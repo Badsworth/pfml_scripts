@@ -20,8 +20,12 @@ from massgov.pfml.api.models.applications.requests import ApplicationRequestBody
 from massgov.pfml.api.models.applications.responses import DocumentResponse
 from massgov.pfml.api.models.common import LookupEnum
 from massgov.pfml.api.services.fineos_actions import get_documents
-from massgov.pfml.api.util.response import IssueRule, IssueType
-from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
+from massgov.pfml.api.validation.exceptions import (
+    IssueRule,
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.db.models.applications import (
     AmountFrequency,
     Application,
@@ -186,22 +190,22 @@ def process_masked_phone_number(
 def remove_masked_fields_from_request(
     body: Dict[str, Any], existing_application: Application
 ) -> Dict[str, Any]:
-    """ Handle masked inputs, which varies depending on a few factors.
+    """Handle masked inputs, which varies depending on a few factors.
 
-        This is done by checking against regexes/static strings to see if the value is masked.
+    This is done by checking against regexes/static strings to see if the value is masked.
 
-        - Input is partially masked
-          - If the visible portion matches what's in the DB - drop the field from the input, it's considered a non-change
-          - If the visible portion does not match, throw a BadRequest error
-          - If the DB does not contain any value yet, throw a BadRequest error
+    - Input is partially masked
+      - If the visible portion matches what's in the DB - drop the field from the input, it's considered a non-change
+      - If the visible portion does not match, throw a BadRequest error
+      - If the DB does not contain any value yet, throw a BadRequest error
 
-        - Input is fully masked
-          - If correctly masked, drop the field from the input, it's considered a non-change
-          - If not correctly masked, it'll pass through this logic, and should fail on later validation
+    - Input is fully masked
+      - If correctly masked, drop the field from the input, it's considered a non-change
+      - If not correctly masked, it'll pass through this logic, and should fail on later validation
 
-        Note address fields (line_1, line_2, zip) behave differently because their update logic assumes
-        a value not being set should be deleted unlike every other example. So, we instead just do the
-        validation bit for those and have seperate logic in the add_or_update_address method for those.
+    Note address fields (line_1, line_2, zip) behave differently because their update logic assumes
+    a value not being set should be deleted unlike every other example. So, we instead just do the
+    validation bit for those and have seperate logic in the add_or_update_address method for those.
     """
     errors = []
     # tax identifier - partially masked field

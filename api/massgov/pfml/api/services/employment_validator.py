@@ -1,7 +1,7 @@
 from typing import Optional
 
 import massgov.pfml.db as db
-from massgov.pfml.api.util.response import Issue, IssueRule, IssueType
+from massgov.pfml.api.validation.exceptions import IssueRule, IssueType, ValidationErrorDetail
 from massgov.pfml.db.models.employees import (
     Employee,
     Employer,
@@ -14,7 +14,7 @@ def get_contributing_employer_or_employee_issue(
     db_session: db.Session,
     maybe_employer_fein: Optional[str],
     maybe_tax_identifier: Optional[TaxIdentifier],
-) -> Optional[Issue]:
+) -> Optional[ValidationErrorDetail]:
     """Validate an Employer exists and a specific Employee works there"""
 
     # Requiring an EIN be present is handled by a separate validation rule
@@ -27,7 +27,7 @@ def get_contributing_employer_or_employee_issue(
 
         # Employer was not in DOR data, or we haven't yet created the corresponding record in FINEOS
         if employer is None or employer.fineos_employer_id is None:
-            return Issue(
+            return ValidationErrorDetail(
                 field="employer_fein",
                 type=IssueType.require_contributing_employer,
                 message="Confirm that you have the correct EIN, and that the Employer is contributing to Paid Family and Medical Leave.",
@@ -42,9 +42,10 @@ def get_contributing_employer_or_employee_issue(
             # means FINEOS has no connection between the employee and employer. Attempting
             # to register the employee/employer combo in Fineos during claim creation
             # will therefore fail with a "not found" error.
-            return Issue(
+            return ValidationErrorDetail(
                 rule=IssueRule.require_employee,
                 message="Couldn't find Employee in our system. Confirm that you have the correct EIN.",
+                type="",
             )
 
     return None

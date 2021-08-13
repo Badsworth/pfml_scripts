@@ -10,7 +10,7 @@ from massgov.pfml.api.services.claim_rules import (
     get_hours_worked_per_week_issues,
     get_previous_leaves_issues,
 )
-from massgov.pfml.api.util.response import IssueType
+from massgov.pfml.api.validation.exceptions import IssueType
 
 
 @pytest.fixture

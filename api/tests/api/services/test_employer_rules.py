@@ -6,8 +6,11 @@ from massgov.pfml.api.services.employer_rules import (
     EmployerRequiresVerificationDataException,
     validate_employer_being_added,
 )
-from massgov.pfml.api.util.response import Issue, IssueType
-from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
+from massgov.pfml.api.validation.exceptions import (
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.db.models.factories import EmployerFactory, EmployerQuarterlyContributionFactory
 
 
@@ -34,7 +37,7 @@ class TestEmployerAddFeinIssue:
             validate_employer_being_added(employer_with_fineos_id)
 
             assert exc.value.errors == [
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.employer_requires_verification_data,
                     message="Employer has no verification data",
                     field="employer_fein",
@@ -54,7 +57,7 @@ class TestEmployerAddFeinIssue:
             validate_employer_being_added(employer_with_fineos_id)
 
             assert exc.value.errors == [
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.employer_requires_verification_data,
                     message="Employer has no verification data",
                     field="employer_fein",
@@ -74,7 +77,7 @@ class TestEmployerAddFeinIssue:
             validate_employer_being_added(employer_with_fineos_id)
 
             assert exc.value.errors == [
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.employer_requires_verification_data,
                     message="Employer has no verification data",
                     field="employer_fein",

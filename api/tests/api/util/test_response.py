@@ -5,6 +5,7 @@
 from werkzeug.exceptions import NotFound
 
 import massgov.pfml.api.util.response as response_util
+from massgov.pfml.api.validation.exceptions import ValidationErrorDetail
 
 user_payload = {
     "id": "5072cd9d-5aca-4c93-979b-8adf131bdb89",
@@ -30,10 +31,10 @@ def test_create_success_with_warning():
         message="successfuly created user",
         data=user_payload,
         warnings=[
-            response_util.Issue(
+            ValidationErrorDetail(
                 message="first_name is required", type="required", field="first_name"
             ),
-            response_util.Issue(
+            ValidationErrorDetail(
                 message="last_name is required", type="required", field="last_name"
             ),
         ],
@@ -48,10 +49,10 @@ def test_create_error_response():
         status_code=NotFound,
         message="Error creating user.",
         errors=[
-            response_util.Issue(
+            ValidationErrorDetail(
                 message="first_name is required", type="required", field="first_name"
             ),
-            response_util.Issue(
+            ValidationErrorDetail(
                 message="last_name is required", type="required", field="last_name"
             ),
         ],

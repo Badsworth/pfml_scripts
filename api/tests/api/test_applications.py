@@ -16,7 +16,7 @@ import tests.api
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.models.applications.responses import ApplicationStatus
 from massgov.pfml.api.services.fineos_actions import LeaveNotificationReason
-from massgov.pfml.api.util.response import IssueRule, IssueType
+from massgov.pfml.api.validation.exceptions import IssueRule, IssueType
 from massgov.pfml.db.models.applications import (
     Application,
     ApplicationPaymentPreference,
@@ -3339,6 +3339,7 @@ def test_application_post_submit_caring_leave_app_before_july(
     assert {
         "message": "Caring leave start_date cannot be before 2021-07-01",
         "rule": "disallow_caring_leave_before_july",
+        "type": "",
     } in errors
 
 
@@ -3366,6 +3367,7 @@ def test_application_post_submit_app_more_than_60_days_ahead(
     assert {
         "message": "Can't submit application more than 60 days in advance of the earliest leave period",
         "rule": "disallow_submit_over_60_days_before_start_date",
+        "type": "",
     } in errors
 
 
@@ -3426,7 +3428,13 @@ def test_application_post_submit_ssn_fraud_error(
         response,
         403,
         message="Application unable to be submitted by current user",
-        errors=[{"message": "Request by current user not allowed", "rule": "disallow_attempts"}],
+        errors=[
+            {
+                "message": "Request by current user not allowed",
+                "rule": "disallow_attempts",
+                "type": "",
+            }
+        ],
     )
 
 
@@ -3503,6 +3511,7 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
     assert {
         "message": "Couldn't find Employee in our system. Confirm that you have the correct EIN.",
         "rule": "require_employee",
+        "type": "",
     } in response_body.get("errors")
     assert not response_body.get("warnings")
     # Simplified check to confirm Application was included in response:

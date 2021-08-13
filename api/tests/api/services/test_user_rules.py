@@ -10,7 +10,7 @@ from massgov.pfml.api.services.user_rules import (
     get_users_post_employer_issues,
     get_users_post_required_fields_issues,
 )
-from massgov.pfml.api.util.response import Issue, IssueRule, IssueType
+from massgov.pfml.api.validation.exceptions import IssueRule, IssueType, ValidationErrorDetail
 from massgov.pfml.db.models.employees import Role
 from massgov.pfml.db.models.factories import (
     ApplicationFactory,
@@ -26,7 +26,7 @@ def test_get_users_convert_employer_already_employer(test_db_session, initialize
     user = UserFactory.create(roles=[Role.EMPLOYER])
     issues = get_users_convert_employer_issues(user, test_db_session)
     assert (
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.conflicting,
             field="user_leave_administrator.employer_fein",
             message="You're already an employer!",
@@ -41,7 +41,7 @@ def test_get_users_convert_employer_existing_applications(
     ApplicationFactory.create(user=user,)
     issues = get_users_convert_employer_issues(user, test_db_session)
     assert (
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.conflicting,
             field="applications",
             message="Your account has submitted applications!",
@@ -54,14 +54,19 @@ def test_get_users_post_required_fields_issues_always_required_fields():
     issues = get_users_post_required_fields_issues(UserCreateRequest())
 
     assert (
-        Issue(type=IssueType.required, field="email_address", message="email_address is required")
+        ValidationErrorDetail(
+            type=IssueType.required, field="email_address", message="email_address is required"
+        )
         in issues
     )
     assert (
-        Issue(type=IssueType.required, field="password", message="password is required") in issues
+        ValidationErrorDetail(
+            type=IssueType.required, field="password", message="password is required"
+        )
+        in issues
     )
     assert (
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             field="role.role_description",
             message="role.role_description is required",
@@ -74,7 +79,7 @@ def test_get_users_post_required_fields_issues_always_required_fields():
 def test_get_users_post_required_fields_issues_ein_required_for_employer():
     def expect_ein_issue(issues):
         assert (
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.required,
                 rule=IssueRule.conditional,
                 field="user_leave_administrator.employer_fein",
@@ -134,7 +139,7 @@ def test_get_users_post_employer_issues_require_employer():
     issues = get_users_post_employer_issues(None)
 
     assert (
-        Issue(
+        ValidationErrorDetail(
             field="user_leave_administrator.employer_fein",
             message="Invalid EIN",
             type=IssueType.require_employer,
@@ -147,7 +152,7 @@ def test_get_users_post_employer_issues_contributing_employer_required():
     issues = get_users_post_employer_issues(EmployerOnlyRequiredFactory.build())
 
     assert (
-        Issue(
+        ValidationErrorDetail(
             field="user_leave_administrator.employer_fein",
             message="Confirm that you have the correct EIN, and that the Employer is contributing to Paid Family and Medical Leave.",
             type=IssueType.require_contributing_employer,

@@ -200,7 +200,7 @@ def test_document_upload_invalid_content_type(
     assert response["errors"][0]["type"] == "file_type"
 
     allowed_content_types = [item.value for item in AllowedContentTypes]
-    assert response["errors"][0]["rule"] == allowed_content_types
+    assert response["errors"][0]["rule"] == ", ".join(allowed_content_types)
 
 
 def test_document_upload_invalid_form_data(

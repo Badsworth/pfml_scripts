@@ -1308,7 +1308,7 @@ components:
         warnings:
           type: array
           items:
-            $ref: "#/components/schemas/Issue"
+            $ref: "#/components/schemas/ValidationErrorDetail"
       required: ["status_code"]
       additionalProperties: false
 
@@ -1328,11 +1328,11 @@ components:
         warnings:
           type: array
           items:
-            $ref: "#/components/schemas/Issue"
+            $ref: "#/components/schemas/ValidationErrorDetail"
         errors:
           type: array
           items:
-            $ref: "#/components/schemas/Issue"
+            $ref: "#/components/schemas/ValidationErrorDetail"
       required: ["status_code", "errors"]
       additionalProperties: false
 
@@ -1363,14 +1363,20 @@ components:
       required: ["resource", "method"]
       additionalProperties: false
 
-    Issue:
+    ValidationErrorDetail:
       type: object
       properties:
         type:
+          example: "required"
           type: string
         message:
+          example: "leave_details.reason is required."
+          description: "Somewhat user-friendly description of the error. May contain PII."
           type: string
         rule:
+          description: >
+            Usage varies depending on the source of the validation error. OpenAPI validation
+            errors will set this to the expected value behavior (i.e the max length, or pattern).
           oneOf:
             - type: string
             - type: number
@@ -1378,7 +1384,11 @@ components:
             - type: boolean
             - type: array
             - type: object
+          nullable: true
         field:
+          description: "Field path, when the error is associated with a specific field."
+          example: "leave_details.reason"
+          nullable: true
           type: string
       additionalProperties: false
 

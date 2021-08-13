@@ -17,6 +17,7 @@ from massgov.pfml.api.services.employer_rules import (
     validate_employer_being_added,
 )
 from massgov.pfml.api.validation.exceptions import (
+    IssueType,
     PaymentRequired,
     ValidationErrorDetail,
     ValidationException,
@@ -78,7 +79,7 @@ def employer_add_fein() -> flask.Response:
             errors=[
                 ValidationErrorDetail(
                     field="employer_fein",
-                    type=response_util.IssueType.required,
+                    type=IssueType.required,
                     message="employer_fein is required",
                 )
             ],
@@ -115,9 +116,9 @@ def employer_add_fein() -> flask.Response:
                 status_code=Conflict,
                 message="Duplicate employer for user",
                 errors=[
-                    response_util.Issue(
+                    ValidationErrorDetail(
                         field="employer_fein",
-                        type=response_util.IssueType.duplicate,
+                        type=IssueType.duplicate,
                         message="Duplicate employer for user",
                     )
                 ],

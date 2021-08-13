@@ -5,8 +5,7 @@ from typing import List, Optional
 
 from massgov.pfml.api.models.claims.common import EmployerClaimReview, PreviousLeave
 from massgov.pfml.api.models.common import EmployerBenefit
-from massgov.pfml.api.util.response import IssueType
-from massgov.pfml.api.validation.exceptions import ValidationErrorDetail
+from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
 
 # there are 168 hours in a week
 MAX_HOURS_WORKED_PER_WEEK = 168

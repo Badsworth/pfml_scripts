@@ -14,7 +14,7 @@ from massgov.pfml.api.services.applications import (
     ReducedScheduleLeavePeriod,
 )
 from massgov.pfml.api.util.deepgetattr import deepgetattr
-from massgov.pfml.api.util.response import Issue, IssueRule, IssueType
+from massgov.pfml.api.validation.exceptions import IssueRule, IssueType, ValidationErrorDetail
 from massgov.pfml.db.models.applications import (
     Application,
     EmployerBenefit,
@@ -36,7 +36,9 @@ MAX_MINUTES_IN_WEEK = 10080  # 60 * 24 * 7
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-def get_application_issues(application: Application, headers: Headers) -> List[Issue]:
+def get_application_issues(
+    application: Application, headers: Headers
+) -> List[ValidationErrorDetail]:
     """Takes in application and outputs any validation issues.
     These issues are either fields that are always required for an application or fields that are conditionally required based on previous input.
     """
@@ -48,7 +50,9 @@ def get_application_issues(application: Application, headers: Headers) -> List[I
     return issues
 
 
-def get_address_issues(application: Application, address_field_name: str) -> List[Issue]:
+def get_address_issues(
+    application: Application, address_field_name: str
+) -> List[ValidationErrorDetail]:
     issues = []
     address_field_db_name_to_api_name_map = {
         f"{address_field_name}.address_line_one": f"{address_field_name}.line_1",
@@ -61,7 +65,7 @@ def get_address_issues(application: Application, address_field_name: str) -> Lis
         val = deepgetattr(application, field)
         if val is None:
             issues.append(
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.required,
                     message=f"{openapi_field} is required",
                     field=openapi_field,
@@ -80,7 +84,7 @@ def handle_rename(renames: Union[Dict[str, str], None], field_name: str) -> str:
 
 def check_required_fields(
     path: str, item: Any, required_fields: List[str], renames: Optional[Dict[str, str]] = None
-) -> List[Issue]:
+) -> List[ValidationErrorDetail]:
     """
     Check that a set of required fields are present on item. Returns an issue for each missing required field.
     """
@@ -91,7 +95,7 @@ def check_required_fields(
         if val is None:
             field_name = f"{path}.{handle_rename(renames, field)}"
             issues.append(
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.required, message=f"{field_name} is required", field=field_name,
                 )
             )
@@ -101,7 +105,7 @@ def check_required_fields(
 
 def check_codependent_fields(
     path: str, item: Any, field_a: str, field_b: str, renames: Optional[Dict[str, str]] = None
-) -> List[Issue]:
+) -> List[ValidationErrorDetail]:
     """
     Checks that neither or both of the specified fields (field_a and _field_b) are set on item. If only one
     field is set then the returned issues will not be empty.
@@ -114,7 +118,7 @@ def check_codependent_fields(
     field_b_path = f"{path}.{handle_rename(renames, field_b)}"
     if val_a and not val_b:
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.required,
                 rule=IssueRule.conditional,
                 message=f"{field_b_path} is required if {field_a_path} is set",
@@ -123,7 +127,7 @@ def check_codependent_fields(
         )
     elif val_b and not val_a:
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.required,
                 rule=IssueRule.conditional,
                 message=f"{field_a_path} is required if {field_b_path} is set",
@@ -140,7 +144,7 @@ def check_date_range(
     end_date: Optional[date],
     end_date_path: str,
     minimum_date: date,
-) -> List[Issue]:
+) -> List[ValidationErrorDetail]:
     """
     Checks if a start and end date are valid, if set. start_date is valid if it is greater than or equal to
     minimum_date. end_date is valid if it is greater than or equal to minimum_date and start_date. A date is
@@ -149,7 +153,7 @@ def check_date_range(
     issues = []
     if start_date and start_date < minimum_date:
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.minimum,
                 message=f"{start_date_path} cannot be earlier than {minimum_date.isoformat()}",
                 field=f"{start_date_path}",
@@ -158,7 +162,7 @@ def check_date_range(
 
     if end_date and end_date < minimum_date:
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.minimum,
                 message=f"{end_date_path} cannot be earlier than {minimum_date.isoformat()}",
                 field=f"{end_date_path}",
@@ -166,7 +170,7 @@ def check_date_range(
         )
     elif start_date and end_date and start_date > end_date:
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.invalid_date_range,
                 message=f"{end_date_path} cannot be earlier than {start_date_path}",
                 field=f"{end_date_path}",
@@ -176,12 +180,12 @@ def check_date_range(
     return issues
 
 
-def get_employer_benefits_issues(application: Application) -> List[Issue]:
+def get_employer_benefits_issues(application: Application) -> List[ValidationErrorDetail]:
     issues = []
 
     if application.has_employer_benefits and len(list(application.employer_benefits)) == 0:
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.required,
                 rule=IssueRule.conditional,
                 message="when has_employer_benefits is true, employer_benefits cannot be empty",
@@ -195,7 +199,9 @@ def get_employer_benefits_issues(application: Application) -> List[Issue]:
     return issues
 
 
-def get_employer_benefit_issues(benefit: EmployerBenefit, index: int) -> List[Issue]:
+def get_employer_benefit_issues(
+    benefit: EmployerBenefit, index: int
+) -> List[ValidationErrorDetail]:
     benefit_path = f"employer_benefits[{index}]"
     issues = []
 
@@ -226,12 +232,12 @@ def get_employer_benefit_issues(benefit: EmployerBenefit, index: int) -> List[Is
     return issues
 
 
-def get_other_incomes_issues(application: Application) -> List[Issue]:
+def get_other_incomes_issues(application: Application) -> List[ValidationErrorDetail]:
     issues = []
 
     if application.has_other_incomes and len(list(application.other_incomes)) == 0:
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.required,
                 rule=IssueRule.conditional,
                 message="when has_other_incomes is true, other_incomes cannot be empty",
@@ -245,7 +251,7 @@ def get_other_incomes_issues(application: Application) -> List[Issue]:
     return issues
 
 
-def get_other_income_issues(income: OtherIncome, index: int) -> List[Issue]:
+def get_other_income_issues(income: OtherIncome, index: int) -> List[ValidationErrorDetail]:
     income_path = f"other_incomes[{index}]"
     issues = []
 
@@ -276,7 +282,7 @@ def get_other_income_issues(income: OtherIncome, index: int) -> List[Issue]:
     return issues
 
 
-def get_concurrent_leave_issues(application: Application) -> List[Issue]:
+def get_concurrent_leave_issues(application: Application) -> List[ValidationErrorDetail]:
     issues = []
 
     if application.has_concurrent_leave and application.concurrent_leave:
@@ -301,7 +307,7 @@ def get_concurrent_leave_issues(application: Application) -> List[Issue]:
     else:
         if application.has_concurrent_leave and not application.concurrent_leave:
             issues.append(
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.required,
                     rule=IssueRule.conditional,
                     message="when has_concurrent_leave is true, concurrent_leave must be present",
@@ -311,7 +317,7 @@ def get_concurrent_leave_issues(application: Application) -> List[Issue]:
         else:
             if not application.has_concurrent_leave and application.concurrent_leave:
                 issues.append(
-                    Issue(
+                    ValidationErrorDetail(
                         type=IssueType.required,
                         rule=IssueRule.conditional,
                         message="when has_concurrent_leave is false, concurrent_leave must be null",
@@ -322,7 +328,9 @@ def get_concurrent_leave_issues(application: Application) -> List[Issue]:
     return issues
 
 
-def get_previous_leaves_other_reason_issues(application: Application) -> List[Issue]:
+def get_previous_leaves_other_reason_issues(
+    application: Application,
+) -> List[ValidationErrorDetail]:
     issues = []
 
     if (
@@ -330,7 +338,7 @@ def get_previous_leaves_other_reason_issues(application: Application) -> List[Is
         and len(list(application.previous_leaves_other_reason)) == 0
     ):
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.required,
                 rule=IssueRule.conditional,
                 message="when has_previous_leaves_other_reason is true, previous_leaves_other_reason cannot be empty",
@@ -350,7 +358,7 @@ def get_previous_leaves_other_reason_issues(application: Application) -> List[Is
     return issues
 
 
-def get_previous_leaves_same_reason_issues(application: Application) -> List[Issue]:
+def get_previous_leaves_same_reason_issues(application: Application) -> List[ValidationErrorDetail]:
     issues = []
 
     if (
@@ -358,7 +366,7 @@ def get_previous_leaves_same_reason_issues(application: Application) -> List[Iss
         and len(list(application.previous_leaves_same_reason)) == 0
     ):
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.required,
                 rule=IssueRule.conditional,
                 message="when has_previous_leaves_same_reason is true, previous_leaves_same_reason cannot be empty",
@@ -372,7 +380,7 @@ def get_previous_leaves_same_reason_issues(application: Application) -> List[Iss
     return issues
 
 
-def get_previous_leave_issues(leave: PreviousLeave, leave_path: str) -> List[Issue]:
+def get_previous_leave_issues(leave: PreviousLeave, leave_path: str) -> List[ValidationErrorDetail]:
     issues = []
 
     required_fields = [
@@ -386,7 +394,7 @@ def get_previous_leave_issues(leave: PreviousLeave, leave_path: str) -> List[Iss
 
     if leave.worked_per_week_minutes and leave.worked_per_week_minutes > MAX_MINUTES_IN_WEEK:
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.maximum,
                 message=f"Minutes worked per week cannot exceed {MAX_MINUTES_IN_WEEK}",
                 field=f"{leave_path}.worked_per_week_minutes",
@@ -404,7 +412,7 @@ def get_previous_leave_issues(leave: PreviousLeave, leave_path: str) -> List[Iss
     return issues
 
 
-def get_leave_related_issues(application: Application) -> List[Issue]:
+def get_leave_related_issues(application: Application) -> List[ValidationErrorDetail]:
 
     is_medical_leave_app = application.leave_reason_id in (
         LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id,
@@ -421,7 +429,9 @@ def get_leave_related_issues(application: Application) -> List[Issue]:
     return []
 
 
-def get_conditional_issues(application: Application, headers: Headers) -> List[Issue]:
+def get_conditional_issues(
+    application: Application, headers: Headers
+) -> List[ValidationErrorDetail]:
     issues = []
     # TODO (CP-1674): This condition is temporary. It can be removed once we
     # can safely enforce these validation rules across all in-progress claims
@@ -432,7 +442,7 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
     # Fields involved in Part 1 of the progressive application
     if application.has_state_id and not application.mass_id:
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.required,
                 rule=IssueRule.conditional,
                 message="mass_id is required if has_mass_id is set",
@@ -447,7 +457,7 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
         issues += get_address_issues(application, "mailing_address")
     elif not application.mailing_address and application.has_mailing_address:
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.required,
                 rule=IssueRule.conditional,
                 message="mailing_address is required if has_mailing_address is set",
@@ -460,7 +470,7 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
     if application.employer_notified:
         if not application.employer_notification_date:
             issues.append(
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.required,
                     rule=IssueRule.conditional,
                     message="employer_notification_date is required for leave_details if employer_notified is set",
@@ -469,7 +479,7 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
             )
         elif application.employer_notification_date < date.today() - relativedelta(years=2):
             issues.append(
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.minimum,
                     rule=IssueRule.conditional,
                     message="employer_notification_date year must be within the past 2 years",
@@ -478,7 +488,7 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
             )
         elif application.employer_notification_date > date.today():
             issues.append(
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.maximum,
                     rule=IssueRule.conditional,
                     message="employer_notification_date must be today or prior",
@@ -502,7 +512,7 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
         )
     ):
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.required,
                 rule=IssueRule.conditional,
                 # TODO (CP-1176): Update the error message to include Unemployed
@@ -516,7 +526,7 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
         and not application.employer_notified
     ):
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 # `field` is intentionally excluded since this is a submission rule, rather than field rule
                 type=IssueType.required,
                 rule=IssueRule.require_employer_notified,
@@ -545,7 +555,9 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
             val = deepgetattr(application, field)
             if val is None:
                 issues.append(
-                    Issue(type=IssueType.required, message=f"{field} is required", field=field,)
+                    ValidationErrorDetail(
+                        type=IssueType.required, message=f"{field} is required", field=field,
+                    )
                 )
 
     # Fields involved in Part 3 of the progressive application
@@ -554,11 +566,11 @@ def get_conditional_issues(application: Application, headers: Headers) -> List[I
     return issues
 
 
-def get_medical_leave_issues(application: Application) -> List[Issue]:
+def get_medical_leave_issues(application: Application) -> List[ValidationErrorDetail]:
     issues = []
     if application.pregnant_or_recent_birth is None:
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.required,
                 rule=IssueRule.conditional,
                 message="It is required to indicate if there has been a recent pregnancy or birth when medical leave is requested, regardless of if it is related to the leave request",
@@ -575,13 +587,13 @@ QUALIFIER_IDS_FOR_BONDING = [
 ]
 
 
-def get_bonding_leave_issues(application: Application) -> List[Issue]:
+def get_bonding_leave_issues(application: Application) -> List[ValidationErrorDetail]:
     issues = []
 
     # This is here for now to consolidate cross-field validation but can be moved to the openapi.yml if this file becomes too unwieldy
     if application.leave_reason_qualifier_id not in QUALIFIER_IDS_FOR_BONDING:
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.required,
                 rule=IssueRule.conditional,
                 message="Invalid leave reason qualifier for bonding leave type",
@@ -593,7 +605,7 @@ def get_bonding_leave_issues(application: Application) -> List[Issue]:
         == LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_id
     ) and not application.child_birth_date:
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.required,
                 rule=IssueRule.conditional,
                 message="Child birth date is required for newborn bonding leave",
@@ -608,7 +620,7 @@ def get_bonding_leave_issues(application: Application) -> List[Issue]:
         ]
     ) and not application.child_placement_date:
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.required,
                 rule=IssueRule.conditional,
                 message="Child placement date is required for foster or adoption bonding leave",
@@ -618,7 +630,7 @@ def get_bonding_leave_issues(application: Application) -> List[Issue]:
     return issues
 
 
-def get_caring_leave_issues(application: Application) -> List[Issue]:
+def get_caring_leave_issues(application: Application) -> List[ValidationErrorDetail]:
     if not application.caring_leave_metadata:
         return []
 
@@ -636,12 +648,12 @@ def get_caring_leave_issues(application: Application) -> List[Issue]:
     return issues
 
 
-def get_payments_issues(application: Application) -> List[Issue]:
+def get_payments_issues(application: Application) -> List[ValidationErrorDetail]:
     issues = []
 
     if not application.payment_preference.payment_method_id:
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.required,
                 message="Payment method is required",
                 field="payment_preference.payment_method",
@@ -652,7 +664,7 @@ def get_payments_issues(application: Application) -> List[Issue]:
     if application.payment_preference.payment_method_id == PaymentMethod.ACH.payment_method_id:
         if not application.payment_preference.account_number:
             issues.append(
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.required,
                     rule=IssueRule.conditional,
                     message="Account number is required for direct deposit",
@@ -661,7 +673,7 @@ def get_payments_issues(application: Application) -> List[Issue]:
             )
         if not application.payment_preference.routing_number:
             issues.append(
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.required,
                     rule=IssueRule.conditional,
                     message="Routing number is required for direct deposit",
@@ -670,7 +682,7 @@ def get_payments_issues(application: Application) -> List[Issue]:
             )
         elif not validate_routing_number(application.payment_preference.routing_number):
             issues.append(
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.checksum,
                     message="Routing number is invalid",
                     field="payment_preference.routing_number",
@@ -679,7 +691,7 @@ def get_payments_issues(application: Application) -> List[Issue]:
 
         if not application.payment_preference.bank_account_type_id:
             issues.append(
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.required,
                     rule=IssueRule.conditional,
                     message="Account type is required for direct deposit",
@@ -713,13 +725,13 @@ ALWAYS_REQUIRED_FIELDS_DB_NAME_TO_API_NAME_MAP = {
 }
 
 
-def get_always_required_issues(application: Application) -> List[Issue]:
+def get_always_required_issues(application: Application) -> List[ValidationErrorDetail]:
     issues = []
     for (field, openapi_field) in ALWAYS_REQUIRED_FIELDS_DB_NAME_TO_API_NAME_MAP.items():
         val = deepgetattr(application, field)
         if val is None:
             issues.append(
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.required,
                     message=f"{openapi_field} is required",
                     field=openapi_field,
@@ -729,7 +741,7 @@ def get_always_required_issues(application: Application) -> List[Issue]:
     return issues
 
 
-def get_leave_periods_issues(application: Application) -> List[Issue]:
+def get_leave_periods_issues(application: Application) -> List[ValidationErrorDetail]:
     issues = []
 
     issues += get_continuous_leave_issues(application.continuous_leave_periods)
@@ -745,7 +757,7 @@ def get_leave_periods_issues(application: Application) -> List[Issue]:
         ]
     ):
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 message="At least one leave period should be entered",
                 rule=IssueRule.min_leave_periods,
                 type=IssueType.required,
@@ -756,7 +768,7 @@ def get_leave_periods_issues(application: Application) -> List[Issue]:
         application.continuous_leave_periods or application.reduced_schedule_leave_periods
     ):
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 message="Intermittent leave cannot be taken alongside Continuous or Reduced Schedule leave",
                 rule=IssueRule.disallow_hybrid_intermittent_leave,
                 type=IssueType.conflicting,
@@ -766,7 +778,7 @@ def get_leave_periods_issues(application: Application) -> List[Issue]:
     return issues
 
 
-def get_leave_period_ranges_issues(application: Application) -> List[Issue]:
+def get_leave_period_ranges_issues(application: Application) -> List[ValidationErrorDetail]:
     """Validate all leave period date ranges against each other"""
     issues = []
 
@@ -804,9 +816,10 @@ def get_leave_period_ranges_issues(application: Application) -> List[Issue]:
         and (earliest_start_date - date.today()).days > MAX_DAYS_IN_ADVANCE_TO_SUBMIT
     ):
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 message=f"Can't submit application more than {MAX_DAYS_IN_ADVANCE_TO_SUBMIT} days in advance of the earliest leave period",
                 rule=IssueRule.disallow_submit_over_60_days_before_start_date,
+                type="",
             )
         )
 
@@ -817,9 +830,10 @@ def get_leave_period_ranges_issues(application: Application) -> List[Issue]:
         and earliest_start_date < CARING_LEAVE_EARLIEST_START_DATE
     ):
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 message=f"Caring leave start_date cannot be before {CARING_LEAVE_EARLIEST_START_DATE.isoformat()}",
                 rule=IssueRule.disallow_caring_leave_before_july,
+                type="",
             )
         )
 
@@ -830,9 +844,10 @@ def get_leave_period_ranges_issues(application: Application) -> List[Issue]:
         and (latest_end_date - earliest_start_date).days > MAX_DAYS_IN_LEAVE_PERIOD_RANGE
     ):
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 message=f"Leave cannot exceed {MAX_DAYS_IN_LEAVE_PERIOD_RANGE} days",
                 rule=IssueRule.disallow_12mo_leave_period,
+                type="",
             )
         )
 
@@ -842,7 +857,7 @@ def get_leave_period_ranges_issues(application: Application) -> List[Issue]:
     ):
         if start_date_2 <= end_date_1:
             issues.append(
-                Issue(
+                ValidationErrorDetail(
                     message=f"Leave period ranges cannot overlap. Received {start_date_1.isoformat()} – {end_date_1.isoformat()} and {start_date_2.isoformat()} – {end_date_2.isoformat()}.",
                     rule=IssueRule.disallow_overlapping_leave_periods,
                     type=IssueType.conflicting,
@@ -856,7 +871,7 @@ def get_leave_period_date_issues(
     leave_period: Union[ContinuousLeavePeriod, IntermittentLeavePeriod, ReducedScheduleLeavePeriod],
     leave_period_path: str,
     leave_period_type: str,
-) -> List[Issue]:
+) -> List[ValidationErrorDetail]:
     """Validate an individual leave period's start and end dates"""
     issues = []
     end_date = getattr(leave_period, "end_date", None)
@@ -864,7 +879,7 @@ def get_leave_period_date_issues(
 
     if start_date and start_date < PFML_PROGRAM_LAUNCH_DATE:
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.minimum,
                 message="start_date cannot be in a year earlier than 2021",
                 field=f"{leave_period_path}.start_date",
@@ -873,7 +888,7 @@ def get_leave_period_date_issues(
 
     if start_date and end_date and start_date > end_date:
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.minimum,
                 message="end_date cannot be earlier than the start_date",
                 field=f"{leave_period_path}.end_date",
@@ -887,16 +902,19 @@ def get_leave_period_date_issues(
         and (end_date - start_date).days > MAX_DAYS_IN_LEAVE_PERIOD_RANGE
     ):
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 message=f"Leave cannot exceed {MAX_DAYS_IN_LEAVE_PERIOD_RANGE} days",
                 rule=getattr(IssueRule, f"disallow_12mo_{leave_period_type}_leave_period"),
+                type="",
             )
         )
 
     return issues
 
 
-def get_continuous_leave_issues(leave_periods: Iterable[ContinuousLeavePeriod]) -> List[Issue]:
+def get_continuous_leave_issues(
+    leave_periods: Iterable[ContinuousLeavePeriod],
+) -> List[ValidationErrorDetail]:
     issues = []
     required_leave_period_fields = [
         "end_date",
@@ -912,7 +930,7 @@ def get_continuous_leave_issues(leave_periods: Iterable[ContinuousLeavePeriod]) 
 
             if val is None:
                 issues.append(
-                    Issue(
+                    ValidationErrorDetail(
                         type=IssueType.required,
                         message=f"{field} is required",
                         field=f"{leave_period_path}.{field}",
@@ -922,7 +940,9 @@ def get_continuous_leave_issues(leave_periods: Iterable[ContinuousLeavePeriod]) 
     return issues
 
 
-def get_intermittent_leave_issues(leave_periods: Iterable[IntermittentLeavePeriod]) -> List[Issue]:
+def get_intermittent_leave_issues(
+    leave_periods: Iterable[IntermittentLeavePeriod],
+) -> List[ValidationErrorDetail]:
     issues = []
     required_leave_period_fields = [
         "duration",
@@ -943,7 +963,7 @@ def get_intermittent_leave_issues(leave_periods: Iterable[IntermittentLeavePerio
 
             if val is None:
                 issues.append(
-                    Issue(
+                    ValidationErrorDetail(
                         type=IssueType.required,
                         message=f"{field} is required",
                         field=f"{leave_period_path}.{field}",
@@ -955,7 +975,7 @@ def get_intermittent_leave_issues(leave_periods: Iterable[IntermittentLeavePerio
             and (current_period.duration or 0) >= 24
         ):
             issues.append(
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.intermittent_duration_hours_maximum,
                     message=f"{leave_period_path}.duration must be less than 24 if the duration_basis is hours",
                     field=f"{leave_period_path}.duration",
@@ -986,7 +1006,7 @@ def get_intermittent_leave_issues(leave_periods: Iterable[IntermittentLeavePerio
 
             if days_in_request_interval > days_in_leave:
                 issues.append(
-                    Issue(
+                    ValidationErrorDetail(
                         type=IssueType.intermittent_interval_maximum,
                         message="the total days in the interval (frequency_interval * the number of days in frequency_interval_basis) cannot exceed the total days between the start and end dates of the leave period",
                         field=f"{leave_period_path}.frequency_interval_basis",
@@ -999,7 +1019,7 @@ def get_intermittent_leave_issues(leave_periods: Iterable[IntermittentLeavePerio
 
                 if days_requested_per_interval > days_in_request_interval:
                     issues.append(
-                        Issue(
+                        ValidationErrorDetail(
                             type=IssueType.days_absent_per_intermittent_interval_maximum,
                             message="The total days absent per interval (frequency * duration) cannot exceed the total days in the interval",
                             field=f"{leave_period_path}.duration",
@@ -1009,7 +1029,7 @@ def get_intermittent_leave_issues(leave_periods: Iterable[IntermittentLeavePerio
     return issues
 
 
-def get_reduced_schedule_leave_issues(application: Application) -> List[Issue]:
+def get_reduced_schedule_leave_issues(application: Application) -> List[ValidationErrorDetail]:
     """Validate required fields are present for each reduced schedule leave period
     and validate that the amount of minutes entered are within a valid range, in
     comparison to the work pattern entered.
@@ -1035,7 +1055,7 @@ def get_reduced_schedule_leave_issues(application: Application) -> List[Issue]:
 
             if val is None:
                 issues.append(
-                    Issue(
+                    ValidationErrorDetail(
                         type=IssueType.required,
                         message=f"{field} is required",
                         field=f"{leave_period_path}.{field}",
@@ -1047,7 +1067,7 @@ def get_reduced_schedule_leave_issues(application: Application) -> List[Issue]:
 
 def get_reduced_schedule_leave_minutes_issues(
     leave_period: ReducedScheduleLeavePeriod, leave_period_path: str, application: Application
-) -> List[Issue]:
+) -> List[ValidationErrorDetail]:
     """Validate the *_off_minutes fields of a reduced leave period"""
 
     issues = []
@@ -1066,7 +1086,7 @@ def get_reduced_schedule_leave_minutes_issues(
     # *_off_minutes fields individually have a minimum of 0, through the OpenAPI spec
     if sum(minutes_each_day) <= 0:
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.minimum,
                 message="Reduced leave minutes must be greater than 0",
                 rule=IssueRule.min_reduced_leave_minutes,
@@ -1084,7 +1104,7 @@ def get_reduced_schedule_leave_minutes_issues(
 
             if val is None:
                 issues.append(
-                    Issue(
+                    ValidationErrorDetail(
                         type=IssueType.required,
                         message=f"{field} is required",
                         field=f"{leave_period_path}.{field}",
@@ -1102,7 +1122,7 @@ def get_reduced_schedule_leave_minutes_issues(
                 leave_period_minutes: int = getattr(leave_period, field, None) or 0
                 if work_pattern_minutes is not None and leave_period_minutes > work_pattern_minutes:
                     issues.append(
-                        Issue(
+                        ValidationErrorDetail(
                             type=IssueType.maximum,
                             message=f"{field} cannot exceed the work pattern minutes for the same day, which is {work_pattern_minutes}",
                             field=f"{leave_period_path}.{field}",
@@ -1112,14 +1132,14 @@ def get_reduced_schedule_leave_minutes_issues(
     return issues
 
 
-def get_work_pattern_issues(application: Application) -> List[Issue]:
+def get_work_pattern_issues(application: Application) -> List[ValidationErrorDetail]:
     issues = []
 
     minutes_each_day = [day.minutes or 0 for day in application.work_pattern.work_pattern_days]
 
     if sum(minutes_each_day) <= 0:
         issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.minimum,
                 field="work_pattern.work_pattern_days",
                 message="Total minutes for a work pattern must be greater than 0",
@@ -1132,7 +1152,7 @@ def get_work_pattern_issues(application: Application) -> List[Issue]:
         for i, day in enumerate(application.work_pattern.work_pattern_days):
             if day.minutes is None:
                 issues.append(
-                    Issue(
+                    ValidationErrorDetail(
                         type=IssueType.required,
                         message=f"work_pattern.work_pattern_days[{i}].minutes is required",
                         field=f"work_pattern.work_pattern_days[{i}].minutes",
@@ -1140,7 +1160,7 @@ def get_work_pattern_issues(application: Application) -> List[Issue]:
                 )
             elif day.minutes > 24 * 60:
                 issues.append(
-                    Issue(
+                    ValidationErrorDetail(
                         type=IssueType.maximum,
                         message="Total minutes in a work pattern week must be less than a day (1440 minutes)",
                         field=f"work_pattern.work_pattern_days[{i}].minutes",
@@ -1152,7 +1172,7 @@ def get_work_pattern_issues(application: Application) -> List[Issue]:
 
 def validate_application_state(
     existing_application: Application, db_session: db.Session
-) -> List[Issue]:
+) -> List[ValidationErrorDetail]:
     """
     Utility method for validating an application's state in the entire system is valid
     Currently the only check is one to potentially catch fraud where an SSN is being used
@@ -1176,7 +1196,11 @@ def validate_application_state(
     # the user should reach out to the contact center for additional assistance.
     if application:
         issues.append(
-            Issue(message="Request by current user not allowed", rule=IssueRule.disallow_attempts,)
+            ValidationErrorDetail(
+                message="Request by current user not allowed",
+                rule=IssueRule.disallow_attempts,
+                type="",
+            )
         )
 
         logger.warning(
