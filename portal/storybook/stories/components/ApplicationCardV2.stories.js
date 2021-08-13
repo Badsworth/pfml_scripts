@@ -19,8 +19,8 @@ export default {
 };
 
 export const Story = ({ claim, _documents, ...args }) => {
-  const attachedDocuments = [],
-    errors = [];
+  const attachedDocuments = [];
+  const errors = [];
   const claimAttrs = {
     Completed: new MockBenefitsApplicationBuilder().completed().create(),
   }[claim];
