@@ -11,31 +11,9 @@ import LeaveReason from "../models/LeaveReason";
 import PropTypes from "prop-types";
 import React from "react";
 import findKeyByValue from "../utils/findKeyByValue";
-import { isFeatureEnabled } from "../services/featureFlags";
 import { useTranslation } from "../locales/i18n";
 
 // REUSABLE STATUS CARD SECTIONS
-/**
- * Single source for pre-styled status card
- * @property {ReactElement} children - Child components
- * @returns {ReactElement}
- */
-const StatusCardContainer = ({ children }) => (
-  <React.Fragment>
-    <aside className="maxw-mobile-lg border-top-1 border-primary" />
-    <article className="maxw-mobile-lg border-left border-right border-bottom border-base-lighter margin-bottom-3">
-      {children}
-    </article>
-  </React.Fragment>
-);
-
-StatusCardContainer.propTypes = {
-  children: PropTypes.oneOfType([
-    PropTypes.arrayOf(PropTypes.node),
-    PropTypes.node,
-  ]).isRequired,
-};
-
 /**
  * Main header for the top of status cards
  * @param {string} title - Title of the status card
@@ -53,11 +31,8 @@ HeaderSection.propTypes = {
 
 /**
  * Group together details for status cards
- * @property {string} details - Details to provide (e.g., actual ID or EIN)
- * @property {string} title - Title of the detail being displayed (e.g., "Application ID")
- * @returns {ReactElement}
  */
-const GroupDetailSection = ({ details, title }) => (
+const TitleAndDetailSection = ({ details, title }) => (
   <div className="padding-2 padding-bottom-1 padding-top-0 margin-top-0">
     <Heading level="4" size="6">
       {title}
@@ -68,37 +43,17 @@ const GroupDetailSection = ({ details, title }) => (
   </div>
 );
 
-GroupDetailSection.propTypes = {
+TitleAndDetailSection.propTypes = {
   details: PropTypes.string.isRequired,
   title: PropTypes.string.isRequired,
 };
 
 /**
  * Button section with top border and optional header text/section
- * @property {string} buttonText - Text to be displayed on button
- * @property {string} [headerText=''] - Optional header text
- * @property {string} href - Link/URL path for href attribute
- * @property {ReactElement} [iconComponent=null] - Optional icon component to pass
- * @returns {ReactElement}
  */
-const GroupButtonSection = ({
-  buttonText,
-  headerText = "",
-  href,
-  iconComponent = null,
-}) => {
-  const GroupButtonHeader = () => {
-    if (!headerText) return null;
-
-    /**
-     * @todo "in progress" status designs include a header
-     * section which can be added here when needed.
-     */
-  };
-
+const GroupButtonSection = ({ buttonText, href, iconComponent = null }) => {
   return (
     <div className="border-top border-base-lighter padding-2 margin-1 margin-bottom-0">
-      <GroupButtonHeader />
       <ButtonLink
         className="display-flex flex-align-center flex-justify-center flex-column"
         href={href}
@@ -112,23 +67,19 @@ const GroupButtonSection = ({
 
 GroupButtonSection.propTypes = {
   buttonText: PropTypes.string.isRequired,
-  headerText: PropTypes.string,
   href: PropTypes.string.isRequired,
-  iconComponent: PropTypes.elementType,
+  iconComponent: PropTypes.object,
 };
 
 GroupButtonSection.defaultProps = {
-  headerText: "",
   iconComponent: null,
 };
 
 /**
  * Section to view notices and upload documents
- * @property {Class} claim - Instance of BenefitsApplication
- * @property {Function} t - Translation function for localization
- * @returns {ReactElement}
  */
-const ManageDocumentSection = ({ claim, t }) => {
+const ManageDocumentSection = ({ claim }) => {
+  const { t } = useTranslation();
   const { fineos_absence_id: absence_case_id } = claim;
 
   const viewNoticesLink = createRouteWithQuery(
@@ -167,17 +118,19 @@ const ManageDocumentSection = ({ claim, t }) => {
 
 ManageDocumentSection.propTypes = {
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  t: PropTypes.func.isRequired,
 };
 
 // STATUS CARDS
 /**
  * Status card for claim.status = "Completed"
- * @property {Class} claim - Instance of BenefitsApplication
- * @property {Function} t - Translation function for localization
- * @returns {ReactElement}
  */
-const CompletedStatusCard = ({ claim, t }) => {
+const CompletedStatusCard = ({ claim }) => {
+  const { t } = useTranslation();
+
+  const leaveReasonText = t("components.applicationCardV2.leaveReasonValue", {
+    context: findKeyByValue(LeaveReason, claim.leave_details?.reason),
+  });
+
   const iconComponent = (
     <Icon
       className="position-absolute flex-align-self-end margin-right-neg-105"
@@ -187,21 +140,18 @@ const CompletedStatusCard = ({ claim, t }) => {
     />
   );
 
-  const leaveReasonText = t("components.applicationCardV2.leaveReasonValue", {
-    context: findKeyByValue(LeaveReason, claim.leave_details?.reason),
-  });
-
   return (
-    <StatusCardContainer>
+    <React.Fragment>
       <HeaderSection title={leaveReasonText} />
-      <GroupDetailSection
+      <TitleAndDetailSection
         title={t("components.applicationCardV2.applicationID")}
         details={claim.fineos_absence_id}
       />
-      <GroupDetailSection
+      <TitleAndDetailSection
         title={t("components.applicationCardV2.employerEIN")}
         details={claim.employer_fein}
       />
+
       <GroupButtonSection
         buttonText={t(
           "components.applicationCardV2.viewStatusUpdatesAndDetails"
@@ -211,14 +161,13 @@ const CompletedStatusCard = ({ claim, t }) => {
         })}
         iconComponent={iconComponent}
       />
-      <ManageDocumentSection claim={claim} t={t} />
-    </StatusCardContainer>
+      <ManageDocumentSection claim={claim} />
+    </React.Fragment>
   );
 };
 
 CompletedStatusCard.propTypes = {
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  t: PropTypes.func.isRequired,
 };
 
 /**
@@ -226,32 +175,30 @@ CompletedStatusCard.propTypes = {
  * claimants to continue an in progress application, view what
  * they've submitted, view notices and instructions, or upload
  * additional docs.
- *
- * @property {object} appLogic - Data for application logic.<br>
- * @property {Array} [documents=[]] - Potential documents for user.<br>
- * @property {Class} claim - Instance of BenefitsApplication.<br>
- * @property {Function} t - Translation function for localization.<br>
- * @returns {ReactElement}
  */
 export const ApplicationCardV2 = (props) => {
-  const { claim } = props;
-  const { t } = useTranslation();
-  const statusProps = { ...props, t };
+  const {
+    claim: { status },
+  } = props;
 
-  // Determine status based on claim.status & feature flags
-  const status =
-    {
-      [true]: null, // default
-      [isFeatureEnabled("claimantShowStatusPage")]: "Completed",
-    }.true || claim.status; // uses claim.status if no feature flags set
+  const StatusCard = () => {
+    switch (status) {
+      case "Completed":
+        return <CompletedStatusCard {...props} />;
 
-  switch (status) {
-    case "Completed":
-      return <CompletedStatusCard {...statusProps} />;
+      default:
+        return null;
+    }
+  };
 
-    default:
-      return null;
-  }
+  return (
+    <React.Fragment>
+      <aside className="maxw-mobile-lg border-top-1 border-primary" />
+      <article className="maxw-mobile-lg border-left border-right border-bottom border-base-lighter margin-bottom-3">
+        <StatusCard />
+      </article>
+    </React.Fragment>
+  );
 };
 
 ApplicationCardV2.propTypes = {
