@@ -24,7 +24,7 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     get_documents_as_leave_admin,
 )
 from massgov.pfml.api.services.managed_requirements import update_employer_confirmation_requirements
-from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
+from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms, IssueType
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     Claim,
@@ -108,7 +108,7 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
         if user_leave_admin is None:
             raise NotAuthorizedForAccess(
                 description="User does not have leave administrator record for this employer",
-                error_type="unauthorized_leave_admin",
+                error_type=IssueType.unauthorized_leave_admin,
             )
 
         if user_leave_admin.fineos_web_id is None:
@@ -243,7 +243,7 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
             message="No outstanding information request for claim",
             errors=[
                 response_util.custom_issue(
-                    "outstanding_information_request_required",
+                    IssueType.outstanding_information_request_required,
                     "No outstanding information request for claim",
                 )
             ],
@@ -339,7 +339,7 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
                 errors=[
                     response_util.custom_issue(
                         message="Claim contains both V1 and V2 eforms.",
-                        type="contains_v1_and_v2_eforms",
+                        type=IssueType.contains_v1_and_v2_eforms,
                     )
                 ],
                 data={},

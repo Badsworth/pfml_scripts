@@ -429,7 +429,10 @@ def validate_content_type(content_type):
         message = "Incorrect file type: {}".format(content_type)
         logger.warning(message)
         validation_error = ValidationErrorDetail(
-            message=message, type="file_type", rule=", ".join(allowed_content_types), field="file",
+            message=message,
+            type=IssueType.file_type,
+            rule=", ".join(allowed_content_types),
+            field="file",
         )
         raise ValidationException(errors=[validation_error], message=message, data={})
 
@@ -448,7 +451,7 @@ def get_valid_content_type(file):
             logger.warning(message)
             validation_error = ValidationErrorDetail(
                 message=message,
-                type="file_type_mismatch",
+                type=IssueType.file_type_mismatch,
                 rule="Detected content type and mime type do not match.",
                 field="file",
             )
@@ -468,7 +471,7 @@ def validate_file_name(file_name):
         message = "Missing extension on file name: {}".format(file_name)
         validation_error = ValidationErrorDetail(
             message=message,
-            type="file_name_extension",
+            type=IssueType.file_name_extension,
             rule="File name extension required.",
             field="file",
         )
@@ -600,7 +603,7 @@ def document_upload(application_id, body, file):
                 return response_util.error_response(
                     status_code=BadRequest,
                     message=message,
-                    errors=[response_util.custom_issue("fineos_client", message)],
+                    errors=[response_util.custom_issue(IssueType.fineos_client, message)],
                     data=document_details.dict(),
                 ).to_api_response()
 

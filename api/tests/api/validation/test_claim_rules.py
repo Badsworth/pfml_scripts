@@ -68,14 +68,14 @@ class TestGetEmployerClaimReviewIssues:
         assert len(resp) == 1
         assert resp[0].message == "hours_worked_per_week must be populated"
         assert resp[0].field == "hours_worked_per_week"
-        assert resp[0].type == "missing_expected_field"
+        assert resp[0].type == IssueType.required
 
 
 class TestGetHoursWorkedPerWeekIssues:
     @pytest.mark.parametrize(
         "hours_worked_per_week, expected_type,expected_field, expected_msg_blurb",
         [
-            [None, "missing_expected_field", "hours_worked_per_week", "must be populated"],
+            [None, IssueType.required, "hours_worked_per_week", "must be populated"],
             [-1, IssueType.minimum, "hours_worked_per_week", "greater than 0"],
             [169, IssueType.maximum, "hours_worked_per_week", "168 or fewer"],
         ],

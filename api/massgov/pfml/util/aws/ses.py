@@ -12,7 +12,11 @@ from botocore.exceptions import ClientError
 from pydantic import BaseModel, validator
 
 import massgov.pfml.util.logging as logging
-from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
+from massgov.pfml.api.validation.exceptions import (
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.util.files import read_file
 
 if TYPE_CHECKING:
@@ -33,8 +37,7 @@ class EmailRecipient(BaseModel):
     def check_to_addresses_format(cls, emails):  # noqa: B902
         if len(emails) == 0:
             validation_error = ValidationErrorDetail(
-                message="Have to provide at least one valid email address",
-                type="missing_email_format",
+                message="Have to provide at least one valid email address", type=IssueType.required,
             )
             raise ValidationException(
                 errors=[validation_error], message="Email validation error", data={}
@@ -55,7 +58,7 @@ class EmailRecipient(BaseModel):
         regex = r"^(?!.*\.-.*$|.*-\..*$)([a-zA-Z0-9._-]+)([a-zA-Z0-9]@[a-zA-Z0-9])([a-zA-Z0-9.-]+)([a-zA-Z0-9]\.[a-zA-Z]{2,3})$"
         if not re.match(regex, email):
             validation_error = ValidationErrorDetail(
-                message=f"Email format has to match {regex}", type="incorrect_email_format",
+                message=f"Email format has to match {regex}", type=IssueType.pattern,
             )
             raise ValidationException(
                 errors=[validation_error], message="Email validation error", data={}

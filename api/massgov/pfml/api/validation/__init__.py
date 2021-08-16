@@ -21,7 +21,11 @@ from werkzeug.exceptions import (
 import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging as logging
 import massgov.pfml.util.newrelic.events as newrelic_util
-from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
+from massgov.pfml.api.validation.exceptions import (
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.api.validation.validators import (
     CustomParameterValidator,
     CustomRequestBodyValidator,
@@ -116,7 +120,9 @@ def handle_fineos_unavailable_error(error: FINEOSFatalUnavailable) -> Response:
     return response_util.error_response(
         status_code=ServiceUnavailable,
         message="The service is currently unavailable. Please try again later.",
-        errors=[response_util.custom_issue("fineos_client", "FINEOS is currently unavailable")],
+        errors=[
+            response_util.custom_issue(IssueType.fineos_client, "FINEOS is currently unavailable")
+        ],
     ).to_api_response()
 
 

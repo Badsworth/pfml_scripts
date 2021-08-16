@@ -1683,7 +1683,7 @@ def test_application_patch_invalid_work_pattern(client, user, auth_token, test_d
             "field": "work_pattern.work_pattern_days",
             "message": "Provided work_pattern_days is missing Friday, Saturday, Thursday, Tuesday.",
             "rule": "no_missing_days",
-            "type": "invalid_days",
+            "type": "required",
         }
     ]
 
@@ -2970,7 +2970,7 @@ def test_application_patch_state_invalid(client, user, auth_token, state_string)
             {
                 "field": "mailing_address.state",
                 "message": f"'{state_string}' is not a valid state",
-                "type": "enum",
+                "type": "invalid",
             },
         ],
     )

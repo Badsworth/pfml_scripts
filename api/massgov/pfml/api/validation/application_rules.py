@@ -819,7 +819,7 @@ def get_leave_period_ranges_issues(application: Application) -> List[ValidationE
             ValidationErrorDetail(
                 message=f"Can't submit application more than {MAX_DAYS_IN_ADVANCE_TO_SUBMIT} days in advance of the earliest leave period",
                 rule=IssueRule.disallow_submit_over_60_days_before_start_date,
-                type="",
+                type=IssueType.pfml,
             )
         )
 
@@ -833,7 +833,7 @@ def get_leave_period_ranges_issues(application: Application) -> List[ValidationE
             ValidationErrorDetail(
                 message=f"Caring leave start_date cannot be before {CARING_LEAVE_EARLIEST_START_DATE.isoformat()}",
                 rule=IssueRule.disallow_caring_leave_before_july,
-                type="",
+                type=IssueType.pfml,
             )
         )
 
@@ -847,7 +847,7 @@ def get_leave_period_ranges_issues(application: Application) -> List[ValidationE
             ValidationErrorDetail(
                 message=f"Leave cannot exceed {MAX_DAYS_IN_LEAVE_PERIOD_RANGE} days",
                 rule=IssueRule.disallow_12mo_leave_period,
-                type="",
+                type=IssueType.pfml,
             )
         )
 
@@ -905,7 +905,7 @@ def get_leave_period_date_issues(
             ValidationErrorDetail(
                 message=f"Leave cannot exceed {MAX_DAYS_IN_LEAVE_PERIOD_RANGE} days",
                 rule=getattr(IssueRule, f"disallow_12mo_{leave_period_type}_leave_period"),
-                type="",
+                type=IssueType.pfml,
             )
         )
 
@@ -1199,7 +1199,7 @@ def validate_application_state(
             ValidationErrorDetail(
                 message="Request by current user not allowed",
                 rule=IssueRule.disallow_attempts,
-                type="",
+                type=IssueType.pfml,
             )
         )
 
