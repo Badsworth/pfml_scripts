@@ -2378,6 +2378,7 @@ const components = {
   },
   applicationCardV2: {
     applicationID: "Application ID",
+    continueApplication: "Continue application",
     employerEIN: "Employer Identification Number",
     heading: "Application {{number}}",
     leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReducedSchedule)",

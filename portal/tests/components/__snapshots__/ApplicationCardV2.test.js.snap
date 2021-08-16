@@ -1,18 +1,7 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ApplicationCardV2 claim statuses match snapshots completed status matches its snapshot 1`] = `
+exports[`ApplicationCardV2 components match snapshots completed status matches snapshot 1`] = `
 <CompletedStatusCard
-  appLogic={
-    Object {
-      "appErrors": AppErrorInfoCollection {
-        "items": Array [],
-        "itemsById": Object {},
-      },
-      "documents": Object {
-        "download": [MockFunction],
-      },
-    }
-  }
   claim={
     BenefitsApplication {
       "application_id": "mock_application_id",
@@ -117,7 +106,83 @@ exports[`ApplicationCardV2 claim statuses match snapshots completed status match
       },
     }
   }
-  documents={Array []}
   number={2}
 />
+`;
+
+exports[`ApplicationCardV2 components match snapshots in progress status matches snapshot 1`] = `
+<InProgressStatusCard
+  claim={
+    BenefitsApplication {
+      "application_id": "mock_application_id",
+      "concurrent_leave": null,
+      "created_at": null,
+      "date_of_birth": null,
+      "employer_benefits": Array [],
+      "employer_fein": null,
+      "employment_status": null,
+      "fineos_absence_id": null,
+      "first_name": null,
+      "gender": null,
+      "has_concurrent_leave": null,
+      "has_continuous_leave_periods": null,
+      "has_employer_benefits": null,
+      "has_intermittent_leave_periods": null,
+      "has_mailing_address": null,
+      "has_other_incomes": null,
+      "has_previous_leaves_other_reason": null,
+      "has_previous_leaves_same_reason": null,
+      "has_reduced_schedule_leave_periods": null,
+      "has_state_id": null,
+      "has_submitted_payment_preference": null,
+      "hours_worked_per_week": null,
+      "last_name": null,
+      "leave_details": Object {
+        "caring_leave_metadata": null,
+        "child_birth_date": null,
+        "child_placement_date": null,
+        "employer_notified": null,
+        "has_future_child_date": null,
+        "pregnant_or_recent_birth": null,
+        "reason_qualifier": null,
+      },
+      "mailing_address": null,
+      "mass_id": null,
+      "middle_name": null,
+      "other_incomes": Array [],
+      "payment_preference": null,
+      "phone": Object {
+        "int_code": null,
+        "phone_number": null,
+        "phone_type": null,
+      },
+      "previous_leaves_other_reason": Array [],
+      "previous_leaves_same_reason": Array [],
+      "residential_address": Address {
+        "city": null,
+        "line_1": null,
+        "line_2": null,
+        "state": null,
+        "zip": null,
+      },
+      "status": "Started",
+      "tax_identifier": null,
+      "work_pattern": null,
+    }
+  }
+  number={2}
+/>
+`;
+
+exports[`ApplicationCardV2 components match snapshots status container matches snapshot 1`] = `
+<Fragment>
+  <aside
+    className="maxw-mobile-lg border-top-1 border-primary"
+  />
+  <article
+    className="maxw-mobile-lg border border-base-lighter border-top-0 margin-bottom-3"
+  >
+    <StatusCard />
+  </article>
+</Fragment>
 `;
