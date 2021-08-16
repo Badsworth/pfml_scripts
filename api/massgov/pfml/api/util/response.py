@@ -11,7 +11,7 @@ from werkzeug.exceptions import (
     ServiceUnavailable,
 )
 
-from massgov.pfml.api.validation.exceptions import IssueType, PaymentRequired, ValidationErrorDetail
+from massgov.pfml.api.validation.exceptions import PaymentRequired, ValidationErrorDetail
 from massgov.pfml.util.paginate.paginator import Page, PaginationAPIContext
 from massgov.pfml.util.pydantic import Serializer
 
@@ -83,21 +83,6 @@ def exclude_none(obj):
         elif v is not None:
             clean[k] = v
     return clean
-
-
-# == helper factory functions ==
-
-
-def custom_issue(
-    type: IssueType, message: str, rule: str = "", field: str = ""
-) -> ValidationErrorDetail:
-    return ValidationErrorDetail(type=type, message=message, rule=rule, field=field)
-
-
-def validation_issue(exception: ValidationErrorDetail) -> ValidationErrorDetail:
-    return ValidationErrorDetail(
-        type=exception.type, message=exception.message, rule=exception.rule, field=exception.field
-    )
 
 
 # == response utilities ==

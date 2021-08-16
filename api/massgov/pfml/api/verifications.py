@@ -9,7 +9,7 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.api.models.verifications.requests import VerificationRequest
 from massgov.pfml.api.users import user_response
-from massgov.pfml.api.validation.exceptions import IssueType
+from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
 from massgov.pfml.db.models.employees import (
     EmployerQuarterlyContribution,
     User,
@@ -106,7 +106,7 @@ def verifications():
                 status_code=BadRequest,
                 message="Withholding amount is incorrect.",
                 errors=[
-                    response_util.custom_issue(
+                    ValidationErrorDetail(
                         message="Withholding amount is incorrect",
                         type=IssueType.incorrect,
                         field="withholding_amount",

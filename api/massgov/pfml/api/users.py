@@ -14,7 +14,7 @@ from massgov.pfml.api.models.users.requests import (
 )
 from massgov.pfml.api.models.users.responses import UserLeaveAdminResponse, UserResponse
 from massgov.pfml.api.util.deepgetattr import deepgetattr
-from massgov.pfml.api.validation.exceptions import IssueType
+from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
 from massgov.pfml.api.validation.user_rules import (
     get_users_convert_employer_issues,
     get_users_post_employer_issues,
@@ -127,7 +127,7 @@ def users_convert_employer(user_id):
                 status_code=BadRequest,
                 message="Invalid FEIN",
                 errors=[
-                    response_util.custom_issue(
+                    ValidationErrorDetail(
                         type=IssueType.require_employer,
                         message="Invalid FEIN",
                         field="employer_fein",

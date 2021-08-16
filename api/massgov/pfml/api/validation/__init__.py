@@ -72,15 +72,13 @@ def log_validation_error(
 
 
 def validation_request_handler(validation_exception: ValidationException) -> Response:
-    errors = []
     for error in validation_exception.errors:
         log_validation_error(validation_exception, error)
-        errors.append(response_util.validation_issue(error))
 
     return response_util.error_response(
         status_code=BadRequest,
         message=validation_exception.message,
-        errors=errors,
+        errors=validation_exception.errors,
         data=validation_exception.data,
     ).to_api_response()
 
@@ -121,7 +119,9 @@ def handle_fineos_unavailable_error(error: FINEOSFatalUnavailable) -> Response:
         status_code=ServiceUnavailable,
         message="The service is currently unavailable. Please try again later.",
         errors=[
-            response_util.custom_issue(IssueType.fineos_client, "FINEOS is currently unavailable")
+            ValidationErrorDetail(
+                type=IssueType.fineos_client, message="FINEOS is currently unavailable"
+            )
         ],
     ).to_api_response()
 

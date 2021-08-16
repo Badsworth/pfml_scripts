@@ -527,7 +527,7 @@ def document_upload(application_id, body, file):
             return response_util.error_response(
                 status_code=BadRequest,
                 message="File validation error.",
-                errors=[response_util.validation_issue(error) for error in ve.errors],
+                errors=ve.errors,
                 data=document_details.dict(),
             ).to_api_response()
 
@@ -603,7 +603,7 @@ def document_upload(application_id, body, file):
                 return response_util.error_response(
                     status_code=BadRequest,
                     message=message,
-                    errors=[response_util.custom_issue(IssueType.fineos_client, message)],
+                    errors=[ValidationErrorDetail(type=IssueType.fineos_client, message=message)],
                     data=document_details.dict(),
                 ).to_api_response()
 

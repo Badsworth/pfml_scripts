@@ -24,7 +24,11 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     get_documents_as_leave_admin,
 )
 from massgov.pfml.api.services.managed_requirements import update_employer_confirmation_requirements
-from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms, IssueType
+from massgov.pfml.api.validation.exceptions import (
+    ContainsV1AndV2Eforms,
+    IssueType,
+    ValidationErrorDetail,
+)
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     Claim,
@@ -206,10 +210,7 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
 
     if issues := claim_rules.get_employer_claim_review_issues(claim_review):
         return response_util.error_response(
-            status_code=BadRequest,
-            message="Invalid claim review body",
-            errors=[response_util.validation_issue(issue) for issue in issues],
-            data={},
+            status_code=BadRequest, message="Invalid claim review body", errors=issues, data={},
         ).to_api_response()
 
     try:
@@ -242,9 +243,9 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
             status_code=BadRequest,
             message="No outstanding information request for claim",
             errors=[
-                response_util.custom_issue(
-                    IssueType.outstanding_information_request_required,
-                    "No outstanding information request for claim",
+                ValidationErrorDetail(
+                    type=IssueType.outstanding_information_request_required,
+                    message="No outstanding information request for claim",
                 )
             ],
         ).to_api_response()
@@ -337,7 +338,7 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
                 status_code=error.status_code,
                 message=error.description,
                 errors=[
-                    response_util.custom_issue(
+                    ValidationErrorDetail(
                         message="Claim contains both V1 and V2 eforms.",
                         type=IssueType.contains_v1_and_v2_eforms,
                     )
