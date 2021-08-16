@@ -36,6 +36,7 @@ export const LeavePeriodIntermittent = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
   );
@@ -95,6 +96,7 @@ export const LeavePeriodIntermittent = (props) => {
       onSave={handleSave}
     >
       {(claim.isMedicalOrPregnancyLeave || claim.isCaringLeave) && (
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; neutral:... Remove this comment to see the full error message
         <Alert state="info" neutral>
           <Trans
             i18nKey="pages.claimsLeavePeriodIntermittent.needDocumentAlert"
@@ -174,6 +176,7 @@ export const LeavePeriodIntermittent = (props) => {
           formState.has_intermittent_leave_periods && hasOtherLeavePeriodTypes
         }
       >
+        {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; state: string; autoWidth... Remove this comment to see the full error message */}
         <Alert state="warning" autoWidth>
           {t("pages.claimsLeavePeriodIntermittent.hybridLeaveWarning")}
         </Alert>

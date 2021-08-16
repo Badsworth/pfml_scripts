@@ -22,6 +22,7 @@ const Heading = (props) => {
     "text-normal": weight === "normal" || (!weight && stylingLevel >= 5),
   });
 
+  // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: any; className: string; }' is no... Remove this comment to see the full error message
   return <HeadingElement className={classes}>{props.children}</HeadingElement>;
 };
 

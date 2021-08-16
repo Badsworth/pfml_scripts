@@ -27,6 +27,7 @@ export const Index = (props) => {
       />
       <Title>{t("pages.employersOrganizations.title")}</Title>
       {accountConverted && (
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; heading: string; state: ... Remove this comment to see the full error message
         <Alert
           heading={t("pages.employersOrganizations.convertHeading")}
           state="success"
@@ -35,6 +36,7 @@ export const Index = (props) => {
         </Alert>
       )}
       {hasVerifiableEmployer && (
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; heading:... Remove this comment to see the full error message
         <Alert
           state="warning"
           heading={t("pages.employersOrganizations.verificationTitle")}

@@ -23,10 +23,12 @@ import routes from "../routes";
  */
 
 export default class EmployersApi extends BaseApi {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'basePath' in type 'EmployersApi' is not ... Remove this comment to see the full error message
   get basePath() {
     return routes.api.employers;
   }
 
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'i18nPrefix' in type 'EmployersApi' is no... Remove this comment to see the full error message
   get i18nPrefix() {
     return "employers";
   }
@@ -76,6 +78,7 @@ export default class EmployersApi extends BaseApi {
     const { content_type, fineos_document_id } = document;
     const subPath = `/claims/${absenceId}/documents/${fineos_document_id}`;
     const method = "GET";
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 4 arguments, but got 3.
     const url = createRequestUrl(method, this.basePath, subPath);
     const authHeader = await getAuthorizationHeader();
 
@@ -93,6 +96,7 @@ export default class EmployersApi extends BaseApi {
     }
 
     if (!response.ok) {
+      // @ts-expect-error ts-migrate(2554) FIXME: Expected 5 arguments, but got 2.
       handleNotOkResponse(url, response);
     }
 

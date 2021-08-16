@@ -62,6 +62,7 @@ const useOtherLeavesLogic = ({ appErrorsLogic }) => {
     appErrorsLogic.clearErrors();
 
     try {
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'removePreviousLeave' does not exist on t... Remove this comment to see the full error message
       await otherLeavesApi.removePreviousLeave(applicationId, previousLeaveId);
     } catch (error) {
       appErrorsLogic.catchError(error);

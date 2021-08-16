@@ -28,6 +28,7 @@ export const VerifyContributions = (props) => {
     return employer.employer_id === query.employer_id;
   });
 
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState({
     withholdingAmount: 0,
   });
@@ -94,6 +95,7 @@ export const VerifyContributions = (props) => {
         <Trans
           i18nKey="pages.employersOrganizationsVerifyContributions.detailsList"
           values={{
+            // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
             date: formatDateRange(withholding.filing_period),
           }}
           components={{
@@ -122,6 +124,7 @@ export const VerifyContributions = (props) => {
       <InputCurrency
         {...getFunctionalInputProps("withholdingAmount")}
         onChange={handleAmountChange}
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ onChange: (event: any) => void; mask: stri... Remove this comment to see the full error message
         mask="currency"
         hint={t(
           "pages.employersOrganizationsVerifyContributions.withholdingAmountHint"
@@ -129,6 +132,7 @@ export const VerifyContributions = (props) => {
         label={t(
           "pages.employersOrganizationsVerifyContributions.withholdingAmountLabel",
           {
+            // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
             date: formatDateRange(withholding.filing_period),
           }
         )}

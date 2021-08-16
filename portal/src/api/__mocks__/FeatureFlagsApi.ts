@@ -7,6 +7,7 @@
 
 import Flag from "../../models/Flag";
 
+// @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
 export const getFlagsMock = jest.fn().mockResolvedValue(() => {
   return [
     new Flag({
@@ -21,6 +22,7 @@ export const getFlagsMock = jest.fn().mockResolvedValue(() => {
   ];
 });
 
+// @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
 export default jest.fn().mockImplementation(() => ({
   getFlags: getFlagsMock,
 }));

@@ -18,6 +18,7 @@ export const Login = (props) => {
   const { appLogic, query } = props;
   const { t } = useTranslation();
 
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState({
     password: "",
     username: "",
@@ -46,6 +47,7 @@ export const Login = (props) => {
   return (
     <React.Fragment>
       {accountVerified && (
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; className: string; headi... Remove this comment to see the full error message
         <Alert
           className="margin-bottom-3"
           heading={t("pages.authLogin.accountVerifiedHeading")}
@@ -57,6 +59,7 @@ export const Login = (props) => {
       )}
 
       {sessionTimedOut && (
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; className: string; headi... Remove this comment to see the full error message
         <Alert
           className="margin-bottom-3"
           heading={t("pages.authLogin.sessionTimedOutHeading")}

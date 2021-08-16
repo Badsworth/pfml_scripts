@@ -45,10 +45,13 @@ export class ErrorBoundary extends React.Component {
   };
 
   render() {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 't' does not exist on type 'Readonly<{}> ... Remove this comment to see the full error message
     const { t } = this.props;
 
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'hasError' does not exist on type 'Readon... Remove this comment to see the full error message
     if (this.state.hasError) {
       return (
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element[]; state: string; }' is ... Remove this comment to see the full error message
         <Alert state="error">
           <p>{t("components.errorBoundary.message")}</p>
           <Button onClick={this.handleReloadClick}>
@@ -62,6 +65,7 @@ export class ErrorBoundary extends React.Component {
   }
 }
 
+// @ts-expect-error ts-migrate(2339) FIXME: Property 'propTypes' does not exist on type 'typeo... Remove this comment to see the full error message
 ErrorBoundary.propTypes = {
   children: PropTypes.node,
   /** Translate function */

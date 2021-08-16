@@ -26,6 +26,7 @@ export const FamilyMemberDateOfBirth = (props) => {
   // properties; without this it would be possible for a claimant to skip this page by just
   // clicking "Save and continue" instead of entering a date.
   const initialClaimState = pick(props.claim, caringLeaveMetadataKey);
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState({
     leave_details: {
       caring_leave_metadata: new CaringLeaveMetadata(

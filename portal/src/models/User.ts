@@ -2,6 +2,7 @@
 import BaseModel from "./BaseModel";
 
 class User extends BaseModel {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'User' is not assignab... Remove this comment to see the full error message
   get defaults() {
     return {
       auth_id: null,
@@ -15,6 +16,7 @@ class User extends BaseModel {
   }
 
   get hasEmployerRole() {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'roles' does not exist on type 'User'.
     return this.roles.some(
       (userRole) => userRole.role_description === RoleDescription.employer
     );
@@ -33,6 +35,7 @@ class User extends BaseModel {
    * @returns {boolean}
    */
   get hasVerifiableEmployer() {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'user_leave_administrators' does not exis... Remove this comment to see the full error message
     return this.user_leave_administrators.some(
       (employer) => employer && this.isVerifiableEmployer(employer)
     );
@@ -52,6 +55,7 @@ class User extends BaseModel {
    * @returns {UserLeaveAdministrator}
    */
   getUnverifiableEmployerById(employerId) {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'user_leave_administrators' does not exis... Remove this comment to see the full error message
     return this.user_leave_administrators.find((employer) => {
       return (
         employerId === employer.employer_id &&
@@ -66,6 +70,7 @@ class User extends BaseModel {
    * @returns {UserLeaveAdministrator}
    */
   getVerifiableEmployerById(employerId) {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'user_leave_administrators' does not exis... Remove this comment to see the full error message
     return this.user_leave_administrators.find((employer) => {
       return (
         employerId === employer.employer_id &&
@@ -79,6 +84,7 @@ class User extends BaseModel {
    * @returns {UserLeaveAdministrator[]}
    */
   get verifiedEmployersNotRegisteredInFineos() {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'user_leave_administrators' does not exis... Remove this comment to see the full error message
     return this.user_leave_administrators.filter(
       (employer) =>
         employer.has_fineos_registration === false && employer.verified === true
@@ -90,6 +96,7 @@ class User extends BaseModel {
    * @returns {UserLeaveAdministrator[]}
    */
   get verifiedEmployers() {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'user_leave_administrators' does not exis... Remove this comment to see the full error message
     return this.user_leave_administrators.filter(
       (employer) => employer.verified === true
     );
@@ -119,6 +126,7 @@ class User extends BaseModel {
    * @returns {boolean}
    */
   isEmployerIdRegisteredInFineos(employerId) {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'user_leave_administrators' does not exis... Remove this comment to see the full error message
     return this.user_leave_administrators.some(
       (employer) =>
         employerId === employer.employer_id && employer.has_fineos_registration
@@ -127,6 +135,7 @@ class User extends BaseModel {
 }
 
 export class UserRole extends BaseModel {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'UserRole' is not assi... Remove this comment to see the full error message
   get defaults() {
     return {
       role_description: null,
@@ -145,6 +154,7 @@ export const RoleDescription = {
 };
 
 export class UserLeaveAdministrator extends BaseModel {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'UserLeaveAdministrato... Remove this comment to see the full error message
   get defaults() {
     return {
       employer_dba: null,

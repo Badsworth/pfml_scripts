@@ -24,6 +24,7 @@ export const fields = [
 export const FamilyMemberRelationship = (props) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState({
     leave_details: {
       caring_leave_metadata: new CaringLeaveMetadata(
@@ -93,6 +94,7 @@ export const FamilyMemberRelationship = (props) => {
             />
             <Details
               label={t("pages.claimsFamilyMemberRelationship.detailsLabel")}
+              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; label: string; classNam... Remove this comment to see the full error message
               className="text-bold"
             >
               <Trans

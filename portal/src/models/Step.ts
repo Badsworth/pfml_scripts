@@ -37,6 +37,7 @@ const fieldHasValue = (fieldPath, context) => {
  * @returns {Step}
  */
 export default class Step extends BaseModel {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'Step' is not assignab... Remove this comment to see the full error message
   get defaults() {
     return {
       /**
@@ -95,6 +96,7 @@ export default class Step extends BaseModel {
   }
 
   get fields() {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'pages' does not exist on type 'Step'.
     return this.pages.flatMap((page) => page.meta.fields);
   }
 
@@ -119,11 +121,14 @@ export default class Step extends BaseModel {
   }
 
   get isComplete() {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'completeCond' does not exist on type 'St... Remove this comment to see the full error message
     if (this.completeCond) return this.completeCond(this.context);
 
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'warnings' does not exist on type 'Step'.
     const issues = getRelevantIssues([], this.warnings || [], this.pages);
 
     if (process.env.NODE_ENV === "development" && issues.length) {
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'name' does not exist on type 'Step'.
       // eslint-disable-next-line no-console
       console.log(`${this.name} has warnings`, issues);
     }
@@ -132,18 +137,22 @@ export default class Step extends BaseModel {
   }
 
   get isInProgress() {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'context' does not exist on type 'Step'.
     return this.fields.some((field) => fieldHasValue(field, this.context));
   }
 
   get isNotApplicable() {
+    // @ts-expect-error ts-migrate(2551) FIXME: Property 'notApplicableCond' does not exist on typ... Remove this comment to see the full error message
     if (this.notApplicableCond) return this.notApplicableCond(this.context);
 
     return false;
   }
 
   get isDisabled() {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dependsOn' does not exist on type 'Step'... Remove this comment to see the full error message
     if (!this.dependsOn.length) return false;
 
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dependsOn' does not exist on type 'Step'... Remove this comment to see the full error message
     return this.dependsOn.some((dependedOnStep) => !dependedOnStep.isComplete);
   }
 
@@ -176,6 +185,7 @@ export default class Step extends BaseModel {
 
     // TODO (CP-1658) Remove this filter logic once the claimantShowOtherLeaveStep feature flag is no longer relevant
     const filterOutHiddenSteps = (steps) => {
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'showOtherLeaveStep' does not exist on ty... Remove this comment to see the full error message
       if (context.showOtherLeaveStep) {
         return steps;
       } else {
@@ -185,6 +195,7 @@ export default class Step extends BaseModel {
 
     const verifyId = new Step({
       name: ClaimSteps.verifyId,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isSubmitted' does not exist on type '{}'... Remove this comment to see the full error message
       editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.verifyId],
@@ -194,6 +205,7 @@ export default class Step extends BaseModel {
 
     const employerInformation = new Step({
       name: ClaimSteps.employerInformation,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isSubmitted' does not exist on type '{}'... Remove this comment to see the full error message
       editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.employerInformation],
@@ -204,6 +216,7 @@ export default class Step extends BaseModel {
 
     const leaveDetails = new Step({
       name: ClaimSteps.leaveDetails,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isSubmitted' does not exist on type '{}'... Remove this comment to see the full error message
       editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.leaveDetails],
@@ -214,6 +227,7 @@ export default class Step extends BaseModel {
 
     const otherLeave = new Step({
       name: ClaimSteps.otherLeave,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isSubmitted' does not exist on type '{}'... Remove this comment to see the full error message
       editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.otherLeave],
@@ -225,6 +239,7 @@ export default class Step extends BaseModel {
     const reviewAndConfirm = new Step({
       name: ClaimSteps.reviewAndConfirm,
       completeCond: (context) => context.claim.isSubmitted,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isSubmitted' does not exist on type '{}'... Remove this comment to see the full error message
       editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.reviewAndConfirm],
@@ -240,6 +255,7 @@ export default class Step extends BaseModel {
     const payment = new Step({
       name: ClaimSteps.payment,
       completeCond: (context) => context.claim.has_submitted_payment_preference,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'has_submitted_payment_preference' does n... Remove this comment to see the full error message
       editable: !claim.has_submitted_payment_preference,
       group: 2,
       pages: pagesByStep[ClaimSteps.payment],

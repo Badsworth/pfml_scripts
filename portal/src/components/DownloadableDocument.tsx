@@ -60,6 +60,7 @@ const DownloadableDocument = (props) => {
       {showCreatedAt && (
         <div className="text-base-dark">
           {t("components.downloadableDocument.createdAtDate", {
+            // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
             date: formatDateRange(document.created_at),
           })}
         </div>

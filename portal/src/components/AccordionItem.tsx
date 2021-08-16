@@ -19,6 +19,7 @@ function AccordionItem(props) {
       <h2 className="usa-accordion__heading">
         <button
           className="usa-accordion__button"
+          // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'boolean |... Remove this comment to see the full error message
           aria-expanded={isExpanded.toString()}
           aria-controls={id}
           onClick={handleClick}

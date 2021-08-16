@@ -119,6 +119,7 @@ function ApplicationDetails(props) {
             {t("components.applicationCard.leavePeriodLabel_continuous")}
           </Heading>
           <p {...valueProps}>
+            {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
             {formatDateRange(
               get(
                 claim,
@@ -136,6 +137,7 @@ function ApplicationDetails(props) {
             {t("components.applicationCard.leavePeriodLabel_reduced")}
           </Heading>
           <p {...valueProps}>
+            {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
             {formatDateRange(
               get(
                 claim,
@@ -156,6 +158,7 @@ function ApplicationDetails(props) {
             {t("components.applicationCard.leavePeriodLabel_intermittent")}
           </Heading>
           <p {...valueProps}>
+            {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
             {formatDateRange(
               get(
                 claim,
@@ -204,6 +207,7 @@ function LegalNotices(props) {
       </Heading>
 
       {hasLoadingDocumentsError && (
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; noIcon: true; }' is not... Remove this comment to see the full error message
         <Alert noIcon>
           <Trans
             i18nKey="components.applicationCard.documentsLoadError"

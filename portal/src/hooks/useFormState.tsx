@@ -8,10 +8,12 @@ export class FormState {
      * @readonly
      * @type {object}
      */
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
     this.formState = null;
     /**
      * @private
      */
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'setState' does not exist on type 'FormSt... Remove this comment to see the full error message
     this.setState = setState;
   }
 
@@ -23,6 +25,7 @@ export class FormState {
    * @returns {*}
    */
   getField = (name) => {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
     return get(this.formState, name);
   };
 
@@ -48,6 +51,7 @@ export class FormState {
    * @example formState.updateFields({ "leave_details.employer_notified": true })
    */
   updateFields = (fields) => {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'setState' does not exist on type 'FormSt... Remove this comment to see the full error message
     this.setState((prevState) => {
       // Create mutable copy of the state
       const draftState = { ...prevState };
@@ -70,6 +74,7 @@ export class FormState {
 const useFormState = (initialState = {}) => {
   const [state, setState] = useState(initialState);
   const formStateRef = useRef(new FormState(setState));
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   formStateRef.current.formState = state;
   return formStateRef.current;
 };

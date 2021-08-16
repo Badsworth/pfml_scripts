@@ -9,6 +9,7 @@ import { uniqueId } from "lodash";
 // import { createClaimMock } from "./src/api/BenefitsApplicationsApi";
 // expect(createClaimMock).toHaveBeenCalled();
 
+// @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
 export const completeClaimMock = jest.fn((application_id) =>
   Promise.resolve({
     success: true,
@@ -21,6 +22,7 @@ export const completeClaimMock = jest.fn((application_id) =>
   })
 );
 
+// @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
 export const createClaimMock = jest.fn(() =>
   Promise.resolve({
     success: true,
@@ -34,6 +36,7 @@ export const createClaimMock = jest.fn(() =>
 );
 
 export const getClaimMockApplicationId = "mock-application-id-1";
+// @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
 export const getClaimMock = jest.fn(() =>
   Promise.resolve({
     success: true,
@@ -46,6 +49,7 @@ export const getClaimMock = jest.fn(() =>
   })
 );
 
+// @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
 export const getClaimsMock = jest.fn(() =>
   Promise.resolve({
     success: true,
@@ -64,6 +68,7 @@ export const getClaimsMock = jest.fn(() =>
   })
 );
 
+// @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
 export const updateClaimMock = jest.fn((application_id, patchData) =>
   Promise.resolve({
     success: true,
@@ -77,6 +82,7 @@ export const updateClaimMock = jest.fn((application_id, patchData) =>
   })
 );
 
+// @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
 export const submitClaimMock = jest.fn((application_id) =>
   Promise.resolve({
     success: true,
@@ -89,6 +95,7 @@ export const submitClaimMock = jest.fn((application_id) =>
   })
 );
 
+// @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
 export const submitPaymentPreferenceMock = jest.fn(
   (application_id, paymentPreferenceData) =>
     Promise.resolve({
@@ -104,6 +111,7 @@ export const submitPaymentPreferenceMock = jest.fn(
     })
 );
 
+// @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
 const claimsApi = jest.fn().mockImplementation(({ user }) => ({
   completeClaim: completeClaimMock,
   createClaim: createClaimMock,

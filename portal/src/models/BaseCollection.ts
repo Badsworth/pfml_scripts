@@ -15,12 +15,14 @@ class BaseCollection {
      * Array of the items in the collection
      * @type {BaseModel[]}
      */
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'items' does not exist on type 'BaseColle... Remove this comment to see the full error message
     this.items = items || [];
 
     /**
      * Object mapping item ids to items in the collection
      * @type {object.<string, *>}
      */
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'itemsById' does not exist on type 'BaseC... Remove this comment to see the full error message
     this.itemsById = keyBy(this.items, this.idProperty);
   }
 
@@ -36,6 +38,7 @@ class BaseCollection {
   }
 
   get isEmpty() {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'items' does not exist on type 'BaseColle... Remove this comment to see the full error message
     return this.items.length === 0;
   }
 
@@ -46,6 +49,7 @@ class BaseCollection {
    * @returns {BaseModel|undefined} item - instance of item
    */
   getItem(itemId) {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'itemsById' does not exist on type 'BaseC... Remove this comment to see the full error message
     return this.itemsById[itemId];
   }
 
@@ -56,6 +60,7 @@ class BaseCollection {
    * @returns {BaseCollection}
    */
   addItem(item) {
+    // @ts-expect-error ts-migrate(2538) FIXME: Type 'void' cannot be used as an index type.
     const itemId = item[this.idProperty];
     if (!itemId) {
       throw new Error(`Item ${this.idProperty} is null or undefined`);
@@ -65,7 +70,9 @@ class BaseCollection {
         `Item with ${this.idProperty} ${itemId} already exists in collection`
       );
     }
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'items' does not exist on type 'BaseColle... Remove this comment to see the full error message
     const newItems = this.items.concat(item);
+    // @ts-expect-error ts-migrate(2351) FIXME: This expression is not constructable.
     return new this.constructor(newItems);
   }
 
@@ -91,11 +98,14 @@ class BaseCollection {
    * @returns {BaseCollection} - new instance of a collection with updated item
    */
   updateItem(item) {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'items' does not exist on type 'BaseColle... Remove this comment to see the full error message
     const items = this.items;
+    // @ts-expect-error ts-migrate(2538) FIXME: Type 'void' cannot be used as an index type.
     const itemId = item[this.idProperty];
     if (!itemId) {
       throw new Error(`Item ${this.idProperty} is null or undefined`);
     }
+    // @ts-expect-error ts-migrate(2464) FIXME: A computed property name must be of type 'string',... Remove this comment to see the full error message
     const itemIndex = findIndex(items, { [this.idProperty]: itemId });
     if (itemIndex === -1) {
       throw new Error(
@@ -106,6 +116,7 @@ class BaseCollection {
       .slice(0, itemIndex)
       .concat([item])
       .concat(items.slice(itemIndex + 1));
+    // @ts-expect-error ts-migrate(2351) FIXME: This expression is not constructable.
     return new this.constructor(newItems);
   }
 
@@ -116,7 +127,9 @@ class BaseCollection {
    * @returns {BaseCollection} - new instance of a collection with item removed
    */
   removeItem(itemId) {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'items' does not exist on type 'BaseColle... Remove this comment to see the full error message
     const items = this.items;
+    // @ts-expect-error ts-migrate(2464) FIXME: A computed property name must be of type 'string',... Remove this comment to see the full error message
     const itemIndex = findIndex(items, { [this.idProperty]: itemId });
     if (itemIndex === -1) {
       throw new Error(
@@ -126,6 +139,7 @@ class BaseCollection {
     const newItems = items
       .slice(0, itemIndex)
       .concat(items.slice(itemIndex + 1));
+    // @ts-expect-error ts-migrate(2351) FIXME: This expression is not constructable.
     return new this.constructor(newItems);
   }
 }

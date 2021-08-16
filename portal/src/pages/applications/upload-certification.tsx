@@ -146,6 +146,7 @@ export const UploadCertification = (props) => {
         <ul className="usa-list">
           {t("pages.claimsUploadCertification.leadListNewborn", {
             returnObjects: true,
+          // @ts-expect-error ts-migrate(2339) FIXME: Property 'map' does not exist on type 'string'.
           }).map((listItem, index) => (
             <li key={index}>{listItem}</li>
           ))}
@@ -155,6 +156,7 @@ export const UploadCertification = (props) => {
       <FileUploadDetails />
 
       {hasLoadingDocumentsError && (
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; noIc... Remove this comment to see the full error message
         <Alert className="margin-bottom-3" noIcon>
           <Trans
             i18nKey="pages.claimsUploadCertification.documentsLoadError"

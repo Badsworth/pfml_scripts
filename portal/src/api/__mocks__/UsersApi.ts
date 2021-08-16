@@ -20,7 +20,9 @@ const createMockUser = () =>
 
 const createMockEmployer = () => {
   const user = createMockUser();
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'roles' does not exist on type 'User'.
   user.roles.push(new UserRole({ role_description: RoleDescription.employer }));
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'user_leave_administrators' does not exis... Remove this comment to see the full error message
   user.user_leave_administrators.push(
     new UserLeaveAdministrator({
       employer_dba: "Test Company",
@@ -33,6 +35,7 @@ const createMockEmployer = () => {
   return user;
 };
 
+// @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
 export const mockCreateUser = jest.fn(() =>
   Promise.resolve({
     success: true,
@@ -40,6 +43,7 @@ export const mockCreateUser = jest.fn(() =>
   })
 );
 
+// @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
 export const mockGetCurrentUser = jest.fn(() =>
   Promise.resolve({
     success: true,
@@ -47,6 +51,7 @@ export const mockGetCurrentUser = jest.fn(() =>
   })
 );
 
+// @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
 export const mockUpdateUser = jest.fn(() =>
   Promise.resolve({
     success: true,
@@ -54,6 +59,7 @@ export const mockUpdateUser = jest.fn(() =>
   })
 );
 
+// @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
 export const mockConvertUser = jest.fn(() =>
   Promise.resolve({
     success: true,
@@ -61,6 +67,7 @@ export const mockConvertUser = jest.fn(() =>
   })
 );
 
+// @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
 export default jest.fn().mockImplementation(() => ({
   createUser: mockCreateUser,
   getCurrentUser: mockGetCurrentUser,

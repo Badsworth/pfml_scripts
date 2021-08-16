@@ -62,6 +62,7 @@ export const Status = ({ appLogic, docList = TEST_DOC }) => {
         </Heading>
         <LegalNoticeList
           documents={documents}
+          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ documents: Document[]; handleDownload: any... Remove this comment to see the full error message
           handleDownload={appLogic.documents.download}
         />
       </div>

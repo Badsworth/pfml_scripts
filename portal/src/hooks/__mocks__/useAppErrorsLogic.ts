@@ -6,9 +6,13 @@
  */
 const useAppErrorsLogic = () => ({
   appErrors: null,
+  // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
   setAppErrors: jest.fn(),
+  // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
   catchError: jest.fn(),
+  // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
   clearErrors: jest.fn(),
+  // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
   clearRequiredFieldErrors: jest.fn(),
 });
 

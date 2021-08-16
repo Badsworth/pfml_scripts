@@ -24,6 +24,7 @@ export const ConcurrentLeavesDetails = (props) => {
   const { appLogic, claim } = props;
   const employer_fein = claim.employer_fein;
 
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState({
     concurrent_leave: new ConcurrentLeave(get(claim, "concurrent_leave")),
   });

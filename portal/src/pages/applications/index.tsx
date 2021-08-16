@@ -31,6 +31,7 @@ export const Index = (props) => {
   return (
     <React.Fragment>
       {query && query.uploadedAbsenceId && (
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; className: string; headi... Remove this comment to see the full error message
         <Alert
           className="margin-bottom-3"
           heading={t("pages.applications.uploadSuccessHeading")}
@@ -62,6 +63,7 @@ export const Index = (props) => {
                   <ApplicationCard
                     appLogic={appLogic}
                     key={claim.application_id}
+                    // @ts-expect-error ts-migrate(2322) FIXME: Type '{ appLogic: any; key: any; claim: any; numbe... Remove this comment to see the full error message
                     claim={claim}
                     number={index + 1}
                   />
@@ -80,6 +82,7 @@ export const Index = (props) => {
                   <ApplicationCard
                     appLogic={appLogic}
                     key={claim.application_id}
+                    // @ts-expect-error ts-migrate(2322) FIXME: Type '{ appLogic: any; key: any; claim: any; numbe... Remove this comment to see the full error message
                     claim={claim}
                     number={claims.inProgress.length + index + 1}
                   />

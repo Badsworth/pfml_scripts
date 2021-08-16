@@ -35,10 +35,12 @@ export const PreviousLeavesSameReasonDetails = (props) => {
 
   const initialEntries = pick(props, fields).claim;
   if (initialEntries.previous_leaves_same_reason.length === 0) {
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     initialEntries.previous_leaves_same_reason = [new PreviousLeave()];
   }
 
   // default to one existing previous leave.
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState(initialEntries);
   const previous_leaves_same_reason = get(
     formState,
@@ -63,6 +65,7 @@ export const PreviousLeavesSameReasonDetails = (props) => {
     updateFields({
       previous_leaves_same_reason: [
         ...previous_leaves_same_reason,
+        // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
         new PreviousLeave(),
       ],
     });

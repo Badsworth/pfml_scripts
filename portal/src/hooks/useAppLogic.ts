@@ -42,6 +42,7 @@ const useAppLogic = () => {
 
   const documents = useDocumentsLogic({
     appErrorsLogic,
+    // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ appErrorsLogic: { setAppErrors... Remove this comment to see the full error message
     portalFlow,
   });
 
@@ -52,6 +53,7 @@ const useAppLogic = () => {
   });
 
   const otherLeaves = useOtherLeavesLogic({ appErrorsLogic });
+  // @ts-expect-error ts-migrate(2554) FIXME: Expected 0 arguments, but got 1.
   const featureFlags = useFlagsLogic({ appErrorsLogic });
 
   return {

@@ -16,6 +16,7 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     addItem: addBenefitsApplication,
     updateItem: setBenefitsApplication,
     setCollection: setBenefitsApplications,
+  // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
   } = useCollectionState(new BenefitsApplicationCollection());
 
   // Track whether the loadAll method has been called. Checking that claims
@@ -24,6 +25,7 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   const [hasLoadedAll, setHasLoadedAll] = useState(false);
 
   const applicationsApi = useMemo(
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 0 arguments, but got 1.
     () => new BenefitsApplicationsApi({ user }),
     [user]
   );
@@ -160,6 +162,7 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
         throw new ValidationError(issues, applicationsApi.i18nPrefix);
       }
 
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'application_id' does not exist on type '... Remove this comment to see the full error message
       const params = { claim_id: claim.application_id };
       portalFlow.goToNextPage({ claim, user }, params);
     } catch (error) {
@@ -180,6 +183,7 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
       setBenefitsApplication(claim);
       const context = { claim, user };
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'application_id' does not exist on type '... Remove this comment to see the full error message
       const params = { claim_id: claim.application_id };
       portalFlow.goToNextPage(context, params);
     } catch (error) {
@@ -201,6 +205,7 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
       addBenefitsApplication(claim);
 
       const context = { claim, user };
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'application_id' does not exist on type '... Remove this comment to see the full error message
       const params = { claim_id: claim.application_id };
       portalFlow.goToPageFor("CREATE_CLAIM", context, params);
     } catch (error) {
@@ -223,6 +228,7 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
       const context = { claim, user };
       const params = {
+        // @ts-expect-error ts-migrate(2339) FIXME: Property 'application_id' does not exist on type '... Remove this comment to see the full error message
         claim_id: claim.application_id,
         "part-one-submitted": "true",
       };
@@ -262,6 +268,7 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
       const context = { claim, user };
       const params = {
+        // @ts-expect-error ts-migrate(2339) FIXME: Property 'application_id' does not exist on type '... Remove this comment to see the full error message
         claim_id: claim.application_id,
         "payment-pref-submitted": "true",
       };

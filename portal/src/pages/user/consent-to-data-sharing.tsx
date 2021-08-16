@@ -49,6 +49,7 @@ export const ConsentToDataSharing = (props) => {
             {t("pages.userConsentToDataSharing.applicationUsageList", {
               returnObjects: true,
               context: roleContext,
+            // @ts-expect-error ts-migrate(2339) FIXME: Property 'map' does not exist on type 'string'.
             }).map((listItemContent, index) => (
               <li key={index}>{listItemContent}</li>
             ))}
@@ -88,6 +89,7 @@ export const ConsentToDataSharing = (props) => {
         </AccordionItem>
       </Accordion>
 
+      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element[]; state: string; noIcon... Remove this comment to see the full error message */}
       <Alert state="info" noIcon>
         <p>{t("pages.userConsentToDataSharing.agreementBody")}</p>
         <Button type="submit" loading={handleSubmit.isThrottled}>

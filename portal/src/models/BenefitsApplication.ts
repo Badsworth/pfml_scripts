@@ -14,6 +14,7 @@ import spreadMinutesOverWeek from "../utils/spreadMinutesOverWeek";
 class BenefitsApplication extends BaseBenefitsApplication {
   get defaults() {
     return merge({
+      // @ts-expect-error ts-migrate(2340) FIXME: Only public and protected methods of the base clas... Remove this comment to see the full error message
       ...super.defaults,
       employment_status: null,
       has_concurrent_leave: null,
@@ -80,6 +81,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
    * @returns {boolean}
    */
   get isCompleted() {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'status' does not exist on type 'Benefits... Remove this comment to see the full error message
     return this.status === BenefitsApplicationStatus.completed;
   }
 
@@ -106,6 +108,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
    * @returns {boolean}
    */
   get isSubmitted() {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'status' does not exist on type 'Benefits... Remove this comment to see the full error message
     return this.status === BenefitsApplicationStatus.submitted;
   }
 }
@@ -144,6 +147,7 @@ export const ReasonQualifier = {
 };
 
 export class ContinuousLeavePeriod extends BaseModel {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'ContinuousLeavePeriod... Remove this comment to see the full error message
   get defaults() {
     return {
       end_date: null,
@@ -154,6 +158,7 @@ export class ContinuousLeavePeriod extends BaseModel {
 }
 
 export class IntermittentLeavePeriod extends BaseModel {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'IntermittentLeavePeri... Remove this comment to see the full error message
   get defaults() {
     return {
       // How many {days|hours} of work will you miss per absence?
@@ -175,6 +180,7 @@ export class IntermittentLeavePeriod extends BaseModel {
 }
 
 export class CaringLeaveMetadata extends BaseModel {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'CaringLeaveMetadata' ... Remove this comment to see the full error message
   get defaults() {
     return {
       family_member_date_of_birth: null,
@@ -205,6 +211,7 @@ export class WorkPattern extends BaseModel {
     }
   }
 
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'WorkPattern' is not a... Remove this comment to see the full error message
   get defaults() {
     return {
       work_pattern_days: OrderedDaysOfWeek.map(
@@ -219,6 +226,7 @@ export class WorkPattern extends BaseModel {
    * @returns {(number|null)}
    */
   get minutesWorkedPerWeek() {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_days' does not exist on typ... Remove this comment to see the full error message
     const hasNoMinutes = this.work_pattern_days.every(
       (day) => day.minutes === null
     );
@@ -226,6 +234,7 @@ export class WorkPattern extends BaseModel {
       return null;
     }
 
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_days' does not exist on typ... Remove this comment to see the full error message
     return sumBy(this.work_pattern_days, "minutes");
   }
 
@@ -255,6 +264,7 @@ export class WorkPattern extends BaseModel {
 }
 
 export class WorkPatternDay extends BaseModel {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'WorkPatternDay' is no... Remove this comment to see the full error message
   get defaults() {
     return {
       day_of_week: null,
@@ -288,6 +298,7 @@ export const DurationBasis = {
   // minutes: "Minutes",
 };
 export class ReducedScheduleLeavePeriod extends BaseModel {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'ReducedScheduleLeaveP... Remove this comment to see the full error message
   get defaults() {
     return {
       end_date: null,
@@ -310,30 +321,37 @@ export class ReducedScheduleLeavePeriod extends BaseModel {
     return [
       {
         day_of_week: DayOfWeek.sunday,
+        // @ts-expect-error ts-migrate(2339) FIXME: Property 'sunday_off_minutes' does not exist on ty... Remove this comment to see the full error message
         minutes: this.sunday_off_minutes,
       },
       {
         day_of_week: DayOfWeek.monday,
+        // @ts-expect-error ts-migrate(2339) FIXME: Property 'monday_off_minutes' does not exist on ty... Remove this comment to see the full error message
         minutes: this.monday_off_minutes,
       },
       {
         day_of_week: DayOfWeek.tuesday,
+        // @ts-expect-error ts-migrate(2339) FIXME: Property 'tuesday_off_minutes' does not exist on t... Remove this comment to see the full error message
         minutes: this.tuesday_off_minutes,
       },
       {
         day_of_week: DayOfWeek.wednesday,
+        // @ts-expect-error ts-migrate(2339) FIXME: Property 'wednesday_off_minutes' does not exist on... Remove this comment to see the full error message
         minutes: this.wednesday_off_minutes,
       },
       {
         day_of_week: DayOfWeek.thursday,
+        // @ts-expect-error ts-migrate(2339) FIXME: Property 'thursday_off_minutes' does not exist on ... Remove this comment to see the full error message
         minutes: this.thursday_off_minutes,
       },
       {
         day_of_week: DayOfWeek.friday,
+        // @ts-expect-error ts-migrate(2339) FIXME: Property 'friday_off_minutes' does not exist on ty... Remove this comment to see the full error message
         minutes: this.friday_off_minutes,
       },
       {
         day_of_week: DayOfWeek.saturday,
+        // @ts-expect-error ts-migrate(2339) FIXME: Property 'saturday_off_minutes' does not exist on ... Remove this comment to see the full error message
         minutes: this.saturday_off_minutes,
       },
     ];
@@ -344,12 +362,19 @@ export class ReducedScheduleLeavePeriod extends BaseModel {
    */
   get totalMinutesOff() {
     const fieldsWithMinutes = compact([
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'friday_off_minutes' does not exist on ty... Remove this comment to see the full error message
       this.friday_off_minutes,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'monday_off_minutes' does not exist on ty... Remove this comment to see the full error message
       this.monday_off_minutes,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'saturday_off_minutes' does not exist on ... Remove this comment to see the full error message
       this.saturday_off_minutes,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'sunday_off_minutes' does not exist on ty... Remove this comment to see the full error message
       this.sunday_off_minutes,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'thursday_off_minutes' does not exist on ... Remove this comment to see the full error message
       this.thursday_off_minutes,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'tuesday_off_minutes' does not exist on t... Remove this comment to see the full error message
       this.tuesday_off_minutes,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'wednesday_off_minutes' does not exist on... Remove this comment to see the full error message
       this.wednesday_off_minutes,
     ]);
 

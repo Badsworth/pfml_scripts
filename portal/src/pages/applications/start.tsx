@@ -35,6 +35,7 @@ export const Start = (props) => {
             ),
           }}
         />
+        {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element[]; className: string; st... Remove this comment to see the full error message */}
         <Alert className="measure-6" state="info" noIcon>
           <p>{t("pages.claimsStart.truthAttestation")}</p>
           <Button

@@ -25,6 +25,7 @@ export const ScheduleFixed = (props) => {
   const { t } = useTranslation();
 
   const initialEntries = pick(props, fields).claim;
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState(
     Object.assign(
       initialEntries,
@@ -42,6 +43,7 @@ export const ScheduleFixed = (props) => {
 
   const handleSave = async () => {
     const workPattern = new WorkPattern(formState.work_pattern);
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_days' does not exist on typ... Remove this comment to see the full error message
     const { work_pattern_days } = workPattern;
     // TODO (CP-1262): refactor calculating hours worked per week to WorkPattern model
     const minutes = workPattern.minutesWorkedPerWeek;

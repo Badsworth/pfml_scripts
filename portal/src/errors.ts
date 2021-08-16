@@ -24,7 +24,9 @@ export class CognitoAuthError extends BasePortalError {
   constructor(cognitoError, issue = null, ...params) {
     super(...params);
     this.name = "CognitoAuthError";
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'cognitoError' does not exist on type 'Co... Remove this comment to see the full error message
     this.cognitoError = cognitoError;
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'issue' does not exist on type 'CognitoAu... Remove this comment to see the full error message
     this.issue = issue;
   }
 }
@@ -79,6 +81,7 @@ export class UserNotReceivedError extends BasePortalError {
 export class ApiRequestError extends BasePortalError {
   constructor(data, ...params) {
     super(...params);
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'responseData' does not exist on type 'Ap... Remove this comment to see the full error message
     this.responseData = data;
     this.name = "ApiRequestError";
   }
@@ -89,6 +92,7 @@ export class ApiRequestError extends BasePortalError {
  */
 export class NotFoundError extends ApiRequestError {
   constructor(...params) {
+    // @ts-expect-error ts-migrate(2557) FIXME: Expected at least 1 arguments, but got 0 or more.
     super(...params);
     this.name = "NotFoundError";
   }
@@ -99,6 +103,7 @@ export class NotFoundError extends ApiRequestError {
  */
 export class BadRequestError extends ApiRequestError {
   constructor(...params) {
+    // @ts-expect-error ts-migrate(2557) FIXME: Expected at least 1 arguments, but got 0 or more.
     super(...params);
     this.name = "BadRequestError";
   }
@@ -111,6 +116,7 @@ export class BadRequestError extends ApiRequestError {
  */
 export class ForbiddenError extends ApiRequestError {
   constructor(...params) {
+    // @ts-expect-error ts-migrate(2557) FIXME: Expected at least 1 arguments, but got 0 or more.
     super(...params);
     this.name = "ForbiddenError";
   }
@@ -121,6 +127,7 @@ export class ForbiddenError extends ApiRequestError {
  */
 export class InternalServerError extends ApiRequestError {
   constructor(...params) {
+    // @ts-expect-error ts-migrate(2557) FIXME: Expected at least 1 arguments, but got 0 or more.
     super(...params);
     this.name = "InternalServerError";
   }
@@ -131,6 +138,7 @@ export class InternalServerError extends ApiRequestError {
  */
 export class RequestTimeoutError extends ApiRequestError {
   constructor(...params) {
+    // @ts-expect-error ts-migrate(2557) FIXME: Expected at least 1 arguments, but got 0 or more.
     super(...params);
     this.name = "RequestTimeoutError";
   }
@@ -146,6 +154,7 @@ export class DocumentsLoadError extends BasePortalError {
    */
   constructor(application_id, ...params) {
     super(...params);
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'application_id' does not exist on type '... Remove this comment to see the full error message
     this.application_id = application_id;
     this.name = "DocumentsLoadError";
   }
@@ -167,8 +176,11 @@ export class DocumentsUploadError extends BasePortalError {
    */
   constructor(application_id, file_id, issue = null, ...params) {
     super(...params);
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'application_id' does not exist on type '... Remove this comment to see the full error message
     this.application_id = application_id;
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'file_id' does not exist on type 'Documen... Remove this comment to see the full error message
     this.file_id = file_id;
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'issue' does not exist on type 'Documents... Remove this comment to see the full error message
     this.issue = issue;
     this.name = "DocumentsUploadError";
   }
@@ -179,6 +191,7 @@ export class DocumentsUploadError extends BasePortalError {
  */
 export class ServiceUnavailableError extends ApiRequestError {
   constructor(...params) {
+    // @ts-expect-error ts-migrate(2557) FIXME: Expected at least 1 arguments, but got 0 or more.
     super(...params);
     this.name = "ServiceUnavailableError";
   }
@@ -189,6 +202,7 @@ export class ServiceUnavailableError extends ApiRequestError {
  */
 export class UnauthorizedError extends ApiRequestError {
   constructor(...params) {
+    // @ts-expect-error ts-migrate(2557) FIXME: Expected at least 1 arguments, but got 0 or more.
     super(...params);
     this.name = "UnauthorizedError";
   }
@@ -205,7 +219,9 @@ export class ValidationError extends BasePortalError {
    */
   constructor(issues, i18nPrefix, ...params) {
     super(...params);
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'issues' does not exist on type 'Validati... Remove this comment to see the full error message
     this.issues = issues;
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'i18nPrefix' does not exist on type 'Vali... Remove this comment to see the full error message
     this.i18nPrefix = i18nPrefix;
     this.name = "ValidationError";
   }
@@ -217,7 +233,9 @@ export class ValidationError extends BasePortalError {
 export class LeaveAdminForbiddenError extends ForbiddenError {
   constructor(employer_id, has_verification_data, message, ...params) {
     super(...params);
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'employer_id' does not exist on type 'Lea... Remove this comment to see the full error message
     this.employer_id = employer_id;
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'has_verification_data' does not exist on... Remove this comment to see the full error message
     this.has_verification_data = has_verification_data;
     this.message = message;
     this.name = "LeaveAdminForbiddenError";

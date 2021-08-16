@@ -97,6 +97,7 @@ const AmendablePreviousLeave = ({
   const LeaveDetailsRow = () => (
     <tr>
       <th scope="row">
+        {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
         {formatDateRange(
           previousLeave.leave_start_date,
           previousLeave.leave_end_date
@@ -124,6 +125,7 @@ const AmendablePreviousLeave = ({
       >
         <tr>
           <td
+            // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number'.
             colSpan="2"
             className="padding-top-2 padding-bottom-2 padding-left-0"
           >

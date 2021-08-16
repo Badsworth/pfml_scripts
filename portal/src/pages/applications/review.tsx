@@ -111,6 +111,7 @@ export const Review = (props) => {
     claimantConfigs,
     {
       claim: props.claim,
+      // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ claim: any; showOtherLeaveStep... Remove this comment to see the full error message
       showOtherLeaveStep: isFeatureEnabled("claimantShowOtherLeaveStep"),
     },
     null
@@ -173,6 +174,7 @@ export const Review = (props) => {
   return (
     <div className="measure-6">
       {showNewFieldError && (
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; "dat... Remove this comment to see the full error message
         <Alert
           className="margin-bottom-3"
           data-test="missing-required-fields-alert"
@@ -301,6 +303,7 @@ export const Review = (props) => {
         level={reviewRowLevel}
         label={t("pages.claimsReview.userDateOfBirthLabel")}
       >
+        {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1. */}
         {formatDateRange(get(claim, "date_of_birth"))}
       </ReviewRow>
 
@@ -368,6 +371,7 @@ export const Review = (props) => {
         })}
       </ReviewRow>
 
+      {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_type' does not exist on typ... Remove this comment to see the full error message */}
       {workPattern.work_pattern_type === WorkPatternType.fixed &&
         workPattern.minutesWorkedPerWeek !== null && (
           <ReviewRow
@@ -375,10 +379,12 @@ export const Review = (props) => {
             label={t("pages.claimsReview.workPatternDaysFixedLabel")}
             noBorder
           >
+            {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_days' does not exist on typ... Remove this comment to see the full error message */}
             <WeeklyTimeTable days={workPattern.work_pattern_days} />
           </ReviewRow>
         )}
 
+      {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_type' does not exist on typ... Remove this comment to see the full error message */}
       {workPattern.work_pattern_type === WorkPatternType.variable && (
         <ReviewRow
           level={reviewRowLevel}
@@ -446,6 +452,7 @@ export const Review = (props) => {
           level={reviewRowLevel}
           label={t("pages.claimsReview.childBirthDateLabel")}
         >
+          {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1. */}
           {formatDateRange(get(claim, "leave_details.child_birth_date"))}
         </ReviewRow>
       )}
@@ -458,6 +465,7 @@ export const Review = (props) => {
             level={reviewRowLevel}
             label={t("pages.claimsReview.childPlacementDateLabel")}
           >
+            {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1. */}
             {formatDateRange(get(claim, "leave_details.child_placement_date"))}
           </ReviewRow>
         )}
@@ -501,6 +509,7 @@ export const Review = (props) => {
             level={reviewRowLevel}
             label={t("pages.claimsReview.familyMemberDateOfBirthLabel")}
           >
+            {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1. */}
             {formatDateRange(
               get(
                 claim,
@@ -537,14 +546,17 @@ export const Review = (props) => {
         <ReviewRow
           level={reviewRowLevel}
           label={t("pages.claimsReview.reducedLeaveScheduleLabel")}
+          // @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_type' does not exist on typ... Remove this comment to see the full error message
           noBorder={workPattern.work_pattern_type === WorkPatternType.fixed}
         >
+          {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_type' does not exist on typ... Remove this comment to see the full error message */}
           {workPattern.work_pattern_type === WorkPatternType.fixed && (
             <WeeklyTimeTable
               className="margin-bottom-0"
               days={reducedLeavePeriod.days}
             />
           )}
+          {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_type' does not exist on typ... Remove this comment to see the full error message */}
           {workPattern.work_pattern_type === WorkPatternType.variable &&
             t("pages.claimsReview.reducedLeaveScheduleWeeklyTotal", {
               context:
@@ -645,6 +657,7 @@ export const Review = (props) => {
               label={t("pages.claimsReview.concurrentLeaveLabel")}
             >
               <p className="text-base-darker margin-top-1">
+                {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
                 {formatDateRange(
                   get(claim, "concurrent_leave.leave_start_date"),
                   get(claim, "concurrent_leave.leave_end_date")
@@ -773,6 +786,7 @@ export const Review = (props) => {
             })}
           </Heading>
           {hasLoadingDocumentsError && (
+            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; noIc... Remove this comment to see the full error message
             <Alert className="margin-bottom-3" noIcon>
               <Trans
                 i18nKey="pages.claimsReview.documentsLoadError"
@@ -875,6 +889,7 @@ export const PreviousLeaveList = (props) => {
       })}
     >
       <p className="text-base-darker margin-top-1">
+        {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
         {formatDateRange(entry.leave_start_date, entry.leave_end_date)}
       </p>
       <ul className="usa-list margin-top-1">
@@ -947,6 +962,7 @@ export const EmployerBenefitList = (props) => {
       context: findKeyByValue(EmployerBenefitType, entry.benefit_type),
     });
 
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     const dates = formatDateRange(
       entry.benefit_start_date,
       entry.benefit_end_date
@@ -1003,6 +1019,7 @@ export const OtherIncomeList = (props) => {
       context: findKeyByValue(OtherIncomeType, entry.income_type),
     });
 
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     const dates = formatDateRange(
       entry.income_start_date,
       entry.income_end_date

@@ -16,12 +16,14 @@ export const StateId = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
   );
   const { has_state_id } = formState;
 
   const handleSave = () => {
+    // @ts-expect-error ts-migrate(2525) FIXME: Initializer provides no value for this binding ele... Remove this comment to see the full error message
     const { mass_id, ...requestData } = { ...formState };
     // API requires any letters in the ID to be uppercase:
     requestData.mass_id = mass_id ? mass_id.toUpperCase() : mass_id;

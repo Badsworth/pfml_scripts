@@ -7,6 +7,7 @@ import BaseModel from "./BaseModel";
  * to as a "Part" (i.e Part 2 of 3).
  */
 export default class StepGroup extends BaseModel {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'StepGroup' is not ass... Remove this comment to see the full error message
   get defaults() {
     return {
       /**
@@ -26,6 +27,7 @@ export default class StepGroup extends BaseModel {
    * @returns {boolean}
    */
   get isEnabled() {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'steps' does not exist on type 'StepGroup... Remove this comment to see the full error message
     return this.steps.some((step) => !step.isDisabled);
   }
 }

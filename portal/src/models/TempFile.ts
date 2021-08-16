@@ -6,6 +6,7 @@ import { uniqueId } from "lodash";
  * uploaded
  */
 class TempFile extends BaseModel {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'TempFile' is not assi... Remove this comment to see the full error message
   get defaults() {
     return {
       id: uniqueId("TempFile"),

@@ -32,6 +32,7 @@ function FormLabel({
 
   return (
     <React.Fragment>
+      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: any[]; className: string; htmlFo... Remove this comment to see the full error message */}
       <LabelElement
         className={labelClasses}
         htmlFor={component === "label" ? props.inputId : null}

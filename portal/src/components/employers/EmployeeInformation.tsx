@@ -55,6 +55,7 @@ const EmployeeInformation = (props) => {
         level="3"
         label={t("components.employersEmployeeInformation.dobLabel")}
       >
+        {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1. */}
         {formatDateRange(date_of_birth)}
       </ReviewRow>
     </React.Fragment>

@@ -6,6 +6,7 @@ import { uniqueId } from "xstate/lib/utils";
 // e.g.
 // import { getDocumentsMock } from "./src/api/DocumentsApi";
 // expect(getDocumentsMock).toHaveBeenCalled();
+// @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
 export const attachDocumentMock = jest.fn(
   (application_id, files = [], document_type) => {
     return Promise.resolve({
@@ -20,6 +21,7 @@ export const attachDocumentMock = jest.fn(
   }
 );
 
+// @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
 export const getDocumentsMock = jest.fn((application_id) => {
   return Promise.resolve({
     success: true,
@@ -32,10 +34,12 @@ export const getDocumentsMock = jest.fn((application_id) => {
   });
 });
 
+// @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
 export const downloadDocumentMock = jest.fn(() => {
   return new Blob();
 });
 
+// @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
 const documentsApi = jest.fn().mockImplementation(() => ({
   attachDocument: attachDocumentMock,
   downloadDocument: downloadDocumentMock,

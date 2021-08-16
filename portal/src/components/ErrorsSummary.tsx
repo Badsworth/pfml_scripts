@@ -23,6 +23,7 @@ function ErrorsSummary(props) {
     if (!errors.isEmpty) {
       window.scrollTo(0, 0);
       // Move focus to the alert so screen readers immediately announce that there are errors
+      // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
       alertRef.current.focus();
     }
   }, [errors]);
@@ -63,6 +64,7 @@ function ErrorsSummary(props) {
   };
 
   return (
+    // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; head... Remove this comment to see the full error message
     <Alert
       className="margin-bottom-3"
       heading={t("components.errorsSummary.genericHeading", {

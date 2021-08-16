@@ -27,6 +27,7 @@ export const Confirmation = (props) => {
       />
       <Trans
         i18nKey="pages.employersClaimsConfirmation.instructionsFollowUpDateLabel"
+        // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
         values={{ date: formatDateRange(claim.follow_up_date) }}
         components={{
           div: <div />,

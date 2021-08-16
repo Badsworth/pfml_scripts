@@ -5,6 +5,7 @@
 import BaseModel from "./BaseModel";
 
 class EmployerBenefit extends BaseModel {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'EmployerBenefit' is n... Remove this comment to see the full error message
   get defaults() {
     return {
       benefit_amount_dollars: null,

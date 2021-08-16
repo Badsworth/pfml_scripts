@@ -5,6 +5,7 @@
 import BaseModel from "./BaseModel";
 
 class OtherIncome extends BaseModel {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'OtherIncome' is not a... Remove this comment to see the full error message
   get defaults() {
     return {
       income_amount_dollars: null,

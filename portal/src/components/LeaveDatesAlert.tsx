@@ -15,6 +15,7 @@ function LeaveDatesAlert(props) {
   if (!props.startDate || !props.endDate) return null;
 
   return (
+    // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; className: string; headi... Remove this comment to see the full error message
     <Alert
       className="margin-top-2 margin-bottom-4"
       heading={t("components.leaveDatesAlert.heading")}
@@ -24,6 +25,7 @@ function LeaveDatesAlert(props) {
       noIcon
       state="info"
     >
+      {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
       {formatDateRange(props.startDate, props.endDate)}
     </Alert>
   );

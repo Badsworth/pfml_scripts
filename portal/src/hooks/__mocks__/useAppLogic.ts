@@ -9,48 +9,76 @@ import Flag from "../../models/Flag";
 import PaginationMeta from "../../models/PaginationMeta";
 import { uniqueId } from "lodash";
 
+// @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
 export default jest.fn(() => ({
+  // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
   appErrors: new AppErrorInfoCollection(),
   auth: {
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     createAccount: jest.fn(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     createEmployerAccount: jest.fn(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     forgotPassword: jest.fn(),
     isLoggedIn: true,
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     login: jest.fn(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     logout: jest.fn(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     requireLogin: jest.fn(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     resendForgotPasswordCode: jest.fn(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     resendVerifyAccountCode: jest.fn(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     resetPassword: jest.fn(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     verifyAccount: jest.fn(),
   },
+  // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
   catchError: jest.fn(),
   benefitsApplications: {
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     benefitsApplications: new BenefitsApplicationCollection(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     complete: jest.fn(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     create: jest.fn(
       () => new BenefitsApplication({ application_id: uniqueId() })
     ),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     get: jest.fn(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     hasLoadedBenefitsApplicationAndWarnings: jest.fn().mockReturnValue(true),
     hasLoadedAll: false,
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     load: jest.fn(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     loadAll: jest.fn(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     submit: jest.fn(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     submitPaymentPreference: jest.fn(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     update: jest.fn(),
     warningsLists: {},
   },
   claims: {
     activeFilters: {},
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     claims: new ClaimCollection(),
     isLoadingClaims: null,
     paginationMeta: new PaginationMeta(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     loadPage: jest.fn(),
   },
+  // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
   clearErrors: jest.fn(),
+  // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
   clearRequiredFieldErrors: jest.fn(),
   documents: {
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     attach: jest.fn((application_id, files, documentType) => {
       const uploadPromises = [];
       for (let i = 0; i < files.length; i++) {
@@ -58,40 +86,63 @@ export default jest.fn(() => ({
       }
       return uploadPromises;
     }),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     hasLoadedClaimDocuments: jest.fn(),
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     documents: new DocumentCollection(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     loadAll: jest.fn(),
   },
   employers: {
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     addEmployer: jest.fn(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     downloadDocument: jest.fn(() => new Blob()),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     loadClaim: jest.fn(
       () => new EmployerClaim({ fineos_absence_id: "NTN-111-ABS-01" })
     ),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     loadDocuments: jest.fn(() => new DocumentCollection()),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     loadWithholding: jest.fn(() => ({ filing_period: "2011-11-20" })),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     submitClaimReview: jest.fn(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     submitWithholding: jest.fn(),
   },
   portalFlow: {
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     getNextPageRoute: jest.fn(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     goTo: jest.fn(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     goToNextPage: jest.fn(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     goToPageFor: jest.fn(),
     pathname: "/mock-portalFlow-pathname",
   },
   otherLeaves: {
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     removeEmployerBenefit: jest.fn(() => true),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     removeOtherIncome: jest.fn(() => true),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     removePreviousLeave: jest.fn(() => true),
   },
+  // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
   setAppErrors: jest.fn(),
+  // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
   updateUser: jest.fn(),
   user: new User({ user_id: "mock_user_id", consented_to_data_sharing: true }),
   users: {
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     loadUser: jest.fn(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     requireUserConsentToDataAgreement: jest.fn(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     requireUserRole: jest.fn(),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     updateUser: jest.fn(),
     user: new User({
       auth_id: "mock_auth_id",
@@ -140,6 +191,7 @@ export default jest.fn(() => ({
         end: null,
       }),
     ],
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     getFlag: jest.fn(() => {
       return new Flag({
         enabled: false,
@@ -151,6 +203,7 @@ export default jest.fn(() => ({
         end: null,
       });
     }),
+    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'jest'.
     loadFlags: jest.fn(),
   },
 }));

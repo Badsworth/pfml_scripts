@@ -19,6 +19,7 @@ export const ConvertToEmployer = (props) => {
   const { appLogic, user, claims } = props;
   const { t } = useTranslation();
   const { convertUser } = appLogic.users;
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState({ employer_fein: "" });
   const hasClaims = !claims.isEmpty;
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -59,6 +60,7 @@ export const ConvertToEmployer = (props) => {
   return (
     <React.Fragment>
       <Title>{t("pages.convertToEmployer.title")}</Title>
+      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; heading: string; state:... Remove this comment to see the full error message */}
       <Alert
         heading={t("pages.convertToEmployer.alertHeading")}
         state="warning"

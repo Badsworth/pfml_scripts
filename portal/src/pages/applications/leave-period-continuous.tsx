@@ -36,6 +36,7 @@ export const LeavePeriodContinuous = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
   );
@@ -92,6 +93,7 @@ export const LeavePeriodContinuous = (props) => {
       onSave={handleSave}
     >
       {(claim.isMedicalOrPregnancyLeave || claim.isCaringLeave) && (
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; neutral:... Remove this comment to see the full error message
         <Alert state="info" neutral>
           <Trans
             i18nKey="pages.claimsLeavePeriodContinuous.needDocumentAlert"

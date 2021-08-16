@@ -5,6 +5,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import SiteLogo from "@massds/mayflower-react/dist/SiteLogo";
 import User from "../models/User";
+// @ts-expect-error ts-migrate(2307) FIXME: Cannot find module '@massds/mayflower-assets/stati... Remove this comment to see the full error message
 import logo from "@massds/mayflower-assets/static/images/logo/stateseal.png";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";

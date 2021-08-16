@@ -40,6 +40,7 @@ function optimizeFileSize(file, maximumFileSize) {
       checkOrientation: false, // Improves compression speed for larger files
       convertSize: maximumFileSize,
       success: (compressedBlob) => {
+        // @ts-expect-error ts-migrate(2339) FIXME: Property 'name' does not exist on type 'Blob'.
         const fileName = compressedBlob.name;
         const fileNameWithPrefix = "Compressed_" + fileName;
 
@@ -47,6 +48,7 @@ function optimizeFileSize(file, maximumFileSize) {
           originalSize: file.size,
           compressedSize: compressedBlob.size,
         });
+        // @ts-expect-error ts-migrate(2339) FIXME: Property 'name' does not exist on type 'Blob'.
         compressedBlob.name = fileNameWithPrefix;
         resolve(compressedBlob);
       },
@@ -161,6 +163,7 @@ const useFilesLogic = ({
     collection: files,
     addItems: addFiles,
     removeItem: removeFile,
+  // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
   } = useCollectionState(new TempFileCollection());
 
   /**

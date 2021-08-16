@@ -12,6 +12,7 @@ import formatDateRange from "../utils/formatDateRange";
  * Separate models then extend this.
  */
 class BaseBenefitsApplication extends BaseModel {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'BaseBenefitsApplicati... Remove this comment to see the full error message
   get defaults() {
     return {
       application_id: null,
@@ -34,6 +35,7 @@ class BaseBenefitsApplication extends BaseModel {
         reduced_schedule_leave_periods: null,
       },
       middle_name: null,
+      // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
       residential_address: new Address(),
       status: null,
       tax_identifier: null,
@@ -66,6 +68,7 @@ class BaseBenefitsApplication extends BaseModel {
       this,
       `leave_details.continuous_leave_periods[0]`
     );
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     return formatDateRange(start_date, end_date);
   }
 
@@ -87,6 +90,7 @@ class BaseBenefitsApplication extends BaseModel {
       this,
       `leave_details.intermittent_leave_periods[0]`
     );
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     return formatDateRange(start_date, end_date);
   }
 
@@ -108,6 +112,7 @@ class BaseBenefitsApplication extends BaseModel {
       this,
       `leave_details.reduced_schedule_leave_periods[0]`
     );
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     return formatDateRange(start_date, end_date);
   }
 
@@ -116,6 +121,7 @@ class BaseBenefitsApplication extends BaseModel {
    * @returns {string}
    */
   get fullName() {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'first_name' does not exist on type 'Base... Remove this comment to see the full error message
     return compact([this.first_name, this.middle_name, this.last_name]).join(
       " "
     );

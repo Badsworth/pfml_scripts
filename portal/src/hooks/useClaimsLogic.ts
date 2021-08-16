@@ -12,6 +12,7 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
   // Initialized to empty collection, but will eventually store the claims
   // as API calls are made to fetch the user's claims
   const { collection: claims, setCollection: setClaims } = useCollectionState(
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     new ClaimCollection()
   );
   const [isLoadingClaims, setIsLoadingClaims] = useState();
@@ -41,6 +42,7 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
 
     // Or have we already loaded this page with the same order and filter params?
     if (
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'page_offset' does not exist on type 'Pag... Remove this comment to see the full error message
       parseInt(paginationMeta.page_offset) === parseInt(pageOffset) &&
       isEqual(activeFilters, filters) &&
       isEqual(activeOrder, order)
@@ -48,6 +50,7 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
       return;
     }
 
+    // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'boolean' is not assignable to pa... Remove this comment to see the full error message
     setIsLoadingClaims(true);
     appErrorsLogic.clearErrors();
 
@@ -62,6 +65,7 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
       setActiveFilters(filters);
       setActiveOrder(order);
       setPaginationMeta(paginationMeta);
+      // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'boolean' is not assignable to pa... Remove this comment to see the full error message
       setIsLoadingClaims(false);
     } catch (error) {
       appErrorsLogic.catchError(error);

@@ -81,6 +81,7 @@ const AmendableConcurrentLeave = ({
   const ConcurrentLeaveDetailsRow = () => (
     <tr>
       <th scope="row">
+        {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
         {formatDateRange(
           concurrentLeave.leave_start_date,
           concurrentLeave.leave_end_date
@@ -100,6 +101,7 @@ const AmendableConcurrentLeave = ({
       >
         <tr>
           <td
+            // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number'.
             colSpan="3"
             className="padding-top-2 padding-bottom-2 padding-left-0"
           >

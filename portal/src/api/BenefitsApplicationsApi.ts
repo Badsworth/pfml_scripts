@@ -17,10 +17,12 @@ import routes from "../routes";
  */
 
 export default class BenefitsApplicationsApi extends BaseApi {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'basePath' in type 'BenefitsApplicationsA... Remove this comment to see the full error message
   get basePath() {
     return routes.api.applications;
   }
 
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'i18nPrefix' in type 'BenefitsApplication... Remove this comment to see the full error message
   get i18nPrefix() {
     return "applications";
   }
@@ -60,6 +62,7 @@ export default class BenefitsApplicationsApi extends BaseApi {
    * @returns {Promise<BenefitsApplicationsApiSingleResult>} The result of the API call
    */
   getClaim = async (application_id) => {
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     const { data, warnings } = await this.request("GET", application_id);
 
     return {
@@ -73,6 +76,7 @@ export default class BenefitsApplicationsApi extends BaseApi {
    * @returns {Promise<BenefitsApplicationsApiListResult>} The result of the API call
    */
   getClaims = async () => {
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
     const { data } = await this.request("GET");
 
     let claims = data.map((claimData) => new BenefitsApplication(claimData));
@@ -91,6 +95,7 @@ export default class BenefitsApplicationsApi extends BaseApi {
    * @returns {Promise<BenefitsApplicationsApiSingleResult>} The result of the API call
    */
   completeClaim = async (application_id) => {
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     const { data } = await this.request(
       "POST",
       `${application_id}/complete_application`
@@ -106,6 +111,7 @@ export default class BenefitsApplicationsApi extends BaseApi {
    * @returns {Promise<BenefitsApplicationsApiSingleResult>} The result of the API call
    */
   createClaim = async () => {
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
     const { data } = await this.request("POST");
 
     return {
@@ -120,6 +126,7 @@ export default class BenefitsApplicationsApi extends BaseApi {
    * @returns {Promise<BenefitsApplicationsApiSingleResult>} The result of the API call
    */
   updateClaim = async (application_id, patchData) => {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'errors' does not exist on type '{ data: ... Remove this comment to see the full error message
     const { data, errors, warnings } = await this.request(
       "PATCH",
       application_id,
@@ -141,6 +148,7 @@ export default class BenefitsApplicationsApi extends BaseApi {
    * @returns {Promise<BenefitsApplicationsApiSingleResult>} The result of the API call
    */
   submitClaim = async (application_id) => {
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     const { data } = await this.request(
       "POST",
       `${application_id}/submit_application`
@@ -152,6 +160,7 @@ export default class BenefitsApplicationsApi extends BaseApi {
   };
 
   submitPaymentPreference = async (application_id, paymentPreferenceData) => {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'errors' does not exist on type '{ data: ... Remove this comment to see the full error message
     const { data, errors, warnings } = await this.request(
       "POST",
       `${application_id}/submit_payment_preference`,

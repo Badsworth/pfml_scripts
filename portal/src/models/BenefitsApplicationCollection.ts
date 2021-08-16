@@ -4,6 +4,7 @@ import { BenefitsApplicationStatus } from "./BenefitsApplication";
 /** @typedef {import('./BenefitsApplication').default} BenefitsApplication */
 
 export default class BenefitsApplicationCollection extends BaseCollection {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'idProperty' in type 'BenefitsApplication... Remove this comment to see the full error message
   get idProperty() {
     return "application_id";
   }
@@ -12,6 +13,7 @@ export default class BenefitsApplicationCollection extends BaseCollection {
    * @returns {BenefitsApplication[]} Returns all claims with an "Started" or "Submitted" status
    */
   get inProgress() {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'items' does not exist on type 'BenefitsA... Remove this comment to see the full error message
     return this.items.filter(
       (item) => item.status !== BenefitsApplicationStatus.completed
     );
@@ -22,6 +24,7 @@ export default class BenefitsApplicationCollection extends BaseCollection {
    * those that made it to the Claims Processing System
    */
   get submitted() {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'items' does not exist on type 'BenefitsA... Remove this comment to see the full error message
     return this.items.filter((item) => item.isSubmitted);
   }
 
@@ -30,6 +33,7 @@ export default class BenefitsApplicationCollection extends BaseCollection {
    the progressive application
    */
   get completed() {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'items' does not exist on type 'BenefitsA... Remove this comment to see the full error message
     return this.items.filter((item) => item.isCompleted);
   }
 }

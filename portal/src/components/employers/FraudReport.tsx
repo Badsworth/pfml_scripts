@@ -49,6 +49,7 @@ const FraudReport = ({ fraudInput, getFunctionalInputProps }) => {
       />
       <ConditionalContent visible={fraudInput === "Yes"}>
         <React.Fragment>
+          {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; heading:... Remove this comment to see the full error message */}
           <Alert
             state="warning"
             heading={t("components.employersFraudReport.alertHeading")}

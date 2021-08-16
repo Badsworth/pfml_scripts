@@ -9,15 +9,20 @@ class Claim extends BaseModel {
   constructor(attrs) {
     super(attrs);
 
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'employee' does not exist on type 'Claim'... Remove this comment to see the full error message
     if (this.employee) {
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'employee' does not exist on type 'Claim'... Remove this comment to see the full error message
       this.employee = new ClaimEmployee(this.employee);
     }
 
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'employer' does not exist on type 'Claim'... Remove this comment to see the full error message
     if (this.employer) {
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'employer' does not exist on type 'Claim'... Remove this comment to see the full error message
       this.employer = new ClaimEmployer(this.employer);
     }
   }
 
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'Claim' is not assigna... Remove this comment to see the full error message
   get defaults() {
     return {
       absence_period_end_date: null,
@@ -50,6 +55,7 @@ class Claim extends BaseModel {
  * Employee (claimant) record associated to the Claim
  */
 export class ClaimEmployee extends BaseModel {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'ClaimEmployee' is not... Remove this comment to see the full error message
   get defaults() {
     return {
       first_name: null,
@@ -75,6 +81,7 @@ export class ClaimEmployee extends BaseModel {
  * Employer record associated to the Claim
  */
 export class ClaimEmployer extends BaseModel {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'ClaimEmployer' is not... Remove this comment to see the full error message
   get defaults() {
     return {
       employer_dba: null,
@@ -88,6 +95,7 @@ export class ClaimEmployer extends BaseModel {
  * Managed requirements associated to the Claim
  */
 export class ManagedRequirements extends BaseModel {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'ManagedRequirements' ... Remove this comment to see the full error message
   get defaults() {
     return {
       category: null,

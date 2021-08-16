@@ -1,5 +1,7 @@
+// @ts-expect-error ts-migrate(2307) FIXME: Cannot find module './DFMLLogo.svg' or its corresp... Remove this comment to see the full error message
 import DFMLLogo from "./DFMLLogo.svg";
 import FooterSlim from "@massds/mayflower-react/dist/FooterSlim";
+// @ts-expect-error ts-migrate(2307) FIXME: Cannot find module './PFMLLogo.svg' or its corresp... Remove this comment to see the full error message
 import PFMLLogo from "./PFMLLogo.svg";
 import React from "react";
 import SiteLogo from "@massds/mayflower-react/dist/SiteLogo";

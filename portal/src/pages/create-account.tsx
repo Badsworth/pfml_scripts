@@ -18,6 +18,7 @@ export const CreateAccount = (props) => {
   const { appLogic } = props;
   const { t } = useTranslation();
 
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState({
     password: "",
     // TODO (CP-1931) Rename username to email_address to match the field name sent to the API, so errors show up inline
@@ -37,6 +38,7 @@ export const CreateAccount = (props) => {
 
   return (
     <form className="usa-form" onSubmit={handleSubmit} method="post">
+      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; heading:... Remove this comment to see the full error message */}
       <Alert
         state="info"
         heading={t("pages.authCreateAccount.alertHeading")}

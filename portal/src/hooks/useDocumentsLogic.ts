@@ -25,6 +25,7 @@ const useDocumentsLogic = ({ appErrorsLogic }) => {
     collection: documents,
     addItem: addDocument,
     addItems: addDocuments,
+  // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
   } = useCollectionState(new DocumentCollection());
 
   const documentsApi = useMemo(() => new DocumentsApi(), []);

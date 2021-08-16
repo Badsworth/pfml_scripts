@@ -96,7 +96,8 @@ const LeaveDetails = (props) => {
       >
         {isIntermittent
           ? "—"
-          : formatDateRange(
+          : // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
+            formatDateRange(
               props.claim.leaveStartDate,
               props.claim.leaveEndDate
             )}
@@ -193,6 +194,7 @@ const LeaveDetails = (props) => {
             visible={believeRelationshipAccurate === "No"}
             data-test="relationship-accurate-no"
           >
+            {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; state: string; heading: ... Remove this comment to see the full error message */}
             <Alert
               state="warning"
               heading={t(
@@ -228,6 +230,7 @@ const LeaveDetails = (props) => {
             visible={believeRelationshipAccurate === "Unknown"}
             data-test="relationship-accurate-unknown"
           >
+            {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; state: string; className... Remove this comment to see the full error message */}
             <Alert state="info" className="measure-5 margin-y-3">
               {t(
                 "components.employersLeaveDetails.unknownRelationshipAlertLead"

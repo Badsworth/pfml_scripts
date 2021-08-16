@@ -39,6 +39,7 @@ export const PaymentMethod = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
   );

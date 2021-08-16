@@ -18,6 +18,7 @@ const useEmployersLogic = ({ appErrorsLogic, portalFlow, setUser }) => {
 
     try {
       const employer = await employersApi.addEmployer(data);
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'employer_id' does not exist on type 'Use... Remove this comment to see the full error message
       const params = { employer_id: employer.employer_id, next };
       // Setting user to undefined to require fetching updated user_leave_administrators before navigating to Verify Contributions
       setUser(undefined);

@@ -29,6 +29,7 @@ export const ScheduleVariable = (props) => {
   const { t } = useTranslation();
 
   const workPattern = new WorkPattern(claim.work_pattern);
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   // minutesWorkedPerWeek will be spread across
   // 7 work_pattern_days when user submits and is not a part of the Claim model.
@@ -59,6 +60,7 @@ export const ScheduleVariable = (props) => {
     if (!minutesWorkedPerWeek) {
       work_pattern_days = [];
     } else {
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_days' does not exist on typ... Remove this comment to see the full error message
       ({ work_pattern_days } =
         WorkPattern.createWithWeek(minutesWorkedPerWeek));
       hours_worked_per_week = round(minutesWorkedPerWeek / 60, 2);

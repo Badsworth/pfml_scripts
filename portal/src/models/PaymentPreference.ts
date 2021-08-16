@@ -3,6 +3,7 @@
 import BaseModel from "./BaseModel";
 
 class PaymentPreference extends BaseModel {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'PaymentPreference' is... Remove this comment to see the full error message
   get defaults() {
     return {
       account_number: null,

@@ -25,8 +25,11 @@ Auth.configure({
     // path: '/', (optional)
   },
   mandatorySignIn: false,
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'cognitoRegion' does not exist on type 's... Remove this comment to see the full error message
   region: process.env.awsConfig.cognitoRegion,
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'cognitoUserPoolId' does not exist on typ... Remove this comment to see the full error message
   userPoolId: process.env.awsConfig.cognitoUserPoolId,
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'cognitoUserPoolWebClientId' does not exi... Remove this comment to see the full error message
   userPoolWebClientId: process.env.awsConfig.cognitoUserPoolWebClientId,
 });
 
@@ -45,6 +48,7 @@ export const App = ({ Component, pageProps }) => {
 
   const appLogic = useAppLogic();
   useSessionTimeout(
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'secondsOfInactivityUntilLogout' does not... Remove this comment to see the full error message
     process.env.session.secondsOfInactivityUntilLogout,
     appLogic.auth
   );
@@ -85,6 +89,7 @@ export const App = ({ Component, pageProps }) => {
      *  focus should change. Learn more: https://nextjs.org/docs/routing/shallow-routing
      */
     const handleRouteChangeError = (_err, url, options = {}) => {
+      // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{}' is not assignable to paramet... Remove this comment to see the full error message
       handleRouteChangeEnd(url, options);
     };
 
@@ -95,6 +100,7 @@ export const App = ({ Component, pageProps }) => {
      * @param {boolean} options.shallow - Primarily used in our route events to determine if scroll/active
      *  focus should change. Learn more: https://nextjs.org/docs/routing/shallow-routing
      */
+    // @ts-expect-error ts-migrate(2525) FIXME: Initializer provides no value for this binding ele... Remove this comment to see the full error message
     const handleRouteChangeStart = (url = "", { shallow } = {}) => {
       const [routeName, queryString] = url.split("?");
       const pageAttributes = {
@@ -121,6 +127,7 @@ export const App = ({ Component, pageProps }) => {
      * @param {boolean} options.shallow - Primarily used in our route events to determine if scroll/active
      *  focus should change. Learn more: https://nextjs.org/docs/routing/shallow-routing
      */
+    // @ts-expect-error ts-migrate(2525) FIXME: Initializer provides no value for this binding ele... Remove this comment to see the full error message
     const handleRouteChangeComplete = (url = "", { shallow } = {}) => {
       handleRouteChangeEnd(url, { shallow });
 
@@ -130,6 +137,7 @@ export const App = ({ Component, pageProps }) => {
       // component, which includes the markup to support this.
       if (!shallow) {
         const pageHeading = document.querySelector(".js-title");
+        // @ts-expect-error ts-migrate(2339) FIXME: Property 'focus' does not exist on type 'Element'.
         if (pageHeading) pageHeading.focus();
       }
     };
@@ -193,6 +201,7 @@ App.propTypes = {
 function getPageAttributesFromQueryString(queryString) {
   const pageAttributes = {};
   // note that URLSearchParams accepts null/undefined in its constructor
+  // @ts-expect-error ts-migrate(2569) FIXME: Type 'URLSearchParams' is not an array type or a s... Remove this comment to see the full error message
   for (const [key, value] of new URLSearchParams(queryString)) {
     pageAttributes[`query_${snakeCase(key)}`] = value;
   }

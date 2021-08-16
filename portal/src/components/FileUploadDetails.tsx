@@ -13,6 +13,7 @@ function FileUploadDetails() {
   const tipsArray = t("components.fileUploadDetails.tips", {
     returnObjects: true,
   });
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'map' does not exist on type 'string'.
   const renderedTips = tipsArray.map((list, index) => (
     <List key={index} list={list} />
   ));

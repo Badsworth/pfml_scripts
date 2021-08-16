@@ -40,6 +40,7 @@ const useAppErrorsLogic = ({ portalFlow }) => {
     addItem: addError,
     collection: appErrors,
     setCollection: setAppErrors,
+  // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
   } = useCollectionState(new AppErrorInfoCollection());
 
   /**
@@ -72,6 +73,7 @@ const useAppErrorsLogic = ({ portalFlow }) => {
    * @callback clearErrorsFunction
    */
   const clearErrors = () => {
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     setAppErrors(() => new AppErrorInfoCollection());
   };
 
@@ -273,6 +275,7 @@ const useAppErrorsLogic = ({ portalFlow }) => {
         errorName: error.name,
       });
     } else {
+      // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
       tracker.noticeError(error);
     }
   };

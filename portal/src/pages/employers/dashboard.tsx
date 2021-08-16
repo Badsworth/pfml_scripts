@@ -54,6 +54,7 @@ export const Dashboard = (props) => {
     });
 
     const paramsObj = {};
+    // @ts-expect-error ts-migrate(2569) FIXME: Type 'IterableIterator<[string, string]>' is not a... Remove this comment to see the full error message
     for (const [paramKey, paramValue] of params.entries()) {
       paramsObj[paramKey] = paramValue;
     }
@@ -75,6 +76,7 @@ export const Dashboard = (props) => {
 
       <div className="measure-6">
         {props.user.hasVerifiableEmployer && (
+          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; heading:... Remove this comment to see the full error message
           <Alert
             state="warning"
             heading={t("pages.employersDashboard.verificationTitle")}
@@ -148,6 +150,7 @@ export const Dashboard = (props) => {
       />
       <PaginatedClaimsTable
         appLogic={props.appLogic}
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ appLogic: any; user: any; query: any; upda... Remove this comment to see the full error message
         user={props.user}
         query={props.query}
         updatePageQuery={updatePageQuery}
@@ -288,6 +291,7 @@ const PaginatedClaimsTable = withClaims((props) => {
 
 PaginatedClaimsTable.propTypes = {
   appLogic: Dashboard.propTypes.appLogic,
+  // @ts-expect-error ts-migrate(2322) FIXME: Type '{ appLogic: PropTypes.Validator<PropTypes.In... Remove this comment to see the full error message
   claims: PropTypes.instanceOf(ClaimCollection),
   paginationMeta: PropTypes.instanceOf(PaginationMeta),
   updatePageQuery: PropTypes.func.isRequired,
@@ -339,6 +343,7 @@ const ClaimTableRows = (props) => {
 
     switch (columnKey) {
       case "created_at":
+        // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
         return formatDateRange(get(claim, columnKey));
       case "fineos_absence_id":
         return isEmployerRegisteredInFineos ? (
@@ -362,6 +367,7 @@ const ClaimTableRows = (props) => {
         return employerFein;
       case "status":
         return (
+          // @ts-expect-error ts-migrate(2786) FIXME: 'AbsenceCaseStatusTag' cannot be used as a JSX com... Remove this comment to see the full error message
           <AbsenceCaseStatusTag
             status={get(claim, "claim_status")}
             managedRequirements={get(claim, "managed_requirements")}
@@ -418,6 +424,7 @@ const DashboardInfoAlert = (props) => {
   // We use this flag to communicate this to the user.
   if (user.hasVerifiedEmployerNotRegisteredInFineos) {
     return (
+      // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; heading:... Remove this comment to see the full error message
       <Alert
         state="info"
         heading={t("pages.employersDashboard.unavailableClaimsTitle", {
@@ -443,6 +450,7 @@ const DashboardInfoAlert = (props) => {
   }
 
   return (
+    // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; heading:... Remove this comment to see the full error message
     <Alert state="info" heading={t("pages.employersDashboard.betaHeader")}>
       <p>
         <Trans
@@ -489,7 +497,9 @@ const Filters = (props) => {
    */
   const activeFilters = getFormStateFromQuery();
   const [showFilters, setShowFilters] = useState(false);
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState(activeFilters);
+  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ formState: any; updateFields: ... Remove this comment to see the full error message
   const getFunctionalInputProps = useFunctionalInputProps({
     formState,
     updateFields,
@@ -755,7 +765,9 @@ const Search = (props) => {
   const { initialValue, updatePageQuery } = props;
   const { t } = useTranslation();
 
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState({ search: initialValue });
+  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ formState: any; updateFields: ... Remove this comment to see the full error message
   const getFunctionalInputProps = useFunctionalInputProps({
     formState,
     updateFields,
@@ -820,9 +832,11 @@ const SortDropdown = (props) => {
   }
 
   const { t } = useTranslation();
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState({
     orderAndDirection: compact([order_by, order_direction]).join(","),
   });
+  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ formState: any; updateFields: ... Remove this comment to see the full error message
   const getFunctionalInputProps = useFunctionalInputProps({
     formState,
     updateFields,
@@ -863,6 +877,7 @@ const SortDropdown = (props) => {
     <Dropdown
       {...getFunctionalInputProps("orderAndDirection")}
       onChange={handleChange}
+      // @ts-expect-error ts-migrate(2322) FIXME: Type '{ label: TFunctionResult; value: string; }[]... Remove this comment to see the full error message
       choices={Array.from(choices).map(([key, value]) => ({
         label: t("pages.employersDashboard.sortChoice", { context: key }),
         value,

@@ -73,6 +73,7 @@ export const Review = (props) => {
     (leave, index) => new PreviousLeave({ ...leave, previous_leave_id: index })
   );
 
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { clearField, getField, formState, updateFields } = useFormState({
     // base fields
     concurrentLeave: claim.concurrent_leave,
@@ -352,8 +353,10 @@ export const Review = (props) => {
         formState.believeRelationshipAccurate === "No"
           ? formState.relationshipInaccurateReason
           : "";
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'believe_relationship_accurate' does not ... Remove this comment to see the full error message
       payload.believe_relationship_accurate =
         formState.believeRelationshipAccurate;
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'relationship_inaccurate_reason' does not... Remove this comment to see the full error message
       payload.relationship_inaccurate_reason = parsedRelationshipComment;
     }
 
@@ -382,9 +385,11 @@ export const Review = (props) => {
           name: claim.fullName,
         })}
       </Title>
+      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; noIcon: ... Remove this comment to see the full error message */}
       <Alert state="warning" noIcon>
         <Trans
           i18nKey="pages.employersClaimsReview.instructionsFollowUpDate"
+          // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
           values={{ date: formatDateRange(claim.follow_up_date) }}
         />
       </Alert>
@@ -423,6 +428,7 @@ export const Review = (props) => {
         }
       />
       <LeaveSchedule
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ appLogic: any; claim: any; hasDocuments: b... Remove this comment to see the full error message
         appLogic={appLogic}
         claim={claim}
         hasDocuments={!!certificationDocuments.length}
@@ -493,6 +499,7 @@ export const Review = (props) => {
               onAdd={handleConcurrentLeaveAdd}
               onChange={handleConcurrentLeaveInputChange}
               onRemove={handleConcurrentLeaveRemove}
+              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ appErrors: any; addedConcurrentLeave: any;... Remove this comment to see the full error message
               shouldShowV2={shouldShowV2}
             />
           </React.Fragment>

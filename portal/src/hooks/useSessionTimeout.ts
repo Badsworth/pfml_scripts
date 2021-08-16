@@ -15,6 +15,7 @@ const useSessionTimeout = (secondsOfInactivityUntilLogout, authLogic) => {
   const isIdle = useIdle(idleMilliseconds);
   useEffect(() => {
     if (isLoggedIn && isIdle) {
+      // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
       tracker.trackEvent("Session timed out");
 
       logout({

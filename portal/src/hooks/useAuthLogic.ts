@@ -140,6 +140,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    *  session timeout. Defaults to false
    */
   const logout = async (options = {}) => {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'sessionTimedOut' does not exist on type ... Remove this comment to see the full error message
     const { sessionTimedOut = false } = options;
     trackAuthRequest("signOut");
     // Set global: true to invalidate all refresh tokens associated with the user on the Cognito servers
@@ -155,6 +156,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     try {
       await Auth.signOut({ global: true });
     } catch (error) {
+      // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
       tracker.noticeError(error);
     }
     setIsLoggedIn(false);
@@ -191,6 +193,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     };
 
     if (role_description === RoleDescription.employer) {
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'user_leave_administrator' does not exist... Remove this comment to see the full error message
       requestData.user_leave_administrator = { employer_fein };
     }
 
@@ -218,6 +221,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    * @param {string} password Password
    */
   const createAccount = async (username = "", password) => {
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 4 arguments, but got 3.
     await _createAccountInApi(username, password, RoleDescription.claimant);
   };
 

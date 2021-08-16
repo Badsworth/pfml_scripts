@@ -32,6 +32,7 @@ export const fields = [
 export const Address = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
   );
@@ -62,11 +63,13 @@ export const Address = (props) => {
     "residential_address"
   );
   if (!residentialAddressProps.value) {
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     residentialAddressProps.value = new AddressModel();
   }
 
   const mailingAddressProps = getFunctionalInputProps("mailing_address");
   if (!mailingAddressProps.value) {
+    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     mailingAddressProps.value = new AddressModel();
   }
 

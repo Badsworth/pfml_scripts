@@ -28,6 +28,7 @@ const Title = ({ component = "h1", small = false, ...props }) => {
       <Helmet>
         <title>{seoTitle}</title>
       </Helmet>
+      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: any; tabIndex: string; className... Remove this comment to see the full error message */}
       <TitleElement tabIndex="-1" className={classes}>
         {props.children}
       </TitleElement>

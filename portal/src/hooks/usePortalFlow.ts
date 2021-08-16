@@ -40,6 +40,7 @@ const usePortalFlow = () => {
   const goTo = (route, params, options = {}) => {
     const url = createRouteWithQuery(route, params);
 
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'redirect' does not exist on type '{}'.
     if (options.redirect) {
       router.replace(route);
       return;

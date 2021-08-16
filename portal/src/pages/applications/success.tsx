@@ -99,6 +99,7 @@ export const Success = (props) => {
 
       <div className="measure-6">
         {!["leaveNotInFuture", "caringLeave"].includes(claimContext) && (
+          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; autoWidt... Remove this comment to see the full error message
           <Alert state="warning" autoWidth>
             <Trans
               i18nKey="pages.claimsSuccess.proofRequired"

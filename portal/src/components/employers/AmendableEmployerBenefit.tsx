@@ -140,6 +140,7 @@ const AmendableEmployerBenefit = ({
   const BenefitDetailsRow = () => (
     <tr>
       <th scope="row">
+        {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
         {formatDateRange(
           employerBenefit.benefit_start_date,
           employerBenefit.benefit_end_date
@@ -160,6 +161,7 @@ const AmendableEmployerBenefit = ({
         visible={isAddedByLeaveAdmin || isAmendmentFormDisplayed}
       >
         <tr>
+          {/* @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number'. */}
           <td colSpan="4" className="padding-y-2 padding-left-0">
             <AmendmentForm
               className={className}

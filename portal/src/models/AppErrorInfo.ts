@@ -12,6 +12,7 @@ import { uniqueId } from "lodash";
  * @property {string} [type] - Name of validation issue type (e.g "required", "pattern", "date", etc)
  */
 class AppErrorInfo extends BaseModel {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'AppErrorInfo' is not ... Remove this comment to see the full error message
   get defaults() {
     return {
       key: uniqueId("AppErrorInfo"),

@@ -3,6 +3,7 @@ import BaseCollection from "./BaseCollection";
 /** @typedef {import('./Document').default} Document */
 
 export default class DocumentCollection extends BaseCollection {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'idProperty' in type 'DocumentCollection'... Remove this comment to see the full error message
   get idProperty() {
     return "fineos_document_id";
   }
@@ -13,6 +14,7 @@ export default class DocumentCollection extends BaseCollection {
    * @returns {Document[]}
    */
   filterByApplication(application_id) {
+    // @ts-expect-error ts-migrate(2339) FIXME: Property 'items' does not exist on type 'DocumentC... Remove this comment to see the full error message
     return this.items.filter((item) => item.application_id === application_id);
   }
 }

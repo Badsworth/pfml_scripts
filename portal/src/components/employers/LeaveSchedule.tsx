@@ -58,6 +58,7 @@ const LeaveSchedule = ({ hasDocuments, claim }) => {
           {isContinuous && (
             <tr>
               <th scope="row">
+                {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
                 {formatDateRange(
                   get(
                     claim,
@@ -122,6 +123,7 @@ const LeaveSchedule = ({ hasDocuments, claim }) => {
           )}
           {isIntermittent && (
             <IntermittentLeaveSchedule
+              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ intermittentLeavePeriods: any; hasDocument... Remove this comment to see the full error message
               intermittentLeavePeriods={intermittent_leave_periods}
               hasDocuments={hasDocuments}
             />

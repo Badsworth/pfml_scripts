@@ -5,6 +5,7 @@
 import BaseModel from "./BaseModel";
 
 class PreviousLeave extends BaseModel {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'PreviousLeave' is not... Remove this comment to see the full error message
   get defaults() {
     return {
       is_for_current_employer: null,

@@ -19,6 +19,7 @@ export const BondingLeaveAttestation = (props) => {
         i18nKey="pages.claimsBondingLeaveAttestation.lead"
         components={{ ul: <ul className="usa-list" />, li: <li /> }}
       />
+      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element[]; className: string; st... Remove this comment to see the full error message */}
       <Alert className="measure-6" state="info" noIcon>
         <p>{t("pages.claimsBondingLeaveAttestation.truthAttestation")}</p>
         <ButtonLink

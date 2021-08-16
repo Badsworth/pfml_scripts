@@ -26,6 +26,7 @@ export const fields = [
 export const LeaveReason = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
   );
@@ -109,6 +110,7 @@ export const LeaveReason = (props) => {
       title={t("pages.claimsLeaveReason.title")}
       onSave={handleSave}
     >
+      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; neutral:... Remove this comment to see the full error message */}
       <Alert state="info" neutral>
         <Trans
           i18nKey="pages.claimsLeaveReason.alertBody"
@@ -146,6 +148,7 @@ export const LeaveReason = (props) => {
           claim.leave_details.reason !== reason
         }
       >
+        {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; heading:... Remove this comment to see the full error message */}
         <Alert
           state="warning"
           heading={t("pages.claimsLeaveReason.leaveReasonChangedAlertTitle")}

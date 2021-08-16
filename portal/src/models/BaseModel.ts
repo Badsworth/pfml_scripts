@@ -12,12 +12,14 @@ export default class BaseModel {
   constructor(attrs) {
     attrs = attrs || {};
 
+    // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
     for (const [property, defaultValue] of Object.entries(this.defaults)) {
       this[property] = defaultValue;
     }
 
     for (const [property, value] of Object.entries(attrs)) {
       // Ignore top-level attributes that aren't part of the model class's defaults array
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'hasOwnProperty' does not exist on type '... Remove this comment to see the full error message
       if (!this.defaults.hasOwnProperty(property)) {
         // Log a warning since it might indicate a missing field on the model or API, indicating a potential bug.
         // TODO (CP-694): Don't log a warning when the field is a temporary field, in which case it's expected that this field doesn't exist in the API yet
@@ -51,6 +53,7 @@ export default class BaseModel {
    * @returns {boolean} true if this object has default values and false otherwise
    */
   isDefault() {
+    // @ts-expect-error ts-migrate(2351) FIXME: This expression is not constructable.
     return isEqual(this, new this.constructor());
   }
 }

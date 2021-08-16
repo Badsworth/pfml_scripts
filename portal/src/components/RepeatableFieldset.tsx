@@ -18,8 +18,10 @@ const RepeatableFieldset = (props) => {
   const limitReached = props.limit ? entries.length >= props.limit : false;
 
   useEffect(() => {
+    // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
     if (entriesAndIds.length > previousEntriesLength) {
       // When a new entry is added to the list, focus and scroll it into view.
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'querySelector' does not exist on type 'u... Remove this comment to see the full error message
       const lastEntry = containerRef.current.querySelector(
         ".js-repeated-fieldset-card:last-of-type"
       );
@@ -44,6 +46,7 @@ const RepeatableFieldset = (props) => {
   );
 
   return (
+    // @ts-expect-error ts-migrate(2322) FIXME: Type 'RefObject<unknown>' is not assignable to typ... Remove this comment to see the full error message
     <section className="margin-bottom-4" ref={containerRef}>
       {entriesAndIds.map(([entry, id], index) => (
         <RepeatableFieldsetCard

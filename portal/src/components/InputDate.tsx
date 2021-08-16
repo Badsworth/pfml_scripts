@@ -33,6 +33,7 @@ export function formatFieldsAsISO8601({ month, day, year }, options = {}) {
   day = day ? day.replace(/\D/g, "") : "";
   year = year ? year.replace(/\D/g, "") : "";
 
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'skipLeadingZeros' does not exist on type... Remove this comment to see the full error message
   if (!options.skipLeadingZeros) {
     month = addLeadingZero(month);
     day = addLeadingZero(day);
@@ -110,8 +111,11 @@ function InputDate(props) {
    */
   const handleBlur = (evt) => {
     const isoDate = formatFieldsAsISO8601({
+      // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
       month: inputTextRefs.month.current.value,
+      // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
       day: inputTextRefs.day.current.value,
+      // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
       year: inputTextRefs.year.current.value,
     });
 
@@ -128,8 +132,11 @@ function InputDate(props) {
   const handleChange = (evt) => {
     const date = formatFieldsAsISO8601(
       {
+        // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
         month: inputTextRefs.month.current.value,
+        // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
         day: inputTextRefs.day.current.value,
+        // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
         year: inputTextRefs.year.current.value,
       },
       // We skip adding leading zeros onChange so that we don't prevent

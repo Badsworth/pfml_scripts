@@ -6,6 +6,7 @@ import BaseModel from "./BaseModel";
 import LeaveReason from "./LeaveReason";
 
 class Document extends BaseModel {
+  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'Document' is not assi... Remove this comment to see the full error message
   get defaults() {
     return {
       application_id: null,

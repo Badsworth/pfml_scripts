@@ -86,6 +86,7 @@ export const Status = (props) => {
         data-test="status"
         label={t("pages.employersClaimsStatus.statusLabel")}
       >
+        {/* @ts-expect-error ts-migrate(2786) FIXME: 'AbsenceCaseStatusTag' cannot be used as a JSX com... Remove this comment to see the full error message */}
         <AbsenceCaseStatusTag status={claim.status} />
       </StatusRow>
       <StatusRow
@@ -105,6 +106,7 @@ export const Status = (props) => {
           data-test="duration"
           label={t("pages.employersClaimsStatus.leaveDurationLabel")}
         >
+          {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
           {formatDateRange(claim.leaveStartDate, claim.leaveEndDate)}
         </StatusRow>
       )}

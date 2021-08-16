@@ -26,6 +26,7 @@ export const ResetPassword = (props) => {
   // which we need for resetting their password
   const showEmailField = !cachedEmail;
 
+  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState({
     code: "",
     password: "",
@@ -58,6 +59,7 @@ export const ResetPassword = (props) => {
         href={routes.auth.login}
       />
       {codeResent && appErrors.isEmpty && (
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; className: string; headi... Remove this comment to see the full error message
         <Alert
           className="margin-bottom-3 margin-top-0"
           heading={t("pages.authResetPassword.codeResentHeading")}

@@ -41,6 +41,7 @@ export const GetReady = (props) => {
 
       <Title>{t("pages.getReady.title")}</Title>
 
+      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element[]; heading: string; stat... Remove this comment to see the full error message */}
       <Alert
         heading={t("pages.getReady.alertHeading")}
         state="info"
