@@ -85,6 +85,10 @@ Exports the Storybook site as a static HTML site.
 
 ## Additional commands
 
+### `npm run ts:check`
+
+Run the TypeScript type checks.
+
 ### `npm run analyze-bundle`
 
 Runs `webpack-bundle-analyzer` over the Next.js build, scanning the bundle and creating a visualization of what’s inside it. This can be helpful to debug the bundle size. Use this visualization to find large or unnecessary dependencies.
