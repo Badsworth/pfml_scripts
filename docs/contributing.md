@@ -97,17 +97,34 @@ Use "request changes" sparingly, unless there's a blocking issue or major refact
 
 ### How to merge
 
-When merging a PR, use the PR description as a starting point. Copy it into the merge commit body and clean it up as desired. Please verify that the commit title includes the JIRA ticket.
+When merging a PR, _use the PR description as a starting point_. Copy it into the merge commit body and clean it up as desired.
 
-Example:
+**Please verify that the commit title includes the JIRA ticket.**
+
+If the PR only has a single commit, GitHub will default to using that commit
+subject and description. This is often incorrect, missing the JIRA ticket.
+
+Example to follow:
 
     PFML-540: Implement GET claims endpoint (#145)
 
-    https://jira.cms.gov/browse/PFML-540
+    https://lwd.atlassian.net/browse/PFML-540
 
     Implements /claims endpoint which is a GET that takes a valid user ID and returns their first claim from the database.
 
     Demo: Unit tests and adhoc testing via swagger UI.
+    
+Example to avoid:
+
+    add claims endpoint (#145)
+    
+    * formatting
+    
+    * fix
+    
+    * change endpoint
+    
+    * initial endpoint
 
 ### When to merge
 
