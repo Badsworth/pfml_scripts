@@ -130,7 +130,7 @@ class ACHWarning:
 class ACHReader:
     """A reader for ACH format files."""
 
-    def __init__(self, f: TextIO):
+    def __init__(self, f: TextIO, parse: bool = True):
         self.f = f
         self.name = getattr(self.f, "name", repr(self.f))
         self.ach_returns: List[ACHReturn] = []
@@ -139,7 +139,8 @@ class ACHReader:
         self.batch_count = 0
         self.entry_count = 0
 
-        self.parse_ach_file()
+        if parse:
+            self.parse_ach_file()
 
     def get_ach_returns(self) -> List[ACHReturn]:
         return self.ach_returns
