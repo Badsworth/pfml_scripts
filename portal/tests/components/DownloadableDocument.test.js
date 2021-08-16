@@ -1,5 +1,6 @@
 import Document, { DocumentType } from "../../src/models/Document";
 import DownloadableDocument from "../../src/components/DownloadableDocument";
+import Icon from "../../src/components/Icon";
 import React from "react";
 import { act } from "react-dom/test-utils";
 import { shallow } from "enzyme";
@@ -87,5 +88,12 @@ describe("DownloadableDocument", () => {
       "mock-absence-id",
       DOCUMENT
     );
+  });
+
+  it("renders document with icon and additional classname item", () => {
+    const { wrapper } = render({
+      icon: <Icon fill="currentColor" name="file_present" size={3} />,
+    });
+    expect(wrapper).toMatchSnapshot();
   });
 });

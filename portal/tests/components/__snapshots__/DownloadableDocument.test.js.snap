@@ -12,3 +12,21 @@ exports[`DownloadableDocument renders document item 1`] = `
   </Button>
 </Fragment>
 `;
+
+exports[`DownloadableDocument renders document with icon and additional classname item 1`] = `
+<Fragment>
+  <Button
+    className="text-bold display-flex flex-align-center"
+    onClick={[Function]}
+    type="button"
+    variation="unstyled"
+  >
+    <Icon
+      fill="currentColor"
+      name="file_present"
+      size={3}
+    />
+    Other notice (PDF)
+  </Button>
+</Fragment>
+`;

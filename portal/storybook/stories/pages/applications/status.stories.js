@@ -8,8 +8,11 @@ export default {
 
 export const DefaultStory = () => {
   const appLogic = {
+    appErrors: { items: [] },
+    documents: { download: () => {} },
     portalFlow: {
       getNextPageRoute: () => "/storybook-mock",
+      goTo: () => {},
     },
   };
   return <Status appLogic={appLogic} />;
