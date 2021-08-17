@@ -4,13 +4,39 @@ import { Submission, GetClaimFromDBArgs } from "../../../src/types";
 import { waitForAjaxComplete } from "../../actions/fineos";
 import { ClaimDocument } from "../../claims_database/models/claim";
 import { format, parseISO } from "date-fns";
+import { config } from "../../actions/common";
+import * as scenarios from "../../../src/scenarios";
+import { getCertificationDocumentType } from "util/documents";
 
-const spec: GetClaimFromDB = {
-  filters: { status: "approved" },
+const spec: GetClaimFromDBArgs = {
+  filters: { status: "approved", environment: config("ENVIRONMENT") },
   fallbackScenario: "MED_LSDCR",
 };
 
 describe("Approval (notifications/notices)", () => {
+  // const approval = it("Approves a claim", () => {
+  //   cy.task<ClaimDocument>("getClaimFromDB", spec).then((claim) => {
+  //     cy.stash("claim", claim);
+  //     if (claim.status === "approved") return;
+  //     const claimPage = fineosPages.ClaimPage.visit(claim.fineosAbsenceId);
+  //     claimPage.adjudicate((adjudication) => {
+  //       adjudication.evidence((evidence) => {
+  //         // Receive all of the claim documentation.
+  //         scenarios[claim.scenario].claim; //@todo mark evidence, would either have to save document types in db or return generated claim from this task
+  //       });
+  //       adjudication.certificationPeriods((cert) => cert.prefill());
+  //       adjudication.acceptLeavePlan();
+  //     });
+  //     claimPage.shouldHaveStatus("Applicability", "Applicable");
+  //     claimPage.shouldHaveStatus("Eligibility", "Met");
+  //     claimPage.shouldHaveStatus("Evidence", "Satisfied");
+  //     claimPage.shouldHaveStatus("Availability", "Time Available");
+  //     claimPage.shouldHaveStatus("Restriction", "Passed");
+  //     claimPage.shouldHaveStatus("PlanDecision", "Accepted");
+  //     claimPage.approve();
+  //   });
+  // });
+
   const modify = it(
     "Will modify leave dates for an approved claim",
     { baseUrl: getFineosBaseUrl() },
@@ -19,6 +45,7 @@ describe("Approval (notifications/notices)", () => {
       cy.visit("/");
       cy.task<ClaimDocument>("getClaimFromDB", spec).then(
         ({ fineosAbsenceId, startDate, endDate }) => {
+          cy.stash("fineosAbsenceId", fineosAbsenceId);
           // visit claim after approval for start date change request w approval
           fineosPages.ClaimPage.visit(fineosAbsenceId)
             .tasks((task) => {
@@ -63,8 +90,8 @@ describe("Approval (notifications/notices)", () => {
       cy.dependsOnPreviousPass([modify]);
       fineos.before();
       cy.visit("/");
-      cy.unstash<Submission>("submission").then((submission) => {
-        fineosPages.ClaimPage.visit(submission.fineos_absence_id)
+      cy.unstash<string>("fineosAbsenceId").then((fineosAbsenceId) => {
+        fineosPages.ClaimPage.visit(fineosAbsenceId)
           .outstandingRequirements((outstandingRequirement) => {
             outstandingRequirement.add();
           })
