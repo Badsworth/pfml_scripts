@@ -3,6 +3,7 @@ import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
+import { extractLeavePeriod } from "util/claims";
 
 describe("Submit medical application via the web portal: Adjudication Approval & payment checking", () => {
   const submissionTest =
@@ -104,6 +105,20 @@ describe("Submit medical application via the web portal: Adjudication Approval &
                 .assertMatchingPaymentDates();
             }
           );
+          const [startDate, endDate] = extractLeavePeriod(
+            claim.claim,
+            "reduced_schedule_leave_periods"
+          );
+          cy.task("saveClaim", {
+            scenario: claim.scenario,
+            claimId: submission.application_id,
+            fineosAbsenceId: submission.fineos_absence_id,
+            startDate,
+            endDate,
+            status: "approved",
+            environment: config("ENVIRONMENT"),
+            submittedDate: submission.timestamp_from,
+          });
         });
       });
     }

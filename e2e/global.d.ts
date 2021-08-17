@@ -24,9 +24,10 @@ type Scenarios = import("./src/types").Scenarios;
 type ScenarioSpecs = import("./src/types").ScenarioSpecs;
 type APIClaimSpec = import("./src/generation/Claim").APIClaimSpec;
 type GeneratedClaim = import("./src/generation/Claim").GeneratedClaim;
-type DBDocument = import("mongoose").Document;
 type FineosExclusiveLeaveReasons =
   import("./src/generation/Claim").FineosExclusiveLeaveReasons;
+type DBClaimMetadata = import("./src/types").DBClaimMetadata;
+type GetClaimFromDB = import("./src/types").GetClaimFromDB;
 
 declare namespace Cypress {
   interface Cypress {
@@ -90,9 +91,10 @@ declare namespace Cypress {
       waitParams: Parameters<waitForClaimDocuments>[0],
       options?: Partial<Timeoutable & Loggable>
     ): Chainable<boolean>;
-    task<T>(
+    task(
       event: "getClaimFromDB",
-      spec: Pick<T, Exclude<keyof T, DBDocument<T, unknown, unknown>>>
-    ): Chainable<T>;
+      arg: GetClaimFromDB
+    ): Chainable<GetClaimFromDB>;
+    task(event: "saveClaim", arg: DBClaimMetadata): Chainable<never>;
   }
 }

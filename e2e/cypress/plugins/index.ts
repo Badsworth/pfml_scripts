@@ -23,6 +23,7 @@ import {
   ApplicationSubmissionResponse,
   Credentials,
   Scenarios,
+  DBClaimMetadata,
 } from "../../src/types";
 import {
   generateCredentials,
@@ -46,10 +47,9 @@ import * as scenarios from "../../src/scenarios";
 import { Employer, EmployerPickSpec } from "../../src/generation/Employer";
 import * as postSubmit from "../../src/submission/PostSubmit";
 import pRetry from "p-retry";
-import { disconnectDB, connectDB } from "../claims_database/db";
-import ClaimModel, { ClaimDocument } from "../claims_database/models/claim";
+import { MongoConnector } from "../claims_database/db";
+import ClaimModel from "../claims_database/models/claim";
 import { extractLeavePeriod } from "../../src/util/claims";
-import { Document as DBDocument } from "mongoose";
 
 async function generateClaim(scenarioID: Scenarios): Promise<DehydratedClaim> {
   if (!(scenarioID in scenarios)) {
@@ -102,7 +102,6 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
     config("API_BASEURL"),
     authenticator
   );
-  (async () => await connectDB(config("MONGO_CONNECTION_URI")))();
 
   // Keep a static cache of the SSO login cookies. This allows us to skip double-logins
   // in envrionments that use SSO. Double logins are a side effect of changing the baseUrl.
@@ -186,31 +185,21 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       return true;
     },
 
-    async getClaimFromDB(
-      spec: Pick<
-        ClaimDocument,
-        Exclude<
-          keyof ClaimDocument,
-          DBDocument<ClaimDocument, unknown, unknown>
-        >
-      >
-    ): Promise<ClaimDocument> {
-      if (!(spec.scenario in scenarios)) {
-        throw new Error(`Invalid scenario: ${spec.scenario}`);
+    /**
+     * Returns a claim submitted from prior E2E runs based on the claim specification
+     * @param filters - DBClaimMetaData
+     * @returns
+     */
+    async getClaimFromDB({ filters, fallbackScenario }: GetClaimFromDB) {
+      const { connectDB, disconnectDB } = MongoConnector();
+      await connectDB(config("MONGO_CONNECTION_URI"));
+      if (!(fallbackScenario in scenarios)) {
+        throw new Error(`Invalid scenario: ${fallbackScenario}`);
       }
-      const scenario = scenarios[spec.scenario];
-      const { label, leave_dates } = scenario.claim;
-      const startDate = leave_dates ? leave_dates[0] : undefined;
-      const endDate = leave_dates ? leave_dates[1] : undefined;
-      let claim = await ClaimModel.findOne({
-        scenario: label,
-        startDate,
-        endDate,
-        status: "adjudication",
-      });
+      let claim = await ClaimModel.findOne(filters);
       if (!claim) {
         // submit to api
-        const genApplication = await generateClaim(spec.scenario);
+        const genApplication = await generateClaim(fallbackScenario);
         const submittedClaim = await submitClaimToAPI(genApplication);
         const extractLeaveType = (application: DehydratedClaim) => {
           if (application.claim.has_intermittent_leave_periods)
@@ -224,7 +213,7 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
           extractLeaveType(genApplication)
         );
         const doc = {
-          scenario: label,
+          scenario: fallbackScenario,
           claimId: submittedClaim.application_id,
           fineosAbsenceId: submittedClaim.fineos_absence_id,
           startDate,
@@ -238,8 +227,18 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
         claim.status = "in-progress";
         await claim.save();
       }
+      await disconnectDB();
       return claim;
     },
+
+    async saveClaim(arg: DBClaimMetadata): Promise<null> {
+      const { connectDB, disconnectDB } = MongoConnector();
+      await connectDB(config("MONGO_CONNECTION_URI"));
+      await ClaimModel.create(arg);
+      await disconnectDB();
+      return null;
+    },
+
     syslog(arg: unknown | unknown[]): null {
       if (Array.isArray(arg)) {
         console.log(...arg);
@@ -255,7 +254,6 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
   };
   on("file:preprocessor", webpackPreprocessor(options));
 
-  on("after:run", disconnectDB);
   // Pass config values through as environment variables, which we will access via Cypress.env() in actions/common.ts.
   const configEntries = Object.entries(merged).map(([k, v]) => [`E2E_${k}`, v]);
   return {

@@ -405,22 +405,16 @@ class CertificationPeriodsPage {
 }
 class RequestInformationPage {
   private enterNewLeaveDates(newStartDate: string, newEndDate: string) {
-    cy.get(
-      "input[id='timeOffAbsencePeriodDetailsWidget_un41_startDate']"
-    ).click();
-    cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un41_startDate']").type(
-      `{selectall}{backspace}${newStartDate}{enter}`
+    cy.get("input[type='text'][id$='_startDate']").click();
+    cy.get("input[type='text'][id$='_startDate']").type(
+      `{selectall}{backspace}${newStartDate}`
     );
-    cy.wait("@ajaxRender");
-    cy.wait(300);
-    cy.get(
-      "input[id='timeOffAbsencePeriodDetailsWidget_un41_endDate']"
-    ).click();
-    cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un41_endDate']").type(
-      `{selectall}{backspace}${newEndDate}{enter}`
+    fineos.waitForAjaxComplete();
+    cy.get("input[type='text'][id$='_endDate']").click();
+    cy.get("input[type='text'][id$='_endDate']").type(
+      `{selectall}{backspace}${newEndDate}`
     );
-    cy.wait("@ajaxRender");
-    cy.wait(200);
+    fineos.waitForAjaxComplete();
     cy.get("input[title='OK']").click();
   }
 

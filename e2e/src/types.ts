@@ -225,3 +225,8 @@ export type DBClaimMetadata = {
   environment: string;
   submittedDate: Date;
 };
+
+export type GetClaimFromDBArgs = {
+  filters: Partial<DBClaimMetadata>;
+  fallbackScenario: Scenarios;
+};

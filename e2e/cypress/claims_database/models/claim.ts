@@ -3,8 +3,6 @@ import { DBClaimMetadata } from "../../../src/types";
 
 export interface ClaimDocument extends DBClaimMetadata, Document {}
 
-export type G = DBClaimMetadata;
-
 const schema = new Schema<ClaimDocument>({
   scenario: { type: String, required: true },
   claimId: { type: String, required: true },
