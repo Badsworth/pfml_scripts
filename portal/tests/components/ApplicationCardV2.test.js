@@ -1,34 +1,22 @@
-import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { ApplicationCardV2 } from "../../src/components/ApplicationCardV2";
 import { MockBenefitsApplicationBuilder } from "../test-utils";
 import React from "react";
-import { shallow } from "enzyme";
+import { mount } from "enzyme";
 
 describe("ApplicationCardV2", () => {
-  let props;
-  const render = (claim, additionalProps = {}) => {
-    props = Object.assign(
-      {
-        appLogic: {
-          appErrors: new AppErrorInfoCollection([]),
-          documents: {
-            download: jest.fn(),
-          },
-        },
-        documents: [],
-      },
-      additionalProps
-    );
+  describe("components match their snapshots", () => {
+    it("in progress component status matches snapshot", () => {
+      const claim = new MockBenefitsApplicationBuilder().submitted().create();
+      const wrapper = mount(<ApplicationCardV2 claim={claim} number={2} />);
 
-    return shallow(<ApplicationCardV2 claim={claim} number={2} {...props} />);
-  };
+      expect(wrapper).toMatchSnapshot();
+    });
 
-  describe("claim statuses match snapshots", () => {
-    it("completed status matches its snapshot", () => {
-      const wrapper = render(
-        new MockBenefitsApplicationBuilder().completed().create()
-      );
-      expect(wrapper.find("StatusCard").dive()).toMatchSnapshot();
+    it("completed status component matches snapshot", () => {
+      const claim = new MockBenefitsApplicationBuilder().completed().create();
+      const wrapper = mount(<ApplicationCardV2 claim={claim} />);
+
+      expect(wrapper).toMatchSnapshot();
     });
   });
 });

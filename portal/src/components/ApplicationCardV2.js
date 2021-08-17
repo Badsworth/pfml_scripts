@@ -14,8 +14,6 @@ import { useTranslation } from "../locales/i18n";
 
 /**
  * Main header for the top of status cards
- * @param {string} title - Title of the status card
- * @returns {ReactElement}
  */
 const HeaderSection = ({ title }) => (
   <Heading className="margin-bottom-1 padding-2 padding-top-3" level="2">
@@ -166,6 +164,39 @@ CompletedStatusCard.propTypes = {
 };
 
 /**
+ * Status card for claim.status != "Completed" (In Progress)
+ */
+const InProgressStatusCard = ({ claim, number }) => {
+  const { t } = useTranslation();
+
+  return (
+    <React.Fragment>
+      <HeaderSection
+        title={t("components.applicationCardV2.heading", {
+          number,
+        })}
+      />
+      <TitleAndDetailSectionItem
+        title={t("components.applicationCardV2.employerEIN")}
+        details={claim.employer_fein}
+      />
+      <ButtonSection
+        buttonText={t("components.applicationCardV2.continueApplication")}
+        href={routeWithParams("applications.checklist", {
+          claim_id: claim.application_id,
+        })}
+      />
+    </React.Fragment>
+  );
+};
+
+InProgressStatusCard.propTypes = {
+  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
+  /**  The 1-based index of the application card */
+  number: PropTypes.number.isRequired,
+};
+
+/**
  * Main entry point for an existing benefits Application, allowing
  * claimants to continue an in progress application, view what
  * they've submitted, view notices and instructions, or upload
@@ -182,17 +213,17 @@ export const ApplicationCardV2 = (props) => {
         return <CompletedStatusCard {...props} />;
 
       default:
-        return null;
+        return <InProgressStatusCard {...props} />;
     }
   };
 
   return (
-    <React.Fragment>
-      <aside className="maxw-mobile-lg border-top-1 border-primary" />
-      <article className="maxw-mobile-lg border-left border-right border-bottom border-base-lighter margin-bottom-3">
+    <div className="maxw-mobile-lg">
+      <aside className="border-top-1 border-primary" />
+      <article className="border-x border-bottom border-base-lighter">
         <StatusCard />
       </article>
-    </React.Fragment>
+    </div>
   );
 };
 
