@@ -87,6 +87,13 @@ export function before(flags?: Partial<FeatureFlags>): void {
     /\/api\/v1\/(employers\/claims|applications)\/.*\/documents\/\d+/
   ).as("documentDownload");
 
+  cy.intercept(/\/api\/v1\/claims\?page_offset=\d+$/).as(
+    "dashboardDefaultQuery"
+  );
+  cy.intercept(/\/api\/v1\/claims\?(page_offset=\d+)?&?(order_by)/).as(
+    "dashboardClaimQueries"
+  );
+
   deleteDownloadsFolder();
 }
 
@@ -1022,10 +1029,10 @@ export function assertZeroWithholdings(): void {
     /(Employer has no verification data|Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications)/
   );
 }
-
+export type DashboardClaimStatus = "Approved" | "Denied" | "Closed" | "--";
 export function selectClaimFromEmployerDashboard(
   fineosAbsenceId: string,
-  status: "Approved" | "Denied" | "Closed" | "--"
+  status: DashboardClaimStatus
 ): void {
   goToEmployerDashboard();
   cy.contains("tr", fineosAbsenceId).should("contain.text", status);
@@ -1718,4 +1725,103 @@ export function assertLeaveType(leaveType: "Active duty"): void {
   cy.findByText("Leave type", { selector: "h3" })
     .next()
     .should("contain.text", leaveType);
+}
+
+type FilterOptions = {
+  status?: {
+    [key in DashboardClaimStatus]?: true;
+  };
+};
+/**Filter claims by given parameters
+ * @example
+ * portal.filterLADashboardBy({
+ *   status: {
+ *     Closed: true,
+ *     Denied: true,
+ *   },
+ * }); //Shows claims with status of 'Closed' & 'Denied'
+ */
+export function filterLADashboardBy(filters: FilterOptions): void {
+  cy.get('button[aria-controls="filters"]')
+    .invoke("text")
+    .then((text) => {
+      if (text.includes("Show filters"))
+        cy.findByText("Show filters", { exact: false }).click();
+    });
+  cy.findByText("Hide filters").should("be.visible");
+  const { status } = filters;
+  if (status) {
+    cy.get("#filters fieldset").within(() => {
+      for (const key of Object.keys(status))
+        cy.findByLabelText(key).click({ force: true });
+    });
+  }
+  cy.findByText("Apply filters").should("not.be.disabled").click();
+  cy.get('span[role="progressbar"]').should("be.visible");
+  cy.contains("table", "Employer ID number").should("be.visible");
+  // cy.wait("@dashboardClaimQueries");
+}
+/**Looks if dashboard is empty */
+function checkDashboardIsEmpty() {
+  return cy
+    .contains("table", "Employer ID number")
+    .find("tbody tr")
+    .then(($tr) => {
+      return $tr.text() === "No applications on file";
+    });
+}
+/**Asserts that all claims visible on the page have a status */
+export function assertClaimsHaveStatus(status: DashboardClaimStatus): void {
+  checkDashboardIsEmpty().then((hasNoClaims) => {
+    // Make sure it passes if there are no claims with that status.
+    if (hasNoClaims) return;
+    cy.contains("table", "Employer ID number")
+      .find('tbody tr td[data-label="Status"]')
+      .each((el) => {
+        expect(el).to.contain.text(status);
+      });
+  });
+}
+
+export function clearFilters(): void {
+  cy.get('button[aria-controls="filters"]')
+    .invoke("text")
+    .then((text) => {
+      if (text.includes("Show filters"))
+        cy.findByText("Show filters", { exact: false }).click();
+      cy.findByText("Reset all filters").click();
+      cy.get('span[role="progressbar"]').should("be.visible");
+      cy.contains("table", "Employer ID number").should("be.visible");
+      cy.wait("@dashboardDefaultQuery");
+    });
+}
+
+/**Sorts claims on the dashboard*/
+export function sortClaims(by: "new" | "old" | "name_asc" | "name_desc"): void {
+  const sortValuesMap = {
+    new: {
+      value: "created_at,descending",
+      query: "order_by=created_at&order_direction=descending",
+    },
+    old: {
+      value: "created_at,ascending",
+      query: "order_by=created_at&order_direction=ascending",
+    },
+    name_asc: {
+      value: "employee,ascending",
+      query: "order_by=employee&order_direction=ascending",
+    },
+    name_desc: {
+      value: "employee,descending",
+      query: "order_by=employee&order_direction=descending",
+    },
+  };
+  cy.findByLabelText("Sort").then((el) => {
+    if (el.val() === sortValuesMap[by].value) return;
+    cy.wrap(el).select(sortValuesMap[by].value);
+    cy.get('span[role="progressbar"]').should("be.visible");
+    cy.wait("@dashboardClaimQueries")
+      .its("request.url")
+      .should("include", sortValuesMap[by].query);
+  });
 }
