@@ -47,6 +47,7 @@ const useAppLogic = () => {
 
   const employers = useEmployersLogic({
     appErrorsLogic,
+    clearClaims: claims.clearClaims,
     portalFlow,
     setUser: users.setUser,
   });
