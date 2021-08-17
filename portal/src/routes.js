@@ -18,7 +18,6 @@ const routes = {
     concurrentLeaves: "/applications/concurrent-leaves",
     concurrentLeavesDetails: "/applications/concurrent-leaves-details",
     concurrentLeavesIntro: "/applications/concurrent-leaves-intro",
-    dashboard: "/dashboard",
     dateOfBirth: "/applications/date-of-birth",
     dateOfChild: "/applications/date-of-child",
     employerBenefits: "/applications/employer-benefits",
