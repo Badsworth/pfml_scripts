@@ -120,7 +120,7 @@ const routes = {
         "https://www.mass.gov/info-details/massachusetts-department-of-family-and-medical-leave-informed-consent-agreement",
       dfml: "https://www.mass.gov/orgs/department-of-family-and-medical-leave",
       dfmlRegulations:
-        "https://www.mass.gov/regulations/458-CMR-200-department-of-family-and-medical-leave-1",
+        "https://www.mass.gov/regulations/458-CMR-200-family-and-medical-leave",
       employerAccount:
         "https://www.mass.gov/how-to/creating-an-employer-account-to-review-paid-family-and-medical-leave-pfml-applications",
       employerReimbursements:

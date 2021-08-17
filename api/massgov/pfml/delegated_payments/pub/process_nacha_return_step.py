@@ -95,7 +95,9 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
 
     def process_stream(self, stream: TextIO) -> None:
         ach_reader = reader.ACHReader(stream)
+        self.process_parsed(ach_reader)
 
+    def process_parsed(self, ach_reader: reader.ACHReader) -> None:
         for warning in ach_reader.get_warnings():
             logger.warning("ACH Warning: %s", warning.warning, extra=warning.get_details_for_log())
             self.increment(self.Metrics.WARNING_COUNT)
@@ -198,10 +200,10 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         next_state: Optional[LkPrenoteState] = None
         pub_error_message: Optional[str] = None
 
-        if pub_eft.prenote_state == PrenoteState.PENDING_PRE_PUB:
+        if pub_eft.prenote_state_id == PrenoteState.PENDING_PRE_PUB.prenote_state_id:
             self.increment(self.Metrics.EFT_PRENOTE_UNEXPECTED_STATE_COUNT)
             message = f"Unexpected existing prenote state: {pub_eft.prenote_state.prenote_state_description}"
-        elif pub_eft.prenote_state == PrenoteState.REJECTED:
+        elif pub_eft.prenote_state_id == PrenoteState.REJECTED.prenote_state_id:
             self.increment(self.Metrics.EFT_PRENOTE_ALREADY_REJECTED_COUNT)
             message = f"Unexpected existing prenote state: {pub_eft.prenote_state.prenote_state_description}"
         else:  # EFT in PENDING_WITH_PUB or APPROVED existing state
@@ -318,6 +320,16 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             )
             self.db_session.add(writeback_details)
 
+            logger.warning(
+                "ACH Return: Payment bank processing error",
+                extra={
+                    **ach_return.get_details_for_log(),
+                    "payments.payment_id": payment.payment_id,
+                    "payments.state": end_state_id,
+                },
+            )
+            self.increment(self.Metrics.PAYMENT_REJECTED_COUNT)
+
             self.add_pub_error(
                 pub_error_type=PubErrorType.ACH_RETURN,
                 message="Payment rejected by PUB",
@@ -327,16 +339,14 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 details=ach_return.get_details_for_error(),
                 payment=payment,
             )
-
-            self.increment(self.Metrics.PAYMENT_REJECTED_COUNT)
         elif end_state_id == State.DELEGATED_PAYMENT_ERROR_FROM_BANK.state_id:
             # Already processed an ACH return for this payment.
             logger.info(
                 "payment already in a bank processing error state",
                 extra={
-                    "payments.ach.id_number": ach_return.id_number,
-                    "payments.state": end_state_id,
+                    **ach_return.get_details_for_log(),
                     "payments.payment_id": payment.payment_id,
+                    "payments.state": end_state_id,
                 },
             )
             self.increment(self.Metrics.PAYMENT_ALREADY_REJECTED_COUNT)
@@ -344,6 +354,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             # The latest state for this payment is not compatible with receiving an ACH return.
             details = {
                 **ach_return.get_details_for_log(),
+                "payments.payment_id": payment.payment_id,
                 "payments.state": end_state_id,
             }
 

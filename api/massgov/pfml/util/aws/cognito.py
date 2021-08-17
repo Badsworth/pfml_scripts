@@ -8,7 +8,7 @@ import botocore
 
 import massgov.pfml.db as db
 import massgov.pfml.util.logging
-from massgov.pfml.api.util.response import Issue, IssueType
+from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
 
 USER_ID_ATTRIBUTE = "sub"
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -41,7 +41,7 @@ class CognitoValidationError(Exception):
 
     __slots__ = ["message", "issue"]
 
-    def __init__(self, message: str, issue: Issue):
+    def __init__(self, message: str, issue: ValidationErrorDetail):
         self.message = message
         self.issue = issue
 
@@ -60,7 +60,9 @@ class CognitoUserExistsValidationError(CognitoValidationError):
     def __init__(self, message: str, sub_id: Optional[str]):
         self.sub_id = sub_id
         self.message = message
-        self.issue = Issue(field="email_address", type=IssueType.exists, message=message)
+        self.issue = ValidationErrorDetail(
+            field="email_address", type=IssueType.exists, message=message
+        )
 
 
 class CognitoPasswordSetFailure(Exception):
@@ -227,7 +229,7 @@ def create_cognito_account(
             else IssueType.invalid
         )
 
-        issue = Issue(field="password", type=issue_type, message=message)
+        issue = ValidationErrorDetail(field="password", type=issue_type, message=message)
         logger.info(
             "Cognito validation issue - InvalidPasswordException",
             extra={"cognito_error": issue.message},
@@ -240,7 +242,9 @@ def create_cognito_account(
         # 2. When username isn't an email
         # Number 2 above will be caught by our OpenAPI validations, which check that email_address
         # is an email, so we interpret this error to indicate something is wrong with the password
-        issue = Issue(field="password", type=IssueType.invalid, message="{}".format(error))
+        issue = ValidationErrorDetail(
+            field="password", type=IssueType.invalid, message="{}".format(error)
+        )
         logger.info(
             "Cognito validation issue - ParamValidationError",
             extra={"cognito_error": issue.message},

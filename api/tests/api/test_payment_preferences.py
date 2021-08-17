@@ -2,7 +2,7 @@ import pytest
 
 import massgov.pfml.fineos.mock_client as fineos_mock
 import tests.api
-from massgov.pfml.api.util.response import IssueRule, IssueType
+from massgov.pfml.api.validation.exceptions import IssueRule, IssueType
 from massgov.pfml.db.models.applications import Address, ApplicationPaymentPreference
 from massgov.pfml.db.models.employees import BankAccountType, PaymentMethod
 from massgov.pfml.db.models.factories import ApplicationFactory

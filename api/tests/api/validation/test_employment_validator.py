@@ -1,9 +1,9 @@
 import pytest
 
-from massgov.pfml.api.services.employment_validator import (
+from massgov.pfml.api.validation.employment_validator import (
     get_contributing_employer_or_employee_issue,
 )
-from massgov.pfml.api.util.response import Issue, IssueRule, IssueType
+from massgov.pfml.api.validation.exceptions import IssueRule, IssueType, ValidationErrorDetail
 from massgov.pfml.db.models.factories import (
     EmployeeFactory,
     EmployerFactory,
@@ -59,7 +59,7 @@ def test_employer_with_fineos_id_is_required(test_db_session, initialize_factori
         test_db_session, employer.employer_fein, None
     )
 
-    assert issue == Issue(
+    assert issue == ValidationErrorDetail(
         field="employer_fein",
         type=IssueType.require_contributing_employer,
         message="Confirm that you have the correct EIN, and that the Employer is contributing to Paid Family and Medical Leave.",
@@ -74,9 +74,10 @@ def test_employee_is_required(test_db_session, initialize_factories_session):
         test_db_session, employer.employer_fein, TaxIdentifierFactory.create()
     )
 
-    assert issue == Issue(
+    assert issue == ValidationErrorDetail(
         rule=IssueRule.require_employee,
         message="Couldn't find Employee in our system. Confirm that you have the correct EIN.",
+        type="",
     )
 
 
@@ -91,7 +92,8 @@ def test_employee_with_wages_from_employer_is_required(
         test_db_session, employer.employer_fein, employee.tax_identifier
     )
 
-    assert issue == Issue(
+    assert issue == ValidationErrorDetail(
         rule=IssueRule.require_employee,
         message="Couldn't find Employee in our system. Confirm that you have the correct EIN.",
+        type="",
     )

@@ -1,14 +1,17 @@
 from typing import List, Optional
 
-from massgov.pfml.api.util.response import Issue, IssueType
-from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
+from massgov.pfml.api.validation.exceptions import (
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.db.models.employees import Employer
 
 
 class EmployerRequiresVerificationDataException(Exception):
     __slots__ = ["errors"]
 
-    def __init__(self, errors: List[Issue]):
+    def __init__(self, errors: List[ValidationErrorDetail]):
         self.errors = errors
 
 
@@ -44,8 +47,7 @@ def validate_employer_being_added(employer: Optional[Employer]) -> None:
     if employer.has_verification_data is False:
         raise EmployerRequiresVerificationDataException(
             errors=[
-                # TODO (CP-1925): Use ValidationErrorDetail instead of Issue
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.employer_requires_verification_data,
                     message="Employer has no verification data",
                     field="employer_fein",

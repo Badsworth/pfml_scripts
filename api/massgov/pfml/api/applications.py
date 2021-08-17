@@ -10,9 +10,9 @@ from sqlalchemy import desc
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, ServiceUnavailable, Unauthorized
 
 import massgov.pfml.api.app as app
-import massgov.pfml.api.services.application_rules as application_rules
 import massgov.pfml.api.services.applications as applications_service
 import massgov.pfml.api.util.response as response_util
+import massgov.pfml.api.validation.application_rules as application_rules
 import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, can, ensure
@@ -25,9 +25,6 @@ from massgov.pfml.api.models.applications.requests import (
 )
 from massgov.pfml.api.models.applications.responses import ApplicationResponse, DocumentResponse
 from massgov.pfml.api.services.applications import get_document_by_id
-from massgov.pfml.api.services.employment_validator import (
-    get_contributing_employer_or_employee_issue,
-)
 from massgov.pfml.api.services.fineos_actions import (
     complete_intake,
     create_other_leaves_and_other_incomes_eforms,
@@ -39,8 +36,14 @@ from massgov.pfml.api.services.fineos_actions import (
     submit_payment_preference,
     upload_document,
 )
-from massgov.pfml.api.util.response import Issue, IssueType
-from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
+from massgov.pfml.api.validation.employment_validator import (
+    get_contributing_employer_or_employee_issue,
+)
+from massgov.pfml.api.validation.exceptions import (
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.db.models.applications import (
     Application,
     ContentType,
@@ -212,7 +215,7 @@ def get_fineos_submit_issues_response(err, existing_application):
                 existing_application.application_id
             ),
             errors=[
-                Issue(
+                ValidationErrorDetail(
                     IssueType.fineos_case_creation_issues, "register_employee did not find a match"
                 )
             ],
@@ -228,7 +231,7 @@ def get_fineos_submit_issues_response(err, existing_application):
                 existing_application.application_id
             ),
             errors=[
-                Issue(
+                ValidationErrorDetail(
                     IssueType.fineos_case_error,
                     "Unexpected error encountered when submitting to the Claims Processing System",
                 )
@@ -426,7 +429,10 @@ def validate_content_type(content_type):
         message = "Incorrect file type: {}".format(content_type)
         logger.warning(message)
         validation_error = ValidationErrorDetail(
-            message=message, type="file_type", rule=allowed_content_types, field="file",
+            message=message,
+            type=IssueType.file_type,
+            rule=", ".join(allowed_content_types),
+            field="file",
         )
         raise ValidationException(errors=[validation_error], message=message, data={})
 
@@ -445,7 +451,7 @@ def get_valid_content_type(file):
             logger.warning(message)
             validation_error = ValidationErrorDetail(
                 message=message,
-                type="file_type_mismatch",
+                type=IssueType.file_type_mismatch,
                 rule="Detected content type and mime type do not match.",
                 field="file",
             )
@@ -465,7 +471,7 @@ def validate_file_name(file_name):
         message = "Missing extension on file name: {}".format(file_name)
         validation_error = ValidationErrorDetail(
             message=message,
-            type="file_name_extension",
+            type=IssueType.file_name_extension,
             rule="File name extension required.",
             field="file",
         )
@@ -521,7 +527,7 @@ def document_upload(application_id, body, file):
             return response_util.error_response(
                 status_code=BadRequest,
                 message="File validation error.",
-                errors=[response_util.validation_issue(error) for error in ve.errors],
+                errors=ve.errors,
                 data=document_details.dict(),
             ).to_api_response()
 
@@ -597,7 +603,7 @@ def document_upload(application_id, body, file):
                 return response_util.error_response(
                     status_code=BadRequest,
                     message=message,
-                    errors=[response_util.custom_issue("fineos_client", message)],
+                    errors=[ValidationErrorDetail(type=IssueType.fineos_client, message=message)],
                     data=document_details.dict(),
                 ).to_api_response()
 
@@ -693,8 +699,8 @@ def document_download(application_id: str, document_id: str) -> Response:
 
         ensure(READ, document)
 
-        document_data: massgov.pfml.fineos.models.customer_api.Base64EncodedFileData = download_document(
-            existing_application, document_id, db_session
+        document_data: massgov.pfml.fineos.models.customer_api.Base64EncodedFileData = (
+            download_document(existing_application, document_id, db_session)
         )
         file_bytes = base64.b64decode(document_data.base64EncodedFileContents.encode("ascii"))
 

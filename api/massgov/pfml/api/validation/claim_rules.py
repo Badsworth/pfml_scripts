@@ -5,8 +5,7 @@ from typing import List, Optional
 
 from massgov.pfml.api.models.claims.common import EmployerClaimReview, PreviousLeave
 from massgov.pfml.api.models.common import EmployerBenefit
-from massgov.pfml.api.util.response import IssueType
-from massgov.pfml.api.validation.exceptions import ValidationErrorDetail
+from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
 
 # there are 168 hours in a week
 MAX_HOURS_WORKED_PER_WEEK = 168
@@ -33,7 +32,7 @@ def get_hours_worked_per_week_issues(
     if hours_worked_per_week is None:
         error = ValidationErrorDetail(
             message="hours_worked_per_week must be populated",
-            type="missing_expected_field",
+            type=IssueType.required,
             field="hours_worked_per_week",
         )
         return [error]
@@ -73,7 +72,7 @@ def get_previous_leaves_issues(previous_leaves: List[PreviousLeave]) -> List[Val
             error_list.append(
                 ValidationErrorDetail(
                     message="Previous leaves cannot start before 2021",
-                    type="invalid_previous_leave_start_date",
+                    type=IssueType.invalid_previous_leave_start_date,
                     field=f"previous_leaves[{index}].leave_start_date",
                 )
             )

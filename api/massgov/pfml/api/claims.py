@@ -7,8 +7,8 @@ from sqlalchemy.orm.session import Session
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
 
 import massgov.pfml.api.app as app
-import massgov.pfml.api.services.claim_rules as claim_rules
 import massgov.pfml.api.util.response as response_util
+import massgov.pfml.api.validation.claim_rules as claim_rules
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.authorization.flask import READ, can, requires
@@ -24,7 +24,11 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     get_documents_as_leave_admin,
 )
 from massgov.pfml.api.services.managed_requirements import update_employer_confirmation_requirements
-from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
+from massgov.pfml.api.validation.exceptions import (
+    ContainsV1AndV2Eforms,
+    IssueType,
+    ValidationErrorDetail,
+)
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     Claim,
@@ -108,7 +112,7 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
         if user_leave_admin is None:
             raise NotAuthorizedForAccess(
                 description="User does not have leave administrator record for this employer",
-                error_type="unauthorized_leave_admin",
+                error_type=IssueType.unauthorized_leave_admin,
             )
 
         if user_leave_admin.fineos_web_id is None:
@@ -206,10 +210,7 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
 
     if issues := claim_rules.get_employer_claim_review_issues(claim_review):
         return response_util.error_response(
-            status_code=BadRequest,
-            message="Invalid claim review body",
-            errors=[response_util.validation_issue(issue) for issue in issues],
-            data={},
+            status_code=BadRequest, message="Invalid claim review body", errors=issues, data={},
         ).to_api_response()
 
     try:
@@ -242,9 +243,9 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
             status_code=BadRequest,
             message="No outstanding information request for claim",
             errors=[
-                response_util.custom_issue(
-                    "outstanding_information_request_required",
-                    "No outstanding information request for claim",
+                ValidationErrorDetail(
+                    type=IssueType.outstanding_information_request_required,
+                    message="No outstanding information request for claim",
                 )
             ],
         ).to_api_response()
@@ -337,9 +338,9 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
                 status_code=error.status_code,
                 message=error.description,
                 errors=[
-                    response_util.custom_issue(
+                    ValidationErrorDetail(
                         message="Claim contains both V1 and V2 eforms.",
-                        type="contains_v1_and_v2_eforms",
+                        type=IssueType.contains_v1_and_v2_eforms,
                     )
                 ],
                 data={},

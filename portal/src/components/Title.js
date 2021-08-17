@@ -16,6 +16,7 @@ const Title = ({ component = "h1", small = false, ...props }) => {
     {
       "font-heading-lg line-height-sans-2": !small,
       "font-heading-sm line-height-sans-3": small,
+      "text-normal": props.weight === "normal",
       "usa-legend": component === "legend",
       "usa-sr-only": !!props.hidden,
     }
@@ -58,6 +59,8 @@ Title.propTypes = {
    * for sets of question pages.
    */
   small: PropTypes.bool,
+  /** Override default font weight */
+  weight: PropTypes.oneOf(["normal", "bold"]),
 };
 
 export default Title;

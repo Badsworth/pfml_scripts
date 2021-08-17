@@ -28,6 +28,8 @@ type FineosExclusiveLeaveReasons =
   import("./src/generation/Claim").FineosExclusiveLeaveReasons;
 type DBClaimMetadata = import("./src/types").DBClaimMetadata;
 type GetClaimFromDB = import("./src/types").GetClaimFromDB;
+type ApplicationSubmissionResponse =
+  import("./src/types").ApplicationSubmissionResponse;
 
 declare namespace Cypress {
   interface Cypress {
@@ -36,7 +38,6 @@ declare namespace Cypress {
     runner: Cypress.Runner;
   }
   interface Chainable<Subject = any> {
-    labelled(label: string | RegExp): Chainable<HTMLElement>;
     typeMasked(
       text: string,
       options?: Partial<Cypress.TypeOptions>

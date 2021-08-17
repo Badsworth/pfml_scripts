@@ -15,7 +15,11 @@ from massgov.pfml.api.models.common import (
     LookupEnum,
     PreviousLeaveQualifyingReason,
 )
-from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
+from massgov.pfml.api.validation.exceptions import (
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
     FinancialRoutingNumber,
@@ -403,7 +407,7 @@ class Phone(PydanticBaseModel):
             error_list.append(
                 ValidationErrorDetail(
                     message="Phone number must be a valid number",
-                    type="invalid_phone_number",
+                    type=IssueType.invalid_phone_number,
                     rule="phone_number_must_be_valid_number",
                     field="phone.phone_number",
                 )
@@ -413,7 +417,7 @@ class Phone(PydanticBaseModel):
             error_list.append(
                 ValidationErrorDetail(
                     message="Phone number must be a valid number",
-                    type="invalid_phone_number",
+                    type=IssueType.invalid_phone_number,
                     rule="phone_number_must_be_valid_number",
                     field="phone.phone_number",
                 )

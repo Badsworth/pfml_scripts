@@ -1881,13 +1881,18 @@ const pages = {
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsStatus: {
+    applicationDetails: "Application details",
+    applicationID: "Application ID",
+    backButtonLabel: "Back to your applications",
+    employerEIN: "Employer Identification Number (EIN)",
     makeChangesBody:
-      "If you need to make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Some Changes to your application, such as changing your start and end dates, may mean your application needs to be reviewed by your employer again.",
+      "<p>If you need to make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Some changes to your application, such as changing your start and end dates, may mean your application needs to be reviewed by your employer again.</p>",
     makeChangesHeading: "Make changes to your application",
     manageApplicationHeading: "Manage your application",
     reportOtherBenefitsBody:
-      "<p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report changes to: <ul><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for disability benefit after you submitted your application, report this change.</li></ul></p>",
+      "<p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report changes to:</p><ul><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for disability benefit after you submitted your application, report this change.</li></ul>",
     reportOtherBenefitsHeading: "Report other benefits or income",
+    viewNoticesHeading: "View your notices",
   },
   claimsSuccess: {
     adjudicationProcess:
@@ -2384,6 +2389,23 @@ const components = {
       "<p>If you’ll receive <reductions-overview-link>other benefits or income</reductions-overview-link>, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. This includes:</p><ul><li>Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)</li><li>Income from any other sources during your leave</li></ul>",
     resumeClaimButton: "Continue application",
     uploadDocsButton: "Upload additional documents",
+  },
+  applicationCardV2: {
+    applicationID: "Application ID",
+    employerEIN: "Employer Identification Number",
+    heading: "Application {{number}}",
+    leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReducedSchedule)",
+    leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
+    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
+    leaveReasonValue_care: "$t(shared.leaveReasonCare)",
+    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_serviceMemberFamily:
+      "$t(shared.leaveReasonServiceMemberFamily)",
+    manageApplicationDocuments: "Manage your application documents",
+    uploadDocuments: "Upload documents",
+    viewNotices: "View notices",
+    viewStatusUpdatesAndDetails: "View status updates and details",
   },
   authNav: {
     logOutButton: "Log out",

@@ -24,4 +24,12 @@ describe("status page", () => {
     });
     expect(wrapper).toMatchSnapshot();
   });
+
+  it("does not render ViewYourNotices if documents not given", () => {
+    const { wrapper } = renderWithAppLogic(Status, {
+      diveLevels: 0,
+      props: { docList: [] },
+    });
+    expect(wrapper).toMatchSnapshot();
+  });
 });

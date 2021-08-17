@@ -891,7 +891,7 @@ class TestUpdateClaim:
         mock_get_issues.return_value = [
             ValidationErrorDetail(
                 message="hours_worked_per_week must be populated",
-                type="missing_expected_field",
+                type="required",
                 field="hours_worked_per_week",
             )
         ]

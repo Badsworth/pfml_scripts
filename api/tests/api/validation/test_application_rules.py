@@ -5,7 +5,7 @@ from freezegun import freeze_time
 from werkzeug.datastructures import Headers
 
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
-from massgov.pfml.api.services.application_rules import (
+from massgov.pfml.api.validation.application_rules import (
     get_always_required_issues,
     get_conditional_issues,
     get_continuous_leave_issues,
@@ -15,7 +15,7 @@ from massgov.pfml.api.services.application_rules import (
     get_reduced_schedule_leave_issues,
     get_work_pattern_issues,
 )
-from massgov.pfml.api.util.response import Issue, IssueRule, IssueType
+from massgov.pfml.api.validation.exceptions import IssueRule, IssueType, ValidationErrorDetail
 from massgov.pfml.db.models.applications import (
     ConcurrentLeave,
     EmployerBenefit,
@@ -59,7 +59,9 @@ def test_first_name_required():
     )
     issues = get_always_required_issues(test_app)
     assert [
-        Issue(type=IssueType.required, message="first_name is required", field="first_name")
+        ValidationErrorDetail(
+            type=IssueType.required, message="first_name is required", field="first_name"
+        )
     ] == issues
 
 
@@ -74,7 +76,9 @@ def test_last_name_required():
     )
     issues = get_always_required_issues(test_app)
     assert [
-        Issue(type=IssueType.required, message="last_name is required", field="last_name")
+        ValidationErrorDetail(
+            type=IssueType.required, message="last_name is required", field="last_name"
+        )
     ] == issues
 
 
@@ -90,12 +94,12 @@ def test_phone_required():
 
     issues = get_always_required_issues(test_app)
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="phone.phone_number is required",
             field="phone.phone_number",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="phone.phone_type is required",
             field="phone.phone_type",
@@ -114,7 +118,9 @@ def test_date_of_birth_required():
     )
     issues = get_always_required_issues(test_app)
     assert [
-        Issue(type=IssueType.required, message="date_of_birth is required", field="date_of_birth")
+        ValidationErrorDetail(
+            type=IssueType.required, message="date_of_birth is required", field="date_of_birth"
+        )
     ] == issues
 
 
@@ -128,7 +134,9 @@ def test_has_state_id_required():
     )
     issues = get_always_required_issues(test_app)
     assert [
-        Issue(type=IssueType.required, message="has_state_id is required", field="has_state_id")
+        ValidationErrorDetail(
+            type=IssueType.required, message="has_state_id is required", field="has_state_id"
+        )
     ] == issues
 
 
@@ -144,7 +152,9 @@ def test_tax_identifier_required():
     )
     issues = get_always_required_issues(test_app)
     assert [
-        Issue(type=IssueType.required, message="tax_identifier is required", field="tax_identifier")
+        ValidationErrorDetail(
+            type=IssueType.required, message="tax_identifier is required", field="tax_identifier"
+        )
     ] == issues
 
 
@@ -159,7 +169,7 @@ def test_leave_reason_required():
     )
     issues = get_always_required_issues(test_app)
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="leave_details.reason is required",
             field="leave_details.reason",
@@ -177,7 +187,7 @@ def test_employment_status_required():
     )
     issues = get_always_required_issues(test_app)
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="employment_status is required",
             field="employment_status",
@@ -196,7 +206,7 @@ def test_employer_notified_required():
     )
     issues = get_always_required_issues(test_app)
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="leave_details.employer_notified is required",
             field="leave_details.employer_notified",
@@ -211,7 +221,7 @@ def test_employer_notified_date_minimum():
     )
     issues = get_conditional_issues(test_app, Headers())
     assert (
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.minimum,
             rule=IssueRule.conditional,
             message="employer_notification_date year must be within the past 2 years",
@@ -228,7 +238,7 @@ def test_employer_notified_date_maximum():
     )
     issues = get_conditional_issues(test_app, Headers())
     assert (
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.maximum,
             rule=IssueRule.conditional,
             message="employer_notification_date must be today or prior",
@@ -247,7 +257,7 @@ def test_hours_worked_per_week_required():
     )
     issues = get_always_required_issues(test_app)
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="hours_worked_per_week is required",
             field="hours_worked_per_week",
@@ -265,7 +275,7 @@ def test_residential_address_required():
     )
     issues = get_always_required_issues(test_app)
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="residential_address is required",
             field="residential_address",
@@ -286,22 +296,22 @@ def test_residential_address_fields_required():
     issues = get_conditional_issues(test_app, Headers())
 
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="residential_address.line_1 is required",
             field="residential_address.line_1",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="residential_address.city is required",
             field="residential_address.city",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="residential_address.state is required",
             field="residential_address.state",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="residential_address.zip is required",
             field="residential_address.zip",
@@ -322,22 +332,22 @@ def test_mailing_address_fields_required():
     issues = get_conditional_issues(test_app, Headers())
 
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="mailing_address.line_1 is required",
             field="mailing_address.line_1",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="mailing_address.city is required",
             field="mailing_address.city",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="mailing_address.state is required",
             field="mailing_address.state",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="mailing_address.zip is required",
             field="mailing_address.zip",
@@ -356,7 +366,7 @@ def test_has_mailing_address_required():
     )
     issues = get_always_required_issues(test_app)
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="has_mailing_address is required",
             field="has_mailing_address",
@@ -373,7 +383,7 @@ def test_work_pattern_type_required():
     )
     issues = get_always_required_issues(test_app)
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="work_pattern.work_pattern_type is required",
             field="work_pattern.work_pattern_type",
@@ -393,17 +403,17 @@ def test_has_leave_periods_required():
     )
     issues = get_always_required_issues(test_app)
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="has_continuous_leave_periods is required",
             field="has_continuous_leave_periods",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="has_intermittent_leave_periods is required",
             field="has_intermittent_leave_periods",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="has_reduced_schedule_leave_periods is required",
             field="has_reduced_schedule_leave_periods",
@@ -461,12 +471,12 @@ def test_disallow_overlapping_hybrid_leave_dates():
         lambda issue: issue.rule is IssueRule.disallow_overlapping_leave_periods, issues
     )
     assert [
-        Issue(
+        ValidationErrorDetail(
             message="Leave period ranges cannot overlap. Received 2021-03-01 – 2021-04-01 and 2021-03-15 – 2021-03-20.",
             rule=IssueRule.disallow_overlapping_leave_periods,
             type=IssueType.conflicting,
         ),
-        Issue(
+        ValidationErrorDetail(
             message="Leave period ranges cannot overlap. Received 2021-03-01 – 2021-04-01 and 2021-03-21 – 2021-04-01.",
             rule=IssueRule.disallow_overlapping_leave_periods,
             type=IssueType.conflicting,
@@ -496,7 +506,7 @@ def test_disallow_hybrid_intermittent_continuous_leave():
     issues = get_leave_periods_issues(test_app)
 
     assert (
-        Issue(
+        ValidationErrorDetail(
             message="Intermittent leave cannot be taken alongside Continuous or Reduced Schedule leave",
             rule=IssueRule.disallow_hybrid_intermittent_leave,
             type=IssueType.conflicting,
@@ -527,7 +537,7 @@ def test_disallow_hybrid_intermittent_reduced_leave():
     issues = get_leave_periods_issues(test_app)
 
     assert (
-        Issue(
+        ValidationErrorDetail(
             message="Intermittent leave cannot be taken alongside Continuous or Reduced Schedule leave",
             rule=IssueRule.disallow_hybrid_intermittent_leave,
             type=IssueType.conflicting,
@@ -552,7 +562,7 @@ def test_disallow_2020_leave_period_start_dates():
     issues = get_leave_periods_issues(test_app)
 
     assert (
-        Issue(
+        ValidationErrorDetail(
             field="leave_details.continuous_leave_periods[0].start_date",
             message="start_date cannot be in a year earlier than 2021",
             type=IssueType.minimum,
@@ -561,7 +571,7 @@ def test_disallow_2020_leave_period_start_dates():
     )
 
     assert (
-        Issue(
+        ValidationErrorDetail(
             field="leave_details.intermittent_leave_periods[0].start_date",
             message="start_date cannot be in a year earlier than 2021",
             type=IssueType.minimum,
@@ -570,7 +580,7 @@ def test_disallow_2020_leave_period_start_dates():
     )
 
     assert (
-        Issue(
+        ValidationErrorDetail(
             field="leave_details.reduced_schedule_leave_periods[0].start_date",
             message="start_date cannot be in a year earlier than 2021",
             type=IssueType.minimum,
@@ -589,9 +599,10 @@ def test_disallow_caring_leave_before_july():
         ],
     )
 
-    disallow_submission_issue = Issue(
+    disallow_submission_issue = ValidationErrorDetail(
         message="Caring leave start_date cannot be before 2021-07-01",
         rule=IssueRule.disallow_caring_leave_before_july,
+        type="",
     )
 
     issues = get_leave_periods_issues(test_app)
@@ -612,9 +623,10 @@ def test_disallow_submit_over_60_days_before_start_date():
         ],
     )
 
-    disallow_submission_issue = Issue(
+    disallow_submission_issue = ValidationErrorDetail(
         message="Can't submit application more than 60 days in advance of the earliest leave period",
         rule=IssueRule.disallow_submit_over_60_days_before_start_date,
+        type="",
     )
 
     with freeze_time("2021-01-01"):
@@ -642,7 +654,7 @@ def test_min_leave_periods():
     issues = get_leave_periods_issues(test_app)
 
     assert [
-        Issue(
+        ValidationErrorDetail(
             message="At least one leave period should be entered",
             rule=IssueRule.min_leave_periods,
             type=IssueType.required,
@@ -655,12 +667,12 @@ def test_continuous_leave_period():
     issues = get_continuous_leave_issues(test_leave_periods)
 
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="end_date is required",
             field="leave_details.continuous_leave_periods[0].end_date",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="start_date is required",
             field="leave_details.continuous_leave_periods[0].start_date",
@@ -697,7 +709,7 @@ def test_leave_period_end_date_before_start_date():
     )
 
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.minimum,
             message="end_date cannot be earlier than the start_date",
             field="leave_details.continuous_leave_periods[0].end_date",
@@ -705,7 +717,7 @@ def test_leave_period_end_date_before_start_date():
     ] == continuous_leave_issues
 
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.minimum,
             message="end_date cannot be earlier than the start_date",
             field="leave_details.intermittent_leave_periods[0].end_date",
@@ -713,7 +725,7 @@ def test_leave_period_end_date_before_start_date():
     ] == intermittent_leave_issues
 
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.minimum,
             message="end_date cannot be earlier than the start_date",
             field="leave_details.reduced_schedule_leave_periods[0].end_date",
@@ -751,23 +763,26 @@ def test_leave_period_disallow_12mo_leave_period_per_type():
     )
 
     assert [
-        Issue(
+        ValidationErrorDetail(
             message="Leave cannot exceed 364 days",
             rule=IssueRule.disallow_12mo_continuous_leave_period,
+            type="",
         ),
     ] == continuous_leave_issues
 
     assert [
-        Issue(
+        ValidationErrorDetail(
             message="Leave cannot exceed 364 days",
             rule=IssueRule.disallow_12mo_intermittent_leave_period,
+            type="",
         ),
     ] == intermittent_leave_issues
 
     assert [
-        Issue(
+        ValidationErrorDetail(
             message="Leave cannot exceed 364 days",
             rule=IssueRule.disallow_12mo_reduced_leave_period,
+            type="",
         ),
     ] == reduced_schedule_leave_issues
 
@@ -796,7 +811,11 @@ def test_leave_period_disallow_12mo_leave_period():
     issues = get_leave_periods_issues(test_app)
 
     assert [
-        Issue(rule=IssueRule.disallow_12mo_leave_period, message="Leave cannot exceed 364 days",),
+        ValidationErrorDetail(
+            rule=IssueRule.disallow_12mo_leave_period,
+            message="Leave cannot exceed 364 days",
+            type="",
+        ),
     ] == issues
 
 
@@ -830,37 +849,37 @@ def test_intermittent_leave_period():
     issues = get_intermittent_leave_issues(test_leave_periods)
 
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="duration is required",
             field="leave_details.intermittent_leave_periods[0].duration",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="duration_basis is required",
             field="leave_details.intermittent_leave_periods[0].duration_basis",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="end_date is required",
             field="leave_details.intermittent_leave_periods[0].end_date",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="frequency is required",
             field="leave_details.intermittent_leave_periods[0].frequency",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="frequency_interval is required",
             field="leave_details.intermittent_leave_periods[0].frequency_interval",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="frequency_interval_basis is required",
             field="leave_details.intermittent_leave_periods[0].frequency_interval_basis",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="start_date is required",
             field="leave_details.intermittent_leave_periods[0].start_date",
@@ -884,7 +903,7 @@ def test_intermittent_leave_period():
                 )
             ],
             [
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.intermittent_duration_hours_maximum,
                     message="leave_details.intermittent_leave_periods[0].duration must be less than 24 if the duration_basis is hours",
                     field="leave_details.intermittent_leave_periods[0].duration",
@@ -904,7 +923,7 @@ def test_intermittent_leave_period():
                 )
             ],
             [
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.intermittent_duration_hours_maximum,
                     message="leave_details.intermittent_leave_periods[0].duration must be less than 24 if the duration_basis is hours",
                     field="leave_details.intermittent_leave_periods[0].duration",
@@ -951,7 +970,7 @@ def test_intermittent_hours_less_than_24(test_leave_periods, expected_issues):
                 )
             ],
             [
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.intermittent_interval_maximum,
                     message="the total days in the interval (frequency_interval * the number of days in frequency_interval_basis) cannot exceed the total days between the start and end dates of the leave period",
                     field="leave_details.intermittent_leave_periods[0].frequency_interval_basis",
@@ -972,7 +991,7 @@ def test_intermittent_hours_less_than_24(test_leave_periods, expected_issues):
                 )
             ],
             [
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.intermittent_interval_maximum,
                     message="the total days in the interval (frequency_interval * the number of days in frequency_interval_basis) cannot exceed the total days between the start and end dates of the leave period",
                     field="leave_details.intermittent_leave_periods[0].frequency_interval_basis",
@@ -993,7 +1012,7 @@ def test_intermittent_hours_less_than_24(test_leave_periods, expected_issues):
                 )
             ],
             [
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.intermittent_interval_maximum,
                     message="the total days in the interval (frequency_interval * the number of days in frequency_interval_basis) cannot exceed the total days between the start and end dates of the leave period",
                     field="leave_details.intermittent_leave_periods[0].frequency_interval_basis",
@@ -1014,7 +1033,7 @@ def test_intermittent_hours_less_than_24(test_leave_periods, expected_issues):
                 )
             ],
             [
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.intermittent_interval_maximum,
                     message="the total days in the interval (frequency_interval * the number of days in frequency_interval_basis) cannot exceed the total days between the start and end dates of the leave period",
                     field="leave_details.intermittent_leave_periods[0].frequency_interval_basis",
@@ -1035,7 +1054,7 @@ def test_intermittent_hours_less_than_24(test_leave_periods, expected_issues):
                 )
             ],
             [
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.intermittent_interval_maximum,
                     message="the total days in the interval (frequency_interval * the number of days in frequency_interval_basis) cannot exceed the total days between the start and end dates of the leave period",
                     field="leave_details.intermittent_leave_periods[0].frequency_interval_basis",
@@ -1082,7 +1101,7 @@ def test_intermittent_interval_less_than_leave_period_length(test_leave_periods,
                 )
             ],
             [
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.days_absent_per_intermittent_interval_maximum,
                     message="The total days absent per interval (frequency * duration) cannot exceed the total days in the interval",
                     field="leave_details.intermittent_leave_periods[0].duration",
@@ -1103,7 +1122,7 @@ def test_intermittent_interval_less_than_leave_period_length(test_leave_periods,
                 )
             ],
             [
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.days_absent_per_intermittent_interval_maximum,
                     message="The total days absent per interval (frequency * duration) cannot exceed the total days in the interval",
                     field="leave_details.intermittent_leave_periods[0].duration",
@@ -1124,7 +1143,7 @@ def test_intermittent_interval_less_than_leave_period_length(test_leave_periods,
                 )
             ],
             [
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.days_absent_per_intermittent_interval_maximum,
                     message="The total days absent per interval (frequency * duration) cannot exceed the total days in the interval",
                     field="leave_details.intermittent_leave_periods[0].duration",
@@ -1157,17 +1176,17 @@ def test_reduced_leave_period_required_fields():
     issues = get_reduced_schedule_leave_issues(test_app)
 
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.minimum,
             message="Reduced leave minutes must be greater than 0",
             rule=IssueRule.min_reduced_leave_minutes,
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="end_date is required",
             field="leave_details.reduced_schedule_leave_periods[0].end_date",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="start_date is required",
             field="leave_details.reduced_schedule_leave_periods[0].start_date",
@@ -1198,32 +1217,32 @@ def test_reduced_leave_period_required_minutes_fields():
     issues = get_reduced_schedule_leave_issues(test_app)
 
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="monday_off_minutes is required",
             field="leave_details.reduced_schedule_leave_periods[0].monday_off_minutes",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="tuesday_off_minutes is required",
             field="leave_details.reduced_schedule_leave_periods[0].tuesday_off_minutes",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="wednesday_off_minutes is required",
             field="leave_details.reduced_schedule_leave_periods[0].wednesday_off_minutes",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="thursday_off_minutes is required",
             field="leave_details.reduced_schedule_leave_periods[0].thursday_off_minutes",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="friday_off_minutes is required",
             field="leave_details.reduced_schedule_leave_periods[0].friday_off_minutes",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="saturday_off_minutes is required",
             field="leave_details.reduced_schedule_leave_periods[0].saturday_off_minutes",
@@ -1260,37 +1279,37 @@ def test_reduced_leave_period_maximum_minutes():
     issues = get_reduced_schedule_leave_issues(test_app)
 
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.maximum,
             message="sunday_off_minutes cannot exceed the work pattern minutes for the same day, which is 1",
             field="leave_details.reduced_schedule_leave_periods[0].sunday_off_minutes",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.maximum,
             message="monday_off_minutes cannot exceed the work pattern minutes for the same day, which is 2",
             field="leave_details.reduced_schedule_leave_periods[0].monday_off_minutes",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.maximum,
             message="tuesday_off_minutes cannot exceed the work pattern minutes for the same day, which is 3",
             field="leave_details.reduced_schedule_leave_periods[0].tuesday_off_minutes",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.maximum,
             message="wednesday_off_minutes cannot exceed the work pattern minutes for the same day, which is 4",
             field="leave_details.reduced_schedule_leave_periods[0].wednesday_off_minutes",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.maximum,
             message="thursday_off_minutes cannot exceed the work pattern minutes for the same day, which is 5",
             field="leave_details.reduced_schedule_leave_periods[0].thursday_off_minutes",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.maximum,
             message="friday_off_minutes cannot exceed the work pattern minutes for the same day, which is 6",
             field="leave_details.reduced_schedule_leave_periods[0].friday_off_minutes",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.maximum,
             message="saturday_off_minutes cannot exceed the work pattern minutes for the same day, which is 7",
             field="leave_details.reduced_schedule_leave_periods[0].saturday_off_minutes",
@@ -1338,7 +1357,7 @@ def test_reduced_leave_period_minimum_total_minutes():
     issues = get_reduced_schedule_leave_issues(test_app)
 
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.minimum,
             message="Reduced leave minutes must be greater than 0",
             rule=IssueRule.min_reduced_leave_minutes,
@@ -1350,7 +1369,7 @@ def test_mass_id_required_if_has_mass_id():
     test_app = ApplicationFactory.build(has_state_id=True, mass_id=None)
     issues = get_conditional_issues(test_app, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             rule="conditional",
             message="mass_id is required if has_mass_id is set",
@@ -1363,7 +1382,7 @@ def test_mailing_addr_required_if_has_mailing_addr():
     test_app = ApplicationFactory.build(has_mailing_address=True, mailing_address=None)
     issues = get_conditional_issues(test_app, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             rule="conditional",
             message="mailing_address is required if has_mailing_address is set",
@@ -1380,7 +1399,7 @@ def test_pregnant_required_medical_leave():
     assert test_app.pregnant_or_recent_birth is None
     issues = get_conditional_issues(test_app, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             rule="conditional",
             message="It is required to indicate if there has been a recent pregnancy or birth when medical leave is requested, regardless of if it is related to the leave request",
@@ -1396,7 +1415,7 @@ def test_reason_qualifers_required_for_bonding():
     )
     issues = get_conditional_issues(test_app, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             rule="conditional",
             message="Invalid leave reason qualifier for bonding leave type",
@@ -1413,7 +1432,7 @@ def test_child_birth_date_required_for_newborn_bonding():
     )
     issues = get_conditional_issues(test_app, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             rule="conditional",
             message="Child birth date is required for newborn bonding leave",
@@ -1430,7 +1449,7 @@ def test_child_placement_date_required_for_adoption_bonding():
     )
     issues = get_conditional_issues(test_app, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             rule="conditional",
             message="Child placement date is required for foster or adoption bonding leave",
@@ -1447,7 +1466,7 @@ def test_child_placement_date_required_for_fostercare_bonding():
     )
     issues = get_conditional_issues(test_app, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             rule="conditional",
             message="Child placement date is required for foster or adoption bonding leave",
@@ -1464,7 +1483,7 @@ def test_account_number_required_for_ACH():
     )
     issues = get_payments_issues(test_app)
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             rule="conditional",
             message="Account number is required for direct deposit",
@@ -1481,7 +1500,7 @@ def test_routing_number_required_for_ACH():
     )
     issues = get_payments_issues(test_app)
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             rule="conditional",
             message="Routing number is required for direct deposit",
@@ -1498,7 +1517,7 @@ def test_bank_account_type_required_for_ACH():
     )
     issues = get_payments_issues(test_app)
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             rule="conditional",
             message="Account type is required for direct deposit",
@@ -1515,7 +1534,7 @@ def test_valid_routing_number():
     )
     issues = get_payments_issues(test_app)
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.checksum,
             message="Routing number is invalid",
             field="payment_preference.routing_number",
@@ -1529,7 +1548,7 @@ def test_payment_method_required_for_payment_preference():
     )
     issues = get_payments_issues(test_app)
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="Payment method is required",
             field="payment_preference.payment_method",
@@ -1547,7 +1566,7 @@ def test_min_work_pattern_total_minutes_worked():
     issues = get_work_pattern_issues(test_app)
 
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.minimum,
             field="work_pattern.work_pattern_days",
             message="Total minutes for a work pattern must be greater than 0",
@@ -1572,7 +1591,7 @@ def test_required_work_pattern_minutes():
 
     for i in range(6):
         expected_issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.required,
                 message=f"work_pattern.work_pattern_days[{i + 1}].minutes is required",
                 field=f"work_pattern.work_pattern_days[{i + 1}].minutes",
@@ -1599,7 +1618,7 @@ def test_max_work_pattern_minutes():
 
     for i in range(6):
         expected_issues.append(
-            Issue(
+            ValidationErrorDetail(
                 type=IssueType.maximum,
                 message="Total minutes in a work pattern week must be less than a day (1440 minutes)",
                 field=f"work_pattern.work_pattern_days[{i + 1}].minutes",
@@ -1618,7 +1637,7 @@ def test_employer_fein_required_for_employed_claimants():
     )
     issues = get_conditional_issues(test_app, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             rule=IssueRule.conditional,
             message="employer_fein is required if employment_status is Employed",
@@ -1640,7 +1659,7 @@ def test_employer_notification_date_required():
     test_app = ApplicationFactory.build(employer_notified=True, employer_notification_date=None)
     issues = get_conditional_issues(test_app, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             rule=IssueRule.conditional,
             message="employer_notification_date is required for leave_details if employer_notified is set",
@@ -1656,7 +1675,7 @@ def test_employer_notification_date_required_when_employed():
     )
     issues = get_conditional_issues(test_app, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             rule=IssueRule.require_employer_notified,
             message="employer_notified must be True if employment_status is Employed",
@@ -1688,7 +1707,7 @@ def test_has_employer_benefits_true_no_benefit():
 
     issues = get_conditional_issues(application, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             rule=IssueRule.conditional,
             message="when has_employer_benefits is true, employer_benefits cannot be empty",
@@ -1725,17 +1744,17 @@ def test_employer_benefit_missing_fields():
     test_app = ApplicationFactory.build(employer_benefits=[EmployerBenefit()])
     issues = get_conditional_issues(test_app, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="employer_benefits[0].benefit_start_date is required",
             field="employer_benefits[0].benefit_start_date",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="employer_benefits[0].benefit_type is required",
             field="employer_benefits[0].benefit_type",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="employer_benefits[0].is_full_salary_continuous is required",
             field="employer_benefits[0].is_full_salary_continuous",
@@ -1754,7 +1773,7 @@ def test_employer_benefit_amount_dollars_required():
 
     issues = get_conditional_issues(application, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             rule=IssueRule.conditional,
             message="employer_benefits[0].benefit_amount_dollars is required if employer_benefits[0].benefit_amount_frequency is set",
@@ -1774,7 +1793,7 @@ def test_employer_benefit_amount_frequency_required():
 
     issues = get_conditional_issues(application, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             rule=IssueRule.conditional,
             message="employer_benefits[0].benefit_amount_frequency is required if employer_benefits[0].benefit_amount_dollars is set",
@@ -1794,7 +1813,7 @@ def test_employer_benefit_start_date_must_be_after_2020():
 
     issues = get_conditional_issues(application, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.minimum,
             message="employer_benefits[0].benefit_start_date cannot be earlier than 2021-01-01",
             field="employer_benefits[0].benefit_start_date",
@@ -1813,7 +1832,7 @@ def test_employer_benefit_end_date_must_be_after_2020():
 
     issues = get_conditional_issues(application, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.minimum,
             message="employer_benefits[0].benefit_end_date cannot be earlier than 2021-01-01",
             field="employer_benefits[0].benefit_end_date",
@@ -1834,7 +1853,7 @@ def test_employer_benefit_end_date_must_be_after_start_date():
 
     issues = get_conditional_issues(application, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.invalid_date_range,
             message="employer_benefits[0].benefit_end_date cannot be earlier than employer_benefits[0].benefit_start_date",
             field="employer_benefits[0].benefit_end_date",
@@ -1852,7 +1871,7 @@ def test_other_leave_feature_flagged_rules():
     issues = get_conditional_issues(application, headers)
 
     assert (
-        Issue(
+        ValidationErrorDetail(
             field="has_concurrent_leave",
             message="has_concurrent_leave is required",
             type=IssueType.required,
@@ -1860,7 +1879,7 @@ def test_other_leave_feature_flagged_rules():
         not in issues
     )
     assert (
-        Issue(
+        ValidationErrorDetail(
             field="has_employer_benefits",
             message="has_employer_benefits is required",
             type=IssueType.required,
@@ -1868,7 +1887,7 @@ def test_other_leave_feature_flagged_rules():
         not in issues
     )
     assert (
-        Issue(
+        ValidationErrorDetail(
             field="has_other_incomes",
             message="has_other_incomes is required",
             type=IssueType.required,
@@ -1876,7 +1895,7 @@ def test_other_leave_feature_flagged_rules():
         not in issues
     )
     assert (
-        Issue(
+        ValidationErrorDetail(
             field="has_previous_leaves_other_reason",
             message="has_previous_leaves_other_reason is required",
             type=IssueType.required,
@@ -1884,7 +1903,7 @@ def test_other_leave_feature_flagged_rules():
         not in issues
     )
     assert (
-        Issue(
+        ValidationErrorDetail(
             field="has_previous_leaves_same_reason",
             message="has_previous_leaves_same_reason is required",
             type=IssueType.required,
@@ -1897,7 +1916,7 @@ def test_other_leave_feature_flagged_rules():
     issues = get_conditional_issues(application, headers)
 
     assert (
-        Issue(
+        ValidationErrorDetail(
             field="has_concurrent_leave",
             message="has_concurrent_leave is required",
             type=IssueType.required,
@@ -1905,7 +1924,7 @@ def test_other_leave_feature_flagged_rules():
         in issues
     )
     assert (
-        Issue(
+        ValidationErrorDetail(
             field="has_employer_benefits",
             message="has_employer_benefits is required",
             type=IssueType.required,
@@ -1913,7 +1932,7 @@ def test_other_leave_feature_flagged_rules():
         in issues
     )
     assert (
-        Issue(
+        ValidationErrorDetail(
             field="has_other_incomes",
             message="has_other_incomes is required",
             type=IssueType.required,
@@ -1921,7 +1940,7 @@ def test_other_leave_feature_flagged_rules():
         in issues
     )
     assert (
-        Issue(
+        ValidationErrorDetail(
             field="has_previous_leaves_other_reason",
             message="has_previous_leaves_other_reason is required",
             type=IssueType.required,
@@ -1929,7 +1948,7 @@ def test_other_leave_feature_flagged_rules():
         in issues
     )
     assert (
-        Issue(
+        ValidationErrorDetail(
             field="has_previous_leaves_same_reason",
             message="has_previous_leaves_same_reason is required",
             type=IssueType.required,
@@ -1948,7 +1967,7 @@ def test_other_leave_submitted_feature_flagged_rules():
     issues = get_conditional_issues(application, headers)
 
     assert (
-        Issue(
+        ValidationErrorDetail(
             field="has_employer_benefits",
             message="has_employer_benefits is required",
             type=IssueType.required,
@@ -1956,7 +1975,7 @@ def test_other_leave_submitted_feature_flagged_rules():
         not in issues
     )
     assert (
-        Issue(
+        ValidationErrorDetail(
             field="has_other_incomes",
             message="has_other_incomes is required",
             type=IssueType.required,
@@ -1964,7 +1983,7 @@ def test_other_leave_submitted_feature_flagged_rules():
         not in issues
     )
     assert (
-        Issue(
+        ValidationErrorDetail(
             field="has_previous_leaves_other_reason",
             message="has_previous_leaves_other_reason is required",
             type=IssueType.required,
@@ -1972,7 +1991,7 @@ def test_other_leave_submitted_feature_flagged_rules():
         not in issues
     )
     assert (
-        Issue(
+        ValidationErrorDetail(
             field="has_previous_leaves_same_reason",
             message="has_previous_leaves_same_reason is required",
             type=IssueType.required,
@@ -1987,7 +2006,7 @@ def test_has_other_incomes_true_no_income():
 
     issues = get_conditional_issues(application, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             rule=IssueRule.conditional,
             message="when has_other_incomes is true, other_incomes cannot be empty",
@@ -2024,17 +2043,17 @@ def test_other_income_missing_fields():
     test_app = ApplicationFactory.build(other_incomes=[OtherIncome()])
     issues = get_conditional_issues(test_app, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="other_incomes[0].income_end_date is required",
             field="other_incomes[0].income_end_date",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="other_incomes[0].income_start_date is required",
             field="other_incomes[0].income_start_date",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="other_incomes[0].income_type is required",
             field="other_incomes[0].income_type",
@@ -2053,7 +2072,7 @@ def test_other_income_amount_dollars_required():
 
     issues = get_conditional_issues(application, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             rule=IssueRule.conditional,
             message="other_incomes[0].income_amount_dollars is required if other_incomes[0].income_amount_frequency is set",
@@ -2073,7 +2092,7 @@ def test_other_income_amount_frequency_required():
 
     issues = get_conditional_issues(application, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             rule=IssueRule.conditional,
             message="other_incomes[0].income_amount_frequency is required if other_incomes[0].income_amount_dollars is set",
@@ -2093,7 +2112,7 @@ def test_other_income_start_date_must_be_after_2020():
 
     issues = get_conditional_issues(application, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.minimum,
             message="other_incomes[0].income_start_date cannot be earlier than 2021-01-01",
             field="other_incomes[0].income_start_date",
@@ -2112,7 +2131,7 @@ def test_other_income_end_date_must_be_after_2020():
 
     issues = get_conditional_issues(application, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.minimum,
             message="other_incomes[0].income_end_date cannot be earlier than 2021-01-01",
             field="other_incomes[0].income_end_date",
@@ -2133,7 +2152,7 @@ def test_other_income_end_date_must_be_after_start_date():
 
     issues = get_conditional_issues(application, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.invalid_date_range,
             message="other_incomes[0].income_end_date cannot be earlier than other_incomes[0].income_start_date",
             field="other_incomes[0].income_end_date",
@@ -2148,13 +2167,13 @@ def test_has_previous_leaves_true_no_leave():
 
     issues = get_conditional_issues(application, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             rule=IssueRule.conditional,
             message="when has_previous_leaves_other_reason is true, previous_leaves_other_reason cannot be empty",
             field="previous_leaves_other_reason",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             rule=IssueRule.conditional,
             message="when has_previous_leaves_same_reason is true, previous_leaves_same_reason cannot be empty",
@@ -2190,17 +2209,17 @@ def test_concurrent_leave_required_fields():
     issues = get_conditional_issues(application, Headers())
 
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="concurrent_leave.leave_start_date is required",
             field="concurrent_leave.leave_start_date",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="concurrent_leave.leave_end_date is required",
             field="concurrent_leave.leave_end_date",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="concurrent_leave.is_for_current_employer is required",
             field="concurrent_leave.is_for_current_employer",
@@ -2218,12 +2237,12 @@ def test_concurrent_leave_required_fields():
                 leave_end_date=date(2020, 4, 1),
             ),
             [
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.minimum,
                     message=f"concurrent_leave.leave_start_date cannot be earlier than {PFML_PROGRAM_LAUNCH_DATE}",
                     field="concurrent_leave.leave_start_date",
                 ),
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.minimum,
                     message=f"concurrent_leave.leave_end_date cannot be earlier than {PFML_PROGRAM_LAUNCH_DATE}",
                     field="concurrent_leave.leave_end_date",
@@ -2237,7 +2256,7 @@ def test_concurrent_leave_required_fields():
                 leave_end_date=date(2021, 4, 1),
             ),
             [
-                Issue(
+                ValidationErrorDetail(
                     type=IssueType.invalid_date_range,
                     message="concurrent_leave.leave_end_date cannot be earlier than concurrent_leave.leave_start_date",
                     field="concurrent_leave.leave_end_date",
@@ -2273,27 +2292,27 @@ def test_previous_leave_missing_fields():
     test_app = ApplicationFactory.build(previous_leaves_same_reason=[PreviousLeaveSameReason()])
     issues = get_conditional_issues(test_app, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="previous_leaves_same_reason[0].leave_start_date is required",
             field="previous_leaves_same_reason[0].leave_start_date",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="previous_leaves_same_reason[0].leave_end_date is required",
             field="previous_leaves_same_reason[0].leave_end_date",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="previous_leaves_same_reason[0].is_for_current_employer is required",
             field="previous_leaves_same_reason[0].is_for_current_employer",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="previous_leaves_same_reason[0].leave_minutes is required",
             field="previous_leaves_same_reason[0].leave_minutes",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="previous_leaves_same_reason[0].worked_per_week_minutes is required",
             field="previous_leaves_same_reason[0].worked_per_week_minutes",
@@ -2303,32 +2322,32 @@ def test_previous_leave_missing_fields():
     test_app = ApplicationFactory.build(previous_leaves_other_reason=[PreviousLeaveOtherReason()])
     issues = get_conditional_issues(test_app, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="previous_leaves_other_reason[0].leave_start_date is required",
             field="previous_leaves_other_reason[0].leave_start_date",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="previous_leaves_other_reason[0].leave_end_date is required",
             field="previous_leaves_other_reason[0].leave_end_date",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="previous_leaves_other_reason[0].is_for_current_employer is required",
             field="previous_leaves_other_reason[0].is_for_current_employer",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="previous_leaves_other_reason[0].leave_minutes is required",
             field="previous_leaves_other_reason[0].leave_minutes",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="previous_leaves_other_reason[0].worked_per_week_minutes is required",
             field="previous_leaves_other_reason[0].worked_per_week_minutes",
         ),
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.required,
             message="previous_leaves_other_reason[0].leave_reason is required",
             field="previous_leaves_other_reason[0].leave_reason",
@@ -2347,7 +2366,7 @@ def test_previous_leave_start_date_must_be_after_2020():
 
     issues = get_conditional_issues(application, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.minimum,
             message="previous_leaves_same_reason[0].leave_start_date cannot be earlier than 2021-01-01",
             field="previous_leaves_same_reason[0].leave_start_date",
@@ -2366,7 +2385,7 @@ def test_previous_leave_end_date_must_be_after_2020():
 
     issues = get_conditional_issues(application, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.minimum,
             message="previous_leaves_other_reason[0].leave_end_date cannot be earlier than 2021-01-01",
             field="previous_leaves_other_reason[0].leave_end_date",
@@ -2387,7 +2406,7 @@ def test_previous_leave_end_date_must_be_after_start_date():
 
     issues = get_conditional_issues(application, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.invalid_date_range,
             message="previous_leaves_same_reason[0].leave_end_date cannot be earlier than previous_leaves_same_reason[0].leave_start_date",
             field="previous_leaves_same_reason[0].leave_end_date",
@@ -2410,7 +2429,7 @@ def test_previous_leave_worked_per_week_minutes_must_be_less_than_10080():
 
     issues = get_conditional_issues(application, Headers())
     assert [
-        Issue(
+        ValidationErrorDetail(
             type=IssueType.maximum,
             message="Minutes worked per week cannot exceed 10080",
             field="previous_leaves_same_reason[0].worked_per_week_minutes",

@@ -7,5 +7,13 @@ export default {
 };
 
 export const DefaultStory = () => {
-  return <Status />;
+  const appLogic = {
+    appErrors: { items: [] },
+    documents: { download: () => {} },
+    portalFlow: {
+      getNextPageRoute: () => "/storybook-mock",
+      goTo: () => {},
+    },
+  };
+  return <Status appLogic={appLogic} />;
 };

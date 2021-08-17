@@ -4,15 +4,22 @@ type Props = {
   type: "warn" | "success" | "info" | "error" | "neutral";
   closeable?: boolean;
   children: string;
+  onClose?: Function;
 };
 
-const Alert = ({ type = "neutral", closeable = false, children }: Props) => {
+const Alert = ({
+  type = "neutral",
+  closeable = false,
+  onClose = () => {},
+  children,
+}: Props) => {
   const [showAlert, setAlert] = useState(true);
 
   const closeAlert = (event: React.MouseEvent) => {
     event.preventDefault();
 
     setAlert(false);
+    onClose(event);
   };
 
   if (showAlert) {

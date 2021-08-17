@@ -4,13 +4,13 @@ import pytest
 
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
 from massgov.pfml.api.models.common import EmployerBenefit, PreviousLeave
-from massgov.pfml.api.services.claim_rules import (
+from massgov.pfml.api.validation.claim_rules import (
     get_employer_benefits_issues,
     get_employer_claim_review_issues,
     get_hours_worked_per_week_issues,
     get_previous_leaves_issues,
 )
-from massgov.pfml.api.util.response import IssueType
+from massgov.pfml.api.validation.exceptions import IssueType
 
 
 @pytest.fixture
@@ -68,14 +68,14 @@ class TestGetEmployerClaimReviewIssues:
         assert len(resp) == 1
         assert resp[0].message == "hours_worked_per_week must be populated"
         assert resp[0].field == "hours_worked_per_week"
-        assert resp[0].type == "missing_expected_field"
+        assert resp[0].type == IssueType.required
 
 
 class TestGetHoursWorkedPerWeekIssues:
     @pytest.mark.parametrize(
         "hours_worked_per_week, expected_type,expected_field, expected_msg_blurb",
         [
-            [None, "missing_expected_field", "hours_worked_per_week", "must be populated"],
+            [None, IssueType.required, "hours_worked_per_week", "must be populated"],
             [-1, IssueType.minimum, "hours_worked_per_week", "greater than 0"],
             [169, IssueType.maximum, "hours_worked_per_week", "168 or fewer"],
         ],
