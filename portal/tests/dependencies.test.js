@@ -26,6 +26,7 @@ const dependencyRules = [
           "useFilesLogic",
           "useCollectionState",
           "useThrottledHandler",
+          "useAutoFocusEffect",
         ],
         reason:
           "Components should not depend on application code. Consider exposing events that clients handle.",
