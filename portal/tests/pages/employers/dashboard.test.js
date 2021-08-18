@@ -769,7 +769,7 @@ describe("Employer dashboard", () => {
       expect.arrayContaining([
         expect.objectContaining({
           label: "Status",
-          value: "fineos_absence_status,ascending",
+          value: "absence_status,ascending",
         }),
       ])
     );
