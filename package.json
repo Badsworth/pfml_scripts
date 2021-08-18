@@ -43,6 +43,11 @@
       "prettier --write",
       "git add"
     ],
+    "e2e/**/*.{ts}": [
+      "e2e/node_modules/.bin/prettier --write --config .prettierrc",
+      "e2e/node_modules/.bin/eslint --fix --config e2e/.eslintrc",
+      "git add"
+    ],
     "!(bin)/**/*.{tf,tfvars}": [
       "npm run lint:tf",
       "git add"
