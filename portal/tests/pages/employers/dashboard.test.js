@@ -610,9 +610,8 @@ describe("Employer dashboard", () => {
     });
 
     const filtersWrapper = wrapper.find("Filters").dive();
-    const { changeField, changeCheckbox, submitForm } = simulateEvents(
-      filtersWrapper
-    );
+    const { changeField, changeCheckbox, submitForm } =
+      simulateEvents(filtersWrapper);
 
     changeCheckbox("claim_status", true, "Approved");
     changeCheckbox("claim_status", true, "Closed");
