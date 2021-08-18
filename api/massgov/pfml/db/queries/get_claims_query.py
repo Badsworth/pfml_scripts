@@ -1,10 +1,12 @@
+import re
 from datetime import date
 from enum import Enum
-from typing import Any, Callable, List, Optional, Set, Type
+from typing import Any, Callable, List, Optional, Set, Type, Union
 
-from sqlalchemy import Column, and_, asc, desc, or_
+from sqlalchemy import Column, and_, asc, desc, func, or_
 from sqlalchemy.orm import contains_eager
 from sqlalchemy.sql.elements import UnaryExpression
+from sqlalchemy.sql.selectable import Alias
 
 from massgov.pfml import db
 from massgov.pfml.db.models.applications import Application
@@ -46,15 +48,19 @@ PendingAbsenceStatuses = ["Intake In Progress", "In Review", "Adjudication", Non
 
 
 class GetClaimsQuery:
-    joined: List[Type[Base]]
+    joined: List[Union[Type[Base], Alias]]
 
     def __init__(self, db_session: db.Session):
+        self.session = db_session
         self.query = db_session.query(Claim)
         self.joined = []
 
     # prevents duplicate joining of a table
     def join(
-        self, model: Type[Base], isouter: bool = False, join_filter: Optional[Any] = None
+        self,
+        model: Union[Type[Base], Alias],
+        isouter: bool = False,
+        join_filter: Optional[Any] = None,
     ) -> None:
         for joined in self.joined:
             if model is joined:
@@ -113,15 +119,40 @@ class GetClaimsQuery:
             filters.append(Claim.fineos_absence_status_id.is_(None))
         self.query = self.query.filter(or_(*filters))
 
+    def employee_search_sub_query(self) -> Alias:
+        search_columns = [
+            Employee,
+            func.concat(Employee.first_name, " ", Employee.last_name).label("first_last"),
+            func.concat(Employee.last_name, " ", Employee.first_name).label("last_first"),
+            func.concat(
+                Employee.first_name, " ", Employee.middle_name, " ", Employee.last_name
+            ).label("full_name"),
+        ]
+        return self.session.query(*search_columns).subquery()
+
+    def format_search_string(self, search_string: str) -> str:
+        return re.sub(r"\s+", " ", search_string).strip()
+
     def add_search_filter(self, search_string: str) -> None:
         self.join(Claim.employee, isouter=True)  # type:ignore
         self.query = self.query.filter(Employee.employee_id == Claim.employee_id)
-        filters = [
-            Claim.fineos_absence_id.ilike(f"%{search_string}%"),
-            Employee.first_name.ilike(f"%{search_string}%"),
-            Employee.middle_name.ilike(f"%{search_string}%"),
-            Employee.last_name.ilike(f"%{search_string}%"),
-        ]
+        search_string = self.format_search_string(search_string)
+        search_sub_query = self.employee_search_sub_query()
+        self.join(search_sub_query, isouter=True)
+        self.query = self.query.filter(search_sub_query.c.employee_id == Claim.employee_id)
+        if " " in search_string:
+            filters = [
+                search_sub_query.c.first_last.ilike(f"%{search_string}%"),
+                search_sub_query.c.last_first.ilike(f"%{search_string}%"),
+                search_sub_query.c.full_name.ilike(f"%{search_string}%"),
+            ]
+        else:
+            filters = [
+                Claim.fineos_absence_id.ilike(f"%{search_string}%"),
+                Employee.first_name.ilike(f"%{search_string}%"),
+                Employee.middle_name.ilike(f"%{search_string}%"),
+                Employee.last_name.ilike(f"%{search_string}%"),
+            ]
         self.query = self.query.filter(or_(*filters))
 
     def add_managed_requirements_filter(self) -> None:
