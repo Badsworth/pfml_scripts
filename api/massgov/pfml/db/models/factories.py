@@ -504,6 +504,13 @@ class ApplicationFactory(BaseFactory):
     has_intermittent_leave_periods = False
     has_reduced_schedule_leave_periods = False
 
+    # Other leaves
+    has_concurrent_leave = False
+    has_employer_benefits = False
+    has_other_incomes = False
+    has_previous_leaves_other_reason = False
+    has_previous_leaves_same_reason = False
+
     # Relationships
     user = factory.SubFactory(UserFactory)
     user_id = factory.LazyAttribute(lambda a: a.user.user_id)
