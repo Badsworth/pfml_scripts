@@ -578,7 +578,6 @@ def get_claims() -> flask.Response:
                 query.add_absence_status_filter(absence_statuses)
 
             if search_string:
-                search_string = search_string.strip()
                 query.add_search_filter(search_string)
 
             query.add_order_by(pagination_context)

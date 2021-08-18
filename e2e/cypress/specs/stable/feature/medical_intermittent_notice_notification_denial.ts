@@ -2,6 +2,7 @@ import { fineos, portal, email, fineosPages } from "../../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
+import { assertValidClaim } from "../../../../src/util/typeUtils";
 
 describe("Denial Notification and Notice", () => {
   after(() => {
@@ -82,9 +83,7 @@ describe("Denial Notification and Notice", () => {
       cy.visit("/");
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-          if (!claim.employer_fein) {
-            throw new Error("Claim must include employer FEIN");
-          }
+          assertValidClaim(claim);
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
           portal.login(getLeaveAdminCredentials(claim.employer_fein));
           portal.selectClaimFromEmployerDashboard(

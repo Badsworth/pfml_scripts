@@ -2,9 +2,7 @@ import { fineos, portal, email, fineosPages } from "../../../actions";
 import { getFineosBaseUrl } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
-import { ClaimDocument } from "../../../claims_database/models/claim";
-
-// update state of claim at the end of the test
+import { findCertificationDoc } from "../../../../src/util/documents";
 
 describe("Request for More Information (notifications/notices)", () => {
   after(() => {
@@ -16,25 +14,33 @@ describe("Request for More Information (notifications/notices)", () => {
     password: config("PORTAL_PASSWORD"),
   };
 
-  let notificationTimestamp: number;
-
   const submit = it(
     "Given a claim in which a CSR has requested more information",
     { baseUrl: getFineosBaseUrl() },
     () => {
       fineos.before();
       cy.visit("/");
-      cy.task<ClaimDocument>("getClaimFromDB", { scenario: "CHAP_RFI" }).then(
-        (claim) => {
-          cy.stash("dbClaim", claim);
-          const page = fineosPages.ClaimPage.visit(claim.fineosAbsenceId);
-          notificationTimestamp = Date.now();
+
+      cy.task("generateClaim", "CHAP_RFI").then((claim) => {
+        cy.task("submitClaimToAPI", {
+          ...claim,
+          credentials,
+        }).then((res) => {
+          cy.stash("claim", claim.claim);
+          cy.stash("submission", {
+            application_id: res.application_id,
+            fineos_absence_id: res.fineos_absence_id,
+            timestamp_from: Date.now(),
+          });
+
+          const page = fineosPages.ClaimPage.visit(res.fineos_absence_id);
           page.adjudicate((adjudication) => {
             adjudication.evidence((evidence) => {
-              // @todo - utilized this function for presubmitted claims
-              // const certificationDocument = findCertificationDoc(claim.documents);
+              const certificationDocument = findCertificationDoc(
+                claim.documents
+              );
               evidence.requestAdditionalInformation(
-                "Care for a family member form",
+                certificationDocument.document_type,
                 {
                   "Care Information incomplete": "This is incomplete",
                 },
@@ -56,8 +62,8 @@ describe("Request for More Information (notifications/notices)", () => {
             .documents((docPage) =>
               docPage.assertDocumentExists("Request for more Information")
             );
-        }
-      );
+        });
+      });
     }
   );
 
@@ -67,34 +73,32 @@ describe("Request for More Information (notifications/notices)", () => {
     () => {
       cy.dependsOnPreviousPass([submit]);
       portal.before();
-      cy.unstash<ClaimDocument>("dbClaim").then(
-        ({ claimId, fineosAbsenceId }) => {
-          portal.login(credentials);
-          cy.log("Waiting for documents");
-          cy.task(
-            "waitForClaimDocuments",
-            {
-              credentials: credentials,
-              application_id: claimId,
-              document_type: "Request for more Information",
-            },
-            { timeout: 60000 }
-          );
-          cy.log("Finished waiting for documents");
-          cy.visit("/applications");
-          cy.contains("article", fineosAbsenceId).within(() => {
-            cy.findByText("Request for more information (PDF)")
-              .should("be.visible")
-              .click();
-          });
-          portal.downloadLegalNotice(fineosAbsenceId);
-          portal.uploadAdditionalDocument(
-            fineosAbsenceId,
-            "Certification",
-            "caring"
-          );
-        }
-      );
+      cy.unstash<Submission>("submission").then((submission) => {
+        portal.login(credentials);
+        cy.log("Waiting for documents");
+        cy.task(
+          "waitForClaimDocuments",
+          {
+            credentials: credentials,
+            application_id: submission.application_id,
+            document_type: "Request for more Information",
+          },
+          { timeout: 60000 }
+        );
+        cy.log("Finished waiting for documents");
+        cy.visit("/applications");
+        cy.contains("article", submission.fineos_absence_id).within(() => {
+          cy.findByText("Request for more information (PDF)")
+            .should("be.visible")
+            .click();
+        });
+        portal.downloadLegalNotice(submission.fineos_absence_id);
+        portal.uploadAdditionalDocument(
+          submission.fineos_absence_id,
+          "Certification",
+          "caring"
+        );
+      });
     }
   );
 
@@ -105,8 +109,8 @@ describe("Request for More Information (notifications/notices)", () => {
       cy.dependsOnPreviousPass([submit, upload]);
       fineos.before();
       cy.visit("/");
-      cy.unstash<ClaimDocument>("dbClaim").then(({ fineosAbsenceId }) => {
-        const page = fineosPages.ClaimPage.visit(fineosAbsenceId);
+      cy.unstash<Submission>("submission").then((submission) => {
+        const page = fineosPages.ClaimPage.visit(submission.fineos_absence_id);
         page.tasks((taskPage) =>
           taskPage.assertTaskExists("Caring Certification Review")
         );
@@ -125,24 +129,24 @@ describe("Request for More Information (notifications/notices)", () => {
     { retries: 0 },
     () => {
       cy.dependsOnPreviousPass([submit]);
-      cy.unstash<ClaimDocument>("dbClaim").then(({ fineosAbsenceId }) => {
+      cy.unstash<Submission>("submission").then((submission) => {
         email.getEmails(
           {
             address: "gqzap.notifications@inbox.testmail.app",
             subject:
               "Thank you for successfully submitting your Paid Family and Medical Leave Application",
-            timestamp_from: notificationTimestamp,
-            messageWildcard: fineosAbsenceId,
-            debugInfo: { "Fineos Claim ID": fineosAbsenceId },
+            timestamp_from: submission.timestamp_from,
+            messageWildcard: submission.fineos_absence_id,
+            debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
           },
           30000
         );
-        cy.contains(fineosAbsenceId);
+        cy.contains(submission.fineos_absence_id);
       });
     }
   );
 
-  it.skip(
+  it(
     "Should generate a (Request for Information) notification for the claimant",
     { retries: 0 },
     () => {

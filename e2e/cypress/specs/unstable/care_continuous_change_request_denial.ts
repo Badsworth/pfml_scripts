@@ -1,8 +1,8 @@
-import { fineos, fineosPages } from "../../../actions";
-import { getFineosBaseUrl } from "../../../config";
-import { Submission } from "../../../../src/types";
-import { config } from "../../../actions/common";
-import { extractLeavePeriod } from "../../../../src/util/claims";
+import { fineos, fineosPages } from "../../actions";
+import { getFineosBaseUrl } from "../../config";
+import { Submission } from "../../../src/types";
+import { config } from "../../actions/common";
+import { extractLeavePeriod } from "../../../src/util/claims";
 import { addDays, format } from "date-fns";
 
 describe("Post-approval (notifications/notices)", () => {

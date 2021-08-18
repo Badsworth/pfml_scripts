@@ -1,7 +1,6 @@
 import base64
 
 import connexion
-import flask
 import puremagic
 from flask import Response
 from puremagic import PureError
@@ -86,7 +85,7 @@ def application_get(application_id):
         ensure(READ, existing_application)
         application_response = ApplicationResponse.from_orm(existing_application)
 
-    issues = application_rules.get_application_issues(existing_application, flask.request.headers)
+    issues = application_rules.get_application_issues(existing_application)
 
     return response_util.success_response(
         message="Successfully retrieved application",
@@ -186,7 +185,7 @@ def applications_update(application_id):
             db_session, application_request, existing_application
         )
 
-    issues = application_rules.get_application_issues(existing_application, flask.request.headers)
+    issues = application_rules.get_application_issues(existing_application)
     employer_issue = get_contributing_employer_or_employee_issue(
         db_session, existing_application.employer_fein, existing_application.tax_identifier
     )
@@ -252,9 +251,7 @@ def applications_submit(application_id):
 
         log_attributes = get_application_log_attributes(existing_application)
 
-        issues = application_rules.get_application_issues(
-            existing_application, flask.request.headers
-        )
+        issues = application_rules.get_application_issues(existing_application)
         employer_issue = get_contributing_employer_or_employee_issue(
             db_session, existing_application.employer_fein, existing_application.tax_identifier
         )
@@ -379,9 +376,7 @@ def applications_complete(application_id):
 
         log_attributes = get_application_log_attributes(existing_application)
 
-        issues = application_rules.get_application_issues(
-            existing_application, flask.request.headers
-        )
+        issues = application_rules.get_application_issues(existing_application)
         if issues:
             logger.info(
                 "applications_complete failure - application failed validation",

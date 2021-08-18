@@ -230,7 +230,7 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
       await disconnectDB();
       return claim;
     },
-
+    // @todo: surpress potential errors
     async saveClaim(arg: DBClaimMetadata): Promise<null> {
       const { connectDB, disconnectDB } = MongoConnector();
       await connectDB(config("MONGO_CONNECTION_URI"));

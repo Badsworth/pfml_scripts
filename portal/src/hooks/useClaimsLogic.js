@@ -26,6 +26,16 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
   const [activeOrder, setActiveOrder] = useState({});
 
   /**
+   * Empty the claims collection so that it is fetched again from the API
+   */
+  const clearClaims = () => {
+    setClaims(new ClaimCollection());
+    // Also clear any indication that a page is loaded, so our loadPage method
+    // fetches the page from the API
+    setPaginationMeta(new PaginationMeta());
+  };
+
+  /**
    * Load a page of claims for the authenticated user
    * @param {number|string} [pageOffset] - Page number to load
    * @param {object} [order]
@@ -71,6 +81,7 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
   return {
     activeFilters,
     claims,
+    clearClaims,
     isLoadingClaims,
     loadPage,
     paginationMeta,

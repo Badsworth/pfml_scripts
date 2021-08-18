@@ -359,9 +359,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         hrsWorkedPerWeek = 37 if customer_id == "1000" else 37.5
         return models.group_client_api.CustomerOccupations(
             elements=[
-                models.group_client_api.CustomerOccupation(
-                    id="12345", hrsWorkedPerWeek=str(hrsWorkedPerWeek)
-                )
+                models.group_client_api.CustomerOccupation(hrsWorkedPerWeek=str(hrsWorkedPerWeek))
             ]
         )
 

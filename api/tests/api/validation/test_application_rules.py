@@ -2,7 +2,6 @@ from datetime import date, datetime
 
 import pytest
 from freezegun import freeze_time
-from werkzeug.datastructures import Headers
 
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.validation.application_rules import (
@@ -219,7 +218,7 @@ def test_employer_notified_date_minimum():
     test_app = ApplicationFactory.build(
         employer_notified=True, employer_notification_date=date(2018, 12, 31)
     )
-    issues = get_conditional_issues(test_app, Headers())
+    issues = get_conditional_issues(test_app)
     assert (
         ValidationErrorDetail(
             type=IssueType.minimum,
@@ -236,7 +235,7 @@ def test_employer_notified_date_maximum():
     test_app = ApplicationFactory.build(
         employer_notified=True, employer_notification_date=date(2021, 1, 2)
     )
-    issues = get_conditional_issues(test_app, Headers())
+    issues = get_conditional_issues(test_app)
     assert (
         ValidationErrorDetail(
             type=IssueType.maximum,
@@ -293,7 +292,7 @@ def test_residential_address_fields_required():
         employer_notified=True,
     )
 
-    issues = get_conditional_issues(test_app, Headers())
+    issues = get_conditional_issues(test_app)
 
     assert [
         ValidationErrorDetail(
@@ -329,7 +328,7 @@ def test_mailing_address_fields_required():
         employer_notified=True,
     )
 
-    issues = get_conditional_issues(test_app, Headers())
+    issues = get_conditional_issues(test_app)
 
     assert [
         ValidationErrorDetail(
@@ -1367,7 +1366,7 @@ def test_reduced_leave_period_minimum_total_minutes():
 
 def test_mass_id_required_if_has_mass_id():
     test_app = ApplicationFactory.build(has_state_id=True, mass_id=None)
-    issues = get_conditional_issues(test_app, Headers())
+    issues = get_conditional_issues(test_app)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
@@ -1380,7 +1379,7 @@ def test_mass_id_required_if_has_mass_id():
 
 def test_mailing_addr_required_if_has_mailing_addr():
     test_app = ApplicationFactory.build(has_mailing_address=True, mailing_address=None)
-    issues = get_conditional_issues(test_app, Headers())
+    issues = get_conditional_issues(test_app)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
@@ -1397,7 +1396,7 @@ def test_pregnant_required_medical_leave():
         pregnant_or_recent_birth=None,
     )
     assert test_app.pregnant_or_recent_birth is None
-    issues = get_conditional_issues(test_app, Headers())
+    issues = get_conditional_issues(test_app)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
@@ -1413,7 +1412,7 @@ def test_reason_qualifers_required_for_bonding():
         leave_reason_id=LeaveReason.CHILD_BONDING.leave_reason_id,
         leave_reason_qualifier_id=LeaveReasonQualifier.SERIOUS_HEALTH_CONDITION.leave_reason_qualifier_id,
     )
-    issues = get_conditional_issues(test_app, Headers())
+    issues = get_conditional_issues(test_app)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
@@ -1430,7 +1429,7 @@ def test_child_birth_date_required_for_newborn_bonding():
         leave_reason_qualifier_id=LeaveReasonQualifier.NEWBORN.leave_reason_qualifier_id,
         child_birth_date=None,
     )
-    issues = get_conditional_issues(test_app, Headers())
+    issues = get_conditional_issues(test_app)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
@@ -1447,7 +1446,7 @@ def test_child_placement_date_required_for_adoption_bonding():
         leave_reason_qualifier_id=LeaveReasonQualifier.ADOPTION.leave_reason_qualifier_id,
         child_placement_date=None,
     )
-    issues = get_conditional_issues(test_app, Headers())
+    issues = get_conditional_issues(test_app)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
@@ -1464,7 +1463,7 @@ def test_child_placement_date_required_for_fostercare_bonding():
         leave_reason_qualifier_id=LeaveReasonQualifier.FOSTER_CARE.leave_reason_qualifier_id,
         child_placement_date=None,
     )
-    issues = get_conditional_issues(test_app, Headers())
+    issues = get_conditional_issues(test_app)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
@@ -1635,7 +1634,7 @@ def test_employer_fein_required_for_employed_claimants():
         employer_notification_date=date(2021, 1, 3),
         employer_notified=True,
     )
-    issues = get_conditional_issues(test_app, Headers())
+    issues = get_conditional_issues(test_app)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
@@ -1651,13 +1650,13 @@ def test_employer_fein_not_required_for_self_employed_claimants():
         employer_fein=None,
         employment_status_id=EmploymentStatus.SELF_EMPLOYED.employment_status_id,
     )
-    issues = get_conditional_issues(test_app, Headers())
+    issues = get_conditional_issues(test_app)
     assert not issues
 
 
 def test_employer_notification_date_required():
     test_app = ApplicationFactory.build(employer_notified=True, employer_notification_date=None)
-    issues = get_conditional_issues(test_app, Headers())
+    issues = get_conditional_issues(test_app)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
@@ -1673,7 +1672,7 @@ def test_employer_notification_date_required_when_employed():
         employer_notified=False,
         employment_status_id=EmploymentStatus.EMPLOYED.employment_status_id,
     )
-    issues = get_conditional_issues(test_app, Headers())
+    issues = get_conditional_issues(test_app)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
@@ -1688,7 +1687,7 @@ def test_employer_notification_date_not_required_when_unemployed():
         employer_notified=False,
         employment_status_id=EmploymentStatus.UNEMPLOYED.employment_status_id,
     )
-    issues = get_conditional_issues(test_app, Headers())
+    issues = get_conditional_issues(test_app)
     assert [] == issues
 
 
@@ -1697,7 +1696,7 @@ def test_employer_notification_date_not_required_when_self_employed():
         employer_notified=False,
         employment_status_id=EmploymentStatus.SELF_EMPLOYED.employment_status_id,
     )
-    issues = get_conditional_issues(test_app, Headers())
+    issues = get_conditional_issues(test_app)
     assert [] == issues
 
 
@@ -1705,7 +1704,7 @@ def test_has_employer_benefits_true_no_benefit():
     application = ApplicationFactory.build()
     application.has_employer_benefits = True
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
@@ -1721,7 +1720,7 @@ def test_employer_benefit_no_issues():
     benefits = [EmployerBenefitFactory.build(application_id=application.application_id)]
     application.employer_benefits = benefits
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [] == issues
 
 
@@ -1736,13 +1735,13 @@ def test_employer_benefit_amount_fields_are_optional():
     ]
     application.employer_benefits = benefits
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [] == issues
 
 
 def test_employer_benefit_missing_fields():
     test_app = ApplicationFactory.build(employer_benefits=[EmployerBenefit()])
-    issues = get_conditional_issues(test_app, Headers())
+    issues = get_conditional_issues(test_app)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
@@ -1771,7 +1770,7 @@ def test_employer_benefit_amount_dollars_required():
     ]
     application.employer_benefits = benefits
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
@@ -1791,7 +1790,7 @@ def test_employer_benefit_amount_frequency_required():
     ]
     application.employer_benefits = benefits
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
@@ -1811,7 +1810,7 @@ def test_employer_benefit_start_date_must_be_after_2020():
     ]
     application.employer_benefits = benefits
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [
         ValidationErrorDetail(
             type=IssueType.minimum,
@@ -1830,7 +1829,7 @@ def test_employer_benefit_end_date_must_be_after_2020():
     ]
     application.employer_benefits = benefits
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [
         ValidationErrorDetail(
             type=IssueType.minimum,
@@ -1851,7 +1850,7 @@ def test_employer_benefit_end_date_must_be_after_start_date():
     ]
     application.employer_benefits = benefits
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [
         ValidationErrorDetail(
             type=IssueType.invalid_date_range,
@@ -1861,59 +1860,15 @@ def test_employer_benefit_end_date_must_be_after_start_date():
     ] == issues
 
 
-def test_other_leave_feature_flagged_rules():
-    # Assert that API returns specific validation warnings when the
-    # X-FF-Require-Other-Leaves header is present
-    application = ApplicationFactory.build()
-    headers = Headers()
-
-    # Rules aren't enforced when a feature flag header isn't included
-    issues = get_conditional_issues(application, headers)
-
-    assert (
-        ValidationErrorDetail(
-            field="has_concurrent_leave",
-            message="has_concurrent_leave is required",
-            type=IssueType.required,
-        )
-        not in issues
+def test_other_leave_rules():
+    application = ApplicationFactory.build(
+        has_concurrent_leave=None,
+        has_employer_benefits=None,
+        has_other_incomes=None,
+        has_previous_leaves_other_reason=None,
+        has_previous_leaves_same_reason=None,
     )
-    assert (
-        ValidationErrorDetail(
-            field="has_employer_benefits",
-            message="has_employer_benefits is required",
-            type=IssueType.required,
-        )
-        not in issues
-    )
-    assert (
-        ValidationErrorDetail(
-            field="has_other_incomes",
-            message="has_other_incomes is required",
-            type=IssueType.required,
-        )
-        not in issues
-    )
-    assert (
-        ValidationErrorDetail(
-            field="has_previous_leaves_other_reason",
-            message="has_previous_leaves_other_reason is required",
-            type=IssueType.required,
-        )
-        not in issues
-    )
-    assert (
-        ValidationErrorDetail(
-            field="has_previous_leaves_same_reason",
-            message="has_previous_leaves_same_reason is required",
-            type=IssueType.required,
-        )
-        not in issues
-    )
-
-    # Rules are enforced when a feature flag header isn't included
-    headers.add("X-FF-Require-Other-Leaves", "value_does_not_matter")
-    issues = get_conditional_issues(application, headers)
+    issues = get_conditional_issues(application)
 
     assert (
         ValidationErrorDetail(
@@ -1957,14 +1912,10 @@ def test_other_leave_feature_flagged_rules():
     )
 
 
-def test_other_leave_submitted_feature_flagged_rules():
-    # Assert that API does not return specific validation warnings when the
-    # X-FF-Require-Other-Leaves header is present and the claim is already submitted
+def test_other_leave_submitted_rules():
+    # TODO (CP-2455): Remove this test once we always require other leaves be present, even on submitted applications
     application = ApplicationFactory.build(submitted_time=datetime.now())
-    headers = Headers()
-    headers.add("X-FF-Require-Other-Leaves", "value_does_not_matter")
-
-    issues = get_conditional_issues(application, headers)
+    issues = get_conditional_issues(application)
 
     assert (
         ValidationErrorDetail(
@@ -2004,7 +1955,7 @@ def test_has_other_incomes_true_no_income():
     application = ApplicationFactory.build()
     application.has_other_incomes = True
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
@@ -2020,7 +1971,7 @@ def test_other_income_no_issues():
     incomes = [OtherIncomeFactory.build(application_id=application.application_id,)]
     application.other_incomes = incomes
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [] == issues
 
 
@@ -2035,13 +1986,13 @@ def test_other_income_amount_fields_are_optional():
     ]
     application.other_incomes = incomes
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [] == issues
 
 
 def test_other_income_missing_fields():
     test_app = ApplicationFactory.build(other_incomes=[OtherIncome()])
-    issues = get_conditional_issues(test_app, Headers())
+    issues = get_conditional_issues(test_app)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
@@ -2070,7 +2021,7 @@ def test_other_income_amount_dollars_required():
     ]
     application.other_incomes = incomes
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
@@ -2090,7 +2041,7 @@ def test_other_income_amount_frequency_required():
     ]
     application.other_incomes = incomes
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
@@ -2110,7 +2061,7 @@ def test_other_income_start_date_must_be_after_2020():
     ]
     application.other_incomes = incomes
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [
         ValidationErrorDetail(
             type=IssueType.minimum,
@@ -2129,7 +2080,7 @@ def test_other_income_end_date_must_be_after_2020():
     ]
     application.other_incomes = incomes
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [
         ValidationErrorDetail(
             type=IssueType.minimum,
@@ -2150,7 +2101,7 @@ def test_other_income_end_date_must_be_after_start_date():
     ]
     application.other_incomes = incomes
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [
         ValidationErrorDetail(
             type=IssueType.invalid_date_range,
@@ -2165,7 +2116,7 @@ def test_has_previous_leaves_true_no_leave():
     application.has_previous_leaves_other_reason = True
     application.has_previous_leaves_same_reason = True
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
@@ -2192,7 +2143,7 @@ def test_concurrent_leave_no_issues():
         leave_end_date=date(2021, 3, 1),
     )
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [] == issues
 
 
@@ -2206,7 +2157,7 @@ def test_concurrent_leave_required_fields():
         leave_end_date=None,
     )
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
 
     assert [
         ValidationErrorDetail(
@@ -2270,7 +2221,7 @@ def test_concurrent_leave_date_range_issues(test_concurrent_leave, expected_issu
     application.has_concurrent_leave = True
     application.concurrent_leave = test_concurrent_leave
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
 
     assert expected_issues == issues
 
@@ -2284,13 +2235,13 @@ def test_previous_leave_no_issues():
     ]
     application.previous_leaves_other_reason = leaves_other_reason
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [] == issues
 
 
 def test_previous_leave_missing_fields():
     test_app = ApplicationFactory.build(previous_leaves_same_reason=[PreviousLeaveSameReason()])
-    issues = get_conditional_issues(test_app, Headers())
+    issues = get_conditional_issues(test_app)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
@@ -2320,7 +2271,7 @@ def test_previous_leave_missing_fields():
     ] == issues
 
     test_app = ApplicationFactory.build(previous_leaves_other_reason=[PreviousLeaveOtherReason()])
-    issues = get_conditional_issues(test_app, Headers())
+    issues = get_conditional_issues(test_app)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
@@ -2364,7 +2315,7 @@ def test_previous_leave_start_date_must_be_after_2020():
     ]
     application.previous_leaves_same_reason = leaves
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [
         ValidationErrorDetail(
             type=IssueType.minimum,
@@ -2383,7 +2334,7 @@ def test_previous_leave_end_date_must_be_after_2020():
     ]
     application.previous_leaves_other_reason = leaves
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [
         ValidationErrorDetail(
             type=IssueType.minimum,
@@ -2404,7 +2355,7 @@ def test_previous_leave_end_date_must_be_after_start_date():
     ]
     application.previous_leaves_same_reason = leaves
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [
         ValidationErrorDetail(
             type=IssueType.invalid_date_range,
@@ -2427,7 +2378,7 @@ def test_previous_leave_worked_per_week_minutes_must_be_less_than_10080():
     ]
     application.previous_leaves_same_reason = leaves
 
-    issues = get_conditional_issues(application, Headers())
+    issues = get_conditional_issues(application)
     assert [
         ValidationErrorDetail(
             type=IssueType.maximum,

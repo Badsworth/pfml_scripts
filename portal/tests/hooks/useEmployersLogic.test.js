@@ -23,15 +23,17 @@ jest.mock("../../src/services/tracker");
 describe("useEmployersLogic", () => {
   const absenceId = "mock-fineos-absence-id-1";
   const employerId = "mock-employer-id";
-  let appErrorsLogic, employersLogic, portalFlow, setUser;
+  let appErrorsLogic, clearClaims, employersLogic, portalFlow, setUser;
 
   function renderHook() {
+    clearClaims = jest.fn();
     setUser = jest.fn();
     testHook(() => {
       portalFlow = usePortalFlow();
       appErrorsLogic = useAppErrorsLogic({ portalFlow });
       employersLogic = useEmployersLogic({
         appErrorsLogic,
+        clearClaims,
         portalFlow,
         setUser,
       });
@@ -350,13 +352,14 @@ describe("useEmployersLogic", () => {
       expect(submitClaimReviewMock).toHaveBeenCalledWith(absenceId, patchData);
     });
 
-    it("clears the cached claim", async () => {
+    it("clears the cached EmployerClaim and claims", async () => {
       await act(async () => {
         await employersLogic.loadClaim(absenceId);
         await employersLogic.submitClaimReview(absenceId, patchData);
       });
 
       expect(employersLogic.claim).toBeNull();
+      expect(clearClaims).toHaveBeenCalled();
     });
 
     describe("errors", () => {

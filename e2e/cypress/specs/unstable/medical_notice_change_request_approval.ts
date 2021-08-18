@@ -14,6 +14,7 @@ const spec: GetClaimFromDBArgs = {
 };
 
 describe("Approval (notifications/notices)", () => {
+  // @todo: what's the best approach to handle scenario where no claim meets the spec => freshly submitted claim is adjudication
   // const approval = it("Approves a claim", () => {
   //   cy.task<ClaimDocument>("getClaimFromDB", spec).then((claim) => {
   //     cy.stash("claim", claim);
