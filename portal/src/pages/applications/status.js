@@ -1,6 +1,7 @@
 import Document, { DocumentType } from "../../models/Document";
 import React, { useEffect, useState } from "react";
 import BackButton from "../../components/BackButton";
+import ButtonLink from "../../components/ButtonLink";
 import Heading from "../../components/Heading";
 import LegalNoticeList from "../../components/LegalNoticeList.js";
 import PropTypes from "prop-types";
@@ -8,6 +9,7 @@ import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import { handleError } from "../../api/BaseApi";
 import { isFeatureEnabled } from "../../services/featureFlags";
+import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
@@ -104,6 +106,27 @@ export const Status = ({ appLogic, docList = TEST_DOC }) => {
           </div>
         </div>
         <ViewYourNotices />
+
+        {/* Upload documents section */}
+        <div className={containerClassName}>
+          <Heading level="2">
+            {t("pages.claimsStatus.uploadDocumentsHeading")}
+          </Heading>
+          <Heading level="3">
+            {t("pages.claimsStatus.infoRequestsHeading")}
+          </Heading>
+          <p>{t("pages.claimsStatus.infoRequestsBody")}</p>
+          {/* // TODO (CP-2457): update claim_id to claim.application_id */}
+          <ButtonLink
+            className="measure-6 margin-bottom-3"
+            href={routeWithParams("applications.uploadDocsOptions", {
+              claim_id: "65184a9e-f938-40b6-b0f6-25f416a4c113",
+            })}
+          >
+            {t("pages.claimsStatus.uploadDocumentsButton")}
+          </ButtonLink>
+        </div>
+
         {/* Manage applications section */}
         <div className={containerClassName}>
           <Heading level="2">
