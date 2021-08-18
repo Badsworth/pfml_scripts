@@ -21,17 +21,6 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
               timestamp_from: Date.now(),
             });
             fineosPages.ClaimPage.visit(fineos_absence_id)
-              .documents((docs) => {
-                claim.documents.forEach((document) =>
-                  docs
-                    .uploadDocument(document.document_type)
-                    .assertDocumentUploads(document.document_type)
-                );
-              })
-              .tasks((taskPage) => {
-                taskPage.add("ID Review");
-                taskPage.add("Caring Certification Review");
-              })
               .adjudicate((adjudication) => {
                 adjudication.evidence((evidence) =>
                   claim.documents.forEach(({ document_type }) =>
@@ -39,10 +28,6 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
                   )
                 );
               })
-              .tasks((taskPage) => {
-                taskPage.close("ID Review");
-                taskPage.close("Caring Certification Review");
-              });
           });
       });
     }
