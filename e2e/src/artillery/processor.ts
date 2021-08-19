@@ -33,6 +33,8 @@ export const submitAndAdjudicate = fn(
     await interactor.generateClaim(context, ee, "LSTBHAP1");
     await interactor.submitClaim(context, ee);
     await interactor.postProcessClaim(context, ee);
-    console.log("Done generating claim", context.claim?.scenario);
+    console.log(
+      `${context.submission?.fineos_absence_id} has been post processed w/o errors`
+    );
   }
 );

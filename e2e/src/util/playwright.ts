@@ -58,17 +58,6 @@ export async function clickTab(
   await page.click(
     `:is(.TabStrip td.TabOn :text("${label}"), .TabStrip td.TabOff :text("${label}"))`
   );
-
-  // await page.waitForSelector("td.TabOn");
-  // const tab = await page.waitForSelector(
-  //   `:is(.TabStrip td.TabOn :text("${label}"), .TabStrip td.TabOff :text("${label}"))`
-  // );
-  // // Remove the TabOn class before we start so we can detect when it has been re-added.
-  // await tab.evaluate((tab) => {
-  //   tab.classList.remove("TabOn");
-  // });
-
-  // await tab.click();
   await waitForStablePage(page);
   await delay(200);
 }

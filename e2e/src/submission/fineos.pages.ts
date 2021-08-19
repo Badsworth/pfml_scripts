@@ -222,9 +222,6 @@ export class CertificationPeriods extends FineosPage {
 }
 
 export class Evidence extends FineosPage {
-  constructor(page: Page) {
-    super(page);
-  }
   async receive(
     evidenceType: string,
     receipt: "Pending" | "Received" | "Not Received" = "Received",
@@ -254,9 +251,11 @@ export class Evidence extends FineosPage {
     await this.page.waitForSelector(".WidgetPanel_PopupWidget", {
       state: "hidden",
     });
-    await this.page
-      .waitForSelector("#disablingLayer")
-      .then((el) => el.waitForElementState("hidden"));
+    await delay(1000);
+    await this.page.waitForSelector("#disablingLayer", {
+      state: "hidden",
+      timeout: 60000,
+    });
     await delay(150);
   }
 }
@@ -275,7 +274,7 @@ export class Tasks extends FineosPage {
       this.page.waitForNavigation(),
       this.page.click('input[type="submit"][value="Close"]'),
     ]);
-    await delay(150);
+    await delay(1500);
   }
   async open(task: FineosTasks): Promise<void> {
     await Promise.race([

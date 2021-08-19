@@ -81,19 +81,19 @@ interface SpawnError {
           options: {
             "awslogs-group": "e2e-lst-logs",
             "awslogs-region": "us-east-1",
-            "awslogs-stream-prefix": "artillery-logs-test",
+            "awslogs-stream-prefix": "artillery-logs-test-max",
           },
         },
         essential: true,
       },
     ],
-    family: "e2e-lst-task-7",
+    family: "e2e-lst-task-8",
     taskRoleArn: "arn:aws:iam::233259245172:role/execute-task-main",
     executionRoleArn: "arn:aws:iam::233259245172:role/execute-task-main",
     networkMode: "awsvpc",
     requiresCompatibilities: ["FARGATE"],
-    cpu: "1024",
-    memory: "2048",
+    cpu: "2048",
+    memory: "4096",
   };
 
   const task_def = await ecs.registerTaskDefinition(task_def_options).promise();
