@@ -216,6 +216,21 @@
   
   
     <li class="md-nav__item">
+      <a href="../../archiving-code/" class="md-nav__link">
+        Process for Archiving Code
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../contributing/" class="md-nav__link">
         Contributing
       </a>
@@ -296,14 +311,14 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7" type="checkbox" id="__nav_7" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" type="checkbox" id="__nav_8" checked>
       
-      <label class="md-nav__link" for="__nav_7">
+      <label class="md-nav__link" for="__nav_8">
         Api
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Api" data-md-level="1">
-        <label class="md-nav__title" for="__nav_7">
+        <label class="md-nav__title" for="__nav_8">
           <span class="md-nav__icon md-icon"></span>
           Api
         </label>
@@ -349,6 +364,13 @@
         <li class="md-nav__item">
   <a href="#bank-of-america-integration" class="md-nav__link">
     Bank of America Integration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#bulk-user-import" class="md-nav__link">
+    Bulk user import
   </a>
   
 </li>
@@ -534,14 +556,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_8" type="checkbox" id="__nav_8" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_9" type="checkbox" id="__nav_9" >
       
-      <label class="md-nav__link" for="__nav_8">
+      <label class="md-nav__link" for="__nav_9">
         Infra
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Infra" data-md-level="1">
-        <label class="md-nav__title" for="__nav_8">
+        <label class="md-nav__title" for="__nav_9">
           <span class="md-nav__icon md-icon"></span>
           Infra
         </label>
@@ -600,14 +622,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_9" type="checkbox" id="__nav_9" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_10" type="checkbox" id="__nav_10" >
       
-      <label class="md-nav__link" for="__nav_9">
+      <label class="md-nav__link" for="__nav_10">
         Portal
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Portal" data-md-level="1">
-        <label class="md-nav__title" for="__nav_9">
+        <label class="md-nav__title" for="__nav_10">
           <span class="md-nav__icon md-icon"></span>
           Portal
         </label>
@@ -798,14 +820,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_10" type="checkbox" id="__nav_10" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_11" type="checkbox" id="__nav_11" >
       
-      <label class="md-nav__link" for="__nav_10">
+      <label class="md-nav__link" for="__nav_11">
         Releases
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Releases" data-md-level="1">
-        <label class="md-nav__title" for="__nav_10">
+        <label class="md-nav__title" for="__nav_11">
           <span class="md-nav__icon md-icon"></span>
           Releases
         </label>
@@ -873,6 +895,13 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#bulk-user-import" class="md-nav__link">
+    Bulk user import
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -898,6 +927,10 @@
 <p>Code was written to generate mock data files for the integration.</p>
 <p>Then the Bank of America work was put on indefinite hold as Bank of America
 suspended any new integrations with benefit programs in late 2020.</p>
+<h2 id="bulk-user-import">Bulk user import</h2>
+<p>https://github.com/EOLWD/pfml/tree/archive/bulk-user-import</p>
+<p>Before Leave Admins could self-register and verify, we had two manual processes for reaching out to leave admins and importing them into the system: one using a Formstack survey, and another was a tool that supported importing Leave Admin users from one or more CSV files stored locally or in S3.</p>
+<p>The Formstack importer was related to the leave admin outreach work, and while it did get deployed, it was sidestepped with the bulk imports instead. After self-registration/verification launched, the bulk-imports process was discontinued as well. Bulk import data was duplicated to Sharepoint at <code>EOL-PFMLPROJECT &gt; Shared Documents &gt; General &gt; Service Desk &gt; POC Loads</code>.</p>
                 
               
               
