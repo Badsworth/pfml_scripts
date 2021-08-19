@@ -6,6 +6,7 @@ data "aws_s3_bucket" "reports" {
   bucket = "massgov-pfml-${var.environment_name}-reports"
 }
 
+# TODO (EMPLOYER-1654): Bulk User Import code has been archived. S3 bucket can be removed once its data is removed.
 resource "aws_s3_bucket" "bulk_user_import" {
   bucket = "massgov-pfml-${var.environment_name}-bulk-user-import"
   acl    = "private"

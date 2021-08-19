@@ -104,11 +104,13 @@ resource "aws_iam_role_policy" "task_executor" {
 # User Bulk Import task stuff
 # ------------------------------------------------------------------------------------------------------
 
+# TODO (EMPLOYER-1654): Bulk User Import code has been archived. S3 bucket can be removed once its data is removed.
 resource "aws_iam_role" "task_bulk_import_task_role" {
   name               = "${local.app_name}-${var.environment_name}-ecs-tasks-bulk-import-task-role"
   assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
 }
 
+# TODO (EMPLOYER-1654): Bulk User Import code has been archived. S3 bucket can be removed once its data is removed.
 data "aws_iam_policy_document" "task_bulk_import_s3_policy_doc" {
   # Allow ECS User Bulk Import task access S3 files
   statement {

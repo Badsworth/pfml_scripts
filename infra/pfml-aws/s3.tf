@@ -48,45 +48,6 @@ resource "aws_s3_bucket_public_access_block" "terraform_block_public_access" {
 
 # ----------------------------------------------------------------------------------------------------------------------
 
-# Create S3 buckets to store data imported from Formstack
-
-resource "aws_s3_bucket" "formstack_import" {
-  for_each = toset(local.environments)
-
-  bucket = "massgov-pfml-${each.key}-formstack-data"
-  acl    = "private"
-
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "AES256"
-      }
-    }
-  }
-
-  versioning {
-    enabled = "true"
-  }
-
-  tags = merge(module.constants.common_tags, {
-    environment = module.constants.environment_tags[each.key]
-    public      = "no"
-    Name        = "massgov-pfml-${each.key}-formstack-data"
-  })
-}
-
-resource "aws_s3_bucket_public_access_block" "formstack_import_block_public_access" {
-  for_each = aws_s3_bucket.formstack_import
-  bucket   = each.value.id
-
-  block_public_acls       = true
-  block_public_policy     = true
-  ignore_public_acls      = true
-  restrict_public_buckets = true
-}
-
-# ----------------------------------------------------------------------------------------------------------------------
-
 # Create S3 buckets to receive agency data.
 #
 # Note that we're creating more buckets than agencies will be interacting with.
