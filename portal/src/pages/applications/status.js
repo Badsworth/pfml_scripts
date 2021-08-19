@@ -3,6 +3,7 @@ import React, { useEffect, useState } from "react";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import Heading from "../../components/Heading";
+import LeaveDetails from "./leave-details";
 import LegalNoticeList from "../../components/LegalNoticeList.js";
 import PropTypes from "prop-types";
 import Title from "../../components/Title";
@@ -31,7 +32,46 @@ const TEST_DOC = [
   }),
 ];
 
-export const Status = ({ appLogic, docList = TEST_DOC }) => {
+const ABSENCE_DETAIL_LIST = {
+  medical: [
+    {
+      period_type: "Reduced",
+      absence_period_start_date: "2021-06-01",
+      absence_period_end_date: "2021-06-08",
+      request_decision: "Approved",
+      fineos_leave_request_id: "PL-14432-0000002026",
+    },
+    {
+      period_type: "Continuous",
+      absence_period_start_date: "2021-07-01",
+      absence_period_end_date: "2021-07-08",
+      request_decision: "Pending",
+      fineos_leave_request_id: "PL-14432-0000002326",
+    },
+  ],
+  bonding: [
+    {
+      period_type: "Reduced",
+      absence_period_start_date: "2021-08-01",
+      absence_period_end_date: "2021-08-08",
+      request_decision: "Denied",
+      fineos_leave_request_id: "PL-14434-0000002026",
+    },
+    {
+      period_type: "Continuous",
+      absence_period_start_date: "2021-08-01",
+      absence_period_end_date: "2021-08-08",
+      request_decision: "Withdrawn",
+      fineos_leave_request_id: "PL-14434-0000002326",
+    },
+  ],
+};
+
+export const Status = ({
+  appLogic,
+  docList = TEST_DOC,
+  absenceDetails = ABSENCE_DETAIL_LIST,
+}) => {
   const { t } = useTranslation();
   const { portalFlow } = appLogic;
 
@@ -64,7 +104,7 @@ export const Status = ({ appLogic, docList = TEST_DOC }) => {
         </Heading>
         <LegalNoticeList
           documents={documents}
-          handleDownload={appLogic.documents.download}
+          onDownloadClick={appLogic.documents.download}
         />
       </div>
     ) : null;
@@ -105,6 +145,8 @@ export const Status = ({ appLogic, docList = TEST_DOC }) => {
             <p className="text-bold">123456789</p>
           </div>
         </div>
+
+        <LeaveDetails absenceDetails={absenceDetails} />
         <ViewYourNotices />
 
         {/* Upload documents section */}
@@ -178,6 +220,7 @@ Status.propTypes = {
   }).isRequired,
   // TODO (CP-2461): remove once page is integrated with API
   docList: PropTypes.array,
+  absenceDetails: PropTypes.object,
 };
 
 export default Status;

@@ -34,6 +34,14 @@ describe("status page", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
+  it("does not render LeaveDetails if absenceDetails not given", () => {
+    const { wrapper } = renderWithAppLogic(Status, {
+      diveLevels: 0,
+      props: { absenceDetails: {} },
+    });
+    expect(wrapper).toMatchSnapshot();
+  });
+
   it("includes a button to upload additional documents", () => {
     const { wrapper } = renderWithAppLogic(Status, {
       diveLevels: 0,
