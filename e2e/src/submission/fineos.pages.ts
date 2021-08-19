@@ -103,18 +103,12 @@ export class Fineos {
  * So far it seems like there's no reason to specify it here, as page object will be accessible from Fineos.withBrowser scope anyway.
  */
 abstract class FineosPage {
-  protected readonly page: Page;
-  constructor(page: Page) {
+  constructor(protected readonly page: Page) {
     this.page = page;
   }
   protected async onTab(...path: string[]): Promise<void> {
     for (const part of path) {
       await util.clickTab(this.page, part);
-      // await this.page.waitForNavigation();
-      // await Promise.all([
-      //   this.page.waitForNavigation(),
-      //   util.clickTab(this.page, part),
-      // ]);
       await delay(150);
     }
   }
@@ -300,5 +294,134 @@ export class Tasks extends FineosPage {
       this.page.waitForNavigation(),
       this.page.click("#footerButtonsBar input[value='Next']"),
     ]);
+  }
+}
+
+type RolesSpec = {
+  role: FineosRoles | FineosSecurityGroups;
+  supervisorOf: boolean;
+  memberOf: boolean;
+}[];
+export class ConfigPage extends FineosPage {
+  constructor(page: Page) {
+    super(page);
+  }
+  static async visit(page: Page): Promise<ConfigPage> {
+    await page.click(`a[aria-label='Configuration Studio']`);
+    return new ConfigPage(page);
+  }
+  async setRoles(userId: string, roles: RolesSpec): Promise<void> {
+    await this.roles(userId, async (rolePage) => {
+      // Can't make this work without the wait.
+      // Role selection doesn't work straigh away, and there's no UI indication of when it turns on.
+      await this.page.waitForTimeout(2000);
+      await rolePage.clearRoles();
+      for (const { role, memberOf, supervisorOf } of roles)
+        await rolePage.setRole(role, memberOf, supervisorOf);
+      // This is a good place to pause if you want to make sure you are assigning the roles correctly.
+      // await this.page.pause();
+      await rolePage.applyRolesToUser();
+    });
+  }
+  async roles(
+    userId: string,
+    cb: (page: RolesPage) => Promise<void>
+  ): Promise<void> {
+    await this.page.click(`text="Company Structure"`);
+    await util.clickTab(this.page, "Users");
+    await (await util.labelled(this.page, "User ID")).fill(userId);
+    await this.page.click(`input[title="Search for User"]`);
+    await this.page.click(`input[title="Select to edit the user"]`);
+    // Lookup the user ID, then navigate to the edit roles page.
+    await cb(new RolesPage(this.page));
+  }
+}
+
+export type FineosRoles =
+  | "DFML Program Integrity"
+  | "DFML Appeals"
+  | "SaviLinx"
+  | "Post-Prod Admin(sec)"
+  | "DFML IT";
+export type FineosSecurityGroups =
+  | "DFML Claims Examiners(sec)"
+  | "DFML Claims Supervisors(sec)"
+  | "DFML Compliance Analyst(sec)"
+  | "DFML Compliance Supervisors(sec)"
+  | "DFML Appeals Administrator(sec)"
+  | "DFML Appeals Examiner I(sec)"
+  | "DFML Appeals Examiner II(sec)"
+  | "SaviLinx Agents (sec)"
+  | "SaviLinx Secured Agents(sec)"
+  | "SaviLinx Supervisors(sec)"
+  | "DFML IT(sec)"
+  | "Post-Prod Admin(sec)";
+export class RolesPage extends FineosPage {
+  constructor(page: Page) {
+    super(page);
+  }
+  async setRole(
+    name: FineosSecurityGroups | FineosRoles,
+    member: boolean,
+    supervisor: boolean
+  ): Promise<void> {
+    await this.page.click(
+      `a[id^="LinkDepartmentToUserWidget_"][id$="_AvailableDepartments-Name-filter"]`
+    );
+
+    await this.page
+      .waitForSelector(
+        `input[id^="LinkDepartmentToUserWidget"][id$="_AvailableDepartments_Name_textFilter"]`
+      )
+      .then((filterInput) => filterInput.fill(name));
+    await this.page.click(
+      `input[id^="LinkDepartmentToUserWidget"][id$="_AvailableDepartments_cmdFilter"]`
+    );
+    await this.page.click(
+      `table[id$="_AvailableDepartments"] tr:has-text("${name}")`
+    );
+
+    const setCheckboxState = async (
+      selector: string,
+      checked: boolean
+    ): Promise<void> => {
+      await this.page.waitForSelector(selector).then((checkbox) =>
+        checkbox.isChecked().then((isChecked) =>
+          // If current checkbox state is different from desired - click on it.
+          // Have to use this because checkbox selection doesn't reset when linking/unlinking roles
+          isChecked === checked ? null : checkbox.click()
+        )
+      );
+    };
+    await setCheckboxState(
+      `input[type="checkbox"][id^="LinkDepartmentToUserWidget"][id$="_userToDeptMemberCheckbox_CHECKBOX"]`,
+      member
+    );
+    await setCheckboxState(
+      `input[type="checkbox"][id^="LinkDepartmentToUserWidget"][id$="_userToDeptSupervisorCheckbox_CHECKBOX"]`,
+      supervisor
+    );
+    await this.page.click(`input[title="Link Department to User"]`);
+  }
+  async clearRoles(): Promise<void> {
+    const checkboxSelector = `input[type="checkbox"][id^="LinkDepartmentToUserWidget"][id$="_LinkedDepartments_MasterMultiSelectCB_CHECKBOX"]`;
+    await this.page.click(checkboxSelector);
+    await this.page.waitForSelector(
+      `table[id^="LinkDepartmentToUserWidget"][id$="_LinkedDepartments"] tr.ListRowSelected`
+    );
+    const activeRoles = await this.page.$$(
+      `table[id^="LinkDepartmentToUserWidget"][id$="_LinkedDepartments"] tr`
+    );
+    for (const tr of activeRoles) {
+      const rowText = await tr.textContent();
+      // Don't unlink the Post-prod role by request from @mrossi113
+      if (rowText?.includes("Post-Prod Admin(sec)")) {
+        tr.$(`input[type="checkbox"]`).then((chbox) => chbox?.click());
+      }
+    }
+    await this.page.click(`input[title="Unlink Department from User"]`);
+  }
+  async applyRolesToUser(): Promise<void> {
+    await this.page.click(`input[title="Select to update the User"]`);
   }
 }

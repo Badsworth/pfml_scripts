@@ -1,5 +1,6 @@
 import Status from "../../../src/pages/applications/status";
 import { renderWithAppLogic } from "../../test-utils";
+import routes from "../../../src/routes";
 
 describe("status page", () => {
   beforeEach(() => {
@@ -23,5 +24,28 @@ describe("status page", () => {
       diveLevels: 0,
     });
     expect(wrapper).toMatchSnapshot();
+  });
+
+  it("does not render ViewYourNotices if documents not given", () => {
+    const { wrapper } = renderWithAppLogic(Status, {
+      diveLevels: 0,
+      props: { docList: [] },
+    });
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it("includes a button to upload additional documents", () => {
+    const { wrapper } = renderWithAppLogic(Status, {
+      diveLevels: 0,
+    });
+
+    const button = wrapper.find("ButtonLink");
+    expect(button.children().text()).toEqual("Upload additional documents");
+    expect(button.exists()).toBe(true);
+    expect(wrapper).toMatchSnapshot();
+    /* // TODO (CP-2457): remove hard coded claim_id, update to claim.application_id */
+    expect(button.prop("href")).toBe(
+      `${routes.applications.uploadDocsOptions}?claim_id=65184a9e-f938-40b6-b0f6-25f416a4c113`
+    );
   });
 });

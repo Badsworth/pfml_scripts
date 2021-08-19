@@ -610,8 +610,9 @@ describe("Employer dashboard", () => {
     });
 
     const filtersWrapper = wrapper.find("Filters").dive();
-    const { changeField, changeCheckbox, submitForm } =
-      simulateEvents(filtersWrapper);
+    const { changeField, changeCheckbox, submitForm } = simulateEvents(
+      filtersWrapper
+    );
 
     changeCheckbox("claim_status", true, "Approved");
     changeCheckbox("claim_status", true, "Closed");
@@ -769,7 +770,7 @@ describe("Employer dashboard", () => {
       expect.arrayContaining([
         expect.objectContaining({
           label: "Status",
-          value: "fineos_absence_status,ascending",
+          value: "absence_status,ascending",
         }),
       ])
     );

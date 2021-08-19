@@ -3,7 +3,7 @@ import {
   renderWithAppLogic,
   testHook,
 } from "../../test-utils";
-import ApplicationCard from "../../../src/components/ApplicationCard";
+
 import Applications from "../../../src/pages/applications/index";
 import BenefitsApplication from "../../../src/models/BenefitsApplication";
 import BenefitsApplicationCollection from "../../../src/models/BenefitsApplicationCollection";
@@ -40,8 +40,9 @@ describe("Applications", () => {
 
   describe("when no claims exist", () => {
     it("redirects to getReady", () => {
-      appLogic.benefitsApplications.benefitsApplications =
-        new BenefitsApplicationCollection([]);
+      appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+        []
+      );
       const goToSpy = jest.spyOn(appLogic.portalFlow, "goTo");
       render();
 
@@ -51,11 +52,12 @@ describe("Applications", () => {
 
   describe("when applications have been started or submitted", () => {
     beforeEach(() => {
-      appLogic.benefitsApplications.benefitsApplications =
-        new BenefitsApplicationCollection([
+      appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+        [
           new MockBenefitsApplicationBuilder().create(),
           new MockBenefitsApplicationBuilder().submitted().create(),
-        ]);
+        ]
+      );
       jest
         .spyOn(appLogic.documents, "hasLoadedClaimDocuments")
         .mockImplementation(() => true);
@@ -73,16 +75,15 @@ describe("Applications", () => {
     });
 
     it("renders list of started and completed applications", () => {
-      expect(wrapper.find(ApplicationCard)).toHaveLength(2);
+      expect(wrapper.find("ApplicationCard")).toHaveLength(2);
     });
   });
 
   describe("when applications have been completed", () => {
     beforeEach(() => {
-      appLogic.benefitsApplications.benefitsApplications =
-        new BenefitsApplicationCollection([
-          new MockBenefitsApplicationBuilder().completed().create(),
-        ]);
+      appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+        [new MockBenefitsApplicationBuilder().completed().create()]
+      );
       render();
     });
 
@@ -97,7 +98,7 @@ describe("Applications", () => {
     });
 
     it("renders list of completed applications", () => {
-      expect(wrapper.find(ApplicationCard)).toHaveLength(1);
+      expect(wrapper.find("ApplicationCard").dive()).toHaveLength(1);
     });
   });
 
@@ -112,29 +113,26 @@ describe("Applications", () => {
       completedClaim = new MockBenefitsApplicationBuilder()
         .completed()
         .create();
-      appLogic.benefitsApplications.benefitsApplications =
-        new BenefitsApplicationCollection([
-          startedClaim,
-          submittedClaim,
-          completedClaim,
-        ]);
+      appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+        [startedClaim, submittedClaim, completedClaim]
+      );
       render();
     });
 
     it("increments the submitted ApplicationCard numbers by the number of in progress claims", () => {
-      expect(wrapper.find(ApplicationCard).last().prop("number")).toBe(3);
+      expect(wrapper.find("ApplicationCard").last().prop("number")).toBe(3);
     });
 
     it("separates completed claims into 'Submitted' section", () => {
-      const sections = wrapper.findWhere((el) => {
-        // using "ComponentWithUser" here because the "withClaimDocuments" HOC uses the
-        // "withUser" HOC, which returns a "ComponentWithUser"
-        return ["Heading", "ComponentWithUser"].includes(el.name());
-      });
-
-      expect(sections.get(1).props.claim).toEqual(startedClaim);
-      expect(sections.get(2).props.claim).toEqual(submittedClaim);
-      expect(sections.get(4).props.claim).toEqual(completedClaim);
+      expect(wrapper.find("ApplicationCard").get(0).props.claim).toEqual(
+        startedClaim
+      );
+      expect(wrapper.find("ApplicationCard").get(1).props.claim).toEqual(
+        submittedClaim
+      );
+      expect(wrapper.find("ApplicationCard").get(2).props.claim).toEqual(
+        completedClaim
+      );
     });
   });
 
@@ -151,8 +149,9 @@ describe("Applications", () => {
           new BenefitsApplication(claim2),
         ];
 
-        appLogic.benefitsApplications.benefitsApplications =
-          new BenefitsApplicationCollection(newClaims);
+        appLogic.benefitsApplications.benefitsApplications = new BenefitsApplicationCollection(
+          newClaims
+        );
       });
     });
 
@@ -172,6 +171,14 @@ describe("Applications", () => {
       });
 
       expect(spy).toHaveBeenCalledTimes(2);
+    });
+
+    it("renders application card when feature flags are enabled", () => {
+      process.env.featureFlags = {
+        claimantShowStatusPage: true,
+      };
+
+      expect(wrapper.find("ApplicationCard")).toMatchSnapshot();
     });
   });
 });

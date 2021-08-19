@@ -6,6 +6,7 @@ from datetime import date, datetime, timedelta
 import boto3
 import faker
 import pytest
+from freezegun import freeze_time
 from sqlalchemy.exc import SQLAlchemyError
 
 import massgov.pfml.db as db
@@ -1207,3 +1208,21 @@ def test_create_payment_log_full(test_db_session, initialize_factories_session):
     # Payment check should be present and match exactly
     assert "payment_check" in snapshot
     assert snapshot["payment_check"].items() == payment_check.for_json().items()
+
+
+def test_create_success_file(mock_s3_bucket, monkeypatch):
+    archive_folder_path = f"s3://{mock_s3_bucket}/reports"
+    monkeypatch.setenv("PFML_ERROR_REPORTS_ARCHIVE_PATH", archive_folder_path)
+
+    # Make this act like the FINEOS extract process often does
+    # Starting at 11pm, but finishing a bit after.
+    with freeze_time("2021-08-01 23:00:00", tz_offset=4):
+        now = payments_util.get_now()
+    with freeze_time("2021-08-02 00:15:00", tz_offset=4):
+        payments_util.create_success_file(now, "example-process")
+
+    # Will be saved at a path with a folder showing the start date
+    # and a timestamp showing when it actually finished
+    files = file_util.list_files(archive_folder_path, recursive=True)
+    assert len(files) == 1
+    assert files[0] == "processed/2021-08-01/2021-08-02-00-15-00-example-process.SUCCESS"

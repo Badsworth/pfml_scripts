@@ -268,6 +268,61 @@ export class ClaimPage {
     waitForAjaxComplete();
     return this;
   }
+  recordCancellation(): this {
+    const recordCancelledTime = () => {
+      cy.contains("td", "Known").click();
+      cy.get(
+        'input[title="Record Cancelled Time for the selected absence period"]'
+      ).click();
+      waitForAjaxComplete();
+      cy.get('input[type="submit"][value="OK"]').click();
+      waitForAjaxComplete();
+      clickNext();
+      waitForAjaxComplete();
+      fineos.clickNext();
+      waitForAjaxComplete();
+    };
+    const additionalReportingInformation = () => {
+      cy.get('select[id$="reportedBy"]').select("Employee");
+      waitForAjaxComplete();
+      cy.get('select[id$="receivedVia"]').select("Phone");
+      waitForAjaxComplete();
+      cy.get('select[id$="cancellationReason"]').select(
+        "Employee Requested Cancellation"
+      );
+      waitForAjaxComplete();
+      cy.get(
+        'input[type="checkbox"][id$="MasterMultiSelectCB_CHECKBOX"]'
+      ).click();
+      cy.get('input[type="submit"][title="Apply"]').click();
+      waitForAjaxComplete();
+      fineos.clickNext();
+      waitForAjaxComplete();
+    };
+    const makeDecision = () => {
+      cy.get('select[id$="period-decision-status"]').select("Approved");
+      waitForAjaxComplete();
+      cy.get(
+        'input[type="checkbox"][id$="MasterMultiSelectCB_CHECKBOX"]'
+      ).click();
+      waitForAjaxComplete();
+      cy.get('input[type="submit"][title="Apply"]').click();
+      waitForAjaxComplete();
+      fineos.clickNext();
+      waitForAjaxComplete();
+    };
+
+    cy.findByText("Record Cancellation", {
+      selector: "span",
+    }).click({
+      force: true,
+    });
+    // steps for cancelling time
+    recordCancelledTime();
+    additionalReportingInformation();
+    makeDecision();
+    return this;
+  }
 }
 
 class AdjudicationPage {
@@ -615,6 +670,11 @@ class TasksPage {
     fineos.clickBottomWidgetButton("OK");
     waitForAjaxComplete();
     assertClaimStatus("Closed - Claim Decision Changed");
+    return this;
+  }
+  all(): this {
+    cy.get("input[type='radio'][value$='_allTasks']").click();
+    waitForAjaxComplete();
     return this;
   }
 }

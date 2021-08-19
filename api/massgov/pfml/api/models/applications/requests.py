@@ -18,7 +18,11 @@ from massgov.pfml.api.models.applications.common import (
     WorkPattern,
 )
 from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, PreviousLeave
-from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
+from massgov.pfml.api.validation.exceptions import (
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import FEINUnformattedStr, MassIdStr, TaxIdUnformattedStr
 
@@ -35,7 +39,7 @@ def max_date_of_birth_validator(date_of_birth, field):
         error_list.append(
             ValidationErrorDetail(
                 message=f"Date of birth must be within the past {MAX_BIRTH_YEARS} years",
-                type="invalid_year_range",
+                type=IssueType.invalid_year_range,
                 rule=f"date_of_birth_within_past_{MAX_BIRTH_YEARS}_years",
                 field=field,
             )
@@ -50,7 +54,7 @@ def min_date_of_birth_validator(date_of_birth, field):
         error_list.append(
             ValidationErrorDetail(
                 message=f"The person taking leave must be at least {MIN_AGE} years old",
-                type="invalid_age",
+                type=IssueType.invalid_age,
                 rule=f"older_than_{MIN_AGE}",
                 field=field,
             )
@@ -65,7 +69,7 @@ def future_date_of_birth_validator(date_of_birth, field):
         error_list.append(
             ValidationErrorDetail(
                 message=f"Family member's date of birth must be less than {MAX_FUTURE_BIRTH_MONTHS} months from now",
-                type="future_birth_date",
+                type=IssueType.future_birth_date,
                 rule=f"max_{MAX_FUTURE_BIRTH_MONTHS}_months_in_future",
                 field=field,
             )
@@ -187,7 +191,7 @@ class ApplicationRequestBody(PydanticBaseModel):
                 error_list.append(
                     ValidationErrorDetail(
                         message=f"Provided work_pattern_days is missing {', '.join(sorted(missing_days))}.",
-                        type="invalid_days",
+                        type=IssueType.required,
                         rule="no_missing_days",
                         field="work_pattern.work_pattern_days",
                     )
@@ -197,7 +201,7 @@ class ApplicationRequestBody(PydanticBaseModel):
                 error_list.append(
                     ValidationErrorDetail(
                         message=f"Provided work_pattern_days has {len(api_work_pattern_days)} days. There should be 7 days.",
-                        type="invalid_days",
+                        type=IssueType.required,
                         rule="seven_days_required",
                         field="work_pattern.work_pattern_days",
                     )

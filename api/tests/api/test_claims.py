@@ -891,7 +891,7 @@ class TestUpdateClaim:
         mock_get_issues.return_value = [
             ValidationErrorDetail(
                 message="hours_worked_per_week must be populated",
-                type="missing_expected_field",
+                type="required",
                 field="hours_worked_per_week",
             )
         ]
@@ -2925,6 +2925,119 @@ class TestGetClaimsEndpoint:
             response_body = response.get_json()
 
             assert len(response_body["data"]) >= 7
+
+    class TestClaimsSearchFullName:
+        @pytest.fixture()
+        def X_NAME(self):
+            return "xxxxx"
+
+        @pytest.fixture()
+        def employer(self):
+            return EmployerFactory.create()
+
+        @pytest.fixture()
+        def full_name_employees(self, X_NAME):
+            similar_employees = []
+            full_name_employee = EmployeeFactory.create()
+
+            similar_employees.append(full_name_employee)
+            similar_employees.append(EmployeeFactory.create())
+
+            # same first_name
+            similar_employees.append(
+                EmployeeFactory.create(
+                    first_name=full_name_employee.first_name, middle_name=X_NAME, last_name=X_NAME
+                )
+            )
+            # same middle_name
+            similar_employees.append(
+                EmployeeFactory.create(
+                    first_name=X_NAME, middle_name=full_name_employee.middle_name, last_name=X_NAME
+                )
+            )
+            # same last_name
+            similar_employees.append(
+                EmployeeFactory.create(
+                    first_name=X_NAME, middle_name=X_NAME, last_name=full_name_employee.last_name
+                )
+            )
+            # same first_name and last_name should be returned in first_last and last_first search
+            similar_employees.append(
+                EmployeeFactory.create(
+                    first_name=full_name_employee.first_name,
+                    middle_name=X_NAME,
+                    last_name=full_name_employee.last_name,
+                )
+            )
+            return similar_employees
+
+        @pytest.fixture()
+        def full_name_employee(self, full_name_employees):
+            return full_name_employees[0]
+
+        @pytest.fixture(autouse=True)
+        def load_test_db(
+            self, employer_user, employer, test_verification, test_db_session, full_name_employees
+        ):
+
+            for employee_full_name in full_name_employees:
+                ClaimFactory.create(employer=employer, employee=employee_full_name, claim_type_id=1)
+
+            leave_admin = UserLeaveAdministrator(
+                user_id=employer_user.user_id,
+                employer_id=employer.employer_id,
+                fineos_web_id="fake-fineos-web-id",
+                verification=test_verification,
+            )
+            test_db_session.add(leave_admin)
+            test_db_session.commit()
+
+        def perform_search(self, search_string, client, token):
+            return client.get(
+                f"/v1/claims?search={search_string}", headers={"Authorization": f"Bearer {token}"},
+            )
+
+        def test_get_claims_search_full_name(self, client, employer_auth_token, full_name_employee):
+            search_string = f"{full_name_employee.first_name} {full_name_employee.middle_name} {full_name_employee.last_name}"
+            response = self.perform_search(search_string, client, employer_auth_token)
+
+            assert response.status_code == 200
+            response_body = response.get_json()
+
+            assert len(response_body["data"]) == 1
+
+        def test_get_claims_search_full_name_with_extra_spaces(
+            self, client, employer_auth_token, full_name_employee
+        ):
+            search_string = f" {full_name_employee.first_name}     {full_name_employee.middle_name}   {full_name_employee.last_name} "
+            response = self.perform_search(search_string, client, employer_auth_token)
+
+            assert response.status_code == 200
+            response_body = response.get_json()
+
+            assert len(response_body["data"]) == 1
+
+        def test_get_claims_search_first_last(
+            self, client, employer_auth_token, full_name_employee
+        ):
+            search_string = f"{full_name_employee.first_name} {full_name_employee.last_name}"
+            response = self.perform_search(search_string, client, employer_auth_token)
+
+            assert response.status_code == 200
+            response_body = response.get_json()
+
+            assert len(response_body["data"]) == 2
+
+        def test_get_claims_search_last_first(
+            self, client, employer_auth_token, full_name_employee
+        ):
+            search_string = f"{full_name_employee.last_name} {full_name_employee.first_name}"
+            response = self.perform_search(search_string, client, employer_auth_token)
+
+            assert response.status_code == 200
+            response_body = response.get_json()
+
+            assert len(response_body["data"]) == 2
 
     # Test the combination of claims feature
     # ordering, filtering and search

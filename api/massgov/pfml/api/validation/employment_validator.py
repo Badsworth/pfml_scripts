@@ -45,7 +45,7 @@ def get_contributing_employer_or_employee_issue(
             return ValidationErrorDetail(
                 rule=IssueRule.require_employee,
                 message="Couldn't find Employee in our system. Confirm that you have the correct EIN.",
-                type="",
+                type=IssueType.pfml,
             )
 
     return None

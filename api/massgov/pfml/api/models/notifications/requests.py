@@ -3,7 +3,11 @@ from typing import List, Optional
 
 from pydantic import validator
 
-from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
+from massgov.pfml.api.validation.exceptions import (
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.util.pydantic import PydanticBaseModel
 
 
@@ -50,7 +54,7 @@ class NotificationRequest(PydanticBaseModel):
                     error_list.append(
                         ValidationErrorDetail(
                             message=f"{expected_field} is required when recipient type is {recipient_type}: {recipient}",
-                            type="missing_expected_field",
+                            type=IssueType.required,
                             field=expected_field,
                         )
                     )

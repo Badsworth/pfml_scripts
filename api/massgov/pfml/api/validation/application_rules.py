@@ -3,7 +3,6 @@ from itertools import chain, combinations
 from typing import Any, Dict, Iterable, List, Optional, Union
 
 from dateutil.relativedelta import relativedelta
-from werkzeug.datastructures import Headers
 
 import massgov.pfml.db as db
 import massgov.pfml.util.logging
@@ -36,16 +35,14 @@ MAX_MINUTES_IN_WEEK = 10080  # 60 * 24 * 7
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-def get_application_issues(
-    application: Application, headers: Headers
-) -> List[ValidationErrorDetail]:
+def get_application_issues(application: Application) -> List[ValidationErrorDetail]:
     """Takes in application and outputs any validation issues.
     These issues are either fields that are always required for an application or fields that are conditionally required based on previous input.
     """
     issues = []
     issues += get_always_required_issues(application)
     issues += get_leave_periods_issues(application)
-    issues += get_conditional_issues(application, headers)
+    issues += get_conditional_issues(application)
 
     return issues
 
@@ -429,15 +426,11 @@ def get_leave_related_issues(application: Application) -> List[ValidationErrorDe
     return []
 
 
-def get_conditional_issues(
-    application: Application, headers: Headers
-) -> List[ValidationErrorDetail]:
+def get_conditional_issues(application: Application) -> List[ValidationErrorDetail]:
     issues = []
-    # TODO (CP-1674): This condition is temporary. It can be removed once we
+    # TODO (CP-2455): This condition is temporary. It can be removed once we
     # can safely enforce these validation rules across all in-progress claims
-    require_other_leaves_fields = (
-        headers.get("X-FF-Require-Other-Leaves", None) and not application.submitted_time
-    )
+    require_other_leaves_fields = not application.submitted_time
 
     # Fields involved in Part 1 of the progressive application
     if application.has_state_id and not application.mass_id:
@@ -543,8 +536,8 @@ def get_conditional_issues(
     issues += get_concurrent_leave_issues(application)
 
     if require_other_leaves_fields:
-        # TODO (CP-1674): Move these rules into the "always required" set once the
-        # X-FF-Require-Other-Leaves header is obsolete.
+        # TODO (CP-2455): Move these rules into the "always required" set once they can be required
+        # on the complete_application endpoint
         for field in [
             "has_concurrent_leave",
             "has_employer_benefits",
@@ -819,7 +812,7 @@ def get_leave_period_ranges_issues(application: Application) -> List[ValidationE
             ValidationErrorDetail(
                 message=f"Can't submit application more than {MAX_DAYS_IN_ADVANCE_TO_SUBMIT} days in advance of the earliest leave period",
                 rule=IssueRule.disallow_submit_over_60_days_before_start_date,
-                type="",
+                type=IssueType.pfml,
             )
         )
 
@@ -833,7 +826,7 @@ def get_leave_period_ranges_issues(application: Application) -> List[ValidationE
             ValidationErrorDetail(
                 message=f"Caring leave start_date cannot be before {CARING_LEAVE_EARLIEST_START_DATE.isoformat()}",
                 rule=IssueRule.disallow_caring_leave_before_july,
-                type="",
+                type=IssueType.pfml,
             )
         )
 
@@ -847,7 +840,7 @@ def get_leave_period_ranges_issues(application: Application) -> List[ValidationE
             ValidationErrorDetail(
                 message=f"Leave cannot exceed {MAX_DAYS_IN_LEAVE_PERIOD_RANGE} days",
                 rule=IssueRule.disallow_12mo_leave_period,
-                type="",
+                type=IssueType.pfml,
             )
         )
 
@@ -905,7 +898,7 @@ def get_leave_period_date_issues(
             ValidationErrorDetail(
                 message=f"Leave cannot exceed {MAX_DAYS_IN_LEAVE_PERIOD_RANGE} days",
                 rule=getattr(IssueRule, f"disallow_12mo_{leave_period_type}_leave_period"),
-                type="",
+                type=IssueType.pfml,
             )
         )
 
@@ -1199,7 +1192,7 @@ def validate_application_state(
             ValidationErrorDetail(
                 message="Request by current user not allowed",
                 rule=IssueRule.disallow_attempts,
-                type="",
+                type=IssueType.pfml,
             )
         )
 

@@ -614,7 +614,9 @@ def add_or_update_address(
                     address_type.address_description and address_type.address_description.lower()
                 )
                 error_detail = ValidationErrorDetail(
-                    "enum", message, None, f"{address_description}_address.state",
+                    type=IssueType.invalid,
+                    message=message,
+                    field=f"{address_description}_address.state",
                 )
                 raise ValidationException([error_detail], message, {})
 

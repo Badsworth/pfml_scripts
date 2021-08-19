@@ -3,8 +3,13 @@ import { useMemo, useState } from "react";
 import EmployersApi from "../api/EmployersApi";
 import { LeaveAdminForbiddenError } from "../errors";
 
-const useEmployersLogic = ({ appErrorsLogic, portalFlow, setUser }) => {
-  const [claim, setClaim] = useState(null);
+const useEmployersLogic = ({
+  appErrorsLogic,
+  clearClaims,
+  portalFlow,
+  setUser,
+}) => {
+  const [claim, setEmployerClaim] = useState(null);
   const [documents, setDocuments] = useState(null);
   const employersApi = useMemo(() => new EmployersApi(), []);
 
@@ -38,7 +43,7 @@ const useEmployersLogic = ({ appErrorsLogic, portalFlow, setUser }) => {
     try {
       const { claim } = await employersApi.getClaim(absenceId);
 
-      setClaim(claim);
+      setEmployerClaim(claim);
     } catch (error) {
       const employer_id = get(error, "responseData.employer_id");
       const has_verification_data = get(
@@ -117,12 +122,11 @@ const useEmployersLogic = ({ appErrorsLogic, portalFlow, setUser }) => {
     try {
       await employersApi.submitClaimReview(absenceId, data);
 
-      // Clear the cached claim so its data, most notably is_reviewable,
-      // is refetched from the API if it's requested again. We do this
-      // since the API's submitClaimReview response doesn't include
-      // all of the data we need (because it doesn't call out to FINEOS
-      // to retrieve that data).
-      setClaim(null);
+      // Clear the cached claim data, most notably is_reviewable and
+      // managed_requirements, so that the claim's dashboard status
+      // routing remain accurate.
+      setEmployerClaim(null);
+      clearClaims();
 
       const params = { absence_id: absenceId };
       portalFlow.goToNextPage({}, params);

@@ -108,17 +108,6 @@ locals {
       ]
     },
 
-    "bulk-user-import" = {
-      command   = ["bulk-user-import"]
-      task_role = aws_iam_role.task_bulk_import_task_role.arn
-      env = [
-        local.db_access,
-        local.fineos_api_access,
-        { name : "PROCESS_CSV_DATA_BUCKET_NAME", value : "${aws_s3_bucket.bulk_user_import.bucket}" },
-        { name : "COGNITO_IDENTITY_POOL_ID", value : "${var.cognito_user_pool_id}" }
-      ]
-    },
-
     "dor-import" = {
       command        = ["dor-import"],
       task_role      = aws_iam_role.dor_import_task_role.arn,
@@ -408,7 +397,7 @@ resource "aws_ecs_task_definition" "ecs_tasks" {
       # silently cause env vars to go missing which would definitely confuse someone for a day or two.
       #
       environment = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if contains(keys(val), "value")]
-      secrets     = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if !contains(keys(val), "value")]
+      secrets     = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if ! contains(keys(val), "value")]
     },
     ###### ↑ Generic "business logic" container definition ↑ | ↓ New Relic infrastructure sidecar definition ↓ ######
     {

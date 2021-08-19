@@ -1,7 +1,6 @@
 import base64
 
 import connexion
-import flask
 import puremagic
 from flask import Response
 from puremagic import PureError
@@ -86,7 +85,7 @@ def application_get(application_id):
         ensure(READ, existing_application)
         application_response = ApplicationResponse.from_orm(existing_application)
 
-    issues = application_rules.get_application_issues(existing_application, flask.request.headers)
+    issues = application_rules.get_application_issues(existing_application)
 
     return response_util.success_response(
         message="Successfully retrieved application",
@@ -186,7 +185,7 @@ def applications_update(application_id):
             db_session, application_request, existing_application
         )
 
-    issues = application_rules.get_application_issues(existing_application, flask.request.headers)
+    issues = application_rules.get_application_issues(existing_application)
     employer_issue = get_contributing_employer_or_employee_issue(
         db_session, existing_application.employer_fein, existing_application.tax_identifier
     )
@@ -252,9 +251,7 @@ def applications_submit(application_id):
 
         log_attributes = get_application_log_attributes(existing_application)
 
-        issues = application_rules.get_application_issues(
-            existing_application, flask.request.headers
-        )
+        issues = application_rules.get_application_issues(existing_application)
         employer_issue = get_contributing_employer_or_employee_issue(
             db_session, existing_application.employer_fein, existing_application.tax_identifier
         )
@@ -379,9 +376,7 @@ def applications_complete(application_id):
 
         log_attributes = get_application_log_attributes(existing_application)
 
-        issues = application_rules.get_application_issues(
-            existing_application, flask.request.headers
-        )
+        issues = application_rules.get_application_issues(existing_application)
         if issues:
             logger.info(
                 "applications_complete failure - application failed validation",
@@ -429,7 +424,10 @@ def validate_content_type(content_type):
         message = "Incorrect file type: {}".format(content_type)
         logger.warning(message)
         validation_error = ValidationErrorDetail(
-            message=message, type="file_type", rule=", ".join(allowed_content_types), field="file",
+            message=message,
+            type=IssueType.file_type,
+            rule=", ".join(allowed_content_types),
+            field="file",
         )
         raise ValidationException(errors=[validation_error], message=message, data={})
 
@@ -448,7 +446,7 @@ def get_valid_content_type(file):
             logger.warning(message)
             validation_error = ValidationErrorDetail(
                 message=message,
-                type="file_type_mismatch",
+                type=IssueType.file_type_mismatch,
                 rule="Detected content type and mime type do not match.",
                 field="file",
             )
@@ -468,7 +466,7 @@ def validate_file_name(file_name):
         message = "Missing extension on file name: {}".format(file_name)
         validation_error = ValidationErrorDetail(
             message=message,
-            type="file_name_extension",
+            type=IssueType.file_name_extension,
             rule="File name extension required.",
             field="file",
         )
@@ -524,7 +522,7 @@ def document_upload(application_id, body, file):
             return response_util.error_response(
                 status_code=BadRequest,
                 message="File validation error.",
-                errors=[response_util.validation_issue(error) for error in ve.errors],
+                errors=ve.errors,
                 data=document_details.dict(),
             ).to_api_response()
 
@@ -600,7 +598,7 @@ def document_upload(application_id, body, file):
                 return response_util.error_response(
                     status_code=BadRequest,
                     message=message,
-                    errors=[response_util.custom_issue("fineos_client", message)],
+                    errors=[ValidationErrorDetail(type=IssueType.fineos_client, message=message)],
                     data=document_details.dict(),
                 ).to_api_response()
 

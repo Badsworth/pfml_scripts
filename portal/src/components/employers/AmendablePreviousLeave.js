@@ -14,6 +14,7 @@ import PropTypes from "prop-types";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import { get } from "lodash";
+import useAutoFocusEffect from "../../hooks/useAutoFocusEffect";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -31,8 +32,11 @@ const AmendablePreviousLeave = ({
 }) => {
   const { t } = useTranslation();
   const [amendment, setAmendment] = useState(previousLeave);
-  const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
-    useState(false);
+  const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
+    isAddedByLeaveAdmin
+  );
+  const containerRef = React.createRef();
+  useAutoFocusEffect({ containerRef, isAmendmentFormDisplayed });
 
   const getFieldPath = (field) =>
     `previous_leaves[${amendment.previous_leave_id}].${field}`;
@@ -119,10 +123,8 @@ const AmendablePreviousLeave = ({
   return (
     <React.Fragment>
       {!isAddedByLeaveAdmin && <LeaveDetailsRow />}
-      <ConditionalContent
-        visible={isAddedByLeaveAdmin || isAmendmentFormDisplayed}
-      >
-        <tr>
+      <ConditionalContent visible={isAmendmentFormDisplayed}>
+        <tr ref={containerRef}>
           <td
             colSpan="2"
             className="padding-top-2 padding-bottom-2 padding-left-0"

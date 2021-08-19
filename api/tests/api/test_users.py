@@ -430,7 +430,6 @@ def test_users_convert_employer_bad_fein(client, user, auth_token):
     assert {
         "field": "employer_fein",
         "message": "Invalid FEIN",
-        "rule": "",
         "type": "require_employer",
     } in errors
 

@@ -19,6 +19,7 @@ import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import { get } from "lodash";
 import getInputValueFromEvent from "../../utils/getInputValueFromEvent";
+import useAutoFocusEffect from "../../hooks/useAutoFocusEffect";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -36,8 +37,11 @@ const AmendableEmployerBenefit = ({
 }) => {
   const { t } = useTranslation();
   const [amendment, setAmendment] = useState(employerBenefit);
-  const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
-    useState(false);
+  const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] = useState(
+    isAddedByLeaveAdmin
+  );
+  const containerRef = React.createRef();
+  useAutoFocusEffect({ containerRef, isAmendmentFormDisplayed });
 
   const getFieldPath = (field) =>
     `employer_benefits[${amendment.employer_benefit_id}].${field}`;
@@ -156,10 +160,8 @@ const AmendableEmployerBenefit = ({
   return (
     <React.Fragment>
       {!isAddedByLeaveAdmin && <BenefitDetailsRow />}
-      <ConditionalContent
-        visible={isAddedByLeaveAdmin || isAmendmentFormDisplayed}
-      >
-        <tr>
+      <ConditionalContent visible={isAmendmentFormDisplayed}>
+        <tr ref={containerRef}>
           <td colSpan="4" className="padding-y-2 padding-left-0">
             <AmendmentForm
               className={className}

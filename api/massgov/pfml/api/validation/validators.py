@@ -14,7 +14,11 @@ from connexion.json_schema import Draft4RequestValidator, Draft4ResponseValidato
 from connexion.utils import is_null
 
 import massgov.pfml.util.logging as logging
-from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
+from massgov.pfml.api.validation.exceptions import (
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 
 logger = logging.get_logger(__name__)
 
@@ -90,7 +94,9 @@ class CustomRequestBodyValidator(RequestBodyValidator):
 
         if not self.is_null_value_valid and is_null(data):
             errors = [
-                ValidationErrorDetail(field="", message="Missing request body", type="required")
+                ValidationErrorDetail(
+                    field="", message="Missing request body", type=IssueType.required
+                )
             ]
 
             raise ValidationException(errors=errors, message="Request Validation Error", data=data)

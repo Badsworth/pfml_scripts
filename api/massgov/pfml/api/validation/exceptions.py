@@ -63,11 +63,16 @@ class IssueRule(str, Enum):
     require_employee = "require_employee"
 
 
-# Partial list of types currently used manually
-# This is not a comprehensive list of all IssueTypes
 class IssueType(str, Enum):
+    """
+    Potential values for the `type` field of a `ValidationErrorDetail`.
+    Reuse of existing types when applicable is encouraged.
+    """
+
     # Data is present but shouldn't be
     conflicting = "conflicting"
+    # Eform versions should be consistent
+    contains_v1_and_v2_eforms = "contains_v1_and_v2_eforms"
     # A matching record already exists
     duplicate = "duplicate"
     # A record already exists, preventing this data from being used again
@@ -76,18 +81,44 @@ class IssueType(str, Enum):
     maximum = "maximum"
     # Number or Date is less than the expected range
     minimum = "minimum"
+    # Data didn't conform to expected pattern
+    # OpenAPI validation errors may have this `type`, so using the same term to be consistent.
+    pattern = "pattern"
     # Data is insecure or compromised and cannot be used
     insecure = "insecure"
+    # Generic issue indicating the data is wrong in some way. For example, it doesn't match our records.
+    incorrect = "incorrect"
     # Generic issue indicating something about the data is invalid. This should
     # only be used when we're unable to provide anything more specific about the issue,
     # for instance when the issue could be a range of things that we're unable to specify.
     invalid = "invalid"
+    # TODO (EMPLOYER-1642): Use more generic error
+    invalid_phone_number = "invalid_phone_number"
     # Date range is invalid, eg a start date occurs after an end date
     invalid_date_range = "invalid_date_range"
+    # TODO (EMPLOYER-1642): Use more generic error
+    invalid_year_range = "invalid_year_range"
+    # TODO (EMPLOYER-1642): Use more generic error
+    invalid_previous_leave_start_date = "invalid_previous_leave_start_date"
+    # TODO (EMPLOYER-1642): Use more generic error
+    invalid_age = "invalid_age"
+    # TODO (EMPLOYER-1642): Use more generic error
+    future_birth_date = "future_birth_date"
     # Data is missing
     required = "required"
+    object_not_found = "object_not_found"
+    # TODO (EMPLOYER-1642): Use more generic error
+    outstanding_information_request_required = "outstanding_information_request_required"
     # Masked field is not allowed
     invalid_masked_field = "invalid_masked_field"
+    # File mime type is not a supported mime type
+    file_type = "file_type"
+    # Extension portion is required in the filename, but missing.
+    file_name_extension = "file_name_extension"
+    # Parsed mime type is different than what file extension indicates
+    file_type_mismatch = "file_type_mismatch"
+    # Generic error indicating the error originated from Fineos (FINEOSClientBadResponse)
+    fineos_client = "fineos_client"
     # A claimant could not be created in FINEOS
     fineos_case_creation_issues = "fineos_case_creation_issues"
     # An unspecified error related to creating/completing the absence case in fineos
@@ -110,11 +141,18 @@ class IssueType(str, Enum):
     checksum = "checksum"
     # Employer can't be verified because there's nothing to verify against
     employer_requires_verification_data = "employer_requires_verification_data"
+    # Leave admin user attempting to view data for an organization they don't have access to
+    unauthorized_leave_admin = "unauthorized_leave_admin"
+    # Generic error indicating the error originated from our own business logic.
+    # This was added when we began enforcing that `type` is an `IssueType`. Avoid using
+    # this moving forward.
+    # TODO (EMPLOYER-1643): Remove this once the errors the reference it no longer use IssueRule
+    pfml = ""
 
 
 @dataclass
 class ValidationErrorDetail:
-    type: Union[IssueType, str]
+    type: IssueType
     message: str = ""
     rule: Optional[Union[IssueRule, str]] = None
     field: Optional[str] = None

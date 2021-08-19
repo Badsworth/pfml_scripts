@@ -85,19 +85,6 @@ def exclude_none(obj):
     return clean
 
 
-# == helper factory functions ==
-
-
-def custom_issue(type: str, message: str, rule: str = "", field: str = "") -> ValidationErrorDetail:
-    return ValidationErrorDetail(type=type, message=message, rule=rule, field=field)
-
-
-def validation_issue(exception: ValidationErrorDetail) -> ValidationErrorDetail:
-    return ValidationErrorDetail(
-        type=exception.type, message=exception.message, rule=exception.rule, field=exception.field
-    )
-
-
 # == response utilities ==
 def success_response(
     message: str,
