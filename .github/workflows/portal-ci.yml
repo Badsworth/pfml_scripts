@@ -12,13 +12,10 @@ on:
     paths:
       - portal/**
 
-defaults:
-  run:
-    working-directory: portal
-
 env:
   nodeVersion: 15.x
   deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
+  working-dir: ./portal
   workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
 jobs:
@@ -36,9 +33,11 @@ jobs:
 
       - name: install
         run: npm ci
+        working-directory: ${{ env.working-dir }}
 
       - name: format-check
         run: npm run format-check
+        working-directory: ${{ env.working-dir }}
 
       - name: if format-check fails
         if: ${{ failure() }}
@@ -46,9 +45,11 @@ jobs:
 
       - name: lint
         run: npm run lint:ci
+        working-directory: ${{ env.working-dir }}
 
       - name: test
         run: npm run test:ci
+        working-directory: ${{ env.working-dir }}
 
       - name: Coveralls
         uses: coverallsapp/github-action@master
