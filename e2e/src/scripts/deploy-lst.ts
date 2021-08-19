@@ -161,8 +161,9 @@ interface SpawnError {
     throw new Error("No task can be started!");
   }
   console.log(
-    `Task has been triggered and last status is: ${task_results.tasks[0].lastStatus}\nCheck AWS Cloudwatch for any logs.`
+    `Task has been triggered and last status is: ${task_results.tasks[0].lastStatus}\n`
   );
+  console.log(`Check AWS Cloudwatch with RUN_ID: ${run_id} for any logs.`);
 })().catch((e) => {
   console.error(e);
   process.exit(1);
