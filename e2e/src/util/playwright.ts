@@ -1,4 +1,4 @@
-import playwright from "playwright-chromium";
+import playwright, { Page } from "playwright-chromium";
 import delay from "delay";
 
 /**********
@@ -62,6 +62,22 @@ export async function clickTab(
   await delay(200);
 }
 
+export async function selectListTableRow(
+  page: Page,
+  rowSelector: string
+): Promise<void> {
+  await page.waitForSelector(rowSelector).then(async (el) => {
+    // Only click the table row if it's not already selected.
+    const cl = await el.getAttribute("classList");
+    if (cl && cl.includes("ListRowSelected")) {
+      return;
+    }
+    await el.click();
+    // Wait for it to be selected before moving on. Sometimes, this requires a page refresh.
+    await page.waitForSelector(`${rowSelector}.ListRowSelected`);
+  });
+}
+
 export async function waitForStablePage(page: playwright.Page): Promise<void> {
   // Waits for all known Fineos ajax stuff to complete.
   await Promise.all([
@@ -87,7 +103,7 @@ export async function gotoCase(
 ): Promise<void> {
   await page.click('.menulink a.Link[aria-label="Cases"]');
   await clickTab(page, "Case");
-  await labelled(page, "Case Number").then((el) => el.type(id));
+  await labelled(page, "Case Number").then((el) => el.fill(id));
   // Uncheck "Search Case Alias".
   await labelled(page, "Search Case Alias").then((el) => el.click());
   await page.click('input[type="submit"][value="Search"]');

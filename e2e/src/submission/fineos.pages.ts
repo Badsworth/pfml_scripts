@@ -232,7 +232,8 @@ export class Evidence extends FineosPage {
       | "Waived" = "Satisfied",
     reason = "Evidence has been reviewed and approved"
   ): Promise<void> {
-    await this.page.click(`td[title="${evidenceType}"]`, { timeout: 1000 });
+    const row = `table[id*='evidenceResultListviewWidget'] tr:has-text('${evidenceType}')`;
+    await util.selectListTableRow(this.page, row);
     await this.page.click('input[value="Manage Evidence"]');
     await this.page.waitForSelector(".WidgetPanel_PopupWidget");
     await util
@@ -248,15 +249,13 @@ export class Evidence extends FineosPage {
       .labelled(this.page, "Evidence Decision Reason")
       .then((el) => el.fill(reason));
     await this.page.click('.WidgetPanel_PopupWidget input[value="OK"]');
-    await this.page.waitForSelector(".WidgetPanel_PopupWidget", {
-      state: "hidden",
-    });
-    await delay(1000);
-    await this.page.waitForSelector("#disablingLayer", {
-      state: "hidden",
-      timeout: 60000,
-    });
-    await delay(150);
+    // Wait for the row to update before moving on.
+    await this.page.waitForSelector(
+      `${row} :nth-child(3):has-text('${receipt}')`
+    );
+    await this.page.waitForSelector(
+      `${row} :nth-child(5):has-text('${decision}')`
+    );
   }
 }
 
@@ -266,15 +265,11 @@ export class Tasks extends FineosPage {
   }
   async close(task: FineosTasks): Promise<void> {
     await util.clickTab(this.page, "Tasks");
-    await Promise.race([
-      this.page.waitForNavigation(),
-      this.page.click(`td[title="${task}"]`),
-    ]);
-    await Promise.race([
-      this.page.waitForNavigation(),
-      this.page.click('input[type="submit"][value="Close"]'),
-    ]);
-    await delay(1500);
+    await util.selectListTableRow(
+      this.page,
+      `table[id*='TasksForCaseWidget'] tr:has-text('${task}')`
+    );
+    await this.page.click('input[type="submit"][value="Close"]');
   }
   async open(task: FineosTasks): Promise<void> {
     await Promise.race([
@@ -282,7 +277,7 @@ export class Tasks extends FineosPage {
       this.page.click(`input[title="Add a task to this case"][type=submit]`),
     ]);
     await util.labelled(this.page, "Find Work Types Named").then(async (el) => {
-      await el.type(task);
+      await el.fill(task);
       await el.press("Enter");
     });
     await Promise.race([
