@@ -1,11 +1,25 @@
 {
+  "root": true,
   "globals": {
     // Trackers loaded globally
     "newrelic": "readonly",
     "globalThis": "readonly"
   },
-  "extends": ["plugin:jsx-a11y/recommended", "plugin:react/recommended"],
-  "plugins": ["jsx-a11y", "react-hooks"],
+  "env": {
+    "browser": true,
+    "es6": true,
+    "node": true,
+    "jest": true
+  },
+  "extends": [
+    "nava",
+    "plugin:jest/recommended",
+    "plugin:jsdoc/recommended",
+    "prettier",
+    "plugin:jsx-a11y/recommended",
+    "plugin:react/recommended"
+  ],
+  "plugins": ["jest", "jsdoc", "lodash", "todo-plz", "jsx-a11y", "react-hooks"],
   "parser": "babel-eslint",
   "parserOptions": {
     "ecmaVersion": 2018,
@@ -15,17 +29,53 @@
     }
   },
   "rules": {
+    "camelcase": "off",
+    "jest/consistent-test-it": ["error", { "fn": "it" }],
+    "jest/no-conditional-expect": "off",
+    "jest/no-try-expect": "off",
+    "jest/valid-title": "off",
+    "jsdoc/check-param-names": "error",
+    "jsdoc/newline-after-description": "off",
+    "jsdoc/require-jsdoc": "off",
+    "jsdoc/require-param": "off",
+    "jsdoc/require-param-description": "off",
+    "jsdoc/require-param-name": "error",
+    "jsdoc/require-param-type": "error",
+    "jsdoc/require-returns": "warn",
+    "jsdoc/require-returns-description": "off",
+    "jsdoc/no-undefined-types": "off",
+    "jsdoc/tag-lines": "off",
     "jsx-a11y/anchor-has-content": "off",
     "jsx-a11y/no-onchange": "off",
+    "lodash/import-scope": ["error", "member"],
+    "lodash/path-style": ["error", "string"],
+    "no-console": ["error", { "allow": ["error"] }],
+    "no-irregular-whitespace": ["error", { "skipTemplates": true }],
+    "no-prototype-builtins": "off",
+    "object-shorthand": ["error", "properties", { "avoidQuotes": true }],
+    "promise/no-native": "off",
     "react/button-has-type": "error",
     "react/jsx-handler-names": "off",
     "react/jsx-fragments": ["error", "element"],
     "react/jsx-no-target-blank": ["error", { "allowReferrer": true }],
     "react/no-unescaped-entities": "off",
     "react-hooks/rules-of-hooks": "error",
-    "react-hooks/exhaustive-deps": "warn"
+    "react-hooks/exhaustive-deps": "warn",
+    "require-await": "error",
+    "sort-imports": "error",
+    "sort-vars": "error",
+    "todo-plz/ticket-ref": [
+      "error",
+      { "pattern": "(API|CP|EMPLOYER|POL)-[0-9]+", "terms": ["TODO"] }
+    ]
   },
   "settings": {
+    "jest": {
+      "version": "detect"
+    },
+    "jsdoc": {
+      "mode": "typescript"
+    },
     "react": {
       "version": "detect"
     }

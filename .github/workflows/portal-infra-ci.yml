@@ -1,4 +1,4 @@
-# Run tests and linting for the Paid Leave Portal Lambda functions
+# Run tests for the Paid Leave Portal Lambda functions
 #
 name: Portal infra CI
 
@@ -11,23 +11,6 @@ env:
   nodeVersion: 15.x
 
 jobs:
-  lint:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: Use Node.js
-        uses: actions/setup-node@v1
-        with:
-          node-version: ${{ env.nodeVersion }}
-
-      - name: install
-        run: npm ci
-
-      - name: lint
-        run: npm run lint:ci
-
   test:
     runs-on: ubuntu-latest
 
