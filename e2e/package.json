@@ -31,7 +31,8 @@
     "flood:LeaveAdminSelfReg": "element run src/flood/scenarios/LeaveAdminSelfReg.perf.ts --no-headless",
     "artillery:dev": "npm run artillery:bundle&& artillery run -e test -q dist/spec.yml",
     "artillery:run": "E2E_ENVIRONMENT=performance npm run artillery:bundle && artillery run -e performance dist/spec.yml",
-    "artillery:bundle": "rm -rf ./dist && webpack --config=webpack.artillery.config.ts"
+    "artillery:bundle": "rm -rf ./dist && webpack --config=webpack.artillery.config.ts",
+    "newrelic:generate-fineos-dashboards": "ts-node src/scripts/2021-07-19-generate-nr-api-dashboards.ts"
   },
   "author": "",
   "license": "ISC",

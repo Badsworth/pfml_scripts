@@ -52,6 +52,9 @@ function getRawEnvironment() {
     FLOOD_API_TOKEN: process.env.E2E_FLOOD_API_TOKEN,
     LST_EMPLOYEES_FILE: process.env.E2E_LST_EMPLOYEES_FILE,
     LST_EMPLOYERS_FILE: process.env.E2E_LST_EMPLOYERS_FILE,
+
+    NEWRELIC_APIKEY: process.env.NEWRELIC_APIKEY,
+    NEWRELIC_ACCOUNTID: process.env.NEWRELIC_ACCOUNTID,
   };
 }
 
