@@ -14,7 +14,6 @@ const StatusTagMap = {
   Withdrawn: "inactive",
 };
 
-// TODO(CP-2482): replace with AbsencePeriodModel
 export const LeaveDetails = ({ absenceDetails = {} }) => {
   const { t } = useTranslation();
   return map(absenceDetails, (absenceItem, absenceItemName) => (

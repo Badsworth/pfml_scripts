@@ -2,6 +2,7 @@ import Document, { DocumentType } from "../../models/Document";
 import React, { useEffect, useState } from "react";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
+import ClaimDetail from "../../models/ClaimDetail";
 import Heading from "../../components/Heading";
 import LeaveDetails from "./leave-details";
 import LegalNoticeList from "../../components/LegalNoticeList.js";
@@ -13,7 +14,6 @@ import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-
 // TODO (CP-2461): remove once page is integrated with API
 const TEST_DOC = [
   new Document({
@@ -32,14 +32,15 @@ const TEST_DOC = [
   }),
 ];
 
-const ABSENCE_DETAIL_LIST = {
-  medical: [
+const TEST_CLAIM = new ClaimDetail({
+  absence_periods: [
     {
       period_type: "Reduced",
       absence_period_start_date: "2021-06-01",
       absence_period_end_date: "2021-06-08",
       request_decision: "Approved",
       fineos_leave_request_id: "PL-14432-0000002026",
+      reason: "Serious Health Condition - Employee",
     },
     {
       period_type: "Continuous",
@@ -47,15 +48,15 @@ const ABSENCE_DETAIL_LIST = {
       absence_period_end_date: "2021-07-08",
       request_decision: "Pending",
       fineos_leave_request_id: "PL-14432-0000002326",
+      reason: "Serious Health Condition - Employee",
     },
-  ],
-  bonding: [
     {
       period_type: "Reduced",
       absence_period_start_date: "2021-08-01",
       absence_period_end_date: "2021-08-08",
       request_decision: "Denied",
       fineos_leave_request_id: "PL-14434-0000002026",
+      reason: "Child Bonding",
     },
     {
       period_type: "Continuous",
@@ -63,14 +64,15 @@ const ABSENCE_DETAIL_LIST = {
       absence_period_end_date: "2021-08-08",
       request_decision: "Withdrawn",
       fineos_leave_request_id: "PL-14434-0000002326",
+      reason: "Child Bonding",
     },
   ],
-};
+});
 
 export const Status = ({
   appLogic,
   docList = TEST_DOC,
-  absenceDetails = ABSENCE_DETAIL_LIST,
+  absenceDetails = TEST_CLAIM.absencePeriodsByReason,
 }) => {
   const { t } = useTranslation();
   const { portalFlow } = appLogic;

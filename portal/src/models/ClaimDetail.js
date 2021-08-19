@@ -1,5 +1,6 @@
 import { ClaimEmployee, ClaimEmployer } from "./Claim";
 import BaseModel from "./BaseModel";
+import { groupBy } from "lodash";
 
 class ClaimDetail extends BaseModel {
   constructor(attrs) {
@@ -68,7 +69,28 @@ class ClaimDetail extends BaseModel {
       },
     };
   }
+
+  /**
+   * Get absence_periods grouped by their leave reason
+   * @returns {Object} an object that keys arrays of absence periods by their reason e.g { "Child Bonding": [AbsencePeriod] }
+   */
+  get absencePeriodsByReason() {
+    return groupBy(this.absence_periods, "reason");
+  }
 }
+
+/**
+ * Model for AbsencePeriod Object
+ * @property {string} [absence_period_start_date] - Start date of absence period
+ * @property {string} [absence_period_end_date] - End date of absence period
+ * @property {string} [evidence_status] - Evidence status for documents requested [N/A, Pending, Waived, Satisfied, Not Satisfied, Not Required]
+ * @property {string} [fineos_leave_request_id] - Leave request id from Fineos
+ * @property {string} [period_type] - Indicates type of absence period type [Continuous, Intermittent, Reduced Schedule]
+ * @property {string} [reason] - Absence Period Reason [Care for a Family Member, Pregnancy/Maternity, Child Bonding, Serious Health Condition - Employee]
+ * @property {string} [reason_qualifier_one] - First qualifying reason
+ * @property {string} [reason_qualifier_two] - Second qualifying reason
+ * @property {string} [request_decision] - Status of leave decision [Pending, Approved, Denied, Withdrawn]
+ */
 
 export class AbsencePeriod extends BaseModel {
   get defaults() {

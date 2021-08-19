@@ -55,6 +55,6 @@ LegalNoticeList.propTypes = {
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
   /** 
     The function called when the document's link is clicked. It will receive an instance of the document as an argument.
-  */
+   */
   onDownloadClick: PropTypes.func,
 };

@@ -1,4 +1,7 @@
-import ClaimDetail, { OutstandingEvidence } from "../../src/models/ClaimDetail";
+import ClaimDetail, {
+  AbsencePeriod,
+  OutstandingEvidence,
+} from "../../src/models/ClaimDetail";
 import { ClaimEmployee, ClaimEmployer } from "../../src/models/Claim";
 
 describe("ClaimDetail", () => {
@@ -117,5 +120,36 @@ describe("ClaimDetail", () => {
     expect(claimDetail.absence_periods[1].absence_period_end_date).toBe(
       "2021-12-31"
     );
+  });
+
+  it("groups absence periods by leave_details", () => {
+    const claimDetail = new ClaimDetail({
+      absence_periods: [
+        {
+          absence_period_start_date: "2021-01-01",
+          absence_period_end_date: "2021-06-30",
+          reason: "Child Bonding",
+        },
+        {
+          absence_period_start_date: "2021-07-01",
+          absence_period_end_date: "2021-12-31",
+          reason: "Serious Health Condition - Employee",
+        },
+        {
+          absence_period_start_date: "2021-10-01",
+          absence_period_end_date: "2021-12-31",
+          reason: "Serious Health Condition - Employee",
+        },
+      ],
+    });
+    expect(Object.keys(claimDetail.absencePeriodsByReason).length).toBe(2);
+    expect(
+      claimDetail.absencePeriodsByReason["Serious Health Condition - Employee"]
+    ).toBeInstanceOf(Array);
+    expect(
+      claimDetail.absencePeriodsByReason[
+        "Serious Health Condition - Employee"
+      ][0]
+    ).toBeInstanceOf(AbsencePeriod);
   });
 });
