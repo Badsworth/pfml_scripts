@@ -258,8 +258,8 @@ const CompletedStatusCard = ({ claim }) => {
         buttonText={t(
           "components.applicationCardV2.viewStatusUpdatesAndDetails"
         )}
-        href={routeWithParams("applications.uploadDocsOptions", {
-          claim_id: claim.application_id,
+        href={routeWithParams("applications.status", {
+          absence_case_id: claim.fineos_absence_id,
         })}
         iconComponent={iconComponent}
       />
