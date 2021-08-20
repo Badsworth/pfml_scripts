@@ -40,7 +40,7 @@ from massgov.pfml.db.models.factories import (
     PaymentReferenceFileFactory,
 )
 from massgov.pfml.payments.fineos_payment_export import CiIndex
-from massgov.pfml.types import TaxId
+from massgov.pfml.types import Fein, TaxId
 
 logger = logging.get_logger(__name__)
 fake = faker.Faker()
@@ -693,7 +693,7 @@ def generate_scenario_data_db(
 
     employee = EmployeeFactory.create(
         first_name=fake.first_name(),
-        tax_identifier=TaxIdentifier(tax_identifier=TaxId(ssn)),
+        tax_identifier=TaxIdentifier(tax_identifier=ssn),
         ctr_address_pair=ctr_address_pair,
         eft=eft,
         payment_method_id=payment_method_id,
@@ -703,7 +703,7 @@ def generate_scenario_data_db(
 
     employee.addresses = [EmployeeAddress(employee=employee, address=mailing_address)]
 
-    employer = EmployerFactory.create(employer_fein=fein, fineos_employer_id=fineos_employer_id)
+    employer = EmployerFactory.create(employer_fein=Fein(fein), fineos_employer_id=fineos_employer_id)
 
     claims: List[Claim] = []
     payment_amounts: List[decimal.Decimal] = []
