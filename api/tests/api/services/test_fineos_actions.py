@@ -435,7 +435,7 @@ def test_create_employer_simple(test_db_session):
     fineos_client = massgov.pfml.fineos.MockFINEOSClient()
 
     employer = Employer()
-    employer.employer_fein = "888447598"
+    employer.employer_fein = Fein("888447598")
     employer.employer_name = "Test Organization Name44"
     employer.employer_dba = "Test Organization DBA"
     test_db_session.add(employer)
@@ -452,7 +452,7 @@ def test_update_employer_simple(test_db_session):
     fineos_client = massgov.pfml.fineos.MockFINEOSClient()
 
     employer = Employer()
-    employer.employer_fein = "888447576"
+    employer.employer_fein = Fein("888447576")
     employer.employer_name = "Test Organization Name"
     employer.employer_dba = "Test Organization DBA"
     employer.fineos_employer_id = 250
@@ -468,7 +468,7 @@ def test_employer_creation_exception(test_db_session):
     fineos_client = massgov.pfml.fineos.MockFINEOSClient()
 
     employer = Employer()
-    employer.employer_fein = "999999999"
+    employer.employer_fein = Fein("999999999")
     employer.employer_name = "Test Organization Dupe"
     employer.employer_dba = "Test Organization Dupe DBA"
     test_db_session.add(employer)
@@ -736,7 +736,7 @@ def test_create_service_agreement_for_employer(test_db_session):
     fineos_client = massgov.pfml.fineos.MockFINEOSClient()
 
     employer = Employer()
-    employer.employer_fein = "888447598"
+    employer.employer_fein = Fein("888447598")
     employer.employer_name = "Test Organization Name"
     employer.employer_dba = "Test Organization DBA"
     test_db_session.add(employer)

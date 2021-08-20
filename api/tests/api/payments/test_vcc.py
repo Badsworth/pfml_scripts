@@ -644,10 +644,9 @@ def test_build_individual_vcc_document_too_long_values(initialize_factories_sess
     now = datetime.now()
 
     long_ssn_data = get_base_employee(use_random_tin=True)
-    long_ssn_data.tax_identifier.tax_identifier = TaxId("0" * 25)
-    with pytest.raises(
-        Exception, match="Value for tax_identifier is longer than allowed length of 9."
-    ):
+    
+    with pytest.raises(ValueError):
+        long_ssn_data.tax_identifier.tax_identifier = TaxId("0" * 25)
         vcc.build_individual_vcc_document(Document(), long_ssn_data, now, vcc.get_doc_id(now, 1))
 
     long_aba_num_data = get_base_employee(use_random_tin=True)
