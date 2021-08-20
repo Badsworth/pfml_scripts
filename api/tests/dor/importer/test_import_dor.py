@@ -27,6 +27,7 @@ from massgov.pfml.dor.importer.import_dor import (
     RECEIVED_FOLDER,
     move_file_to_processed,
 )
+from massgov.pfml.types import Fein, TaxId
 from massgov.pfml.util.encryption import GpgCrypt, Utf8Crypt
 
 from . import dor_test_data as test_data
@@ -522,7 +523,7 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
 
 
 def validate_employee_persistence(employee_wage_payload, employee_row, import_log_id):
-    assert employee_row.tax_identifier.tax_identifier == employee_wage_payload["employee_ssn"]
+    assert employee_row.tax_identifier.tax_identifier == TaxId(employee_wage_payload["employee_ssn"])
     assert employee_row.first_name == employee_wage_payload["employee_first_name"]
     assert employee_row.last_name == employee_wage_payload["employee_last_name"]
     assert employee_row.latest_import_log_id == import_log_id
@@ -541,7 +542,7 @@ def validate_wage_persistence(employee_wage_payload, wage_row, import_log_id):
 
 
 def validate_employer_persistence(employer_payload, employer_row, import_log_id):
-    assert employer_row.employer_fein == employer_payload["fein"]
+    assert employer_row.employer_fein == Fein(employer_payload["fein"])
     assert employer_row.employer_name == employer_payload["employer_name"]
     assert employer_row.family_exemption == employer_payload["family_exemption"]
     assert employer_row.medical_exemption == employer_payload["medical_exemption"]

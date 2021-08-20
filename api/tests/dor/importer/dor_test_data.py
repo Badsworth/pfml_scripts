@@ -4,6 +4,8 @@ from decimal import Decimal
 
 import pytz
 
+from massgov.pfml.types import Fein, TaxId
+
 employer_quarter_line = "A0000000000120190930Anderson, Barber and Johnson                                                                                                                                                                                                                                   244674065     F2020040120200522110527"
 employee_quarter_line = "B0000000000120190930john                                                                                                                                                                                                                                                           Doe                                                                                                                                                                                                                                                            123456789TF            45000.00            15000.00               55.80              37.29                15.00                7.00"
 employer_info_line = "00000000001Anderson, Barber and Johnson                                                                                                                                                                                                                                   244674065     64034 Angela Mews                                                                                                                                                                                                                                              North Kaylabury               MA935463801USAAnderson, Barber and Johnson                                                                                                                                                                                                                                   TF202001012020123120200522110527"
@@ -38,13 +40,13 @@ updated_employer = copy.deepcopy(updated_employer_except_update_date)
 updated_employer["updated_date"] = pytz.UTC.localize(datetime(2020, 5, 23, 11, 5, 27))
 
 employer_international_address = copy.deepcopy(new_employer)
-employer_international_address["fein"] = "999999999"
+employer_international_address["fein"] = Fein("999999999")
 employer_international_address["account_key"] = "00000000002"
 employer_international_address["employer_address_state"] = "DX"
 employer_international_address["employer_address_country"] = "CAN"
 
 employer_invalid_country = copy.deepcopy(new_employer)
-employer_invalid_country["fein"] = "999999991"
+employer_invalid_country["fein"] = Fein("999999991")
 employer_invalid_country["account_key"] = "00000000003"
 employer_invalid_country["employer_address_state"] = "MA"
 employer_invalid_country["employer_address_country"] = "UXU"

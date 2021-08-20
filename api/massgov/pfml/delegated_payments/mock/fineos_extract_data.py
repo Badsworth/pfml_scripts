@@ -568,7 +568,7 @@ def generate_claimant_data_files(
 
         ssn = employee.tax_identifier.tax_identifier.to_unformatted_str()
         if scenario_descriptor.claim_extract_employee_identifier_unknown:
-            ssn = "UNKNOWNSSN"
+            ssn = "000000000"
         absence_case_number = scenario_data.absence_case_id
 
         date_of_birth = "1991-01-01 12:00:00"

@@ -1126,7 +1126,7 @@ def create_or_update_employer(
         # attribute for the request, which FINEOS uses to determine if this is a
         # create or update on their end.
         fineos_customer_nbr=str(employer.employer_id),
-        employer_fein=employer.employer_fein,
+        employer_fein=employer.employer_fein.to_unformatted_str(),
         employer_legal_name=employer.employer_name,
         employer_dba=employer.employer_dba,
     )

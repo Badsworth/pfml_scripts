@@ -215,13 +215,13 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     def read_employer(self, employer_fein: Fein) -> models.OCOrganisation:
         _capture_call("read_employer", None, employer_fein=employer_fein)
 
-        if employer_fein == "999999999":
+        if employer_fein == Fein("999999999"):
             raise exception.FINEOSNotFound("Employer not found.")
 
         return models.OCOrganisation(
             OCOrganisation=[
                 models.OCOrganisationItem(
-                    CustomerNo="999", CorporateTaxNumber=employer_fein, Name="Foo"
+                    CustomerNo="999", CorporateTaxNumber=employer_fein.to_unformatted_str(), Name="Foo"
                 )
             ]
         )

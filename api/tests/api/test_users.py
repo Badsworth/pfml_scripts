@@ -15,7 +15,6 @@ from massgov.pfml.db.models.factories import (
     UserFactory,
 )
 from massgov.pfml.util.aws.cognito import CognitoUserExistsValidationError
-from massgov.pfml.util.strings import format_fein
 
 fake = faker.Faker()
 
