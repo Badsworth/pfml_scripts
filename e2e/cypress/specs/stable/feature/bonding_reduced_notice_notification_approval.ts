@@ -3,6 +3,7 @@ import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import {
   Submission,
   ApplicationSubmissionResponse,
+  AllNotNull,
 } from "../../../../src/types";
 import { config } from "../../../actions/common";
 import {
