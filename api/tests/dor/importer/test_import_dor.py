@@ -523,7 +523,9 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
 
 
 def validate_employee_persistence(employee_wage_payload, employee_row, import_log_id):
-    assert employee_row.tax_identifier.tax_identifier == TaxId(employee_wage_payload["employee_ssn"])
+    assert employee_row.tax_identifier.tax_identifier == TaxId(
+        employee_wage_payload["employee_ssn"]
+    )
     assert employee_row.first_name == employee_wage_payload["employee_first_name"]
     assert employee_row.last_name == employee_wage_payload["employee_last_name"]
     assert employee_row.latest_import_log_id == import_log_id

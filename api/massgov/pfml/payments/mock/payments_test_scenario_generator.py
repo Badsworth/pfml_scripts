@@ -40,6 +40,7 @@ from massgov.pfml.db.models.factories import (
     PaymentReferenceFileFactory,
 )
 from massgov.pfml.payments.fineos_payment_export import CiIndex
+from massgov.pfml.types import TaxId
 
 logger = logging.get_logger(__name__)
 fake = faker.Faker()
@@ -692,7 +693,7 @@ def generate_scenario_data_db(
 
     employee = EmployeeFactory.create(
         first_name=fake.first_name(),
-        tax_identifier=TaxIdentifier(tax_identifier=ssn),
+        tax_identifier=TaxIdentifier(tax_identifier=TaxId(ssn)),
         ctr_address_pair=ctr_address_pair,
         eft=eft,
         payment_method_id=payment_method_id,

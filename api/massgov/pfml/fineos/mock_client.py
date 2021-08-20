@@ -221,7 +221,9 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         return models.OCOrganisation(
             OCOrganisation=[
                 models.OCOrganisationItem(
-                    CustomerNo="999", CorporateTaxNumber=employer_fein.to_unformatted_str(), Name="Foo"
+                    CustomerNo="999",
+                    CorporateTaxNumber=employer_fein.to_unformatted_str(),
+                    Name="Foo",
                 )
             ]
         )
