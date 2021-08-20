@@ -40,7 +40,7 @@ from massgov.pfml.db.models.factories import (
     PaymentReferenceFileFactory,
 )
 from massgov.pfml.payments.fineos_payment_export import CiIndex
-from massgov.pfml.types import Fein, TaxId
+from massgov.pfml.types import Fein
 
 logger = logging.get_logger(__name__)
 fake = faker.Faker()
