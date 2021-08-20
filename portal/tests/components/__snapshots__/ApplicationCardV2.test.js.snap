@@ -273,7 +273,7 @@ exports[`ApplicationCardV2 components match their snapshots completed status mat
           </TitleAndDetailSectionItem>
           <ButtonSection
             buttonText="View status updates and details"
-            href="/applications/upload-docs-options?claim_id=mock_application_id"
+            href="/applications/status?absence_case_id=NTN-111-ABS-01"
             iconComponent={
               <Icon
                 className="position-absolute flex-align-self-end margin-right-neg-105"
@@ -288,14 +288,14 @@ exports[`ApplicationCardV2 components match their snapshots completed status mat
             >
               <ButtonLink
                 className="display-flex flex-align-center flex-justify-center flex-column margin-right-0"
-                href="/applications/upload-docs-options?claim_id=mock_application_id"
+                href="/applications/status?absence_case_id=NTN-111-ABS-01"
               >
                 <Link
-                  href="/applications/upload-docs-options?claim_id=mock_application_id"
+                  href="/applications/status?absence_case_id=NTN-111-ABS-01"
                 >
                   <a
                     className="usa-button display-flex flex-align-center flex-justify-center flex-column margin-right-0"
-                    href="/applications/upload-docs-options?claim_id=mock_application_id"
+                    href="/applications/status?absence_case_id=NTN-111-ABS-01"
                   >
                     <div>
                       View status updates and details
