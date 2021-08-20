@@ -167,7 +167,7 @@ def validate_ams_document(
 
     if tin_value:
         if employee.tax_identifier:
-            if tin_value != employee.tax_identifier.tax_identifier:
+            if tin_value.replace("_", "") != employee.tax_identifier.tax_identifier:
                 validation_container.add_validation_issue(
                     payments_util.ValidationReason.INVALID_VALUE, "TIN"
                 )

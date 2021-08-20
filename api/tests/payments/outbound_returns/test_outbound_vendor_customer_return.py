@@ -28,6 +28,7 @@ from massgov.pfml.db.models.factories import (
     TaxIdentifierFactory,
 )
 from massgov.pfml.payments.payments_util import Constants, ValidationContainer, ValidationReason
+from massgov.pfml.types import TaxId
 from tests.helpers.state_log import AdditionalParams, setup_state_log
 
 # every test in here requires real resources
@@ -94,6 +95,8 @@ def create_ovr_dependencies(
 
     All the other AMS_DOCUMENTS will fail the validation steps, since their depdencies won't exist.
     """
+    # TIN comes in with an invalid format from the document. Remove leading and trailing _
+    tin = tin.replace("_", "")
 
     if previous_states is None:
         previous_states = [State.VCC_SENT]
@@ -206,7 +209,7 @@ def test_validate_ams_document_with_invalid_fields(test_db_session, initialize_f
     for issue in validation_container.validation_issues:
         assert issue.reason == field_to_reason_mapping[issue.details]
 
-    assert len(validation_container.validation_issues) == 12
+    assert len(validation_container.validation_issues) == 11
 
 
 def test_validate_ams_document_with_missing_fields(test_db_session, initialize_factories_session):
