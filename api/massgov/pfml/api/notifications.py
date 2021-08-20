@@ -11,6 +11,7 @@ from werkzeug.exceptions import BadRequest
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
+from massgov.pfml.types import Fein
 import massgov.pfml.util.logging
 from massgov.pfml import db
 from massgov.pfml.api.authorization.flask import CREATE, ensure
@@ -80,7 +81,7 @@ def notifications_post():
         try:
             employer = (
                 db_session.query(Employer)
-                .filter(Employer.employer_fein == notification_request.fein.replace("-", ""))
+                .filter(Employer.employer_fein == Fein(notification_request.fein.replace("-", "")))
                 .one_or_none()
             )
 
@@ -92,6 +93,8 @@ def notifications_post():
                 newrelic.agent.add_custom_parameter("employer_id", employer.employer_id)
         except MultipleResultsFound:
             return _err400_multiple_employer_feins_found(notification_request, log_attributes)
+        except ValueError:
+            return _err400_employer_fein_not_found(notification_request, log_attributes)
 
         if employer is None:
             return _err400_employer_fein_not_found(notification_request, log_attributes)
