@@ -15,6 +15,7 @@ import { waitForAjaxComplete } from "../../../actions/fineos";
  * Because there's too many scenarios for us to reasonably handle during the `Reason of Absence` step,
  * specify the description here and use/expand it as needed.
  */
+// @todo Depending on what leave type you are taking this will need to be updated.
 const absenceDescription: AbsenceReasonDescription = {
   relates_to: "Family",
   // relates_to: "Employee",
@@ -23,18 +24,21 @@ const absenceDescription: AbsenceReasonDescription = {
   qualifier_1: "Other Additional Activities",
   // qualifier_1: "Active Duty",
   // qualifier_2: "Sickness/Injury",
-  // @todo Add more of you need to.
 };
 
 /**
  * Same as above, there's too many scenarios for us to reasonably handle when describing primary relationship,
  * specify the description here and use/expand it as needed.
  */
+// @todo If the Leave Type has Absence Relationship. This includes Child Bonding, Caring for a family member, and Out of work for another reason with Family.
 const _relationshipDescription: PrimaryRelationshipDescription = {
   relationship_to_employee: "Sibling - Brother/Sister",
   qualifier_1: "Biological",
 };
 
+/**
+ * Information on how to test CPS-906 tickets is here: https://github.com/EOLWD/pfml/blob/main/e2e/docs/cps-testing.md
+ */
 describe("Submit a claim through Fineos intake process, verify the Absence Case", () => {
   const claimSubmission = it(
     "As a claimant, I should be able to submit a claim through Fineos intake",
@@ -49,11 +53,12 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
         ClaimantPage.visit(claim.claim.tax_identifier)
           // Start intake process
           .startCreateNotification((occupationDetails) => {
-            // @note CPS-906-P (CPS-1650)/Check that you can't submit 0 as amount of hours worked per week
+            // @TODO CPS-906-P (CPS-1650)/Check that you can't submit 0 as amount of hours worked per week
+            // Comment out everything after this to end the test.
             occupationDetails.enterHoursWorkedPerWeek(0);
             occupationDetails.clickNext();
             fineos.assertErrorMessage("Hours worked per week must be entered");
-            // @note end of testing CPS-906-P (CPS-1650)
+            // @TODO end of testing CPS-906-P (CPS-1650)
             // Adjust as needed
             if (claim.claim.hours_worked_per_week)
               occupationDetails.enterHoursWorkedPerWeek(
@@ -85,7 +90,7 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
                           start: startDate,
                           end: endDate,
                         });
-                    // @note CPS-906-G (CPS-2449)/intermittent & reduced leave periods.
+                    // @TODO CPS-906-G (CPS-2449)/intermittent & reduced leave periods.
                     if (claim.claim.has_intermittent_leave_periods)
                       // @TODO adjust leave period/status as needed
                       datesOfAbsence
@@ -123,7 +128,7 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
             cy.stash("submission", { fineos_absence_id });
 
             const claimPage = ClaimPage.visit(fineos_absence_id);
-            // @NOTE  testing CPS-906-D (CPS-794)/notes character limit
+            // @TODO  testing CPS-906-D (CPS-794)/notes character limit
             // claimPage.notes((notes) => {
             //   cy.findByText("Create New").click();
             //   cy.findByText("Leave Request Review", {
@@ -153,7 +158,7 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
             //     });
             //   notes.assertHasNote("Leave Request Review", "a".repeat(4000));
             // });
-            // @NOTE  End of testing CPS-906-D (CPS-794)
+            // @TODO  End of testing CPS-906-D (CPS-794)
 
             claimPage.adjudicate((adjudication) => {
               adjudication.availability((_) => {
@@ -174,14 +179,14 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
                 cy.get("#footerButtonsBar input[value='Close']").click();
                 waitForAjaxComplete();
               });
-              // @note CPS-906-G (CPS-2449)/Check restriction decision
+              // @TODO CPS-906-G (CPS-2449)/Check restriction decision
               adjudication.restrictions((restrictions) => {
                 restrictions.assertRestrictionDecision("Passed");
               });
               adjudication.evidence((evidence) => {
                 claim.documents.forEach((doc) => {
-                  // @note CPS-906-H-0 (CPS-2449)
-                  // @note CPS-906-V (CPS-2454)
+                  // @TODO CPS-906-H-0 (CPS-2449)
+                  // @TODO CPS-906-V (CPS-2454)
                   // Checking for evidence and it's initial status as part of the adjudication.
                   evidence.assertEvidenceStatus({
                     evidenceType: doc.document_type,
