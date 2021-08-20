@@ -55,9 +55,9 @@ def test_get_wages_and_contributions_by_employee_id_and_filling_period(test_db_s
 
 
 def test_get_employer_by_fein(test_db_session):
-    employer_row = util.get_employer_by_fein(test_db_session, "00-000000000")
-
-    assert employer_row is None
+    with pytest.raises(ValueError):
+        employer_row = util.get_employer_by_fein(test_db_session, "00-000000000")
+        assert employer_row is None
 
 
 def test_employer_dict_to_country_and_state_values(test_db_session):

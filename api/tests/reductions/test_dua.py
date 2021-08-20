@@ -92,7 +92,7 @@ def _get_valid_dua_payment_data() -> Dict[str, Any]:
     # Make sure customer number and FEIN are unique for each returned dict.
     return {
         "fineos_customer_number": str(fake.unique.random_int(min=1000, max=9999)),
-        "employer_fein": str(fake.unique.random_int(min=100_000, max=999_999)),
+        "employer_fein": str(fake.random_number(digits=9, fix_len=True)),
         "payment_date": _random_date_in_past_year(),
         "request_week_begin_date": _random_date_in_past_year(),
         "gross_payment_amount_cents": fake.random_int(min=100, max=999),
