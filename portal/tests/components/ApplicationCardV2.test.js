@@ -7,7 +7,6 @@ import React from "react";
 import { mount } from "enzyme";
 
 describe("ApplicationCardV2", () => {
-  
   const appLogic = {
     appErrors: new AppErrorInfoCollection([]),
     documents: {
@@ -32,24 +31,20 @@ describe("ApplicationCardV2", () => {
     it("in progress status matches snapshot", () => {
       const claim = new MockBenefitsApplicationBuilder().submitted().create();
       const wrapper = mount(
-        <ApplicationCardV2 
-          appLogic={appLogic} 
-          claim={claim} 
-          number={2} 
-        />
+        <ApplicationCardV2 appLogic={appLogic} claim={claim} number={2} />
       );
 
       expect(wrapper).toMatchSnapshot();
     });
-    
+
     it("in progress status with documents matches snapshot", () => {
       const claim = new MockBenefitsApplicationBuilder().submitted().create();
       const wrapper = mount(
-        <ApplicationCardV2 
+        <ApplicationCardV2
           appLogic={appLogic}
-          claim={claim} 
-          documents={testDocuments} 
-          number={2} 
+          claim={claim}
+          documents={testDocuments}
+          number={2}
         />
       );
 
