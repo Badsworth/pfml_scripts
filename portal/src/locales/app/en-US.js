@@ -15,7 +15,7 @@ const chars = {
   // Non-breaking space characters are used to keep cardinal adjectives on the
   // same line as the nouns they describe or between the last two words of a
   // sentence to prevent line breaks that would cause orphaned words.
-  nbsp: " ",
+  nbsp: " ",
 };
 
 const errors = {
@@ -678,6 +678,7 @@ const shared = {
   absenceCaseStatus_closed: "Closed",
   absenceCaseStatus_denied: "Denied",
   absenceCaseStatus_noAction: "No action required",
+  absenceCaseStatus_pending: "Pending",
   achTypeChecking: "Checking",
   achTypeSavings: "Savings",
   amountFrequencyLabel: "Frequency",
@@ -710,6 +711,7 @@ const shared = {
   choiceYes: "Yes",
   claimDurationTypeContinuous: "Continuous leave",
   claimDurationTypeIntermittent: "Intermittent leave",
+  claimDurationTypeReduced: "Reduced leave",
   claimDurationTypeReducedSchedule: "Reduced leave schedule",
   claimsEmploymentInfoTitle: "Employment information",
   claimsLeaveDetailsTitle: "Leave details",
@@ -1888,6 +1890,24 @@ const pages = {
     infoRequestsBody:
       "If you have a request for more information, use this to upload the requested documentation.",
     infoRequestsHeading: "Respond to requests for information",
+    leavePeriodLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
+    leavePeriodLabel_intermittent: "$t(shared.claimDurationTypeIntermittent)",
+    leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReduced)",
+    leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
+    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
+    leaveReasonValue_care: "$t(shared.leaveReasonCare)",
+    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_serviceMemberFamily:
+      "$t(shared.leaveReasonServiceMemberFamily)",
+    leaveStatusMessage_Approved:
+      "<p>Your leave was approved.</p><p>Review your approval notice for more details about your benefit amount, payment schedule, and how to appeal if your benefits appear incorrect.</p>",
+    leaveStatusMessage_Denied:
+      "<p>Your leave was denied.</p><p>Review your denial notice for more details and an explanation of the appeal process.</p><p>If you would like to file an appeal, then you must request an appeal within <strong>ten (10) calendar days</strong> of the receipt of your approval notice.</p><p><request-appeal-link>See more about the appeal process here.</request-appeal-link></p>",
+    leaveStatusMessage_Pending:
+      "<p> Your leave is under review.</p><p><application-timeline-link>Learn more about the application approval process.</application-timeline-link></p>",
+    leaveStatusMessage_Withdrawn:
+      "<p>You have withdrawn your application from the claim process.</p><p>If you want to apply for paid leave again, you can begin your application <application-link>here.</application-link></p>",
     makeChangesBody:
       "<p>If you need to make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Some changes to your application, such as changing your start and end dates, may mean your application needs to be reviewed by your employer again.</p>",
     makeChangesHeading: "Make changes to your application",
@@ -2062,14 +2082,14 @@ const pages = {
   },
   employersClaimsNewApplication: {
     agreementBody:
-      "I understand that I need to give true answers to all questions in order to fulfill my responsibilities as a Massachusetts employer. I certify under penalty of perjury that my answers will be complete and accurate.",
+      "I understand that I need to give true answers to all questions in order to fulfill my responsibilities as a Massachusetts employer, and that my response may be shared with the employee and third parties. I certify under penalty of perjury that my answers will be complete and accurate.",
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     dobLabel: "Date of birth",
     employeeNameLabel: "Employee name",
     employerIdNumberLabel: "Employer ID number (EIN)",
     instructions:
-      "<p>This takes about 10 minutes. We use the information you provide to determine the leave time and benefit amount your employee will receive.</p><p>We need true answers to every question so that we can manage the program the way the law requires. Please confirm that you will answer as truthfully as you can.</p>",
+      "<p>This takes about 10 minutes. We use the information you provide to determine the leave time and benefit amount your employee will receive.</p><p>Your response may be shared with the employee and third parties for purposes of processing and adjudicating this application.</p><p>We need true answers to every question so that we can manage the program the way the law requires. Please confirm that you will answer as truthfully as you can.</p>",
     instructionsFollowUpDate: "$t(shared.employerInstructions_followUpDate)",
     instructionsLabel:
       "Are you the right person to respond to this application?",
@@ -2355,6 +2375,7 @@ const components = {
     status_declined: "$t(shared.absenceCaseStatus_denied)",
     status_noAction: "$t(shared.absenceCaseStatus_noAction)",
     status_openRequirements: "Review by {{followupDate}}",
+    status_pending: "$t(shared.absenceCaseStatus_pending)",
   },
   amendButton: {
     amend: "Amend",
