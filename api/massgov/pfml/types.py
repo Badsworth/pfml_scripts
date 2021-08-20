@@ -98,9 +98,10 @@ class Fein(dict):
         else:
             self.val = val
             self.is_valid = False
-            # raise ValueError(
-            #     f"does not match one of: {self.REGEX_UNFORMATTED.pattern}, {self.REGEX_FORMATTED.pattern}"
-            # )
+
+            raise ValueError(
+                f"does not match one of: {self.REGEX_UNFORMATTED.pattern}, {self.REGEX_FORMATTED.pattern}"
+            )
 
     def to_unformatted_str(self) -> str:
         return self.val.replace("-", "")

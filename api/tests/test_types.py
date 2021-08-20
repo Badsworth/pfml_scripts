@@ -18,7 +18,8 @@ def test_tax_id_with_unformatted_str():
 
 
 def test_tax_id_with_invalid_str():
-    assert TaxId("00043212").is_valid is False
+    with pytest.raises(ValueError):
+        TaxId("00043212")
 
 
 def test_tax_id_with_invalid_type():

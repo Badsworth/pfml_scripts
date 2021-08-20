@@ -28,7 +28,6 @@ from massgov.pfml.db.models.factories import (
     TaxIdentifierFactory,
 )
 from massgov.pfml.payments.payments_util import Constants, ValidationContainer, ValidationReason
-from massgov.pfml.types import TaxId
 from tests.helpers.state_log import AdditionalParams, setup_state_log
 
 # every test in here requires real resources

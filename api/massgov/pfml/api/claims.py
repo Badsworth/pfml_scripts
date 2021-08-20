@@ -54,7 +54,6 @@ from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
 )
 from massgov.pfml.util.paginate.paginator import PaginationAPIContext
 from massgov.pfml.util.sqlalchemy import get_or_404
-from massgov.pfml.util.strings import sanitize_fein
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 # HRD Employer FEIN. See https://lwd.atlassian.net/browse/EMPLOYER-1317
@@ -558,7 +557,7 @@ def get_claims() -> flask.Response:
                 employer_ids_list = [
                     e.employer_id
                     for e in employers_list
-                    if sanitize_fein(e.employer_fein.to_unformatted_str() or "")
+                    if e.employer_fein.to_unformatted_str()
                     not in CLAIMS_DASHBOARD_BLOCKED_FEINS
                     and current_user.verified_employer(e)
                 ]
