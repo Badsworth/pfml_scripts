@@ -11,7 +11,6 @@ from massgov.pfml.db.models.factories import (
     VerificationFactory,
 )
 from massgov.pfml.db.models.verifications import Verification, VerificationType
-from massgov.pfml.util.strings import format_fein
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
