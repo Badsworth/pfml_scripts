@@ -1,6 +1,5 @@
 maintenance:
-    start: "2021-08-21T22:59:00-04:00"
-    end: "2021-08-22T05:00:00-04:00"
+    start: "2021-08-20T19:59:00-04:00"
     enabled: 1
     options:
         pages_routes:
