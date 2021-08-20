@@ -25,7 +25,7 @@ from massgov.pfml.db.models.factories import (
     EmployerFactory,
     WagesAndContributionsFactory,
 )
-from massgov.pfml.types import TaxId
+from massgov.pfml.types import Fein, TaxId
 
 # almost every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -673,7 +673,7 @@ def test_process_all_employers_skips_nonexistent_employer(
     local_test_db_session, local_initialize_factories_session, tmp_path, monkeypatch
 ):
     # Set fineos_employer_id to None for 'missing' employer to skip employer.
-    missing_employer_fein = "999999999"
+    missing_employer_fein = Fein("999999999")
     WagesAndContributionsFactory.create_batch(
         size=1,
         employer=EmployerFactory.create(
@@ -870,7 +870,7 @@ def test_process_employee_updates_skips_nonexistent_employer(
     test_db_session, initialize_factories_session, tmp_path, create_triggers
 ):
     # Set fineos_employer_id to None for 'missing' employer to skip employer.
-    missing_employer_fein = "999999999"
+    missing_employer_fein = Fein("999999999")
     WagesAndContributionsFactory.create_batch(
         size=1,
         employer=EmployerFactory.create(

@@ -4604,7 +4604,7 @@ def test_application_post_complete_app_without_other_leave_fields(
     claim = ClaimFactory.create(
         fineos_notification_id="NTN-1989", fineos_absence_id="NTN-1989-ABS-01"
     )
-    application.tax_identifier = TaxIdentifier(tax_identifier="999004444")
+    application.tax_identifier = TaxIdentifier(tax_identifier=TaxId("999004444"))
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.hours_worked_per_week = 70
     application.residential_address = AddressFactory.create()

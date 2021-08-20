@@ -5,6 +5,7 @@ import massgov.pfml.payments.data_mart as data_mart
 import massgov.pfml.payments.data_mart_states_processing.identify_mmars_status as identify_mmars_status
 import massgov.pfml.payments.payments_util as payments_util
 from massgov.pfml.db.models.employees import State, StateLog
+from massgov.pfml.types import TaxId
 from tests.helpers.data_mart import run_test_process_success_no_pending_payment
 from tests.helpers.state_log import setup_state_log
 
@@ -95,7 +96,7 @@ def test_process_identify_mmars_status_unexpected_internal_exception_for_state_l
     state_logs = [create_identify_mmars_status_state_log(local_test_db_session) for _ in range(2)]
 
     def mock_get_vendor_info(vendor_tin):
-        if vendor_tin == state_logs[0].employee.tax_identifier.tax_identifier:
+        if TaxId(vendor_tin) == state_logs[0].employee.tax_identifier.tax_identifier:
             raise Exception
         else:
             return None

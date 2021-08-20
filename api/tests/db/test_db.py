@@ -132,7 +132,7 @@ def test_get_connection_parameters_not_local_no_set_password(
 
 
 def simulate_insert_duplicate_row(db_session):
-    TEST_SSN = "1234567890"
+    TEST_SSN = "123456789"
     tax_id_1 = TaxIdentifier(
         tax_identifier_id="638309eb-1981-4a13-aa35-8f1eb6f52e75", tax_identifier=TEST_SSN
     )
@@ -153,7 +153,7 @@ def simulate_rollback(db_session):
 
 @pytest.mark.integration
 def test_db_doesnt_log_sql_params(test_db_session, verbose_test_db_session):
-    ERROR_PARAMETERS = "[parameters: ({'tax_identifier_id': '638309eb-1981-4a13-aa35-8f1eb6f52e75', 'tax_identifier': '1234567890'}, {'tax_identifier_id': 'c28b9a52-cd53-445f-b3eb-a15a05ed287f', 'tax_identifier': '1234567890'})]"
+    ERROR_PARAMETERS = "[parameters: ({'tax_identifier_id': '638309eb-1981-4a13-aa35-8f1eb6f52e75', 'tax_identifier': '123456789'}, {'tax_identifier_id': 'c28b9a52-cd53-445f-b3eb-a15a05ed287f', 'tax_identifier': '123456789'})]"
 
     with pytest.raises(InvalidRequestError) as verbose_e:
         simulate_rollback(verbose_test_db_session)

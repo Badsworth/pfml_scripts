@@ -4,7 +4,7 @@ from decimal import Decimal
 
 import pytz
 
-from massgov.pfml.types import Fein, TaxId
+from massgov.pfml.types import Fein
 
 employer_quarter_line = "A0000000000120190930Anderson, Barber and Johnson                                                                                                                                                                                                                                   244674065     F2020040120200522110527"
 employee_quarter_line = "B0000000000120190930john                                                                                                                                                                                                                                                           Doe                                                                                                                                                                                                                                                            123456789TF            45000.00            15000.00               55.80              37.29                15.00                7.00"
