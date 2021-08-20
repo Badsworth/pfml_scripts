@@ -11,7 +11,7 @@ Array [
     <Heading
       level="2"
     >
-      pages.claimsStatus.leaveReasonValue
+      Medical leave
     </Heading>
     <div
       className="margin-top-2"
@@ -21,7 +21,7 @@ Array [
         className="margin-bottom-1"
         level="3"
       >
-        pages.claimsStatus.leavePeriodLabel
+        Reduced leave
       </Heading>
       <p>
         From June 1, 2021 to June 8, 2021
@@ -61,7 +61,7 @@ Array [
         className="margin-bottom-1"
         level="3"
       >
-        pages.claimsStatus.leavePeriodLabel
+        Continuous leave
       </Heading>
       <p>
         From July 1, 2021 to July 8, 2021
@@ -101,7 +101,7 @@ Array [
     <Heading
       level="2"
     >
-      pages.claimsStatus.leaveReasonValue
+      Bond with a child
     </Heading>
     <div
       className="margin-top-2"
@@ -111,7 +111,7 @@ Array [
         className="margin-bottom-1"
         level="3"
       >
-        pages.claimsStatus.leavePeriodLabel
+        Reduced leave
       </Heading>
       <p>
         From August 1, 2021 to August 8, 2021
@@ -151,7 +151,7 @@ Array [
         className="margin-bottom-1"
         level="3"
       >
-        pages.claimsStatus.leavePeriodLabel
+        Continuous leave
       </Heading>
       <p>
         From August 1, 2021 to August 8, 2021
@@ -195,7 +195,7 @@ exports[`leave details page does renders page with one section if absenceDetails
   <Heading
     level="2"
   >
-    pages.claimsStatus.leaveReasonValue
+    Medical leave
   </Heading>
   <div
     className="margin-top-2"
@@ -205,7 +205,7 @@ exports[`leave details page does renders page with one section if absenceDetails
       className="margin-bottom-1"
       level="3"
     >
-      pages.claimsStatus.leavePeriodLabel
+      Reduced leave
     </Heading>
     <p>
       From June 1, 2021 to June 8, 2021
@@ -245,7 +245,7 @@ exports[`leave details page does renders page with one section if absenceDetails
       className="margin-bottom-1"
       level="3"
     >
-      pages.claimsStatus.leavePeriodLabel
+      Continuous leave
     </Heading>
     <p>
       From July 1, 2021 to July 8, 2021
