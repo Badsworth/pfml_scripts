@@ -11,7 +11,6 @@ from werkzeug.exceptions import BadRequest
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
-from massgov.pfml.types import Fein
 import massgov.pfml.util.logging
 from massgov.pfml import db
 from massgov.pfml.api.authorization.flask import CREATE, ensure
@@ -25,6 +24,7 @@ from massgov.pfml.db.queries.managed_requirements import (
     get_fineos_managed_requirements_from_notification,
     get_managed_requirement_by_fineos_managed_requirement_id,
 )
+from massgov.pfml.types import Fein
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
