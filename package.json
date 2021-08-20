@@ -25,9 +25,7 @@
       "npm run format --prefix=portal -- --write"
     ],
     "e2e/**/*.{ts}": [
-      "echo HELLO",
-      "e2e/node_modules/.bin/prettier --write --config .prettierrc",
-      "e2e/node_modules/.bin/eslint --fix --config e2e/.eslintrc.json --no-ignore",
+      "npm run lint:precommit",
       "git add"
     ],
     "!(bin)/**/*.{tf,tfvars}": [

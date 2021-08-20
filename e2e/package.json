@@ -14,6 +14,7 @@
     "lint:ts": "tsc --noEmit",
     "lint:js": "eslint src/ cypress/ test/",
     "lint:format": "prettier src/ cypress/ test/ --write --loglevel silent",
+    "lint:precommit": "eslint --fix && prettier --write '**/*.{ts}'",
     "test:unit": "jest --config=jest.unit.json",
     "test:integration": "jest --config=jest.integration.json",
     "cli": "ts-node src/cli.ts",
