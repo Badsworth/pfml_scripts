@@ -321,7 +321,7 @@ def get_standard_test_data(*, now, scenario_name, test_db_session, tmp_path, vcm
     fake = faker.Faker()
     scenario_config = scenario_generator.ScenarioDataConfig(
         scenario_list,
-        ssn_id_base=fake.random_number(digits=9),
+        ssn_id_base=fake.random_number(digits=9, fix_len=True),
         fein_id_base=fake.random_number(digits=9, fix_len=True),
     )
 

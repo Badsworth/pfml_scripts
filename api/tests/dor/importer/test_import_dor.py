@@ -27,7 +27,7 @@ from massgov.pfml.dor.importer.import_dor import (
     RECEIVED_FOLDER,
     move_file_to_processed,
 )
-from massgov.pfml.types import Fein, TaxId
+from massgov.pfml.types import TaxId
 from massgov.pfml.util.encryption import GpgCrypt, Utf8Crypt
 
 from . import dor_test_data as test_data

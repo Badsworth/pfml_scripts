@@ -580,7 +580,8 @@ def import_employers(db_session, employers, report, import_log_entry_id):
     # Get all employers in DB
     existing_employer_reference_models = dor_persistence_util.get_all_employers_fein(db_session)
     fein_to_existing_employer_reference_models = {
-        employer.employer_fein.to_unformatted_str(): employer for employer in existing_employer_reference_models
+        employer.employer_fein.to_unformatted_str(): employer
+        for employer in existing_employer_reference_models
     }
 
     logger.info("Found employers in db: %i", len(existing_employer_reference_models))
@@ -1385,7 +1386,9 @@ def import_employees_and_wage_data(
 
     ssn_to_existing_employee_model = {}
     for employee in existing_employee_models:
-        ssn_to_existing_employee_model[employee.tax_identifier.tax_identifier.to_unformatted_str()] = employee
+        ssn_to_existing_employee_model[
+            employee.tax_identifier.tax_identifier.to_unformatted_str()
+        ] = employee
 
     logger.info(
         "Done - Create existing employee reference maps - checked ssns: %i, existing employees matched: %i",

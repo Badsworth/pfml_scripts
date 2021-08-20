@@ -74,7 +74,8 @@ class TaxId:
         return cls(val)
 
 
-class Fein:
+# inherit from dict to make the class JSON serializable
+class Fein(dict):
     """
     Represents a FEIN
     """
@@ -86,6 +87,8 @@ class Fein:
     is_valid: bool = True
 
     def __init__(self, val: str) -> None:
+        dict.__init__(self, val=val)
+
         val = str(val)
 
         if self.REGEX_FORMATTED.match(val):

@@ -400,7 +400,9 @@ def get_employers_account_key(db_session, account_keys):
 
 
 def get_employer_by_fein(db_session, fein):
-    employer_row = db_session.query(Employer).filter(Employer.employer_fein == Fein(fein)).one_or_none()
+    employer_row = (
+        db_session.query(Employer).filter(Employer.employer_fein == Fein(fein)).one_or_none()
+    )
     return employer_row
 
 
