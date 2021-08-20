@@ -25,7 +25,7 @@
       "npm run format --prefix=portal -- --write"
     ],
     "e2e/**/*.{ts}": [
-      "npm run lint:precommit",
+      "npm run lint:precommit --prefix=e2e -- --write",
       "git add"
     ],
     "!(bin)/**/*.{tf,tfvars}": [
