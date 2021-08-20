@@ -128,7 +128,7 @@ const LegalNoticeSection = ({ appLogic, claim, documents }) => {
    * If application is not submitted or has
    * no documents, don't display section
    */
-  if(!isSubmitted || !hasDocuments) return null;
+  if (!isSubmitted || !hasDocuments) return null;
 
   const legalNotices = findDocumentsByTypes(documents, [
     DocumentType.approvalNotice,
@@ -160,15 +160,11 @@ const LegalNoticeSection = ({ appLogic, claim, documents }) => {
 
   return (
     <div className="margin-2 margin-top-0 padding-bottom-1">
-      <Heading level="3">
-        {t("components.applicationCardV2.notice")}
-      </Heading>
+      <Heading level="3">{t("components.applicationCardV2.notice")}</Heading>
       <p className="padding-bottom-2 margin-top-05" style={{ maxWidth: 385 }}>
         {t("components.applicationCardV2.noticeOnClickDetails")}
       </p>
-      <ul className="add-list-reset">
-        {legalNoticeList}
-      </ul> 
+      <ul className="add-list-reset">{legalNoticeList}</ul>
     </div>
   );
 };
@@ -189,12 +185,12 @@ LegalNoticeSection.propTypes = {
 };
 
 /**
-* Status card for claim.status != "Completed" (In Progress)
-*/
+ * Status card for claim.status != "Completed" (In Progress)
+ */
 const InProgressStatusCard = (props) => {
   const { claim, number } = props;
   const { t } = useTranslation();
-  
+
   return (
     <React.Fragment>
       <HeaderSection
@@ -206,7 +202,7 @@ const InProgressStatusCard = (props) => {
         title={t("components.applicationCardV2.employerEIN")}
         details={claim.employer_fein}
       />
-      <LegalNoticeSection { ...props } />
+      <LegalNoticeSection {...props} />
       <ButtonSection
         buttonText={t("components.applicationCardV2.continueApplication")}
         href={routeWithParams("applications.checklist", {
@@ -221,7 +217,7 @@ InProgressStatusCard.propTypes = {
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   /**  The 1-based index of the application card */
   number: PropTypes.number.isRequired,
-}; 
+};
 
 /**
  * Status card for claim.status = "Completed"

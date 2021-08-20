@@ -2431,7 +2431,8 @@ const components = {
       "$t(shared.leaveReasonServiceMemberFamily)",
     manageApplicationDocuments: "Manage your application documents",
     notice: "Notice",
-    noticeOnClickDetails: "When you click the notice link, the file will download to your device.",
+    noticeOnClickDetails:
+      "When you click the notice link, the file will download to your device.",
     uploadDocuments: "Upload documents",
     viewNotices: "View notices",
     viewStatusUpdatesAndDetails: "View status updates and details",
