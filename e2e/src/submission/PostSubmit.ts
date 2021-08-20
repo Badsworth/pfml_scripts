@@ -21,12 +21,10 @@ export async function approveClaim(
   // Start adjudication
   await claimPage.adjudicate(async (adjudication) => {
     await adjudication.acceptLeavePlan();
-
     await adjudication.evidence(async (evidence) => {
       for (const { document_type } of claim.documents)
         await evidence.receive(document_type);
     });
-
     await adjudication.certificationPeriods(async (certification) => {
       await certification.prefill();
     });

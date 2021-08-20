@@ -1378,3 +1378,29 @@ def create_payment_log(
 
     payment_log = PaymentLog(payment=payment, import_log_id=import_log_id, details=audit_details)
     db_session.add(payment_log)
+
+
+def create_success_file(start_time: datetime, process_name: str) -> None:
+    """
+    Create a file that indicates the ECS process was successful. Will
+    be put in a folder for the date the processing started, but
+    the file will be timestamped with the time it completed.
+
+    s3://bucket/reports/processed/{start_date}/{completion_timestamp}-{process_name}.SUCCESS
+    """
+    s3_config = payments_config.get_s3_config()
+
+    end_time = get_now()
+    timestamp_prefix = end_time.strftime("%Y-%m-%d-%H-%M-%S")
+    success_file_name = f"{timestamp_prefix}-{process_name}.SUCCESS"
+
+    archive_path = s3_config.pfml_error_reports_archive_path
+    output_path = build_archive_path(
+        archive_path, Constants.S3_INBOUND_PROCESSED_DIR, success_file_name, current_time=start_time
+    )
+
+    # What is the easiest way to create an empty file to upload?
+    with file_util.write_file(output_path) as success_file:
+        success_file.write("SUCCESS")
+
+    logger.info("Creating success file at %s", output_path)

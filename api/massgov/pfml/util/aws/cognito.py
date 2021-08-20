@@ -1,12 +1,9 @@
-import secrets
-import string
 import time
 from typing import Optional, Union
 
 import boto3
 import botocore
 
-import massgov.pfml.db as db
 import massgov.pfml.util.logging
 from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
 
@@ -65,33 +62,8 @@ class CognitoUserExistsValidationError(CognitoValidationError):
         )
 
 
-class CognitoPasswordSetFailure(Exception):
-    pass
-
-
 def create_cognito_client():
     return boto3.client("cognito-idp", region_name="us-east-1")
-
-
-def generate_temp_password() -> str:
-    alphabet = string.ascii_letters + string.digits + string.punctuation
-    while True:
-        has_punctuation = False
-        has_upper = False
-        has_lower = False
-        has_number = False
-        password = "".join(secrets.choice(alphabet) for i in range(16))
-        for letter in password:
-            if letter in string.punctuation:
-                has_punctuation = True
-            elif letter.isupper():
-                has_upper = True
-            elif letter.islower():
-                has_lower = True
-            elif letter in string.digits:
-                has_number = True
-        if has_punctuation and has_upper and has_lower and has_number:
-            return password
 
 
 def lookup_cognito_account_id(
@@ -131,53 +103,6 @@ def lookup_cognito_account_id(
 
         raise CognitoSubNotFound("Cognito did not return an ID for the user!")
     return None
-
-
-def create_verified_cognito_leave_admin_account(
-    db_session: db.Session,
-    email: str,
-    fein: str,
-    cognito_user_pool_id: str,
-    cognito_client: Optional["botocore.client.CognitoIdentityProvider"] = None,
-) -> str:
-    """Create Cognito and API records for a leave admin with a verified email and temporary password"""
-
-    sub_id: Optional[str] = None
-    if cognito_client is None:
-        cognito_client = create_cognito_client()
-    temp_password = generate_temp_password()
-
-    try:
-        cognito_user = cognito_client.admin_create_user(
-            UserPoolId=cognito_user_pool_id,
-            Username=email,
-            UserAttributes=[
-                {"Name": "email", "Value": email},
-                {"Name": "email_verified", "Value": "true"},
-            ],
-            DesiredDeliveryMediums=["EMAIL"],
-            MessageAction="SUPPRESS",
-        )
-    except botocore.exceptions.ClientError as exc:
-        logger.warning("Unable to create account for user", exc_info=exc)
-        raise CognitoAccountCreationFailure("Unable to create account for user")
-
-    for attr in cognito_user["User"]["Attributes"]:
-        if attr["Name"] == USER_ID_ATTRIBUTE:
-            sub_id = attr["Value"]
-            break
-
-    if sub_id is None:
-        raise CognitoSubNotFound("Cognito did not return an ID for the user!")
-
-    try:
-        cognito_client.admin_set_user_password(
-            UserPoolId=cognito_user_pool_id, Username=email, Password=temp_password, Permanent=True
-        )
-    except botocore.exceptions.ClientError as exc:
-        logger.warning("Unable to set password for user", exc_info=exc)
-        raise CognitoPasswordSetFailure("Unable to set password for user")
-    return sub_id
 
 
 def create_cognito_account(

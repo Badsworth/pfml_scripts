@@ -1,16 +1,19 @@
 import Document, { DocumentType } from "../../models/Document";
 import React, { useEffect, useState } from "react";
 import BackButton from "../../components/BackButton";
+import ButtonLink from "../../components/ButtonLink";
+import ClaimDetail from "../../models/ClaimDetail";
 import Heading from "../../components/Heading";
+import LeaveDetails from "./leave-details";
 import LegalNoticeList from "../../components/LegalNoticeList.js";
 import PropTypes from "prop-types";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import { handleError } from "../../api/BaseApi";
 import { isFeatureEnabled } from "../../services/featureFlags";
+import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-
 // TODO (CP-2461): remove once page is integrated with API
 const TEST_DOC = [
   new Document({
@@ -29,7 +32,48 @@ const TEST_DOC = [
   }),
 ];
 
-export const Status = ({ appLogic, docList = TEST_DOC }) => {
+const TEST_CLAIM = new ClaimDetail({
+  absence_periods: [
+    {
+      period_type: "Reduced",
+      absence_period_start_date: "2021-06-01",
+      absence_period_end_date: "2021-06-08",
+      request_decision: "Approved",
+      fineos_leave_request_id: "PL-14432-0000002026",
+      reason: "Serious Health Condition - Employee",
+    },
+    {
+      period_type: "Continuous",
+      absence_period_start_date: "2021-07-01",
+      absence_period_end_date: "2021-07-08",
+      request_decision: "Pending",
+      fineos_leave_request_id: "PL-14432-0000002326",
+      reason: "Serious Health Condition - Employee",
+    },
+    {
+      period_type: "Reduced",
+      absence_period_start_date: "2021-08-01",
+      absence_period_end_date: "2021-08-08",
+      request_decision: "Denied",
+      fineos_leave_request_id: "PL-14434-0000002026",
+      reason: "Child Bonding",
+    },
+    {
+      period_type: "Continuous",
+      absence_period_start_date: "2021-08-01",
+      absence_period_end_date: "2021-08-08",
+      request_decision: "Withdrawn",
+      fineos_leave_request_id: "PL-14434-0000002326",
+      reason: "Child Bonding",
+    },
+  ],
+});
+
+export const Status = ({
+  appLogic,
+  docList = TEST_DOC,
+  absenceDetails = TEST_CLAIM.absencePeriodsByReason,
+}) => {
   const { t } = useTranslation();
   const { portalFlow } = appLogic;
 
@@ -62,7 +106,7 @@ export const Status = ({ appLogic, docList = TEST_DOC }) => {
         </Heading>
         <LegalNoticeList
           documents={documents}
-          handleDownload={appLogic.documents.download}
+          onDownloadClick={appLogic.documents.download}
         />
       </div>
     ) : null;
@@ -103,7 +147,30 @@ export const Status = ({ appLogic, docList = TEST_DOC }) => {
             <p className="text-bold">123456789</p>
           </div>
         </div>
+
+        <LeaveDetails absenceDetails={absenceDetails} />
         <ViewYourNotices />
+
+        {/* Upload documents section */}
+        <div className={containerClassName}>
+          <Heading level="2">
+            {t("pages.claimsStatus.uploadDocumentsHeading")}
+          </Heading>
+          <Heading level="3">
+            {t("pages.claimsStatus.infoRequestsHeading")}
+          </Heading>
+          <p>{t("pages.claimsStatus.infoRequestsBody")}</p>
+          {/* // TODO (CP-2457): update claim_id to claim.application_id */}
+          <ButtonLink
+            className="measure-6 margin-bottom-3"
+            href={routeWithParams("applications.uploadDocsOptions", {
+              claim_id: "65184a9e-f938-40b6-b0f6-25f416a4c113",
+            })}
+          >
+            {t("pages.claimsStatus.uploadDocumentsButton")}
+          </ButtonLink>
+        </div>
+
         {/* Manage applications section */}
         <div className={containerClassName}>
           <Heading level="2">
@@ -155,6 +222,7 @@ Status.propTypes = {
   }).isRequired,
   // TODO (CP-2461): remove once page is integrated with API
   docList: PropTypes.array,
+  absenceDetails: PropTypes.object,
 };
 
 export default Status;

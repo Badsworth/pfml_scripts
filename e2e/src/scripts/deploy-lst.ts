@@ -1,6 +1,7 @@
 import { spawn as _spawn, SpawnOptions } from "child_process";
-import { format } from "date-fns";
 import aws from "aws-sdk";
+import config from "../config";
+import { v4 as uuid } from "uuid";
 
 type ProcessData = {
   stdout: string[];
@@ -29,7 +30,8 @@ interface SpawnError {
  */
 
 (async () => {
-  const image_name = `e2e-lst:${format(new Date(), "t")}`;
+  const run_id = uuid();
+  const image_name = `e2e-lst:${run_id}`;
   const cmd_args = {
     build: [
       "build",
@@ -64,6 +66,7 @@ interface SpawnError {
     console.log("Pushing Image to ECR-LST repository ...");
     await run_command("docker", cmd_args.push);
     console.log("Image Push Successful!\n");
+    console.log(`The image has been pushed to ${image_name}`);
   } catch (e) {
     throw e;
   }
@@ -81,19 +84,20 @@ interface SpawnError {
           options: {
             "awslogs-group": "e2e-lst-logs",
             "awslogs-region": "us-east-1",
-            "awslogs-stream-prefix": "artillery-logs-test",
+            // Put the run ID in the log stream so we can group the log data for a single run together.
+            "awslogs-stream-prefix": `artillery/${run_id}`,
           },
         },
         essential: true,
       },
     ],
-    family: "e2e-lst-task-7",
+    family: "e2e-lst-task-8",
     taskRoleArn: "arn:aws:iam::233259245172:role/execute-task-main",
     executionRoleArn: "arn:aws:iam::233259245172:role/execute-task-main",
     networkMode: "awsvpc",
     requiresCompatibilities: ["FARGATE"],
-    cpu: "1024",
-    memory: "2048",
+    cpu: "2048",
+    memory: "4096",
   };
 
   const task_def = await ecs.registerTaskDefinition(task_def_options).promise();
@@ -112,6 +116,19 @@ interface SpawnError {
     },
   };
 
+  const secretNames = [
+    "ENVIRONMENT" as const,
+    "PORTAL_PASSWORD" as const,
+    "FINEOS_PASSWORD" as const,
+    "TESTMAIL_APIKEY" as const,
+    "FINEOS_USERS" as const,
+  ];
+  const secrets = secretNames.map((name) => {
+    return {
+      name: `E2E_${name}`,
+      value: config(name),
+    };
+  });
   const task_results = await ecs
     .runTask({
       cluster: "arn:aws:ecs:us-east-1:233259245172:cluster/e2e-lst-cluster",
@@ -121,6 +138,22 @@ interface SpawnError {
       launchType: "FARGATE",
       count: 1,
       startedBy: "E2E-LST",
+      overrides: {
+        containerOverrides: [
+          {
+            name: "e2e-lst-container",
+            environment: [
+              ...secrets,
+              {
+                // Pass in the run ID as a way to correlate runs across several containers.
+                // We'll use this ID in logs and metrics.
+                name: "LST_RUN_ID",
+                value: run_id,
+              },
+            ],
+          },
+        ],
+      },
     })
     .promise();
 
@@ -128,8 +161,9 @@ interface SpawnError {
     throw new Error("No task can be started!");
   }
   console.log(
-    `Task has been triggered and last status is: ${task_results.tasks[0].lastStatus}\nCheck AWS Cloudwatch for any logs.`
+    `Task has been triggered and last status is: ${task_results.tasks[0].lastStatus}\n`
   );
+  console.log(`Check AWS Cloudwatch with RUN_ID: ${run_id} for any logs.`);
 })().catch((e) => {
   console.error(e);
   process.exit(1);

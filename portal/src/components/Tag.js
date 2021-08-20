@@ -2,12 +2,11 @@ import PropTypes from "prop-types";
 import React from "react";
 import classnames from "classnames";
 
-const Tag = ({ label, state }) => {
+const Tag = ({ label, state, paddingSm = false }) => {
   const classes = classnames(
     "usa-tag",
     "display-inline-block",
     "text-bold",
-    "padding-x-205",
     "padding-y-05",
     "radius-lg",
     "text-no-wrap",
@@ -20,6 +19,10 @@ const Tag = ({ label, state }) => {
       "bg-error-lighter": state === "error",
       "text-base-darker": state === "inactive",
       "bg-base-lightest": state === "inactive",
+      "bg-primary-lighter": state === "pending",
+      "text-primary": state === "pending",
+      "padding-x-205": !paddingSm,
+      "padding-x-1": paddingSm,
     }
   );
 
@@ -28,8 +31,9 @@ const Tag = ({ label, state }) => {
 
 Tag.propTypes = {
   label: PropTypes.string.isRequired,
-  state: PropTypes.oneOf(["success", "warning", "error", "inactive"])
+  state: PropTypes.oneOf(["success", "warning", "error", "inactive", "pending"])
     .isRequired,
+  paddingSm: PropTypes.bool,
 };
 
 export default Tag;

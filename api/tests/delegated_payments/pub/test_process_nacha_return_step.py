@@ -662,6 +662,41 @@ def test_payment_return_invalid_current_state(
     assert metrics["payment_unexpected_state_count"] == 1
 
 
+def test_payment_return_pub_transaction_sent_duplicate_record(
+    local_test_db_session, process_return_step, mock_ach_reader
+):
+    payment = payment_with_state_factory(
+        123, State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT, local_test_db_session
+    )
+
+    # Verify that if we receive duplicate records, the process behaves fine
+    ach_return = create_ach_return("P123", TypeCode.ENTRY_DETAIL, "R01")
+    mock_ach_reader.ach_returns.append(ach_return)
+    mock_ach_reader.ach_returns.append(ach_return)
+    mock_ach_reader.ach_returns.append(ach_return)
+
+    process_return_step.process_parsed(mock_ach_reader)
+
+    assert_payment_state(
+        payment,
+        Flow.DELEGATED_PAYMENT,
+        State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
+        local_test_db_session,
+    )
+    assert_payment_state(
+        payment,
+        Flow.DELEGATED_PEI_WRITEBACK,
+        State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
+        local_test_db_session,
+    )
+
+    assert_fineos_writeback_status(
+        payment, FineosWritebackTransactionStatus.BANK_PROCESSING_ERROR, local_test_db_session
+    )
+
+    assert_pub_error(local_test_db_session, PubErrorType.ACH_RETURN, "Payment rejected by PUB")
+
+
 def test_process_nacha_return_file_step_full(
     local_test_db_session,
     monkeypatch,

@@ -52,10 +52,13 @@ class Claim extends BaseModel {
 export class ClaimEmployee extends BaseModel {
   get defaults() {
     return {
+      email_address: null,
       first_name: null,
       last_name: null,
       middle_name: null,
       other_name: null,
+      phone_number: null,
+      tax_identifier_last4: null,
     };
   }
 

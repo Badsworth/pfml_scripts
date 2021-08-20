@@ -55,7 +55,213 @@ exports[`status page displays an error if feature flag is disabled 1`] = `
         </p>
       </div>
     </div>
+    <LeaveDetails
+      absenceDetails={
+        Object {
+          "Child Bonding": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-08-08",
+              "absence_period_start_date": "2021-08-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14434-0000002026",
+              "period_type": "Reduced",
+              "reason": "Child Bonding",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Denied",
+            },
+            AbsencePeriod {
+              "absence_period_end_date": "2021-08-08",
+              "absence_period_start_date": "2021-08-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14434-0000002326",
+              "period_type": "Continuous",
+              "reason": "Child Bonding",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Withdrawn",
+            },
+          ],
+          "Serious Health Condition - Employee": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-06-08",
+              "absence_period_start_date": "2021-06-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14432-0000002026",
+              "period_type": "Reduced",
+              "reason": "Serious Health Condition - Employee",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Approved",
+            },
+            AbsencePeriod {
+              "absence_period_end_date": "2021-07-08",
+              "absence_period_start_date": "2021-07-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14432-0000002326",
+              "period_type": "Continuous",
+              "reason": "Serious Health Condition - Employee",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Pending",
+            },
+          ],
+        }
+      }
+    />
     <ViewYourNotices />
+    <div
+      className="border-top border-base-lighter padding-top-2"
+    >
+      <Heading
+        level="2"
+      >
+        Upload Documents
+      </Heading>
+      <Heading
+        level="3"
+      >
+        Respond to requests for information
+      </Heading>
+      <p>
+        If you have a request for more information, use this to upload the requested documentation.
+      </p>
+      <ButtonLink
+        className="measure-6 margin-bottom-3"
+        href="/applications/upload-docs-options?claim_id=65184a9e-f938-40b6-b0f6-25f416a4c113"
+      >
+        Upload additional documents
+      </ButtonLink>
+    </div>
+    <div
+      className="border-top border-base-lighter padding-top-2"
+    >
+      <Heading
+        level="2"
+      >
+        Manage your application
+      </Heading>
+      <Heading
+        level="3"
+      >
+        Make changes to your application
+      </Heading>
+      <Trans
+        components={
+          Object {
+            "contact-center-phone-link": <a
+              href="tel:(833) 344‑7365"
+            />,
+          }
+        }
+        i18nKey="pages.claimsStatus.makeChangesBody"
+      />
+      <Heading
+        level="3"
+      >
+        Report other benefits or income
+      </Heading>
+      <Trans
+        components={
+          Object {
+            "contact-center-phone-link": <a
+              href="tel:(833) 344‑7365"
+            />,
+            "li": <li />,
+            "ul": <ul
+              className="usa-list"
+            />,
+          }
+        }
+        i18nKey="pages.claimsStatus.reportOtherBenefitsBody"
+      />
+    </div>
+  </div>
+</Fragment>
+`;
+
+exports[`status page does not render LeaveDetails if absenceDetails not given 1`] = `
+<Fragment>
+  <BackButton
+    href="/applications"
+    label="Back to your applications"
+  />
+  <div
+    className="measure-6"
+  >
+    <Title
+      small={true}
+      weight="normal"
+    >
+      Application details
+    </Title>
+    <Heading
+      level="2"
+      size="1"
+    >
+      Leave Reason
+    </Heading>
+    <div
+      className="display-flex border-base-lighter margin-bottom-3 bg-base-lightest padding-2"
+    >
+      <div
+        className="padding-right-10"
+      >
+        <Heading
+          level="2"
+          size="4"
+          weight="normal"
+        >
+          Application ID
+        </Heading>
+        <p
+          className="text-bold"
+        >
+          Fineos-Absence-ID
+        </p>
+      </div>
+      <div>
+        <Heading
+          level="2"
+          size="4"
+          weight="normal"
+        >
+          Employer Identification Number (EIN)
+        </Heading>
+        <p
+          className="text-bold"
+        >
+          123456789
+        </p>
+      </div>
+    </div>
+    <LeaveDetails
+      absenceDetails={Object {}}
+    />
+    <ViewYourNotices />
+    <div
+      className="border-top border-base-lighter padding-top-2"
+    >
+      <Heading
+        level="2"
+      >
+        Upload Documents
+      </Heading>
+      <Heading
+        level="3"
+      >
+        Respond to requests for information
+      </Heading>
+      <p>
+        If you have a request for more information, use this to upload the requested documentation.
+      </p>
+      <ButtonLink
+        className="measure-6 margin-bottom-3"
+        href="/applications/upload-docs-options?claim_id=65184a9e-f938-40b6-b0f6-25f416a4c113"
+      >
+        Upload additional documents
+      </ButtonLink>
+    </div>
     <div
       className="border-top border-base-lighter padding-top-2"
     >
@@ -158,7 +364,264 @@ exports[`status page does not render ViewYourNotices if documents not given 1`] 
         </p>
       </div>
     </div>
+    <LeaveDetails
+      absenceDetails={
+        Object {
+          "Child Bonding": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-08-08",
+              "absence_period_start_date": "2021-08-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14434-0000002026",
+              "period_type": "Reduced",
+              "reason": "Child Bonding",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Denied",
+            },
+            AbsencePeriod {
+              "absence_period_end_date": "2021-08-08",
+              "absence_period_start_date": "2021-08-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14434-0000002326",
+              "period_type": "Continuous",
+              "reason": "Child Bonding",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Withdrawn",
+            },
+          ],
+          "Serious Health Condition - Employee": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-06-08",
+              "absence_period_start_date": "2021-06-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14432-0000002026",
+              "period_type": "Reduced",
+              "reason": "Serious Health Condition - Employee",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Approved",
+            },
+            AbsencePeriod {
+              "absence_period_end_date": "2021-07-08",
+              "absence_period_start_date": "2021-07-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14432-0000002326",
+              "period_type": "Continuous",
+              "reason": "Serious Health Condition - Employee",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Pending",
+            },
+          ],
+        }
+      }
+    />
     <ViewYourNotices />
+    <div
+      className="border-top border-base-lighter padding-top-2"
+    >
+      <Heading
+        level="2"
+      >
+        Upload Documents
+      </Heading>
+      <Heading
+        level="3"
+      >
+        Respond to requests for information
+      </Heading>
+      <p>
+        If you have a request for more information, use this to upload the requested documentation.
+      </p>
+      <ButtonLink
+        className="measure-6 margin-bottom-3"
+        href="/applications/upload-docs-options?claim_id=65184a9e-f938-40b6-b0f6-25f416a4c113"
+      >
+        Upload additional documents
+      </ButtonLink>
+    </div>
+    <div
+      className="border-top border-base-lighter padding-top-2"
+    >
+      <Heading
+        level="2"
+      >
+        Manage your application
+      </Heading>
+      <Heading
+        level="3"
+      >
+        Make changes to your application
+      </Heading>
+      <Trans
+        components={
+          Object {
+            "contact-center-phone-link": <a
+              href="tel:(833) 344‑7365"
+            />,
+          }
+        }
+        i18nKey="pages.claimsStatus.makeChangesBody"
+      />
+      <Heading
+        level="3"
+      >
+        Report other benefits or income
+      </Heading>
+      <Trans
+        components={
+          Object {
+            "contact-center-phone-link": <a
+              href="tel:(833) 344‑7365"
+            />,
+            "li": <li />,
+            "ul": <ul
+              className="usa-list"
+            />,
+          }
+        }
+        i18nKey="pages.claimsStatus.reportOtherBenefitsBody"
+      />
+    </div>
+  </div>
+</Fragment>
+`;
+
+exports[`status page includes a button to upload additional documents 1`] = `
+<Fragment>
+  <BackButton
+    href="/applications"
+    label="Back to your applications"
+  />
+  <div
+    className="measure-6"
+  >
+    <Title
+      small={true}
+      weight="normal"
+    >
+      Application details
+    </Title>
+    <Heading
+      level="2"
+      size="1"
+    >
+      Leave Reason
+    </Heading>
+    <div
+      className="display-flex border-base-lighter margin-bottom-3 bg-base-lightest padding-2"
+    >
+      <div
+        className="padding-right-10"
+      >
+        <Heading
+          level="2"
+          size="4"
+          weight="normal"
+        >
+          Application ID
+        </Heading>
+        <p
+          className="text-bold"
+        >
+          Fineos-Absence-ID
+        </p>
+      </div>
+      <div>
+        <Heading
+          level="2"
+          size="4"
+          weight="normal"
+        >
+          Employer Identification Number (EIN)
+        </Heading>
+        <p
+          className="text-bold"
+        >
+          123456789
+        </p>
+      </div>
+    </div>
+    <LeaveDetails
+      absenceDetails={
+        Object {
+          "Child Bonding": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-08-08",
+              "absence_period_start_date": "2021-08-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14434-0000002026",
+              "period_type": "Reduced",
+              "reason": "Child Bonding",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Denied",
+            },
+            AbsencePeriod {
+              "absence_period_end_date": "2021-08-08",
+              "absence_period_start_date": "2021-08-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14434-0000002326",
+              "period_type": "Continuous",
+              "reason": "Child Bonding",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Withdrawn",
+            },
+          ],
+          "Serious Health Condition - Employee": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-06-08",
+              "absence_period_start_date": "2021-06-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14432-0000002026",
+              "period_type": "Reduced",
+              "reason": "Serious Health Condition - Employee",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Approved",
+            },
+            AbsencePeriod {
+              "absence_period_end_date": "2021-07-08",
+              "absence_period_start_date": "2021-07-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14432-0000002326",
+              "period_type": "Continuous",
+              "reason": "Serious Health Condition - Employee",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Pending",
+            },
+          ],
+        }
+      }
+    />
+    <ViewYourNotices />
+    <div
+      className="border-top border-base-lighter padding-top-2"
+    >
+      <Heading
+        level="2"
+      >
+        Upload Documents
+      </Heading>
+      <Heading
+        level="3"
+      >
+        Respond to requests for information
+      </Heading>
+      <p>
+        If you have a request for more information, use this to upload the requested documentation.
+      </p>
+      <ButtonLink
+        className="measure-6 margin-bottom-3"
+        href="/applications/upload-docs-options?claim_id=65184a9e-f938-40b6-b0f6-25f416a4c113"
+      >
+        Upload additional documents
+      </ButtonLink>
+    </div>
     <div
       className="border-top border-base-lighter padding-top-2"
     >
@@ -261,7 +724,84 @@ exports[`status page renders the page 1`] = `
         </p>
       </div>
     </div>
+    <LeaveDetails
+      absenceDetails={
+        Object {
+          "Child Bonding": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-08-08",
+              "absence_period_start_date": "2021-08-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14434-0000002026",
+              "period_type": "Reduced",
+              "reason": "Child Bonding",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Denied",
+            },
+            AbsencePeriod {
+              "absence_period_end_date": "2021-08-08",
+              "absence_period_start_date": "2021-08-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14434-0000002326",
+              "period_type": "Continuous",
+              "reason": "Child Bonding",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Withdrawn",
+            },
+          ],
+          "Serious Health Condition - Employee": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-06-08",
+              "absence_period_start_date": "2021-06-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14432-0000002026",
+              "period_type": "Reduced",
+              "reason": "Serious Health Condition - Employee",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Approved",
+            },
+            AbsencePeriod {
+              "absence_period_end_date": "2021-07-08",
+              "absence_period_start_date": "2021-07-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14432-0000002326",
+              "period_type": "Continuous",
+              "reason": "Serious Health Condition - Employee",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Pending",
+            },
+          ],
+        }
+      }
+    />
     <ViewYourNotices />
+    <div
+      className="border-top border-base-lighter padding-top-2"
+    >
+      <Heading
+        level="2"
+      >
+        Upload Documents
+      </Heading>
+      <Heading
+        level="3"
+      >
+        Respond to requests for information
+      </Heading>
+      <p>
+        If you have a request for more information, use this to upload the requested documentation.
+      </p>
+      <ButtonLink
+        className="measure-6 margin-bottom-3"
+        href="/applications/upload-docs-options?claim_id=65184a9e-f938-40b6-b0f6-25f416a4c113"
+      >
+        Upload additional documents
+      </ButtonLink>
+    </div>
     <div
       className="border-top border-base-lighter padding-top-2"
     >

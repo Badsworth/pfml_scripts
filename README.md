@@ -1,6 +1,6 @@
 # Massachusetts Paid Family & Medical Leave
 
-This is the top level of the monorepo for the Mass PFML project, including web portal and API. View the `README` in each child directory for information specific to each system component.
+This is the top level of the monorepo for the Mass PFML project, including web portal and API. **View the `README` in each child directory for information specific to each system component.**
 
 **You may also be interested in:**
 
@@ -17,7 +17,7 @@ To make configuration updates to mkdocs or the deployment workflow, see [mkdocs.
 
 ## Developer Setup
 
-When initially setting up the project, install packages from the repo root to enable git hooks and linting.
+When initially setting up the project, install packages from the repo root to enable git hooks.
 
 ```
 npm install
@@ -30,56 +30,17 @@ $ brew install tfenv
 $ tfenv install 0.14.7
 ```
 
-## Portal
-
-### Prerequisites
-
-Node v10 (or greater)
-
-### Run Instructions
-
-Run the web portal locally from the project root directory with the following commands:
-
-```
-npm install --prefix portal
-npm run dev --prefix portal
-```
-
 ### Additional commands
 
-#### `npm run lint`
+#### `npm run lint:tf`
 
-Run all linters. Fixes any [auto-fixable ESLint errors](https://eslint.org/docs/user-guide/command-line-interface#fixing-problems) and formats the Terraform files.
-
-[Integrate ESLint into your IDE or a git hook](https://eslint.org/docs/user-guide/integrations) if you'd like to catch linting errors before it reaches the CI.
-
-#### `npm run lint:ci`
-
-Runs all linters and fails on errors. Does not attempt to auto-fix ESLint errors.
-
-#### `npm run lint:js`
-
-Lint JS files using [ESLint](https://eslint.org/).
-
-#### `npm run portal:format`
-
-Automatically format Portal files using [Prettier](https://prettier.io/).
-
-This can be ran in a pull request by adding a comment with a bod of:
-
-```
-/gh portal format
-```
-
-## API
-
-See [api/README.md](/api/README.md).
+Formats the Terraform files.
 
 ## Directory Structure
 
 ```
 └── .github                 🗂 GitHub actions and templates
-└── api                     🔑 Admin portal
+└── admin                   🔑 Admin portal
 └── api                     🔀 Integration API
 └── bin                     🤖 Developer scripts
 └── docs                    🔖 Developer documentation

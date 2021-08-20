@@ -816,7 +816,7 @@ const SortDropdown = (props) => {
 
   // TODO (EMPLOYER-1587): Move the choice directly into the choices object definition
   if (isFeatureEnabled("employerShowReviewByStatus")) {
-    choices.set("status", "fineos_absence_status,ascending");
+    choices.set("status", "absence_status,ascending");
   }
 
   const { t } = useTranslation();

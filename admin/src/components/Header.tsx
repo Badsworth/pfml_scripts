@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 
 export default function Header() {
@@ -20,7 +19,7 @@ export default function Header() {
           className="user-options"
         >
           <span className="user-options__avatar">
-            <Image
+            <img
               className="user-options__avatar-image"
               src="https://via.placeholder.com/32"
               alt="FirstName LastName"

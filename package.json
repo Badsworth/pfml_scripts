@@ -9,29 +9,11 @@
   "scripts": {
     "docs": "docker run --rm -it -p 8000:8000 -v ${PWD}:/docs squidfunk/mkdocs-material",
     "docs:build": "docker run --rm -v ${PWD}:/docs squidfunk/mkdocs-material build",
-    "lint:ci": "npm run lint:js && npm run lint:tf",
-    "lint:js": "eslint --ext .js ./",
-    "lint:tf": "./bin/tf-fmt.sh",
-    "lint": "npm run lint:js -- --fix && npm run lint:tf",
-    "portal:format": "prettier --write 'portal/**/*.{js,json,md,mdx,scss,yaml,yml}'",
-    "portal:format-check": "prettier --check 'portal/**/*.{js,json,md,mdx,scss,yaml,yml}'"
+    "lint:tf": "./bin/tf-fmt.sh"
   },
   "devDependencies": {
-    "babel-eslint": "^10.1.0",
-    "eslint": "^7.29.0",
-    "eslint-config-nava": "^10.0.0",
-    "eslint-config-prettier": "^8.3.0",
-    "eslint-plugin-import": "^2.23.4",
-    "eslint-plugin-jest": "^24.3.6",
-    "eslint-plugin-jsdoc": "^35.4.1",
-    "eslint-plugin-jsx-a11y": "^6.4.1",
-    "eslint-plugin-lodash": "^7.2.0",
-    "eslint-plugin-react": "^7.24.0",
-    "eslint-plugin-react-hooks": "^4.2.0",
-    "eslint-plugin-todo-plz": "^1.2.0",
     "husky": "^4.3.7",
-    "lint-staged": "^11.0.0",
-    "prettier": "^2.3.2"
+    "lint-staged": "^11.0.0"
   },
   "husky": {
     "hooks": {
@@ -39,9 +21,8 @@
     }
   },
   "lint-staged": {
-    "*.{js,jsx}": [
-      "prettier --write",
-      "git add"
+    "portal/**/*": [
+      "npm run format --prefix=portal -- --write"
     ],
     "e2e/**/*.{ts}": [
       "echo HELLO",
@@ -50,8 +31,7 @@
       "git add"
     ],
     "!(bin)/**/*.{tf,tfvars}": [
-      "npm run lint:tf",
-      "git add"
+      "npm run lint:tf"
     ]
   }
 }

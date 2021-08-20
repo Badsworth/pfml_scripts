@@ -18,7 +18,6 @@ from massgov.pfml.db.models.employees import (
     Flow,
     LkPrenoteState,
     Payment,
-    PaymentReferenceFile,
     PrenoteState,
     PubEft,
     PubErrorType,
@@ -269,10 +268,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
             )
             return
 
-        payment_reference_file = PaymentReferenceFile(
-            payment=payment, reference_file=self.reference_file,
-        )
-        self.db_session.add(payment_reference_file)
+        self.add_payment_reference_file(payment, self.reference_file)
 
         if ach_return.is_change_notification():
             self.accept_payment_with_change(payment, cast(reader.ACHChangeNotification, ach_return))

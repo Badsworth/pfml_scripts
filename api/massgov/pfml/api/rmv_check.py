@@ -10,6 +10,7 @@ from massgov.pfml.api.services.rmv_check import (
     handle_rmv_check_request,
     make_response_from_rmv_check,
 )
+from massgov.pfml.db.models.applications import RMVCheck
 from massgov.pfml.rmv.client import RmvClient
 
 
@@ -37,7 +38,7 @@ def is_mocked(rmv_mocking_behavior: RMVCheckBehavior, request: RMVCheckRequest) 
 
 def rmv_check_post():
     # Check if requester has access, else bounce back
-    ensure(CREATE, "RMVCheck")
+    ensure(CREATE, RMVCheck)
 
     request = RMVCheckRequest.parse_obj(connexion.request.json)
 

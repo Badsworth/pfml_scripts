@@ -184,7 +184,7 @@ describe("Approval (notifications/notices)", () => {
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
               // Reduced timeout, since we have multiple tests that run prior to this.
-              40000
+              60000
             )
             .then(() => {
               const dob =
