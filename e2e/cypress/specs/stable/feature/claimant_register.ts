@@ -1,4 +1,4 @@
-import { portal, fineos } from "../../../actions";
+import { portal, email } from "../../../actions";
 
 describe("Claimant Registration", () => {
   it("Should allow a new claimant to register", () => {
