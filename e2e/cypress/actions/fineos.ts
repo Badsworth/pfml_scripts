@@ -1,5 +1,5 @@
 import { DocumentUploadRequest } from "_api";
-import { format, addMonths, addDays, startOfWeek, subDays } from "date-fns";
+import { format, addMonths, addDays } from "date-fns";
 import { config } from "./common";
 /**
  * This function is used to fetch and set the proper cookies for access Fineos UAT
@@ -228,79 +228,6 @@ export function findOtherLeaveEForm(claimNumber: string): void {
   onTab("Documents");
   assertHasDocument("Other Leaves");
   cy.wait(200);
-}
-
-/**
- * Adding a  Historical Absence case, assumes being navigated to `Absence Hub` tab on the Claim page.
- */
-export function addHistoricalAbsenceCase(): void {
-  cy.contains("Options").click();
-  cy.contains("Add Historical Absence").click();
-  cy.findByLabelText("Absence relates to").select("Employee");
-  waitForAjaxComplete();
-  cy.findByLabelText("Absence Reason").select(
-    "Serious Health Condition - Employee"
-  );
-  waitForAjaxComplete();
-  cy.findByLabelText("Qualifier 1").select("Not Work Related");
-  waitForAjaxComplete();
-  cy.findByLabelText("Qualifier 2").select("Sickness");
-  waitForAjaxComplete();
-  cy.contains("div", "timeOffHistoricalAbsencePeriodsListviewWidget")
-    .find("input")
-    .click();
-  const mostRecentSunday = startOfWeek(new Date());
-  const startDate = subDays(mostRecentSunday, 13);
-  const startDateFormatted = format(startDate, "MM/dd/yyyy");
-  const endDateFormatted = format(addDays(startDate, 4), "MM/dd/yyyy");
-  // Fill in end date
-  cy.findByLabelText("End Date").type(
-    `{selectall}{backspace}${endDateFormatted}{enter}`
-  );
-  wait();
-  cy.wait(200);
-  // Fill start date
-  cy.findByLabelText("Start Date").type(
-    `{selectall}{backspace}${startDateFormatted}{enter}`
-  );
-  wait();
-  cy.wait(200);
-  // First all day checkbox
-  cy.get(
-    'span[id^="historicalTimeOffAbsencePeriodDetailsWidget"][id$="startDateAllDay_WRAPPER"]'
-  ).click();
-  wait();
-  cy.wait(200);
-  // Second all day checkbox
-  cy.get(
-    'span[id^="historicalTimeOffAbsencePeriodDetailsWidget"][id$="endDateAllDay_WRAPPER"]'
-  ).click();
-  wait();
-  cy.wait(200);
-
-  // Click on Okay to exit popup window
-  cy.get(
-    'input[id^="addHistoricalTimeOffAbsencePeriodPopupWidget"][id$="okButtonBean"]'
-  ).click({ force: true });
-  // Select Leave Plan
-  cy.contains("div", "historicalAbsenceSelectedLeavePlansListViewWidget")
-    .find("input")
-    .click();
-  wait();
-  cy.get(
-    "input[name='historicalCasePlanSelectionListviewWidget_un0_Checkbox_RowId_0_CHECKBOX']"
-  ).click();
-  clickBottomWidgetButton();
-  clickBottomWidgetButton();
-  // Click on Claimaints name to view their cases
-  cy.get(
-    'a[id="com.fineos.frontoffice.casemanager.casekeyinformation.CaseKeyInfoBar_un8_KeyInfoBarLink_0"]'
-  ).click();
-  onTab("Cases");
-  cy.get(".ListRowSelected > td").should(($td) => {
-    expect($td.eq(4)).to.contain("Absence Historical Case");
-  });
-  cy.get('input[title="Open"]').click();
 }
 
 /**Clicks on the 'Next' or 'Previous' button to move to the next/previous step during the intake process or recording actual leave */
