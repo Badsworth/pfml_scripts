@@ -17,7 +17,7 @@ from massgov.pfml.db.models.employees import (
     TaxIdentifier,
     WagesAndContributions,
 )
-from massgov.pfml.types import TaxId
+from massgov.pfml.types import Fein, TaxId
 from massgov.pfml.util.datetime import to_datetime
 
 logger = logging.get_logger(__name__)
@@ -76,7 +76,7 @@ def dict_to_employer_quarter_contribution(employer_info, employer_id, import_log
 def dict_to_employer(employer_info, import_log_entry_id, uuid=uuid.uuid4):
     return Employer(
         account_key=employer_info["account_key"],
-        employer_fein=employer_info["fein"],
+        employer_fein=Fein(employer_info["fein"]),
         employer_name=employer_info["employer_name"],
         employer_dba=employer_info["employer_dba"],
         family_exemption=employer_info["family_exemption"],
@@ -167,6 +167,7 @@ def update_employer(db_session, existing_employer, employer_info, import_log_ent
 
 
 def tax_id_from_dict(employee_id, tax_identifier, uuid=uuid.uuid4):
+    print(tax_identifier)
     formatted_tax_id = TaxId(tax_identifier)
     tax_identifier = TaxIdentifier(tax_identifier_id=employee_id, tax_identifier=formatted_tax_id,)
 
@@ -399,7 +400,7 @@ def get_employers_account_key(db_session, account_keys):
 
 
 def get_employer_by_fein(db_session, fein):
-    employer_row = db_session.query(Employer).filter(Employer.employer_fein == fein).one_or_none()
+    employer_row = db_session.query(Employer).filter(Employer.employer_fein == Fein(fein)).one_or_none()
     return employer_row
 
 

@@ -40,13 +40,13 @@ updated_employer = copy.deepcopy(updated_employer_except_update_date)
 updated_employer["updated_date"] = pytz.UTC.localize(datetime(2020, 5, 23, 11, 5, 27))
 
 employer_international_address = copy.deepcopy(new_employer)
-employer_international_address["fein"] = Fein("999999999")
+employer_international_address["fein"] = "999999999"
 employer_international_address["account_key"] = "00000000002"
 employer_international_address["employer_address_state"] = "DX"
 employer_international_address["employer_address_country"] = "CAN"
 
 employer_invalid_country = copy.deepcopy(new_employer)
-employer_invalid_country["fein"] = Fein("999999991")
+employer_invalid_country["fein"] = "999999991"
 employer_invalid_country["account_key"] = "00000000003"
 employer_invalid_country["employer_address_state"] = "MA"
 employer_invalid_country["employer_address_country"] = "UXU"

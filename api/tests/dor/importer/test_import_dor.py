@@ -544,7 +544,7 @@ def validate_wage_persistence(employee_wage_payload, wage_row, import_log_id):
 
 
 def validate_employer_persistence(employer_payload, employer_row, import_log_id):
-    assert employer_row.employer_fein == Fein(employer_payload["fein"])
+    assert employer_row.employer_fein.to_unformatted_str() == employer_payload["fein"]
     assert employer_row.employer_name == employer_payload["employer_name"]
     assert employer_row.family_exemption == employer_payload["family_exemption"]
     assert employer_row.medical_exemption == employer_payload["medical_exemption"]

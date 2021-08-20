@@ -86,6 +86,8 @@ class Fein:
     is_valid: bool = True
 
     def __init__(self, val: str) -> None:
+        val = str(val)
+
         if self.REGEX_FORMATTED.match(val):
             self.val = val
         elif self.REGEX_UNFORMATTED.match(val):

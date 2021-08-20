@@ -580,7 +580,7 @@ def import_employers(db_session, employers, report, import_log_entry_id):
     # Get all employers in DB
     existing_employer_reference_models = dor_persistence_util.get_all_employers_fein(db_session)
     fein_to_existing_employer_reference_models = {
-        employer.employer_fein: employer for employer in existing_employer_reference_models
+        employer.employer_fein.to_unformatted_str(): employer for employer in existing_employer_reference_models
     }
 
     logger.info("Found employers in db: %i", len(existing_employer_reference_models))
@@ -670,10 +670,11 @@ def import_employers(db_session, employers, report, import_log_entry_id):
     employer_address_relationship_models_to_create = []
 
     for emp in employer_models_to_create:
+        print(fein_to_new_employer_id)
         employer_address_relationship_models_to_create.append(
             dor_persistence_util.employer_id_address_id_to_model(
-                fein_to_new_employer_id[emp.employer_fein],
-                fein_to_new_address_id[emp.employer_fein],
+                fein_to_new_employer_id[emp.employer_fein.to_unformatted_str()],
+                fein_to_new_address_id[emp.employer_fein.to_unformatted_str()],
             )
         )
 
@@ -804,7 +805,7 @@ def import_employees(
     for emp in not_found_employee_info_list:
         found = None
         for tax_id in previously_created_tax_ids:
-            if tax_id.tax_identifier == emp["employee_ssn"]:
+            if tax_id.tax_identifier.to_unformatted_str() == emp["employee_ssn"]:
                 found = tax_id
 
         ssn_to_new_employee_id[emp["employee_ssn"]] = uuid.uuid4()
@@ -832,7 +833,7 @@ def import_employees(
     for ssn in ssn_to_new_employee_id:
         found = False
         for tax_id in previously_created_tax_ids:
-            if tax_id.tax_identifier == ssn:
+            if tax_id.tax_identifier.to_unformatted_str() == ssn:
                 found = True
 
         if not found:
@@ -1384,7 +1385,7 @@ def import_employees_and_wage_data(
 
     ssn_to_existing_employee_model = {}
     for employee in existing_employee_models:
-        ssn_to_existing_employee_model[employee.tax_identifier.tax_identifier] = employee
+        ssn_to_existing_employee_model[employee.tax_identifier.tax_identifier.to_unformatted_str()] = employee
 
     logger.info(
         "Done - Create existing employee reference maps - checked ssns: %i, existing employees matched: %i",
