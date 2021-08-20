@@ -76,15 +76,17 @@ safety = "^1.9.0"
 sqlalchemy-stubs = {git = "https://github.com/dropbox/sqlalchemy-stubs", rev = "55470ceab8149db983411d5c094c9fe16343c58b"}
 
 [tool.poetry.extras]
-# pyodbc requires building/linking against native libraries, which we don't have
-# control over with AWS SAM, making it optional makes AWS SAM skip it.
+# pyodbc requires building/linking against native libraries. Historically, this
+# was an issue when building AWS Lambdas via AWS SAM, as one doesn't have
+# control over the build environment for SAM (when using the docker build
+# option). Making it optional makes AWS SAM skip trying to include the package.
 #
-# It's only required for connecting to Data Mart (part of the payments ECS
-# tasks).
+# It's only required for connecting to Data Mart (part of the manual payments
+# ECS tasks).
 mssql-server = ["pyodbc"]
-# These are packages only used by the API component itself, and so can be
-# excluded from the AWS Lambda builds to reduce the size of the Lambda package
-# below AWS limits.
+# These are packages only used by the API component itself. Historically, these
+# were separated out so they could be excluded from the AWS Lambda builds to
+# reduce the size of the Lambda package below AWS limits.
 api-only-dependencies = [
  "connexion",
  "flask-bouncer",
@@ -109,7 +111,6 @@ dor-import = "massgov.pfml.dor.importer.import_dor:handler"
 generate-wagesandcontributions = "massgov.pfml.api.generate_wagesandcontributions:main"
 load-employers-to-fineos = "massgov.pfml.fineos.employer_load:handler"
 fineos-eligibility-feed-export = "massgov.pfml.fineos.eligibility_feed_export.eligibility_export:main"
-bulk-user-import = "massgov.pfml.user_import.process_csv:process"
 payments-ctr-process = "massgov.pfml.payments.process_ctr_payments:ctr_process"
 payments-fineos-process = "massgov.pfml.payments.process_payments:fineos_process"
 payments-mock-generate = "massgov.pfml.payments.mock.generate:main"

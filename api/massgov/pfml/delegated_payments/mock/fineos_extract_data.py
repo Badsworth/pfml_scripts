@@ -87,7 +87,13 @@ PEI_FIELD_NAMES = [
     "EVENTREASON",
     "AMALGAMATIONC",
 ]
-PEI_PAYMENT_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "PAYMENTSTARTP", "PAYMENTENDPER"]
+PEI_PAYMENT_DETAILS_FIELD_NAMES = [
+    "PECLASSID",
+    "PEINDEXID",
+    "PAYMENTSTARTP",
+    "PAYMENTENDPER",
+    "BALANCINGAMOU_MONAMT",
+]
 PEI_CLAIM_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "ABSENCECASENU", "LEAVEREQUESTI"]
 REQUESTED_ABSENCE_FIELD_NAMES = [
     "LEAVEREQUEST_DECISION",
@@ -312,6 +318,8 @@ class FineosPaymentData(FineosData):
             payment_detail_record["PAYMENTSTARTP"] = self.payment_start_period
             payment_detail_record["PAYMENTENDPER"] = self.payment_end_period
 
+            payment_detail_record["BALANCINGAMOU_MONAMT"] = self.payment_amount
+
         return payment_detail_record
 
     def get_requested_absence_record(self):
@@ -486,9 +494,9 @@ def generate_payment_extract_files(
             generate_defaults=True,
             c_value=c_value,
             i_value=i_value,
-            include_claim_details=scenario_descriptor.include_non_vpei_records,
-            include_payment_details=scenario_descriptor.include_non_vpei_records,
-            include_requested_absence=scenario_descriptor.include_non_vpei_records,
+            include_claim_details=scenario_descriptor.include_claim_details,
+            include_payment_details=True,
+            include_requested_absence=True,
             tin=ssn,
             absence_case_number=scenario_data.absence_case_id,
             payment_address_1=mock_address["line_1"],

@@ -73,10 +73,11 @@ export default class DOR {
   static async writeEmployeesFile(
     employerPool: Iterable<Employer>,
     employeePool: Iterable<Employee>,
-    filename: string
+    filename: string,
+    refDate = now
   ): Promise<void> {
     const lines = function* () {
-      const periods = quarters();
+      const periods = quarters(refDate);
       const employerLookup = new Map<string, string>();
       for (const employer of employerPool) {
         employerLookup.set(employer.fein, employer.accountKey);

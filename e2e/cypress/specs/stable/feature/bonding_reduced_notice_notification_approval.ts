@@ -148,7 +148,7 @@ describe("Approval (notifications/notices)", () => {
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
-              180000
+              30000
             )
             .then(() => {
               cy.get(

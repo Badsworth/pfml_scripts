@@ -66,13 +66,12 @@ describe("Mask", () => {
     expect(input.prop("inputMode")).toBe("decimal");
   });
 
-  it("applies overlay styling to the child element when mask is currency", () => {
+  it("applies icon prefix to the child element when mask is currency", () => {
     const { wrapper } = render({ mask: "currency" }, { value: "123456789" });
     const input = wrapper.find("div").last();
 
-    expect(input.prop("className")).toEqual(
-      "c-inputtext-mask__before--currency"
-    );
+    expect(input.prop("className")).toEqual("usa-input-prefix");
+    expect(input).toMatchSnapshot();
   });
 
   it("adds `inputMode='decimal'` to the child element when mask is hours", () => {

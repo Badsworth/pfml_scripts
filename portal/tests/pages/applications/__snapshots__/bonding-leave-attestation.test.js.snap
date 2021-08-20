@@ -3,40 +3,35 @@
 exports[`BondingLeaveAttestation renders the page 1`] = `
 <Fragment>
   <BackButton />
-  <form
-    className="usa-form"
-    method="post"
-    onSubmit={[Function]}
-  >
-    <Title>
-      Confirm that you are an eligible parent
-    </Title>
-    <Trans
-      components={
-        Object {
-          "li": <li />,
-          "ul": <ul
-            className="usa-list"
-          />,
-        }
+  <Title>
+    Confirm that you are an eligible parent
+  </Title>
+  <Trans
+    components={
+      Object {
+        "li": <li />,
+        "ul": <ul
+          className="usa-list"
+        />,
       }
-      i18nKey="pages.claimsBondingLeaveAttestation.lead"
-    />
-    <Alert
-      className="measure-6"
-      noIcon={true}
-      state="info"
+    }
+    i18nKey="pages.claimsBondingLeaveAttestation.lead"
+  />
+  <Alert
+    className="measure-6"
+    noIcon={true}
+    state="info"
+  >
+    <p>
+      I agree that I am a new parent by one of the routes listed and can provide certification to support this relationship.
+    </p>
+    <ButtonLink
+      className="text-no-underline text-white"
+      href="/applications/review?claim_id=mock_application_id"
     >
-      <p>
-        I agree that I am a new parent by one of the routes listed and can provide certification to support this relationship.
-      </p>
-      <Button
-        type="submit"
-      >
-        I understand and agree
-      </Button>
-    </Alert>
-  </form>
+      I understand and agree
+    </ButtonLink>
+  </Alert>
 </Fragment>
 `;
 

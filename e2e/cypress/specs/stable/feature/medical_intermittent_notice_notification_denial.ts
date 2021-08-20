@@ -2,6 +2,7 @@ import { fineos, portal, email, fineosPages } from "../../../actions";
 import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
+import { assertValidClaim } from "../../../../src/util/typeUtils";
 
 describe("Denial Notification and Notice", () => {
   after(() => {
@@ -36,6 +37,7 @@ describe("Denial Notification and Notice", () => {
             .shouldHaveStatus("Eligibility", "Not Met")
             .deny("Claimant wages failed 30x rule")
             .triggerNotice("Leave Request Declined")
+            .triggerNotice("Preliminary Designation")
             .documents((docPage) =>
               docPage.assertDocumentExists("Denial Notice")
             );
@@ -60,7 +62,7 @@ describe("Denial Notification and Notice", () => {
             application_id: submission.application_id,
             document_type: "Denial Notice",
           },
-          { timeout: 300000 }
+          { timeout: 45000 }
         );
         cy.log("Finished waiting for documents");
         cy.visit("/applications");
@@ -81,9 +83,7 @@ describe("Denial Notification and Notice", () => {
       cy.visit("/");
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-          if (!claim.employer_fein) {
-            throw new Error("Claim must include employer FEIN");
-          }
+          assertValidClaim(claim);
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
           portal.login(getLeaveAdminCredentials(claim.employer_fein));
           portal.selectClaimFromEmployerDashboard(
@@ -123,7 +123,7 @@ describe("Denial Notification and Notice", () => {
                 messageWildcard: submission.fineos_absence_id,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
-              180000
+              45000
             )
             .then(() => {
               const dob =
@@ -163,7 +163,7 @@ describe("Denial Notification and Notice", () => {
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
               // Reduced timeout, since we have multiple tests that run prior to this.
-              60000
+              30000
             )
             .then(() => {
               const dob =

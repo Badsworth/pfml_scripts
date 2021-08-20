@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`SupportingWorkDetails renders the component with the AmendmentForm closed 1`] = `
+exports[`SupportingWorkDetails renders the component with the AmendmentForm hidden 1`] = `
 <Fragment>
   <ReviewHeading
     level="2"
@@ -21,44 +21,44 @@ exports[`SupportingWorkDetails renders the component with the AmendmentForm clos
     >
       30
     </p>
-    <ConditionalContent
-      clearField={[MockFunction]}
-      fieldNamesClearedWhenHidden={
-        Array [
-          "hours_worked_per_week",
-        ]
-      }
-      getField={[MockFunction]}
-      updateFields={[MockFunction]}
-      visible={false}
-    >
-      <AmendmentForm
-        className="bg-base-lightest border-base-lighter"
-        destroyButtonLabel="Cancel amendment"
-        onDestroy={[Function]}
-      >
-        <Heading
-          level="4"
-          size="3"
-        >
-          Amend weekly hours worked
-        </Heading>
-        <p>
-          This amendment will get saved when you submit your review.
-        </p>
-        <InputNumber
-          hint="If their schedule varies, tell us the average number of hours worked over the past 52 weeks."
-          label="On average, how many hours does the employee work each week?"
-          mask="hours"
-          name="hours_worked_per_week"
-          onChange={[Function]}
-          smallLabel={true}
-          value={30}
-          valueType="integer"
-          width="small"
-        />
-      </AmendmentForm>
-    </ConditionalContent>
   </ReviewRow>
+  <ConditionalContent
+    clearField={[MockFunction]}
+    fieldNamesClearedWhenHidden={
+      Array [
+        "hours_worked_per_week",
+      ]
+    }
+    getField={[MockFunction]}
+    updateFields={[MockFunction]}
+    visible={false}
+  >
+    <AmendmentForm
+      className="bg-base-lightest border-base-lighter"
+      destroyButtonLabel="Cancel amendment"
+      onDestroy={[Function]}
+    >
+      <Heading
+        level="4"
+        size="3"
+      >
+        Amend weekly hours worked
+      </Heading>
+      <p>
+        This amendment will get saved when you submit your review.
+      </p>
+      <InputNumber
+        hint="If their schedule varies, tell us the average number of hours worked over the past 52 weeks."
+        label="On average, how many hours does the employee work each week?"
+        mask="hours"
+        name="hours_worked_per_week"
+        onChange={[Function]}
+        smallLabel={true}
+        value={30}
+        valueType="integer"
+        width="small"
+      />
+    </AmendmentForm>
+  </ConditionalContent>
 </Fragment>
 `;

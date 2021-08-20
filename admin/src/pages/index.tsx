@@ -18,11 +18,8 @@ export default function Home() {
     setShowConfirmationDialog(false);
   };
 
-  const { SlideOutPopup, openSlideOut } = usePopup<SlideOutProps>(SlideOut);
-
-  if (!SlideOutPopup || !openSlideOut) {
-    throw "Popup was not initialized!";
-  }
+  const { Popup: SlideOutPopup, open: openSlideOut } =
+    usePopup<SlideOutProps>(SlideOut);
 
   return (
     <>
@@ -30,17 +27,17 @@ export default function Home() {
         <title>Dashboard</title>
       </Helmet>
       <h1>h1 HTML5 Kitchen Sink</h1>
-      <Button callback={() => setShowConfirmationDialog(true)}>
+      <Button onClick={() => setShowConfirmationDialog(true)}>
         Click to Open Confirmation Dialog
       </Button>
-      <Button callback={openSlideOut()}>Click to Open Slide Out</Button>
-      <Button callback={() => setShowUserLookup(true)}>
+      <Button onClick={openSlideOut()}>Click to Open Slide Out</Button>
+      <Button onClick={() => setShowUserLookup(true)}>
         Click to Open User Lookup
       </Button>
       {showConfirmationDialog && (
         <ConfirmationDialog
           title="Enable Caring Leave Type"
-          body="Lorum ipsum"
+          body="Lorem ipsum, dolor sit amet consectetur adip elit. Eius aliquam laudantium explicabo pari dolorem."
           handleCancelCallback={confirmationDialogCancelCallback}
           handleContinueCallback={confirmationDialogContinueCallback}
         />

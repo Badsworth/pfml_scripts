@@ -28,12 +28,19 @@ describe("FormLabel", () => {
     expect(label.text()).toMatch(text);
   });
 
-  it("uses inputId as the label's `for` attribute", () => {
+  it("sets the label's `for` attribute when component is a label", () => {
     const inputId = "foo";
-    const { wrapper } = render({ inputId });
-    const field = wrapper.find(".usa-label");
+    const { wrapper: labelWrapper } = render({ component: "label", inputId });
+    const { wrapper: legendWrapper } = render({ component: "legend", inputId });
 
-    expect(field.prop("htmlFor")).toBe(inputId);
+    expect(labelWrapper.find(".usa-label").prop("htmlFor")).toBe(inputId);
+    expect(legendWrapper.find(".usa-label").prop("htmlFor")).toBeNull();
+  });
+
+  it("does not set the label `id` attribute when inputId is not set", () => {
+    const { wrapper } = render({ component: "label", inputId: null });
+
+    expect(wrapper.find(".usa-label").prop("id")).toBeNull();
   });
 
   describe("when the type prop isn't set", () => {

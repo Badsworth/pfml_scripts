@@ -63,7 +63,6 @@ const withClaims = (Component) => {
     return (
       <Component
         {...props}
-        activeFilters={appLogic.claims.activeFilters}
         claims={appLogic.claims.claims}
         paginationMeta={appLogic.claims.paginationMeta}
       />
@@ -92,7 +91,7 @@ const withClaims = (Component) => {
       order_direction: PropTypes.string,
       page_offset: PropTypes.string,
       search: PropTypes.string,
-    }),
+    }).isRequired,
   };
 
   return withUser(ComponentWithClaims);

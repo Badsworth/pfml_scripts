@@ -16,7 +16,7 @@ import tests.api
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.models.applications.responses import ApplicationStatus
 from massgov.pfml.api.services.fineos_actions import LeaveNotificationReason
-from massgov.pfml.api.util.response import IssueRule, IssueType
+from massgov.pfml.api.validation.exceptions import IssueRule, IssueType
 from massgov.pfml.db.models.applications import (
     Application,
     ApplicationPaymentPreference,
@@ -1684,7 +1684,7 @@ def test_application_patch_invalid_work_pattern(client, user, auth_token, test_d
             "field": "work_pattern.work_pattern_days",
             "message": "Provided work_pattern_days is missing Friday, Saturday, Thursday, Tuesday.",
             "rule": "no_missing_days",
-            "type": "invalid_days",
+            "type": "required",
         }
     ]
 
@@ -2971,7 +2971,7 @@ def test_application_patch_state_invalid(client, user, auth_token, state_string)
             {
                 "field": "mailing_address.state",
                 "message": f"'{state_string}' is not a valid state",
-                "type": "enum",
+                "type": "invalid",
             },
         ],
     )
@@ -3340,6 +3340,7 @@ def test_application_post_submit_caring_leave_app_before_july(
     assert {
         "message": "Caring leave start_date cannot be before 2021-07-01",
         "rule": "disallow_caring_leave_before_july",
+        "type": "",
     } in errors
 
 
@@ -3367,6 +3368,7 @@ def test_application_post_submit_app_more_than_60_days_ahead(
     assert {
         "message": "Can't submit application more than 60 days in advance of the earliest leave period",
         "rule": "disallow_submit_over_60_days_before_start_date",
+        "type": "",
     } in errors
 
 
@@ -3427,7 +3429,13 @@ def test_application_post_submit_ssn_fraud_error(
         response,
         403,
         message="Application unable to be submitted by current user",
-        errors=[{"message": "Request by current user not allowed", "rule": "disallow_attempts"}],
+        errors=[
+            {
+                "message": "Request by current user not allowed",
+                "rule": "disallow_attempts",
+                "type": "",
+            }
+        ],
     )
 
 
@@ -3504,6 +3512,7 @@ def test_application_post_submit_app_ssn_not_found(client, user, auth_token, tes
     assert {
         "message": "Couldn't find Employee in our system. Confirm that you have the correct EIN.",
         "rule": "require_employee",
+        "type": "",
     } in response_body.get("errors")
     assert not response_body.get("warnings")
     # Simplified check to confirm Application was included in response:
@@ -4556,6 +4565,46 @@ def test_application_post_complete_app(client, user, auth_token, test_db_session
         fineos_notification_id="NTN-1989", fineos_absence_id="NTN-1989-ABS-01"
     )
     application.tax_identifier = TaxIdentifier(tax_identifier=TaxId("999004444"))
+    application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
+    application.hours_worked_per_week = 70
+    application.residential_address = AddressFactory.create()
+    application.work_pattern = WorkPatternFixedFactory.create()
+    application.claim = claim
+    application.continuous_leave_periods = [
+        ContinuousLeavePeriodFactory.create(start_date=date(2021, 1, 1))
+    ]
+    application.has_continuous_leave_periods = True
+
+    test_db_session.commit()
+
+    response = client.post(
+        "/v1/applications/{}/complete_application".format(application.application_id),
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    response_body = response.get_json()
+
+    assert response.status_code == 200
+    assert response_body.get("data").get("status") == ApplicationStatus.Completed.value
+
+
+def test_application_post_complete_app_without_other_leave_fields(
+    client, user, auth_token, test_db_session
+):
+    # TODO (CP-2455): Remove this test when we begin requiring these fields for complete_application
+    application = ApplicationFactory.create(
+        user=user,
+        has_concurrent_leave=None,
+        has_employer_benefits=None,
+        has_other_incomes=None,
+        has_previous_leaves_other_reason=None,
+        has_previous_leaves_same_reason=None,
+        submitted_time=datetime.now(),
+    )
+    claim = ClaimFactory.create(
+        fineos_notification_id="NTN-1989", fineos_absence_id="NTN-1989-ABS-01"
+    )
+    application.tax_identifier = TaxIdentifier(tax_identifier="999004444")
     application.employment_status_id = EmploymentStatus.UNEMPLOYED.employment_status_id
     application.hours_worked_per_week = 70
     application.residential_address = AddressFactory.create()

@@ -39,6 +39,29 @@ describe("useClaimsLogic", () => {
     expect(appLogic.current.claims.claims.items).toHaveLength(0);
   });
 
+  describe("clearClaims", () => {
+    it("empties claims collection and clears the loaded page", async () => {
+      mockPaginatedFetch([{ fineos_absence_id: "NTN-123" }]);
+      const { appLogic } = setup();
+
+      await act(async () => {
+        await appLogic.current.claims.loadPage();
+      });
+
+      expect(appLogic.current.claims.claims.items).toHaveLength(1);
+      expect(appLogic.current.claims.paginationMeta.page_offset).toBe(1);
+
+      act(() => {
+        appLogic.current.claims.clearClaims();
+      });
+
+      expect(appLogic.current.claims.claims.items).toHaveLength(0);
+      expect(
+        appLogic.current.claims.paginationMeta.page_offset
+      ).toBeUndefined();
+    });
+  });
+
   describe("loadPage", () => {
     it("gets claims from API", async () => {
       const mockResponseData = [
@@ -122,6 +145,12 @@ describe("useClaimsLogic", () => {
         mockPaginatedFetch();
         await appLogic.current.claims.loadPage(1);
         expect(global.fetch).not.toHaveBeenCalled();
+
+        // this should make an API request since previous claims were cleared
+        appLogic.current.claims.clearClaims();
+        mockPaginatedFetch();
+        await appLogic.current.claims.loadPage(1);
+        expect(global.fetch).toHaveBeenCalled();
 
         // this should make an API request since the filters changed
         mockPaginatedFetch();

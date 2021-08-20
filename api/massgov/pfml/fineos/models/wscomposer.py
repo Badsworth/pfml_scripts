@@ -24,7 +24,7 @@ class CreateOrUpdateEmployer(pydantic.BaseModel):
     fineos_customer_nbr: str
     employer_fein: str
     employer_legal_name: str
-    employer_dba: Optional[str]
+    employer_dba: str
 
 
 class CreateOrUpdateServiceAgreement(pydantic.BaseModel):

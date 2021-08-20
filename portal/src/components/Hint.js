@@ -1,7 +1,6 @@
 import PropTypes from "prop-types";
 import React from "react";
 import classnames from "classnames";
-import { uniqueId } from "lodash";
 
 const Hint = (props) => {
   const hintClasses = classnames(
@@ -14,12 +13,10 @@ const Hint = (props) => {
       "usa-intro": !props.small,
     }
   );
+  const id = props.inputId ? `${props.inputId}_hint` : null;
 
   return (
-    <span
-      className={hintClasses}
-      id={`${props.inputId || uniqueId("hint")}_hint`}
-    >
+    <span className={hintClasses} id={id}>
       {props.children}
     </span>
   );

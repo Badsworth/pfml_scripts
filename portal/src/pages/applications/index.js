@@ -1,5 +1,6 @@
 import Alert from "../../components/Alert";
-import ApplicationCard from "../../components/ApplicationCard";
+import ApplicationCardV1 from "../../components/ApplicationCard";
+import ApplicationCardV2 from "../../components/ApplicationCardV2";
 import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
 import ButtonLink from "../../components/ButtonLink";
 import Heading from "../../components/Heading";
@@ -7,6 +8,7 @@ import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplications from "../../hoc/withBenefitsApplications";
@@ -101,6 +103,17 @@ export const Index = (props) => {
     </React.Fragment>
   );
 };
+
+/**
+ * Allowing claimantShowStatusPage feature flag
+ */
+function ApplicationCard(props) {
+  return isFeatureEnabled("claimantShowStatusPage") ? (
+    <ApplicationCardV2 {...props} />
+  ) : (
+    <ApplicationCardV1 {...props} />
+  );
+}
 
 Index.propTypes = {
   appLogic: PropTypes.shape({

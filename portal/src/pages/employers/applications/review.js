@@ -41,7 +41,6 @@ import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
 export const Review = (props) => {
-  // TODO (EMPLOYER-583) add frontend validation
   const {
     appLogic,
     query: { absence_id: absenceId },
@@ -86,14 +85,14 @@ export const Review = (props) => {
     comment: "",
     employer_decision: "Approve",
     fraud: undefined,
-    employeeNotice: undefined,
+    employee_notice: undefined,
     believeRelationshipAccurate: undefined,
     relationshipInaccurateReason: "",
+    should_show_comment_box: false,
     // added fields
     addedBenefits: [],
     addedPreviousLeaves: [],
     addedConcurrentLeave: null,
-    shouldShowCommentBox: false,
   });
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -120,16 +119,44 @@ export const Review = (props) => {
 
   const isReportingFraud = formState.fraud === "Yes";
   const isDenyingRequest = formState.employer_decision === "Deny";
-  const isEmployeeNoticeInsufficient = formState.employeeNotice === "No";
+  const isEmployeeNoticeInsufficient = formState.employee_notice === "No";
+  const shouldShowCommentBox = formState.should_show_comment_box;
 
   const isCommentRequired =
     isReportingFraud ||
     isDenyingRequest ||
     isEmployeeNoticeInsufficient ||
-    formState.shouldShowCommentBox;
+    shouldShowCommentBox;
+
+  useEffect(() => {
+    updateFields({
+      should_show_comment_box:
+        isDenyingRequest || isEmployeeNoticeInsufficient || !!formState.comment,
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isDenyingRequest, isEmployeeNoticeInsufficient]);
+
+  useEffect(() => {
+    if (!shouldShowCommentBox) {
+      updateFields({ comment: "" });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [shouldShowCommentBox]);
+
+  /**
+   * Returns the context for the proper help message when the comment box is shown.
+   */
+  const buildFeedbackContext = () => {
+    if (isReportingFraud) return "fraud";
+    if (!isReportingFraud && isDenyingRequest) return "employerDecision";
+    if (!isDenyingRequest && isEmployeeNoticeInsufficient)
+      return "employeeNotice";
+
+    return "";
+  };
 
   const isSubmitDisabled =
-    (isCommentRequired && formState.comment === "") ||
+    (isCommentRequired && !formState.comment) ||
     (formState.believeRelationshipAccurate === "No" &&
       formState.relationshipInaccurateReason === "");
   const isCaringLeave = get(claim, "leave_details.reason") === LeaveReason.care;
@@ -269,14 +296,6 @@ export const Review = (props) => {
     });
   };
 
-  const handleFraudInputChange = (updatedFraudInput) => {
-    updateFields({ fraud: updatedFraudInput });
-  };
-
-  const handleEmployeeNoticeChange = (updatedEmployeeNotice) => {
-    updateFields({ employeeNotice: updatedEmployeeNotice });
-  };
-
   const handleBelieveRelationshipAccurateChange = (
     updatedBelieveRelationshipAccurate
   ) => {
@@ -312,7 +331,7 @@ export const Review = (props) => {
       : formState.hours_worked_per_week;
 
     const payload = {
-      comment: formState.comment,
+      comment: formState.comment || "",
       concurrent_leave,
       employer_benefits,
       employer_decision: formState.employer_decision,
@@ -487,10 +506,15 @@ export const Review = (props) => {
           onRemove={handleBenefitRemove}
           shouldShowV2={shouldShowV2}
         />
-        <FraudReport onChange={handleFraudInputChange} />
+        <FraudReport
+          fraudInput={formState.fraud}
+          getFunctionalInputProps={getFunctionalInputProps}
+        />
         <EmployeeNotice
-          fraud={formState.fraud}
-          onChange={handleEmployeeNoticeChange}
+          employeeNoticeInput={formState.employee_notice}
+          fraudInput={formState.fraud}
+          getFunctionalInputProps={getFunctionalInputProps}
+          updateFields={updateFields}
         />
         <EmployerDecision
           employerDecisionInput={formState.employer_decision}
@@ -499,14 +523,12 @@ export const Review = (props) => {
           updateFields={updateFields}
         />
         <Feedback
-          appLogic={props.appLogic}
-          isReportingFraud={isReportingFraud}
-          isDenyingRequest={isDenyingRequest}
-          isEmployeeNoticeInsufficient={isEmployeeNoticeInsufficient}
-          comment={formState.comment}
-          setComment={(comment) => updateFields({ comment })}
-          shouldShowCommentBox={formState.shouldShowCommentBox}
-          updateFields={updateFields}
+          context={buildFeedbackContext()}
+          getFunctionalInputProps={getFunctionalInputProps}
+          shouldDisableNoOption={
+            isDenyingRequest || isEmployeeNoticeInsufficient
+          }
+          shouldShowCommentBox={shouldShowCommentBox}
         />
         <Button
           className="margin-top-4"

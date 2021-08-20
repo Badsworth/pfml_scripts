@@ -20,6 +20,7 @@ from itertools import chain
 from typing import Dict, List, Optional, Set, Tuple
 
 import phonenumbers
+from pydantic import UUID4
 
 import massgov.pfml.db
 import massgov.pfml.fineos.models
@@ -49,6 +50,7 @@ from massgov.pfml.db.models.employees import (
     User,
 )
 from massgov.pfml.fineos.exception import FINEOSNotFound
+from massgov.pfml.fineos.models.customer_api import ReflexiveQuestionType
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employee import (
     OtherIncomesEFormBuilder,
@@ -193,6 +195,7 @@ def send_to_fineos(
         logger.warning(
             "Did not find Employee to associate to Claim.",
             extra={
+                "absence_case_id": new_case.absenceId,
                 "application.absence_case_id": new_case.absenceId,
                 "application.application_id": application.application_id,
             },
@@ -203,6 +206,7 @@ def send_to_fineos(
         logger.warning(
             "Did not find Employer to associate to Claim.",
             extra={
+                "absence_case_id": new_case.absenceId,
                 "application.absence_case_id": new_case.absenceId,
                 "application.application_id": application.application_id,
             },
@@ -423,7 +427,8 @@ def build_customer_address(
         addressLine4=application_address.city,
         addressLine6=application_address.geo_state.geo_state_description,
         postCode=application_address.zip_code,
-        country=Country.USA.country_description,
+        # TODO (API-1484): remove string cast
+        country=str(Country.USA.country_description),
     )
     customer_address = massgov.pfml.fineos.models.customer_api.CustomerAddress(address=address)
     return customer_address
@@ -459,6 +464,9 @@ def build_leave_periods(
 ]:
     reduced_schedule_leave_periods = []
     for reduced_leave_period in application.reduced_schedule_leave_periods:
+        if not reduced_leave_period.start_date or not reduced_leave_period.end_date:
+            raise ValueError("Leave periods must have a start and end date.")
+
         [
             monday_hours_minutes,
             tuesday_hours_minutes,
@@ -507,6 +515,8 @@ def build_leave_periods(
 
     intermittent_leave_periods = []
     for int_leave_period in application.intermittent_leave_periods:
+        if not int_leave_period.start_date or not int_leave_period.end_date:
+            raise ValueError("Leave periods must have a start and end date.")
         intermittent_leave_periods.append(
             massgov.pfml.fineos.models.customer_api.EpisodicLeavePeriod(
                 startDate=int_leave_period.start_date,
@@ -651,6 +661,9 @@ def build_absence_case(
     continuous_leave_periods = []
 
     for leave_period in application.continuous_leave_periods:
+        if not leave_period.start_date or not leave_period.end_date:
+            raise ValueError("Leave periods must have a start and end date.")
+
         # determine the status of the absence period
         absence_period_status = determine_absence_period_status(application)
 
@@ -755,7 +768,7 @@ def build_caring_leave_reflexive_question(
 
     caring_leave_metadata = application.caring_leave_metadata
 
-    reflexive_question_details = []
+    reflexive_question_details: List[ReflexiveQuestionType] = []
     # first name
     first_name_details = massgov.pfml.fineos.models.customer_api.Attribute(
         fieldName=f"{reflexive_question_field_name}.firstName",
@@ -782,7 +795,7 @@ def build_caring_leave_reflexive_question(
     if caring_leave_metadata.family_member_date_of_birth:
         date_of_birth_details = massgov.pfml.fineos.models.customer_api.Attribute(
             fieldName=f"{reflexive_question_field_name}.dateOfBirth",
-            dateValue=caring_leave_metadata.family_member_date_of_birth.isoformat(),
+            dateValue=caring_leave_metadata.family_member_date_of_birth,
         )
         reflexive_question_details.append(date_of_birth_details)
 
@@ -806,6 +819,7 @@ def get_occupation(
         logger.warning(
             "get_occuption failure",
             extra={
+                "absence_case_id": application.claim.fineos_absence_id,
                 "application.absence_case_id": application.claim.fineos_absence_id,
                 "application.application_id": application.application_id,
                 "status": getattr(error, "response_status", None),
@@ -822,6 +836,7 @@ def upsert_week_based_work_pattern(fineos_client, user_id, application, occupati
 
     week_based_work_pattern = build_week_based_work_pattern(application)
     log_attributes = {
+        "absence_case_id": application.claim.fineos_absence_id,
         "application.absence_case_id": application.claim.fineos_absence_id,
         "application.application_id": application.application_id,
         "occupation_id": occupation_id,
@@ -914,14 +929,17 @@ def build_week_based_work_pattern(
     fineos_work_pattern_days = []
 
     for day in application.work_pattern.work_pattern_days:
+        if not day.day_of_week or not day.day_of_week.day_of_week_description:
+            raise ValueError("Work pattern days must include the day of the week.")
+
         (hours, minutes) = convert_minutes_to_hours_minutes(day.minutes or 0)
 
         fineos_work_pattern_days.append(
             massgov.pfml.fineos.models.customer_api.WorkPatternDay(
                 dayOfWeek=day.day_of_week.day_of_week_description,
                 weekNumber=1,
-                hours=hours,
-                minutes=minutes,
+                hours=hours or 0,
+                minutes=minutes or 0,
             )
         )
 
@@ -977,14 +995,14 @@ def fineos_document_response_to_document_response(
     content_type, encoding = mimetypes.guess_type(fineos_document_response.originalFilename or "")
 
     document_response = DocumentResponse(
-        user_id=user_id,
-        application_id=application_id,
+        user_id=UUID4(str(user_id)),
+        application_id=UUID4(str(application_id)),
         created_at=created_at,
         document_type=fineos_document_response.name,
         content_type=content_type,
-        fineos_document_id=fineos_document_response.documentId,
-        name=fineos_document_response.originalFilename,
-        description=fineos_document_response.description,
+        fineos_document_id=str(fineos_document_response.documentId),
+        name=fineos_document_response.originalFilename or "",
+        description=fineos_document_response.description or "",
     )
     return document_response
 
@@ -1014,6 +1032,11 @@ def build_payment_preference(
     payment_preference = application.payment_preference
     override_postal_addr = True if payment_address else None
     if payment_preference.payment_method_id == PaymentMethod.ACH.payment_method_id:
+        if not payment_preference.account_number or not payment_preference.routing_number:
+            raise ValueError(
+                "ACH payment preference must include an account number and routing number."
+            )
+
         account_details = massgov.pfml.fineos.models.customer_api.AccountDetails(
             accountName=f"{application.first_name} {application.last_name}",
             accountNo=payment_preference.account_number,
@@ -1021,7 +1044,8 @@ def build_payment_preference(
             accountType=payment_preference.bank_account_type.bank_account_type_description,
         )
         fineos_payment_preference = massgov.pfml.fineos.models.customer_api.NewPaymentPreference(
-            paymentMethod=PaymentMethod.ACH.payment_method_description,
+            # TODO (API-1484): remove string cast
+            paymentMethod=str(PaymentMethod.ACH.payment_method_description),
             isDefault=True,
             customerAddress=payment_address,
             accountDetails=account_details,
@@ -1029,7 +1053,8 @@ def build_payment_preference(
         )
     elif payment_preference.payment_method_id == PaymentMethod.CHECK.payment_method_id:
         fineos_payment_preference = massgov.pfml.fineos.models.customer_api.NewPaymentPreference(
-            paymentMethod=PaymentMethod.CHECK.payment_method_description,
+            # TODO (API-1484): remove string cast
+            paymentMethod=str(PaymentMethod.CHECK.payment_method_description),
             isDefault=True,
             customerAddress=payment_address,
             chequeDetails=massgov.pfml.fineos.models.customer_api.ChequeDetails(),
@@ -1090,6 +1115,11 @@ def create_or_update_employer(
             )
             is_create = True
             pass
+
+    if not employer.employer_name:
+        raise ValueError(
+            "An Employer must have a employer_name in order to create or update an employer."
+        )
 
     employer_request_body = massgov.pfml.fineos.models.CreateOrUpdateEmployer(
         # `fineos_customer_nbr` is used as the Organization's CustomerNo

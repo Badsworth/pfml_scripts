@@ -54,7 +54,6 @@ const getClaims = (leaveAdmin) => {
 };
 
 const setup = ({
-  activeFilters = {},
   claims = [],
   userAttrs = {},
   paginationMeta = {},
@@ -72,7 +71,6 @@ const setup = ({
       consented_to_data_sharing: true,
       ...userAttrs,
     });
-    appLogic.claims.activeFilters = activeFilters;
     appLogic.claims.claims = new ClaimCollection(claims);
     appLogic.claims.shouldLoadPage = jest.fn().mockReturnValue(false);
     appLogic.claims.paginationMeta = new PaginationMeta({
@@ -88,6 +86,7 @@ const setup = ({
   const updateQuerySpy = jest.spyOn(appLogic.portalFlow, "updateQuery");
 
   const { wrapper } = renderWithAppLogic(Dashboard, {
+    diveLevels: 1,
     props: { appLogic, query },
     userAttrs,
   });
@@ -99,9 +98,26 @@ const setup = ({
   };
 };
 
+/**
+ * The claims table is wrapped with a high order component, so we need to dive
+ * a number of levels in order to actually get the component we're after.
+ * @param {object} wrapper
+ * @returns {object} enzyme wrapper
+ */
+const findClaimsTable = (wrapper) => {
+  return wrapper
+    .find("ComponentWithUser")
+    .dive()
+    .find("ComponentWithClaims")
+    .dive()
+    .at(0)
+    .dive();
+};
+
 describe("Employer dashboard", () => {
   it("renders the page with expected content and pagination components", () => {
     const { wrapper } = setup();
+    const claimsTable = findClaimsTable(wrapper);
 
     // Take targeted snapshots of content elements to avoid snapshotting noisy props
     expect(wrapper.find("Title")).toMatchSnapshot();
@@ -109,19 +125,14 @@ describe("Employer dashboard", () => {
     wrapper
       .find("Trans")
       .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
-    wrapper
-      .find("PaginatedClaimsTable")
-      .dive()
+
+    claimsTable
       .find("Trans")
       .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
 
     expect(wrapper.find("Details")).toMatchSnapshot();
-    expect(
-      wrapper.find("PaginatedClaimsTable").dive().find("PaginationSummary")
-    ).toMatchSnapshot();
-    expect(
-      wrapper.find("PaginatedClaimsTable").dive().find("PaginationNavigation")
-    ).toMatchSnapshot();
+    expect(claimsTable.find("PaginationSummary")).toMatchSnapshot();
+    expect(claimsTable.find("PaginationNavigation")).toMatchSnapshot();
   });
 
   it("renders a beta info alert if all employers are registered in FINEOS", () => {
@@ -196,7 +207,7 @@ describe("Employer dashboard", () => {
     };
 
     const { wrapper } = setup({ claims, userAttrs });
-    const parent = wrapper.find("PaginatedClaimsTable").dive();
+    const parent = findClaimsTable(wrapper);
 
     expect(parent.find("ClaimTableRows").dive()).toMatchSnapshot();
     expect(parent.find("thead")).toMatchSnapshot();
@@ -214,7 +225,7 @@ describe("Employer dashboard", () => {
     };
 
     const { wrapper } = setup({ claims, userAttrs });
-    const parent = wrapper.find("PaginatedClaimsTable").dive();
+    const parent = findClaimsTable(wrapper);
 
     expect(parent.find("ClaimTableRows").dive().find("a")).toHaveLength(0);
   });
@@ -232,7 +243,7 @@ describe("Employer dashboard", () => {
         user_leave_administrators: [verifiedUserLeaveAdministrator],
       },
     });
-    const parent = wrapper.find("PaginatedClaimsTable").dive();
+    const parent = findClaimsTable(wrapper);
 
     expect(
       parent
@@ -259,9 +270,7 @@ describe("Employer dashboard", () => {
     });
 
     expect(
-      soloEmployerWrapper
-        .find("PaginatedClaimsTable")
-        .dive()
+      findClaimsTable(soloEmployerWrapper)
         .find("ClaimTableRows")
         .prop("tableColumnKeys")
     ).toMatchInlineSnapshot(`
@@ -274,9 +283,7 @@ describe("Employer dashboard", () => {
       ]
     `);
     expect(
-      multipleEmployerWrapper
-        .find("PaginatedClaimsTable")
-        .dive()
+      findClaimsTable(multipleEmployerWrapper)
         .find("ClaimTableRows")
         .prop("tableColumnKeys")
     ).toMatchInlineSnapshot(`
@@ -301,7 +308,7 @@ describe("Employer dashboard", () => {
         total_pages: 1,
       },
     });
-    const parent = wrapper.find("PaginatedClaimsTable").dive();
+    const parent = findClaimsTable(wrapper);
 
     expect(parent.find("ClaimTableRows").dive()).toMatchSnapshot();
     expect(parent.find("PaginationSummary").exists()).toBe(false);
@@ -315,7 +322,7 @@ describe("Employer dashboard", () => {
         total_pages: 1,
       },
     });
-    const parent = wrapper.find("PaginatedClaimsTable").dive();
+    const parent = findClaimsTable(wrapper);
 
     expect(parent.find("PaginationSummary").exists()).toBe(true);
     expect(parent.find("PaginationNavigation").exists()).toBe(false);
@@ -324,7 +331,7 @@ describe("Employer dashboard", () => {
   it("changes the page_offset query param when a page navigation button is clicked", () => {
     const { updateQuerySpy, wrapper } = setup();
     const clickedPageOffset = "3";
-    const parent = wrapper.find("PaginatedClaimsTable").dive();
+    const parent = findClaimsTable(wrapper);
 
     parent.find("PaginationNavigation").simulate("click", clickedPageOffset);
 
@@ -353,7 +360,7 @@ describe("Employer dashboard", () => {
         user_leave_administrators: [verifiableUserLeaveAdministrator],
       },
     });
-    const parent = wrapper.find("PaginatedClaimsTable").dive();
+    const parent = findClaimsTable(wrapper);
 
     expect(
       parent.find("[data-test='verification-instructions-row'] Trans").dive()
@@ -372,7 +379,7 @@ describe("Employer dashboard", () => {
     };
 
     const { wrapper } = setup({
-      activeFilters: {
+      query: {
         search: "Initial search field value",
       },
     });
@@ -430,9 +437,9 @@ describe("Employer dashboard", () => {
       }),
     ];
 
-    const { wrapper: CollapsedWithoutFilters } = setup();
-    const { wrapper: CollapsedWithFilters } = setup({
-      activeFilters: {
+    const { wrapper: WrapperWithoutFilters } = setup();
+    const { wrapper: WrapperWithFilters } = setup({
+      query: {
         claim_status: "Pending",
         employer_id: user_leave_administrators[0].employer_id,
       },
@@ -441,21 +448,40 @@ describe("Employer dashboard", () => {
         user_leave_administrators,
       },
     });
-    const { wrapper: ExpandedWithoutFilters } = setup({
-      query: {
-        "show-filters": "true",
-      },
-    });
 
     const getButton = (w) =>
       w.find("Filters").dive().find("Button[aria-controls='filters']");
 
-    expect(getButton(CollapsedWithFilters)).toMatchSnapshot();
-    expect(getButton(CollapsedWithoutFilters)).toMatchSnapshot();
-    expect(getButton(ExpandedWithoutFilters)).toMatchSnapshot();
+    expect(getButton(WrapperWithFilters)).toMatchSnapshot();
+    expect(getButton(WrapperWithoutFilters)).toMatchSnapshot();
   });
 
-  it("sets initial filter form state from activeFilters prop", () => {
+  it("toggles filters visibility when Show Filters button is clicked", () => {
+    const { wrapper } = setup();
+    const filtersWrapper = wrapper.find("Filters").dive();
+    const findButton = () =>
+      filtersWrapper.find("Button[aria-controls='filters']");
+
+    let button = findButton();
+    expect(button.prop("aria-expanded")).toBe("false");
+    expect(filtersWrapper.find("form").prop("hidden")).toBe(true);
+
+    // Show the filters
+    button.simulate("click");
+
+    button = findButton();
+    expect(button.prop("aria-expanded")).toBe("true");
+    expect(button).toMatchSnapshot();
+    expect(filtersWrapper.find("form").prop("hidden")).toBe(false);
+
+    // Hide the filters
+    button.simulate("click");
+
+    button = findButton();
+    expect(button.prop("aria-expanded")).toBe("false");
+  });
+
+  it("sets initial filter form state from query prop", () => {
     // Include multiple LA's so Employer filter shows
     const user_leave_administrators = [
       createUserLeaveAdministrator({
@@ -467,7 +493,7 @@ describe("Employer dashboard", () => {
     ];
 
     const { wrapper } = setup({
-      activeFilters: {
+      query: {
         claim_status: "Approved,Closed",
         employer_id: user_leave_administrators[0].employer_id,
       },
@@ -496,29 +522,30 @@ describe("Employer dashboard", () => {
     `);
   });
 
-  it("shows filters section when show-filters query param is set", () => {
-    const { wrapper: collapsedWrapper } = setup();
-    const { wrapper: expandedWrapper } = setup({
+  it("updates filters form state if query changes", () => {
+    const { wrapper } = setup({
       query: {
-        "show-filters": "true",
+        claim_status: "Approved,Closed",
       },
     });
 
-    const getFiltersContainer = (w) =>
-      w.find("Filters").dive().find("#filters");
+    const getCheckedStatuses = (wrapper) => {
+      const filters = wrapper.find("Filters").dive();
 
-    expect(getFiltersContainer(collapsedWrapper).prop("hidden")).toBe(true);
-    expect(getFiltersContainer(expandedWrapper).prop("hidden")).toBe(false);
-  });
+      return filters
+        .find("InputChoiceGroup")
+        .prop("choices")
+        .filter((choice) => choice.checked)
+        .map((choice) => choice.value);
+    };
 
-  it("toggles show-filters param when toggle button is clicked", () => {
-    const { updateQuerySpy, wrapper } = setup();
-    const filters = wrapper.find("Filters").dive();
-    const { click } = simulateEvents(filters);
+    expect(getCheckedStatuses(wrapper)).toEqual(["Approved", "Closed"]);
 
-    click("Button[aria-controls='filters']");
+    wrapper.setProps({
+      query: { claim_status: "Approved" },
+    });
 
-    expect(updateQuerySpy).toHaveBeenCalledWith({ "show-filters": "true" });
+    expect(getCheckedStatuses(wrapper)).toEqual(["Approved"]);
   });
 
   it("renders organizations filter when there are multiple verified organizations", () => {
@@ -613,7 +640,7 @@ describe("Employer dashboard", () => {
     ];
 
     const { updateQuerySpy, wrapper } = setup({
-      activeFilters: {
+      query: {
         claim_status: "Approved",
         employer_id: user_leave_administrators[0].employer_id,
       },
@@ -644,7 +671,7 @@ describe("Employer dashboard", () => {
     ];
 
     const { wrapper: wrapperWithActiveFilters } = setup({
-      activeFilters: {
+      query: {
         claim_status: "Approved,Closed",
         employer_id: user_leave_administrators[0].employer_id,
       },
@@ -674,7 +701,7 @@ describe("Employer dashboard", () => {
     ];
 
     const { updateQuerySpy, wrapper } = setup({
-      activeFilters: {
+      query: {
         claim_status: "Approved,Closed",
         employer_id: user_leave_administrators[0].employer_id,
       },
@@ -693,7 +720,7 @@ describe("Employer dashboard", () => {
 
   it("updates the claim_status param when one of several status FilterMenuButtons is clicked", () => {
     const { updateQuerySpy, wrapper } = setup({
-      activeFilters: {
+      query: {
         claim_status: "Approved,Closed,Pending",
       },
     });
@@ -709,7 +736,7 @@ describe("Employer dashboard", () => {
 
   it("removes the claim_status param when the last remaining status FilterMenuButton is clicked", () => {
     const { updateQuerySpy, wrapper } = setup({
-      activeFilters: {
+      query: {
         claim_status: "Closed",
       },
     });
@@ -722,30 +749,37 @@ describe("Employer dashboard", () => {
     });
   });
 
-  it("renders Sort section when feature flags are enabled", () => {
+  it("renders Sort dropdown", () => {
+    const { wrapper } = setup();
+    const claimsTable = findClaimsTable(wrapper);
+
+    expect(claimsTable.find("SortDropdown").dive()).toMatchSnapshot();
+  });
+
+  it("renders Sort by Status option when feature flag is enabled", () => {
     process.env.featureFlags = {
+      employerShowReviewByStatus: true,
       employerShowDashboardSort: true,
     };
 
     const { wrapper } = setup();
+    const claimsTable = findClaimsTable(wrapper);
 
-    expect(
-      wrapper.find("PaginatedClaimsTable").dive().find("SortDropdown").dive()
-    ).toMatchSnapshot();
+    expect(claimsTable.find("SortDropdown").dive().prop("choices")).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          label: "Status",
+          value: "absence_status,ascending",
+        }),
+      ])
+    );
   });
 
   it("updates order_by and order_direction params when a sort choice is selected", () => {
-    process.env.featureFlags = {
-      employerShowDashboardSort: true,
-    };
-
     const { updateQuerySpy, wrapper } = setup();
+    const claimsTable = findClaimsTable(wrapper);
 
-    const field = wrapper
-      .find("PaginatedClaimsTable")
-      .dive()
-      .find("SortDropdown")
-      .dive();
+    const field = claimsTable.find("SortDropdown").dive();
     const { changeField } = simulateEvents(field);
 
     changeField("orderAndDirection", "employee,ascending");

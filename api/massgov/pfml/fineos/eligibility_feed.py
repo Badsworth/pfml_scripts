@@ -45,6 +45,7 @@ EmployeeId = UUID
 class EligibilityFeedExportMode(Enum):
     FULL = "full"
     UPDATES = "updates"
+    LIST = "list"
 
 
 class EligibilityFeedExportConfig(BaseSettings):
@@ -59,6 +60,9 @@ class EligibilityFeedExportConfig(BaseSettings):
         None, env="ELIGIBILITY_FEED_EXPORT_FILE_NUMBER_LIMIT"
     )  # Only applies to "updates" mode
     bundle_count: PositiveInt = PositiveInt(1)  # Only applies to "full" mode currently
+    employer_ids: str = Field(
+        None, env="ELIGIBILITY_FEED_LIST_OF_EMPLOYER_IDS"
+    )  # Applies to "list" mode only. Pass a list of employer Id's to process.
 
 
 DEFAULT_DATE = date(1753, 1, 1)
@@ -722,6 +726,84 @@ def process_all_employers(
                 )
 
     db_session.close()
+
+    end_time = utcnow()
+    report.end = end_time.isoformat()
+
+    return report
+
+
+# Used by Prod Support to fix a small number of employers.
+# This method is not meant to be used for high volumes.
+def process_a_list_of_employers(
+    employer_ids: List[str],
+    db_session: db.Session,
+    fineos_client: AbstractFINEOSClient,
+    output_dir_path: str,
+    output_transport_params: Optional[OutputTransportParams] = None,
+) -> EligibilityFeedExportReport:
+    start_time = utcnow()
+    report = EligibilityFeedExportReport(start=start_time.isoformat())
+
+    logger.info(f"Starting eligibility feeds generation for a list of employers: {employer_ids}")
+
+    employers_to_process: List[Employer] = db_session.query(Employer).filter(
+        Employer.employer_id.in_(employer_ids)
+    ).all()
+    employers_to_process_count = len(employers_to_process)
+
+    if employers_to_process_count != len(employer_ids):
+        logger.error("Not all employers in input list found in the database. Exiting.")
+        return report
+
+    # Process list of employers
+    for employer in employers_to_process:
+        try:
+            report.employers_total_count += 1
+
+            # Find FINEOS employer id using employer FEIN
+            fineos_employer_id = get_fineos_employer_id(fineos_client, employer)
+            if fineos_employer_id is None:
+                logger.info(
+                    "FINEOS employer id not in API DB. Continuing.",
+                    extra={
+                        "internal_employer_id": employer.employer_id,
+                        "account_key": employer.account_key,
+                    },
+                )
+                report.employers_skipped_count += 1
+                continue
+
+            number_of_employees = query_employees_for_employer(
+                db_session.query(Employee.employee_id), employer
+            ).count()
+
+            employees_and_most_recent_wages: Iterable[
+                Tuple[Employee, WagesAndContributions]
+            ] = query_employees_and_most_recent_wages_for_employer(
+                db_session.query(Employee, WagesAndContributions), employer
+            ).yield_per(
+                1000
+            )
+
+            open_and_write_to_eligibility_file(
+                output_dir_path,
+                fineos_employer_id,
+                employer,
+                number_of_employees,
+                employees_and_most_recent_wages,
+                output_transport_params,
+            )
+
+            report.employers_success_count += 1
+            report.employee_and_employer_pairs_total_count += number_of_employees
+        except Exception:
+            logger.exception(
+                "Error generating FINEOS Eligibility Feed for Employer",
+                extra={"internal_employer_id": employer.employer_id},
+            )
+            report.employers_error_count += 1
+            continue
 
     end_time = utcnow()
     report.end = end_time.isoformat()

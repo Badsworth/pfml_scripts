@@ -113,12 +113,12 @@ resource "newrelic_nrql_alert_condition" "api_error_rate" {
     query             = <<-NRQL
       SELECT filter(
         count(error.message),
-        WHERE NOT error.message = '(mark_document_as_recieved) expected 200, but got 422'
-        AND NOT error.message = '(mark_document_as_recieved) FINEOSFatalResponseError: 500'
-        AND NOT error.message = '(get_customer_info) expected 200, but got 403'
-        AND NOT error.message = '(upload_documents) FINEOSFatalResponseError: 502'
-        AND NOT error.message = '(upload_documents) expected 200, but got 403'
-        AND NOT error.message = '(download_document_as_leave_admin) FINEOSFatalResponseError: 502'
+        WHERE NOT error.message LIKE '(mark_document_as_recieved) expected 200, but got 422%'
+        AND NOT error.message LIKE '(mark_document_as_recieved) FINEOSFatalResponseError: 500%'
+        AND NOT error.message LIKE '(get_customer_info) expected 200, but got 403%'
+        AND NOT error.message LIKE '(upload_documents) FINEOSFatalResponseError: 502%'
+        AND NOT error.message LIKE '(upload_documents) expected 200, but got 403%'
+        AND NOT error.message LIKE '(download_document_as_leave_admin) FINEOSFatalResponseError: 502%'
         AND NOT error.class = 'massgov.pfml.fineos.exception:FINEOSFatalUnavailable'
       ) * 100 * clamp_max(floor(uniqueCount(current_user.user_id) / 10), 1) / uniqueCount(traceId)
       FROM Transaction, TransactionError
@@ -314,13 +314,14 @@ resource "newrelic_nrql_alert_condition" "rds_low_storage_space" {
 # Alerts relating to abnormal traffic against the /notifications endpoint, where FINEOS POSTs new claims
 
 resource "newrelic_nrql_alert_condition" "notifications_endpoint_infinite_email_spam" {
-  # CRIT: ≥ 5 transactions to this endpoint in 15 minutes, for the same absence case ID and recipient type
+  # CRIT: ≥ 12 transactions to this endpoint in 15 minutes, for the same absence case ID and recipient type
   # Traffic surges have happened in the past for the same absence case ID, but different recipient types
 
   description    = <<-TXT
     There's too much traffic on the notifications endpoint for a specific absence case ID & specific type of recipient.
     This usually means FINEOS is stuck in an infinite loop and is sending huge quantities of emails to a real human.
-    This alarm *SHOULD* never go off, now that FINEOS has released their 6/26/2021 service pack, but one never knows...
+    This can also mean E2E testing traffic against nonprod is producing a false positive (see INFRA-637).
+    This alarm SHOULD never go off in prod, now that FINEOS has released their 6/26/2021 service pack.
   TXT
   name           = "(${upper(var.environment_name)}) Notifications endpoint spam alert"
   policy_id      = newrelic_alert_policy.api_alerts.id
@@ -341,7 +342,7 @@ resource "newrelic_nrql_alert_condition" "notifications_endpoint_infinite_email_
   }
 
   critical {
-    threshold             = 4   # to emulate a 'greater than or equal to 5' threshold
+    threshold             = 11  # to emulate a 'greater than or equal to 12' threshold
     threshold_duration    = 900 # 15 minutes
     operator              = "above"
     threshold_occurrences = "all"
@@ -517,7 +518,6 @@ module "unexpected_import_error" {
   nrql = <<-NRQL
     SELECT count(*) FROM Log
     WHERE message LIKE '%Unable to import module%'
-      AND aws.logGroup NOT LIKE '%formstack-import%'
       AND aws.logGroup LIKE '%${var.environment_name}%'
   NRQL
 }

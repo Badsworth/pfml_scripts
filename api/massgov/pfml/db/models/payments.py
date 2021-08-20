@@ -3,7 +3,7 @@ import uuid
 from decimal import Decimal
 from typing import TYPE_CHECKING
 
-from sqlalchemy import TIMESTAMP, Column, Date, ForeignKey, Integer, Numeric, Text
+from sqlalchemy import JSON, TIMESTAMP, Column, Date, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.functions import now as sqlnow
@@ -493,6 +493,21 @@ PENDING_ACTIVE_WRITEBACK_RECORD_STATUS = (
 )
 
 
+class PaymentLog(Base, TimestampMixin):
+    __tablename__ = "payment_log"
+    payment_log_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    payment_id = Column(
+        PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True, nullable=False
+    )
+
+    import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
+
+    details = Column(JSON)
+
+    payment = relationship(Payment)
+    import_log = relationship(ImportLog)
+
+
 class FineosWritebackTransactionStatus(LookupTable):
     model = LkFineosWritebackTransactionStatus
     column_names = (
@@ -531,6 +546,9 @@ class FineosWritebackTransactionStatus(LookupTable):
     PROCESSED = LkFineosWritebackTransactionStatus(10, "Processed", ACTIVE_WRITEBACK_RECORD_STATUS)
     PAID = LkFineosWritebackTransactionStatus(11, "Paid", ACTIVE_WRITEBACK_RECORD_STATUS)
     POSTED = LkFineosWritebackTransactionStatus(12, "Posted", ACTIVE_WRITEBACK_RECORD_STATUS)
+    LEAVE_IN_REVIEW = LkFineosWritebackTransactionStatus(
+        13, "Leave Plan In Review", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
+    )
 
 
 def sync_lookup_tables(db_session):

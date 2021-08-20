@@ -20,22 +20,21 @@ on:
         description: "Cypress Run Tags"
         required: false
         default: "Manual"
+      title_override:
+        description: "Title Override (replaces commit message in Cypress Dashboard)"
+        required: false
       only_stable:
         description: "Only run 'stable' tests? (true/false)"
         required: false
         default: "false"
-  # E2E PRs that touch Cypress.
-  pull_request:
-    paths:
-      - e2e/cypress/**
-      - e2e/cypress.json
-      - e2e/package.json
-      - e2e/employee.json
 
 env:
+  E2E_ENVIRONMENT: ${{ github.event.inputs.target_environment }}
+  COMMIT_INFO_MESSAGE: |
+    ${{ github.event.inputs.title_override || format('Manual Run: {0}', github.event.inputs.target_environment) }}
   # Setup any secret overrides that are necessary here.
   # Most other environment variables will come from /e2e/config.json,
-  # as determined by the E2E_ENVIRONMENT variable set above.
+  # as determined by the E2E_ENVIRONMENT variable.
   E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
   E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
   E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
@@ -43,7 +42,11 @@ env:
   E2E_SSO_USERNAME: ${{ secrets.E2E_SSO_USERNAME }}
   CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  COMMIT_INFO_MESSAGE: ${{ github.event.pull_request.title || github.event.head_commit.message }}
+
+# Prevent this workflow from running more than 1x concurrently in any environment.
+# This prevents us from overloading the environment with requests, which causes false failures.
+# Cypress & Flood share the same concurrency key to prevent E2E and Flood running concurrently.
+concurrency: E2E-${{ github.event.inputs.target_environment }}
 
 jobs:
   cypress:
@@ -55,29 +58,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        containers: [1,2,3,4,5,6,7]
+        containers: [1,2,3,4,5,6,7,8]
     steps:
       - uses: actions/checkout@v2
-
-      # Set Cypress Tags according to what type of event we're dealing with.
-      - name: Set variables for PR
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "cypress_tags=PR" >> $GITHUB_ENV
-          echo "E2E_ENVIRONMENT=test" >> $GITHUB_ENV
-          echo "only_stable=false" >> $GITHUB_ENV
-      - name: Set variables for Nightly
-        if: github.event_name == 'schedule'
-        run: |
-          echo "cypress_tags=Nightly" >> $GITHUB_ENV
-          echo "E2E_ENVIRONMENT=test" >> $GITHUB_ENV
-          echo "only_stable=false" >> $GITHUB_ENV
-      - name: Set variables for manual run
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          echo "cypress_tags=${{ github.event.inputs.cypress_tags }}" >> $GITHUB_ENV
-          echo "E2E_ENVIRONMENT=${{ github.event.inputs.target_environment }}" >> $GITHUB_ENV
-          echo "only_stable=${{github.event.inputs.only_stable }}" >> $GITHUB_ENV
 
       # Run Cypress tests.
       - name: Cypress Tests (Stable)
@@ -89,7 +72,7 @@ jobs:
           parallel: true
           working-directory: e2e
           group: Stable
-          tag: "${{ env.cypress_tags }},Env-${{ env.E2E_ENVIRONMENT }}"
+          tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
 
       # Run Cypress tests.
       - name: Cypress Tests (Unstable)
@@ -101,10 +84,10 @@ jobs:
           working-directory: e2e
           group: Unstable
           install: false # Skip install on second run.
-          tag: "${{ env.cypress_tags }},Env-${{ env.E2E_ENVIRONMENT }}"
+          tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
           config: trashAssetsBeforeRuns=false
         # Always run this step if requested, even if stable tests fail.
-        if: env.only_stable == 'false' && always()
+        if: github.event.inputs.only_stable == 'false' && always()
         # Do not allow this step to fail the job. It is informational, not mandatory.
         continue-on-error: true
         # Setting a step timeout here prevents a hung unstable test from timing out at the job level - it times out at
@@ -127,26 +110,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      # Set Cypress Tags according to what type of event we're dealing with.
-      - name: Set variables for PR
-        if: github.event_name == 'pull_request'
-        run: |
-          echo "cypress_tags=PR" >> $GITHUB_ENV
-          echo "E2E_ENVIRONMENT=test" >> $GITHUB_ENV
-          echo "only_stable=false" >> $GITHUB_ENV
-      - name: Set variables for Nightly
-        if: github.event_name == 'schedule'
-        run: |
-          echo "cypress_tags=Nightly" >> $GITHUB_ENV
-          echo "E2E_ENVIRONMENT=test" >> $GITHUB_ENV
-          echo "only_stable=false" >> $GITHUB_ENV
-      - name: Set variables for manual run
-        if: github.event_name == 'workflow_dispatch'
-        run: |
-          echo "cypress_tags=${{ github.event.inputs.cypress_tags }}" >> $GITHUB_ENV
-          echo "E2E_ENVIRONMENT=${{ github.event.inputs.target_environment }}" >> $GITHUB_ENV
-          echo "only_stable=${{github.event.inputs.only_stable }}" >> $GITHUB_ENV
-
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -160,12 +123,12 @@ jobs:
       - name: Pull Client_ID from SSM
         uses: "marvinpinto/action-inject-ssm-secrets@latest"
         with:
-          ssm_parameter: "/service/pfml-api/${{ env.E2E_ENVIRONMENT }}/cognito_internal_fineos_role_app_client_id"
+          ssm_parameter: "/service/pfml-api/${{ github.event.inputs.target_environment }}/cognito_internal_fineos_role_app_client_id"
           env_variable_name: "E2E_API_FINEOS_CLIENT_ID"
       - name: Pull Client_SECRET from SSM
         uses: "marvinpinto/action-inject-ssm-secrets@latest"
         with:
-          ssm_parameter: "/service/pfml-api/${{ env.E2E_ENVIRONMENT }}/cognito_internal_fineos_role_app_client_secret"
+          ssm_parameter: "/service/pfml-api/${{ github.event.inputs.target_environment }}/cognito_internal_fineos_role_app_client_secret"
           env_variable_name: "E2E_API_FINEOS_CLIENT_SECRET"
 
       - name: Setup Node

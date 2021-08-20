@@ -1,5 +1,5 @@
 import "react-datetime/css/react-datetime.css";
-//import { ApiResponse, FlagsResponse, getFlagsByNameLogs } from "../api";
+//import { Flag, HttpError, patchFlagsByName } from "../../api";
 import {
   Field,
   FieldArray,
@@ -11,15 +11,24 @@ import {
 import Datetime from "react-datetime";
 import { useRouter } from "next/router";
 import { Helmet } from "react-helmet-async";
-import Link from "next/link";
 import React from "react";
+import Tooltip from "../../components/Tooltip";
 import moment from "moment";
 
 export default function Maintenance() {
   const router = useRouter();
 
+  // Remove when Flag is in ../../api.
+  interface Flag {
+    start?: string | null;
+    end?: string | null;
+    name?: string;
+    options?: object;
+    enabled?: boolean;
+  }
+
   type FormValues = {
-    maintenance_name: string;
+    name: string;
     start: string;
     end: string;
     checked_page_routes: string[];
@@ -42,7 +51,7 @@ export default function Maintenance() {
     : [];
 
   const defaultFormValues: FormValues = {
-    maintenance_name: router.query?.maintenance_name?.toString() ?? "",
+    name: router.query?.name?.toString() ?? "",
     start: "",
     end: "",
     checked_page_routes: checked_page_routes,
@@ -73,11 +82,8 @@ export default function Maintenance() {
    */
   const validate = (values: FormValues) => {
     const errors: FormikErrors<FormValues> = {};
-    if (
-      values.maintenance_name !== "" &&
-      !/^[A-Z0-9 _\-]+$/i.test(values.maintenance_name)
-    ) {
-      errors.maintenance_name = "Invalid name format";
+    if (values.name !== "" && !/^[A-Z0-9 _\-]+$/i.test(values.name)) {
+      errors.name = "Invalid name format";
     }
     if (values.start !== "") {
       const start = moment(values.start);
@@ -134,15 +140,21 @@ export default function Maintenance() {
   };
 
   const DateTimeField = (
-    props: { label: string } & FieldHookConfig<string>,
+    props: {
+      label: string;
+      toolTipText: React.ReactNode;
+    } & FieldHookConfig<string>,
   ) => {
     const [field, meta, helpers] = useField(props);
     const { setValue } = helpers;
     const renderInput = (options: any) => {
       return (
         <label className="maintenance-configure__label">
-          {props.label}
+          {props.label} <Tooltip>{props.toolTipText}</Tooltip>
           <input {...options} />
+          {meta.touched && meta.error ? (
+            <div className="maintenance-configure__error">{meta.error}</div>
+          ) : null}
         </label>
       );
     };
@@ -166,9 +178,6 @@ export default function Maintenance() {
               : ""
           }`}
         />
-        {meta.touched && meta.error ? (
-          <div className="maintenance-configure__error">{meta.error}</div>
-        ) : null}
       </>
     );
   };
@@ -207,7 +216,7 @@ export default function Maintenance() {
     <Formik
       validate={validate}
       initialValues={defaultFormValues}
-      onSubmit={async (values) => {
+      onSubmit={async (values, { setSubmitting, setFieldError }) => {
         const custom_page_routes = values.custom_page_routes
           .map((i) => i.trim())
           .filter((i) => i.length > 0);
@@ -215,10 +224,40 @@ export default function Maintenance() {
         values.page_routes = Array.from(
           new Set([...values.checked_page_routes, ...custom_page_routes]),
         );
-        // TODO submit to API.
-        await new Promise((resolve) => setTimeout(resolve, 500));
-        alert(JSON.stringify(values, null, 2));
-        //router.push("/maintenance");
+        const flag: Flag = {};
+        // TODO is this always enabled from this page?
+        flag.enabled = true;
+        flag.start = values.start === "" ? null : moment(values.start).format();
+        flag.end = values.end === "" ? null : moment(values.end).format();
+        flag.options = {
+          name: values.name,
+          page_routes: values.page_routes,
+        };
+        /*
+        patchFlagsByName({ name: "maintenance" }, flag)
+          .then(
+            () => {
+              router.push("/maintenance");
+            },
+            (e) => {
+              if (e instanceof HttpError) {
+                const errors =
+                  (e.data?.errors as { field: string; message: string }[]) ??
+                  [];
+                errors.map((error) => {
+                  if (error.field in values) {
+                    setFieldError(error.field, error.message);
+                  }
+                });
+              }
+            },
+          )
+          .finally(() => {
+            setSubmitting(false);
+          });
+        */
+        // Remove this push when above is uncommented.
+        router.push("/maintenance");
       }}
     >
       {(props) => {
@@ -229,13 +268,31 @@ export default function Maintenance() {
             autoComplete="off"
           >
             <TextField
-              name="maintenance_name"
+              name="name"
               placeholder="Enter type of maintenance"
               label="Name"
             />
             <div className="maintenance-configure__datetimes-wrapper">
-              <DateTimeField name="start" label="Start Date/Time" />
-              <DateTimeField name="end" label="End Date/Time" />
+              <DateTimeField
+                name="start"
+                label="Start Date/Time"
+                toolTipText={
+                  <>
+                    To start maintenance <strong>now</strong>, leave the Start
+                    Date/Time field blank.
+                  </>
+                }
+              />
+              <DateTimeField
+                name="end"
+                label="End Date/Time"
+                toolTipText={
+                  <>
+                    To keep maintenance on <strong>indefinitely</strong>, leave
+                    the End Date/Time field blank.
+                  </>
+                }
+              />
             </div>
             <fieldset className="maintenance-configure__fieldset">
               <legend>Page Routes</legend>
@@ -315,13 +372,14 @@ export default function Maintenance() {
               )}
             </fieldset>
             <button
-              className="maintenance-configure__btn btn"
+              className="maintenance-configure__btn btn btn--cancel"
               type="button"
               disabled={props.isSubmitting}
+              onClick={() => {
+                router.push("/maintenance");
+              }}
             >
-              <Link href="/maintenance">
-                <a>Cancel</a>
-              </Link>
+              Cancel
             </button>
             <button
               className="maintenance-configure__btn btn"

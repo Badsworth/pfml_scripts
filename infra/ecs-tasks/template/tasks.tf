@@ -54,7 +54,10 @@
 # Resource Limits
 # ===============
 #
-# CPU and memory defaults are 512 (CPU units) and 1024 (MB).
+# CPU and memory defaults are 1024 (CPU units) and 2048 (MB).
+# 1/4th of that allocation (256 CPU units, 512MB RAM) is reserved for the New Relic infra sidecar.
+# This leaves the default resource allocation available to your business logic as: 768 CPU units, 1.5GB RAM.
+
 # If you need more resources than this, add "cpu" or "memory" keys to your ECS task's
 # entry in locals.tasks. The defaults will be used if these keys are absent.
 #
@@ -102,17 +105,6 @@ locals {
       env = [
         local.db_access,
         { name : "S3_EXPORT_BUCKET", value : "massgov-pfml-${var.environment_name}-execute-sql-export" }
-      ]
-    },
-
-    "bulk-user-import" = {
-      command   = ["bulk-user-import"]
-      task_role = aws_iam_role.task_bulk_import_task_role.arn
-      env = [
-        local.db_access,
-        local.fineos_api_access,
-        { name : "PROCESS_CSV_DATA_BUCKET_NAME", value : "${aws_s3_bucket.bulk_user_import.bucket}" },
-        { name : "COGNITO_IDENTITY_POOL_ID", value : "${var.cognito_user_pool_id}" }
       ]
     },
 
@@ -363,8 +355,8 @@ resource "aws_ecs_task_definition" "ecs_tasks" {
   family                   = "${local.app_name}-${var.environment_name}-${each.key}"
   task_role_arn            = lookup(each.value, "task_role", null)
   execution_role_arn       = lookup(each.value, "execution_role", aws_iam_role.task_executor.arn)
-  cpu                      = tostring(lookup(each.value, "cpu", 512))
-  memory                   = tostring(lookup(each.value, "memory", 1024))
+  cpu                      = tostring(lookup(each.value, "cpu", 1024))
+  memory                   = tostring(lookup(each.value, "memory", 2048))
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
 
@@ -377,8 +369,8 @@ resource "aws_ecs_task_definition" "ecs_tasks" {
       name                   = each.key,
       image                  = format("%s:%s", data.aws_ecr_repository.app.repository_url, var.service_docker_tag),
       command                = each.value.command,
-      cpu                    = tonumber(lookup(each.value, "cpu", 512)) - 256,
-      memory                 = tonumber(lookup(each.value, "memory", 1024)) - 512,
+      cpu                    = tonumber(lookup(each.value, "cpu", 1024)) - 256,
+      memory                 = tonumber(lookup(each.value, "memory", 2048)) - 512,
       networkMode            = "awsvpc",
       essential              = true,
       readonlyRootFilesystem = false, # False by default; some tasks write local files.
@@ -407,6 +399,7 @@ resource "aws_ecs_task_definition" "ecs_tasks" {
       environment = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if contains(keys(val), "value")]
       secrets     = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if !contains(keys(val), "value")]
     },
+    ###### ↑ Generic "business logic" container definition ↑ | ↓ New Relic infrastructure sidecar definition ↓ ######
     {
       name              = "newrelic-infra",
       image             = "498823821309.dkr.ecr.us-east-1.amazonaws.com/eolwd-pfml-dockerhub-mirror:newrelic.infrastructure-bundle.2.6.1",

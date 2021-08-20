@@ -8,13 +8,15 @@ from massgov.pfml.util.datetime import quarter
 
 
 def compute_base_period(
-    effective_quarter: quarter.Quarter, quarters_with_wage_data: Container[quarter.Quarter]
+    effective_quarter: quarter.Quarter,
+    quarters_with_wage_data: Container[quarter.Quarter],
+    multiple_employers_bool: bool = False,
 ) -> Tuple[quarter.Quarter, ...]:
     """Compute the "base period" for the given effective quarter and container of quarters.
 
     Returns a tuple of the 4 Quarters in the base period.
     """
-    if effective_quarter in quarters_with_wage_data:
+    if effective_quarter in quarters_with_wage_data and not multiple_employers_bool:
         base_period_end = effective_quarter
     elif effective_quarter.previous_quarter() in quarters_with_wage_data:
         base_period_end = effective_quarter.previous_quarter()

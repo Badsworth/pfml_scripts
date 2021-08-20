@@ -3,40 +3,50 @@
 exports[`CaringLeaveAttestation renders the page 1`] = `
 <Fragment>
   <BackButton />
-  <form
-    className="usa-form"
-    method="post"
-    onSubmit={[Function]}
-  >
-    <Title>
-      Confirm that you are an eligible caregiver
-    </Title>
-    <Trans
-      components={
-        Object {
-          "caregiver-relationship-link": <a
-            href="https://www.mass.gov/family-caring-leave-relationships"
-            rel="noopener"
-            target="_blank"
-          />,
-        }
+  <Title>
+    Confirm that you are an eligible caregiver
+  </Title>
+  <Trans
+    components={
+      Object {
+        "caregiver-relationship-link": <a
+          href="https://www.mass.gov/family-caring-leave-relationships"
+          rel="noopener"
+          target="_blank"
+        />,
       }
-      i18nKey="pages.claimsCaringLeaveAttestation.lead"
-    />
-    <Alert
-      className="measure-6"
-      noIcon={true}
-      state="info"
+    }
+    i18nKey="pages.claimsCaringLeaveAttestation.lead"
+  />
+  <Alert
+    className="measure-6"
+    noIcon={true}
+    state="info"
+  >
+    <p>
+      I agree that I have an eligible relationship with my child who is experiencing a serious health condition and needs my care.
+    </p>
+    <ButtonLink
+      className="text-no-underline text-white"
+      href="/applications/review?claim_id=mock_application_id"
     >
-      <p>
-        I agree that I have an eligible relationship with my child who is experiencing a serious health condition and needs my care.
-      </p>
-      <Button
-        type="submit"
-      >
-        I understand and agree
-      </Button>
-    </Alert>
-  </form>
+      I understand and agree
+    </ButtonLink>
+  </Alert>
 </Fragment>
+`;
+
+exports[`CaringLeaveAttestation renders the page 2`] = `
+Array [
+  "This paid leave applies to caregivers with an ",
+  <a
+    href="https://www.mass.gov/family-caring-leave-relationships"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    eligible family relationship
+  </a>,
+  ".",
+]
 `;

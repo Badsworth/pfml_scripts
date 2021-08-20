@@ -167,14 +167,14 @@ describe("Series of test that verifies LAs are properly registered in Fineos", (
       },
     };
 
-    const leave_admin_info_1 = ((await getUsersCurrent(
+    const leave_admin_info_1 = (await getUsersCurrent(
       pmflApiOptions_1
-    )) as unknown) as {
+    )) as unknown as {
       data: { data: UserResponse };
     };
-    const leave_admin_info_2 = ((await getUsersCurrent(
+    const leave_admin_info_2 = (await getUsersCurrent(
       pmflApiOptions_2
-    )) as unknown) as {
+    )) as unknown as {
       data: { data: UserResponse };
     };
 

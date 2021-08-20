@@ -42,11 +42,11 @@ exports[`EmployerBenefits renders the component for v1 eforms 1`] = `
           Benefit type
         </th>
         <th
-          colSpan="2"
           scope="col"
         >
           Details
         </th>
+        <th />
       </tr>
     </thead>
     <tbody>
@@ -159,11 +159,11 @@ exports[`EmployerBenefits renders the component for v2 eforms 1`] = `
           Benefit type
         </th>
         <th
-          colSpan="2"
           scope="col"
         >
           Details
         </th>
+        <th />
       </tr>
     </thead>
     <tbody>
@@ -218,7 +218,6 @@ exports[`EmployerBenefits renders the component for v2 eforms 1`] = `
       <tr>
         <td
           className="padding-y-2 padding-left-0"
-          colSpan="4"
         >
           <AddButton
             disabled={false}
@@ -226,6 +225,9 @@ exports[`EmployerBenefits renders the component for v2 eforms 1`] = `
             onClick={[Function]}
           />
         </td>
+        <td />
+        <td />
+        <td />
       </tr>
     </tbody>
   </Table>

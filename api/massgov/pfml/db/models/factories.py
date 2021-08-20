@@ -367,6 +367,33 @@ class ClaimFactory(BaseFactory):
     employee_id = factory.LazyAttribute(lambda w: w.employee.employee_id)
 
 
+class AbsencePeriodFactory(BaseFactory):
+    class Meta:
+        model = employee_models.AbsencePeriod
+
+    absence_period_id = Generators.UuidObj
+    claim = factory.SubFactory(ClaimFactory)
+    claim_id = factory.LazyAttribute(lambda w: w.claim.claim_id)
+    fineos_leave_request_id = factory.Faker("random_int")
+    absence_period_start_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 1, 1), date_end=date(2021, 1, 15)
+    )
+    absence_period_end_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 1, 16), date_end=date(2021, 1, 28)
+    )
+    leave_request_decision_id = (
+        employee_models.LeaveRequestDecision.APPROVED.leave_request_decision_id
+    )
+    absence_period_type_id = 1
+    absence_reason_id = 1
+    absence_reason_qualifier_one_id = 1
+    is_id_proofed = False
+    created_at = datetime.now()
+    updated_at = datetime.now()
+    fineos_absence_period_class_id = factory.Faker("random_int")
+    fineos_absence_period_index_id = factory.Faker("random_int")
+
+
 class ManagedRequirementFactory(BaseFactory):
     class Meta:
         model = employee_models.ManagedRequirement
@@ -479,6 +506,13 @@ class ApplicationFactory(BaseFactory):
     has_continuous_leave_periods = False
     has_intermittent_leave_periods = False
     has_reduced_schedule_leave_periods = False
+
+    # Other leaves
+    has_concurrent_leave = False
+    has_employer_benefits = False
+    has_other_incomes = False
+    has_previous_leaves_other_reason = False
+    has_previous_leaves_same_reason = False
 
     # Relationships
     user = factory.SubFactory(UserFactory)

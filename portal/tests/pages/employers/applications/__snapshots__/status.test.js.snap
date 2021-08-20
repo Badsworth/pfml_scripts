@@ -22,7 +22,7 @@ exports[`Status renders the page and correct content in Trans component 1`] = `
       components={
         Object {
           "dfml-regulations-link": <a
-            href="https://www.mass.gov/regulations/458-CMR-200-department-of-family-and-medical-leave-1"
+            href="https://www.mass.gov/regulations/458-CMR-200-family-and-medical-leave"
             rel="noopener"
             target="_blank"
           />,
@@ -87,7 +87,7 @@ exports[`Status renders the page and correct content in Trans component 2`] = `
 Array [
   "A decision has been made for this application. No action is required of you, but you can download a copy of the decision notice for details. Your employee has the right to appeal this decision under Massachusetts regulations (",
   <a
-    href="https://www.mass.gov/regulations/458-CMR-200-department-of-family-and-medical-leave-1"
+    href="https://www.mass.gov/regulations/458-CMR-200-family-and-medical-leave"
     key="1"
     rel="noopener"
     target="_blank"
@@ -102,7 +102,7 @@ exports[`Status shows lead text for a claim that has a decision 1`] = `
 Array [
   "A decision has been made for this application. No action is required of you, but you can download a copy of the decision notice for details. Your employee has the right to appeal this decision under Massachusetts regulations (",
   <a
-    href="https://www.mass.gov/regulations/458-CMR-200-department-of-family-and-medical-leave-1"
+    href="https://www.mass.gov/regulations/458-CMR-200-family-and-medical-leave"
     key="1"
     rel="noopener"
     target="_blank"
@@ -130,7 +130,7 @@ exports[`Status shows lead text for resolved claims 1`] = `
 Array [
   "A decision has been made for this application. No action is required of you, but you can download a copy of the decision notice for details. Your employee has the right to appeal this decision under Massachusetts regulations (",
   <a
-    href="https://www.mass.gov/regulations/458-CMR-200-department-of-family-and-medical-leave-1"
+    href="https://www.mass.gov/regulations/458-CMR-200-family-and-medical-leave"
     key="1"
     rel="noopener"
     target="_blank"

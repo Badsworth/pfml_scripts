@@ -110,7 +110,17 @@ resource "pagerduty_schedule" "mass_pfml_api_delivery" {
 
 // Rotation for onboarding engineers by shadowing the current primary on-call.
 //
+// If you need the shadow rotation, set the local variable to true. After the change is merged,
+// go into Pagerduty and manually set overrides for the week that they are supposed to onboard.
+// 
+// When not in use, please disable this by setting the local variable to false.
+//
+locals {
+  enable_shadow_rotation = false
+}
+
 resource "pagerduty_schedule" "mass_pfml_api_primary_shadow" {
+  count     = local.enable_shadow_rotation ? 1 : 0
   name      = "Mass PFML API Eng Primary (SHADOW)"
   time_zone = "America/New_York"
 
@@ -151,9 +161,14 @@ resource "pagerduty_escalation_policy" "mass_pfml_api_high_priority" {
       type = "schedule_reference"
       id   = pagerduty_schedule.mass_pfml_api_primary.id
     }
-    target {
-      type = "schedule_reference"
-      id   = pagerduty_schedule.mass_pfml_api_primary_shadow.id
+
+    // Optionally add the Primary Shadow to the escalation rule, if the shadow rotation is enabled.
+    dynamic "target" {
+      for_each = local.enable_shadow_rotation ? [1] : []
+      content {
+        type = "schedule_reference"
+        id   = pagerduty_schedule.mass_pfml_api_primary_shadow[0].id
+      }
     }
   }
 
@@ -199,9 +214,14 @@ resource "pagerduty_escalation_policy" "mass_pfml_api_low_priority" {
       type = "schedule_reference"
       id   = pagerduty_schedule.mass_pfml_api_primary.id
     }
-    target {
-      type = "schedule_reference"
-      id   = pagerduty_schedule.mass_pfml_api_primary_shadow.id
+
+    // Optionally add the Primary Shadow to the escalation rule, if the shadow rotation is enabled.
+    dynamic "target" {
+      for_each = local.enable_shadow_rotation ? [1] : []
+      content {
+        type = "schedule_reference"
+        id   = pagerduty_schedule.mass_pfml_api_primary_shadow[0].id
+      }
     }
   }
 

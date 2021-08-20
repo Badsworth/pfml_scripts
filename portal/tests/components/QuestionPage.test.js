@@ -10,7 +10,7 @@ describe("QuestionPage", () => {
     const wrapper = shallow(
       <QuestionPage
         title={sampleTitle}
-        onSave={jest.fn()}
+        onSave={jest.fn(() => Promise.resolve())}
         nextPage={sampleRoute}
       >
         <div>Some stuff here</div>
@@ -20,7 +20,7 @@ describe("QuestionPage", () => {
   });
 
   it("calls onSave with formData", async () => {
-    const handleSave = jest.fn();
+    const handleSave = jest.fn(() => Promise.resolve());
     const wrapper = shallow(
       <QuestionPage title={sampleTitle} onSave={handleSave}>
         <div>Some stuff here</div>

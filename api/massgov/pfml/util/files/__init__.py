@@ -303,41 +303,6 @@ def copy_file(source, destination):
         shutil.copy2(source, destination)
 
 
-def copy_s3_files(source, destination, expected_file_names, recursive=False):
-    s3_objects = list_files(source, recursive=recursive)
-
-    # A dictionary of mapping from expected file names to the new S3 location
-    file_mapping = dict.fromkeys(expected_file_names, "")
-
-    for s3_object in s3_objects:
-        for expected_file_name in expected_file_names:
-            # The objects will be just the file name
-            # eg. a file at s3://bucket/path/to/2020-01-01-file.csv.zip
-            # would be named 2020-01-01-file.csv.zip here
-            if s3_object.endswith(expected_file_name):
-                source_file = os.path.join(source, s3_object)
-                dest_file = os.path.join(destination, s3_object)
-
-                # We found two files which end the same, error
-                if file_mapping.get(expected_file_name):
-                    raise RuntimeError(
-                        f"Duplicate files found for {expected_file_name}: {file_mapping.get(expected_file_name)} and {source_file}"
-                    )
-
-                copy_file(source_file, dest_file)
-                file_mapping[expected_file_name] = dest_file
-
-    missing_files = []
-    for expected_file_name, destination in file_mapping.items():
-        if not destination:
-            missing_files.append(expected_file_name)
-
-    if missing_files:
-        raise Exception(f"The following files were not found in S3 {','.join(missing_files)}")
-
-    return file_mapping
-
-
 def delete_file(path):
     if is_s3_path(path):
         bucket, s3_path = split_s3_url(path)

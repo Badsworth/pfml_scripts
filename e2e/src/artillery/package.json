@@ -1,0 +1,8 @@
+{
+  "name": "pfml-artillery",
+  "description": "This faux-package contains dependencies we cannot bundle.",
+  "main": "processor.js",
+  "dependencies": {
+    "playwright-chromium": "^1.10.0"
+  }
+}

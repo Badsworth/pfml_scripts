@@ -54,7 +54,12 @@ describe("DOR File Writer", () => {
   });
   it("Should generate valid employer lines", async function () {
     const filename = `${tempdir}/employee.txt`;
-    await DORWriter.writeEmployeesFile(employerPool, employeePool, filename);
+    await DORWriter.writeEmployeesFile(
+      employerPool,
+      employeePool,
+      filename,
+      new Date(2021, 7, 1)
+    );
     await expect(fs.promises.readFile(filename, "utf-8")).resolves
       .toMatchInlineSnapshot(`
             "A0000120200930John Hancock                                                                                                                                                                                                                                                   1212315       F1212315                       0.002020093020200930235959

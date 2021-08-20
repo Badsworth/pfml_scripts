@@ -1,11 +1,12 @@
 import copy
 import logging  # noqa: B1
-from datetime import date
+from datetime import date, timedelta
 from unittest import mock
 
 import pytest
 
 import massgov.pfml.fineos.mock_client
+import massgov.pfml.util.datetime as datetime_util
 from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.exceptions import ObjectNotFound
 from massgov.pfml.api.models.claims.common import PreviousLeave
@@ -23,7 +24,10 @@ from massgov.pfml.db.models.employees import UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory
 from massgov.pfml.fineos import FINEOSClient, create_client
 from massgov.pfml.fineos.models import CreateOrUpdateLeaveAdmin, group_client_api
-from massgov.pfml.fineos.models.group_client_api import GroupClientDocument
+from massgov.pfml.fineos.models.group_client_api import (
+    GroupClientDocument,
+    ManagedRequirementDetails,
+)
 
 
 @pytest.fixture
@@ -220,6 +224,39 @@ def period_decisions_no_plan():
             ],
         }
     )
+
+
+@pytest.fixture
+def mock_managed_requirements():
+    today = datetime_util.utcnow().date()
+    return [
+        {
+            "managedReqId": 123,
+            "category": "Employer Confirmation",
+            "type": "Employer Confirmation of Leave Data",
+            "followUpDate": today + timedelta(days=10),
+            "documentReceived": True,
+            "creator": "Fake Creator",
+            "status": "Open",
+            "subjectPartyName": "Fake Name",
+            "sourceOfInfoPartyName": "Fake Sourcee",
+            "creationDate": today,
+            "dateSuppressed": None,
+        },
+        {
+            "managedReqId": 124,
+            "category": "Employer Confirmation",
+            "type": "Employer Confirmation of Leave Data",
+            "followUpDate": today + timedelta(days=10),
+            "documentReceived": True,
+            "creator": "Fake Creator",
+            "status": "Complete",
+            "subjectPartyName": "Fake Name",
+            "sourceOfInfoPartyName": "Fake Sourcee",
+            "creationDate": today,
+            "dateSuppressed": None,
+        },
+    ]
 
 
 def mock_fineos_client_period_decisions(period_decisions_data):
@@ -1716,7 +1753,7 @@ def test_get_claim_plan(mock_fineos_period_decisions, initialize_factories_sessi
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details = get_claim_as_leave_admin(
+    leave_details, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
     )
     assert leave_details.status == "Known"
@@ -1727,7 +1764,7 @@ def test_get_claim_no_plan(mock_fineos_period_decisions_no_plan, initialize_fact
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details = get_claim_as_leave_admin(
+    leave_details, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions_no_plan
     )
     assert leave_details.status == "Known"
@@ -1740,7 +1777,7 @@ def test_get_claim_eform_type_contains_neither_version_no_feature_toggle(
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details = get_claim_as_leave_admin(
+    leave_details, _ = get_claim_as_leave_admin(
         fineos_user_id,
         absence_id,
         employer,
@@ -1757,7 +1794,7 @@ def test_get_claim_eform_type_contains_neither_version_with_feature_toggle(
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details = get_claim_as_leave_admin(
+    leave_details, _ = get_claim_as_leave_admin(
         fineos_user_id,
         absence_id,
         employer,
@@ -1790,7 +1827,7 @@ def test_get_claim_other_leaves_v2_eform(
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details = get_claim_as_leave_admin(
+    leave_details, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_leaves_v2_eform,
     )
 
@@ -1874,7 +1911,7 @@ def test_get_claim_other_leaves_v2_accrued_leave_different_employer_eform(
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details = get_claim_as_leave_admin(
+    leave_details, _ = get_claim_as_leave_admin(
         fineos_user_id,
         absence_id,
         employer,
@@ -1901,7 +1938,7 @@ def test_get_claim_other_income(mock_fineos_other_income_v1_eform, initialize_fa
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details = get_claim_as_leave_admin(
+    leave_details, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_income_v1_eform,
     )
     assert leave_details.date_of_birth == "****-12-25"
@@ -1931,6 +1968,78 @@ def test_get_claim_other_income(mock_fineos_other_income_v1_eform, initialize_fa
     assert leave_details.is_reviewable is False
     assert leave_details.status == "Known"
     assert leave_details.uses_second_eform_version is False
+
+
+@pytest.mark.integration
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
+def test_get_claim_with_open_managed_requirement(
+    mock_get_req,
+    mock_fineos_period_decisions,
+    initialize_factories_session,
+    mock_managed_requirements,
+):
+    mock_get_req.return_value = [
+        ManagedRequirementDetails.parse_obj(mr) for mr in mock_managed_requirements
+    ]
+    fineos_user_id = "Friendly_HR"
+    absence_id = "NTN-001-ABS-001"
+    employer = EmployerFactory.create()
+    leave_details, managed_requirements = get_claim_as_leave_admin(
+        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
+    )
+    assert leave_details.status == "Known"
+    assert len(managed_requirements) == len(mock_managed_requirements)
+    assert leave_details.is_reviewable
+
+
+@pytest.mark.integration
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
+def test_get_claim_with_closed_managed_requirement(
+    mock_get_req,
+    mock_fineos_period_decisions,
+    initialize_factories_session,
+    mock_managed_requirements,
+):
+    returned_managed_req = []
+    for mr in mock_managed_requirements:
+        mr = ManagedRequirementDetails.parse_obj(mr)
+        mr.status = "Complete"
+        returned_managed_req.append(mr)
+    mock_get_req.return_value = returned_managed_req
+    fineos_user_id = "Friendly_HR"
+    absence_id = "NTN-001-ABS-001"
+    employer = EmployerFactory.create()
+    leave_details, managed_requirements = get_claim_as_leave_admin(
+        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
+    )
+    assert leave_details.status == "Known"
+    assert len(managed_requirements) == len(mock_managed_requirements)
+    assert not leave_details.is_reviewable
+
+
+@pytest.mark.integration
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
+def test_get_claim_with_open_expired_managed_requirement(
+    mock_get_req,
+    mock_fineos_period_decisions,
+    initialize_factories_session,
+    mock_managed_requirements,
+):
+    returned_managed_req = []
+    for mr in mock_managed_requirements:
+        mr = ManagedRequirementDetails.parse_obj(mr)
+        mr.followUpDate = datetime_util.utcnow().date() - timedelta(days=3)
+        returned_managed_req.append(mr)
+    mock_get_req.return_value = returned_managed_req
+    fineos_user_id = "Friendly_HR"
+    absence_id = "NTN-001-ABS-001"
+    employer = EmployerFactory.create()
+    leave_details, managed_requirements = get_claim_as_leave_admin(
+        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
+    )
+    assert leave_details.status == "Known"
+    assert len(managed_requirements) == len(mock_managed_requirements)
+    assert not leave_details.is_reviewable
 
 
 # testing class for get_documents_as_leave_admin

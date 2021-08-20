@@ -87,7 +87,7 @@ const cmd: CommandModule<SystemWideArgs, PresetArgs> = {
             files.map((file) => fs.createReadStream(file))
           );
           logger.info(
-            `Flood launched as "${response.name}": ${response.permalink}.`
+            `Flood launched as "${response.name}": ${response.permalink}`
           );
           return response.uuid;
         };

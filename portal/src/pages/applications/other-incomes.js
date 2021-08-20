@@ -24,7 +24,10 @@ export const OtherIncomes = (props) => {
     if (formState.has_other_incomes === false && claim.other_incomes.length) {
       formState.other_incomes = null;
     }
-    appLogic.benefitsApplications.update(claim.application_id, formState);
+    return appLogic.benefitsApplications.update(
+      claim.application_id,
+      formState
+    );
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({

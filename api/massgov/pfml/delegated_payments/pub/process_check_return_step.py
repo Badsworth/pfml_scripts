@@ -18,7 +18,6 @@ from massgov.pfml.db.models.employees import (
     Payment,
     PaymentCheck,
     PaymentCheckStatus,
-    PaymentReferenceFile,
     PubErrorType,
     ReferenceFile,
     ReferenceFileType,
@@ -109,10 +108,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
         if not self.payment_state_is_check_sent(payment, check_payment):
             return
 
-        payment_reference_file = PaymentReferenceFile(
-            payment=payment, reference_file=self.reference_file,
-        )
-        self.db_session.add(payment_reference_file)
+        self.add_payment_reference_file(payment, self.reference_file)
 
         if check_payment.status == check_return.PaidStatus.PAID:
             self.paid_check_payment(payment, check_payment)
@@ -296,6 +292,7 @@ def extra_for_log(
     check_payment: check_return.CheckPayment, payment: Payment
 ) -> Dict[str, Union[None, int, str]]:
     return {
+        "absence_case_id": payment.claim.fineos_absence_id if payment.claim else None,
         "payments.check.line_number": check_payment.line_number,
         "payments.check.check_number": check_payment.check_number,
         "payments.check.status": check_payment.status.name,

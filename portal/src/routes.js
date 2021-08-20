@@ -18,7 +18,6 @@ const routes = {
     concurrentLeaves: "/applications/concurrent-leaves",
     concurrentLeavesDetails: "/applications/concurrent-leaves-details",
     concurrentLeavesIntro: "/applications/concurrent-leaves-intro",
-    dashboard: "/dashboard",
     dateOfBirth: "/applications/date-of-birth",
     dateOfChild: "/applications/date-of-child",
     employerBenefits: "/applications/employer-benefits",
@@ -59,6 +58,7 @@ const routes = {
     ssn: "/applications/ssn",
     start: "/applications/start",
     stateId: "/applications/state-id",
+    status: "/applications/status",
     success: "/applications/success",
     // For routes that don't have a page to point to yet, we can route them
     // to a placeholder page. This allows us to search our code for routes.applications.todo,
@@ -97,6 +97,8 @@ const routes = {
       "https://www.dol.gov/agencies/whd/fact-sheets/28C-fmla-eldercare",
     massTaxConnect: "https://mtc.dor.state.ma.us/mtc/_/",
     massgov: {
+      applicationApprovalTimeline:
+        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-application-approval-timeline",
       benefitsGuide:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide",
       benefitsGuide_aboutBondingLeave:
@@ -119,7 +121,7 @@ const routes = {
         "https://www.mass.gov/info-details/massachusetts-department-of-family-and-medical-leave-informed-consent-agreement",
       dfml: "https://www.mass.gov/orgs/department-of-family-and-medical-leave",
       dfmlRegulations:
-        "https://www.mass.gov/regulations/458-CMR-200-department-of-family-and-medical-leave-1",
+        "https://www.mass.gov/regulations/458-CMR-200-family-and-medical-leave",
       employerAccount:
         "https://www.mass.gov/how-to/creating-an-employer-account-to-review-paid-family-and-medical-leave-pfml-applications",
       employerReimbursements:
@@ -153,6 +155,8 @@ const routes = {
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-",
       reductionsOverview:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions",
+      requestAnAppealForPFML:
+        "https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave",
       schedulingLeaveGuide:
         "https://www.mass.gov/info-details/intermittent-and-reduced-leave-schedules",
       taxLiability: "https://www.mass.gov/pfml-tax-liability",

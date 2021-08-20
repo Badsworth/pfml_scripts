@@ -6,6 +6,7 @@ from datetime import date, datetime, timedelta
 import boto3
 import faker
 import pytest
+from freezegun import freeze_time
 from sqlalchemy.exc import SQLAlchemyError
 
 import massgov.pfml.db as db
@@ -17,6 +18,8 @@ from massgov.pfml.db.models.employees import (
     Country,
     CtrBatchIdentifier,
     GeoState,
+    ImportLog,
+    PaymentCheck,
     PrenoteState,
     PubEft,
     ReferenceFileType,
@@ -29,12 +32,13 @@ from massgov.pfml.db.models.factories import (
     EmployeeFactory,
     EmployeePubEftPairFactory,
     EmployeeReferenceFileFactory,
+    EmployerFactory,
     ExperianAddressPairFactory,
     PaymentFactory,
     PubEftFactory,
     ReferenceFileFactory,
 )
-from massgov.pfml.db.models.payments import FineosExtractVpei
+from massgov.pfml.db.models.payments import FineosExtractVpei, PaymentLog
 from massgov.pfml.delegated_payments.delegated_payments_util import (
     find_existing_address_pair,
     find_existing_eft,
@@ -1139,3 +1143,86 @@ def test_create_staging_table_instance(test_db_session, initialize_factories_ses
 )
 def test_get_period_in_weeks(start, end, weeks):
     assert payments_util.get_period_in_weeks(start, end) == weeks
+
+
+def test_create_payment_log(test_db_session, initialize_factories_session):
+    # Create a payment without a claim/employee/etc. So this only has the additional info
+    import_log = ImportLog(import_log_id=1)
+    test_db_session.add(import_log)
+    payment = PaymentFactory.create(claim=None, claim_id=None)
+
+    additional_details = {"info": {"nested": 1}}
+    payments_util.create_payment_log(
+        payment, import_log.import_log_id, test_db_session, additional_details
+    )
+
+    payment_log = test_db_session.query(PaymentLog).first()
+    assert payment_log.payment_id == payment.payment_id
+    assert payment_log.import_log_id == import_log.import_log_id
+
+    excepted_details = {"snapshot": {}}
+    excepted_details.update(additional_details)
+    assert payment_log.details == excepted_details
+
+
+def test_create_payment_log_full(test_db_session, initialize_factories_session):
+    import_log = ImportLog(import_log_id=1)
+    test_db_session.add(import_log)
+
+    employer = EmployerFactory.create()
+    claim = ClaimFactory.create(employer=employer, employer_id=employer.employer_id)
+    payment = PaymentFactory.create(claim=claim)
+    employee = claim.employee
+
+    payment_check = PaymentCheck(payment_id=payment.payment_id, check_number=25)
+    test_db_session.add(payment_check)
+    test_db_session.commit()
+
+    # Don't provide any additional details
+    payments_util.create_payment_log(payment, import_log.import_log_id, test_db_session)
+
+    payment_log = test_db_session.query(PaymentLog).first()
+    assert payment_log.payment_id == payment.payment_id
+    assert payment_log.import_log_id == import_log.import_log_id
+
+    # Verify the only record in the details is the snapshot data
+    assert len(payment_log.details) == 1
+    assert "snapshot" in payment_log.details
+
+    snapshot = payment_log.details["snapshot"]
+
+    # Claim should be present and match exactly
+    assert "claim" in snapshot
+    assert snapshot["claim"].items() == claim.for_json().items()
+
+    # Employee should be present, and a subset of the data
+    assert "employee" in snapshot
+    assert len(snapshot["employee"]) > 7  # Sanity check to verify not empty
+    assert snapshot["employee"].items() <= employee.for_json().items()
+
+    # Employer should be present, and a subset of the data
+    assert "employer" in snapshot
+    assert len(snapshot["employer"]) > 7  # Sanity check to verify not empty
+    assert snapshot["employer"].items() <= employer.for_json().items()
+
+    # Payment check should be present and match exactly
+    assert "payment_check" in snapshot
+    assert snapshot["payment_check"].items() == payment_check.for_json().items()
+
+
+def test_create_success_file(mock_s3_bucket, monkeypatch):
+    archive_folder_path = f"s3://{mock_s3_bucket}/reports"
+    monkeypatch.setenv("PFML_ERROR_REPORTS_ARCHIVE_PATH", archive_folder_path)
+
+    # Make this act like the FINEOS extract process often does
+    # Starting at 11pm, but finishing a bit after.
+    with freeze_time("2021-08-01 23:00:00", tz_offset=4):
+        now = payments_util.get_now()
+    with freeze_time("2021-08-02 00:15:00", tz_offset=4):
+        payments_util.create_success_file(now, "example-process")
+
+    # Will be saved at a path with a folder showing the start date
+    # and a timestamp showing when it actually finished
+    files = file_util.list_files(archive_folder_path, recursive=True)
+    assert len(files) == 1
+    assert files[0] == "processed/2021-08-01/2021-08-02-00-15-00-example-process.SUCCESS"

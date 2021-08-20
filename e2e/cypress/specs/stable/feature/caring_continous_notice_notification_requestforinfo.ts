@@ -83,7 +83,7 @@ describe("Request for More Information (notifications/notices)", () => {
             application_id: submission.application_id,
             document_type: "Request for more Information",
           },
-          { timeout: 300000 }
+          { timeout: 60000 }
         );
         cy.log("Finished waiting for documents");
         cy.visit("/applications");
@@ -139,7 +139,7 @@ describe("Request for More Information (notifications/notices)", () => {
             messageWildcard: submission.fineos_absence_id,
             debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
           },
-          180000
+          30000
         );
         cy.contains(submission.fineos_absence_id);
       });
@@ -170,7 +170,7 @@ describe("Request for More Information (notifications/notices)", () => {
                 "Fineos Claim ID": submission.fineos_absence_id,
               },
             },
-            60000
+            40000
           );
           cy.contains(submission.fineos_absence_id);
         });

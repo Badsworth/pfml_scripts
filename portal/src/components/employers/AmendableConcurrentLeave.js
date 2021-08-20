@@ -8,6 +8,7 @@ import Heading from "../Heading";
 import InputDate from "../InputDate";
 import PropTypes from "prop-types";
 import formatDateRange from "../../utils/formatDateRange";
+import useAutoFocusEffect from "../../hooks/useAutoFocusEffect";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -25,7 +26,9 @@ const AmendableConcurrentLeave = ({
   const { t } = useTranslation();
   const [amendment, setAmendment] = useState(concurrentLeave);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
-    useState(false);
+    useState(isAddedByLeaveAdmin);
+  const containerRef = React.createRef();
+  useAutoFocusEffect({ containerRef, isAmendmentFormDisplayed });
 
   const getFormattedValue = (field, value) => {
     if (field === "leave_start_date" || field === "leave_end_date") {
@@ -95,10 +98,8 @@ const AmendableConcurrentLeave = ({
   return (
     <React.Fragment>
       {!isAddedByLeaveAdmin && <ConcurrentLeaveDetailsRow />}
-      <ConditionalContent
-        visible={isAddedByLeaveAdmin || isAmendmentFormDisplayed}
-      >
-        <tr>
+      <ConditionalContent visible={isAmendmentFormDisplayed}>
+        <tr ref={containerRef}>
           <td
             colSpan="3"
             className="padding-top-2 padding-bottom-2 padding-left-0"

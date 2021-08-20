@@ -606,9 +606,6 @@ const errors = {
         "The employer ID you entered is already associated with your account.",
       employer_verification_data_required:
         "$t(shared.ein.employer_verification_data_required)",
-      // TODO (EMPLOYER-1565): Remove this once the API no longer returns it
-      invalid:
-        "Enter your 9-digit Employer Identification Number in the correct format.",
       pattern:
         "Enter your 9-digit Employer Identification Number in the correct format.",
       require_contributing_employer:
@@ -681,6 +678,7 @@ const shared = {
   absenceCaseStatus_closed: "Closed",
   absenceCaseStatus_denied: "Denied",
   absenceCaseStatus_noAction: "No action required",
+  absenceCaseStatus_pending: "Pending",
   achTypeChecking: "Checking",
   achTypeSavings: "Savings",
   amountFrequencyLabel: "Frequency",
@@ -713,6 +711,7 @@ const shared = {
   choiceYes: "Yes",
   claimDurationTypeContinuous: "Continuous leave",
   claimDurationTypeIntermittent: "Intermittent leave",
+  claimDurationTypeReduced: "Reduced leave",
   claimDurationTypeReducedSchedule: "Reduced leave schedule",
   claimsEmploymentInfoTitle: "Employment information",
   claimsLeaveDetailsTitle: "Leave details",
@@ -1883,6 +1882,43 @@ const pages = {
     idLabel: "Enter your license or ID number",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
+  claimsStatus: {
+    applicationDetails: "Application details",
+    applicationID: "Application ID",
+    backButtonLabel: "Back to your applications",
+    employerEIN: "Employer Identification Number (EIN)",
+    infoRequestsBody:
+      "If you have a request for more information, use this to upload the requested documentation.",
+    infoRequestsHeading: "Respond to requests for information",
+    leavePeriodLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
+    leavePeriodLabel_intermittent: "$t(shared.claimDurationTypeIntermittent)",
+    leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReduced)",
+    leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
+    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
+    leaveReasonValue_care: "$t(shared.leaveReasonCare)",
+    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_serviceMemberFamily:
+      "$t(shared.leaveReasonServiceMemberFamily)",
+    leaveStatusMessage_Approved:
+      "<p>Your leave was approved.</p><p>Review your approval notice for more details about your benefit amount, payment schedule, and how to appeal if your benefits appear incorrect.</p>",
+    leaveStatusMessage_Denied:
+      "<p>Your leave was denied.</p><p>Review your denial notice for more details and an explanation of the appeal process.</p><p>If you would like to file an appeal, then you must request an appeal within <strong>ten (10) calendar days</strong> of the receipt of your approval notice.</p><p><request-appeal-link>See more about the appeal process here.</request-appeal-link></p>",
+    leaveStatusMessage_Pending:
+      "<p> Your leave is under review.</p><p><application-timeline-link>Learn more about the application approval process.</application-timeline-link></p>",
+    leaveStatusMessage_Withdrawn:
+      "<p>You have withdrawn your application from the claim process.</p><p>If you want to apply for paid leave again, you can begin your application <application-link>here.</application-link></p>",
+    makeChangesBody:
+      "<p>If you need to make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Some changes to your application, such as changing your start and end dates, may mean your application needs to be reviewed by your employer again.</p>",
+    makeChangesHeading: "Make changes to your application",
+    manageApplicationHeading: "Manage your application",
+    reportOtherBenefitsBody:
+      "<p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report changes to:</p><ul><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for disability benefit after you submitted your application, report this change.</li></ul>",
+    reportOtherBenefitsHeading: "Report other benefits or income",
+    uploadDocumentsButton: "Upload additional documents",
+    uploadDocumentsHeading: "Upload Documents",
+    viewNoticesHeading: "View your notices",
+  },
   claimsSuccess: {
     adjudicationProcess:
       "<ul> <li>Your employer has 10 business days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.</li><li>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</li></ul>",
@@ -2046,14 +2082,14 @@ const pages = {
   },
   employersClaimsNewApplication: {
     agreementBody:
-      "I understand that I need to give true answers to all questions in order to fulfill my responsibilities as a Massachusetts employer. I certify under penalty of perjury that my answers will be complete and accurate.",
+      "I understand that I need to give true answers to all questions in order to fulfill my responsibilities as a Massachusetts employer, and that my response may be shared with the employee and third parties. I certify under penalty of perjury that my answers will be complete and accurate.",
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     dobLabel: "Date of birth",
     employeeNameLabel: "Employee name",
     employerIdNumberLabel: "Employer ID number (EIN)",
     instructions:
-      "<p>This takes about 10 minutes. We use the information you provide to determine the leave time and benefit amount your employee will receive.</p><p>We need true answers to every question so that we can manage the program the way the law requires. Please confirm that you will answer as truthfully as you can.</p>",
+      "<p>This takes about 10 minutes. We use the information you provide to determine the leave time and benefit amount your employee will receive.</p><p>Your response may be shared with the employee and third parties for purposes of processing and adjudicating this application.</p><p>We need true answers to every question so that we can manage the program the way the law requires. Please confirm that you will answer as truthfully as you can.</p>",
     instructionsFollowUpDate: "$t(shared.employerInstructions_followUpDate)",
     instructionsLabel:
       "Are you the right person to respond to this application?",
@@ -2144,6 +2180,7 @@ const pages = {
     sortChoice_employee_za: "Last name – Z to A",
     sortChoice_newest: "Newest applications",
     sortChoice_oldest: "Oldest applications",
+    sortChoice_status: "Status",
     sortLabel: "Sort",
     startDateTooltip: "When an employee started a new leave application",
     statusDescription_approved:
@@ -2338,6 +2375,7 @@ const components = {
     status_declined: "$t(shared.absenceCaseStatus_denied)",
     status_noAction: "$t(shared.absenceCaseStatus_noAction)",
     status_openRequirements: "Review by {{followupDate}}",
+    status_pending: "$t(shared.absenceCaseStatus_pending)",
   },
   amendButton: {
     amend: "Amend",
@@ -2377,6 +2415,24 @@ const components = {
       "<p>If you’ll receive <reductions-overview-link>other benefits or income</reductions-overview-link>, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. This includes:</p><ul><li>Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)</li><li>Income from any other sources during your leave</li></ul>",
     resumeClaimButton: "Continue application",
     uploadDocsButton: "Upload additional documents",
+  },
+  applicationCardV2: {
+    applicationID: "Application ID",
+    continueApplication: "Continue application",
+    employerEIN: "Employer Identification Number (EIN)",
+    heading: "Application {{number}}",
+    leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReducedSchedule)",
+    leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
+    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
+    leaveReasonValue_care: "$t(shared.leaveReasonCare)",
+    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_serviceMemberFamily:
+      "$t(shared.leaveReasonServiceMemberFamily)",
+    manageApplicationDocuments: "Manage your application documents",
+    uploadDocuments: "Upload documents",
+    viewNotices: "View notices",
+    viewStatusUpdatesAndDetails: "View status updates and details",
   },
   authNav: {
     logOutButton: "Log out",

@@ -7,7 +7,6 @@ import SlideOut, { Props as SlideOutProps } from "../components/SlideOut";
 import usePopup from "../hooks/usePopup";
 import { Helmet } from "react-helmet-async";
 import { useState } from "react";
-import Image from "next/image";
 
 type User = {
   name: string;
@@ -46,13 +45,11 @@ const tempUsers = [
 
 export default function UserLookup() {
   const [users, setUsers] = useState<User[]>([]);
-  const { SlideOutPopup, openSlideOut } = usePopup<SlideOutProps<User>, User>(
-    SlideOut,
-  );
 
-  if (!SlideOutPopup || !openSlideOut) {
-    throw "Popup was not initialized!";
-  }
+  const { Popup: SlideOutPopup, open: openSlideOut } = usePopup<
+    SlideOutProps<User>,
+    User
+  >(SlideOut);
 
   const findUsers = async (searchTerm: string) => {
     return new Promise((resolve) =>
@@ -65,11 +62,18 @@ export default function UserLookup() {
   const getUsersType = (u: User) => <Tag text={u.type} color="green" />;
   const getUsersOptions = (u: User) => (
     <>
-      <Button additionalClasses={["btn--plain"]} callback={openSlideOut(u)}>
+      <Button additionalClasses={["btn--plain"]} onClick={openSlideOut(u)}>
         Quick view
       </Button>
-      &nbsp; |&nbsp;
-      <Button additionalClasses={["btn--plain"]}>View account</Button>
+      &nbsp; | &nbsp;
+      <Button
+        additionalClasses={["btn--plain"]}
+        onClick={() => {
+          //TODO link and pass state
+        }}
+      >
+        View account
+      </Button>
     </>
   );
 
@@ -84,7 +88,7 @@ export default function UserLookup() {
         {(data) => (
           <>
             <div className="account-info-slideover__image-wrapper">
-              <Image src="https://via.placeholder.com/32" layout="fill" />
+              <img alt="" src="https://via.placeholder.com/400" />
             </div>
             <p>{data?.name}</p>
             <p>{data?.email}</p>

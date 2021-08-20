@@ -21,6 +21,16 @@ h2 {
   margin-bottom: 0.72em;
 }
 
+a {
+  color: $Color-BayBlue-500;
+  text-decoration: none;
+}
+
+a:hover,
+a:focus {
+  text-decoration: underline;
+}
+
 .page {
   background: #e5e5e5;
   display: grid;
@@ -29,84 +39,7 @@ h2 {
   height: 100vh;
 }
 
-.page__header {
-  align-items: center;
-  background: $Color-BerkshiresGreen-600;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
-  display: flex;
-  grid-column: 1 / span 2;
-  grid-row: 1 / 1;
-  justify-content: space-between;
-  padding: 0.79em 1.14em;
-  position: relative;
-  width: 100%;
-  z-index: 1;
-}
-
-.page__logo-link {
-  color: #fff;
-  display: block;
-  font-size: 3.15em;
-  text-decoration: none;
-}
-
-.page__logo-link::before {
-  @include IconFontProps;
-  content: $IconPfmlLogo;
-  display: block;
-}
-
-.user-options {
-  align-items: center;
-  display: flex;
-  text-decoration: none;
-}
-
-.user-options__name {
-  color: #fff;
-  display: block;
-  margin-left: 0.57em;
-}
-
-.user-options__avatar-image {
-  border-radius: 50%;
-  display: block;
-  height: 32px;
-  width: 32px;
-}
-
-.page__sidebar {
-  display: none;
-
-  @media screen and (min-width: 1024px) {
-    background: $Color-BerkshiresGreen-200;
-
-    display: flex;
-    flex-direction: column;
-    grid-column: 1 / 1;
-    grid-row: 2 / 2;
-    overflow-y: auto;
-    position: relative;
-  }
-}
-
-.page__main {
-  grid-column: 1 / span 2;
-  padding: 1.9em 2.29em;
-
-  @media screen and (min-width: 1024px) {
-    grid-column: 2 / 2;
-    grid-row: 2 / 2;
-    overflow-x: hidden;
-    overflow-y: auto;
-    position: relative;
-  }
-}
-
-// general input styling:
-// changes here will apply to all inputs, therefore
-// custom overrides should happen at the component level
-input {
+input[type='text'] {
   appearance: none;
   border: 1px solid #ddd;
   border-radius: $Border-Radius;
@@ -137,12 +70,47 @@ input {
   }
 }
 
+input[type='checkbox'] {
+  appearance: none;
+  background: #fff;
+  border: solid 1px $Color-GraniteGray-200;
+  border-radius: 4px;
+  color: $Color-GraniteGray-200;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  width: 16px;
+
+  &:checked {
+    background: $Color-BayBlue-50;
+    border-color: $Color-BayBlue-500;
+    color: $Color-BayBlue-500;
+  }
+
+  &:checked::after {
+    @include IconFontProps;
+    content: $IconCheck;
+    font-size: 0.6em;
+    left: 2px;
+    position: absolute;
+    top: 3px;
+  }
+
+  &[disabled]:checked {
+    background: $Color-GraniteGray-50;
+    border-color: $Color-GraniteGray-300;
+    color: $Color-GraniteGray-300;
+  }
+}
+
 .users__warning-wrapper {
   margin: 1.71em 0;
 }
 
 .account-info-slideover__image-wrapper {
-  position: relative;
   height: 224px;
+  position: relative;
   width: 400px;
 }
+

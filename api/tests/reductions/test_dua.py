@@ -4,6 +4,7 @@ import random
 import string
 import tempfile
 from datetime import date, timedelta
+from decimal import Decimal
 from typing import Any, Dict, Optional
 
 import boto3
@@ -921,6 +922,16 @@ def test_generate_reduction_payment_report_information_with_no_new_payments():
             assert v == "NO NEW PAYMENTS"
 
 
+def test_convert_cent_to_dollars():
+    assert dua._convert_cent_to_dollars(123456) == Decimal("1234.56")
+    assert dua._convert_cent_to_dollars(256) == Decimal("2.56")
+    assert dua._convert_cent_to_dollars(12) == Decimal("0.12")
+    assert dua._convert_cent_to_dollars(5) == Decimal("0.05")
+    assert dua._convert_cent_to_dollars(0) == Decimal("0.0")
+    assert dua._convert_cent_to_dollars(None) == Decimal("0.0")
+    assert dua._convert_cent_to_dollars() == Decimal("0.0")
+
+
 def test_generate_reduction_payment_report_information_with_payments(
     initialize_factories_session, test_db_session
 ):
@@ -947,10 +958,10 @@ def test_generate_reduction_payment_report_information_with_payments(
             dua.Constants.PAYMENT_REPORT_TIME_FORMAT
         ),
         "GROSS_PAYMENT_AMOUNT": dua._convert_cent_to_dollars(
-            str(dua_reduction_payment.gross_payment_amount_cents)
+            dua_reduction_payment.gross_payment_amount_cents
         ),
         "NET_PAYMENT_AMOUNT": dua._convert_cent_to_dollars(
-            str(dua_reduction_payment.payment_amount_cents)
+            dua_reduction_payment.payment_amount_cents
         ),
         "FRAUD_IND": dua_reduction_payment.fraud_indicator,
         "BYB_DT": dua_reduction_payment.benefit_year_begin_date.strftime(

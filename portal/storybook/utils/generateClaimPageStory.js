@@ -110,6 +110,9 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
       },
       appErrors,
       setAppErrors: () => {},
+      portalFlow: {
+        getNextPageRoute: () => "/storybook-mock",
+      },
     };
     return (
       <Component

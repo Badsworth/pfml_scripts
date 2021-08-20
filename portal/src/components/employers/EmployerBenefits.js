@@ -59,9 +59,10 @@ const EmployerBenefits = (props) => {
             <th scope="col">
               {t("components.employersEmployerBenefits.benefitTypeLabel")}
             </th>
-            <th scope="col" colSpan="2">
+            <th scope="col">
               {t("components.employersEmployerBenefits.detailsLabel")}
             </th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -79,8 +80,10 @@ const EmployerBenefits = (props) => {
             ))
           ) : (
             <tr>
-              <th scope="row">{t("shared.noneReported")}</th>
-              <td colSpan="3" />
+              <td>{t("shared.noneReported")}</td>
+              <td></td>
+              <td></td>
+              <td></td>
             </tr>
           )}
           {shouldShowV2 &&
@@ -97,7 +100,7 @@ const EmployerBenefits = (props) => {
             ))}
           {shouldShowV2 && (
             <tr>
-              <td colSpan="4" className="padding-y-2 padding-left-0">
+              <td className="padding-y-2 padding-left-0">
                 <AddButton
                   label={t("components.employersEmployerBenefits.addButton", {
                     context:
@@ -107,6 +110,9 @@ const EmployerBenefits = (props) => {
                   disabled={addedBenefits.length >= limit}
                 />
               </td>
+              <td></td>
+              <td></td>
+              <td></td>
             </tr>
           )}
         </tbody>

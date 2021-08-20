@@ -43,11 +43,11 @@ exports[`NewApplication renders the page 1`] = `
           ]
         }
         label={
-          <ReviewHeading
+          <Heading
             level="2"
           >
             Are you the right person to respond to this application?
-          </ReviewHeading>
+          </Heading>
         }
         name="hasReviewerVerified"
         onChange={[Function]}

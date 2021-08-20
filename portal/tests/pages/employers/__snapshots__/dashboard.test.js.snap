@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Employer dashboard renders Sort section when feature flags are enabled 1`] = `
+exports[`Employer dashboard renders Sort dropdown 1`] = `
 <Dropdown
   choices={
     Array [
@@ -206,25 +206,21 @@ exports[`Employer dashboard renders filters 1`] = `
         Array [
           Object {
             "checked": false,
-            "className": "bg-transparent",
             "label": "Approved",
             "value": "Approved",
           },
           Object {
             "checked": false,
-            "className": "bg-transparent",
             "label": "Closed",
             "value": "Closed",
           },
           Object {
             "checked": false,
-            "className": "bg-transparent",
             "label": "Denied",
             "value": "Declined",
           },
           Object {
             "checked": false,
-            "className": "bg-transparent",
             "label": "--",
             "value": "Pending",
           },
@@ -235,7 +231,7 @@ exports[`Employer dashboard renders filters 1`] = `
       onChange={[Function]}
       smallLabel={true}
       type="checkbox"
-      value=""
+      value={Array []}
     />
     <Dropdown
       autocomplete={true}
@@ -286,17 +282,6 @@ exports[`Employer dashboard renders filters toggle button with expected label an
   variation="outline"
 >
   Show filters
-</Button>
-`;
-
-exports[`Employer dashboard renders filters toggle button with expected label and aria attributes 3`] = `
-<Button
-  aria-controls="filters"
-  aria-expanded="true"
-  onClick={[Function]}
-  variation="outline"
->
-  Hide filters
 </Button>
 `;
 
@@ -550,4 +535,15 @@ exports[`Employer dashboard shows buttons for removing active filters 1`] = `
     Closed
   </FilterMenuButton>
 </div>
+`;
+
+exports[`Employer dashboard toggles filters visibility when Show Filters button is clicked 1`] = `
+<Button
+  aria-controls="filters"
+  aria-expanded="true"
+  onClick={[Function]}
+  variation="outline"
+>
+  Hide filters
+</Button>
 `;

@@ -90,6 +90,29 @@ describe("ClaimsApi", () => {
       expect(filters).toEqual(originalFilters);
     });
 
+    it("uses fineos_absence_status as order_by value when passed in as just absence_status", async () => {
+      mockFetch();
+
+      const order = {
+        order_by: "absence_status",
+        order_direction: "ascending",
+      };
+      const originalOrder = { ...order };
+      const claimsApi = new ClaimsApi();
+      await claimsApi.getClaims(2, order, {});
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/claims?page_offset=2&order_by=fineos_absence_status&order_direction=ascending`,
+        expect.objectContaining({
+          headers: expect.any(Object),
+          method: "GET",
+        })
+      );
+      // Doesn't mutate original object, so that our claimsLogic caches what it is aware of, rather
+      // than what is sent to the API
+      expect(order).toEqual(originalOrder);
+    });
+
     it("returns response as instances of ClaimCollection and PaginationMeta", async () => {
       const mockResponseData = [
         {

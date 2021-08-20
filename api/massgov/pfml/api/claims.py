@@ -1,19 +1,20 @@
 import base64
-from typing import Any, Dict, Optional, Set, Union
+from typing import Any, Dict, List, Optional, Set, Union
 
 import connexion
 import flask
+from sqlalchemy.orm.session import Session
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
 
 import massgov.pfml.api.app as app
-import massgov.pfml.api.services.claim_rules as claim_rules
 import massgov.pfml.api.util.response as response_util
+import massgov.pfml.api.validation.claim_rules as claim_rules
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.authorization.flask import READ, can, requires
 from massgov.pfml.api.exceptions import ObjectNotFound
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
-from massgov.pfml.api.models.claims.responses import ClaimResponse
+from massgov.pfml.api.models.claims.responses import ClaimResponse, DetailedClaimResponse
 from massgov.pfml.api.services.administrator_fineos_actions import (
     awaiting_leave_info,
     complete_claim_review,
@@ -22,10 +23,31 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     get_claim_as_leave_admin,
     get_documents_as_leave_admin,
 )
-from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
-from massgov.pfml.db.models.employees import AbsenceStatus, Claim, Employer, UserLeaveAdministrator
+from massgov.pfml.api.services.managed_requirements import update_employer_confirmation_requirements
+from massgov.pfml.api.validation.exceptions import (
+    ContainsV1AndV2Eforms,
+    IssueType,
+    ValidationErrorDetail,
+)
+from massgov.pfml.db.models.employees import (
+    AbsenceStatus,
+    Claim,
+    Employer,
+    ManagedRequirement,
+    ManagedRequirementStatus,
+    ManagedRequirementType,
+    UserLeaveAdministrator,
+)
 from massgov.pfml.db.queries.get_claims_query import ActionRequiredStatusFilter, GetClaimsQuery
-from massgov.pfml.fineos.models.group_client_api import Base64EncodedFileData
+from massgov.pfml.db.queries.managed_requirements import (
+    create_managed_requirement_from_fineos,
+    get_managed_requirement_by_fineos_managed_requirement_id,
+    update_managed_requirement_from_fineos,
+)
+from massgov.pfml.fineos.models.group_client_api import (
+    Base64EncodedFileData,
+    ManagedRequirementDetails,
+)
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
     EmployerClaimReviewEFormBuilder,
     EmployerClaimReviewV1EFormBuilder,
@@ -90,7 +112,7 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
         if user_leave_admin is None:
             raise NotAuthorizedForAccess(
                 description="User does not have leave administrator record for this employer",
-                error_type="unauthorized_leave_admin",
+                error_type=IssueType.unauthorized_leave_admin,
             )
 
         if user_leave_admin.fineos_web_id is None:
@@ -161,6 +183,25 @@ def get_claim_review_log_attributes(claim_review: Optional[EmployerClaimReview])
     }
 
 
+def get_managed_requirements_log_attributes(
+    fineos_managed_requirements: List[ManagedRequirementDetails],
+    updated_managed_requirements: List[ManagedRequirement],
+) -> Dict[str, Any]:
+    return {
+        "managed_requirements.updated_successfully": len(updated_managed_requirements),
+        "managed_requirements.not_updated_successfully": len(fineos_managed_requirements)
+        - len(updated_managed_requirements),
+        "managed_requirements.received_as_open": len(
+            [
+                fmr
+                for fmr in fineos_managed_requirements
+                if str(fmr.status)
+                == ManagedRequirementStatus.OPEN.managed_requirement_status_description
+            ]
+        ),
+    }
+
+
 @requires(READ, "EMPLOYER_API")
 def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
     body = connexion.request.json
@@ -169,10 +210,7 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
 
     if issues := claim_rules.get_employer_claim_review_issues(claim_review):
         return response_util.error_response(
-            status_code=BadRequest,
-            message="Invalid claim review body",
-            errors=[response_util.validation_issue(issue) for issue in issues],
-            data={},
+            status_code=BadRequest, message="Invalid claim review body", errors=issues, data={},
         ).to_api_response()
 
     try:
@@ -205,9 +243,9 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
             status_code=BadRequest,
             message="No outstanding information request for claim",
             errors=[
-                response_util.custom_issue(
-                    "outstanding_information_request_required",
-                    "No outstanding information request for claim",
+                ValidationErrorDetail(
+                    type=IssueType.outstanding_information_request_required,
+                    message="No outstanding information request for claim",
                 )
             ],
         ).to_api_response()
@@ -231,6 +269,29 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
             logger.info("Created eform", extra=log_attributes)
 
     logger.info("Updated claim", extra=log_attributes)
+
+    # Try updating managed requirements after claim update
+    try:
+        fineos = massgov.pfml.fineos.create_client()
+        fineos_managed_requirements = fineos.get_managed_requirements(
+            str(fineos_web_id), fineos_absence_id
+        )
+
+        with app.db_session() as db_session:
+            updated_managed_requirements = update_employer_confirmation_requirements(
+                db_session, user_leave_admin.user_id, fineos_managed_requirements,
+            )
+
+            log_attributes = {
+                **log_attributes,
+                **get_managed_requirements_log_attributes(
+                    fineos_managed_requirements, updated_managed_requirements
+                ),
+            }
+
+    # On exception, log the error and pass so API returns normally
+    except Exception as ex:
+        logger.warning("Unable to update managed requirements", exc_info=ex, extra=log_attributes)
 
     claim_response = {"claim_id": fineos_absence_id}
     return response_util.success_response(
@@ -266,7 +327,7 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
         employer = get_or_404(db_session, Employer, user_leave_admin.employer_id)
 
         try:
-            claim_review_response = get_claim_as_leave_admin(
+            claim_review_response, managed_requirements = get_claim_as_leave_admin(
                 user_leave_admin.fineos_web_id,
                 fineos_absence_id,
                 employer,
@@ -277,9 +338,9 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
                 status_code=error.status_code,
                 message=error.description,
                 errors=[
-                    response_util.custom_issue(
+                    ValidationErrorDetail(
                         message="Claim contains both V1 and V2 eforms.",
-                        type="contains_v1_and_v2_eforms",
+                        type=IssueType.contains_v1_and_v2_eforms,
                     )
                 ],
                 data={},
@@ -313,6 +374,16 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
         logger.info(
             "employer_get_claim_review success", extra={**log_attributes},
         )
+        try:
+            handle_managed_requirements(
+                db_session, claim_from_db, managed_requirements, log_attributes,
+            )
+        except Exception as error:  # catch all exception handler
+            logger.error(
+                "Failed to handle the claim's managed requirements in employer claim review call",
+                extra=log_attributes,
+                exc_info=error,
+            )
         return response_util.success_response(
             message="Successfully retrieved claim",
             data=claim_review_response.dict(),
@@ -443,7 +514,7 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
 
     return response_util.success_response(
         message="Successfully retrieved claim",
-        data=ClaimResponse.from_orm(claim).dict(),
+        data=DetailedClaimResponse.from_orm(claim).dict(),
         status_code=200,
     ).to_api_response()
 
@@ -508,7 +579,6 @@ def get_claims() -> flask.Response:
                 query.add_absence_status_filter(absence_statuses)
 
             if search_string:
-                search_string = search_string.strip()
                 query.add_search_filter(search_string)
 
             query.add_order_by(pagination_context)
@@ -559,3 +629,25 @@ def validate_filterable_absence_statuses(absence_statuses: Set[str]) -> None:
             raise BadRequest(f"Invalid claim status {absence_status}.")
 
     return
+
+
+def handle_managed_requirements(
+    db_session: Session,
+    claim: Optional[Claim],
+    managed_requirements: List[ManagedRequirementDetails],
+    log_attributes: dict,
+) -> None:
+    if claim is None:
+        return
+    for mr in managed_requirements:
+        db_mr = get_managed_requirement_by_fineos_managed_requirement_id(
+            mr.managedReqId, db_session
+        )
+        if (
+            db_mr
+            and db_mr.managed_requirement_type_id
+            == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id
+        ):
+            update_managed_requirement_from_fineos(db_session, mr, db_mr, log_attributes)
+        elif not db_mr:
+            create_managed_requirement_from_fineos(db_session, claim.claim_id, mr, log_attributes)

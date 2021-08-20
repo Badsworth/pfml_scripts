@@ -67,7 +67,7 @@ def main():
         employer_id=employer_id,
         first_name=None,
         last_name=None,
-        national_insurance_no=784569632,
+        national_insurance_no="784569632",
     )
     cps.register_api_user(employee_registration)
 

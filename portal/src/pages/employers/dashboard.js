@@ -1,4 +1,5 @@
-import { camelCase, compact, find, get, pick, startCase } from "lodash";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { camelCase, compact, find, get, isEqual, startCase } from "lodash";
 import { AbsenceCaseStatus } from "../../models/Claim";
 import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
 import Alert from "../../components/Alert";
@@ -15,7 +16,6 @@ import PaginationMeta from "../../models/PaginationMeta";
 import PaginationNavigation from "../../components/PaginationNavigation";
 import PaginationSummary from "../../components/PaginationSummary";
 import PropTypes from "prop-types";
-import React from "react";
 import Table from "../../components/Table";
 import Title from "../../components/Title";
 import TooltipIcon from "../../components/TooltipIcon";
@@ -29,9 +29,11 @@ import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withClaims from "../../hoc/withClaims";
+import withUser from "../../hoc/withUser";
 
 export const Dashboard = (props) => {
   const { t } = useTranslation();
+  const introElementRef = useRef(null);
 
   /**
    * Update the page's query string, to load a different page number,
@@ -59,6 +61,9 @@ export const Dashboard = (props) => {
     // Our withClaims component watches the query string and
     // will trigger an API request when it changes.
     props.appLogic.portalFlow.updateQuery(paramsObj);
+
+    // Scroll user back to top of the table actions
+    if (introElementRef.current) introElementRef.current.scrollIntoView();
   };
 
   const showReviewByStatus = isFeatureEnabled("employerShowReviewByStatus");
@@ -90,7 +95,7 @@ export const Dashboard = (props) => {
         <DashboardInfoAlert user={props.user} />
       </div>
 
-      <section className="margin-bottom-4">
+      <section className="margin-bottom-4" ref={introElementRef}>
         <p className="margin-y-2">
           {!showReviewByStatus && t("pages.employersDashboard.instructions")}
         </p>
@@ -133,20 +138,18 @@ export const Dashboard = (props) => {
       </section>
 
       <Search
-        initialValue={get(props.activeFilters, "search", "")}
+        initialValue={get(props.query, "search", "")}
         updatePageQuery={updatePageQuery}
       />
       <Filters
-        activeFilters={props.activeFilters}
-        showFilters={props.query["show-filters"] === "true"}
+        query={props.query}
         updatePageQuery={updatePageQuery}
         user={props.user}
       />
       <PaginatedClaimsTable
         appLogic={props.appLogic}
-        claims={props.claims}
         user={props.user}
-        paginationMeta={props.paginationMeta}
+        query={props.query}
         updatePageQuery={updatePageQuery}
         sort={
           <SortDropdown
@@ -161,10 +164,6 @@ export const Dashboard = (props) => {
 };
 
 Dashboard.propTypes = {
-  activeFilters: PropTypes.shape({
-    claim_status: PropTypes.string,
-    employer_id: PropTypes.string,
-  }).isRequired,
   appLogic: PropTypes.shape({
     portalFlow: PropTypes.shape({
       getNextPageRoute: PropTypes.func.isRequired,
@@ -172,17 +171,17 @@ Dashboard.propTypes = {
       updateQuery: PropTypes.func.isRequired,
     }).isRequired,
   }).isRequired,
-  claims: PropTypes.instanceOf(ClaimCollection),
   query: PropTypes.shape({
-    "show-filters": PropTypes.oneOf(["false", "true"]),
+    claim_status: PropTypes.string,
+    employer_id: PropTypes.string,
     order_by: PropTypes.string,
     order_direction: PropTypes.oneOf(["ascending", "descending"]),
+    search: PropTypes.string,
   }),
-  paginationMeta: PropTypes.instanceOf(PaginationMeta),
   user: PropTypes.instanceOf(User).isRequired,
 };
 
-const PaginatedClaimsTable = (props) => {
+const PaginatedClaimsTable = withClaims((props) => {
   const { paginationMeta, updatePageQuery, user } = props;
   const { t } = useTranslation();
 
@@ -285,7 +284,7 @@ const PaginatedClaimsTable = (props) => {
       )}
     </React.Fragment>
   );
-};
+});
 
 PaginatedClaimsTable.propTypes = {
   appLogic: Dashboard.propTypes.appLogic,
@@ -401,7 +400,7 @@ const ClaimTableRows = (props) => {
 
 ClaimTableRows.propTypes = {
   appLogic: Dashboard.propTypes.appLogic,
-  claims: Dashboard.propTypes.claims,
+  claims: PropTypes.instanceOf(ClaimCollection),
   tableColumnKeys: PropTypes.arrayOf(PropTypes.string).isRequired,
   user: PropTypes.instanceOf(User).isRequired,
 };
@@ -468,28 +467,51 @@ DashboardInfoAlert.propTypes = {
 };
 
 const Filters = (props) => {
-  const filterFields = ["claim_status", "employer_id"];
-  const { showFilters, updatePageQuery, user } = props;
+  const { updatePageQuery, user } = props;
   const { t } = useTranslation();
 
-  const initialFormState = { ...pick(props.activeFilters, filterFields) };
-  if (initialFormState.claim_status) {
-    // Convert checkbox field query param into array, to conform to how we manage checkbox form state
-    initialFormState.claim_status = initialFormState.claim_status.split(",");
-  }
+  /**
+   * Returns all filter fields with their values set based on
+   * what's currently in the URL query string
+   * @returns { { employer_id: string, claim_status: string[] } }
+   */
+  const getFormStateFromQuery = useCallback(() => {
+    const claim_status = get(props.query, "claim_status");
+    return {
+      employer_id: get(props.query, "employer_id", ""),
+      // Convert checkbox field query param into array, to conform to how we manage checkbox form state
+      claim_status: claim_status ? claim_status.split(",") : [],
+    };
+  }, [props.query]);
 
-  const { formState, updateFields } = useFormState(initialFormState);
+  /**
+   * Form visibility and state management
+   */
+  const activeFilters = getFormStateFromQuery();
+  const [showFilters, setShowFilters] = useState(false);
+  const { formState, updateFields } = useFormState(activeFilters);
   const getFunctionalInputProps = useFunctionalInputProps({
     formState,
     updateFields,
   });
 
+  /**
+   * Watch the query string for changes, and update the selected form fields
+   * anytime those change. This is handy since a filter might get removed
+   * outside of this component, and it also saves us from calling
+   * updateFields every time we call updatePageQuery. Instead, we treat
+   * the query string as the source of truth, and react to its changes.
+   */
+  useEffect(() => {
+    updateFields(getFormStateFromQuery());
+  }, [getFormStateFromQuery, updateFields]);
+
+  /**
+   * UI variables
+   */
   const filtersContainerId = "filters";
-  let activeFiltersCount = Object.values(initialFormState).length;
-  if (initialFormState.claim_status) {
-    // Count each selected status as an active filter
-    activeFiltersCount += initialFormState.claim_status.length - 1;
-  }
+  let activeFiltersCount = activeFilters.claim_status.length;
+  if (activeFilters.employer_id) activeFiltersCount++;
 
   /**
    * Event handler for when the user applies their status and
@@ -507,21 +529,22 @@ const Filters = (props) => {
     updatePageQuery([
       ...params,
       {
-        name: "show-filters",
-        value: false,
-      },
-      {
         // Reset the page to 1 since filters affect what shows on the first page
         name: "page_offset",
         value: "1",
       },
     ]);
+
+    setShowFilters(false);
   };
 
+  /**
+   * Event handler for the "Reset filters" action
+   */
   const handleFilterReset = () => {
     const params = [];
 
-    Object.keys(initialFormState).forEach((name) => {
+    Object.keys(activeFilters).forEach((name) => {
       // Reset by setting to an empty string
       params.push({ name, value: "" });
     });
@@ -557,15 +580,7 @@ const Filters = (props) => {
   };
 
   const handleFilterToggleClick = () => {
-    // We use a query param instead of useState since the page re-mounts
-    // every time a filter changes, so we lose any local component state
-    // each time that happens.
-    updatePageQuery([
-      {
-        name: "show-filters",
-        value: !showFilters,
-      },
-    ]);
+    setShowFilters(!showFilters);
   };
 
   // TODO (EMPLOYER-1587): Remove variable
@@ -619,7 +634,6 @@ const Filters = (props) => {
             ...pendingStatusChoices,
           ].map((value) => ({
             checked: get(formState, "claim_status", []).includes(value),
-            className: "bg-transparent",
             label: t("pages.employersDashboard.filterStatusChoice", {
               context: startCase(camelCase(value)).replace(/[-\s]/g, ""),
             }),
@@ -644,7 +658,7 @@ const Filters = (props) => {
           />
         )}
 
-        <Button type="submit" disabled={Object.values(formState).length === 0}>
+        <Button type="submit" disabled={isEqual(formState, activeFilters)}>
           {t("pages.employersDashboard.filtersApply")}
         </Button>
 
@@ -664,27 +678,27 @@ const Filters = (props) => {
           <strong className="margin-right-2 display-inline-block">
             {t("pages.employersDashboard.filterNavLabel")}
           </strong>
-          {initialFormState.employer_id && (
+          {activeFilters.employer_id && (
             <FilterMenuButton
               data-test="employer_id"
               onClick={() => handleRemoveFilterClick("employer_id")}
             >
               {
                 find(user.verifiedEmployers, {
-                  employer_id: initialFormState.employer_id,
+                  employer_id: activeFilters.employer_id,
                 }).employer_dba
               }
             </FilterMenuButton>
           )}
-          {initialFormState.claim_status &&
-            initialFormState.claim_status.map((status) => (
+          {activeFilters.claim_status &&
+            activeFilters.claim_status.map((status) => (
               <FilterMenuButton
                 data-test={`claim_status_${status}`}
                 key={status}
                 onClick={() =>
                   handleRemoveFilterClick(
                     "claim_status",
-                    initialFormState.claim_status.filter((s) => s !== status)
+                    activeFilters.claim_status.filter((s) => s !== status)
                   )
                 }
               >
@@ -700,11 +714,10 @@ const Filters = (props) => {
 };
 
 Filters.propTypes = {
-  activeFilters: PropTypes.shape({
+  query: PropTypes.shape({
     claim_status: PropTypes.string,
     employer_id: PropTypes.string,
   }).isRequired,
-  showFilters: PropTypes.bool,
   updatePageQuery: PropTypes.func.isRequired,
   user: PropTypes.instanceOf(User).isRequired,
 };
@@ -794,12 +807,18 @@ Search.propTypes = {
 
 const SortDropdown = (props) => {
   const { order_by, order_direction, updatePageQuery } = props;
-  const choices = {
-    newest: "created_at,descending",
-    oldest: "created_at,ascending",
-    employee_az: "employee,ascending",
-    employee_za: "employee,descending",
-  };
+  const choices = new Map([
+    ["newest", "created_at,descending"],
+    ["oldest", "created_at,ascending"],
+    ["employee_az", "employee,ascending"],
+    ["employee_za", "employee,descending"],
+  ]);
+
+  // TODO (EMPLOYER-1587): Move the choice directly into the choices object definition
+  if (isFeatureEnabled("employerShowReviewByStatus")) {
+    choices.set("status", "absence_status,ascending");
+  }
+
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState({
     orderAndDirection: compact([order_by, order_direction]).join(","),
@@ -840,13 +859,11 @@ const SortDropdown = (props) => {
     ]);
   };
 
-  if (!isFeatureEnabled("employerShowDashboardSort")) return null;
-
   return (
     <Dropdown
       {...getFunctionalInputProps("orderAndDirection")}
       onChange={handleChange}
-      choices={Object.entries(choices).map(([key, value]) => ({
+      choices={Array.from(choices).map(([key, value]) => ({
         label: t("pages.employersDashboard.sortChoice", { context: key }),
         value,
       }))}
@@ -866,4 +883,4 @@ SortDropdown.propTypes = {
   updatePageQuery: PropTypes.func.isRequired,
 };
 
-export default withClaims(Dashboard);
+export default withUser(Dashboard);

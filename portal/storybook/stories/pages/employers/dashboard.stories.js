@@ -1,6 +1,7 @@
 import Claim, { ClaimEmployee, ClaimEmployer } from "src/models/Claim";
 import React, { useState } from "react";
 import User, { UserLeaveAdministrator } from "src/models/User";
+import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import ClaimCollection from "src/models/ClaimCollection";
 import { Dashboard } from "src/pages/employers/dashboard";
 import { DateTime } from "luxon";
@@ -18,9 +19,16 @@ function createUserLeaveAdministrator(attrs = {}) {
   });
 }
 
+function createUser(attrs = {}) {
+  return new User({
+    consented_to_data_sharing: true,
+    ...attrs,
+  });
+}
+
 const verificationScenarios = {
   "All employers verified": {
-    user: new User({
+    user: createUser({
       user_leave_administrators: [
         createUserLeaveAdministrator({
           has_fineos_registration: true,
@@ -36,7 +44,7 @@ const verificationScenarios = {
     }),
   },
   "Single verified employer, not registered in FINEOS": {
-    user: new User({
+    user: createUser({
       user_leave_administrators: [
         createUserLeaveAdministrator({
           has_fineos_registration: false,
@@ -47,7 +55,7 @@ const verificationScenarios = {
     }),
   },
   "All employers not verified + unverifiable": {
-    user: new User({
+    user: createUser({
       user_leave_administrators: [
         createUserLeaveAdministrator({
           has_verification_data: false,
@@ -57,7 +65,7 @@ const verificationScenarios = {
     }),
   },
   "All employers not verified + verifiable": {
-    user: new User({
+    user: createUser({
       user_leave_administrators: [
         createUserLeaveAdministrator({
           has_verification_data: true,
@@ -67,7 +75,7 @@ const verificationScenarios = {
     }),
   },
   "Mix of verified and verifiable employers": {
-    user: new User({
+    user: createUser({
       user_leave_administrators: [
         createUserLeaveAdministrator({
           has_fineos_registration: true,
@@ -83,7 +91,7 @@ const verificationScenarios = {
     }),
   },
   "Mix of verified and unverifiable employers": {
-    user: new User({
+    user: createUser({
       user_leave_administrators: [
         createUserLeaveAdministrator({
           has_fineos_registration: true,
@@ -161,35 +169,40 @@ export const Default = (args) => {
             })
         );
 
+  const mockFunction = () => {};
   const appLogic = {
+    appErrors: new AppErrorInfoCollection(),
+    auth: {
+      isLoggedIn: true,
+      requireLogin: mockFunction,
+    },
+    claims: {
+      claims: new ClaimCollection(claims),
+      isLoadingClaims: false,
+      loadPage: mockFunction,
+      paginationMeta: new PaginationMeta({
+        page_offset: 1,
+        page_size: 25,
+        total_pages: hasNoClaims ? 1 : args.total_pages,
+        total_records: hasNoClaims ? 0 : args.total_pages * 25,
+        order_by: "created_at",
+        order_direction: "asc",
+      }),
+    },
     portalFlow: {
-      getNextPageRoute: () => {
-        return "#mock-route";
-      },
+      getNextPageRoute: () => "#mock-route",
       updateQuery: (params) => {
         setQuery(params);
       },
       pathname: routes.employers.dashboard,
     },
+    users: {
+      loadUser: mockFunction,
+      requireUserConsentToDataAgreement: mockFunction,
+      requireUserRole: mockFunction,
+      user,
+    },
   };
 
-  return (
-    <Dashboard
-      appLogic={appLogic}
-      activeFilters={{}}
-      claims={new ClaimCollection(claims)}
-      paginationMeta={
-        new PaginationMeta({
-          page_offset: 1,
-          page_size: 25,
-          total_pages: hasNoClaims ? 1 : args.total_pages,
-          total_records: hasNoClaims ? 0 : args.total_pages * 25,
-          order_by: "created_at",
-          order_direction: "asc",
-        })
-      }
-      query={query}
-      user={user}
-    />
-  );
+  return <Dashboard appLogic={appLogic} query={query} user={user} />;
 };

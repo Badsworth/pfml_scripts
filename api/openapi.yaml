@@ -1,4 +1,4 @@
-openapi: 3.0.2
+openapi: 3.0.3
 info:
   title: Paid Leave API
   description: An API for managing leave within Massachusetts Paid Family and Medical Leave.
@@ -343,7 +343,7 @@ paths:
                   - $ref: '#/components/schemas/SuccessfulResponse'
                   - properties:
                       data:
-                        $ref: "#/components/schemas/ClaimResponse"
+                        $ref: "#/components/schemas/DetailedClaimResponse"
         "400":
           description: An unsuccessful request returns a 400 status code if one or more errors occurred.
           content:
@@ -576,11 +576,6 @@ paths:
             format: uuid
           description: ID of Application to retrieve
           required: true
-        - name: X-FF-Require-Other-Leaves
-          description: Enforces validations on Other Leaves fields when present
-          in: header
-          schema:
-            type: string
       responses:
         "200":
           $ref: "#/components/responses/ApplicationResponse"
@@ -613,11 +608,6 @@ paths:
             format: uuid
           description: ID of Application to update
           required: true
-        - name: X-FF-Require-Other-Leaves
-          description: Enforces validations on Other Leaves fields when present
-          in: header
-          schema:
-            type: string
       responses:
         "200":
           description: Application updated without errors.
@@ -653,11 +643,6 @@ paths:
             format: uuid
           description: ID of Application to submit
           required: true
-        - name: X-FF-Require-Other-Leaves
-          description: Enforces validations on Other Leaves fields when present
-          in: header
-          schema:
-            type: string
       responses:
         "201":
           description: Application submitted without errors.
@@ -697,11 +682,6 @@ paths:
             format: uuid
           description: ID of Application to submit
           required: true
-        - name: X-FF-Require-Other-Leaves
-          description: Enforces validations on Other Leaves fields when present
-          in: header
-          schema:
-            type: string
       responses:
         "201":
           description: Application completed without errors.
@@ -1308,7 +1288,7 @@ components:
         warnings:
           type: array
           items:
-            $ref: "#/components/schemas/Issue"
+            $ref: "#/components/schemas/ValidationErrorDetail"
       required: ["status_code"]
       additionalProperties: false
 
@@ -1328,11 +1308,11 @@ components:
         warnings:
           type: array
           items:
-            $ref: "#/components/schemas/Issue"
+            $ref: "#/components/schemas/ValidationErrorDetail"
         errors:
           type: array
           items:
-            $ref: "#/components/schemas/Issue"
+            $ref: "#/components/schemas/ValidationErrorDetail"
       required: ["status_code", "errors"]
       additionalProperties: false
 
@@ -1363,14 +1343,20 @@ components:
       required: ["resource", "method"]
       additionalProperties: false
 
-    Issue:
+    ValidationErrorDetail:
       type: object
       properties:
         type:
+          example: "required"
           type: string
         message:
+          example: "leave_details.reason is required."
+          description: "Somewhat user-friendly description of the error. May contain PII."
           type: string
         rule:
+          description: >
+            Usage varies depending on the source of the validation error. OpenAPI validation
+            errors will set this to the expected value behavior (i.e the max length, or pattern).
           oneOf:
             - type: string
             - type: number
@@ -1378,7 +1364,11 @@ components:
             - type: boolean
             - type: array
             - type: object
+          nullable: true
         field:
+          description: "Field path, when the error is associated with a specific field."
+          example: "leave_details.reason"
+          nullable: true
           type: string
       additionalProperties: false
 
@@ -2197,6 +2187,93 @@ components:
         created_at:
           format: date
 
+    AbsencePeriodStatusResponse:
+      type: object
+      properties:
+        fineos_leave_request_id:
+          type: string
+          example: "PL-14432-0000002026"
+        absence_period_start_date:
+          type: string
+          format: date
+          example: "2021-06-01"
+        absence_period_end_date:
+          type: string
+          format: date
+          example: "2021-06-08"
+        reason:
+          type: string
+          enum:
+            - Care for a Family Member
+            - Pregnancy/Maternity
+            - Child Bonding
+            - Serious Health Condition - Employ
+          example: "Child Bonding"
+        reason_qualifier_one:
+          type: string
+          enum:
+            - Newborn
+            - Adoption
+            - Foster Care
+          example: "Newborn"
+        reason_qualifier_two:
+          type: string
+        period_type:
+          type: string
+          enum:
+            - Continuous
+            - Intermittent
+            - Reduced Schedule
+          example: "Continuous"
+        request_decision:
+          type: string
+          enum:
+            - Pending
+            - Approved
+            - Denied
+            - Withdrawn
+          example: "Approved"
+        evidence_status:
+          type: string
+          enum:
+            - Pending
+            - Waived
+            - Satisfied
+            - Not Satisfied
+            - Not Required
+          example: "Satisfied"
+
+    DetailedClaimResponse:
+      type: object
+      properties:
+        employer:
+          $ref: "#/components/schemas/EmployerResponse"
+        employee:
+          $ref: "#/components/schemas/EmployeeResponse"
+        fineos_absence_id:
+          format: string
+          example: "NTN-01-ABS-01"
+        fineos_notification_id:
+          format: string
+          example: "NTN-01"
+        created_at:
+          format: date
+        absence_periods:
+            type: array
+            items:
+              $ref: "#/components/schemas/AbsencePeriodStatusResponse"
+        outstanding_evidence:
+          type: object
+          properties:
+            employee_evidence:
+              type: array
+              items:
+                $ref: "#/components/schemas/EvidenceStatusDetail"
+            employer_evidence:
+              type: array
+              items:
+                $ref: "#/components/schemas/EvidenceStatusDetail"
+
     ClaimResponse:
       type: object
       properties:
@@ -2235,6 +2312,16 @@ components:
       items:
         $ref: "#/components/schemas/ClaimResponse"
 
+    EvidenceStatusDetail:
+      type: object
+      properties:
+        document_name:
+          type: string
+          example: "Document Name"
+        is_document_received:
+          type: boolean
+          example: true
+
     EmployerAddFeinResponse:
       type: object
       properties:
@@ -2254,6 +2341,7 @@ components:
         created_at:
           format: date
           example: "1970-06-01"
+          nullable: true
         document_type:
           type: string
           enum:
@@ -2271,15 +2359,18 @@ components:
         content_type:
           type: string
           example: "image/png"
+          nullable: true
         fineos_document_id:
           type: string
           example: "1234"
         name:
           type: string
           example: "passport.png"
+          nullable: true
         description:
           type: string
           example: "Jane Smith Passport"
+          nullable: true
       required:
         - created_at
         - document_type

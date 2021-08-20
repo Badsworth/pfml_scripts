@@ -46,12 +46,12 @@ class VendorLicenseInquiryResponse(PydanticBaseModel):
     city: str
     zip: str
 
-    _parse_license1 = validator("license1_expiration_date", pre=True, allow_reuse=True)(
-        parse_date_YMD
-    )
-    _parse_license2 = validator("license2_expiration_date", pre=True, allow_reuse=True)(
-        parse_date_YMD
-    )
+    _parse_license1: classmethod = validator(
+        "license1_expiration_date", pre=True, allow_reuse=True
+    )(parse_date_YMD)
+    _parse_license2: classmethod = validator(
+        "license2_expiration_date", pre=True, allow_reuse=True
+    )(parse_date_YMD)
 
     class Config:
         alias_generator = snake_to_camel

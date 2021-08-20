@@ -53,7 +53,10 @@ export const PreviousLeavesSameReasonDetails = (props) => {
     : formatDate("2021-01-01").full();
 
   const handleSave = () => {
-    appLogic.benefitsApplications.update(claim.application_id, formState);
+    return appLogic.benefitsApplications.update(
+      claim.application_id,
+      formState
+    );
   };
 
   const handleAddClick = () => {

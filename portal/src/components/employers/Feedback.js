@@ -1,9 +1,7 @@
-import React, { useEffect } from "react";
-import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
-import ConditionalContent from "../ConditionalContent";
 import FormLabel from "../FormLabel";
 import InputChoiceGroup from "../InputChoiceGroup";
 import PropTypes from "prop-types";
+import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import { Trans } from "react-i18next";
 import classnames from "classnames";
@@ -15,43 +13,14 @@ import { useTranslation } from "../../locales/i18n";
  */
 
 const Feedback = ({
-  appLogic,
-  isReportingFraud,
-  isDenyingRequest,
-  isEmployeeNoticeInsufficient,
-  comment,
-  setComment,
+  context,
+  getFunctionalInputProps,
+  shouldDisableNoOption,
   shouldShowCommentBox,
-  updateFields,
 }) => {
-  // TODO (EMPLOYER-583) add frontend validation
   const { t } = useTranslation();
-  const errorMsg = appLogic.appErrors.fieldErrorMessage("comment");
-
-  useEffect(() => {
-    if (!shouldShowCommentBox) {
-      setComment("");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [shouldShowCommentBox]);
-
-  useEffect(() => {
-    updateFields({
-      shouldShowCommentBox:
-        isDenyingRequest || isEmployeeNoticeInsufficient || !!comment,
-    });
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isDenyingRequest, isEmployeeNoticeInsufficient]);
-
-  const buildContext = () => {
-    if (isReportingFraud) return "fraud";
-    if (!isReportingFraud && isDenyingRequest) return "employerDecision";
-    if (!isDenyingRequest && isEmployeeNoticeInsufficient)
-      return "employeeNotice";
-  };
-
-  const shouldDisableNoOption =
-    isDenyingRequest || isEmployeeNoticeInsufficient;
+  const { errorMsg, name, onChange, value } =
+    getFunctionalInputProps("comment");
 
   const commentClasses = classnames("usa-form-group", {
     "usa-form-group--error": !!errorMsg,
@@ -63,6 +32,7 @@ const Feedback = ({
   return (
     <React.Fragment>
       <InputChoiceGroup
+        {...getFunctionalInputProps("should_show_comment_box")}
         smallLabel
         choices={[
           {
@@ -82,58 +52,40 @@ const Feedback = ({
             {t("components.employersFeedback.instructionsLabel")}
           </ReviewHeading>
         }
-        name="shouldShowCommentBox"
-        onChange={(event) => {
-          const hasSelectedYes = event.target.value === "true";
-          updateFields({ shouldShowCommentBox: hasSelectedYes });
-          if (!hasSelectedYes) setComment("");
-        }}
         type="radio"
       />
-      <ConditionalContent
-        getField={() => comment}
-        clearField={() => setComment("")}
-        updateFields={(event) => setComment(event.target.value)}
-        visible={shouldShowCommentBox}
-      >
+      {shouldShowCommentBox && (
         <div className={commentClasses}>
           <FormLabel
             className="usa-label"
-            htmlFor="comment"
+            htmlFor={name}
             small
             errorMsg={errorMsg}
           >
             <Trans
+              data-test="feedback-comment-solicitation"
               i18nKey="components.employersFeedback.commentSolicitation"
-              tOptions={{
-                context: buildContext() || "",
-              }}
+              tOptions={{ context }}
             />
           </FormLabel>
           <textarea
             className={textAreaClasses}
-            name="comment"
-            onChange={(event) => setComment(event.target.value)}
+            data-test="feedback-comment-textbox"
+            name={name}
+            onChange={onChange}
+            value={value}
           />
         </div>
-      </ConditionalContent>
+      )}
     </React.Fragment>
   );
 };
 
 Feedback.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
-    clearErrors: PropTypes.func.isRequired,
-    catchError: PropTypes.func.isRequired,
-  }).isRequired,
-  isReportingFraud: PropTypes.bool,
-  isDenyingRequest: PropTypes.bool,
-  isEmployeeNoticeInsufficient: PropTypes.bool,
-  comment: PropTypes.string.isRequired,
-  setComment: PropTypes.func.isRequired,
+  context: PropTypes.string.isRequired,
+  getFunctionalInputProps: PropTypes.func.isRequired,
+  shouldDisableNoOption: PropTypes.bool.isRequired,
   shouldShowCommentBox: PropTypes.bool.isRequired,
-  updateFields: PropTypes.func.isRequired,
 };
 
 export default Feedback;
