@@ -1,7 +1,7 @@
 import logging  # noqa: B1
 import os
 import xml.dom.minidom as minidom
-from datetime import date, datetime, timedelta
+from datetime import datetime, timedelta
 
 import boto3
 import faker
@@ -1118,31 +1118,6 @@ def test_create_staging_table_instance(test_db_session, initialize_factories_ses
     )
 
     assert len(employee) == 1
-
-
-@pytest.mark.parametrize(
-    "start, end, weeks",
-    (
-        (datetime(2021, 1, 1, 11, 0, 0), datetime(2021, 1, 1, 11, 0, 0), 1),
-        (datetime(2021, 1, 1, 11, 0, 0), datetime(2021, 1, 4, 11, 0, 0), 1),
-        (datetime(2021, 1, 1, 11, 0, 0), datetime(2021, 1, 7, 11, 0, 0), 1),
-        (datetime(2021, 1, 1, 11, 0, 0), datetime(2021, 1, 8, 11, 0, 0), 2),
-        (datetime(2021, 1, 1, 11, 0, 0), datetime(2021, 1, 14, 11, 0, 0), 2),
-        (datetime(2021, 1, 1, 11, 0, 0), datetime(2021, 1, 15, 11, 0, 0), 3),
-        (datetime(2021, 1, 1, 11, 0, 0), datetime(2021, 1, 7, 10, 0, 0), 1),
-        (datetime(2021, 1, 1, 11, 0, 0), datetime(2021, 1, 7, 12, 0, 0), 1),
-        (datetime(2021, 1, 28, 11, 0, 0), datetime(2021, 2, 3, 11, 0, 0), 1),
-        (datetime(2021, 1, 28, 11, 0, 0), datetime(2021, 2, 4, 11, 0, 0), 2),
-        (date(2021, 1, 1), date(2021, 1, 7), 1),
-        (date(2021, 1, 1), date(2021, 1, 8), 2),
-        (date(2021, 1, 1), date(2021, 1, 14), 2),
-        (date(2021, 1, 1), date(2021, 1, 15), 3),
-        (datetime(2021, 1, 1, 11, 0, 0), date(2021, 1, 8), 2),
-        (date(2021, 1, 1), datetime(2021, 1, 8, 11, 0, 0), 2),
-    ),
-)
-def test_get_period_in_weeks(start, end, weeks):
-    assert payments_util.get_period_in_weeks(start, end) == weeks
 
 
 def test_create_payment_log(test_db_session, initialize_factories_session):

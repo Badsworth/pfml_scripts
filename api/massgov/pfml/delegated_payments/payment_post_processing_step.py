@@ -23,6 +23,7 @@ from massgov.pfml.db.models.payments import (
     MaximumWeeklyBenefitAmount,
 )
 from massgov.pfml.delegated_payments.step import Step
+from massgov.pfml.util.datetime import get_period_in_weeks
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -108,7 +109,7 @@ class PaymentPostProcessingStep(Step):
         # on the length of the period. This is calculated by finding the length
         # in days of the pay period, dividing by 7, and rounding up.
 
-        weeks = payments_util.get_period_in_weeks(start_date, end_date)
+        weeks = get_period_in_weeks(start_date, end_date)
 
         return weeks * result.maximum_weekly_benefit_amount
 

@@ -33,6 +33,7 @@ from massgov.pfml.delegated_payments.audit.mock.delegated_payment_audit_generato
     generate_audit_report_dataset,
 )
 from massgov.pfml.delegated_payments.pub.pub_check import _format_check_memo
+from massgov.pfml.util.datetime import get_period_in_weeks
 
 pytestmark = pytest.mark.integration
 
@@ -413,7 +414,7 @@ def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Pay
         == payment.period_end_date.isoformat()
     )
     assert row[PAYMENT_AUDIT_CSV_HEADERS.payment_period_weeks] == str(
-        payments_util.get_period_in_weeks(payment.period_start_date, payment.period_end_date)
+        get_period_in_weeks(payment.period_start_date, payment.period_end_date)
     )
     assert row[PAYMENT_AUDIT_CSV_HEADERS.payment_amount] == str(payment.amount)
     assert row[PAYMENT_AUDIT_CSV_HEADERS.absence_case_number] == payment.claim.fineos_absence_id

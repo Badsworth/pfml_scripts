@@ -25,6 +25,7 @@ from massgov.pfml.delegated_payments.reporting.delegated_abstract_reporting impo
     Report,
     ReportGroup,
 )
+from massgov.pfml.util.datetime import get_period_in_weeks
 
 
 class PaymentAuditRowError(Exception):
@@ -118,7 +119,7 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
 
     payment_period_weeks = None
     if payment.period_start_date and payment.period_end_date:
-        payment_period_weeks = payments_util.get_period_in_weeks(
+        payment_period_weeks = get_period_in_weeks(
             payment.period_start_date, payment.period_end_date
         )
 
