@@ -16,6 +16,7 @@ from typing import Any, List, Optional, Union
 import faker
 import requests
 
+import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
@@ -304,8 +305,8 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         absence_case_summary = models.customer_api.AbsenceCaseSummary(
             absenceId="NTN-259-ABS-01",
             notificationCaseId="NTN-259",
-            startDate=start_date,
-            endDate=end_date,
+            startDate=datetime_util.to_datetime(start_date) if start_date else None,
+            endDate=datetime_util.to_datetime(end_date) if end_date else None,
         )
         logger.info(
             "mock: %r %r => %r %r",
