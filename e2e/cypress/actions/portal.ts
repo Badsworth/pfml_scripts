@@ -56,6 +56,7 @@ import {
   }
  */
 export function before(flags?: Partial<FeatureFlags>): void {
+  Cypress.config("baseUrl", config("PORTAL_BASEURL"));
   // Set the feature flag necessary to see the portal.
   const defaults: FeatureFlags = {
     pfmlTerriyay: true,
