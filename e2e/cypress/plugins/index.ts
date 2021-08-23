@@ -40,8 +40,8 @@ import DocumentWaiter from "./DocumentWaiter";
 import { ClaimGenerator, DehydratedClaim } from "../../src/generation/Claim";
 import * as scenarios from "../../src/scenarios";
 import { Employer, EmployerPickSpec } from "../../src/generation/Employer";
-import * as postSubmit from "../../src/submission/PostSubmit";
 import pRetry from "p-retry";
+import { Fineos } from "../../src/submission/fineos.pages";
 
 // This function is called when a project is opened or re-opened (e.g. due to
 // the project's config changing)
@@ -118,14 +118,17 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
         });
     },
 
-    async completeSSOLoginFineos(): Promise<string> {
+    async completeSSOLoginFineos(credentials?: Credentials): Promise<string> {
       if (ssoCookies === undefined) {
-        ssoCookies = await postSubmit.withFineosBrowser(
+        ssoCookies = await Fineos.withBrowser(
           async (page) => {
             return JSON.stringify(await page.context().cookies());
           },
-          false,
-          path.join(__dirname, "..", "screenshots")
+          {
+            debug: false,
+            screenshots: path.join(__dirname, "..", "screenshots"),
+            credentials,
+          }
         );
       }
       return ssoCookies;

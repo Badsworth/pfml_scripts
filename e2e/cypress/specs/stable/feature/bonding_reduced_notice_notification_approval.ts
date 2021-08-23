@@ -1,5 +1,5 @@
 import { fineos, portal, email, fineosPages } from "../../../actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
+import { getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
 import {
@@ -17,62 +17,57 @@ describe("Approval (notifications/notices)", () => {
     password: config("PORTAL_PASSWORD"),
   };
 
-  const submit = it(
-    "Given a fully approved claim",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      fineos.before();
-      cy.visit("/");
-      // Submit a claim via the API, including Employer Response.
-      cy.task("generateClaim", "REDUCED_ER").then((claim) => {
-        cy.stash("claim", claim.claim);
-        cy.task("submitClaimToAPI", {
-          ...claim,
-          credentials,
-        }).then((response) => {
-          cy.stash("submission", {
-            application_id: response.application_id,
-            fineos_absence_id: response.fineos_absence_id,
-            timestamp_from: Date.now(),
-          });
-
-          const claimPage = fineosPages.ClaimPage.visit(
-            response.fineos_absence_id
-          );
-          claimPage.adjudicate((adjudication) => {
-            adjudication.evidence((evidence) => {
-              // Receive and approve all of the documentation for the claim.
-              claim.documents.forEach((doc) =>
-                evidence.receive(doc.document_type)
-              );
-            });
-            adjudication.certificationPeriods((cert) => cert.prefill());
-            adjudication.acceptLeavePlan();
-          });
-          claimPage.tasks((tasks) => {
-            const certificationDoc = findCertificationDoc(claim.documents);
-            const certificationTask = getDocumentReviewTaskName(
-              certificationDoc.document_type
-            );
-            tasks.assertTaskExists("ID Review");
-            tasks.assertTaskExists(certificationTask);
-          });
-          claimPage.shouldHaveStatus("Applicability", "Applicable");
-          claimPage.shouldHaveStatus("Eligibility", "Met");
-          claimPage.shouldHaveStatus("Evidence", "Satisfied");
-          claimPage.shouldHaveStatus("Availability", "Time Available");
-          claimPage.shouldHaveStatus("Restriction", "Passed");
-          claimPage.shouldHaveStatus("PlanDecision", "Accepted");
-          claimPage.approve();
-          claimPage
-            .triggerNotice("Designation Notice")
-            .documents((docPage) =>
-              docPage.assertDocumentExists("Approval Notice")
-            );
+  const submit = it("Given a fully approved claim", () => {
+    fineos.before();
+    // Submit a claim via the API, including Employer Response.
+    cy.task("generateClaim", "REDUCED_ER").then((claim) => {
+      cy.stash("claim", claim.claim);
+      cy.task("submitClaimToAPI", {
+        ...claim,
+        credentials,
+      }).then((response) => {
+        cy.stash("submission", {
+          application_id: response.application_id,
+          fineos_absence_id: response.fineos_absence_id,
+          timestamp_from: Date.now(),
         });
+
+        const claimPage = fineosPages.ClaimPage.visit(
+          response.fineos_absence_id
+        );
+        claimPage.adjudicate((adjudication) => {
+          adjudication.evidence((evidence) => {
+            // Receive and approve all of the documentation for the claim.
+            claim.documents.forEach((doc) =>
+              evidence.receive(doc.document_type)
+            );
+          });
+          adjudication.certificationPeriods((cert) => cert.prefill());
+          adjudication.acceptLeavePlan();
+        });
+        claimPage.tasks((tasks) => {
+          const certificationDoc = findCertificationDoc(claim.documents);
+          const certificationTask = getDocumentReviewTaskName(
+            certificationDoc.document_type
+          );
+          tasks.assertTaskExists("ID Review");
+          tasks.assertTaskExists(certificationTask);
+        });
+        claimPage.shouldHaveStatus("Applicability", "Applicable");
+        claimPage.shouldHaveStatus("Eligibility", "Met");
+        claimPage.shouldHaveStatus("Evidence", "Satisfied");
+        claimPage.shouldHaveStatus("Availability", "Time Available");
+        claimPage.shouldHaveStatus("Restriction", "Passed");
+        claimPage.shouldHaveStatus("PlanDecision", "Accepted");
+        claimPage.approve();
+        claimPage
+          .triggerNotice("Designation Notice")
+          .documents((docPage) =>
+            docPage.assertDocumentExists("Approval Notice")
+          );
       });
-    }
-  );
+    });
+  });
 
   it(
     "Should generate a legal notice (Approval) that the claimant can view",

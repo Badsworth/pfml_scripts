@@ -1,6 +1,6 @@
 import { getNotificationSubject } from "../../actions/email";
 import { fineos, portal, email, fineosPages } from "../../actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
+import { getLeaveAdminCredentials } from "../../config";
 import { Submission } from "../../../src/types";
 import { extractLeavePeriod } from "../../../src/util/claims";
 import { assertValidClaim } from "../../../src/util/typeUtils";
@@ -12,82 +12,69 @@ describe("Post-approval (notifications/notices)", () => {
     password: Cypress.env("E2E_PORTAL_PASSWORD"),
   };
 
-  const submit = it(
-    "Given a fully approved claim",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      fineos.before();
-      cy.visit("/");
-      // Submit a claim via the API, including Employer Response.
-      cy.task("generateClaim", "CHAP_ER").then((claim) => {
-        cy.stash("claim", claim);
-        cy.task("submitClaimToAPI", {
-          ...claim,
-          credentials,
-        }).then((response) => {
-          cy.stash("submission", {
-            application_id: response.application_id,
-            fineos_absence_id: response.fineos_absence_id,
-            timestamp_from: Date.now(),
-          });
-
-          const claimPage = fineosPages.ClaimPage.visit(
-            response.fineos_absence_id
-          );
-          claimPage.adjudicate((adjudication) => {
-            adjudication.evidence((evidence) => {
-              // Receive and approve all of the documentation for the claim.
-              claim.documents.forEach((document) => {
-                evidence.receive(document.document_type);
-              });
-            });
-            adjudication.certificationPeriods((certificationPeriods) =>
-              certificationPeriods.prefill()
-            );
-            adjudication.acceptLeavePlan();
-          });
-          claimPage.approve();
-          claimPage.triggerNotice("Preliminary Designation");
+  const submit = it("Given a fully approved claim", () => {
+    fineos.before();
+    // Submit a claim via the API, including Employer Response.
+    cy.task("generateClaim", "CHAP_ER").then((claim) => {
+      cy.stash("claim", claim);
+      cy.task("submitClaimToAPI", {
+        ...claim,
+        credentials,
+      }).then((response) => {
+        cy.stash("submission", {
+          application_id: response.application_id,
+          fineos_absence_id: response.fineos_absence_id,
+          timestamp_from: Date.now(),
         });
-      });
-    }
-  );
 
-  const extension = it(
-    "Agent extends the claim",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      cy.dependsOnPreviousPass([submit]);
-      fineos.before();
-      cy.visit("/");
-      cy.unstash<DehydratedClaim>("claim").then(({ claim, documents }) => {
-        cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
-          const [startDate, endDate] = extractLeavePeriod(claim);
-          const newStartDate = format(
-            addDays(new Date(endDate), 1),
-            "MM/dd/yyyy"
-          );
-          const newEndDate = format(
-            addDays(new Date(endDate), 8),
-            "MM/dd/yyyy"
-          );
-          cy.stash("extensionLeaveDates", [startDate, newEndDate]);
-
-          const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id);
-          claimPage.benefitsExtension((benefitsExtension) =>
-            benefitsExtension.extendLeave(newStartDate, newEndDate)
-          );
-          claimPage.adjudicate((adjudication) => {
-            adjudication.evidence((evidence) => {
-              for (const document of documents) {
-                evidence.receive(document.document_type);
-              }
+        const claimPage = fineosPages.ClaimPage.visit(
+          response.fineos_absence_id
+        );
+        claimPage.adjudicate((adjudication) => {
+          adjudication.evidence((evidence) => {
+            // Receive and approve all of the documentation for the claim.
+            claim.documents.forEach((document) => {
+              evidence.receive(document.document_type);
             });
+          });
+          adjudication.certificationPeriods((certificationPeriods) =>
+            certificationPeriods.prefill()
+          );
+          adjudication.acceptLeavePlan();
+        });
+        claimPage.approve();
+        claimPage.triggerNotice("Preliminary Designation");
+      });
+    });
+  });
+
+  const extension = it("Agent extends the claim", () => {
+    cy.dependsOnPreviousPass([submit]);
+    fineos.before();
+    cy.unstash<DehydratedClaim>("claim").then(({ claim, documents }) => {
+      cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
+        const [startDate, endDate] = extractLeavePeriod(claim);
+        const newStartDate = format(
+          addDays(new Date(endDate), 1),
+          "MM/dd/yyyy"
+        );
+        const newEndDate = format(addDays(new Date(endDate), 8), "MM/dd/yyyy");
+        cy.stash("extensionLeaveDates", [startDate, newEndDate]);
+
+        const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id);
+        claimPage.benefitsExtension((benefitsExtension) =>
+          benefitsExtension.extendLeave(newStartDate, newEndDate)
+        );
+        claimPage.adjudicate((adjudication) => {
+          adjudication.evidence((evidence) => {
+            for (const document of documents) {
+              evidence.receive(document.document_type);
+            }
           });
         });
       });
-    }
-  );
+    });
+  });
 
   it(
     "Leave admin will see leave periods for the claim that reflect the extension",

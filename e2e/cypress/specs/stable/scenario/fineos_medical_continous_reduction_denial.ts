@@ -10,14 +10,12 @@ import {
 import { Address } from "../../../../src/_api";
 import { fineos, fineosPages, portal } from "../../../actions";
 import { config } from "../../../actions/common";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
+import { getLeaveAdminCredentials } from "../../../config";
 
 describe("Claimant can call call-center to submit a claim for leave with other leaves and benefits", () => {
   if (config("FINEOS_HAS_UPDATED_EFORMS") === "true") {
-    const claimSubmission = it(
-      "CPS Agent can enter a claim with Concurrent (employer sponsored) leave and employer sponsored benefits",
-      { baseUrl: getFineosBaseUrl() },
-      () => {
+    const claimSubmission =
+      it("CPS Agent can enter a claim with Concurrent (employer sponsored) leave and employer sponsored benefits", () => {
         fineos.before();
         cy.visit("/");
         cy.task("generateClaim", "CONTINUOUS_MEDICAL_OLB").then((claim) => {
@@ -74,8 +72,7 @@ describe("Claimant can call call-center to submit a claim for leave with other l
                 });
             });
         });
-      }
-    );
+      });
     it("LA can review and deny the claim", () => {
       cy.dependsOnPreviousPass([claimSubmission]);
       portal.before();

@@ -105,7 +105,7 @@ export default class ArtilleryPFMLInteractor {
             context.claim as GeneratedClaim,
             context.submission?.fineos_absence_id as string
           ),
-        false
+        { debug: false }
       );
       console.log("Claim post-processed");
     });

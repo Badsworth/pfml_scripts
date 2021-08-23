@@ -1,15 +1,16 @@
 import { DocumentUploadRequest } from "_api";
 import { format, addMonths, addDays } from "date-fns";
-import { config } from "./common";
+import { config, getFineosBaseUrl } from "./common";
+import { Credentials } from "../../src/types";
 /**
  * This function is used to fetch and set the proper cookies for access Fineos UAT
  *
  * Note: Only used for UAT enviornment
  */
-function SSO(): void {
+function SSO(credentials?: Credentials): void {
   cy.clearCookies();
   // Perform SSO login in a task. We can't visit other domains in Cypress.
-  cy.task("completeSSOLoginFineos").then((cookiesJson) => {
+  cy.task("completeSSOLoginFineos", credentials).then((cookiesJson) => {
     const deserializedCookies: Record<string, string>[] =
       JSON.parse(cookiesJson);
     // Filter out any cookies that will fail to be set. Those are ones where secure: false
@@ -23,7 +24,25 @@ function SSO(): void {
   });
 }
 
-export function before(): void {
+/**
+ * Sets up Cypress to work with fineos. This includes:
+ * 1. Intercepting known errors and error pages.
+ * 2. Handling authentication and SSO Login.
+ * 3. Setting the baseURL
+ * 4. Navigating to fineos home page.
+ * @param credentials you can override the credentials used for authenticating to fineos,
+ * an example use case would be testing secure actions in `uat` environment,
+ * where we need to use 2 different fineos accounts.
+ * @example
+ * fineos.before() // set's up fineos with default credentials.
+ * fineos.before({username:config('SSO2_USERNAME'), password: config('SSO2_PASSWORD')})
+ * // set's up login for the second SSO account
+ */
+export function before(credentials?: Credentials): void {
+  Cypress.config(
+    "baseUrl",
+    getFineosBaseUrl(credentials?.username, credentials?.password)
+  );
   // Fineos error pages have been found to cause test crashes when rendered. This is very hard to debug, as Cypress
   // crashes with no warning and removes the entire run history, so when a Fineos error page is detected, we replace the
   // page with an error page and capture the real response to a file for future debugging.
@@ -63,6 +82,7 @@ export function before(): void {
   if (config("ENVIRONMENT") === "uat") {
     SSO();
   }
+  cy.visit("/");
 }
 
 export function visitClaim(claimId: string): void {

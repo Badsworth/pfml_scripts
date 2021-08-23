@@ -61,13 +61,16 @@ async function submitClaimToAPI(
   const res = await submitClaimToAPI(claim);
   assertValidClaim(claim.claim);
   console.log(res.fineos_absence_id);
-  await Fineos.withBrowser(async (page) => {
-    // await approveClaim(page, claim, res.fineos_absence_id);
-    await closeDocuments(
-      page,
-      claim as unknown as GeneratedClaim,
-      res.fineos_absence_id
-    );
-    // const claimPage = await Claim.visit(page, res.fineos_absence_id);
-  }, true);
+  await Fineos.withBrowser(
+    async (page) => {
+      // await approveClaim(page, claim, res.fineos_absence_id);
+      await closeDocuments(
+        page,
+        claim as unknown as GeneratedClaim,
+        res.fineos_absence_id
+      );
+      // const claimPage = await Claim.visit(page, res.fineos_absence_id);
+    },
+    { debug: true }
+  );
 })();

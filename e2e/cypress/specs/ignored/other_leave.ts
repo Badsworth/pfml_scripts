@@ -1,5 +1,4 @@
 import { fineos, portal } from "../../actions";
-import { getFineosBaseUrl } from "../../config";
 import { Submission } from "../../../src/types";
 import { config } from "../../actions/common";
 
@@ -37,16 +36,12 @@ describe("Submit a bonding claim with other income and other leave - BHAP1", () 
       });
     });
   // Check for Other Leave Document
-  it(
-    "In Fineos, check for Other Leave E-Form",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      cy.dependsOnPreviousPass([submit]);
-      fineos.before();
-      cy.unstash<Submission>("submission").then((submission) => {
-        cy.visit("/");
-        fineos.findOtherLeaveEForm(submission.fineos_absence_id);
-      });
-    }
-  );
+  it("In Fineos, check for Other Leave E-Form", () => {
+    cy.dependsOnPreviousPass([submit]);
+    fineos.before();
+    cy.unstash<Submission>("submission").then((submission) => {
+      cy.visit("/");
+      fineos.findOtherLeaveEForm(submission.fineos_absence_id);
+    });
+  });
 });

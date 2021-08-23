@@ -1,10 +1,10 @@
 import { Page } from "playwright-chromium";
 import {
   ConfigPage,
+  Fineos,
   FineosRoles,
   FineosSecurityGroups,
 } from "../submission/fineos.pages";
-import { withFineosBrowser } from "../submission/PostSubmit";
 
 const presets: Record<
   FineosSecurityGroups,
@@ -67,11 +67,14 @@ async function chooseRolePreset(
   ]);
 }
 (() => {
-  withFineosBrowser(async (page) => {
-    await chooseRolePreset(
-      page,
-      "SRV_SSO_Account2@mass.gov",
-      "DFML Appeals Administrator(sec)"
-    );
-  }, true);
+  Fineos.withBrowser(
+    async (page) => {
+      await chooseRolePreset(
+        page,
+        "SRV_SSO_Account2@mass.gov",
+        "DFML Appeals Administrator(sec)"
+      );
+    },
+    { debug: true }
+  );
 })();

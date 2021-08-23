@@ -1,5 +1,4 @@
 import { portal, fineos, fineosPages } from "../../actions";
-import { getFineosBaseUrl } from "../../config";
 import { Submission } from "../../../src/types";
 import {
   assertIsTypedArray,
@@ -21,13 +20,10 @@ describe("Claim reduction", () => {
       });
     });
   });
-  const approval = it(
-    "CPS agent can approve the claim and check for possible reductions",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
+  const approval =
+    it("CPS agent can approve the claim and check for possible reductions", () => {
       cy.dependsOnPreviousPass([claimSubmission]);
       fineos.before();
-      cy.visit("/");
       cy.unstash<DehydratedClaim>("claim").then(({ documents }) => {
         cy.unstash<Submission>("submission").then((submission) => {
           fineosPages.ClaimPage.visit(submission.fineos_absence_id)
@@ -46,34 +42,29 @@ describe("Claim reduction", () => {
             .approve();
         });
       });
-    }
-  );
-  it(
-    "CPS Agent can apply reductions to the case",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      cy.dependsOnPreviousPass([claimSubmission, approval]);
-      cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
-        cy.unstash<Submission>("submission").then((submission) => {
-          fineos.before();
-          cy.visit("/");
-          fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
-            (leaveCase) => {
-              const { other_incomes, employer_benefits } = claim;
-              assertIsTypedArray(other_incomes, isValidOtherIncome);
-              assertIsTypedArray(employer_benefits, isValidEmployerBenefit);
-              leaveCase
-                .applyReductions({ other_incomes, employer_benefits })
-                .assertPaymentsMade([{ net_payment_amount: 0 }])
-                .assertPaymentAllocations([
-                  { net_payment_amount: 0 },
-                  { net_payment_amount: 0 },
-                ])
-                .assertAmountsPending([{ net_payment_amount: 0 }]);
-            }
-          );
-        });
+    });
+  it("CPS Agent can apply reductions to the case", () => {
+    cy.dependsOnPreviousPass([claimSubmission, approval]);
+    cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
+      cy.unstash<Submission>("submission").then((submission) => {
+        fineos.before();
+        cy.visit("/");
+        fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
+          (leaveCase) => {
+            const { other_incomes, employer_benefits } = claim;
+            assertIsTypedArray(other_incomes, isValidOtherIncome);
+            assertIsTypedArray(employer_benefits, isValidEmployerBenefit);
+            leaveCase
+              .applyReductions({ other_incomes, employer_benefits })
+              .assertPaymentsMade([{ net_payment_amount: 0 }])
+              .assertPaymentAllocations([
+                { net_payment_amount: 0 },
+                { net_payment_amount: 0 },
+              ])
+              .assertAmountsPending([{ net_payment_amount: 0 }]);
+          }
+        );
       });
-    }
-  );
+    });
+  });
 });

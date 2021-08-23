@@ -1,5 +1,5 @@
 import { fineos, fineosPages, portal } from "../../../actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
+import { getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
@@ -54,11 +54,10 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
 
   it(
     "CSR rep will approve continous caring application",
-    { retries: 0, baseUrl: getFineosBaseUrl() },
+    { retries: 0 },
     () => {
       cy.dependsOnPreviousPass();
       fineos.before();
-      cy.visit("/");
       cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
         cy.unstash<DehydratedClaim>("claim").then((claim) => {
           fineosPages.ClaimPage.visit(fineos_absence_id)
@@ -87,30 +86,25 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
     }
   );
 
-  it(
-    "Should be able to confirm the weekly payment amount and check Ownership is Assigned To",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      cy.dependsOnPreviousPass();
-      fineos.before();
-      cy.visit("/");
+  it("Should be able to confirm the weekly payment amount and check Ownership is Assigned To", () => {
+    cy.dependsOnPreviousPass();
+    fineos.before();
 
-      cy.unstash<DehydratedClaim>("claim").then((claim) => {
-        cy.unstash<Submission>("submission").then((submission) => {
-          const payment = claim.metadata
-            ?.expected_weekly_payment as unknown as number;
-          fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
-            (leaveCase) => {
-              leaveCase.assertOwnershipAssignTo("DFML Program Integrity");
-              leaveCase.assertAmountsPending([
-                {
-                  net_payment_amount: payment,
-                },
-              ]);
-            }
-          );
-        });
+    cy.unstash<DehydratedClaim>("claim").then((claim) => {
+      cy.unstash<Submission>("submission").then((submission) => {
+        const payment = claim.metadata
+          ?.expected_weekly_payment as unknown as number;
+        fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
+          (leaveCase) => {
+            leaveCase.assertOwnershipAssignTo("DFML Program Integrity");
+            leaveCase.assertAmountsPending([
+              {
+                net_payment_amount: payment,
+              },
+            ]);
+          }
+        );
       });
-    }
-  );
+    });
+  });
 });

@@ -1,5 +1,5 @@
 import { fineos, portal, email, fineosPages } from "../../../actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
+import { getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
@@ -14,37 +14,32 @@ describe("Denial Notification and Notice", () => {
     password: config("PORTAL_PASSWORD"),
   };
 
-  const submit = it(
-    "Given a fully denied claim",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      fineos.before();
-      cy.visit("/");
+  const submit = it("Given a fully denied claim", () => {
+    fineos.before();
 
-      cy.task("generateClaim", "MED_INTER_INEL").then((claim) => {
-        cy.task("submitClaimToAPI", {
-          ...claim,
-          credentials,
-        }).then((res) => {
-          cy.stash("claim", claim.claim);
-          cy.stash("submission", {
-            application_id: res.application_id,
-            fineos_absence_id: res.fineos_absence_id,
-            timestamp_from: Date.now(),
-          });
-
-          fineosPages.ClaimPage.visit(res.fineos_absence_id)
-            .shouldHaveStatus("Eligibility", "Not Met")
-            .deny("Claimant wages failed 30x rule")
-            .triggerNotice("Leave Request Declined")
-            .triggerNotice("Preliminary Designation")
-            .documents((docPage) =>
-              docPage.assertDocumentExists("Denial Notice")
-            );
+    cy.task("generateClaim", "MED_INTER_INEL").then((claim) => {
+      cy.task("submitClaimToAPI", {
+        ...claim,
+        credentials,
+      }).then((res) => {
+        cy.stash("claim", claim.claim);
+        cy.stash("submission", {
+          application_id: res.application_id,
+          fineos_absence_id: res.fineos_absence_id,
+          timestamp_from: Date.now(),
         });
+
+        fineosPages.ClaimPage.visit(res.fineos_absence_id)
+          .shouldHaveStatus("Eligibility", "Not Met")
+          .deny("Claimant wages failed 30x rule")
+          .triggerNotice("Leave Request Declined")
+          .triggerNotice("Preliminary Designation")
+          .documents((docPage) =>
+            docPage.assertDocumentExists("Denial Notice")
+          );
       });
-    }
-  );
+    });
+  });
 
   it(
     "Should generate a legal notice (Denial) that the claimant can view",

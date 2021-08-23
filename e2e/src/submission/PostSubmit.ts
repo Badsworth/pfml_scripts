@@ -1,15 +1,7 @@
 import { Page } from "playwright-chromium";
 import { GeneratedClaim } from "../generation/Claim";
 import { getDocumentReviewTaskName } from "../util/documents";
-import { Claim, Fineos } from "./fineos.pages";
-
-export function withFineosBrowser<T extends unknown>(
-  next: (page: Page) => Promise<T>,
-  debug = false,
-  screenshots?: string
-): Promise<T> {
-  return Fineos.withBrowser(next, debug, screenshots);
-}
+import { Claim } from "./fineos.pages";
 
 export async function approveClaim(
   page: Page,

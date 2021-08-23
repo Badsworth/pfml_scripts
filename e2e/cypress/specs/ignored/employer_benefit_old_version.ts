@@ -1,5 +1,5 @@
 import { portal, fineos, fineosPages } from "../../actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
+import { getLeaveAdminCredentials } from "../../config";
 import {
   Submission,
   ValidEmployerBenefit,
@@ -50,10 +50,8 @@ import { config } from "../../actions/common";
         });
       });
     });
-    const reportBenefits = it(
-      "Claimant can contact the call center & report an employer benefit",
-      { baseUrl: getFineosBaseUrl() },
-      () => {
+    const reportBenefits =
+      it("Claimant can contact the call center & report an employer benefit", () => {
         cy.dependsOnPreviousPass([claimSubmission]);
         fineos.before();
         cy.visit("/");
@@ -75,8 +73,7 @@ import { config } from "../../actions/common";
             });
           });
         });
-      }
-    );
+      });
     const benefitAmendment =
       it("LA can view and amend the reported benefits", () => {
         portal.before({ claimantShowOtherLeaveStep: false });
@@ -114,26 +111,22 @@ import { config } from "../../actions/common";
           });
         });
       });
-    it(
-      "Agent can see employer response amendments",
-      { baseUrl: getFineosBaseUrl() },
-      () => {
-        cy.dependsOnPreviousPass([
-          claimSubmission,
-          reportBenefits,
-          benefitAmendment,
-        ]);
-        fineos.before();
-        cy.visit("/");
-        cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
-          cy.unstash<Submission>("submission").then((submission) => {
-            cy.unstash<
-              [ValidEmployerBenefit, ValidEmployerBenefit, ValidOtherIncome]
-            >("benefits").then(() => {
-              assertValidClaim(claim);
-              fineosPages.ClaimPage.visit(
-                submission.fineos_absence_id
-              ).documents((docsPage) => {
+    it("Agent can see employer response amendments", () => {
+      cy.dependsOnPreviousPass([
+        claimSubmission,
+        reportBenefits,
+        benefitAmendment,
+      ]);
+      fineos.before();
+      cy.visit("/");
+      cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
+        cy.unstash<Submission>("submission").then((submission) => {
+          cy.unstash<
+            [ValidEmployerBenefit, ValidEmployerBenefit, ValidOtherIncome]
+          >("benefits").then(() => {
+            assertValidClaim(claim);
+            fineosPages.ClaimPage.visit(submission.fineos_absence_id).documents(
+              (docsPage) => {
                 // Check the employer response is there.
                 docsPage.assertDocumentExists(
                   `Employer Response to Leave Request`
@@ -145,11 +138,11 @@ import { config } from "../../actions/common";
                 cy.findByDisplayValue("600.00").should("be.visible");
 
                 clickBottomWidgetButton();
-              });
-            });
+              }
+            );
           });
         });
-      }
-    );
+      });
+    });
   }
 );

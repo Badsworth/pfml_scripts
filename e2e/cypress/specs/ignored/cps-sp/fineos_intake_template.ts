@@ -1,5 +1,5 @@
 import { fineos, portal } from "../../../actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
+import { getLeaveAdminCredentials } from "../../../config";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import {
   AbsenceReasonDescription,
@@ -40,12 +40,9 @@ const _relationshipDescription: PrimaryRelationshipDescription = {
  * Information on how to test CPS-906 tickets is here: https://github.com/EOLWD/pfml/blob/main/e2e/docs/cps-testing.md
  */
 describe("Submit a claim through Fineos intake process, verify the Absence Case", () => {
-  const claimSubmission = it(
-    "As a claimant, I should be able to submit a claim through Fineos intake",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
+  const claimSubmission =
+    it("As a claimant, I should be able to submit a claim through Fineos intake", () => {
       fineos.before();
-      cy.visit("/");
       cy.task("generateClaim", "MIL_EXI").then((claim) => {
         assertValidClaim(claim.claim);
         cy.stash("claim", claim);
@@ -199,8 +196,7 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
             });
           });
       });
-    }
-  );
+    });
 
   it("LA can review and approve the claim", () => {
     cy.dependsOnPreviousPass([claimSubmission]);

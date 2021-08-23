@@ -1,37 +1,33 @@
 import { fineos, portal } from "../../actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
+import { getLeaveAdminCredentials } from "../../config";
 import { assertValidClaim } from "../../../src/util/typeUtils";
 import { ClaimantPage, ClaimPage } from "../../actions/fineos.pages";
 import { Submission } from "../../../src/types";
 
 describe("Create a new continuous leave, military caregiver claim in FINEOS", () => {
-  const claimSubmission = it(
-    "Should be able to create a claim",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      fineos.before();
-      cy.visit("/");
-      cy.task("generateClaim", "MIL_EXI").then((claim) => {
-        assertValidClaim(claim.claim);
-        cy.stash("claim", claim);
+  const claimSubmission = it("Should be able to create a claim", () => {
+    fineos.before();
+    cy.visit("/");
+    cy.task("generateClaim", "MIL_EXI").then((claim) => {
+      assertValidClaim(claim.claim);
+      cy.stash("claim", claim);
 
-        ClaimantPage.visit(claim.claim.tax_identifier)
-          .createNotification(claim.claim)
-          .then((fineos_absence_id) => {
-            cy.log(fineos_absence_id);
-            cy.stash("submission", { fineos_absence_id });
+      ClaimantPage.visit(claim.claim.tax_identifier)
+        .createNotification(claim.claim)
+        .then((fineos_absence_id) => {
+          cy.log(fineos_absence_id);
+          cy.stash("submission", { fineos_absence_id });
 
-            ClaimPage.visit(fineos_absence_id).adjudicate((adjudication) => {
-              adjudication.evidence((evidence) => {
-                claim.documents.forEach((doc) =>
-                  evidence.receive(doc.document_type)
-                );
-              });
+          ClaimPage.visit(fineos_absence_id).adjudicate((adjudication) => {
+            adjudication.evidence((evidence) => {
+              claim.documents.forEach((doc) =>
+                evidence.receive(doc.document_type)
+              );
             });
           });
-      });
-    }
-  );
+        });
+    });
+  });
 
   it("LA can review and approve the claim", () => {
     cy.dependsOnPreviousPass([claimSubmission]);
