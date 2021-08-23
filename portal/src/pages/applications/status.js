@@ -4,13 +4,17 @@ import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import ClaimDetail from "../../models/ClaimDetail";
 import Heading from "../../components/Heading";
-import LeaveDetails from "./leave-details";
+import LeaveReason from "../../models/LeaveReason";
 import LegalNoticeList from "../../components/LegalNoticeList.js";
 import PropTypes from "prop-types";
+import Tag from "../../components/Tag";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
+import findKeyByValue from "../../utils/findKeyByValue";
+import formatDate from "../../utils/formatDate";
 import { handleError } from "../../api/BaseApi";
 import { isFeatureEnabled } from "../../services/featureFlags";
+import { map } from "lodash";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
@@ -40,7 +44,7 @@ const TEST_CLAIM = new ClaimDetail({
       absence_period_end_date: "2021-06-08",
       request_decision: "Approved",
       fineos_leave_request_id: "PL-14432-0000002026",
-      reason: "Serious Health Condition - Employee",
+      reason: LeaveReason.medical,
     },
     {
       period_type: "Continuous",
@@ -48,7 +52,7 @@ const TEST_CLAIM = new ClaimDetail({
       absence_period_end_date: "2021-07-08",
       request_decision: "Pending",
       fineos_leave_request_id: "PL-14432-0000002326",
-      reason: "Serious Health Condition - Employee",
+      reason: LeaveReason.medical,
     },
     {
       period_type: "Reduced",
@@ -56,7 +60,7 @@ const TEST_CLAIM = new ClaimDetail({
       absence_period_end_date: "2021-08-08",
       request_decision: "Denied",
       fineos_leave_request_id: "PL-14434-0000002026",
-      reason: "Child Bonding",
+      reason: LeaveReason.bonding,
     },
     {
       period_type: "Continuous",
@@ -64,7 +68,7 @@ const TEST_CLAIM = new ClaimDetail({
       absence_period_end_date: "2021-08-08",
       request_decision: "Withdrawn",
       fineos_leave_request_id: "PL-14434-0000002326",
-      reason: "Child Bonding",
+      reason: LeaveReason.bonding,
     },
   ],
 });
@@ -121,7 +125,7 @@ export const Status = ({
         href={routes.applications.index}
       />
       <div className="measure-6">
-        <Title weight="normal" small={true}>
+        <Title weight="normal" small>
           {t("pages.claimsStatus.applicationDetails")}
         </Title>
 
@@ -226,3 +230,76 @@ Status.propTypes = {
 };
 
 export default Status;
+
+const StatusTagMap = {
+  Approved: "success",
+  Denied: "error",
+  Pending: "pending",
+  Withdrawn: "inactive",
+};
+
+export const LeaveDetails = ({ absenceDetails = {} }) => {
+  const { t } = useTranslation();
+  return map(absenceDetails, (absenceItem, absenceItemName) => (
+    <div
+      key={absenceItemName}
+      className="border-bottom border-base-lighter margin-bottom-2 padding-bottom-2"
+    >
+      <Heading level="2">
+        {t("pages.claimsStatus.leaveReasonValue", {
+          context: findKeyByValue(LeaveReason, absenceItemName),
+        })}
+      </Heading>
+      {absenceItem.length
+        ? absenceItem.map(
+            ({
+              period_type,
+              absence_period_start_date,
+              absence_period_end_date,
+              request_decision,
+              fineos_leave_request_id,
+            }) => (
+              <div key={fineos_leave_request_id} className="margin-top-2">
+                <Heading className="margin-bottom-1" level="3">
+                  {t("pages.claimsStatus.leavePeriodLabel", {
+                    context: period_type.toLowerCase(),
+                  })}
+                </Heading>
+                <p>
+                  {`From ${formatDate(
+                    absence_period_start_date
+                  ).full()} to ${formatDate(absence_period_end_date).full()}`}
+                </p>
+                <Tag
+                  paddingSm
+                  label={request_decision}
+                  state={StatusTagMap[request_decision]}
+                />
+                <Trans
+                  i18nKey="pages.claimsStatus.leaveStatusMessage"
+                  tOptions={{ context: request_decision }}
+                  components={{
+                    "application-timeline-link": (
+                      <a
+                        href={
+                          routes.external.massgov.applicationApprovalTimeline
+                        }
+                      />
+                    ),
+                    "application-link": (
+                      <a href={routes.applications.getReady} />
+                    ),
+                    "request-appeal-link": (
+                      <a
+                        href={routes.external.massgov.requestAnAppealForPFML}
+                      />
+                    ),
+                  }}
+                />
+              </div>
+            )
+          )
+        : null}
+    </div>
+  ));
+};
