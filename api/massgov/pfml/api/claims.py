@@ -305,8 +305,6 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
     Calls out to the FINEOS Group Client API to retrieve claim data and returns it.
     The requesting user must be of the EMPLOYER role.
     """
-    default_to_v2 = bool(flask.request.headers.get("X-FF-Default-To-V2", False))
-
     try:
         user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
     except (VerificationRequired, NotAuthorizedForAccess) as error:
@@ -328,10 +326,7 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
 
         try:
             claim_review_response, managed_requirements = get_claim_as_leave_admin(
-                user_leave_admin.fineos_web_id,
-                fineos_absence_id,
-                employer,
-                default_to_v2=default_to_v2,
+                user_leave_admin.fineos_web_id, fineos_absence_id, employer,
             )
         except (ContainsV1AndV2Eforms) as error:
             return response_util.error_response(
