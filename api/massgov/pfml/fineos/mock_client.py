@@ -352,6 +352,18 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     ) -> models.group_client_api.CustomerInfo:
         return models.group_client_api.CustomerInfo.parse_obj(mock_customer_info())
 
+    def get_customer_occupations_customer_api(
+        self, user_id: str, customer_id: str
+    ) -> List[models.customer_api.ReadCustomerOccupation]:
+        _capture_call("get_customer_occupations_customer_api", user_id, customer_id=customer_id)
+
+        hrsWorkedPerWeek = 37 if customer_id == "1000" else 37.5
+        return [
+            models.customer_api.ReadCustomerOccupation(
+                occupationId=12345, hoursWorkedPerWeek=hrsWorkedPerWeek
+            )
+        ]
+
     def get_customer_occupations(
         self, user_id: str, customer_id: str
     ) -> models.group_client_api.CustomerOccupations:
@@ -360,7 +372,9 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         hrsWorkedPerWeek = 37 if customer_id == "1000" else 37.5
         return models.group_client_api.CustomerOccupations(
             elements=[
-                models.group_client_api.CustomerOccupation(hrsWorkedPerWeek=str(hrsWorkedPerWeek))
+                models.group_client_api.CustomerOccupation(
+                    id="12345", hrsWorkedPerWeek=str(hrsWorkedPerWeek)
+                )
             ]
         )
 

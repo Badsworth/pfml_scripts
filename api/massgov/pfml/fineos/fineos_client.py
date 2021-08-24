@@ -322,6 +322,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         url = urllib.parse.urljoin(self.customer_api_url, path)
         content_type_header = {"Content-Type": header_content_type} if header_content_type else {}
         headers = dict({"userid": user_id}, **content_type_header)
+
         response = self._request(method, url, method_name, headers, **args)
         return response
 
@@ -749,6 +750,20 @@ class FINEOSClient(client.AbstractFINEOSClient):
             "customer_create_eform",
             data=json.dumps(eform.eformAttributes),
         )
+
+    def get_customer_occupations_customer_api(
+        self, user_id: str, customer_id: str
+    ) -> List[models.customer_api.ReadCustomerOccupation]:
+
+        response = self._customer_api(
+            "GET", "customer/occupations", user_id, "get_customer_occupations_customer_api",
+        )
+
+        json = response.json()
+        for item in json:
+            set_empty_dates_to_none(item, ["dateJobBegan", "dateJobEnded"])
+
+        return pydantic.parse_obj_as(List[models.customer_api.ReadCustomerOccupation], json)
 
     def get_case_occupations(
         self, user_id: str, case_id: str
