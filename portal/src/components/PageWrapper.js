@@ -1,4 +1,9 @@
-import { DateTime } from "luxon";
+import {
+  isInMaintenanceWindow,
+  isMaintenanceOneDayInFuture,
+  isMaintenancePageRoute,
+  maintenanceTime,
+} from "../utils/maintenance";
 import ErrorBoundary from "./ErrorBoundary";
 import ErrorsSummary from "./ErrorsSummary";
 import Header from "./Header";
@@ -17,43 +22,6 @@ const Footer = dynamic(() => import("./Footer"));
 const MaintenanceTakeover = dynamic(() => import("./MaintenanceTakeover"));
 
 /**
- * @param {string} [start] - ISO 8601 date time
- * @param {string} [end] - ISO 8601 date time
- * @returns {boolean}
- */
-const isInMaintenanceWindow = (start, end) => {
-  // If no time frame is set, the maintenance window is considered
-  // always open (when maintenance mode is On)
-  if (!start && !end) return true;
-
-  const now = DateTime.local();
-  const isAfterStart = start ? now >= DateTime.fromISO(start) : true;
-  const isBeforeEnd = end ? now < DateTime.fromISO(end) : true;
-
-  return isAfterStart && isBeforeEnd;
-};
-
-/**
- * Check if a page route should include the maintenance message
- * @param {string[]} maintenancePageRoutes - routes to apply maintenance message to
- * @param {string} pathname - current page's path
- * @returns {boolean}
- */
-const isMaintenancePageRoute = (maintenancePageRoutes, pathname) => {
-  return (
-    maintenancePageRoutes &&
-    // includes specific page? (pathname doesn't include a trailing slash):
-    (maintenancePageRoutes.includes(pathname) ||
-      // or pages matching a wildcard? (e.g /applications/* or /* for site-wide):
-      maintenancePageRoutes.some(
-        (maintenancePageRoute) =>
-          maintenancePageRoute.endsWith("*") &&
-          pathname.startsWith(maintenancePageRoute.split("*")[0])
-      ))
-  );
-};
-
-/**
  * This component renders the global page elements, such as header/footer, site-level
  * error alert, and maintenance page when enabled. Every page on the site is rendered
  * with this component as its parent.
@@ -66,6 +34,7 @@ const PageWrapper = (props) => {
   const maintenancePageRoutes = get(maintenance, "options.page_routes", ["/*"]);
   const maintenanceStart = maintenance.start;
   const maintenanceEnd = maintenance.end;
+  const maintenanceEnabled = !!maintenance.enabled;
 
   /**
    * What to show to the user within our page wrapper. Depends on
@@ -75,20 +44,35 @@ const PageWrapper = (props) => {
   let pageBody;
 
   /**
+   * Should this page display the maintenance alert bar?
+   * Only shows on routes that are included in maintenance page_routes
+   * and if the current date/time is within 24 hours of the
+   * maintenance start date/time
+   * @type {boolean}
+   */
+  const showUpcomingMaintenanceAlertBar =
+    maintenanceEnabled &&
+    isMaintenancePageRoute(
+      maintenancePageRoutes,
+      appLogic.portalFlow.pathname
+    ) &&
+    isMaintenanceOneDayInFuture(maintenanceStart);
+
+  /**
    * Should this page display a maintenance message instead of its normal content?
    * @type {boolean}
    */
   const showMaintenancePageBody =
-    maintenance.enabled &&
+    maintenanceEnabled &&
     isMaintenancePageRoute(
       maintenancePageRoutes,
       appLogic.portalFlow.pathname
     ) &&
     isInMaintenanceWindow(maintenanceStart, maintenanceEnd);
 
-  const maintenanceEndTime = maintenanceEnd
-    ? DateTime.fromISO(maintenanceEnd).toLocaleString(DateTime.DATETIME_FULL)
-    : null;
+  // User-friendly representation of the maintenance times
+  const maintenanceStartTime = maintenanceTime(maintenanceStart);
+  const maintenanceEndTime = maintenanceTime(maintenanceEnd);
 
   // Prevent site from being rendered if this feature flag isn't enabled.
   // We render a vague but recognizable message that serves as an indicator
@@ -107,7 +91,8 @@ const PageWrapper = (props) => {
     pageBody = (
       <section id="page" data-test="maintenance page">
         <MaintenanceTakeover
-          scheduledRemovalDayAndTimeText={maintenanceEndTime}
+          maintenanceStartTime={maintenanceStartTime}
+          maintenanceEndTime={maintenanceEndTime}
         />
       </section>
     );
@@ -124,7 +109,13 @@ const PageWrapper = (props) => {
       <div className="l-container">
         <div>
           {/* Wrap header children in a div because its parent is a flex container */}
-          <Header user={appLogic.users.user} onLogout={appLogic.auth.logout} />
+          <Header
+            user={appLogic.users.user}
+            onLogout={appLogic.auth.logout}
+            showUpcomingMaintenanceAlertBar={showUpcomingMaintenanceAlertBar}
+            maintenanceStartTime={maintenanceStartTime}
+            maintenanceEndTime={maintenanceEndTime}
+          />
         </div>
         <main
           id="main"

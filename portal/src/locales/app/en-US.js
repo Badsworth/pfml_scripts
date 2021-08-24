@@ -2827,10 +2827,19 @@ const components = {
   leaveDatesAlert: {
     heading: "Your leave dates for paid leave",
   },
+  maintenanceAlertBar: {
+    message_withEndTime:
+      "We will be performing some maintenance on our system from <strong>{{start}}</strong> to <strong>{{end}}</strong>.",
+    message:
+      "We will be performing some maintenance on our system starting <strong>{{start}}</strong>.",
+  },
   maintenanceTakeover: {
-    lead: "This page is currently unavailable while the site is undergoing maintenance. Please check back$t(chars.nbsp)shortly.",
-    scheduled:
-      "We are performing scheduled maintenance to improve functionality and our overall service. Paid leave applications will be back online on <strong>{{scheduledRemovalDayAndTime}}</strong>.<br/><br/>When we are back, you will be able to access your existing applications or create a new one. Employers will be able to respond to information requests. We appreciate your understanding and patience. To get ready, review <what-to-expect-link>what to expect when you apply for paid family and medical leave benefits</what-to-expect-link>.",
+    noSchedule:
+      "We’re performing some maintenance on our system. Please check back in a few hours, or call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak) between 8 a.m.-5 p.m. ET.",
+    scheduledWithEndAndNoStart:
+      "We're performing some maintenance on our system, so you can't log in or work on any applications right now. The system will be back online and available on <strong>{{end}}</strong>.",
+    scheduledWithStartAndEnd:
+      "We're performing some maintenance on our system, so you can't log in or work on any applications right now. The system will be offline from <strong>{{start}}</strong> to <strong>{{end}}</strong>.",
     title: "We’re undergoing maintenance",
   },
   newTag: "New",
