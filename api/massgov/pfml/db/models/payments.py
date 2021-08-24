@@ -551,8 +551,67 @@ class FineosWritebackTransactionStatus(LookupTable):
     )
 
 
+PAYMENT_AUDIT_REPORT_ACTION_REJECTED = "REJECTED"
+PAYMENT_AUDIT_REPORT_ACTION_SKIPPED = "SKIPPED"
+PAYMENT_AUDIT_REPORT_ACTION_INFORMATIONAL = ""
+
+
+class LkPaymentAuditReportType(Base):
+    __tablename__ = "lk_payment_audit_report_type"
+    payment_audit_report_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    payment_audit_report_type_description = Column(Text, nullable=False)
+    payment_audit_report_action = Column(Text, nullable=False)
+
+    def __init__(
+        self,
+        payment_audit_report_type_id,
+        payment_audit_report_type_description,
+        payment_audit_report_action,
+    ):
+        self.payment_audit_report_type_id = payment_audit_report_type_id
+        self.payment_audit_report_type_description = payment_audit_report_type_description
+        self.payment_audit_report_action = payment_audit_report_action
+
+
+class PaymentAuditReportType(LookupTable):
+    model = LkPaymentAuditReportType
+    column_names = (
+        "payment_audit_report_type_id",
+        "payment_audit_report_type_description",
+        "payment_audit_report_action",
+    )
+
+    MAX_WEEKLY_BENEFITS = LkPaymentAuditReportType(
+        1, "Max Weekly Benefits", PAYMENT_AUDIT_REPORT_ACTION_REJECTED
+    )
+    DUA_DIA_REDUCTION = LkPaymentAuditReportType(
+        2, "DUA DIA Reduction", PAYMENT_AUDIT_REPORT_ACTION_SKIPPED
+    )
+
+
+class PaymentAuditReportDetails(Base, TimestampMixin):
+    __tablename__ = "payment_audit_details"
+    payment_audit_details_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    payment_id = Column(
+        PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True, nullable=False
+    )
+    audit_report_type_id = Column(
+        Integer,
+        ForeignKey("lk_payment_audit_report_type.payment_audit_report_type_id"),
+        nullable=False,
+    )
+    details = Column(JSON, nullable=False)
+    added_to_audit_report_at = Column(TIMESTAMP(timezone=True), nullable=True,)
+    import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
+
+    payment = relationship(Payment)
+    audit_report_type = relationship(LkPaymentAuditReportType)
+    import_log = relationship(ImportLog)
+
+
 def sync_lookup_tables(db_session):
     FineosWritebackTransactionStatus.sync_to_database(db_session)
+    PaymentAuditReportType.sync_to_database(db_session)
 
 
 def sync_maximum_weekly_benefit_amount(db_session):

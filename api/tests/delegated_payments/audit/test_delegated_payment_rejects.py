@@ -101,7 +101,9 @@ def test_rejects_column_validation(test_db_session, payment_rejects_step):
         previously_errored_payment_count=1,
         previously_skipped_payment_count=0,
     )
-    payment_rejects_row = build_audit_report_row(payment_audit_data)
+    payment_rejects_row = build_audit_report_row(
+        payment_audit_data, payments_util.get_now(), test_db_session
+    )
 
     payment_rejects_row.pfml_payment_id = None
     payment_rejects_row.rejected_by_program_integrity = "Y"
@@ -165,7 +167,9 @@ def test_valid_combination_of_reject_and_skip(
         previously_skipped_payment_count=0,
     )
 
-    payment_rejects_row = build_audit_report_row(payment_audit_data)
+    payment_rejects_row = build_audit_report_row(
+        payment_audit_data, payments_util.get_now(), test_db_session
+    )
     payment_rejects_row.rejected_by_program_integrity = rejected_by_program_integrity
     payment_rejects_row.skipped_by_program_integrity = skipped_by_program_integrity
 
@@ -359,7 +363,7 @@ def test_transition_not_sampled_payment_audit_pending_states(test_db_session, pa
         assert payment_state_log.outcome["message"] == outcome["message"]
 
 
-def _generate_audit_file(payment_rejects_received_folder_path, file_name, db_session):
+def _generate_rejects_file(payment_rejects_received_folder_path, file_name, db_session):
     # generate the rejects file
     audit_scenario_data = generate_payment_audit_data_set_and_rejects_file(
         DEFAULT_AUDIT_SCENARIO_DATA_SET,
@@ -405,7 +409,7 @@ def test_process_rejects(
     timestamp_file_prefix = "2021-01-15-12-00-00"
 
     # generate the rejects file
-    audit_scenario_data = _generate_audit_file(
+    audit_scenario_data = _generate_rejects_file(
         payment_rejects_received_folder_path, "Payment-Audit-Report-Response", test_db_session
     )
 
@@ -466,10 +470,10 @@ def test_process_rejects_error(
     monkeypatch.setenv("PFML_PAYMENT_REJECTS_ARCHIVE_PATH", payment_rejects_archive_folder_path)
 
     # generate two rejects files to trigger a processing error
-    _generate_audit_file(
+    _generate_rejects_file(
         payment_rejects_received_folder_path, "Payment-Audit-Report-Response-1", test_db_session
     )
-    _generate_audit_file(
+    _generate_rejects_file(
         payment_rejects_received_folder_path, "Payment-Audit-Report-Response-2", test_db_session
     )
 

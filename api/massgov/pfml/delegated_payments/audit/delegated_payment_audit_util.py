@@ -1,6 +1,7 @@
 import os
 from dataclasses import dataclass
-from typing import Iterable, List, Optional
+from datetime import datetime
+from typing import Any, Dict, Iterable, List, Optional, cast
 
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 from massgov.pfml import db
@@ -15,9 +16,16 @@ from massgov.pfml.db.models.employees import (
     Payment,
     PaymentMethod,
 )
+from massgov.pfml.db.models.payments import (
+    PAYMENT_AUDIT_REPORT_ACTION_REJECTED,
+    PAYMENT_AUDIT_REPORT_ACTION_SKIPPED,
+    LkPaymentAuditReportType,
+    PaymentAuditReportDetails,
+)
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
     PaymentAuditCSV,
+    PaymentAuditDetails,
 )
 from massgov.pfml.delegated_payments.pub.pub_check import _format_check_memo
 from massgov.pfml.delegated_payments.reporting.delegated_abstract_reporting import (
@@ -41,9 +49,6 @@ class PaymentAuditData:
     previously_errored_payment_count: int
     previously_rejected_payment_count: int
     previously_skipped_payment_count: int
-    rejected_by_program_integrity: Optional[bool] = None
-    rejected_notes: str = ""
-    skipped_by_program_integrity: Optional[bool] = None
 
 
 def write_audit_report(
@@ -54,7 +59,9 @@ def write_audit_report(
 ) -> Optional[str]:
     payment_audit_report_rows: List[PaymentAuditCSV] = []
     for payment_audit_data in payment_audit_data_set:
-        payment_audit_report_rows.append(build_audit_report_row(payment_audit_data))
+        payment_audit_report_rows.append(
+            build_audit_report_row(payment_audit_data, payments_util.get_now(), db_session)
+        )
 
     return write_audit_report_rows(payment_audit_report_rows, output_path, db_session, report_name)
 
@@ -85,7 +92,9 @@ def write_audit_report_rows(
     return reports[0]
 
 
-def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAuditCSV:
+def build_audit_report_row(
+    payment_audit_data: PaymentAuditData, audit_report_time: datetime, db_session: db.Session
+) -> PaymentAuditCSV:
     """Build a single row of the payment audit report file"""
 
     payment: Payment = payment_audit_data.payment
@@ -122,6 +131,8 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
         payment_period_weeks = get_period_in_weeks(
             payment.period_start_date, payment.period_end_date
         )
+
+    audit_report_details = get_payment_audit_report_details(payment, audit_report_time, db_session)
 
     payment_audit_row = PaymentAuditCSV(
         pfml_payment_id=str(payment.payment_id),
@@ -161,15 +172,19 @@ def build_audit_report_row(payment_audit_data: PaymentAuditData) -> PaymentAudit
         previously_errored_payment_count=str(payment_audit_data.previously_errored_payment_count),
         previously_rejected_payment_count=str(payment_audit_data.previously_rejected_payment_count),
         previously_skipped_payment_count=str(payment_audit_data.previously_skipped_payment_count),
-        rejected_by_program_integrity=bool_to_str[payment_audit_data.rejected_by_program_integrity],
-        rejected_notes=payment_audit_data.rejected_notes,
-        skipped_by_program_integrity=bool_to_str[payment_audit_data.skipped_by_program_integrity],
+        max_weekly_benefits_details=audit_report_details.max_weekly_benefits_details,
+        dua_dia_reduction_details=audit_report_details.dua_dia_reduction_details,
+        rejected_by_program_integrity=bool_to_str[
+            audit_report_details.rejected_by_program_integrity
+        ],
+        skipped_by_program_integrity=bool_to_str[audit_report_details.skipped_by_program_integrity],
+        rejected_notes=audit_report_details.rejected_notes,
     )
 
     return payment_audit_row
 
 
-bool_to_str = {None: "", True: "Y", False: "N"}
+bool_to_str = {None: "", True: "Y", False: ""}
 
 
 def get_leave_type(payment: Payment) -> Optional[str]:
@@ -193,4 +208,84 @@ def get_payment_preference(payment: Payment) -> str:
 
     raise PaymentAuditRowError(
         "Unexpected payment preference %s" % payment.disb_method.payment_method_description
+    )
+
+
+def stage_payment_audit_report_details(
+    payment: Payment,
+    audit_report_type: LkPaymentAuditReportType,
+    message: str,
+    import_log_id: Optional[int],
+    db_session: db.Session,
+) -> None:
+    details: Dict[str, Any] = {}
+    details["message"] = message
+
+    audit_report_details = PaymentAuditReportDetails(
+        payment_id=payment.payment_id,
+        audit_report_type_id=audit_report_type.payment_audit_report_type_id,
+        details=details,
+        import_log_id=import_log_id,
+    )
+    db_session.add(audit_report_details)
+
+
+def get_payment_audit_report_details(
+    payment: Payment, added_to_audit_report_at: datetime, db_session: db.Session
+) -> PaymentAuditDetails:
+    """Returns an partial object of the payment audit report row relevant to details"""
+    staged_audit_report_details_list: List[PaymentAuditReportDetails] = (
+        db_session.query(PaymentAuditReportDetails)
+        .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
+        .order_by(PaymentAuditReportDetails.created_at.asc())
+        .all()
+    )
+
+    if len(staged_audit_report_details_list) == 0:
+        return PaymentAuditDetails()
+
+    audit_report_details = {}
+    rejected = False
+    skipped = False
+    program_integrity_notes = []
+
+    for staged_audit_report_detail in staged_audit_report_details_list:
+        audit_report_type = (
+            staged_audit_report_detail.audit_report_type.payment_audit_report_type_description
+        )
+
+        # Set the message in the correct column
+        key = f"{audit_report_type.lower()}_details".replace(" ", "_")
+
+        details_dict = cast(Dict[str, Any], staged_audit_report_detail.details)
+        audit_report_details[key] = details_dict["message"]
+
+        # Track rejected or skipped
+        is_rejected_or_skipped = (
+            staged_audit_report_detail.audit_report_type.payment_audit_report_action
+        )
+
+        is_rejected_or_skipped = (
+            staged_audit_report_detail.audit_report_type.payment_audit_report_action
+        )
+        if is_rejected_or_skipped == PAYMENT_AUDIT_REPORT_ACTION_REJECTED:
+            rejected = True
+            program_integrity_notes.append(f"{audit_report_type} (Rejected)")
+        elif is_rejected_or_skipped == PAYMENT_AUDIT_REPORT_ACTION_SKIPPED:
+            skipped = True
+            program_integrity_notes.append(f"{audit_report_type} (Skipped)")
+
+        # Mark the details row as processed
+        staged_audit_report_detail.added_to_audit_report_at = added_to_audit_report_at
+
+    # set aggregated notes
+    rejected_notes = None
+    if len(program_integrity_notes) > 0:
+        rejected_notes = ", ".join(program_integrity_notes)
+
+    return PaymentAuditDetails(
+        rejected_by_program_integrity=rejected,
+        skipped_by_program_integrity=(not rejected and skipped),
+        rejected_notes=rejected_notes,
+        **audit_report_details,
     )
