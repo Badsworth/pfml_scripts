@@ -33,7 +33,6 @@ from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformPreviousLeaveFromOtherLeaveEform,
 )
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import EFormBody
-from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 from massgov.pfml.util.pydantic.types import FEINFormattedStr, MaskedTaxIdFormattedStr
 
 LEAVE_ADMIN_INFO_REQUEST_TYPE = "Employer Confirmation of Leave Data"
@@ -194,7 +193,6 @@ def get_claim_as_leave_admin(
         fineos_client = massgov.pfml.fineos.create_client()
 
     absence_periods = fineos_client.get_absence_period_decisions(fineos_user_id, absence_id).dict()
-    set_empty_dates_to_none(absence_periods, ["startDate", "endDate"])
 
     if not absence_periods.get("decisions", []):
         logger.error(

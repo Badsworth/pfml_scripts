@@ -9,10 +9,12 @@ from decimal import Decimal
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import Field
+
+from massgov.pfml.util.pydantic import PydanticBaseModelEmptyStrIsNone
 
 
-class EnumInstanceSummary(BaseModel):
+class EnumInstanceSummary(PydanticBaseModelEmptyStrIsNone):
     id: Optional[str] = Field(None, description="Enum instance ID")
     name: Optional[str] = Field(None, description="Enum instance name")
     _links: Optional[Dict[str, str]] = Field(
@@ -22,14 +24,14 @@ class EnumInstanceSummary(BaseModel):
     )
 
 
-class EnumSubset(BaseModel):
+class EnumSubset(PydanticBaseModelEmptyStrIsNone):
     name: Optional[str] = Field(None, description="Enum subset name")
     instances: Optional[List[EnumInstanceSummary]] = Field(
         None, description="List of the instances that belongs to this Subset "
     )
 
 
-class ErrorSource(BaseModel):
+class ErrorSource(PydanticBaseModelEmptyStrIsNone):
     pointer: Optional[str] = None
     parameter: Optional[str] = None
 
@@ -39,16 +41,16 @@ class Direction(Enum):
     DESC = "DESC"
 
 
-class SortOrderItem(BaseModel):
+class SortOrderItem(PydanticBaseModelEmptyStrIsNone):
     columnName: Optional[str] = None
     direction: Optional[Direction] = None
 
 
-class EnumSubsetSummary(BaseModel):
+class EnumSubsetSummary(PydanticBaseModelEmptyStrIsNone):
     name: Optional[str] = Field(None, description="Enum subset name")
 
 
-class AbsenceCaseSummary(BaseModel):
+class AbsenceCaseSummary(PydanticBaseModelEmptyStrIsNone):
     absenceHandler: Optional[str] = Field(
         None, description=" The Person handling the absence case", max_length=50, min_length=0
     )
@@ -99,18 +101,18 @@ class AbsenceCaseSummary(BaseModel):
     )
 
 
-class ErrorModel(BaseModel):
+class ErrorModel(PydanticBaseModelEmptyStrIsNone):
     error: str
     correlationId: Optional[str] = None
     errorDetail: Optional[str] = None
     stacktrace: Optional[str] = None
 
 
-class UserErrorModel(BaseModel):
+class UserErrorModel(PydanticBaseModelEmptyStrIsNone):
     error: str
 
 
-class AbsenceDay(BaseModel):
+class AbsenceDay(PydanticBaseModelEmptyStrIsNone):
     date: Optional[date] = Field(None, description="ISO 8601 date format", example="1999-12-31")
     timeRequested: Optional[str] = Field(
         None,
@@ -135,7 +137,7 @@ class AbsenceDay(BaseModel):
     )
 
 
-class EpisodicLeavePeriodDetail(BaseModel):
+class EpisodicLeavePeriodDetail(PydanticBaseModelEmptyStrIsNone):
     frequency: Optional[int] = Field(None, description="The Frequency of Episodes")
     frequencyInterval: Optional[int] = Field(
         None, description="Number indicating the episodic frequency interval"
@@ -151,7 +153,7 @@ class EpisodicLeavePeriodDetail(BaseModel):
     )
 
 
-class LeavePlanDetails(BaseModel):
+class LeavePlanDetails(PydanticBaseModelEmptyStrIsNone):
     longName: Optional[str] = Field(
         None, description="The long name for the leave plan.", max_length=50, min_length=0
     )
@@ -178,7 +180,7 @@ class LeavePlanDetails(BaseModel):
     )
 
 
-class ReportedReducedScheduleLeavePeriod(BaseModel):
+class ReportedReducedScheduleLeavePeriod(PydanticBaseModelEmptyStrIsNone):
     startDate: date = Field(..., description="ISO 8601 date format", example="1999-12-31")
     endDate: date = Field(..., description="ISO 8601 date format", example="1999-12-31")
     decision: Optional[str] = Field(
@@ -223,7 +225,7 @@ class ReportedReducedScheduleLeavePeriod(BaseModel):
     )
 
 
-class ReportedTimeOffLeavePeriod(BaseModel):
+class ReportedTimeOffLeavePeriod(PydanticBaseModelEmptyStrIsNone):
     startDate: date = Field(..., description="ISO 8601 date format", example="1999-12-31")
     endDate: date = Field(..., description="ISO 8601 date format", example="1999-12-31")
     lastDayWorked: Optional[date] = Field(
@@ -246,7 +248,7 @@ class ReportedTimeOffLeavePeriod(BaseModel):
     )
 
 
-class EpisodicLeavePeriod(BaseModel):
+class EpisodicLeavePeriod(PydanticBaseModelEmptyStrIsNone):
     startDate: date = Field(..., description="ISO 8601 date format", example="1999-12-31")
     endDate: date = Field(..., description="ISO 8601 date format", example="1999-12-31")
     frequency: Optional[int] = Field(None, description="The Frequency of Episodes")
@@ -264,7 +266,7 @@ class EpisodicLeavePeriod(BaseModel):
     )
 
 
-class ReducedScheduleLeavePeriod(BaseModel):
+class ReducedScheduleLeavePeriod(PydanticBaseModelEmptyStrIsNone):
     startDate: date = Field(..., description="ISO 8601 date format", example="1999-12-31")
     endDate: date = Field(..., description="ISO 8601 date format", example="1999-12-31")
     status: Optional[str] = Field(
@@ -309,7 +311,7 @@ class ReducedScheduleLeavePeriod(BaseModel):
     )
 
 
-class TimeOffLeavePeriod(BaseModel):
+class TimeOffLeavePeriod(PydanticBaseModelEmptyStrIsNone):
     startDate: date = Field(..., description="ISO 8601 date format", example="1999-12-31")
     endDate: date = Field(..., description="ISO 8601 date format", example="1999-12-31")
     lastDayWorked: Optional[date] = Field(
@@ -332,7 +334,7 @@ class TimeOffLeavePeriod(BaseModel):
     )
 
 
-class AbsenceReasonModel(BaseModel):
+class AbsenceReasonModel(PydanticBaseModelEmptyStrIsNone):
     reason: str = Field(
         ..., description="The name for the absence reason.", max_length=100, min_length=0
     )
@@ -347,7 +349,7 @@ class AbsenceReasonModel(BaseModel):
     )
 
 
-class LeavePlanModel(BaseModel):
+class LeavePlanModel(PydanticBaseModelEmptyStrIsNone):
     leavePlanId: str = Field(
         ...,
         description="Leave Plan UUID is a mandatory field, it must be specified.",
@@ -409,13 +411,13 @@ class LeavePlanModel(BaseModel):
     statesData: Optional[List[str]] = None
 
 
-class EmployeeRegistrationStatus(BaseModel):
+class EmployeeRegistrationStatus(PydanticBaseModelEmptyStrIsNone):
     registered: Optional[bool] = Field(
         None, description="True if the Employee is registered, false otherwise."
     )
 
 
-class LeavePlanSummary(BaseModel):
+class LeavePlanSummary(PydanticBaseModelEmptyStrIsNone):
     leavePlanId: str = Field(..., description="The Leave Plan UUID.", max_length=36, min_length=0)
     name: Optional[str] = Field(
         None, description="The long name for the leave plan.", max_length=50, min_length=0
@@ -433,7 +435,7 @@ class LeavePlanSummary(BaseModel):
     leavePlanAlias: Optional[str] = Field(None, description="The alias for this leave plan.")
 
 
-class EmploymentDetails(BaseModel):
+class EmploymentDetails(PydanticBaseModelEmptyStrIsNone):
     employeeId: Optional[str] = Field(None, description="The employee Id.")
     dateOfHire: Optional[date] = Field(
         None, description="ISO 8601 date format", example="1999-12-31"
@@ -453,7 +455,7 @@ class EmploymentDetails(BaseModel):
     )
 
 
-class DocumentGroup(BaseModel):
+class DocumentGroup(PydanticBaseModelEmptyStrIsNone):
     name: Optional[str] = Field(
         None, description="The document group name.", max_length=100, min_length=0
     )
@@ -462,7 +464,7 @@ class DocumentGroup(BaseModel):
     )
 
 
-class DocumentSummary(BaseModel):
+class DocumentSummary(PydanticBaseModelEmptyStrIsNone):
     documentId: Optional[int] = Field(None, description="The document ID.")
     fileName: Optional[str] = Field(
         None, description="The document file name.", max_length=100, min_length=0
@@ -475,7 +477,7 @@ class DocumentSummary(BaseModel):
     )
 
 
-class AbsenceReasonSummary(BaseModel):
+class AbsenceReasonSummary(PydanticBaseModelEmptyStrIsNone):
     reason: str = Field(
         ..., description="The name for the absence reason.", max_length=100, min_length=0
     )
@@ -536,7 +538,7 @@ class AbsenceReasonSummary(BaseModel):
     )
 
 
-class LimitationDetail(BaseModel):
+class LimitationDetail(PydanticBaseModelEmptyStrIsNone):
     limitationType: Optional[str] = Field(
         None, description="Represents a Limitation to be associated to an Accommodation Case."
     )
@@ -548,14 +550,14 @@ class LimitationDetail(BaseModel):
     )
 
 
-class ModelEnum(BaseModel):
+class ModelEnum(PydanticBaseModelEmptyStrIsNone):
     domainName: str = Field(..., description="Domain name.", max_length=100, min_length=0)
     instanceValue: str = Field(
         ..., description="Enum instance value.", max_length=100, min_length=0
     )
 
 
-class NotificationAbsenceCaseSummary(BaseModel):
+class NotificationAbsenceCaseSummary(PydanticBaseModelEmptyStrIsNone):
     absenceHandler: Optional[str] = Field(
         None, description=" The Person handling the absence case", max_length=50, min_length=0
     )
@@ -603,7 +605,7 @@ class NotificationAbsenceCaseSummary(BaseModel):
     )
 
 
-class WorkPlaceAccommodationDetail(BaseModel):
+class WorkPlaceAccommodationDetail(PydanticBaseModelEmptyStrIsNone):
     accommodationCategory: Optional[str] = Field(
         None, description="The Category that identifies this association."
     )
@@ -633,17 +635,17 @@ class WorkPlaceAccommodationDetail(BaseModel):
     )
 
 
-class Absence(BaseModel):
+class Absence(PydanticBaseModelEmptyStrIsNone):
     id: Optional[str] = Field(None, description="Unique identifier for the absence case")
     caseReference: Optional[str] = Field(None, description="Case reference related to absence")
 
 
-class Employee(BaseModel):
+class Employee(PydanticBaseModelEmptyStrIsNone):
     id: Optional[str] = Field(None, description="Unique identifier for the employee")
     name: Optional[str] = Field(None, description="Name of the employee")
 
 
-class LeavePlan(BaseModel):
+class LeavePlan(PydanticBaseModelEmptyStrIsNone):
     id: Optional[str] = Field(None, description="The unique identifier for the leave plan")
     name: Optional[str] = Field(None, description="Leave plan long name")
     shortName: Optional[str] = Field(None, description="Leave plan short name")
@@ -685,7 +687,7 @@ class LeavePlan(BaseModel):
     paidLeaveCaseId: Optional[str] = Field(None, description="Paid leave case id")
 
 
-class LeaveRequest(BaseModel):
+class LeaveRequest(PydanticBaseModelEmptyStrIsNone):
     id: Optional[str] = Field(
         None, description="Business Entity OID", example="PE-00012-0000001234"
     )
@@ -697,7 +699,7 @@ class LeaveRequest(BaseModel):
     denialReason: Optional[str] = Field(None, description="Reason for denial of a request")
 
 
-class RequestedEpisodicLeaveDetails(BaseModel):
+class RequestedEpisodicLeaveDetails(PydanticBaseModelEmptyStrIsNone):
     frequency: Optional[int] = Field(
         None,
         description="How often individual periods of absence are taken, for example, 2 (times)",
@@ -719,7 +721,7 @@ class RequestedEpisodicLeaveDetails(BaseModel):
     )
 
 
-class AbsencePeriodDecision(BaseModel):
+class AbsencePeriodDecision(PydanticBaseModelEmptyStrIsNone):
     periodId: Optional[str] = Field(
         None, description="Business Entity OID", example="PE-00012-0000001234"
     )
@@ -804,7 +806,7 @@ class AbsencePeriodDecision(BaseModel):
     )
 
 
-class AbsencePeriodDecisions(BaseModel):
+class AbsencePeriodDecisions(PydanticBaseModelEmptyStrIsNone):
     startDate: Optional[date] = Field(
         None, description="ISO 8601 date format", example="1999-12-31"
     )
@@ -812,7 +814,7 @@ class AbsencePeriodDecisions(BaseModel):
     absencePeriodDecisions: Optional[List[AbsencePeriodDecision]] = None
 
 
-class AccommodationCaseSummary(BaseModel):
+class AccommodationCaseSummary(PydanticBaseModelEmptyStrIsNone):
     accommodationCaseId: Optional[str] = Field(
         None, description="The Case Number for the accommodation case", max_length=256, min_length=0
     )
@@ -870,13 +872,13 @@ class AccommodationCaseSummary(BaseModel):
     )
 
 
-class Limitation(BaseModel):
+class Limitation(PydanticBaseModelEmptyStrIsNone):
     limitationType: Optional[str] = Field(
         None, description="Represents a Limitation to be associated to an Accommodation Case."
     )
 
 
-class WorkPlaceAccommodation(BaseModel):
+class WorkPlaceAccommodation(PydanticBaseModelEmptyStrIsNone):
     accommodationCategory: Optional[str] = Field(
         None, description="The Category that identifies this association."
     )
@@ -888,7 +890,7 @@ class WorkPlaceAccommodation(BaseModel):
     )
 
 
-class ReflexiveQuestionType(BaseModel):
+class ReflexiveQuestionType(PydanticBaseModelEmptyStrIsNone):
     fieldName: str = Field(
         ..., description="The name of an attribute.", max_length=300, min_length=0
     )
@@ -904,7 +906,7 @@ class ReflexiveQuestionType(BaseModel):
     enumValue: Optional[ModelEnum] = None
 
 
-class ReflexiveQuestions(BaseModel):
+class ReflexiveQuestions(PydanticBaseModelEmptyStrIsNone):
     reflexiveQuestionLevel: str = Field(
         ...,
         description="The reflexive question level possible value can be 'reason', 'primary relationship' or 'secondary relationship'.",
@@ -914,7 +916,7 @@ class ReflexiveQuestions(BaseModel):
     reflexiveQuestionDetails: Optional[List[ReflexiveQuestionType]] = None
 
 
-class EmployeeLeaveBalance(BaseModel):
+class EmployeeLeaveBalance(PydanticBaseModelEmptyStrIsNone):
     approvedTime: Optional[float] = Field(
         None,
         description="Employee total approved leave as per the leave plan calculation for the given period.",
@@ -960,7 +962,7 @@ class EmployeeLeaveBalance(BaseModel):
     )
 
 
-class EpisodicActualAbsencePeriodReportingInfo(BaseModel):
+class EpisodicActualAbsencePeriodReportingInfo(PydanticBaseModelEmptyStrIsNone):
     actualDate: date = Field(..., description="ISO 8601 date format", example="1999-12-31")
     episodicPeriodDuration: int = Field(
         ..., description="Duration of the actual time record for the absence period."
@@ -1018,7 +1020,7 @@ class EpisodicActualAbsencePeriodReportingInfo(BaseModel):
     )
 
 
-class EpisodicActualTimeDetail(BaseModel):
+class EpisodicActualTimeDetail(PydanticBaseModelEmptyStrIsNone):
     actualDate: date = Field(..., description="ISO 8601 date format", example="1999-12-31")
     episodicPeriodDuration: int = Field(
         ..., description="Duration of the actual time record for the absence period."
@@ -1040,13 +1042,13 @@ class EpisodicActualTimeDetail(BaseModel):
     )
 
 
-class EpisodicActualTimeDetails(BaseModel):
+class EpisodicActualTimeDetails(PydanticBaseModelEmptyStrIsNone):
     episodicActualTimeDetails: Optional[List[EpisodicActualTimeDetail]] = Field(
         None, description="Multiple actual time taken on the single episodic leave request."
     )
 
 
-class EFormAttribute(BaseModel):
+class EFormAttribute(PydanticBaseModelEmptyStrIsNone):
     name: str = Field(..., description="The name of an EForm attibute.")
     booleanValue: Optional[bool] = Field(
         None,
@@ -1070,7 +1072,7 @@ class EFormAttribute(BaseModel):
     enumValue: Optional[ModelEnum] = None
 
 
-class SupervisedAbsenceSummary(BaseModel):
+class SupervisedAbsenceSummary(PydanticBaseModelEmptyStrIsNone):
     absenceHandler: Optional[str] = Field(
         None, description=" The Person handling the absence case", max_length=50, min_length=0
     )
@@ -1130,19 +1132,19 @@ class SupervisedAbsenceSummary(BaseModel):
     )
 
 
-class EmployeeSummaryForManager(BaseModel):
+class EmployeeSummaryForManager(PydanticBaseModelEmptyStrIsNone):
     firstName: Optional[str] = Field(None, description="First names of a person.")
     lastName: Optional[str] = Field(None, description="The person's lastName.")
     initials: Optional[str] = Field(None, description="The person's middle initials.")
     employeeId: Optional[str] = Field(None, description="The employment id of the employee.")
 
 
-class PaginatedEmployeeSearchResults(BaseModel):
+class PaginatedEmployeeSearchResults(PydanticBaseModelEmptyStrIsNone):
     totalNumberOfRecords: Optional[int] = None
     employees: Optional[List[EmployeeSummaryForManager]] = None
 
 
-class SupervisedAbsenceDay(BaseModel):
+class SupervisedAbsenceDay(PydanticBaseModelEmptyStrIsNone):
     date: Optional[date] = Field(None, description="ISO 8601 date format", example="1999-12-31")
     timeRequested: Optional[str] = Field(
         None,
@@ -1167,7 +1169,7 @@ class SupervisedAbsenceDay(BaseModel):
     )
 
 
-class SupervisedAbsencePeriod(BaseModel):
+class SupervisedAbsencePeriod(PydanticBaseModelEmptyStrIsNone):
     id: Optional[str] = Field(
         None, description="Business Entity OID", example="PE-00012-0000001234"
     )
@@ -1205,7 +1207,7 @@ class SupervisedAbsencePeriod(BaseModel):
     episodicLeavePeriodDetail: Optional[EpisodicLeavePeriodDetail] = None
 
 
-class SupervisedReducedScheduleLeavePeriod(BaseModel):
+class SupervisedReducedScheduleLeavePeriod(PydanticBaseModelEmptyStrIsNone):
     startDate: date = Field(..., description="ISO 8601 date format", example="1999-12-31")
     endDate: date = Field(..., description="ISO 8601 date format", example="1999-12-31")
     status: Optional[str] = Field(
@@ -1250,7 +1252,7 @@ class SupervisedReducedScheduleLeavePeriod(BaseModel):
     )
 
 
-class SupervisedTimeOffLeavePeriod(BaseModel):
+class SupervisedTimeOffLeavePeriod(PydanticBaseModelEmptyStrIsNone):
     startDate: date = Field(..., description="ISO 8601 date format", example="1999-12-31")
     endDate: date = Field(..., description="ISO 8601 date format", example="1999-12-31")
     lastDayWorked: Optional[date] = Field(
@@ -1273,11 +1275,11 @@ class SupervisedTimeOffLeavePeriod(BaseModel):
     )
 
 
-class ValidationMessageModel(BaseModel):
+class ValidationMessageModel(PydanticBaseModelEmptyStrIsNone):
     validationMessage: str
 
 
-class EFormSummary(BaseModel):
+class EFormSummary(PydanticBaseModelEmptyStrIsNone):
     eformId: int = Field(..., description="Unique automatically generated Id of an EForm document.")
     eformTypeId: Optional[str] = Field(
         None, description="Business Entity OID", example="PE-00012-0000001234"
@@ -1296,7 +1298,7 @@ class EFormSummary(BaseModel):
     )
 
 
-class AccountTransferInfo(BaseModel):
+class AccountTransferInfo(PydanticBaseModelEmptyStrIsNone):
     bankAccountNumber: Optional[str] = Field(
         None, description="The bank account number of an employee"
     )
@@ -1310,11 +1312,11 @@ class AccountTransferInfo(BaseModel):
     bankCode: Optional[str] = Field(None, description="The bank code of an employee")
 
 
-class ChequePaymentInfo(BaseModel):
+class ChequePaymentInfo(PydanticBaseModelEmptyStrIsNone):
     chequeNumber: Optional[str] = Field(None, description="The cheque number of an employee")
 
 
-class Policy(BaseModel):
+class Policy(PydanticBaseModelEmptyStrIsNone):
     referenceNo: str = Field(
         ...,
         description="Unique alphanumeric policy reference from the relevant policy admin system.",
@@ -1323,7 +1325,7 @@ class Policy(BaseModel):
     )
 
 
-class StartClaim(BaseModel):
+class StartClaim(PydanticBaseModelEmptyStrIsNone):
     description: Optional[str] = Field(
         None,
         description="Description for this case as entered by the user.",
@@ -1351,7 +1353,7 @@ class StartClaim(BaseModel):
     )
 
 
-class ExtraRequestAttributes(BaseModel):
+class ExtraRequestAttributes(PydanticBaseModelEmptyStrIsNone):
     temporaryAddress: Optional[bool] = Field(
         None, description="Temporary address type indicator. Default value false, if not provided."
     )
@@ -1360,11 +1362,11 @@ class ExtraRequestAttributes(BaseModel):
     )
 
 
-class WebMessageId(BaseModel):
+class WebMessageId(PydanticBaseModelEmptyStrIsNone):
     messageId: Optional[int] = Field(None, description="Message Id")
 
 
-class CaseParticipantsSummary(BaseModel):
+class CaseParticipantsSummary(PydanticBaseModelEmptyStrIsNone):
     participantId: Optional[int] = Field(None, description="Id of the participant")
     rolename: Optional[str] = Field(
         None,
@@ -1396,7 +1398,7 @@ class CaseParticipantsSummary(BaseModel):
     )
 
 
-class CaseStatusHistory(BaseModel):
+class CaseStatusHistory(PydanticBaseModelEmptyStrIsNone):
     status: Optional[str] = Field(
         None, description="The stage in the process that the case was at."
     )
@@ -1409,7 +1411,7 @@ class CaseStatusHistory(BaseModel):
     )
 
 
-class WorkPatternDay(BaseModel):
+class WorkPatternDay(PydanticBaseModelEmptyStrIsNone):
     dayOfWeek: str = Field(..., description="The day of the week.")
     weekNumber: int = Field(
         ...,
@@ -1421,7 +1423,7 @@ class WorkPatternDay(BaseModel):
     minutes: int = Field(..., description="The number of minutes on this day in the work pattern.")
 
 
-class Base64EncodedFileDetails(BaseModel):
+class Base64EncodedFileDetails(PydanticBaseModelEmptyStrIsNone):
     fileName: str = Field(..., description="The name of the file, without the extension.")
     fileExtension: str = Field(
         ..., description="The extension of the file, without a preceding dot."
@@ -1431,7 +1433,7 @@ class Base64EncodedFileDetails(BaseModel):
     description: Optional[str] = Field(None, description="A description of the file.")
 
 
-class ChequeDetails(BaseModel):
+class ChequeDetails(PydanticBaseModelEmptyStrIsNone):
     nameToPrintOnCheck: Optional[str] = Field(
         None,
         description="The name that should be printed on the check",
@@ -1440,7 +1442,7 @@ class ChequeDetails(BaseModel):
     )
 
 
-class MonthlyBasisEarningAmountsResponse(BaseModel):
+class MonthlyBasisEarningAmountsResponse(PydanticBaseModelEmptyStrIsNone):
     earningsAmount: Decimal = Field(..., description="Money amount format", example="1500.50")
     shiftPay: Optional[Decimal] = Field(None, description="Money amount format", example="1500.50")
     pensionContribution: Optional[Decimal] = Field(
@@ -1458,7 +1460,7 @@ class MonthlyBasisEarningAmountsResponse(BaseModel):
     )
 
 
-class WeeklyBasisEarningAmountsResponse(BaseModel):
+class WeeklyBasisEarningAmountsResponse(PydanticBaseModelEmptyStrIsNone):
     totalAmountOverridden: bool = Field(
         ...,
         description="This attribute indicates if the total weekly or bi-weekly amount has been manually overridden.",
@@ -1510,7 +1512,7 @@ class WeeklyBasisEarningAmountsResponse(BaseModel):
     )
 
 
-class WeeklyBasisEarningAmountsRequest(BaseModel):
+class WeeklyBasisEarningAmountsRequest(PydanticBaseModelEmptyStrIsNone):
     totalAmountOverridden: bool = Field(
         ...,
         description="This attribute indicates if the total weekly or bi-weekly amount has been manually overridden.",
@@ -1550,7 +1552,7 @@ class WeeklyBasisEarningAmountsRequest(BaseModel):
     )
 
 
-class MonthlyBasisEarningAmountsRequest(BaseModel):
+class MonthlyBasisEarningAmountsRequest(PydanticBaseModelEmptyStrIsNone):
     earningsAmount: Decimal = Field(..., description="Money amount format", example="1500.50")
     shiftPay: Optional[Decimal] = Field(None, description="Money amount format", example="1500.50")
     pensionContribution: Optional[Decimal] = Field(
@@ -1562,7 +1564,7 @@ class MonthlyBasisEarningAmountsRequest(BaseModel):
     )
 
 
-class PregnancyDetails(BaseModel):
+class PregnancyDetails(PydanticBaseModelEmptyStrIsNone):
     actualDeliveryDate: Optional[date] = Field(
         None, description="ISO 8601 date format", example="1999-12-31"
     )
@@ -1577,7 +1579,7 @@ class PregnancyDetails(BaseModel):
     )
 
 
-class DiagnosisDetails(BaseModel):
+class DiagnosisDetails(PydanticBaseModelEmptyStrIsNone):
     medicalCode: Optional[str] = Field(
         None,
         description="The code ID that specifies a particular diagnosis.",
@@ -1613,7 +1615,7 @@ class DiagnosisDetails(BaseModel):
     )
 
 
-class RestrictionsLimitations(BaseModel):
+class RestrictionsLimitations(PydanticBaseModelEmptyStrIsNone):
     restrictionEffectiveDate: Optional[date] = Field(
         None, description="ISO 8601 date format", example="1999-12-31"
     )
@@ -1623,7 +1625,7 @@ class RestrictionsLimitations(BaseModel):
     )
 
 
-class NewDiagnosisDetails(BaseModel):
+class NewDiagnosisDetails(PydanticBaseModelEmptyStrIsNone):
     medicalCode: Optional[str] = Field(
         None,
         description="The code ID that specifies a particular diagnosis.",
@@ -1636,7 +1638,7 @@ class NewDiagnosisDetails(BaseModel):
     )
 
 
-class CustomerSummaryDetails(BaseModel):
+class CustomerSummaryDetails(PydanticBaseModelEmptyStrIsNone):
     customerNo: str = Field(..., description="The Customer number", max_length=256, min_length=0)
     firstName: str = Field(
         ..., description="The First Name of the Customer", max_length=256, min_length=0
@@ -1649,7 +1651,7 @@ class CustomerSummaryDetails(BaseModel):
     )
 
 
-class SocialSecurityBenefitResponse(BaseModel):
+class SocialSecurityBenefitResponse(PydanticBaseModelEmptyStrIsNone):
     socialSecurityBenefitId: Optional[str] = Field(
         None, description="The unique identification number(oid)."
     )
@@ -1683,7 +1685,7 @@ class SocialSecurityBenefitResponse(BaseModel):
     )
 
 
-class SocialSecurityDecisionResponse(BaseModel):
+class SocialSecurityDecisionResponse(PydanticBaseModelEmptyStrIsNone):
     socialSecurityDecisionId: str = Field(
         ...,
         description="The unique identifier for the social security",
@@ -1704,7 +1706,7 @@ class SocialSecurityDecisionResponse(BaseModel):
     )
 
 
-class ApprovalOrders(BaseModel):
+class ApprovalOrders(PydanticBaseModelEmptyStrIsNone):
     approvalOrderId: str = Field(..., description="Approval Order Id", max_length=50, min_length=0)
     benefitCaseNumber: str = Field(..., description="Benefit Number", max_length=50, min_length=0)
     referenceNumber: str = Field(..., description="Reference Number", max_length=50, min_length=0)
@@ -1717,7 +1719,7 @@ class ApprovalOrders(BaseModel):
     facilityName: str = Field(..., description="Faclity Name", max_length=50, min_length=0)
 
 
-class ApprovalOrderDecisions(BaseModel):
+class ApprovalOrderDecisions(PydanticBaseModelEmptyStrIsNone):
     approvalDecisionId: str = Field(
         ..., description="Approval Order Decision Id", max_length=50, min_length=0
     )
@@ -1739,7 +1741,7 @@ class ApprovalOrderDecisions(BaseModel):
     remainingUnits: float = Field(..., description="Remaining Units")
 
 
-class Base64EncodedFileData(BaseModel):
+class Base64EncodedFileData(PydanticBaseModelEmptyStrIsNone):
     fileName: str = Field(..., description="The name of the file, without the extension.")
     fileExtension: str = Field(
         ..., description="The extension of the file, without a preceding dot."
@@ -1753,7 +1755,7 @@ class Base64EncodedFileData(BaseModel):
     )
 
 
-class OutstandingSupportingEvidence(BaseModel):
+class OutstandingSupportingEvidence(PydanticBaseModelEmptyStrIsNone):
     rootCaseId: Optional[str] = Field(
         None,
         description="The root case id is the id of the last case retrieved following all parent relationships starting from the case holding the supporting evidence elements. Given a case Id, all supporting evidence elements share the same root case.",
@@ -1782,7 +1784,7 @@ class OutstandingSupportingEvidence(BaseModel):
     )
 
 
-class EmployerQuestion(BaseModel):
+class EmployerQuestion(PydanticBaseModelEmptyStrIsNone):
     questionId: str = Field(
         ...,
         description="The id of the employer question. Must be unique for all employer questions of one category.",
@@ -1810,26 +1812,26 @@ class EmployerQuestion(BaseModel):
     )
 
 
-class EmployerQuestions(BaseModel):
+class EmployerQuestions(PydanticBaseModelEmptyStrIsNone):
     elements: List[EmployerQuestion] = Field(
         ...,
         description="An array of employer questions stored in the EmployerQuestion structure belonging to the given category of ER questions.",
     )
 
 
-class EmployerQuestionAnswer(BaseModel):
+class EmployerQuestionAnswer(PydanticBaseModelEmptyStrIsNone):
     question: EmployerQuestion
     answer: EFormAttribute
 
 
-class EmployerQuestionAnswers(BaseModel):
+class EmployerQuestionAnswers(PydanticBaseModelEmptyStrIsNone):
     elements: List[EmployerQuestionAnswer] = Field(
         ...,
         description="An array of questions and answers to employer questions belonging to the given category of ER questions.",
     )
 
 
-class EmployeeAnswers(BaseModel):
+class EmployeeAnswers(PydanticBaseModelEmptyStrIsNone):
     category: Optional[str] = Field(
         None,
         description="The category of the employer questions answered. Enum InstructionsQuestionsCategory (domainId 234) instance name value",
@@ -1837,13 +1839,13 @@ class EmployeeAnswers(BaseModel):
     answers: Optional[List[EFormAttribute]] = Field(None, description="Get Answers if any exist.")
 
 
-class RegistrationResponse(BaseModel):
+class RegistrationResponse(PydanticBaseModelEmptyStrIsNone):
     registered: Optional[bool] = Field(
         None, description="True if the customer is registered, false otherwise."
     )
 
 
-class EnumDomain(BaseModel):
+class EnumDomain(PydanticBaseModelEmptyStrIsNone):
     id: Optional[str] = Field(None, description="Enum domain ID (unique in the system)")
     name: Optional[str] = Field(None, description="Enum domain name")
     description: Optional[str] = Field(None, description="Description of this domain")
@@ -1872,7 +1874,7 @@ class EnumDomain(BaseModel):
     )
 
 
-class ApiError(BaseModel):
+class ApiError(PydanticBaseModelEmptyStrIsNone):
     id: Optional[str] = None
     status: Optional[str] = None
     code: Optional[str] = None
@@ -1883,11 +1885,11 @@ class ApiError(BaseModel):
     _links: Optional[Dict[str, str]] = None
 
 
-class ErrorResponse(BaseModel):
+class ErrorResponse(PydanticBaseModelEmptyStrIsNone):
     errors: Optional[List[ApiError]] = None
 
 
-class EnumDomains(BaseModel):
+class EnumDomains(PydanticBaseModelEmptyStrIsNone):
     elements: Optional[List[EnumDomain]] = None
     totalSize: Optional[int] = Field(
         None,
@@ -1901,12 +1903,12 @@ class EnumDomains(BaseModel):
     _links: Optional[Dict[str, str]] = None
 
 
-class QuerySortInfo(BaseModel):
+class QuerySortInfo(PydanticBaseModelEmptyStrIsNone):
     sortStatementsText: Optional[str] = None
     sortOrderItemsList: Optional[List[SortOrderItem]] = None
 
 
-class EnumInstance(BaseModel):
+class EnumInstance(PydanticBaseModelEmptyStrIsNone):
     id: Optional[str] = Field(None, description="Enum instance ID (unique in the domain)")
     name: Optional[str] = Field(None, description="Enum instance name")
     domainId: Optional[int] = Field(
@@ -1941,7 +1943,7 @@ class EnumInstance(BaseModel):
     )
 
 
-class EnumInstances(BaseModel):
+class EnumInstances(PydanticBaseModelEmptyStrIsNone):
     elements: Optional[List[EnumInstance]] = None
     totalSize: Optional[int] = Field(
         None,
@@ -1955,7 +1957,7 @@ class EnumInstances(BaseModel):
     _links: Optional[Dict[str, str]] = None
 
 
-class AbsencePeriod(BaseModel):
+class AbsencePeriod(PydanticBaseModelEmptyStrIsNone):
     id: Optional[str] = Field(
         None, description="Business Entity OID", example="PE-00012-0000001234"
     )
@@ -1993,7 +1995,7 @@ class AbsencePeriod(BaseModel):
     episodicLeavePeriodDetail: Optional[EpisodicLeavePeriodDetail] = None
 
 
-class AbsenceCase(BaseModel):
+class AbsenceCase(PydanticBaseModelEmptyStrIsNone):
     additionalComments: Optional[str] = Field(
         None,
         description="Description for this case as entered by the user.",
@@ -2084,7 +2086,7 @@ class AbsenceCase(BaseModel):
     )
 
 
-class ExtensionAttribute(BaseModel):
+class ExtensionAttribute(PydanticBaseModelEmptyStrIsNone):
     name: str = Field(
         ..., description="The name of the attribute which extends standard claim set of attributes."
     )
@@ -2109,7 +2111,7 @@ class ExtensionAttribute(BaseModel):
     )
 
 
-class NotificationAccommodationCaseSummary(BaseModel):
+class NotificationAccommodationCaseSummary(PydanticBaseModelEmptyStrIsNone):
     accommodationCaseId: Optional[str] = Field(
         None, description="The Case Number for the accommodation case", max_length=256, min_length=0
     )
@@ -2150,7 +2152,7 @@ class NotificationAccommodationCaseSummary(BaseModel):
     )
 
 
-class NotificationClaimSummary(BaseModel):
+class NotificationClaimSummary(PydanticBaseModelEmptyStrIsNone):
     claimId: str = Field(
         ..., description="The claim number of the claim", max_length=256, min_length=0
     )
@@ -2207,7 +2209,7 @@ class NotificationClaimSummary(BaseModel):
     )
 
 
-class Period(BaseModel):
+class Period(PydanticBaseModelEmptyStrIsNone):
     periodReference: Optional[str] = Field(
         None, description="Business Entity OID", example="PE-00012-0000001234"
     )
@@ -2250,7 +2252,7 @@ class Period(BaseModel):
     leaveRequest: Optional[LeaveRequest] = None
 
 
-class AccommodationCase(BaseModel):
+class AccommodationCase(PydanticBaseModelEmptyStrIsNone):
     notificationCaseId: Optional[str] = Field(
         None,
         description="Notification case id of the case to which the accommodation should be added as a child case.  ",
@@ -2278,13 +2280,13 @@ class AccommodationCase(BaseModel):
     )
 
 
-class EpisodicActualAbsencePeriodDetails(BaseModel):
+class EpisodicActualAbsencePeriodDetails(PydanticBaseModelEmptyStrIsNone):
     actualTimeReported: Optional[List[EpisodicActualAbsencePeriodReportingInfo]] = Field(
         None, description="The reporting information associated with an actual absence period."
     )
 
 
-class EForm(BaseModel):
+class EForm(PydanticBaseModelEmptyStrIsNone):
     eformAttributes: Optional[List[EFormAttribute]] = Field(
         None, description="An array of EForm attributes."
     )
@@ -2294,12 +2296,12 @@ class EForm(BaseModel):
     )
 
 
-class PaginatedSupervisedAbsences(BaseModel):
+class PaginatedSupervisedAbsences(PydanticBaseModelEmptyStrIsNone):
     totalNumberOfRecords: Optional[int] = None
     absences: Optional[List[SupervisedAbsenceSummary]] = None
 
 
-class SupervisedAbsenceDetails(BaseModel):
+class SupervisedAbsenceDetails(PydanticBaseModelEmptyStrIsNone):
     absenceId: Optional[str] = Field(
         None, description="The case number of this absence case.", max_length=254, min_length=0
     )
@@ -2344,7 +2346,7 @@ class SupervisedAbsenceDetails(BaseModel):
     )
 
 
-class NotificationCaseSummaryForAbsenceTypes(BaseModel):
+class NotificationCaseSummaryForAbsenceTypes(PydanticBaseModelEmptyStrIsNone):
     notificationCaseId: Optional[str] = Field(
         None, description="The case number for the notification case."
     )
@@ -2395,7 +2397,7 @@ class NotificationCaseSummaryForAbsenceTypes(BaseModel):
     )
 
 
-class NotificationCaseSummaryForClaims(BaseModel):
+class NotificationCaseSummaryForClaims(PydanticBaseModelEmptyStrIsNone):
     notificationCaseId: Optional[str] = Field(
         None, description="The case number for the notification case."
     )
@@ -2443,7 +2445,7 @@ class NotificationCaseSummaryForClaims(BaseModel):
     )
 
 
-class ClaimSummary(BaseModel):
+class ClaimSummary(PydanticBaseModelEmptyStrIsNone):
     claimId: str = Field(
         ..., description="The claim number of the claim", max_length=256, min_length=0
     )
@@ -2506,7 +2508,7 @@ class ClaimSummary(BaseModel):
     )
 
 
-class Document(BaseModel):
+class Document(PydanticBaseModelEmptyStrIsNone):
     caseId: Optional[str] = None
     rootCaseId: Optional[str] = None
     documentId: int = Field(..., description="The document Id")
@@ -2568,7 +2570,7 @@ class Document(BaseModel):
     )
 
 
-class ManagedRequirementSummary(BaseModel):
+class ManagedRequirementSummary(PydanticBaseModelEmptyStrIsNone):
     managedReqId: int = Field(..., description="the identifier for this managed requirement.")
     category: str = Field(
         ...,
@@ -2619,7 +2621,7 @@ class ManagedRequirementSummary(BaseModel):
     )
 
 
-class Payment(BaseModel):
+class Payment(PydanticBaseModelEmptyStrIsNone):
     paymentId: Optional[str] = Field(
         None, description="Business Entity OID", example="PE-00012-0000001234"
     )
@@ -2674,7 +2676,7 @@ class Payment(BaseModel):
     )
 
 
-class EmailAddress(BaseModel):
+class EmailAddress(PydanticBaseModelEmptyStrIsNone):
     id: int = Field(
         ...,
         description="The id of the contact method (e.g. phone / mobile / emailAddress) ",
@@ -2691,7 +2693,7 @@ class EmailAddress(BaseModel):
     )
 
 
-class PhoneNumber(BaseModel):
+class PhoneNumber(PydanticBaseModelEmptyStrIsNone):
     id: int = Field(
         ...,
         description="The id of the contact method (e.g. phone / mobile / emailAddress) ",
@@ -2720,7 +2722,7 @@ class PhoneNumber(BaseModel):
     )
 
 
-class Address(BaseModel):
+class Address(PydanticBaseModelEmptyStrIsNone):
     premiseNo: Optional[str] = Field(
         None, description="This is the premise number", max_length=5, min_length=0
     )
@@ -2755,7 +2757,7 @@ class Address(BaseModel):
     )
 
 
-class ExtendedAddress(BaseModel):
+class ExtendedAddress(PydanticBaseModelEmptyStrIsNone):
     buildingName1: Optional[str] = Field(
         None, description="The name of the building.", max_length=30, min_length=0
     )
@@ -2819,7 +2821,7 @@ class ExtendedAddress(BaseModel):
     )
 
 
-class DisabilityClaim(BaseModel):
+class DisabilityClaim(PydanticBaseModelEmptyStrIsNone):
     claimIncurredDate: Optional[date] = Field(
         None, description="ISO 8601 date format", example="1999-12-31"
     )
@@ -2919,12 +2921,12 @@ class DisabilityClaim(BaseModel):
     )
 
 
-class ReadDisabilityResult(BaseModel):
+class ReadDisabilityResult(PydanticBaseModelEmptyStrIsNone):
     claimSummary: Optional[ClaimSummary] = None
     disabilityClaim: Optional[DisabilityClaim] = None
 
 
-class PaymentLineDetails(BaseModel):
+class PaymentLineDetails(PydanticBaseModelEmptyStrIsNone):
     adjustmentId: Optional[str] = Field(
         None, description="Business Entity OID", example="PE-00012-0000001234"
     )
@@ -2955,13 +2957,13 @@ class PaymentLineDetails(BaseModel):
     )
 
 
-class CustomerAddressDetails(BaseModel):
+class CustomerAddressDetails(PydanticBaseModelEmptyStrIsNone):
     address: Optional[Address] = None
     australianAddress: Optional[ExtendedAddress] = None
     extraRequestAttributes: Optional[ExtraRequestAttributes] = None
 
 
-class CustomerDetails(BaseModel):
+class CustomerDetails(PydanticBaseModelEmptyStrIsNone):
     firstName: str = Field(..., description="Person's first name.", max_length=50, min_length=0)
     lastName: str = Field(..., description="Person's last name.", max_length=50, min_length=0)
     secondName: Optional[str] = Field(
@@ -3012,7 +3014,7 @@ class CustomerDetails(BaseModel):
     initals: Optional[str] = None
 
 
-class NextPaymentLine(BaseModel):
+class NextPaymentLine(PydanticBaseModelEmptyStrIsNone):
     lineType: Optional[str] = Field(
         None,
         description="The name of the payment adjustment e.g. Gross Benefit, Income Tax, Seat Belt etc.",
@@ -3032,7 +3034,7 @@ class NextPaymentLine(BaseModel):
     )
 
 
-class WebMessage(BaseModel):
+class WebMessage(PydanticBaseModelEmptyStrIsNone):
     subject: str = Field(..., description="Subject of the message", max_length=200, min_length=0)
     narrative: str = Field(..., description="The web message text", max_length=4000, min_length=0)
     caseId: Optional[str] = Field(
@@ -3060,14 +3062,14 @@ class WebMessage(BaseModel):
     isRead: Optional[bool] = None
 
 
-class WebMessageSummary(BaseModel):
+class WebMessageSummary(PydanticBaseModelEmptyStrIsNone):
     unReadMessages: Optional[int] = Field(None, description="The number of un-read web messages")
     webMessages: Optional[List[WebMessage]] = Field(
         None, description="The list of web messages belonging to the customer"
     )
 
 
-class NewWebMessage(BaseModel):
+class NewWebMessage(PydanticBaseModelEmptyStrIsNone):
     subject: str = Field(..., description="Subject of the message", max_length=200, min_length=0)
     narrative: str = Field(..., description="The web message text", max_length=4000, min_length=0)
     caseId: Optional[str] = Field(
@@ -3082,7 +3084,7 @@ class NewWebMessage(BaseModel):
     )
 
 
-class PersonDetails(BaseModel):
+class PersonDetails(PydanticBaseModelEmptyStrIsNone):
     gender: Optional[str] = Field(
         None, description="The person's gender.", max_length=100, min_length=0
     )
@@ -3107,7 +3109,7 @@ class PersonDetails(BaseModel):
     )
 
 
-class ParticipantContactDetails(BaseModel):
+class ParticipantContactDetails(PydanticBaseModelEmptyStrIsNone):
     phoneNumbers: Optional[List[PhoneNumber]] = Field(
         None, description="Return list of phone numbers"
     )
@@ -3120,7 +3122,7 @@ class ParticipantContactDetails(BaseModel):
     )
 
 
-class BenefitSummary(BaseModel):
+class BenefitSummary(PydanticBaseModelEmptyStrIsNone):
     benefitId: Optional[str] = Field(None, description="The case number of the benefit.")
     benefitCaseType: Optional[str] = Field(
         None, description="The name by which the benefit type is referred."
@@ -3159,7 +3161,7 @@ class BenefitSummary(BaseModel):
     )
 
 
-class DisabilityBenefit(BaseModel):
+class DisabilityBenefit(PydanticBaseModelEmptyStrIsNone):
     benefitIncurredDate: Optional[date] = Field(
         None, description="ISO 8601 date format", example="1999-12-31"
     )
@@ -3325,12 +3327,12 @@ class DisabilityBenefit(BaseModel):
     )
 
 
-class ReadDisabilityBenefitResult(BaseModel):
+class ReadDisabilityBenefitResult(PydanticBaseModelEmptyStrIsNone):
     benefitSummary: Optional[BenefitSummary] = None
     disabilityBenefit: Optional[DisabilityBenefit] = None
 
 
-class LumpSumBenefit(BaseModel):
+class LumpSumBenefit(PydanticBaseModelEmptyStrIsNone):
     benefitIncurredDate: Optional[date] = Field(
         None, description="ISO 8601 date format", example="1999-12-31"
     )
@@ -3395,12 +3397,12 @@ class LumpSumBenefit(BaseModel):
     )
 
 
-class ReadLumpSumBenefitResult(BaseModel):
+class ReadLumpSumBenefitResult(PydanticBaseModelEmptyStrIsNone):
     benefitSummary: Optional[BenefitSummary] = None
     lumpSumBenefit: Optional[LumpSumBenefit] = None
 
 
-class WeekBasedWorkPattern(BaseModel):
+class WeekBasedWorkPattern(PydanticBaseModelEmptyStrIsNone):
     workPatternType: str = Field(
         ...,
         description="The Work Pattern Type, which can be any of the following: Fixed, 2 weeks Rotating, 3 weeks Rotating, 4 weeks Rotating. The Unknown, Variable and Weekly Work Pattern values will not be supported",
@@ -3421,7 +3423,7 @@ class WeekBasedWorkPattern(BaseModel):
     )
 
 
-class AccountDetails(BaseModel):
+class AccountDetails(PydanticBaseModelEmptyStrIsNone):
     bankCode: Optional[str] = Field(None, description="The Bank Code", max_length=4, min_length=0)
     accountNo: str = Field(
         ..., description="The Account number of the personal account", max_length=256, min_length=0
@@ -3441,7 +3443,7 @@ class AccountDetails(BaseModel):
     )
 
 
-class EarningsResponse(BaseModel):
+class EarningsResponse(PydanticBaseModelEmptyStrIsNone):
     salaryAmountBasis: Optional[str] = Field(
         None, description="Basis for salary amount being used."
     )
@@ -3471,7 +3473,7 @@ class EarningsResponse(BaseModel):
     monthlyBasisEarningAmountsResponse: Optional[MonthlyBasisEarningAmountsResponse] = None
 
 
-class WeeklyEarningsRequest(BaseModel):
+class WeeklyEarningsRequest(PydanticBaseModelEmptyStrIsNone):
     salaryAmountBasis: Optional[str] = Field(
         None, description="Basis for salary amount being used."
     )
@@ -3490,7 +3492,7 @@ class WeeklyEarningsRequest(BaseModel):
     weeklyBasisEarningAmountsRequest: Optional[WeeklyBasisEarningAmountsRequest] = None
 
 
-class ReadOccupation(BaseModel):
+class ReadOccupation(PydanticBaseModelEmptyStrIsNone):
     dateJobBegan: Optional[date] = Field(
         None, description="ISO 8601 date format", example="1999-12-31"
     )
@@ -3544,7 +3546,7 @@ class ReadOccupation(BaseModel):
     )
 
 
-class ClaimOccupation(BaseModel):
+class ClaimOccupation(PydanticBaseModelEmptyStrIsNone):
     dateJobBegan: Optional[date] = Field(
         None, description="ISO 8601 date format", example="1999-12-31"
     )
@@ -3590,7 +3592,7 @@ class ClaimOccupation(BaseModel):
     primary: Optional[bool] = Field(None, description="Is occupation the primary one?")
 
 
-class MonthlyEarningsRequest(BaseModel):
+class MonthlyEarningsRequest(PydanticBaseModelEmptyStrIsNone):
     salaryAmountBasis: Optional[str] = Field(
         None, description="Basis for salary amount being used."
     )
@@ -3609,7 +3611,7 @@ class MonthlyEarningsRequest(BaseModel):
     monthlyBasisEarningAmountsRequest: Optional[MonthlyBasisEarningAmountsRequest] = None
 
 
-class TaxTypeDetails(BaseModel):
+class TaxTypeDetails(PydanticBaseModelEmptyStrIsNone):
     effectiveDate: Optional[date] = Field(
         None, description="ISO 8601 date format", example="1999-12-31"
     )
@@ -3633,7 +3635,7 @@ class TaxTypeDetails(BaseModel):
     )
 
 
-class FuturePaymentDetail(BaseModel):
+class FuturePaymentDetail(PydanticBaseModelEmptyStrIsNone):
     periodStartDate: Optional[date] = Field(
         None, description="ISO 8601 date format", example="1999-12-31"
     )
@@ -3677,7 +3679,7 @@ class FuturePaymentDetail(BaseModel):
     )
 
 
-class TaxTypeDetailsResponse(BaseModel):
+class TaxTypeDetailsResponse(PydanticBaseModelEmptyStrIsNone):
     effectiveDate: Optional[date] = Field(
         None, description="ISO 8601 date format", example="1999-12-31"
     )
@@ -3702,7 +3704,7 @@ class TaxTypeDetailsResponse(BaseModel):
     taxTypeDetailsId: str = Field(..., description="The id of the tax type details.")
 
 
-class MedicalDetailsResponse(BaseModel):
+class MedicalDetailsResponse(PydanticBaseModelEmptyStrIsNone):
     condition: Optional[str] = Field(
         None, description="A description of the medical condition of the injured party."
     )
@@ -3741,7 +3743,7 @@ class MedicalDetailsResponse(BaseModel):
     description: Optional[str] = Field(None, description="Description of the cause of injury code.")
 
 
-class MedicalDetails(BaseModel):
+class MedicalDetails(PydanticBaseModelEmptyStrIsNone):
     condition: Optional[str] = Field(
         None, description="A description of the medical condition of the injured party."
     )
@@ -3779,7 +3781,7 @@ class MedicalDetails(BaseModel):
     )
 
 
-class HospitalisationDetailsResponse(BaseModel):
+class HospitalisationDetailsResponse(PydanticBaseModelEmptyStrIsNone):
     startDate: date = Field(..., description="ISO 8601 date format", example="1999-12-31")
     endDate: Optional[date] = Field(None, description="ISO 8601 date format", example="1999-12-31")
     endDateConfirmed: Optional[bool] = Field(
@@ -3798,7 +3800,7 @@ class HospitalisationDetailsResponse(BaseModel):
     facility: Optional[str] = Field(None, description="The facilitator(hospital) name.")
 
 
-class HospitalisationDetails(BaseModel):
+class HospitalisationDetails(PydanticBaseModelEmptyStrIsNone):
     startDate: date = Field(..., description="ISO 8601 date format", example="1999-12-31")
     endDate: Optional[date] = Field(None, description="ISO 8601 date format", example="1999-12-31")
     endDateConfirmed: Optional[bool] = Field(
@@ -3813,7 +3815,7 @@ class HospitalisationDetails(BaseModel):
     extensionAttributes: Optional[List[ExtensionAttribute]] = None
 
 
-class IncomeSourceResponse(BaseModel):
+class IncomeSourceResponse(PydanticBaseModelEmptyStrIsNone):
     amount: Optional[Decimal] = Field(None, description="Money amount format", example="1500.50")
     startDate: Optional[date] = Field(
         None, description="ISO 8601 date format", example="1999-12-31"
@@ -3831,7 +3833,7 @@ class IncomeSourceResponse(BaseModel):
     )
 
 
-class IncomeSource(BaseModel):
+class IncomeSource(PydanticBaseModelEmptyStrIsNone):
     amount: Optional[Decimal] = Field(None, description="Money amount format", example="1500.50")
     startDate: Optional[date] = Field(
         None, description="ISO 8601 date format", example="1999-12-31"
@@ -3846,7 +3848,7 @@ class IncomeSource(BaseModel):
     extensionAttributes: Optional[List[ExtensionAttribute]] = None
 
 
-class ReadCustomerOccupation(BaseModel):
+class ReadCustomerOccupation(PydanticBaseModelEmptyStrIsNone):
     dateJobBegan: Optional[date] = Field(
         None, description="ISO 8601 date format", example="1999-12-31"
     )
@@ -3899,7 +3901,7 @@ class ReadCustomerOccupation(BaseModel):
     )
 
 
-class AbsenceDetails(BaseModel):
+class AbsenceDetails(PydanticBaseModelEmptyStrIsNone):
     absenceId: Optional[str] = Field(
         None, description="The case number of this absence case.", max_length=254, min_length=0
     )
@@ -3938,7 +3940,7 @@ class AbsenceDetails(BaseModel):
     )
 
 
-class NotificationCaseSummary(BaseModel):
+class NotificationCaseSummary(PydanticBaseModelEmptyStrIsNone):
     notificationCaseId: Optional[str] = Field(
         None, description="The case number for the notification case."
     )
@@ -3992,13 +3994,13 @@ class NotificationCaseSummary(BaseModel):
     )
 
 
-class Decision(BaseModel):
+class Decision(PydanticBaseModelEmptyStrIsNone):
     absence: Optional[Absence] = None
     employee: Optional[Employee] = None
     period: Optional[Period] = None
 
 
-class PeriodDecisions(BaseModel):
+class PeriodDecisions(PydanticBaseModelEmptyStrIsNone):
     startDate: Optional[date] = Field(
         None, description="ISO 8601 date format", example="1999-12-31"
     )
@@ -4008,7 +4010,7 @@ class PeriodDecisions(BaseModel):
     )
 
 
-class ContactDetails(BaseModel):
+class ContactDetails(PydanticBaseModelEmptyStrIsNone):
     phoneNumbers: Optional[List[PhoneNumber]] = Field(
         None, description="An array of objects which contain customer phone number details."
     )
@@ -4017,12 +4019,12 @@ class ContactDetails(BaseModel):
     )
 
 
-class CustomerAddress(BaseModel):
+class CustomerAddress(PydanticBaseModelEmptyStrIsNone):
     address: Address
     australianAddress: Optional[ExtendedAddress] = None
 
 
-class PaymentLine(BaseModel):
+class PaymentLine(PydanticBaseModelEmptyStrIsNone):
     lineType: Optional[str] = Field(
         None,
         description="The name of the payment adjustment e.g. Gross Benefit, Income Tax, Seat Belt etc.",
@@ -4051,7 +4053,7 @@ class PaymentLine(BaseModel):
     )
 
 
-class NextPayment(BaseModel):
+class NextPayment(PydanticBaseModelEmptyStrIsNone):
     nextPaymentDate: Optional[date] = Field(
         None, description="ISO 8601 date format", example="1999-12-31"
     )
@@ -4070,14 +4072,14 @@ class NextPayment(BaseModel):
     )
 
 
-class Participant(BaseModel):
+class Participant(PydanticBaseModelEmptyStrIsNone):
     participantSummary: CaseParticipantsSummary
     personDetails: Optional[PersonDetails] = None
     correspondenceAddress: Optional[Address] = None
     extendedAddress: Optional[ExtendedAddress] = None
 
 
-class PaymentPreferenceResponse(BaseModel):
+class PaymentPreferenceResponse(PydanticBaseModelEmptyStrIsNone):
     description: Optional[str] = Field(None, description="Description of the Payment Preference")
     effectiveFrom: Optional[date] = Field(
         None, description="ISO 8601 date format", example="1999-12-31"
@@ -4112,7 +4114,7 @@ class PaymentPreferenceResponse(BaseModel):
     )
 
 
-class NewPaymentPreference(BaseModel):
+class NewPaymentPreference(PydanticBaseModelEmptyStrIsNone):
     description: Optional[str] = Field(None, description="Description of the Payment Preference")
     effectiveFrom: Optional[date] = Field(
         None, description="ISO 8601 date format", example="1999-12-31"
@@ -4138,7 +4140,7 @@ class NewPaymentPreference(BaseModel):
     )
 
 
-class MainPayeeDetails(BaseModel):
+class MainPayeeDetails(PydanticBaseModelEmptyStrIsNone):
     participantId: Optional[int] = Field(None, description="Id of the participant")
     rolename: Optional[str] = Field(
         None,
@@ -4178,7 +4180,7 @@ class MainPayeeDetails(BaseModel):
     )
 
 
-class FuturePayment(BaseModel):
+class FuturePayment(PydanticBaseModelEmptyStrIsNone):
     dueEventId: Optional[str] = Field(
         None, description="Business Entity OID", example="PE-00012-0000001234"
     )
@@ -4210,7 +4212,7 @@ class FuturePayment(BaseModel):
     )
 
 
-class Customer(BaseModel):
+class Customer(PydanticBaseModelEmptyStrIsNone):
     firstName: str = Field(..., description="Person's first name.", max_length=50, min_length=0)
     lastName: str = Field(..., description="Person's last name.", max_length=50, min_length=0)
     secondName: Optional[str] = Field(

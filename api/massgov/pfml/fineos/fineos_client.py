@@ -25,7 +25,6 @@ from massgov.pfml.fineos.util.response import (
     get_fineos_correlation_id,
     log_validation_error,
 )
-from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 
 from . import client, exception, models
 
@@ -532,17 +531,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
         json = response.json()
         logger.debug("json %r", json)
 
-        set_empty_dates_to_none(
-            json[0],
-            [
-                "accidentDate",
-                "expectedDeliveryDate",
-                "actualDeliveryDate",
-                "dateFirstMissingWork",
-                "expectedRTWDate",
-            ],
-        )
-
         # Doesn't match OpenAPI file - API returns a single-item list instead of the object.
         return models.customer_api.NotificationCaseSummary.parse_obj(json[0])
 
@@ -550,9 +538,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
         response = self._customer_api("GET", "customer/absence/absences", user_id, "get_absences")
         json = response.json()
         logger.debug("json %r", json)
-        # Workaround empty strings in response instead of null. These cause parse_obj to fail.
-        for item in json:
-            set_empty_dates_to_none(item, ["startDate", "endDate"])
 
         return pydantic.parse_obj_as(List[models.customer_api.AbsenceCaseSummary], json)
 
@@ -562,9 +547,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
         json = response.json()
         logger.debug("json %r", json)
-
-        for item in json["absencePeriods"]:
-            set_empty_dates_to_none(item, ["startDate", "endDate", "expectedReturnToWorkDate"])
 
         return models.customer_api.AbsenceDetails.parse_obj(json)
 
@@ -587,7 +569,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
             error.method_name = "get_absence_period_decisions"
             raise error
         absence_periods = response.json()
-        set_empty_dates_to_none(absence_periods, ["startDate", "endDate"])
         return models.group_client_api.PeriodDecisions.parse_obj(absence_periods)
 
     def get_customer_info(
@@ -609,7 +590,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
             error.method_name = "get_customer_info"
             raise error
         json = response.json()
-        set_empty_dates_to_none(json, ["dateOfBirth"])
         return models.group_client_api.CustomerInfo.parse_obj(json)
 
     def get_customer_occupations(
@@ -631,9 +611,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
             error.method_name = "get_customer_occupations"
             raise error
         json = response.json()
-        # Workaround empty strings in response instead of null. These cause parse_obj to fail.
-        for item in json["elements"]:
-            set_empty_dates_to_none(item, ["jobStartDate", "jobEndDate"])
         return models.group_client_api.CustomerOccupations.parse_obj(json)
 
     def get_outstanding_information(
@@ -699,9 +676,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
             error.method_name = "get_eform_summary"
             raise error
         json = response.json()
-        # Workaround empty strings in response instead of null. These cause parse_obj to fail.
-        for item in json:
-            set_empty_dates_to_none(item, ["effectiveDateFrom", "effectiveDateTo"])
         return pydantic.parse_obj_as(List[models.group_client_api.EFormSummary], json)
 
     def get_eform(
@@ -723,8 +697,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
             error.method_name = "get_eform"
             raise error
         json = response.json()
-        for eformAttribute in json["eformAttributes"]:
-            set_empty_dates_to_none(eformAttribute, ["dateValue"])
         return models.group_client_api.EForm.parse_obj(json)
 
     def create_eform(self, user_id: str, absence_id: str, eform: EFormBody) -> None:
@@ -766,8 +738,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
 
         json = response.json()
-        for item in json:
-            set_empty_dates_to_none(item, ["dateJobBegan", "dateJobEnded"])
 
         return pydantic.parse_obj_as(List[models.customer_api.ReadCustomerOccupation], json)
 
@@ -779,8 +749,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
 
         json = response.json()
-        for item in json:
-            set_empty_dates_to_none(item, ["dateJobBegan", "dateJobEnded"])
 
         return pydantic.parse_obj_as(List[models.customer_api.ReadCustomerOccupation], json)
 
@@ -795,8 +763,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
             data=payment_preference.json(exclude_none=True),
         )
         json = response.json()
-        # Workaround empty strings in response instead of null. These cause parse_obj to fail.
-        set_empty_dates_to_none(json, ["effectiveFrom", "effectiveTo"])
         return models.customer_api.PaymentPreferenceResponse.parse_obj(json)
 
     def update_occupation(
@@ -949,23 +915,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             error.method_name = "get_managed_requirements"
             raise error
         managed_reqs = response.json()
-        return [
-            models.group_client_api.ManagedRequirementDetails.parse_obj(
-                set_empty_dates_to_none(
-                    req,
-                    [
-                        "dateRequested",
-                        "notProceedingWithDate",
-                        "dateLastFollowedUp",
-                        "followUpDate",
-                        "dateCompleted",
-                        "creationDate",
-                        "dateSuppressed",
-                    ],
-                )
-            )
-            for req in managed_reqs
-        ]
+        return [models.group_client_api.ManagedRequirementDetails.parse_obj(managed_reqs)]
 
     def get_documents(self, user_id: str, absence_id: str) -> List[models.customer_api.Document]:
         header_content_type = None
@@ -1067,7 +1017,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
 
         json = response.json()
-        set_empty_dates_to_none(json, ["patternStartDate"])
 
         return models.customer_api.WeekBasedWorkPattern.parse_obj(json)
 
@@ -1087,7 +1036,6 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
 
         json = response.json()
-        set_empty_dates_to_none(json, ["patternStartDate"])
 
         return models.customer_api.WeekBasedWorkPattern.parse_obj(json)
 

@@ -19,5 +19,6 @@ customer_api.yaml:
 	poetry run python preprocess-fineos-models-spec.py $< > $@
 
 %.py: %.cleaned.json
-	poetry run datamodel-codegen --field-constraints --input $< --output $@
+	poetry run datamodel-codegen --field-constraints --base-class "massgov.pfml.util.pydantic.PydanticBaseModelEmptyStrIsNone" --input $< --output $@
 	poetry run black $@
+	poetry run isort $@
