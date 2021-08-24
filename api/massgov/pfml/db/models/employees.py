@@ -1388,51 +1388,57 @@ class AbsenceReasonQualifierOne(LookupTable):
     model = LkAbsenceReasonQualifierOne
     column_names = ("absence_reason_qualifier_one_id", "absence_reason_qualifier_one_description")
 
-    NOT_WORK_RELATED = LkAbsenceReason(1, "Not Work Related")
-    WORK_RELATED = LkAbsenceReason(2, "Work Related")
-    BLOOD = LkAbsenceReason(3, "Blood")
-    BLOOD_STEM_CELL = LkAbsenceReason(4, "Blood Stem Cell")
-    BONE_MARROW = LkAbsenceReason(5, "Bone Marrow")
-    ORGAN = LkAbsenceReason(6, "Organ")
-    OTHER = LkAbsenceReason(7, "Other")
-    POSTNATAL_DISABILITY = LkAbsenceReason(8, "Postnatal Disability")
-    PRENATAL_CARE = LkAbsenceReason(9, "Prenatal Care")
-    PRENATAL_DISABILITY = LkAbsenceReason(10, "Prenatal Disability")
-    ADOPTION = LkAbsenceReason(11, "Adoption")
-    FOSTER_CARE = LkAbsenceReason(12, "Foster Care")
-    NEWBORN = LkAbsenceReason(13, "Newborn")
-    PREGNANCY_RELATED = LkAbsenceReason(14, "Pregnancy Related")
-    RIGHT_TO_LEAVE = LkAbsenceReason(15, "Right to Leave")
-    SERIOUS_HEALTH_CONDITION = LkAbsenceReason(16, "Serious Health Condition")
-    SICKNESS_NON_SERIOUS_HEALTH_CONDITION = LkAbsenceReason(
+    NOT_WORK_RELATED = LkAbsenceReasonQualifierOne(1, "Not Work Related")
+    WORK_RELATED = LkAbsenceReasonQualifierOne(2, "Work Related")
+    BLOOD = LkAbsenceReasonQualifierOne(3, "Blood")
+    BLOOD_STEM_CELL = LkAbsenceReasonQualifierOne(4, "Blood Stem Cell")
+    BONE_MARROW = LkAbsenceReasonQualifierOne(5, "Bone Marrow")
+    ORGAN = LkAbsenceReasonQualifierOne(6, "Organ")
+    OTHER = LkAbsenceReasonQualifierOne(7, "Other")
+    POSTNATAL_DISABILITY = LkAbsenceReasonQualifierOne(8, "Postnatal Disability")
+    PRENATAL_CARE = LkAbsenceReasonQualifierOne(9, "Prenatal Care")
+    PRENATAL_DISABILITY = LkAbsenceReasonQualifierOne(10, "Prenatal Disability")
+    ADOPTION = LkAbsenceReasonQualifierOne(11, "Adoption")
+    FOSTER_CARE = LkAbsenceReasonQualifierOne(12, "Foster Care")
+    NEWBORN = LkAbsenceReasonQualifierOne(13, "Newborn")
+    PREGNANCY_RELATED = LkAbsenceReasonQualifierOne(14, "Pregnancy Related")
+    RIGHT_TO_LEAVE = LkAbsenceReasonQualifierOne(15, "Right to Leave")
+    SERIOUS_HEALTH_CONDITION = LkAbsenceReasonQualifierOne(16, "Serious Health Condition")
+    SICKNESS_NON_SERIOUS_HEALTH_CONDITION = LkAbsenceReasonQualifierOne(
         17, "Sickness - Non-Serious Health Condition"
     )
-    CHILDCARE = LkAbsenceReason(18, "Childcare")
-    COUNSELING = LkAbsenceReason(19, "Counseling")
-    FINANCIAL_AND_LEGAL_ARRANGEMENTS = LkAbsenceReason(20, "Financial & Legal Arrangements")
-    MILITARY_EVENTS_AND_RELATED_ACTIVITIES = LkAbsenceReason(
+    CHILDCARE = LkAbsenceReasonQualifierOne(18, "Childcare")
+    COUNSELING = LkAbsenceReasonQualifierOne(19, "Counseling")
+    FINANCIAL_AND_LEGAL_ARRANGEMENTS = LkAbsenceReasonQualifierOne(
+        20, "Financial & Legal Arrangements"
+    )
+    MILITARY_EVENTS_AND_RELATED_ACTIVITIES = LkAbsenceReasonQualifierOne(
         21, "Military Events & Related Activities"
     )
-    OTHER_ADDITIONAL_ACTIVITIES = LkAbsenceReason(22, "Other Additional Activities")
-    PRENATAL_CARE = LkAbsenceReason(23, "Prenatal Care")
-    POST_DEPLOYMENT_ACTIVITES_INCLUDING_BEREAVEMENT = LkAbsenceReason(
+    OTHER_ADDITIONAL_ACTIVITIES = LkAbsenceReasonQualifierOne(22, "Other Additional Activities")
+    PRENATAL_CARE = LkAbsenceReasonQualifierOne(23, "Prenatal Care")
+    POST_DEPLOYMENT_ACTIVITES_INCLUDING_BEREAVEMENT = LkAbsenceReasonQualifierOne(
         24, "Post Deployment Activities - Including Bereavement"
     )
-    REST_AND_RECUPERATION = LkAbsenceReason(25, "Rest & Recuperation")
-    SHORT_NOTICE_DEPLOYMENT = LkAbsenceReason(26, "Short Notice Deployment")
-    CLOSURE_OF_SCHOOL_CHILDCARE = LkAbsenceReason(27, "Closure of School/Childcare")
-    QUARANTINE_ISOLATION_NON_SICK = LkAbsenceReason(28, "Quarantine/Isolation - Not Sick")
-    BIRTH_DISABILITY = LkAbsenceReason(29, "Birth Disability")
-    CHILDCARE_AND_SCHOOL_ACTIVITIES = LkAbsenceReason(30, "Childcare and School Activities")
+    REST_AND_RECUPERATION = LkAbsenceReasonQualifierOne(25, "Rest & Recuperation")
+    SHORT_NOTICE_DEPLOYMENT = LkAbsenceReasonQualifierOne(26, "Short Notice Deployment")
+    CLOSURE_OF_SCHOOL_CHILDCARE = LkAbsenceReasonQualifierOne(27, "Closure of School/Childcare")
+    QUARANTINE_ISOLATION_NON_SICK = LkAbsenceReasonQualifierOne(
+        28, "Quarantine/Isolation - Not Sick"
+    )
+    BIRTH_DISABILITY = LkAbsenceReasonQualifierOne(29, "Birth Disability")
+    CHILDCARE_AND_SCHOOL_ACTIVITIES = LkAbsenceReasonQualifierOne(
+        30, "Childcare and School Activities"
+    )
 
 
 class AbsenceReasonQualifierTwo(LookupTable):
     model = LkAbsenceReasonQualifierTwo
     column_names = ("absence_reason_qualifier_two_id", "absence_reason_qualifier_two_description")
 
-    ACCIDENT_INJURY = LkAbsenceReason(1, "Accident / Injury")
-    MEDICAL_RELATED = LkAbsenceReason(2, "Medical Related")
-    NON_MEDICAL = LkAbsenceReason(3, "Non Medical")
+    ACCIDENT_INJURY = LkAbsenceReasonQualifierTwo(1, "Accident / Injury")
+    MEDICAL_RELATED = LkAbsenceReasonQualifierTwo(2, "Medical Related")
+    NON_MEDICAL = LkAbsenceReasonQualifierTwo(3, "Non Medical")
 
 
 class GeoState(LookupTable):
@@ -2437,12 +2443,17 @@ class LeaveRequestDecision(LookupTable):
 
 def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
+    AbsencePeriodType.sync_to_database(db_session)
+    AbsenceReason.sync_to_database(db_session)
+    AbsenceReasonQualifierOne.sync_to_database(db_session)
+    AbsenceReasonQualifierTwo.sync_to_database(db_session)
     AbsenceStatus.sync_to_database(db_session)
     AddressType.sync_to_database(db_session)
     GeoState.sync_to_database(db_session)
     Country.sync_to_database(db_session)
     ClaimType.sync_to_database(db_session)
     Race.sync_to_database(db_session)
+    LeaveRequestDecision.sync_to_database(db_session)
     MaritalStatus.sync_to_database(db_session)
     Gender.sync_to_database(db_session)
     Occupation.sync_to_database(db_session)

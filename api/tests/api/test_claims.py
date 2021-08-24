@@ -20,10 +20,7 @@ from massgov.pfml.api.validation.exceptions import ValidationErrorDetail
 from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     Claim,
-    LkAbsencePeriodType,
-    LkAbsenceReason,
-    LkAbsenceReasonQualifierOne,
-    LkLeaveRequestDecision,
+    LeaveRequestDecision,
     LkManagedRequirementStatus,
     ManagedRequirement,
     ManagedRequirementCategory,
@@ -1669,26 +1666,9 @@ class TestGetClaimEndpoint:
         claim = ClaimFactory.create(
             employer=employer, employee=employee, fineos_absence_status_id=1, claim_type_id=1,
         )
-        request_decision = LkLeaveRequestDecision(
-            leave_request_decision_id=3, leave_request_decision_description="Approved"
-        )
-        test_db_session.add(request_decision)
-        absence_period_type = LkAbsencePeriodType(
-            absence_period_type_id=1, absence_period_type_description="Continuous"
-        )
-        test_db_session.add(absence_period_type)
-        absence_reason = LkAbsenceReason(
-            absence_reason_id=1, absence_reason_description="Child Bonding"
-        )
-        test_db_session.add(absence_reason)
-        absence_reason_qualifier_one = LkAbsenceReasonQualifierOne(
-            absence_reason_qualifier_one_id=1,
-            absence_reason_qualifier_one_description="Child Bonding",
-        )
-        test_db_session.add(absence_reason_qualifier_one)
-        test_db_session.commit()
         leave_period = AbsencePeriodFactory.create(
-            claim=claim, leave_request_decision_id=request_decision.leave_request_decision_id,
+            claim=claim,
+            leave_request_decision_id=LeaveRequestDecision.APPROVED.leave_request_decision_id,
         )
         ApplicationFactory.create(user=user, claim=claim)
         response = client.get(
