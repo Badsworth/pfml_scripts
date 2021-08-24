@@ -433,7 +433,7 @@ class TestNotificationManagedRequirement:
     def test_notification_managed_requirement_create_failure(
         self, mock_get_req, client, test_db_session, fineos_user_token, fineos_managed_requirement,
     ):
-        fineos_managed_requirement.status = "Bad Status"
+        fineos_managed_requirement.followUpDate = "Bad Date"
         mock_get_req.return_value = [fineos_managed_requirement]
 
         response = self._api_call_create(client, fineos_user_token)
@@ -448,7 +448,7 @@ class TestNotificationManagedRequirement:
     def test_notification_managed_requirement_update_failure_status(
         self, mock_get_req, client, test_db_session, fineos_user_token, fineos_managed_requirement,
     ):
-        fineos_managed_requirement.status = "Bad Status"
+        fineos_managed_requirement.followUpDate = "Bad Date"
         mock_get_req.return_value = [fineos_managed_requirement]
 
         response = self._api_call_update(client, fineos_user_token)

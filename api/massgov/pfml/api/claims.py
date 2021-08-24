@@ -1,5 +1,5 @@
 import base64
-from typing import Any, Dict, List, Optional, Set, Union
+from typing import Dict, List, Optional, Set, Union
 
 import connexion
 import flask
@@ -33,9 +33,8 @@ from massgov.pfml.db.models.employees import (
     AbsenceStatus,
     Claim,
     Employer,
-    ManagedRequirement,
-    ManagedRequirementStatus,
     ManagedRequirementType,
+    User,
     UserLeaveAdministrator,
 )
 from massgov.pfml.db.queries.get_claims_query import ActionRequiredStatusFilter, GetClaimsQuery
@@ -51,6 +50,14 @@ from massgov.pfml.fineos.models.group_client_api import (
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
     EmployerClaimReviewEFormBuilder,
     EmployerClaimReviewV1EFormBuilder,
+)
+from massgov.pfml.util.logging.claims import (
+    get_claim_log_attributes,
+    get_claim_review_log_attributes,
+)
+from massgov.pfml.util.logging.employers import get_employer_log_attributes
+from massgov.pfml.util.logging.managed_requirements import (
+    get_managed_requirements_update_log_attributes,
 )
 from massgov.pfml.util.paginate.paginator import PaginationAPIContext
 from massgov.pfml.util.sqlalchemy import get_or_404
@@ -78,6 +85,13 @@ class VerificationRequired(Forbidden):
             errors=[],
             data={"employer_id": employer_id, "has_verification_data": has_verification_data},
         ).to_api_response()
+
+
+def get_user() -> User:
+    current_user = app.current_user()
+    if current_user is None:
+        raise Unauthorized()
+    return current_user
 
 
 def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdministrator:
@@ -126,84 +140,9 @@ def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdmi
         return user_leave_admin
 
 
-def get_employer_log_attributes(app: connexion.FlaskApp) -> Dict[str, Any]:
-    """
-    Determine the requesting user's employer relationships & verification status
-    """
-    current_user = app.current_user()
-    if current_user is None:
-        raise Unauthorized()
-
-    employers = list(current_user.employers)
-    verified_employers = [
-        e.employer_id for e in current_user.employers if current_user.verified_employer(e)
-    ]
-    log_attributes = {
-        "num_employers": len(employers),
-        "num_verified_employers": len(verified_employers),
-        "num_unverified_employers": len(employers) - len(verified_employers),
-    }
-    return log_attributes
-
-
-def get_claim_log_attributes(claim: Optional[Claim]) -> Dict[str, Any]:
-    if claim is None:
-        return {}
-
-    application = claim.application  # type: ignore
-    if application is None:
-        return {}
-
-    leave_reason = (
-        application.leave_reason.leave_reason_description if application.leave_reason else None
-    )
-
-    return {"leave_reason": leave_reason}
-
-
-def get_claim_review_log_attributes(claim_review: Optional[EmployerClaimReview]) -> Dict[str, Any]:
-    if claim_review is None:
-        return {}
-
-    relationship_accurate_val = (
-        claim_review.believe_relationship_accurate.value
-        if claim_review.believe_relationship_accurate
-        else None
-    )
-
-    return {
-        "claim_request.believe_relationship_accurate": relationship_accurate_val,
-        "claim_request.employer_decision": claim_review.employer_decision,
-        "claim_request.fraud": claim_review.fraud,
-        "claim_request.has_amendments": claim_review.has_amendments,
-        "claim_request.has_comment": str(bool(claim_review.comment)),
-        "claim_request.num_previous_leaves": len(claim_review.previous_leaves),
-        "claim_request.num_employer_benefits": len(claim_review.employer_benefits),
-        "claim_request.num_concurrent_leave": 1 if claim_review.concurrent_leave else 0,
-    }
-
-
-def get_managed_requirements_log_attributes(
-    fineos_managed_requirements: List[ManagedRequirementDetails],
-    updated_managed_requirements: List[ManagedRequirement],
-) -> Dict[str, Any]:
-    return {
-        "managed_requirements.updated_successfully": len(updated_managed_requirements),
-        "managed_requirements.not_updated_successfully": len(fineos_managed_requirements)
-        - len(updated_managed_requirements),
-        "managed_requirements.received_as_open": len(
-            [
-                fmr
-                for fmr in fineos_managed_requirements
-                if str(fmr.status)
-                == ManagedRequirementStatus.OPEN.managed_requirement_status_description
-            ]
-        ),
-    }
-
-
 @requires(READ, "EMPLOYER_API")
 def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
+    current_user = get_user()
     body = connexion.request.json
 
     claim_review: EmployerClaimReview = EmployerClaimReview.parse_obj(body)
@@ -226,7 +165,7 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
         "absence_case_id": fineos_absence_id,
         "user_leave_admin.employer_id": user_leave_admin.employer_id,
         **get_claim_review_log_attributes(claim_review),
-        **get_employer_log_attributes(app),
+        **get_employer_log_attributes(current_user),
         **get_claim_log_attributes(claim),
     }
 
@@ -269,29 +208,31 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
             logger.info("Created eform", extra=log_attributes)
 
     logger.info("Updated claim", extra=log_attributes)
+    with app.db_session() as db_session:
+        # Try updating managed requirements after claim update
+        try:
+            fineos = massgov.pfml.fineos.create_client()
+            fineos_managed_requirements = fineos.get_managed_requirements(
+                str(fineos_web_id), fineos_absence_id
+            )
 
-    # Try updating managed requirements after claim update
-    try:
-        fineos = massgov.pfml.fineos.create_client()
-        fineos_managed_requirements = fineos.get_managed_requirements(
-            str(fineos_web_id), fineos_absence_id
-        )
-
-        with app.db_session() as db_session:
             updated_managed_requirements = update_employer_confirmation_requirements(
                 db_session, user_leave_admin.user_id, fineos_managed_requirements,
             )
 
             log_attributes = {
                 **log_attributes,
-                **get_managed_requirements_log_attributes(
+                **get_managed_requirements_update_log_attributes(
                     fineos_managed_requirements, updated_managed_requirements
                 ),
             }
 
-    # On exception, log the error and pass so API returns normally
-    except Exception as ex:
-        logger.warning("Unable to update managed requirements", exc_info=ex, extra=log_attributes)
+        # On exception, log the error and pass so API returns normally
+        except Exception as ex:
+            logger.warning(
+                "Unable to update managed requirements", exc_info=ex, extra=log_attributes
+            )
+            db_session.rollback()
 
     claim_response = {"claim_id": fineos_absence_id}
     return response_util.success_response(
@@ -310,7 +251,7 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
     except (VerificationRequired, NotAuthorizedForAccess) as error:
         return error.to_api_response()
 
-    log_attributes = get_employer_log_attributes(app)
+    log_attributes = get_employer_log_attributes(user_leave_admin.user)
 
     if not user_leave_admin.fineos_web_id:
         logger.error(
@@ -400,7 +341,7 @@ def employer_get_claim_documents(fineos_absence_id: str) -> flask.Response:
     documents = get_documents_as_leave_admin(user_leave_admin.fineos_web_id, fineos_absence_id)  # type: ignore
     documents_list = [doc.dict() for doc in documents]
 
-    log_attributes = get_employer_log_attributes(app)
+    log_attributes = get_employer_log_attributes(user_leave_admin.user)
 
     claim = get_claim_from_db(fineos_absence_id)
     if claim:
@@ -422,7 +363,6 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
     """
 
     log_attr: Dict[str, Union[str, int]] = {}
-    log_attr.update(get_employer_log_attributes(app))
 
     try:
         user_leave_admin = get_current_user_leave_admin_record(fineos_absence_id)
@@ -436,6 +376,7 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
             f"employer_document_download failed - {not_verified.description}", extra=log_attr,
         )
         return not_verified.to_api_response()
+    log_attr.update(get_employer_log_attributes(user_leave_admin.user))
 
     try:
         document_data: Base64EncodedFileData = download_document_as_leave_admin(
@@ -534,7 +475,9 @@ def get_claims() -> flask.Response:
     search_string = flask.request.args.get("search", type=str)
     absence_statuses = parse_filterable_absence_statuses(flask.request.args.get("claim_status"))
     is_employer = can(READ, "EMPLOYER_API")
-    log_attributes = get_employer_log_attributes(app)
+    log_attributes = {}
+    if current_user:
+        log_attributes.update(get_employer_log_attributes(current_user))
 
     with PaginationAPIContext(Claim, request=flask.request) as pagination_context:
         with app.db_session() as db_session:
@@ -642,6 +585,8 @@ def handle_managed_requirements(
             and db_mr.managed_requirement_type_id
             == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id
         ):
-            update_managed_requirement_from_fineos(db_session, mr, db_mr, log_attributes)
+            update_managed_requirement_from_fineos(db_session, mr, db_mr, log_attributes.copy())
         elif not db_mr:
-            create_managed_requirement_from_fineos(db_session, claim.claim_id, mr, log_attributes)
+            create_managed_requirement_from_fineos(
+                db_session, claim.claim_id, mr, log_attributes.copy()
+            )

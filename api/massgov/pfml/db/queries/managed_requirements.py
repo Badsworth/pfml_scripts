@@ -1,47 +1,23 @@
-from typing import List, Optional
+from typing import Optional
 from uuid import UUID
 
+from sqlalchemy import exc
 from sqlalchemy.orm.session import Session
 
 import massgov.pfml.util.logging
-from massgov.pfml.api.models.notifications.requests import NotificationRequest
 from massgov.pfml.db.models.employees import (
     ManagedRequirement,
     ManagedRequirementCategory,
     ManagedRequirementStatus,
     ManagedRequirementType,
 )
-from massgov.pfml.fineos import create_client, exception
 from massgov.pfml.fineos.models.group_client_api import ManagedRequirementDetails
+from massgov.pfml.util.logging.managed_requirements import (
+    get_fineos_managed_requirement_log_attributes,
+    get_managed_requirement_log_attributes,
+)
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
-
-
-def get_contact_id(notification: NotificationRequest) -> Optional[str]:
-    for recipient in notification.recipients:
-        if recipient.contact_id is not None:
-            return recipient.contact_id
-
-    return None
-
-
-# TODO: move to api/massgov/pfml/api/services/managed_requirements.py
-def get_fineos_managed_requirements_from_notification(
-    notification: NotificationRequest, log_attributes: dict
-) -> List[ManagedRequirementDetails]:
-    if not notification.recipients:
-        logger.warning("No Recipient in notification request", extra=log_attributes)
-        return []
-    fineos_client = create_client()
-    contact_id = get_contact_id(notification)
-    if contact_id is None:
-        logger.warning("No contact_id in any recipient", extra=log_attributes)
-        return []
-    try:
-        return fineos_client.get_managed_requirements(contact_id, notification.absence_case_id)
-    except exception.FINEOSClientError:
-        # the error is already logged by get_managed_requirements
-        return []
 
 
 def get_managed_requirement_by_fineos_managed_requirement_id(
@@ -62,9 +38,10 @@ def update_managed_requirement_from_fineos(
     db_requirement: ManagedRequirement,
     log_attributes: dict,
 ) -> Optional[ManagedRequirement]:
-    log_attributes.update(
-        {"managed_requirement.id": str(db_requirement.managed_requirement_id), **log_attributes,}
-    )
+    log_attributes = {
+        **log_attributes,
+        **get_fineos_managed_requirement_log_attributes(fineos_requirement),
+    }
     try:
         db_requirement.managed_requirement_status_id = ManagedRequirementStatus.get_id(
             fineos_requirement.status
@@ -83,10 +60,10 @@ def update_managed_requirement_from_fineos(
         )
         logger.warning("Managed Requirement follow_up_date Mismatch", extra=log_attributes)
     db_requirement.follow_up_date = fineos_follow_up_date
-    db_session.add(db_requirement)
-    db_session.commit()
-    logger.info("Managed requirement successfully updated", extra=log_attributes)
-    return db_requirement
+    commited_requirement = commit_managed_requirement_update(db_session, db_requirement)
+    if commited_requirement:
+        logger.info("Managed requirement successfully updated", extra=log_attributes)
+    return commited_requirement
 
 
 def create_managed_requirement_from_fineos(
@@ -114,10 +91,10 @@ def create_managed_requirement_from_fineos(
         managed_requirement_category_id=category_id,
         managed_requirement_type_id=type_id,
     )
-    db_session.add(managed_requirement)
-    db_session.commit()
-    logger.info("Managed requirement successfully created", extra=log_attributes)
-    return managed_requirement
+    commited_requirement = commit_managed_requirement_update(db_session, managed_requirement)
+    if commited_requirement:
+        logger.info("Managed requirement successfully created", extra=log_attributes)
+    return commited_requirement
 
 
 def create_or_update_managed_requirement_from_fineos(
@@ -137,3 +114,22 @@ def create_or_update_managed_requirement_from_fineos(
         return update_managed_requirement_from_fineos(
             db_session, fineos_requirement, db_requirement, log_attributes
         )
+
+
+def commit_managed_requirement_update(
+    db_session: Session, managed_req_update: ManagedRequirement,
+) -> Optional[ManagedRequirement]:
+
+    try:
+        db_session.add(managed_req_update)
+        db_session.commit()
+
+    except exc.SQLAlchemyError as ex:
+        logger.warning(
+            "Unable to commit ManagedRequirement record to database",
+            exc_info=ex,
+            extra={**get_managed_requirement_log_attributes(managed_req_update)},
+        )
+        return None
+
+    return managed_req_update

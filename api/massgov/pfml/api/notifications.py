@@ -15,14 +15,19 @@ import massgov.pfml.util.logging
 from massgov.pfml import db
 from massgov.pfml.api.authorization.flask import CREATE, ensure
 from massgov.pfml.api.models.notifications.requests import NotificationRequest
+from massgov.pfml.api.services.managed_requirements import (
+    get_fineos_managed_requirements_from_notification,
+)
 from massgov.pfml.api.services.service_now_actions import send_notification_to_service_now
 from massgov.pfml.db.models.applications import Notification
 from massgov.pfml.db.models.employees import Claim, Employee, Employer, ManagedRequirementType
 from massgov.pfml.db.queries.managed_requirements import (
     create_managed_requirement_from_fineos,
     create_or_update_managed_requirement_from_fineos,
-    get_fineos_managed_requirements_from_notification,
     get_managed_requirement_by_fineos_managed_requirement_id,
+)
+from massgov.pfml.util.logging.managed_requirements import (
+    get_fineos_managed_requirement_log_attributes,
 )
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -140,6 +145,7 @@ def notifications_post():
                 extra=log_attributes,
                 exc_info=error,
             )
+            db_session.rollback()  # handle insert errors
 
     # Send the request to Service Now
     send_notification_to_service_now(notification_request, employer)
@@ -248,12 +254,8 @@ def handle_managed_requirements_create(
 
     for fineos_requirement in fineos_requirements:
         log_attr = {
-            "fineos_managed_requirement.managedReqId": fineos_requirement.managedReqId,
-            "fineos_managed_requirement.status": fineos_requirement.status,
-            "fineos_managed_requirement.category": fineos_requirement.category,
-            "fineos_managed_requirement.type": fineos_requirement.type,
-            "fineos_managed_requirement.followUpDate": fineos_requirement.followUpDate,
             **log_attributes.copy(),
+            **get_fineos_managed_requirement_log_attributes(fineos_requirement),
         }
         try:
             type_id = ManagedRequirementType.get_id(fineos_requirement.type)
@@ -290,12 +292,8 @@ def handle_managed_requirements_update(
 
     for fineos_requirement in fineos_requirements:
         log_attr = {
-            "fineos_managed_requirement.managedReqId": fineos_requirement.managedReqId,
-            "fineos_managed_requirement.status": fineos_requirement.status,
-            "fineos_managed_requirement.category": fineos_requirement.category,
-            "fineos_managed_requirement.type": fineos_requirement.type,
-            "fineos_managed_requirement.followUpDate": fineos_requirement.followUpDate,
             **log_attributes.copy(),
+            **get_fineos_managed_requirement_log_attributes(fineos_requirement),
         }
         create_or_update_managed_requirement_from_fineos(
             db_session, claim_id, fineos_requirement, log_attr
