@@ -3,40 +3,42 @@
 exports[`LegalNoticeList renders only document that are of type legal notice 1`] = `
 <Fragment>
   <p
-    className="margin-bottom-2"
+    className="padding-bottom-2 margin-top-05"
   >
     When you click the notice link, the file will download to your device.
   </p>
   <ul
-    className="usa-list usa-list--unstyled"
+    className="add-list-reset"
   >
     <li
-      className="margin-bottom-2"
+      className="grid-row flex-row flex-justify-start flex-align-start margin-bottom-1 text-primary"
       key="fineos-id-4"
     >
-      <DownloadableDocument
-        document={
-          Document {
-            "application_id": null,
-            "content_type": "image/png",
-            "created_at": "2020-04-05",
-            "description": null,
-            "document_type": "Approval Notice",
-            "fineos_document_id": "fineos-id-4",
-            "name": "legal notice",
-            "user_id": null,
-          }
-        }
-        icon={
-          <Icon
-            fill="currentColor"
-            name="file_present"
-            size={3}
-          />
-        }
-        onDownloadClick={[MockFunction]}
-        showCreatedAt={true}
+      <Icon
+        className="margin-right-1"
+        fill="currentColor"
+        name="file_present"
+        size={3}
       />
+      <div>
+        <DownloadableDocument
+          className="margin-left-2"
+          document={
+            Document {
+              "application_id": null,
+              "content_type": "image/png",
+              "created_at": "2020-04-05",
+              "description": null,
+              "document_type": "Approval Notice",
+              "fineos_document_id": "fineos-id-4",
+              "name": "legal notice",
+              "user_id": null,
+            }
+          }
+          onDownloadClick={[MockFunction]}
+          showCreatedAt={true}
+        />
+      </div>
     </li>
   </ul>
 </Fragment>
