@@ -62,6 +62,20 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+      - name: Pull the newrelic API key from parameter store for reporting
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/service/pfml-api/common/newrelic-license-key"
+          env_variable_name: "E2E_NEWRELIC_INGEST_KEY"
+
       # Run Cypress tests.
       - name: Cypress Tests (Stable)
         uses: cypress-io/github-action@v2
