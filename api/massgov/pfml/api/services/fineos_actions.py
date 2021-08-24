@@ -195,8 +195,8 @@ def send_to_fineos(
     new_claim = Claim(
         fineos_absence_id=new_case.absenceId,
         fineos_notification_id=new_case.notificationCaseId,
-        absence_period_start_date=new_case.startDate.date() if new_case.startDate else None,
-        absence_period_end_date=new_case.endDate.date() if new_case.endDate else None,
+        absence_period_start_date=new_case.startDate,
+        absence_period_end_date=new_case.endDate,
     )
     if employee:
         new_claim.employee = employee

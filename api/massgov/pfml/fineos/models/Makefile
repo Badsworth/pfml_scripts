@@ -9,7 +9,7 @@ MODELS = customer_api/spec.py group_client_api/spec.py
 models: $(MODELS)
 
 clean:
-	rm -f $(MODELS) */*.cleaned.json
+	rm $(MODELS)
 
 customer_api.yaml:
 	$(error Please fetch https://documentation.fineos.com/support/documentation/ manually)

@@ -356,27 +356,33 @@ python-versions = "*"
 
 [[package]]
 name = "datamodel-code-generator"
-version = "0.11.11"
+version = "0.5.29"
 description = "Datamodel Code Generator"
 category = "dev"
 optional = false
-python-versions = ">=3.6.1,<4.0.0"
+python-versions = ">=3.6.1"
 
 [package.dependencies]
 argcomplete = ">=1.10,<2.0"
-black = ">=19.10b0"
+black = ">=19.10b0,<20"
 genson = ">=1.2.1,<2.0"
-inflect = ">=4.1.0,<6.0"
-isort = ">=4.3.21,<6.0"
-jinja2 = ">=2.10.1,<4.0"
-openapi-spec-validator = ">=0.2.8,<0.4"
+inflect = ">=4.1.0,<5.0"
+isort = ">=4.3.21,<5.0"
+jinja2 = ">=2.10.1,<3.0"
+openapi-spec-validator = ">=0.2.8,<0.3"
 prance = ">=0.18.2,<1.0"
 pydantic = {version = ">=1.5.1,<2.0", extras = ["email"]}
 PySnooper = ">=0.4.1,<1.0.0"
 toml = ">=0.10.0,<1.0.0"
 
 [package.extras]
+all = ["pytest-runner", "setuptools-scm", "pytest (>=4.6)", "pytest-benchmark", "pytest-cov", "pytest-mock", "mypy", "isort", "freezegun", "httpx", "mkdocs", "mkdocs-material", "wheel", "twine", "codecov"]
+ci = ["codecov"]
+docs = ["mkdocs", "mkdocs-material"]
 http = ["httpx"]
+setup = ["pytest-runner", "setuptools-scm"]
+test = ["pytest (>=4.6)", "pytest-benchmark", "pytest-cov", "pytest-mock", "mypy", "isort", "freezegun"]
+wheel = ["wheel", "twine"]
 
 [[package]]
 name = "decorator"
@@ -2103,8 +2109,8 @@ csvsorter = [
     {file = "csvsorter-1.4.tar.gz", hash = "sha256:2b3c6a944f8541e76ff18d2b14f672a3a936cff5ce7e54a0d4fe1ce90e9248ff"},
 ]
 datamodel-code-generator = [
-    {file = "datamodel-code-generator-0.11.11.tar.gz", hash = "sha256:4f35d40a0edf93207663071e8016f909d622d3169b05f0e1ddde429ee1aefad9"},
-    {file = "datamodel_code_generator-0.11.11-py3-none-any.whl", hash = "sha256:a318cfea9d4ab736e0da4121c5612006c9045e576ff3c3e58be7829a8c1e706d"},
+    {file = "datamodel-code-generator-0.5.29.tar.gz", hash = "sha256:14735b4f44fcca77e1909228aabcbdd2200e637eae92533eee3265387ccb9a98"},
+    {file = "datamodel_code_generator-0.5.29-py3-none-any.whl", hash = "sha256:d35c2b9bc3c183e5ebdb25dda7fda905b53b0f573fbde19fb94557bdcc039ad5"},
 ]
 decorator = [
     {file = "decorator-4.4.2-py2.py3-none-any.whl", hash = "sha256:41fa54c2a0cc4ba648be4fd43cff00aedf5b9465c9bf18d64325bc225f08f760"},
