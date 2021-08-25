@@ -2988,6 +2988,30 @@ class TestGetClaimsEndpoint:
 
             assert len(response_body["data"]) == 2
 
+        def test_claims_search_wildcard_input(
+            self, client, employer_auth_token, full_name_employee
+        ):
+            response = self.perform_search("%", client, employer_auth_token)
+
+            assert response.status_code == 200
+            response_body = response.get_json()
+
+            assert len(response_body["data"]) == 0
+
+        def test_claims_search_wildcard_input_full_name(
+            self, client, employer_auth_token, full_name_employee
+        ):
+            response = self.perform_search(
+                f"{full_name_employee.last_name}%{full_name_employee.first_name}",
+                client,
+                employer_auth_token,
+            )
+
+            assert response.status_code == 200
+            response_body = response.get_json()
+
+            assert len(response_body["data"]) == 0
+
     # Test the combination of claims feature
     # ordering, filtering and search
     class TestClaimsMultipleParams:

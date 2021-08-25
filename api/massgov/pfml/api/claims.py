@@ -4,6 +4,7 @@ from typing import Dict, List, Optional, Set, Union
 import connexion
 import flask
 from sqlalchemy.orm.session import Session
+from sqlalchemy_utils import escape_like
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
 
 import massgov.pfml.api.app as app
@@ -516,7 +517,9 @@ def get_claims() -> flask.Response:
                 query.add_absence_status_filter(absence_statuses)
 
             if search_string:
-                query.add_search_filter(search_string)
+                query.add_search_filter(
+                    escape_like(search_string)
+                )  # escape user input search string
 
             query.add_order_by(pagination_context)
 

@@ -48,6 +48,7 @@ tenacity = "^6.2.0"
 xmlschema = "^1.2.2"
 zeep = { version = "^3.4.0", optional = true }
 Flask = "^1.1.0"
+SQLAlchemy-Utils = "^0.37.8"
 
 
 [tool.poetry.dev-dependencies]
