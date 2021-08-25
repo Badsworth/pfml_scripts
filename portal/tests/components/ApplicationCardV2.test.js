@@ -51,6 +51,15 @@ describe("ApplicationCardV2", () => {
       expect(wrapper).toMatchSnapshot();
     });
 
+    it("in progress status with no EIN does not show the EIN title section", () => {
+      const claim = new MockBenefitsApplicationBuilder().address().create();
+      const wrapper = mount(
+        <ApplicationCardV2 appLogic={appLogic} claim={claim} number={2} />
+      );
+
+      expect(wrapper.find("TitleAndDetailSectionItem").exists()).toBeFalsy();
+    });
+
     it("completed status matches snapshot", () => {
       const claim = new MockBenefitsApplicationBuilder().completed().create();
       const wrapper = mount(<ApplicationCardV2 claim={claim} />);

@@ -17,7 +17,12 @@ export default {
       defaultValue: "Completed",
       control: {
         type: "radio",
-        options: ["Completed", "In Progress", "In Progress + Notices"],
+        options: [
+          "Completed",
+          "In Progress",
+          "In Progress + No EIN",
+          "In Progress + Notices",
+        ],
       },
     },
   },
@@ -66,16 +71,20 @@ export const Story = ({ claim, ...args }) => {
         claim: generateClaim("completed"),
       },
 
+      "In Progress": {
+        claim: generateClaim("employed"),
+      },
+
+      "In Progress + No EIN": {
+        claim: generateClaim("address"),
+      },
+
       "In Progress + Notices": {
         claim: generateClaim("submitted"),
         documents: [
           generateNotice("requestForInfoNotice"),
           generateNotice("denialNotice"),
         ],
-      },
-
-      "In Progress": {
-        claim: generateClaim("employed"),
       },
     }[claim],
     { appLogic, ...args }

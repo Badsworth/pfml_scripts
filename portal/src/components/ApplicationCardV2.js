@@ -173,10 +173,12 @@ const InProgressStatusCard = (props) => {
           number,
         })}
       />
-      <TitleAndDetailSectionItem
-        title={t("components.applicationCardV2.employerEIN")}
-        details={claim.employer_fein}
-      />
+      {claim.employer_fein && (
+        <TitleAndDetailSectionItem
+          title={t("components.applicationCardV2.employerEIN")}
+          details={claim.employer_fein}
+        />
+      )}
       <LegalNoticeSection {...props} />
       <ButtonSection
         buttonText={t("components.applicationCardV2.continueApplication")}
