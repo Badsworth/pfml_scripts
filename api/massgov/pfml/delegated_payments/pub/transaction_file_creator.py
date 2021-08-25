@@ -1,11 +1,13 @@
 import enum
 from typing import List, Optional, Tuple, cast
 
+from massgov.pfml.util.names import Name, parse_name
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.delegated_payments.pub.pub_check as pub_check
 import massgov.pfml.util.logging as logging
+from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
     Employee,
     Payment,
@@ -14,7 +16,12 @@ from massgov.pfml.db.models.employees import (
     PubEft,
     State,
 )
-from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
+from massgov.pfml.db.models.payments import (
+    FineosExtractEmployeeFeed,
+    FineosExtractVpei,
+    FineosWritebackDetails,
+    FineosWritebackTransactionStatus
+)
 from massgov.pfml.delegated_payments.check_issue_file import CheckIssueFile
 from massgov.pfml.delegated_payments.delegated_payments_nacha import (
     add_eft_prenote_to_nacha_file,
@@ -99,23 +106,23 @@ class TransactionFileCreatorStep(Step):
         logger.info("Start adding EFT prenotes to PUB transaction file")
 
         # add eligible employee eft prenotes to transaction file
-        employees_with_efts: List[
-            Tuple[Employee, PubEft]
-        ] = self._get_eft_eligible_employees_with_eft()
+        employees_with_eft_and_employee_name: List[
+            Tuple[Employee, PubEft, Name]
+        ] = self._get_eft_eligible_employees_with_eft_and_employee_name()
 
-        if len(employees_with_efts) == 0:
+        if len(employees_with_eft_and_employee_name) == 0:
             logger.info("No EFT prenotes to add to PUB transaction file")
             return
 
         self._create_ach_file_if_not_exists()
         # Cast the ach_file as we know it's set by _create_ach_file_if_not_exists
-        add_eft_prenote_to_nacha_file(cast(NachaFile, self.ach_file), employees_with_efts)
+        add_eft_prenote_to_nacha_file(cast(NachaFile, self.ach_file), employees_with_eft_and_employee_name)
 
         # transition eft states for employee
-        for employee_with_eft in employees_with_efts:
+        for employee_with_eft_and_employee_name in employees_with_eft_and_employee_name:
             self.increment(self.Metrics.ACH_PRENOTE_COUNT)
-            employee: Employee = employee_with_eft[0]
-            eft: PubEft = employee_with_eft[1]
+            employee: Employee = employee_with_eft_and_employee_name[0]
+            eft: PubEft = employee_with_eft_and_employee_name[1]
 
             eft.prenote_state_id = PrenoteState.PENDING_WITH_PUB.prenote_state_id
             eft.prenote_sent_at = payments_util.get_now()
@@ -129,25 +136,27 @@ class TransactionFileCreatorStep(Step):
             )
 
         logger.info(
-            "Done adding EFT prenotes to PUB transaction file: %i", len(employees_with_efts)
+            "Done adding EFT prenotes to PUB transaction file: %i", len(employee_with_eft_and_employee_name)
         )
 
     def add_ach_payments(self) -> None:
         logger.info("Start adding ACH payments to PUB transaction file")
 
         # add eligible payments to transaction file
-        payments: List[Payment] = self._get_eligible_eft_payments()
+        payments_with_payee_name: List[Tuple[Payment, str]] = self._get_eligible_eft_payments_with_payee_name()
 
-        if len(payments) == 0:
+        if len(payments_with_payee_name) == 0:
             logger.info("No ACH payments to add to PUB transaction file")
             return
 
         self._create_ach_file_if_not_exists()
         # Cast the ach_file as we know it's set by _create_ach_file_if_not_exists
-        add_payments_to_nacha_file(cast(NachaFile, self.ach_file), payments)
+        add_payments_to_nacha_file(cast(NachaFile, self.ach_file), payments_with_payee_name)
 
         # transition states
-        for payment in payments:
+        for payment_with_payee_name in payments_with_payee_name:
+            payment = payment_with_payee_name[0]
+
             self.increment(self.Metrics.ACH_PAYMENT_COUNT)
 
             outcome = state_log_util.build_outcome("PUB transaction sent")
@@ -174,7 +183,7 @@ class TransactionFileCreatorStep(Step):
             self.db_session.add(writeback_details)
             payments_util.create_payment_log(payment, self.get_import_log_id(), self.db_session)
 
-        logger.info("Done adding ACH payments to PUB transaction file: %i", len(payments))
+        logger.info("Done adding ACH payments to PUB transaction file: %i", len(payments_with_payee_name))
 
     def send_payment_files(self) -> None:
         s3_config = payments_config.get_s3_config()
@@ -223,7 +232,7 @@ class TransactionFileCreatorStep(Step):
         if self.ach_file is None:
             self.ach_file = create_nacha_file()
 
-    def _get_eligible_eft_payments(self) -> List[Payment]:
+    def _get_eligible_eft_payments_with_payee_name(self) -> List[Tuple[Payment, Name]]:
         state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
             associated_class=state_log_util.AssociatedClass.PAYMENT,
             end_state=State.DELEGATED_PAYMENT_ADD_TO_PUB_TRANSACTION_EFT,
@@ -236,9 +245,12 @@ class TransactionFileCreatorStep(Step):
                     f"Non-ACH payment method detected in state log: { state_log.state_log_id }, payment: {state_log.payment.payment_id}"
                 )
 
-        ach_payments = [state_log.payment for state_log in state_logs]
+        payments_with_payee_name: List[Tuple[Payment, str]] = []
+        for state_log in state_logs:
+            payee_name = get_fineos_payee_name(state_log.payment, self.db_session)
+            payments_with_payee_name.append((state_log.payment, payee_name))
 
-        return ach_payments
+        return payments_with_payee_name
 
     def _get_pub_efts_for_prenote(self, employee: Employee) -> List[PubEft]:
         employee_pub_eft_pairs = employee.pub_efts.all()
@@ -256,14 +268,14 @@ class TransactionFileCreatorStep(Step):
 
         return pending_pub_efts
 
-    def _get_eft_eligible_employees_with_eft(self) -> List[Tuple[Employee, PubEft]]:
+    def _get_eft_eligible_employees_with_eft_and_employee_name(self) -> List[Tuple[Employee, PubEft, Name]]:
         state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
             associated_class=state_log_util.AssociatedClass.EMPLOYEE,
             end_state=State.DELEGATED_EFT_SEND_PRENOTE,
             db_session=self.db_session,
         )
 
-        employees_with_eft: List[Tuple[Employee, PubEft]] = []
+        employees_with_eft_and_employee_name: List[Tuple[Employee, PubEft, Name]] = []
 
         for state_log in state_logs:
             employee: Employee = state_log.employee
@@ -280,7 +292,49 @@ class TransactionFileCreatorStep(Step):
                     f"No pending prenote pub efts associated with employee: {employee.employee_id}"
                 )
 
-            for pub_eft in pub_efts:
-                employees_with_eft.append((employee, pub_eft))
+            employee_name = get_fineos_employee_name(employee, self.db_session)
 
-        return employees_with_eft
+            for pub_eft in pub_efts:
+                employees_with_eft_and_employee_name.append((employee, pub_eft, employee_name))
+
+        return employees_with_eft_and_employee_name
+
+
+# TODO move to payment utils
+
+def get_fineos_payee_name(payment: Payment, db_session: db.Session) -> Name:
+    vpei_payment = (
+        db_session.query(FineosExtractVpei)
+        .filter(FineosExtractVpei.c == payment.fineos_pei_c_value)
+        .filter(FineosExtractVpei.i == payment.fineos_pei_i_value)
+        .order_by(FineosExtractVpei.created_at.desc())  # Get the most recently staged payment
+        .first()
+    )
+
+    if vpei_payment is None:
+        raise Exception(f"Could not find staged VEPI record for payment - c: {payment.fineos_pei_c_value}, i: {payment.fineos_pei_i_value}")
+
+    return parse_name(vpei_payment.payeefullname)
+    
+
+# TODO move to payment utils
+
+# Used for prenotes at which point payment row is not available
+def get_fineos_employee_name(employee: Employee, db_session: db.Session) -> Name:
+    employee_feed_row = (
+        db_session.query(FineosExtractEmployeeFeed)
+        .filter(FineosExtractEmployeeFeed.customerno == employee.fineos_customer_number)
+        .order_by(FineosExtractEmployeeFeed.created_at.desc())   # Get the most recently staged employee
+        .first()  # TODO is this assumption correct? There can be multiple entries
+    )
+
+    if employee_feed_row is None:
+        raise Exception(f"Could not find staged Employee Feed record for employee - fineos customer number: {employee.fineos_customer_number}")
+
+    names = []
+    # last name first, see truncation rules for Individual Name
+    # https://lwd.atlassian.net/wiki/spaces/API/pages/1313800323/PUB+ACH+File+Format
+    names.append(employee_feed_row.lastname)
+    names.append(employee_feed_row.firstnames)    
+
+    return Name(first_name=employee_feed_row.firstnames, last_name=employee_feed_row.lastname)

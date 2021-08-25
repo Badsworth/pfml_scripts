@@ -1,6 +1,8 @@
 import os
 import re
 
+from sqlalchemy.sql.expression import extract
+
 import faker
 import pytest
 import sqlalchemy
@@ -21,6 +23,7 @@ from massgov.pfml.db.models.employees import (
     State,
     StateLog,
 )
+from massgov.pfml.db.models.payments import FineosExtractEmployeeFeed, FineosExtractVpei
 from massgov.pfml.db.models.factories import (
     ClaimFactory,
     EmployeeFactory,
@@ -30,7 +33,7 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.delegated_payments.check_issue_file import CheckIssueFile
 from massgov.pfml.delegated_payments.ez_check import EzCheckFile
-from massgov.pfml.delegated_payments.pub.transaction_file_creator import TransactionFileCreatorStep
+from massgov.pfml.delegated_payments.pub.transaction_file_creator import TransactionFileCreatorStep, get_fineos_employee_name, get_fineos_payee_name
 from tests.delegated_payments.pub.test_pub_check import _random_valid_check_payment_with_state_log
 
 fake = faker.Faker()
@@ -247,7 +250,7 @@ def test_get_eligible_eft_payments_error_states(
     with pytest.raises(
         Exception, match=r"Non-ACH payment method detected in state log: .+",
     ):
-        transaction_file_step._get_eligible_eft_payments()
+        transaction_file_step._get_eligible_eft_payments_with_payee_name()
 
 
 def test_get_pub_efts_for_pre_note(
@@ -297,11 +300,11 @@ def test_get_eft_eligible_employees_with_eft_error_states(
         Exception,
         match=f"No pending prenote pub efts associated with employee: {employee.employee_id}",
     ):
-        transaction_file_step._get_eft_eligible_employees_with_eft()
+        transaction_file_step._get_eft_eligible_employees_with_eft_and_employee_name()
 
 
 def create_employee_with_eft(prenote_state: LkPrenoteState) -> Employee:
-    employee = EmployeeFactory.create()
+    employee = EmployeeFactory.create(fineos_customer_number=str(fake.unique.random_int()))
     pub_eft = PubEftFactory.create(prenote_state_id=prenote_state.prenote_state_id)
     EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft)
 
@@ -311,6 +314,13 @@ def create_employee_with_eft(prenote_state: LkPrenoteState) -> Employee:
 def create_employee_for_prenote(db_session):
     employee = create_employee_with_eft(PrenoteState.PENDING_PRE_PUB)
 
+    extract_employee_feed_record = FineosExtractEmployeeFeed(
+        customerno=employee.fineos_customer_number,
+        firstnames="Fineos",
+        lastname=employee.last_name        
+    )
+    db_session.add(extract_employee_feed_record)
+
     state_log_util.create_finished_state_log(
         employee,
         State.DELEGATED_EFT_SEND_PRENOTE,
@@ -318,8 +328,10 @@ def create_employee_for_prenote(db_session):
         db_session,
     )
 
+    return employee
 
-def create_payment_for_pub_transaction(db_session, payment_method: LkPaymentMethod):
+
+def create_payment_for_pub_transaction(db_session, payment_method: LkPaymentMethod, create_extract_row: bool = True):
     employee = create_employee_with_eft(PrenoteState.APPROVED)
     employee_pub_eft_pairs = employee.pub_efts.all()
     pub_eft = employee_pub_eft_pairs[0].pub_eft
@@ -327,12 +339,26 @@ def create_payment_for_pub_transaction(db_session, payment_method: LkPaymentMeth
     claim = ClaimFactory.create(
         employee=employee, claim_type_id=ClaimType.MEDICAL_LEAVE.claim_type_id
     )
+
+    i_value = "9000"
+    c_value = str(fake.unique.random_int())
+
     payment = PaymentFactory.create(
         claim=claim,
         pub_eft=pub_eft,
         disb_method_id=payment_method.payment_method_id,
         claim_type_id=ClaimType.MEDICAL_LEAVE.claim_type_id,
+        fineos_pei_c_value=i_value,
+        fineos_pei_i_value=c_value
     )
+
+    if create_extract_row:
+        extract_payment_vpei_record = FineosExtractVpei(
+            c=i_value,
+            i=c_value,
+            payeefullname=f"Fineos {employee.last_name}"
+        )
+        db_session.add(extract_payment_vpei_record)
 
     state_log_util.create_finished_state_log(
         payment,
@@ -342,3 +368,31 @@ def create_payment_for_pub_transaction(db_session, payment_method: LkPaymentMeth
     )
 
     return payment
+
+
+# TODO move to payments_util after PUB-277
+def test_get_fineos_employee_name(test_db_session, initialize_factories_session):
+    employee = create_employee_for_prenote(test_db_session)
+    name = get_fineos_employee_name(employee, test_db_session)
+    assert f"{name.first_name} {name.last_name}" == f"Fineos {employee.last_name}"
+
+    employee_without_extract = create_employee_with_eft(PrenoteState.PENDING_PRE_PUB)
+    with pytest.raises(
+        Exception,
+        match=f"Could not find staged Employee Feed record for employee - fineos customer number: {employee_without_extract.fineos_customer_number}",
+    ):        
+        get_fineos_employee_name(employee_without_extract, test_db_session)
+
+
+def test_get_fineos_payee_name(test_db_session, initialize_factories_session):
+    payment = create_payment_for_pub_transaction(test_db_session, PaymentMethod.ACH)
+    name = get_fineos_payee_name(payment, test_db_session)
+    assert f"{name.first_name} {name.last_name}" == f"Fineos {payment.claim.employee.last_name}"
+
+    payment_without_extract = create_payment_for_pub_transaction(test_db_session, PaymentMethod.ACH, create_extract_row=False)
+    with pytest.raises(
+        Exception,
+        match=f"Could not find staged VEPI record for payment - c: {payment_without_extract.fineos_pei_c_value}, i: {payment_without_extract.fineos_pei_i_value}",
+    ):        
+        get_fineos_payee_name(payment_without_extract, test_db_session)
+    

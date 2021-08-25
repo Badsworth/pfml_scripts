@@ -4,6 +4,8 @@ from decimal import Decimal
 from enum import Enum
 from typing import List, Tuple
 
+import massgov.pfml.db as db
+from massgov.pfml.util.names import Name
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
@@ -87,19 +89,20 @@ def send_nacha_file(
     )
 
 
-def add_payments_to_nacha_file(nacha_file: NachaFile, payments: List[Payment]) -> None:
-    if len(payments) == 0:
+def add_payments_to_nacha_file(nacha_file: NachaFile, payments_with_payee_name: List[Tuple[Payment, Name]]) -> None:
+    if len(payments_with_payee_name) == 0:
         logger.warning("No Payment records to add to PUB transaction file")
         return
 
     family_leave_nacha_batch = create_nacha_batch(NachaBatchType.FAMILY_LEAVE)
     medical_leave_nacha_batch = create_nacha_batch(NachaBatchType.MEDICAL_LEAVE)
 
-    for payment in payments:
+    for payment_with_payee_name in payments_with_payee_name:
+        payment = payment_with_payee_name[0]
+        payee_name = payment_with_payee_name[1]
+
         if payment.disb_method_id != PaymentMethod.ACH.payment_method_id:
             raise Exception(f"Non-ACH payment method for payment: {payment.payment_id}")
-
-        claim = payment.claim
 
         entry = NachaEntry(
             trans_code=get_trans_code(payment.pub_eft.bank_account_type_id, False, False),
@@ -107,7 +110,7 @@ def add_payments_to_nacha_file(nacha_file: NachaFile, payments: List[Payment]) -
             dfi_act_num=payment.pub_eft.account_nbr,
             amount=payment.amount,
             id=f"P{payment.pub_individual_id}",
-            name=f"{claim.employee.last_name} {claim.employee.first_name}",
+            name=f"{payee_name.last_name} {payee_name.first_name}",
         )
 
         if payment.claim_type_id == ClaimType.FAMILY_LEAVE.claim_type_id:
@@ -127,9 +130,9 @@ def add_payments_to_nacha_file(nacha_file: NachaFile, payments: List[Payment]) -
 
 
 def add_eft_prenote_to_nacha_file(
-    nacha_file: NachaFile, employees_with_eft: List[Tuple[Employee, PubEft]]
+    nacha_file: NachaFile, employees_with_eft_and_employee_name: List[Tuple[Employee, PubEft, Name]]
 ) -> None:
-    if len(employees_with_eft) == 0:
+    if len(employees_with_eft_and_employee_name) == 0:
         logger.warning("No claimant EFTs to prenote.")
         return
 
@@ -142,9 +145,10 @@ def add_eft_prenote_to_nacha_file(
         nacha_batch = create_nacha_batch(NachaBatchType.PRENOTE)
         reuse_batch = False
 
-    for employee_with_eft in employees_with_eft:
-        employee = employee_with_eft[0]
-        pub_eft = employee_with_eft[1]
+    for employee_with_eft_and_employee_name in employees_with_eft_and_employee_name:
+        employee = employee_with_eft_and_employee_name[0]
+        pub_eft = employee_with_eft_and_employee_name[1]
+        employee_name = employee_with_eft_and_employee_name[2]
 
         if pub_eft.prenote_state_id != PrenoteState.PENDING_PRE_PUB.prenote_state_id:
             raise Exception(
@@ -157,7 +161,7 @@ def add_eft_prenote_to_nacha_file(
             dfi_act_num=pub_eft.account_nbr,
             amount=Decimal("0.00"),
             id=f"E{pub_eft.pub_individual_id}",
-            name=f"{employee.last_name} {employee.first_name}",
+            name=f"{employee_name.last_name} {employee_name.first_name}",
         )
 
         nacha_batch.add_entry(entry)

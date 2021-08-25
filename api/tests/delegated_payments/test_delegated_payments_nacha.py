@@ -5,12 +5,14 @@ from typing import Tuple
 import pytest
 from freezegun import freeze_time
 
+from massgov.pfml.util.names import Name
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     ClaimType,
     Employee,
     LkPaymentMethod,
     LkPrenoteState,
+    Payment,
     PaymentMethod,
     PrenoteState,
     PubEft,
@@ -124,11 +126,11 @@ def test_generate_nacha_file_multiple_batches(monkeypatch, test_db_session):
 def test_nacha_file_prenote_entries():
     nacha_file = create_nacha_file()
 
-    employees_with_eft = []
+    employees_with_eft_and_employee_name = []
     for _ in range(5):
-        employees_with_eft.append(build_employee_with_eft(PrenoteState.PENDING_PRE_PUB))
+        employees_with_eft_and_employee_name.append(build_employee_with_eft_and_employee_name(PrenoteState.PENDING_PRE_PUB))
 
-    add_eft_prenote_to_nacha_file(nacha_file, employees_with_eft)
+    add_eft_prenote_to_nacha_file(nacha_file, employees_with_eft_and_employee_name)
 
     assert len(nacha_file.batches[0].entries) == 5
 
@@ -136,25 +138,25 @@ def test_nacha_file_prenote_entries():
 def test_nacha_file_prenote_entries_errors():
     nacha_file = create_nacha_file()
 
-    employee_with_eft = build_employee_with_eft(PrenoteState.APPROVED)
+    employees_with_eft_and_employee_name = build_employee_with_eft_and_employee_name(PrenoteState.APPROVED)
 
     with pytest.raises(
         Exception,
-        match=f"Found non pending eft trying to add to prenote list: {employee_with_eft[0].employee_id}, eft: {employee_with_eft[1].pub_eft_id}",
+        match=f"Found non pending eft trying to add to prenote list: {employees_with_eft_and_employee_name[0].employee_id}, eft: {employees_with_eft_and_employee_name[1].pub_eft_id}",
     ):
-        add_eft_prenote_to_nacha_file(nacha_file, [employee_with_eft])
+        add_eft_prenote_to_nacha_file(nacha_file, [employees_with_eft_and_employee_name])
 
 
 def test_nacha_file_payment_entries():
     nacha_file = create_nacha_file()
 
-    payments = []
+    payments_with_payee_name = []
     for _ in range(5):
-        payments.append(build_payment(PaymentMethod.ACH, ClaimType.FAMILY_LEAVE))
+        payments_with_payee_name.append(build_payment_with_payee_name(PaymentMethod.ACH, ClaimType.FAMILY_LEAVE))
     for _ in range(5):
-        payments.append(build_payment(PaymentMethod.ACH, ClaimType.MEDICAL_LEAVE))
+        payments_with_payee_name.append(build_payment_with_payee_name(PaymentMethod.ACH, ClaimType.MEDICAL_LEAVE))
 
-    add_payments_to_nacha_file(nacha_file, payments)
+    add_payments_to_nacha_file(nacha_file, payments_with_payee_name)
 
     assert len(nacha_file.batches) == 2
     assert len(nacha_file.batches[0].entries) == 5
@@ -165,29 +167,29 @@ def test_nacha_file_payment_entries_one_leave_type():
     # Same as above, but only one leave type, only one batch should be added.
     nacha_file = create_nacha_file()
 
-    payments = []
+    payments_with_payee_name = []
     for _ in range(5):
-        payments.append(build_payment(PaymentMethod.ACH, ClaimType.FAMILY_LEAVE))
+        payments_with_payee_name.append(build_payment_with_payee_name(PaymentMethod.ACH, ClaimType.FAMILY_LEAVE))
 
-    add_payments_to_nacha_file(nacha_file, payments)
+    add_payments_to_nacha_file(nacha_file, payments_with_payee_name)
     assert len(nacha_file.batches[0].entries) == 5
 
 
 def test_nacha_file_payment_and_prenote_entries():
     nacha_file = create_nacha_file()
-    payments = []
+    payments_with_payee_name = []
     for _ in range(5):
-        payments.append(build_payment(PaymentMethod.ACH, ClaimType.FAMILY_LEAVE))
+        payments_with_payee_name.append(build_payment_with_payee_name(PaymentMethod.ACH, ClaimType.FAMILY_LEAVE))
     for _ in range(5):
-        payments.append(build_payment(PaymentMethod.ACH, ClaimType.MEDICAL_LEAVE))
+        payments_with_payee_name.append(build_payment_with_payee_name(PaymentMethod.ACH, ClaimType.MEDICAL_LEAVE))
 
-    employees_with_eft = []
+    employees_with_eft_and_employee_name = []
     for _ in range(7):
-        employees_with_eft.append(build_employee_with_eft(PrenoteState.PENDING_PRE_PUB))
+        employees_with_eft_and_employee_name.append(build_employee_with_eft_and_employee_name(PrenoteState.PENDING_PRE_PUB))
 
     # Add all payments and EFT
-    add_payments_to_nacha_file(nacha_file, payments)
-    add_eft_prenote_to_nacha_file(nacha_file, employees_with_eft)
+    add_payments_to_nacha_file(nacha_file, payments_with_payee_name)
+    add_eft_prenote_to_nacha_file(nacha_file, employees_with_eft_and_employee_name)
 
     assert len(nacha_file.batches) == 2
     assert len(nacha_file.batches[0].entries) == 12
@@ -217,11 +219,11 @@ def test_nacha_file_payment_and_prenote_entries():
 def test_nacha_file_upload(mock_s3_bucket):
     nacha_file = create_nacha_file()
 
-    employee_with_eft = build_employee_with_eft(PrenoteState.PENDING_PRE_PUB)
-    add_eft_prenote_to_nacha_file(nacha_file, [employee_with_eft])
+    employees_with_eft_and_employee_name = build_employee_with_eft_and_employee_name(PrenoteState.PENDING_PRE_PUB)
+    add_eft_prenote_to_nacha_file(nacha_file, [employees_with_eft_and_employee_name])
 
-    payment = build_payment(PaymentMethod.ACH)
-    add_payments_to_nacha_file(nacha_file, [payment])
+    payment_with_payee_name = build_payment_with_payee_name(PaymentMethod.ACH)
+    add_payments_to_nacha_file(nacha_file, [payment_with_payee_name])
 
     archive_folder_path = f"s3://{mock_s3_bucket}/pub/archive"
     outbound_folder_path = f"s3://{mock_s3_bucket}/pub/outbound"
@@ -241,18 +243,19 @@ def test_nacha_file_upload(mock_s3_bucket):
     assert len([line for line in file_stream]) == 10
 
 
-def build_employee_with_eft(prenote_state: LkPrenoteState) -> Tuple[Employee, PubEft]:
+def build_employee_with_eft_and_employee_name(prenote_state: LkPrenoteState) -> Tuple[Employee, PubEft, Name]:
     employee = EmployeeFactory.build()
     pub_eft = PubEftFactory.build(prenote_state_id=prenote_state.prenote_state_id)
     EmployeePubEftPairFactory.build(employee=employee, pub_eft=pub_eft)
 
-    return (employee, pub_eft)
+    return (employee, pub_eft, Name(first_name=employee.first_name, last_name=employee.last_name))
 
 
-def build_payment(payment_method: LkPaymentMethod, claim_type: ClaimType = ClaimType.FAMILY_LEAVE):
-    employee_with_eft = build_employee_with_eft(PrenoteState.PENDING_PRE_PUB)
+def build_payment_with_payee_name(payment_method: LkPaymentMethod, claim_type: ClaimType = ClaimType.FAMILY_LEAVE) -> Tuple[Payment, Name]:
+    employee_with_eft = build_employee_with_eft_and_employee_name(PrenoteState.PENDING_PRE_PUB)
     employee = employee_with_eft[0]
     pub_eft = employee_with_eft[1]
+    employee_name = employee_with_eft[2]
 
     claim = ClaimFactory.build(employee=employee, claim_type_id=claim_type.claim_type_id)
     payment = PaymentFactory.build(
@@ -262,4 +265,4 @@ def build_payment(payment_method: LkPaymentMethod, claim_type: ClaimType = Claim
         claim_type=claim_type,
         claim_type_id=claim_type.claim_type_id,
     )
-    return payment
+    return (payment, employee_name)
