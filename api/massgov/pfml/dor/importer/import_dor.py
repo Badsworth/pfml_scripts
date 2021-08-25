@@ -9,8 +9,8 @@ import resource
 import sys
 import uuid
 from dataclasses import asdict, dataclass, field
-from datetime import date, datetime
-from typing import Any, Dict, List, Optional, Set, Tuple
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Set
 
 import boto3
 from sqlalchemy.exc import SQLAlchemyError
@@ -22,12 +22,7 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 import massgov.pfml.util.newrelic.events
 from massgov.pfml import db
-from massgov.pfml.db.models.employees import (
-    EmployeeLog,
-    EmployerQuarterlyContribution,
-    ImportLog,
-    WagesAndContributions,
-)
+from massgov.pfml.db.models.employees import EmployeeLog, ImportLog, WagesAndContributions
 from massgov.pfml.dor.importer.dor_file_formats import (
     EMPLOYEE_FILE_ROW_LENGTH,
     EMPLOYEE_FORMAT,
@@ -1228,41 +1223,23 @@ def import_employer_pfml_contributions(
     report: ImportReport,
     import_log_entry_id: int,
 ) -> None:
-    account_key_to_employer_id_map: Dict[str, uuid.UUID] = {}
-    account_keys: List[str] = []
-    for employee_info in employer_quarterly_info_list:
-        account_keys.append(employee_info["account_key"])
-
-    employer_models = dor_persistence_util.get_employers_account_key(db_session, account_keys)
-    for employer in employer_models:
-        account_key_to_employer_id_map[employer.account_key] = employer.employer_id
-
-    employer_ids_to_check_in_db = []
-    for employer_quarterly_info in employer_quarterly_info_list:
-        found_employer_id = account_key_to_employer_id_map.get(
-            employer_quarterly_info["account_key"], None
-        )
-        if found_employer_id is not None:
-            employer_ids_to_check_in_db.append(found_employer_id)
-
-    existing_employer_models_all_dates = dor_persistence_util.get_employer_quarterly_info_by_employer_id(
-        db_session, employer_ids_to_check_in_db
+    account_keys = {employee_info["account_key"] for employee_info in employer_quarterly_info_list}
+    account_key_to_employer_id_map = dor_persistence_util.get_employers_by_account_key(
+        db_session, account_keys
     )
 
-    existing_quarterly_map: Dict[Tuple[uuid.UUID, date], EmployerQuarterlyContribution] = {}
-    for existing_employer_model in existing_employer_models_all_dates:
-        key = (existing_employer_model.employer_id, existing_employer_model.filing_period)
-        existing_quarterly_map[key] = existing_employer_model
+    existing_quarterly_map = dor_persistence_util.get_employer_quarterly_info_by_employer_id(
+        db_session, account_key_to_employer_id_map.values()
+    )
 
     # Determine which are new (employer, quarter) combinations, and which are updates to existing
     # rows in the database.
-    not_found_employer_quarterly_contribution_list = []
+    new_employer_quarterly_contributions = {}
     found_employer_quarterly_contribution_list = []
 
     for employer_quarterly_info in employer_quarterly_info_list:
-        employer_id = account_key_to_employer_id_map.get(
-            employer_quarterly_info["account_key"], None
-        )
+        account_key = employer_quarterly_info["account_key"]
+        employer_id = account_key_to_employer_id_map.get(account_key, None)
         if employer_id is None:
             logger.warning(
                 "Attempted to create a quarterly row for unknown employer: %s",
@@ -1272,13 +1249,17 @@ def import_employer_pfml_contributions(
             continue
 
         period = employer_quarterly_info["filing_period"]
-        existing_composite_key = (employer_id, period)
-        existing_model = existing_quarterly_map.get(existing_composite_key, None)
+        composite_key = (employer_id, period)
 
-        if existing_model is not None:
+        if composite_key in existing_quarterly_map:
             found_employer_quarterly_contribution_list.append(employer_quarterly_info)
         else:
-            not_found_employer_quarterly_contribution_list.append(employer_quarterly_info)
+            if composite_key in new_employer_quarterly_contributions:
+                logger.warning(
+                    "duplicate employer quarterly contribution row",
+                    extra=dict(account_key=account_key, filing_period=period),
+                )
+            new_employer_quarterly_contributions[composite_key] = employer_quarterly_info
 
     employer_quarter_models_to_create = list(
         map(
@@ -1287,7 +1268,7 @@ def import_employer_pfml_contributions(
                 account_key_to_employer_id_map[employer_info["account_key"]],
                 import_log_entry_id,
             ),
-            not_found_employer_quarterly_contribution_list,
+            new_employer_quarterly_contributions.values(),
         )
     )
 
@@ -1355,14 +1336,10 @@ def import_employees_and_wage_data(
     import_log_entry_id,
 ):
     # 1 - Create account key to existing employer id reference map
-    account_key_to_employer_id_map = {}
-    account_keys = []
-    for employee_info in employee_and_wage_info_list:
-        account_keys.append(employee_info["account_key"])
-
-    employer_models = dor_persistence_util.get_employers_account_key(db_session, account_keys)
-    for employer in employer_models:
-        account_key_to_employer_id_map[employer.account_key] = employer.employer_id
+    account_keys = {employee_info["account_key"] for employee_info in employee_and_wage_info_list}
+    account_key_to_employer_id_map = dor_persistence_util.get_employers_by_account_key(
+        db_session, account_keys
+    )
 
     # 2 - Create existing employee reference maps
     logger.info(
