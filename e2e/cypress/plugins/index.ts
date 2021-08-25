@@ -43,12 +43,10 @@ import { Employer, EmployerPickSpec } from "../../src/generation/Employer";
 import pRetry from "p-retry";
 import { Fineos } from "../../src/submission/fineos.pages";
 
-// This function is called when a project is opened or re-opened (e.g. due to
-// the project's config changing)
-/**
- * @type {Cypress.PluginConfig}
- */
-export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
+export default function (
+  on: Cypress.PluginEvents,
+  cypressConfig: Cypress.ConfigOptions
+): Cypress.ConfigOptions {
   const verificationFetcher = getVerificationFetcher();
   const authenticator = getAuthManager();
   const submitter = getPortalSubmitter();
@@ -194,8 +192,21 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
 
   // Pass config values through as environment variables, which we will access via Cypress.env() in actions/common.ts.
   const configEntries = Object.entries(merged).map(([k, v]) => [`E2E_${k}`, v]);
+
+  // Add dynamic options for the New Relic reporter.
+  let reporterOptions = cypressConfig.reporterOptions ?? {};
+  if (cypressConfig.reporter?.match(/new\-relic/)) {
+    // Add dynamic reporter options based on config values.
+    reporterOptions = {
+      accountId: config("NEWRELIC_ACCOUNTID"),
+      apiKey: config("NEWRELIC_INGEST_KEY"),
+      environment: config("ENVIRONMENT"),
+      ...reporterOptions,
+    };
+  }
   return {
     baseUrl: config("PORTAL_BASEURL"),
     env: Object.fromEntries(configEntries),
+    reporterOptions,
   };
 }

@@ -87,6 +87,7 @@ jobs:
           working-directory: e2e
           group: Stable
           tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
+          config: reporter=cypress/reporters/new-relic.js
 
       # Run Cypress tests.
       - name: Cypress Tests (Unstable)
@@ -99,7 +100,7 @@ jobs:
           group: Unstable
           install: false # Skip install on second run.
           tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
-          config: trashAssetsBeforeRuns=false
+          config: trashAssetsBeforeRuns=false,reporter=cypress/reporters/new-relic.js
         # Always run this step if requested, even if stable tests fail.
         if: github.event.inputs.only_stable == 'false' && always()
         # Do not allow this step to fail the job. It is informational, not mandatory.

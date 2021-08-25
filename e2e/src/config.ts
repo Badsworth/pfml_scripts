@@ -53,8 +53,9 @@ function getRawEnvironment() {
     LST_EMPLOYEES_FILE: process.env.E2E_LST_EMPLOYEES_FILE,
     LST_EMPLOYERS_FILE: process.env.E2E_LST_EMPLOYERS_FILE,
 
-    NEWRELIC_APIKEY: process.env.NEWRELIC_APIKEY,
-    NEWRELIC_ACCOUNTID: process.env.NEWRELIC_ACCOUNTID,
+    NEWRELIC_APIKEY: process.env.E2E_NEWRELIC_APIKEY,
+    NEWRELIC_ACCOUNTID: process.env.E2E_NEWRELIC_ACCOUNTID,
+    NEWRELIC_INGEST_KEY: process.env.E2E_NEWRELIC_INGEST_KEY,
   };
 }
 
@@ -79,6 +80,7 @@ const file: Partial<Configuration> =
 // The default layer is a set of default values which will be used if nothing is set.
 const defaults: Partial<Configuration> = {
   FINEOS_HAS_UPDATED_EFORMS: "false",
+  NEWRELIC_ACCOUNTID: "2837112",
 };
 export const merged = {
   ...defaults,
