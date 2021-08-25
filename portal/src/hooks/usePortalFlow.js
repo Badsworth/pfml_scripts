@@ -21,7 +21,6 @@ const usePortalFlow = () => {
 
   // State representing current page route
   const { pathname, asPath: pathWithParams } = router;
-
   /**
    * The routing machine's active State Node
    * @type {{ meta?: { applicableRules?: string[], fields?: string[], step?: string }, on: object}}

@@ -144,20 +144,6 @@ const checklistEvents = {
   ],
 };
 
-const uploadRouting = {
-  on: {
-    CONTINUE: [
-      {
-        target: routes.applications.status,
-        cond: "isUploadedAfterCompletion",
-      },
-      {
-        target: routes.applications.checklist,
-      },
-    ],
-  },
-};
-
 export default {
   states: {
     [routes.applications.getReady]: {
@@ -371,7 +357,19 @@ export default {
         ],
       },
     },
-    "/applications/upload/[documentType]": { ...uploadRouting },
+    "/applications/upload/[documentType]": {
+      on: {
+        CONTINUE: [
+          {
+            target: routes.applications.status,
+            cond: "isUploadedAfterCompletion",
+          },
+          {
+            target: routes.applications.checklist,
+          },
+        ],
+      },
+    },
     [routes.applications.index]: {
       meta: {},
       on: {
@@ -387,55 +385,6 @@ export default {
         UPLOADING_CARING_CERTIFICATION:
           routes.applications.upload.caringCertification,
       },
-    },
-    [routes.applications.upload.bondingAdoptionStatement]: {
-      meta: {
-        step: ClaimSteps.uploadCertification,
-        fields: [],
-      },
-      ...uploadRouting,
-    },
-    [routes.applications.upload.bondingProofOfBirth]: {
-      meta: {
-        step: ClaimSteps.uploadCertification,
-        fields: [],
-      },
-      ...uploadRouting,
-    },
-    [routes.applications.upload.medicalCertificationOfCondition]: {
-      meta: {
-        step: ClaimSteps.uploadCertification,
-        fields: [],
-      },
-      ...uploadRouting,
-    },
-    [routes.applications.upload.pregnancyMedicalCertification]: {
-      meta: {
-        step: ClaimSteps.uploadCertification,
-        fields: [],
-      },
-      ...uploadRouting,
-    },
-    [routes.applications.upload.caringCertification]: {
-      meta: {
-        step: ClaimSteps.uploadCertification,
-        fields: [],
-      },
-      ...uploadRouting,
-    },
-    [routes.applications.upload.stateId]: {
-      meta: {
-        step: ClaimSteps.uploadCertification,
-        fields: [],
-      },
-      ...uploadRouting,
-    },
-    [routes.applications.upload.otherId]: {
-      meta: {
-        step: ClaimSteps.uploadCertification,
-        fields: [],
-      },
-      ...uploadRouting,
     },
     [routes.applications.dateOfChild]: {
       meta: {
