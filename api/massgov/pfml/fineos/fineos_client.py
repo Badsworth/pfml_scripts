@@ -996,7 +996,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
     def download_document_as_leave_admin(
         self, user_id: str, absence_id: str, fineos_document_id: str
-    ) -> models.group_client_api.Base64EncodedFileData:
+    ) -> models.group_client_api.Base64EncodedFileDetails:
         try:
             header_content_type = None
 
@@ -1016,16 +1016,11 @@ class FINEOSClient(client.AbstractFINEOSClient):
             error.method_name = "download_document_as_leave_admin"
             raise error
         response_json = response.json()
-        # populate spec required field missing in fineos response
-        if "fileSizeInBytes" not in response_json:
-            response_json["fileSizeInBytes"] = len(
-                base64.b64decode(response_json["base64EncodedFileContents"].encode("ascii"))
-            )
-        return models.group_client_api.Base64EncodedFileData.parse_obj(response_json)
+        return models.group_client_api.Base64EncodedFileDetails.parse_obj(response_json)
 
     def download_document(
         self, user_id: str, absence_id: str, fineos_document_id: str
-    ) -> models.customer_api.Base64EncodedFileData:
+    ) -> models.customer_api.Base64EncodedFileDetails:
         header_content_type = None
 
         response = self._customer_api(
@@ -1037,13 +1032,8 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
 
         response_json = response.json()
-        # populate spec required field missing in fineos response
-        if "fileSizeInBytes" not in response_json:
-            response_json["fileSizeInBytes"] = len(
-                base64.b64decode(response_json["base64EncodedFileContents"].encode("ascii"))
-            )
 
-        return models.customer_api.Base64EncodedFileData.parse_obj(response_json)
+        return models.customer_api.Base64EncodedFileDetails.parse_obj(response_json)
 
     def mark_document_as_received(
         self, user_id: str, absence_id: str, fineos_document_id: str

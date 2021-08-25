@@ -579,33 +579,31 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
 
     def download_document_as_leave_admin(
         self, user_id: str, absence_id: str, fineos_document_id: str
-    ) -> models.group_client_api.Base64EncodedFileData:
+    ) -> models.group_client_api.Base64EncodedFileDetails:
         file_bytes = open(str(TEST_IMAGE_FILE_PATH), "rb").read()
         encoded_file_contents_str = base64.b64encode(file_bytes).decode("ascii")
 
-        return models.group_client_api.Base64EncodedFileData.parse_obj(
+        return models.group_client_api.Base64EncodedFileDetails.parse_obj(
             {
                 "fileName": "test.pdf",
                 "fileExtension": "pdf",
                 "contentType": "application/pdf",
                 "base64EncodedFileContents": encoded_file_contents_str,
-                "fileSizeInBytes": len(file_bytes),
             }
         )
 
     def download_document(
         self, user_id: str, absence_id: str, fineos_document_id: str
-    ) -> models.customer_api.Base64EncodedFileData:
+    ) -> models.customer_api.Base64EncodedFileDetails:
         file_bytes = open(str(TEST_IMAGE_FILE_PATH), "rb").read()
         encoded_file_contents_str = base64.b64encode(file_bytes).decode("ascii")
 
-        return models.customer_api.Base64EncodedFileData.parse_obj(
+        return models.customer_api.Base64EncodedFileDetails.parse_obj(
             {
                 "fileName": "test.pdf",
                 "fileExtension": "pdf",
                 "contentType": "application/pdf",
                 "base64EncodedFileContents": encoded_file_contents_str,
-                "fileSizeInBytes": len(file_bytes),
             }
         )
 

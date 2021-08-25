@@ -1117,7 +1117,7 @@ def submit_payment_preference(
 
 def download_document(
     application: Application, fineos_document_id: str, db_session: massgov.pfml.db.Session
-) -> massgov.pfml.fineos.models.customer_api.Base64EncodedFileData:
+) -> massgov.pfml.fineos.models.customer_api.Base64EncodedFileDetails:
     fineos = massgov.pfml.fineos.create_client()
 
     fineos_web_id = get_or_register_employee_fineos_web_id(fineos, application, db_session)

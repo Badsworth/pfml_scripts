@@ -21,7 +21,7 @@ from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
 from massgov.pfml.db.models.employees import Employer, User, UserLeaveAdministrator
 from massgov.pfml.fineos.common import DOWNLOADABLE_DOC_TYPES
 from massgov.pfml.fineos.models.group_client_api import (
-    Base64EncodedFileData,
+    Base64EncodedFileDetails,
     GroupClientDocument,
     ManagedRequirementDetails,
 )
@@ -143,7 +143,7 @@ def get_documents_as_leave_admin(fineos_user_id: str, absence_id: str) -> List[D
 
 def download_document_as_leave_admin(
     fineos_user_id: str, absence_id: str, fineos_document_id: str
-) -> Base64EncodedFileData:
+) -> Base64EncodedFileDetails:
     log_attributes = {
         "fineos_user_id": fineos_user_id,
         "absence_id": absence_id,

@@ -47,7 +47,7 @@ from massgov.pfml.db.queries.managed_requirements import (
 from massgov.pfml.fineos import models
 from massgov.pfml.fineos.mock_client import MockFINEOSClient
 from massgov.pfml.fineos.models.group_client_api import (
-    Base64EncodedFileData,
+    Base64EncodedFileDetails,
     ManagedRequirementDetails,
 )
 from massgov.pfml.util.pydantic.types import FEINFormattedStr
@@ -305,14 +305,12 @@ class TestEmployerDocumentDownload:
 
     @pytest.fixture
     def document_data(self):
-        return Base64EncodedFileData(
+        return Base64EncodedFileDetails(
             fileName="test.pdf",
             fileExtension="pdf",
             base64EncodedFileContents="Zm9v",  # decodes to "foo"
             contentType="application/pdf",
             description=None,
-            fileSizeInBytes=0,
-            managedReqId=None,
         )
 
     @pytest.fixture

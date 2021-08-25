@@ -45,10 +45,7 @@ from massgov.pfml.db.queries.managed_requirements import (
     get_managed_requirement_by_fineos_managed_requirement_id,
     update_managed_requirement_from_fineos,
 )
-from massgov.pfml.fineos.models.group_client_api import (
-    Base64EncodedFileData,
-    ManagedRequirementDetails,
-)
+from massgov.pfml.fineos.models.group_client_api import ManagedRequirementDetails
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
     EmployerClaimReviewEFormBuilder,
     EmployerClaimReviewV1EFormBuilder,
@@ -378,11 +375,19 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
             f"employer_document_download failed - {not_verified.description}", extra=log_attr,
         )
         return not_verified.to_api_response()
+
     log_attr.update(get_employer_log_attributes(user_leave_admin.user))
 
+    fineos_web_id = user_leave_admin.fineos_web_id
+
+    # get_current_user_leave_admin_record validates this is set, so should never
+    # hit branch, but the type system doesn't know that currently
+    if fineos_web_id is None:
+        raise ValueError("User admin does not have a FINEOS user")
+
     try:
-        document_data: Base64EncodedFileData = download_document_as_leave_admin(
-            user_leave_admin.fineos_web_id, fineos_absence_id, fineos_document_id  # type: ignore
+        document_data = download_document_as_leave_admin(
+            fineos_web_id, fineos_absence_id, fineos_document_id
         )
     except ObjectNotFound as not_found:
         logger.error(

@@ -697,9 +697,8 @@ def document_download(application_id: UUID, document_id: str) -> Response:
 
         ensure(READ, document)
 
-        document_data: massgov.pfml.fineos.models.customer_api.Base64EncodedFileData = (
-            download_document(existing_application, document_id, db_session)
-        )
+        document_data = download_document(existing_application, document_id, db_session)
+
         file_bytes = base64.b64decode(document_data.base64EncodedFileContents.encode("ascii"))
 
         content_type = document_data.contentType or "application/octet-stream"
