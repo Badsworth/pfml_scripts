@@ -300,8 +300,7 @@ class TransactionFileCreatorStep(Step):
         return employees_with_eft_and_employee_name
 
 
-# TODO move to payment utils
-
+# TODO move to payment_utils
 def get_fineos_payee_name(payment: Payment, db_session: db.Session) -> Name:
     vpei_payment = (
         db_session.query(FineosExtractVpei)
@@ -317,8 +316,7 @@ def get_fineos_payee_name(payment: Payment, db_session: db.Session) -> Name:
     return parse_name(vpei_payment.payeefullname)
     
 
-# TODO move to payment utils
-
+# TODO move to payment_utils
 # Used for prenotes at which point payment row is not available
 def get_fineos_employee_name(employee: Employee, db_session: db.Session) -> Name:
     employee_feed_row = (
@@ -329,12 +327,6 @@ def get_fineos_employee_name(employee: Employee, db_session: db.Session) -> Name
     )
 
     if employee_feed_row is None:
-        raise Exception(f"Could not find staged Employee Feed record for employee - fineos customer number: {employee.fineos_customer_number}")
-
-    names = []
-    # last name first, see truncation rules for Individual Name
-    # https://lwd.atlassian.net/wiki/spaces/API/pages/1313800323/PUB+ACH+File+Format
-    names.append(employee_feed_row.lastname)
-    names.append(employee_feed_row.firstnames)    
+        raise Exception(f"Could not find staged Employee Feed record for employee - fineos customer number: {employee.fineos_customer_number}") 
 
     return Name(first_name=employee_feed_row.firstnames, last_name=employee_feed_row.lastname)
