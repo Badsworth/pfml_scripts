@@ -12,10 +12,6 @@
     "openMode": 0,
     "runMode": 1
   },
-  "reporter": "cypress-multi-reporters",
-  "reporterOptions": {
-    "configFile": "cypress/reporter-config.js"
-  },
   "testFiles": ["**/*.{feature,ts}"],
   "viewportWidth": 2000,
   "viewportHeight": 1320
