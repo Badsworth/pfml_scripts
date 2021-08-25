@@ -64,6 +64,19 @@ const routes = {
     // to a placeholder page. This allows us to search our code for routes.applications.todo,
     // which is less confusing than seeing routes.applications.checklist
     todo: "/applications/checklist",
+    upload: {
+      bondingAdoptionStatement: "/applications/upload/adoption-statement",
+      bondingProofOfBirth: "/applications/upload/proof-of-birth",
+      caringCertification:
+        "/applications/upload/family-member-medical-certification",
+      index: "/applications/upload",
+      medicalCertificationOfCondition:
+        "/applications/upload/medical-certification",
+      otherId: "/applications/upload/other-id",
+      pregnancyMedicalCertification:
+        "/applications/upload/pregnancy-medical-certification",
+      stateId: "/applications/upload/state-id",
+    },
     uploadCertification: "/applications/upload-certification",
     uploadDocsOptions: "/applications/upload-docs-options",
     uploadId: "/applications/upload-id",

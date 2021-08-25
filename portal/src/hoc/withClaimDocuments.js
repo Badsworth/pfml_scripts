@@ -12,14 +12,13 @@ import withUser from "./withUser";
  */
 const withClaimDocuments = (Component) => {
   const ComponentWithDocuments = (props) => {
-    const {
-      appLogic,
-      claim: { application_id },
-    } = props;
+    const { appLogic, claim, query } = props;
     const {
       documents: { loadAll, documents, hasLoadedClaimDocuments },
       users,
     } = appLogic;
+
+    const application_id = claim ? claim.application_id : query.application_id;
 
     const shouldLoad = !hasLoadedClaimDocuments(application_id);
 
@@ -57,6 +56,9 @@ const withClaimDocuments = (Component) => {
     }).isRequired,
     claim: PropTypes.shape({
       application_id: PropTypes.string.isRequired,
+    }),
+    query: PropTypes.shape({
+      claim_id: PropTypes.string.isRequired,
     }),
   };
 

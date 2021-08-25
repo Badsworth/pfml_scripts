@@ -13,6 +13,7 @@
  */
 import {
   EmploymentStatus,
+  ReasonQualifier,
   WorkPatternType,
 } from "../models/BenefitsApplication";
 
@@ -31,6 +32,7 @@ import { fields as familyMemberRelationshipFields } from "../pages/applications/
 import { fields as genderFields } from "../pages/applications/gender";
 import { get } from "lodash";
 import { fields as intermittentFrequencyFields } from "../pages/applications/intermittent-frequency";
+import { isFeatureEnabled } from "../services/featureFlags";
 import { fields as leavePeriodContinuousFields } from "../pages/applications/leave-period-continuous";
 import { fields as leavePeriodIntermittentFields } from "../pages/applications/leave-period-intermittent";
 import { fields as leavePeriodReducedScheduleFields } from "../pages/applications/leave-period-reduced-schedule";
@@ -60,10 +62,20 @@ import { fields as workPatternTypeFields } from "../pages/applications/work-patt
 export const guards = {
   isCaringLeave: ({ claim }) => claim.isCaringLeave,
   isMedicalOrPregnancyLeave: ({ claim }) => claim.isMedicalOrPregnancyLeave,
+  isPregnancyLeave: ({ claim }) => claim.leave_details.pregnant_or_recent_birth,
   isBondingLeave: ({ claim }) => claim.isBondingLeave,
+  isBondingAdoption: ({ claim }) =>
+    claim.isBondingLeave &&
+    [ReasonQualifier.adoption, ReasonQualifier.fosterCare].includes(
+      claim.leave_details.reason_qualifier
+    ),
+  isBondingNewBorn: ({ claim }) =>
+    claim.isBondingLeave &&
+    claim.leave_details.reason_qualifier === ReasonQualifier.newBorn,
   isEmployed: ({ claim }) =>
     get(claim, "employment_status") === EmploymentStatus.employed,
   isCompleted: ({ claim }) => claim.isCompleted,
+  isUploadedAfterCompletion: ({ isAdditionalDoc }) => isAdditionalDoc,
   hasStateId: ({ claim }) => claim.has_state_id === true,
   hasConcurrentLeave: ({ claim }) => claim.has_concurrent_leave === true,
   hasEmployerBenefits: ({ claim }) => claim.has_employer_benefits === true,
@@ -91,8 +103,59 @@ const checklistEvents = {
   OTHER_LEAVE: routes.applications.previousLeavesIntro,
   EMPLOYER_INFORMATION: routes.applications.employmentStatus,
   PAYMENT: routes.applications.paymentMethod,
-  UPLOAD_CERTIFICATION: routes.applications.uploadCertification,
-  UPLOAD_ID: routes.applications.uploadId,
+  UPLOAD_CERTIFICATION: [
+    {
+      target: routes.applications.uploadCertification,
+      cond: () => !isFeatureEnabled("claimantShowStatusPage"),
+    },
+    {
+      target: routes.applications.upload.bondingProofOfBirth,
+      cond: "isBondingNewBorn",
+    },
+    {
+      target: routes.applications.upload.bondingAdoptionStatement,
+      cond: "isBondingAdoption",
+    },
+    {
+      target: routes.applications.upload.caringCertification,
+      cond: "isCaringLeave",
+    },
+    {
+      target: routes.applications.upload.pregnancyMedicalCertification,
+      cond: "isPregnancyLeave",
+    },
+    {
+      target: routes.applications.upload.medicalCertificationOfCondition,
+      cond: "isMedicalOrPregnancyLeave",
+    },
+  ],
+  UPLOAD_ID: [
+    {
+      target: routes.applications.uploadId,
+      cond: () => !isFeatureEnabled("claimantShowStatusPage"),
+    },
+    {
+      target: routes.applications.upload.stateId,
+      cond: "hasStateId",
+    },
+    {
+      target: routes.applications.upload.otherId,
+    },
+  ],
+};
+
+const uploadRouting = {
+  on: {
+    CONTINUE: [
+      {
+        target: routes.applications.status,
+        cond: "isUploadedAfterCompletion",
+      },
+      {
+        target: routes.applications.checklist,
+      },
+    ],
+  },
 };
 
 export default {
@@ -307,6 +370,72 @@ export default {
           },
         ],
       },
+    },
+    "/applications/upload/[documentType]": { ...uploadRouting },
+    [routes.applications.index]: {
+      meta: {},
+      on: {
+        UPLOAD_STATE_ID: routes.applications.upload.stateId,
+        UPLOAD_OTHER_ID: routes.applications.upload.otherId,
+        UPLOAD_PROOF_OF_BIRTH: routes.applications.upload.bondingProofOfBirth,
+        UPLOAD_ADOPTION_STATEMENT:
+          routes.applications.upload.bondingAdoptionStatement,
+        UPLOAD_MEDICAL_CERTIFICATION:
+          routes.applications.upload.medicalCertificationOfCondition,
+        UPLOAD_PREGNANCY_CERTIFICATION:
+          routes.applications.upload.pregnancyMedicalCertification,
+        UPLOADING_CARING_CERTIFICATION:
+          routes.applications.upload.caringCertification,
+      },
+    },
+    [routes.applications.upload.bondingAdoptionStatement]: {
+      meta: {
+        step: ClaimSteps.uploadCertification,
+        fields: [],
+      },
+      ...uploadRouting,
+    },
+    [routes.applications.upload.bondingProofOfBirth]: {
+      meta: {
+        step: ClaimSteps.uploadCertification,
+        fields: [],
+      },
+      ...uploadRouting,
+    },
+    [routes.applications.upload.medicalCertificationOfCondition]: {
+      meta: {
+        step: ClaimSteps.uploadCertification,
+        fields: [],
+      },
+      ...uploadRouting,
+    },
+    [routes.applications.upload.pregnancyMedicalCertification]: {
+      meta: {
+        step: ClaimSteps.uploadCertification,
+        fields: [],
+      },
+      ...uploadRouting,
+    },
+    [routes.applications.upload.caringCertification]: {
+      meta: {
+        step: ClaimSteps.uploadCertification,
+        fields: [],
+      },
+      ...uploadRouting,
+    },
+    [routes.applications.upload.stateId]: {
+      meta: {
+        step: ClaimSteps.uploadCertification,
+        fields: [],
+      },
+      ...uploadRouting,
+    },
+    [routes.applications.upload.otherId]: {
+      meta: {
+        step: ClaimSteps.uploadCertification,
+        fields: [],
+      },
+      ...uploadRouting,
     },
     [routes.applications.dateOfChild]: {
       meta: {
@@ -681,6 +810,12 @@ export default {
       },
       on: {
         CONTINUE: routes.applications.review,
+      },
+    },
+    [routes.applications.status]: {
+      on: {
+        UPLOAD_PROOF_OF_BIRTH: routes.applications.upload.bondingProofOfBirth,
+        UPLOAD_ADDITIONAL_DOCS: routes.applications.upload.index,
       },
     },
   },
