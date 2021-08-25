@@ -1901,13 +1901,13 @@ const pages = {
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     leaveStatusMessage_Approved:
-      "<p>Your leave was approved.</p><p>Review your approval notice for more details about your benefit amount, payment schedule, and how to appeal if your benefits appear incorrect.</p>",
+      "<p><strong>This leave was approved.</strong></p><p><notice-link>View your approval notice</notice-link> for more details about your benefit amount, payment schedule, and how to appeal if your benefits appear incorrect.</p>",
     leaveStatusMessage_Denied:
-      "<p>Your leave was denied.</p><p>Review your denial notice for more details and an explanation of the appeal process.</p><p>If you would like to file an appeal, then you must request an appeal within <strong>ten (10) calendar days</strong> of the receipt of your approval notice.</p><p><request-appeal-link>See more about the appeal process here.</request-appeal-link></p>",
+      "<p><strong>This leave was denied.</strong></p><p><notice-link>View your denial notice</notice-link> for more details and an explanation of the appeal process.</p><p>If you would like to appeal, you must submit your request within 10 calendar days of the date on your denial notice.</p><p>Learn more about <request-appeal-link>the appeal process</request-appeal-link>.</p>",
     leaveStatusMessage_Pending:
-      "<p> Your leave is under review.</p><p><application-timeline-link>Learn more about the application approval process.</application-timeline-link></p>",
+      "<p><strong>This leave is being reviewed.</strong><p>",
     leaveStatusMessage_Withdrawn:
-      "<p>You have withdrawn your application from the claim process.</p><p>If you want to apply for paid leave again, you can begin your application <application-link>here.</application-link></p>",
+      "<p><strong>This leave was withdrawn.</strong></p><p>You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
     makeChangesBody:
       "<p>If you need to make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Some changes to your application, such as changing your start and end dates, may mean your application needs to be reviewed by your employer again.</p>",
     makeChangesHeading: "Make changes to your application",

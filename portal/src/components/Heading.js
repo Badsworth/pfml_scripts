@@ -8,7 +8,7 @@ import classnames from "classnames";
  * `Title` component instead.
  */
 const Heading = (props) => {
-  const { level, size, weight } = props;
+  const { level, size, weight, id } = props;
   const HeadingElement = `h${level}`;
   const stylingLevel = size ? parseInt(size) : parseInt(level);
 
@@ -22,7 +22,11 @@ const Heading = (props) => {
     "text-normal": weight === "normal" || (!weight && stylingLevel >= 5),
   });
 
-  return <HeadingElement className={classes}>{props.children}</HeadingElement>;
+  return (
+    <HeadingElement id={id} className={classes}>
+      {props.children}
+    </HeadingElement>
+  );
 };
 
 Heading.propTypes = {
@@ -35,6 +39,10 @@ Heading.propTypes = {
    * utility classes to control spacing.
    */
   className: PropTypes.string,
+  /**
+   * Target id for HTML heading element. Useful for targetting element for scrolled items.
+   */
+  id: PropTypes.string,
   /**
    * HTML heading level. It's important to not skip one or more heading levels.
    * To override the styling, use the `size` prop. To render an `h1`, use the

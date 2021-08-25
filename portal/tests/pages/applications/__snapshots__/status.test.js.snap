@@ -37,11 +37,11 @@ Array [
             "application-link": <a
               href="/applications/get-ready"
             />,
-            "application-timeline-link": <a
-              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-application-approval-timeline"
+            "notice-link": <a
+              href="#view_notices"
             />,
             "request-appeal-link": <a
-              href="https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave"
+              href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
             />,
           }
         }
@@ -77,11 +77,11 @@ Array [
             "application-link": <a
               href="/applications/get-ready"
             />,
-            "application-timeline-link": <a
-              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-application-approval-timeline"
+            "notice-link": <a
+              href="#view_notices"
             />,
             "request-appeal-link": <a
-              href="https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave"
+              href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
             />,
           }
         }
@@ -127,11 +127,11 @@ Array [
             "application-link": <a
               href="/applications/get-ready"
             />,
-            "application-timeline-link": <a
-              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-application-approval-timeline"
+            "notice-link": <a
+              href="#view_notices"
             />,
             "request-appeal-link": <a
-              href="https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave"
+              href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
             />,
           }
         }
@@ -167,11 +167,11 @@ Array [
             "application-link": <a
               href="/applications/get-ready"
             />,
-            "application-timeline-link": <a
-              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-application-approval-timeline"
+            "notice-link": <a
+              href="#view_notices"
             />,
             "request-appeal-link": <a
-              href="https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave"
+              href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
             />,
           }
         }
@@ -221,11 +221,11 @@ exports[`leave details page does renders page with one section if absenceDetails
           "application-link": <a
             href="/applications/get-ready"
           />,
-          "application-timeline-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-application-approval-timeline"
+          "notice-link": <a
+            href="#view_notices"
           />,
           "request-appeal-link": <a
-            href="https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave"
+            href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
           />,
         }
       }
@@ -261,11 +261,11 @@ exports[`leave details page does renders page with one section if absenceDetails
           "application-link": <a
             href="/applications/get-ready"
           />,
-          "application-timeline-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-application-approval-timeline"
+          "notice-link": <a
+            href="#view_notices"
           />,
           "request-appeal-link": <a
-            href="https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave"
+            href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
           />,
         }
       }

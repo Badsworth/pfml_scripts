@@ -105,7 +105,7 @@ export const Status = ({
   const ViewYourNotices = () => {
     return documents.length ? (
       <div className="border-bottom border-base-lighter padding-bottom-2">
-        <Heading className="margin-bottom-1" level="2">
+        <Heading className="margin-bottom-1" level="2" id="view_notices">
           {t("pages.claimsStatus.viewNoticesHeading")}
         </Heading>
         <LegalNoticeList
@@ -279,16 +279,10 @@ export const LeaveDetails = ({ absenceDetails = {} }) => {
                   i18nKey="pages.claimsStatus.leaveStatusMessage"
                   tOptions={{ context: request_decision }}
                   components={{
-                    "application-timeline-link": (
-                      <a
-                        href={
-                          routes.external.massgov.applicationApprovalTimeline
-                        }
-                      />
-                    ),
                     "application-link": (
                       <a href={routes.applications.getReady} />
                     ),
+                    "notice-link": <a href="#view_notices" />,
                     "request-appeal-link": (
                       <a
                         href={routes.external.massgov.requestAnAppealForPFML}

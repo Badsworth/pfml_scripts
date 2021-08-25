@@ -97,8 +97,6 @@ const routes = {
       "https://www.dol.gov/agencies/whd/fact-sheets/28C-fmla-eldercare",
     massTaxConnect: "https://mtc.dor.state.ma.us/mtc/_/",
     massgov: {
-      applicationApprovalTimeline:
-        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-application-approval-timeline",
       benefitsGuide:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide",
       benefitsGuide_aboutBondingLeave:
@@ -156,7 +154,7 @@ const routes = {
       reductionsOverview:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions",
       requestAnAppealForPFML:
-        "https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave",
+        "https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim",
       schedulingLeaveGuide:
         "https://www.mass.gov/info-details/intermittent-and-reduced-leave-schedules",
       taxLiability: "https://www.mass.gov/pfml-tax-liability",
