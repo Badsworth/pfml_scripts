@@ -11,14 +11,14 @@ import withClaims from "../../src/hoc/withClaims";
 jest.mock("../../src/hooks/useAppLogic");
 
 describe("withClaims", () => {
-  function setup(appLogic, query = {}) {
+  function setup(appLogic, apiParams = {}) {
     let wrapper;
 
     act(() => {
       const PageComponent = () => <div />;
-      const WrappedComponent = withClaims(PageComponent);
+      const WrappedComponent = withClaims(PageComponent, apiParams);
 
-      wrapper = mount(<WrappedComponent appLogic={appLogic} query={query} />);
+      wrapper = mount(<WrappedComponent appLogic={appLogic} />);
     });
 
     return { wrapper };
@@ -55,7 +55,7 @@ describe("withClaims", () => {
     const appLogic = useAppLogic();
     appLogic.claims.paginationMeta = new PaginationMeta({ page_offset: 1 });
     appLogic.claims.isLoadingClaims = true;
-    const query = {
+    const apiParams = {
       page_offset: "2",
       claim_status: "Approved,Pending",
       employer_id: "mock-employer-id",
@@ -64,7 +64,7 @@ describe("withClaims", () => {
       search: "foo",
     };
 
-    setup(appLogic, query);
+    setup(appLogic, apiParams);
 
     expect(appLogic.claims.loadPage).toHaveBeenCalledWith(
       "2",

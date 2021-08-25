@@ -30,7 +30,7 @@ exports[`Employer dashboard renders Sort dropdown 1`] = `
   onChange={[Function]}
   selectClassName="margin-0"
   smallLabel={true}
-  value=""
+  value="created_at,descending"
 />
 `;
 
