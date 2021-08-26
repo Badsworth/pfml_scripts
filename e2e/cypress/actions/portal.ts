@@ -1759,8 +1759,8 @@ export function filterLADashboardBy(filters: FilterOptions): void {
   }
   cy.findByText("Apply filters").should("not.be.disabled").click();
   cy.get('span[role="progressbar"]').should("be.visible");
+  cy.wait("@dashboardClaimQueries");
   cy.contains("table", "Employer ID number").should("be.visible");
-  // cy.wait("@dashboardClaimQueries");
 }
 /**Looks if dashboard is empty */
 function checkDashboardIsEmpty() {
@@ -1792,8 +1792,8 @@ export function clearFilters(): void {
         cy.findByText("Show filters", { exact: false }).click();
       cy.findByText("Reset all filters").click();
       cy.get('span[role="progressbar"]').should("be.visible");
+      cy.wait("@dashboardClaimQueries");
       cy.contains("table", "Employer ID number").should("be.visible");
-      cy.wait("@dashboardDefaultQuery");
     });
 }
 

@@ -27,6 +27,7 @@ describe("Employer dashboard", () => {
         "Closed",
         "Denied",
       ];
+      cy.wait("@dashboardClaimQueries");
       statuses.forEach((status) => {
         portal.filterLADashboardBy({
           status: {
