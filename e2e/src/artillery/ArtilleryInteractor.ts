@@ -34,7 +34,7 @@ export default class ArtilleryPFMLInteractor {
 
   private async employees(): Promise<EmployeePool> {
     if (!this.employeePool) {
-      this.employeePool = await EmployeePool.load(config("EMPLOYEES_FILE"));
+      this.employeePool = await EmployeePool.load(config("LST_EMPLOYEES_FILE"));
     }
     return this.employeePool;
   }

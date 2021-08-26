@@ -20,6 +20,7 @@ export class Fineos {
     const browser = await chromium.launch({
       headless: !debug,
       slowMo: debug ? 100 : undefined,
+      executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
     });
     const httpCredentials = isSSO
       ? undefined
