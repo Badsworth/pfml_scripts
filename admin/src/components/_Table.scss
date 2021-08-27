@@ -34,7 +34,9 @@
     padding: 0.5em 1.75em;
   }
 
+  /* stylelint-disable */
   tr:last-child &__col {
     border: 0;
   }
+  /* stylelint-enable */
 }

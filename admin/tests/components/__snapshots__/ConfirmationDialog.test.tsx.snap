@@ -7,6 +7,7 @@ exports[`ConfirmationDialog component renders correctly 1`] = `
 >
   <div
     className="confirmation-dialog__background"
+    onClick={[Function]}
   />
   <div
     className="confirmation-dialog__content"
@@ -25,27 +26,23 @@ exports[`ConfirmationDialog component renders correctly 1`] = `
       </p>
     </div>
     <div
-      className="confirmation-dialog__action-buttons confirmation-dialog__action-buttons--stacked"
+      className="confirmation-dialog__action-buttons"
     >
       <button
-        className="btn"
+        className="confirmation-dialog__btn confirmation-dialog__btn-continue btn"
+        disabled={false}
         onClick={[Function]}
+        type="button"
       >
-        <span
-          className="btn__text"
-        >
-          Continue
-        </span>
+        Continue
       </button>
       <button
-        className="btn btn-cancel"
+        className="confirmation-dialog__btn confirmation-dialog__btn-cancel btn--cancel btn"
+        disabled={false}
         onClick={[Function]}
+        type="button"
       >
-        <span
-          className="btn__text"
-        >
-          Cancel
-        </span>
+        Cancel
       </button>
     </div>
   </div>
