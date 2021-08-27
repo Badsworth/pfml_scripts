@@ -46,8 +46,7 @@ export const Checklist = (props) => {
 
   const certificationDocuments = findDocumentsByLeaveReason(
     documents,
-    get(claim, "leave_details.reason"),
-    get(claim, "leave_details.pregnant_or_recent_birth")
+    get(claim, "leave_details.reason")
   );
 
   const partOneSubmitted = query["part-one-submitted"];
