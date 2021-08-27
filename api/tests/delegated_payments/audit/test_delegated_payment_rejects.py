@@ -20,7 +20,10 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.db.models.factories import ClaimFactory, PaymentFactory
 from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
-from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import PaymentAuditCSV
+from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
+    PAYMENT_AUDIT_CSV_HEADERS,
+    PaymentAuditCSV,
+)
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
     PaymentAuditData,
     build_audit_report_row,
@@ -80,6 +83,49 @@ def test_parse_payment_rejects_file(tmp_path, test_db_session, payment_rejects_s
             rejects_count += 1
 
     assert rejects_count > 0
+
+
+@freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time
+def test_parse_payment_rejects_file_missing_columns(
+    tmp_path, test_db_session, payment_rejects_step
+):
+    # Test that if columns are missing during parsing,
+    # it won't throw any errors. Required columns
+    # are validated later in processing (See: test_rejects_column_validation)
+    # This avoids issues if we create a new column and
+    # the deployment happens between the file generation
+    # in ECS task #1, and the parsing in ECS task #2
+    expected_rejects_folder = os.path.join(
+        str(tmp_path),
+        payments_util.Constants.S3_OUTBOUND_SENT_DIR,
+        payments_util.get_now().strftime("%Y-%m-%d"),
+    )
+
+    file_path = os.path.join(
+        expected_rejects_folder, "2021-01-15-12-00-00-Payment-Audit-Report-Response.csv"
+    )
+    # Create a partial output, only putting two real column and a fake (which gets ignored)
+    with file_util.write_file(file_path) as output_file:
+        output_file.write(
+            f"{PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id},{PAYMENT_AUDIT_CSV_HEADERS.leave_type},FAKE_COLUMN_HEADER\n"
+        )
+        output_file.write("1,1,1\n")
+        output_file.write("2,2,2\n")
+        output_file.write("3,3,3")
+
+    payment_rejects_rows: List[PaymentAuditCSV] = payment_rejects_step.parse_payment_rejects_file(
+        file_path
+    )
+    assert len(payment_rejects_rows) == 3
+    for row in payment_rejects_rows:
+        assert row.pfml_payment_id is not None
+        assert row.pfml_payment_id == row.leave_type
+
+        # Just verify a few others aren't set
+        assert row.rejected_by_program_integrity is None
+        assert row.skipped_by_program_integrity is None
+        assert row.max_weekly_benefits_details is None
+        assert row.dua_dia_reduction_details is None
 
 
 def test_rejects_column_validation(test_db_session, payment_rejects_step):

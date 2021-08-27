@@ -74,7 +74,7 @@ class PaymentRejectsException(Exception):
 def get_row(row: Dict[str, str], key: Optional[str]) -> Optional[str]:
     if not key:
         return None
-    return row[key]
+    return row.get(key, None)
 
 
 class PaymentRejectsStep(Step):
