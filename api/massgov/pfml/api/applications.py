@@ -1,4 +1,5 @@
 import base64
+from uuid import UUID
 
 import connexion
 import puremagic
@@ -680,7 +681,7 @@ def documents_get(application_id):
         ).to_api_response()
 
 
-def document_download(application_id: str, document_id: str) -> Response:
+def document_download(application_id: UUID, document_id: str) -> Response:
     with app.db_session() as db_session:
         # Get the referenced application or return 404
         existing_application = get_or_404(db_session, Application, application_id)
@@ -708,7 +709,7 @@ def document_download(application_id: str, document_id: str) -> Response:
         )
 
 
-def employer_benefit_delete(application_id: str, employer_benefit_id: str) -> Response:
+def employer_benefit_delete(application_id: UUID, employer_benefit_id: UUID) -> Response:
     with app.db_session() as db_session:
         existing_application = get_or_404(db_session, Application, application_id)
 
@@ -729,7 +730,7 @@ def employer_benefit_delete(application_id: str, employer_benefit_id: str) -> Re
     ).to_api_response()
 
 
-def other_income_delete(application_id: str, other_income_id: str) -> Response:
+def other_income_delete(application_id: UUID, other_income_id: UUID) -> Response:
     with app.db_session() as db_session:
         existing_application = get_or_404(db_session, Application, application_id)
 
@@ -748,7 +749,7 @@ def other_income_delete(application_id: str, other_income_id: str) -> Response:
     ).to_api_response()
 
 
-def previous_leave_delete(application_id: str, previous_leave_id: str) -> Response:
+def previous_leave_delete(application_id: UUID, previous_leave_id: UUID) -> Response:
     with app.db_session() as db_session:
         existing_application = get_or_404(db_session, Application, application_id)
 
@@ -769,7 +770,7 @@ def previous_leave_delete(application_id: str, previous_leave_id: str) -> Respon
     ).to_api_response()
 
 
-def payment_preference_submit(application_id: str) -> Response:
+def payment_preference_submit(application_id: UUID) -> Response:
     body = connexion.request.json
 
     with app.db_session() as db_session:

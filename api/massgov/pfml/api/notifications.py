@@ -92,7 +92,7 @@ def notifications_post():
             if employer:
                 log_attributes = {
                     **log_attributes,
-                    "employer_id": employer.employer_id,
+                    "employer_id": str(employer.employer_id),
                 }
                 newrelic.agent.add_custom_parameter("employer_id", employer.employer_id)
         except MultipleResultsFound:
@@ -105,7 +105,7 @@ def notifications_post():
             db_session, log_attributes, notification_request.claimant_info.customer_id
         )
         if employee_id:
-            log_attributes = {**log_attributes, "employee_id": employee_id}
+            log_attributes = {**log_attributes, "employee_id": str(employee_id)}
             newrelic.agent.add_custom_parameter("employee_id", employee_id)
 
         if claim is None:
@@ -158,7 +158,7 @@ def notifications_post():
 
 def get_employee_id_from_fineos_customer_number(
     db_session: db.Session, log_attributes: dict, fineos_customer_number: str
-) -> Optional[str]:
+) -> Optional[UUID]:
     """Get employee ID by fineos_customer_number. Fails without raising an exception since an Employee ID isn't required for sending a notification."""
     try:
         employee = (

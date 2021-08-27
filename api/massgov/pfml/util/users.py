@@ -55,7 +55,9 @@ def get_register_user_log_attributes(
     # This log should provide enough info to support manually creating records if necessary
     return {
         "current_user.auth_id": auth_id,
-        "employer_id": employer_for_leave_admin.employer_id if employer_for_leave_admin else None,
+        "employer_id": str(employer_for_leave_admin.employer_id)
+        if employer_for_leave_admin
+        else None,
         "is_employer": str(employer_for_leave_admin is not None),
     }
 

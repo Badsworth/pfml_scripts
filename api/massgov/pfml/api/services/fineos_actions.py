@@ -20,7 +20,6 @@ from itertools import chain
 from typing import Dict, List, Optional, Set, Tuple
 
 import phonenumbers
-from pydantic import UUID4
 
 import massgov.pfml.db
 import massgov.pfml.fineos.models
@@ -1029,8 +1028,8 @@ def fineos_document_response_to_document_response(
     content_type, encoding = mimetypes.guess_type(fineos_document_response.originalFilename or "")
 
     document_response = DocumentResponse(
-        user_id=UUID4(str(user_id)),
-        application_id=UUID4(str(application_id)),
+        user_id=user_id,
+        application_id=application_id,
         created_at=created_at,
         document_type=fineos_document_response.name,
         content_type=content_type,

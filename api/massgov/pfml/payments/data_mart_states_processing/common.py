@@ -318,7 +318,7 @@ def process_employees_in_state(
             extra = {"prior_state": prior_state.state_description}
 
             if employee:
-                extra["employee_id"] = employee.employee_id
+                extra["employee_id"] = str(employee.employee_id)
                 extra["fineos_customer_number"] = employee.fineos_customer_number
 
             logger.exception(
@@ -384,7 +384,7 @@ def only_state_logs_with_employees(
             # the new entry will have the same issue. Requires manual
             # intervention. The DB is broken.
 
-            extra = {"state_log_id": state_log.state_log_id}
+            extra = {"state_log_id": str(state_log.state_log_id)}
             if state_log.end_state:
                 extra["end_state"] = cast(str, state_log.end_state.state_description)
             logger.error(

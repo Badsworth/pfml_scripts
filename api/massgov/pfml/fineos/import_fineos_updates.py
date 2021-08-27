@@ -2,6 +2,7 @@ import json
 import sys
 from dataclasses import asdict, dataclass
 from typing import Any, Dict, Optional
+from uuid import UUID
 
 import boto3
 from pydantic import BaseSettings, Field
@@ -152,10 +153,10 @@ def process_csv_row(
     is_new_employee = False
 
     employee_id = row.get("EMPLOYEEIDENTIFIER")
-    # lint made me do it!
-    emp_id = str(employee_id)
+    if not employee_id:
+        raise ValueError("Employee ID is required to process row")
 
-    employee: Optional[Employee] = db_session.query(Employee).get(emp_id)
+    employee: Optional[Employee] = db_session.query(Employee).get(employee_id)
 
     if employee is None:
         # Find employee by SSN
@@ -170,7 +171,7 @@ def process_csv_row(
         else:
             logger.info(
                 f"Employee not found in PFML DB and no SSN provided."
-                f" FINEOS employee_id is {emp_id}."
+                f" FINEOS employee_id is {employee_id}."
             )
             report.no_ssn_present_count += 1
             report.errored_employees_count += 1
@@ -178,7 +179,7 @@ def process_csv_row(
 
         if employee is None:
             is_new_employee = True
-            employee = Employee(employee_id=emp_id)
+            employee = Employee(employee_id=employee_id)
 
             tax_identifier = (
                 db_session.query(TaxIdentifier)
@@ -205,7 +206,7 @@ def process_csv_row(
             logger.info(
                 f"Employee found in PFML DB by SSN with different emp_id."
                 f" PFML employee_id is {employee.employee_id},"
-                f" FINEOS employee_id is {emp_id}."
+                f" FINEOS employee_id is {employee_id}."
             )
             report.emp_id_discrepancies_count += 1
             report.errored_employees_count += 1
@@ -285,12 +286,12 @@ def process_csv_row(
         employer_fineos_id = row.get("ORG_CUSTOMERNO", None)
         if not employer_fineos_id.isdecimal():
             logger.warning(
-                f"Employer has non-numeric FINEOS Customer Nbr {employer_fineos_id} for employee_id {emp_id}."
+                f"Employer has non-numeric FINEOS Customer Nbr {employer_fineos_id} for employee_id {employee_id}."
             )
             report.errored_employees_count += 1
             return
 
-        employer_id: Optional[str] = (
+        employer_id: Optional[UUID] = (
             db_session.query(Employer.employer_id)
             .filter(Employer.fineos_employer_id == employer_fineos_id)
             .one_or_none()
@@ -298,7 +299,7 @@ def process_csv_row(
 
         if employer_id is None:
             fineos_employer_name = row.get("ORG_NAME")
-            logger.info(f"Cannot create EmployerOccupation record for employee_id {emp_id}.")
+            logger.info(f"Cannot create EmployerOccupation record for employee_id {employee_id}.")
             logger.info(
                 f"Employer with FINEOS Customer Nbr {employer_fineos_id} and Org Name of {fineos_employer_name} not found."
             )

@@ -1,4 +1,5 @@
 from typing import List, Optional
+from uuid import UUID
 
 from sqlalchemy import exc
 
@@ -52,7 +53,7 @@ def get_fineos_managed_requirements_from_notification(
 
 
 def update_employer_confirmation_requirements(
-    db_session: Session, admin_user_id: str, fineos_managed_reqs: List[ManagedRequirementDetails],
+    db_session: Session, admin_user_id: UUID, fineos_managed_reqs: List[ManagedRequirementDetails],
 ) -> List[ManagedRequirement]:
 
     employer_confirmation_requirements = select_employer_confirmation_requirements(
@@ -76,7 +77,7 @@ def update_employer_confirmation_requirements(
 
 
 def employer_confirmation_req_to_managed_req_update(
-    db_session: Session, admin_user_id: str, fineos_managed_req: ManagedRequirementDetails,
+    db_session: Session, admin_user_id: UUID, fineos_managed_req: ManagedRequirementDetails,
 ) -> Optional[ManagedRequirement]:
 
     managed_req: Optional[ManagedRequirement]

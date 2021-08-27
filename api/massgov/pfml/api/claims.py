@@ -1,5 +1,6 @@
 import base64
 from typing import Dict, List, Optional, Set, Union
+from uuid import UUID
 
 import connexion
 import flask
@@ -97,7 +98,7 @@ def get_user() -> User:
 
 def get_current_user_leave_admin_record(fineos_absence_id: str) -> UserLeaveAdministrator:
     with app.db_session() as db_session:
-        associated_employer_id: Optional[str] = None
+        associated_employer_id: Optional[UUID] = None
 
         current_user = app.current_user()
         if current_user is None:
@@ -160,7 +161,7 @@ def employer_update_claim_review(fineos_absence_id: str) -> flask.Response:
 
     claim = get_claim_from_db(fineos_absence_id)
 
-    log_attributes: Dict[str, Union[bool, str, int, None]]
+    log_attributes: Dict[str, Union[bool, str, int, UUID, None]]
 
     log_attributes = {
         "absence_case_id": fineos_absence_id,
