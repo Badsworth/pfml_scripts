@@ -51,8 +51,10 @@ import {
     employerShowAddOrganization: true,
     employerShowVerifications: true,
     employerShowDashboard: true,
-    useNewPlanProofs: config("HAS_FINEOS_SP") === "true",
-    showCaringLeaveType: config("HAS_FINEOS_SP") === "true",
+    useNewPlanProofs: true,
+    showCaringLeaveType: true,
+    employerShowReviewByStatus:
+      config("PORTAL_HAS_LA_STATUS_UPDATES") === "true",
   }
  */
 export function before(flags?: Partial<FeatureFlags>): void {
@@ -71,6 +73,8 @@ export function before(flags?: Partial<FeatureFlags>): void {
     employerShowDashboard: true,
     useNewPlanProofs: true,
     showCaringLeaveType: true,
+    employerShowReviewByStatus:
+      config("PORTAL_HAS_LA_STATUS_UPDATES") === "true",
   };
   cy.setCookie(
     "_ff",
@@ -1030,12 +1034,22 @@ export function assertZeroWithholdings(): void {
     /(Employer has no verification data|Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications)/
   );
 }
-export type DashboardClaimStatus = "Approved" | "Denied" | "Closed" | "--";
+export type DashboardClaimStatus =
+  | "Approved"
+  | "Denied"
+  | "Closed"
+  | "--"
+  | "No action required"
+  | "Review by";
 export function selectClaimFromEmployerDashboard(
   fineosAbsenceId: string,
   status: DashboardClaimStatus
 ): void {
   goToEmployerDashboard();
+  // With the status updates enabled, claims are sorted by status by default
+  // which means we won't see our claim show up on the first page.
+  if (config("PORTAL_HAS_LA_STATUS_UPDATES") === "true")
+    sortClaims("new", false);
   cy.contains("tr", fineosAbsenceId).should("contain.text", status);
   cy.findByText(fineosAbsenceId).click();
 }
@@ -1798,10 +1812,16 @@ export function clearFilters(): void {
 }
 
 /**Sorts claims on the dashboard*/
-export function sortClaims(by: "new" | "old" | "name_asc" | "name_desc"): void {
+export function sortClaims(
+  by: "new" | "old" | "name_asc" | "name_desc" | "status",
+  // @TODO split the query assertion into it's own function.
+  assertQuery = true
+): void {
   const sortValuesMap = {
     new: {
+      // Value of the <option> tag for the sort select
       value: "created_at,descending",
+      // Query associated with it
       query: "order_by=created_at&order_direction=descending",
     },
     old: {
@@ -1816,13 +1836,18 @@ export function sortClaims(by: "new" | "old" | "name_asc" | "name_desc"): void {
       value: "employee,descending",
       query: "order_by=employee&order_direction=descending",
     },
+    status: {
+      value: "absence_status,ascending",
+      query: "fineos_absence_status&order_direction=ascending",
+    },
   };
   cy.findByLabelText("Sort").then((el) => {
     if (el.val() === sortValuesMap[by].value) return;
     cy.wrap(el).select(sortValuesMap[by].value);
     cy.get('span[role="progressbar"]').should("be.visible");
-    cy.wait("@dashboardClaimQueries")
-      .its("request.url")
-      .should("include", sortValuesMap[by].query);
+    if (assertQuery)
+      cy.wait("@dashboardClaimQueries")
+        .its("request.url")
+        .should("include", sortValuesMap[by].query);
   });
 }

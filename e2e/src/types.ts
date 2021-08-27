@@ -21,6 +21,7 @@ export type FeatureFlags = {
   employerShowDashboard: boolean;
   useNewPlanProofs: boolean;
   showCaringLeaveType: boolean;
+  employerShowReviewByStatus: boolean;
 };
 
 export type Credentials = {

@@ -6,6 +6,7 @@ import {
   findCertificationDoc,
   getDocumentReviewTaskName,
 } from "../../../../src/util/documents";
+import { assertValidClaim } from "../../../../src/util/typeUtils";
 
 describe("Approval (notifications/notices)", () => {
   after(() => {
@@ -114,7 +115,9 @@ describe("Approval (notifications/notices)", () => {
           portal.login(getLeaveAdminCredentials(claim.employer_fein));
           portal.selectClaimFromEmployerDashboard(
             submission.fineos_absence_id,
-            "--"
+            config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"
+              ? "No action required"
+              : "--"
           );
           portal.checkNoticeForLeaveAdmin(
             submission.fineos_absence_id,
@@ -159,9 +162,18 @@ describe("Approval (notifications/notices)", () => {
     "Should generate an approval notification for the Leave Administrator",
     { retries: 0 },
     () => {
+      portal.before();
       cy.dependsOnPreviousPass([submit]);
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
+          assertValidClaim(claim);
+          portal.login(getLeaveAdminCredentials(claim.employer_fein));
+          portal.selectClaimFromEmployerDashboard(
+            submission.fineos_absence_id,
+            config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"
+              ? "No action required"
+              : "--"
+          );
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
           const subjectEmployer = email.getNotificationSubject(
             `${claim.first_name} ${claim.last_name}`,

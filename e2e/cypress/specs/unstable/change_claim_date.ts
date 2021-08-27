@@ -115,7 +115,12 @@ describe("Claim date change", () => {
           ([startDate, endDate]) => {
             assertValidClaim(claim);
             portal.login(getLeaveAdminCredentials(claim.employer_fein));
-            portal.selectClaimFromEmployerDashboard(fineos_absence_id, "--");
+            portal.selectClaimFromEmployerDashboard(
+              fineos_absence_id,
+              config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"
+                ? "Review by"
+                : "--"
+            );
             const portalFormatStart = format(new Date(startDate), "M/d/yyyy");
             const portalFormatEnd = format(
               parse(endDate, "MM/dd/yyyy", new Date(endDate)),
