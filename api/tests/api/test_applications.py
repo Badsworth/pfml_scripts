@@ -3798,7 +3798,7 @@ def test_application_post_submit_to_fineos(client, user, auth_token, test_db_ses
         (
             "get_customer_occupations_customer_api",
             fineos_user_id,
-            {"customer_id": application.tax_identifier.tax_identifier},
+            {"customer_id": application.tax_identifier.tax_identifier.to_unformatted_str()},
         ),
         (
             "add_week_based_work_pattern",
