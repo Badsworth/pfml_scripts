@@ -1,6 +1,7 @@
 import { ClaimEmployee, ClaimEmployer } from "../../src/models/Claim";
 import { mockFetch, mockLoggedInAuthSession } from "../test-utils";
 import ClaimCollection from "../../src/models/ClaimCollection";
+import ClaimDetail from "../../src/models/ClaimDetail";
 import ClaimsApi from "../../src/api/ClaimsApi";
 import PaginationMeta from "../../src/models/PaginationMeta";
 
@@ -168,6 +169,45 @@ describe("ClaimsApi", () => {
 
       expect(claims.getItem("abs-2").employee).toBeNull();
       expect(claims.getItem("abs-2").employer).toBeNull();
+    });
+  });
+
+  describe("getClaimDetail", () => {
+    it("makes request to API with absence case ID", async () => {
+      mockFetch();
+
+      const absenceId = "test-absence-id";
+      const claimsApi = new ClaimsApi();
+      await claimsApi.getClaimDetail(absenceId);
+
+      expect(global.fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/claims/${absenceId}`,
+        expect.objectContaining({
+          headers: expect.any(Object),
+          method: "GET",
+        })
+      );
+    });
+
+    it("returns the claim detail as a ClaimDetail instance", async () => {
+      const mockResponseData = {
+        employee: { email_address: "alsofake@fake.com", first_name: "Baxter" },
+        employer: { employer_fein: "00-3456789" },
+      };
+
+      mockFetch({
+        response: {
+          data: mockResponseData,
+        },
+      });
+
+      const absenceId = "test-absence-id";
+      const claimsApi = new ClaimsApi();
+      const { claimDetail } = await claimsApi.getClaimDetail(absenceId);
+
+      expect(claimDetail).toBeInstanceOf(ClaimDetail);
+      expect(claimDetail.employee.email_address).toBe("alsofake@fake.com");
+      expect(claimDetail.employer.employer_fein).toBe("00-3456789");
     });
   });
 });

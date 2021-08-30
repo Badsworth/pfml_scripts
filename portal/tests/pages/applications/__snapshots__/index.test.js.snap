@@ -407,12 +407,15 @@ Array [
         "catchError": [Function],
         "claims": Object {
           "activeFilters": Object {},
+          "claimDetail": undefined,
           "claims": ClaimCollection {
             "items": Array [],
             "itemsById": Object {},
           },
           "clearClaims": [Function],
+          "isLoadingClaimDetail": undefined,
           "isLoadingClaims": undefined,
+          "loadClaimDetail": [Function],
           "loadPage": [Function],
           "paginationMeta": PaginationMeta {
             "order_by": undefined,
@@ -957,12 +960,15 @@ Array [
         "catchError": [Function],
         "claims": Object {
           "activeFilters": Object {},
+          "claimDetail": undefined,
           "claims": ClaimCollection {
             "items": Array [],
             "itemsById": Object {},
           },
           "clearClaims": [Function],
+          "isLoadingClaimDetail": undefined,
           "isLoadingClaims": undefined,
+          "loadClaimDetail": [Function],
           "loadPage": [Function],
           "paginationMeta": PaginationMeta {
             "order_by": undefined,
@@ -1548,12 +1554,15 @@ Array [
         "catchError": [Function],
         "claims": Object {
           "activeFilters": Object {},
+          "claimDetail": undefined,
           "claims": ClaimCollection {
             "items": Array [],
             "itemsById": Object {},
           },
           "clearClaims": [Function],
+          "isLoadingClaimDetail": undefined,
           "isLoadingClaims": undefined,
+          "loadClaimDetail": [Function],
           "loadPage": [Function],
           "paginationMeta": PaginationMeta {
             "order_by": undefined,
