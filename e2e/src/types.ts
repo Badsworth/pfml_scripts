@@ -10,17 +10,7 @@ import { DehydratedClaim } from "./generation/Claim";
 
 export type FeatureFlags = {
   pfmlTerriyay: boolean;
-  claimantShowAuth: boolean;
-  claimantShowMedicalLeaveType: boolean;
   noMaintenance: boolean;
-  employerShowSelfRegistrationForm: boolean;
-  claimantShowOtherLeaveStep: boolean;
-  claimantAuthThroughApi: boolean;
-  employerShowAddOrganization: boolean;
-  employerShowVerifications: boolean;
-  employerShowDashboard: boolean;
-  useNewPlanProofs: boolean;
-  showCaringLeaveType: boolean;
   claimantShowStatusPage: boolean;
   employerShowReviewByStatus: boolean;
 };

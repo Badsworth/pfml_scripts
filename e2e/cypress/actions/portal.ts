@@ -43,17 +43,7 @@ import { APILeaveReason } from "generation/Claim";
  * @param flags set feature flags you want to override from defaults
  * @default {
     pfmlTerriyay: true,
-    claimantShowAuth: true,
-    claimantShowMedicalLeaveType: true,
     noMaintenance: true,
-    employerShowSelfRegistrationForm: true,
-    claimantShowOtherLeaveStep: true,
-    claimantAuthThroughApi: true,
-    employerShowAddOrganization: true,
-    employerShowVerifications: true,
-    employerShowDashboard: true,
-    useNewPlanProofs: true,
-    showCaringLeaveType: true,
     employerShowReviewByStatus:
       config("PORTAL_HAS_LA_STATUS_UPDATES") === "true",
   }
@@ -63,17 +53,7 @@ export function before(flags?: Partial<FeatureFlags>): void {
   // Set the feature flag necessary to see the portal.
   const defaults: FeatureFlags = {
     pfmlTerriyay: true,
-    claimantShowAuth: true,
-    claimantShowMedicalLeaveType: true,
     noMaintenance: true,
-    employerShowSelfRegistrationForm: true,
-    claimantShowOtherLeaveStep: true,
-    claimantAuthThroughApi: true,
-    employerShowAddOrganization: true,
-    employerShowVerifications: true,
-    employerShowDashboard: true,
-    useNewPlanProofs: true,
-    showCaringLeaveType: true,
     claimantShowStatusPage: false,
     employerShowReviewByStatus:
       config("PORTAL_HAS_LA_STATUS_UPDATES") === "true",
