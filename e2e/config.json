@@ -14,6 +14,7 @@
     "LST_EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
     "FINEOS_HAS_UPDATED_EFORMS": "true",
+    "HAS_CLAIMANT_STATUS_PAGE": "true",
     "PORTAL_HAS_LA_STATUS_UPDATES": "true"
   },
   "stage": {
@@ -28,7 +29,8 @@
     "EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
-    "FINEOS_HAS_UPDATED_EFORMS": "true"
+    "FINEOS_HAS_UPDATED_EFORMS": "true",
+    "HAS_CLAIMANT_STATUS_PAGE": "true"
   },
   "training": {
     "PORTAL_BASEURL": "https://paidleave-training.mass.gov",

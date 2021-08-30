@@ -57,6 +57,8 @@ function getRawEnvironment() {
     NEWRELIC_APIKEY: process.env.E2E_NEWRELIC_APIKEY,
     NEWRELIC_ACCOUNTID: process.env.E2E_NEWRELIC_ACCOUNTID,
     NEWRELIC_INGEST_KEY: process.env.E2E_NEWRELIC_INGEST_KEY,
+
+    HAS_CLAIMANT_STATUS_PAGE: process.env.HAS_CLAIMANT_STATUS_PAGE,
   };
 }
 
@@ -83,6 +85,7 @@ const defaults: Partial<Configuration> = {
   FINEOS_HAS_UPDATED_EFORMS: "false",
   PORTAL_HAS_LA_STATUS_UPDATES: "false",
   NEWRELIC_ACCOUNTID: "2837112",
+  HAS_CLAIMANT_STATUS_PAGE: "false",
 };
 export const merged = {
   ...defaults,

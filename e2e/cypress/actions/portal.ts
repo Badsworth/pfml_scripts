@@ -36,6 +36,7 @@ import {
   dateToReviewFormat,
   minutesToHoursAndMinutes,
 } from "../../src/util/claims";
+import { APILeaveReason } from "generation/Claim";
 
 /**
  *
@@ -73,6 +74,7 @@ export function before(flags?: Partial<FeatureFlags>): void {
     employerShowDashboard: true,
     useNewPlanProofs: true,
     showCaringLeaveType: true,
+    claimantShowStatusPage: false,
     employerShowReviewByStatus:
       config("PORTAL_HAS_LA_STATUS_UPDATES") === "true",
   };
@@ -1038,6 +1040,7 @@ export type DashboardClaimStatus =
   | "Approved"
   | "Denied"
   | "Closed"
+  | "Withdrawn"
   | "--"
   | "No action required"
   | "Review by";
@@ -1850,4 +1853,32 @@ export function sortClaims(
         .its("request.url")
         .should("include", sortValuesMap[by].query);
   });
+}
+
+export function claimantGoToClaimStatus(fineosAbsenceId: string): void {
+  cy.get(
+    `a[href$="/applications/status/?absence_case_id=${fineosAbsenceId}"`
+  ).click();
+}
+
+type LeaveStatus = {
+  leave: NonNullable<APILeaveReason>;
+  status: DashboardClaimStatus;
+};
+
+export function claimantAssertClaimStatus(leaves: LeaveStatus[]): void {
+  const leaveReasonHeadings = {
+    "Serious Health Condition - Employee": "Medical leave",
+    "Child Bonding": "Bond with a child",
+    "Care for a Family Member": "",
+    "Pregnancy/Maternity": "",
+  } as const;
+
+  for (const { leave, status } of leaves) {
+    cy.contains(leaveReasonHeadings[leave])
+      .parent()
+      .within(() => {
+        cy.contains(status);
+      });
+  }
 }
