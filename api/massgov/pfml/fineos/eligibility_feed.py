@@ -1019,7 +1019,7 @@ def employee_to_eligibility_feed_record(
             else None
         ),
         employeeNationalID=(
-            employee.tax_identifier.tax_identifier.to_unformatted_str().replace("-", "")
+            employee.tax_identifier.tax_identifier.to_unformatted_str()
             if employee.tax_identifier
             else None
         ),
