@@ -1024,9 +1024,7 @@ def employee_to_eligibility_feed_record(
             else None
         ),
         employeeNationalIDType=(
-            determine_national_id_type(
-                employee.tax_identifier.tax_identifier.to_unformatted_str()
-            )
+            determine_national_id_type(employee.tax_identifier.tax_identifier.to_unformatted_str())
             if employee.tax_identifier
             else None
         ),
