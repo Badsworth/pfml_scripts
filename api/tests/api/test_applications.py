@@ -66,6 +66,7 @@ from massgov.pfml.fineos.exception import (
     FINEOSNotFound,
 )
 from massgov.pfml.fineos.factory import FINEOSClientConfig
+from massgov.pfml.util.paginate.paginator import DEFAULT_PAGE_SIZE
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -199,12 +200,57 @@ def test_applications_get_all_for_user(client, user, auth_token):
     response = client.get("/v1/applications", headers={"Authorization": f"Bearer {auth_token}"})
     assert response.status_code == 200
 
-    response_body = response.get_json().get("data")
-
-    for (application, app_response) in zip(applications, response_body):
+    response_data = response.get_json().get("data")
+    assert len(response_data) == len(applications)
+    for (application, app_response) in zip(applications, response_data):
         assert str(application.application_id) == app_response["application_id"]
         assert application.nickname == app_response["application_nickname"]
         assert application.application_id != unassociated_application.application_id
+
+
+def test_applications_get_all_pagination_default_limit(client, user, auth_token):
+    applications = [ApplicationFactory.create(user=user) for _ in range(DEFAULT_PAGE_SIZE * 4)]
+    applications = sorted(applications, key=lambda app: app.start_time, reverse=True)
+
+    response = client.get("/v1/applications", headers={"Authorization": f"Bearer {auth_token}"})
+    assert response.status_code == 200
+    response_data = response.get_json().get("data")
+    assert len(response_data) == DEFAULT_PAGE_SIZE
+    for (application, app_response) in zip(applications, response_data):
+        assert str(application.application_id) == app_response["application_id"]
+        assert application.nickname == app_response["application_nickname"]
+
+
+def test_applications_get_all_pagination_asc(client, user, auth_token):
+    applications = [ApplicationFactory.create(user=user) for _ in range(100)]
+    applications = sorted(applications, key=lambda app: app.start_time, reverse=False)
+
+    response = client.get(
+        "/v1/applications?order_direction=ascending",
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 200
+    response_data = response.get_json().get("data")
+    assert len(response_data) == DEFAULT_PAGE_SIZE
+    for (application, app_response) in zip(applications, response_data):
+        assert str(application.application_id) == app_response["application_id"]
+        assert application.nickname == app_response["application_nickname"]
+
+
+def test_applications_get_all_pagination_limit_double(client, user, auth_token):
+    applications = [ApplicationFactory.create(user=user) for _ in range(DEFAULT_PAGE_SIZE * 4)]
+    applications = sorted(applications, key=lambda app: app.start_time, reverse=True)
+
+    response = client.get(
+        f"/v1/applications?page_size={DEFAULT_PAGE_SIZE * 2}",
+        headers={"Authorization": f"Bearer {auth_token}"},
+    )
+    assert response.status_code == 200
+    response_data = response.get_json().get("data")
+    assert len(response_data) == DEFAULT_PAGE_SIZE * 2
+    for (application, app_response) in zip(applications, response_data):
+        assert str(application.application_id) == app_response["application_id"]
+        assert application.nickname == app_response["application_nickname"]
 
 
 def test_applications_post_start_app(client, user, auth_token, test_db_session):

@@ -3,10 +3,10 @@ from uuid import UUID
 
 import connexion
 import puremagic
-from flask import Response
+from flask import Response, request
 from puremagic import PureError
 from pydantic import ValidationError
-from sqlalchemy import desc
+from sqlalchemy import asc, desc
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, ServiceUnavailable, Unauthorized
 
 import massgov.pfml.api.app as app
@@ -15,7 +15,7 @@ import massgov.pfml.api.util.response as response_util
 import massgov.pfml.api.validation.application_rules as application_rules
 import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
-from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, can, ensure
+from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, ensure
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
 from massgov.pfml.api.models.applications.common import DocumentType as IoDocumentTypes
 from massgov.pfml.api.models.applications.requests import (
@@ -61,6 +61,11 @@ from massgov.pfml.fineos.exception import (
     FINEOSNotFound,
 )
 from massgov.pfml.util.logging.applications import get_application_log_attributes
+from massgov.pfml.util.paginate.paginator import (
+    ApplicationPaginationAPIContext,
+    OrderDirection,
+    page_for_api_context,
+)
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -100,26 +105,23 @@ def applications_get():
         user_id = user.user_id
     else:
         raise Unauthorized
+    with ApplicationPaginationAPIContext(Application, request=request) as pagination_context:
+        with app.db_session() as db_session:
+            is_asc = pagination_context.order_direction == OrderDirection.asc.value
+            sort_fn = asc if is_asc else desc
+            application_query = (
+                db_session.query(Application)
+                .filter(Application.user_id == user_id)
+                .order_by(sort_fn(pagination_context.order_key))
+            )
+            page = page_for_api_context(pagination_context, application_query)
 
-    with app.db_session() as db_session:
-        applications = (
-            db_session.query(Application)
-            .filter(Application.user_id == user_id)
-            .order_by(desc(Application.start_time))
-            .limit(50)  # Mitigate slow queries for end-to-end test user
-            .all()
-        )
-
-        filtered_applications = filter(lambda a: can(READ, a), applications)
-
-    applications_response = list(
-        map(
-            lambda application: ApplicationResponse.from_orm(application).dict(),
-            filtered_applications,
-        )
-    )
-    return response_util.success_response(
-        message="Successfully retrieved applications", data=applications_response
+    return response_util.paginated_success_response(
+        message="Successfully retrieved applications",
+        model=ApplicationResponse,
+        page=page,
+        context=pagination_context,
+        status_code=200,
     ).to_api_response()
 
 

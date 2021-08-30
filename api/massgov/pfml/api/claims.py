@@ -542,7 +542,7 @@ def get_claims() -> flask.Response:
 
     return response_util.paginated_success_response(
         message="Successfully retrieved claims",
-        serializer=ClaimResponse(),
+        model=ClaimResponse,
         page=page,
         context=pagination_context,
         status_code=200,
