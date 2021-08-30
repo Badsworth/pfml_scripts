@@ -102,6 +102,7 @@
     "memoryReservation": 512,
     "image": "498823821309.dkr.ecr.us-east-1.amazonaws.com/eolwd-pfml-dockerhub-mirror:newrelic.infrastructure-bundle.2.6.1",
     "name": "newrelic-infra",
+    "essential": false,
     "logConfiguration": {
       "logDriver": "awslogs",
       "options": {

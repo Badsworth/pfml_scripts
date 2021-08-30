@@ -405,6 +405,7 @@ resource "aws_ecs_task_definition" "ecs_tasks" {
       image             = "498823821309.dkr.ecr.us-east-1.amazonaws.com/eolwd-pfml-dockerhub-mirror:newrelic.infrastructure-bundle.2.6.1",
       cpu               = 256,
       memoryReservation = 512,
+      essential         = false,
       environment = [
         {
           name  = "NRIA_OVERRIDE_HOST_ROOT",
