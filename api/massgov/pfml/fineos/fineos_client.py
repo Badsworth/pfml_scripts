@@ -560,7 +560,13 @@ class FINEOSClient(client.AbstractFINEOSClient):
         response = self._customer_api(
             "GET", f"customer/absence/absences/{absence_id}", user_id, "get_absence"
         )
-        return models.customer_api.AbsenceDetails.parse_obj(response.json())
+        json = response.json()
+        logger.debug("json %r", json)
+
+        for item in json["absencePeriods"]:
+            set_empty_dates_to_none(item, ["startDate", "endDate", "expectedReturnToWorkDate"])
+
+        return models.customer_api.AbsenceDetails.parse_obj(json)
 
     def get_absence_period_decisions(
         self, user_id: str, absence_id: str

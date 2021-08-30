@@ -202,8 +202,13 @@ def mock_customer_info():
             "addressLine6": "GA",
             "addressLine7": "",
             "postCode": "30303",
-            "country": {"name": "USA", "domainName": "Country",},
-            "extensions": {},
+            "country": {"name": "USA", "domainName": "Country"},
+            "extensions": {
+                "ConsenttoShareData": True,
+                "Confirmed": True,
+                "MassachusettsID": "",
+                "OutOfStateID": "",
+            },
         },
     }
 

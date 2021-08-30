@@ -13,14 +13,23 @@ for _schema_name, schema_desc in schemas.items():
             if "format" in prop_desc:
                 if prop_desc["format"] == "string":
                     prop_desc.pop("format", None)
-
-                elif prop_desc["format"] == "date-time":
-                    prop_desc["format"] = "date"
-
                 elif prop_desc["format"] == "money":
                     prop_desc["format"] = "decimal"
                     prop_desc.pop("maxLength", None)
                     prop_desc.pop("minLength", None)
+
+            if "type" in prop_desc:
+                # Seemingly when FINEOS uses `additionalProperties: { type:
+                # object }` they don't usually mean the values will be objects,
+                # but intend them to be any type.
+                #
+                # Since `additionalProperties: true` is the default setting and
+                # by default does not constrain the type of the values, just
+                # drop the declaration if it only says `{ type: object }`.
+                if prop_desc["type"] == "object" and (
+                    prop_desc.get("additionalProperties", None) == {"type": "object"}
+                ):
+                    prop_desc.pop("additionalProperties")
     else:
         # Some entries have an "allOf" property with a reference as well as properties, e.g. `AUTaxCodeDetails`
         continue
