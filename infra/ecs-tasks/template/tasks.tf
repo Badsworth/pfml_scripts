@@ -212,43 +212,6 @@ locals {
       ]
     }
 
-    "payments-ctr-process" = {
-      command        = ["payments-ctr-process"]
-      task_role      = aws_iam_role.payments_ctr_process_task_role.arn
-      execution_role = aws_iam_role.payments_ctr_import_execution_role.arn
-      cpu            = 2048
-      memory         = 16384
-      env = [
-        local.db_access,
-        local.datamart_access,
-        local.eolwd_moveit_access,
-        local.emails_ctr,
-        { name : "PFML_ERROR_REPORTS_PATH", value : "${var.pfml_error_reports_path}" },
-        { name : "CTR_MOVEIT_INCOMING_PATH", value : "${var.ctr_moveit_incoming_path}" },
-        { name : "CTR_MOVEIT_OUTGOING_PATH", value : "${var.ctr_moveit_outgoing_path}" },
-        { name : "CTR_MOVEIT_ARCHIVE_PATH", value : "${var.ctr_moveit_archive_path}" },
-        { name : "PFML_CTR_INBOUND_PATH", value : "${var.pfml_ctr_inbound_path}" },
-        { name : "PFML_CTR_OUTBOUND_PATH", value : "${var.pfml_ctr_outbound_path}" }
-      ]
-    },
-
-    "payments-fineos-process" = {
-      command   = ["payments-fineos-process"]
-      task_role = aws_iam_role.payments_fineos_process_task_role.arn
-      cpu       = 2048
-      memory    = 16384
-      env = [
-        local.db_access,
-        local.fineos_s3_access,
-        local.emails_ctr,
-        { name : "FINEOS_PAYMENT_MAX_HISTORY_DATE", value : "${var.fineos_payment_max_history_date}" },
-        { name : "FINEOS_VENDOR_MAX_HISTORY_DATE", value : "${var.fineos_vendor_max_history_date}" },
-        { name : "PFML_FINEOS_INBOUND_PATH", value : "${var.pfml_fineos_inbound_path}" },
-        { name : "PFML_FINEOS_OUTBOUND_PATH", value : "${var.pfml_fineos_outbound_path}" },
-        { name : "PFML_ERROR_REPORTS_PATH", value : "${var.pfml_error_reports_path}" },
-      ]
-    },
-
     "pub-payments-process-fineos" = {
       command   = ["pub-payments-process-fineos"]
       task_role = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-fineos"
@@ -262,15 +225,6 @@ locals {
         { name : "FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", value : "2021-06-12" },
         { name : "USE_EXPERIAN_SOAP_CLIENT", value : "1" },
         { name : "EXPERIAN_AUTH_TOKEN", valueFrom : "/service/${local.app_name}/common/experian-auth-token" }
-      ]
-    },
-
-    "fineos-test-vendor-export-generate" = {
-      command   = ["fineos-test-vendor-export-generate"]
-      task_role = aws_iam_role.payments_fineos_process_task_role.arn
-      env = [
-        local.db_access,
-        local.fineos_s3_access
       ]
     },
 
@@ -291,47 +245,6 @@ locals {
         { name : "CPS_ERROR_REPORTS_PROCESSED_S3_PATH", value : "s3://${data.aws_s3_bucket.agency_transfer.id}/cps-errors/processed/" },
       ]
 
-    },
-
-    "payments-rotate-data-mart-password" = {
-      command   = ["payments-rotate-data-mart-password"]
-      task_role = aws_iam_role.payments_ctr_process_task_role.arn
-      env = [
-        local.datamart_access,
-        { name : "CTR_DATA_MART_PASSWORD_OLD", valueFrom : "/service/${local.app_name}/${var.environment_name}/ctr-data-mart-password-old" }
-      ]
-    },
-
-    "payments-ctr-vc-code-cleanup" = {
-      command   = ["payments-ctr-vc-code-cleanup"]
-      task_role = aws_iam_role.payments_ctr_process_task_role.arn
-      env = [
-        local.db_access,
-        local.datamart_access
-      ]
-    },
-
-    "payments-payment-voucher-plus" = {
-      command   = ["payments-payment-voucher-plus"]
-      task_role = aws_iam_role.payments_fineos_process_task_role.arn
-      cpu       = 2048
-      memory    = 16384
-      env = [
-        local.db_access,
-        local.datamart_access,
-        local.fineos_s3_access,
-        local.emails_ctr,
-        { name : "PFML_ERROR_REPORTS_PATH", value : "${var.pfml_error_reports_path}" },
-        { name : "PFML_VOUCHER_OUTPUT_PATH", value : "${var.pfml_voucher_output_path}" },
-        { name : "FINEOS_VENDOR_MAX_HISTORY_DATE", value : "${var.fineos_vendor_max_history_date}" },
-        { name : "PFML_FINEOS_INBOUND_PATH", value : "${var.pfml_fineos_inbound_path}" }
-      ]
-    },
-    "transmogrify-state" = {
-      command = ["transmogrify-state"],
-      env = [
-        local.db_access
-      ]
     },
 
     "import-fineos-to-warehouse" = {

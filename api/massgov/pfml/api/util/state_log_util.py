@@ -25,7 +25,7 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.delegated_payments.delegated_payments_util import (
     ValidationContainer as DelegatedValidationContainer,
 )
-from massgov.pfml.payments.payments_util import ValidationContainer
+from massgov.pfml.delegated_payments.delegated_payments_util import ValidationContainer
 
 logger = logging.get_logger(__name__)
 

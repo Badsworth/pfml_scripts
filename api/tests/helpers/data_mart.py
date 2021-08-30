@@ -1,6 +1,6 @@
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.payments.data_mart as data_mart
-import massgov.pfml.payments.payments_util as payments_util
+import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 from massgov.pfml.db.models.employees import Country, Employee, GeoState, State, StateLog
 from massgov.pfml.db.models.factories import AddressFactory, CtrAddressPairFactory, EftFactory
 

@@ -12,9 +12,7 @@ RUN apt-get update \
         build-essential git curl \
         postgresql gnupg \
  && curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
- && curl https://packages.microsoft.com/config/debian/10/prod.list > /etc/apt/sources.list.d/mssql-release.list \
- && apt-get update \
- && ACCEPT_EULA=Y apt-get install --no-install-recommends --yes msodbcsql17 unixodbc-dev mssql-tools
+ && curl https://packages.microsoft.com/config/debian/10/prod.list > /etc/apt/sources.list.d/mssql-release.list
 
 # setup user stuff
 ARG RUN_UID
@@ -112,10 +110,6 @@ COPY --from=app-build /usr/local/lib/ /usr/local/lib/
 COPY --from=app-build /usr/local/include/python* /usr/local/include/
 COPY --from=app-build /lib64/* /lib64/
 COPY --from=app-build --chown=${RUN_USER} /tmp/ /tmp/
-
-# Include ODBC/MS SQL Sever stuff
-COPY --from=app-build /opt/microsoft/ /opt/microsoft/
-COPY --from=app-build /etc/odbcinst.ini /etc/
 
 ENV PATH="/app/.venv/bin:$PATH"
 

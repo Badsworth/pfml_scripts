@@ -1266,14 +1266,6 @@ docs = ["sphinx (>=1.6.5)", "sphinx-rtd-theme"]
 tests = ["pytest (>=3.2.1,!=3.3.0)", "hypothesis (>=3.27.0)"]
 
 [[package]]
-name = "pyodbc"
-version = "4.0.30"
-description = "DB API Module for ODBC"
-category = "main"
-optional = true
-python-versions = "*"
-
-[[package]]
 name = "pyopenssl"
 version = "19.1.0"
 description = "Python wrapper module around the OpenSSL library"
@@ -1685,9 +1677,6 @@ optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
 [package.extras]
-mssql = ["pyodbc"]
-mssql_pymssql = ["pymssql"]
-mssql_pyodbc = ["pyodbc"]
 mysql = ["mysqlclient"]
 oracle = ["cx-oracle"]
 postgresql = ["psycopg2"]

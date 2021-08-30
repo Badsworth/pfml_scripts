@@ -5,7 +5,7 @@ from email.mime.text import MIMEText
 import pytest
 from pydantic import ValidationError
 
-import massgov.pfml.payments.payments_util as payments_util
+import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.aws.ses as conn
 from massgov.pfml.api.validation.exceptions import ValidationException
 from massgov.pfml.util.files import create_csv_from_list
