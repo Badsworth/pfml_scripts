@@ -15,7 +15,6 @@ import findKeyByValue from "../utils/findKeyByValue";
 import formatDateRange from "../utils/formatDateRange";
 import { get } from "lodash";
 import hasDocumentsLoadError from "../utils/hasDocumentsLoadError";
-import { isFeatureEnabled } from "../services/featureFlags";
 import routeWithParams from "../utils/routeWithParams";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
@@ -294,21 +293,16 @@ function ApplicationActions(props) {
     get(claim, "has_previous_leaves_same_reason") !== null ||
     get(claim, "has_previous_leaves_other_reason") !== null ||
     get(claim, "has_concurrent_leave") !== null;
-  const reductionsEnabled = isFeatureEnabled("claimantShowOtherLeaveStep");
   // Show no instructions by default
   let reductionsI18nKey = null;
-  // After launch, show new instructions on completed claims
-  if (reductionsEnabled && claim.isCompleted) {
+  // Show new other leave instructions on completed claims
+  if (claim.isCompleted) {
     reductionsI18nKey = "components.applicationCard.reductionsInstructions";
   }
-  // After launch, show prompt to report if Part 1 was submitted with null reductions data
-  else if (reductionsEnabled && !hasReductionsData && claim.isSubmitted) {
+  // Show prompt to report other leaves if Part 1 was submitted with null reductions data
+  else if (!hasReductionsData && claim.isSubmitted) {
     reductionsI18nKey =
       "components.applicationCard.reductionsInstructions_missingData";
-  }
-  // Before launch, show old instructions on completed claims
-  else if (claim.isCompleted) {
-    reductionsI18nKey = "components.applicationCard.reductionsInstructions_old";
   }
 
   return (

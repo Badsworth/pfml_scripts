@@ -17,11 +17,6 @@ const flagsConfig = {
     // TODO (CP-534): Show all options when portal supports activeDutyFamily, serviceMemberFamily
     claimantShowMilitaryLeaveTypes: false,
 
-    // When this flag is enabled, the "Other leave, income, and benefits" step of
-    // the Claim flow becomes visible, and its validation rules are applied via
-    // a X-FF-Require-Other-Leaves header on API requests.
-    claimantShowOtherLeaveStep: true,
-
     // When this flag is enabled, the claim status page for claimants will show
     claimantShowStatusPage: false,
 

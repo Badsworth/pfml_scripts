@@ -39,10 +39,7 @@ describe("Employer welcome", () => {
       .forEach((trans) => expect(trans.dive()).toMatchSnapshot());
   });
 
-  it("renders other leave alert when claimantShowOtherLeaveStep is true", () => {
-    process.env.featureFlags = {
-      claimantShowOtherLeaveStep: true,
-    };
+  it("renders other leave alert", () => {
     wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
 
     expect(wrapper.find("Alert").exists()).toEqual(true);
@@ -52,20 +49,5 @@ describe("Employer welcome", () => {
         .find(`Trans[i18nKey="pages.employersWelcome.otherLeaveInfoAlertBody"]`)
         .dive()
     ).toMatchSnapshot();
-  });
-
-  it("does not render caring leave alert when claimantShowOtherLeaveStep is true", () => {
-    process.env.featureFlags = {
-      claimantShowOtherLeaveStep: true,
-    };
-    wrapper = shallow(<Welcome appLogic={appLogic} />).dive();
-
-    expect(
-      wrapper
-        .find(
-          `Trans[i18nKey="pages.employersWelcome.caringLeaveInfoAlertBody"]`
-        )
-        .exists()
-    ).toEqual(false);
   });
 });

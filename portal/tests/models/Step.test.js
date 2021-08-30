@@ -317,16 +317,17 @@ describe("Step Model", () => {
       );
 
       expect(steps.map((s) => s.name)).toMatchInlineSnapshot(`
-        Array [
-          "VERIFY_ID",
-          "EMPLOYER_INFORMATION",
-          "LEAVE_DETAILS",
-          "REVIEW_AND_CONFIRM",
-          "PAYMENT",
-          "UPLOAD_ID",
-          "UPLOAD_CERTIFICATION",
-        ]
-      `);
+Array [
+  "VERIFY_ID",
+  "EMPLOYER_INFORMATION",
+  "LEAVE_DETAILS",
+  "OTHER_LEAVE",
+  "REVIEW_AND_CONFIRM",
+  "PAYMENT",
+  "UPLOAD_ID",
+  "UPLOAD_CERTIFICATION",
+]
+`);
     });
 
     it("sets #pages property for each Step", () => {

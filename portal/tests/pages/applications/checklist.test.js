@@ -35,7 +35,7 @@ describe("Checklist", () => {
   });
 
   it("renders description for Step", () => {
-    expect.assertions(7);
+    expect.assertions(8);
 
     const { wrapper } = renderWithAppLogic(Checklist, {
       // Avoids a blank description for the Upload Certification step,
@@ -117,7 +117,7 @@ describe("Checklist", () => {
     });
 
     it("Payment pref step is not editable", () => {
-      const paymentPrefStep = wrapper.find("Step").at(4);
+      const paymentPrefStep = wrapper.find("Step").at(5);
 
       expect(paymentPrefStep.prop("editable")).toBe(false);
     });
@@ -203,7 +203,7 @@ describe("Checklist", () => {
         diveLevels,
         hasLoadedClaimDocuments: true,
       });
-      const uploadCertificationStep = wrapper.find("Step").at(6);
+      const uploadCertificationStep = wrapper.find("Step").at(7);
       expect(uploadCertificationStep.find("Trans").dive()).toMatchSnapshot();
     });
 
@@ -217,7 +217,7 @@ describe("Checklist", () => {
         diveLevels,
         hasLoadedClaimDocuments: true,
       });
-      const uploadCertificationStep = wrapper.find("Step").at(6);
+      const uploadCertificationStep = wrapper.find("Step").at(7);
 
       expect(uploadCertificationStep.find("Trans").dive()).toMatchSnapshot();
     });
@@ -232,7 +232,7 @@ describe("Checklist", () => {
         diveLevels,
         hasLoadedClaimDocuments: true,
       });
-      const uploadCertificationStep = wrapper.find("Step").at(6);
+      const uploadCertificationStep = wrapper.find("Step").at(7);
 
       expect(uploadCertificationStep.find("Trans").dive()).toMatchSnapshot();
     });
@@ -245,7 +245,7 @@ describe("Checklist", () => {
       });
 
       expect(wrapper.exists("Spinner")).toBe(true);
-      expect(wrapper.find("Step")).toHaveLength(5);
+      expect(wrapper.find("Step")).toHaveLength(6);
     });
 
     it("renders Alert when there is an error for loading documents", () => {
@@ -255,7 +255,7 @@ describe("Checklist", () => {
       });
 
       expect(wrapper.find("StepList").at(2).exists("Alert")).toBe(true);
-      expect(wrapper.find("Step")).toHaveLength(5);
+      expect(wrapper.find("Step")).toHaveLength(6);
     });
   });
 
@@ -273,8 +273,8 @@ describe("Checklist", () => {
           [claim.application_id]: [],
         },
       });
-      expect(wrapper.find("Step").at(5).prop("status")).toBe(startStatus);
       expect(wrapper.find("Step").at(6).prop("status")).toBe(startStatus);
+      expect(wrapper.find("Step").at(7).prop("status")).toBe(startStatus);
     });
 
     it("renders id doc step as completed", () => {
@@ -288,8 +288,8 @@ describe("Checklist", () => {
           [claim.application_id]: [],
         },
       });
-      expect(wrapper.find("Step").at(5).prop("status")).toBe(completeStatus);
-      expect(wrapper.find("Step").at(6).prop("status")).toBe(startStatus);
+      expect(wrapper.find("Step").at(6).prop("status")).toBe(completeStatus);
+      expect(wrapper.find("Step").at(7).prop("status")).toBe(startStatus);
     });
 
     it("renders certification doc step as completed when the document type matches the leave reason", () => {
@@ -306,8 +306,8 @@ describe("Checklist", () => {
           numberOfDocs: 1,
         },
       });
-      expect(wrapper.find("Step").at(5).prop("status")).toBe(startStatus);
-      expect(wrapper.find("Step").at(6).prop("status")).toBe(completeStatus);
+      expect(wrapper.find("Step").at(6).prop("status")).toBe(startStatus);
+      expect(wrapper.find("Step").at(7).prop("status")).toBe(completeStatus);
     });
 
     it("renders certification doc step as incomplete when the document type does not match the leave reason", () => {
@@ -324,8 +324,8 @@ describe("Checklist", () => {
           numberOfDocs: 1,
         },
       });
-      expect(wrapper.find("Step").at(5).prop("status")).toBe(startStatus);
       expect(wrapper.find("Step").at(6).prop("status")).toBe(startStatus);
+      expect(wrapper.find("Step").at(7).prop("status")).toBe(startStatus);
     });
 
     // TODO (CP-2029): Remove this test once claims filed before 7/1/2021 are adjudicated and we don't use State managed Paid Leave Confirmation
@@ -344,18 +344,14 @@ describe("Checklist", () => {
           numberOfDocs: 1,
         },
       });
-      expect(wrapper.find("Step").at(5).prop("status")).toBe(startStatus);
-      expect(wrapper.find("Step").at(6).prop("status")).toBe(completeStatus);
+      expect(wrapper.find("Step").at(6).prop("status")).toBe(startStatus);
+      expect(wrapper.find("Step").at(7).prop("status")).toBe(completeStatus);
     });
   });
 
   // TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
   describe("when Part 1 is submitted w/o Other Leave data", () => {
     it("passes submittedContent to Other Leave step", () => {
-      process.env.featureFlags = {
-        claimantShowOtherLeaveStep: true,
-      };
-
       const claim = new MockBenefitsApplicationBuilder()
         .submitted()
         .nullOtherLeave()
@@ -381,10 +377,6 @@ describe("Checklist", () => {
   // TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
   describe("when Part 1 is submitted w/ Other Leave data", () => {
     it("does not pass submittedContent to Other Leave step", () => {
-      process.env.featureFlags = {
-        claimantShowOtherLeaveStep: true,
-      };
-
       const claim = new MockBenefitsApplicationBuilder().submitted().create();
       const { wrapper } = renderWithAppLogic(Checklist, {
         claimAttrs: claim,

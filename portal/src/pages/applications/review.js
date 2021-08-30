@@ -110,7 +110,6 @@ export const Review = (props) => {
     claimantConfigs,
     {
       claim: props.claim,
-      showOtherLeaveStep: isFeatureEnabled("claimantShowOtherLeaveStep"),
     },
     null
   );

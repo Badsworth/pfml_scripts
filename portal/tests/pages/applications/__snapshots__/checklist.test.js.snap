@@ -238,6 +238,32 @@ Array [
 
 exports[`Checklist renders description for Step 4`] = `
 Array [
+  "You will need to know:",
+  <ul
+    className="usa-list"
+    key="1"
+  >
+    <li
+      key="0"
+    >
+      If you will use any benefits from your employer because you are taking leave.
+    </li>
+    <li
+      key="1"
+    >
+      If you will receive income from any other sources during your leave.
+    </li>
+    <li
+      key="2"
+    >
+      The dates for any leave you’ve taken since January 1, 2021 for a condition that is covered by Paid Family and Medical Leave.
+    </li>
+  </ul>,
+]
+`;
+
+exports[`Checklist renders description for Step 5`] = `
+Array [
   <p
     key="p-0"
   >
@@ -258,7 +284,7 @@ Array [
 ]
 `;
 
-exports[`Checklist renders description for Step 5`] = `
+exports[`Checklist renders description for Step 6`] = `
 Array [
   <p
     key="p-0"
@@ -273,7 +299,7 @@ Array [
 ]
 `;
 
-exports[`Checklist renders description for Step 6`] = `
+exports[`Checklist renders description for Step 7`] = `
 Array [
   <p
     key="p-0"
@@ -288,7 +314,7 @@ Array [
 ]
 `;
 
-exports[`Checklist renders description for Step 7`] = `
+exports[`Checklist renders description for Step 8`] = `
 Array [
   <p
     key="p-0"
@@ -512,8 +538,89 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
     <Step
       completedText="Completed"
       editable={true}
-      key="REVIEW_AND_CONFIRM"
+      key="OTHER_LEAVE"
       number={4}
+      status="completed"
+      stepHref="/applications/previous-leaves-intro?claim_id=mock_application_id"
+      submittedContent={
+        <React.Fragment>
+          <Trans
+            components={
+              Object {
+                "contact-center-phone-link": <a
+                  href="tel:(833) 344-7365"
+                />,
+              }
+            }
+            i18nKey="pages.claimsChecklist.otherLeaveSubmittedIntro"
+          />
+          <Details
+            label="What do I need to report?"
+          >
+            <Trans
+              components={
+                Object {
+                  "li": <li />,
+                  "ul": <ul
+                    className="usa-list"
+                  />,
+                  "when-can-i-use-pfml": <a
+                    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+                  />,
+                }
+              }
+              i18nKey="pages.claimsChecklist.otherLeaveSubmittedDetailsBody"
+            />
+          </Details>
+        </React.Fragment>
+      }
+      title="Report other leave, benefits, and income"
+    >
+      <Trans
+        components={
+          Object {
+            "caregiver-certification-form-link": <a
+              href="https://www.mass.gov/family-caring-form"
+              rel="noopener"
+              target="_blank"
+            />,
+            "caregiver-relationship-link": <a
+              href="https://www.mass.gov/family-caring-leave-relationships"
+              rel="noopener"
+              target="_blank"
+            />,
+            "contact-center-phone-link": <a
+              href="tel:(833) 344-7365"
+            />,
+            "healthcare-provider-form-link": <a
+              href="https://www.mass.gov/medical-leave-form"
+              rel="noopener"
+              target="_blank"
+            />,
+            "li": <li />,
+            "ul": <ul
+              className="usa-list"
+            />,
+            "which-paid-leave-link": <a
+              href="https://www.mass.gov/which-paid-leave"
+              rel="noopener"
+              target="_blank"
+            />,
+          }
+        }
+        i18nKey="pages.claimsChecklist.stepHTMLDescription"
+        tOptions={
+          Object {
+            "context": "otherLeave",
+          }
+        }
+      />
+    </Step>
+    <Step
+      completedText="Completed"
+      editable={true}
+      key="REVIEW_AND_CONFIRM"
+      number={5}
       status="not_started"
       stepHref="/applications/review?claim_id=mock_application_id"
       submittedContent={null}
@@ -581,7 +688,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       completedText="Completed"
       editable={true}
       key="PAYMENT"
-      number={5}
+      number={6}
       status="disabled"
       stepHref="/applications/payment-method?claim_id=mock_application_id"
       submittedContent={null}
@@ -649,7 +756,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       completedText="Completed"
       editable={true}
       key="UPLOAD_ID"
-      number={6}
+      number={7}
       status="disabled"
       stepHref="/applications/upload-id?claim_id=mock_application_id"
       submittedContent={null}
@@ -699,7 +806,7 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
       completedText="Completed"
       editable={true}
       key="UPLOAD_CERTIFICATION"
-      number={7}
+      number={8}
       status="disabled"
       stepHref="/applications/upload-certification?claim_id=mock_application_id"
       submittedContent={null}

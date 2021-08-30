@@ -48,7 +48,7 @@ exports[`Employer welcome displays links to Organizations page 3`] = `
 </ul>
 `;
 
-exports[`Employer welcome renders other leave alert when claimantShowOtherLeaveStep is true 1`] = `"The Department of Family and Medical Leave has updated the Review page. Employees can now report other leaves and benefits in their paid leave application. If your employee reported other leaves or benefits, you can review the information provided, and add any that they missed."`;
+exports[`Employer welcome renders other leave alert 1`] = `"The Department of Family and Medical Leave has updated the Review page. Employees can now report other leaves and benefits in their paid leave application. If your employee reported other leaves or benefits, you can review the information provided, and add any that they missed."`;
 
 exports[`Employer welcome renders page 1`] = `
 <Fragment>
@@ -82,6 +82,15 @@ exports[`Employer welcome renders page 1`] = `
               }
             }
             i18nKey="pages.employersWelcome.verificationAlertBody"
+          />
+        </p>
+      </Alert>
+      <Alert
+        state="info"
+      >
+        <p>
+          <Trans
+            i18nKey="pages.employersWelcome.otherLeaveInfoAlertBody"
           />
         </p>
       </Alert>
@@ -241,7 +250,9 @@ Array [
 ]
 `;
 
-exports[`Employer welcome renders page 3`] = `
+exports[`Employer welcome renders page 3`] = `"The Department of Family and Medical Leave has updated the Review page. Employees can now report other leaves and benefits in their paid leave application. If your employee reported other leaves or benefits, you can review the information provided, and add any that they missed."`;
+
+exports[`Employer welcome renders page 4`] = `
 Array [
   "When you log into your account you can now use the ",
   <a
@@ -254,7 +265,7 @@ Array [
 ]
 `;
 
-exports[`Employer welcome renders page 4`] = `
+exports[`Employer welcome renders page 5`] = `
 Array [
   "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the ",
   <a
@@ -278,7 +289,7 @@ Array [
 ]
 `;
 
-exports[`Employer welcome renders page 5`] = `
+exports[`Employer welcome renders page 6`] = `
 <ul
   className="usa-list desktop:font-body-2xs desktop:padding-top-05"
   key="0"

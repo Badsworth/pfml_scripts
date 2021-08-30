@@ -95,45 +95,6 @@ Array [
   <p
     key="p-0"
   >
-    If you’ll receive 
-    <a
-      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
-      key="1"
-    >
-      other benefits or income
-    </a>
-    , call the Contact Center at 
-    <a
-      href="tel:(833) 344-7365"
-      key="3"
-    >
-      (833) 344‑7365
-    </a>
-    . This includes:
-  </p>,
-  <ul
-    className="usa-list"
-    key="1"
-  >
-    <li
-      key="0"
-    >
-      Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
-    </li>
-    <li
-      key="1"
-    >
-      Income from any other sources during your leave
-    </li>
-  </ul>,
-]
-`;
-
-exports[`ApplicationCard when the claim status is Completed when the Other Leave feature flag is true renders new instructions about reductions 1`] = `
-Array [
-  <p
-    key="p-0"
-  >
     If your plans for other benefits or income during your paid leave have changed, call the Contact Center at 
     <a
       href="tel:(833) 344-7365"

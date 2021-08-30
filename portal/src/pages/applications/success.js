@@ -15,7 +15,6 @@ import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import UserFeedback from "../../components/UserFeedback";
 import { get } from "lodash";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
@@ -75,16 +74,13 @@ export const Success = (props) => {
   }
 
   // TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
-  const reductionsEnabled = isFeatureEnabled("claimantShowOtherLeaveStep");
   const hasReductionsData =
     get(claim, "has_employer_benefits") !== null ||
     get(claim, "has_other_incomes") !== null ||
     get(claim, "has_previous_leaves_same_reason") !== null ||
     get(claim, "has_previous_leaves_other_reason") !== null ||
     get(claim, "has_concurrent_leave") !== null;
-  const showReportReductions = reductionsEnabled && !hasReductionsData;
-  const showReportReductionsHeading =
-    !reductionsEnabled || showReportReductions;
+  const showReportReductions = !hasReductionsData;
 
   return (
     <React.Fragment>
@@ -114,47 +110,29 @@ export const Success = (props) => {
           </Alert>
         )}
 
-        {showReportReductionsHeading && (
-          <Heading level="2">
-            <IconPhone {...iconProps} />
-            {t("pages.claimsSuccess.reportReductionsHeading")}
-          </Heading>
-        )}
         {showReportReductions && (
-          <Trans
-            i18nKey="pages.claimsSuccess.reportReductionsMessage"
-            components={{
-              "contact-center-phone-link": (
-                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-              ),
-              "when-can-i-use-pfml": (
-                <a href={routes.external.massgov.whenCanIUsePFML} />
-              ),
-              ul: <ul className="usa-list" />,
-              li: <li />,
-            }}
-            tOptions={{
-              context: claimContext,
-            }}
-          />
-        )}
-        {!reductionsEnabled && (
-          <Trans
-            i18nKey="pages.claimsSuccess.reportReductionsProcess"
-            components={{
-              "contact-center-phone-link": (
-                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-              ),
-              ul: <ul className="usa-list" />,
-              li: <li />,
-              "reductions-employer-benefits-link": (
-                <a href={routes.external.massgov.reductionsEmployerBenefits} />
-              ),
-              "reductions-overview-link": (
-                <a href={routes.external.massgov.reductionsOverview} />
-              ),
-            }}
-          />
+          <React.Fragment>
+            <Heading level="2">
+              <IconPhone {...iconProps} />
+              {t("pages.claimsSuccess.reportReductionsHeading")}
+            </Heading>
+            <Trans
+              i18nKey="pages.claimsSuccess.reportReductionsMessage"
+              components={{
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
+                "when-can-i-use-pfml": (
+                  <a href={routes.external.massgov.whenCanIUsePFML} />
+                ),
+                ul: <ul className="usa-list" />,
+                li: <li />,
+              }}
+              tOptions={{
+                context: claimContext,
+              }}
+            />
+          </React.Fragment>
         )}
 
         <Heading level="2">

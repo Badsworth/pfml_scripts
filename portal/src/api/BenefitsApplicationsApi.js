@@ -2,7 +2,6 @@
 import BaseApi from "./BaseApi";
 import BenefitsApplication from "../models/BenefitsApplication";
 import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
-import { isFeatureEnabled } from "../services/featureFlags";
 import routes from "../routes";
 
 /**
@@ -34,10 +33,10 @@ export default class BenefitsApplicationsApi extends BaseApi {
   get featureFlagHeaders() {
     const headers = {};
 
-    if (isFeatureEnabled("claimantShowOtherLeaveStep")) {
-      // Enable validation on fields in the Other Leave step
-      headers["X-FF-Require-Other-Leaves"] = true;
-    }
+    // Add any feature flag headers here. eg:
+    // if (isFeatureEnabled("claimantShowOtherLeaveStep")) {
+    //   headers["X-FF-Require-Other-Leaves"] = true;
+    // }
 
     return headers;
   }

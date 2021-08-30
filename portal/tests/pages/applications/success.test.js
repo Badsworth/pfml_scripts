@@ -70,18 +70,10 @@ describe("Success", () => {
 
       const transElements = wrapper.find("Trans");
       transElements.forEach((el) => expect(el.dive()).toMatchSnapshot());
-
-      expect(
-        wrapper
-          .find(`Trans[i18nKey="pages.claimsSuccess.reportReductionsProcess"]`)
-          .exists()
-      ).toEqual(true);
     });
   });
 
-  it(`renders reportReductionsMessage when feature flag on and !hasReductionsData`, () => {
-    process.env.featureFlags = { claimantShowOtherLeaveStep: true };
-
+  it(`renders reportReductionsMessage when there are no other leaves`, () => {
     const claim = new MockBenefitsApplicationBuilder()
       .continuous({ start_date: "2020-01-01" })
       .medicalLeaveReason()
@@ -105,9 +97,7 @@ describe("Success", () => {
     ).toEqual(false);
   });
 
-  it(`does not render reportReductionsMessage when feature flag on and hasReductionsData`, () => {
-    process.env.featureFlags = { claimantShowOtherLeaveStep: true };
-
+  it(`does not render reportReductionsMessage when there are other leaves`, () => {
     const claim = new MockBenefitsApplicationBuilder()
       .continuous({ start_date: "2020-01-01" })
       .medicalLeaveReason()
