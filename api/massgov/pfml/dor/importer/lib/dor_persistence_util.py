@@ -174,8 +174,7 @@ def tax_id_from_dict(tax_identifier_id: UUID, tax_identifier_str: str) -> TaxIde
 
 
 def create_tax_id(db_session, tax_id):
-    formatted_tax_id = TaxId(tax_id)
-    tax_identifier = TaxIdentifier(tax_identifier=formatted_tax_id)
+    tax_identifier = TaxIdentifier(tax_identifier=TaxId(tax_id))
     db_session.add(tax_identifier)
     db_session.flush()
     db_session.refresh(tax_identifier)
