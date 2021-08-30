@@ -5,7 +5,6 @@ from uuid import UUID
 import connexion
 import flask
 from sqlalchemy.orm.session import Session
-from sqlalchemy_utils import escape_like
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
 
 import massgov.pfml.api.app as app
@@ -64,6 +63,7 @@ from massgov.pfml.util.logging.managed_requirements import (
 )
 from massgov.pfml.util.paginate.paginator import PaginationAPIContext
 from massgov.pfml.util.sqlalchemy import get_or_404
+from sqlalchemy_utils import escape_like
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 # HRD Employer FEIN. See https://lwd.atlassian.net/browse/EMPLOYER-1317
