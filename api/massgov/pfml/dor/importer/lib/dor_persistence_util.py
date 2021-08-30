@@ -167,7 +167,6 @@ def update_employer(db_session, existing_employer, employer_info, import_log_ent
 
 
 def tax_id_from_dict(employee_id, tax_identifier, uuid=uuid.uuid4):
-    print(tax_identifier)
     formatted_tax_id = TaxId(tax_identifier)
     tax_identifier = TaxIdentifier(tax_identifier_id=employee_id, tax_identifier=formatted_tax_id,)
 
