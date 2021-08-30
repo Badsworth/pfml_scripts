@@ -27,6 +27,7 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.api.models.applications.common import LeaveReason as LeaveReasonApi
 from massgov.pfml.api.models.applications.common import OtherIncome
 from massgov.pfml.api.models.applications.responses import DocumentResponse
+from massgov.pfml.api.models.claims.responses import AbsencePeriodStatusResponse
 from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, PreviousLeave
 from massgov.pfml.db.models.applications import (
     Application,
@@ -49,7 +50,7 @@ from massgov.pfml.db.models.employees import (
     User,
 )
 from massgov.pfml.fineos.exception import FINEOSNotFound
-from massgov.pfml.fineos.models.customer_api import ReflexiveQuestionType
+from massgov.pfml.fineos.models.customer_api import AbsenceDetails, ReflexiveQuestionType
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employee import (
     OtherIncomesEFormBuilder,
@@ -1299,3 +1300,40 @@ def create_other_leaves_and_other_incomes_eforms(
         eform = OtherIncomesEFormBuilder.build(employer_benefits, other_incomes,)
         create_eform(application, db_session, eform)
         logger.info("Created Other Incomes eform", extra=log_attributes)
+
+
+def get_absence_periods(
+    employee_tax_identifier: str,
+    employer_fein: str,
+    fineos_absence_id: str,
+    db_session: massgov.pfml.db.Session,
+) -> List[AbsencePeriodStatusResponse]:
+    fineos = massgov.pfml.fineos.create_client()
+
+    # Get FINEOS web admin id
+    try:
+        fineos_web_id = register_employee(
+            fineos, employee_tax_identifier, employer_fein, db_session,
+        )
+    except Exception:
+        return []
+
+    # Get absence periods
+    response: AbsenceDetails = fineos.get_absence(fineos_web_id, fineos_absence_id)
+    # Map FINEOS response to PFML response
+    absence_periods = []
+    if response and response.absencePeriods:
+        for absence_period in response.absencePeriods:
+            absence_period_status = AbsencePeriodStatusResponse()
+            absence_period_status.absence_period_start_date = absence_period.startDate
+            absence_period_status.absence_period_end_date = absence_period.endDate
+            absence_period_status.period_type = absence_period.absenceType
+            absence_period_status.reason = absence_period.reason
+            absence_period_status.reason_qualifier_one = absence_period.reasonQualifier1
+            absence_period_status.reason_qualifier_two = absence_period.reasonQualifier2
+            absence_period_status.request_decision = absence_period.requestStatus
+            absence_period_status.fineos_leave_period_id = absence_period.id
+
+            absence_periods.append(absence_period_status)
+
+    return absence_periods

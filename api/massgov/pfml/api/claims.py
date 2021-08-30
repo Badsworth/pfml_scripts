@@ -25,6 +25,7 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     get_claim_as_leave_admin,
     get_documents_as_leave_admin,
 )
+from massgov.pfml.api.services.fineos_actions import get_absence_periods
 from massgov.pfml.api.services.managed_requirements import update_employer_confirmation_requirements
 from massgov.pfml.api.validation.exceptions import (
     ContainsV1AndV2Eforms,
@@ -433,16 +434,24 @@ def user_has_access_to_claim(claim: Claim) -> bool:
 
 
 def get_claim(fineos_absence_id: str) -> flask.Response:
+    current_user = app.current_user()
+    is_employer = can(READ, "EMPLOYER_API")
     claim = get_claim_from_db(fineos_absence_id)
 
     if claim is None:
-        logger.warning("Claim not in database.")
+        logger.warning(
+            "get_claim failure - Claim not in PFML database.",
+            extra={"absence_case_id": fineos_absence_id},
+        )
         return response_util.error_response(
-            status_code=BadRequest, message="Claim not in database.", errors=[], data={},
+            status_code=BadRequest, message="Claim not in PFML database.", errors=[], data={},
         ).to_api_response()
 
     if not user_has_access_to_claim(claim):
-        logger.warning("User does not have access to claim.")
+        logger.warning(
+            "get_claim failure - User does not have access to claim.",
+            extra={"absence_case_id": fineos_absence_id},
+        )
         return response_util.error_response(
             status_code=Forbidden,
             message="User does not have access to claim.",
@@ -450,10 +459,32 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
             data={},
         ).to_api_response()
 
+    detailed_claim = DetailedClaimResponse.from_orm(claim)
+
+    # Expectation this endpoint is for the claimant dashboard only as it uses
+    # the FINEOS customer API.
+    if not (is_employer and current_user and current_user.employers):
+        with app.db_session() as db_session:
+            if (claim.employee and claim.employee.tax_identifier) and (
+                claim.employer and claim.employer.employer_fein
+            ):
+                employee_tax_identifier = claim.employee.tax_identifier.tax_identifier
+                employer_fein = claim.employer.employer_fein
+                detailed_claim.absence_periods = get_absence_periods(
+                    employee_tax_identifier, employer_fein, fineos_absence_id, db_session
+                )
+            else:
+                logger.info(
+                    "get_claim info - No employee or employer tied to this claim. Cannot retrieve absence periods from FINEOS.",
+                    extra={"absence_case_id": fineos_absence_id, "claim_id": claim.claim_id},
+                )
+                detailed_claim.absence_periods = []
+
+            if claim.application:  # type: ignore
+                detailed_claim.application_id = claim.application.application_id  # type: ignore
+
     return response_util.success_response(
-        message="Successfully retrieved claim",
-        data=DetailedClaimResponse.from_orm(claim).dict(),
-        status_code=200,
+        message="Successfully retrieved claim", data=detailed_claim.dict(), status_code=200,
     ).to_api_response()
 
 

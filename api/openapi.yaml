@@ -2185,7 +2185,7 @@ components:
     AbsencePeriodStatusResponse:
       type: object
       properties:
-        fineos_leave_request_id:
+        fineos_leave_period_id:
           type: string
           example: "PL-14432-0000002026"
         absence_period_start_date:
@@ -2245,6 +2245,10 @@ components:
           $ref: "#/components/schemas/EmployerResponse"
         employee:
           $ref: "#/components/schemas/EmployeeResponse"
+        application_id:
+          type: string
+          format: uuid
+          example: "fdc23456-c8fa-48bf-89a1-5c7c6a3af164"
         fineos_absence_id:
           format: string
           example: "NTN-01-ABS-01"
