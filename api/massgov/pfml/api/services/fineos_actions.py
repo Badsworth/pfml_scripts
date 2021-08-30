@@ -1303,8 +1303,8 @@ def create_other_leaves_and_other_incomes_eforms(
 
 
 def get_absence_periods(
-    employee_tax_identifier: str,
-    employer_fein: str,
+    employee_tax_identifier: TaxId,
+    employer_fein: Fein,
     fineos_absence_id: str,
     db_session: massgov.pfml.db.Session,
 ) -> List[AbsencePeriodStatusResponse]:
