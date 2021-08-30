@@ -6,14 +6,15 @@ import pytest
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
-from massgov.pfml.db.models.employees import Flow, State
+from massgov.pfml.db.models.employees import Flow, PaymentTransactionType, State
 from massgov.pfml.db.models.factories import ClaimFactory, EmployeeFactory, PaymentFactory
 from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
-from massgov.pfml.delegated_payments.payment_post_processing_step import (
+from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_step import (
+    PaymentPostProcessingStep,
+)
+from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_util import (
     EmployeePaymentGroup,
     PaymentContainer,
-    PaymentPostProcessingStep,
-    PaymentTransactionType,
 )
 
 ###
