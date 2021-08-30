@@ -10,7 +10,6 @@ class TaxId:
     REGEX_FORMATTED = re.compile(r"^\d{3}-\d{2}-\d{4}$")
 
     val: str
-    is_valid: bool = True
 
     def __init__(self, val: str) -> None:
         if self.REGEX_FORMATTED.match(val):
@@ -19,7 +18,6 @@ class TaxId:
             self.val = "{}-{}-{}".format(val[:3], val[3:5], val[5:])
         else:
             self.val = val
-            self.is_valid = False
 
             raise ValueError(
                 f"does not match one of: {self.REGEX_UNFORMATTED.pattern}, {self.REGEX_FORMATTED.pattern}"
