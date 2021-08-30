@@ -838,6 +838,7 @@ const shared = {
   leaveReasonBonding: "Bond with a child",
   leaveReasonCare: "Care for a family member",
   leaveReasonMedical: "Medical leave",
+  leaveReasonMedicalSchedule: "Medical leave schedule",
   leaveReasonPregnancy: "Medical leave for pregnancy or birth",
   leaveReasonServiceMemberFamily: "Military family",
   maxEmployerCommentLengthError:
@@ -1894,10 +1895,10 @@ const pages = {
     leavePeriodLabel_intermittent: "$t(shared.claimDurationTypeIntermittent)",
     leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReduced)",
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
-    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
-    leaveReasonValue_care: "$t(shared.leaveReasonCare)",
-    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
-    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_bonding: "Leave to bond with a child schedule",
+    leaveReasonValue_care: "Leave to care for a family member schedule",
+    leaveReasonValue_medical: "$t(shared.leaveReasonMedicalSchedule)",
+    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedicalSchedule)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     leaveStatusMessage_Approved:
@@ -2419,10 +2420,10 @@ const components = {
     heading: "Application {{number}}",
     leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReducedSchedule)",
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
-    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
-    leaveReasonValue_care: "$t(shared.leaveReasonCare)",
-    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
-    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_bonding: "Leave to bond with a child",
+    leaveReasonValue_care: "Leave to care for a family member",
+    leaveReasonValue_medical: "Medical leave",
+    leaveReasonValue_pregnancy: "Medical leave for pregnancy",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     manageApplicationDocuments: "Manage your application documents",
