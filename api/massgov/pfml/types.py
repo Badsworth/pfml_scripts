@@ -39,7 +39,7 @@ class TaxId:
         return self.val == other.val
 
     def __str__(self):
-        return self.val.replace("-", "")
+        return self.to_unformatted_str()
 
     def __repr__(self):
         return f"TaxId({self.val})"
