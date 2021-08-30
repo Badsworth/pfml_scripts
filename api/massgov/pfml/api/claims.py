@@ -471,10 +471,7 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
                 employee_tax_identifier = claim.employee.tax_identifier.tax_identifier
                 employer_fein = claim.employer.employer_fein
                 detailed_claim.absence_periods = get_absence_periods(
-                    employee_tax_identifier,
-                    employer_fein,
-                    fineos_absence_id,
-                    db_session,
+                    employee_tax_identifier, employer_fein, fineos_absence_id, db_session,
                 )
             else:
                 logger.info(
