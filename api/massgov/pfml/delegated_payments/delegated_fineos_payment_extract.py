@@ -55,8 +55,8 @@ from massgov.pfml.db.models.payments import (
     FineosWritebackTransactionStatus,
     LkFineosWritebackTransactionStatus,
 )
-from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.delegated_payments.delegated_payments_util import get_now
+from massgov.pfml.delegated_payments.step import Step
 
 logger = logging.get_logger(__name__)
 
