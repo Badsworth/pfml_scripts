@@ -1,7 +1,9 @@
+import uuid
 from enum import Enum
-from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar
+from typing import TYPE_CHECKING, Any, Optional, Type, TypeVar, cast
 
 import sqlalchemy.types as types
+from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.engine.interfaces import Dialect
 
 from massgov.pfml.types import Fein, TaxId
@@ -20,6 +22,9 @@ if TYPE_CHECKING:
     StrEnumType = types.TypeDecorator[_E]
 else:
     StrEnumType = types.TypeDecorator
+
+# (PostgreSQLUUID) https://github.com/dropbox/sqlalchemy-stubs/issues/94
+PostgreSQLUUID = cast("types.TypeEngine[uuid.UUID]", UUID(as_uuid=True),)
 
 
 class StrEnum(StrEnumType):

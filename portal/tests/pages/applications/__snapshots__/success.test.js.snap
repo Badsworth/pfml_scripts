@@ -38,18 +38,20 @@ exports[`Success renders content tailored to Caring Leave 1`] = `
             href="tel:(833) 344-7365"
           />,
           "li": <li />,
-          "reductions-employer-benefits-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
-          />,
-          "reductions-overview-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
-          />,
           "ul": <ul
             className="usa-list"
           />,
+          "when-can-i-use-pfml": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+          />,
         }
       }
-      i18nKey="pages.claimsSuccess.reportReductionsProcess"
+      i18nKey="pages.claimsSuccess.reportReductionsMessage"
+      tOptions={
+        Object {
+          "context": "caringLeave",
+        }
+      }
     />
     <Heading
       level="2"
@@ -117,7 +119,7 @@ Array [
     >
       (833) 344‑7365
     </a>
-     if you’ll receive:
+     if any of these are true:
   </p>,
   <ul
     className="usa-list"
@@ -126,26 +128,28 @@ Array [
     <li
       key="0"
     >
-      Any 
-      <a
-        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
-        key="1"
-      >
-        benefits from your employer
-      </a>
-       that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
+      You have already taken leave to care for a family member since July 1, 2021
     </li>
     <li
       key="1"
     >
-      Income from 
+      You have already taken leave since January 1, 2021 for 
       <a
-        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
         key="1"
       >
-        any other sources
+        any other reason that qualifies for PFML
       </a>
-       during your leave
+    </li>
+    <li
+      key="2"
+    >
+      You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)
+    </li>
+    <li
+      key="3"
+    >
+      You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)
     </li>
   </ul>,
 ]
@@ -231,18 +235,20 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
             href="tel:(833) 344-7365"
           />,
           "li": <li />,
-          "reductions-employer-benefits-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
-          />,
-          "reductions-overview-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
-          />,
           "ul": <ul
             className="usa-list"
           />,
+          "when-can-i-use-pfml": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+          />,
         }
       }
-      i18nKey="pages.claimsSuccess.reportReductionsProcess"
+      i18nKey="pages.claimsSuccess.reportReductionsMessage"
+      tOptions={
+        Object {
+          "context": "leaveNotInFuture",
+        }
+      }
     />
     <Heading
       level="2"
@@ -310,7 +316,7 @@ Array [
     >
       (833) 344‑7365
     </a>
-     if you’ll receive:
+     if any of these are true:
   </p>,
   <ul
     className="usa-list"
@@ -319,26 +325,28 @@ Array [
     <li
       key="0"
     >
-      Any 
-      <a
-        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
-        key="1"
-      >
-        benefits from your employer
-      </a>
-       that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
+      You have already taken leave to care for a family member since July 1, 2021
     </li>
     <li
       key="1"
     >
-      Income from 
+      You have already taken leave since January 1, 2021 for 
       <a
-        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
         key="1"
       >
-        any other sources
+        any other reason that qualifies for PFML
       </a>
-       during your leave
+    </li>
+    <li
+      key="2"
+    >
+      You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)
+    </li>
+    <li
+      key="3"
+    >
+      You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)
     </li>
   </ul>,
 ]
@@ -418,37 +426,6 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
     <Heading
       level="2"
     >
-      <SvgIconPhone
-        className="margin-right-2 text-secondary text-middle"
-        fill="currentColor"
-        height={30}
-        width={30}
-      />
-      We may need more information from you
-    </Heading>
-    <Trans
-      components={
-        Object {
-          "contact-center-phone-link": <a
-            href="tel:(833) 344-7365"
-          />,
-          "li": <li />,
-          "reductions-employer-benefits-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
-          />,
-          "reductions-overview-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
-          />,
-          "ul": <ul
-            className="usa-list"
-          />,
-        }
-      }
-      i18nKey="pages.claimsSuccess.reportReductionsProcess"
-    />
-    <Heading
-      level="2"
-    >
       <SvgIconCalendar
         className="margin-right-2 text-secondary text-middle"
         fill="currentColor"
@@ -503,52 +480,6 @@ Array [
 exports[`Success renders content tailored to Family (Bonding Future Adoption) 3`] = `"After your child arrives in your home, you will need to upload, mail, or fax a document that shows your child’s placement date."`;
 
 exports[`Success renders content tailored to Family (Bonding Future Adoption) 4`] = `
-Array [
-  <p
-    key="p-0"
-  >
-    Call the Contact Center at 
-    <a
-      href="tel:(833) 344-7365"
-      key="1"
-    >
-      (833) 344‑7365
-    </a>
-     if you’ll receive:
-  </p>,
-  <ul
-    className="usa-list"
-    key="1"
-  >
-    <li
-      key="0"
-    >
-      Any 
-      <a
-        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
-        key="1"
-      >
-        benefits from your employer
-      </a>
-       that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
-    </li>
-    <li
-      key="1"
-    >
-      Income from 
-      <a
-        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
-        key="1"
-      >
-        any other sources
-      </a>
-       during your leave
-    </li>
-  </ul>,
-]
-`;
-
-exports[`Success renders content tailored to Family (Bonding Future Adoption) 5`] = `
 <ul
   className="usa-list"
   key="0"
@@ -631,37 +562,6 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
         }
       />
     </Alert>
-    <Heading
-      level="2"
-    >
-      <SvgIconPhone
-        className="margin-right-2 text-secondary text-middle"
-        fill="currentColor"
-        height={30}
-        width={30}
-      />
-      We may need more information from you
-    </Heading>
-    <Trans
-      components={
-        Object {
-          "contact-center-phone-link": <a
-            href="tel:(833) 344-7365"
-          />,
-          "li": <li />,
-          "reductions-employer-benefits-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
-          />,
-          "reductions-overview-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
-          />,
-          "ul": <ul
-            className="usa-list"
-          />,
-        }
-      }
-      i18nKey="pages.claimsSuccess.reportReductionsProcess"
-    />
     <Heading
       level="2"
     >
@@ -749,52 +649,6 @@ Array [
 exports[`Success renders content tailored to Family (Bonding Future Newborn) 3`] = `"After your child is born, you will need to upload, mail, or fax a document that shows your child’s date of birth."`;
 
 exports[`Success renders content tailored to Family (Bonding Future Newborn) 4`] = `
-Array [
-  <p
-    key="p-0"
-  >
-    Call the Contact Center at 
-    <a
-      href="tel:(833) 344-7365"
-      key="1"
-    >
-      (833) 344‑7365
-    </a>
-     if you’ll receive:
-  </p>,
-  <ul
-    className="usa-list"
-    key="1"
-  >
-    <li
-      key="0"
-    >
-      Any 
-      <a
-        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
-        key="1"
-      >
-        benefits from your employer
-      </a>
-       that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
-    </li>
-    <li
-      key="1"
-    >
-      Income from 
-      <a
-        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
-        key="1"
-      >
-        any other sources
-      </a>
-       during your leave
-    </li>
-  </ul>,
-]
-`;
-
-exports[`Success renders content tailored to Family (Bonding Future Newborn) 5`] = `
 <ul
   className="usa-list"
   key="0"
@@ -837,7 +691,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 5`]
 </ul>
 `;
 
-exports[`Success renders content tailored to Family (Bonding Future Newborn) 6`] = `
+exports[`Success renders content tailored to Family (Bonding Future Newborn) 5`] = `
 Array [
   "You can take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at ",
   <a
@@ -895,18 +749,20 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
             href="tel:(833) 344-7365"
           />,
           "li": <li />,
-          "reductions-employer-benefits-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
-          />,
-          "reductions-overview-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
-          />,
           "ul": <ul
             className="usa-list"
           />,
+          "when-can-i-use-pfml": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+          />,
         }
       }
-      i18nKey="pages.claimsSuccess.reportReductionsProcess"
+      i18nKey="pages.claimsSuccess.reportReductionsMessage"
+      tOptions={
+        Object {
+          "context": "leaveNotInFuture",
+        }
+      }
     />
     <Heading
       level="2"
@@ -1004,7 +860,7 @@ Array [
     >
       (833) 344‑7365
     </a>
-     if you’ll receive:
+     if any of these are true:
   </p>,
   <ul
     className="usa-list"
@@ -1013,26 +869,28 @@ Array [
     <li
       key="0"
     >
-      Any 
-      <a
-        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
-        key="1"
-      >
-        benefits from your employer
-      </a>
-       that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
+      You have already taken leave to care for a family member since July 1, 2021
     </li>
     <li
       key="1"
     >
-      Income from 
+      You have already taken leave since January 1, 2021 for 
       <a
-        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
         key="1"
       >
-        any other sources
+        any other reason that qualifies for PFML
       </a>
-       during your leave
+    </li>
+    <li
+      key="2"
+    >
+      You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)
+    </li>
+    <li
+      key="3"
+    >
+      You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)
     </li>
   </ul>,
 ]
@@ -1127,18 +985,20 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
             href="tel:(833) 344-7365"
           />,
           "li": <li />,
-          "reductions-employer-benefits-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
-          />,
-          "reductions-overview-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
-          />,
           "ul": <ul
             className="usa-list"
           />,
+          "when-can-i-use-pfml": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+          />,
         }
       }
-      i18nKey="pages.claimsSuccess.reportReductionsProcess"
+      i18nKey="pages.claimsSuccess.reportReductionsMessage"
+      tOptions={
+        Object {
+          "context": "leaveNotInFuture",
+        }
+      }
     />
     <Heading
       level="2"
@@ -1206,7 +1066,7 @@ Array [
     >
       (833) 344‑7365
     </a>
-     if you’ll receive:
+     if any of these are true:
   </p>,
   <ul
     className="usa-list"
@@ -1215,26 +1075,28 @@ Array [
     <li
       key="0"
     >
-      Any 
-      <a
-        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
-        key="1"
-      >
-        benefits from your employer
-      </a>
-       that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
+      You have already taken leave to care for a family member since July 1, 2021
     </li>
     <li
       key="1"
     >
-      Income from 
+      You have already taken leave since January 1, 2021 for 
       <a
-        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
         key="1"
       >
-        any other sources
+        any other reason that qualifies for PFML
       </a>
-       during your leave
+    </li>
+    <li
+      key="2"
+    >
+      You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)
+    </li>
+    <li
+      key="3"
+    >
+      You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)
     </li>
   </ul>,
 ]
@@ -1309,18 +1171,20 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
             href="tel:(833) 344-7365"
           />,
           "li": <li />,
-          "reductions-employer-benefits-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
-          />,
-          "reductions-overview-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
-          />,
           "ul": <ul
             className="usa-list"
           />,
+          "when-can-i-use-pfml": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+          />,
         }
       }
-      i18nKey="pages.claimsSuccess.reportReductionsProcess"
+      i18nKey="pages.claimsSuccess.reportReductionsMessage"
+      tOptions={
+        Object {
+          "context": "leaveNotInFuture",
+        }
+      }
     />
     <Heading
       level="2"
@@ -1418,7 +1282,7 @@ Array [
     >
       (833) 344‑7365
     </a>
-     if you’ll receive:
+     if any of these are true:
   </p>,
   <ul
     className="usa-list"
@@ -1427,26 +1291,28 @@ Array [
     <li
       key="0"
     >
-      Any 
-      <a
-        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
-        key="1"
-      >
-        benefits from your employer
-      </a>
-       that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
+      You have already taken leave to care for a family member since July 1, 2021
     </li>
     <li
       key="1"
     >
-      Income from 
+      You have already taken leave since January 1, 2021 for 
       <a
-        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
         key="1"
       >
-        any other sources
+        any other reason that qualifies for PFML
       </a>
-       during your leave
+    </li>
+    <li
+      key="2"
+    >
+      You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)
+    </li>
+    <li
+      key="3"
+    >
+      You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)
     </li>
   </ul>,
 ]
@@ -1561,18 +1427,20 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
             href="tel:(833) 344-7365"
           />,
           "li": <li />,
-          "reductions-employer-benefits-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
-          />,
-          "reductions-overview-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
-          />,
           "ul": <ul
             className="usa-list"
           />,
+          "when-can-i-use-pfml": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+          />,
         }
       }
-      i18nKey="pages.claimsSuccess.reportReductionsProcess"
+      i18nKey="pages.claimsSuccess.reportReductionsMessage"
+      tOptions={
+        Object {
+          "context": "medicalPregnantFuture",
+        }
+      }
     />
     <Heading
       level="2"
@@ -1683,7 +1551,7 @@ Array [
     >
       (833) 344‑7365
     </a>
-     if you’ll receive:
+     if any of these are true:
   </p>,
   <ul
     className="usa-list"
@@ -1692,26 +1560,28 @@ Array [
     <li
       key="0"
     >
-      Any 
-      <a
-        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-"
-        key="1"
-      >
-        benefits from your employer
-      </a>
-       that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)
+      You have already taken leave to care for a family member since July 1, 2021
     </li>
     <li
       key="1"
     >
-      Income from 
+      You have already taken leave since January 1, 2021 for 
       <a
-        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
         key="1"
       >
-        any other sources
+        any other reason that qualifies for PFML
       </a>
-       during your leave
+    </li>
+    <li
+      key="2"
+    >
+      You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)
+    </li>
+    <li
+      key="3"
+    >
+      You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)
     </li>
   </ul>,
 ]
@@ -1774,7 +1644,7 @@ Array [
 ]
 `;
 
-exports[`Success renders reportReductionsMessage when feature flag on and !hasReductionsData 1`] = `
+exports[`Success renders reportReductionsMessage when there are no other leaves 1`] = `
 Array [
   <p
     key="p-0"

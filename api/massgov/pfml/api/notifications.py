@@ -15,16 +15,21 @@ import massgov.pfml.util.logging
 from massgov.pfml import db
 from massgov.pfml.api.authorization.flask import CREATE, ensure
 from massgov.pfml.api.models.notifications.requests import NotificationRequest
+from massgov.pfml.api.services.managed_requirements import (
+    get_fineos_managed_requirements_from_notification,
+)
 from massgov.pfml.api.services.service_now_actions import send_notification_to_service_now
 from massgov.pfml.db.models.applications import Notification
 from massgov.pfml.db.models.employees import Claim, Employee, Employer, ManagedRequirementType
 from massgov.pfml.db.queries.managed_requirements import (
     create_managed_requirement_from_fineos,
     create_or_update_managed_requirement_from_fineos,
-    get_fineos_managed_requirements_from_notification,
     get_managed_requirement_by_fineos_managed_requirement_id,
 )
 from massgov.pfml.types import Fein
+from massgov.pfml.util.logging.managed_requirements import (
+    get_fineos_managed_requirement_log_attributes,
+)
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
@@ -88,7 +93,7 @@ def notifications_post():
             if employer:
                 log_attributes = {
                     **log_attributes,
-                    "employer_id": employer.employer_id,
+                    "employer_id": str(employer.employer_id),
                 }
                 newrelic.agent.add_custom_parameter("employer_id", employer.employer_id)
         except MultipleResultsFound:
@@ -103,7 +108,7 @@ def notifications_post():
             db_session, log_attributes, notification_request.claimant_info.customer_id
         )
         if employee_id:
-            log_attributes = {**log_attributes, "employee_id": employee_id}
+            log_attributes = {**log_attributes, "employee_id": str(employee_id)}
             newrelic.agent.add_custom_parameter("employee_id", employee_id)
 
         if claim is None:
@@ -143,6 +148,7 @@ def notifications_post():
                 extra=log_attributes,
                 exc_info=error,
             )
+            db_session.rollback()  # handle insert errors
 
     # Send the request to Service Now
     send_notification_to_service_now(notification_request, employer)
@@ -155,7 +161,7 @@ def notifications_post():
 
 def get_employee_id_from_fineos_customer_number(
     db_session: db.Session, log_attributes: dict, fineos_customer_number: str
-) -> Optional[str]:
+) -> Optional[UUID]:
     """Get employee ID by fineos_customer_number. Fails without raising an exception since an Employee ID isn't required for sending a notification."""
     try:
         employee = (
@@ -251,12 +257,8 @@ def handle_managed_requirements_create(
 
     for fineos_requirement in fineos_requirements:
         log_attr = {
-            "fineos_managed_requirement.managedReqId": fineos_requirement.managedReqId,
-            "fineos_managed_requirement.status": fineos_requirement.status,
-            "fineos_managed_requirement.category": fineos_requirement.category,
-            "fineos_managed_requirement.type": fineos_requirement.type,
-            "fineos_managed_requirement.followUpDate": fineos_requirement.followUpDate,
             **log_attributes.copy(),
+            **get_fineos_managed_requirement_log_attributes(fineos_requirement),
         }
         try:
             type_id = ManagedRequirementType.get_id(fineos_requirement.type)
@@ -293,12 +295,8 @@ def handle_managed_requirements_update(
 
     for fineos_requirement in fineos_requirements:
         log_attr = {
-            "fineos_managed_requirement.managedReqId": fineos_requirement.managedReqId,
-            "fineos_managed_requirement.status": fineos_requirement.status,
-            "fineos_managed_requirement.category": fineos_requirement.category,
-            "fineos_managed_requirement.type": fineos_requirement.type,
-            "fineos_managed_requirement.followUpDate": fineos_requirement.followUpDate,
             **log_attributes.copy(),
+            **get_fineos_managed_requirement_log_attributes(fineos_requirement),
         }
         create_or_update_managed_requirement_from_fineos(
             db_session, claim_id, fineos_requirement, log_attr

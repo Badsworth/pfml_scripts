@@ -7,6 +7,7 @@ import SupportingWorkDetails from "../../../src/components/employers/SupportingW
 import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps";
 
 describe("SupportingWorkDetails", () => {
+  const appErrors = new AppErrorInfoCollection();
   const hoursWorkedPerWeek = 30;
   const getField = jest.fn();
   const clearField = jest.fn();
@@ -16,21 +17,23 @@ describe("SupportingWorkDetails", () => {
   beforeEach(() => {
     testHook(() => {
       getFunctionalInputProps = useFunctionalInputProps({
-        appErrors: new AppErrorInfoCollection(),
+        appErrors,
         formState: { hours_worked_per_week: hoursWorkedPerWeek },
         updateFields,
       });
     });
   });
 
-  function render(renderMode = "shallow") {
-    const props = {
+  function render(renderMode = "shallow", givenProps = {}) {
+    const defaultProps = {
+      appErrors,
       clearField,
       getField,
       getFunctionalInputProps,
       initialHoursWorkedPerWeek: hoursWorkedPerWeek,
       updateFields,
     };
+    const props = { ...defaultProps, ...givenProps };
     if (renderMode === "mount") {
       return mount(<SupportingWorkDetails {...props} />);
     }
@@ -73,7 +76,7 @@ describe("SupportingWorkDetails", () => {
         updateFields,
       });
     });
-    const wrapper = render("mount");
+    const wrapper = render("mount", { appErrors });
 
     expect(isAmendmentFormVisible(wrapper)).toBe(true);
   });
@@ -115,7 +118,7 @@ describe("SupportingWorkDetails", () => {
         updateFields,
       });
     });
-    const wrapper = render("mount");
+    const wrapper = render("mount", { appErrors });
 
     expect(isAmendmentFormVisible(wrapper)).toBe(true);
     wrapper.find({ "data-test": "amendment-destroy-button" }).simulate("click");

@@ -1,5 +1,285 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`leave details page does not render LeaveDetails if absenceDetails not given 1`] = `null`;
+
+exports[`leave details page does renders page separated by keys if object of absenceDetails has more keys 1`] = `
+Array [
+  <div
+    className="border-bottom border-base-lighter margin-bottom-2 padding-bottom-2"
+    key="medical"
+  >
+    <Heading
+      level="2"
+    >
+      pages.claimsStatus.leaveReasonValue
+    </Heading>
+    <div
+      className="margin-top-2"
+      key="PL-14432-0000002026"
+    >
+      <Heading
+        className="margin-bottom-1"
+        level="3"
+      >
+        Reduced leave
+      </Heading>
+      <p>
+        From June 1, 2021 to June 8, 2021
+      </p>
+      <Tag
+        label="Approved"
+        paddingSm={true}
+        state="success"
+      />
+      <Trans
+        components={
+          Object {
+            "application-link": <a
+              href="/applications/get-ready"
+            />,
+            "notice-link": <a
+              href="#view_notices"
+            />,
+            "request-appeal-link": <a
+              href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+            />,
+          }
+        }
+        i18nKey="pages.claimsStatus.leaveStatusMessage"
+        tOptions={
+          Object {
+            "context": "Approved",
+          }
+        }
+      />
+    </div>
+    <div
+      className="margin-top-2"
+      key="PL-14432-0000002326"
+    >
+      <Heading
+        className="margin-bottom-1"
+        level="3"
+      >
+        Continuous leave
+      </Heading>
+      <p>
+        From July 1, 2021 to July 8, 2021
+      </p>
+      <Tag
+        label="Pending"
+        paddingSm={true}
+        state="pending"
+      />
+      <Trans
+        components={
+          Object {
+            "application-link": <a
+              href="/applications/get-ready"
+            />,
+            "notice-link": <a
+              href="#view_notices"
+            />,
+            "request-appeal-link": <a
+              href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+            />,
+          }
+        }
+        i18nKey="pages.claimsStatus.leaveStatusMessage"
+        tOptions={
+          Object {
+            "context": "Pending",
+          }
+        }
+      />
+    </div>
+  </div>,
+  <div
+    className="border-bottom border-base-lighter margin-bottom-2 padding-bottom-2"
+    key="bonding"
+  >
+    <Heading
+      level="2"
+    >
+      pages.claimsStatus.leaveReasonValue
+    </Heading>
+    <div
+      className="margin-top-2"
+      key="PL-14434-0000002026"
+    >
+      <Heading
+        className="margin-bottom-1"
+        level="3"
+      >
+        Reduced leave
+      </Heading>
+      <p>
+        From August 1, 2021 to August 8, 2021
+      </p>
+      <Tag
+        label="Denied"
+        paddingSm={true}
+        state="error"
+      />
+      <Trans
+        components={
+          Object {
+            "application-link": <a
+              href="/applications/get-ready"
+            />,
+            "notice-link": <a
+              href="#view_notices"
+            />,
+            "request-appeal-link": <a
+              href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+            />,
+          }
+        }
+        i18nKey="pages.claimsStatus.leaveStatusMessage"
+        tOptions={
+          Object {
+            "context": "Denied",
+          }
+        }
+      />
+    </div>
+    <div
+      className="margin-top-2"
+      key="PL-14434-0000002326"
+    >
+      <Heading
+        className="margin-bottom-1"
+        level="3"
+      >
+        Continuous leave
+      </Heading>
+      <p>
+        From August 1, 2021 to August 8, 2021
+      </p>
+      <Tag
+        label="Withdrawn"
+        paddingSm={true}
+        state="inactive"
+      />
+      <Trans
+        components={
+          Object {
+            "application-link": <a
+              href="/applications/get-ready"
+            />,
+            "notice-link": <a
+              href="#view_notices"
+            />,
+            "request-appeal-link": <a
+              href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+            />,
+          }
+        }
+        i18nKey="pages.claimsStatus.leaveStatusMessage"
+        tOptions={
+          Object {
+            "context": "Withdrawn",
+          }
+        }
+      />
+    </div>
+  </div>,
+]
+`;
+
+exports[`leave details page does renders page with one section if absenceDetails has only one key 1`] = `
+<div
+  className="border-bottom border-base-lighter margin-bottom-2 padding-bottom-2"
+  key="medical"
+>
+  <Heading
+    level="2"
+  >
+    pages.claimsStatus.leaveReasonValue
+  </Heading>
+  <div
+    className="margin-top-2"
+    key="PL-14432-0000002026"
+  >
+    <Heading
+      className="margin-bottom-1"
+      level="3"
+    >
+      Reduced leave
+    </Heading>
+    <p>
+      From June 1, 2021 to June 8, 2021
+    </p>
+    <Tag
+      label="Approved"
+      paddingSm={true}
+      state="success"
+    />
+    <Trans
+      components={
+        Object {
+          "application-link": <a
+            href="/applications/get-ready"
+          />,
+          "notice-link": <a
+            href="#view_notices"
+          />,
+          "request-appeal-link": <a
+            href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+          />,
+        }
+      }
+      i18nKey="pages.claimsStatus.leaveStatusMessage"
+      tOptions={
+        Object {
+          "context": "Approved",
+        }
+      }
+    />
+  </div>
+  <div
+    className="margin-top-2"
+    key="PL-14432-0000002326"
+  >
+    <Heading
+      className="margin-bottom-1"
+      level="3"
+    >
+      Continuous leave
+    </Heading>
+    <p>
+      From July 1, 2021 to July 8, 2021
+    </p>
+    <Tag
+      label="Pending"
+      paddingSm={true}
+      state="pending"
+    />
+    <Trans
+      components={
+        Object {
+          "application-link": <a
+            href="/applications/get-ready"
+          />,
+          "notice-link": <a
+            href="#view_notices"
+          />,
+          "request-appeal-link": <a
+            href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+          />,
+        }
+      }
+      i18nKey="pages.claimsStatus.leaveStatusMessage"
+      tOptions={
+        Object {
+          "context": "Pending",
+        }
+      }
+    />
+  </div>
+</div>
+`;
+
 exports[`status page displays an error if feature flag is disabled 1`] = `
 <Fragment>
   <BackButton

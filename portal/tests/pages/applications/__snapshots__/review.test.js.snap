@@ -503,6 +503,7 @@ exports[`Review Page Leave reason When the reason is caring leave renders caring
     data-test="other-leave"
   >
     <ReviewHeading
+      editHref="/applications/previous-leaves-intro?claim_id=mock_application_id"
       editText="Edit"
       level="3"
     >
@@ -910,6 +911,7 @@ exports[`Review Page Part 1 Review Page when all data is present renders Review 
     data-test="other-leave"
   >
     <ReviewHeading
+      editHref="/applications/previous-leaves-intro?claim_id=mock_application_id"
       editText="Edit"
       level="3"
     >

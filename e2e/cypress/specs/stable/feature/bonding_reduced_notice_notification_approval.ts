@@ -1,15 +1,18 @@
 import { fineos, portal, email, fineosPages } from "../../../actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
+import { getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
 import {
   findCertificationDoc,
   getDocumentReviewTaskName,
 } from "../../../../src/util/documents";
+import { assertValidClaim } from "../../../../src/util/typeUtils";
 
 describe("Approval (notifications/notices)", () => {
   after(() => {
-    portal.deleteDownloadsFolder();
+    // @todo: remove conditional statement once claimant status is deployed to all envs
+    config("HAS_CLAIMANT_STATUS_PAGE") !== "true" &&
+      portal.deleteDownloadsFolder();
   });
 
   const credentials: Credentials = {
@@ -17,88 +20,95 @@ describe("Approval (notifications/notices)", () => {
     password: config("PORTAL_PASSWORD"),
   };
 
-  const submit = it(
-    "Given a fully approved claim",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      fineos.before();
-      cy.visit("/");
-      // Submit a claim via the API, including Employer Response.
-      cy.task("generateClaim", "REDUCED_ER").then((claim) => {
-        cy.stash("claim", claim.claim);
-        cy.task("submitClaimToAPI", {
-          ...claim,
-          credentials,
-        }).then((response) => {
-          cy.stash("submission", {
-            application_id: response.application_id,
-            fineos_absence_id: response.fineos_absence_id,
-            timestamp_from: Date.now(),
-          });
-
-          const claimPage = fineosPages.ClaimPage.visit(
-            response.fineos_absence_id
-          );
-          claimPage.adjudicate((adjudication) => {
-            adjudication.evidence((evidence) => {
-              // Receive and approve all of the documentation for the claim.
-              claim.documents.forEach((doc) =>
-                evidence.receive(doc.document_type)
-              );
-            });
-            adjudication.certificationPeriods((cert) => cert.prefill());
-            adjudication.acceptLeavePlan();
-          });
-          claimPage.tasks((tasks) => {
-            const certificationDoc = findCertificationDoc(claim.documents);
-            const certificationTask = getDocumentReviewTaskName(
-              certificationDoc.document_type
-            );
-            tasks.assertTaskExists("ID Review");
-            tasks.assertTaskExists(certificationTask);
-          });
-          claimPage.shouldHaveStatus("Applicability", "Applicable");
-          claimPage.shouldHaveStatus("Eligibility", "Met");
-          claimPage.shouldHaveStatus("Evidence", "Satisfied");
-          claimPage.shouldHaveStatus("Availability", "Time Available");
-          claimPage.shouldHaveStatus("Restriction", "Passed");
-          claimPage.shouldHaveStatus("PlanDecision", "Accepted");
-          claimPage.approve();
-          claimPage
-            .triggerNotice("Designation Notice")
-            .documents((docPage) =>
-              docPage.assertDocumentExists("Approval Notice")
-            );
+  const submit = it("Given a fully approved claim", () => {
+    fineos.before();
+    // Submit a claim via the API, including Employer Response.
+    cy.task("generateClaim", "REDUCED_ER").then((claim) => {
+      cy.stash("claim", claim.claim);
+      cy.task("submitClaimToAPI", {
+        ...claim,
+        credentials,
+      }).then((response) => {
+        cy.stash("submission", {
+          application_id: response.application_id,
+          fineos_absence_id: response.fineos_absence_id,
+          timestamp_from: Date.now(),
         });
+
+        const claimPage = fineosPages.ClaimPage.visit(
+          response.fineos_absence_id
+        );
+        claimPage.adjudicate((adjudication) => {
+          adjudication.evidence((evidence) => {
+            // Receive and approve all of the documentation for the claim.
+            claim.documents.forEach((doc) =>
+              evidence.receive(doc.document_type)
+            );
+          });
+          adjudication.certificationPeriods((cert) => cert.prefill());
+          adjudication.acceptLeavePlan();
+        });
+        claimPage.tasks((tasks) => {
+          const certificationDoc = findCertificationDoc(claim.documents);
+          const certificationTask = getDocumentReviewTaskName(
+            certificationDoc.document_type
+          );
+          tasks.assertTaskExists("ID Review");
+          tasks.assertTaskExists(certificationTask);
+        });
+        claimPage.shouldHaveStatus("Applicability", "Applicable");
+        claimPage.shouldHaveStatus("Eligibility", "Met");
+        claimPage.shouldHaveStatus("Evidence", "Satisfied");
+        claimPage.shouldHaveStatus("Availability", "Time Available");
+        claimPage.shouldHaveStatus("Restriction", "Passed");
+        claimPage.shouldHaveStatus("PlanDecision", "Accepted");
+        claimPage.approve();
+        claimPage
+          .triggerNotice("Designation Notice")
+          .documents((docPage) =>
+            docPage.assertDocumentExists("Approval Notice")
+          );
       });
-    }
-  );
+    });
+  });
 
   it(
     "Should generate a legal notice (Approval) that the claimant can view",
     { retries: 0 },
     () => {
       cy.dependsOnPreviousPass([submit]);
-      portal.before();
-      cy.visit("/");
+      portal.before({
+        claimantShowStatusPage: config("HAS_CLAIMANT_STATUS_PAGE") === "true",
+      });
       portal.login(credentials);
+      cy.visit("/applications");
       cy.unstash<Submission>("submission").then((submission) => {
         // Wait for the legal document to arrive.
-        cy.task(
-          "waitForClaimDocuments",
-          {
-            credentials: credentials,
-            application_id: submission.application_id,
-            document_type: "Approval Notice",
-          },
-          { timeout: 30000 }
-        );
-
-        cy.visit("/applications");
-        cy.contains("article", submission.fineos_absence_id).within(() => {
+        if (config("HAS_CLAIMANT_STATUS_PAGE") === "true") {
+          portal.claimantGoToClaimStatus(submission.fineos_absence_id);
+          // @todo: update status to "Approved" once status page doesn't use static data
+          portal.claimantAssertClaimStatus([
+            { leave: "Child Bonding", status: "Denied" },
+          ]);
           cy.findByText("Approval notice (PDF)").should("be.visible").click();
-        });
-        portal.downloadLegalNotice(submission.fineos_absence_id);
+          // @todo: uncomment once claimant status is deployed to all envs
+          // portal.downloadLegalNotice(submission.fineos_absence_id);
+        } else {
+          // @todo: remove once claimant status is deployed to all envs
+          cy.task(
+            "waitForClaimDocuments",
+            {
+              credentials: credentials,
+              application_id: submission.application_id,
+              document_type: "Approval Notice",
+            },
+            { timeout: 30000 }
+          );
+          cy.contains("article", submission.fineos_absence_id).within(() => {
+            cy.findByText("Approval notice (PDF)").should("be.visible").click();
+          });
+          portal.downloadLegalNotice(submission.fineos_absence_id);
+        }
       });
     }
   );
@@ -119,7 +129,9 @@ describe("Approval (notifications/notices)", () => {
           portal.login(getLeaveAdminCredentials(claim.employer_fein));
           portal.selectClaimFromEmployerDashboard(
             submission.fineos_absence_id,
-            "--"
+            config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"
+              ? "No action required"
+              : "--"
           );
           portal.checkNoticeForLeaveAdmin(
             submission.fineos_absence_id,
@@ -164,9 +176,18 @@ describe("Approval (notifications/notices)", () => {
     "Should generate an approval notification for the Leave Administrator",
     { retries: 0 },
     () => {
+      portal.before();
       cy.dependsOnPreviousPass([submit]);
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
+          assertValidClaim(claim);
+          portal.login(getLeaveAdminCredentials(claim.employer_fein));
+          portal.selectClaimFromEmployerDashboard(
+            submission.fineos_absence_id,
+            config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"
+              ? "No action required"
+              : "--"
+          );
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
           const subjectEmployer = email.getNotificationSubject(
             `${claim.first_name} ${claim.last_name}`,

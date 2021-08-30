@@ -310,6 +310,31 @@ export class ClaimPage {
     makeDecision();
     return this;
   }
+
+  suppressCorrespondence(hasAction: boolean): this {
+    cy.contains("Options").click();
+    if (hasAction) {
+      cy.contains("Notifications").click();
+      cy.get("input[type='submit'][value='Suppress Notifications']").click();
+      cy.contains(
+        "Automatic Notifications and Correspondence have been suppressed."
+      );
+      cy.get("#alertsHeader").within(() => {
+        cy.contains("Open").click();
+        waitForAjaxComplete();
+        cy.contains(
+          "Automatic Notifications and Correspondence have been suppressed."
+        );
+        clickBottomWidgetButton("Close");
+      });
+    } else {
+      cy.contains(
+        "span[title='Control is protected by a Secured Action.']",
+        "Notifications"
+      ).should("have.attr", "disabled");
+    }
+    return this;
+  }
 }
 
 class AdjudicationPage {

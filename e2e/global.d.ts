@@ -54,7 +54,10 @@ declare namespace Cypress {
         : GeneratedClaim
     >;
     task(event: "getAuthVerification", mail: string): Chainable<string>;
-    task(event: "completeSSOLoginFineos"): Chainable<string>;
+    task(
+      event: "completeSSOLoginFineos",
+      credentials?: Credentials
+    ): Chainable<string>;
     task(event: "generateCredentials"): Chainable<Credentials>;
     task(event: "getParsedPDF", filename: string): Promise<pdf>;
     task(event: "deleteDownloadFolder", folderName: string): Chainable<true>;

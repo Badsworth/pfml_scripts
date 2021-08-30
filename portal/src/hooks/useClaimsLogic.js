@@ -1,7 +1,7 @@
+import { get, isEqual } from "lodash";
 import ClaimCollection from "../models/ClaimCollection";
 import ClaimsApi from "../api/ClaimsApi";
 import PaginationMeta from "../models/PaginationMeta";
-import { isEqual } from "lodash";
 import useCollectionState from "./useCollectionState";
 import { useState } from "react";
 
@@ -14,7 +14,9 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
   const { collection: claims, setCollection: setClaims } = useCollectionState(
     new ClaimCollection()
   );
+  const [claimDetail, setClaimDetail] = useState();
   const [isLoadingClaims, setIsLoadingClaims] = useState();
+  const [isLoadingClaimDetail, setIsLoadingClaimDetail] = useState();
 
   // Pagination info associated with the current collection of claims
   const [paginationMeta, setPaginationMeta] = useState(new PaginationMeta());
@@ -78,11 +80,39 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
     }
   };
 
+  /**
+   * Load details for a single claim
+   * @param {string} absenceId - FINEOS absence ID for the claim to load
+   */
+  const loadClaimDetail = async (absenceId) => {
+    if (isLoadingClaimDetail) return;
+
+    // Have we already loaded this claim?
+    if (get(claimDetail, "fineos_absence_id") === absenceId) {
+      return;
+    }
+
+    setIsLoadingClaimDetail(true);
+    appErrorsLogic.clearErrors();
+
+    try {
+      const data = await claimsApi.getClaimDetail(absenceId);
+
+      setClaimDetail(data.claimDetail);
+      setIsLoadingClaimDetail(false);
+    } catch (error) {
+      appErrorsLogic.catchError(error);
+    }
+  };
+
   return {
     activeFilters,
+    claimDetail,
     claims,
     clearClaims,
     isLoadingClaims,
+    isLoadingClaimDetail,
+    loadClaimDetail,
     loadPage,
     paginationMeta,
   };

@@ -756,7 +756,7 @@ describe("Employer dashboard", () => {
     expect(claimsTable.find("SortDropdown").dive()).toMatchSnapshot();
   });
 
-  it("renders Sort by Status option when feature flag is enabled", () => {
+  it("renders and defaults to Sort by Status option when feature flag is enabled", () => {
     process.env.featureFlags = {
       employerShowReviewByStatus: true,
       employerShowDashboardSort: true,
@@ -764,14 +764,18 @@ describe("Employer dashboard", () => {
 
     const { wrapper } = setup();
     const claimsTable = findClaimsTable(wrapper);
+    const sortDropdown = claimsTable.find("SortDropdown").dive();
 
-    expect(claimsTable.find("SortDropdown").dive().prop("choices")).toEqual(
+    expect(sortDropdown.prop("choices")).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           label: "Status",
           value: "absence_status,ascending",
         }),
       ])
+    );
+    expect(sortDropdown.prop("value")).toMatchInlineSnapshot(
+      `"absence_status,ascending"`
     );
   });
 

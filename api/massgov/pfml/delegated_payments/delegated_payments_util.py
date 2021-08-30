@@ -1,4 +1,3 @@
-import math
 import os
 import pathlib
 import re
@@ -200,22 +199,6 @@ def get_date_folder(current_time: Optional[datetime] = None) -> str:
         current_time = get_now()
 
     return current_time.strftime("%Y-%m-%d")
-
-
-def get_period_in_weeks(period_start: date, period_end: date) -> int:
-    period_start_date = period_start.date() if isinstance(period_start, datetime) else period_start
-    period_end_date = period_end.date() if isinstance(period_end, datetime) else period_end
-
-    # We add 1 to the period in days because we want to consider a week to be
-    # 7 days inclusive. For example:
-    #    Jan 1st - Jan 1st is 1 day even though no time passes.
-    #    Jan 1st - Jan 2nd is 2 days
-    #    Jan 1st - Jan 7th is 7 days (eg. Monday -> Sunday)
-    #    Jan 1st - Jan 8th is 8 days (eg. Monday -> the next Monday)
-
-    period_in_days = (period_end_date - period_start_date).days + 1
-    weeks = math.ceil(period_in_days / 7.0)
-    return weeks
 
 
 def build_archive_path(

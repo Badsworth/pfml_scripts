@@ -150,6 +150,17 @@ interface SpawnError {
                 name: "LST_RUN_ID",
                 value: run_id,
               },
+              {
+                name: "E2E_DEBUG",
+                // Need to set in .env file or when running command:
+                // E2E_DEBUG=true npx ts-node src/scripts/deploy-lst.ts
+                value: process.env.E2E_DEBUG,
+              },
+              {
+                name: "IS_ECS",
+                // Should always be true when running this script
+                value: "true",
+              },
             ],
           },
         ],

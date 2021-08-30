@@ -26,6 +26,7 @@ function getRawEnvironment() {
     PORTAL_PASSWORD: process.env.E2E_PORTAL_PASSWORD,
     PORTAL_USERNAME: process.env.E2E_PORTAL_USERNAME,
     EMPLOYER_PORTAL_PASSWORD: process.env.E2E_EMPLOYER_PORTAL_PASSWORD,
+    PORTAL_HAS_LA_STATUS_UPDATES: process.env.E2E_PORTAL_HAS_LA_STATUS_UPDATES,
 
     COGNITO_POOL: process.env.E2E_COGNITO_POOL,
     COGNITO_CLIENTID: process.env.E2E_COGNITO_CLIENTID,
@@ -53,8 +54,11 @@ function getRawEnvironment() {
     LST_EMPLOYEES_FILE: process.env.E2E_LST_EMPLOYEES_FILE,
     LST_EMPLOYERS_FILE: process.env.E2E_LST_EMPLOYERS_FILE,
 
-    NEWRELIC_APIKEY: process.env.NEWRELIC_APIKEY,
-    NEWRELIC_ACCOUNTID: process.env.NEWRELIC_ACCOUNTID,
+    NEWRELIC_APIKEY: process.env.E2E_NEWRELIC_APIKEY,
+    NEWRELIC_ACCOUNTID: process.env.E2E_NEWRELIC_ACCOUNTID,
+    NEWRELIC_INGEST_KEY: process.env.E2E_NEWRELIC_INGEST_KEY,
+
+    HAS_CLAIMANT_STATUS_PAGE: process.env.HAS_CLAIMANT_STATUS_PAGE,
   };
 }
 
@@ -79,6 +83,9 @@ const file: Partial<Configuration> =
 // The default layer is a set of default values which will be used if nothing is set.
 const defaults: Partial<Configuration> = {
   FINEOS_HAS_UPDATED_EFORMS: "false",
+  PORTAL_HAS_LA_STATUS_UPDATES: "false",
+  NEWRELIC_ACCOUNTID: "2837112",
+  HAS_CLAIMANT_STATUS_PAGE: "false",
 };
 export const merged = {
   ...defaults,

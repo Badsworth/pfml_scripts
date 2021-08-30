@@ -184,6 +184,45 @@ describe("PageWrapper", () => {
     expect(hasMaintenancePage(wrapper)).toBe(true);
   });
 
+  it("renders MaintenanceTakeover with localized start time when maintenanceStart is set", () => {
+    mockRouter.pathname = "/";
+    // Started an hour ago
+    const maintenanceStartDateTime = DateTime.local().minus({ hours: 1 });
+
+    const wrapperWithoutStartTime = render({
+      maintenance: new Flag({
+        enabled: true,
+        options: {
+          page_routes: ["/*"],
+        },
+      }),
+    });
+
+    const wrapperWithStartTime = render({
+      maintenance: new Flag({
+        enabled: true,
+        options: {
+          page_routes: ["/*"],
+        },
+        start: maintenanceStartDateTime.toISO(),
+      }),
+    });
+
+    expect(
+      wrapperWithoutStartTime
+        .find({ "data-test": "maintenance page" })
+        .childAt(0)
+        .prop("maintenanceStartTime")
+    ).toBeNull();
+
+    expect(
+      wrapperWithStartTime
+        .find({ "data-test": "maintenance page" })
+        .childAt(0)
+        .prop("maintenanceStartTime")
+    ).toEqual(maintenanceStartDateTime.toLocaleString(DateTime.DATETIME_FULL));
+  });
+
   it("renders MaintenanceTakeover with localized end time when maintenanceEnd is set", () => {
     mockRouter.pathname = "/";
     // Ends in an hour
@@ -197,6 +236,7 @@ describe("PageWrapper", () => {
         },
       }),
     });
+
     const wrapperWithEndTime = render({
       maintenance: new Flag({
         enabled: true,
@@ -211,14 +251,14 @@ describe("PageWrapper", () => {
       wrapperWithoutEndTime
         .find({ "data-test": "maintenance page" })
         .childAt(0)
-        .prop("scheduledRemovalDayAndTimeText")
+        .prop("maintenanceEndTime")
     ).toBeNull();
 
     expect(
       wrapperWithEndTime
         .find({ "data-test": "maintenance page" })
         .childAt(0)
-        .prop("scheduledRemovalDayAndTimeText")
+        .prop("maintenanceEndTime")
     ).toEqual(maintenanceEndDateTime.toLocaleString(DateTime.DATETIME_FULL));
   });
 

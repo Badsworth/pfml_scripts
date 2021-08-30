@@ -40,15 +40,13 @@ import DocumentWaiter from "./DocumentWaiter";
 import { ClaimGenerator, DehydratedClaim } from "../../src/generation/Claim";
 import * as scenarios from "../../src/scenarios";
 import { Employer, EmployerPickSpec } from "../../src/generation/Employer";
-import * as postSubmit from "../../src/submission/PostSubmit";
 import pRetry from "p-retry";
+import { Fineos } from "../../src/submission/fineos.pages";
 
-// This function is called when a project is opened or re-opened (e.g. due to
-// the project's config changing)
-/**
- * @type {Cypress.PluginConfig}
- */
-export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
+export default function (
+  on: Cypress.PluginEvents,
+  cypressConfig: Cypress.ConfigOptions
+): Cypress.ConfigOptions {
   const verificationFetcher = getVerificationFetcher();
   const authenticator = getAuthManager();
   const submitter = getPortalSubmitter();
@@ -118,14 +116,17 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
         });
     },
 
-    async completeSSOLoginFineos(): Promise<string> {
+    async completeSSOLoginFineos(credentials?: Credentials): Promise<string> {
       if (ssoCookies === undefined) {
-        ssoCookies = await postSubmit.withFineosBrowser(
+        ssoCookies = await Fineos.withBrowser(
           async (page) => {
             return JSON.stringify(await page.context().cookies());
           },
-          false,
-          path.join(__dirname, "..", "screenshots")
+          {
+            debug: false,
+            screenshots: path.join(__dirname, "..", "screenshots"),
+            credentials,
+          }
         );
       }
       return ssoCookies;
@@ -191,8 +192,21 @@ export default function (on: Cypress.PluginEvents): Cypress.ConfigOptions {
 
   // Pass config values through as environment variables, which we will access via Cypress.env() in actions/common.ts.
   const configEntries = Object.entries(merged).map(([k, v]) => [`E2E_${k}`, v]);
+
+  // Add dynamic options for the New Relic reporter.
+  let reporterOptions = cypressConfig.reporterOptions ?? {};
+  if (cypressConfig.reporter?.match(/new\-relic/)) {
+    // Add dynamic reporter options based on config values.
+    reporterOptions = {
+      accountId: config("NEWRELIC_ACCOUNTID"),
+      apiKey: config("NEWRELIC_INGEST_KEY"),
+      environment: config("ENVIRONMENT"),
+      ...reporterOptions,
+    };
+  }
   return {
     baseUrl: config("PORTAL_BASEURL"),
     env: Object.fromEntries(configEntries),
+    reporterOptions,
   };
 }

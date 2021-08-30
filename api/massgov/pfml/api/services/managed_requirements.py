@@ -1,9 +1,11 @@
-from typing import Any, Dict, List, Optional
+from typing import List, Optional
+from uuid import UUID
 
 from sqlalchemy import exc
 
 import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
+from massgov.pfml.api.models.notifications.requests import NotificationRequest
 from massgov.pfml.db import Session
 from massgov.pfml.db.models.employees import (
     ManagedRequirement,
@@ -11,35 +13,47 @@ from massgov.pfml.db.models.employees import (
     ManagedRequirementType,
 )
 from massgov.pfml.db.queries.managed_requirements import (
+    commit_managed_requirement_update,
     get_managed_requirement_by_fineos_managed_requirement_id,
 )
+from massgov.pfml.fineos import create_client, exception
 from massgov.pfml.fineos.models.group_client_api import ManagedRequirementDetails
+from massgov.pfml.util.logging.managed_requirements import (
+    get_fineos_managed_requirement_log_attributes,
+    get_managed_requirement_log_attributes,
+)
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
-def get_fineos_managed_req_log_attrs(
-    fineos_managed_req: ManagedRequirementDetails,
-) -> Dict[str, Any]:
-    return {
-        "fineos_managed_requirement.managedReqId": fineos_managed_req.managedReqId,
-        "fineos_managed_requirement.status": fineos_managed_req.status,
-        "fineos_managed_requirement.category": fineos_managed_req.category,
-        "fineos_managed_requirement.type": fineos_managed_req.type,
-        "fineos_managed_requirement.followUpDate": fineos_managed_req.followUpDate,
-    }
+def get_contact_id(notification: NotificationRequest) -> Optional[str]:
+    for recipient in notification.recipients:
+        if recipient.contact_id is not None:
+            return recipient.contact_id
+
+    return None
 
 
-def get_managed_req_log_attrs(managed_req: ManagedRequirement) -> Dict[str, Any]:
-    return {
-        "managed_requirement.id": managed_req.managed_requirement_id,
-        "managed_requirement.fineos_managed_requirement_id": managed_req.fineos_managed_requirement_id,
-        "managed_requirement.status": managed_req.managed_requirement_status.managed_requirement_status_description,
-    }
+def get_fineos_managed_requirements_from_notification(
+    notification: NotificationRequest, log_attributes: dict
+) -> List[ManagedRequirementDetails]:
+    if not notification.recipients:
+        logger.warning("No Recipient in notification request", extra=log_attributes)
+        return []
+    fineos_client = create_client()
+    contact_id = get_contact_id(notification)
+    if contact_id is None:
+        logger.warning("No contact_id in any recipient", extra=log_attributes)
+        return []
+    try:
+        return fineos_client.get_managed_requirements(contact_id, notification.absence_case_id)
+    except exception.FINEOSClientError:
+        # the error is already logged by get_managed_requirements
+        return []
 
 
 def update_employer_confirmation_requirements(
-    db_session: Session, admin_user_id: str, fineos_managed_reqs: List[ManagedRequirementDetails],
+    db_session: Session, admin_user_id: UUID, fineos_managed_reqs: List[ManagedRequirementDetails],
 ) -> List[ManagedRequirement]:
 
     employer_confirmation_requirements = select_employer_confirmation_requirements(
@@ -52,7 +66,7 @@ def update_employer_confirmation_requirements(
     ]
 
     records = [
-        commit_managed_req_update(db_session, valid_update)
+        commit_managed_requirement_update(db_session, valid_update)
         for valid_update in managed_req_updates
         if valid_update
     ]
@@ -63,7 +77,7 @@ def update_employer_confirmation_requirements(
 
 
 def employer_confirmation_req_to_managed_req_update(
-    db_session: Session, admin_user_id: str, fineos_managed_req: ManagedRequirementDetails,
+    db_session: Session, admin_user_id: UUID, fineos_managed_req: ManagedRequirementDetails,
 ) -> Optional[ManagedRequirement]:
 
     managed_req: Optional[ManagedRequirement]
@@ -82,14 +96,14 @@ def employer_confirmation_req_to_managed_req_update(
         else:
             logger.warning(
                 "ManagedRequirement record not found",
-                extra={**get_fineos_managed_req_log_attrs(fineos_managed_req)},
+                extra={**get_fineos_managed_requirement_log_attributes(fineos_managed_req)},
             )
 
     except exc.SQLAlchemyError as ex:
         logger.warning(
             "Unable to get ManagedRequirement record",
             exc_info=ex,
-            extra={**get_fineos_managed_req_log_attrs(fineos_managed_req)},
+            extra={**get_fineos_managed_requirement_log_attributes(fineos_managed_req)},
         )
         return None
 
@@ -97,31 +111,11 @@ def employer_confirmation_req_to_managed_req_update(
         logger.warning(
             "Managed requirement failed to update. Unsupported Fineos Managed Requirement status received.",
             exc_info=ex,
-            extra={**get_fineos_managed_req_log_attrs(fineos_managed_req)},
+            extra={**get_fineos_managed_requirement_log_attributes(fineos_managed_req)},
         )
         return None
 
     return managed_req
-
-
-# TODO - move this to managed requirements query module?
-def commit_managed_req_update(
-    db_session: Session, managed_req_update: ManagedRequirement,
-) -> Optional[ManagedRequirement]:
-
-    try:
-        db_session.add(managed_req_update)
-        db_session.commit()
-
-    except exc.SQLAlchemyError as ex:
-        logger.warning(
-            "Unable to update ManagedRequirement record",
-            exc_info=ex,
-            extra={**get_managed_req_log_attrs(managed_req_update)},
-        )
-        return None
-
-    return managed_req_update
 
 
 def is_managed_req_status_outdated(
@@ -135,8 +129,8 @@ def is_managed_req_status_outdated(
         logger.info(
             "Received managed requirement details with no status change",
             extra={
-                **get_fineos_managed_req_log_attrs(fineos_managed_req),
-                **get_managed_req_log_attrs(managed_req),
+                **get_fineos_managed_requirement_log_attributes(fineos_managed_req),
+                **get_managed_requirement_log_attributes(managed_req),
             },
         )
 
@@ -152,7 +146,7 @@ def is_employer_confirmation_requirement(fineos_managed_req: ManagedRequirementD
         # We currently only sync this type of managed requirement, and don't expect any others
         logger.info(
             "Received unexpected managed requirement type",
-            extra={**get_fineos_managed_req_log_attrs(fineos_managed_req)},
+            extra={**get_fineos_managed_requirement_log_attributes(fineos_managed_req)},
         )
 
     return is_confirmation

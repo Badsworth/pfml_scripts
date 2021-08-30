@@ -1,5 +1,4 @@
 import { fineos, portal, email, fineosPages } from "../../actions";
-import { getFineosBaseUrl } from "../../config";
 import { Submission } from "../../../src/types";
 import { waitForAjaxComplete } from "../../actions/fineos";
 import { addDays, formatISO, startOfWeek, subDays } from "date-fns";
@@ -24,10 +23,8 @@ describe("Report of intermittent leave hours notification", () => {
     });
   });
 
-  const approval = it(
-    "Given a fully approved claim and leave hours correctly recorded by CSR rep",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
+  const approval =
+    it("Given a fully approved claim and leave hours correctly recorded by CSR rep", () => {
       cy.dependsOnPreviousPass([submit]);
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
@@ -54,16 +51,12 @@ describe("Report of intermittent leave hours notification", () => {
           });
         });
       });
-    }
-  );
+    });
 
-  const hoursRecorded = it(
-    "CSR Representative can record actual leave hours",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
+  const hoursRecorded =
+    it("CSR Representative can record actual leave hours", () => {
       cy.dependsOnPreviousPass([submit, approval]);
       fineos.before();
-      cy.visit("/");
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
           // Those are the specific dates fit to the scenario spec.
@@ -104,8 +97,7 @@ describe("Report of intermittent leave hours notification", () => {
           );
         });
       });
-    }
-  );
+    });
 
   it(
     "Employer should receive a '{Employee Name} reported their intermittent leave hours' notification",

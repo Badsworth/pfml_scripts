@@ -1004,7 +1004,7 @@ def employee_to_eligibility_feed_record(
 ) -> Optional[EligibilityFeedRecord]:
     record = EligibilityFeedRecord(
         # FINEOS required fields, without a general default we can set
-        employeeIdentifier=employee.employee_id,
+        employeeIdentifier=str(employee.employee_id),
         employeeFirstName=employee.first_name,
         employeeLastName=employee.last_name,
         # FINEOS required fields, but with an agreed upon default we can fall

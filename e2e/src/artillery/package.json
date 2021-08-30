@@ -3,6 +3,10 @@
   "description": "This faux-package contains dependencies we cannot bundle.",
   "main": "processor.js",
   "dependencies": {
-    "playwright-chromium": "^1.10.0"
+    "playwright-chromium": "^1.12.2",
+    "artillery": "^1.7.6"
+  },
+  "scripts": {
+    "artillery": "artillery run -e test dist/spec.yaml"
   }
 }

@@ -4,22 +4,27 @@ import { Page, chromium } from "playwright-chromium";
 import config from "../config";
 import { v4 as uuid } from "uuid";
 import * as util from "../util/playwright";
-import { ClaimStatus, FineosTasks } from "../types";
+import { ClaimStatus, Credentials, FineosTasks } from "../types";
 
+export type FineosBrowserOptions = {
+  debug: boolean;
+  screenshots?: string;
+  credentials?: Credentials;
+};
 export class Fineos {
   static async withBrowser<T extends unknown>(
     next: (page: Page) => Promise<T>,
-    debug = false,
-    screenshots?: string
+    { debug = false, screenshots, credentials }: FineosBrowserOptions
   ): Promise<T> {
     const isSSO = config("ENVIRONMENT") === "uat";
     const browser = await chromium.launch({
       headless: !debug,
       slowMo: debug ? 100 : undefined,
+      executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
     });
     const httpCredentials = isSSO
       ? undefined
-      : {
+      : credentials ?? {
           username: config("FINEOS_USERNAME"),
           password: config("FINEOS_PASSWORD"),
         };
@@ -64,14 +69,18 @@ export class Fineos {
       await page.goto(config("FINEOS_BASEURL"));
 
       if (isSSO) {
+        const ssoCredentials = credentials ?? {
+          username: config("SSO_USERNAME"),
+          password: config("SSO_PASSWORD"),
+        };
         await page.fill(
           "input[type='email'][name='loginfmt']",
-          config("SSO_USERNAME")
+          ssoCredentials.username
         );
         await page.click("input[value='Next']");
         await page.fill(
           "input[type='password'][name='passwd']",
-          config("SSO_PASSWORD")
+          ssoCredentials.password
         );
         await page.click("input[value='Sign in']");
         // Sometimes we end up with a "Do you want to stay logged in" question.

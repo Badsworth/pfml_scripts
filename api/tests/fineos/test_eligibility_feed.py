@@ -55,7 +55,7 @@ def test_employee_to_eligibility_feed_record(initialize_factories_session):
     )
 
     # fields that should be set
-    assert eligibility_feed_record.employeeIdentifier == employee.employee_id
+    assert eligibility_feed_record.employeeIdentifier == str(employee.employee_id)
     assert eligibility_feed_record.employeeFirstName == employee.first_name
     assert eligibility_feed_record.employeeLastName == employee.last_name
     assert eligibility_feed_record.employeeDateOfBirth == ef.DEFAULT_DATE

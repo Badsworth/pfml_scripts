@@ -1,3 +1,4 @@
+import uuid
 from enum import Enum
 from typing import Any, Type, TypeVar
 
@@ -12,3 +13,5 @@ class StrEnum(types.TypeDecorator[_E]):
 
 class TaxIdColumn(types.TypeDecorator[TaxId]): ...
 class FeinColumn(types.TypeDecorator[Fein]): ...
+
+PostgreSQLUUID = types.TypeEngine[uuid.UUID]

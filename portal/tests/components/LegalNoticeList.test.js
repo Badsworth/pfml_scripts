@@ -43,9 +43,7 @@ describe("LegalNoticeList", () => {
 
   it("renders fallbacktext if there is no list of documents", () => {
     const { wrapper } = render();
-    expect(wrapper.find("p").children()).toMatchInlineSnapshot(
-      `"Once we’ve made a decision, you can download the decision notice here. You’ll also get an email notification."`
-    );
+    expect(wrapper.find("p").children()).toMatchInlineSnapshot(`null`);
   });
 
   it("calls download function on click", () => {

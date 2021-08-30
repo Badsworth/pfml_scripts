@@ -74,7 +74,7 @@ class PaymentRejectsException(Exception):
 def get_row(row: Dict[str, str], key: Optional[str]) -> Optional[str]:
     if not key:
         return None
-    return row[key]
+    return row.get(key, None)
 
 
 class PaymentRejectsStep(Step):
@@ -168,13 +168,19 @@ class PaymentRejectsStep(Step):
                     previously_skipped_payment_count=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.previously_skipped_payment_count
                     ),
+                    max_weekly_benefits_details=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.max_weekly_benefits_details
+                    ),
+                    dua_dia_reduction_details=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.dua_dia_reduction_details
+                    ),
                     rejected_by_program_integrity=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity
                     ),
-                    rejected_notes=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.rejected_notes),
                     skipped_by_program_integrity=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.skipped_by_program_integrity
                     ),
+                    rejected_notes=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.rejected_notes),
                 )
                 payment_rejects_rows.append(payment_reject_row)
 

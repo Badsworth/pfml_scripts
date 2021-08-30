@@ -842,7 +842,7 @@ def test_process_catches_exceptions_and_continues(
     )
     assert len(failed_log_records) == 1
     failed_log_record_dict = failed_log_records[0].__dict__
-    assert failed_log_record_dict["employee_id"] == employee_to_fail_processing.employee_id
+    assert failed_log_record_dict["employee_id"] == str(employee_to_fail_processing.employee_id)
     assert failed_log_record_dict["prior_state"] == State.IDENTIFY_MMARS_STATUS.state_description
 
     # first employee should be in same state as start due to exception

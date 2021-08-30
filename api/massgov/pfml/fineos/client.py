@@ -95,6 +95,12 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
+    def get_customer_occupations_customer_api(
+        self, user_id: str, customer_id: str
+    ) -> typing.List[models.customer_api.ReadCustomerOccupation]:
+        pass
+
+    @abc.abstractmethod
     def get_outstanding_information(
         self, user_id: str, case_id: str
     ) -> typing.List[models.group_client_api.OutstandingInformationItem]:

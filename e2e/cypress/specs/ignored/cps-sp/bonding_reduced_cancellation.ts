@@ -1,5 +1,4 @@
 import { fineos, portal, fineosPages } from "../../../actions";
-import { getFineosBaseUrl } from "../../../config";
 import { config } from "../../../actions/common";
 import { Submission } from "../../../../src/types";
 import {
@@ -17,7 +16,7 @@ describe("Approval (notifications/notices)", () => {
     password: config("PORTAL_PASSWORD"),
   };
 
-  it("Given a fully approved claim", { baseUrl: getFineosBaseUrl() }, () => {
+  it("Given a fully approved claim", () => {
     fineos.before();
     cy.visit("/");
     // Submit a claim via the API, including Employer Response.
@@ -65,7 +64,7 @@ describe("Approval (notifications/notices)", () => {
     });
   });
 
-  it("Records Cancellation", { baseUrl: getFineosBaseUrl() }, () => {
+  it("Records Cancellation", () => {
     cy.dependsOnPreviousPass();
     fineos.before();
     cy.visit("/");

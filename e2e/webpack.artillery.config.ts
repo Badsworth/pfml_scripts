@@ -48,8 +48,6 @@ module.exports = () => {
       }),
       new CopyPlugin({
         patterns: [
-          { from: "./employees/*.employees.json", to: "./" },
-          { from: "./forms/*.pdf", to: "./" },
           { from: "./src/artillery/package.json", to: "./" },
           { from: "./src/artillery/spec.yml", to: "./" },
         ],

@@ -203,8 +203,13 @@ def mock_customer_info():
             "addressLine6": "GA",
             "addressLine7": "",
             "postCode": "30303",
-            "country": {"name": "USA", "domainName": "Country",},
-            "extensions": {},
+            "country": {"name": "USA", "domainName": "Country"},
+            "extensions": {
+                "ConsenttoShareData": True,
+                "Confirmed": True,
+                "MassachusettsID": "",
+                "OutOfStateID": "",
+            },
         },
     }
 
@@ -339,7 +344,23 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         return [models.customer_api.AbsenceCaseSummary()]
 
     def get_absence(self, user_id: str, absence_id: str) -> models.customer_api.AbsenceDetails:
-        return models.customer_api.AbsenceDetails()
+        if absence_id == "NTN-304363-ABS-01":
+            absence_details = models.customer_api.AbsenceDetails()
+            absence_details.absenceId = "NTN-304363-ABS-01"
+            absence_period = models.customer_api.AbsencePeriod()
+            absence_period.id = "PL-14449-0000002237"
+            absence_period.absenceType = "Continuous"
+            absence_period.reason = "Child Bonding"
+            absence_period.reasonQualifier1 = "Foster Care"
+            absence_period.reasonQualifier2 = ""
+            absence_period.startDate = datetime.date(2021, 1, 29)
+            absence_period.endDate = datetime.date(2021, 1, 30)
+            absence_period.requestStatus = "Pending"
+
+            absence_details.absencePeriods = [absence_period]
+            return absence_details
+        else:
+            return models.customer_api.AbsenceDetails()
 
     def get_absence_period_decisions(
         self, user_id: str, absence_id: str
@@ -354,6 +375,18 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
     ) -> models.group_client_api.CustomerInfo:
         return models.group_client_api.CustomerInfo.parse_obj(mock_customer_info())
 
+    def get_customer_occupations_customer_api(
+        self, user_id: str, customer_id: str
+    ) -> List[models.customer_api.ReadCustomerOccupation]:
+        _capture_call("get_customer_occupations_customer_api", user_id, customer_id=customer_id)
+
+        hrsWorkedPerWeek = 37 if customer_id == "1000" else 37.5
+        return [
+            models.customer_api.ReadCustomerOccupation(
+                occupationId=12345, hoursWorkedPerWeek=hrsWorkedPerWeek
+            )
+        ]
+
     def get_customer_occupations(
         self, user_id: str, customer_id: str
     ) -> models.group_client_api.CustomerOccupations:
@@ -362,7 +395,9 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         hrsWorkedPerWeek = 37 if customer_id == "1000" else 37.5
         return models.group_client_api.CustomerOccupations(
             elements=[
-                models.group_client_api.CustomerOccupation(hrsWorkedPerWeek=str(hrsWorkedPerWeek))
+                models.group_client_api.CustomerOccupation(
+                    id="12345", hrsWorkedPerWeek=str(hrsWorkedPerWeek)
+                )
             ]
         )
 

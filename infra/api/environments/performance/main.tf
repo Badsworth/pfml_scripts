@@ -78,7 +78,7 @@ module "api" {
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/PERF/dataexports"
   fineos_aws_iam_role_arn                             = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
   fineos_aws_iam_role_external_id                     = "12345"
-  service_now_base_url                                = "https://savilinxstage.servicenowservices.com"
+  service_now_base_url                                = "https://savilinxperf.servicenowservices.com"
   portal_base_url                                     = "https://paidleave-performance.mass.gov"
   enable_application_fraud_check                      = "0"
   release_version                                     = var.release_version

@@ -808,7 +808,7 @@ def manage_state_log(
     has_vendor_update: bool,
 ) -> None:
     """Manages the VENDOR_CHECK states"""
-    validation_container.record_key = employee_pfml_entry.employee_id
+    validation_container.record_key = str(employee_pfml_entry.employee_id)
     current_state = state_log_util.get_latest_state_log_in_flow(
         employee_pfml_entry, Flow.VENDOR_CHECK, db_session
     )

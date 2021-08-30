@@ -1901,13 +1901,13 @@ const pages = {
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     leaveStatusMessage_Approved:
-      "<p>Your leave was approved.</p><p>Review your approval notice for more details about your benefit amount, payment schedule, and how to appeal if your benefits appear incorrect.</p>",
+      "<p><strong>This leave was approved.</strong></p><p><notice-link>View your approval notice</notice-link> for more details about your benefit amount, payment schedule, and how to appeal if your benefits appear incorrect.</p>",
     leaveStatusMessage_Denied:
-      "<p>Your leave was denied.</p><p>Review your denial notice for more details and an explanation of the appeal process.</p><p>If you would like to file an appeal, then you must request an appeal within <strong>ten (10) calendar days</strong> of the receipt of your approval notice.</p><p><request-appeal-link>See more about the appeal process here.</request-appeal-link></p>",
+      "<p><strong>This leave was denied.</strong></p><p><notice-link>View your denial notice</notice-link> for more details and an explanation of the appeal process.</p><p>If you would like to appeal, you must submit your request within 10 calendar days of the date on your denial notice.</p><p>Learn more about <request-appeal-link>the appeal process</request-appeal-link>.</p>",
     leaveStatusMessage_Pending:
-      "<p> Your leave is under review.</p><p><application-timeline-link>Learn more about the application approval process.</application-timeline-link></p>",
+      "<p><strong>This leave is being reviewed.</strong><p>",
     leaveStatusMessage_Withdrawn:
-      "<p>You have withdrawn your application from the claim process.</p><p>If you want to apply for paid leave again, you can begin your application <application-link>here.</application-link></p>",
+      "<p><strong>This leave was withdrawn.</strong></p><p>You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
     makeChangesBody:
       "<p>If you need to make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Some changes to your application, such as changing your start and end dates, may mean your application needs to be reviewed by your employer again.</p>",
     makeChangesHeading: "Make changes to your application",
@@ -1950,8 +1950,6 @@ const pages = {
     reportReductionsHeading: "We may need more information from you",
     reportReductionsMessage:
       "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if any of these are true:</p><ul><li>You have already taken leave to care for a family member since July 1, 2021</li><li>You have already taken leave since January 1, 2021 for <when-can-i-use-pfml>any other reason that qualifies for PFML</when-can-i-use-pfml></li><li>You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)</li><li>You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)</li></ul>",
-    reportReductionsProcess:
-      "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if you’ll receive:</p><ul><li>Any <reductions-employer-benefits-link>benefits from your employer</reductions-employer-benefits-link> that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)</li><li>Income from <reductions-overview-link>any other sources</reductions-overview-link> during your leave</li></ul>",
     title: "You submitted your application",
   },
   claimsUploadCertification: {
@@ -2411,8 +2409,6 @@ const components = {
       "<p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report changes to:</p><ul><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer-sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for a disability benefit after you submitted your application, report this change.</li></ul>",
     reductionsInstructions_missingData:
       "<p>If you have other leave, benefits, and income to report, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report any of these situations:</p><ul><li>You have already taken leave to care for a family member since July 1, 2021</li><li>You have already taken leave since January 1, 2021 for <when-can-i-use-pfml>any other reason that qualifies for PFML</when-can-i-use-pfml></li><li>You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)</li><li>You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)</li></ul>",
-    reductionsInstructions_old:
-      "<p>If you’ll receive <reductions-overview-link>other benefits or income</reductions-overview-link>, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. This includes:</p><ul><li>Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)</li><li>Income from any other sources during your leave</li></ul>",
     resumeClaimButton: "Continue application",
     uploadDocsButton: "Upload additional documents",
   },
@@ -2430,9 +2426,12 @@ const components = {
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     manageApplicationDocuments: "Manage your application documents",
+    noticeOnClickDetails:
+      "When you click the notice link, the file will download to your device.",
     uploadDocuments: "Upload documents",
     viewNotices: "View notices",
     viewStatusUpdatesAndDetails: "View status updates and details",
+    viewYourNotices: "View your notices",
   },
   authNav: {
     logOutButton: "Log out",
@@ -2824,10 +2823,19 @@ const components = {
   leaveDatesAlert: {
     heading: "Your leave dates for paid leave",
   },
+  maintenanceAlertBar: {
+    message_withEndTime:
+      "We will be performing some maintenance on our system from <strong>{{start}}</strong> to <strong>{{end}}</strong>.",
+    message:
+      "We will be performing some maintenance on our system starting <strong>{{start}}</strong>.",
+  },
   maintenanceTakeover: {
-    lead: "This page is currently unavailable while the site is undergoing maintenance. Please check back$t(chars.nbsp)shortly.",
-    scheduled:
-      "We are performing scheduled maintenance to improve functionality and our overall service. Paid leave applications will be back online on <strong>{{scheduledRemovalDayAndTime}}</strong>.<br/><br/>When we are back, you will be able to access your existing applications or create a new one. Employers will be able to respond to information requests. We appreciate your understanding and patience. To get ready, review <what-to-expect-link>what to expect when you apply for paid family and medical leave benefits</what-to-expect-link>.",
+    noSchedule:
+      "We’re performing some maintenance on our system. Please check back in a few hours, or call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak) between 8 a.m.-5 p.m. ET.",
+    scheduledWithEndAndNoStart:
+      "We're performing some maintenance on our system, so you can't log in or work on any applications right now. The system will be back online and available on <strong>{{end}}</strong>.",
+    scheduledWithStartAndEnd:
+      "We're performing some maintenance on our system, so you can't log in or work on any applications right now. The system will be offline from <strong>{{start}}</strong> to <strong>{{end}}</strong>.",
     title: "We’re undergoing maintenance",
   },
   newTag: "New",

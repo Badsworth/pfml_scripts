@@ -65,22 +65,25 @@ export const postSubmit: PostSubmitCallback = async (claim, response) => {
           response
         )}`
       );
-    await Fineos.withBrowser(async (page) => {
-      switch (metadata.postSubmit) {
-        case "APPROVE":
-          await approveClaim(page, claim, fineos_absence_id);
-          break;
-        case "DENY":
-          await denyClaim(page, fineos_absence_id);
-          break;
-        case "APPROVEDOCS":
-          await closeDocuments(page, claim, fineos_absence_id);
-          break;
-        default:
-          throw new Error(
-            `Unknown claim.metadata.postSubmit property: ${metadata.postSubmit}`
-          );
-      }
-    });
+    await Fineos.withBrowser(
+      async (page) => {
+        switch (metadata.postSubmit) {
+          case "APPROVE":
+            await approveClaim(page, claim, fineos_absence_id);
+            break;
+          case "DENY":
+            await denyClaim(page, fineos_absence_id);
+            break;
+          case "APPROVEDOCS":
+            await closeDocuments(page, claim, fineos_absence_id);
+            break;
+          default:
+            throw new Error(
+              `Unknown claim.metadata.postSubmit property: ${metadata.postSubmit}`
+            );
+        }
+      },
+      { debug: false }
+    );
   }
 };

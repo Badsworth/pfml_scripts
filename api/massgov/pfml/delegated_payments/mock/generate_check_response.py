@@ -148,7 +148,7 @@ class PubCheckResponseGenerator:
             account_type="Checking",
             bank_name="PEOPLES UNITED BANK",
             bfc_code="CLMNT",
-            payee_id=employee.employee_id,
+            payee_id=str(employee.employee_id),
             check_number=check_number,
             payee_name=_format_employee_name_for_ez_check(employee),
         )

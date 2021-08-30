@@ -13,7 +13,7 @@ from werkzeug.exceptions import (
 
 from massgov.pfml.api.validation.exceptions import PaymentRequired, ValidationErrorDetail
 from massgov.pfml.util.paginate.paginator import Page, PaginationAPIContext
-from massgov.pfml.util.pydantic import Serializer
+from massgov.pfml.util.pydantic import PydanticBaseModel
 
 
 # == response data structures ==
@@ -99,7 +99,7 @@ def paginated_success_response(
     message: str,
     context: PaginationAPIContext,
     page: Page,
-    serializer: Serializer,
+    model: Type[PydanticBaseModel],
     warnings: Optional[List[ValidationErrorDetail]] = None,
     status_code: int = 200,
 ) -> Response:
@@ -114,7 +114,9 @@ def paginated_success_response(
 
     # resource and method values are injected in Metadata.to_api_response function
     meta = MetaData(paging=paging_meta, method="", resource="")
-    data = [serializer.serialize(value) for value in page.values]
+    data = [model.from_orm(value).dict() for value in page.values]  # type: ignore
+    # Skip type checking on this line because of a pydantic-mypy bug:
+    # https://github.com/samuelcolvin/pydantic/issues/2819
 
     return Response(
         status_code=status_code, message=message, data=data, warnings=warnings, meta=meta

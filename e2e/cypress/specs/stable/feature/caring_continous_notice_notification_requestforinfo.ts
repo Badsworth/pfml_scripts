@@ -1,5 +1,4 @@
 import { fineos, portal, email, fineosPages } from "../../../actions";
-import { getFineosBaseUrl } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
 import { findCertificationDoc } from "../../../../src/util/documents";
@@ -14,12 +13,9 @@ describe("Request for More Information (notifications/notices)", () => {
     password: config("PORTAL_PASSWORD"),
   };
 
-  const submit = it(
-    "Given a claim in which a CSR has requested more information",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
+  const submit =
+    it("Given a claim in which a CSR has requested more information", () => {
       fineos.before();
-      cy.visit("/");
 
       cy.task("generateClaim", "CHAP_RFI").then((claim) => {
         cy.task("submitClaimToAPI", {
@@ -64,8 +60,7 @@ describe("Request for More Information (notifications/notices)", () => {
             );
         });
       });
-    }
-  );
+    });
 
   const upload = it(
     "Should allow claimant to upload additional documents and generate a legal notice (Request for Information) that the claimant can view",
@@ -102,27 +97,19 @@ describe("Request for More Information (notifications/notices)", () => {
     }
   );
 
-  it(
-    "CSR rep can view the additional information uploaded by claimant",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      cy.dependsOnPreviousPass([submit, upload]);
-      fineos.before();
-      cy.visit("/");
-      cy.unstash<Submission>("submission").then((submission) => {
-        const page = fineosPages.ClaimPage.visit(submission.fineos_absence_id);
-        page.tasks((taskPage) =>
-          taskPage.assertTaskExists("Caring Certification Review")
-        );
-        page.documents((documentsPage) => {
-          documentsPage.assertDocumentUploads(
-            "Care for a family member form",
-            2
-          );
-        });
+  it("CSR rep can view the additional information uploaded by claimant", () => {
+    cy.dependsOnPreviousPass([submit, upload]);
+    fineos.before();
+    cy.unstash<Submission>("submission").then((submission) => {
+      const page = fineosPages.ClaimPage.visit(submission.fineos_absence_id);
+      page.tasks((taskPage) =>
+        taskPage.assertTaskExists("Caring Certification Review")
+      );
+      page.documents((documentsPage) => {
+        documentsPage.assertDocumentUploads("Care for a family member form", 2);
       });
-    }
-  );
+    });
+  });
 
   it(
     "I should receive a 'Thank you for successfully submitting your ... application' notification (employee)",

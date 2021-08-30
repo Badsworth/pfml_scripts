@@ -1,7 +1,6 @@
 import { fineos, fineosPages, portal } from "../../../actions";
 import {
   getClaimantCredentials,
-  getFineosBaseUrl,
   getLeaveAdminCredentials,
 } from "../../../config";
 import {
@@ -93,75 +92,70 @@ describe("Claimant uses portal to report other leaves and benefits, receives cor
       });
     });
 
-  it(
-    "As a CPS Agent, I can review the claim and apply reductions.",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      cy.dependsOnPreviousPass([claimSubmission, erApproval]);
-      fineos.before();
-      cy.visit("/");
-      cy.unstash<DehydratedClaim>("claim").then(({ claim, documents }) => {
-        cy.unstash<Submission>("submission").then((submission) => {
-          cy.unstash<LeaveAdminchanges>("amendments").then(
-            ({ employerReportedBenefit, employerReportedConcurrentLeave }) => {
-              claim.employer_benefits = [employerReportedBenefit];
-              claim.concurrent_leave = employerReportedConcurrentLeave;
-              assertValidClaim(claim);
-              fineosPages.ClaimPage.visit(submission.fineos_absence_id)
-                .tasks((tasks) => {
-                  // Check all of the appropriate tasks have been generated
-                  tasks.assertTaskExists("Employee Reported Other Leave");
-                  tasks.assertTaskExists("Employee Reported Other Income");
-                  tasks.assertTaskExists("Employer Conflict Reported");
-                  // Add escalation tasks and check they are assigned appropriately
-                  tasks
-                    .add("Escalate Employer Reported Other Income")
-                    .assertIsAssignedToUser(
-                      "Escalate Employer Reported Other Income",
-                      "DFML Program Integrity"
-                    )
-                    .assertIsAssignedToDepartment(
-                      "Escalate Employer Reported Other Income",
-                      "DFML Program Integrity"
-                    );
-                  tasks
-                    .add("Escalate employer reported past leave")
-                    .assertIsAssignedToUser(
-                      "Escalate employer reported past leave",
-                      "DFML Program Integrity"
-                    )
-                    .assertIsAssignedToDepartment(
-                      "Escalate employer reported past leave",
-                      "DFML Program Integrity"
-                    );
-                })
-                .adjudicate((adjudication) => {
-                  adjudication
-                    .evidence((evidence) => {
-                      documents.forEach(({ document_type }) => {
-                        evidence.receive(document_type);
-                      });
-                    })
-                    .certificationPeriods((certification) => {
-                      certification.prefill();
-                    })
-                    .acceptLeavePlan();
-                })
-                .approve()
-                .paidLeave((leaveCase) => {
-                  const { other_incomes, employer_benefits } = claim;
-                  assertIsTypedArray(other_incomes, isValidOtherIncome);
-                  assertIsTypedArray(employer_benefits, isValidEmployerBenefit);
-                  leaveCase
-                    .applyReductions({ other_incomes, employer_benefits })
-                    .assertPaymentsMade([{ net_payment_amount: 350 }])
-                    .assertPaymentAllocations([{ net_payment_amount: 350 }])
-                    .assertAmountsPending([{ net_payment_amount: 350 }]);
-                });
-            }
-          );
-        });
+  it("As a CPS Agent, I can review the claim and apply reductions.", () => {
+    cy.dependsOnPreviousPass([claimSubmission, erApproval]);
+    fineos.before();
+    cy.unstash<DehydratedClaim>("claim").then(({ claim, documents }) => {
+      cy.unstash<Submission>("submission").then((submission) => {
+        cy.unstash<LeaveAdminchanges>("amendments").then(
+          ({ employerReportedBenefit, employerReportedConcurrentLeave }) => {
+            claim.employer_benefits = [employerReportedBenefit];
+            claim.concurrent_leave = employerReportedConcurrentLeave;
+            assertValidClaim(claim);
+            fineosPages.ClaimPage.visit(submission.fineos_absence_id)
+              .tasks((tasks) => {
+                // Check all of the appropriate tasks have been generated
+                tasks.assertTaskExists("Employee Reported Other Leave");
+                tasks.assertTaskExists("Employee Reported Other Income");
+                tasks.assertTaskExists("Employer Conflict Reported");
+                // Add escalation tasks and check they are assigned appropriately
+                tasks
+                  .add("Escalate Employer Reported Other Income")
+                  .assertIsAssignedToUser(
+                    "Escalate Employer Reported Other Income",
+                    "DFML Program Integrity"
+                  )
+                  .assertIsAssignedToDepartment(
+                    "Escalate Employer Reported Other Income",
+                    "DFML Program Integrity"
+                  );
+                tasks
+                  .add("Escalate employer reported past leave")
+                  .assertIsAssignedToUser(
+                    "Escalate employer reported past leave",
+                    "DFML Program Integrity"
+                  )
+                  .assertIsAssignedToDepartment(
+                    "Escalate employer reported past leave",
+                    "DFML Program Integrity"
+                  );
+              })
+              .adjudicate((adjudication) => {
+                adjudication
+                  .evidence((evidence) => {
+                    documents.forEach(({ document_type }) => {
+                      evidence.receive(document_type);
+                    });
+                  })
+                  .certificationPeriods((certification) => {
+                    certification.prefill();
+                  })
+                  .acceptLeavePlan();
+              })
+              .approve()
+              .paidLeave((leaveCase) => {
+                const { other_incomes, employer_benefits } = claim;
+                assertIsTypedArray(other_incomes, isValidOtherIncome);
+                assertIsTypedArray(employer_benefits, isValidEmployerBenefit);
+                leaveCase
+                  .applyReductions({ other_incomes, employer_benefits })
+                  .assertPaymentsMade([{ net_payment_amount: 350 }])
+                  .assertPaymentAllocations([{ net_payment_amount: 350 }])
+                  .assertAmountsPending([{ net_payment_amount: 350 }]);
+              });
+          }
+        );
       });
-    }
-  );
+    });
+  });
 });

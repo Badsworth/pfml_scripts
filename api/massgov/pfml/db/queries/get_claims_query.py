@@ -2,6 +2,7 @@ import re
 from datetime import date
 from enum import Enum
 from typing import Any, Callable, List, Optional, Set, Type, Union
+from uuid import UUID
 
 from sqlalchemy import Column, and_, asc, desc, func, or_
 from sqlalchemy.orm import contains_eager
@@ -71,7 +72,7 @@ class GetClaimsQuery:
         else:
             self.query = self.query.join(model, isouter=isouter)
 
-    def add_employer_ids_filter(self, employer_ids: List[str]) -> None:
+    def add_employer_ids_filter(self, employer_ids: List[UUID]) -> None:
         self.query = self.query.filter(Claim.employer_id.in_(employer_ids))
 
     # TODO: current_user shouldn't be Optional - `get_claims` should throw an error instead

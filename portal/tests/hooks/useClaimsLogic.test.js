@@ -2,6 +2,7 @@ import { act, renderHook } from "@testing-library/react-hooks";
 import { mockFetch, mockLoggedInAuthSession } from "../test-utils";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
+import ClaimDetail from "../../src/models/ClaimDetail";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
 jest.mock("../../src/services/tracker");
@@ -37,6 +38,13 @@ describe("useClaimsLogic", () => {
     const { appLogic } = setup();
 
     expect(appLogic.current.claims.claims.items).toHaveLength(0);
+    expect(appLogic.current.claims.claimDetail).toBeUndefined();
+  });
+
+  it("sets initial claim detail data to undefined", () => {
+    const { appLogic } = setup();
+
+    expect(appLogic.current.claims.claimDetail).toBeUndefined();
   });
 
   describe("clearClaims", () => {
@@ -216,6 +224,108 @@ describe("useClaimsLogic", () => {
 
       await act(async () => {
         await appLogic.current.claims.loadPage();
+      });
+
+      expect(appLogic.current.appErrors.items[0].name).toEqual(
+        "BadRequestError"
+      );
+    });
+  });
+
+  describe("loadClaimDetail", () => {
+    it("gets claim from API", async () => {
+      const mockResponseData = {
+        fineos_absence_id: "absence_id_1",
+      };
+      mockFetch({
+        response: {
+          data: mockResponseData,
+        },
+      });
+
+      const { appLogic } = setup();
+
+      await act(async () => {
+        await appLogic.current.claims.loadClaimDetail("absence_case_id");
+      });
+
+      expect(appLogic.current.claims.claimDetail).toBeInstanceOf(ClaimDetail);
+    });
+
+    it("it sets isLoadingClaimDetail to true when a claim is being loaded", async () => {
+      mockFetch();
+      const { appLogic, waitFor } = setup();
+
+      expect(appLogic.current.claims.isLoadingClaimDetail).toBeUndefined();
+
+      await act(async () => {
+        appLogic.current.claims.loadClaimDetail("absence case id");
+
+        await waitFor(() => {
+          expect(appLogic.current.claims.isLoadingClaimDetail).toBe(true);
+        });
+      });
+
+      // All loading promises resolved, so claim is loaded by this point
+      expect(appLogic.current.claims.isLoadingClaimDetail).toBe(false);
+    });
+
+    it("only makes api request if the absence case ID has changed", async () => {
+      expect.assertions();
+      const { appLogic } = setup();
+
+      await act(async () => {
+        // this should make an API request since no claim details are loaded
+        const mockResponseData = {
+          fineos_absence_id: "absence_id_1",
+        };
+        mockFetch({
+          response: {
+            data: mockResponseData,
+          },
+        });
+        await appLogic.current.claims.loadClaimDetail("absence_id_1");
+        expect(global.fetch).toHaveBeenCalled();
+
+        // but this shouldn't, since we've already loaded this claim
+        mockFetch();
+        await appLogic.current.claims.loadClaimDetail("absence_id_1");
+        expect(global.fetch).not.toHaveBeenCalled();
+
+        // this should make an API request since the absence case ID changed
+        mockFetch();
+        await appLogic.current.claims.loadClaimDetail("absence_id_2");
+        expect(global.fetch).toHaveBeenCalled();
+      });
+    });
+
+    it("clears prior errors before API request is made", async () => {
+      mockFetch();
+      const { appLogic } = setup();
+
+      act(() => {
+        appLogic.current.setAppErrors(
+          new AppErrorInfoCollection([new AppErrorInfo()])
+        );
+      });
+
+      await act(async () => {
+        await appLogic.current.claims.loadClaimDetail("absence_id_1");
+      });
+
+      expect(appLogic.current.appErrors.items).toHaveLength(0);
+    });
+
+    it("catches exceptions thrown from the API module", async () => {
+      jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+      mockFetch({
+        status: 400,
+      });
+
+      const { appLogic } = setup();
+
+      await act(async () => {
+        await appLogic.current.claims.loadClaimDetail("absence_id_1");
       });
 
       expect(appLogic.current.appErrors.items[0].name).toEqual(

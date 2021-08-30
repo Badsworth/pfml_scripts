@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`MaintenanceTakeover renders scheduled text when scheduledRemovalDayAndTimeText prop is set 1`] = `
+exports[`MaintenanceTakeover renders the correct message text when only end time is provided 1`] = `
 <div
   className="tablet:padding-y-10 text-center"
 >
@@ -11,17 +11,11 @@ exports[`MaintenanceTakeover renders scheduled text when scheduledRemovalDayAndT
     className="margin-x-auto measure-2"
   >
     <Trans
-      components={
-        Object {
-          "what-to-expect-link": <a
-            href="https://www.mass.gov/guides/what-to-expect-when-you-apply-for-paid-family-and-medical-leave-benefits"
-          />,
-        }
-      }
-      i18nKey="components.maintenanceTakeover.scheduled"
+      i18nKey="components.maintenanceTakeover.scheduledWithEndAndNoStart"
       values={
         Object {
-          "scheduledRemovalDayAndTime": "Sunday, March 7th at 10:00 p.m. EST",
+          "end": "June 17, 2021, 10:00 AM EDT",
+          "start": null,
         }
       }
     />
@@ -29,33 +23,19 @@ exports[`MaintenanceTakeover renders scheduled text when scheduledRemovalDayAndT
 </div>
 `;
 
-exports[`MaintenanceTakeover renders scheduled text when scheduledRemovalDayAndTimeText prop is set 2`] = `
+exports[`MaintenanceTakeover renders the correct message text when only end time is provided 2`] = `
 Array [
-  "We are performing scheduled maintenance to improve functionality and our overall service. Paid leave applications will be back online on ",
+  "We're performing some maintenance on our system, so you can't log in or work on any applications right now. The system will be back online and available on ",
   <strong
     key="strong-1"
   >
-    Sunday, March 7th at 10:00 p.m. EST
+    June 17, 2021, 10:00 AM EDT
   </strong>,
-  ".",
-  <br
-    key="br-3"
-  />,
-  <br
-    key="br-4"
-  />,
-  "When we are back, you will be able to access your existing applications or create a new one. Employers will be able to respond to information requests. We appreciate your understanding and patience. To get ready, review ",
-  <a
-    href="https://www.mass.gov/guides/what-to-expect-when-you-apply-for-paid-family-and-medical-leave-benefits"
-    key="6"
-  >
-    what to expect when you apply for paid family and medical leave benefits
-  </a>,
   ".",
 ]
 `;
 
-exports[`MaintenanceTakeover renders with the expected content 1`] = `
+exports[`MaintenanceTakeover renders the correct message text when start/end times are both provided 1`] = `
 <div
   className="tablet:padding-y-10 text-center"
 >
@@ -65,7 +45,58 @@ exports[`MaintenanceTakeover renders with the expected content 1`] = `
   <Lead
     className="margin-x-auto measure-2"
   >
-    This page is currently unavailable while the site is undergoing maintenance. Please check back shortly.
+    <Trans
+      i18nKey="components.maintenanceTakeover.scheduledWithStartAndEnd"
+      values={
+        Object {
+          "end": "June 17, 2021, 10:00 AM EDT",
+          "start": "June 15, 2021, 3:00 PM EDT",
+        }
+      }
+    />
   </Lead>
 </div>
 `;
+
+exports[`MaintenanceTakeover renders the correct message text when start/end times are both provided 2`] = `
+Array [
+  "We're performing some maintenance on our system, so you can't log in or work on any applications right now. The system will be offline from ",
+  <strong
+    key="strong-1"
+  >
+    June 15, 2021, 3:00 PM EDT
+  </strong>,
+  " to ",
+  <strong
+    key="strong-3"
+  >
+    June 17, 2021, 10:00 AM EDT
+  </strong>,
+  ".",
+]
+`;
+
+exports[`MaintenanceTakeover renders the correct message text when start/end times are not provided 1`] = `
+<div
+  className="tablet:padding-y-10 text-center"
+>
+  <Title>
+    We’re undergoing maintenance
+  </Title>
+  <Lead
+    className="margin-x-auto measure-2"
+  >
+    <Trans
+      i18nKey="components.maintenanceTakeover.noSchedule"
+      values={
+        Object {
+          "end": null,
+          "start": null,
+        }
+      }
+    />
+  </Lead>
+</div>
+`;
+
+exports[`MaintenanceTakeover renders the correct message text when start/end times are not provided 2`] = `"We’re performing some maintenance on our system. Please check back in a few hours, or call the Contact Center at (833) 344‑7365 between 8 a.m.-5 p.m. ET."`;

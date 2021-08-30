@@ -14,5 +14,6 @@
   },
   "testFiles": ["**/*.{feature,ts}"],
   "viewportWidth": 2000,
-  "viewportHeight": 1320
+  "viewportHeight": 1320,
+  "videoCompression": 20
 }

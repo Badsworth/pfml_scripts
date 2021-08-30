@@ -1,5 +1,5 @@
 import { fineos, fineosPages, portal } from "../../../actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
+import { getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
@@ -35,13 +35,10 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
       });
     });
 
-  const adjudicate = it(
-    "Should check hours worked per week/upload state managed document/mark evidence received (Fineos)",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
+  const adjudicate =
+    it("Should check hours worked per week/upload state managed document/mark evidence received (Fineos)", () => {
       cy.dependsOnPreviousPass([submissionTest]);
       fineos.before();
-      cy.visit("/");
 
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then((submission) => {
@@ -73,8 +70,7 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
             });
         });
       });
-    }
-  );
+    });
 
   // Check Application card in portal for document uploaded in Fineos
   it("I should be able to see that a document has been uploaded in the portal", () => {
