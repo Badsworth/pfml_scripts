@@ -47,9 +47,7 @@ def test_send_email(mock_ses):
         {"fineos_customer_number": 1, "ctr_vendor_customer_code": 1},
         {"fineos_customer_number": 2, "ctr_vendor_customer_code": 2},
     ]
-    attachments = [
-        create_csv_from_list(fineos_vendor_customer_numbers, fieldnames, file_name)
-    ]
+    attachments = [create_csv_from_list(fineos_vendor_customer_numbers, fieldnames, file_name)]
     response = conn.send_email(
         recipient, subject, body_text, sender, bounce_forwarding_email_address_arn, attachments
     )
