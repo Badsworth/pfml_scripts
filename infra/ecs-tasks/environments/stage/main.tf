@@ -73,9 +73,6 @@ module "tasks" {
   dfml_business_operations_email_address = "mass-pfml-payments-test-email@navapbc.com"
   agency_reductions_email_address        = "mass-pfml-payments-test-email@navapbc.com"
 
-  ctr_data_mart_host     = ""
-  ctr_data_mart_username = ""
-
   fineos_data_export_path         = "s3://fin-somdev-data-export/IDT/dataexports"
   fineos_data_import_path         = "s3://fin-somdev-data-import/IDT/peiupdate"
   fineos_error_export_path        = "s3://fin-somdev-data-export/IDT/errorExtracts"

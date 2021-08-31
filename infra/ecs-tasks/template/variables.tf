@@ -210,18 +210,6 @@ variable "ctr_vcc_bievnt_email_address" {
   default     = ""
 }
 
-variable "ctr_data_mart_host" {
-  description = "URL of the EOL Finance Data Mart."
-  type        = string
-  default     = ""
-}
-
-variable "ctr_data_mart_username" {
-  description = "Username to connect to EOL Finance Data Mart."
-  type        = string
-  default     = ""
-}
-
 variable "enable_recurring_payments_schedule" {
   description = "Enable scheduling for payments-payment-voucher-plus ECS task"
   type        = bool

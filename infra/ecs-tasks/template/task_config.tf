@@ -57,13 +57,6 @@ locals {
     { name : "MOVEIT_SSH_KEY_PASSWORD", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key-password" }
   ]
 
-  # Provides access to CTR datamart
-  datamart_access = [
-    { name : "CTR_DATA_MART_HOST", value : var.ctr_data_mart_host },
-    { name : "CTR_DATA_MART_USERNAME", value : var.ctr_data_mart_username },
-    { name : "CTR_DATA_MART_PASSWORD", valueFrom : "/service/${local.app_name}/${var.environment_name}/ctr-data-mart-password" }
-  ]
-
   # S3 path configurations for PUB
   pub_s3_folders = [
     { name : "PFML_FINEOS_WRITEBACK_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/cps/pei-writeback" },

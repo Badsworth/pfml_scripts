@@ -72,10 +72,6 @@ module "tasks" {
   ctr_vcc_bievnt_email_address           = "mass-pfml-payments-test-email@navapbc.com"
   dfml_business_operations_email_address = "mass-pfml-payments-test-email@navapbc.com"
 
-  # These can be kept blank.
-  ctr_data_mart_host     = ""
-  ctr_data_mart_username = ""
-
   # TODO: Values from FINEOS.
   fineos_data_export_path   = "s3://fin-somdev-data-export/DT3/dataexports"
   fineos_data_import_path   = "s3://fin-somdev-data-import/DT3/peiupdate"
