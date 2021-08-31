@@ -1127,6 +1127,29 @@ const pages = {
     sectionLabel: "What’s your date of birth?",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
+  claimsDepartment: {
+    choiceNo: "$t(shared.choiceNo)",
+    choiceNotListed: "My department is not listed",
+    choiceNotSure: "I'm not sure",
+    choiceYes: "$t(shared.choiceYes)",
+    comboBoxLabel: "Select a department",
+    confirmHint:
+      "Based on what you’ve entered, our records show you work at <strong>{{department}}</strong>. Is this the department where you are applying to take leave?",
+    confirmSectionLabel: "Confirm your department",
+    errors: {
+      missingConfirmation:
+        "Please confirm if this is the department you are taking leave from.",
+      missingDepartment:
+        "Please select the department you are taking leave from.",
+      departmentsNotFound:
+        "We couldn't find any departments associated to you for this employer. Please go back and make sure you've entered the correct FEIN."
+    },
+    followupInfo:
+      "We will follow up with you after you apply to make sure the right department reviews your application.",
+    hint: "If you want to take leave from more than one department, you need to submit a separate application for each department.",
+    moreThanOne: "What if I work at more than one department?",
+    sectionLabel: "Which department are you applying to take leave from?",
+  },
   claimsEmployerBenefits: {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
@@ -1686,6 +1709,7 @@ const pages = {
     employerBenefitType_shortTermDisability:
       "$t(shared.employerBenefitType_shortTermDisability)",
     employerFeinLabel: "Employer’s EIN",
+    employeeDepartment: "Department",
     employerNotifiedLabel: "Notified employer",
     employerNotifiedValue: "No",
     employerNotifiedValue_true: "Notified employer on {{date}}",

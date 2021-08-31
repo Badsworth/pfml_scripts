@@ -34,6 +34,7 @@ class BaseBenefitsApplication extends BaseModel {
         reduced_schedule_leave_periods: null,
       },
       middle_name: null,
+      reporting_unit: null,
       residential_address: new Address(),
       status: null,
       tax_identifier: null,

@@ -263,6 +263,12 @@ export const Review = (props) => {
         {get(claim, "phone.phone_number")}
       </ReviewRow>
 
+      {get(claim, "org_unit") && (
+        <ReviewRow level={reviewRowLevel} label="Department">
+          {get(claim, "org_unit")}
+        </ReviewRow>
+      )}
+
       <ReviewRow
         level={reviewRowLevel}
         label={t("pages.claimsReview.residentialAddressLabel")}
@@ -334,6 +340,15 @@ export const Review = (props) => {
           label={t("pages.claimsReview.employerFeinLabel")}
         >
           {get(claim, "employer_fein")}
+        </ReviewRow>
+      )}
+
+      {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.employeeDepartment")}
+        >
+          {get(claim, "reporting_unit")}
         </ReviewRow>
       )}
 
