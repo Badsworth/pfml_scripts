@@ -49,12 +49,12 @@ PendingAbsenceStatuses = ["Intake In Progress", "In Review", "Adjudication", Non
 
 
 class GetClaimsQuery:
-    joined: List[Union[Type[Base], Alias]]
+    joined: Set[Union[Type[Base], Alias]]
 
     def __init__(self, db_session: db.Session):
         self.session = db_session
         self.query = db_session.query(Claim)
-        self.joined = []
+        self.joined = set()
 
     # prevents duplicate joining of a table
     def join(
@@ -63,10 +63,9 @@ class GetClaimsQuery:
         isouter: bool = False,
         join_filter: Optional[Any] = None,
     ) -> None:
-        for joined in self.joined:
-            if model is joined:
-                return
-        self.joined.append(model)
+        if model in self.joined:
+            return
+        self.joined.add(model)
         if join_filter is not None:  # use join_filter when query filter would not work
             self.query = self.query.join(model, join_filter, isouter=isouter)
         else:
@@ -109,6 +108,7 @@ class GetClaimsQuery:
         return filters
 
     def add_absence_status_filter(self, absence_statuses: Set[str]) -> None:
+        # use outer join to return claims without fineos_absence_status_id
         self.join(Claim.fineos_absence_status, isouter=True)  # type:ignore
         filters = self.get_managed_requirement_status_filters(absence_statuses)
         if not len(absence_statuses):
@@ -135,7 +135,9 @@ class GetClaimsQuery:
         return re.sub(r"\s+", " ", search_string).strip()
 
     def add_search_filter(self, search_string: str) -> None:
+        # use outer join to return claims with missing relationship data
         self.join(Claim.employee, isouter=True)  # type:ignore
+
         self.query = self.query.filter(Employee.employee_id == Claim.employee_id)
         search_string = self.format_search_string(search_string)
         search_sub_query = self.employee_search_sub_query()
@@ -165,6 +167,7 @@ class GetClaimsQuery:
             == ManagedRequirementStatus.OPEN.managed_requirement_status_id,
             ManagedRequirement.follow_up_date >= date.today(),
         ]
+        # use outer join to return claims without managed_requirements (one to many)
         self.join(ManagedRequirement, isouter=True, join_filter=and_(*filters))
         self.query = self.query.options(contains_eager("managed_requirements"))
 
@@ -187,7 +190,7 @@ class GetClaimsQuery:
             sort_fn(Employee.first_name),
             sort_fn(Employee.middle_name),
         ]
-
+        # use outer join to return claims with missing relationship data
         self.join(Claim.employee, isouter=True)  # type:ignore
         self.query = self.query.order_by(*order_keys)
 
@@ -195,8 +198,13 @@ class GetClaimsQuery:
         sort_fn = asc_null_first if is_asc else desc_null_last
         # oldest follow up date first if ascending
         sort_req = asc if is_asc else desc
+
+        # use outer join to return claims without fineos_absence_status_id
         self.join(Claim.fineos_absence_status, isouter=True)  # type:ignore
+
+        # use outer join to return claims with missing relationship data
         self.join(Claim.employee, isouter=True)  # type:ignore
+
         order = [
             sort_req(Claim.soonest_open_requirement_date),  # type:ignore
             sort_fn(LkAbsenceStatus.sort_order),
