@@ -29,6 +29,23 @@ def start(args):
 def update(args):
     logger.info(f"Running 'update-release', args: {repr(args)}")
 
+    # guardrails will have vetted args.release_version
+    # guardrails will have vetted args.git_commits
+
+    # autonomous flow:
+    #   fetch_remotes()
+    #   get most recent tag for args.app, convert to semver
+    #   check out the branch at args.release_version
+    #       NB: will the check-out break everything if the release branch lacks this code?
+    #       NB: save a pointer to the old HEAD of args.release_version in case of error
+    #   for each git commit in args.git_commits:
+    #       cherry-pick that commit onto the branch at args.release_version
+    #       if merge conflicts or any other Git error, STOP. Hard reset to the saved pointer and exit 1.
+    #   once all commits cherry-picked:
+    #       increment semver 'prerelease' version by one
+    #       tag new HEAD of args.release_version with incremented semver
+    #       push (force-push?) updated branch to origin
+
 
 def finalize(args):
     logger.info(f"Running 'finalize-release', args: {repr(args)}")
