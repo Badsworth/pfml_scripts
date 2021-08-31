@@ -783,15 +783,15 @@ class FINEOSClient(client.AbstractFINEOSClient):
         occupation_id: int,
         employment_status: Optional[str],
         hours_worked_per_week: Optional[Decimal],
-        # employer_fein: Optional[str],
-        # reporting_unit_fineos_id: Optional[str],
+        employer_fein: Optional[str],
+        reporting_unit_fineos_id: Optional[str],
     ) -> None:
         xml_body = self._create_update_occupation_payload(
             occupation_id,
             employment_status,
             hours_worked_per_week,
-            # employer_fein,
-            # reporting_unit_fineos_id,
+            employer_fein,
+            reporting_unit_fineos_id,
         )
         self._wscomposer_request(
             "POST",
@@ -806,8 +806,8 @@ class FINEOSClient(client.AbstractFINEOSClient):
         occupation_id: int,
         employment_status: Optional[str],
         hours_worked_per_week: Optional[Decimal],
-        # employer_fein: Optional[str],
-        # reporting_unit_fineos_id: Optional[str],
+        employer_fein: Optional[str],
+        reporting_unit_fineos_id: Optional[str],
     ) -> str:
         additional_data_set = models.AdditionalDataSet()
 
@@ -837,9 +837,10 @@ class FINEOSClient(client.AbstractFINEOSClient):
         #         name="workSiteId", value="1"
         #     )  # @todo: which worksite? are there multiple?
         # )
-        # additional_data_set.additional_data.append(
-        #     models.AdditionalData(name="organizationUnitId", value=reporting_unit_fineos_id)
-        # )
+        logger.info(reporting_unit_fineos_id)
+        additional_data_set.additional_data.append(
+            models.AdditionalData(name="OrganizationUnitId", value=reporting_unit_fineos_id)
+        )
 
         # Put the XML object together properly.
         service_data = models.OccupationDetailUpdateData()

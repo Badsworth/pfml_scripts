@@ -1139,6 +1139,8 @@ const pages = {
         "Please confirm if this is the department you are taking leave from.",
       missingDepartment:
         "Please select the department you are taking leave from.",
+      departmentsNotFound:
+        "We couldn't find any departments associated to you for this employer. Please go back and make sure you've entered the correct FEIN."
     },
     followupInfo:
       "We will follow up with you after you apply to make sure the right department reviews your application.",
@@ -1705,6 +1707,7 @@ const pages = {
     employerBenefitType_shortTermDisability:
       "$t(shared.employerBenefitType_shortTermDisability)",
     employerFeinLabel: "Employer’s EIN",
+    employeeDepartment: "Department",
     employerNotifiedLabel: "Notified employer",
     employerNotifiedValue: "No",
     employerNotifiedValue_true: "Notified employer on {{date}}",

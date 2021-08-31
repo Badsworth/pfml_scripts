@@ -905,13 +905,13 @@ def update_occupation_details(
     employment_status_label = None
     if application.employment_status:
         employment_status_label = application.employment_status.fineos_label
-
+    logger.info('APPLICATION DATA IS HERE', application.reporting_unit.reporting_unit_fineos_id)
     fineos_client.update_occupation(
         occupation_id,
         employment_status_label,
         application.hours_worked_per_week,
-        # application.employer_fein,
-        # application.reporting_unit.reporting_unit_fineos_id,
+        application.employer_fein,
+        application.reporting_unit.reporting_unit_fineos_id,
     )
 
 

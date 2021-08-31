@@ -124,17 +124,19 @@ export const Department = (props) => {
     // obtain the full list of departments connected to this claimant's employer
     if (!employerDepartments.length) {
       // const deps = await appLogic.benefitsApplications.getDepartmentsByEmployer(claim.employer_fein)
-      employerDeps = [];
+      // employerDeps = [];
+      employerDeps = [...claimantDeps].slice(1);
     }
+    claimantDeps = claimantDeps.slice(0, 1);
 
-    setDepartments(claimantDeps.length ? claimantDeps : employerDeps);
+    setDepartments(claimantDeps?.length ? claimantDeps : employerDeps);
     setEmployerDepartments(employerDeps);
   };
 
   // Helpers
   const getDepartmentListSizes = (deps) => {
-    const isLong = deps.length > 5;
-    const isShort = deps.length > 1 && deps.length <= 5;
+    const isLong = deps.length > 3;
+    const isShort = deps.length > 1 && deps.length <= 3;
     const isUnique = deps.length === 1;
     return {
       isLong,
@@ -233,11 +235,11 @@ export const Department = (props) => {
                   department: departments[0]?.reporting_unit_description,
                 }}
               />
-              <div className="margin-top-2">
+              {/* <div className="margin-top-2">
                 <Details label={t("pages.claimsDepartment.moreThanOne")}>
                   {t("pages.claimsDepartment.hint")}
                 </Details>
-              </div>
+              </div> */}
             </React.Fragment>
           }
           type="radio"
@@ -251,7 +253,7 @@ export const Department = (props) => {
           })}
           choices={claimantChoices}
           label={t("pages.claimsDepartment.sectionLabel")}
-          hint={t("pages.claimsDepartment.hint")}
+          // hint={t("pages.claimsDepartment.hint")}
           type="radio"
         />
       </ConditionalContent>
@@ -267,7 +269,7 @@ export const Department = (props) => {
           <ConditionalContent visible={isLong}>
             <FormLabel
               component="legend"
-              hint={t("pages.claimsDepartment.hint")}
+              // hint={t("pages.claimsDepartment.hint")}
             >
               {t("pages.claimsDepartment.sectionLabel")}
             </FormLabel>

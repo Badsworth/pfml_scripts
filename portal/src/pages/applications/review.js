@@ -348,6 +348,15 @@ export const Review = (props) => {
       {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
         <ReviewRow
           level={reviewRowLevel}
+          label={t("pages.claimsReview.employeeDepartment")}
+        >
+          {get(claim, "reporting_unit")}
+        </ReviewRow>
+      )}
+
+      {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
+        <ReviewRow
+          level={reviewRowLevel}
           label={t("pages.claimsReview.employerNotifiedLabel")}
         >
           {t("pages.claimsReview.employerNotifiedValue", {

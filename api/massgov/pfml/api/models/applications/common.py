@@ -35,12 +35,10 @@ class Occupation(str, LookupEnum):
 
 
 class ReportingUnit(str, LookupEnum):
-    dfml = "DFML"
-    pfml = "PFML"
-    contact_center = "Contact Center"
-    devops = "DevOps"
-    savilinx = "Savilinx"
-    hr = "HR"
+    dor = "DOR"
+    eotss = "EOTSS"
+    hrd = "HRD"
+    eolwd = "EOLWD"
 
 
 class EligibilityEmploymentStatus(str):

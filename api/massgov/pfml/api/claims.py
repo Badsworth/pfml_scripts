@@ -594,14 +594,22 @@ def get_claims() -> flask.Response:
                 employer_ids_list = [
                     e.employer_id
                     for e in employers_list
-                    if sanitize_fein(e.employer_fein or "") not in CLAIMS_DASHBOARD_BLOCKED_FEINS
-                    and current_user.verified_employer(e)
+                    # if sanitize_fein(e.employer_fein or "") not in CLAIMS_DASHBOARD_BLOCKED_FEINS
+                    # and current_user.verified_employer(e)
                 ]
-
+                logger.info(employer_ids_list)
                 query.add_employer_ids_filter(employer_ids_list)
+                
+                reporting_units = (
+                    db_session.query(LkUserLeaveAdministratorReportingUnit).filter(
+                        LkUserLeaveAdministratorReportingUnit.user_leave_administrator_id == current_user.user_id
+                    ).all()
+                )
+                reporting_units_list = [reporting_unit.reporting_unit_id for reporting_unit in reporting_units]
 
                 query.add_reporting_units_filter(
-                    user_leave_admins_reporting_unit_ids(employers_list, CLAIMS_DASHBOARD_BLOCKED_FEINS)
+                    # user_leave_admins_reporting_unit_ids(employers_list, CLAIMS_DASHBOARD_BLOCKED_FEINS)
+                    reporting_units_list
                 )
             else:
                 query.add_user_owns_claim_filter(current_user)

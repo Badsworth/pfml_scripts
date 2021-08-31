@@ -100,7 +100,9 @@ def employees_search():
         employee = employee_query.first()
 
         # @todo: query for units connected to this employee, not all of them
-        employee.reporting_units = db_session.query(LkReportingUnit).all()
+        if employee:
+            employee.reporting_units = db_session.query(LkReportingUnit).all()
+            # employee.reporting_units = []
 
     if employee is None:
         raise NotFound()

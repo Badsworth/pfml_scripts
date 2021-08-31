@@ -200,7 +200,7 @@ def applications_update(application_id):
     return response_util.success_response(
         message="Application updated without errors.",
         data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-        warnings=issues,
+        warnings=[issue for issue in issues if not issue.rule or (issue.rule and issue.rule) != "require_employee"],
     ).to_api_response()
 
 

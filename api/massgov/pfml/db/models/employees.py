@@ -923,10 +923,12 @@ class LkReportingUnit(Base):
     __tablename__ = "lk_reporting_unit"
     reporting_unit_id = Column(Integer, primary_key=True, autoincrement=True)
     reporting_unit_description = Column(Text)
+    reporting_unit_fineos_id = Column(Integer)
 
-    def __init__(self, reporting_unit_id, reporting_unit_description):
+    def __init__(self, reporting_unit_id, reporting_unit_description, reporting_unit_fineos_id):
         self.reporting_unit_id = reporting_unit_id
         self.reporting_unit_description = reporting_unit_description
+        self.reporting_unit_fineos_id = reporting_unit_fineos_id
 
 
 class LkUserLeaveAdministratorReportingUnit(Base):
@@ -2470,14 +2472,12 @@ class Worksite(LookupTable):
 
 class ReportingUnit(LookupTable):
     model = LkReportingUnit
-    column_names = ("reporting_unit_id", "reporting_unit_description")
+    column_names = ("reporting_unit_id", "reporting_unit_description", "reporting_unit_fineos_id")
 
-    DFML = LkReportingUnit(1, "DFML")
-    PFML = LkReportingUnit(2, "PFML")
-    CCENTER = LkReportingUnit(3, "Contact Center")
-    DEVOPS = LkReportingUnit(4, "DevOps")
-    SAVILINX = LkReportingUnit(5, "Savilinx")
-    HR = LkReportingUnit(6, "HR")
+    DOR = LkReportingUnit(1, "DOR", 701)
+    EOTSS = LkReportingUnit(2, "EOTSS", 703)
+    HRD = LkReportingUnit(3, "HRD", 704)
+    EOLWD = LkReportingUnit(4, "EOLWD", 702)
 
 
 def sync_lookup_tables(db_session):
