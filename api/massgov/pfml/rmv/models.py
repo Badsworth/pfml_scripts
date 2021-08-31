@@ -33,6 +33,12 @@ class VendorLicenseInquiryRequest(PydanticBaseModel):
         allow_population_by_field_name = True
 
 
+class RMVSex(str, Enum):
+    M = "M"
+    F = "F"
+    X = "X"
+
+
 class VendorLicenseInquiryResponse(PydanticBaseModel):
     customer_key: str
     license_id: str = Field(..., alias="LicenseID")
@@ -45,6 +51,7 @@ class VendorLicenseInquiryResponse(PydanticBaseModel):
     street2: Optional[str]
     city: str
     zip: str
+    sex: RMVSex
 
     _parse_license1: classmethod = validator(
         "license1_expiration_date", pre=True, allow_reuse=True

@@ -96,6 +96,10 @@ module "tasks" {
   enable_pub_automation_create_pub_files = false
   enable_pub_automation_process_returns  = false
 
+  rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
+  rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-performance/rmv_client_certificate-fXNkdl"
+  rmv_api_behavior                  = "partially_mocked"
+
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
 
   dor_fineos_etl_schedule_expression = "cron(30 0 * * ? *)" # Daily at 00:30 UTC [19:30 EST] [20:30 EDT]

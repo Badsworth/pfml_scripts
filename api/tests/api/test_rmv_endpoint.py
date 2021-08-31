@@ -11,19 +11,19 @@ pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def rmv_full_mock(monkeypatch):
-    new_env = monkeypatch.setenv("RMV_CHECK_BEHAVIOR", "fully_mocked")
+    new_env = monkeypatch.setenv("RMV_API_BEHAVIOR", "fully_mocked")
     return new_env
 
 
 @pytest.fixture
 def rmv_partial_mock(monkeypatch):
-    new_env = monkeypatch.setenv("RMV_CHECK_BEHAVIOR", "partially_mocked")
+    new_env = monkeypatch.setenv("RMV_API_BEHAVIOR", "partially_mocked")
     return new_env
 
 
 @pytest.fixture
 def rmv_no_mock(monkeypatch):
-    new_env = monkeypatch.setenv("RMV_CHECK_BEHAVIOR", "not_mocked")
+    new_env = monkeypatch.setenv("RMV_API_BEHAVIOR", "not_mocked")
     return new_env
 
 
