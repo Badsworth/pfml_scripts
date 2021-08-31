@@ -278,7 +278,7 @@ Status.propTypes = {
 
 export default Status;
 
-const StatusTagMap = {
+export const StatusTagMap = {
   Approved: "success",
   Denied: "error",
   Pending: "pending",
