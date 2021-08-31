@@ -71,7 +71,7 @@ module "api" {
   logging_level                                       = "massgov.pfml.fineos.fineos_client=DEBUG"
   rmv_client_base_url                                 = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn                   = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-stage/rmv_client_certificate-QlZaMl"
-  rmv_check_behavior                                  = "partially_mocked"
+  rmv_api_behavior                                    = "partially_mocked"
   rmv_check_mock_success                              = "1"
   fineos_client_customer_api_url                      = "https://idt-api.masspfml.fineos.com/customerapi/"
   fineos_client_integration_services_api_url          = "https://idt-api.masspfml.fineos.com/integration-services/"

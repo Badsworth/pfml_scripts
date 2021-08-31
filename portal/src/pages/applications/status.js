@@ -1,5 +1,7 @@
 import Document, { DocumentType } from "../../models/Document";
 import React, { useEffect, useState } from "react";
+import { has, map } from "lodash";
+import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import ClaimDetail from "../../models/ClaimDetail";
@@ -14,7 +16,6 @@ import findKeyByValue from "../../utils/findKeyByValue";
 import formatDate from "../../utils/formatDate";
 import { handleError } from "../../api/BaseApi";
 import { isFeatureEnabled } from "../../services/featureFlags";
-import { map } from "lodash";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
@@ -116,10 +117,56 @@ export const Status = ({
     ) : null;
   };
 
+  const getInfoAlertContext = (absenceDetails) => {
+    const hasBondingReason = has(absenceDetails, LeaveReason.bonding);
+    const hasPregnancyReason = has(absenceDetails, LeaveReason.pregnancy);
+
+    if (hasBondingReason && !hasPregnancyReason) {
+      return "bonding";
+    }
+
+    if (hasPregnancyReason && !hasBondingReason) {
+      return "pregnancy";
+    }
+
+    return "";
+  };
+  const infoAlertContext = getInfoAlertContext(absenceDetails);
+
   const containerClassName = "border-top border-base-lighter padding-top-2";
 
   return (
     <React.Fragment>
+      {!!infoAlertContext && (
+        <Alert
+          className="margin-bottom-3"
+          data-test="info-alert"
+          heading={t("pages.claimsStatus.infoAlertHeading", {
+            context: infoAlertContext,
+          })}
+          headingLevel="2"
+          headingSize="4"
+          noIcon
+          state="info"
+        >
+          <Trans
+            i18nKey="pages.claimsStatus.infoAlertBody"
+            tOptions={{ context: infoAlertContext }}
+            components={{
+              "about-bonding-leave-link": (
+                <a
+                  href={routes.external.massgov.benefitsGuide_aboutBondingLeave}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                />
+              ),
+              "contact-center-phone-link": (
+                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+              ),
+            }}
+          />
+        </Alert>
+      )}
       <BackButton
         label={t("pages.claimsStatus.backButtonLabel")}
         href={routes.applications.index}
@@ -231,7 +278,7 @@ Status.propTypes = {
 
 export default Status;
 
-const StatusTagMap = {
+export const StatusTagMap = {
   Approved: "success",
   Denied: "error",
   Pending: "pending",

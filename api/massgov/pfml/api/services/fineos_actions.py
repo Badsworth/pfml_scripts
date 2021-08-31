@@ -17,7 +17,7 @@ import mimetypes
 import uuid
 from enum import Enum
 from itertools import chain
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import phonenumbers
 
@@ -49,7 +49,7 @@ from massgov.pfml.db.models.employees import (
     TaxIdentifier,
     User,
 )
-from massgov.pfml.fineos.exception import FINEOSNotFound
+from massgov.pfml.fineos.exception import FINEOSClientError, FINEOSNotFound
 from massgov.pfml.fineos.models.customer_api import AbsenceDetails, ReflexiveQuestionType
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employee import (
@@ -286,6 +286,13 @@ DOCUMENT_TYPES_ASSOCIATED_WITH_EVIDENCE = (
 )
 
 
+def document_log_attrs(doc: Document) -> Dict[str, Any]:
+    return {
+        "document_id": doc.document_id,
+        "document.document_type": doc.document_type_instance.document_type_description,
+    }
+
+
 def mark_documents_as_received(
     application: Application, db_session: massgov.pfml.db.Session
 ) -> None:
@@ -302,16 +309,28 @@ def mark_documents_as_received(
         .filter(Document.application_id == application.application_id)
         .filter(Document.document_type_id.in_(DOCUMENT_TYPES_ASSOCIATED_WITH_EVIDENCE))
     )
+
+    exception_count = 0
     for document in documents:
         if document.fineos_id is None:
             logger.warning(
-                "Document does not have a fineos_id", extra={"document_id": document.document_id},
+                "Document does not have a fineos_id", extra={**document_log_attrs(document)},
             )
             raise ValueError("Document does not have a fineos_id")
 
-        fineos.mark_document_as_received(
-            fineos_web_id, str(application.claim.fineos_absence_id), str(document.fineos_id)
-        )
+        try:
+            fineos.mark_document_as_received(
+                fineos_web_id, str(application.claim.fineos_absence_id), str(document.fineos_id)
+            )
+        except FINEOSClientError as ex:
+            exception_count += 1
+            logger.warning(
+                "Unable to mark document as received",
+                extra={**document_log_attrs(document)},
+                exc_info=ex,
+            )
+    if exception_count > 0:
+        raise RuntimeError
 
 
 def mark_single_document_as_received(
@@ -327,10 +346,18 @@ def mark_single_document_as_received(
         raise ValueError("document.fineos_id is None")
 
     fineos = massgov.pfml.fineos.create_client()
-    fineos_web_id = get_or_register_employee_fineos_web_id(fineos, application, db_session)
-    fineos.mark_document_as_received(
-        fineos_web_id, str(application.claim.fineos_absence_id), str(document.fineos_id)
-    )
+    try:
+        fineos_web_id = get_or_register_employee_fineos_web_id(fineos, application, db_session)
+        fineos.mark_document_as_received(
+            fineos_web_id, str(application.claim.fineos_absence_id), str(document.fineos_id)
+        )
+    except FINEOSClientError as ex:
+        logger.warning(
+            "Unable to mark document as received",
+            extra={**document_log_attrs(document)},
+            exc_info=ex,
+        )
+        raise
 
 
 def build_customer_model(application, current_user):

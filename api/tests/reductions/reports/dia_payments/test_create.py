@@ -21,6 +21,7 @@ from massgov.pfml.db.models.factories import (
     EmployeeFactory,
     EmployeeWithFineosNumberFactory,
 )
+from massgov.pfml.reductions.reports.models.dia import make_report_row_from_payment
 from massgov.pfml.util.batch.log import LogEntry
 
 
@@ -28,7 +29,7 @@ def test_write_dfml_report_rows_no_claim_info():
     output_file = io.StringIO()
 
     payment_data = (DiaReductionPaymentFactory.build(), None)
-    payment_rows = [dia_payments_reports_create._make_report_row_from_payment(payment_data)]
+    payment_rows = [make_report_row_from_payment(payment_data)]
 
     dia_payments_reports_create._write_dfml_report_rows(output_file, payment_rows)
 
@@ -66,7 +67,7 @@ def test_write_dfml_report_rows_some_claim_info():
     output_file = io.StringIO()
 
     payment_data = (DiaReductionPaymentFactory.build(), ClaimFactory.build())
-    payment_rows = [dia_payments_reports_create._make_report_row_from_payment(payment_data)]
+    payment_rows = [make_report_row_from_payment(payment_data)]
 
     dia_payments_reports_create._write_dfml_report_rows(output_file, payment_rows)
 
@@ -111,7 +112,7 @@ def test_write_dfml_report_rows_full_claim_info():
             fineos_absence_status_id=AbsenceStatus.ADJUDICATION.absence_status_id,
         ),
     )
-    payment_rows = [dia_payments_reports_create._make_report_row_from_payment(payment_data)]
+    payment_rows = [make_report_row_from_payment(payment_data)]
 
     dia_payments_reports_create._write_dfml_report_rows(output_file, payment_rows)
 

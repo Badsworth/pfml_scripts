@@ -1260,6 +1260,13 @@ class DiaReductionPayment(Base, TimestampMixin):
 
     # Each row should be unique.
 
+    Index(
+        "ix_dia_reduction_payment_fineos_customer_number_board_no",
+        fineos_customer_number,
+        board_no,
+        unique=False,
+    )
+
 
 class PubError(Base, TimestampMixin):
     __tablename__ = "pub_error"
@@ -2343,6 +2350,17 @@ class State(LookupTable):
         187, "Error saving new DUA payments in database", Flow.DUA_PAYMENT_LIST.flow_id
     )
 
+    DIA_CONSOLIDATED_REPORT_CREATED = LkState(
+        188, "Create consolidated report for DFML", Flow.DFML_DIA_REDUCTION_REPORT.flow_id
+    )
+    DIA_CONSOLIDATED_REPORT_SENT = LkState(
+        189, "Send consolidated DIA report for DFML", Flow.DFML_DIA_REDUCTION_REPORT.flow_id
+    )
+
+    DIA_CONSOLIDATED_REPORT_ERROR = LkState(
+        190, "Consolidated DIA report for DFML error", Flow.DFML_DIA_REDUCTION_REPORT.flow_id
+    )
+
 
 class PaymentTransactionType(LookupTable):
     model = LkPaymentTransactionType
@@ -2410,6 +2428,12 @@ class ReferenceFileType(LookupTable):
     PUB_POSITIVE_PAYMENT = LkReferenceFileType(27, "PUB positive pay file", 1)
 
     DELEGATED_PAYMENT_REPORT_FILE = LkReferenceFileType(28, "SQL Report", 1)
+    DIA_CONSOLIDATED_REDUCTION_REPORT = LkReferenceFileType(
+        29, "Consolidated DIA payments for DFML reduction report", 1
+    )
+    DIA_CONSOLIDATED_REDUCTION_REPORT_ERRORS = LkReferenceFileType(
+        30, "Consolidated DIA payments for DFML reduction report", 1
+    )
 
 
 class Title(LookupTable):

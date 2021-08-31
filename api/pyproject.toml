@@ -118,6 +118,7 @@ reductions-send-claimant-lists-to-agencies = "massgov.pfml.reductions.send_claim
 transmogrify-state-logs = "massgov.pfml.util.tasks.transmogrify_states:transmogrify_states"
 delegated-payment-audit-rejects-generate = "massgov.pfml.delegated_payments.audit.mock.delegated_payment_audit_generator:generate_payment_rejects_file"
 delegated-payment-check-response-generate = "massgov.pfml.delegated_payments.mock.generate_check_response:generate_check_response_files"
+update-gender-data-from-rmv = "massgov.pfml.rmv.update_gender_data:main"
 
 [tool.black]
 line-length = 100

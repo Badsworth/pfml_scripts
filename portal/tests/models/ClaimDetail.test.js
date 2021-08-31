@@ -2,7 +2,11 @@ import ClaimDetail, {
   AbsencePeriod,
   OutstandingEvidence,
 } from "../../src/models/ClaimDetail";
-import { ClaimEmployee, ClaimEmployer } from "../../src/models/Claim";
+import {
+  ClaimEmployee,
+  ClaimEmployer,
+  ManagedRequirement,
+} from "../../src/models/Claim";
 
 describe("ClaimDetail", () => {
   it("creates an employee and an employer", () => {
@@ -151,5 +155,23 @@ describe("ClaimDetail", () => {
         "Serious Health Condition - Employee"
       ][0]
     ).toBeInstanceOf(AbsencePeriod);
+  });
+
+  it("creates employer managed requirements", () => {
+    const requirement = {
+      category: "test category",
+      created_at: "2021-05-30",
+      follow_up_date: "2021-06-30",
+      responded_at: "2021-07-30",
+      status: "Completed",
+      type: "test type",
+    };
+
+    const managed_requirements = [requirement, requirement];
+    const claimDetail = new ClaimDetail({ managed_requirements });
+
+    claimDetail.managed_requirements.forEach((managed_requirement) => {
+      expect(managed_requirement).toBeInstanceOf(ManagedRequirement);
+    });
   });
 });

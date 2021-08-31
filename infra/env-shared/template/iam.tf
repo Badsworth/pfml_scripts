@@ -48,3 +48,32 @@ data "aws_iam_policy_document" "reports_executor" {
     ]
   }
 }
+
+
+
+# Allow Eventbridge to send ECS task change events to the ECS Task Events 
+# cloudwatch log group
+data "aws_iam_policy_document" "ecs-tasks-events-log-policy" {
+  statement {
+    actions = [
+      "logs:CreateLogStream",
+      "logs:PutLogEvents",
+      "logs:PutLogEventsBatch",
+    ]
+    effect = "Allow"
+
+    principals {
+      type        = "Service"
+      identifiers = ["ecs.amazonaws.com", "events.amazonaws.com", "delivery.logs.amazonaws.com"]
+    }
+
+    resources = [
+      "${aws_cloudwatch_log_group.ecs_tasks_events.arn}:*"
+    ]
+  }
+}
+
+resource "aws_cloudwatch_log_resource_policy" "ecs-tasks-events-log-publishing-policy" {
+  policy_document = data.aws_iam_policy_document.ecs-tasks-events-log-policy.json
+  policy_name     = "ecs-tasks-events-log-publishing-policy"
+}

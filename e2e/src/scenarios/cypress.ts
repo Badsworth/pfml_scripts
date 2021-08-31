@@ -345,6 +345,10 @@ export const MED_PRE: ScenarioSpecification = {
       MASSID: {},
       PREGNANCY_MATERNITY_FORM: {},
     },
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+    },
   },
 };
 

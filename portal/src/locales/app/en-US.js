@@ -1887,6 +1887,14 @@ const pages = {
     applicationID: "Application ID",
     backButtonLabel: "Back to your applications",
     employerEIN: "Employer Identification Number (EIN)",
+    infoAlertBody_bonding:
+      "You can take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if you need <about-bonding-leave-link>medical leave after giving birth.</about-bonding-leave-link>",
+    infoAlertBody_pregnancy:
+      "You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. <about-bonding-leave-link>Family leave to bond with your child</about-bonding-leave-link> can be easily added to your claim by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
+    infoAlertHeading_bonding:
+      "If you gave birth, you may be eligible for paid medical leave",
+    infoAlertHeading_pregnancy:
+      "You may also be eligible for paid family leave",
     infoRequestsBody:
       "If you have a request for more information, use this to upload the requested documentation.",
     infoRequestsHeading: "Respond to requests for information",

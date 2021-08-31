@@ -2413,6 +2413,54 @@ class TestGetClaimsEndpoint:
         for claim in response_body["data"]:
             assert claim["employer"]["employer_fein"] == format_fein(other_employer.employer_fein)
 
+    def test_get_claims_no_employee(
+        self, client, employer_auth_token, employer_user, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create()
+
+        for _ in range(5):
+            ClaimFactory.create(
+                employer=employer, fineos_absence_status_id=1, claim_type_id=1,
+            )
+
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        response = client.get(
+            f"/v1/claims?employer_id={employer.employer_id}",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 200
+        response_body = response.get_json()
+
+        assert len(response_body["data"]) == 5
+
+    def test_get_claims_no_employer(self, client, auth_token, user):
+        employee = EmployeeFactory.create()
+
+        for _ in range(5):
+            application = ApplicationFactory.create(user=user)
+            ClaimFactory.create(
+                employee=employee,
+                application=application,
+                fineos_absence_status_id=1,
+                claim_type_id=1,
+            )
+
+        response = client.get("/v1/claims", headers={"Authorization": f"Bearer {auth_token}"},)
+
+        assert response.status_code == 200
+        response_body = response.get_json()
+
+        assert len(response_body["data"]) == 5
+
     # Inner class for testing Claims With Status Filtering
     class TestClaimsWithStatus:
         NUM_CLAIM_PER_STATUS = 2
