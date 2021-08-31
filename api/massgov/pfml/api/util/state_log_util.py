@@ -22,9 +22,7 @@ from massgov.pfml.db.models.employees import (
     ReferenceFile,
     StateLog,
 )
-from massgov.pfml.delegated_payments.delegated_payments_util import (
-    ValidationContainer as DelegatedValidationContainer,
-)
+from massgov.pfml.delegated_payments.delegated_payments_util import ValidationContainer
 
 logger = logging.get_logger(__name__)
 
@@ -590,7 +588,7 @@ def get_state_counts(db_session: db.Session) -> Dict[str, int]:
 
 def build_outcome(
     message: str,
-    validation_container: Optional[DelegatedValidationContainer] = None,
+    validation_container: Optional[ValidationContainer] = None,
     **extra_attributes: str,
 ) -> Dict[str, Any]:
     outcome: Dict[str, Any] = {}
