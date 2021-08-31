@@ -1,4 +1,5 @@
-import { ClaimEmployee, ClaimEmployer } from "./Claim";
+import { ClaimEmployee, ClaimEmployer, ManagedRequirement } from "./Claim";
+
 import BaseModel from "./BaseModel";
 import { groupBy } from "lodash";
 
@@ -17,6 +18,12 @@ class ClaimDetail extends BaseModel {
     if (this.absence_periods) {
       this.absence_periods = this.absence_periods.map(
         (absence_period) => new AbsencePeriod(absence_period)
+      );
+    }
+
+    if (this.managed_requirements) {
+      this.managed_requirements = this.managed_requirements.map(
+        (managed_requirement) => new ManagedRequirement(managed_requirement)
       );
     }
 
@@ -57,6 +64,10 @@ class ClaimDetail extends BaseModel {
       employer: null,
       fineos_absence_id: null,
       fineos_notification_id: null,
+      /**
+       * @type {ManagedRequirement}
+       */
+      managed_requirements: [],
       outstanding_evidence: {
         /**
          * @type {OutstandingEvidence}
