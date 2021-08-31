@@ -282,6 +282,36 @@ exports[`leave details page does renders page with one section if absenceDetails
 
 exports[`status page displays an error if feature flag is disabled 1`] = `
 <Fragment>
+  <Alert
+    className="margin-bottom-3"
+    data-test="info-alert"
+    heading="If you gave birth, you may be eligible for paid medical leave"
+    headingLevel="2"
+    headingSize="4"
+    noIcon={true}
+    state="info"
+  >
+    <Trans
+      components={
+        Object {
+          "about-bonding-leave-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
+            rel="noreferrer noopener"
+            target="_blank"
+          />,
+          "contact-center-phone-link": <a
+            href="tel:(833) 344-7365"
+          />,
+        }
+      }
+      i18nKey="pages.claimsStatus.infoAlertBody"
+      tOptions={
+        Object {
+          "context": "bonding",
+        }
+      }
+    />
+  </Alert>
   <BackButton
     href="/applications"
     label="Back to your applications"
@@ -591,6 +621,36 @@ exports[`status page does not render LeaveDetails if absenceDetails not given 1`
 
 exports[`status page does not render ViewYourNotices if documents not given 1`] = `
 <Fragment>
+  <Alert
+    className="margin-bottom-3"
+    data-test="info-alert"
+    heading="If you gave birth, you may be eligible for paid medical leave"
+    headingLevel="2"
+    headingSize="4"
+    noIcon={true}
+    state="info"
+  >
+    <Trans
+      components={
+        Object {
+          "about-bonding-leave-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
+            rel="noreferrer noopener"
+            target="_blank"
+          />,
+          "contact-center-phone-link": <a
+            href="tel:(833) 344-7365"
+          />,
+        }
+      }
+      i18nKey="pages.claimsStatus.infoAlertBody"
+      tOptions={
+        Object {
+          "context": "bonding",
+        }
+      }
+    />
+  </Alert>
   <BackButton
     href="/applications"
     label="Back to your applications"
@@ -771,6 +831,36 @@ exports[`status page does not render ViewYourNotices if documents not given 1`] 
 
 exports[`status page includes a button to upload additional documents 1`] = `
 <Fragment>
+  <Alert
+    className="margin-bottom-3"
+    data-test="info-alert"
+    heading="If you gave birth, you may be eligible for paid medical leave"
+    headingLevel="2"
+    headingSize="4"
+    noIcon={true}
+    state="info"
+  >
+    <Trans
+      components={
+        Object {
+          "about-bonding-leave-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
+            rel="noreferrer noopener"
+            target="_blank"
+          />,
+          "contact-center-phone-link": <a
+            href="tel:(833) 344-7365"
+          />,
+        }
+      }
+      i18nKey="pages.claimsStatus.infoAlertBody"
+      tOptions={
+        Object {
+          "context": "bonding",
+        }
+      }
+    />
+  </Alert>
   <BackButton
     href="/applications"
     label="Back to your applications"
@@ -949,8 +1039,169 @@ exports[`status page includes a button to upload additional documents 1`] = `
 </Fragment>
 `;
 
+exports[`status page info alert displays if claimant has bonding but not pregnancy claims 1`] = `
+<div
+  className="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
+  tabIndex="-1"
+>
+  <div
+    className="usa-alert__body"
+    role="region"
+  >
+    <Heading
+      className="usa-alert__heading"
+      level="2"
+      size="4"
+    >
+      If you gave birth, you may be eligible for paid medical leave
+    </Heading>
+    <div
+      className="usa-alert__text"
+    >
+      <Trans
+        components={
+          Object {
+            "about-bonding-leave-link": <a
+              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
+              rel="noreferrer noopener"
+              target="_blank"
+            />,
+            "contact-center-phone-link": <a
+              href="tel:(833) 344-7365"
+            />,
+          }
+        }
+        i18nKey="pages.claimsStatus.infoAlertBody"
+        tOptions={
+          Object {
+            "context": "bonding",
+          }
+        }
+      />
+    </div>
+  </div>
+</div>
+`;
+
+exports[`status page info alert displays if claimant has bonding but not pregnancy claims 2`] = `
+Array [
+  "You can take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at ",
+  <a
+    href="tel:(833) 344-7365"
+    key="1"
+  >
+    (833) 344‑7365
+  </a>,
+  " if you need ",
+  <a
+    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
+    key="3"
+    rel="noreferrer noopener"
+    target="_blank"
+  >
+    medical leave after giving birth.
+  </a>,
+]
+`;
+
+exports[`status page info alert displays if claimant has pregnancy but not bonding claims 1`] = `
+<div
+  className="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
+  tabIndex="-1"
+>
+  <div
+    className="usa-alert__body"
+    role="region"
+  >
+    <Heading
+      className="usa-alert__heading"
+      level="2"
+      size="4"
+    >
+      You may also be eligible for paid family leave
+    </Heading>
+    <div
+      className="usa-alert__text"
+    >
+      <Trans
+        components={
+          Object {
+            "about-bonding-leave-link": <a
+              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
+              rel="noreferrer noopener"
+              target="_blank"
+            />,
+            "contact-center-phone-link": <a
+              href="tel:(833) 344-7365"
+            />,
+          }
+        }
+        i18nKey="pages.claimsStatus.infoAlertBody"
+        tOptions={
+          Object {
+            "context": "pregnancy",
+          }
+        }
+      />
+    </div>
+  </div>
+</div>
+`;
+
+exports[`status page info alert displays if claimant has pregnancy but not bonding claims 2`] = `
+Array [
+  "You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. ",
+  <a
+    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
+    key="1"
+    rel="noreferrer noopener"
+    target="_blank"
+  >
+    Family leave to bond with your child
+  </a>,
+  " can be easily added to your claim by calling our Contact Center at ",
+  <a
+    href="tel:(833) 344-7365"
+    key="3"
+  >
+    (833) 344‑7365
+  </a>,
+  ".",
+]
+`;
+
 exports[`status page renders the page 1`] = `
 <Fragment>
+  <Alert
+    className="margin-bottom-3"
+    data-test="info-alert"
+    heading="If you gave birth, you may be eligible for paid medical leave"
+    headingLevel="2"
+    headingSize="4"
+    noIcon={true}
+    state="info"
+  >
+    <Trans
+      components={
+        Object {
+          "about-bonding-leave-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
+            rel="noreferrer noopener"
+            target="_blank"
+          />,
+          "contact-center-phone-link": <a
+            href="tel:(833) 344-7365"
+          />,
+        }
+      }
+      i18nKey="pages.claimsStatus.infoAlertBody"
+      tOptions={
+        Object {
+          "context": "bonding",
+        }
+      }
+    />
+  </Alert>
   <BackButton
     href="/applications"
     label="Back to your applications"
