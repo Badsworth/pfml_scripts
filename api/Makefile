@@ -122,7 +122,7 @@ create-user: ## Create local API User
 	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-user.py $(args)
 
 deps: ## Install dependencies
-	$(POETRY_CMD) install --no-root --extras "mssql-server api-only-dependencies"
+	$(POETRY_CMD) install --no-root --extras "api-only-dependencies"
 
 deps-check:
 	$(PY_RUN_CMD) safety check --full-report

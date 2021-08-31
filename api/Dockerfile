@@ -42,12 +42,10 @@ WORKDIR /app
 
 # install dependencies
 COPY pyproject.toml poetry.lock ./
-RUN poetry install --no-root --extras "mssql-server api-only-dependencies"
+RUN poetry install --no-root --extras "api-only-dependencies"
 
 # grab the application
 COPY . ./
-
-ENV PATH="/opt/mssql-tools/bin:$PATH"
 
 # run the server
 CMD ["poetry", "run", "python", "-m", "massgov.pfml.api"]
@@ -66,13 +64,13 @@ WORKDIR /app
 # use a project-local virtualenv to be easy to find
 ENV POETRY_VIRTUALENVS_IN_PROJECT true
 COPY pyproject.toml poetry.lock ./
-RUN poetry install --no-root --no-dev --extras "mssql-server api-only-dependencies"
+RUN poetry install --no-root --no-dev --extras "api-only-dependencies"
 
 # for simplicity, grab the whole project
 COPY . ./
 # then install just the application by building and installing the project
 # Python package (excludes non-essential files, like tests)
-RUN poetry build --format wheel && poetry run pip install 'dist/massgov.pfml.api-0.1.0-py3-none-any.whl[mssql-server]'
+RUN poetry build --format wheel && poetry run pip install 'dist/massgov.pfml.api-0.1.0-py3-none-any.whl'
 
 #-------------------------------------------------------------------------------
 # Application only

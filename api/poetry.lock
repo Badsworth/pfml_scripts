@@ -1939,7 +1939,6 @@ testing = ["pytest (>=3.5,!=3.7.3)", "pytest-checkdocs (>=1.2.3)", "pytest-flake
 
 [extras]
 api-only-dependencies = ["connexion", "flask-bouncer", "flask_cors", "Flask-HTTPAuth", "gunicorn", "lxml", "zeep"]
-mssql-server = ["pyodbc"]
 
 [metadata]
 lock-version = "1.1"
