@@ -10,9 +10,7 @@ RUN apt-get update \
  && apt-get install --no-install-recommends --yes \
         make \
         build-essential git curl \
-        postgresql gnupg \
- && curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
- && curl https://packages.microsoft.com/config/debian/10/prod.list > /etc/apt/sources.list.d/mssql-release.list
+        postgresql gnupg
 
 # setup user stuff
 ARG RUN_UID
