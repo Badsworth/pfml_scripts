@@ -1836,9 +1836,9 @@ export function sortClaims(
 }
 
 export function claimantGoToClaimStatus(fineosAbsenceId: string): void {
-  cy.get(
-    `a[href$="/applications/status/?absence_case_id=${fineosAbsenceId}"`
-  ).click();
+  cy.get(`a[href$="/applications/status/?absence_case_id=${fineosAbsenceId}"`)
+    .should("be.visible")
+    .click();
 }
 
 type LeaveStatus = {
