@@ -88,8 +88,6 @@ locals {
 
   # Configuration for email sending + destinations required for payments
   emails_ctr = concat(local.emails, [
-    { name : "CTR_GAX_BIEVNT_EMAIL_ADDRESS", value : var.ctr_gax_bievnt_email_address },
-    { name : "CTR_VCC_BIEVNT_EMAIL_ADDRESS", value : var.ctr_vcc_bievnt_email_address },
     { name : "DFML_PROJECT_MANAGER_EMAIL_ADDRESS", value : var.dfml_project_manager_email_address },
     { name : "DFML_BUSINESS_OPERATIONS_EMAIL_ADDRESS", value : var.dfml_business_operations_email_address },
   ])

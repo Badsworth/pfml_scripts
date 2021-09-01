@@ -56,20 +56,12 @@ module "tasks" {
 
   # These can be kept blank.
   eolwd_moveit_sftp_uri    = ""
-  ctr_moveit_incoming_path = ""
-  ctr_moveit_outgoing_path = ""
-  ctr_moveit_archive_path  = ""
-  pfml_ctr_inbound_path    = "s3://massgov-pfml-cps-preview-agency-transfer/ctr/inbound"
-  pfml_ctr_outbound_path   = "s3://massgov-pfml-cps-preview-agency-transfer/ctr/outbound"
   pfml_error_reports_path  = "s3://massgov-pfml-cps-preview-agency-transfer/error-reports/outbound"
-  pfml_voucher_output_path = "s3://massgov-pfml-cps-preview-agency-transfer/payments/manual-payment-voucher"
 
   dfml_project_manager_email_address     = "mass-pfml-payments-test-email@navapbc.com"
   pfml_email_address                     = "PFML_DoNotReply@eol.mass.gov"
   bounce_forwarding_email_address        = "PFML_DoNotReply@eol.mass.gov"
   bounce_forwarding_email_address_arn    = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
-  ctr_gax_bievnt_email_address           = "mass-pfml-payments-test-email@navapbc.com"
-  ctr_vcc_bievnt_email_address           = "mass-pfml-payments-test-email@navapbc.com"
   dfml_business_operations_email_address = "mass-pfml-payments-test-email@navapbc.com"
 
   # TODO: Values from FINEOS.
@@ -88,7 +80,6 @@ module "tasks" {
   payment_audit_report_outbound_folder_path = "s3://massgov-pfml-cps-preview-agency-transfer/audit/outbound"
   payment_audit_report_sent_folder_path     = "s3://massgov-pfml-cps-preview-agency-transfer/audit/sent"
 
-  enable_recurring_payments_schedule = false
   enable_register_admins_job         = true
 
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"

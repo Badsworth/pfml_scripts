@@ -150,17 +150,6 @@ variable "dor_fineos_etl_schedule_expression" {
   type        = string
   default     = "cron(30 4 * * ? *)"
 }
-variable "pfml_ctr_inbound_path" {
-  description = "PFML API stores a copy of all files that CTR/MMARS generates for us"
-  type        = string
-  default     = ""
-}
-
-variable "pfml_ctr_outbound_path" {
-  description = "PFML API stores a copy of all files that we generate for CTR/MMARS"
-  type        = string
-  default     = ""
-}
 
 variable "eolwd_moveit_sftp_uri" {
   description = "URI for LWD MOVEit instance"
@@ -172,48 +161,6 @@ variable "pfml_error_reports_path" {
   description = "PFML API stores a copy of all error reports generated"
   type        = string
   default     = ""
-}
-
-variable "pfml_voucher_output_path" {
-  description = "PFML API stores a copy of all payment vouchers generated"
-  type        = string
-  default     = ""
-}
-
-variable "ctr_moveit_incoming_path" {
-  description = "CTR/MMARS generates Outbound Return files for PFML API to pick up (MOVEit folder)"
-  type        = string
-  default     = ""
-}
-
-variable "ctr_moveit_outgoing_path" {
-  description = "PFML API generates files for CTR/MMARS to process (MOVEit folder)"
-  type        = string
-  default     = ""
-}
-
-variable "ctr_moveit_archive_path" {
-  description = "Once PFML API picks up files from CTR/MMARS MOVEit, we need to archive them (MOVEit folder)"
-  type        = string
-  default     = ""
-}
-
-variable "ctr_gax_bievnt_email_address" {
-  description = "Email address to send GAX BIEVNT report to"
-  type        = string
-  default     = ""
-}
-
-variable "ctr_vcc_bievnt_email_address" {
-  description = "Email address to send VCC BIEVNT report to"
-  type        = string
-  default     = ""
-}
-
-variable "enable_recurring_payments_schedule" {
-  description = "Enable scheduling for payments-payment-voucher-plus ECS task"
-  type        = bool
-  default     = false
 }
 
 variable "pfml_email_address" {
