@@ -1333,30 +1333,3 @@ data "aws_iam_policy_document" "cps_errors_crawler_role_policy_document" {
     effect = "Allow"
   }
 }
-
-# ----------------------------------------------------------------------------------------------------------------------
-# IAM role and policies for update-gender-data-from-rmv
-# ----------------------------------------------------------------------------------------------------------------------
-
-resource "aws_iam_role" "update_gender_data_from_rmv_task_role" {
-  name               = "${local.app_name}-${var.environment_name}-update-gender-data-from-rmv-task-role"
-  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
-}
-
-resource "aws_iam_role_policy" "update_gender_data_from_rmv_role_policy" {
-  name   = "${local.app_name}-${var.environment_name}-update-gender-data-from-rmv-role-policy"
-  role   = aws_iam_role.update_gender_data_from_rmv_task_role.id
-  policy = data.aws_iam_policy_document.update_gender_data_from_rmv.json
-}
-
-data "aws_iam_policy_document" "update_gender_data_from_rmv" {
-  statement {
-    effect = "Allow"
-    actions = [
-      "secretsmanager:GetSecretValue",
-    ]
-    resources = [
-      var.rmv_client_certificate_binary_arn,
-    ]
-  }
-}

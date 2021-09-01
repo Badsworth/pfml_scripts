@@ -107,12 +107,4 @@ locals {
   emails_reductions = concat(local.emails, [
     { name : "AGENCY_REDUCTIONS_EMAIL_ADDRESS", value : var.agency_reductions_email_address }
   ])
-
-  # Provide access to the RMV APIs
-  rmv_api_access = [
-    { name : "RMV_CLIENT_BASE_URL", value : var.rmv_client_base_url },
-    { name : "RMV_CLIENT_CERTIFICATE_BINARY_ARN", value : var.rmv_client_certificate_binary_arn },
-    { name : "RMV_CLIENT_CERTIFICATE_PASSWORD", valueFrom : "/service/${local.app_name}/${var.environment_name}/rmv_client_certificate_password" },
-    { name : "RMV_API_BEHAVIOR", value : var.rmv_api_behavior }
-  ]
 }

@@ -342,15 +342,6 @@ locals {
         { name : "BI_WAREHOUSE_PATH", value : "s3://massgov-pfml-${var.environment_name}-business-intelligence-tool/warehouse/raw/fineos/" }
       ]
     },
-
-    "update-gender-data-from-rmv" = {
-      command   = ["update-gender-data-from-rmv"]
-      task_role = aws_iam_role.update_gender_data_from_rmv_task_role.arn
-      env = [
-        local.db_access,
-        local.rmv_api_access
-      ]
-    },
   }
 }
 

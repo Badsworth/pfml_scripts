@@ -8,7 +8,7 @@ import massgov.pfml.db.config as db_config
 from massgov.pfml.util.strings import split_str
 
 
-class RMVAPIBehavior(Enum):
+class RMVCheckBehavior(Enum):
     # Fully mocked endpoint
     MOCK = "fully_mocked"
     # Partially mocked endpoint, will call the RMV API when called with certain records. Mocked responses otherwise.
@@ -28,7 +28,7 @@ class AppConfig:
     cognito_user_pool_client_id: str
     cognito_user_pool_keys_url: str
     enable_employee_endpoints: bool
-    rmv_api_behavior: RMVAPIBehavior
+    rmv_check_behavior: RMVCheckBehavior
     rmv_check_mock_success: bool
     enable_application_fraud_check: bool
     dashboard_password: str
@@ -46,8 +46,8 @@ def get_config() -> AppConfig:
         cognito_user_pool_client_id=os.environ.get("COGNITO_USER_POOL_CLIENT_ID", ""),
         cognito_user_pool_keys_url=os.environ.get("COGNITO_USER_POOL_KEYS_URL", ""),
         enable_employee_endpoints=os.environ.get("ENABLE_EMPLOYEE_ENDPOINTS", "0") == "1",
-        rmv_api_behavior=RMVAPIBehavior(
-            os.environ.get("RMV_API_BEHAVIOR", RMVAPIBehavior.MOCK.value)
+        rmv_check_behavior=RMVCheckBehavior(
+            os.environ.get("RMV_CHECK_BEHAVIOR", RMVCheckBehavior.MOCK.value)
         ),
         # "1" always passes id proofing, "0" always fails id proofing
         rmv_check_mock_success=os.environ.get("RMV_CHECK_MOCK_SUCCESS", "1") == "1",

@@ -59,7 +59,7 @@ module "api" {
   cognito_enable_provisioned_concurrency              = false
   rmv_client_base_url                                 = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn                   = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-training/rmv_client_certificate-uUtNEp"
-  rmv_api_behavior                                    = "partially_mocked"
+  rmv_check_behavior                                  = "partially_mocked"
   rmv_check_mock_success                              = "1"
   fineos_client_integration_services_api_url          = "https://trn-api.masspfml.fineos.com/integration-services/"
   fineos_client_group_client_api_url                  = "https://trn-api.masspfml.fineos.com/groupclientapi/"

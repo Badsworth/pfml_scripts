@@ -60,10 +60,6 @@ module "tasks" {
   fineos_error_export_path  = "s3://fin-sompre-data-export/UAT/errorExtracts"
   fineos_report_export_path = "s3://fin-sompre-data-export/UAT/reportExtracts"
 
-  rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
-  rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-uat/rmv_client_certificate-LWvMFe"
-  rmv_api_behavior                  = "partially_mocked"
-
   logging_level = "massgov.pfml.fineos.fineos_client=DEBUG"
 
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
