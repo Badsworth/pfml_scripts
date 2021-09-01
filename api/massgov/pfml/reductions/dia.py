@@ -20,7 +20,7 @@ from massgov.pfml.delegated_payments.delegated_payments_util import (
     get_now,
     move_file_and_update_ref_file,
 )
-from massgov.pfml.delegated_payments.sftp_s3_transfer import (
+from massgov.pfml.util.sftp_s3_transfer import (
     SftpS3TransferConfig,
     copy_from_sftp_to_s3_and_archive_files,
     copy_to_sftp_and_archive_s3_files,
