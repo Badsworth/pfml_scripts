@@ -1,6 +1,5 @@
 import ClaimDetail, { AbsencePeriod } from "src/models/ClaimDetail";
 import { Status, StatusTagMap } from "src/pages/applications/status";
-
 import LeaveReason from "src/models/LeaveReason";
 import React from "react";
 import { ReasonQualifier } from "src/models/BenefitsApplication";
@@ -34,14 +33,14 @@ const LEAVE_SCENARIO_MAP = {
 };
 
 /**
- * Creates the absence details to pass in as a prop to the Status component.
+ * Creates the claim detail to be used by the Status component.
  * Ensures that all permutations of leave reason and request decision are displayed.
  * @param {string} leaveScenarioSelection - the selected radio option for the
  *    leave scenario in Storybook.
- * @returns {object} an object that maps leave reason to each of the absence
- *    periods with that reason.
+ * @returns {ClaimDetail} a populated ClaimDetail object that contains
+ *    absence periods applicable to the provided leave scenario selection.
  */
-function createAbsenceDetails(leaveScenarioSelection) {
+function createClaimDetail(leaveScenarioSelection) {
   const initialPartials = LEAVE_SCENARIO_MAP[leaveScenarioSelection] || [];
   // ensure that we see all request decisions.
   const allPartials = initialPartials.flatMap((initialPartial) => [
@@ -54,7 +53,13 @@ function createAbsenceDetails(leaveScenarioSelection) {
   const absence_periods = allPartials.map((partial) =>
     createAbsencePeriod(partial)
   );
-  return new ClaimDetail({ absence_periods }).absencePeriodsByReason;
+  return new ClaimDetail({
+    application_id: "my-application-id",
+    employer: {
+      employer_fein: "123456789",
+    },
+    absence_periods,
+  });
 }
 
 /**
@@ -90,9 +95,14 @@ export default {
 
 export const DefaultStory = (args) => {
   const leaveScenario = args["Leave Scenario"];
-  const absenceDetails = createAbsenceDetails(leaveScenario);
+  const claimDetail = createClaimDetail(leaveScenario);
   const appLogic = {
     appErrors: { items: [] },
+    claims: {
+      claimDetail,
+      isLoadingClaimDetail: false,
+      loadClaimDetail: () => {},
+    },
     documents: { download: () => {} },
     portalFlow: {
       getNextPageRoute: () => "/storybook-mock",
@@ -112,6 +122,10 @@ export const DefaultStory = (args) => {
 
   const claim = generateClaim("completed", leaveReason);
   return (
-    <Status appLogic={appLogic} absenceDetails={absenceDetails} claim={claim} />
+    <Status
+      appLogic={appLogic}
+      claim={claim}
+      query={{ absence_case_id: "NTN-12345-ABS-01" }}
+    />
   );
 };
