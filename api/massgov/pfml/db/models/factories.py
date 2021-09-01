@@ -203,6 +203,8 @@ class EmployeeFactory(EmployeeOnlyDORDataFactory):
     phone_number = "+19425290727"
     ctr_vendor_customer_code = "VC0001201168"
     gender_id = None
+    fineos_employee_first_name = factory.LazyAttribute(lambda e: e.first_name)
+    fineos_employee_last_name = factory.LazyAttribute(lambda e: e.last_name)
 
 
 class EmployeeWithFineosNumberFactory(EmployeeFactory):

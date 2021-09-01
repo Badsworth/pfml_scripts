@@ -44,6 +44,18 @@ def test_name_truncation(monkeypatch):
     )
 
     assert entry.get_value("name") == "Smith-Westfield Johnat"
+    assert entry.get_value("name") == "Smith-Westfield Johnathan"[:22]
+
+    entry = NachaEntry(
+        trans_code="22",
+        receiving_dfi_id="23138010",
+        dfi_act_num="122424",
+        amount=123.00,
+        id="1224asdfgasdf",
+        name="Smith John",
+    )
+
+    assert entry.get_value("name") == "Smith John            "
 
 
 @freeze_time("2021-03-17 21:58:00")
@@ -132,6 +144,14 @@ def test_nacha_file_prenote_entries():
 
     assert len(nacha_file.batches[0].entries) == 5
 
+    for index, employee_with_eft in enumerate(employees_with_eft):
+        entry = nacha_file.batches[0].entries[index]
+        pub_eft = employee_with_eft[1]
+        assert (
+            entry.get_value("name").strip()
+            == f"{pub_eft.fineos_employee_last_name} {pub_eft.fineos_employee_first_name}"[:22]
+        )
+
 
 def test_nacha_file_prenote_entries_errors():
     nacha_file = create_nacha_file()
@@ -171,6 +191,13 @@ def test_nacha_file_payment_entries_one_leave_type():
 
     add_payments_to_nacha_file(nacha_file, payments)
     assert len(nacha_file.batches[0].entries) == 5
+
+    for index, payment in enumerate(payments):
+        entry = nacha_file.batches[0].entries[index]
+        assert (
+            entry.get_value("name").strip()
+            == f"{payment.fineos_employee_last_name} {payment.fineos_employee_first_name}"[:22]
+        )
 
 
 def test_nacha_file_payment_and_prenote_entries():
@@ -243,7 +270,11 @@ def test_nacha_file_upload(mock_s3_bucket):
 
 def build_employee_with_eft(prenote_state: LkPrenoteState) -> Tuple[Employee, PubEft]:
     employee = EmployeeFactory.build()
-    pub_eft = PubEftFactory.build(prenote_state_id=prenote_state.prenote_state_id)
+    pub_eft = PubEftFactory.build(
+        prenote_state_id=prenote_state.prenote_state_id,
+        fineos_employee_first_name=employee.first_name,
+        fineos_employee_last_name=employee.last_name,
+    )
     EmployeePubEftPairFactory.build(employee=employee, pub_eft=pub_eft)
 
     return (employee, pub_eft)
@@ -261,5 +292,7 @@ def build_payment(payment_method: LkPaymentMethod, claim_type: ClaimType = Claim
         disb_method_id=payment_method.payment_method_id,
         claim_type=claim_type,
         claim_type_id=claim_type.claim_type_id,
+        fineos_employee_first_name=employee.first_name,
+        fineos_employee_last_name=employee.last_name,
     )
     return payment

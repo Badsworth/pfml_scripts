@@ -476,6 +476,10 @@ class PubEft(Base, TimestampMixin):
         server_default=pub_eft_individual_id_seq.next_value(),
     )
 
+    fineos_employee_first_name = Column(Text)
+    fineos_employee_middle_name = Column(Text)
+    fineos_employee_last_name = Column(Text)
+
     bank_account_type = relationship(LkBankAccountType)
     prenote_state = relationship(LkPrenoteState)
 
@@ -562,6 +566,10 @@ class Employee(Base, TimestampMixin):
             index=True,
         )
     )
+
+    fineos_employee_first_name = Column(Text)
+    fineos_employee_middle_name = Column(Text)
+    fineos_employee_last_name = Column(Text)
 
     title = relationship(LkTitle)
     race = relationship(LkRace)
@@ -735,6 +743,10 @@ class Payment(Base, TimestampMixin):
     )
     claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"))
     leave_request_id = Column(PostgreSQLUUID, ForeignKey("absence_period.absence_period_id"))
+
+    fineos_employee_first_name = Column(Text)
+    fineos_employee_middle_name = Column(Text)
+    fineos_employee_last_name = Column(Text)
 
     claim = relationship("Claim", back_populates="payments")
     claim_type = relationship(LkClaimType)
