@@ -8,7 +8,7 @@ describe("Employer dashboard", () => {
   after(() => {
     portal.deleteDownloadsFolder();
   });
-  const submit = it("Given a fully denied claim", () => {
+  const submit = it("Given claim", () => {
     cy.task("generateClaim", "MED_INTER_INEL").then((claim) => {
       cy.stash("claim", claim.claim);
     });
@@ -24,13 +24,13 @@ describe("Employer dashboard", () => {
       const statuses: DashboardClaimStatus[] =
         config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"
           ? [
-              "Review by",
+              // "Review by",
               "No action required",
               "Closed",
               "Denied",
               // Leaving this out, as currently Leave Admins are not able to respond to subsequent leave requests, which causes some "Approved" claims to show up as "Review by"
               // @see PFMLPB-1558
-              // "Approved"
+              // "Approved",
             ]
           : ["--", "Approved", "Closed", "Denied"];
       cy.wait("@dashboardClaimQueries");

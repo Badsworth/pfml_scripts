@@ -45,7 +45,8 @@ import { APILeaveReason } from "generation/Claim";
     pfmlTerriyay: true,
     noMaintenance: true,
     employerShowReviewByStatus:
-      config("PORTAL_HAS_LA_STATUS_UPDATES") === "true",
+    employerShowDashboardSearch: true,
+    employerShowReviewByStatus: true,
   }
  */
 export function before(flags?: Partial<FeatureFlags>): void {
