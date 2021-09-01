@@ -55,8 +55,8 @@ module "tasks" {
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/IDT/dataexports"
   logging_level                                       = "massgov.pfml.fineos.fineos_client=DEBUG"
 
-  eolwd_moveit_sftp_uri    = ""
-  pfml_error_reports_path  = "s3://massgov-pfml-stage-agency-transfer/error-reports/outbound"
+  eolwd_moveit_sftp_uri   = ""
+  pfml_error_reports_path = "s3://massgov-pfml-stage-agency-transfer/error-reports/outbound"
 
   dfml_project_manager_email_address     = "mass-pfml-payments-test-email@navapbc.com"
   pfml_email_address                     = "PFML_DoNotReply@eol.mass.gov"
@@ -77,7 +77,7 @@ module "tasks" {
   payment_audit_report_outbound_folder_path = "s3://massgov-pfml-stage-agency-transfer/audit/outbound"
   payment_audit_report_sent_folder_path     = "s3://massgov-pfml-stage-agency-transfer/audit/sent"
 
-  enable_register_admins_job         = true
+  enable_register_admins_job = true
 
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-stage/rmv_client_certificate-QlZaMl"

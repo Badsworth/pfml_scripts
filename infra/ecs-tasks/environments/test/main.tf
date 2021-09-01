@@ -55,8 +55,8 @@ module "tasks" {
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/DT2/dataexports"
   logging_level                                       = "massgov.pfml.fineos.fineos_client=DEBUG"
 
-  eolwd_moveit_sftp_uri    = ""
-  pfml_error_reports_path  = "s3://massgov-pfml-test-agency-transfer/error-reports/outbound"
+  eolwd_moveit_sftp_uri   = ""
+  pfml_error_reports_path = "s3://massgov-pfml-test-agency-transfer/error-reports/outbound"
 
   dfml_project_manager_email_address     = "mass-pfml-payments-test-email@navapbc.com"
   pfml_email_address                     = "PFML_DoNotReply@eol.mass.gov"
@@ -77,7 +77,7 @@ module "tasks" {
   payment_audit_report_outbound_folder_path = "s3://massgov-pfml-test-agency-transfer/audit/outbound"
   payment_audit_report_sent_folder_path     = "s3://massgov-pfml-test-agency-transfer/audit/sent"
 
-  enable_register_admins_job         = true
+  enable_register_admins_job = true
 
   enable_pub_automation_fineos           = true
   enable_pub_automation_create_pub_files = false
