@@ -1,9 +1,8 @@
-import Document, { DocumentType } from "../../models/Document";
 import React, { useEffect, useState } from "react";
 import { has, map } from "lodash";
+
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
-import BenefitsApplication from "../../models/BenefitsApplication";
 import ButtonLink from "../../components/ButtonLink";
 import ClaimDetail from "../../models/ClaimDetail";
 import Heading from "../../components/Heading";
@@ -16,6 +15,7 @@ import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDate from "../../utils/formatDate";
+import { generateNotice } from "../../../tests/test-utils";
 import { handleError } from "../../api/BaseApi";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
@@ -23,24 +23,12 @@ import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
 // TODO (CP-2461): remove once page is integrated with API
-const TEST_DOC = [
-  new Document({
-    content_type: "image/png",
-    created_at: "2020-04-05",
-    document_type: DocumentType.approvalNotice,
-    fineos_document_id: "fineos-id-4",
-    name: "legal notice",
-  }),
-  new Document({
-    content_type: "image/png",
-    created_at: "2020-04-05",
-    document_type: DocumentType.denialNotice,
-    fineos_document_id: "fineos-id-5",
-    name: "legal notice 2",
-  }),
+const TEST_DOCS = [
+  generateNotice("approvalNotice"),
+  generateNotice("denialNotice"),
 ];
 
-export const Status = ({ appLogic, claim, docList = TEST_DOC, query }) => {
+export const Status = ({ appLogic, docList = TEST_DOCS, query }) => {
   const { t } = useTranslation();
   const {
     claims: { claimDetail, isLoadingClaimDetail, loadClaimDetail },
@@ -115,7 +103,7 @@ export const Status = ({ appLogic, claim, docList = TEST_DOC, query }) => {
     return "";
   };
   const infoAlertContext = getInfoAlertContext(absenceDetails);
-
+  const [firstAbsenceDetail] = Object.keys(absenceDetails);
   const containerClassName = "border-top border-base-lighter padding-top-2";
 
   return (
@@ -163,7 +151,7 @@ export const Status = ({ appLogic, claim, docList = TEST_DOC, query }) => {
 
         <Heading level="2" size="1">
           {t("pages.claimsStatus.leaveReasonValueHeader", {
-            context: findKeyByValue(LeaveReason, claim?.leave_details?.reason),
+            context: findKeyByValue(LeaveReason, firstAbsenceDetail),
           })}
         </Heading>
         <div className="display-flex border-base-lighter margin-bottom-3 bg-base-lightest padding-2">
@@ -257,7 +245,6 @@ Status.propTypes = {
       goTo: PropTypes.func.isRequired,
     }).isRequired,
   }).isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication),
   // TODO (CP-2461): remove once page is integrated with API
   docList: PropTypes.array,
   query: PropTypes.shape({
