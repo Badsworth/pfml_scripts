@@ -329,7 +329,7 @@ exports[`status page displays an error if feature flag is disabled 1`] = `
       level="2"
       size="1"
     >
-      Leave Reason
+      pages.claimsStatus.leaveReasonValueHeader
     </Heading>
     <div
       className="display-flex border-base-lighter margin-bottom-3 bg-base-lightest padding-2"
@@ -509,7 +509,7 @@ exports[`status page does not render LeaveDetails if absenceDetails not given 1`
       level="2"
       size="1"
     >
-      Leave Reason
+      pages.claimsStatus.leaveReasonValueHeader
     </Heading>
     <div
       className="display-flex border-base-lighter margin-bottom-3 bg-base-lightest padding-2"
@@ -668,7 +668,7 @@ exports[`status page does not render ViewYourNotices if documents not given 1`] 
       level="2"
       size="1"
     >
-      Leave Reason
+      pages.claimsStatus.leaveReasonValueHeader
     </Heading>
     <div
       className="display-flex border-base-lighter margin-bottom-3 bg-base-lightest padding-2"
@@ -878,7 +878,7 @@ exports[`status page includes a button to upload additional documents 1`] = `
       level="2"
       size="1"
     >
-      Leave Reason
+      pages.claimsStatus.leaveReasonValueHeader
     </Heading>
     <div
       className="display-flex border-base-lighter margin-bottom-3 bg-base-lightest padding-2"
@@ -1219,7 +1219,7 @@ exports[`status page renders the page 1`] = `
       level="2"
       size="1"
     >
-      Leave Reason
+      pages.claimsStatus.leaveReasonValueHeader
     </Heading>
     <div
       className="display-flex border-base-lighter margin-bottom-3 bg-base-lightest padding-2"

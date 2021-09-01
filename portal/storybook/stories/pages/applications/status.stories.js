@@ -1,9 +1,11 @@
 import ClaimDetail, { AbsencePeriod } from "src/models/ClaimDetail";
 import { Status, StatusTagMap } from "src/pages/applications/status";
+
 import LeaveReason from "src/models/LeaveReason";
 import React from "react";
 import { ReasonQualifier } from "src/models/BenefitsApplication";
 import faker from "faker";
+import { generateClaim } from "tests/test-utils";
 import { merge } from "lodash";
 
 /**
@@ -87,7 +89,8 @@ export default {
 };
 
 export const DefaultStory = (args) => {
-  const absenceDetails = createAbsenceDetails(args["Leave Scenario"]);
+  const leaveScenario = args["Leave Scenario"];
+  const absenceDetails = createAbsenceDetails(leaveScenario);
   const appLogic = {
     appErrors: { items: [] },
     documents: { download: () => {} },
@@ -96,5 +99,19 @@ export const DefaultStory = (args) => {
       goTo: () => {},
     },
   };
-  return <Status appLogic={appLogic} absenceDetails={absenceDetails} />;
+
+  // Leave reason based on leave scenario control
+  const leaveReason = {
+    "Medical-Pregnancy and Bonding": "bonding",
+    "Medical-Pregnancy": "pregnancy",
+    "Bonding-newborn": "bonding",
+    "Bonding-adoption/foster": "bonding",
+    "Medical leave due to illness": "medical",
+    "Caring leave": "caring",
+  }[leaveScenario];
+
+  const claim = generateClaim("completed", leaveReason);
+  return (
+    <Status appLogic={appLogic} absenceDetails={absenceDetails} claim={claim} />
+  );
 };

@@ -1,8 +1,10 @@
 import Document, { DocumentType } from "../../models/Document";
 import React, { useEffect, useState } from "react";
 import { has, map } from "lodash";
+
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import ButtonLink from "../../components/ButtonLink";
 import ClaimDetail from "../../models/ClaimDetail";
 import Heading from "../../components/Heading";
@@ -19,6 +21,7 @@ import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
+
 // TODO (CP-2461): remove once page is integrated with API
 const TEST_DOC = [
   new Document({
@@ -76,6 +79,7 @@ const TEST_CLAIM = new ClaimDetail({
 
 export const Status = ({
   appLogic,
+  claim,
   docList = TEST_DOC,
   absenceDetails = TEST_CLAIM.absencePeriodsByReason,
 }) => {
@@ -179,8 +183,9 @@ export const Status = ({
         {/* Heading section */}
 
         <Heading level="2" size="1">
-          {/* // TODO (CP-2449): placeholder */}
-          Leave Reason
+          {t("pages.claimsStatus.leaveReasonValueHeader", {
+            context: findKeyByValue(LeaveReason, claim?.leave_details?.reason),
+          })}
         </Heading>
         <div className="display-flex border-base-lighter margin-bottom-3 bg-base-lightest padding-2">
           <div className="padding-right-10">
@@ -271,6 +276,7 @@ Status.propTypes = {
       goTo: PropTypes.func.isRequired,
     }).isRequired,
   }).isRequired,
+  claim: PropTypes.instanceOf(BenefitsApplication),
   // TODO (CP-2461): remove once page is integrated with API
   docList: PropTypes.array,
   absenceDetails: PropTypes.object,

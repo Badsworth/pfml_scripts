@@ -16,6 +16,7 @@ import BenefitsApplication, {
   WorkPatternDay,
   WorkPatternType,
 } from "../../src/models/BenefitsApplication";
+import Document, { DocumentType } from "../../src/models/Document";
 import EmployerBenefit, {
   EmployerBenefitFrequency,
   EmployerBenefitType,
@@ -24,17 +25,16 @@ import OtherIncome, {
   OtherIncomeFrequency,
   OtherIncomeType,
 } from "../../src/models/OtherIncome";
-
 import PreviousLeave, {
   PreviousLeaveReason,
   PreviousLeaveType,
 } from "../../src/models/PreviousLeave";
+import { set, uniqueId } from "lodash";
 
 import Address from "../../src/models/Address";
 import ConcurrentLeave from "../../src/models/ConcurrentLeave";
 import EmployerClaim from "../../src/models/EmployerClaim";
 import LeaveReason from "../../src/models/LeaveReason";
-import { set } from "lodash";
 
 export class BaseMockBenefitsApplicationBuilder {
   employed() {
@@ -885,3 +885,41 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
     return new BenefitsApplication(this.claimAttrs);
   }
 }
+
+/**
+ * Generates claim of type (e.g., completed)
+ * @param {string} type - completed, employed, address, submitted, etc..
+ * @param {string} leaveReason - bonding, caring, medical, or pregnancy.
+ * @returns {MockBenefitsApplicationBuilder}
+ */
+export const generateClaim = (type, leaveReason) => {
+  const claim = new MockBenefitsApplicationBuilder()[type]();
+  if (leaveReason) {
+    const claimLeaveReason = `${leaveReason}LeaveReason`;
+    claim[claimLeaveReason]();
+  }
+
+  return claim.create();
+};
+
+// Generates notice of type (e.g., denialNotice)
+export const generateNotice = (type) => {
+  // Creates random number up to limit {number} value
+  const createRandomInteger = (limit) => {
+    const randomNumber = Math.floor(Math.random() * limit) + 1;
+    return `0${randomNumber}`.slice(-2);
+  };
+
+  // Four-digit prior year (e.g., 2020)
+  const lastYear = new Date().getFullYear() - 1;
+
+  // Random month/day for notice date
+  const randomMonth = createRandomInteger(12);
+  const randomDay = createRandomInteger(28);
+
+  return new Document({
+    created_at: `${lastYear}-${randomMonth}-${randomDay}`,
+    document_type: DocumentType[type],
+    fineos_document_id: uniqueId("notice"),
+  });
+};
