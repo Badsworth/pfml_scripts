@@ -45,10 +45,17 @@ describe("Employer dashboard", () => {
       });
       portal.sortClaims("name_asc");
       portal.sortClaims("name_desc");
-      portal.sortClaims("old");
-      portal.sortClaims("new");
       if (config("PORTAL_HAS_LA_STATUS_UPDATES") === "true")
         portal.sortClaims("status");
+      portal.sortClaims("old");
+      portal.sortClaims("new");
+      // Here, to keep this test fast, we just search for the top claim in the dashboard
+      cy.contains("table", "Employer ID number")
+        .find('td[data-label="Application ID"]')
+        .first()
+        .then(($td) => {
+          portal.searchClaimsById($td.text());
+        });
     });
   });
 });
