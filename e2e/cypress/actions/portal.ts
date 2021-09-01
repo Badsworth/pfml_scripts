@@ -1428,7 +1428,7 @@ export function uploadAdditionalDocument(
   } else {
     addLeaveDocs(docName);
   }
-  cy.contains("You successfully submitted your documents");
+  cy.contains("You successfully submitted your documents", { timeout: 30000 });
 }
 
 /**
