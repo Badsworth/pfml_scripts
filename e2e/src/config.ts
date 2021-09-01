@@ -83,7 +83,7 @@ const file: Partial<Configuration> =
 // The default layer is a set of default values which will be used if nothing is set.
 const defaults: Partial<Configuration> = {
   FINEOS_HAS_UPDATED_EFORMS: "false",
-  PORTAL_HAS_LA_STATUS_UPDATES: "false",
+  PORTAL_HAS_LA_STATUS_UPDATES: "true",
   NEWRELIC_ACCOUNTID: "2837112",
   HAS_CLAIMANT_STATUS_PAGE: "false",
 };
