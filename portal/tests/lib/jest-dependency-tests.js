@@ -150,7 +150,6 @@ function listFilesRecursive(dir) {
       }
     }
   }
-
   return files;
 }
 
