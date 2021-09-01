@@ -13,6 +13,7 @@ export type FeatureFlags = {
   noMaintenance: boolean;
   claimantShowStatusPage: boolean;
   employerShowReviewByStatus: boolean;
+  employerShowDashboardSearch?: boolean;
 };
 
 export type Credentials = {
