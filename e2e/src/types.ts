@@ -12,6 +12,7 @@ export type FeatureFlags = {
   pfmlTerriyay: boolean;
   noMaintenance: boolean;
   claimantShowStatusPage: boolean;
+  employerShowDashboardSearch: boolean;
   employerShowReviewByStatus: boolean;
 };
 

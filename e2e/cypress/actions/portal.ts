@@ -55,8 +55,8 @@ export function before(flags?: Partial<FeatureFlags>): void {
     pfmlTerriyay: true,
     noMaintenance: true,
     claimantShowStatusPage: false,
-    employerShowReviewByStatus:
-      config("PORTAL_HAS_LA_STATUS_UPDATES") === "true",
+    employerShowDashboardSearch: true,
+    employerShowReviewByStatus: true,
   };
   cy.setCookie(
     "_ff",
@@ -1833,6 +1833,21 @@ export function sortClaims(
         .its("request.url")
         .should("include", sortValuesMap[by].query);
   });
+}
+
+export function searchClaimsById(fineos_absence_id: string): void {
+  cy.findByLabelText("Search for employee name or application ID").type(
+    `${fineos_absence_id}{enter}`
+  );
+  cy.get('span[role="progressbar"]').should("be.visible");
+  cy.wait("@dashboardClaimQueries");
+  cy.contains("table", "Employer ID number")
+    .find("tbody")
+    .children()
+    .should(($el) => {
+      expect($el).to.have.length(1);
+      expect($el).to.contain.text(fineos_absence_id);
+    });
 }
 
 export function claimantGoToClaimStatus(fineosAbsenceId: string): void {
