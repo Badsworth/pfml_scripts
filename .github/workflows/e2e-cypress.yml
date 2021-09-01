@@ -171,4 +171,4 @@ jobs:
         run: npm ci
       - name: Integration Tests
         working-directory: e2e
-        run: npm run test:integration
+        run: npm run test:integration -- --group=stable${{ github.event.inputs.run_unstable == 'true' && ' --group=unstable' || '' }}${{ github.event.inputs.run_nightly == 'true' && ' --group=nightly' || '' }}

@@ -1,4 +1,4 @@
-import { describe, beforeAll, test, expect } from "@jest/globals";
+import { jest, describe, beforeAll, test, expect } from "@jest/globals";
 import aws from "aws-sdk";
 import config from "../../src/config";
 import {
@@ -48,6 +48,9 @@ function convertNetworkConfiguration(
   return;
 }
 
+/**
+ * @group nightly
+ */
 describe("Series of test that verifies LAs are properly registered in Fineos", () => {
   beforeAll(async () => {
     leave_admin_creds_1 = generateCredentials();
