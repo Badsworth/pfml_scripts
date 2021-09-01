@@ -49,8 +49,6 @@ locals {
   # Provides access to EOLWD's SFTP server (MoveIT)
   eolwd_moveit_access = [
     { name : "EOLWD_MOVEIT_SFTP_URI", value : var.eolwd_moveit_sftp_uri },
-    { name : "CTR_MOVEIT_SSH_KEY", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key" },
-    { name : "CTR_MOVEIT_SSH_KEY_PASSWORD", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key-password" },
     # Duplicate this for now since reductions has a different name
     { name : "MOVEIT_SFTP_URI", value : var.eolwd_moveit_sftp_uri },
     { name : "MOVEIT_SSH_KEY", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key" },
