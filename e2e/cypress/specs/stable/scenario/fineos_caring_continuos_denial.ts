@@ -54,7 +54,7 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
           portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
           portal.selectClaimFromEmployerDashboard(
             fineos_absence_id,
-            "Review by"
+            "No action required"
           );
           portal.visitActionRequiredERFormPage(fineos_absence_id);
           portal.respondToLeaveAdminRequest(false, true, false, true);

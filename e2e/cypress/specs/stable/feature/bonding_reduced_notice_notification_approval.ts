@@ -88,7 +88,7 @@ describe("Approval (notifications/notices)", () => {
           portal.claimantGoToClaimStatus(submission.fineos_absence_id);
           // @todo: update status to "Approved" once status page doesn't use static data
           portal.claimantAssertClaimStatus([
-            { leave: "Child Bonding", status: "Denied" },
+            { leave: "Child Bonding", status: "Approved" },
           ]);
           cy.findByText("Approval notice (PDF)").should("be.visible").click();
           // @todo: uncomment once claimant status is deployed to all envs

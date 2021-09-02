@@ -44,7 +44,7 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
         portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
         portal.selectClaimFromEmployerDashboard(
           submission.fineos_absence_id,
-          "Review by"
+          "No action required"
         );
         portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
         portal.respondToLeaveAdminRequest(false, true, true, true);
