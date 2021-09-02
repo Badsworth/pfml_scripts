@@ -455,8 +455,7 @@ def build_customer_address(
         addressLine4=application_address.city,
         addressLine6=application_address.geo_state.geo_state_description,
         postCode=application_address.zip_code,
-        # TODO (API-1484): remove string cast
-        country=str(Country.USA.country_description),
+        country=Country.USA.country_description,
     )
     customer_address = massgov.pfml.fineos.models.customer_api.CustomerAddress(address=address)
     return customer_address
@@ -1105,8 +1104,7 @@ def build_payment_preference(
             accountType=payment_preference.bank_account_type.bank_account_type_description,
         )
         fineos_payment_preference = massgov.pfml.fineos.models.customer_api.NewPaymentPreference(
-            # TODO (API-1484): remove string cast
-            paymentMethod=str(PaymentMethod.ACH.payment_method_description),
+            paymentMethod=PaymentMethod.ACH.payment_method_description,
             isDefault=True,
             customerAddress=payment_address,
             accountDetails=account_details,
@@ -1114,8 +1112,7 @@ def build_payment_preference(
         )
     elif payment_preference.payment_method_id == PaymentMethod.CHECK.payment_method_id:
         fineos_payment_preference = massgov.pfml.fineos.models.customer_api.NewPaymentPreference(
-            # TODO (API-1484): remove string cast
-            paymentMethod=str(PaymentMethod.CHECK.payment_method_description),
+            paymentMethod=PaymentMethod.CHECK.payment_method_description,
             isDefault=True,
             customerAddress=payment_address,
             chequeDetails=massgov.pfml.fineos.models.customer_api.ChequeDetails(),

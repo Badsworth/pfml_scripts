@@ -20,7 +20,7 @@ class LkVerificationType(Base):
 
     __tablename__ = "lk_verification_type"
     verification_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    verification_type_description = Column(Text)
+    verification_type_description = Column(Text, nullable=False)
 
     def __init__(self, verification_type_id, verification_type_description):
         self.verification_type_id = verification_type_id

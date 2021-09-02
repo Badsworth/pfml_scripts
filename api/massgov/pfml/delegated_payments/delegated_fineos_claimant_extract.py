@@ -263,9 +263,7 @@ class ClaimantData:
             True,
             custom_validator_func=payments_util.lookup_validator(
                 PaymentMethod,
-                disallowed_lookup_values=[
-                    cast(str, PaymentMethod.DEBIT.payment_method_description)
-                ],
+                disallowed_lookup_values=[PaymentMethod.DEBIT.payment_method_description],
             ),
         )
 

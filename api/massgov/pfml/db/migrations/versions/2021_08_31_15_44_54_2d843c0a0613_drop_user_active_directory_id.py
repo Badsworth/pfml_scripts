@@ -1,7 +1,7 @@
 """drop User.active_directory_id that was renamed to .sub_id
 
 Revision ID: 2d843c0a0613
-Revises: c6d26b935c2c
+Revises: 25cfc76c10c1
 Create Date: 2021-08-31 15:44:54.519695
 
 """

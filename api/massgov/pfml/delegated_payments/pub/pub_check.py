@@ -259,7 +259,7 @@ def _convert_payment_to_ez_check_record(payment: Payment, check_number: int) -> 
         address_line_1=cast(str, address.address_line_one),
         address_line_2=address.address_line_two,
         city=cast(str, address.city),
-        state=cast(str, geo_state.geo_state_description),
+        state=geo_state.geo_state_description,
         zip_code=cast(str, address.zip_code),
         # Hard-coding country to US because we store country codes in 3 characters in our database
         # and the EZcheck format requires 2 character country codes.
