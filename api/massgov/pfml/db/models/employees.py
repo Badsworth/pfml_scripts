@@ -1374,6 +1374,8 @@ class AbsencePeriodType(LookupTable):
     INCAPACITY_EPISODIC = LkAbsencePeriodType(7, "Incapacity Episodic")
     BLACKOUT_PERIOD = LkAbsencePeriodType(8, "Blackout Period")
     UNSPECIFIED = LkAbsencePeriodType(9, "Unspecified")
+    CONTINUOUS = LkAbsencePeriodType(10, "Continuous")
+    INTERMITTENT = LkAbsencePeriodType(11, "Intermittent")
 
 
 class AbsenceReason(LookupTable):
