@@ -54,6 +54,10 @@ def tag_branch(branch_name, tag_name):
     git.push("origin", tag_name)
 
 
+def branch_exists(branch_name: str) -> bool:
+    return f"remotes/origin/{branch_name}" in git.branch("-a").split()
+
+
 def to_semver(version_str: str) -> semver.VersionInfo:
     # for portal, update as minor.patch
     if version_str.startswith("portal/v"):

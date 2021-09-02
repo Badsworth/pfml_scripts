@@ -34,9 +34,9 @@ def main(raw_args: list) -> None:
     # Avert your eyes!
     sys.excepthook = audit_logging_exception_hook
 
-    logger.info("*** Scripted Releases v. 00004 ***")
-    logger.info(f"Args: {repr(args)}")
+    logger.info("*** Scripted Releases v. 00005 ***")
     logger.info(f"Script is running in {'interactive' if args.interactive else 'autonomous'} mode.")
+    logger.info(f"Args: {repr(args)}")
 
     if not hasattr(args, 'func'):
         raise RuntimeError(NO_SUBCOMMAND)

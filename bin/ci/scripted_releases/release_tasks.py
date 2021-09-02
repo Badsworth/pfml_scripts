@@ -7,7 +7,8 @@ logger = logging.getLogger(__name__)
 
 def start(args):
     # increments minor release number
-    logger.info(f"Running 'start-release', args: {str(args)}")
+    logger.info(f"Running 'start-release'...")
+    logger.debug(f"Args: {repr(args)}")
 
     # getting the proper tags/branches for the release
     git_utils.fetch_remotes()
@@ -27,7 +28,8 @@ def start(args):
 
 
 def update(args):
-    logger.info(f"Running 'update-release', args: {repr(args)}")
+    logger.info(f"Running 'update-release'...")
+    logger.debug(f"Args: {repr(args)}")
 
     # guardrails will have vetted args.release_version
     # guardrails will have vetted args.git_commits
@@ -48,12 +50,15 @@ def update(args):
 
 
 def finalize(args):
-    logger.info(f"Running 'finalize-release', args: {repr(args)}")
+    logger.info(f"Running 'finalize-release'...")
+    logger.debug(f"Args: {repr(args)}")
 
 
 def hotfix(args):
-    logger.info(f"Running 'hotfix'; args, {repr(args)}")
+    logger.info(f"Running 'hotfix'...")
+    logger.debug(f"Args: {repr(args)}")
 
 
 def major(args):
-    logger.info(f"Running 'major-release'; args, {repr(args)}")
+    logger.info(f"Running 'major-release'...")
+    logger.debug(f"Args: {repr(args)}")
