@@ -61,7 +61,8 @@ describe("Denial Notification and Notice", () => {
               status: "Denied",
             },
           ]);
-          cy.findByText("Denial notice (PDF)").should("be.visible").click();
+          // @todo: uncomment line below once, doc download is supported
+          // cy.findByText("Denial notice (PDF)").should("be.visible").click();
           // @todo: when application status page uses claim data, assert the documents there
         } else {
           cy.log("Waiting for documents");
