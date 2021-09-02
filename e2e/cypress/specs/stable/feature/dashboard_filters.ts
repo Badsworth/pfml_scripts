@@ -2,7 +2,6 @@ import { portal } from "../../../actions";
 import { getLeaveAdminCredentials } from "../../../config";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { DashboardClaimStatus } from "../../../actions/portal";
-import { config } from "../../../actions/common";
 
 describe("Employer dashboard", () => {
   after(() => {

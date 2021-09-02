@@ -2,7 +2,6 @@ import { portal, fineos, fineosPages } from "../../../actions";
 import { getLeaveAdminCredentials } from "../../../config";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { Submission } from "../../../../src/types";
-import { config } from "../../../actions/common";
 describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
   const fineosSubmission = it("Should be able to create a claim", () => {
     fineos.before();

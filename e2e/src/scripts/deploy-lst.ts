@@ -72,7 +72,7 @@ import ArtilleryDeployer from "../artillery/ArtilleryDeployer";
       LST_RUN_ID: run_id,
       E2E_DEBUG: process.env.E2E_DEBUG,
       IS_ECS: "true",
-    } as Record<string, string>,
+    } as Record<string, string>
   );
 
   const result = await deployer.deploy(remote_tag, run_id, environment);
