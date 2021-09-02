@@ -27,8 +27,7 @@
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
-    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
-    "HAS_CLAIMANT_STATUS_PAGE": "true"
+    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
   },
   "training": {
     "PORTAL_BASEURL": "https://paidleave-training.mass.gov",
