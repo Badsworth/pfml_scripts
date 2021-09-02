@@ -5,7 +5,7 @@ import pydantic
 import pytest
 
 from massgov.pfml.rmv.caller import ApiCaller, LazyApiCaller, MockZeepCaller
-from massgov.pfml.rmv.client import RmvClient
+from massgov.pfml.rmv.client import RmvClient, is_test_record
 from massgov.pfml.rmv.errors import RmvUnknownError
 from massgov.pfml.rmv.models import RmvAcknowledgement, VendorLicenseInquiryRequest
 
@@ -33,6 +33,23 @@ def inquiry_request():
         ssn_last_4="1443",
         license_id="ABC12345",
     )
+
+
+def test_is_test_record():
+    test_records = {
+        ("Steve", "Tester"),
+        ("Charles", "Presley"),
+        ("Willis", "Sierra"),
+        ("Lilibeth", "Perozo"),
+        ("Roseangela", "Leite Da Silva"),
+        ("Vida", "King"),
+        ("John", "Pinkham"),
+        ("Jonathan", "Day"),
+        ("Linda", "Bellabe"),
+    }
+
+    for f_name, l_name in test_records:
+        assert is_test_record(f_name, l_name) is True
 
 
 def test_rmv_client_vendor_license_inquiry_200_none_acknowledgement(inquiry_request):

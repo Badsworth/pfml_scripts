@@ -11,19 +11,19 @@ pytestmark = pytest.mark.integration
 
 @pytest.fixture
 def rmv_full_mock(monkeypatch):
-    new_env = monkeypatch.setenv("RMV_CHECK_BEHAVIOR", "fully_mocked")
+    new_env = monkeypatch.setenv("RMV_API_BEHAVIOR", "fully_mocked")
     return new_env
 
 
 @pytest.fixture
 def rmv_partial_mock(monkeypatch):
-    new_env = monkeypatch.setenv("RMV_CHECK_BEHAVIOR", "partially_mocked")
+    new_env = monkeypatch.setenv("RMV_API_BEHAVIOR", "partially_mocked")
     return new_env
 
 
 @pytest.fixture
 def rmv_no_mock(monkeypatch):
-    new_env = monkeypatch.setenv("RMV_CHECK_BEHAVIOR", "not_mocked")
+    new_env = monkeypatch.setenv("RMV_API_BEHAVIOR", "not_mocked")
     return new_env
 
 
@@ -164,6 +164,54 @@ def test_rmv_check_no_mocking(monkeypatch, rmv_no_mock, client, fineos_user_toke
             "Street2": "Apt. 123",
             "City": "Boston",
             "Zip": "12345",
+        }
+    )
+    with mock.patch("massgov.pfml.api.rmv_check.RmvClient._caller", mock_rmv_caller) as MockCaller:
+        response = client.post(
+            "/v1/rmv-check", headers={"Authorization": f"Bearer {fineos_user_token}"}, json=body
+        )
+        response_body = response.get_json().get("data")
+
+    assert response.status_code == 200
+    assert MockCaller.calls["VendorLicenseInquiry"] == 1
+    assert response_body["verified"] is True
+    assert response_body["description"] == "Verification check passed."
+
+
+@mock.patch("massgov.pfml.api.rmv_check.RmvClient.__init__", return_value=None)
+def test_rmv_check_with_unexpected_gender(monkeypatch, rmv_no_mock, client, fineos_user_token):
+    mock_rmv_caller = MockZeepCaller(
+        {
+            "LicenseID": "S99988801",
+            "Street1": "123 Main St.",
+            "Street2": "Apt. 123",
+            "City": "Boston",
+            "Zip": "12345",
+            "Sex": "J",
+        }
+    )
+    with mock.patch("massgov.pfml.api.rmv_check.RmvClient._caller", mock_rmv_caller) as MockCaller:
+        response = client.post(
+            "/v1/rmv-check", headers={"Authorization": f"Bearer {fineos_user_token}"}, json=body
+        )
+        response_body = response.get_json().get("data")
+
+    assert response.status_code == 200
+    assert MockCaller.calls["VendorLicenseInquiry"] == 1
+    assert response_body["verified"] is True
+    assert response_body["description"] == "Verification check passed."
+
+
+@mock.patch("massgov.pfml.api.rmv_check.RmvClient.__init__", return_value=None)
+def test_rmv_check_with_missing_gender(monkeypatch, rmv_no_mock, client, fineos_user_token):
+    mock_rmv_caller = MockZeepCaller(
+        {
+            "LicenseID": "S99988801",
+            "Street1": "123 Main St.",
+            "Street2": "Apt. 123",
+            "City": "Boston",
+            "Zip": "12345",
+            "Sex": None,
         }
     )
     with mock.patch("massgov.pfml.api.rmv_check.RmvClient._caller", mock_rmv_caller) as MockCaller:
