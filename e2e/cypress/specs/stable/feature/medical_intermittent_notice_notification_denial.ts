@@ -59,7 +59,7 @@ describe("Denial Notification and Notice", () => {
           portal.claimantAssertClaimStatus([
             {
               leave: "Serious Health Condition - Employee",
-              status: "Approved",
+              status: "Denied",
             },
           ]);
           cy.findByText("Denial notice (PDF)").should("be.visible").click();
@@ -97,10 +97,7 @@ describe("Denial Notification and Notice", () => {
           assertValidClaim(claim);
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
           portal.login(getLeaveAdminCredentials(claim.employer_fein));
-          portal.selectClaimFromEmployerDashboard(
-            submission.fineos_absence_id,
-            "No action required"
-          );
+          portal.selectClaimFromEmployerDashboard(submission.fineos_absence_id);
           portal.checkNoticeForLeaveAdmin(
             submission.fineos_absence_id,
             employeeFullName,

@@ -41,10 +41,7 @@ describe("Submit medical application via the web portal: Adjudication Approval &
       cy.unstash<Submission>("submission").then((submission) => {
         assertValidClaim(claim.claim);
         portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
-        portal.selectClaimFromEmployerDashboard(
-          submission.fineos_absence_id,
-          "No action required"
-        );
+        portal.selectClaimFromEmployerDashboard(submission.fineos_absence_id);
         portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
         portal.respondToLeaveAdminRequest(false, true, true);
       });

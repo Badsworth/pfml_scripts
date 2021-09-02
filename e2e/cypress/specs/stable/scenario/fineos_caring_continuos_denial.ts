@@ -52,10 +52,7 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
         cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
           assertValidClaim(claim.claim);
           portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
-          portal.selectClaimFromEmployerDashboard(
-            fineos_absence_id,
-            "No action required"
-          );
+          portal.selectClaimFromEmployerDashboard(fineos_absence_id);
           portal.visitActionRequiredERFormPage(fineos_absence_id);
           portal.respondToLeaveAdminRequest(false, true, false, true);
         });

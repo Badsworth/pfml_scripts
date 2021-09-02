@@ -90,8 +90,7 @@ describe("Post-approval (notifications/notices)", () => {
               assertValidClaim(claim);
               portal.login(getLeaveAdminCredentials(claim.employer_fein));
               portal.selectClaimFromEmployerDashboard(
-                submission.fineos_absence_id,
-                "Review by"
+                submission.fineos_absence_id
               );
               const portalFormatStart = format(new Date(startDate), "M/d/yyyy");
               const portalFormatEnd = format(

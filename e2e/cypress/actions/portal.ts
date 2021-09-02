@@ -1026,14 +1026,10 @@ export type DashboardClaimStatus =
   | "No action required"
   | "Review by";
 export function selectClaimFromEmployerDashboard(
-  fineosAbsenceId: string,
-  status: DashboardClaimStatus
+  fineosAbsenceId: string
 ): void {
   goToEmployerDashboard();
-  // With the status updates enabled, claims are sorted by status by default
-  // which means we won't see our claim show up on the first page.
-  sortClaims("new", false);
-  cy.contains("tr", fineosAbsenceId).should("contain.text", status);
+  searchClaimsById(fineosAbsenceId);
   cy.findByText(fineosAbsenceId).click();
 }
 
