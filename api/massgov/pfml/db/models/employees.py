@@ -893,9 +893,6 @@ class HealthCareProviderAddress(Base):
 class User(Base, TimestampMixin):
     __tablename__ = "user"
     user_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
-    active_directory_id = deferred(
-        Column(Text().evaluates_none(), index=True, unique=True)
-    )  # renaming to sub_id
     sub_id = Column(Text, index=True, unique=True)
     email_address = Column(Text)
     consented_to_data_sharing = Column(Boolean, default=False, nullable=False)
