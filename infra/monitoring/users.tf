@@ -6,8 +6,8 @@ locals {
     "Allison Johnson" = {
       email = "allisonjohnson@navapbc.com"
     },
-    "Jim Delloso" = {
-      email = "jimdelloso@navapbc.com"
+    "Kevin Toles" = {
+      email = "kevintoles@navapbc.com"
     },
     "Sheldon Bachstein" = {
       email = "sheldon@navapbc.com"

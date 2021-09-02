@@ -342,15 +342,6 @@ locals {
         { name : "BI_WAREHOUSE_PATH", value : "s3://massgov-pfml-${var.environment_name}-business-intelligence-tool/warehouse/raw/fineos/" }
       ]
     },
-
-    "update-gender-data-from-rmv" = {
-      command   = ["update-gender-data-from-rmv"]
-      task_role = aws_iam_role.update_gender_data_from_rmv_task_role.arn
-      env = [
-        local.db_access,
-        local.rmv_api_access
-      ]
-    },
   }
 }
 
@@ -406,7 +397,7 @@ resource "aws_ecs_task_definition" "ecs_tasks" {
       # silently cause env vars to go missing which would definitely confuse someone for a day or two.
       #
       environment = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if contains(keys(val), "value")]
-      secrets     = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if !contains(keys(val), "value")]
+      secrets     = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if ! contains(keys(val), "value")]
     },
     ###### ↑ Generic "business logic" container definition ↑ | ↓ New Relic infrastructure sidecar definition ↓ ######
     {

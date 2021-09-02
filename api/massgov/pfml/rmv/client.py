@@ -6,7 +6,6 @@ import newrelic.agent
 import zeep.helpers as zeep_helpers
 
 import massgov.pfml.util.logging
-from massgov.pfml.api.config import RMVAPIBehavior
 from massgov.pfml.rmv.caller import ApiCaller, LazyApiCaller, LazyZeepApiCaller
 from massgov.pfml.rmv.errors import RmvUnknownError
 from massgov.pfml.rmv.models import (
@@ -16,29 +15,6 @@ from massgov.pfml.rmv.models import (
 )
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
-
-
-def is_test_record(first_name: str, last_name: str) -> bool:
-    test_records = {
-        ("Steve", "Tester"),
-        ("Charles", "Presley"),
-        ("Willis", "Sierra"),
-        ("Lilibeth", "Perozo"),
-        ("Roseangela", "Leite Da Silva"),
-        ("Vida", "King"),
-        ("John", "Pinkham"),
-        ("Jonathan", "Day"),
-        ("Linda", "Bellabe"),
-    }
-
-    return (first_name, last_name) in test_records
-
-
-def is_mocked(rmv_mocking_behavior: RMVAPIBehavior, first_name: str, last_name: str) -> bool:
-    return rmv_mocking_behavior is RMVAPIBehavior.MOCK or (
-        rmv_mocking_behavior is RMVAPIBehavior.PARTIAL_MOCK
-        and not is_test_record(first_name, last_name)
-    )
 
 
 class RmvClient:

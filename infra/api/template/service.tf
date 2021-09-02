@@ -79,7 +79,7 @@ data "template_file" "container_definitions" {
     logging_level                              = var.logging_level
     rmv_client_certificate_binary_arn          = var.rmv_client_certificate_binary_arn
     rmv_client_base_url                        = var.rmv_client_base_url
-    rmv_api_behavior                           = var.rmv_api_behavior
+    rmv_check_behavior                         = var.rmv_check_behavior
     rmv_check_mock_success                     = var.rmv_check_mock_success
     fineos_client_customer_api_url             = var.fineos_client_customer_api_url
     fineos_client_integration_services_api_url = var.fineos_client_integration_services_api_url

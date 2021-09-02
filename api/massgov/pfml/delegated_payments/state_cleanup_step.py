@@ -1,5 +1,4 @@
 import enum
-from typing import cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
@@ -70,7 +69,7 @@ class StateCleanupStep(Step):
                 end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
                 associated_model=payment,
                 outcome=state_log_util.build_outcome(
-                    cast(str, writeback_transaction_status.transaction_status_description,)
+                    writeback_transaction_status.transaction_status_description
                 ),
                 import_log_id=self.get_import_log_id(),
                 db_session=self.db_session,

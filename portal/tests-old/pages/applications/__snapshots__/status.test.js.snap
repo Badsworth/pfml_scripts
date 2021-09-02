@@ -282,36 +282,6 @@ exports[`leave details page does renders page with one section if absenceDetails
 
 exports[`status page displays an error if feature flag is disabled 1`] = `
 <Fragment>
-  <Alert
-    className="margin-bottom-3"
-    data-test="info-alert"
-    heading="If you gave birth, you may be eligible for paid medical leave"
-    headingLevel="2"
-    headingSize="4"
-    noIcon={true}
-    state="info"
-  >
-    <Trans
-      components={
-        Object {
-          "about-bonding-leave-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
-            rel="noreferrer noopener"
-            target="_blank"
-          />,
-          "contact-center-phone-link": <a
-            href="tel:(833) 344-7365"
-          />,
-        }
-      }
-      i18nKey="pages.claimsStatus.infoAlertBody"
-      tOptions={
-        Object {
-          "context": "bonding",
-        }
-      }
-    />
-  </Alert>
   <BackButton
     href="/applications"
     label="Back to your applications"
@@ -329,7 +299,7 @@ exports[`status page displays an error if feature flag is disabled 1`] = `
       level="2"
       size="1"
     >
-      Leave Reason
+      Medical leave
     </Heading>
     <div
       className="display-flex border-base-lighter margin-bottom-3 bg-base-lightest padding-2"
@@ -347,7 +317,7 @@ exports[`status page displays an error if feature flag is disabled 1`] = `
         <p
           className="text-bold"
         >
-          Fineos-Absence-ID
+          absence-case-id
         </p>
       </div>
       <div>
@@ -361,7 +331,7 @@ exports[`status page displays an error if feature flag is disabled 1`] = `
         <p
           className="text-bold"
         >
-          123456789
+          employer-fein
         </p>
       </div>
     </div>
@@ -373,23 +343,25 @@ exports[`status page displays an error if feature flag is disabled 1`] = `
               "absence_period_end_date": "2021-08-08",
               "absence_period_start_date": "2021-08-01",
               "evidence_status": null,
-              "fineos_leave_request_id": "PL-14434-0000002026",
-              "period_type": "Reduced",
-              "reason": "Child Bonding",
-              "reason_qualifier_one": null,
-              "reason_qualifier_two": null,
-              "request_decision": "Denied",
-            },
-            AbsencePeriod {
-              "absence_period_end_date": "2021-08-08",
-              "absence_period_start_date": "2021-08-01",
-              "evidence_status": null,
               "fineos_leave_request_id": "PL-14434-0000002326",
               "period_type": "Continuous",
               "reason": "Child Bonding",
               "reason_qualifier_one": null,
               "reason_qualifier_two": null,
               "request_decision": "Withdrawn",
+            },
+          ],
+          "Pregnancy/Maternity": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-08-08",
+              "absence_period_start_date": "2021-08-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14434-0000002026",
+              "period_type": "Reduced",
+              "reason": "Pregnancy/Maternity",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Denied",
             },
           ],
           "Serious Health Condition - Employee": Array [
@@ -438,7 +410,7 @@ exports[`status page displays an error if feature flag is disabled 1`] = `
       </p>
       <ButtonLink
         className="measure-6 margin-bottom-3"
-        href="/applications/upload-docs-options?claim_id=65184a9e-f938-40b6-b0f6-25f416a4c113"
+        href="/applications/upload-docs-options?claim_id=application-id"
       >
         Upload additional documents
       </ButtonLink>
@@ -509,7 +481,7 @@ exports[`status page does not render LeaveDetails if absenceDetails not given 1`
       level="2"
       size="1"
     >
-      Leave Reason
+      pages.claimsStatus.leaveReasonValueHeader
     </Heading>
     <div
       className="display-flex border-base-lighter margin-bottom-3 bg-base-lightest padding-2"
@@ -527,7 +499,7 @@ exports[`status page does not render LeaveDetails if absenceDetails not given 1`
         <p
           className="text-bold"
         >
-          Fineos-Absence-ID
+          absence-case-id
         </p>
       </div>
       <div>
@@ -541,7 +513,7 @@ exports[`status page does not render LeaveDetails if absenceDetails not given 1`
         <p
           className="text-bold"
         >
-          123456789
+          employer-fein
         </p>
       </div>
     </div>
@@ -567,7 +539,7 @@ exports[`status page does not render LeaveDetails if absenceDetails not given 1`
       </p>
       <ButtonLink
         className="measure-6 margin-bottom-3"
-        href="/applications/upload-docs-options?claim_id=65184a9e-f938-40b6-b0f6-25f416a4c113"
+        href="/applications/upload-docs-options?claim_id=application-id"
       >
         Upload additional documents
       </ButtonLink>
@@ -621,36 +593,6 @@ exports[`status page does not render LeaveDetails if absenceDetails not given 1`
 
 exports[`status page does not render ViewYourNotices if documents not given 1`] = `
 <Fragment>
-  <Alert
-    className="margin-bottom-3"
-    data-test="info-alert"
-    heading="If you gave birth, you may be eligible for paid medical leave"
-    headingLevel="2"
-    headingSize="4"
-    noIcon={true}
-    state="info"
-  >
-    <Trans
-      components={
-        Object {
-          "about-bonding-leave-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
-            rel="noreferrer noopener"
-            target="_blank"
-          />,
-          "contact-center-phone-link": <a
-            href="tel:(833) 344-7365"
-          />,
-        }
-      }
-      i18nKey="pages.claimsStatus.infoAlertBody"
-      tOptions={
-        Object {
-          "context": "bonding",
-        }
-      }
-    />
-  </Alert>
   <BackButton
     href="/applications"
     label="Back to your applications"
@@ -668,7 +610,7 @@ exports[`status page does not render ViewYourNotices if documents not given 1`] 
       level="2"
       size="1"
     >
-      Leave Reason
+      Medical leave
     </Heading>
     <div
       className="display-flex border-base-lighter margin-bottom-3 bg-base-lightest padding-2"
@@ -686,7 +628,7 @@ exports[`status page does not render ViewYourNotices if documents not given 1`] 
         <p
           className="text-bold"
         >
-          Fineos-Absence-ID
+          absence-case-id
         </p>
       </div>
       <div>
@@ -700,7 +642,7 @@ exports[`status page does not render ViewYourNotices if documents not given 1`] 
         <p
           className="text-bold"
         >
-          123456789
+          employer-fein
         </p>
       </div>
     </div>
@@ -712,23 +654,25 @@ exports[`status page does not render ViewYourNotices if documents not given 1`] 
               "absence_period_end_date": "2021-08-08",
               "absence_period_start_date": "2021-08-01",
               "evidence_status": null,
-              "fineos_leave_request_id": "PL-14434-0000002026",
-              "period_type": "Reduced",
-              "reason": "Child Bonding",
-              "reason_qualifier_one": null,
-              "reason_qualifier_two": null,
-              "request_decision": "Denied",
-            },
-            AbsencePeriod {
-              "absence_period_end_date": "2021-08-08",
-              "absence_period_start_date": "2021-08-01",
-              "evidence_status": null,
               "fineos_leave_request_id": "PL-14434-0000002326",
               "period_type": "Continuous",
               "reason": "Child Bonding",
               "reason_qualifier_one": null,
               "reason_qualifier_two": null,
               "request_decision": "Withdrawn",
+            },
+          ],
+          "Pregnancy/Maternity": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-08-08",
+              "absence_period_start_date": "2021-08-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14434-0000002026",
+              "period_type": "Reduced",
+              "reason": "Pregnancy/Maternity",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Denied",
             },
           ],
           "Serious Health Condition - Employee": Array [
@@ -777,7 +721,7 @@ exports[`status page does not render ViewYourNotices if documents not given 1`] 
       </p>
       <ButtonLink
         className="measure-6 margin-bottom-3"
-        href="/applications/upload-docs-options?claim_id=65184a9e-f938-40b6-b0f6-25f416a4c113"
+        href="/applications/upload-docs-options?claim_id=application-id"
       >
         Upload additional documents
       </ButtonLink>
@@ -831,36 +775,6 @@ exports[`status page does not render ViewYourNotices if documents not given 1`] 
 
 exports[`status page includes a button to upload additional documents 1`] = `
 <Fragment>
-  <Alert
-    className="margin-bottom-3"
-    data-test="info-alert"
-    heading="If you gave birth, you may be eligible for paid medical leave"
-    headingLevel="2"
-    headingSize="4"
-    noIcon={true}
-    state="info"
-  >
-    <Trans
-      components={
-        Object {
-          "about-bonding-leave-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
-            rel="noreferrer noopener"
-            target="_blank"
-          />,
-          "contact-center-phone-link": <a
-            href="tel:(833) 344-7365"
-          />,
-        }
-      }
-      i18nKey="pages.claimsStatus.infoAlertBody"
-      tOptions={
-        Object {
-          "context": "bonding",
-        }
-      }
-    />
-  </Alert>
   <BackButton
     href="/applications"
     label="Back to your applications"
@@ -878,7 +792,7 @@ exports[`status page includes a button to upload additional documents 1`] = `
       level="2"
       size="1"
     >
-      Leave Reason
+      Medical leave
     </Heading>
     <div
       className="display-flex border-base-lighter margin-bottom-3 bg-base-lightest padding-2"
@@ -896,7 +810,7 @@ exports[`status page includes a button to upload additional documents 1`] = `
         <p
           className="text-bold"
         >
-          Fineos-Absence-ID
+          absence-case-id
         </p>
       </div>
       <div>
@@ -910,7 +824,7 @@ exports[`status page includes a button to upload additional documents 1`] = `
         <p
           className="text-bold"
         >
-          123456789
+          employer-fein
         </p>
       </div>
     </div>
@@ -922,23 +836,25 @@ exports[`status page includes a button to upload additional documents 1`] = `
               "absence_period_end_date": "2021-08-08",
               "absence_period_start_date": "2021-08-01",
               "evidence_status": null,
-              "fineos_leave_request_id": "PL-14434-0000002026",
-              "period_type": "Reduced",
-              "reason": "Child Bonding",
-              "reason_qualifier_one": null,
-              "reason_qualifier_two": null,
-              "request_decision": "Denied",
-            },
-            AbsencePeriod {
-              "absence_period_end_date": "2021-08-08",
-              "absence_period_start_date": "2021-08-01",
-              "evidence_status": null,
               "fineos_leave_request_id": "PL-14434-0000002326",
               "period_type": "Continuous",
               "reason": "Child Bonding",
               "reason_qualifier_one": null,
               "reason_qualifier_two": null,
               "request_decision": "Withdrawn",
+            },
+          ],
+          "Pregnancy/Maternity": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-08-08",
+              "absence_period_start_date": "2021-08-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14434-0000002026",
+              "period_type": "Reduced",
+              "reason": "Pregnancy/Maternity",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Denied",
             },
           ],
           "Serious Health Condition - Employee": Array [
@@ -987,7 +903,7 @@ exports[`status page includes a button to upload additional documents 1`] = `
       </p>
       <ButtonLink
         className="measure-6 margin-bottom-3"
-        href="/applications/upload-docs-options?claim_id=65184a9e-f938-40b6-b0f6-25f416a4c113"
+        href="/applications/upload-docs-options?claim_id=application-id"
       >
         Upload additional documents
       </ButtonLink>
@@ -1172,36 +1088,6 @@ Array [
 
 exports[`status page renders the page 1`] = `
 <Fragment>
-  <Alert
-    className="margin-bottom-3"
-    data-test="info-alert"
-    heading="If you gave birth, you may be eligible for paid medical leave"
-    headingLevel="2"
-    headingSize="4"
-    noIcon={true}
-    state="info"
-  >
-    <Trans
-      components={
-        Object {
-          "about-bonding-leave-link": <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
-            rel="noreferrer noopener"
-            target="_blank"
-          />,
-          "contact-center-phone-link": <a
-            href="tel:(833) 344-7365"
-          />,
-        }
-      }
-      i18nKey="pages.claimsStatus.infoAlertBody"
-      tOptions={
-        Object {
-          "context": "bonding",
-        }
-      }
-    />
-  </Alert>
   <BackButton
     href="/applications"
     label="Back to your applications"
@@ -1219,7 +1105,7 @@ exports[`status page renders the page 1`] = `
       level="2"
       size="1"
     >
-      Leave Reason
+      Medical leave
     </Heading>
     <div
       className="display-flex border-base-lighter margin-bottom-3 bg-base-lightest padding-2"
@@ -1237,7 +1123,7 @@ exports[`status page renders the page 1`] = `
         <p
           className="text-bold"
         >
-          Fineos-Absence-ID
+          absence-case-id
         </p>
       </div>
       <div>
@@ -1251,7 +1137,7 @@ exports[`status page renders the page 1`] = `
         <p
           className="text-bold"
         >
-          123456789
+          employer-fein
         </p>
       </div>
     </div>
@@ -1263,23 +1149,25 @@ exports[`status page renders the page 1`] = `
               "absence_period_end_date": "2021-08-08",
               "absence_period_start_date": "2021-08-01",
               "evidence_status": null,
-              "fineos_leave_request_id": "PL-14434-0000002026",
-              "period_type": "Reduced",
-              "reason": "Child Bonding",
-              "reason_qualifier_one": null,
-              "reason_qualifier_two": null,
-              "request_decision": "Denied",
-            },
-            AbsencePeriod {
-              "absence_period_end_date": "2021-08-08",
-              "absence_period_start_date": "2021-08-01",
-              "evidence_status": null,
               "fineos_leave_request_id": "PL-14434-0000002326",
               "period_type": "Continuous",
               "reason": "Child Bonding",
               "reason_qualifier_one": null,
               "reason_qualifier_two": null,
               "request_decision": "Withdrawn",
+            },
+          ],
+          "Pregnancy/Maternity": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-08-08",
+              "absence_period_start_date": "2021-08-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14434-0000002026",
+              "period_type": "Reduced",
+              "reason": "Pregnancy/Maternity",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Denied",
             },
           ],
           "Serious Health Condition - Employee": Array [
@@ -1328,7 +1216,7 @@ exports[`status page renders the page 1`] = `
       </p>
       <ButtonLink
         className="measure-6 margin-bottom-3"
-        href="/applications/upload-docs-options?claim_id=65184a9e-f938-40b6-b0f6-25f416a4c113"
+        href="/applications/upload-docs-options?claim_id=application-id"
       >
         Upload additional documents
       </ButtonLink>
@@ -1378,4 +1266,262 @@ exports[`status page renders the page 1`] = `
     </div>
   </div>
 </Fragment>
+`;
+
+exports[`status page shows a spinner if there is no claim detail 1`] = `
+<Status
+  appLogic={
+    Object {
+      "appErrors": AppErrorInfoCollection {
+        "items": Array [],
+        "itemsById": Object {},
+      },
+      "auth": Object {
+        "createAccount": [MockFunction],
+        "createEmployerAccount": [MockFunction],
+        "forgotPassword": [MockFunction],
+        "isLoggedIn": true,
+        "login": [MockFunction],
+        "logout": [MockFunction],
+        "requireLogin": [MockFunction],
+        "resendForgotPasswordCode": [MockFunction],
+        "resendVerifyAccountCode": [MockFunction],
+        "resetPassword": [MockFunction],
+        "verifyAccount": [MockFunction],
+      },
+      "benefitsApplications": Object {
+        "benefitsApplications": BenefitsApplicationCollection {
+          "items": Array [],
+          "itemsById": Object {},
+        },
+        "complete": [MockFunction],
+        "create": [MockFunction],
+        "get": [MockFunction],
+        "hasLoadedAll": false,
+        "hasLoadedBenefitsApplicationAndWarnings": [MockFunction],
+        "load": [MockFunction],
+        "loadAll": [MockFunction],
+        "submit": [MockFunction],
+        "submitPaymentPreference": [MockFunction],
+        "update": [MockFunction],
+        "warningsLists": Object {},
+      },
+      "catchError": [MockFunction],
+      "claims": Object {
+        "activeFilters": Object {},
+        "claimDetail": ClaimDetail {
+          "absence_periods": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-06-08",
+              "absence_period_start_date": "2021-06-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14432-0000002026",
+              "period_type": "Reduced",
+              "reason": "Serious Health Condition - Employee",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Approved",
+            },
+            AbsencePeriod {
+              "absence_period_end_date": "2021-07-08",
+              "absence_period_start_date": "2021-07-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14432-0000002326",
+              "period_type": "Continuous",
+              "reason": "Serious Health Condition - Employee",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Pending",
+            },
+            AbsencePeriod {
+              "absence_period_end_date": "2021-08-08",
+              "absence_period_start_date": "2021-08-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14434-0000002026",
+              "period_type": "Reduced",
+              "reason": "Pregnancy/Maternity",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Denied",
+            },
+            AbsencePeriod {
+              "absence_period_end_date": "2021-08-08",
+              "absence_period_start_date": "2021-08-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14434-0000002326",
+              "period_type": "Continuous",
+              "reason": "Child Bonding",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Withdrawn",
+            },
+          ],
+          "application_id": "application-id",
+          "employee": null,
+          "employer": ClaimEmployer {
+            "employer_dba": null,
+            "employer_fein": "employer-fein",
+            "employer_id": null,
+          },
+          "fineos_absence_id": null,
+          "fineos_notification_id": null,
+          "managed_requirements": Array [],
+          "outstanding_evidence": Object {
+            "employee_evidence": Array [],
+            "employer_evidence": Array [],
+          },
+        },
+        "claims": ClaimCollection {
+          "items": Array [],
+          "itemsById": Object {},
+        },
+        "clearClaims": [MockFunction],
+        "isLoadingClaimDetail": true,
+        "isLoadingClaims": null,
+        "loadClaimDetail": [MockFunction] {
+          "calls": Array [
+            Array [
+              "absence-case-id",
+            ],
+          ],
+          "results": Array [
+            Object {
+              "type": "return",
+              "value": undefined,
+            },
+          ],
+        },
+        "loadPage": [MockFunction],
+        "paginationMeta": PaginationMeta {
+          "order_by": undefined,
+          "order_direction": undefined,
+          "page_offset": undefined,
+          "page_size": undefined,
+          "total_pages": undefined,
+          "total_records": undefined,
+        },
+      },
+      "clearErrors": [MockFunction],
+      "clearRequiredFieldErrors": [MockFunction],
+      "documents": Object {
+        "attach": [MockFunction],
+        "documents": DocumentCollection {
+          "items": Array [],
+          "itemsById": Object {},
+        },
+        "download": [MockFunction],
+        "hasLoadedClaimDocuments": [MockFunction],
+        "loadAll": [MockFunction],
+      },
+      "employers": Object {
+        "addEmployer": [MockFunction],
+        "downloadDocument": [MockFunction],
+        "loadClaim": [MockFunction],
+        "loadDocuments": [MockFunction],
+        "loadWithholding": [MockFunction],
+        "submitClaimReview": [MockFunction],
+        "submitWithholding": [MockFunction],
+      },
+      "featureFlags": Object {
+        "flags": Array [
+          Flag {
+            "enabled": false,
+            "end": null,
+            "name": "maintenance",
+            "options": Object {
+              "page_routes": Array [
+                "/*",
+              ],
+            },
+            "start": null,
+          },
+        ],
+        "getFlag": [MockFunction],
+        "loadFlags": [MockFunction],
+      },
+      "otherLeaves": Object {
+        "removeEmployerBenefit": [MockFunction],
+        "removeOtherIncome": [MockFunction],
+        "removePreviousLeave": [MockFunction],
+      },
+      "portalFlow": Object {
+        "getNextPageRoute": [MockFunction],
+        "goTo": [MockFunction],
+        "goToNextPage": [MockFunction],
+        "goToPageFor": [MockFunction],
+        "pathname": "/mock-portalFlow-pathname",
+      },
+      "setAppErrors": [MockFunction],
+      "updateUser": [MockFunction],
+      "user": User {
+        "auth_id": null,
+        "consented_to_data_sharing": true,
+        "email_address": null,
+        "roles": Array [],
+        "status": null,
+        "user_id": "mock_user_id",
+        "user_leave_administrators": Array [],
+      },
+      "users": Object {
+        "loadUser": [MockFunction],
+        "requireUserConsentToDataAgreement": [MockFunction],
+        "requireUserRole": [MockFunction],
+        "updateUser": [MockFunction],
+        "user": User {
+          "auth_id": "mock_auth_id",
+          "consented_to_data_sharing": true,
+          "email_address": null,
+          "roles": Array [],
+          "status": null,
+          "user_id": "mock_user_id",
+          "user_leave_administrators": Array [
+            UserLeaveAdministrator {
+              "employer_dba": "Book Bindings 'R Us",
+              "employer_fein": "**-***1823",
+              "employer_id": "dda903f-f093f-ff900",
+              "has_fineos_registration": true,
+              "has_verification_data": true,
+              "verified": false,
+            },
+            UserLeaveAdministrator {
+              "employer_dba": "Knitting Castle",
+              "employer_fein": "**-***3443",
+              "employer_id": "dda930f-93jfk-iej08",
+              "has_fineos_registration": true,
+              "has_verification_data": true,
+              "verified": true,
+            },
+            UserLeaveAdministrator {
+              "employer_dba": "Tomato Touchdown",
+              "employer_fein": "**-***7192",
+              "employer_id": "io19fj9-00jjf-uiw3r",
+              "has_fineos_registration": true,
+              "has_verification_data": false,
+              "verified": false,
+            },
+          ],
+        },
+      },
+    }
+  }
+  query={
+    Object {
+      "absence_case_id": "absence-case-id",
+    }
+  }
+>
+  <div
+    className="margin-top-8 text-center"
+  >
+    <Spinner
+      aria-valuetext="Loading claim details"
+    >
+      <span
+        aria-valuetext="Loading claim details"
+        className="c-spinner"
+        role="progressbar"
+      />
+    </Spinner>
+  </div>
+</Status>
 `;

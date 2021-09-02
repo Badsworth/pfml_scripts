@@ -1753,6 +1753,12 @@ export class ClaimantPage {
     this.clickNext();
     return cb(new OccupationDetails());
   }
+
+  paymentPreferences(): PaymentPreferencePage {
+    onTab("Payment Preferences");
+    waitForAjaxComplete();
+    return new PaymentPreferencePage();
+  }
 }
 /**Contains utilities used within multiple pages throughout the intake process */
 abstract class CreateNotificationStep {
@@ -2424,5 +2430,21 @@ class HistoricalAbsence {
     );
     fineos.clickBottomWidgetButton("OK");
     waitForAjaxComplete();
+  }
+}
+
+class PaymentPreferencePage {
+  edit(): EditPaymentPreferences {
+    cy.get('input[type="submit"][value="Edit"]').click();
+    return new EditPaymentPreferences();
+  }
+}
+
+class EditPaymentPreferences {
+  checkBulkPayee(disabled: boolean) {
+    cy.get('input[type="checkbox"][id$="bulkPayee_CHECKBOX"]').then(($el) => {
+      if (disabled) cy.wrap($el).click();
+      else cy.wrap($el).should("have.attr", "disabled");
+    });
   }
 }

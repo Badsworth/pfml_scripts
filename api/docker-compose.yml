@@ -64,9 +64,8 @@ services:
       - FINEOS_FOLDER_PATH=fineos_mock
       # Enable this variable after initial full load
       # - ELIGIBILITY_FEED_MODE=updates
-      # Enable this variable to configure calls to the RMV API
-      - RMV_API_BEHAVIOR=fully_mocked
       # Enable this variable to configure /rmv-check
+      - RMV_CHECK_BEHAVIOR=fully_mocked
       - RMV_CHECK_MOCK_SUCCESS=1
       # Enable these variables to use a real FINEOS API instead of a mock:
       # - FINEOS_CLIENT_CUSTOMER_API_URL=https://idt-api.masspfml.fineos.com/customerapi/

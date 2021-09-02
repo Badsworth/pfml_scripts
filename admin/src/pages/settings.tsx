@@ -328,11 +328,7 @@ export default function Settings() {
                   disabled={
                     azurePermissions.updated.length === 0 ? true : false
                   }
-                  additionalClasses={[
-                    "btn--cancel",
-                    "settings-btn",
-                    "settings-btn__cancel",
-                  ]}
+                  className={"btn--cancel settings-btn settings-btn__cancel"}
                   onClick={handleSettingsCancel}
                 >
                   Cancel
@@ -341,7 +337,7 @@ export default function Settings() {
                   disabled={
                     azurePermissions.updated.length === 0 ? true : false
                   }
-                  additionalClasses={["settings-btn", "settings-btn__save"]}
+                  className={"settings-btn settings-btn__save"}
                   onClick={handleSettingsSave}
                 >
                   Save

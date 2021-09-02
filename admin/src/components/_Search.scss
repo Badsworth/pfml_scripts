@@ -6,7 +6,7 @@
     position: relative;
   }
   // .search__input
-  &__input {
+  &__input[type=text] {
     padding-left: 2.86em;
   }
   // .search__icon

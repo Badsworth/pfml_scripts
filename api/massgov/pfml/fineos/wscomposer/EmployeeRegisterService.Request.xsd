@@ -1,40 +1,49 @@
-<?xml version="1.0" encoding="utf-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.fineos.com/wscomposer/EmployeeRegisterService"
-targetNamespace="http://www.fineos.com/wscomposer/EmployeeRegisterService"
-xmlns:tns="http://www.fineos.com/wscomposer/EmployeeRegisterService" elementFormDefault="unqualified">
+<?xml version="1.0" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.fineos.com/wscomposer/EmployeeRegisterService" xmlns:tns="http://www.fineos.com/wscomposer/EmployeeRegisterService" targetNamespace="http://www.fineos.com/wscomposer/EmployeeRegisterService" elementFormDefault="unqualified">
   <xs:element name="WSUpdateRequest">
     <xs:complexType>
       <xs:sequence>
-        <xs:element maxOccurs="1" name="config-name" type="xs:string" />
-        <xs:element name="update-data" type="tns:EmployeeRegisterService" />
+        <xs:element maxOccurs="1" name="config-name" type="xs:string"/>
+        <xs:element name="update-data" type="tns:EmployeeRegisterService"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
   <xs:complexType name="EmployeeRegisterService">
     <xs:sequence>
       <xs:sequence minOccurs="0" maxOccurs="unbounded">
-        <xs:element name="EmployeeRegistrationDTO" type="tns:EmployeeRegistrationDTO" />
+        <xs:element name="EmployeeRegistrationDTO" type="tns:EmployeeRegistrationDTO"/>
       </xs:sequence>
       <xs:element name="additional-data-set" minOccurs="0">
+            
         <xs:complexType>
+                  
           <xs:sequence>
+                        
             <xs:element name="additional-data" minOccurs="0" maxOccurs="unbounded">
+                              
               <xs:complexType>
+                                    
                 <xs:sequence>
-                  <xs:element name="name" type="xs:string" />
-                  <xs:element name="value" type="xs:string" />
+                                          
+                  <xs:element name="name" type="xs:string"/>
+                                          
+                  <xs:element name="value" type="xs:string"/>
+                                      
                 </xs:sequence>
+                                
               </xs:complexType>
+                          
             </xs:element>
+                    
           </xs:sequence>
+              
         </xs:complexType>
       </xs:element>
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="EmployeeRegistrationDTO">
     <xs:annotation>
-      <xs:documentation>EmployeeRegistrationDTO for passing data to register Employee with
-      Organisation.</xs:documentation>
+      <xs:documentation>EmployeeRegistrationDTO for passing data to register Employee with Organisation.</xs:documentation>
     </xs:annotation>
     <xs:sequence>
       <xs:element name="OID" minOccurs="0" maxOccurs="1" type="tns:OID">
@@ -59,14 +68,12 @@ xmlns:tns="http://www.fineos.com/wscomposer/EmployeeRegisterService" elementForm
       </xs:element>
       <xs:element name="persistent-oid" minOccurs="0" maxOccurs="1" type="tns:OID">
         <xs:annotation>
-          <xs:documentation>Shadow persistent field for OID. OID of the persistent BO the transient BO
-          represents</xs:documentation>
+          <xs:documentation>Shadow persistent field for OID. OID of the persistent BO the transient BO represents</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="persistent-boeversion" minOccurs="0" maxOccurs="1" type="xs:long">
         <xs:annotation>
-          <xs:documentation>Shadow persistent field for BOEVersion. BOEVersion of the persistent BO the transient BO
-          represents</xs:documentation>
+          <xs:documentation>Shadow persistent field for BOEVersion. BOEVersion of the persistent BO the transient BO represents</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="CustomerNumber" minOccurs="1" maxOccurs="1">
@@ -75,7 +82,7 @@ xmlns:tns="http://www.fineos.com/wscomposer/EmployeeRegisterService" elementForm
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:maxLength value="50" />
+            <xs:maxLength value="50"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
@@ -90,7 +97,7 @@ xmlns:tns="http://www.fineos.com/wscomposer/EmployeeRegisterService" elementForm
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:maxLength value="120" />
+            <xs:maxLength value="120"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
@@ -100,7 +107,7 @@ xmlns:tns="http://www.fineos.com/wscomposer/EmployeeRegisterService" elementForm
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:maxLength value="100" />
+            <xs:maxLength value="100"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
@@ -110,7 +117,7 @@ xmlns:tns="http://www.fineos.com/wscomposer/EmployeeRegisterService" elementForm
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:maxLength value="50" />
+            <xs:maxLength value="50"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
@@ -120,7 +127,7 @@ xmlns:tns="http://www.fineos.com/wscomposer/EmployeeRegisterService" elementForm
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:maxLength value="50" />
+            <xs:maxLength value="50"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
@@ -130,7 +137,7 @@ xmlns:tns="http://www.fineos.com/wscomposer/EmployeeRegisterService" elementForm
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:maxLength value="50" />
+            <xs:maxLength value="50"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
@@ -140,7 +147,7 @@ xmlns:tns="http://www.fineos.com/wscomposer/EmployeeRegisterService" elementForm
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:maxLength value="50" />
+            <xs:maxLength value="50"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
@@ -148,96 +155,173 @@ xmlns:tns="http://www.fineos.com/wscomposer/EmployeeRegisterService" elementForm
   </xs:complexType>
   <!-- Common Fineos Data Types -->
   <xs:simpleType name="OID">
+    	
     <xs:restriction base="xs:string">
-      <xs:pattern value="[pPtT][eElL]:\d{1,5}:\d{1,10}" />
+      		
+      <xs:pattern value="[pPtT][eElL]:\d{1,5}:\d{1,10}"/>
+      	
     </xs:restriction>
   </xs:simpleType>
   <xs:complexType name="FineosEnum">
+    	
     <xs:annotation>
-      <xs:documentation>An enumeration data-type similar to the Enum data-type introduced in Java 5. This allows a
-      Business Object (BO) attribute to have one of a set of pre-defined values that are stored in the
-      database.</xs:documentation>
+      		
+      <xs:documentation>An enumeration data-type similar to the Enum			data-type introduced in Java 5. This allows a Business			Object			(BO)			attribute to have one of a set of pre-defined values that			are stored			in the database.      </xs:documentation>
+      	
     </xs:annotation>
+    	
     <xs:sequence>
+      		
       <xs:choice>
+        			
         <xs:element name="InstanceDomainAndFullId" type="tns:InstanceNameAndDomainNameAndFullId">
+          			
           <xs:annotation>
+            					
             <xs:documentation>An Enum sepecifying Instance Name and Domian Name and FullId</xs:documentation>
+            				
           </xs:annotation>
+          			
         </xs:element>
+        			
         <xs:element name="InstanceAndDomainName" type="tns:InstanceNameAndDomainName">
+          				
           <xs:annotation>
+            					
             <xs:documentation>An Enum sepecifying Instance Name and Domian Name</xs:documentation>
+            				
           </xs:annotation>
+          			
         </xs:element>
+        			
         <xs:element name="FullId" type="xs:long">
+          				
           <xs:annotation>
+            					
             <xs:documentation>An Enum sepecifying Fullid</xs:documentation>
+            				
           </xs:annotation>
+          			
         </xs:element>
+        		
       </xs:choice>
+      	
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="InstanceNameAndDomainNameAndFullId">
+    	
     <xs:annotation>
-      <xs:documentation>Instance name Domain Name and FullId are Expected for enum values. This is type used in Read
-      Service for Enums.</xs:documentation>
+      		
+      <xs:documentation>Instance name Domain Name and FullId are Expected for enum values. This is type used in Read Service for Enums.          </xs:documentation>
+      			
     </xs:annotation>
+    	
     <xs:sequence>
+      		
       <xs:element name="InstanceName" type="xs:string">
+        			
         <xs:annotation>
+          				
           <xs:documentation>Instance Name for this Enum</xs:documentation>
+          			
         </xs:annotation>
+        		
       </xs:element>
+      		
       <xs:element name="DomainName" type="xs:string">
+        			
         <xs:annotation>
+          				
           <xs:documentation>Domain in which the instance name belongs</xs:documentation>
+          			
         </xs:annotation>
+        		
       </xs:element>
+      		
       <xs:element name="FullId" type="xs:long">
+        			
         <xs:annotation>
+          				
           <xs:documentation>Full ID identifies the instance and the Domain</xs:documentation>
+          			
         </xs:annotation>
+        		
       </xs:element>
+      	
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="InstanceNameAndDomainName">
+    	
     <xs:annotation>
-      <xs:documentation>Instance Name, Domain Name are Expected for Enum Values.</xs:documentation>
+      		
+      <xs:documentation>Instance Name, Domain Name are Expected for Enum Values.          </xs:documentation>
+      			
     </xs:annotation>
+    	
     <xs:sequence>
+      		
       <xs:element name="InstanceName" type="xs:string">
+        			
         <xs:annotation>
+          				
           <xs:documentation>Instance Name for this Enum</xs:documentation>
+          			
         </xs:annotation>
+        		
       </xs:element>
+      		
       <xs:element name="DomainName" type="xs:string">
+        			
         <xs:annotation>
+          				
           <xs:documentation>Domain in which the instance name belongs</xs:documentation>
+          			
         </xs:annotation>
+        		
       </xs:element>
+      	
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="Money">
+    	
     <xs:annotation>
-      <xs:documentation>DataType for representing the Fineos Money Object</xs:documentation>
+      		
+      <xs:documentation>			DataType for representing the Fineos Money			Object      </xs:documentation>
+      	
     </xs:annotation>
+    	
     <xs:sequence>
+      		
       <xs:element name="CurrencyCode">
+        			
         <xs:annotation>
-          <xs:documentation>Optional Currency Code for the Fineos Money</xs:documentation>
+          				
+          <xs:documentation>Optional Currency Code for the Fineos					Money          </xs:documentation>
+          			
         </xs:annotation>
+        			
         <xs:simpleType>
+          				
           <xs:restriction base="xs:string">
-            <xs:maxLength value="3" />
+            					
+            <xs:maxLength value="3"/>
+            				
           </xs:restriction>
+          			
         </xs:simpleType>
+        		
       </xs:element>
+      		
       <xs:element name="Amount" type="xs:decimal">
+        			
         <xs:annotation>
-          <xs:documentation>BigDecimal amount for the Fineos Money</xs:documentation>
+          				
+          <xs:documentation>BigDecimal amount for the Fineos Money          </xs:documentation>
+          			
         </xs:annotation>
+        		
       </xs:element>
+      	
     </xs:sequence>
   </xs:complexType>
 </xs:schema>

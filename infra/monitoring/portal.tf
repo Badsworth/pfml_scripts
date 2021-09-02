@@ -104,7 +104,7 @@ resource "pagerduty_schedule" "mass_pfml_portal_delivery" {
     start                        = "2020-11-04T13:00:00-05:00"
     rotation_virtual_start       = "2020-11-04T13:00:00-05:00"
     rotation_turn_length_seconds = 1209600 # 2 weeks
-    users                        = [data.pagerduty_user.mass_pfml["Jim Delloso"].id]
+    users                        = [data.pagerduty_user.mass_pfml["Kevin Toles"].id]
   }
 }
 

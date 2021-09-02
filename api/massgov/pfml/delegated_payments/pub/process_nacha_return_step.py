@@ -303,7 +303,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
                 associated_model=payment,
                 outcome=state_log_util.build_outcome(
-                    cast(str, writeback_transaction_status.transaction_status_description,)
+                    writeback_transaction_status.transaction_status_description
                 ),
                 import_log_id=self.get_import_log_id(),
                 db_session=self.db_session,
@@ -401,7 +401,7 @@ class ProcessNachaReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
                 end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
                 associated_model=payment,
                 outcome=state_log_util.build_outcome(
-                    cast(str, writeback_transaction_status.transaction_status_description,)
+                    writeback_transaction_status.transaction_status_description
                 ),
                 import_log_id=self.get_import_log_id(),
                 db_session=self.db_session,

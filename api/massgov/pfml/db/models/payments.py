@@ -460,7 +460,7 @@ class FineosWritebackDetails(Base):
 class LkFineosWritebackTransactionStatus(Base):
     __tablename__ = "lk_fineos_writeback_transaction_status"
     transaction_status_id = Column(Integer, primary_key=True, autoincrement=True)
-    transaction_status_description = Column(Text)
+    transaction_status_description = Column(Text, nullable=False)
     writeback_record_status = Column(Text)
 
     def __init__(

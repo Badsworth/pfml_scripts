@@ -62,7 +62,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        containers: [1, 2, 3, 4, 5, 6, 7, 8]
+        containers: [1, 2, 3, 4, 5, 6, 7]
     steps:
       - uses: actions/checkout@v2
 
@@ -111,7 +111,7 @@ jobs:
         continue-on-error: true
         # Setting a step timeout here prevents a hung unstable test from timing out at the job level - it times out at
         # the step level instead, allowing continue-on-error to do its job.
-        timeout-minutes: 10
+        timeout-minutes: 15
 
       # Run Cypress tests.
       - name: Cypress Tests (Nightly)
@@ -171,4 +171,4 @@ jobs:
         run: npm ci
       - name: Integration Tests
         working-directory: e2e
-        run: npm run test:integration
+        run: npm run test:integration -- --group=stable${{ github.event.inputs.run_unstable == 'true' && ' --group=unstable' || '' }}${{ github.event.inputs.run_nightly == 'true' && ' --group=nightly' || '' }}

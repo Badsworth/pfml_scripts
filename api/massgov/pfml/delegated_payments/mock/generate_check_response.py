@@ -150,7 +150,7 @@ class PubCheckResponseGenerator:
             bfc_code="CLMNT",
             payee_id=str(employee.employee_id),
             check_number=check_number,
-            payee_name=_format_employee_name_for_ez_check(employee),
+            payee_name=_format_employee_name_for_ez_check(payment),
         )
 
         response_date = (

@@ -142,6 +142,7 @@ class ValidationReason(str, Enum):
     MISSING_FIELD = "MissingField"
     MISSING_DATASET = "MissingDataset"
     MISSING_IN_DB = "MissingInDB"
+    MISSING_FINEOS_NAME = "MissingFineosName"
     FIELD_TOO_SHORT = "FieldTooShort"
     FIELD_TOO_LONG = "FieldTooLong"
     INVALID_LOOKUP_VALUE = "InvalidLookupValue"

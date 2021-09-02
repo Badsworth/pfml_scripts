@@ -58,7 +58,7 @@ module "api" {
   cognito_user_pool_keys_url        = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_29j6fKBDT/.well-known/jwks.json"
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-uat/rmv_client_certificate-LWvMFe"
-  rmv_api_behavior                  = "partially_mocked" # TODO?
+  rmv_check_behavior                = "partially_mocked" # TODO?
   rmv_check_mock_success            = "1"
 
   # copied from stage for now, with replacements for idt --> uat. may not be right

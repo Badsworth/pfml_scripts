@@ -34,7 +34,7 @@
   align-items: flex-start;
   border-bottom: 1px solid $Color-GraniteGray-50;
   display: flex;
-  padding: 1.16em 1.58em 1em 1.71em;
+  padding: 1.857em 1.714em;
 }
 
 .slide-out__content {
@@ -84,6 +84,19 @@
   padding-top: 1.86em;
 }
 
+
+.slide-out__paragraph:nth-of-type(n+1) {
+  color: $Color-GraniteGray-700;
+  margin: 1.714em 0 0;
+}
+
+.slide-out__menu-icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+
 @keyframes animateSlideOutPanelIn {
   from {
     transform: translateX(100%);
@@ -93,6 +106,8 @@
     transform: translateX(0);
   }
 }
+
+
 @keyframes animateSlideOutBackgroundIn {
   from {
     opacity: 0;
