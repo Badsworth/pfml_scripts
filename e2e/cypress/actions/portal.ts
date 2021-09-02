@@ -1865,7 +1865,7 @@ type LeaveStatus = {
 export function claimantAssertClaimStatus(leaves: LeaveStatus[]): void {
   const leaveReasonHeadings = {
     "Serious Health Condition - Employee": "Medical leave",
-    "Child Bonding": "Bond with a child",
+    "Child Bonding": "Leave to bond with a child",
     "Care for a Family Member": "",
     "Pregnancy/Maternity": "",
   } as const;
