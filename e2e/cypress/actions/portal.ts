@@ -1032,8 +1032,7 @@ export function selectClaimFromEmployerDashboard(
   goToEmployerDashboard();
   // With the status updates enabled, claims are sorted by status by default
   // which means we won't see our claim show up on the first page.
-  if (config("PORTAL_HAS_LA_STATUS_UPDATES") === "true")
-    sortClaims("new", false);
+  sortClaims("new", false);
   cy.contains("tr", fineosAbsenceId).should("contain.text", status);
   cy.findByText(fineosAbsenceId).click();
 }

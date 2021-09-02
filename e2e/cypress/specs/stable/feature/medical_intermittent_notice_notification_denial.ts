@@ -99,9 +99,7 @@ describe("Denial Notification and Notice", () => {
           portal.login(getLeaveAdminCredentials(claim.employer_fein));
           portal.selectClaimFromEmployerDashboard(
             submission.fineos_absence_id,
-            config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"
-              ? "No action required"
-              : "--"
+            "No action required"
           );
           portal.checkNoticeForLeaveAdmin(
             submission.fineos_absence_id,

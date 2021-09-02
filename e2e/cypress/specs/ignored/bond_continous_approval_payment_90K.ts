@@ -43,7 +43,7 @@ describe("Submit bonding application via the web portal: Adjudication Approval &
         portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
         portal.selectClaimFromEmployerDashboard(
           submission.fineos_absence_id,
-          config("PORTAL_HAS_LA_STATUS_UPDATES") === "true" ? "Review by" : "--"
+          "Review by"
         );
         portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
         portal.respondToLeaveAdminRequest(false, true, true);

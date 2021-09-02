@@ -92,9 +92,7 @@ describe("Post-approval (notifications/notices)", () => {
               portal.login(getLeaveAdminCredentials(claim.employer_fein));
               portal.selectClaimFromEmployerDashboard(
                 submission.fineos_absence_id,
-                config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"
-                  ? "Review by"
-                  : "--"
+                "Review by"
               );
               const portalFormatStart = format(new Date(startDate), "M/d/yyyy");
               const portalFormatEnd = format(
