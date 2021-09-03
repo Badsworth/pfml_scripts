@@ -95,6 +95,10 @@ module "tasks" {
   enable_recurring_payments_schedule = false
   enable_register_admins_job         = true
 
+  enable_pub_automation_fineos           = true
+  enable_pub_automation_create_pub_files = false
+  enable_pub_automation_process_returns  = false
+
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-cps-preview/rmv_client_certificate-alAlg3"
   rmv_api_behavior                  = "partially_mocked"
