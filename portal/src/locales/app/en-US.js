@@ -787,6 +787,10 @@ const shared = {
   displayTime: "{{hours}}h {{minutes}}m",
   // TODO (CP-1335): Add i18next formatter for time
   displayTime_noMinutes: "{{hours}}h",
+  docsRequired: {
+    newborn:
+      "Once your child is born, submit proof of birth so that we can make a decision.",
+  },
   documentsLoadError:
     "An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
   documentsUploadError:
@@ -1889,6 +1893,7 @@ const pages = {
   claimsStatus: {
     applicationDetails: "Application details",
     applicationID: "Application ID",
+    applicationUpdatesHeading: "Application updates",
     backButtonLabel: "Back to your applications",
     employerEIN: "Employer Identification Number (EIN)",
     infoAlertBody_bonding:
@@ -1935,6 +1940,13 @@ const pages = {
     uploadDocumentsButton: "Upload additional documents",
     uploadDocumentsHeading: "Upload Documents",
     viewNoticesHeading: "View your notices",
+    whatHappensNext: "What happens next",
+    whatHappensNextButton_adoption: "Upload proof of placement",
+    whatHappensNextButton_newborn: "Upload proof of birth",
+    whatYouNeedToDo: "What you need to do",
+    whatYouNeedToDoText_adoption:
+      "After your child arrives in your home, submit proof of placement so that the department can make a decision.",
+    whatYouNeedToDoText_newborn: "$t(shared.docsRequired.newborn)",
   },
   claimsSuccess: {
     adjudicationProcess:
@@ -2402,8 +2414,7 @@ const components = {
     actionsHeading: "Actions",
     bondingLeaveDocsRequired_adopt_foster:
       "Once your child arrives, submit proof of placement so that we can make a decision.",
-    bondingLeaveDocsRequired_newborn:
-      "Once your child is born, submit proof of birth so that we can make a decision.",
+    bondingLeaveDocsRequired_newborn: "$t(shared.docsRequired.newborn)",
     documentsLoadError: "$t(shared.documentsLoadError)",
     feinHeading: "Employer EIN",
     heading: "Application {{number}}",

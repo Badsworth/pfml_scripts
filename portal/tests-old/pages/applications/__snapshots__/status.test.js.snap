@@ -1,17 +1,19 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
+exports[`application updates page does not render ApplicationUpdates if absenceDetails not given 1`] = `""`;
+
 exports[`leave details page does not render LeaveDetails if absenceDetails not given 1`] = `null`;
 
 exports[`leave details page does renders page separated by keys if object of absenceDetails has more keys 1`] = `
 Array [
   <div
     className="border-bottom border-base-lighter margin-bottom-2 padding-bottom-2"
-    key="medical"
+    key="Child Bonding"
   >
     <Heading
       level="2"
     >
-      pages.claimsStatus.leaveReasonValue
+      Leave to bond with a child schedule
     </Heading>
     <div
       className="margin-top-2"
@@ -53,18 +55,28 @@ Array [
         }
       />
     </div>
+  </div>,
+  <div
+    className="border-bottom border-base-lighter margin-bottom-2 padding-bottom-2"
+    key="Pregnancy/Maternity"
+  >
+    <Heading
+      level="2"
+    >
+      Medical leave schedule
+    </Heading>
     <div
       className="margin-top-2"
-      key="PL-14432-0000002326"
+      key="PL-14434-0000002026"
     >
       <Heading
         className="margin-bottom-1"
         level="3"
       >
-        Continuous leave
+        Reduced leave
       </Heading>
       <p>
-        From July 1, 2021 to July 8, 2021
+        From August 1, 2021 to August 8, 2021
       </p>
       <Tag
         label="Pending"
@@ -96,53 +108,13 @@ Array [
   </div>,
   <div
     className="border-bottom border-base-lighter margin-bottom-2 padding-bottom-2"
-    key="bonding"
+    key="Serious Health Condition - Employee"
   >
     <Heading
       level="2"
     >
-      pages.claimsStatus.leaveReasonValue
+      Medical leave schedule
     </Heading>
-    <div
-      className="margin-top-2"
-      key="PL-14434-0000002026"
-    >
-      <Heading
-        className="margin-bottom-1"
-        level="3"
-      >
-        Reduced leave
-      </Heading>
-      <p>
-        From August 1, 2021 to August 8, 2021
-      </p>
-      <Tag
-        label="Denied"
-        paddingSm={true}
-        state="error"
-      />
-      <Trans
-        components={
-          Object {
-            "application-link": <a
-              href="/applications/get-ready"
-            />,
-            "notice-link": <a
-              href="#view_notices"
-            />,
-            "request-appeal-link": <a
-              href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
-            />,
-          }
-        }
-        i18nKey="pages.claimsStatus.leaveStatusMessage"
-        tOptions={
-          Object {
-            "context": "Denied",
-          }
-        }
-      />
-    </div>
     <div
       className="margin-top-2"
       key="PL-14434-0000002326"
@@ -190,56 +162,16 @@ Array [
 exports[`leave details page does renders page with one section if absenceDetails has only one key 1`] = `
 <div
   className="border-bottom border-base-lighter margin-bottom-2 padding-bottom-2"
-  key="medical"
+  key="Serious Health Condition - Employee"
 >
   <Heading
     level="2"
   >
-    pages.claimsStatus.leaveReasonValue
+    Medical leave schedule
   </Heading>
   <div
     className="margin-top-2"
-    key="PL-14432-0000002026"
-  >
-    <Heading
-      className="margin-bottom-1"
-      level="3"
-    >
-      Reduced leave
-    </Heading>
-    <p>
-      From June 1, 2021 to June 8, 2021
-    </p>
-    <Tag
-      label="Approved"
-      paddingSm={true}
-      state="success"
-    />
-    <Trans
-      components={
-        Object {
-          "application-link": <a
-            href="/applications/get-ready"
-          />,
-          "notice-link": <a
-            href="#view_notices"
-          />,
-          "request-appeal-link": <a
-            href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
-          />,
-        }
-      }
-      i18nKey="pages.claimsStatus.leaveStatusMessage"
-      tOptions={
-        Object {
-          "context": "Approved",
-        }
-      }
-    />
-  </div>
-  <div
-    className="margin-top-2"
-    key="PL-14432-0000002326"
+    key="PL-14434-0000002326"
   >
     <Heading
       className="margin-bottom-1"
@@ -248,12 +180,12 @@ exports[`leave details page does renders page with one section if absenceDetails
       Continuous leave
     </Heading>
     <p>
-      From July 1, 2021 to July 8, 2021
+      From August 1, 2021 to August 8, 2021
     </p>
     <Tag
-      label="Pending"
+      label="Withdrawn"
       paddingSm={true}
-      state="pending"
+      state="inactive"
     />
     <Trans
       components={
@@ -272,7 +204,7 @@ exports[`leave details page does renders page with one section if absenceDetails
       i18nKey="pages.claimsStatus.leaveStatusMessage"
       tOptions={
         Object {
-          "context": "Pending",
+          "context": "Withdrawn",
         }
       }
     />
@@ -335,6 +267,87 @@ exports[`status page displays an error if feature flag is disabled 1`] = `
         </p>
       </div>
     </div>
+    <ApplicationUpdates
+      absenceDetails={
+        Object {
+          "Child Bonding": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-08-08",
+              "absence_period_start_date": "2021-08-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14434-0000002326",
+              "period_type": "Continuous",
+              "reason": "Child Bonding",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Withdrawn",
+            },
+          ],
+          "Pregnancy/Maternity": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-08-08",
+              "absence_period_start_date": "2021-08-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14434-0000002026",
+              "period_type": "Reduced",
+              "reason": "Pregnancy/Maternity",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Denied",
+            },
+          ],
+          "Serious Health Condition - Employee": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-06-08",
+              "absence_period_start_date": "2021-06-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14432-0000002026",
+              "period_type": "Reduced",
+              "reason": "Serious Health Condition - Employee",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Approved",
+            },
+            AbsencePeriod {
+              "absence_period_end_date": "2021-07-08",
+              "absence_period_start_date": "2021-07-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14432-0000002326",
+              "period_type": "Continuous",
+              "reason": "Serious Health Condition - Employee",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Pending",
+            },
+          ],
+        }
+      }
+      applicationId="application-id"
+      docList={
+        Array [
+          Document {
+            "application_id": null,
+            "content_type": null,
+            "created_at": "2021-08-21",
+            "description": null,
+            "document_type": "Approval Notice",
+            "fineos_document_id": "notice1",
+            "name": null,
+            "user_id": null,
+          },
+          Document {
+            "application_id": null,
+            "content_type": null,
+            "created_at": "2021-08-21",
+            "description": null,
+            "document_type": "Denial Notice",
+            "fineos_document_id": "notice2",
+            "name": null,
+            "user_id": null,
+          },
+        ]
+      }
+    />
     <LeaveDetails
       absenceDetails={
         Object {
@@ -517,6 +530,34 @@ exports[`status page does not render LeaveDetails if absenceDetails not given 1`
         </p>
       </div>
     </div>
+    <ApplicationUpdates
+      absenceDetails={Object {}}
+      applicationId="application-id"
+      docList={
+        Array [
+          Document {
+            "application_id": null,
+            "content_type": null,
+            "created_at": "2021-08-21",
+            "description": null,
+            "document_type": "Approval Notice",
+            "fineos_document_id": "notice1",
+            "name": null,
+            "user_id": null,
+          },
+          Document {
+            "application_id": null,
+            "content_type": null,
+            "created_at": "2021-08-21",
+            "description": null,
+            "document_type": "Denial Notice",
+            "fineos_document_id": "notice2",
+            "name": null,
+            "user_id": null,
+          },
+        ]
+      }
+    />
     <LeaveDetails
       absenceDetails={Object {}}
     />
@@ -646,6 +687,64 @@ exports[`status page does not render ViewYourNotices if documents not given 1`] 
         </p>
       </div>
     </div>
+    <ApplicationUpdates
+      absenceDetails={
+        Object {
+          "Child Bonding": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-08-08",
+              "absence_period_start_date": "2021-08-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14434-0000002326",
+              "period_type": "Continuous",
+              "reason": "Child Bonding",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Withdrawn",
+            },
+          ],
+          "Pregnancy/Maternity": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-08-08",
+              "absence_period_start_date": "2021-08-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14434-0000002026",
+              "period_type": "Reduced",
+              "reason": "Pregnancy/Maternity",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Denied",
+            },
+          ],
+          "Serious Health Condition - Employee": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-06-08",
+              "absence_period_start_date": "2021-06-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14432-0000002026",
+              "period_type": "Reduced",
+              "reason": "Serious Health Condition - Employee",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Approved",
+            },
+            AbsencePeriod {
+              "absence_period_end_date": "2021-07-08",
+              "absence_period_start_date": "2021-07-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14432-0000002326",
+              "period_type": "Continuous",
+              "reason": "Serious Health Condition - Employee",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Pending",
+            },
+          ],
+        }
+      }
+      applicationId="application-id"
+      docList={Array []}
+    />
     <LeaveDetails
       absenceDetails={
         Object {
@@ -828,6 +927,87 @@ exports[`status page includes a button to upload additional documents 1`] = `
         </p>
       </div>
     </div>
+    <ApplicationUpdates
+      absenceDetails={
+        Object {
+          "Child Bonding": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-08-08",
+              "absence_period_start_date": "2021-08-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14434-0000002326",
+              "period_type": "Continuous",
+              "reason": "Child Bonding",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Withdrawn",
+            },
+          ],
+          "Pregnancy/Maternity": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-08-08",
+              "absence_period_start_date": "2021-08-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14434-0000002026",
+              "period_type": "Reduced",
+              "reason": "Pregnancy/Maternity",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Denied",
+            },
+          ],
+          "Serious Health Condition - Employee": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-06-08",
+              "absence_period_start_date": "2021-06-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14432-0000002026",
+              "period_type": "Reduced",
+              "reason": "Serious Health Condition - Employee",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Approved",
+            },
+            AbsencePeriod {
+              "absence_period_end_date": "2021-07-08",
+              "absence_period_start_date": "2021-07-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14432-0000002326",
+              "period_type": "Continuous",
+              "reason": "Serious Health Condition - Employee",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Pending",
+            },
+          ],
+        }
+      }
+      applicationId="application-id"
+      docList={
+        Array [
+          Document {
+            "application_id": null,
+            "content_type": null,
+            "created_at": "2021-08-21",
+            "description": null,
+            "document_type": "Approval Notice",
+            "fineos_document_id": "notice1",
+            "name": null,
+            "user_id": null,
+          },
+          Document {
+            "application_id": null,
+            "content_type": null,
+            "created_at": "2021-08-21",
+            "description": null,
+            "document_type": "Denial Notice",
+            "fineos_document_id": "notice2",
+            "name": null,
+            "user_id": null,
+          },
+        ]
+      }
+    />
     <LeaveDetails
       absenceDetails={
         Object {
@@ -1141,6 +1321,87 @@ exports[`status page renders the page 1`] = `
         </p>
       </div>
     </div>
+    <ApplicationUpdates
+      absenceDetails={
+        Object {
+          "Child Bonding": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-08-08",
+              "absence_period_start_date": "2021-08-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14434-0000002326",
+              "period_type": "Continuous",
+              "reason": "Child Bonding",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Withdrawn",
+            },
+          ],
+          "Pregnancy/Maternity": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-08-08",
+              "absence_period_start_date": "2021-08-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14434-0000002026",
+              "period_type": "Reduced",
+              "reason": "Pregnancy/Maternity",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Denied",
+            },
+          ],
+          "Serious Health Condition - Employee": Array [
+            AbsencePeriod {
+              "absence_period_end_date": "2021-06-08",
+              "absence_period_start_date": "2021-06-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14432-0000002026",
+              "period_type": "Reduced",
+              "reason": "Serious Health Condition - Employee",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Approved",
+            },
+            AbsencePeriod {
+              "absence_period_end_date": "2021-07-08",
+              "absence_period_start_date": "2021-07-01",
+              "evidence_status": null,
+              "fineos_leave_request_id": "PL-14432-0000002326",
+              "period_type": "Continuous",
+              "reason": "Serious Health Condition - Employee",
+              "reason_qualifier_one": null,
+              "reason_qualifier_two": null,
+              "request_decision": "Pending",
+            },
+          ],
+        }
+      }
+      applicationId="application-id"
+      docList={
+        Array [
+          Document {
+            "application_id": null,
+            "content_type": null,
+            "created_at": "2021-08-21",
+            "description": null,
+            "document_type": "Approval Notice",
+            "fineos_document_id": "notice1",
+            "name": null,
+            "user_id": null,
+          },
+          Document {
+            "application_id": null,
+            "content_type": null,
+            "created_at": "2021-08-21",
+            "description": null,
+            "document_type": "Denial Notice",
+            "fineos_document_id": "notice2",
+            "name": null,
+            "user_id": null,
+          },
+        ]
+      }
+    />
     <LeaveDetails
       absenceDetails={
         Object {

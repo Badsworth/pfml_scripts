@@ -1,12 +1,15 @@
-/* eslint-disable import/first */
-jest.mock("../../../src/hooks/useAppLogic");
-
-import Status, { LeaveDetails } from "../../../src/pages/applications/status";
-import { renderWithAppLogic, testHook } from "../../test-utils";
+import Document, { DocumentType } from "../../../src/models/Document";
+import Status, {
+  ApplicationUpdates,
+  LeaveDetails,
+} from "../../../src/pages/applications/status";
+import { generateNotice, renderWithAppLogic, testHook } from "../../test-utils";
 import ClaimDetail from "../../../src/models/ClaimDetail";
 import LeaveReason from "../../../src/models/LeaveReason";
 import routes from "../../../src/routes";
 import useAppLogic from "../../../src/hooks/useAppLogic";
+
+jest.mock("../../../src/hooks/useAppLogic");
 
 const CLAIM_DETAIL = new ClaimDetail({
   application_id: "application-id",
@@ -200,32 +203,25 @@ describe("status page", () => {
   });
 });
 
-/** Test LeaveDetails component */
-// TODO(CP-2482): replace with AbsencePeriodModel
-const ABSENCE_DETAIL_LIST = {
-  medical: [
+const SECONDARY_CLAIM_DETAIL = new ClaimDetail({
+  absence_periods: [
     {
       period_type: "Reduced",
       absence_period_start_date: "2021-06-01",
       absence_period_end_date: "2021-06-08",
       request_decision: "Approved",
       fineos_leave_request_id: "PL-14432-0000002026",
+      reason: LeaveReason.bonding,
+      reason_qualifier_one: "Newborn",
     },
     {
-      period_type: "Continuous",
-      absence_period_start_date: "2021-07-01",
-      absence_period_end_date: "2021-07-08",
-      request_decision: "Pending",
-      fineos_leave_request_id: "PL-14432-0000002326",
-    },
-  ],
-  bonding: [
-    {
-      period_type: "Reduced",
+      period_type: "Reduced Leave",
       absence_period_start_date: "2021-08-01",
       absence_period_end_date: "2021-08-08",
-      request_decision: "Denied",
+      request_decision: "Pending",
       fineos_leave_request_id: "PL-14434-0000002026",
+      reason: LeaveReason.pregnancy,
+      reason_qualifier_one: "Postnatal Disability",
     },
     {
       period_type: "Continuous",
@@ -233,10 +229,41 @@ const ABSENCE_DETAIL_LIST = {
       absence_period_end_date: "2021-08-08",
       request_decision: "Withdrawn",
       fineos_leave_request_id: "PL-14434-0000002326",
+      reason: LeaveReason.medical,
     },
   ],
-};
+});
 
+const TERTIARY_CLAIM_DETAIL = new ClaimDetail({
+  absence_periods: [
+    {
+      period_type: "Continuous",
+      absence_period_start_date: "2021-07-01",
+      absence_period_end_date: "2021-07-08",
+      request_decision: "Pending",
+      fineos_leave_request_id: "PL-14432-0000002326",
+      reason: LeaveReason.bonding,
+      reason_qualifier_one: "Adoption",
+    },
+  ],
+});
+
+const TEST_DOCS = [
+  generateNotice("approvalNotice", "2021-08-21"),
+  generateNotice("denialNotice", "2021-08-21"),
+];
+
+const CERTIFICATION_DOC = [
+  new Document({
+    content_type: "image/png",
+    created_at: "2020-04-05",
+    document_type: DocumentType.certification[LeaveReason.bonding],
+    fineos_document_id: "fineos-id-5",
+    name: "legal notice 2",
+  }),
+];
+
+/** Test LeaveDetails component */
 describe("leave details page", () => {
   it("does not render LeaveDetails if absenceDetails not given", () => {
     const { wrapper } = renderWithAppLogic(LeaveDetails, {
@@ -249,7 +276,7 @@ describe("leave details page", () => {
   it("does renders page separated by keys if object of absenceDetails has more keys", () => {
     const { wrapper } = renderWithAppLogic(LeaveDetails, {
       diveLevels: 0,
-      props: { absenceDetails: ABSENCE_DETAIL_LIST },
+      props: { absenceDetails: SECONDARY_CLAIM_DETAIL.absencePeriodsByReason },
     });
     expect(wrapper).toMatchSnapshot();
   });
@@ -257,8 +284,119 @@ describe("leave details page", () => {
   it("does renders page with one section if absenceDetails has only one key", () => {
     const { wrapper } = renderWithAppLogic(LeaveDetails, {
       diveLevels: 0,
-      props: { absenceDetails: { medical: ABSENCE_DETAIL_LIST.medical } },
+      props: {
+        absenceDetails: {
+          [LeaveReason.medical]:
+            SECONDARY_CLAIM_DETAIL.absencePeriodsByReason[LeaveReason.medical],
+        },
+      },
     });
     expect(wrapper).toMatchSnapshot();
+  });
+});
+
+/** Test ApplicationUpdates component */
+describe("application updates page", () => {
+  it("does not render ApplicationUpdates if absenceDetails not given", () => {
+    const { wrapper } = renderWithAppLogic(ApplicationUpdates, {
+      diveLevels: 0,
+      props: { absenceDetails: {} },
+    });
+    expect(wrapper).toMatchSnapshot();
+  });
+
+  it("does render Proof of Placement button if given 'Adoption' as reason_qualifier and leave_reason as 'Child Bonding'", () => {
+    const { wrapper } = renderWithAppLogic(ApplicationUpdates, {
+      diveLevels: 0,
+      props: {
+        absenceDetails: TERTIARY_CLAIM_DETAIL.absencePeriodsByReason,
+        docList: TEST_DOCS,
+      },
+    });
+    const button = wrapper.find("ButtonLink");
+    expect(button.children().text()).toEqual("Upload proof of placement");
+  });
+
+  it("does render Proof of Birth button if given 'Newborn' as reason_qualifier and reason as 'Child Bonding'", () => {
+    const { wrapper } = renderWithAppLogic(ApplicationUpdates, {
+      diveLevels: 0,
+      props: {
+        absenceDetails: {
+          [LeaveReason.bonding]:
+            SECONDARY_CLAIM_DETAIL.absencePeriodsByReason[LeaveReason.bonding],
+        },
+        docList: TEST_DOCS,
+      },
+    });
+    const button = wrapper.find("ButtonLink");
+    expect(button.children().text()).toEqual("Upload proof of birth");
+  });
+
+  it("does render Proof of Birth button if given reason is Pregnancy/Maternity", () => {
+    const { wrapper } = renderWithAppLogic(ApplicationUpdates, {
+      diveLevels: 0,
+      props: {
+        absenceDetails: {
+          [LeaveReason.pregnancy]:
+            SECONDARY_CLAIM_DETAIL.absencePeriodsByReason[
+              LeaveReason.pregnancy
+            ],
+        },
+        docList: TEST_DOCS,
+      },
+    });
+    const button = wrapper.find("ButtonLink");
+    expect(button.children().text()).toEqual("Upload proof of birth");
+  });
+
+  it("does update the rendered content on prop update", () => {
+    const { wrapper } = renderWithAppLogic(ApplicationUpdates, {
+      diveLevels: 0,
+      props: {
+        absenceDetails: TERTIARY_CLAIM_DETAIL.absencePeriodsByReason,
+        docList: TEST_DOCS,
+      },
+    });
+    let button = wrapper.find("ButtonLink");
+    expect(button.children().text()).toEqual("Upload proof of placement");
+    wrapper.setProps({
+      absenceDetails: {
+        [LeaveReason.pregnancy]:
+          SECONDARY_CLAIM_DETAIL.absencePeriodsByReason[LeaveReason.pregnancy],
+      },
+      docList: TEST_DOCS,
+    });
+    button = wrapper.find("ButtonLink");
+    expect(button.children().text()).toEqual("Upload proof of birth");
+  });
+
+  it("does not render an upload button given leave_reason is not Pregnancy/Maternity or Child Bonding", () => {
+    const { wrapper } = renderWithAppLogic(ApplicationUpdates, {
+      diveLevels: 0,
+      props: {
+        absenceDetails: {
+          [LeaveReason.medical]:
+            SECONDARY_CLAIM_DETAIL.absencePeriodsByReason[LeaveReason.medical],
+        },
+        docList: TEST_DOCS,
+      },
+    });
+    const button = wrapper.find("ButtonLink");
+    expect(button.get(0)).toBeFalsy();
+  });
+
+  it("does not render an upload button if the correct certification form is given", () => {
+    const { wrapper } = renderWithAppLogic(ApplicationUpdates, {
+      diveLevels: 0,
+      props: {
+        absenceDetails: {
+          [LeaveReason.bonding]:
+            SECONDARY_CLAIM_DETAIL.absencePeriodsByReason[LeaveReason.bonding],
+        },
+        docList: CERTIFICATION_DOC,
+      },
+    });
+    const button = wrapper.find("ButtonLink");
+    expect(button.get(0)).toBeFalsy();
   });
 });

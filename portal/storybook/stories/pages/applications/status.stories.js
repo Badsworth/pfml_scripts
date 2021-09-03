@@ -13,7 +13,7 @@ import { merge } from "lodash";
 const LEAVE_SCENARIO_MAP = {
   "Medical-Pregnancy and Bonding": [
     { reason: LeaveReason.pregnancy },
-    { reason: LeaveReason.bonding },
+    { reason: LeaveReason.bonding, reason_qualifier_one: "Newborn" },
   ],
   "Medical-Pregnancy": [{ reason: LeaveReason.pregnancy }],
   "Bonding-newborn": [

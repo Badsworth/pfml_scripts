@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
-import { has, map } from "lodash";
-
+import { find, has, isEmpty, map } from "lodash";
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import ClaimDetail from "../../models/ClaimDetail";
+import { DocumentType } from "../../models/Document";
 import Heading from "../../components/Heading";
 import LeaveReason from "../../models/LeaveReason";
 import LegalNoticeList from "../../components/LegalNoticeList.js";
@@ -13,6 +13,7 @@ import Spinner from "../../components/Spinner";
 import Tag from "../../components/Tag";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
+import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDate from "../../utils/formatDate";
 import { generateNotice } from "../../../tests/test-utils";
@@ -24,9 +25,14 @@ import { useTranslation } from "../../locales/i18n";
 
 // TODO (CP-2461): remove once page is integrated with API
 const TEST_DOCS = [
-  generateNotice("approvalNotice"),
-  generateNotice("denialNotice"),
+  generateNotice("approvalNotice", "2021-08-21"),
+  generateNotice("denialNotice", "2021-08-21"),
 ];
+
+const nextStepsRoute = {
+  newborn: "applications.upload.bondingProofOfBirth",
+  adoption: "applications.upload.bondingProofOfPlacement",
+};
 
 export const Status = ({ appLogic, docList = TEST_DOCS, query }) => {
   const { t } = useTranslation();
@@ -168,7 +174,11 @@ export const Status = ({ appLogic, docList = TEST_DOCS, query }) => {
             <p className="text-bold">{claimDetail.employer.employer_fein}</p>
           </div>
         </div>
-
+        <ApplicationUpdates
+          absenceDetails={absenceDetails}
+          applicationId={claimDetail.application_id}
+          docList={docList}
+        />
         <LeaveDetails absenceDetails={absenceDetails} />
         <ViewYourNotices />
 
@@ -285,7 +295,7 @@ export const LeaveDetails = ({ absenceDetails = {} }) => {
               <div key={fineos_leave_request_id} className="margin-top-2">
                 <Heading className="margin-bottom-1" level="3">
                   {t("pages.claimsStatus.leavePeriodLabel", {
-                    context: period_type.toLowerCase(),
+                    context: period_type.split(" ")[0].toLowerCase(),
                   })}
                 </Heading>
                 <p>
@@ -319,4 +329,84 @@ export const LeaveDetails = ({ absenceDetails = {} }) => {
         : null}
     </div>
   ));
+};
+
+LeaveDetails.propTypes = {
+  absenceDetails: PropTypes.object,
+};
+
+export const ApplicationUpdates = ({
+  absenceDetails = {},
+  application_id,
+  docList = [],
+}) => {
+  const { t } = useTranslation();
+
+  const renderProofOfBirthButton = (absenceItemName, absenceType, docList) =>
+    absenceItemName === LeaveReason[absenceType] &&
+    !findDocumentsByTypes(docList, [
+      DocumentType.certification[absenceItemName],
+    ]).length;
+
+  const renderOptions = (absenceItemName, isNewBornQualifier, docList) => {
+    if (
+      (renderProofOfBirthButton(absenceItemName, "bonding", docList) &&
+        isNewBornQualifier) ||
+      renderProofOfBirthButton(absenceItemName, "pregnancy", docList)
+    ) {
+      return "newborn";
+    } else if (
+      renderProofOfBirthButton(absenceItemName, "bonding", docList) &&
+      !isNewBornQualifier
+    ) {
+      return "adoption";
+    }
+  };
+
+  return isEmpty(absenceDetails) ? null : (
+    <div className="border-bottom border-base-lighter padding-bottom-2 margin-bottom-2">
+      <Heading level="2">
+        {t("pages.claimsStatus.applicationUpdatesHeading")}
+      </Heading>
+      <Heading level="3">{t("pages.claimsStatus.whatHappensNext")}</Heading>
+      {
+        map(absenceDetails, (absenceItem, absenceItemName) => {
+          const isNewBornQualifier = find(
+            absenceItem,
+            (item) => item && item.reason_qualifier_one === "Newborn"
+          );
+          const typeOfProof = renderOptions(
+            absenceItemName,
+            isNewBornQualifier,
+            docList
+          );
+          return nextStepsRoute[typeOfProof] ? (
+            <div key={absenceItemName}>
+              <p>
+                {t("pages.claimsStatus.whatYouNeedToDoText", {
+                  context: typeOfProof,
+                })}
+              </p>
+              <ButtonLink
+                className="measure-12"
+                href={routeWithParams(`${nextStepsRoute[typeOfProof]}`, {
+                  claim_id: application_id,
+                })}
+              >
+                {t("pages.claimsStatus.whatHappensNextButton", {
+                  context: typeOfProof,
+                })}
+              </ButtonLink>
+            </div>
+          ) : null;
+        })[0]
+      }
+    </div>
+  );
+};
+
+ApplicationUpdates.propTypes = {
+  absenceDetails: PropTypes.object,
+  application_id: PropTypes.string,
+  docList: PropTypes.array,
 };
