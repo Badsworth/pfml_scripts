@@ -42,6 +42,8 @@ function getRawEnvironment() {
 
     SSO_USERNAME: process.env.E2E_SSO_USERNAME,
     SSO_PASSWORD: process.env.E2E_SSO_PASSWORD,
+    SSO2_USERNAME: process.env.E2E_SSO2_USERNAME,
+    SSO2_PASSWORD: process.env.E2E_SSO2_PASSWORD,
 
     TESTMAIL_APIKEY: process.env.E2E_TESTMAIL_APIKEY,
     TESTMAIL_NAMESPACE: process.env.E2E_TESTMAIL_NAMESPACE,

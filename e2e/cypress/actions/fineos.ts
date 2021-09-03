@@ -80,7 +80,7 @@ export function before(credentials?: Credentials): void {
   ).as("ajaxRender");
 
   if (config("ENVIRONMENT") === "uat") {
-    SSO();
+    SSO(credentials);
   }
   cy.visit("/");
 }
