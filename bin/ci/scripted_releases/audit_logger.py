@@ -9,10 +9,9 @@ def setup(file_loc):
     See https://docs.python.org/3/howto/logging-cookbook.html#multiple-handlers-and-formatters.
 
     :param file_loc: The absolute path where audit logs will be stored.
-    :return: a root logger with pre-configured handlers and log levels
     """
 
-    logger = logging.getLogger('screl')
+    logger = logging.getLogger()
     logger.setLevel(logging.DEBUG)
 
     # write ALL logs to this file
@@ -31,4 +30,3 @@ def setup(file_loc):
         logger.addHandler(handler)
 
     logger.debug(f"Audit logger configured; writing logs to '{file_loc}'")
-    return logger

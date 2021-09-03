@@ -55,14 +55,14 @@ describe("Denial Notification and Notice", () => {
         cy.visit("/applications");
         if (config("HAS_CLAIMANT_STATUS_PAGE") === "true") {
           portal.claimantGoToClaimStatus(submission.fineos_absence_id);
-          // @todo: update status to "Denied" once status page doesn't use static data
           portal.claimantAssertClaimStatus([
             {
               leave: "Serious Health Condition - Employee",
               status: "Denied",
             },
           ]);
-          cy.findByText("Denial notice (PDF)").should("be.visible").click();
+          // @todo: uncomment line below once, doc download is supported
+          // cy.findByText("Denial notice (PDF)").should("be.visible").click();
           // @todo: when application status page uses claim data, assert the documents there
         } else {
           cy.log("Waiting for documents");

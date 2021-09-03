@@ -114,6 +114,17 @@ def update_gender_data(
             )
             continue
 
+        if not isinstance(license_inquiry_response.sex, RMVSex):
+            report.claimants_errored_count += 1
+            logger.warning(
+                "Unexpected value for gender",
+                extra={
+                    "employee_id": claimant.employee_id,
+                    "gender_value": license_inquiry_response.sex,
+                },
+            )
+            continue
+
         claimant.gender_id = rmv_sex_to_gender[license_inquiry_response.sex].gender_id
         report.claimants_updated_count += 1
         logger.info(

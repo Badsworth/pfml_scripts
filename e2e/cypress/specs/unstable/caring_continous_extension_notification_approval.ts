@@ -144,7 +144,7 @@ describe("Post-approval (notifications/notices)", () => {
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
-              60000
+              70000
             )
             .then(() => {
               cy.contains(submission.fineos_absence_id);

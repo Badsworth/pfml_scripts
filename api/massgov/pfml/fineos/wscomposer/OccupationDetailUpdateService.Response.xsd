@@ -1,38 +1,50 @@
-<?xml version="1.0" encoding="utf-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
-xmlns="http://www.fineos.com/wscomposer/OccupationDetailUpdateService"
-targetNamespace="http://www.fineos.com/wscomposer/OccupationDetailUpdateService"
-xmlns:tns="http://www.fineos.com/wscomposer/OccupationDetailUpdateService" elementFormDefault="unqualified">
+<?xml version="1.0" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.fineos.com/wscomposer/OccupationDetailUpdateService" xmlns:tns="http://www.fineos.com/wscomposer/OccupationDetailUpdateService" targetNamespace="http://www.fineos.com/wscomposer/OccupationDetailUpdateService" elementFormDefault="unqualified">
   <xs:element name="WSUpdateResponse">
     <xs:complexType>
       <xs:sequence>
         <xs:element name="oid-list">
           <xs:complexType>
             <xs:sequence>
-              <xs:element name="oid" maxOccurs="unbounded" minOccurs="0" type="tns:OID" />
+              <xs:element name="oid" maxOccurs="unbounded" minOccurs="0" type="tns:OID"/>
             </xs:sequence>
           </xs:complexType>
         </xs:element>
         <xs:element name="additional-data-set" minOccurs="0">
+              
           <xs:complexType>
+                    
             <xs:sequence>
+                          
               <xs:element name="additional-data" minOccurs="0" maxOccurs="unbounded">
+                                
                 <xs:complexType>
+                                      
                   <xs:sequence>
-                    <xs:element name="name" type="xs:string" />
-                    <xs:element name="value" type="xs:string" />
+                                            
+                    <xs:element name="name" type="xs:string"/>
+                                            
+                    <xs:element name="value" type="xs:string"/>
+                                        
                   </xs:sequence>
+                                  
                 </xs:complexType>
+                            
               </xs:element>
+                      
             </xs:sequence>
+                
           </xs:complexType>
         </xs:element>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
   <xs:simpleType name="OID">
+    	
     <xs:restriction base="xs:string">
-      <xs:pattern value="[pPtT][eElL]:\d{1,5}:\d{1,10}" />
+      		
+      <xs:pattern value="[pPtT][eElL]:\d{1,5}:\d{1,10}"/>
+      	
     </xs:restriction>
   </xs:simpleType>
 </xs:schema>

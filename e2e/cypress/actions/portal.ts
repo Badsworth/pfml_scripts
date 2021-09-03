@@ -218,8 +218,14 @@ export function registerAsClaimant(credentials: Credentials): void {
   cy.contains("button", "Create account").click();
   cy.task("getAuthVerification", credentials.username).then((code) => {
     cy.findByLabelText("6-digit code").type(code as string);
-    cy.contains("button", "Submit").click();
   });
+  // Wait for cognito to finish before declaring registration complete.
+  cy.intercept({
+    url: `https://cognito-idp.us-east-1.amazonaws.com/`,
+    times: 1,
+  }).as("cognito");
+  cy.contains("button", "Submit").click();
+  cy.wait("@cognito");
 }
 
 export function registerAsLeaveAdmin(
@@ -234,9 +240,15 @@ export function registerAsLeaveAdmin(
   cy.task("getAuthVerification", credentials.username as string).then(
     (code: string) => {
       cy.findByLabelText("6-digit code").type(code as string);
-      cy.contains("button", "Submit").click();
     }
   );
+  // Wait for cognito to finish before declaring registration complete.
+  cy.intercept({
+    url: `https://cognito-idp.us-east-1.amazonaws.com/`,
+    times: 1,
+  }).as("cognito");
+  cy.contains("button", "Submit").click();
+  cy.wait("@cognito");
 }
 
 export function employerLogin(credentials: Credentials): void {
@@ -996,7 +1008,9 @@ export function addOrganization(fein: string, withholding: number): void {
   cy.get('input[name="ein"]').type(fein);
   cy.get('button[type="submit"').click();
   if (withholding !== 0) {
-    cy.get('input[name="withholdingAmount"]').type(withholding.toString());
+    cy.get('input[name="withholdingAmount"]', { timeout: 30000 }).type(
+      withholding.toString()
+    );
     cy.get('button[type="submit"]').click();
     cy.contains("h1", "Thanks for verifying your paid leave contributions");
     cy.contains("p", "Your account has been verified");
@@ -1014,7 +1028,8 @@ export function addOrganization(fein: string, withholding: number): void {
  */
 export function assertZeroWithholdings(): void {
   cy.contains(
-    /(Employer has no verification data|Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications)/
+    /(Employer has no verification data|Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications)/,
+    { timeout: 30000 }
   );
 }
 export type DashboardClaimStatus =

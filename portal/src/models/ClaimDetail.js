@@ -54,6 +54,7 @@ class ClaimDetail extends BaseModel {
        * @type {AbsencePeriod}
        */
       absence_periods: [],
+      application_id: null,
       /**
        * @type {ClaimEmployee}
        */
