@@ -11,7 +11,7 @@ def start(args):
 
     # getting the proper tags/branches for the release
     git_utils.fetch_remotes()
-    recent_tag = git_utils.most_recent_tag(args.app)  # get most recent tag
+    recent_tag = git_utils.most_recent_tag(args.app)
 
     v = git_utils.to_semver(recent_tag)  # convert tag to semver object
     version_name = git_utils.from_semver(v.bump_minor(), args.app)
