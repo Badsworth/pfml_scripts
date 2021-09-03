@@ -56,11 +56,11 @@ const userTypes: {
 describe("Historical absence secure actions", () => {
   userTypes.forEach((userType) => {
     describe(`${userType.security_group}:`, () => {
-      before(() => {
+      before((done) => {
         cy.task("chooseFineosRole", {
           userId: config("SSO2_USERNAME"),
           preset: userType.security_group,
-        });
+        }).then(done);
       });
       it(`${userType.security_group} ${
         userType.can_add_case ? "can" : "can't"

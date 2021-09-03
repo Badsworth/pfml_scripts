@@ -73,7 +73,7 @@ export default function (
       userId: string;
       preset: FineosSecurityGroups;
     }) {
-      Fineos.withBrowser(
+      await Fineos.withBrowser(
         async (page) => {
           await chooseRolePreset(
             page,
@@ -83,7 +83,7 @@ export default function (
             preset
           );
         },
-        { debug: false }
+        { debug: true }
       );
       return null;
     },
