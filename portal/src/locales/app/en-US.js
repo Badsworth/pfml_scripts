@@ -1930,6 +1930,7 @@ const pages = {
     leaveStatusMessage_Withdrawn:
       "<p><strong>This leave was withdrawn.</strong></p><p>You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
     loadingClaimDetailLabel: "Loading claim details",
+    loadingLegalNoticesLabel: "Loading legal notices",
     makeChangesBody:
       "<p>If you need to make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Some changes to your application, such as changing your start and end dates, may mean your application needs to be reviewed by your employer again.</p>",
     makeChangesHeading: "Make changes to your application",

@@ -1,5 +1,6 @@
 import { get, isEqual } from "lodash";
 import ClaimCollection from "../models/ClaimCollection";
+import { ClaimDetailLoadError } from "../errors";
 import ClaimsApi from "../api/ClaimsApi";
 import PaginationMeta from "../models/PaginationMeta";
 import useCollectionState from "./useCollectionState";
@@ -101,7 +102,7 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
       setClaimDetail(data.claimDetail);
       setIsLoadingClaimDetail(false);
     } catch (error) {
-      appErrorsLogic.catchError(error);
+      appErrorsLogic.catchError(new ClaimDetailLoadError(absenceId));
     }
   };
 

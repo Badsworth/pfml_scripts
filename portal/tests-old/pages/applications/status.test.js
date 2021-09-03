@@ -4,8 +4,12 @@ import Status, {
   LeaveDetails,
 } from "../../../src/pages/applications/status";
 import { generateNotice, renderWithAppLogic, testHook } from "../../test-utils";
+import AppErrorInfo from "../../../src/models/AppErrorInfo";
+import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import ClaimDetail from "../../../src/models/ClaimDetail";
+import DocumentCollection from "../../../src/models/DocumentCollection";
 import LeaveReason from "../../../src/models/LeaveReason";
+import { act } from "react-dom/test-utils";
 import routes from "../../../src/routes";
 import useAppLogic from "../../../src/hooks/useAppLogic";
 
@@ -52,6 +56,37 @@ const CLAIM_DETAIL = new ClaimDetail({
   ],
 });
 
+const DOCUMENT_COLLECTION = new DocumentCollection([
+  new Document({
+    content_type: "image/png",
+    created_at: "2020-04-05",
+    document_type: DocumentType.denialNotice,
+    fineos_document_id: "fineos-id-4",
+    name: "legal notice 1",
+  }),
+  new Document({
+    content_type: "image/png",
+    created_at: "2020-04-05",
+    document_type: DocumentType.requestForInfoNotice,
+    fineos_document_id: "fineos-id-5",
+    name: "legal notice 2",
+  }),
+  new Document({
+    content_type: "image/png",
+    created_at: "2020-04-05",
+    document_type: DocumentType.identityVerification,
+    fineos_document_id: "fineos-id-6",
+    name: "non-legal notice 1",
+  }),
+  new Document({
+    content_type: "image/png",
+    created_at: "2020-04-05",
+    document_type: DocumentType.requestForInfoNotice,
+    fineos_document_id: "fineos-id-7",
+    name: "legal notice 2",
+  }),
+]);
+
 describe("status page", () => {
   beforeEach(() => {
     process.env.featureFlags = {
@@ -60,24 +95,29 @@ describe("status page", () => {
   });
 
   const setup = ({
+    appErrors = new AppErrorInfoCollection(),
     claimDetail = CLAIM_DETAIL,
-    docList,
+    documentCollection = DOCUMENT_COLLECTION,
     isLoadingClaimDetail = false,
+    isLoadingDocuments = false,
     render = "shallow",
   } = {}) => {
+    const hasLoadedClaimDocuments = () => !isLoadingDocuments;
     let appLogic;
 
     testHook(() => {
       appLogic = useAppLogic();
+      appLogic.appErrors = appErrors;
       appLogic.claims.claimDetail = claimDetail;
       appLogic.claims.isLoadingClaimDetail = isLoadingClaimDetail;
+      appLogic.documents.documents = documentCollection;
+      appLogic.documents.hasLoadedClaimDocuments = hasLoadedClaimDocuments;
     });
 
     const { wrapper } = renderWithAppLogic(Status, {
       diveLevels: 0,
       props: {
         appLogic,
-        docList,
         query: {
           absence_case_id: "absence-case-id",
         },
@@ -91,17 +131,70 @@ describe("status page", () => {
     };
   };
 
-  it("displays an error if feature flag is disabled", () => {
+  it("redirects page if feature flag is not enabled", () => {
     process.env.featureFlags = {
       claimantShowStatusPage: false,
     };
-    const { wrapper } = setup();
-    expect(wrapper).toMatchSnapshot();
+
+    const { appLogic } = setup({ render: "mount" });
+
+    expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
+      routes.applications.index
+    );
+  });
+
+  it("doesn't render the page if there is a ClaimDetailLoadError", () => {
+    const appErrors = new AppErrorInfoCollection([
+      new AppErrorInfo({ name: "ClaimDetailLoadError" }),
+    ]);
+
+    const { wrapper } = setup({ appErrors });
+
+    expect(wrapper.isEmptyRender()).toBe(true);
+  });
+
+  describe("when DocumentsLoadError exists", () => {
+    const documentsLoadError = new AppErrorInfo({
+      name: "DocumentsLoadError",
+    });
+
+    const setupWithDocumentsLoadError = () => {
+      const { appLogic, wrapper } = setup({
+        documentCollection: new DocumentCollection(),
+        isLoadingDocuments: true,
+        render: "mount",
+      });
+
+      act(() => {
+        wrapper.setProps({
+          appLogic: {
+            ...appLogic,
+            appErrors: new AppErrorInfoCollection([documentsLoadError]),
+          },
+        });
+      });
+      wrapper.update();
+
+      return { wrapper };
+    };
+
+    it("still renders the page", () => {
+      const { wrapper } = setupWithDocumentsLoadError();
+
+      expect(wrapper.isEmptyRender()).toBe(false);
+    });
+
+    it("doesn't show the ViewYourNotices section", () => {
+      const { wrapper } = setupWithDocumentsLoadError();
+
+      expect(wrapper.find("ViewYourNotices").isEmptyRender()).toBe(true);
+    });
   });
 
   it("shows a spinner if there is no claim detail", () => {
     const { wrapper } = setup({
       claimDetail: undefined,
+      documentCollection: new DocumentCollection(),
       isLoadingClaimDetail: true,
       render: "mount",
     });
@@ -175,19 +268,51 @@ describe("status page", () => {
     });
   });
 
-  it("does not render ViewYourNotices if documents not given", () => {
-    const { wrapper } = setup({ docList: [] });
-    expect(wrapper).toMatchSnapshot();
-  });
+  describe("ViewYourNotices", () => {
+    it("shows a spinner while loading", () => {
+      const { wrapper } = setup({
+        documentCollection: new DocumentCollection(),
+        isLoadingDocuments: true,
+        render: "mount",
+      });
 
-  it("does not render LeaveDetails if absenceDetails not given", () => {
-    const { wrapper } = setup({
-      claimDetail: new ClaimDetail({
-        ...CLAIM_DETAIL,
-        absence_periods: null,
-      }),
+      const expectedAriaValueText = "Loading legal notices";
+      const documentSpinner = wrapper.find("Spinner", {
+        "aria-valuetext": expectedAriaValueText,
+      });
+      expect(documentSpinner.exists()).toBe(true);
     });
-    expect(wrapper).toMatchSnapshot();
+
+    it("displays only legal notices", () => {
+      const legalNoticeTypes = new Set([
+        DocumentType.approvalNotice,
+        DocumentType.denialNotice,
+        DocumentType.requestForInfoNotice,
+      ]);
+
+      const { wrapper } = setup({ render: "mount" });
+      wrapper.update();
+
+      const viewYourNoticesComponent = wrapper.find("ViewYourNotices");
+      const legalNoticeListProps = viewYourNoticesComponent
+        .find("LegalNoticeList")
+        .prop("documents");
+      expect(viewYourNoticesComponent).toMatchSnapshot();
+      for (const document of legalNoticeListProps) {
+        expect(legalNoticeTypes.has(document.document_type)).toBe(true);
+      }
+    });
+
+    it("does not appear if there are no legal notices", () => {
+      const { wrapper } = setup({
+        documentCollection: new DocumentCollection(),
+        isLoadingDocuments: false,
+        render: "mount",
+      });
+      wrapper.update();
+
+      expect(wrapper.find("ViewYourNotices").isEmptyRender()).toBe(true);
+    });
   });
 
   it("includes a button to upload additional documents", () => {
@@ -273,7 +398,7 @@ describe("leave details page", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("does renders page separated by keys if object of absenceDetails has more keys", () => {
+  it("does render page separated by keys if object of absenceDetails has more keys", () => {
     const { wrapper } = renderWithAppLogic(LeaveDetails, {
       diveLevels: 0,
       props: { absenceDetails: SECONDARY_CLAIM_DETAIL.absencePeriodsByReason },
@@ -281,7 +406,7 @@ describe("leave details page", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
-  it("does renders page with one section if absenceDetails has only one key", () => {
+  it("does render page with one section if absenceDetails has only one key", () => {
     const { wrapper } = renderWithAppLogic(LeaveDetails, {
       diveLevels: 0,
       props: {

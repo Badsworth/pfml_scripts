@@ -1,11 +1,12 @@
 import ClaimDetail, { AbsencePeriod } from "src/models/ClaimDetail";
 import { Status, StatusTagMap } from "src/pages/applications/status";
+import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
+import DocumentCollection from "src/models/DocumentCollection";
 import LeaveReason from "src/models/LeaveReason";
 import React from "react";
 import { ReasonQualifier } from "src/models/BenefitsApplication";
 import faker from "faker";
-import { generateClaim } from "tests/test-utils";
-import { merge } from "lodash";
+import { generateNotice } from "tests/test-utils";
 
 /**
  * Maps each of the leave scenario options to a list of partial absence periods.
@@ -35,20 +36,21 @@ const LEAVE_SCENARIO_MAP = {
 /**
  * Creates the claim detail to be used by the Status component.
  * Ensures that all permutations of leave reason and request decision are displayed.
- * @param {string} leaveScenarioSelection - the selected radio option for the
+ * @param {object} selections - the selections made in Storybook.
+ * @param {string} selections.leaveScenario - the selected radio option for the
  *    leave scenario in Storybook.
+ * @param {string} selections.requestDecision - the selected radio option for the
+ *    request decision in Storybook.
  * @returns {ClaimDetail} a populated ClaimDetail object that contains
  *    absence periods applicable to the provided leave scenario selection.
  */
-function createClaimDetail(leaveScenarioSelection) {
-  const initialPartials = LEAVE_SCENARIO_MAP[leaveScenarioSelection] || [];
+function createClaimDetail({ leaveScenario, requestDecision }) {
+  const initialPartials = LEAVE_SCENARIO_MAP[leaveScenario] || [];
   // ensure that we see all request decisions.
-  const allPartials = initialPartials.flatMap((initialPartial) => [
-    merge({ request_decision: "Approved" }, initialPartial),
-    merge({ request_decision: "Denied" }, initialPartial),
-    merge({ request_decision: "Pending" }, initialPartial),
-    merge({ request_decision: "Withdrawn" }, initialPartial),
-  ]);
+  const allPartials = initialPartials.map((initialPartial) => ({
+    ...initialPartial,
+    request_decision: requestDecision,
+  }));
 
   const absence_periods = allPartials.map((partial) =>
     createAbsencePeriod(partial)
@@ -76,7 +78,25 @@ function createAbsencePeriod(partialAttrs) {
     request_decision: faker.random.arrayElement(Object.keys(StatusTagMap)),
   };
 
-  return new AbsencePeriod(merge(defaultAbsencePeriod, partialAttrs));
+  return new AbsencePeriod({ ...defaultAbsencePeriod, ...partialAttrs });
+}
+
+function getDocuments({ requestDecision, shouldIncludeRfiDocument }) {
+  const documents = [];
+
+  if (requestDecision === "Approved") {
+    documents.push(generateNotice("approvalNotice"));
+  }
+
+  if (requestDecision === "Denied") {
+    documents.push(generateNotice("denialNotice"));
+  }
+
+  if (shouldIncludeRfiDocument) {
+    documents.push(generateNotice("requestForInfoNotice"));
+  }
+
+  return new DocumentCollection(documents);
 }
 
 export default {
@@ -90,41 +110,50 @@ export default {
         options: Object.keys(LEAVE_SCENARIO_MAP),
       },
     },
+    "Request Decision": {
+      defaultValue: "Approved",
+      control: {
+        type: "radio",
+        options: ["Approved", "Denied", "Pending", "Withdrawn"],
+      },
+    },
+    "Show Request for More Information": {
+      defaultValue: false,
+      control: {
+        type: "boolean",
+      },
+    },
   },
 };
 
 export const DefaultStory = (args) => {
   const leaveScenario = args["Leave Scenario"];
-  const claimDetail = createClaimDetail(leaveScenario);
+  const requestDecision = args["Request Decision"];
+  const shouldIncludeRfiDocument = args["Show Request for More Information"];
+
+  const claimDetail = createClaimDetail({ leaveScenario, requestDecision });
   const appLogic = {
-    appErrors: { items: [] },
+    appErrors: new AppErrorInfoCollection(),
     claims: {
       claimDetail,
       isLoadingClaimDetail: false,
       loadClaimDetail: () => {},
     },
-    documents: { download: () => {} },
+    documents: {
+      documents: getDocuments({ requestDecision, shouldIncludeRfiDocument }),
+      download: () => {},
+      hasLoadedClaimDocuments: () => true,
+      loadAll: () => {},
+    },
     portalFlow: {
       getNextPageRoute: () => "/storybook-mock",
       goTo: () => {},
     },
   };
 
-  // Leave reason based on leave scenario control
-  const leaveReason = {
-    "Medical-Pregnancy and Bonding": "bonding",
-    "Medical-Pregnancy": "pregnancy",
-    "Bonding-newborn": "bonding",
-    "Bonding-adoption/foster": "bonding",
-    "Medical leave due to illness": "medical",
-    "Caring leave": "caring",
-  }[leaveScenario];
-
-  const claim = generateClaim("completed", leaveReason);
   return (
     <Status
       appLogic={appLogic}
-      claim={claim}
       query={{ absence_case_id: "NTN-12345-ABS-01" }}
     />
   );

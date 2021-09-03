@@ -1,9 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { find, has, isEmpty, map } from "lodash";
+import React, { useEffect } from "react";
+import { find, get, groupBy, has, isEmpty, map } from "lodash";
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import ClaimDetail from "../../models/ClaimDetail";
+import DocumentCollection from "../../models/DocumentCollection";
 import { DocumentType } from "../../models/Document";
 import Heading from "../../components/Heading";
 import LeaveReason from "../../models/LeaveReason";
@@ -16,28 +17,26 @@ import { Trans } from "react-i18next";
 import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDate from "../../utils/formatDate";
-import { generateNotice } from "../../../tests/test-utils";
-import { handleError } from "../../api/BaseApi";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-
-// TODO (CP-2461): remove once page is integrated with API
-const TEST_DOCS = [
-  generateNotice("approvalNotice", "2021-08-21"),
-  generateNotice("denialNotice", "2021-08-21"),
-];
 
 const nextStepsRoute = {
   newborn: "applications.upload.bondingProofOfBirth",
   adoption: "applications.upload.bondingProofOfPlacement",
 };
 
-export const Status = ({ appLogic, docList = TEST_DOCS, query }) => {
+export const Status = ({ appLogic, query }) => {
   const { t } = useTranslation();
   const {
     claims: { claimDetail, isLoadingClaimDetail, loadClaimDetail },
+    documents: {
+      documents,
+      download: downloadDocument,
+      hasLoadedClaimDocuments,
+      loadAll: loadClaimDocuments,
+    },
     portalFlow,
   } = appLogic;
   const { absence_case_id } = query;
@@ -53,18 +52,17 @@ export const Status = ({ appLogic, docList = TEST_DOCS, query }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [absence_case_id]);
 
-  const [documents, setDocuments] = useState(docList);
   useEffect(() => {
-    function loadDocuments() {
-      try {
-        const loadedDocuments = { items: docList };
-        setDocuments(loadedDocuments.items);
-      } catch (error) {
-        handleError(error);
-      }
+    const application_id = get(claimDetail, "application_id");
+    if (application_id) {
+      loadClaimDocuments(application_id);
     }
-    loadDocuments();
-  }, [docList]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [claimDetail]);
+
+  const appErrorsByType = groupBy(appLogic.appErrors.items, "name");
+
+  if (has(appErrorsByType, "ClaimDetailLoadError")) return null;
 
   // Check both because claimDetail could be cached from a different status page.
   if (isLoadingClaimDetail || !claimDetail)
@@ -76,22 +74,43 @@ export const Status = ({ appLogic, docList = TEST_DOCS, query }) => {
       </div>
     );
 
-  if (appLogic.appErrors.items.length) return null;
-
   const absenceDetails = claimDetail.absencePeriodsByReason;
+  const legalNotices = documents.legalNotices;
 
   const ViewYourNotices = () => {
-    return documents.length ? (
-      <div className="border-bottom border-base-lighter padding-bottom-2">
+    const className = "border-top border-base-lighter padding-y-2";
+    const hasDocumentsLoadError = has(appErrorsByType, "DocumentsLoadError");
+    const shouldShowSpinner =
+      !hasLoadedClaimDocuments(claimDetail.application_id) &&
+      !hasDocumentsLoadError;
+    const nothingToShow = legalNotices.length === 0 || hasDocumentsLoadError;
+
+    if (shouldShowSpinner) {
+      // claim documents are loading.
+      return (
+        <div className={className}>
+          <Spinner
+            aria-valuetext={t("pages.claimsStatus.loadingLegalNoticesLabel")}
+          />
+        </div>
+      );
+    }
+
+    if (nothingToShow) {
+      return null;
+    }
+
+    return (
+      <div className={className}>
         <Heading className="margin-bottom-1" level="2" id="view_notices">
           {t("pages.claimsStatus.viewNoticesHeading")}
         </Heading>
         <LegalNoticeList
-          documents={documents}
-          onDownloadClick={appLogic.documents.download}
+          documents={legalNotices}
+          onDownloadClick={downloadDocument}
         />
       </div>
-    ) : null;
+    );
   };
 
   const getInfoAlertContext = (absenceDetails) => {
@@ -177,7 +196,7 @@ export const Status = ({ appLogic, docList = TEST_DOCS, query }) => {
         <ApplicationUpdates
           absenceDetails={absenceDetails}
           applicationId={claimDetail.application_id}
-          docList={docList}
+          docList={documents.items}
         />
         <LeaveDetails absenceDetails={absenceDetails} />
         <ViewYourNotices />
@@ -249,14 +268,15 @@ Status.propTypes = {
       loadClaimDetail: PropTypes.func.isRequired,
     }).isRequired,
     documents: PropTypes.shape({
+      documents: PropTypes.instanceOf(DocumentCollection).isRequired,
       download: PropTypes.func.isRequired,
+      hasLoadedClaimDocuments: PropTypes.func.isRequired,
+      loadAll: PropTypes.func.isRequired,
     }),
     portalFlow: PropTypes.shape({
       goTo: PropTypes.func.isRequired,
     }).isRequired,
   }).isRequired,
-  // TODO (CP-2461): remove once page is integrated with API
-  docList: PropTypes.array,
   query: PropTypes.shape({
     absence_case_id: PropTypes.string,
   }).isRequired,
@@ -274,10 +294,7 @@ export const StatusTagMap = {
 export const LeaveDetails = ({ absenceDetails = {} }) => {
   const { t } = useTranslation();
   return map(absenceDetails, (absenceItem, absenceItemName) => (
-    <div
-      key={absenceItemName}
-      className="border-bottom border-base-lighter margin-bottom-2 padding-bottom-2"
-    >
+    <div key={absenceItemName} className="border-base-lighter margin-bottom-2">
       <Heading level="2">
         {t("pages.claimsStatus.leaveReasonValue", {
           context: findKeyByValue(LeaveReason, absenceItemName),
