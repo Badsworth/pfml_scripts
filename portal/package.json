@@ -66,6 +66,7 @@
     "@next/bundle-analyzer": "^10.2.3",
     "@storybook/addon-docs": "^6.3.6",
     "@storybook/react": "^6.3.6",
+    "@testing-library/jest-dom": "^5.14.1",
     "@testing-library/react": "^12.0.0",
     "@testing-library/react-hooks": "^7.0.0",
     "@xstate/test": "^0.4.2",
