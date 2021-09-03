@@ -41,6 +41,7 @@ export const DocumentType = {
   identityVerification: "Identification Proof",
   medicalCertification: "State managed Paid Leave Confirmation",
   requestForInfoNotice: "Request for more Information",
+  withdrawalNotice: "Withdrawal Notice"
 };
 
 export default Document;
