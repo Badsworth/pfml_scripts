@@ -342,21 +342,29 @@ export const ApplicationUpdates = ({
 }) => {
   const { t } = useTranslation();
 
-  const renderProofOfBirthButton = (absenceItemName, absenceType, docList) =>
+  const shouldRenderProofOfBirthButton = (
+    absenceItemName,
+    absenceType,
+    docList
+  ) =>
     absenceItemName === LeaveReason[absenceType] &&
     !findDocumentsByTypes(docList, [
       DocumentType.certification[absenceItemName],
     ]).length;
 
-  const renderOptions = (absenceItemName, isNewBornQualifier, docList) => {
+  const renderOptions = (absenceItemName, absenceItem, docList) => {
+    const isNewBornQualifier = find(
+      absenceItem,
+      (item) => item && item.reason_qualifier_one === "Newborn"
+    );
     if (
-      (renderProofOfBirthButton(absenceItemName, "bonding", docList) &&
+      (shouldRenderProofOfBirthButton(absenceItemName, "bonding", docList) &&
         isNewBornQualifier) ||
-      renderProofOfBirthButton(absenceItemName, "pregnancy", docList)
+      shouldRenderProofOfBirthButton(absenceItemName, "pregnancy", docList)
     ) {
       return "newborn";
     } else if (
-      renderProofOfBirthButton(absenceItemName, "bonding", docList) &&
+      shouldRenderProofOfBirthButton(absenceItemName, "bonding", docList) &&
       !isNewBornQualifier
     ) {
       return "adoption";
@@ -371,13 +379,9 @@ export const ApplicationUpdates = ({
       <Heading level="3">{t("pages.claimsStatus.whatHappensNext")}</Heading>
       {
         map(absenceDetails, (absenceItem, absenceItemName) => {
-          const isNewBornQualifier = find(
-            absenceItem,
-            (item) => item && item.reason_qualifier_one === "Newborn"
-          );
           const typeOfProof = renderOptions(
             absenceItemName,
-            isNewBornQualifier,
+            absenceItem,
             docList
           );
           return nextStepsRoute[typeOfProof] ? (

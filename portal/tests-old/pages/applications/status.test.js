@@ -381,8 +381,7 @@ describe("application updates page", () => {
         docList: TEST_DOCS,
       },
     });
-    const button = wrapper.find("ButtonLink");
-    expect(button.get(0)).toBeFalsy();
+    expect(wrapper.find("ButtonLink").exists()).toBe(false);
   });
 
   it("does not render an upload button if the correct certification form is given", () => {
@@ -396,7 +395,6 @@ describe("application updates page", () => {
         docList: CERTIFICATION_DOC,
       },
     });
-    const button = wrapper.find("ButtonLink");
-    expect(button.get(0)).toBeFalsy();
+    expect(wrapper.find("ButtonLink").exists()).toBe(false);
   });
 });
