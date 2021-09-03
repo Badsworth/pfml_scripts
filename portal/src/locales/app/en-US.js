@@ -2484,7 +2484,7 @@ const components = {
     noticeName_denialNotice: "Denial notice $t(shared.pdfNoticeSuffix)",
     noticeName_requestForInfoNotice:
       "Request for more information $t(shared.pdfNoticeSuffix)",
-    noticeName_withdrawalNotice: "Withdrawal notice $t(shared.pdfNoticeSuffix)"
+    noticeName_withdrawalNotice: "Pending Application Withdrawn $t(shared.pdfNoticeSuffix)"
   },
   dropdown: {
     emptyChoiceLabel: "- Select an answer -",
