@@ -1,20 +1,7 @@
-import { spawn as _spawn, SpawnOptions } from "child_process";
-import aws from "aws-sdk";
+import { spawn as _spawn } from "child_process";
 import config from "../config";
 import { v4 as uuid } from "uuid";
-
-type ProcessData = {
-  stdout: string[];
-  stderr: string[];
-  code: number;
-};
-
-interface SpawnError {
-  command: string;
-  args: string[] | undefined;
-  options: SpawnOptions | undefined;
-  result: ProcessData;
-}
+import ArtilleryDeployer from "../artillery/ArtilleryDeployer";
 
 /**
  * This command is to be used to build images and push them to AWS ECR and
@@ -30,8 +17,19 @@ interface SpawnError {
  */
 
 (async () => {
+  const configARN =
+    "arn:aws:ssm:us-east-1:233259245172:parameter/lst-worker-config";
+
+  const deployer = await ArtilleryDeployer.createFromConfigParameter(
+    configARN,
+    {
+      // Optional config overrides can be added here in development. Move them into
+      // the configuration parameter once you're ready for others to use them.
+    }
+  );
   const run_id = uuid();
-  const image_name = `e2e-lst:${run_id}`;
+  const local_tag = `e2e-lst:${run_id}`;
+  const remote_tag = `${deployer.registry}:${run_id}`;
   const cmd_args = {
     build: [
       "build",
@@ -40,81 +38,23 @@ interface SpawnError {
       "-f",
       "Dockerfile",
       "-t",
-      `${image_name}`,
+      local_tag,
+      "-t",
+      remote_tag,
       ".",
     ],
-    tag: [
-      "tag",
-      `${image_name}`,
-      `233259245172.dkr.ecr.us-east-1.amazonaws.com/${image_name}`,
-    ],
-    push: [
-      "push",
-      `233259245172.dkr.ecr.us-east-1.amazonaws.com/${image_name}`,
-    ],
+    push: ["push", remote_tag],
   };
 
-  try {
-    console.log("Building Docker Image ...");
-    await run_command("docker", cmd_args.build);
-    console.log("Docker Image Build Complete!\n");
-
-    console.log("Tagging the Docker Image ...");
-    await run_command("docker", cmd_args.tag);
-    console.log("Image Tag Successful!\n");
-
-    console.log("Pushing Image to ECR-LST repository ...");
-    await run_command("docker", cmd_args.push);
-    console.log("Image Push Successful!\n");
-    console.log(`The image has been pushed to ${image_name}`);
-  } catch (e) {
-    throw e;
-  }
-
-  console.log("Creating Task Definition...\n");
-  aws.config.update({ region: "us-east-1" });
-  const ecs = new aws.ECS();
-  const task_def_options: aws.ECS.RegisterTaskDefinitionRequest = {
-    containerDefinitions: [
-      {
-        name: "e2e-lst-container",
-        image: `233259245172.dkr.ecr.us-east-1.amazonaws.com/${image_name}`,
-        logConfiguration: {
-          logDriver: "awslogs",
-          options: {
-            "awslogs-group": "e2e-lst-logs",
-            "awslogs-region": "us-east-1",
-            // Put the run ID in the log stream so we can group the log data for a single run together.
-            "awslogs-stream-prefix": `artillery/${run_id}`,
-          },
-        },
-        essential: true,
-      },
-    ],
-    family: "e2e-lst-task-8",
-    taskRoleArn: "arn:aws:iam::233259245172:role/execute-task-main",
-    executionRoleArn: "arn:aws:iam::233259245172:role/execute-task-main",
-    networkMode: "awsvpc",
-    requiresCompatibilities: ["FARGATE"],
-    cpu: "2048",
-    memory: "4096",
-  };
-
-  const task_def = await ecs.registerTaskDefinition(task_def_options).promise();
+  console.log("Building Docker Image ...\n-----------------------");
+  await spawn("docker", cmd_args.build);
+  console.log("Docker Image Build Complete!\n");
 
   console.log(
-    `Task Definition: '${task_def.taskDefinition?.family}' created ...\nwith status: ${task_def.taskDefinition?.status}\n`
+    "Pushing Image to ECR-LST repository...\n-----------------------"
   );
-
-  console.log("Running tasks ...\n");
-
-  const network_config: aws.ECS.NetworkConfiguration = {
-    awsvpcConfiguration: {
-      subnets: ["subnet-0c18406a", "subnet-26157917", "subnet-d081699c"],
-      securityGroups: ["sg-9be41784"],
-      assignPublicIp: "ENABLED",
-    },
-  };
+  await spawn("docker", cmd_args.push);
+  console.log(`Image Pushed to ${remote_tag}!`);
 
   const secretNames = [
     "ENVIRONMENT" as const,
@@ -123,45 +63,21 @@ interface SpawnError {
     "TESTMAIL_APIKEY" as const,
     "FINEOS_USERS" as const,
   ];
-  const secrets = secretNames.map((name) => {
-    return {
-      name: `E2E_${name}`,
-      value: config(name),
-    };
-  });
-  const task_results = await ecs
-    .runTask({
-      cluster: "arn:aws:ecs:us-east-1:233259245172:cluster/e2e-lst-cluster",
-      group: task_def.taskDefinition?.family,
-      taskDefinition: task_def.taskDefinition?.taskDefinitionArn as string,
-      networkConfiguration: network_config,
-      launchType: "FARGATE",
-      count: 1,
-      startedBy: "E2E-LST",
-      overrides: {
-        containerOverrides: [
-          {
-            name: "e2e-lst-container",
-            environment: [
-              ...secrets,
-              {
-                // Pass in the run ID as a way to correlate runs across several containers.
-                // We'll use this ID in logs and metrics.
-                name: "LST_RUN_ID",
-                value: run_id,
-              },
-            ],
-          },
-        ],
-      },
-    })
-    .promise();
+  const environment = secretNames.reduce(
+    (env, name) => {
+      env[`E2E_${name}`] = config(name);
+      return env;
+    },
+    {
+      LST_RUN_ID: run_id,
+      E2E_DEBUG: process.env.E2E_DEBUG,
+      IS_ECS: "true",
+    } as Record<string, string>
+  );
 
-  if (!task_results.tasks) {
-    throw new Error("No task can be started!");
-  }
+  const result = await deployer.deploy(remote_tag, run_id, environment);
   console.log(
-    `Task has been triggered and last status is: ${task_results.tasks[0].lastStatus}\n`
+    `LST has been triggered...\n\n\tCluster: ${result.cluster}\n\n\n`
   );
   console.log(`Check AWS Cloudwatch with RUN_ID: ${run_id} for any logs.`);
 })().catch((e) => {
@@ -169,48 +85,16 @@ interface SpawnError {
   process.exit(1);
 });
 
-/**
- * spwawn function to handle bash commands
- */
-function run_command(
-  command: string,
-  args?: string[],
-  options?: SpawnOptions
-): Promise<ProcessData> {
-  const spawnArgs = args || ([] as string[]),
-    spawnOptions = options || ({} as SpawnOptions);
-  return new Promise<ProcessData>((resolve, reject) => {
-    const child = _spawn(command, spawnArgs, spawnOptions);
-    const result: ProcessData = {
-      stdout: [],
-      stderr: [],
-      code: -1,
-    };
-    child.stderr?.on("data", (d) => {
-      result.stderr.push(d.toString());
-    });
-    child.stdout?.on("data", (d) => {
-      result.stdout.push(d.toString());
+function spawn(command: string, args: string[] = []): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const child = _spawn(command, args, {
+      stdio: "inherit",
     });
     child.on("close", (code) => {
-      result.code = code as number;
-      return code
-        ? reject(makeSpawnErrorFor(result, command, args, options))
-        : resolve(result);
+      code === 0 ? resolve() : reject(`Received ${code}`);
+    });
+    child.on("error", (err) => {
+      reject(err);
     });
   });
-}
-
-function makeSpawnErrorFor(
-  result: ProcessData,
-  command: string,
-  args: string[] | undefined,
-  options: SpawnOptions | undefined
-): SpawnError {
-  return {
-    result,
-    command,
-    args,
-    options,
-  };
 }

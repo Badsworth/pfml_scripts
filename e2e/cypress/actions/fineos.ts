@@ -80,7 +80,7 @@ export function before(credentials?: Credentials): void {
   ).as("ajaxRender");
 
   if (config("ENVIRONMENT") === "uat") {
-    SSO();
+    SSO(credentials);
   }
   cy.visit("/");
 }
@@ -166,7 +166,7 @@ export function wait(): void {
 }
 
 export function waitForAjaxComplete(): void {
-  cy.window()
+  cy.window({ timeout: 30000 })
     .invoke("axGetAjaxQueueManager")
     .should((q) => {
       const inFlight = Object.values(q.requests).filter(

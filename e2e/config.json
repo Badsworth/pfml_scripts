@@ -13,7 +13,8 @@
     "LST_EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
     "LST_EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
-    "FINEOS_HAS_UPDATED_EFORMS": "true"
+    "HAS_CLAIMANT_STATUS_PAGE": "true",
+    "PORTAL_HAS_LA_STATUS_UPDATES": "true"
   },
   "stage": {
     "PORTAL_BASEURL": "https://paidleave-stage.mass.gov",
@@ -26,8 +27,7 @@
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
-    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
-    "FINEOS_HAS_UPDATED_EFORMS": "true"
+    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
   },
   "training": {
     "PORTAL_BASEURL": "https://paidleave-training.mass.gov",
@@ -40,8 +40,7 @@
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-06-04.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-06-04.json",
-    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
-    "FINEOS_HAS_UPDATED_EFORMS": "true"
+    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
   },
   "performance": {
     "PORTAL_BASEURL": "https://paidleave-performance.mass.gov",
@@ -56,8 +55,7 @@
     "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
     "LST_EMPLOYEES_FILE": "./employees/lst-2021-08-18.employees.json",
     "LST_EMPLOYERS_FILE": "./employers/lst-2021-08-18.json",
-    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
-    "FINEOS_HAS_UPDATED_EFORMS": "true"
+    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
   },
   "uat": {
     "PORTAL_BASEURL": "https://paidleave-uat.mass.gov",
@@ -71,8 +69,7 @@
     "EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
-    "HAS_FINEOS_SP": "true",
-    "FINEOS_HAS_UPDATED_EFORMS": "true"
+    "HAS_FINEOS_SP": "true"
   },
   "cps-preview": {
     "PORTAL_BASEURL": "https://paidleave-cps-preview.eol.mass.gov",
@@ -86,7 +83,7 @@
     "EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
-    "FINEOS_HAS_UPDATED_EFORMS": "true"
+    "PORTAL_HAS_LA_STATUS_UPDATES": "true"
   },
   "local": {
     "PORTAL_BASEURL": "http://localhost:3000",

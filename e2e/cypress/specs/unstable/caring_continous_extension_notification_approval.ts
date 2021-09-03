@@ -5,6 +5,7 @@ import { Submission } from "../../../src/types";
 import { extractLeavePeriod } from "../../../src/util/claims";
 import { assertValidClaim } from "../../../src/util/typeUtils";
 import { format, addDays, parse } from "date-fns";
+import { config } from "../../actions/common";
 
 describe("Post-approval (notifications/notices)", () => {
   const credentials: Credentials = {
@@ -91,7 +92,9 @@ describe("Post-approval (notifications/notices)", () => {
               portal.login(getLeaveAdminCredentials(claim.employer_fein));
               portal.selectClaimFromEmployerDashboard(
                 submission.fineos_absence_id,
-                "--"
+                config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"
+                  ? "Review by"
+                  : "--"
               );
               const portalFormatStart = format(new Date(startDate), "M/d/yyyy");
               const portalFormatEnd = format(
@@ -145,7 +148,7 @@ describe("Post-approval (notifications/notices)", () => {
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
-              60000
+              70000
             )
             .then(() => {
               cy.contains(submission.fineos_absence_id);

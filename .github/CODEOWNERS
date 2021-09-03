@@ -11,6 +11,9 @@
 /infra/portal/ @EOLWD/pfml-portal
 /e2e/ @EOLWD/pfml-e2e
 
+/portal/src/pages/applications/status.js @EOLWD/pfml-acorn-street
+/portal/src/components/ApplicationCardV2.js @EOLWD/pfml-acorn-street
+
 # These patterns include ** to match both api/massgov/pfml/DIR and api/tests/DIR
 /api/                                                  @jamesbursa @oscarAtNava
 /api/**/util/                                          @chouinar @jamesbursa

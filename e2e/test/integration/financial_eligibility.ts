@@ -10,7 +10,10 @@ import { ScenarioSpecification } from "../../src/generation/Scenario";
 
 let token: string;
 
-describe("FE test", () => {
+/**
+ * @group stable
+ */
+describe("Financial Eligibility", () => {
   beforeAll(async () => {
     const authenticator = getAuthManager();
 

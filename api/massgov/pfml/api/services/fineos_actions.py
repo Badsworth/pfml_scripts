@@ -17,10 +17,9 @@ import mimetypes
 import uuid
 from enum import Enum
 from itertools import chain
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import phonenumbers
-from pydantic import UUID4
 
 import massgov.pfml.db
 import massgov.pfml.fineos.models
@@ -28,6 +27,7 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.api.models.applications.common import LeaveReason as LeaveReasonApi
 from massgov.pfml.api.models.applications.common import OtherIncome
 from massgov.pfml.api.models.applications.responses import DocumentResponse
+from massgov.pfml.api.models.claims.responses import AbsencePeriodStatusResponse
 from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, PreviousLeave
 from massgov.pfml.db.models.applications import (
     Application,
@@ -49,8 +49,8 @@ from massgov.pfml.db.models.employees import (
     TaxIdentifier,
     User,
 )
-from massgov.pfml.fineos.exception import FINEOSNotFound
-from massgov.pfml.fineos.models.customer_api import ReflexiveQuestionType
+from massgov.pfml.fineos.exception import FINEOSClientError, FINEOSNotFound
+from massgov.pfml.fineos.models.customer_api import AbsenceDetails, ReflexiveQuestionType
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employee import (
     OtherIncomesEFormBuilder,
@@ -286,6 +286,13 @@ DOCUMENT_TYPES_ASSOCIATED_WITH_EVIDENCE = (
 )
 
 
+def document_log_attrs(doc: Document) -> Dict[str, Any]:
+    return {
+        "document_id": doc.document_id,
+        "document.document_type": doc.document_type_instance.document_type_description,
+    }
+
+
 def mark_documents_as_received(
     application: Application, db_session: massgov.pfml.db.Session
 ) -> None:
@@ -302,16 +309,28 @@ def mark_documents_as_received(
         .filter(Document.application_id == application.application_id)
         .filter(Document.document_type_id.in_(DOCUMENT_TYPES_ASSOCIATED_WITH_EVIDENCE))
     )
+
+    exception_count = 0
     for document in documents:
         if document.fineos_id is None:
             logger.warning(
-                "Document does not have a fineos_id", extra={"document_id": document.document_id},
+                "Document does not have a fineos_id", extra={**document_log_attrs(document)},
             )
             raise ValueError("Document does not have a fineos_id")
 
-        fineos.mark_document_as_received(
-            fineos_web_id, str(application.claim.fineos_absence_id), str(document.fineos_id)
-        )
+        try:
+            fineos.mark_document_as_received(
+                fineos_web_id, str(application.claim.fineos_absence_id), str(document.fineos_id)
+            )
+        except FINEOSClientError as ex:
+            exception_count += 1
+            logger.warning(
+                "Unable to mark document as received",
+                extra={**document_log_attrs(document)},
+                exc_info=ex,
+            )
+    if exception_count > 0:
+        raise RuntimeError
 
 
 def mark_single_document_as_received(
@@ -327,10 +346,18 @@ def mark_single_document_as_received(
         raise ValueError("document.fineos_id is None")
 
     fineos = massgov.pfml.fineos.create_client()
-    fineos_web_id = get_or_register_employee_fineos_web_id(fineos, application, db_session)
-    fineos.mark_document_as_received(
-        fineos_web_id, str(application.claim.fineos_absence_id), str(document.fineos_id)
-    )
+    try:
+        fineos_web_id = get_or_register_employee_fineos_web_id(fineos, application, db_session)
+        fineos.mark_document_as_received(
+            fineos_web_id, str(application.claim.fineos_absence_id), str(document.fineos_id)
+        )
+    except FINEOSClientError as ex:
+        logger.warning(
+            "Unable to mark document as received",
+            extra={**document_log_attrs(document)},
+            exc_info=ex,
+        )
+        raise
 
 
 def build_customer_model(application, current_user):
@@ -428,8 +455,7 @@ def build_customer_address(
         addressLine4=application_address.city,
         addressLine6=application_address.geo_state.geo_state_description,
         postCode=application_address.zip_code,
-        # TODO (API-1484): remove string cast
-        country=str(Country.USA.country_description),
+        country=Country.USA.country_description,
     )
     customer_address = massgov.pfml.fineos.models.customer_api.CustomerAddress(address=address)
     return customer_address
@@ -1029,8 +1055,8 @@ def fineos_document_response_to_document_response(
     content_type, encoding = mimetypes.guess_type(fineos_document_response.originalFilename or "")
 
     document_response = DocumentResponse(
-        user_id=UUID4(str(user_id)),
-        application_id=UUID4(str(application_id)),
+        user_id=user_id,
+        application_id=application_id,
         created_at=created_at,
         document_type=fineos_document_response.name,
         content_type=content_type,
@@ -1078,8 +1104,7 @@ def build_payment_preference(
             accountType=payment_preference.bank_account_type.bank_account_type_description,
         )
         fineos_payment_preference = massgov.pfml.fineos.models.customer_api.NewPaymentPreference(
-            # TODO (API-1484): remove string cast
-            paymentMethod=str(PaymentMethod.ACH.payment_method_description),
+            paymentMethod=PaymentMethod.ACH.payment_method_description,
             isDefault=True,
             customerAddress=payment_address,
             accountDetails=account_details,
@@ -1087,8 +1112,7 @@ def build_payment_preference(
         )
     elif payment_preference.payment_method_id == PaymentMethod.CHECK.payment_method_id:
         fineos_payment_preference = massgov.pfml.fineos.models.customer_api.NewPaymentPreference(
-            # TODO (API-1484): remove string cast
-            paymentMethod=str(PaymentMethod.CHECK.payment_method_description),
+            paymentMethod=PaymentMethod.CHECK.payment_method_description,
             isDefault=True,
             customerAddress=payment_address,
             chequeDetails=massgov.pfml.fineos.models.customer_api.ChequeDetails(),
@@ -1300,3 +1324,40 @@ def create_other_leaves_and_other_incomes_eforms(
         eform = OtherIncomesEFormBuilder.build(employer_benefits, other_incomes,)
         create_eform(application, db_session, eform)
         logger.info("Created Other Incomes eform", extra=log_attributes)
+
+
+def get_absence_periods(
+    employee_tax_identifier: str,
+    employer_fein: str,
+    fineos_absence_id: str,
+    db_session: massgov.pfml.db.Session,
+) -> List[AbsencePeriodStatusResponse]:
+    fineos = massgov.pfml.fineos.create_client()
+
+    # Get FINEOS web admin id
+    try:
+        fineos_web_id = register_employee(
+            fineos, employee_tax_identifier, employer_fein, db_session,
+        )
+    except Exception:
+        return []
+
+    # Get absence periods
+    response: AbsenceDetails = fineos.get_absence(fineos_web_id, fineos_absence_id)
+    # Map FINEOS response to PFML response
+    absence_periods = []
+    if response and response.absencePeriods:
+        for absence_period in response.absencePeriods:
+            absence_period_status = AbsencePeriodStatusResponse()
+            absence_period_status.absence_period_start_date = absence_period.startDate
+            absence_period_status.absence_period_end_date = absence_period.endDate
+            absence_period_status.period_type = absence_period.absenceType
+            absence_period_status.reason = absence_period.reason
+            absence_period_status.reason_qualifier_one = absence_period.reasonQualifier1
+            absence_period_status.reason_qualifier_two = absence_period.reasonQualifier2
+            absence_period_status.request_decision = absence_period.requestStatus
+            absence_period_status.fineos_leave_period_id = absence_period.id
+
+            absence_periods.append(absence_period_status)
+
+    return absence_periods

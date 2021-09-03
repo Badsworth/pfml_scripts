@@ -6,10 +6,13 @@ import {
   findCertificationDoc,
   getDocumentReviewTaskName,
 } from "../../../../src/util/documents";
+import { assertValidClaim } from "../../../../src/util/typeUtils";
 
 describe("Approval (notifications/notices)", () => {
   after(() => {
-    portal.deleteDownloadsFolder();
+    // @todo: remove conditional statement once claimant status is deployed to all envs
+    config("HAS_CLAIMANT_STATUS_PAGE") !== "true" &&
+      portal.deleteDownloadsFolder();
   });
 
   const credentials: Credentials = {
@@ -74,26 +77,37 @@ describe("Approval (notifications/notices)", () => {
     { retries: 0 },
     () => {
       cy.dependsOnPreviousPass([submit]);
-      portal.before();
-      cy.visit("/");
+      portal.before({
+        claimantShowStatusPage: config("HAS_CLAIMANT_STATUS_PAGE") === "true",
+      });
       portal.login(credentials);
+      cy.visit("/applications");
       cy.unstash<Submission>("submission").then((submission) => {
         // Wait for the legal document to arrive.
-        cy.task(
-          "waitForClaimDocuments",
-          {
-            credentials: credentials,
-            application_id: submission.application_id,
-            document_type: "Approval Notice",
-          },
-          { timeout: 30000 }
-        );
-
-        cy.visit("/applications");
-        cy.contains("article", submission.fineos_absence_id).within(() => {
-          cy.findByText("Approval notice (PDF)").should("be.visible").click();
-        });
-        portal.downloadLegalNotice(submission.fineos_absence_id);
+        if (config("HAS_CLAIMANT_STATUS_PAGE") === "true") {
+          portal.claimantGoToClaimStatus(submission.fineos_absence_id);
+          portal.claimantAssertClaimStatus([
+            { leave: "Child Bonding", status: "Approved" },
+          ]);
+          // @todo: uncomment lines below once, doc download is supported
+          // cy.findByText("Approval notice (PDF)").should("be.visible").click();
+          // portal.downloadLegalNotice(submission.fineos_absence_id);
+        } else {
+          // @todo: remove once claimant status is deployed to all envs
+          cy.task(
+            "waitForClaimDocuments",
+            {
+              credentials: credentials,
+              application_id: submission.application_id,
+              document_type: "Approval Notice",
+            },
+            { timeout: 30000 }
+          );
+          cy.contains("article", submission.fineos_absence_id).within(() => {
+            cy.findByText("Approval notice (PDF)").should("be.visible").click();
+          });
+          portal.downloadLegalNotice(submission.fineos_absence_id);
+        }
       });
     }
   );
@@ -114,7 +128,9 @@ describe("Approval (notifications/notices)", () => {
           portal.login(getLeaveAdminCredentials(claim.employer_fein));
           portal.selectClaimFromEmployerDashboard(
             submission.fineos_absence_id,
-            "--"
+            config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"
+              ? "No action required"
+              : "--"
           );
           portal.checkNoticeForLeaveAdmin(
             submission.fineos_absence_id,
@@ -159,9 +175,18 @@ describe("Approval (notifications/notices)", () => {
     "Should generate an approval notification for the Leave Administrator",
     { retries: 0 },
     () => {
+      portal.before();
       cy.dependsOnPreviousPass([submit]);
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
+          assertValidClaim(claim);
+          portal.login(getLeaveAdminCredentials(claim.employer_fein));
+          portal.selectClaimFromEmployerDashboard(
+            submission.fineos_absence_id,
+            config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"
+              ? "No action required"
+              : "--"
+          );
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
           const subjectEmployer = email.getNotificationSubject(
             `${claim.first_name} ${claim.last_name}`,

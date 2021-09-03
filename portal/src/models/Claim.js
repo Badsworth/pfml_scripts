@@ -1,5 +1,6 @@
 /* eslint sort-keys: ["error", "asc"] */
 import { compact, get } from "lodash";
+
 import BaseModel from "./BaseModel";
 
 /**
@@ -39,7 +40,7 @@ class Claim extends BaseModel {
       fineos_absence_id: null,
       fineos_notification_id: null,
       /**
-       * @type {ManagedRequirements}
+       * @type {ManagedRequirement}
        */
       managed_requirements: null,
     };
@@ -90,7 +91,7 @@ export class ClaimEmployer extends BaseModel {
 /**
  * Managed requirements associated to the Claim
  */
-export class ManagedRequirements extends BaseModel {
+export class ManagedRequirement extends BaseModel {
   get defaults() {
     return {
       category: null,

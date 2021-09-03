@@ -81,6 +81,10 @@ declare namespace Cypress {
         employerCredentials?: Credentials;
       }
     ): Chainable<ApplicationSubmissionResponse>;
+    task(
+      event: "chooseFineosRole",
+      arg: { userId: string; preset: FineosSecurityGroups }
+    ): null;
     task(event: "pickEmployer", spec: EmployerPickSpec): Chainable<Employer>;
     task(event: "getEmails", opts: GetEmailsOpts): Chainable<Email[]>;
     task(event: "registerClaimant", options: Credentials): Chainable<true>;

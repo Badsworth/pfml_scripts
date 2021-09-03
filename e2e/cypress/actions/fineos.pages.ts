@@ -202,7 +202,7 @@ export class ClaimPage {
     assertClaimStatus("Approved");
     return this;
   }
-  deny(reason: string): this {
+  deny(reason: string, assertStatus = true): this {
     cy.get("input[type='submit'][value='Adjudicate']").click();
     // Make sure the page is fully loaded by waiting for the leave plan to show up.
     cy.get("table[id*='selectedLeavePlans'] tr")
@@ -216,7 +216,8 @@ export class ClaimPage {
       .find("select")
       .select(reason);
     cy.get('input[type="submit"][value="OK"]').click();
-    assertClaimStatus("Declined");
+    // denying an extension for another reason will cause this assertion to fail
+    assertStatus && assertClaimStatus("Declined");
     return this;
   }
 
@@ -375,6 +376,10 @@ class AdjudicationPage {
   acceptLeavePlan() {
     this.onTab("Manage Request");
     cy.get("input[type='submit'][value='Accept']").click({ force: true });
+  }
+  rejectLeavePlan() {
+    this.onTab("Manage Request");
+    cy.get("input[type='submit'][value='Reject']").click({ force: true });
   }
   editPlanDecision(planDecision: PlanDecisions) {
     this.onTab("Manage Request");
@@ -1440,46 +1445,84 @@ class PaidLeavePage {
 class BenefitsExtensionPage {
   private continue(text = "Next") {
     clickBottomWidgetButton(text);
-    cy.wait("@ajaxRender");
-    cy.wait(150);
+    waitForAjaxComplete();
   }
 
-  private enterExtensionLeaveDates(newStartDate: string, newEndDate: string) {
+  private enterExtensionLeaveDates(
+    newStartDate: string,
+    newEndDate: string,
+    workPattern: "continuous" | "reduced"
+  ) {
     cy.findByLabelText("Absence status").select("Known");
-    cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un19_startDate']").type(
+    cy.get("input[id$='_startDate']").type(
       `{selectall}{backspace}${newStartDate}{enter}`
     );
     cy.wait("@ajaxRender");
     cy.wait(200);
-    cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un19_endDate']").type(
+    cy.get("input[id$='_endDate']").type(
       `{selectall}{backspace}${newEndDate}{enter}`
     );
     cy.wait("@ajaxRender");
     cy.wait(200);
-    cy.get(
-      "input[name='timeOffAbsencePeriodDetailsWidget_un19_startDateAllDay_CHECKBOX']"
-    ).click();
-    cy.wait("@ajaxRender");
-    cy.wait(200);
-    cy.get(
-      "input[name='timeOffAbsencePeriodDetailsWidget_un19_endDateAllDay_CHECKBOX']"
-    ).click();
-    cy.wait("@ajaxRender");
-    cy.wait(200);
+    if (workPattern === "continuous") {
+      cy.get(
+        "input[name='timeOffAbsencePeriodDetailsWidget_un19_startDateAllDay_CHECKBOX']"
+      ).click();
+      cy.wait("@ajaxRender");
+      cy.wait(200);
+      cy.get(
+        "input[name='timeOffAbsencePeriodDetailsWidget_un19_endDateAllDay_CHECKBOX']"
+      ).click();
+      cy.wait("@ajaxRender");
+      cy.wait(200);
+    } else {
+      cy.get("input[id^=hoursPerDayDetailsWidget][id$='hours']").each(
+        ($el, index, $list) => {
+          if (index !== 0 && index != $list.length - 1) {
+            cy.wrap($el).type("4");
+          }
+        }
+      );
+    }
     cy.get("input[title='OK']").click();
   }
 
-  extendLeave(newStartDate: string, newEndDate: string): this {
+  extendLeave(
+    newStartDate: string,
+    newEndDate: string,
+    anotherReason = false,
+    workPattern: "continuous" | "reduced" = "continuous"
+  ): this {
     onTab("Capture Additional Time");
+    if (anotherReason) {
+      cy.get('input[type="radio"][value*="another_reason_id"]').click();
+      waitForAjaxComplete();
+    }
+    const addTimeButtonTitles = {
+      continuous: "Add Time Off Period",
+      reduced: "Add Reduced Schedule Period",
+    } as const;
+    cy.findByTitle(addTimeButtonTitles[workPattern]).click();
     // This assumes the claim is continuos
-    cy.findByTitle("Add Time Off Period").click();
-    this.enterExtensionLeaveDates(newStartDate, newEndDate);
+    this.enterExtensionLeaveDates(newStartDate, newEndDate, workPattern);
     this.continue();
     this.continue();
     this.continue();
     this.continue();
     this.continue("OK");
+    anotherReason && this.assertAddedOtherLeave();
     return this;
+  }
+
+  private assertAddedOtherLeave(): void {
+    // Assert bonding leave request was added
+    cy.get("[id*='processPhaseEnum']").should("contain.text", "Adjudication");
+    cy.get("[id*='requestedLeaveCardWidget']")
+      .parent()
+      .within(() => {
+        cy.contains("Pending leave");
+        cy.contains(/(Fixed time off|Reduced schedule) for Child Bonding/);
+      });
   }
 }
 
@@ -1709,6 +1752,12 @@ export class ClaimantPage {
     // "Notification details" step, we are not changing anything here, so we just skip it.
     this.clickNext();
     return cb(new OccupationDetails());
+  }
+
+  paymentPreferences(): PaymentPreferencePage {
+    onTab("Payment Preferences");
+    waitForAjaxComplete();
+    return new PaymentPreferencePage();
   }
 }
 /**Contains utilities used within multiple pages throughout the intake process */
@@ -2381,5 +2430,21 @@ class HistoricalAbsence {
     );
     fineos.clickBottomWidgetButton("OK");
     waitForAjaxComplete();
+  }
+}
+
+class PaymentPreferencePage {
+  edit(): EditPaymentPreferences {
+    cy.get('input[type="submit"][value="Edit"]').click();
+    return new EditPaymentPreferences();
+  }
+}
+
+class EditPaymentPreferences {
+  checkBulkPayee(disabled: boolean) {
+    cy.get('input[type="checkbox"][id$="bulkPayee_CHECKBOX"]').then(($el) => {
+      if (disabled) cy.wrap($el).click();
+      else cy.wrap($el).should("have.attr", "disabled");
+    });
   }
 }

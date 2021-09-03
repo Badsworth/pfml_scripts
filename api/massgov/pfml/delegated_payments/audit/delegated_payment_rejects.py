@@ -2,7 +2,7 @@ import csv
 import enum
 import os
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, cast
+from typing import Any, Dict, List, Optional
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_config as payments_config
@@ -74,7 +74,7 @@ class PaymentRejectsException(Exception):
 def get_row(row: Dict[str, str], key: Optional[str]) -> Optional[str]:
     if not key:
         return None
-    return row[key]
+    return row.get(key, None)
 
 
 class PaymentRejectsStep(Step):
@@ -226,7 +226,7 @@ class PaymentRejectsStep(Step):
                 payment,
                 State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
                 state_log_util.build_outcome(
-                    cast(str, writeback_transaction_status.transaction_status_description,)
+                    writeback_transaction_status.transaction_status_description
                 ),
                 self.db_session,
             )
@@ -250,7 +250,7 @@ class PaymentRejectsStep(Step):
                 payment,
                 State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
                 state_log_util.build_outcome(
-                    cast(str, writeback_transaction_status.transaction_status_description,)
+                    writeback_transaction_status.transaction_status_description
                 ),
                 self.db_session,
             )

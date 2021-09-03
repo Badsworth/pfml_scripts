@@ -12,12 +12,16 @@ on:
         description: "Cypress Run Tags"
         required: false
         default: "Manual"
-      only_stable:
-        description: "Only Stable Tests?"
+      run_unstable:
+        description: "Run tests in unstable group"
+        required: false
+        default: "false"
+      run_nightly:
+        description: "Run tests in nightly group"
         required: false
         default: "false"
   schedule:
-    - cron:  '0 11 * * 1-5'
+    - cron: "0 11 * * 1-5"
 
 jobs:
   trigger_e2e:
@@ -26,7 +30,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        environment: [ "test", "stage", "performance", "training", "uat", "cps-preview" ]
+        environment:
+          ["test", "stage", "performance", "training", "uat", "cps-preview"]
     steps:
       - name: Trigger E2E Workflow
         uses: aurelien-baudet/workflow-dispatch@v2
@@ -38,6 +43,7 @@ jobs:
             {
               "target_environment": "${{ matrix.environment }}",
               "cypress_tags": ${{ toJSON(github.event_name == 'schedule' && format('Morning Run ({0})', matrix.environment) || github.event.inputs.cypress_tags) }},
-              "only_stable": "${{ github.event_name == 'schedule' && 'true' || github.event.inputs.only_stable }}",
+              "run_unstable": "${{ github.event.inputs.run_unstable || 'false' }}",
+              "run_nightly": "${{ github.event_name == 'schedule' && 'true' || github.event.inputs.run_nightly }}",
               "title_override": "${{ github.event_name == 'schedule' && format('Scheduled Run: {0}', matrix.environment) || '' }}"
             }

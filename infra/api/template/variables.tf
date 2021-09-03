@@ -164,14 +164,14 @@ variable "rmv_client_certificate_binary_arn" {
   default     = ""
 }
 
-variable "rmv_check_behavior" {
+variable "rmv_api_behavior" {
   description = "Specifies if the RMV response is mocked"
   type        = string
   default     = "fully_mocked"
 }
 
 variable "rmv_check_mock_success" {
-  description = "Specifies if RMV mock response always passes. '1' always passes id proofing, '0' always fails id proofing."
+  description = "Specifies if RMV check mock response always passes. '1' always passes id proofing, '0' always fails id proofing."
   type        = string
   default     = "1"
 }

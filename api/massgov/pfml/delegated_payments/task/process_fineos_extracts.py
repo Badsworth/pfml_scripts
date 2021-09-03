@@ -12,7 +12,9 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_report import
 from massgov.pfml.delegated_payments.delegated_fineos_claimant_extract import ClaimantExtractStep
 from massgov.pfml.delegated_payments.delegated_fineos_payment_extract import PaymentExtractStep
 from massgov.pfml.delegated_payments.delegated_fineos_pei_writeback import FineosPeiWritebackStep
-from massgov.pfml.delegated_payments.payment_post_processing_step import PaymentPostProcessingStep
+from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_step import (
+    PaymentPostProcessingStep,
+)
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_report_step import ReportStep
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
     PROCESS_FINEOS_EXTRACT_REPORTS,

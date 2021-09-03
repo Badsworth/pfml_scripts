@@ -88,8 +88,8 @@ def eligibility_post():
                 status_code=NotFound, message="Non-eligible employee", errors=[], data={},
             ).to_api_response()
 
-        employee_id: UUID = UUID(str(employee.employee_id))
-        employer_id: UUID = UUID(str(employer.employer_id))
+        employee_id: UUID = employee.employee_id
+        employer_id: UUID = employer.employer_id
 
     try:
         wage_data_response = eligibility.compute_financial_eligibility(

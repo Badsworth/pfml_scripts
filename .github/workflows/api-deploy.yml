@@ -471,10 +471,10 @@ jobs:
           SVC_ID=$(terraform output ecs_service_id | sed s/\"//g | rev | cut -d/ -f1 | rev)
 
           # Wait for ECS service to be stable, and run it twice to allow for
-          # abnormally long deploys (up to 20 minutes.)
+          # abnormally long deploys (up to 30 minutes.)
           failures=0
 
-          while [[ $failures -lt 2 ]]; do
+          while [[ $failures -lt 3 ]]; do
             set +e -x
             result_msg=$(aws ecs wait services-stable --cluster $CLUSTER_ID --services $SVC_ID 2>&1)
             result_code=$?
@@ -490,8 +490,8 @@ jobs:
             fi
           done
 
-          if [[ $failures -ge 2 ]]; then
-            echo "ECS service failed to stabilize within 20 minutes."
+          if [[ $failures -ge 3 ]]; then
+            echo "ECS service failed to stabilize within 30 minutes."
             echo "Please check the ECS service at https://console.aws.amazon.com/ecs/home?region=us-east-1#/clusters/${{ needs.deploy-info.outputs.api-env }}/services/pfml-api-${{ needs.deploy-info.outputs.api-env }}/events"
             echo "If the service stabilizes, you do not need to re-deploy. For lower environments you should run the E2E test job manually."
             echo
@@ -732,7 +732,7 @@ jobs:
             {
               "target_environment": ${{ toJSON(env.deployment_env) }},
               "cypress_tags": "Deploy,Deploy-API",
-              "only_stable": "${{ env.deployment_env == 'test' && 'false' || 'true' }}",
+              "run_unstable": "${{ env.deployment_env != 'test' && 'false' || 'true' }}",
               "title_override": ${{ toJSON(format('API Deploy: {0} to {1}', env.version, env.deployment_env)) }}
             }
 

@@ -3,8 +3,6 @@ import uuid
 from datetime import date, datetime
 from typing import Dict, List, Optional, Tuple
 
-from pydantic import UUID4
-
 import massgov.pfml.db
 import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
@@ -319,7 +317,7 @@ def get_claim_as_leave_admin(
             employer_benefits=employer_benefits,
             employer_fein=FEINFormattedStr(employer.employer_fein),
             employer_dba=employer.employer_dba,
-            employer_id=UUID4(str(employer.employer_id)),
+            employer_id=employer.employer_id,
             fineos_absence_id=absence_id,
             first_name=customer_info["firstName"],
             hours_worked_per_week=hours_worked_per_week,

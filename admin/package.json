@@ -9,7 +9,9 @@
     "generate:api": "npx @spec2ts/openapi-client ../api/openapi.yaml -o src/_api.ts",
     "type-check": "tsc --pretty --noEmit",
     "format": "prettier --write . && stylelint --fix styles/*.scss src/components/*.scss",
+    "format-check:ci": "prettier --check .",
     "test": "jest",
+    "test:update-snapshots": "jest --updateSnapshot",
     "lint": "tsc --pretty --noEmit && next lint && stylelint styles/*.scss src/components/*.scss"
   },
   "dependencies": {
@@ -33,6 +35,7 @@
     "eslint": "7.29.0",
     "eslint-config-next": "11.0.1",
     "jest": "^27.0.5",
+    "prettier": "^2.3.2",
     "react-test-renderer": "^17.0.2",
     "sass": "^1.35.1",
     "stylelint-config-sass-guidelines": "^8.0.0",

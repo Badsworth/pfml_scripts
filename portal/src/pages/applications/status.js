@@ -1,5 +1,7 @@
-import Document, { DocumentType } from "../../models/Document";
 import React, { useEffect, useState } from "react";
+import { has, map } from "lodash";
+
+import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import ClaimDetail from "../../models/ClaimDetail";
@@ -7,85 +9,43 @@ import Heading from "../../components/Heading";
 import LeaveReason from "../../models/LeaveReason";
 import LegalNoticeList from "../../components/LegalNoticeList.js";
 import PropTypes from "prop-types";
+import Spinner from "../../components/Spinner";
 import Tag from "../../components/Tag";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDate from "../../utils/formatDate";
+import { generateNotice } from "../../../tests/test-utils";
 import { handleError } from "../../api/BaseApi";
 import { isFeatureEnabled } from "../../services/featureFlags";
-import { map } from "lodash";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
+
 // TODO (CP-2461): remove once page is integrated with API
-const TEST_DOC = [
-  new Document({
-    content_type: "image/png",
-    created_at: "2020-04-05",
-    document_type: DocumentType.approvalNotice,
-    fineos_document_id: "fineos-id-4",
-    name: "legal notice",
-  }),
-  new Document({
-    content_type: "image/png",
-    created_at: "2020-04-05",
-    document_type: DocumentType.denialNotice,
-    fineos_document_id: "fineos-id-5",
-    name: "legal notice 2",
-  }),
+const TEST_DOCS = [
+  generateNotice("approvalNotice"),
+  generateNotice("denialNotice"),
 ];
 
-const TEST_CLAIM = new ClaimDetail({
-  absence_periods: [
-    {
-      period_type: "Reduced",
-      absence_period_start_date: "2021-06-01",
-      absence_period_end_date: "2021-06-08",
-      request_decision: "Approved",
-      fineos_leave_request_id: "PL-14432-0000002026",
-      reason: LeaveReason.medical,
-    },
-    {
-      period_type: "Continuous",
-      absence_period_start_date: "2021-07-01",
-      absence_period_end_date: "2021-07-08",
-      request_decision: "Pending",
-      fineos_leave_request_id: "PL-14432-0000002326",
-      reason: LeaveReason.medical,
-    },
-    {
-      period_type: "Reduced",
-      absence_period_start_date: "2021-08-01",
-      absence_period_end_date: "2021-08-08",
-      request_decision: "Denied",
-      fineos_leave_request_id: "PL-14434-0000002026",
-      reason: LeaveReason.bonding,
-    },
-    {
-      period_type: "Continuous",
-      absence_period_start_date: "2021-08-01",
-      absence_period_end_date: "2021-08-08",
-      request_decision: "Withdrawn",
-      fineos_leave_request_id: "PL-14434-0000002326",
-      reason: LeaveReason.bonding,
-    },
-  ],
-});
-
-export const Status = ({
-  appLogic,
-  docList = TEST_DOC,
-  absenceDetails = TEST_CLAIM.absencePeriodsByReason,
-}) => {
+export const Status = ({ appLogic, docList = TEST_DOCS, query }) => {
   const { t } = useTranslation();
-  const { portalFlow } = appLogic;
+  const {
+    claims: { claimDetail, isLoadingClaimDetail, loadClaimDetail },
+    portalFlow,
+  } = appLogic;
+  const { absence_case_id } = query;
 
   useEffect(() => {
     if (!isFeatureEnabled("claimantShowStatusPage")) {
       portalFlow.goTo(routes.applications.index);
     }
   }, [portalFlow]);
+
+  useEffect(() => {
+    loadClaimDetail(absence_case_id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [absence_case_id]);
 
   const [documents, setDocuments] = useState(docList);
   useEffect(() => {
@@ -100,7 +60,19 @@ export const Status = ({
     loadDocuments();
   }, [docList]);
 
+  // Check both because claimDetail could be cached from a different status page.
+  if (isLoadingClaimDetail || !claimDetail)
+    return (
+      <div className="margin-top-8 text-center">
+        <Spinner
+          aria-valuetext={t("pages.claimsStatus.loadingClaimDetailLabel")}
+        />
+      </div>
+    );
+
   if (appLogic.appErrors.items.length) return null;
+
+  const absenceDetails = claimDetail.absencePeriodsByReason;
 
   const ViewYourNotices = () => {
     return documents.length ? (
@@ -116,10 +88,56 @@ export const Status = ({
     ) : null;
   };
 
+  const getInfoAlertContext = (absenceDetails) => {
+    const hasBondingReason = has(absenceDetails, LeaveReason.bonding);
+    const hasPregnancyReason = has(absenceDetails, LeaveReason.pregnancy);
+
+    if (hasBondingReason && !hasPregnancyReason) {
+      return "bonding";
+    }
+
+    if (hasPregnancyReason && !hasBondingReason) {
+      return "pregnancy";
+    }
+
+    return "";
+  };
+  const infoAlertContext = getInfoAlertContext(absenceDetails);
+  const [firstAbsenceDetail] = Object.keys(absenceDetails);
   const containerClassName = "border-top border-base-lighter padding-top-2";
 
   return (
     <React.Fragment>
+      {!!infoAlertContext && (
+        <Alert
+          className="margin-bottom-3"
+          data-test="info-alert"
+          heading={t("pages.claimsStatus.infoAlertHeading", {
+            context: infoAlertContext,
+          })}
+          headingLevel="2"
+          headingSize="4"
+          noIcon
+          state="info"
+        >
+          <Trans
+            i18nKey="pages.claimsStatus.infoAlertBody"
+            tOptions={{ context: infoAlertContext }}
+            components={{
+              "about-bonding-leave-link": (
+                <a
+                  href={routes.external.massgov.benefitsGuide_aboutBondingLeave}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                />
+              ),
+              "contact-center-phone-link": (
+                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+              ),
+            }}
+          />
+        </Alert>
+      )}
       <BackButton
         label={t("pages.claimsStatus.backButtonLabel")}
         href={routes.applications.index}
@@ -132,23 +150,22 @@ export const Status = ({
         {/* Heading section */}
 
         <Heading level="2" size="1">
-          {/* // TODO (CP-2449): placeholder */}
-          Leave Reason
+          {t("pages.claimsStatus.leaveReasonValueHeader", {
+            context: findKeyByValue(LeaveReason, firstAbsenceDetail),
+          })}
         </Heading>
         <div className="display-flex border-base-lighter margin-bottom-3 bg-base-lightest padding-2">
           <div className="padding-right-10">
             <Heading weight="normal" level="2" size="4">
               {t("pages.claimsStatus.applicationID")}
             </Heading>
-            {/* // TODO (CP-2449): placeholder */}
-            <p className="text-bold">Fineos-Absence-ID</p>
+            <p className="text-bold">{absence_case_id}</p>
           </div>
           <div>
             <Heading weight="normal" level="2" size="4">
               {t("pages.claimsStatus.employerEIN")}
             </Heading>
-            {/* // TODO (CP-2449): placeholder */}
-            <p className="text-bold">123456789</p>
+            <p className="text-bold">{claimDetail.employer.employer_fein}</p>
           </div>
         </div>
 
@@ -164,11 +181,10 @@ export const Status = ({
             {t("pages.claimsStatus.infoRequestsHeading")}
           </Heading>
           <p>{t("pages.claimsStatus.infoRequestsBody")}</p>
-          {/* // TODO (CP-2457): update claim_id to claim.application_id */}
           <ButtonLink
             className="measure-6 margin-bottom-3"
             href={routeWithParams("applications.uploadDocsOptions", {
-              claim_id: "65184a9e-f938-40b6-b0f6-25f416a4c113",
+              claim_id: claimDetail.application_id,
             })}
           >
             {t("pages.claimsStatus.uploadDocumentsButton")}
@@ -217,6 +233,11 @@ export const Status = ({
 Status.propTypes = {
   appLogic: PropTypes.shape({
     appErrors: PropTypes.object.isRequired,
+    claims: PropTypes.shape({
+      claimDetail: PropTypes.instanceOf(ClaimDetail),
+      isLoadingClaimDetail: PropTypes.bool,
+      loadClaimDetail: PropTypes.func.isRequired,
+    }).isRequired,
     documents: PropTypes.shape({
       download: PropTypes.func.isRequired,
     }),
@@ -226,12 +247,14 @@ Status.propTypes = {
   }).isRequired,
   // TODO (CP-2461): remove once page is integrated with API
   docList: PropTypes.array,
-  absenceDetails: PropTypes.object,
+  query: PropTypes.shape({
+    absence_case_id: PropTypes.string,
+  }).isRequired,
 };
 
 export default Status;
 
-const StatusTagMap = {
+export const StatusTagMap = {
   Approved: "success",
   Denied: "error",
   Pending: "pending",

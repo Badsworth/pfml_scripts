@@ -1004,7 +1004,7 @@ def log_employees_with_new_employers(
         employer_id_set = employee_id_to_employer_id_set.get(employee_id, None)
         if employer_id_set is None or employer_id not in employer_id_set:
             employee_log = EmployeeLog(
-                employee_log_id=str(uuid.uuid4()),
+                employee_log_id=uuid.uuid4(),
                 employee_id=employee_id,
                 employer_id=employer_id,
                 action="UPDATE_NEW_EMPLOYER",

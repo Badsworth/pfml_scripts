@@ -67,7 +67,7 @@ module "api" {
   logging_level                                       = "massgov.pfml.fineos.fineos_client=DEBUG"
   rmv_client_base_url                                 = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn                   = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-performance/rmv_client_certificate-fXNkdl"
-  rmv_check_behavior                                  = "partially_mocked"
+  rmv_api_behavior                                    = "partially_mocked"
   rmv_check_mock_success                              = "1"
   fineos_client_integration_services_api_url          = "https://perf-api.masspfml.fineos.com/integration-services/"
   fineos_client_group_client_api_url                  = "https://perf-api.masspfml.fineos.com/groupclientapi/"
@@ -78,7 +78,7 @@ module "api" {
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/PERF/dataexports"
   fineos_aws_iam_role_arn                             = "arn:aws:iam::666444232783:role/somdev-IAMRoles-CustomerAccountAccessRole-BF05IBJSG74B"
   fineos_aws_iam_role_external_id                     = "12345"
-  service_now_base_url                                = "https://savilinxstage.servicenowservices.com"
+  service_now_base_url                                = "https://savilinxperf.servicenowservices.com"
   portal_base_url                                     = "https://paidleave-performance.mass.gov"
   enable_application_fraud_check                      = "0"
   release_version                                     = var.release_version

@@ -836,9 +836,13 @@ const shared = {
     "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the reduced leave start and end dates in the $t(shared.certificationFormMedical).",
   leaveReasonActiveDutyFamily: "Active duty",
   leaveReasonBonding: "Bond with a child",
+  leaveReasonBondingHeader: "Leave to bond with a child",
   leaveReasonCare: "Care for a family member",
+  leaveReasonCareHeader: "Leave to care for a family member",
   leaveReasonMedical: "Medical leave",
+  leaveReasonMedicalSchedule: "Medical leave schedule",
   leaveReasonPregnancy: "Medical leave for pregnancy or birth",
+  leaveReasonPregnancyHeader: "Medical leave for pregnancy",
   leaveReasonServiceMemberFamily: "Military family",
   maxEmployerCommentLengthError:
     "Please shorten your comment. We cannot accept comments that are longer than 9999 characters.",
@@ -1887,17 +1891,29 @@ const pages = {
     applicationID: "Application ID",
     backButtonLabel: "Back to your applications",
     employerEIN: "Employer Identification Number (EIN)",
+    infoAlertBody_bonding:
+      "You can take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if you need <about-bonding-leave-link>medical leave after giving birth.</about-bonding-leave-link>",
+    infoAlertBody_pregnancy:
+      "You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. <about-bonding-leave-link>Family leave to bond with your child</about-bonding-leave-link> can be easily added to your claim by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
+    infoAlertHeading_bonding:
+      "If you gave birth, you may be eligible for paid medical leave",
+    infoAlertHeading_pregnancy:
+      "You may also be eligible for paid family leave",
     infoRequestsBody:
       "If you have a request for more information, use this to upload the requested documentation.",
     infoRequestsHeading: "Respond to requests for information",
     leavePeriodLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
     leavePeriodLabel_intermittent: "$t(shared.claimDurationTypeIntermittent)",
     leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReduced)",
+    leaveReasonValueHeader_bonding: "$t(shared.leaveReasonBondingHeader)",
+    leaveReasonValueHeader_care: "$t(shared.leaveReasonCareHeader)",
+    leaveReasonValueHeader_medical: "$t(shared.leaveReasonMedical)",
+    leaveReasonValueHeader_pregnancy: "$t(shared.leaveReasonPregnancyHeader)",
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
-    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
-    leaveReasonValue_care: "$t(shared.leaveReasonCare)",
-    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
-    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_bonding: "Leave to bond with a child schedule",
+    leaveReasonValue_care: "Leave to care for a family member schedule",
+    leaveReasonValue_medical: "$t(shared.leaveReasonMedicalSchedule)",
+    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedicalSchedule)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     leaveStatusMessage_Approved:
@@ -1905,9 +1921,10 @@ const pages = {
     leaveStatusMessage_Denied:
       "<p><strong>This leave was denied.</strong></p><p><notice-link>View your denial notice</notice-link> for more details and an explanation of the appeal process.</p><p>If you would like to appeal, you must submit your request within 10 calendar days of the date on your denial notice.</p><p>Learn more about <request-appeal-link>the appeal process</request-appeal-link>.</p>",
     leaveStatusMessage_Pending:
-      "<p><strong>This leave is being reviewed.</strong><p>",
+      "<p><strong>This leave is being reviewed.</strong></p>",
     leaveStatusMessage_Withdrawn:
       "<p><strong>This leave was withdrawn.</strong></p><p>You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
+    loadingClaimDetailLabel: "Loading claim details",
     makeChangesBody:
       "<p>If you need to make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Some changes to your application, such as changing your start and end dates, may mean your application needs to be reviewed by your employer again.</p>",
     makeChangesHeading: "Make changes to your application",
@@ -1950,8 +1967,6 @@ const pages = {
     reportReductionsHeading: "We may need more information from you",
     reportReductionsMessage:
       "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if any of these are true:</p><ul><li>You have already taken leave to care for a family member since July 1, 2021</li><li>You have already taken leave since January 1, 2021 for <when-can-i-use-pfml>any other reason that qualifies for PFML</when-can-i-use-pfml></li><li>You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)</li><li>You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)</li></ul>",
-    reportReductionsProcess:
-      "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if you’ll receive:</p><ul><li>Any <reductions-employer-benefits-link>benefits from your employer</reductions-employer-benefits-link> that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)</li><li>Income from <reductions-overview-link>any other sources</reductions-overview-link> during your leave</li></ul>",
     title: "You submitted your application",
   },
   claimsUploadCertification: {
@@ -2411,8 +2426,6 @@ const components = {
       "<p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report changes to:</p><ul><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer-sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for a disability benefit after you submitted your application, report this change.</li></ul>",
     reductionsInstructions_missingData:
       "<p>If you have other leave, benefits, and income to report, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report any of these situations:</p><ul><li>You have already taken leave to care for a family member since July 1, 2021</li><li>You have already taken leave since January 1, 2021 for <when-can-i-use-pfml>any other reason that qualifies for PFML</when-can-i-use-pfml></li><li>You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)</li><li>You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)</li></ul>",
-    reductionsInstructions_old:
-      "<p>If you’ll receive <reductions-overview-link>other benefits or income</reductions-overview-link>, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. This includes:</p><ul><li>Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)</li><li>Income from any other sources during your leave</li></ul>",
     resumeClaimButton: "Continue application",
     uploadDocsButton: "Upload additional documents",
   },
@@ -2423,10 +2436,10 @@ const components = {
     heading: "Application {{number}}",
     leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReducedSchedule)",
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
-    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
-    leaveReasonValue_care: "$t(shared.leaveReasonCare)",
+    leaveReasonValue_bonding: "$t(shared.leaveReasonBondingHeader)",
+    leaveReasonValue_care: "$t(shared.leaveReasonCareHeader)",
     leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
-    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_pregnancy: "$t(shared.leaveReasonPregnancyHeader)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     manageApplicationDocuments: "Manage your application documents",

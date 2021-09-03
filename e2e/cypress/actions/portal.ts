@@ -36,23 +36,16 @@ import {
   dateToReviewFormat,
   minutesToHoursAndMinutes,
 } from "../../src/util/claims";
+import { APILeaveReason } from "generation/Claim";
 
 /**
  *
  * @param flags set feature flags you want to override from defaults
  * @default {
     pfmlTerriyay: true,
-    claimantShowAuth: true,
-    claimantShowMedicalLeaveType: true,
     noMaintenance: true,
-    employerShowSelfRegistrationForm: true,
-    claimantShowOtherLeaveStep: true,
-    claimantAuthThroughApi: true,
-    employerShowAddOrganization: true,
-    employerShowVerifications: true,
-    employerShowDashboard: true,
-    useNewPlanProofs: config("HAS_FINEOS_SP") === "true",
-    showCaringLeaveType: config("HAS_FINEOS_SP") === "true",
+    employerShowReviewByStatus:
+      config("PORTAL_HAS_LA_STATUS_UPDATES") === "true",
   }
  */
 export function before(flags?: Partial<FeatureFlags>): void {
@@ -60,17 +53,10 @@ export function before(flags?: Partial<FeatureFlags>): void {
   // Set the feature flag necessary to see the portal.
   const defaults: FeatureFlags = {
     pfmlTerriyay: true,
-    claimantShowAuth: true,
-    claimantShowMedicalLeaveType: true,
     noMaintenance: true,
-    employerShowSelfRegistrationForm: true,
-    claimantShowOtherLeaveStep: true,
-    claimantAuthThroughApi: true,
-    employerShowAddOrganization: true,
-    employerShowVerifications: true,
-    employerShowDashboard: true,
-    useNewPlanProofs: true,
-    showCaringLeaveType: true,
+    claimantShowStatusPage: false,
+    employerShowReviewByStatus:
+      config("PORTAL_HAS_LA_STATUS_UPDATES") === "true",
   };
   cy.setCookie(
     "_ff",
@@ -231,8 +217,14 @@ export function registerAsClaimant(credentials: Credentials): void {
   cy.contains("button", "Create account").click();
   cy.task("getAuthVerification", credentials.username).then((code) => {
     cy.findByLabelText("6-digit code").type(code as string);
-    cy.contains("button", "Submit").click();
   });
+  // Wait for cognito to finish before declaring registration complete.
+  cy.intercept({
+    url: `https://cognito-idp.us-east-1.amazonaws.com/`,
+    times: 1,
+  }).as("cognito");
+  cy.contains("button", "Submit").click();
+  cy.wait("@cognito");
 }
 
 export function registerAsLeaveAdmin(
@@ -247,9 +239,15 @@ export function registerAsLeaveAdmin(
   cy.task("getAuthVerification", credentials.username as string).then(
     (code: string) => {
       cy.findByLabelText("6-digit code").type(code as string);
-      cy.contains("button", "Submit").click();
     }
   );
+  // Wait for cognito to finish before declaring registration complete.
+  cy.intercept({
+    url: `https://cognito-idp.us-east-1.amazonaws.com/`,
+    times: 1,
+  }).as("cognito");
+  cy.contains("button", "Submit").click();
+  cy.wait("@cognito");
 }
 
 export function employerLogin(credentials: Credentials): void {
@@ -1009,7 +1007,9 @@ export function addOrganization(fein: string, withholding: number): void {
   cy.get('input[name="ein"]').type(fein);
   cy.get('button[type="submit"').click();
   if (withholding !== 0) {
-    cy.get('input[name="withholdingAmount"]').type(withholding.toString());
+    cy.get('input[name="withholdingAmount"]', { timeout: 30000 }).type(
+      withholding.toString()
+    );
     cy.get('button[type="submit"]').click();
     cy.contains("h1", "Thanks for verifying your paid leave contributions");
     cy.contains("p", "Your account has been verified");
@@ -1027,15 +1027,27 @@ export function addOrganization(fein: string, withholding: number): void {
  */
 export function assertZeroWithholdings(): void {
   cy.contains(
-    /(Employer has no verification data|Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications)/
+    /(Employer has no verification data|Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications)/,
+    { timeout: 30000 }
   );
 }
-export type DashboardClaimStatus = "Approved" | "Denied" | "Closed" | "--";
+export type DashboardClaimStatus =
+  | "Approved"
+  | "Denied"
+  | "Closed"
+  | "Withdrawn"
+  | "--"
+  | "No action required"
+  | "Review by";
 export function selectClaimFromEmployerDashboard(
   fineosAbsenceId: string,
   status: DashboardClaimStatus
 ): void {
   goToEmployerDashboard();
+  // With the status updates enabled, claims are sorted by status by default
+  // which means we won't see our claim show up on the first page.
+  if (config("PORTAL_HAS_LA_STATUS_UPDATES") === "true")
+    sortClaims("new", false);
   cy.contains("tr", fineosAbsenceId).should("contain.text", status);
   cy.findByText(fineosAbsenceId).click();
 }
@@ -1431,7 +1443,7 @@ export function uploadAdditionalDocument(
   } else {
     addLeaveDocs(docName);
   }
-  cy.contains("You successfully submitted your documents");
+  cy.contains("You successfully submitted your documents", { timeout: 30000 });
 }
 
 /**
@@ -1798,10 +1810,16 @@ export function clearFilters(): void {
 }
 
 /**Sorts claims on the dashboard*/
-export function sortClaims(by: "new" | "old" | "name_asc" | "name_desc"): void {
+export function sortClaims(
+  by: "new" | "old" | "name_asc" | "name_desc" | "status",
+  // @TODO split the query assertion into it's own function.
+  assertQuery = true
+): void {
   const sortValuesMap = {
     new: {
+      // Value of the <option> tag for the sort select
       value: "created_at,descending",
+      // Query associated with it
       query: "order_by=created_at&order_direction=descending",
     },
     old: {
@@ -1816,13 +1834,47 @@ export function sortClaims(by: "new" | "old" | "name_asc" | "name_desc"): void {
       value: "employee,descending",
       query: "order_by=employee&order_direction=descending",
     },
+    status: {
+      value: "absence_status,ascending",
+      query: "fineos_absence_status&order_direction=ascending",
+    },
   };
   cy.findByLabelText("Sort").then((el) => {
     if (el.val() === sortValuesMap[by].value) return;
     cy.wrap(el).select(sortValuesMap[by].value);
     cy.get('span[role="progressbar"]').should("be.visible");
-    cy.wait("@dashboardClaimQueries")
-      .its("request.url")
-      .should("include", sortValuesMap[by].query);
+    if (assertQuery)
+      cy.wait("@dashboardClaimQueries")
+        .its("request.url")
+        .should("include", sortValuesMap[by].query);
   });
+}
+
+export function claimantGoToClaimStatus(fineosAbsenceId: string): void {
+  cy.get(`a[href$="/applications/status/?absence_case_id=${fineosAbsenceId}"`)
+    .should("be.visible")
+    // Force to overcome DOM instability.
+    .click({ force: true });
+}
+
+type LeaveStatus = {
+  leave: NonNullable<APILeaveReason>;
+  status: DashboardClaimStatus;
+};
+
+export function claimantAssertClaimStatus(leaves: LeaveStatus[]): void {
+  const leaveReasonHeadings = {
+    "Serious Health Condition - Employee": "Medical leave",
+    "Child Bonding": "Leave to bond with a child",
+    "Care for a Family Member": "",
+    "Pregnancy/Maternity": "",
+  } as const;
+
+  for (const { leave, status } of leaves) {
+    cy.contains(leaveReasonHeadings[leave])
+      .parent()
+      .within(() => {
+        cy.contains(status);
+      });
+  }
 }

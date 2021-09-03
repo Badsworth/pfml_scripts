@@ -29,6 +29,7 @@ Teams exist for select disciplines:
 
 Additionally, certain scrum teams have their own Github team:
 
+- [`@pfml-acorn-street`](https://github.com/orgs/EOLWD/teams/pfml-acorn-street)
 - [`@pfml-beacon-hill`](https://github.com/orgs/EOLWD/teams/pfml-beacon-hill)
 - [`@pfml-dorchester`](https://github.com/orgs/EOLWD/teams/pfml-dorchester)
 - [`@pfml-newbury`](https://github.com/orgs/EOLWD/teams/pfml-newbury)

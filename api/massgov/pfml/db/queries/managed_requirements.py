@@ -84,7 +84,7 @@ def create_managed_requirement_from_fineos(
         )
         return None
     managed_requirement = ManagedRequirement(
-        claim_id=claim_id,  # type: ignore
+        claim_id=claim_id,
         fineos_managed_requirement_id=str(fineos_requirement.managedReqId),
         follow_up_date=fineos_requirement.followUpDate,
         managed_requirement_status_id=status_id,

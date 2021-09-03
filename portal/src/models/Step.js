@@ -174,15 +174,6 @@ export default class Step extends BaseModel {
     );
     const pagesByStep = groupBy(pages, "meta.step");
 
-    // TODO (CP-1658) Remove this filter logic once the claimantShowOtherLeaveStep feature flag is no longer relevant
-    const filterOutHiddenSteps = (steps) => {
-      if (context.showOtherLeaveStep) {
-        return steps;
-      } else {
-        return steps.filter((step) => step.name !== ClaimSteps.otherLeave);
-      }
-    };
-
     const verifyId = new Step({
       name: ClaimSteps.verifyId,
       editable: !claim.isSubmitted,
@@ -228,12 +219,7 @@ export default class Step extends BaseModel {
       editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.reviewAndConfirm],
-      dependsOn: filterOutHiddenSteps([
-        verifyId,
-        employerInformation,
-        leaveDetails,
-        otherLeave,
-      ]),
+      dependsOn: [verifyId, employerInformation, leaveDetails, otherLeave],
       context,
     });
 
@@ -243,13 +229,13 @@ export default class Step extends BaseModel {
       editable: !claim.has_submitted_payment_preference,
       group: 2,
       pages: pagesByStep[ClaimSteps.payment],
-      dependsOn: filterOutHiddenSteps([
+      dependsOn: [
         verifyId,
         employerInformation,
         leaveDetails,
         otherLeave,
         reviewAndConfirm,
-      ]),
+      ],
       context,
       warnings,
     });
@@ -259,14 +245,14 @@ export default class Step extends BaseModel {
       name: ClaimSteps.uploadId,
       group: 3,
       pages: pagesByStep[ClaimSteps.uploadId],
-      dependsOn: filterOutHiddenSteps([
+      dependsOn: [
         verifyId,
         employerInformation,
         leaveDetails,
         otherLeave,
         reviewAndConfirm,
         payment,
-      ]),
+      ],
       context,
     });
 
@@ -277,18 +263,18 @@ export default class Step extends BaseModel {
         get(context.claim, "leave_details.has_future_child_date") === true,
       group: 3,
       pages: pagesByStep[ClaimSteps.uploadCertification],
-      dependsOn: filterOutHiddenSteps([
+      dependsOn: [
         verifyId,
         employerInformation,
         leaveDetails,
         otherLeave,
         reviewAndConfirm,
         payment,
-      ]),
+      ],
       context,
     });
 
-    return filterOutHiddenSteps([
+    return [
       verifyId,
       employerInformation,
       leaveDetails,
@@ -297,6 +283,6 @@ export default class Step extends BaseModel {
       payment,
       uploadId,
       uploadCertification,
-    ]);
+    ];
   };
 }
