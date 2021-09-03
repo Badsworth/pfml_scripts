@@ -165,6 +165,7 @@ describe("Approval (notifications/notices)", () => {
               cy.get(
                 `a[href*="/employers/applications/new-application/?absence_id=${submission.fineos_absence_id}"]`
               );
+              cy.screenshot();
             });
         });
       });
@@ -216,6 +217,7 @@ describe("Approval (notifications/notices)", () => {
               cy.get(
                 `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
               );
+              cy.screenshot();
             });
         });
       });
@@ -248,6 +250,7 @@ describe("Approval (notifications/notices)", () => {
           );
           cy.contains(submission.fineos_absence_id);
           cy.get(`a[href*="${config("PORTAL_BASEURL")}/applications"]`);
+          cy.screenshot();
         });
       });
     }

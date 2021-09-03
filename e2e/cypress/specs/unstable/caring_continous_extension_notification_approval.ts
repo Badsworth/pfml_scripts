@@ -152,6 +152,7 @@ describe("Post-approval (notifications/notices)", () => {
             )
             .then(() => {
               cy.contains(submission.fineos_absence_id);
+              cy.screenshot();
             });
         });
       });

@@ -142,6 +142,7 @@ describe("Denial Notification and Notice", () => {
               const dob =
                 claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
               cy.log(dob);
+              cy.screenshot();
               cy.contains(dob);
               cy.contains(employeeFullName);
               cy.contains(dob);
@@ -188,6 +189,7 @@ describe("Denial Notification and Notice", () => {
               cy.get(
                 `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
               );
+              cy.screenshot();
             });
         });
       });
@@ -222,6 +224,7 @@ describe("Denial Notification and Notice", () => {
             .then(() => {
               cy.wait(100);
               cy.contains(submission.fineos_absence_id);
+              cy.screenshot();
             });
         });
       });
