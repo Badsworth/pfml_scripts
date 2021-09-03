@@ -23,16 +23,18 @@ jobs:
           role-duration-seconds: 3600
           role-to-assume: ci-run-deploys
 
-      - name: Get Today's Date
+      - name: Get Yesterday's Date
         id: date
-        run: echo "::set-output name=date::$(date +'%Y-%m-%d')"
+        run: echo "::set-output name=date::$(date --date='yesterday' +'%Y-%m-%d')"
+        # Process starts at 03:00 UTC = 22:00 EST = 23:00 EDT every night. File checked here always uses
+        # he start time for the folder it's written to, which is in EST or EDT.
 
       - name: Check file names
         id: file-check
         run: |
           pub_file=$(
             aws s3 sync s3://massgov-pfml-prod-agency-transfer . \
-            --exclude "*" --include "reports/sent/${{ steps.date.outputs.date }}/*-cancellation-report.csv" \
+            --exclude "*" --include "reports/processed/${{ steps.date.outputs.date }}/*-pub-payments-process-fineos.SUCCESS" \
             --dryrun 
           )
 
