@@ -12,8 +12,7 @@ def start(args):
 
     # getting the proper tags/branches for the release
     git_utils.fetch_remotes()
-
-    recent_tag = git_utils.most_recent_tag(args.app)  # get most recent tag
+    recent_tag = git_utils.most_recent_tag(args.app)
 
     v = git_utils.to_semver(recent_tag)  # convert tag to semver object
     version_name = git_utils.from_semver(v.bump_minor(), args.app)
@@ -60,5 +59,24 @@ def hotfix(args):
 
 
 def major(args):
-    logger.info(f"Running 'major-release'...")
+    # API ONLY!!! Increments major release number
+    logger.info(f"Running 'major-release'; args: {repr(args)}")
     logger.debug(f"Args: {repr(args)}")
+
+    if args.app != 'api':
+        raise NotImplementedError("This task is for API releases only")
+    else:
+        # getting the proper tags/branches for the release
+        git_utils.fetch_remotes()
+        recent_tag = git_utils.most_recent_tag(args.app)
+
+        v = git_utils.to_semver(recent_tag)  # convert tag to semver object
+        version_name = git_utils.from_semver(v.bump_major(), args.app)
+        branch_name = "release/" + version_name
+
+        # making sure the tag has the proper release candidate flag
+        tag_name = version_name + "-rc1"
+        git_utils.create_branch(branch_name)
+
+        # add -rc before tagging and pushing branch
+        git_utils.tag_branch(branch_name, tag_name)

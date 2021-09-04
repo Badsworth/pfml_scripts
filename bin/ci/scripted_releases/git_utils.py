@@ -44,7 +44,9 @@ def create_branch(branch_name):
 
 
 def most_recent_tag(app):
-    return git.describe("--tags", "--match", f"{app}/v*", "--abbrev=0", "origin/main") 
+    t = git.describe("--tags", "--match", f"{app}/v*", "--abbrev=0", "origin/main")
+    logger.info(f"Detected latest {app} tag is '{t}'")
+    return t
 
 
 def tag_branch(branch_name, tag_name):
