@@ -787,6 +787,10 @@ const shared = {
   displayTime: "{{hours}}h {{minutes}}m",
   // TODO (CP-1335): Add i18next formatter for time
   displayTime_noMinutes: "{{hours}}h",
+  docsRequired: {
+    newborn:
+      "Once your child is born, submit proof of birth so that we can make a decision.",
+  },
   documentsLoadError:
     "An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
   documentsUploadError:
@@ -836,9 +840,13 @@ const shared = {
     "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the reduced leave start and end dates in the $t(shared.certificationFormMedical).",
   leaveReasonActiveDutyFamily: "Active duty",
   leaveReasonBonding: "Bond with a child",
+  leaveReasonBondingHeader: "Leave to bond with a child",
   leaveReasonCare: "Care for a family member",
+  leaveReasonCareHeader: "Leave to care for a family member",
   leaveReasonMedical: "Medical leave",
+  leaveReasonMedicalSchedule: "Medical leave schedule",
   leaveReasonPregnancy: "Medical leave for pregnancy or birth",
+  leaveReasonPregnancyHeader: "Medical leave for pregnancy",
   leaveReasonServiceMemberFamily: "Military family",
   maxEmployerCommentLengthError:
     "Please shorten your comment. We cannot accept comments that are longer than 9999 characters.",
@@ -1909,6 +1917,7 @@ const pages = {
   claimsStatus: {
     applicationDetails: "Application details",
     applicationID: "Application ID",
+    applicationUpdatesHeading: "Application updates",
     backButtonLabel: "Back to your applications",
     employerEIN: "Employer Identification Number (EIN)",
     infoAlertBody_bonding:
@@ -1925,11 +1934,15 @@ const pages = {
     leavePeriodLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
     leavePeriodLabel_intermittent: "$t(shared.claimDurationTypeIntermittent)",
     leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReduced)",
+    leaveReasonValueHeader_bonding: "$t(shared.leaveReasonBondingHeader)",
+    leaveReasonValueHeader_care: "$t(shared.leaveReasonCareHeader)",
+    leaveReasonValueHeader_medical: "$t(shared.leaveReasonMedical)",
+    leaveReasonValueHeader_pregnancy: "$t(shared.leaveReasonPregnancyHeader)",
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
-    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
-    leaveReasonValue_care: "$t(shared.leaveReasonCare)",
-    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
-    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_bonding: "Leave to bond with a child schedule",
+    leaveReasonValue_care: "Leave to care for a family member schedule",
+    leaveReasonValue_medical: "$t(shared.leaveReasonMedicalSchedule)",
+    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedicalSchedule)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     leaveStatusMessage_Approved:
@@ -1937,9 +1950,11 @@ const pages = {
     leaveStatusMessage_Denied:
       "<p><strong>This leave was denied.</strong></p><p><notice-link>View your denial notice</notice-link> for more details and an explanation of the appeal process.</p><p>If you would like to appeal, you must submit your request within 10 calendar days of the date on your denial notice.</p><p>Learn more about <request-appeal-link>the appeal process</request-appeal-link>.</p>",
     leaveStatusMessage_Pending:
-      "<p><strong>This leave is being reviewed.</strong><p>",
+      "<p><strong>This leave is being reviewed.</strong></p>",
     leaveStatusMessage_Withdrawn:
       "<p><strong>This leave was withdrawn.</strong></p><p>You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
+    loadingClaimDetailLabel: "Loading claim details",
+    loadingLegalNoticesLabel: "Loading legal notices",
     makeChangesBody:
       "<p>If you need to make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Some changes to your application, such as changing your start and end dates, may mean your application needs to be reviewed by your employer again.</p>",
     makeChangesHeading: "Make changes to your application",
@@ -1950,6 +1965,13 @@ const pages = {
     uploadDocumentsButton: "Upload additional documents",
     uploadDocumentsHeading: "Upload Documents",
     viewNoticesHeading: "View your notices",
+    whatHappensNext: "What happens next",
+    whatHappensNextButton_adoption: "Upload proof of placement",
+    whatHappensNextButton_newborn: "Upload proof of birth",
+    whatYouNeedToDo: "What you need to do",
+    whatYouNeedToDoText_adoption:
+      "After your child arrives in your home, submit proof of placement so that the department can make a decision.",
+    whatYouNeedToDoText_newborn: "$t(shared.docsRequired.newborn)",
   },
   claimsSuccess: {
     adjudicationProcess:
@@ -2417,8 +2439,7 @@ const components = {
     actionsHeading: "Actions",
     bondingLeaveDocsRequired_adopt_foster:
       "Once your child arrives, submit proof of placement so that we can make a decision.",
-    bondingLeaveDocsRequired_newborn:
-      "Once your child is born, submit proof of birth so that we can make a decision.",
+    bondingLeaveDocsRequired_newborn: "$t(shared.docsRequired.newborn)",
     documentsLoadError: "$t(shared.documentsLoadError)",
     feinHeading: "Employer EIN",
     heading: "Application {{number}}",
@@ -2451,10 +2472,10 @@ const components = {
     heading: "Application {{number}}",
     leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReducedSchedule)",
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
-    leaveReasonValue_bonding: "$t(shared.leaveReasonBonding)",
-    leaveReasonValue_care: "$t(shared.leaveReasonCare)",
+    leaveReasonValue_bonding: "$t(shared.leaveReasonBondingHeader)",
+    leaveReasonValue_care: "$t(shared.leaveReasonCareHeader)",
     leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
-    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_pregnancy: "$t(shared.leaveReasonPregnancyHeader)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     manageApplicationDocuments: "Manage your application documents",

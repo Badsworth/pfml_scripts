@@ -1,86 +1,45 @@
-import Document, { DocumentType } from "../../models/Document";
-import React, { useEffect, useState } from "react";
-import { has, map } from "lodash";
+import React, { useEffect } from "react";
+import { find, get, groupBy, has, isEmpty, map } from "lodash";
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import ClaimDetail from "../../models/ClaimDetail";
+import DocumentCollection from "../../models/DocumentCollection";
+import { DocumentType } from "../../models/Document";
 import Heading from "../../components/Heading";
 import LeaveReason from "../../models/LeaveReason";
 import LegalNoticeList from "../../components/LegalNoticeList.js";
 import PropTypes from "prop-types";
+import Spinner from "../../components/Spinner";
 import Tag from "../../components/Tag";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
+import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDate from "../../utils/formatDate";
-import { handleError } from "../../api/BaseApi";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-// TODO (CP-2461): remove once page is integrated with API
-const TEST_DOC = [
-  new Document({
-    content_type: "image/png",
-    created_at: "2020-04-05",
-    document_type: DocumentType.approvalNotice,
-    fineos_document_id: "fineos-id-4",
-    name: "legal notice",
-  }),
-  new Document({
-    content_type: "image/png",
-    created_at: "2020-04-05",
-    document_type: DocumentType.denialNotice,
-    fineos_document_id: "fineos-id-5",
-    name: "legal notice 2",
-  }),
-];
 
-const TEST_CLAIM = new ClaimDetail({
-  absence_periods: [
-    {
-      period_type: "Reduced",
-      absence_period_start_date: "2021-06-01",
-      absence_period_end_date: "2021-06-08",
-      request_decision: "Approved",
-      fineos_leave_request_id: "PL-14432-0000002026",
-      reason: LeaveReason.medical,
-    },
-    {
-      period_type: "Continuous",
-      absence_period_start_date: "2021-07-01",
-      absence_period_end_date: "2021-07-08",
-      request_decision: "Pending",
-      fineos_leave_request_id: "PL-14432-0000002326",
-      reason: LeaveReason.medical,
-    },
-    {
-      period_type: "Reduced",
-      absence_period_start_date: "2021-08-01",
-      absence_period_end_date: "2021-08-08",
-      request_decision: "Denied",
-      fineos_leave_request_id: "PL-14434-0000002026",
-      reason: LeaveReason.bonding,
-    },
-    {
-      period_type: "Continuous",
-      absence_period_start_date: "2021-08-01",
-      absence_period_end_date: "2021-08-08",
-      request_decision: "Withdrawn",
-      fineos_leave_request_id: "PL-14434-0000002326",
-      reason: LeaveReason.bonding,
-    },
-  ],
-});
+const nextStepsRoute = {
+  newborn: "applications.upload.bondingProofOfBirth",
+  adoption: "applications.upload.bondingProofOfPlacement",
+};
 
-export const Status = ({
-  appLogic,
-  docList = TEST_DOC,
-  absenceDetails = TEST_CLAIM.absencePeriodsByReason,
-}) => {
+export const Status = ({ appLogic, query }) => {
   const { t } = useTranslation();
-  const { portalFlow } = appLogic;
+  const {
+    claims: { claimDetail, isLoadingClaimDetail, loadClaimDetail },
+    documents: {
+      documents,
+      download: downloadDocument,
+      hasLoadedClaimDocuments,
+      loadAll: loadClaimDocuments,
+    },
+    portalFlow,
+  } = appLogic;
+  const { absence_case_id } = query;
 
   useEffect(() => {
     if (!isFeatureEnabled("claimantShowStatusPage")) {
@@ -88,33 +47,70 @@ export const Status = ({
     }
   }, [portalFlow]);
 
-  const [documents, setDocuments] = useState(docList);
   useEffect(() => {
-    function loadDocuments() {
-      try {
-        const loadedDocuments = { items: docList };
-        setDocuments(loadedDocuments.items);
-      } catch (error) {
-        handleError(error);
-      }
-    }
-    loadDocuments();
-  }, [docList]);
+    loadClaimDetail(absence_case_id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [absence_case_id]);
 
-  if (appLogic.appErrors.items.length) return null;
+  useEffect(() => {
+    const application_id = get(claimDetail, "application_id");
+    if (application_id) {
+      loadClaimDocuments(application_id);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [claimDetail]);
+
+  const appErrorsByType = groupBy(appLogic.appErrors.items, "name");
+
+  if (has(appErrorsByType, "ClaimDetailLoadError")) return null;
+
+  // Check both because claimDetail could be cached from a different status page.
+  if (isLoadingClaimDetail || !claimDetail)
+    return (
+      <div className="margin-top-8 text-center">
+        <Spinner
+          aria-valuetext={t("pages.claimsStatus.loadingClaimDetailLabel")}
+        />
+      </div>
+    );
+
+  const absenceDetails = claimDetail.absencePeriodsByReason;
+  const legalNotices = documents.legalNotices;
 
   const ViewYourNotices = () => {
-    return documents.length ? (
-      <div className="border-bottom border-base-lighter padding-bottom-2">
+    const className = "border-top border-base-lighter padding-y-2";
+    const hasDocumentsLoadError = has(appErrorsByType, "DocumentsLoadError");
+    const shouldShowSpinner =
+      !hasLoadedClaimDocuments(claimDetail.application_id) &&
+      !hasDocumentsLoadError;
+    const nothingToShow = legalNotices.length === 0 || hasDocumentsLoadError;
+
+    if (shouldShowSpinner) {
+      // claim documents are loading.
+      return (
+        <div className={className}>
+          <Spinner
+            aria-valuetext={t("pages.claimsStatus.loadingLegalNoticesLabel")}
+          />
+        </div>
+      );
+    }
+
+    if (nothingToShow) {
+      return null;
+    }
+
+    return (
+      <div className={className}>
         <Heading className="margin-bottom-1" level="2" id="view_notices">
           {t("pages.claimsStatus.viewNoticesHeading")}
         </Heading>
         <LegalNoticeList
-          documents={documents}
-          onDownloadClick={appLogic.documents.download}
+          documents={legalNotices}
+          onDownloadClick={downloadDocument}
         />
       </div>
-    ) : null;
+    );
   };
 
   const getInfoAlertContext = (absenceDetails) => {
@@ -132,7 +128,7 @@ export const Status = ({
     return "";
   };
   const infoAlertContext = getInfoAlertContext(absenceDetails);
-
+  const [firstAbsenceDetail] = Object.keys(absenceDetails);
   const containerClassName = "border-top border-base-lighter padding-top-2";
 
   return (
@@ -179,26 +175,29 @@ export const Status = ({
         {/* Heading section */}
 
         <Heading level="2" size="1">
-          {/* // TODO (CP-2449): placeholder */}
-          Leave Reason
+          {t("pages.claimsStatus.leaveReasonValueHeader", {
+            context: findKeyByValue(LeaveReason, firstAbsenceDetail),
+          })}
         </Heading>
         <div className="display-flex border-base-lighter margin-bottom-3 bg-base-lightest padding-2">
           <div className="padding-right-10">
             <Heading weight="normal" level="2" size="4">
               {t("pages.claimsStatus.applicationID")}
             </Heading>
-            {/* // TODO (CP-2449): placeholder */}
-            <p className="text-bold">Fineos-Absence-ID</p>
+            <p className="text-bold">{absence_case_id}</p>
           </div>
           <div>
             <Heading weight="normal" level="2" size="4">
               {t("pages.claimsStatus.employerEIN")}
             </Heading>
-            {/* // TODO (CP-2449): placeholder */}
-            <p className="text-bold">123456789</p>
+            <p className="text-bold">{claimDetail.employer.employer_fein}</p>
           </div>
         </div>
-
+        <ApplicationUpdates
+          absenceDetails={absenceDetails}
+          applicationId={claimDetail.application_id}
+          docList={documents.items}
+        />
         <LeaveDetails absenceDetails={absenceDetails} />
         <ViewYourNotices />
 
@@ -211,11 +210,10 @@ export const Status = ({
             {t("pages.claimsStatus.infoRequestsHeading")}
           </Heading>
           <p>{t("pages.claimsStatus.infoRequestsBody")}</p>
-          {/* // TODO (CP-2457): update claim_id to claim.application_id */}
           <ButtonLink
             className="measure-6 margin-bottom-3"
             href={routeWithParams("applications.uploadDocsOptions", {
-              claim_id: "65184a9e-f938-40b6-b0f6-25f416a4c113",
+              claim_id: claimDetail.application_id,
             })}
           >
             {t("pages.claimsStatus.uploadDocumentsButton")}
@@ -264,21 +262,29 @@ export const Status = ({
 Status.propTypes = {
   appLogic: PropTypes.shape({
     appErrors: PropTypes.object.isRequired,
+    claims: PropTypes.shape({
+      claimDetail: PropTypes.instanceOf(ClaimDetail),
+      isLoadingClaimDetail: PropTypes.bool,
+      loadClaimDetail: PropTypes.func.isRequired,
+    }).isRequired,
     documents: PropTypes.shape({
+      documents: PropTypes.instanceOf(DocumentCollection).isRequired,
       download: PropTypes.func.isRequired,
+      hasLoadedClaimDocuments: PropTypes.func.isRequired,
+      loadAll: PropTypes.func.isRequired,
     }),
     portalFlow: PropTypes.shape({
       goTo: PropTypes.func.isRequired,
     }).isRequired,
   }).isRequired,
-  // TODO (CP-2461): remove once page is integrated with API
-  docList: PropTypes.array,
-  absenceDetails: PropTypes.object,
+  query: PropTypes.shape({
+    absence_case_id: PropTypes.string,
+  }).isRequired,
 };
 
 export default Status;
 
-const StatusTagMap = {
+export const StatusTagMap = {
   Approved: "success",
   Denied: "error",
   Pending: "pending",
@@ -288,10 +294,7 @@ const StatusTagMap = {
 export const LeaveDetails = ({ absenceDetails = {} }) => {
   const { t } = useTranslation();
   return map(absenceDetails, (absenceItem, absenceItemName) => (
-    <div
-      key={absenceItemName}
-      className="border-bottom border-base-lighter margin-bottom-2 padding-bottom-2"
-    >
+    <div key={absenceItemName} className="border-base-lighter margin-bottom-2">
       <Heading level="2">
         {t("pages.claimsStatus.leaveReasonValue", {
           context: findKeyByValue(LeaveReason, absenceItemName),
@@ -309,7 +312,7 @@ export const LeaveDetails = ({ absenceDetails = {} }) => {
               <div key={fineos_leave_request_id} className="margin-top-2">
                 <Heading className="margin-bottom-1" level="3">
                   {t("pages.claimsStatus.leavePeriodLabel", {
-                    context: period_type.toLowerCase(),
+                    context: period_type.split(" ")[0].toLowerCase(),
                   })}
                 </Heading>
                 <p>
@@ -343,4 +346,88 @@ export const LeaveDetails = ({ absenceDetails = {} }) => {
         : null}
     </div>
   ));
+};
+
+LeaveDetails.propTypes = {
+  absenceDetails: PropTypes.object,
+};
+
+export const ApplicationUpdates = ({
+  absenceDetails = {},
+  application_id,
+  docList = [],
+}) => {
+  const { t } = useTranslation();
+
+  const shouldRenderProofOfBirthButton = (
+    absenceItemName,
+    absenceType,
+    docList
+  ) =>
+    absenceItemName === LeaveReason[absenceType] &&
+    !findDocumentsByTypes(docList, [
+      DocumentType.certification[absenceItemName],
+    ]).length;
+
+  const renderOptions = (absenceItemName, absenceItem, docList) => {
+    const isNewBornQualifier = find(
+      absenceItem,
+      (item) => item && item.reason_qualifier_one === "Newborn"
+    );
+    if (
+      (shouldRenderProofOfBirthButton(absenceItemName, "bonding", docList) &&
+        isNewBornQualifier) ||
+      shouldRenderProofOfBirthButton(absenceItemName, "pregnancy", docList)
+    ) {
+      return "newborn";
+    } else if (
+      shouldRenderProofOfBirthButton(absenceItemName, "bonding", docList) &&
+      !isNewBornQualifier
+    ) {
+      return "adoption";
+    }
+  };
+
+  return isEmpty(absenceDetails) ? null : (
+    <div className="border-bottom border-base-lighter padding-bottom-2 margin-bottom-2">
+      <Heading level="2">
+        {t("pages.claimsStatus.applicationUpdatesHeading")}
+      </Heading>
+      <Heading level="3">{t("pages.claimsStatus.whatHappensNext")}</Heading>
+      {
+        map(absenceDetails, (absenceItem, absenceItemName) => {
+          const typeOfProof = renderOptions(
+            absenceItemName,
+            absenceItem,
+            docList
+          );
+          return nextStepsRoute[typeOfProof] ? (
+            <div key={absenceItemName}>
+              <p>
+                {t("pages.claimsStatus.whatYouNeedToDoText", {
+                  context: typeOfProof,
+                })}
+              </p>
+              <ButtonLink
+                className="measure-12"
+                href={routeWithParams(`${nextStepsRoute[typeOfProof]}`, {
+                  claim_id: application_id,
+                })}
+              >
+                {t("pages.claimsStatus.whatHappensNextButton", {
+                  context: typeOfProof,
+                })}
+              </ButtonLink>
+            </div>
+          ) : null;
+        })[0]
+      }
+    </div>
+  );
+};
+
+ApplicationUpdates.propTypes = {
+  absenceDetails: PropTypes.object,
+  application_id: PropTypes.string,
+  docList: PropTypes.array,
 };

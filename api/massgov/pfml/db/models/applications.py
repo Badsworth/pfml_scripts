@@ -35,7 +35,7 @@ class NoClaimTypeForAbsenceType(Exception):
 class LkEmploymentStatus(Base):
     __tablename__ = "lk_employment_status"
     employment_status_id = Column(Integer, primary_key=True, autoincrement=True)
-    employment_status_description = Column(Text)
+    employment_status_description = Column(Text, nullable=False)
     fineos_label = Column(Text)
 
     def __init__(self, employment_status_id, employment_status_description, fineos_label):
@@ -47,7 +47,7 @@ class LkEmploymentStatus(Base):
 class LkLeaveReason(Base):
     __tablename__ = "lk_leave_reason"
     leave_reason_id = Column(Integer, primary_key=True, autoincrement=True)
-    leave_reason_description = Column(Text)
+    leave_reason_description = Column(Text, nullable=False)
     _map = None
 
     def __init__(self, leave_reason_id, leave_reason_description):
@@ -75,7 +75,7 @@ class LkLeaveReason(Base):
 class LkLeaveReasonQualifier(Base):
     __tablename__ = "lk_leave_reason_qualifier"
     leave_reason_qualifier_id = Column(Integer, primary_key=True, autoincrement=True)
-    leave_reason_qualifier_description = Column(Text)
+    leave_reason_qualifier_description = Column(Text, nullable=False)
 
     def __init__(self, leave_reason_qualifier_id, leave_reason_qualifier_description):
         self.leave_reason_qualifier_id = leave_reason_qualifier_id
@@ -85,7 +85,7 @@ class LkLeaveReasonQualifier(Base):
 class LkRelationshipToCaregiver(Base):
     __tablename__ = "lk_relationship_to_caregiver"
     relationship_to_caregiver_id = Column(Integer, primary_key=True, autoincrement=True)
-    relationship_to_caregiver_description = Column(Text)
+    relationship_to_caregiver_description = Column(Text, nullable=False)
 
     def __init__(self, relationship_to_caregiver_id, relationship_to_caregiver_description):
         self.relationship_to_caregiver_id = relationship_to_caregiver_id
@@ -95,7 +95,7 @@ class LkRelationshipToCaregiver(Base):
 class LkRelationshipQualifier(Base):
     __tablename__ = "lk_relationship_qualifier"
     relationship_qualifier_id = Column(Integer, primary_key=True, autoincrement=True)
-    relationship_qualifier_description = Column(Text)
+    relationship_qualifier_description = Column(Text, nullable=False)
 
     def __init__(self, relationship_qualifier_id, relationship_qualifier_description):
         self.relationship_qualifier_id = relationship_qualifier_id
@@ -105,7 +105,7 @@ class LkRelationshipQualifier(Base):
 class LkNotificationMethod(Base):
     __tablename__ = "lk_notification_method"
     notification_method_id = Column(Integer, primary_key=True, autoincrement=True)
-    notification_method_description = Column(Text)
+    notification_method_description = Column(Text, nullable=False)
 
     def __init__(self, notification_method_id, notification_method_description):
         self.notification_method_id = notification_method_id
@@ -115,7 +115,7 @@ class LkNotificationMethod(Base):
 class LkFrequencyOrDuration(Base):
     __tablename__ = "lk_frequency_or_duration"
     frequency_or_duration_id = Column(Integer, primary_key=True, autoincrement=True)
-    frequency_or_duration_description = Column(Text)
+    frequency_or_duration_description = Column(Text, nullable=False)
 
     def __init__(self, frequency_or_duration_id, frequency_or_duration_description):
         self.frequency_or_duration_id = frequency_or_duration_id
@@ -125,7 +125,7 @@ class LkFrequencyOrDuration(Base):
 class LkWorkPatternType(Base):
     __tablename__ = "lk_work_pattern_type"
     work_pattern_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    work_pattern_type_description = Column(Text)
+    work_pattern_type_description = Column(Text, nullable=False)
 
     def __init__(self, work_pattern_type_id, work_pattern_type_description):
         self.work_pattern_type_id = work_pattern_type_id
@@ -135,7 +135,7 @@ class LkWorkPatternType(Base):
 class LkDayOfWeek(Base):
     __tablename__ = "lk_day_of_week"
     day_of_week_id = Column(Integer, primary_key=True, autoincrement=True)
-    day_of_week_description = Column(Text)
+    day_of_week_description = Column(Text, nullable=False)
 
     def __init__(self, day_of_week_id, day_of_week_description):
         self.day_of_week_id = day_of_week_id
@@ -145,7 +145,7 @@ class LkDayOfWeek(Base):
 class LkAmountFrequency(Base):
     __tablename__ = "lk_amount_frequency"
     amount_frequency_id = Column(Integer, primary_key=True, autoincrement=True)
-    amount_frequency_description = Column(Text)
+    amount_frequency_description = Column(Text, nullable=False)
 
     def __init__(self, amount_frequency_id, amount_frequency_description):
         self.amount_frequency_id = amount_frequency_id
@@ -155,7 +155,7 @@ class LkAmountFrequency(Base):
 class LkEmployerBenefitType(Base):
     __tablename__ = "lk_employer_benefit_type"
     employer_benefit_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    employer_benefit_type_description = Column(Text)
+    employer_benefit_type_description = Column(Text, nullable=False)
 
     def __init__(self, employer_benefit_type_id, employer_benefit_type_description):
         self.employer_benefit_type_id = employer_benefit_type_id
@@ -165,7 +165,7 @@ class LkEmployerBenefitType(Base):
 class LkOtherIncomeType(Base):
     __tablename__ = "lk_other_income_type"
     other_income_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    other_income_type_description = Column(Text)
+    other_income_type_description = Column(Text, nullable=False)
 
     def __init__(self, other_income_type_id, other_income_type_description):
         self.other_income_type_id = other_income_type_id
@@ -175,7 +175,7 @@ class LkOtherIncomeType(Base):
 class LkPreviousLeaveQualifyingReason(Base):
     __tablename__ = "lk_previous_leave_qualifying_reason"
     previous_leave_qualifying_reason_id = Column(Integer, primary_key=True, autoincrement=True)
-    previous_leave_qualifying_reason_description = Column(Text)
+    previous_leave_qualifying_reason_description = Column(Text, nullable=False)
 
     def __init__(
         self, previous_leave_qualifying_reason_id, previous_leave_qualifying_reason_description

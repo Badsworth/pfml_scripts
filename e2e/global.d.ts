@@ -81,6 +81,15 @@ declare namespace Cypress {
         employerCredentials?: Credentials;
       }
     ): Chainable<ApplicationSubmissionResponse>;
+    task(
+      event: "chooseFineosRole",
+      arg: {
+        /**ID of the account you want to switch the roles for */
+        userId: string;
+        /**Role preset you want to switch to. */
+        preset: FineosSecurityGroups;
+      }
+    ): Chainable<null>;
     task(event: "pickEmployer", spec: EmployerPickSpec): Chainable<Employer>;
     task(event: "getEmails", opts: GetEmailsOpts): Chainable<Email[]>;
     task(event: "registerClaimant", options: Credentials): Chainable<true>;

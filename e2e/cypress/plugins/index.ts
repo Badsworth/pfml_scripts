@@ -41,6 +41,8 @@ import { ClaimGenerator, DehydratedClaim } from "../../src/generation/Claim";
 import * as scenarios from "../../src/scenarios";
 import { Employer, EmployerPickSpec } from "../../src/generation/Employer";
 import pRetry from "p-retry";
+import { chooseRolePreset } from "../../src/util/fineosRoleSwitching";
+import { FineosSecurityGroups } from "../../src/submission/fineos.pages";
 import { Fineos } from "../../src/submission/fineos.pages";
 
 export default function (
@@ -62,6 +64,28 @@ export default function (
   on("task", {
     getAuthVerification: (toAddress: string) => {
       return verificationFetcher.getVerificationCodeForUser(toAddress);
+    },
+
+    async chooseFineosRole({
+      userId,
+      preset,
+    }: {
+      userId: string;
+      preset: FineosSecurityGroups;
+    }) {
+      await Fineos.withBrowser(
+        async (page) => {
+          await chooseRolePreset(
+            page,
+            // ID of the account you want to switch the roles for
+            userId,
+            // Role preset you want to switch to.
+            preset
+          );
+        },
+        { debug: true }
+      );
+      return null;
     },
 
     getEmails(opts: GetEmailsOpts): Promise<Email[]> {

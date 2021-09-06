@@ -1887,20 +1887,6 @@ class TestGetClaimsEndpoint:
                 "status_code": 200,
             },
             {
-                "tag": "order_by and order_direction params are respected",
-                "request": {"order_direction": "ascending", "order_by": "claim_id"},
-                "paging": {
-                    "page_size": 25,
-                    "page_offset": 1,
-                    "total_pages": 2,
-                    "total_records": 30,
-                    "order_direction": "ascending",
-                    "order_by": "claim_id",
-                },
-                "real_page_size": 25,
-                "status_code": 200,
-            },
-            {
                 "tag": "Unrecognized order_by parameter defaults to created_at",
                 "request": {"order_by": "dogecoin"},
                 "paging": {},
@@ -2412,6 +2398,54 @@ class TestGetClaimsEndpoint:
         assert len(response_body["data"]) == 5
         for claim in response_body["data"]:
             assert claim["employer"]["employer_fein"] == format_fein(other_employer.employer_fein)
+
+    def test_get_claims_no_employee(
+        self, client, employer_auth_token, employer_user, test_db_session, test_verification
+    ):
+        employer = EmployerFactory.create()
+
+        for _ in range(5):
+            ClaimFactory.create(
+                employer=employer, fineos_absence_status_id=1, claim_type_id=1,
+            )
+
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        response = client.get(
+            f"/v1/claims?employer_id={employer.employer_id}",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 200
+        response_body = response.get_json()
+
+        assert len(response_body["data"]) == 5
+
+    def test_get_claims_no_employer(self, client, auth_token, user):
+        employee = EmployeeFactory.create()
+
+        for _ in range(5):
+            application = ApplicationFactory.create(user=user)
+            ClaimFactory.create(
+                employee=employee,
+                application=application,
+                fineos_absence_status_id=1,
+                claim_type_id=1,
+            )
+
+        response = client.get("/v1/claims", headers={"Authorization": f"Bearer {auth_token}"},)
+
+        assert response.status_code == 200
+        response_body = response.get_json()
+
+        assert len(response_body["data"]) == 5
 
     # Inner class for testing Claims With Status Filtering
     class TestClaimsWithStatus:
@@ -3205,3 +3239,47 @@ class TestGetClaimsEndpoint:
             response_body = resp.get_json()
             data = response_body.get("data", [])
             assert len(data) == self.claims_count / 4
+
+    # Test validation of claims endpoint query param validation
+    class TestClaimsAPIInputValidation:
+        def _perform_api_call(self, request, client, employer_auth_token):
+            query_string = "&".join([f"{key}={value}" for key, value in request.items()])
+            return client.get(
+                f"/v1/claims?{query_string}",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+            )
+
+        def _assert_400_error_response(self, response):
+            assert response.status_code == 400
+
+        def test_claims_invalid_param_field(self, client, employer_auth_token):
+            params = {"invalid": "invalid"}
+            response = self._perform_api_call(params, client, employer_auth_token)
+            self._assert_400_error_response(response)
+
+        def test_claims_invalid_order_by(self, client, employer_auth_token):
+            params = {"order_by": "bad"}
+            response = self._perform_api_call(params, client, employer_auth_token)
+            self._assert_400_error_response(response)
+
+        def test_claims_unsupported_column_order_by(self, client, employer_auth_token):
+            params = {"order_by": "updated_at"}
+            response = self._perform_api_call(params, client, employer_auth_token)
+            self._assert_400_error_response(response)
+
+        def test_claims_bad_absence_status(self, client, employer_auth_token):
+            bad_statuses = [
+                "--",
+                "%",
+                "Intake In Progress!",
+                "Intake In Progress%",
+                "Pending--",
+                "; Select",
+            ]
+            for status in bad_statuses:
+                params = {"claim_status": status}
+
+                response = self._perform_api_call(params, client, employer_auth_token)
+                self._assert_400_error_response(response)
+                err_details = response.get_json()["detail"]
+                assert "Invalid claim status" in err_details or "does not match" in err_details

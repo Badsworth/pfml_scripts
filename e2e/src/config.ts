@@ -39,10 +39,11 @@ function getRawEnvironment() {
     FINEOS_USERNAME: process.env.E2E_FINEOS_USERNAME,
     FINEOS_PASSWORD: process.env.E2E_FINEOS_PASSWORD,
     FINEOS_USERS: process.env.E2E_FINEOS_USERS,
-    FINEOS_HAS_UPDATED_EFORMS: process.env.E2E_FINEOS_HAS_UPDATED_EFORMS,
 
     SSO_USERNAME: process.env.E2E_SSO_USERNAME,
     SSO_PASSWORD: process.env.E2E_SSO_PASSWORD,
+    SSO2_USERNAME: process.env.E2E_SSO2_USERNAME,
+    SSO2_PASSWORD: process.env.E2E_SSO2_PASSWORD,
 
     TESTMAIL_APIKEY: process.env.E2E_TESTMAIL_APIKEY,
     TESTMAIL_NAMESPACE: process.env.E2E_TESTMAIL_NAMESPACE,
@@ -82,7 +83,6 @@ const file: Partial<Configuration> =
 
 // The default layer is a set of default values which will be used if nothing is set.
 const defaults: Partial<Configuration> = {
-  FINEOS_HAS_UPDATED_EFORMS: "false",
   PORTAL_HAS_LA_STATUS_UPDATES: "false",
   NEWRELIC_ACCOUNTID: "2837112",
   HAS_CLAIMANT_STATUS_PAGE: "false",

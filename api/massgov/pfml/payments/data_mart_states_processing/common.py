@@ -1,6 +1,6 @@
 import uuid
 from dataclasses import dataclass, field
-from typing import Callable, Iterable, List, Tuple, Union, cast
+from typing import Callable, Iterable, List, Tuple, Union
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as pfml_db
@@ -319,7 +319,7 @@ def process_employees_in_state(
 
             if employee:
                 extra["employee_id"] = str(employee.employee_id)
-                extra["fineos_customer_number"] = employee.fineos_customer_number
+                extra["fineos_customer_number"] = str(employee.fineos_customer_number)
 
             logger.exception(
                 "Hit error processing record in state: %s, employee: %s, %s",
@@ -386,7 +386,7 @@ def only_state_logs_with_employees(
 
             extra = {"state_log_id": str(state_log.state_log_id)}
             if state_log.end_state:
-                extra["end_state"] = cast(str, state_log.end_state.state_description)
+                extra["end_state"] = state_log.end_state.state_description
             logger.error(
                 "No employee for given state log. Skipping.", extra=extra,
             )

@@ -733,7 +733,6 @@ jobs:
               "target_environment": ${{ toJSON(env.deployment_env) }},
               "cypress_tags": "Deploy,Deploy-API",
               "run_unstable": "${{ env.deployment_env != 'test' && 'false' || 'true' }}",
-              "run_nightly": "true"
               "title_override": ${{ toJSON(format('API Deploy: {0} to {1}', env.version, env.deployment_env)) }}
             }
 
