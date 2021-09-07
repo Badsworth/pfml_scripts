@@ -42,17 +42,9 @@ pytestmark = pytest.mark.integration
 def test_employee_to_eligibility_feed_record(initialize_factories_session):
     employee = EmployeeFactory.create()
     employer = EmployerFactory.create()
-    wages_and_contributions = WagesAndContributionsFactory.create_batch(
-        size=5, employee=employee, employer=employer
-    )
+    WagesAndContributionsFactory.create_batch(size=5, employee=employee, employer=employer)
 
-    most_recent_wages = sorted(
-        wages_and_contributions, key=lambda w: w.filing_period, reverse=True
-    )[0]
-
-    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
-        employee, most_recent_wages, employer
-    )
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
 
     # fields that should be set
     assert eligibility_feed_record.employeeIdentifier == str(employee.employee_id)
@@ -77,9 +69,7 @@ def test_employee_to_eligibility_feed_record_with_itin(initialize_factories_sess
     employee.tax_identifier = TaxIdentifier(
         tax_identifier=TaxIdUnformattedStr.validate_type("999887777")
     )
-    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
-        employee, wages_and_contributions, employer
-    )
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
 
     assert eligibility_feed_record.employeeNationalIDType == ef.NationalIdType.itin
 
@@ -91,9 +81,7 @@ def test_employee_to_eligibility_feed_record_with_date_of_birth(initialize_facto
 
     employee.date_of_birth = date(2020, 7, 6)
 
-    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
-        employee, wages_and_contributions, employer
-    )
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
 
     assert eligibility_feed_record.employeeDateOfBirth == employee.date_of_birth
 
@@ -105,9 +93,7 @@ def test_employee_to_eligibility_feed_record_with_date_of_death(initialize_facto
 
     employee.date_of_death = date(2020, 7, 6)
 
-    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
-        employee, wages_and_contributions, employer
-    )
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
 
     assert eligibility_feed_record.employeeDateOfDeath == employee.date_of_death
 
@@ -122,9 +108,7 @@ def test_employee_to_eligibility_feed_record_with_address(initialize_factories_s
         EmployeeAddress(employee_id=employee.employee_id, address_id=address.address_id)
     ]
 
-    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
-        employee, wages_and_contributions, employer
-    )
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
 
     # at the moment, no address info should be included in export
     assert eligibility_feed_record.addressType is None
@@ -141,9 +125,7 @@ def test_employee_to_eligibility_feed_record_with_no_tax_identifier(initialize_f
 
     employee.tax_identifier = None
 
-    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
-        employee, wages_and_contributions, employer
-    )
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
 
     assert eligibility_feed_record.employeeNationalID is None
     assert eligibility_feed_record.employeeNationalIDType is None
@@ -156,9 +138,7 @@ def test_employee_to_eligibility_feed_record_with_gender(initialize_factories_se
 
     employee.gender_id = Gender.WOMAN.gender_id
 
-    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
-        employee, wages_and_contributions, employer
-    )
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
 
     assert eligibility_feed_record.employeeGender == Gender.WOMAN.fineos_gender_description
 
@@ -168,9 +148,7 @@ def test_employee_to_eligibility_feed_record_with_gender(initialize_factories_se
 
     employee.gender_id = Gender.MAN.gender_id
 
-    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
-        employee, wages_and_contributions, employer
-    )
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
 
     assert eligibility_feed_record.employeeGender == Gender.MAN.fineos_gender_description
 
@@ -180,9 +158,7 @@ def test_employee_to_eligibility_feed_record_with_gender(initialize_factories_se
 
     employee.gender_id = Gender.NONBINARY.gender_id
 
-    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
-        employee, wages_and_contributions, employer
-    )
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
 
     assert eligibility_feed_record.employeeGender == Gender.NONBINARY.fineos_gender_description
 
@@ -194,9 +170,7 @@ def test_employee_to_eligibility_feed_record_with_employee_title(initialize_fact
 
     employee.title_id = Title.DR.title_id
 
-    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
-        employee, wages_and_contributions, employer
-    )
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
 
     assert eligibility_feed_record.employeeTitle == employee.title.title_description
 
@@ -209,9 +183,7 @@ def test_employee_to_eligibility_feed_record_with_phone_numbers(initialize_facto
     employee.phone_number = "+12025555555"
     employee.cell_phone_number = "+442083661177"
 
-    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
-        employee, wages_and_contributions, employer
-    )
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
 
     assert eligibility_feed_record.telephoneIntCode == "1"
     assert eligibility_feed_record.telephoneAreaCode == "202"
@@ -246,9 +218,7 @@ def test_employee_to_eligibility_feed_record_with_occupation(
     test_db_session.add(occupation)
     test_db_session.commit()
 
-    eligibility_feed_record = ef.employee_to_eligibility_feed_record(
-        employee, wages_and_contributions, employer
-    )
+    eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
 
     assert eligibility_feed_record.employeeJobTitle == occupation.job_title
     assert eligibility_feed_record.employeeDateOfHire == occupation.date_of_hire
@@ -362,31 +332,24 @@ def test_write_employees_to_csv(tmp_path, test_db_session, initialize_factories_
 
     fineos_employer_id = employer.employer_id
 
-    employees_with_most_recent_wages = list(
-        map(lambda w: (w.employee, w), wages_for_single_employer_different_employees)
-    )
+    employees = list(map(lambda w: w.employee, wages_for_single_employer_different_employees))
 
     # remove phone number from record
-    employees_with_most_recent_wages[1][0].phone_number = None
+    employees[1].phone_number = None
 
     # add an address
-    employees_with_most_recent_wages[1][0].addresses = [
-        EmployeeAddress(
-            employee_id=employees_with_most_recent_wages[1][0].employee_id,
-            address_id=address.address_id,
-        )
+    employees[1].addresses = [
+        EmployeeAddress(employee_id=employees[0].employee_id, address_id=address.address_id,)
     ]
 
     test_db_session.commit()
 
-    number_of_employees = len(employees_with_most_recent_wages)
+    number_of_employees = len(employees)
 
     dest_file = tmp_path / "test.csv"
 
     with open(dest_file, "w") as f:
-        ef.write_employees_to_csv(
-            employer, fineos_employer_id, number_of_employees, employees_with_most_recent_wages, f
-        )
+        ef.write_employees_to_csv(employer, fineos_employer_id, number_of_employees, employees, f)
 
     with open(dest_file, "r") as f:
         file_content = f.readlines()
@@ -394,8 +357,6 @@ def test_write_employees_to_csv(tmp_path, test_db_session, initialize_factories_
     assert file_content[0].strip() == f"EMPLOYER_ID:{fineos_employer_id}"
     assert file_content[1].strip() == f"NUMBER_OF_RECORDS:{number_of_employees}"
     assert file_content[2].strip() == "@DATABLOCK"
-
-    employees = list(map(lambda ew: ew[0], employees_with_most_recent_wages))
 
     phone_number = ef.parse_phone_number(employees[0].phone_number)
 
