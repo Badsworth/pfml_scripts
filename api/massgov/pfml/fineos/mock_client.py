@@ -565,7 +565,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
                 "pregnancy/maternity form",
                 "child bonding evidence form",
                 "military exigency form",
-                "pending application withdrawn"
+                "pending application withdrawn",
             ]
 
             allowed_documents = [
