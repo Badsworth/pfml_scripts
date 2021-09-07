@@ -506,9 +506,6 @@ class FineosWritebackTransactionStatus(LookupTable):
         "writeback_record_status",
     )
 
-    FAILED_MANUAL_VALIDATION = LkFineosWritebackTransactionStatus(
-        1, "Payment Audit Error", ACTIVE_WRITEBACK_RECORD_STATUS
-    )
     FAILED_AUTOMATED_VALIDATION = LkFineosWritebackTransactionStatus(
         2, "Payment Validation Error", ACTIVE_WRITEBACK_RECORD_STATUS
     )
@@ -538,6 +535,51 @@ class FineosWritebackTransactionStatus(LookupTable):
     POSTED = LkFineosWritebackTransactionStatus(12, "Posted", ACTIVE_WRITEBACK_RECORD_STATUS)
     LEAVE_IN_REVIEW = LkFineosWritebackTransactionStatus(
         13, "Leave Plan In Review", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    # == Payment Rejection Statuses
+    FAILED_MANUAL_VALIDATION = LkFineosWritebackTransactionStatus(
+        1, "Payment Audit Error", ACTIVE_WRITEBACK_RECORD_STATUS
+    )  # Default rejection status
+
+    DUA_ADDITIONAL_INCOME = LkFineosWritebackTransactionStatus(
+        14, "DUA Additional Income", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    DIA_ADDITIONAL_INCOME = LkFineosWritebackTransactionStatus(
+        15, "DIA Additional Income", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    SELF_REPORTED_ADDITIONAL_INCOME = LkFineosWritebackTransactionStatus(
+        16, "SelfReported Additional Income", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    EXEMPT_EMPLOYER = LkFineosWritebackTransactionStatus(
+        17, "Exempt Employer", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    WEEKLY_BENEFITS_AMOUNT_EXCEEDS_850 = LkFineosWritebackTransactionStatus(
+        18, "Max Weekly Benefits Exceeded", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    WAITING_WEEK = LkFineosWritebackTransactionStatus(
+        19, "InvalidPayment WaitingWeek", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    ALREADY_PAID_FOR_DATES = LkFineosWritebackTransactionStatus(
+        20, "InvalidPayment PaidDate", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    LEAVE_DATES_CHANGE = LkFineosWritebackTransactionStatus(
+        21, "InvalidPayment LeaveDateChange", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    UNDER_OR_OVERPAY_ADJUSTMENT = LkFineosWritebackTransactionStatus(
+        22, "InvalidPayment PayAdjustment", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    NAME_MISMATCH = LkFineosWritebackTransactionStatus(
+        23, "InvalidPayment NameMismatch", ACTIVE_WRITEBACK_RECORD_STATUS
     )
 
 
