@@ -253,6 +253,7 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
         """Create or update a leave admin in FINEOS."""
         pass
 
+    @abc.abstractmethod
     def create_service_agreement_for_employer(
         self,
         fineos_employer_id: int,
