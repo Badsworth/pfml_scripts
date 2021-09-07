@@ -16,6 +16,26 @@ type Query = {
   name: string;
 };
 
+/**
+ * Returns a NRQL query displaying error messages grouped into "buckets".
+ */
+function getErrorGroupsQuery() {
+  const escapeQuotes = (input: string) => input.replace(/(?<!\\)'/g, "\\'");
+  const groups = {
+    "PFML API Submit Application - 500": "%/submit_application - Internal Server Error (500%",
+    "PFML API Submit Application - 503": "%/submit_application - Service Unavailable (503%",
+    "PFML API Submit Application - 504": "%/submit_application - Gateway Timeout (504%",
+    "PFML API Submit Application - 400": "%submit_application - Bad Request (400%",
+    "Fineos - Ajax timeout": "%In-flight Ajax requests should be 0%",
+    "SSO Login Error": "%cy.task('completeSSOLoginFineos')%",
+    "E-mail fetch timeout": "%Timed out while looking for e-mail.%",
+  }
+  const caseStatements = Object.entries(groups).map(([label, clause]) => {
+    return `WHERE errorMessage LIKE '${escapeQuotes(clause)}' AS '${escapeQuotes(label)}'`;
+  }).join(", ");
+  return `SELECT COUNT(*) AS occurrences FROM CypressTestResult WHERE status != 'passed' FACET cases(${caseStatements}) OR errorMessage SINCE 1 day ago LIMIT MAX`
+}
+
 const queries: Query[] = [
   {
     name: "Pass rate & average run time by file",
@@ -24,8 +44,7 @@ const queries: Query[] = [
   },
   {
     name: "504 & Mail delivery errors",
-    query:
-      "SELECT COUNT(*) AS occurrences FROM CypressTestResult WHERE status != 'passed' FACET cases(WHERE errorMessage LIKE '%submit_application - Gateway Timeout (504)%' AS 'submit_application 504 error', WHERE errorMessage LIKE '%Timed out while looking for e-mail.%', WHERE errorMessage LIKE '%Start a new application%' AS 'Login Error',WHERE  errorMessage LIKE '%Expected to find content: \\'Log out\\'%'AS 'Login Error' ) OR errorMessage SINCE 1 day ago",
+    query: getErrorGroupsQuery(),
   },
   {
     name: "Environment stability",
