@@ -115,6 +115,25 @@ module "fineos_extract_scheduler" {
   ecs_task_executor_role     = aws_iam_role.task_executor.arn
   ecs_task_role              = aws_iam_role.fineos_bucket_tool_role.arn
 
+  input = <<JSON
+  {
+    "containerOverrides": [
+      {
+        "name": "fineos-bucket-tool",
+        "command": [
+          "fineos-bucket-tool",
+          "--recursive",
+          "--dated-folders",
+          "--copy_dir", "${var.fineos_report_export_path}",
+          "--to_dir", "s3://${data.aws_s3_bucket.business_intelligence_tool.bucket}/fineos/dataexports",
+          "--file_prefixes", "all"
+        ]
+      }
+    ]
+  }
+  JSON
+}
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Run import-fineos-to-warehouse at 10pm EST (11pm EDT) (3am UTC +1 day)
 module "import_fineos_to_warehouse" {
