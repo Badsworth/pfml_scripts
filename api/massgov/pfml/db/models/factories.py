@@ -442,6 +442,9 @@ class PaymentFactory(BaseFactory):
     claim = factory.SubFactory(ClaimFactory)
     claim_id = factory.LazyAttribute(lambda a: a.claim.claim_id)
 
+    fineos_employee_first_name = factory.Faker("first_name")
+    fineos_employee_last_name = factory.Faker("last_name")
+
 
 class PaymentReferenceFileFactory(BaseFactory):
     class Meta:
