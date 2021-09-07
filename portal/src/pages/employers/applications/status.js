@@ -45,7 +45,7 @@ export const Status = (props) => {
     DocumentType.approvalNotice,
     DocumentType.denialNotice,
     DocumentType.requestForInfoNotice,
-    DocumentType.withdrawalNotice
+    DocumentType.withdrawalNotice,
   ]);
 
   return (
