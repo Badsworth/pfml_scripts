@@ -1929,6 +1929,8 @@ const pages = {
       "<p><strong>This leave is being reviewed.</strong></p>",
     leaveStatusMessage_Withdrawn:
       "<p><strong>This leave was withdrawn.</strong></p><p>You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
+    legalNoticesFallback:
+      "Once we’ve made a decision, you can download the decision notice here. You’ll also get an email notification.",
     loadingClaimDetailLabel: "Loading claim details",
     loadingLegalNoticesLabel: "Loading legal notices",
     makeChangesBody:
