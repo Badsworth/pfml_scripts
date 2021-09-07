@@ -93,7 +93,7 @@ export interface BaseClaimSpecification {
   /** Control the date of the bonding event (child birth/adoption/etc) */
   bondingDate?: "far-past" | "past" | "future";
   /** Specify explicit leave dates for the claim. These will be used for the reduced/intermittent/continuous leave periods. */
-  leave_dates?: [Date, Date];
+  leave_dates?: (() => [Date, Date]) | [Date, Date];
   /** Specify other incomes, if not specified, start & end dates are automatically matched to leave dates*/
   other_incomes?: NonEmptyArray<OtherIncome>;
   /** Specify employer benefits. if not specified, start & end dates are automatically matched to leave dates. */
