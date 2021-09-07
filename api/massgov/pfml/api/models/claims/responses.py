@@ -116,6 +116,7 @@ class DetailedClaimResponse(PydanticBaseModel):
     claim_status: Optional[str]
     created_at: Optional[date]
     absence_periods: Optional[List[AbsencePeriodStatusResponse]]
+    managed_requirements: Optional[List[ManagedRequirementResponse]]
     # Place holder for future implementation.
     outstanding_evidence: Optional[OutstandingEvidenceResponse]
 
