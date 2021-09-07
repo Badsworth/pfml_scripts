@@ -6,6 +6,7 @@ module.exports = {
   clearMocks: true,
   coveragePathIgnorePatterns: [
     "/node_modules/",
+    "<rootDir>/tests-old/test-utils/",
     "<rootDir>/tests/lib/",
     "<rootDir>/tests/test-utils/",
   ],
@@ -22,10 +23,11 @@ module.exports = {
     "<rootDir>/.next/",
     "<rootDir>/node_modules/",
     "<rootDir>/config",
+    "<rootDir>/tests-old/test-utils/",
     "<rootDir>/tests/lib/",
     "<rootDir>/tests/test-utils/",
   ],
-  testRegex: "(/tests/.*|(\\.|/)(test|spec))\\.[jt]sx?$",
+  testRegex: "(/(tests-old|tests)/.*|(\\.|/)(test|spec))\\.[jt]sx?$",
   coverageThreshold: {
     global: {
       branches: 90,

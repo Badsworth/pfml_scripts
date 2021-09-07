@@ -1,110 +1,76 @@
+import { fireEvent, render, screen } from "@testing-library/react";
 import Button from "../../src/components/Button";
 import React from "react";
-import { shallow } from "enzyme";
-
-function render(customProps = {}) {
-  const props = Object.assign(
-    {
-      children: "Button label",
-      onClick: jest.fn(),
-    },
-    customProps
-  );
-
-  const component = <Button {...props} />;
-
-  return {
-    props,
-    wrapper: shallow(component),
-  };
-}
 
 describe("Button", () => {
-  it("renders with default styling", () => {
-    const { wrapper } = render();
-
-    expect(wrapper).toMatchInlineSnapshot(`
-      <Fragment>
-        <button
-          className="usa-button position-relative"
-          onClick={[MockFunction]}
-          type="button"
-        >
-          Button label
-        </button>
-      </Fragment>
+  it("renders the button with default styling", () => {
+    render(<Button>Button label</Button>);
+    const button = screen.getByRole("button", { name: /Button label/ });
+    expect(button).toMatchInlineSnapshot(`
+      <button
+        class="usa-button position-relative"
+        type="button"
+      >
+        Button label
+      </button>
     `);
+    expect(button).toHaveAccessibleName();
   });
 
-  it("accepts a variation property", () => {
-    const { wrapper } = render({ variation: "outline" });
-
-    expect(wrapper.find("button").hasClass("usa-button--outline")).toBe(true);
+  it("calls on click handler as expected", () => {
+    const onClickHandler = jest.fn();
+    render(<Button onClick={onClickHandler}>Click me</Button>);
+    fireEvent.click(screen.getByText(/Click me/));
+    expect(onClickHandler).toHaveBeenCalled();
   });
 
-  describe("when className is set", () => {
-    it("adds the className to the button", () => {
-      const { wrapper } = render({ className: "custom-class" });
-
-      expect(wrapper.find("button").hasClass("custom-class")).toBe(true);
-    });
+  it("button is not clickable with disabled prop is passed in", () => {
+    const onClickHandler = jest.fn();
+    render(
+      <Button disabled={true} onClick={onClickHandler}>
+        Just try to click me
+      </Button>
+    );
+    const button = screen.getByRole("button");
+    fireEvent.click(button);
+    expect(onClickHandler).not.toHaveBeenCalled();
+    expect(button).toHaveAttribute("disabled");
   });
 
-  describe("when inversed prop is true", () => {
-    it("adds the inversed modifier class", () => {
-      const { wrapper } = render({ inversed: true });
-
-      expect(wrapper.find("button").hasClass("usa-button--inverse")).toBe(true);
-    });
+  it("loading state disables button and displays loading spinner", () => {
+    const onClickHandler = jest.fn();
+    render(
+      <Button
+        loading={true}
+        onClick={onClickHandler}
+        loadingMessage="loading message"
+      >
+        Click me I dare you
+      </Button>
+    );
+    expect(screen.findByRole("progressbar")).toBeTruthy();
+    expect(screen.getByText(/loading message/)).toBeTruthy();
+    fireEvent.click(screen.getByText(/Click me I dare you/));
+    expect(onClickHandler).not.toHaveBeenCalled();
   });
 
-  describe("when inversed prop is true and the variation is 'unstyled'", () => {
-    it("adds the outline modifier class", () => {
-      const { wrapper } = render({ inversed: true, variation: "unstyled" });
-
-      expect(wrapper.find("button").hasClass("usa-button--outline")).toBe(true);
-    });
+  it("can receive styling variations that take effect", () => {
+    render(<Button variation="outline">Hello world</Button>);
+    expect(screen.getByRole("button")).toHaveClass(
+      "usa-button position-relative usa-button--outline bg-white"
+    );
   });
 
-  describe("when loading is set", () => {
-    it("disables button and adds a spinner", () => {
-      const { wrapper } = render({ loading: true });
-
-      expect(wrapper.find("Spinner").exists()).toBe(true);
-      expect(wrapper.find("button").prop("disabled")).toBe(true);
-    });
-
-    it("sets minimum height when variation is unstyled", () => {
-      const { wrapper } = render({ loading: true, variation: "unstyled" });
-
-      expect(wrapper.find("button").hasClass("minh-5")).toBe(true);
-    });
-
-    it("renders a message when loadingMessage is set", () => {
-      const { wrapper } = render({
-        loading: true,
-        loadingMessage: "Saving… please wait.",
-      });
-
-      expect(wrapper.find("strong")).toMatchInlineSnapshot(`
-        <strong
-          className="display-block mobile-lg:display-inline-block margin-top-1 mobile-lg:margin-top-0 text-center mobile-lg:text-left"
-        >
-          Saving… please wait.
-        </strong>
-      `);
-    });
+  it("inversed passes through with impact on class styles", () => {
+    render(<Button inversed={true}>Hello world</Button>);
+    expect(screen.getByRole("button")).toHaveClass(
+      "usa-button position-relative usa-button--inverse"
+    );
   });
 
-  it("accepts aria props", () => {
-    const { wrapper } = render({
-      "aria-controls": "foo",
-      "aria-expanded": "false",
-    });
-
-    const button = wrapper.find("button");
-
-    expect(button.prop("aria-controls")).toBe("foo");
-    expect(button.prop("aria-expanded")).toBe("false");
+  it("can pass through submit type", () => {
+    render(<Button type="submit">Submit</Button>);
+    const button = screen.getByRole("button");
+    expect(button).toHaveAttribute("type", "submit");
   });
 });

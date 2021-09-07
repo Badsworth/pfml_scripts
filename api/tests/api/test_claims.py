@@ -1887,20 +1887,6 @@ class TestGetClaimsEndpoint:
                 "status_code": 200,
             },
             {
-                "tag": "order_by and order_direction params are respected",
-                "request": {"order_direction": "ascending", "order_by": "claim_id"},
-                "paging": {
-                    "page_size": 25,
-                    "page_offset": 1,
-                    "total_pages": 2,
-                    "total_records": 30,
-                    "order_direction": "ascending",
-                    "order_by": "claim_id",
-                },
-                "real_page_size": 25,
-                "status_code": 200,
-            },
-            {
                 "tag": "Unrecognized order_by parameter defaults to created_at",
                 "request": {"order_by": "dogecoin"},
                 "paging": {},
@@ -3253,3 +3239,47 @@ class TestGetClaimsEndpoint:
             response_body = resp.get_json()
             data = response_body.get("data", [])
             assert len(data) == self.claims_count / 4
+
+    # Test validation of claims endpoint query param validation
+    class TestClaimsAPIInputValidation:
+        def _perform_api_call(self, request, client, employer_auth_token):
+            query_string = "&".join([f"{key}={value}" for key, value in request.items()])
+            return client.get(
+                f"/v1/claims?{query_string}",
+                headers={"Authorization": f"Bearer {employer_auth_token}"},
+            )
+
+        def _assert_400_error_response(self, response):
+            assert response.status_code == 400
+
+        def test_claims_invalid_param_field(self, client, employer_auth_token):
+            params = {"invalid": "invalid"}
+            response = self._perform_api_call(params, client, employer_auth_token)
+            self._assert_400_error_response(response)
+
+        def test_claims_invalid_order_by(self, client, employer_auth_token):
+            params = {"order_by": "bad"}
+            response = self._perform_api_call(params, client, employer_auth_token)
+            self._assert_400_error_response(response)
+
+        def test_claims_unsupported_column_order_by(self, client, employer_auth_token):
+            params = {"order_by": "updated_at"}
+            response = self._perform_api_call(params, client, employer_auth_token)
+            self._assert_400_error_response(response)
+
+        def test_claims_bad_absence_status(self, client, employer_auth_token):
+            bad_statuses = [
+                "--",
+                "%",
+                "Intake In Progress!",
+                "Intake In Progress%",
+                "Pending--",
+                "; Select",
+            ]
+            for status in bad_statuses:
+                params = {"claim_status": status}
+
+                response = self._perform_api_call(params, client, employer_auth_token)
+                self._assert_400_error_response(response)
+                err_details = response.get_json()["detail"]
+                assert "Invalid claim status" in err_details or "does not match" in err_details

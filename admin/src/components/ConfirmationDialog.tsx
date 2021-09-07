@@ -37,20 +37,17 @@ const ConfirmationDialog = ({
         </div>
         <div className="confirmation-dialog__action-buttons">
           <Button
-            additionalClasses={[
-              "confirmation-dialog__btn",
-              "confirmation-dialog__btn-continue",
-            ]}
+            className={
+              "confirmation-dialog__btn confirmation-dialog__btn-continue"
+            }
             onClick={handleContinue}
           >
             Continue
           </Button>
           <Button
-            additionalClasses={[
-              "confirmation-dialog__btn",
-              "confirmation-dialog__btn-cancel",
-              "btn--cancel",
-            ]}
+            className={
+              "confirmation-dialog__btn confirmation-dialog__btn-cancel btn--cancel"
+            }
             onClick={handleCancel}
           >
             Cancel

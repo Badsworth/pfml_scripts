@@ -29,13 +29,14 @@ def test_to_semver_portal():
 
 
 def test_from_semver_api():
-  assert git_utils.from_semver(VersionInfo(major=23, minor=9, patch=0))     == "api/v23.9.0"
-  assert git_utils.from_semver(VersionInfo(major=24, minor=7, patch=0, prerelease='rc1')) == "api/v24.7.0-rc1"
-  assert git_utils.from_semver(VersionInfo(major=24, minor=7, patch=1))     == "api/v24.7.1"
+  assert git_utils.from_semver(VersionInfo(major=23, minor=9, patch=0), app='api')                   == "api/v23.9.0"
+  assert git_utils.from_semver(VersionInfo(major=24, minor=7, patch=0, prerelease='rc1'), app='api') == "api/v24.7.0-rc1"
+  assert git_utils.from_semver(VersionInfo(major=24, minor=7, patch=1), app='api')                   == "api/v24.7.1"
+
 
 def test_from_semver_portal():
-  assert git_utils.from_semver(VersionInfo(major=0, minor=19, patch=1), is_portal=True)     == "portal/v19.1"
-  assert git_utils.from_semver(VersionInfo(major=0, minor=15, patch=0, prerelease='rc1'), is_portal=True) == "portal/v15.0-rc1"
+  assert git_utils.from_semver(VersionInfo(major=0, minor=19, patch=1), app='portal')                   == "portal/v19.1"
+  assert git_utils.from_semver(VersionInfo(major=0, minor=15, patch=0, prerelease='rc1'), app='portal') == "portal/v15.0-rc1"
 
 
 # update these when working on major/minor releases

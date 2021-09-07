@@ -3,5 +3,6 @@
     "**/test/integration/*.[jt]s?(x)"
   ],
   "testEnvironment": "node",
-  "testRunner": "jest-circus/runner"
+  "testRunner": "jest-circus/runner",
+  "runner": "groups"
 }

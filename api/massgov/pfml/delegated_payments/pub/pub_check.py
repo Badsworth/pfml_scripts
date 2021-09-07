@@ -13,7 +13,6 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     Address,
     ClaimType,
-    Employee,
     Payment,
     PaymentCheck,
     PaymentMethod,
@@ -224,15 +223,13 @@ def _get_eligible_check_payments(db_session: db.Session) -> List[Payment]:
 
 
 def _convert_payment_to_check_issue_entry(payment: Payment) -> CheckIssueEntry:
-    employee = payment.claim.employee
-
     return CheckIssueEntry(
         status_code="I",  # Always use the issue code? Use "V" for void.
         check_number=payment.check.check_number,  # check number has already been generated in previous EZ Check step
         issue_date=cast(date, payment.payment_date),
         amount=payment.amount,
         payee_id=payment.pub_individual_id,
-        payee_name=_format_employee_name_for_ez_check(employee),
+        payee_name=_format_employee_name_for_ez_check(payment),
         account_number=int(os.environ.get("DFML_PUB_ACCOUNT_NUMBER")),  # type: ignore
     )
 
@@ -248,7 +245,6 @@ def _convert_payment_to_ez_check_record(payment: Payment, check_number: int) -> 
             )
         )
 
-    employee = payment.claim.employee
     experian_address_pair = payment.experian_address_pair
     address = cast(Address, experian_address_pair.experian_address)
 
@@ -259,11 +255,11 @@ def _convert_payment_to_ez_check_record(payment: Payment, check_number: int) -> 
         check_date=cast(date, payment.payment_date),
         amount=payment.amount,
         memo=_format_check_memo(payment),
-        payee_name=_format_employee_name_for_ez_check(employee),
+        payee_name=_format_employee_name_for_ez_check(payment),
         address_line_1=cast(str, address.address_line_one),
         address_line_2=address.address_line_two,
         city=cast(str, address.city),
-        state=cast(str, geo_state.geo_state_description),
+        state=geo_state.geo_state_description,
         zip_code=cast(str, address.zip_code),
         # Hard-coding country to US because we store country codes in 3 characters in our database
         # and the EZcheck format requires 2 character country codes.
@@ -284,9 +280,12 @@ def _format_check_memo(payment: Payment) -> str:
 
 # Follow same truncation rules as described for the ACH file names.
 # https://lwd.atlassian.net/wiki/spaces/API/pages/1313800323/PUB+ACH+File+Format
-def _format_employee_name_for_ez_check(employee: Employee) -> str:
+def _format_employee_name_for_ez_check(payment: Payment) -> str:
+    fineos_first_name = payment.fineos_employee_first_name or ""
+    fineos_employee_last_name = payment.fineos_employee_last_name or ""
+
     # If last name is > 85 characters, truncate to 85.
-    last_name = employee.last_name[: Constants.EZ_CHECK_MAX_NAME_LENGTH]
+    last_name = fineos_employee_last_name[: Constants.EZ_CHECK_MAX_NAME_LENGTH]
     remaining_characters = Constants.EZ_CHECK_MAX_NAME_LENGTH - len(last_name)
 
     # If last name is exactly 84 or 85 characters just use last name.
@@ -296,7 +295,7 @@ def _format_employee_name_for_ez_check(employee: Employee) -> str:
     # If last name < 85 characters use full last name and truncate the first name to use the
     # remaining space.
     remaining_characters = remaining_characters - 1  # Make room for the space character.
-    return "{} {}".format(employee.first_name[:remaining_characters], last_name)
+    return "{} {}".format(fineos_first_name[:remaining_characters], last_name)
 
 
 def _get_ez_check_header() -> EzCheckHeader:

@@ -43,6 +43,9 @@ EMPLOYEE_FEED_FIELD_NAMES = [
     "SORTCODE",
     "ACCOUNTNO",
     "ACCOUNTTYPE",
+    "FIRSTNAMES",
+    "INITIALS",
+    "LASTNAME",
 ]
 LEAVE_PLAN_FIELD_NAMES = [
     "ABSENCE_CASENUMBER",
@@ -174,6 +177,13 @@ class FineosClaimantData(FineosData):
         self.employer_customer_num = self.get_value(
             "employer_customer_num", str(fake.unique.random_int())
         )
+        self.fineos_employee_first_name = self.get_value(
+            "fineos_employee_first_name", fake.first_name()
+        )
+        self.fineos_employee_middle_name = self.get_value("fineos_employee_middle_name", "")
+        self.fineos_employee_last_name = self.get_value(
+            "fineos_employee_last_name", fake.last_name()
+        )
 
     def get_employee_feed_record(self):
         employee_feed_record = OrderedDict()
@@ -193,6 +203,9 @@ class FineosClaimantData(FineosData):
             employee_feed_record["SORTCODE"] = self.routing_nbr
             employee_feed_record["ACCOUNTNO"] = self.account_nbr
             employee_feed_record["ACCOUNTTYPE"] = self.account_type
+            employee_feed_record["FIRSTNAMES"] = self.fineos_employee_first_name
+            employee_feed_record["INITIALS"] = self.fineos_employee_middle_name
+            employee_feed_record["LASTNAME"] = self.fineos_employee_last_name
 
         return employee_feed_record
 

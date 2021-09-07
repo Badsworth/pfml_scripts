@@ -86,12 +86,11 @@ describe("Approval (notifications/notices)", () => {
         // Wait for the legal document to arrive.
         if (config("HAS_CLAIMANT_STATUS_PAGE") === "true") {
           portal.claimantGoToClaimStatus(submission.fineos_absence_id);
-          // @todo: update status to "Approved" once status page doesn't use static data
           portal.claimantAssertClaimStatus([
-            { leave: "Child Bonding", status: "Denied" },
+            { leave: "Child Bonding", status: "Approved" },
           ]);
-          cy.findByText("Approval notice (PDF)").should("be.visible").click();
-          // @todo: uncomment once claimant status is deployed to all envs
+          // @todo: uncomment lines below once, doc download is supported
+          // cy.findByText("Approval notice (PDF)").should("be.visible").click();
           // portal.downloadLegalNotice(submission.fineos_absence_id);
         } else {
           // @todo: remove once claimant status is deployed to all envs

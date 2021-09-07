@@ -310,9 +310,7 @@ class PaymentData:
             self.is_standard_payment,
             custom_validator_func=payments_util.lookup_validator(
                 PaymentMethod,
-                disallowed_lookup_values=[
-                    cast(str, PaymentMethod.DEBIT.payment_method_description)
-                ],
+                disallowed_lookup_values=[PaymentMethod.DEBIT.payment_method_description],
             ),
         )
 
@@ -587,6 +585,7 @@ class PaymentExtractStep(Step):
         CLAIMANT_MISMATCH_COUNT = "claimant_mismatch_count"
         EFT_FOUND_COUNT = "eft_found_count"
         EMPLOYEE_MISSING_IN_DB_COUNT = "employee_in_payment_extract_missing_in_db_count"
+        EMPLOYEE_FINEOS_NAME_MISSING = "employee_fineos_name_missing"
         EMPLOYER_REIMBURSEMENT_COUNT = "employer_reimbursement_count"
         ERRORED_PAYMENT_COUNT = "errored_payment_count"
         NEW_EFT_COUNT = "new_eft_count"
@@ -1174,6 +1173,22 @@ class PaymentExtractStep(Step):
         # Create the payment record
         payment = self.create_payment(payment_data, claim, payment_data.validation_container)
 
+        # Capture the fineos provided employee name for the payment
+        if employee:
+            if (
+                employee.fineos_employee_first_name is None
+                or employee.fineos_employee_last_name is None
+            ):
+                self.increment(self.Metrics.EMPLOYEE_FINEOS_NAME_MISSING)
+                payment_data.validation_container.add_validation_issue(
+                    payments_util.ValidationReason.MISSING_FINEOS_NAME,
+                    f"Missing name from FINEOS on employee {employee.employee_id}",
+                )
+            else:
+                payment.fineos_employee_first_name = employee.fineos_employee_first_name
+                payment.fineos_employee_middle_name = employee.fineos_employee_middle_name
+                payment.fineos_employee_last_name = employee.fineos_employee_last_name
+
         # Specify whether the Payment has an address update
         # TODO - is this still needed?
         payment.has_address_update = has_address_update
@@ -1354,6 +1369,7 @@ class PaymentExtractStep(Step):
             # records in the extract
             if reason in [
                 payments_util.ValidationReason.MISSING_IN_DB,
+                payments_util.ValidationReason.MISSING_FINEOS_NAME,
                 payments_util.ValidationReason.CLAIM_NOT_ID_PROOFED,
                 payments_util.ValidationReason.MISSING_DATASET,
                 payments_util.ValidationReason.CLAIMANT_MISMATCH,

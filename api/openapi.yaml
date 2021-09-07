@@ -373,6 +373,7 @@ paths:
           in: query
           schema:
             type: string
+            pattern: '[a-zA-Z0-9 ,]+'
           description: > 
             claim status used to filter the request,
             single claim status or a comma seperated list of claim status (i.e claim_status="Pending,Closed"),
@@ -1132,6 +1133,7 @@ components:
       schema:
         type: string
         default: "created_at"
+        enum: ["fineos_absence_status", "created_at", "employee"]
     orderDirection:
       name: "order_direction"
       in: query

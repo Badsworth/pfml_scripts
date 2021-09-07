@@ -3,6 +3,7 @@ import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
 import ClaimCollection from "../../models/ClaimCollection";
+import ClaimDetail from "../../models/ClaimDetail";
 import DocumentCollection from "../../models/DocumentCollection";
 import EmployerClaim from "../../models/EmployerClaim";
 import Flag from "../../models/Flag";
@@ -43,9 +44,12 @@ export default jest.fn(() => ({
   },
   claims: {
     activeFilters: {},
+    claimDetail: new ClaimDetail(),
     claims: new ClaimCollection(),
     clearClaims: jest.fn(),
     isLoadingClaims: null,
+    isLoadingClaimDetail: null,
+    loadClaimDetail: jest.fn(),
     paginationMeta: new PaginationMeta(),
     loadPage: jest.fn(),
   },
@@ -61,6 +65,7 @@ export default jest.fn(() => ({
     }),
     hasLoadedClaimDocuments: jest.fn(),
     documents: new DocumentCollection(),
+    download: jest.fn(),
     loadAll: jest.fn(),
   },
   employers: {

@@ -1,6 +1,6 @@
 from datetime import date
 from enum import Enum
-from typing import Optional
+from typing import Optional, Union
 
 from pydantic import Field, validator
 
@@ -51,7 +51,7 @@ class VendorLicenseInquiryResponse(PydanticBaseModel):
     street2: Optional[str]
     city: str
     zip: str
-    sex: RMVSex
+    sex: Union[RMVSex, str, None]
 
     _parse_license1: classmethod = validator(
         "license1_expiration_date", pre=True, allow_reuse=True

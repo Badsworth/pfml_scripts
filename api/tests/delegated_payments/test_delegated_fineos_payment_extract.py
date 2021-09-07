@@ -120,6 +120,7 @@ def add_db_records(
     i_value=None,
     additional_payment_state=None,
     claim_type=None,
+    missing_fineos_name=False,
 ):
     mailing_address = None
     experian_address_pair = None
@@ -128,7 +129,14 @@ def add_db_records(
         experian_address_pair = ExperianAddressPairFactory(fineos_address=mailing_address)
 
     if add_employee:
-        employee = EmployeeFactory.create(tax_identifier=TaxIdentifier(tax_identifier=tin))
+        if missing_fineos_name:
+            employee = EmployeeFactory.create(
+                tax_identifier=TaxIdentifier(tax_identifier=tin),
+                fineos_employee_first_name=None,
+                fineos_employee_last_name=None,
+            )
+        else:
+            employee = EmployeeFactory.create(tax_identifier=TaxIdentifier(tax_identifier=tin))
         if add_eft:
             pub_eft = PubEftFactory.create(
                 routing_nbr=generate_routing_nbr_from_ssn(tin),
@@ -178,6 +186,7 @@ def add_db_records_from_fineos_data(
     add_payment=False,
     add_employee=True,
     additional_payment_state=None,
+    missing_fineos_name=False,
 ):
     add_db_records(
         db_session,
@@ -193,6 +202,7 @@ def add_db_records_from_fineos_data(
         add_payment=add_payment,
         add_employee=add_employee,
         additional_payment_state=additional_payment_state,
+        missing_fineos_name=missing_fineos_name,
     )
 
 
@@ -426,6 +436,10 @@ def test_process_extract_data(
 
         employee = claim.employee
         assert employee
+
+        assert payment.fineos_employee_first_name == employee.fineos_employee_first_name
+        assert payment.fineos_employee_middle_name == employee.fineos_employee_middle_name
+        assert payment.fineos_employee_last_name == employee.fineos_employee_last_name
 
         mailing_address = payment.experian_address_pair.fineos_address
         assert mailing_address
@@ -1202,6 +1216,59 @@ def test_process_extract_not_id_proofed(
     validate_pei_writeback_state_for_payment(
         standard_payment, local_test_db_session, is_issue_in_system=True
     )
+
+
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_extract_no_fineos_name(
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    local_test_db_session,
+    local_payment_extract_step,
+    tmp_path,
+    local_initialize_factories_session,
+    monkeypatch,
+    local_create_triggers,
+):
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+    datasets = []
+    # This tests that a payment with a claim missing ID proofing with be rejected
+
+    standard_payment_data = FineosPaymentData()
+    add_db_records_from_fineos_data(
+        local_test_db_session, standard_payment_data, missing_fineos_name=True
+    )
+    datasets.append(standard_payment_data)
+
+    upload_fineos_data(tmp_path, mock_s3_bucket, datasets)
+
+    # Run the extract process
+    local_payment_extract_step.run()
+
+    standard_payment = (
+        local_test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == standard_payment_data.i_value)
+        .one_or_none()
+    )
+    state_log = state_log_util.get_latest_state_log_in_flow(
+        standard_payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+    )
+    assert (
+        state_log.end_state_id
+        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE.state_id
+    )
+
+    issues = state_log.outcome["validation_container"]["validation_issues"]
+    assert len(issues) == 1
+    assert issues[0] == {
+        "reason": "MissingFineosName",
+        "details": f"Missing name from FINEOS on employee {standard_payment.claim.employee.employee_id}",
+    }
+    validate_pei_writeback_state_for_payment(
+        standard_payment, local_test_db_session, is_issue_in_system=True
+    )
+
+    import_log_report = json.loads(standard_payment.fineos_extract_import_log.report)
+    assert import_log_report["employee_fineos_name_missing"] == 1
 
 
 def test_process_extract_is_adhoc(

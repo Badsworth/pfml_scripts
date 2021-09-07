@@ -109,6 +109,9 @@ class ClaimantData:
     fineos_customer_number: Optional[str] = None
     employer_customer_number: Optional[str] = None
     employee_tax_identifier: Optional[str] = None
+    employee_first_name: Optional[str] = None
+    employee_middle_name: Optional[str] = None
+    employee_last_name: Optional[str] = None
     date_of_birth: Optional[str] = None
     payment_method: Optional[str] = None
 
@@ -223,6 +226,18 @@ class ClaimantData:
             "DATEOFBIRTH", employee_feed, self.validation_container, True
         )
 
+        self.employee_first_name = payments_util.validate_csv_input(
+            "FIRSTNAMES", employee_feed, self.validation_container, True
+        )
+
+        self.employee_middle_name = payments_util.validate_csv_input(
+            "INITIALS", employee_feed, self.validation_container, False
+        )
+
+        self.employee_last_name = payments_util.validate_csv_input(
+            "LASTNAME", employee_feed, self.validation_container, True
+        )
+
         self._process_payment_preferences(employee_feed)
 
     def _process_payment_preferences(self, employee_feed: Dict[str, str]) -> None:
@@ -248,9 +263,7 @@ class ClaimantData:
             True,
             custom_validator_func=payments_util.lookup_validator(
                 PaymentMethod,
-                disallowed_lookup_values=[
-                    cast(str, PaymentMethod.DEBIT.payment_method_description)
-                ],
+                disallowed_lookup_values=[PaymentMethod.DEBIT.payment_method_description],
             ),
         )
 
@@ -695,6 +708,13 @@ class ClaimantExtractStep(Step):
             if claimant_data.fineos_customer_number is not None:
                 employee_pfml_entry.fineos_customer_number = claimant_data.fineos_customer_number
 
+            if claimant_data.employee_first_name is not None:
+                employee_pfml_entry.fineos_employee_first_name = claimant_data.employee_first_name
+                employee_pfml_entry.fineos_employee_middle_name = claimant_data.employee_middle_name
+
+            if claimant_data.employee_last_name is not None:
+                employee_pfml_entry.fineos_employee_last_name = claimant_data.employee_last_name
+
             self.update_eft_info(claimant_data, employee_pfml_entry)
 
             # Associate claim with employee in case it is a new claim.
@@ -725,7 +745,10 @@ class ClaimantExtractStep(Step):
                 routing_nbr=cast(str, claimant_data.routing_nbr),
                 account_nbr=cast(str, claimant_data.account_nbr),
                 bank_account_type_id=BankAccountType.get_id(claimant_data.account_type),
-                prenote_state_id=PrenoteState.PENDING_PRE_PUB.prenote_state_id,  # If this is new, we want it to be pending
+                prenote_state_id=PrenoteState.PENDING_PRE_PUB.prenote_state_id,  # If this is new, we want it to be pending,
+                fineos_employee_first_name=claimant_data.employee_first_name,
+                fineos_employee_middle_name=claimant_data.employee_middle_name,
+                fineos_employee_last_name=claimant_data.employee_last_name,
             )
 
             existing_eft = payments_util.find_existing_eft(employee_pfml_entry, new_eft)

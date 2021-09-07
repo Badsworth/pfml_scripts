@@ -124,7 +124,14 @@ def test_run_step_happy_path(
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2020-12-20")
 
     tax_identifier = TaxIdentifierFactory(tax_identifier="881778956")
-    employee = EmployeeFactory(tax_identifier=tax_identifier)
+    employee = EmployeeFactory(
+        tax_identifier=tax_identifier,
+        fineos_employee_first_name="Glennie-original",
+        fineos_employee_last_name="Balistreri-original",
+    )
+    assert employee.fineos_employee_first_name == "Glennie-original"
+    assert employee.fineos_employee_last_name == "Balistreri-original"
+
     employer = EmployerFactory(fineos_employer_id=96)
 
     employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
@@ -170,6 +177,9 @@ def test_run_step_happy_path(
     # We are not updating first or last name with FINEOS data as DOR is source of truth.
     assert updated_employee.first_name != "Glennie"
     assert updated_employee.last_name != "Balistreri"
+    # Make sure we have captured the claimant name in fineos specific employee columns (initial fineos names from above overwritten)
+    assert updated_employee.fineos_employee_first_name == "Glennie"
+    assert updated_employee.fineos_employee_last_name == "Balistreri"
     assert updated_employee.date_of_birth == datetime.date(1980, 1, 1)
     assert updated_employee.fineos_customer_number is not None
 
@@ -179,6 +189,10 @@ def test_run_step_happy_path(
     assert pub_efts[0].pub_eft.account_nbr == "123546784"
     assert pub_efts[0].pub_eft.bank_account_type_id == BankAccountType.CHECKING.bank_account_type_id
     assert pub_efts[0].pub_eft.prenote_state_id == PrenoteState.PENDING_PRE_PUB.prenote_state_id
+
+    # Make sure we have captured the claimant name in pub_eft
+    assert pub_efts[0].pub_eft.fineos_employee_first_name == "Glennie"
+    assert pub_efts[0].pub_eft.fineos_employee_last_name == "Balistreri"
 
     # Confirm StateLogs
     eft_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
@@ -762,7 +776,13 @@ def test_run_step_validation_issues(
 ):
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     # Create some validation issues
-    fineos_data = FineosClaimantData(routing_nbr="", leave_request_end="", date_of_birth="")
+    fineos_data = FineosClaimantData(
+        routing_nbr="",
+        leave_request_end="",
+        date_of_birth="",
+        fineos_employee_first_name="",
+        fineos_employee_last_name="",
+    )
 
     # Create the employee record
     tax_identifier = TaxIdentifierFactory(tax_identifier=fineos_data.ssn)
@@ -815,6 +835,8 @@ def test_run_step_validation_issues(
     assert validation_issues == [
         {"reason": "MissingField", "details": "ABSENCEPERIOD_END"},
         {"reason": "MissingField", "details": "DATEOFBIRTH"},
+        {"reason": "MissingField", "details": "FIRSTNAMES"},
+        {"reason": "MissingField", "details": "LASTNAME"},
         {"reason": "MissingField", "details": "SORTCODE"},
     ]
 

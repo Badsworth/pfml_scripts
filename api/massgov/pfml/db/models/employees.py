@@ -50,7 +50,7 @@ else:
 class LkAbsencePeriodType(Base):
     __tablename__ = "lk_absence_period_type"
     absence_period_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    absence_period_type_description = Column(Text)
+    absence_period_type_description = Column(Text, nullable=False)
 
     def __init__(self, absence_period_type_id, absence_period_type_description):
         self.absence_period_type_id = absence_period_type_id
@@ -60,7 +60,7 @@ class LkAbsencePeriodType(Base):
 class LkAbsenceReason(Base):
     __tablename__ = "lk_absence_reason"
     absence_reason_id = Column(Integer, primary_key=True, autoincrement=True)
-    absence_reason_description = Column(Text)
+    absence_reason_description = Column(Text, nullable=False)
 
     def __init__(self, absence_reason_id, absence_reason_description):
         self.absence_reason_id = absence_reason_id
@@ -70,7 +70,7 @@ class LkAbsenceReason(Base):
 class LkAbsenceReasonQualifierOne(Base):
     __tablename__ = "lk_absence_reason_qualifier_one"
     absence_reason_qualifier_one_id = Column(Integer, primary_key=True, autoincrement=True)
-    absence_reason_qualifier_one_description = Column(Text)
+    absence_reason_qualifier_one_description = Column(Text, nullable=False)
 
     def __init__(self, absence_reason_qualifier_one_id, absence_reason_qualifier_one_description):
         self.absence_reason_qualifier_one_id = absence_reason_qualifier_one_id
@@ -80,7 +80,7 @@ class LkAbsenceReasonQualifierOne(Base):
 class LkAbsenceReasonQualifierTwo(Base):
     __tablename__ = "lk_absence_reason_qualifier_two"
     absence_reason_qualifier_two_id = Column(Integer, primary_key=True, autoincrement=True)
-    absence_reason_qualifier_two_description = Column(Text)
+    absence_reason_qualifier_two_description = Column(Text, nullable=False)
 
     def __init__(self, absence_reason_qualifier_two_id, absence_reason_qualifier_two_description):
         self.absence_reason_qualifier_two_id = absence_reason_qualifier_two_id
@@ -90,7 +90,7 @@ class LkAbsenceReasonQualifierTwo(Base):
 class LkAbsenceStatus(Base):
     __tablename__ = "lk_absence_status"
     absence_status_id = Column(Integer, primary_key=True, autoincrement=True)
-    absence_status_description = Column(Text)
+    absence_status_description = Column(Text, nullable=False)
     sort_order = Column(Integer, default=0, nullable=False)
 
     # use to set order when sorting (non alphabetic) by absence status
@@ -104,7 +104,7 @@ class LkAbsenceStatus(Base):
 class LkAddressType(Base):
     __tablename__ = "lk_address_type"
     address_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    address_description = Column(Text)
+    address_description = Column(Text, nullable=False)
 
     def __init__(self, address_type_id, address_description):
         self.address_type_id = address_type_id
@@ -114,7 +114,7 @@ class LkAddressType(Base):
 class LkGeoState(Base):
     __tablename__ = "lk_geo_state"
     geo_state_id = Column(Integer, primary_key=True, autoincrement=True)
-    geo_state_description = Column(Text)
+    geo_state_description = Column(Text, nullable=False)
 
     def __init__(self, geo_state_id, geo_state_description):
         self.geo_state_id = geo_state_id
@@ -124,7 +124,7 @@ class LkGeoState(Base):
 class LkCountry(Base):
     __tablename__ = "lk_country"
     country_id = Column(Integer, primary_key=True, autoincrement=True)
-    country_description = Column(Text)
+    country_description = Column(Text, nullable=False)
 
     def __init__(self, country_id, country_description):
         self.country_id = country_id
@@ -134,7 +134,7 @@ class LkCountry(Base):
 class LkClaimType(Base):
     __tablename__ = "lk_claim_type"
     claim_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    claim_type_description = Column(Text)
+    claim_type_description = Column(Text, nullable=False)
 
     def __init__(self, claim_type_id, claim_type_description):
         self.claim_type_id = claim_type_id
@@ -144,7 +144,7 @@ class LkClaimType(Base):
 class LkRace(Base):
     __tablename__ = "lk_race"
     race_id = Column(Integer, primary_key=True)
-    race_description = Column(Text)
+    race_description = Column(Text, nullable=False)
 
     def __init__(self, race_id, race_description):
         self.race_id = race_id
@@ -154,7 +154,7 @@ class LkRace(Base):
 class LkMaritalStatus(Base):
     __tablename__ = "lk_marital_status"
     marital_status_id = Column(Integer, primary_key=True, autoincrement=True)
-    marital_status_description = Column(Text)
+    marital_status_description = Column(Text, nullable=False)
 
     def __init__(self, marital_status_id, marital_status_description):
         self.marital_status_id = marital_status_id
@@ -164,7 +164,7 @@ class LkMaritalStatus(Base):
 class LkGender(Base):
     __tablename__ = "lk_gender"
     gender_id = Column(Integer, primary_key=True, autoincrement=True)
-    gender_description = Column(Text)
+    gender_description = Column(Text, nullable=False)
     fineos_gender_description = Column(Text, nullable=True)
 
     def __init__(self, gender_id, gender_description, fineos_gender_description):
@@ -176,7 +176,7 @@ class LkGender(Base):
 class LkOccupation(Base):
     __tablename__ = "lk_occupation"
     occupation_id = Column(Integer, primary_key=True)
-    occupation_description = Column(Text)
+    occupation_description = Column(Text, nullable=False)
 
     def __init__(self, occupation_id, occupation_description):
         self.occupation_id = occupation_id
@@ -186,7 +186,7 @@ class LkOccupation(Base):
 class LkEducationLevel(Base):
     __tablename__ = "lk_education_level"
     education_level_id = Column(Integer, primary_key=True, autoincrement=True)
-    education_level_description = Column(Text)
+    education_level_description = Column(Text, nullable=False)
 
     def __init__(self, education_level_id, education_level_description):
         self.education_level_id = education_level_id
@@ -196,7 +196,7 @@ class LkEducationLevel(Base):
 class LkRole(Base):
     __tablename__ = "lk_role"
     role_id = Column(Integer, primary_key=True, autoincrement=True)
-    role_description = Column(Text)
+    role_description = Column(Text, nullable=False)
 
     def __init__(self, role_id, role_description):
         self.role_id = role_id
@@ -206,7 +206,7 @@ class LkRole(Base):
 class LkPaymentMethod(Base):
     __tablename__ = "lk_payment_method"
     payment_method_id = Column(Integer, primary_key=True, autoincrement=True)
-    payment_method_description = Column(Text)
+    payment_method_description = Column(Text, nullable=False)
 
     def __init__(self, payment_method_id, payment_method_description):
         self.payment_method_id = payment_method_id
@@ -216,7 +216,7 @@ class LkPaymentMethod(Base):
 class LkBankAccountType(Base):
     __tablename__ = "lk_bank_account_type"
     bank_account_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    bank_account_type_description = Column(Text)
+    bank_account_type_description = Column(Text, nullable=False)
 
     def __init__(self, bank_account_type_id, bank_account_type_description):
         self.bank_account_type_id = bank_account_type_id
@@ -226,7 +226,7 @@ class LkBankAccountType(Base):
 class LkPrenoteState(Base):
     __tablename__ = "lk_prenote_state"
     prenote_state_id = Column(Integer, primary_key=True, autoincrement=True)
-    prenote_state_description = Column(Text)
+    prenote_state_description = Column(Text, nullable=False)
 
     def __init__(self, prenote_state_id, prenote_state_description):
         self.prenote_state_id = prenote_state_id
@@ -236,7 +236,7 @@ class LkPrenoteState(Base):
 class LkFlow(Base):
     __tablename__ = "lk_flow"
     flow_id = Column(Integer, primary_key=True, autoincrement=True)
-    flow_description = Column(Text)
+    flow_description = Column(Text, nullable=False)
 
     def __init__(self, flow_id, flow_description):
         self.flow_id = flow_id
@@ -246,7 +246,7 @@ class LkFlow(Base):
 class LkState(Base):
     __tablename__ = "lk_state"
     state_id = Column(Integer, primary_key=True, autoincrement=True)
-    state_description = Column(Text)
+    state_description = Column(Text, nullable=False)
     flow_id = Column(Integer, ForeignKey("lk_flow.flow_id"))
 
     def __init__(self, state_id, state_description, flow_id):
@@ -258,7 +258,7 @@ class LkState(Base):
 class LkPaymentTransactionType(Base):
     __tablename__ = "lk_payment_transaction_type"
     payment_transaction_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    payment_transaction_type_description = Column(Text)
+    payment_transaction_type_description = Column(Text, nullable=False)
 
     def __init__(self, payment_transaction_type_id, payment_transaction_type_description):
         self.payment_transaction_type_id = payment_transaction_type_id
@@ -268,7 +268,7 @@ class LkPaymentTransactionType(Base):
 class LkPaymentCheckStatus(Base):
     __tablename__ = "lk_payment_check_status"
     payment_check_status_id = Column(Integer, primary_key=True, autoincrement=True)
-    payment_check_status_description = Column(Text)
+    payment_check_status_description = Column(Text, nullable=False)
 
     def __init__(self, payment_check_status_id, payment_check_status_description):
         self.payment_check_status_id = payment_check_status_id
@@ -278,7 +278,7 @@ class LkPaymentCheckStatus(Base):
 class LkReferenceFileType(Base):
     __tablename__ = "lk_reference_file_type"
     reference_file_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    reference_file_type_description = Column(Text)
+    reference_file_type_description = Column(Text, nullable=False)
     num_files_in_set = Column(Integer)
 
     def __init__(self, reference_file_type_id, reference_file_type_description, num_files_in_set):
@@ -290,7 +290,7 @@ class LkReferenceFileType(Base):
 class LkTitle(Base):
     __tablename__ = "lk_title"
     title_id = Column(Integer, primary_key=True, autoincrement=True)
-    title_description = Column(Text)
+    title_description = Column(Text, nullable=False)
 
     def __init__(self, title_id, title_description):
         self.title_id = title_id
@@ -300,7 +300,7 @@ class LkTitle(Base):
 class LkLeaveRequestDecision(Base):
     __tablename__ = "lk_leave_request_decision"
     leave_request_decision_id = Column(Integer, primary_key=True, autoincrement=True)
-    leave_request_decision_description = Column(Text)
+    leave_request_decision_description = Column(Text, nullable=False)
 
     def __init__(self, leave_request_decision_id, leave_request_decision_description):
         self.leave_request_decision_id = leave_request_decision_id
@@ -476,6 +476,10 @@ class PubEft(Base, TimestampMixin):
         server_default=pub_eft_individual_id_seq.next_value(),
     )
 
+    fineos_employee_first_name = Column(Text)
+    fineos_employee_middle_name = Column(Text)
+    fineos_employee_last_name = Column(Text)
+
     bank_account_type = relationship(LkBankAccountType)
     prenote_state = relationship(LkPrenoteState)
 
@@ -562,6 +566,10 @@ class Employee(Base, TimestampMixin):
             index=True,
         )
     )
+
+    fineos_employee_first_name = Column(Text)
+    fineos_employee_middle_name = Column(Text)
+    fineos_employee_last_name = Column(Text)
 
     title = relationship(LkTitle)
     race = relationship(LkRace)
@@ -736,6 +744,10 @@ class Payment(Base, TimestampMixin):
     claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"))
     leave_request_id = Column(PostgreSQLUUID, ForeignKey("absence_period.absence_period_id"))
 
+    fineos_employee_first_name = Column(Text)
+    fineos_employee_middle_name = Column(Text)
+    fineos_employee_last_name = Column(Text)
+
     claim = relationship("Claim", back_populates="payments")
     claim_type = relationship(LkClaimType)
     payment_transaction_type = relationship(LkPaymentTransactionType)
@@ -881,9 +893,6 @@ class HealthCareProviderAddress(Base):
 class User(Base, TimestampMixin):
     __tablename__ = "user"
     user_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
-    active_directory_id = deferred(
-        Column(Text().evaluates_none(), index=True, unique=True)
-    )  # renaming to sub_id
     sub_id = Column(Text, index=True, unique=True)
     email_address = Column(Text)
     consented_to_data_sharing = Column(Boolean, default=False, nullable=False)
@@ -949,7 +958,7 @@ class UserLeaveAdministrator(Base, TimestampMixin):
 class LkManagedRequirementStatus(Base):
     __tablename__ = "lk_managed_requirement_status"
     managed_requirement_status_id = Column(Integer, primary_key=True, autoincrement=True)
-    managed_requirement_status_description = Column(Text)
+    managed_requirement_status_description = Column(Text, nullable=False)
 
     def __init__(self, managed_requirement_status_id, managed_requirement_status_description):
         self.managed_requirement_status_id = managed_requirement_status_id
@@ -959,7 +968,7 @@ class LkManagedRequirementStatus(Base):
 class LkManagedRequirementCategory(Base):
     __tablename__ = "lk_managed_requirement_category"
     managed_requirement_category_id = Column(Integer, primary_key=True, autoincrement=True)
-    managed_requirement_category_description = Column(Text)
+    managed_requirement_category_description = Column(Text, nullable=False)
 
     def __init__(self, managed_requirement_category_id, managed_requirement_category_description):
         self.managed_requirement_category_id = managed_requirement_category_id
@@ -969,7 +978,7 @@ class LkManagedRequirementCategory(Base):
 class LkManagedRequirementType(Base):
     __tablename__ = "lk_managed_requirement_type"
     managed_requirement_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    managed_requirement_type_description = Column(Text)
+    managed_requirement_type_description = Column(Text, nullable=False)
 
     def __init__(self, managed_requirement_type_id, managed_requirement_type_description):
         self.managed_requirement_type_id = managed_requirement_type_id
@@ -1305,7 +1314,7 @@ class PubError(Base, TimestampMixin):
 class LkPubErrorType(Base):
     __tablename__ = "lk_pub_error_type"
     pub_error_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    pub_error_type_description = Column(Text)
+    pub_error_type_description = Column(Text, nullable=False)
 
     def __init__(self, pub_error_type_id, pub_error_type_description):
         self.pub_error_type_id = pub_error_type_id
@@ -1362,6 +1371,8 @@ class AbsencePeriodType(LookupTable):
     INCAPACITY_EPISODIC = LkAbsencePeriodType(7, "Incapacity Episodic")
     BLACKOUT_PERIOD = LkAbsencePeriodType(8, "Blackout Period")
     UNSPECIFIED = LkAbsencePeriodType(9, "Unspecified")
+    CONTINUOUS = LkAbsencePeriodType(10, "Continuous")
+    INTERMITTENT = LkAbsencePeriodType(11, "Intermittent")
 
 
 class AbsenceReason(LookupTable):
