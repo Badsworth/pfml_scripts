@@ -1,6 +1,6 @@
 import React from "react";
 import { create } from "react-test-renderer";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import Button, { Props as ButtonProps } from "../../src/components/Button";
 
@@ -51,9 +51,7 @@ describe("Button", () => {
       onClick: onClick,
     });
 
-    act(() => {
-      fireEvent.click(screen.getByTestId("button"));
-    });
+    fireEvent.click(screen.getByTestId("button"));
 
     expect(onClick).toHaveBeenCalledTimes(0);
     expect(screen.getByTestId("button")).toHaveAttribute("disabled");
@@ -76,9 +74,7 @@ describe("Button", () => {
       onClick: onClick,
     });
 
-    act(() => {
-      fireEvent.click(screen.getByTestId("button"));
-    });
+    fireEvent.click(screen.getByTestId("button"));
 
     expect(onClick).toHaveBeenCalledTimes(1);
   });

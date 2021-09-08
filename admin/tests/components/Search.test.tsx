@@ -1,12 +1,6 @@
 import React from "react";
 import { create } from "react-test-renderer";
-import {
-  act,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import { mocked } from "ts-jest/utils";
 import Search, { Props as SearchProps } from "../../src/components/Search";
@@ -125,7 +119,6 @@ describe("Search", () => {
 
   test("sets the search term on page load when 'search' query parameter is set", () => {
     mockedIsClient.mockReturnValue(true);
-    const setItem = jest.spyOn(Storage.prototype, "setItem");
     mockRouter.query.search = "User";
 
     renderComponent();
@@ -135,8 +128,6 @@ describe("Search", () => {
 
   test("sets the search term when the 'search' query parameter changes", () => {
     mockedIsClient.mockReturnValue(true);
-    const setItem = jest.spyOn(Storage.prototype, "setItem");
-
     mockRouter.pathname = "/users?search=User";
 
     renderComponent();

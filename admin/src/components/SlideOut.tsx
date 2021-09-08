@@ -19,7 +19,7 @@ function SlideOut<T>(props: Props<T>): JSX.Element {
             aria-label={`Close ${title} window`}
           ></button>
         </div>
-        <div className="slide-out__body">
+        <div className="slide-out__body" data-testid="slideout-body">
           {typeof children === "function" ? children(data) : children}
         </div>
       </div>

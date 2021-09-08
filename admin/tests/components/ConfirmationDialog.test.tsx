@@ -1,6 +1,6 @@
 import React from "react";
 import { create } from "react-test-renderer";
-import { act, fireEvent, render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import ConfirmationDialog, {
   Props as ConfirmationDialogProps,
@@ -69,9 +69,7 @@ describe("ConfirmationDialog", () => {
       handleContinueCallback: handleContinueCallback,
     });
 
-    act(() => {
-      fireEvent.click(screen.getByText("Continue"));
-    });
+    fireEvent.click(screen.getByText("Continue"));
 
     expect(handleContinueCallback).toHaveBeenCalledTimes(1);
   });
@@ -83,9 +81,7 @@ describe("ConfirmationDialog", () => {
       handleCancelCallback: handleCancelCallback,
     });
 
-    act(() => {
-      fireEvent.click(screen.getByText("Cancel"));
-    });
+    fireEvent.click(screen.getByText("Cancel"));
 
     expect(handleCancelCallback).toHaveBeenCalledTimes(1);
   });
