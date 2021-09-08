@@ -323,7 +323,7 @@ describe("status page", () => {
     expect(button.exists()).toBe(true);
     expect(wrapper).toMatchSnapshot();
     expect(button.prop("href")).toBe(
-      `${routes.applications.uploadDocsOptions}?claim_id=${CLAIM_DETAIL.application_id}`
+      `${routes.applications.upload.index}?absence_case_id=${CLAIM_DETAIL.application_id}`
     );
   });
 });

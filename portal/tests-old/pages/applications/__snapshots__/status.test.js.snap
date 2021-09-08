@@ -697,7 +697,7 @@ exports[`status page includes a button to upload additional documents 1`] = `
       </p>
       <ButtonLink
         className="measure-6 margin-bottom-3"
-        href="/applications/upload-docs-options?claim_id=application-id"
+        href="/applications/upload?absence_case_id=application-id"
       >
         Upload additional documents
       </ButtonLink>
@@ -1111,7 +1111,7 @@ exports[`status page renders the page 1`] = `
       </p>
       <ButtonLink
         className="measure-6 margin-bottom-3"
-        href="/applications/upload-docs-options?claim_id=application-id"
+        href="/applications/upload?absence_case_id=application-id"
       >
         Upload additional documents
       </ButtonLink>
