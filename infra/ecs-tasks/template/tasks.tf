@@ -349,6 +349,15 @@ locals {
         local.rmv_api_access
       ]
     },
+
+    "report-sequential-employment" = {
+      command   = ["report-sequential-employment"]
+      task_role = aws_iam_role.task_execute_sql_task_role.arn
+      env = [
+        local.db_access,
+        { name : "S3_BUCKET", value : "massgov-pfml-${var.environment_name}-execute-sql-export" }
+      ]
+    },
   }
 }
 
