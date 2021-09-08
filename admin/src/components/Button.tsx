@@ -1,7 +1,7 @@
 import React from "react";
 import classNames from "classnames";
 
-type Props = {
+export type Props = {
   className?: string;
   onClick: Function;
   disabled?: boolean;
@@ -26,6 +26,7 @@ const Button = ({
       type="button"
       className={classes}
       onClick={handleOnClick}
+      data-testid="button"
       disabled={disabled}
     >
       {children}

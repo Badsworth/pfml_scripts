@@ -3,7 +3,7 @@ import { useRouter } from "next/router";
 import useDebounce from "../hooks/useDebounce";
 import isClient from "../utils/isClient";
 
-type Props = {
+export type Props = {
   search: (searchTerm: string) => Promise<unknown>;
   setResults: any; // @todo: better type?
   debounceDelay?: number;
@@ -17,7 +17,7 @@ const Search = ({ search, setResults, debounceDelay }: Props) => {
   const debouncedSearchTerm = useDebounce(searchTerm, debounceDelay || 500);
 
   useEffect(() => {
-    if (isClient()) {
+    if (isClient() && router.query.search != null) {
       setSearchTerm(router.query.search);
     }
   }, [router.query.search]);
@@ -47,13 +47,18 @@ const Search = ({ search, setResults, debounceDelay }: Props) => {
   };
 
   return (
-    <form onSubmit={searchOnSubmit} className="search">
+    <form
+      onSubmit={searchOnSubmit}
+      className="search"
+      data-testid="search-form"
+    >
       <div className="search__input-wrapper">
         <input
           type="text"
           className="search__input"
           onChange={searchOnChange}
           placeholder="Enter email address"
+          data-testid="search-input"
           value={searchTerm}
         />
         <i className="pfml-icon--search search__icon"></i>

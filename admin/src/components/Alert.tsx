@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 
-type Props = {
-  type: "warn" | "success" | "info" | "error" | "neutral";
+export type Props = {
+  type?: "warn" | "success" | "info" | "error" | "neutral";
   closeable?: boolean;
   children: string;
   onClose?: Function;
@@ -24,14 +24,17 @@ const Alert = ({
 
   if (showAlert) {
     return (
-      <div className={`alert alert--${type}`}>
+      <div className={`alert alert--${type}`} data-testid="alert-container">
         <div className="alert__icon"></div>
-        <div className="alert__text">{children}</div>
+        <div className="alert__text" data-testid="alert-text">
+          {children}
+        </div>
         {closeable && (
           <button
             className="alert__dismiss"
             onClick={closeAlert}
             type="button"
+            data-testid="alert-close-button"
           ></button>
         )}
       </div>
