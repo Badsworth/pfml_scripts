@@ -2129,6 +2129,7 @@ components:
             - Care for a family member form
             - Military exigency form
             - Pending Application Withdrawn
+            - Appeal Acknowledgement
             - Certification Form # Only used when Claimant Portal uploads certification docs
           example: "Passport"
         name:
@@ -2358,6 +2359,7 @@ components:
             - Care for a family member form
             - Military exigency form
             - Pending Application Withdrawn
+            - Appeal Acknowledgement
           example: "Denial Notice"
         content_type:
           type: string
@@ -2411,6 +2413,7 @@ components:
             - Care for a family member form
             - Military exigency form
             - Pending Application Withdrawn
+            - Appeal Acknowledgement
           example: "Passport"
         content_type:
           type: string
