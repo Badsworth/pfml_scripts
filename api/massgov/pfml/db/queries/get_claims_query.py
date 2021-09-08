@@ -162,25 +162,34 @@ class GetClaimsQuery:
         # use outer join to return claims with missing relationship data
         self.join(Claim.employee, isouter=True)  # type:ignore
 
-        self.query = self.query.filter(Employee.employee_id == Claim.employee_id)
         search_string = self.format_search_string(search_string)
-        search_sub_query = self.employee_search_sub_query()
-        self.join(search_sub_query, isouter=True)
-        self.query = self.query.filter(search_sub_query.c.employee_id == Claim.employee_id)
+        # if there is no space in the search string
+        # then it is either a first_name, last_name, middle_name or absence_case_id search
+        #  if there is a space then we run the full_name search
         if " " in search_string:
-            filters = [
-                search_sub_query.c.first_last.ilike(f"%{search_string}%"),
-                search_sub_query.c.last_first.ilike(f"%{search_string}%"),
-                search_sub_query.c.full_name.ilike(f"%{search_string}%"),
-            ]
+            search_sub_query = self.employee_search_sub_query()
+            self.join(search_sub_query, isouter=True)
+            filters = and_(
+                search_sub_query.c.employee_id == Claim.employee_id,
+                or_(
+                    search_sub_query.c.first_last.ilike(f"%{search_string}%"),
+                    search_sub_query.c.last_first.ilike(f"%{search_string}%"),
+                    search_sub_query.c.full_name.ilike(f"%{search_string}%"),
+                ),
+            )
         else:
-            filters = [
+            filters = or_(
                 Claim.fineos_absence_id.ilike(f"%{search_string}%"),
-                Employee.first_name.ilike(f"%{search_string}%"),
-                Employee.middle_name.ilike(f"%{search_string}%"),
-                Employee.last_name.ilike(f"%{search_string}%"),
-            ]
-        self.query = self.query.filter(or_(*filters))
+                and_(
+                    Employee.employee_id == Claim.employee_id,
+                    or_(
+                        Employee.first_name.ilike(f"%{search_string}%"),
+                        Employee.middle_name.ilike(f"%{search_string}%"),
+                        Employee.last_name.ilike(f"%{search_string}%"),
+                    ),
+                ),
+            )
+        self.query = self.query.filter(filters)
 
     def add_managed_requirements_filter(self) -> None:
         filters = [

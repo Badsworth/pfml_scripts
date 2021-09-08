@@ -3171,6 +3171,16 @@ class TestGetClaimsEndpoint:
 
             assert len(response_body["data"]) >= 7
 
+        def test_get_claims_search_no_employee(self, client, employer_auth_token, employer):
+            claim = ClaimFactory.create(
+                employer=employer, employee_id=None, employee=None, claim_type_id=1
+            )
+            response = self.perform_search(claim.fineos_absence_id, client, employer_auth_token)
+            response_body = response.get_json()
+            assert len(response_body["data"]) == 1
+            assert response_body["data"][0]["fineos_absence_id"] == claim.fineos_absence_id
+            assert response_body["data"][0]["employee"] is None
+
     class TestClaimsSearchFullName:
         @pytest.fixture()
         def X_NAME(self):
