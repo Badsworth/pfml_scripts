@@ -1,4 +1,5 @@
 import Document, { DocumentType } from "../models/Document";
+
 import Button from "./Button";
 import PropTypes from "prop-types";
 import React from "react";
@@ -85,6 +86,7 @@ function getDocumentName(document, t) {
       DocumentType.approvalNotice,
       DocumentType.denialNotice,
       DocumentType.requestForInfoNotice,
+      DocumentType.withdrawalNotice,
     ].includes(document.document_type)
   ) {
     return t("components.downloadableDocument.noticeName", {
