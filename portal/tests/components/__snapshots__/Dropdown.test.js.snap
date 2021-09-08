@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Dropdown renders select field with list of options 1`] = `
+<select
+  aria-labelledby="Dropdown1_label Dropdown1_hint"
+  class="usa-select maxw-mobile-lg"
+  id="Dropdown1"
+  name="field-name"
+>
+  <option
+    value=""
+  >
+    Select an answer
+  </option>
+  <option
+    value="a"
+  >
+    Apple
+  </option>
+  <option
+    value="b"
+  >
+    Banana
+  </option>
+</select>
+`;
