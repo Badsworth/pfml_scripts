@@ -87,6 +87,7 @@ function getDocumentName(document, t) {
       DocumentType.denialNotice,
       DocumentType.requestForInfoNotice,
       DocumentType.withdrawalNotice,
+      DocumentType.appealAcknowledgement,
     ].includes(document.document_type)
   ) {
     return t("components.downloadableDocument.noticeName", {

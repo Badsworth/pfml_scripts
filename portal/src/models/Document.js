@@ -26,6 +26,7 @@ class Document extends BaseModel {
  * @enum {string}
  */
 export const DocumentType = {
+  appealAcknowledgement: "Appeal Acknowledgment",
   approvalNotice: "Approval Notice",
   certification: {
     certificationForm: "Certification Form",

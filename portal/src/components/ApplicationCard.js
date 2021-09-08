@@ -191,6 +191,7 @@ function LegalNotices(props) {
     DocumentType.denialNotice,
     DocumentType.requestForInfoNotice,
     DocumentType.withdrawalNotice,
+    DocumentType.appealAcknowledgement,
   ]);
 
   // If a claim doesn't have a corresponding FINEOS ID, then
