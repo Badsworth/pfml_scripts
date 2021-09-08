@@ -351,6 +351,7 @@ class DocumentType(str, LookupEnum):
     child_bonding_evidence_form = "Child bonding evidence form"
     care_for_a_family_member_form = "Care for a family member form"
     military_exigency_form = "Military exigency form"
+    withdrawal_notice = "Pending Application Withdrawn"
 
 
 class ContentType(str, LookupEnum):
