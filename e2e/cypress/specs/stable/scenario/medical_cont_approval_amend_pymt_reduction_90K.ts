@@ -41,7 +41,7 @@ describe("Claimant uses portal to report other leaves and benefits, receives cor
 
         const credentials: Credentials = getClaimantCredentials();
         portal.login(credentials);
-        portal.goToDashboardFromApplicationsPage();
+        portal.skipLoadingClaimantApplications();
 
         // Submit Claim
         portal.startClaim();

@@ -125,7 +125,7 @@ type IntermittentLeaveSpec =
   | IntermittentLeavePeriods[]
   | true;
 
-export type GeneratedClaimMetadata = Record<string, string | boolean>;
+export type GeneratedClaimMetadata = Record<string, string | boolean | number>;
 
 export type EmployerResponseSpec = Omit<
   EmployerClaimRequestBody,
