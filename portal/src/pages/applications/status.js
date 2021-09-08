@@ -17,6 +17,7 @@ import { Trans } from "react-i18next";
 import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDate from "../../utils/formatDate";
+import getLegalNotices from "../../utils/getLegalNotices";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
@@ -33,10 +34,10 @@ export const Status = ({ appLogic, query }) => {
   const {
     claims: { claimDetail, isLoadingClaimDetail, loadClaimDetail },
     documents: {
-      documents,
+      documents: allClaimDocuments,
       download: downloadDocument,
       hasLoadedClaimDocuments,
-      loadAll: loadClaimDocuments,
+      loadAll: loadAllClaimDocuments,
     },
     portalFlow,
   } = appLogic;
@@ -56,7 +57,7 @@ export const Status = ({ appLogic, query }) => {
   useEffect(() => {
     const application_id = get(claimDetail, "application_id");
     if (application_id) {
-      loadClaimDocuments(application_id);
+      loadAllClaimDocuments(application_id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [claimDetail]);
@@ -78,10 +79,14 @@ export const Status = ({ appLogic, query }) => {
     );
 
   const absenceDetails = claimDetail.absencePeriodsByReason;
-  const legalNotices = documents.legalNotices;
+  const documentsForApplication = allClaimDocuments.filterByApplication(
+    claimDetail.application_id
+  );
 
   const ViewYourNotices = () => {
     const className = "border-top border-base-lighter padding-y-2";
+    const legalNotices = getLegalNotices(documentsForApplication);
+
     const shouldShowSpinner =
       !hasLoadedClaimDocuments(claimDetail.application_id) &&
       !hasDocumentsLoadError(appLogic.appErrors, claimDetail.application_id);
@@ -202,7 +207,7 @@ export const Status = ({ appLogic, query }) => {
         <ApplicationUpdates
           absenceDetails={absenceDetails}
           applicationId={claimDetail.application_id}
-          docList={documents.items}
+          docList={documentsForApplication}
         />
         <LeaveDetails absenceDetails={absenceDetails} />
         <ViewYourNotices />

@@ -58,6 +58,7 @@ const CLAIM_DETAIL = new ClaimDetail({
 
 const DOCUMENT_COLLECTION = new DocumentCollection([
   new Document({
+    application_id: "application-id",
     content_type: "image/png",
     created_at: "2020-04-05",
     document_type: DocumentType.denialNotice,
@@ -65,6 +66,7 @@ const DOCUMENT_COLLECTION = new DocumentCollection([
     name: "legal notice 1",
   }),
   new Document({
+    application_id: "not-my-application-id",
     content_type: "image/png",
     created_at: "2020-04-05",
     document_type: DocumentType.requestForInfoNotice,
@@ -72,6 +74,7 @@ const DOCUMENT_COLLECTION = new DocumentCollection([
     name: "legal notice 2",
   }),
   new Document({
+    application_id: "application-id",
     content_type: "image/png",
     created_at: "2020-04-05",
     document_type: DocumentType.identityVerification,
@@ -79,11 +82,12 @@ const DOCUMENT_COLLECTION = new DocumentCollection([
     name: "non-legal notice 1",
   }),
   new Document({
+    application_id: "application-id",
     content_type: "image/png",
     created_at: "2020-04-05",
     document_type: DocumentType.requestForInfoNotice,
     fineos_document_id: "fineos-id-7",
-    name: "legal notice 2",
+    name: "legal notice 3",
   }),
 ]);
 
@@ -267,24 +271,21 @@ describe("status page", () => {
       expect(documentSpinner.exists()).toBe(true);
     });
 
-    it("displays only legal notices", () => {
-      const legalNoticeTypes = new Set([
-        DocumentType.approvalNotice,
-        DocumentType.denialNotice,
-        DocumentType.requestForInfoNotice,
-      ]);
+    it("displays only legal notices for the current application_id", () => {
+      const expectedDocuments = [
+        DOCUMENT_COLLECTION.items[0],
+        DOCUMENT_COLLECTION.items[3],
+      ];
 
       const { wrapper } = setup({ render: "mount" });
       wrapper.update();
 
       const viewYourNoticesComponent = wrapper.find("ViewYourNotices");
-      const legalNoticeListProps = viewYourNoticesComponent
+      const documentsProp = viewYourNoticesComponent
         .find("LegalNoticeList")
         .prop("documents");
+      expect(documentsProp).toEqual(expectedDocuments);
       expect(viewYourNoticesComponent).toMatchSnapshot();
-      for (const document of legalNoticeListProps) {
-        expect(legalNoticeTypes.has(document.document_type)).toBe(true);
-      }
     });
 
     it("displays the fallback text if there are no legal notices", () => {
