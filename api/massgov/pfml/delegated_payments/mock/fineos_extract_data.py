@@ -10,6 +10,7 @@ import faker
 
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
+import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import PaymentMethod, PaymentTransactionType
 from massgov.pfml.delegated_payments.mock.mock_util import generate_routing_nbr_from_ssn
 from massgov.pfml.delegated_payments.mock.scenario_data_generator import (
@@ -18,6 +19,8 @@ from massgov.pfml.delegated_payments.mock.scenario_data_generator import (
     NO_MATCH_ADDRESS,
     ScenarioData,
 )
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
 
 fake = faker.Faker()
 fake.seed_instance(1212)
@@ -358,6 +361,7 @@ def _create_file(
     folder_path: str, filename_prefix: str, file_name: str, column_names: List[str]
 ) -> FineosPaymentsExportCsvWriter:
     csv_file_path = os.path.join(folder_path, f"{filename_prefix}{file_name}")
+    logger.info("writing CSV file %s", csv_file_path)
     csv_file = file_util.write_file(csv_file_path)
     csv_writer = csv.DictWriter(csv_file, fieldnames=column_names)
     csv_writer.writeheader()
@@ -552,6 +556,9 @@ def create_fineos_claimant_extract_files(
     requested_absence_som_writer = _create_file(
         folder_path, date_prefix, REQUESTED_ABSENCE_SOM_FILE_NAME, REQUESTED_ABSENCE_SOM_FIELD_NAMES
     )
+    leaveplan_info_writer = _create_file(
+        folder_path, date_prefix, LEAVE_PLAN_FILE_NAME, LEAVE_PLAN_FIELD_NAMES
+    )
 
     # write the respective rows
     for fineos_claimant_data in fineos_claimant_dataset:
@@ -563,6 +570,7 @@ def create_fineos_claimant_extract_files(
     # close the files
     employee_feed_writer.file.close()
     requested_absence_som_writer.file.close()
+    leaveplan_info_writer.file.close()
 
 
 def generate_claimant_data_files(
@@ -599,11 +607,14 @@ def generate_claimant_data_files(
         )
 
         city = employee.ctr_address_pair.fineos_address.city if employee.ctr_address_pair else ""
-        state = (
-            employee.ctr_address_pair.fineos_address.geo_state_text
-            if employee.ctr_address_pair
-            else ""
-        )
+        state = ""
+        if employee.ctr_address_pair:
+            if employee.ctr_address_pair.fineos_address.geo_state:
+                state = str(
+                    employee.ctr_address_pair.fineos_address.geo_state.geo_state_description
+                )
+            else:
+                state = str(employee.ctr_address_pair.fineos_address.geo_state_text)
         post_code = (
             employee.ctr_address_pair.fineos_address.zip_code if employee.ctr_address_pair else ""
         )

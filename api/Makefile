@@ -180,13 +180,8 @@ pub-payments-create-pub-files:
 pub-payments-process-pub-returns:
 	$(PY_RUN_CMD) pub-payments-process-pub-returns --steps ALL $(DECODE_LOG)
 
-fineos-test-vendor-export-generate:
-	mkdir -p mock_fineos_test_vendor_export
-	$(PY_RUN_CMD) fineos-test-vendor-export-generate --folder mock_fineos_test_vendor_export --fein 103000000 --ssn 253000000 --cvalue 5100 --employeecustomernumber 200 --absencecaseid 200 $(DECODE_LOG)
-
-fineos-test-vendor-export-generate-more:
-	mkdir -p mock_fineos_test_vendor_export_more
-	$(PY_RUN_CMD) fineos-test-vendor-export-generate --folder mock_fineos_test_vendor_export_more --fein 104000000 --ssn 254000000 --cvalue 5200 --employeecustomernumber 300 --absencecaseid 300 $(DECODE_LOG)
+pub-payments-mock-generate:
+	$(PY_RUN_CMD)  pub-payments-mock-generate $(DECODE_LOG)
 
 delegated-payment-audit-rejects-generate:
 	mkdir -p mock_payment_rejects_files
