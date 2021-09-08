@@ -417,7 +417,7 @@ export const ApplicationUpdates = ({
               <ButtonLink
                 className="measure-12"
                 href={routeWithParams(nextStepsRoute[typeOfProof], {
-                  absence_case_id: application_id,
+                  claim_id: application_id,
                   additionalDoc: true,
                 })}
               >
