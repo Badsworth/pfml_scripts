@@ -350,6 +350,15 @@ locals {
       ]
     },
 
+    "evaluate-new-financial-eligibility" = {
+      command   = ["evaluate-new-financial-eligibility"]
+      task_role = aws_iam_role.evaluate_new_financial_eligibility_task_role.arn
+      env = [
+        local.db_access,
+        { name : "S3_EXPORT_BUCKET", value : "massgov-pfml-${var.environment_name}-execute-sql-export" }
+      ]
+    },
+
     "report-sequential-employment" = {
       command   = ["report-sequential-employment"]
       task_role = aws_iam_role.task_execute_sql_task_role.arn

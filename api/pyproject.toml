@@ -110,6 +110,7 @@ register-leave-admins-with-fineos = "massgov.pfml.fineos.leave_admin_creation.re
 dor-generate = "massgov.pfml.dor.mock.generate:main"
 dor-import = "massgov.pfml.dor.importer.import_dor:handler"
 generate-wagesandcontributions = "massgov.pfml.api.generate_wagesandcontributions:main"
+evaluate-new-eligibility = "massgov.pfml.evaluate_new_eligibility.report:evaluate_new_eligibility"
 load-employers-to-fineos = "massgov.pfml.fineos.employer_load:handler"
 fineos-eligibility-feed-export = "massgov.pfml.fineos.eligibility_feed_export.eligibility_export:main"
 payments-ctr-process = "massgov.pfml.payments.process_ctr_payments:ctr_process"

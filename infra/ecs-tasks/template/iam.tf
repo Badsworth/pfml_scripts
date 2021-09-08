@@ -1360,3 +1360,48 @@ data "aws_iam_policy_document" "update_gender_data_from_rmv" {
     ]
   }
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for evaluate-new-financial-eligibility
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "evaluate_new_financial_eligibility_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-new-financial-eligibility-task-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy" "evaluate_new_financial_eligibility_role_policy" {
+  name   = "${local.app_name}-${var.environment_name}-evaluate-new-financial-eligibility-role-policy"
+  role   = aws_iam_role.evaluate_new_financial_eligibility_task_role.id
+  policy = data.aws_iam_policy_document.evaluate_new_financial_eligibility.json
+}
+
+# Defined in infra/api/ and referenced here.
+data "aws_cloudwatch_log_group" "service_logs" {
+  name = "service/${local.app_name}-${var.environment_name}"
+}
+
+data "aws_iam_policy_document" "evaluate_new_financial_eligibility" {
+  # Allow writing results to S3.
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:PutObject",
+    ]
+    resources = [
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-execute-sql-export",
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-execute-sql-export/*",
+    ]
+  }
+
+  # Allow reading API server logs from CloudWatch logs.
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:GetLogEvents"
+    ]
+    resources = [
+      "${data.aws_cloudwatch_log_group.service_logs.arn}:*",
+    ]
+  }
+}
