@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { find, get, groupBy, has, isEmpty, map } from "lodash";
+import { find, get, has, isEmpty, map } from "lodash";
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
@@ -17,6 +17,7 @@ import { Trans } from "react-i18next";
 import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDate from "../../utils/formatDate";
+import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
@@ -60,9 +61,11 @@ export const Status = ({ appLogic, query }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [claimDetail]);
 
-  const appErrorsByType = groupBy(appLogic.appErrors.items, "name");
+  const hasClaimDetailLoadError = appLogic.appErrors.items.some(
+    (error) => error.name === "ClaimDetailLoadError"
+  );
 
-  if (has(appErrorsByType, "ClaimDetailLoadError")) return null;
+  if (hasClaimDetailLoadError) return null;
 
   // Check both because claimDetail could be cached from a different status page.
   if (isLoadingClaimDetail || !claimDetail)
@@ -79,11 +82,12 @@ export const Status = ({ appLogic, query }) => {
 
   const ViewYourNotices = () => {
     const className = "border-top border-base-lighter padding-y-2";
-    const hasDocumentsLoadError = has(appErrorsByType, "DocumentsLoadError");
     const shouldShowSpinner =
       !hasLoadedClaimDocuments(claimDetail.application_id) &&
-      !hasDocumentsLoadError;
-    const nothingToShow = legalNotices.length === 0 || hasDocumentsLoadError;
+      !hasDocumentsLoadError(appLogic.appErrors, claimDetail.application_id);
+    const hasNothingToShow =
+      hasDocumentsLoadError(appLogic.appErrors, claimDetail.application_id) ||
+      legalNotices.length === 0;
 
     if (shouldShowSpinner) {
       // claim documents are loading.
@@ -96,19 +100,21 @@ export const Status = ({ appLogic, query }) => {
       );
     }
 
-    if (nothingToShow) {
-      return null;
-    }
+    const sectionBody = hasNothingToShow ? (
+      <p>{t("pages.claimsStatus.legalNoticesFallback")}</p>
+    ) : (
+      <LegalNoticeList
+        documents={legalNotices}
+        onDownloadClick={downloadDocument}
+      />
+    );
 
     return (
       <div className={className}>
         <Heading className="margin-bottom-1" level="2" id="view_notices">
           {t("pages.claimsStatus.viewNoticesHeading")}
         </Heading>
-        <LegalNoticeList
-          documents={legalNotices}
-          onDownloadClick={downloadDocument}
-        />
+        {sectionBody}
       </div>
     );
   };

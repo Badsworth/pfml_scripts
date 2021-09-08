@@ -18,7 +18,7 @@ describe("Submit medical application via the web portal: Adjudication Approval &
           password: config("PORTAL_PASSWORD"),
         };
         portal.login(credentials);
-        portal.goToDashboardFromApplicationsPage();
+        portal.skipLoadingClaimantApplications();
 
         // Submit Claim
         portal.startClaim();

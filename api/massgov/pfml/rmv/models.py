@@ -34,8 +34,8 @@ class VendorLicenseInquiryRequest(PydanticBaseModel):
 
 
 class RMVSex(str, Enum):
-    M = "M"
-    F = "F"
+    M = "MALE"
+    F = "FEMALE"
     X = "X"
 
 

@@ -153,42 +153,26 @@ describe("status page", () => {
     expect(wrapper.isEmptyRender()).toBe(true);
   });
 
-  describe("when DocumentsLoadError exists", () => {
-    const documentsLoadError = new AppErrorInfo({
-      name: "DocumentsLoadError",
+  it("still renders the page if DocumentsLoadError exists", () => {
+    const { appLogic, wrapper } = setup({
+      documentCollection: new DocumentCollection(),
+      isLoadingDocuments: true,
+      render: "mount",
     });
 
-    const setupWithDocumentsLoadError = () => {
-      const { appLogic, wrapper } = setup({
-        documentCollection: new DocumentCollection(),
-        isLoadingDocuments: true,
-        render: "mount",
+    act(() => {
+      wrapper.setProps({
+        appLogic: {
+          ...appLogic,
+          appErrors: new AppErrorInfoCollection([
+            new AppErrorInfo({ name: "DocumentsLoadError" }),
+          ]),
+        },
       });
-
-      act(() => {
-        wrapper.setProps({
-          appLogic: {
-            ...appLogic,
-            appErrors: new AppErrorInfoCollection([documentsLoadError]),
-          },
-        });
-      });
-      wrapper.update();
-
-      return { wrapper };
-    };
-
-    it("still renders the page", () => {
-      const { wrapper } = setupWithDocumentsLoadError();
-
-      expect(wrapper.isEmptyRender()).toBe(false);
     });
+    wrapper.update();
 
-    it("doesn't show the ViewYourNotices section", () => {
-      const { wrapper } = setupWithDocumentsLoadError();
-
-      expect(wrapper.find("ViewYourNotices").isEmptyRender()).toBe(true);
-    });
+    expect(wrapper.isEmptyRender()).toBe(false);
   });
 
   it("shows a spinner if there is no claim detail", () => {
@@ -303,7 +287,7 @@ describe("status page", () => {
       }
     });
 
-    it("does not appear if there are no legal notices", () => {
+    it("displays the fallback text if there are no legal notices", () => {
       const { wrapper } = setup({
         documentCollection: new DocumentCollection(),
         isLoadingDocuments: false,
@@ -311,7 +295,7 @@ describe("status page", () => {
       });
       wrapper.update();
 
-      expect(wrapper.find("ViewYourNotices").isEmptyRender()).toBe(true);
+      expect(wrapper.find("ViewYourNotices").find("p").exists()).toBe(true);
     });
   });
 

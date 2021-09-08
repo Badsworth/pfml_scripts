@@ -151,7 +151,7 @@ class EmployerOnlyDORDataFactory(EmployerOnlyRequiredFactory):
 
 
 class EmployerFactory(EmployerOnlyDORDataFactory):
-    fineos_employer_id = factory.Sequence(lambda n: n)
+    fineos_employer_id = factory.Sequence(lambda n: n + 1)
 
 
 class TaxIdentifierFactory(BaseFactory):

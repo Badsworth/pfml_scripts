@@ -58,11 +58,7 @@ export function before(flags?: Partial<FeatureFlags>): void {
     employerShowReviewByStatus:
       config("PORTAL_HAS_LA_STATUS_UPDATES") === "true",
   };
-  cy.setCookie(
-    "_ff",
-    JSON.stringify(flags ? { ...defaults, ...flags } : defaults),
-    { log: true }
-  );
+  cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });
 
   // Setup a route for application submission so we can extract claim ID later.
   cy.intercept({
@@ -77,6 +73,7 @@ export function before(flags?: Partial<FeatureFlags>): void {
   cy.intercept(/\/api\/v1\/claims\?page_offset=\d+$/).as(
     "dashboardDefaultQuery"
   );
+  // cy.intercept(/\/api\/v1\/applications$/).as("getApplications");
   cy.intercept(/\/api\/v1\/claims\?(page_offset=\d+)?&?(order_by)/).as(
     "dashboardClaimQueries"
   );
@@ -1878,3 +1875,16 @@ export function claimantAssertClaimStatus(leaves: LeaveStatus[]): void {
       });
   }
 }
+
+/**
+ * Stubs the response of `GET: /applications` endpoint to contain no applications.
+ * Claimant is redirected straight to "Start Application" page if he has no open aplications.
+ */
+export const skipLoadingClaimantApplications = (): void => {
+  cy.intercept(/\/api\/v1\/applications$/, { times: 1 }, (req) => {
+    req.reply((res) => {
+      res.body.data = [];
+      res.send();
+    });
+  });
+};

@@ -19,7 +19,7 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
         };
         cy.stash("credentials", credentials);
         portal.login(credentials);
-        portal.goToDashboardFromApplicationsPage();
+        portal.skipLoadingClaimantApplications();
 
         // Submit Claim
         portal.startClaim();
@@ -79,6 +79,7 @@ describe("Submit a bonding claim and adjucation approval - BHAP1", () => {
 
     cy.unstash<Credentials>("credentials").then((credentials) => {
       portal.login(credentials);
+      portal.skipLoadingClaimantApplications();
       cy.unstash<Submission>("submission").then((submission) => {
         portal.goToUploadCertificationPage(submission.application_id);
         cy.contains("form", "Upload your certification form")

@@ -22,18 +22,26 @@ type Query = {
 function getErrorGroupsQuery() {
   const escapeQuotes = (input: string) => input.replace(/(?<!\\)'/g, "\\'");
   const groups = {
-    "PFML API Submit Application - 500": "%/submit_application - Internal Server Error (500%",
-    "PFML API Submit Application - 503": "%/submit_application - Service Unavailable (503%",
-    "PFML API Submit Application - 504": "%/submit_application - Gateway Timeout (504%",
-    "PFML API Submit Application - 400": "%submit_application - Bad Request (400%",
+    "PFML API Submit Application - 500":
+      "%/submit_application - Internal Server Error (500%",
+    "PFML API Submit Application - 503":
+      "%/submit_application - Service Unavailable (503%",
+    "PFML API Submit Application - 504":
+      "%/submit_application - Gateway Timeout (504%",
+    "PFML API Submit Application - 400":
+      "%submit_application - Bad Request (400%",
     "Fineos - Ajax timeout": "%In-flight Ajax requests should be 0%",
     "SSO Login Error": "%cy.task('completeSSOLoginFineos')%",
     "E-mail fetch timeout": "%Timed out while looking for e-mail.%",
-  }
-  const caseStatements = Object.entries(groups).map(([label, clause]) => {
-    return `WHERE errorMessage LIKE '${escapeQuotes(clause)}' AS '${escapeQuotes(label)}'`;
-  }).join(", ");
-  return `SELECT COUNT(*) AS occurrences FROM CypressTestResult WHERE status != 'passed' FACET cases(${caseStatements}) OR errorMessage SINCE 1 day ago LIMIT MAX`
+  };
+  const caseStatements = Object.entries(groups)
+    .map(([label, clause]) => {
+      return `WHERE errorMessage LIKE '${escapeQuotes(
+        clause
+      )}' AS '${escapeQuotes(label)}'`;
+    })
+    .join(", ");
+  return `SELECT COUNT(*) AS occurrences FROM CypressTestResult WHERE status != 'passed' FACET cases(${caseStatements}) OR errorMessage SINCE 1 day ago LIMIT MAX`;
 }
 
 const queries: Query[] = [
@@ -94,7 +102,7 @@ function makeTableViz(title: string, query: string, layout?: Layout) {
 }
 
 (async () => {
-  const pages = queries.map((query, i) => {
+  const pages = queries.map((query) => {
     const widget = makeTableViz(query.name, query.query, {
       column: 1,
       row: 1,
