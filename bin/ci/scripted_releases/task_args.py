@@ -11,9 +11,7 @@ def configure_start_release_args(subparsers: argparse._SubParsersAction) -> argp
     return start_handler
 
 
-# TODO: explore 'mutually_exclusive_group' for -c, -r, and --with-branch
 def configure_update_release_args(raw_args: list, subparsers: argparse._SubParsersAction) -> argparse.ArgumentParser:
-    print(f"raw_args: {raw_args}")
     update_handler = subparsers.add_parser(
         'update-release',
         help='Produces a new release candidate by applying Git commits to the specified release series, '
@@ -28,16 +26,18 @@ def configure_update_release_args(raw_args: list, subparsers: argparse._SubParse
              "e.g.: '-r release/api/v1.2.0' or '-r release/portal/v4.0'."
     )
 
-    update_handler.add_argument(
+    # Update-release can accept EITHER the name of a branch OR an arbitrary number of git commits.
+    # It's technically possible to handle both at once...but doing it this way simplifies the logic,
+    # and allows a user to hold the under-the-hood Git operations in their head more easily.
+    release_details = update_handler.add_mutually_exclusive_group()
+    release_details.add_argument(
         "-c", metavar="git_commits", dest="git_commits", action="append", default=[],
-        required=('-i' not in raw_args and '--interactive' not in raw_args and '--with-branch' not in raw_args),
         help="The commit hash of a Git commit that you want to add to this RC. Can be specified multiple times. "
              "Not compatible with '--with-branch'."
     )
 
-    update_handler.add_argument(
+    release_details.add_argument(
         "--with-branch", type=str, metavar='BRANCH_NAME', dest='source_branch',
-        required=('-i' not in raw_args and '--interactive' not in raw_args and '-c' not in raw_args),
         help="The name of a branch (typically main) that you wish to merge into this release branch. "
              "Not compatible with '-c'."
     )
