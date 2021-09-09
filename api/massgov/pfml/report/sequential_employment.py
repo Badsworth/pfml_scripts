@@ -64,7 +64,7 @@ def create_report(db_session: db.Session) -> None:
         row.total_applicants = total_applicants
 
         report_row_dict = row.dict()
-        logger.info("Created sequential employment report row", **report_row_dict)
+        logger.info("Created sequential employment report row", extra=report_row_dict)
 
         return row
 
@@ -72,7 +72,7 @@ def create_report(db_session: db.Session) -> None:
     row2 = make_row(wages_both_prev_quarters, "Wages both quarters")
 
     location = s3_location()
-    logger.info("Writing sequential employment report to s3", s3_location=location)
+    logger.info("Writing sequential employment report to s3", extra={"s3_location": location})
 
     with file_util.open_stream(location, mode="w") as output_file:
         write_report_to_s3(output_file, [row1, row2])

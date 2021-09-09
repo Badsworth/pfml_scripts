@@ -754,7 +754,7 @@ jobs:
           inputs: |
             {
               "target_environment": "performance",
-              "preset": "base",
+              "preset": "base"
             }
 
   post-e2e-failures-to-slack:
