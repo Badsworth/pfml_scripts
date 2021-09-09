@@ -64,7 +64,7 @@ def create_report(db_session: db.Session) -> None:
         row.total_applicants = total_applicants
 
         report_row_dict = row.dict()
-        logger.info("Created sequential employment report row", **report_row_dict)
+        logger.info("Created sequential employment report row", extra={**report_row_dict})
 
         return row
 
