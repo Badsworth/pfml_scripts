@@ -8,7 +8,8 @@ import config from "../config";
 export function generateCredentials(): Credentials {
   const tag = faker.random.alphaNumeric(8);
   return {
-    username: `${config("TESTMAIL_NAMESPACE")}.${tag}@inbox.testmail.app`,
+    // Partition the addresses to avoid "An account with the given email already exists" errors.
+    username: `${config("TESTMAIL_NAMESPACE")}.1.${tag}@inbox.testmail.app`,
     password: generatePassword(),
   };
 }
