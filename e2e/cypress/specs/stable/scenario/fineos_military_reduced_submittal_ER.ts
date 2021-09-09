@@ -1,5 +1,4 @@
 import { fineos, fineosPages, portal } from "../../../actions";
-import { getLeaveAdminCredentials } from "../../../config";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { ClaimPage } from "../../../actions/fineos.pages";
 import { Submission } from "../../../../src/types";
@@ -34,7 +33,7 @@ describe("Create a new continuous leave, military caregiver claim in FINEOS", ()
     cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
       cy.unstash<Submission>("submission").then((submission) => {
         assertValidClaim(claim);
-        portal.login(getLeaveAdminCredentials(claim.employer_fein));
+        portal.loginLeaveAdmin(claim.employer_fein);
         // Access the review page
         portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
         // Deny the claim

@@ -37,19 +37,10 @@ import {
   minutesToHoursAndMinutes,
 } from "../../src/util/claims";
 import { APILeaveReason } from "generation/Claim";
+import { getClaimantCredentials, getLeaveAdminCredentials } from "../config";
 
-/**
- *
- * @param flags set feature flags you want to override from defaults
- * @default {
-    pfmlTerriyay: true,
-    noMaintenance: true,
-    employerShowReviewByStatus:
-      config("PORTAL_HAS_LA_STATUS_UPDATES") === "true",
-  }
- */
-export function before(flags?: Partial<FeatureFlags>): void {
-  Cypress.config("baseUrl", config("PORTAL_BASEURL"));
+/**Set portal feature flags */
+function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
   // Set the feature flag necessary to see the portal.
   const defaults: FeatureFlags = {
     pfmlTerriyay: true,
@@ -59,6 +50,16 @@ export function before(flags?: Partial<FeatureFlags>): void {
       config("PORTAL_HAS_LA_STATUS_UPDATES") === "true",
   };
   cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });
+}
+
+/**
+ *
+ * @param flags feature flags you want to override from defaults
+ */
+export function before(flags?: Partial<FeatureFlags>): void {
+  Cypress.config("baseUrl", config("PORTAL_BASEURL"));
+  // Set the feature flags necessary to see the portal.
+  setFeatureFlags(flags);
 
   // Setup a route for application submission so we can extract claim ID later.
   cy.intercept({
@@ -194,6 +195,15 @@ export function downloadLegalNotice(claim_id: string): void {
   });
 }
 
+export function loginClaimant(credentials = getClaimantCredentials()): void {
+  login(credentials);
+}
+
+export function loginLeaveAdmin(employer_fein: string): void {
+  const credentials = getLeaveAdminCredentials(employer_fein);
+  login(credentials);
+}
+
 export function login(credentials: Credentials): void {
   cy.visit(`${config("PORTAL_BASEURL")}/login`);
   cy.findByLabelText("Email address").type(credentials.username);
@@ -245,13 +255,6 @@ export function registerAsLeaveAdmin(
   }).as("cognito");
   cy.contains("button", "Submit").click();
   cy.wait("@cognito");
-}
-
-export function employerLogin(credentials: Credentials): void {
-  cy.findByLabelText("Email address").type(credentials.username);
-  cy.findByLabelText("Password").typeMasked(credentials.password);
-  cy.contains("button", "Log in").click();
-  cy.url().should("not.include", "login");
 }
 
 export function assertLoggedIn(): void {

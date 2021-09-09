@@ -1,19 +1,10 @@
 import { fineos, fineosPages } from "../../actions";
-import { config } from "../../actions/common";
 import { Submission } from "../../../src/types";
 
 describe("Create a new continuous medical leave claim in FINEOS and add Historical Absence case. Then withdraw the Absence Case", () => {
-  const credentials: Credentials = {
-    username: config("PORTAL_USERNAME"),
-    password: config("PORTAL_PASSWORD"),
-  };
-
   it("Create historical absence case within Absence Case", () => {
     cy.task("generateClaim", "HIST_CASE").then((claim) => {
-      cy.task("submitClaimToAPI", {
-        ...claim,
-        credentials,
-      }).then((res) => {
+      cy.task("submitClaimToAPI", claim).then((res) => {
         fineos.before();
         cy.visit("/");
         cy.stash("claim", claim.claim);

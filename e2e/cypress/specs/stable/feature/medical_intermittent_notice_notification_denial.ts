@@ -1,8 +1,8 @@
 import { fineos, portal, email, fineosPages } from "../../../actions";
-import { getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
+import { getClaimantCredentials } from "../../../config";
 
 describe("Denial Notification and Notice", () => {
   after(() => {
@@ -10,19 +10,11 @@ describe("Denial Notification and Notice", () => {
       portal.deleteDownloadsFolder();
   });
 
-  const credentials: Credentials = {
-    username: config("PORTAL_USERNAME"),
-    password: config("PORTAL_PASSWORD"),
-  };
-
   const submit = it("Given a fully denied claim", () => {
     fineos.before();
 
     cy.task("generateClaim", "MED_INTER_INEL").then((claim) => {
-      cy.task("submitClaimToAPI", {
-        ...claim,
-        credentials,
-      }).then((res) => {
+      cy.task("submitClaimToAPI", claim).then((res) => {
         cy.stash("claim", claim.claim);
         cy.stash("submission", {
           application_id: res.application_id,
@@ -51,7 +43,7 @@ describe("Denial Notification and Notice", () => {
         claimantShowStatusPage: config("HAS_CLAIMANT_STATUS_PAGE") === "true",
       });
       cy.unstash<Submission>("submission").then((submission) => {
-        portal.login(credentials);
+        portal.loginClaimant();
         cy.visit("/applications");
         if (config("HAS_CLAIMANT_STATUS_PAGE") === "true") {
           portal.claimantGoToClaimStatus(submission.fineos_absence_id);
@@ -69,7 +61,7 @@ describe("Denial Notification and Notice", () => {
           cy.task(
             "waitForClaimDocuments",
             {
-              credentials: credentials,
+              credentials: getClaimantCredentials(),
               application_id: submission.application_id,
               document_type: "Denial Notice",
             },
@@ -96,7 +88,7 @@ describe("Denial Notification and Notice", () => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
           assertValidClaim(claim);
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
-          portal.login(getLeaveAdminCredentials(claim.employer_fein));
+          portal.loginLeaveAdmin(claim.employer_fein);
           portal.selectClaimFromEmployerDashboard(
             submission.fineos_absence_id,
             config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"

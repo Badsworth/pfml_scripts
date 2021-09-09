@@ -1,5 +1,4 @@
 import { fineos, portal } from "../../../actions";
-import { getLeaveAdminCredentials } from "../../../config";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import {
   AbsenceReasonDescription,
@@ -204,7 +203,7 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
     cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
       cy.unstash<Submission>("submission").then((submission) => {
         assertValidClaim(claim);
-        portal.login(getLeaveAdminCredentials(claim.employer_fein));
+        portal.loginLeaveAdmin(claim.employer_fein);
         // Access the review page
         portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
         // Deny the claim

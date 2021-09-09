@@ -1,5 +1,4 @@
 import { fineos, fineosPages, portal } from "../../../actions";
-import { getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
@@ -14,11 +13,7 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
         const application: ApplicationRequestBody = claim.claim;
         const paymentPreference = claim.paymentPreference;
 
-        const credentials: Credentials = {
-          username: config("PORTAL_USERNAME"),
-          password: config("PORTAL_PASSWORD"),
-        };
-        portal.login(credentials);
+        portal.loginClaimant();
         portal.skipLoadingClaimantApplications();
 
         // Submit Claim
@@ -41,7 +36,7 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
     cy.unstash<DehydratedClaim>("claim").then((claim) => {
       cy.unstash<Submission>("submission").then((submission) => {
         assertValidClaim(claim.claim);
-        portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
+        portal.loginLeaveAdmin(claim.claim.employer_fein);
         portal.selectClaimFromEmployerDashboard(
           submission.fineos_absence_id,
           config("PORTAL_HAS_LA_STATUS_UPDATES") === "true" ? "Review by" : "--"

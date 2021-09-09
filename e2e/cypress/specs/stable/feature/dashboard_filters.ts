@@ -1,5 +1,4 @@
 import { portal } from "../../../actions";
-import { getLeaveAdminCredentials } from "../../../config";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { DashboardClaimStatus } from "../../../actions/portal";
 import { config } from "../../../actions/common";
@@ -19,7 +18,7 @@ describe("Employer dashboard", () => {
     cy.visit("/");
     cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
       assertValidClaim(claim);
-      portal.login(getLeaveAdminCredentials(claim.employer_fein));
+      portal.loginLeaveAdmin(claim.employer_fein);
       portal.goToEmployerDashboard();
       const statuses: DashboardClaimStatus[] =
         config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"

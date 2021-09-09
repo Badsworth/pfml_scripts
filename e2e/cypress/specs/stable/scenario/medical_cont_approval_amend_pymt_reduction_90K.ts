@@ -1,8 +1,5 @@
 import { fineos, fineosPages, portal } from "../../../actions";
-import {
-  getClaimantCredentials,
-  getLeaveAdminCredentials,
-} from "../../../config";
+
 import {
   Submission,
   ValidConcurrentLeave,
@@ -39,8 +36,7 @@ describe("Claimant uses portal to report other leaves and benefits, receives cor
         const application = claim.claim;
         const paymentPreference = claim.paymentPreference;
 
-        const credentials: Credentials = getClaimantCredentials();
-        portal.login(credentials);
+        portal.loginClaimant();
         portal.skipLoadingClaimantApplications();
 
         // Submit Claim
@@ -66,7 +62,7 @@ describe("Claimant uses portal to report other leaves and benefits, receives cor
           cy.unstash<LeaveAdminchanges>("amendments").then(
             ({ employerReportedBenefit, employerReportedConcurrentLeave }) => {
               assertValidClaim(claim);
-              portal.login(getLeaveAdminCredentials(claim.employer_fein));
+              portal.loginLeaveAdmin(claim.employer_fein);
               portal.visitActionRequiredERFormPage(
                 submission.fineos_absence_id
               );
