@@ -7,7 +7,7 @@ Each set of subcommands takes slightly different arguments and has slightly diff
 """
 
 # TODO: regex polishing: don't match portal versions with >2 semver numbers.
-RELEASE_VERSION_REGEX = r"release\/(api|portal)\/v([0-9]+)\.([0-9]+)\.{0,1}([0-9]+){0,1}"
+RELEASE_VERSION_REGEX = r"release\/(api|portal|foobar)\/v([0-9]+)\.([0-9]+)\.{0,1}([0-9]+){0,1}"
 COMMIT_REGEX = r"[0-9a-f]{7,40}"  # allows both short and long-form hash types
 
 CLI_ARGS_WHEN_INTERACTIVE = "No additional command-line arguments should be provided in interactive mode."

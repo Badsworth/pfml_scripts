@@ -1,5 +1,4 @@
 from scripted_releases import git_utils
-import semver
 import logging
 
 logger = logging.getLogger(__name__)
@@ -34,8 +33,19 @@ def update(args):
     # guardrails will have vetted args.git_commits
 
     # autonomous flow:
-    #   fetch_remotes()
-    #   get most recent tag for args.app, convert to semver
+    git_utils.fetch_remotes()
+    recent_tag = git_utils.most_recent_tag(args.app)
+    v = git_utils.to_semver(recent_tag)
+
+    if not git_utils.branch_exists(args.release_version):
+        logger.error(f"Could not find the branch '{args.release_version}' on GitHub.")
+        logger.error("Script cannot proceed and will now terminate.")
+        return False
+
+    old_head = git_utils.head_of_branch(args.release_version)
+    logger.info(f"Current HEAD of branch '{args.release_version}' on origin is '{old_head[0:9]}'.")
+    logger.info("Will save this HEAD and revert back to it if anything goes wrong.")
+
     #   check out the branch at args.release_version
     #       NB: will the check-out break everything if the release branch lacks this code?
     #       NB: save a pointer to the old HEAD of args.release_version in case of error

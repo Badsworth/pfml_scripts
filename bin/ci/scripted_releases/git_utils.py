@@ -49,6 +49,10 @@ def most_recent_tag(app):
     return t
 
 
+def head_of_branch(branch_name):
+    return git.rev_parse(f"origin/{branch_name}")
+
+
 def tag_branch(branch_name, tag_name):
     fetch_remotes()
     git.tag(tag_name, branch_name)  # possible without checking out branch
@@ -68,6 +72,8 @@ def to_semver(version_str: str) -> semver.VersionInfo:
         return semver.VersionInfo.parse(ver)
     elif version_str.startswith("api/v"):
         return semver.VersionInfo.parse(version_str.split("api/v")[-1])
+    elif version_str.startswith("foobar/v"):
+        return semver.VersionInfo.parse(version_str.split("foobar/v")[-1])
     else:
         raise ValueError(f"Unrecognized version string '{version_str}'")
 
@@ -75,5 +81,9 @@ def to_semver(version_str: str) -> semver.VersionInfo:
 def from_semver(sem_ver: semver.VersionInfo, app) -> str:
     if app == "portal":
         return "portal/v" + str(sem_ver).split("0.")[-1]
-    else:
+    elif app == "api":
         return "api/v" + str(sem_ver)
+    elif app == "foobar":
+        return "foobar/v" + str(sem_ver)
+    else:
+        raise ValueError("from_semver called with malformed app identifier; will now panic")
