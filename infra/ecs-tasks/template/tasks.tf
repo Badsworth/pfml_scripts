@@ -350,8 +350,8 @@ locals {
       ]
     },
 
-    "evaluate-new-financial-eligibility" = {
-      command   = ["evaluate-new-financial-eligibility"]
+    "evaluate-new-eligibility" = {
+      command   = ["evaluate-new-eligibility"]
       task_role = aws_iam_role.evaluate_new_financial_eligibility_task_role.arn
       env = [
         local.db_access,
