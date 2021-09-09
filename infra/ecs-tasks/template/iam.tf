@@ -1398,7 +1398,10 @@ data "aws_iam_policy_document" "evaluate_new_financial_eligibility" {
   statement {
     effect = "Allow"
     actions = [
-      "logs:GetLogEvents"
+      "logs:GetLogEvents",
+      "logs:StartQuery",
+      "logs:GetQueryResults",
+      "logs:DescribeQueries"
     ]
     resources = [
       "${data.aws_cloudwatch_log_group.service_logs.arn}:*",
