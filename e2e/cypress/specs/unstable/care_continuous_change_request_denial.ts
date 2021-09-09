@@ -1,23 +1,15 @@
 import { fineos, fineosPages } from "../../actions";
 import { Submission } from "../../../src/types";
-import { config } from "../../actions/common";
 import { extractLeavePeriod } from "../../../src/util/claims";
 import { addDays, format } from "date-fns";
 
 describe("Post-approval (notifications/notices)", () => {
-  const credentials: Credentials = {
-    username: config("PORTAL_USERNAME"),
-    password: config("PORTAL_PASSWORD"),
-  };
   it("Submit a Care for a Family member claim for approval", () => {
     fineos.before();
     //Submit a claim via the API, including Employer Response.
     cy.task("generateClaim", "CHAP_ER").then((claim) => {
       cy.stash("claim", claim);
-      cy.task("submitClaimToAPI", {
-        ...claim,
-        credentials,
-      }).then((response) => {
+      cy.task("submitClaimToAPI", claim).then((response) => {
         if (!response.fineos_absence_id) {
           throw new Error("Response contained no fineos_absence_id property");
         }

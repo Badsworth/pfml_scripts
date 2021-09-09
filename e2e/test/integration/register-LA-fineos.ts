@@ -3,6 +3,7 @@ import {
   ECSClient,
   RunTaskCommand,
   waitUntilTasksStopped,
+  NetworkConfiguration as ECSNetworkConfiguration,
 } from "@aws-sdk/client-ecs";
 import config from "../../src/config";
 import {
@@ -16,18 +17,21 @@ import {
   getClaimantCredentials,
 } from "../../src/util/credentials";
 import { endOfQuarter, formatISO, subQuarters, getQuarter } from "date-fns";
-import AuthenticationManager from "submission/AuthenticationManager";
+import AuthenticationManager from "../../src/submission/AuthenticationManager";
 import {
   getUsersCurrent,
   UserResponse,
   EmployerClaimRequestBody,
 } from "../../src/_api";
 import { ClaimGenerator } from "../../src/generation/Claim";
-import { ScenarioSpecification } from "generation/Scenario";
+import { ScenarioSpecification } from "../../src/generation/Scenario";
 import {
   CloudWatchEventsClient,
   ListTargetsByRuleCommand,
+  NetworkConfiguration as CloudwatchEventsNetworkConfiguration,
 } from "@aws-sdk/client-cloudwatch-events";
+import { Credentials } from "../../src/types";
+import { Employer } from "../../src/generation/Employer";
 
 let authenticator: AuthenticationManager;
 let leave_admin_creds_1: Credentials;
@@ -40,8 +44,8 @@ const cloudwatch = new CloudWatchEventsClient({});
 
 // convert format for ECS call
 function convertNetworkConfiguration(
-  cloudwatchConfiguration?: AWS.CloudWatchEvents.NetworkConfiguration
-): AWS.ECS.NetworkConfiguration | undefined {
+  cloudwatchConfiguration?: CloudwatchEventsNetworkConfiguration
+): ECSNetworkConfiguration | undefined {
   if (cloudwatchConfiguration && cloudwatchConfiguration.awsvpcConfiguration) {
     return {
       awsvpcConfiguration: {

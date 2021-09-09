@@ -27,8 +27,7 @@
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
-    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
-    "HAS_CLAIMANT_STATUS_PAGE": "true"
+    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
   },
   "training": {
     "PORTAL_BASEURL": "https://paidleave-training.mass.gov",
@@ -39,8 +38,8 @@
     "COGNITO_POOL": "us-east-1_gHLjkp4A8",
     "COGNITO_CLIENTID": "2hr6bckdopamvq92jahr542p5p",
     "TESTMAIL_NAMESPACE": "gqzap",
-    "EMPLOYEES_FILE": "./employees/e2e-2021-06-04.json",
-    "EMPLOYERS_FILE": "./employers/e2e-2021-06-04.json",
+    "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
+    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
     "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
   },
   "performance": {

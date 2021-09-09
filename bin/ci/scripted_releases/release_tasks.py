@@ -60,7 +60,7 @@ def hotfix(args):
 
 def major(args):
     # API ONLY!!! Increments major release number
-    logger.info(f"Running 'major-release'; args: {repr(args)}")
+    logger.info(f"Running 'major-release'...")
     logger.debug(f"Args: {repr(args)}")
 
     if args.app != 'api':

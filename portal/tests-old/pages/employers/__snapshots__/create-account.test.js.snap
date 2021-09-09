@@ -51,7 +51,7 @@ exports[`CreateAccount renders the page 1`] = `
     <InputText
       hint="Use a secure work address. An email address can only be associated with one account."
       label="Email address"
-      name="username"
+      name="email_address"
       onChange={[Function]}
       smallLabel={true}
       type="email"
@@ -84,7 +84,7 @@ exports[`CreateAccount renders the page 1`] = `
       inputMode="numeric"
       label="Employer ID number (EIN)"
       mask="fein"
-      name="ein"
+      name="user_leave_administrator.employer_fein"
       onChange={[Function]}
       smallLabel={true}
       value=""

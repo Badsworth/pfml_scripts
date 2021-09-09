@@ -1,0 +1,18 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Alert default component renders correctly 1`] = `
+<div
+  className="alert alert--neutral"
+  data-testid="alert-container"
+>
+  <div
+    className="alert__icon"
+  />
+  <div
+    className="alert__text"
+    data-testid="alert-text"
+  >
+    This is a test alert.
+  </div>
+</div>
+`;

@@ -9,7 +9,6 @@ import {
 } from "../../../../src/util/typeUtils";
 import { Address } from "../../../../src/_api";
 import { fineos, fineosPages, portal } from "../../../actions";
-import { getLeaveAdminCredentials } from "../../../config";
 
 describe("Claimant can call call-center to submit a claim for leave with other leaves and benefits", () => {
   const claimSubmission =
@@ -77,7 +76,7 @@ describe("Claimant can call call-center to submit a claim for leave with other l
     cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
       cy.unstash<Submission>("submission").then((submission) => {
         assertValidClaim(claim);
-        portal.login(getLeaveAdminCredentials(claim.employer_fein));
+        portal.loginLeaveAdmin(claim.employer_fein);
         portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
         // Check we have the previous leave from fineos
         assertIsTypedArray(

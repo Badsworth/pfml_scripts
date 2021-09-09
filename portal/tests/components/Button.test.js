@@ -2,11 +2,11 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import Button from "../../src/components/Button";
 import React from "react";
 
-// TODO (CP-2492) - refine these patterns, including aria / a11y testing
 describe("Button", () => {
   it("renders the button with default styling", () => {
-    const { container } = render(<Button>Button label</Button>);
-    expect(container.firstChild).toMatchInlineSnapshot(`
+    render(<Button>Button label</Button>);
+    const button = screen.getByRole("button", { name: /Button label/ });
+    expect(button).toMatchInlineSnapshot(`
       <button
         class="usa-button position-relative"
         type="button"
@@ -14,23 +14,27 @@ describe("Button", () => {
         Button label
       </button>
     `);
-    expect(screen.getByText(/Button label/)).toBeTruthy();
+    expect(button).toHaveAccessibleName("Button label");
   });
 
-  it("variation passes through with impact on class styles", () => {
-    const { container } = render(
-      <Button variation="outline">Hello world</Button>
-    );
-    expect(container.firstChild.className).toEqual(
-      "usa-button position-relative usa-button--outline bg-white"
-    );
+  it("calls on click handler as expected", () => {
+    const onClickHandler = jest.fn();
+    render(<Button onClick={onClickHandler}>Click me</Button>);
+    fireEvent.click(screen.getByText(/Click me/));
+    expect(onClickHandler).toHaveBeenCalled();
   });
 
-  it("inversed passes through with impact on class styles", () => {
-    const { container } = render(<Button inversed={true}>Hello world</Button>);
-    expect(container.firstChild.className).toEqual(
-      "usa-button position-relative usa-button--inverse"
+  it("button is not clickable with disabled prop is passed in", () => {
+    const onClickHandler = jest.fn();
+    render(
+      <Button disabled={true} onClick={onClickHandler}>
+        Just try to click me
+      </Button>
     );
+    const button = screen.getByRole("button");
+    fireEvent.click(button);
+    expect(onClickHandler).not.toHaveBeenCalled();
+    expect(button).toHaveAttribute("disabled");
   });
 
   it("loading state disables button and displays loading spinner", () => {
@@ -48,5 +52,25 @@ describe("Button", () => {
     expect(screen.getByText(/loading message/)).toBeTruthy();
     fireEvent.click(screen.getByText(/Click me I dare you/));
     expect(onClickHandler).not.toHaveBeenCalled();
+  });
+
+  it("can receive styling variations that take effect", () => {
+    render(<Button variation="outline">Hello world</Button>);
+    expect(screen.getByRole("button")).toHaveClass(
+      "usa-button position-relative usa-button--outline bg-white"
+    );
+  });
+
+  it("inversed passes through with impact on class styles", () => {
+    render(<Button inversed={true}>Hello world</Button>);
+    expect(screen.getByRole("button")).toHaveClass(
+      "usa-button position-relative usa-button--inverse"
+    );
+  });
+
+  it("can pass through submit type", () => {
+    render(<Button type="submit">Submit</Button>);
+    const button = screen.getByRole("button");
+    expect(button).toHaveAttribute("type", "submit");
   });
 });

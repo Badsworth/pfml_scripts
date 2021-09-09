@@ -1,5 +1,4 @@
 import { fineos, portal, fineosPages } from "../../actions";
-import { getLeaveAdminCredentials } from "../../config";
 import { Submission } from "../../../src/types";
 import { config } from "../../actions/common";
 import { extractLeavePeriod } from "../../../src/util/claims";
@@ -11,20 +10,12 @@ describe("Claim date change", () => {
     portal.deleteDownloadsFolder();
   });
 
-  const credentials: Credentials = {
-    username: config("PORTAL_USERNAME"),
-    password: config("PORTAL_PASSWORD"),
-  };
-
   const submit = it("Given a fully approved claim", () => {
     fineos.before();
     // Submit a claim via the API, including Employer Response.
     cy.task("generateClaim", "BHAP1ER").then((claim) => {
       cy.stash("claim", claim);
-      cy.task("submitClaimToAPI", {
-        ...claim,
-        credentials,
-      }).then((res) => {
+      cy.task("submitClaimToAPI", claim).then((res) => {
         const [startDate, endDate] = extractLeavePeriod(claim.claim);
         cy.stash("submission", {
           application_id: res.application_id,
@@ -114,7 +105,7 @@ describe("Claim date change", () => {
         cy.unstash<string[]>("changedLeaveDates").then(
           ([startDate, endDate]) => {
             assertValidClaim(claim);
-            portal.login(getLeaveAdminCredentials(claim.employer_fein));
+            portal.loginLeaveAdmin(claim.employer_fein);
             portal.selectClaimFromEmployerDashboard(
               fineos_absence_id,
               config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"

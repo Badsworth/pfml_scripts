@@ -1,22 +1,14 @@
 import { fineos, fineosPages } from "../../actions";
 import { Submission } from "../../../src/types";
-import { config } from "../../actions/common";
 import { extractLeavePeriod } from "../../../src/util/claims";
 import { addDays, format, subDays } from "date-fns";
 import { waitForAjaxComplete } from "../../actions/fineos";
 
 describe("Approval (notifications/notices)", () => {
-  const credentials: Credentials = {
-    username: config("PORTAL_USERNAME"),
-    password: config("PORTAL_PASSWORD"),
-  };
   const submission = it("Will submit a medical leave claim", () => {
     cy.task("generateClaim", "MED_LSDCR").then((claim) => {
       cy.stash("claim", claim);
-      cy.task("submitClaimToAPI", {
-        ...claim,
-        credentials,
-      }).then((response) => {
+      cy.task("submitClaimToAPI", claim).then((response) => {
         if (!response.fineos_absence_id) {
           throw new Error("Response contained no fineos_absence_id property");
         }

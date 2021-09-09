@@ -1,0 +1,33 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SlideOut renders the default component 1`] = `
+<dialog
+  className="slide-out"
+>
+  <div
+    className="slide-out__background"
+  />
+  <div
+    className="slide-out__content"
+  >
+    <div
+      className="slide-out__header"
+    >
+      <h2
+        className="slide-out__title"
+      >
+        Test SlideOut Title
+      </h2>
+      <button
+        aria-label="Close Test SlideOut Title window"
+        className="slide-out__btn-close"
+        type="button"
+      />
+    </div>
+    <div
+      className="slide-out__body"
+      data-testid="slideout-body"
+    />
+  </div>
+</dialog>
+`;

@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+
 import { AbsenceCaseStatus } from "../../../models/Claim";
 import AbsenceCaseStatusTag from "../../../components/AbsenceCaseStatusTag";
 import BackButton from "../../../components/BackButton";
@@ -44,6 +45,8 @@ export const Status = (props) => {
     DocumentType.approvalNotice,
     DocumentType.denialNotice,
     DocumentType.requestForInfoNotice,
+    DocumentType.withdrawalNotice,
+    DocumentType.appealAcknowledgement,
   ]);
 
   return (

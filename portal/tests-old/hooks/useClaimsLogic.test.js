@@ -329,7 +329,7 @@ describe("useClaimsLogic", () => {
       });
 
       expect(appLogic.current.appErrors.items[0].name).toEqual(
-        "BadRequestError"
+        "ClaimDetailLoadError"
       );
     });
   });

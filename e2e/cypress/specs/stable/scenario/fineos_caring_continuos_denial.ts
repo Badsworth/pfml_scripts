@@ -1,5 +1,4 @@
 import { portal, fineos, fineosPages } from "../../../actions";
-import { getLeaveAdminCredentials } from "../../../config";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
@@ -52,7 +51,7 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
           assertValidClaim(claim.claim);
-          portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
+          portal.loginLeaveAdmin(claim.claim.employer_fein);
           portal.selectClaimFromEmployerDashboard(
             fineos_absence_id,
             config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"

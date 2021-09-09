@@ -1,6 +1,10 @@
 import classNames from "classnames";
 
-export default function Badge({ type = "employee" }) {
+export type Props = {
+  type?: "employee" | "employer" | "leave-admin";
+};
+
+const Badge = ({ type = "employee" }: Props) => {
   const badgeClasses = classNames({
     "features-badge": true,
     [`features-badge--${type}`]: true,
@@ -12,5 +16,11 @@ export default function Badge({ type = "employee" }) {
     "leave-admin": "Leave Admin",
   };
 
-  return <span className={badgeClasses}>{types[type]}</span>;
-}
+  return (
+    <span className={badgeClasses} data-testid="badge">
+      {types[type]}
+    </span>
+  );
+};
+
+export default Badge;

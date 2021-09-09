@@ -140,8 +140,8 @@ def build_audit_report_row(
         fineos_customer_number=employee.fineos_customer_number
         if employee.fineos_customer_number
         else None,
-        first_name=employee.first_name,
-        last_name=employee.last_name,
+        first_name=payment.fineos_employee_first_name,
+        last_name=payment.fineos_employee_last_name,
         address_line_1=address.address_line_one if address else None,
         address_line_2=address.address_line_two if address else None,
         city=address.city if address else None,

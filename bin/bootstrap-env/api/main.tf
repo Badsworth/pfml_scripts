@@ -73,7 +73,7 @@ module "api" {
   #       in either a fully-mocked or partially-mocked setting.
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn = ARN_FROM_SECRETS_MANAGER_OUTPUT
-  rmv_check_behavior                = "fully_mocked"
+  rmv_api_behavior                  = "fully_mocked"
   rmv_check_mock_success            = "1"
 
   # TODO: These values are provided by FINEOS.

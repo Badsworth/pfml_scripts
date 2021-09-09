@@ -31,6 +31,7 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
 from massgov.pfml.delegated_payments.audit.delegated_payment_rejects import (
     ACCEPTED_OUTCOME,
     ACCEPTED_STATE,
+    AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS,
     NOT_SAMPLED_PAYMENT_NEXT_STATE_BY_CURRENT_STATE,
     NOT_SAMPLED_PAYMENT_OUTCOME_BY_CURRENT_STATE,
     NOT_SAMPLED_STATE_TRANSITIONS,
@@ -371,6 +372,66 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
         writeback_details.transaction_status_id
         == expected_writeback_transaction_status.transaction_status_id
     )
+
+
+def test_rejected_writeback_status_from_reject_notes(
+    test_db_session, payment_rejects_step, monkeypatch
+):
+    monkeypatch.setenv("USE_AUDIT_REJECT_TRANSACTION_STATUS", "1")
+
+    test_cases = []
+
+    for (reject_note, expected_status) in AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS.items():
+        test_cases.append(
+            {"reject_notes": reject_note, "expected_status": expected_status,}
+        )
+
+    # Close matches
+    test_cases.append(
+        {
+            "reject_notes": "Dua Additional Income",
+            "expected_status": FineosWritebackTransactionStatus.DUA_ADDITIONAL_INCOME,
+        }
+    )
+
+    test_cases.append(
+        {
+            "reject_notes": "DUA Additional Income.",
+            "expected_status": FineosWritebackTransactionStatus.DUA_ADDITIONAL_INCOME,
+        }
+    )
+
+    # No matches
+    test_cases.append(
+        {
+            "reject_notes": None,
+            "expected_status": FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION,
+        }
+    )
+    test_cases.append(
+        {
+            "reject_notes": "",
+            "expected_status": FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION,
+        }
+    )
+    test_cases.append(
+        {
+            "reject_notes": "Unknown reject status note",
+            "expected_status": FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION,
+        }
+    )
+
+    for test_case in test_cases:
+        payment_1 = PaymentFactory.create()
+
+        writeback_status = payment_rejects_step.get_rejected_payment_writeback_status(
+            payment_1, test_case["reject_notes"]
+        )
+
+        assert (
+            writeback_status.transaction_status_id
+            == test_case["expected_status"].transaction_status_id
+        )
 
 
 def test_transition_not_sampled_payment_audit_pending_states(test_db_session, payment_rejects_step):

@@ -99,6 +99,10 @@ module "tasks" {
   enable_reductions_send_claimant_lists_to_agencies_schedule = true
   enable_reductions_process_agency_data_schedule             = true
 
+  rmv_client_base_url               = "https://atlas-gateway.massdot.state.ma.us"
+  rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-prod/rmv_client_certificate-Mo2HJu"
+  rmv_api_behavior                  = "not_mocked"
+
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com", "EOL-DL-DFML-ITSUPPORT@MassMail.State.MA.US"]
 
   dor_fineos_etl_schedule_expression = "cron(30 0 * * ? *)" # Daily at 00:30 UTC [19:30 EST] [20:30 EDT]

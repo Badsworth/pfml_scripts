@@ -32,7 +32,7 @@ resource "aws_cloudwatch_log_group" "ecs_tasks_events" {
 }
 
 resource "aws_cloudwatch_event_rule" "ecs_tasks_events" {
-  name          = "ecs-tasks-events"
+  name          = "ecs-task-state-change-events-${var.environment_name}"
   description   = "Monitors ECS tasks all events"
   event_pattern = <<EOF
   {
@@ -43,7 +43,6 @@ resource "aws_cloudwatch_event_rule" "ecs_tasks_events" {
       "ECS Task State Change"
     ],
     "detail": {
-      "desiredStatus": ["STOPPED"],
       "clusterArn": ["${aws_ecs_cluster.cluster.arn}"]
     }
   }

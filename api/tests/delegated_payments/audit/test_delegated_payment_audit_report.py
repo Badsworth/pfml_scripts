@@ -482,8 +482,8 @@ def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Pay
         row[PAYMENT_AUDIT_CSV_HEADERS.fineos_customer_number]
         == payment.claim.employee.fineos_customer_number
     )
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.first_name] == payment.claim.employee.first_name
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.last_name] == payment.claim.employee.last_name
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.first_name] == payment.fineos_employee_first_name
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.last_name] == payment.fineos_employee_last_name
 
     validate_address_columns(row, payment)
 

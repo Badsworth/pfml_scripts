@@ -1,5 +1,5 @@
 import { fineos, portal, email, fineosPages } from "../../../actions";
-import { getLeaveAdminCredentials } from "../../../config";
+import { getClaimantCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
 import {
@@ -15,20 +15,12 @@ describe("Approval (notifications/notices)", () => {
       portal.deleteDownloadsFolder();
   });
 
-  const credentials: Credentials = {
-    username: config("PORTAL_USERNAME"),
-    password: config("PORTAL_PASSWORD"),
-  };
-
   const submit = it("Given a fully approved claim", () => {
     fineos.before();
     // Submit a claim via the API, including Employer Response.
     cy.task("generateClaim", "REDUCED_ER").then((claim) => {
       cy.stash("claim", claim.claim);
-      cy.task("submitClaimToAPI", {
-        ...claim,
-        credentials,
-      }).then((response) => {
+      cy.task("submitClaimToAPI", claim).then((response) => {
         cy.stash("submission", {
           application_id: response.application_id,
           fineos_absence_id: response.fineos_absence_id,
@@ -80,8 +72,7 @@ describe("Approval (notifications/notices)", () => {
       portal.before({
         claimantShowStatusPage: config("HAS_CLAIMANT_STATUS_PAGE") === "true",
       });
-      portal.login(credentials);
-      cy.visit("/applications");
+      portal.loginClaimant();
       cy.unstash<Submission>("submission").then((submission) => {
         // Wait for the legal document to arrive.
         if (config("HAS_CLAIMANT_STATUS_PAGE") === "true") {
@@ -89,14 +80,15 @@ describe("Approval (notifications/notices)", () => {
           portal.claimantAssertClaimStatus([
             { leave: "Child Bonding", status: "Approved" },
           ]);
-          cy.findByText("Approval notice (PDF)").should("be.visible").click();
-          portal.downloadLegalNotice(submission.fineos_absence_id);
+          // @todo: uncomment lines below once, doc download is supported
+          // cy.findByText("Approval notice (PDF)").should("be.visible").click();
+          // portal.downloadLegalNotice(submission.fineos_absence_id);
         } else {
           // @todo: remove once claimant status is deployed to all envs
           cy.task(
             "waitForClaimDocuments",
             {
-              credentials: credentials,
+              credentials: getClaimantCredentials(),
               application_id: submission.application_id,
               document_type: "Approval Notice",
             },
@@ -124,7 +116,7 @@ describe("Approval (notifications/notices)", () => {
             throw new Error("Claim must include employer FEIN");
           }
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
-          portal.login(getLeaveAdminCredentials(claim.employer_fein));
+          portal.loginLeaveAdmin(claim.employer_fein);
           portal.selectClaimFromEmployerDashboard(
             submission.fineos_absence_id,
             config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"
@@ -179,7 +171,7 @@ describe("Approval (notifications/notices)", () => {
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
           assertValidClaim(claim);
-          portal.login(getLeaveAdminCredentials(claim.employer_fein));
+          portal.loginLeaveAdmin(claim.employer_fein);
           portal.selectClaimFromEmployerDashboard(
             submission.fineos_absence_id,
             config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"

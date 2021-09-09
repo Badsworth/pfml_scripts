@@ -787,6 +787,10 @@ const shared = {
   displayTime: "{{hours}}h {{minutes}}m",
   // TODO (CP-1335): Add i18next formatter for time
   displayTime_noMinutes: "{{hours}}h",
+  docsRequired: {
+    newborn:
+      "Once your child is born, submit proof of birth so that we can make a decision.",
+  },
   documentsLoadError:
     "An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
   documentsUploadError:
@@ -1889,6 +1893,7 @@ const pages = {
   claimsStatus: {
     applicationDetails: "Application details",
     applicationID: "Application ID",
+    applicationUpdatesHeading: "Application updates",
     backButtonLabel: "Back to your applications",
     employerEIN: "Employer Identification Number (EIN)",
     infoAlertBody_bonding:
@@ -1924,7 +1929,10 @@ const pages = {
       "<p><strong>This leave is being reviewed.</strong></p>",
     leaveStatusMessage_Withdrawn:
       "<p><strong>This leave was withdrawn.</strong></p><p>You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
+    legalNoticesFallback:
+      "Once we’ve made a decision, you can download the decision notice here. You’ll also get an email notification.",
     loadingClaimDetailLabel: "Loading claim details",
+    loadingLegalNoticesLabel: "Loading legal notices",
     makeChangesBody:
       "<p>If you need to make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Some changes to your application, such as changing your start and end dates, may mean your application needs to be reviewed by your employer again.</p>",
     makeChangesHeading: "Make changes to your application",
@@ -1935,6 +1943,13 @@ const pages = {
     uploadDocumentsButton: "Upload additional documents",
     uploadDocumentsHeading: "Upload Documents",
     viewNoticesHeading: "View your notices",
+    whatHappensNext: "What happens next",
+    whatHappensNextButton_adoption: "Upload proof of placement",
+    whatHappensNextButton_newborn: "Upload proof of birth",
+    whatYouNeedToDo: "What you need to do",
+    whatYouNeedToDoText_adoption:
+      "After your child arrives in your home, submit proof of placement so that the department can make a decision.",
+    whatYouNeedToDoText_newborn: "$t(shared.docsRequired.newborn)",
   },
   claimsSuccess: {
     adjudicationProcess:
@@ -2402,8 +2417,7 @@ const components = {
     actionsHeading: "Actions",
     bondingLeaveDocsRequired_adopt_foster:
       "Once your child arrives, submit proof of placement so that we can make a decision.",
-    bondingLeaveDocsRequired_newborn:
-      "Once your child is born, submit proof of birth so that we can make a decision.",
+    bondingLeaveDocsRequired_newborn: "$t(shared.docsRequired.newborn)",
     documentsLoadError: "$t(shared.documentsLoadError)",
     feinHeading: "Employer EIN",
     heading: "Application {{number}}",
@@ -2480,10 +2494,14 @@ const components = {
   downloadableDocument: {
     createdAtDate: "Posted {{date}}",
     noticeName: "Other notice $t(shared.pdfNoticeSuffix)", // it should fallback to this if we receive an unexpected or undefined enum
+    noticeName_appealAcknowledgement:
+      "Appeal Acknowledgment $t(shared.pdfNoticeSuffix)",
     noticeName_approvalNotice: "Approval notice $t(shared.pdfNoticeSuffix)",
     noticeName_denialNotice: "Denial notice $t(shared.pdfNoticeSuffix)",
     noticeName_requestForInfoNotice:
       "Request for more information $t(shared.pdfNoticeSuffix)",
+    noticeName_withdrawalNotice:
+      "Pending Application Withdrawn $t(shared.pdfNoticeSuffix)",
   },
   dropdown: {
     emptyChoiceLabel: "- Select an answer -",

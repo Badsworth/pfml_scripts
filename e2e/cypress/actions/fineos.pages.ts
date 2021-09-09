@@ -680,7 +680,45 @@ export class DocumentsPage {
     assertHasDocument(documentName);
     return this;
   }
-
+  changeDocType(
+    oldDocType: DocumentUploadRequest["document_type"],
+    newDocType:
+      | DocumentUploadRequest["document_type"]
+      | "State managed Paid Leave Confirmation",
+    shouldBeAvailable = true
+  ): void {
+    // Select the document
+    cy.get(
+      'table[id^="DocumentsForCaseListviewWidget_"][id$="_DocumentsViewControl"]'
+    )
+      .contains("tr", oldDocType)
+      .click()
+      .should("have.class", "ListRowSelected");
+    // Open document properties
+    cy.findByTitle("Document Properties").click();
+    // Do if this action should be available
+    if (shouldBeAvailable) {
+      // Find and select a new document type.
+      cy.findByTitle("Document Search.").click({ force: true });
+      onTab("Search");
+      cy.findByLabelText("Business Type").type(newDocType);
+      cy.get('input[type="submit"][value="Search"]').click();
+      clickBottomWidgetButton("OK");
+      // Assert that the document typ has been changed correctly
+      cy.findByTitle("Document Search.")
+        .parent()
+        .prev()
+        .should("contain.text", newDocType);
+    } else {
+      cy.contains("td", "Document Type")
+        .next()
+        .should("not.contain.html", 'title="Document Search."');
+    }
+    clickBottomWidgetButton("OK");
+    cy.get(
+      'table[id^="DocumentsForCaseListviewWidget_"][id$="_DocumentsViewControl"]'
+    ).should("contain.text", newDocType);
+  }
   /**
    * Goes through the document upload process and returns back to the documents page
    * @param businessType - name of the document type in fineos

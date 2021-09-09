@@ -1,6 +1,5 @@
 import { getNotificationSubject } from "../../actions/email";
 import { fineos, portal, email, fineosPages } from "../../actions";
-import { getLeaveAdminCredentials } from "../../config";
 import { Submission } from "../../../src/types";
 import { extractLeavePeriod } from "../../../src/util/claims";
 import { assertValidClaim } from "../../../src/util/typeUtils";
@@ -8,20 +7,12 @@ import { format, addDays, parse } from "date-fns";
 import { config } from "../../actions/common";
 
 describe("Post-approval (notifications/notices)", () => {
-  const credentials: Credentials = {
-    username: Cypress.env("E2E_PORTAL_USERNAME"),
-    password: Cypress.env("E2E_PORTAL_PASSWORD"),
-  };
-
   const submit = it("Given a fully approved claim", () => {
     fineos.before();
     // Submit a claim via the API, including Employer Response.
     cy.task("generateClaim", "CHAP_ER").then((claim) => {
       cy.stash("claim", claim);
-      cy.task("submitClaimToAPI", {
-        ...claim,
-        credentials,
-      }).then((response) => {
+      cy.task("submitClaimToAPI", claim).then((response) => {
         cy.stash("submission", {
           application_id: response.application_id,
           fineos_absence_id: response.fineos_absence_id,
@@ -89,7 +80,7 @@ describe("Post-approval (notifications/notices)", () => {
           cy.unstash<string[]>("extensionLeaveDates").then(
             ([startDate, endDate]) => {
               assertValidClaim(claim);
-              portal.login(getLeaveAdminCredentials(claim.employer_fein));
+              portal.loginLeaveAdmin(claim.employer_fein);
               portal.selectClaimFromEmployerDashboard(
                 submission.fineos_absence_id,
                 config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"

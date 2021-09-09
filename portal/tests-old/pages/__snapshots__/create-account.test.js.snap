@@ -41,7 +41,7 @@ exports[`CreateAccount renders the empty page 1`] = `
   </p>
   <InputText
     label="Email address"
-    name="username"
+    name="email_address"
     onChange={[Function]}
     smallLabel={true}
     type="email"
