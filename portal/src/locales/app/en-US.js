@@ -1945,6 +1945,17 @@ const pages = {
     reportOtherBenefitsBody:
       "<p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report changes to:</p><ul><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for disability benefit after you submitted your application, report this change.</li></ul>",
     reportOtherBenefitsHeading: "Report other benefits or income",
+    timelineDescription:
+      "<p>Your application is complete when:</p><ul><li>You have submitted all required documents</li><li>Your employer has responded or their deadline passes</li></ul>",
+    timelineHeading: "Timeline",
+    timelineTextFollowUpEmployer:
+      "<p>Your employer has until <strong>{{employerFollowUpDate}}</strong> to respond to your application.</p>",
+    timelineTextFollowUpGenericDFML:
+      "<p>We have <strong>14 calendar days</strong> after receiving your completed application to make a decision to approve, deny or request more information.</p><p>The process may take longer if we request more information to complete your application or if you request changes to your application.</p>",
+    timelineTextFollowUpGenericEmployer:
+      "<p>Your employer has <strong>10 business days</strong> to respond to your application.</p>",
+    timelineTextLearnMore:
+      "<p>Learn more about the <timeline-link>application approval process.</timeline-link></p>",
     uploadDocumentsButton: "Upload additional documents",
     uploadDocumentsHeading: "Upload Documents",
     viewNoticesHeading: "View your notices",

@@ -170,6 +170,8 @@ const routes = {
       schedulingLeaveGuide:
         "https://www.mass.gov/info-details/intermittent-and-reduced-leave-schedules",
       taxLiability: "https://www.mass.gov/pfml-tax-liability",
+      timeline:
+        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-application-approval-timeline",
       verifyEmployer: "https://www.mass.gov/pfml-verify-employer",
       whenCanIUsePFML:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-",

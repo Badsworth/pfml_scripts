@@ -1,7 +1,5 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`application updates page does not render ApplicationUpdates if absenceDetails not given 1`] = `""`;
-
 exports[`leave details page does not render LeaveDetails if absenceDetails not given 1`] = `null`;
 
 exports[`leave details page does render page separated by keys if object of absenceDetails has more keys 1`] = `
@@ -452,7 +450,7 @@ exports[`status page includes a button to upload additional documents 1`] = `
         </p>
       </div>
     </div>
-    <ApplicationUpdates
+    <Timeline
       absenceDetails={
         Object {
           "Child Bonding": Array [
@@ -506,6 +504,54 @@ exports[`status page includes a button to upload additional documents 1`] = `
             },
           ],
         }
+      }
+      absencePeriods={
+        Array [
+          AbsencePeriod {
+            "absence_period_end_date": "2021-06-08",
+            "absence_period_start_date": "2021-06-01",
+            "evidence_status": null,
+            "fineos_leave_request_id": "PL-14432-0000002026",
+            "period_type": "Reduced",
+            "reason": "Serious Health Condition - Employee",
+            "reason_qualifier_one": null,
+            "reason_qualifier_two": null,
+            "request_decision": "Approved",
+          },
+          AbsencePeriod {
+            "absence_period_end_date": "2021-07-08",
+            "absence_period_start_date": "2021-07-01",
+            "evidence_status": null,
+            "fineos_leave_request_id": "PL-14432-0000002326",
+            "period_type": "Continuous",
+            "reason": "Serious Health Condition - Employee",
+            "reason_qualifier_one": null,
+            "reason_qualifier_two": null,
+            "request_decision": "Pending",
+          },
+          AbsencePeriod {
+            "absence_period_end_date": "2021-08-08",
+            "absence_period_start_date": "2021-08-01",
+            "evidence_status": null,
+            "fineos_leave_request_id": "PL-14434-0000002026",
+            "period_type": "Reduced",
+            "reason": "Pregnancy/Maternity",
+            "reason_qualifier_one": null,
+            "reason_qualifier_two": null,
+            "request_decision": "Denied",
+          },
+          AbsencePeriod {
+            "absence_period_end_date": "2021-08-08",
+            "absence_period_start_date": "2021-08-01",
+            "evidence_status": null,
+            "fineos_leave_request_id": "PL-14434-0000002326",
+            "period_type": "Continuous",
+            "reason": "Child Bonding",
+            "reason_qualifier_one": null,
+            "reason_qualifier_two": null,
+            "request_decision": "Withdrawn",
+          },
+        ]
       }
       applicationId="application-id"
       docList={
@@ -857,7 +903,7 @@ exports[`status page renders the page 1`] = `
         </p>
       </div>
     </div>
-    <ApplicationUpdates
+    <Timeline
       absenceDetails={
         Object {
           "Child Bonding": Array [
@@ -911,6 +957,54 @@ exports[`status page renders the page 1`] = `
             },
           ],
         }
+      }
+      absencePeriods={
+        Array [
+          AbsencePeriod {
+            "absence_period_end_date": "2021-06-08",
+            "absence_period_start_date": "2021-06-01",
+            "evidence_status": null,
+            "fineos_leave_request_id": "PL-14432-0000002026",
+            "period_type": "Reduced",
+            "reason": "Serious Health Condition - Employee",
+            "reason_qualifier_one": null,
+            "reason_qualifier_two": null,
+            "request_decision": "Approved",
+          },
+          AbsencePeriod {
+            "absence_period_end_date": "2021-07-08",
+            "absence_period_start_date": "2021-07-01",
+            "evidence_status": null,
+            "fineos_leave_request_id": "PL-14432-0000002326",
+            "period_type": "Continuous",
+            "reason": "Serious Health Condition - Employee",
+            "reason_qualifier_one": null,
+            "reason_qualifier_two": null,
+            "request_decision": "Pending",
+          },
+          AbsencePeriod {
+            "absence_period_end_date": "2021-08-08",
+            "absence_period_start_date": "2021-08-01",
+            "evidence_status": null,
+            "fineos_leave_request_id": "PL-14434-0000002026",
+            "period_type": "Reduced",
+            "reason": "Pregnancy/Maternity",
+            "reason_qualifier_one": null,
+            "reason_qualifier_two": null,
+            "request_decision": "Denied",
+          },
+          AbsencePeriod {
+            "absence_period_end_date": "2021-08-08",
+            "absence_period_start_date": "2021-08-01",
+            "evidence_status": null,
+            "fineos_leave_request_id": "PL-14434-0000002326",
+            "period_type": "Continuous",
+            "reason": "Child Bonding",
+            "reason_qualifier_one": null,
+            "reason_qualifier_two": null,
+            "request_decision": "Withdrawn",
+          },
+        ]
       }
       applicationId="application-id"
       docList={

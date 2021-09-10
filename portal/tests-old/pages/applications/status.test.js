@@ -1,7 +1,7 @@
 import Document, { DocumentType } from "../../../src/models/Document";
 import Status, {
-  ApplicationUpdates,
   LeaveDetails,
+  Timeline,
 } from "../../../src/pages/applications/status";
 import { generateNotice, renderWithAppLogic, testHook } from "../../test-utils";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
@@ -254,6 +254,16 @@ describe("status page", () => {
 
       expect(wrapper.find({ "data-test": "info-alert" }).exists()).toBe(false);
     });
+
+    it("does not render Timeline if no absence_periods are available", () => {
+      const { wrapper } = setup({
+        claimDetail: new ClaimDetail({
+          ...CLAIM_DETAIL,
+          absence_periods: [],
+        }),
+      });
+      expect(wrapper.find("Timeline").exists()).toBe(false);
+    });
   });
 
   describe("ViewYourNotices", () => {
@@ -405,106 +415,110 @@ describe("leave details page", () => {
   });
 });
 
-/** Test ApplicationUpdates component */
-describe("application updates page", () => {
-  it("does not render ApplicationUpdates if absenceDetails not given", () => {
-    const { wrapper } = renderWithAppLogic(ApplicationUpdates, {
-      diveLevels: 0,
-      props: { absenceDetails: {} },
-    });
-    expect(wrapper).toMatchSnapshot();
-  });
-
+/** Test Timeline component */
+describe("Timeline component", () => {
   it("does render Proof of Placement button if given 'Adoption' as reason_qualifier and leave_reason as 'Child Bonding'", () => {
-    const { wrapper } = renderWithAppLogic(ApplicationUpdates, {
+    const { wrapper } = renderWithAppLogic(Timeline, {
       diveLevels: 0,
       props: {
-        absenceDetails: TERTIARY_CLAIM_DETAIL.absencePeriodsByReason,
+        absencePeriods: TERTIARY_CLAIM_DETAIL.absence_periods,
+        applicationId: "123456789",
         docList: TEST_DOCS,
       },
     });
-    const button = wrapper.find("ButtonLink");
+
+    const button = wrapper.find("FollowUpSteps").dive().find("ButtonLink");
     expect(button.children().text()).toEqual("Upload proof of placement");
   });
 
   it("does render Proof of Birth button if given 'Newborn' as reason_qualifier and reason as 'Child Bonding'", () => {
-    const { wrapper } = renderWithAppLogic(ApplicationUpdates, {
+    const { wrapper } = renderWithAppLogic(Timeline, {
       diveLevels: 0,
       props: {
-        absenceDetails: {
-          [LeaveReason.bonding]:
-            SECONDARY_CLAIM_DETAIL.absencePeriodsByReason[LeaveReason.bonding],
-        },
+        absencePeriods: [SECONDARY_CLAIM_DETAIL.absence_periods[0]],
+        applicationId: "123456789",
         docList: TEST_DOCS,
       },
     });
-    const button = wrapper.find("ButtonLink");
+    const button = wrapper.find("FollowUpSteps").dive().find("ButtonLink");
     expect(button.children().text()).toEqual("Upload proof of birth");
   });
 
   it("does render Proof of Birth button if given reason is Pregnancy/Maternity", () => {
-    const { wrapper } = renderWithAppLogic(ApplicationUpdates, {
+    const { wrapper } = renderWithAppLogic(Timeline, {
       diveLevels: 0,
       props: {
-        absenceDetails: {
-          [LeaveReason.pregnancy]:
-            SECONDARY_CLAIM_DETAIL.absencePeriodsByReason[
-              LeaveReason.pregnancy
-            ],
-        },
+        absencePeriods: [SECONDARY_CLAIM_DETAIL.absence_periods[1]],
+        applicationId: "123456789",
         docList: TEST_DOCS,
       },
     });
-    const button = wrapper.find("ButtonLink");
+    const button = wrapper.find("FollowUpSteps").dive().find("ButtonLink");
     expect(button.children().text()).toEqual("Upload proof of birth");
   });
 
   it("does update the rendered content on prop update", () => {
-    const { wrapper } = renderWithAppLogic(ApplicationUpdates, {
+    const { wrapper } = renderWithAppLogic(Timeline, {
       diveLevels: 0,
       props: {
-        absenceDetails: TERTIARY_CLAIM_DETAIL.absencePeriodsByReason,
+        absencePeriods: TERTIARY_CLAIM_DETAIL.absence_periods,
+        applicationId: "123456789",
         docList: TEST_DOCS,
       },
     });
-    let button = wrapper.find("ButtonLink");
+    let button = wrapper.find("FollowUpSteps").dive().find("ButtonLink");
     expect(button.children().text()).toEqual("Upload proof of placement");
     wrapper.setProps({
-      absenceDetails: {
-        [LeaveReason.pregnancy]:
-          SECONDARY_CLAIM_DETAIL.absencePeriodsByReason[LeaveReason.pregnancy],
-      },
+      absencePeriods: SECONDARY_CLAIM_DETAIL.absence_periods,
+      applicationId: "123456789",
       docList: TEST_DOCS,
     });
-    button = wrapper.find("ButtonLink");
+    button = wrapper.find("FollowUpSteps").dive().find("ButtonLink");
     expect(button.children().text()).toEqual("Upload proof of birth");
   });
 
-  it("does not render an upload button given leave_reason is not Pregnancy/Maternity or Child Bonding", () => {
-    const { wrapper } = renderWithAppLogic(ApplicationUpdates, {
+  it("does renders ender ApplicationTimeline component given leave_reason is not Pregnancy/Maternity or Child Bonding", () => {
+    const { wrapper } = renderWithAppLogic(Timeline, {
       diveLevels: 0,
       props: {
-        absenceDetails: {
-          [LeaveReason.medical]:
-            SECONDARY_CLAIM_DETAIL.absencePeriodsByReason[LeaveReason.medical],
-        },
+        absencePeriods: [SECONDARY_CLAIM_DETAIL.absence_periods[2]],
+        applicationId: "123456789",
         docList: TEST_DOCS,
       },
     });
-    expect(wrapper.find("ButtonLink").exists()).toBe(false);
+    expect(wrapper.find("ApplicationTimeline").exists()).toBe(true);
   });
 
-  it("does not render an upload button if the correct certification form is given", () => {
-    const { wrapper } = renderWithAppLogic(ApplicationUpdates, {
+  it("does render ApplicationTimeline subcomponent if the correct certification form is given", () => {
+    const { wrapper } = renderWithAppLogic(Timeline, {
       diveLevels: 0,
       props: {
-        absenceDetails: {
-          [LeaveReason.bonding]:
-            SECONDARY_CLAIM_DETAIL.absencePeriodsByReason[LeaveReason.bonding],
-        },
+        absencePeriods: [SECONDARY_CLAIM_DETAIL.absence_periods[0]],
+        applicationId: "123456789",
         docList: CERTIFICATION_DOC,
       },
     });
-    expect(wrapper.find("ButtonLink").exists()).toBe(false);
+    expect(wrapper.find("ApplicationTimeline").exists()).toBe(true);
+  });
+
+  it("does render follow up date in application timeline if followup date given", () => {
+    const { wrapper } = renderWithAppLogic(Timeline, {
+      diveLevels: 0,
+      props: {
+        employerFollowUpDate: "09-02-2020",
+        applicationId: "123456789",
+        absencePeriods: [SECONDARY_CLAIM_DETAIL.absence_periods[0]],
+        docList: CERTIFICATION_DOC,
+      },
+    });
+
+    expect(
+      wrapper
+        .find("ApplicationTimeline")
+        .dive()
+        .find("Trans")
+        .at(1)
+        .prop("i18nKey")
+    ).toBe("pages.claimsStatus.timelineTextFollowUpEmployer");
   });
 });

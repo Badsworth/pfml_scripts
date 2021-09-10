@@ -1,10 +1,9 @@
+import ClaimDetail, { AbsencePeriod } from "../../models/ClaimDetail";
 import React, { useEffect } from "react";
-import { find, get, has, isEmpty, map } from "lodash";
-
+import { find, get, has, map } from "lodash";
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
-import ClaimDetail from "../../models/ClaimDetail";
 import DocumentCollection from "../../models/DocumentCollection";
 import { DocumentType } from "../../models/Document";
 import Heading from "../../components/Heading";
@@ -92,6 +91,9 @@ export const Status = ({ appLogic, query }) => {
     );
 
   const absenceDetails = claimDetail.absencePeriodsByReason;
+  const hasPendingStatus = claimDetail.absence_periods.some(
+    (absenceItem) => absenceItem.request_decision === "Pending"
+  );
   const documentsForApplication = allClaimDocuments.filterByApplication(
     claimDetail.application_id
   );
@@ -232,11 +234,17 @@ export const Status = ({ appLogic, query }) => {
             <p className="text-bold">{claimDetail.employer.employer_fein}</p>
           </div>
         </div>
-        <ApplicationUpdates
-          absenceDetails={absenceDetails}
-          applicationId={claimDetail.application_id}
-          docList={documentsForApplication}
-        />
+        {hasPendingStatus && (
+          <Timeline
+            absencePeriods={claimDetail.absence_periods}
+            employerFollowUpDate={
+              claimDetail.managed_requirements[0]?.follow_up_date
+            }
+            absenceDetails={absenceDetails}
+            applicationId={claimDetail.application_id}
+            docList={documentsForApplication}
+          />
+        )}
         <LeaveDetails absenceDetails={absenceDetails} />
         <ViewYourNotices />
 
@@ -391,82 +399,103 @@ LeaveDetails.propTypes = {
   absenceDetails: PropTypes.object,
 };
 
-export const ApplicationUpdates = ({
-  absenceDetails = {},
-  application_id,
-  docList = [],
+export const Timeline = ({
+  employerFollowUpDate = null,
+  applicationId,
+  docList,
+  absencePeriods,
 }) => {
   const { t } = useTranslation();
 
-  const shouldRenderProofOfBirthButton = (
-    absenceItemName,
-    absenceType,
-    docList
-  ) =>
-    absenceItemName === LeaveReason[absenceType] &&
+  const shouldRenderCertificationButton = (absencePeriodReason, docList) =>
     !findDocumentsByTypes(docList, [
-      DocumentType.certification[absenceItemName],
+      DocumentType.certification[absencePeriodReason],
     ]).length;
 
-  const renderOptions = (absenceItemName, absenceItem, docList) => {
-    const isNewBornQualifier = find(
-      absenceItem,
-      (item) => item && item.reason_qualifier_one === "Newborn"
+  const bondingAbsencePeriod = find(
+    absencePeriods,
+    (absencePeriod) =>
+      absencePeriod.reason === LeaveReason.pregnancy ||
+      absencePeriod.reason === LeaveReason.bonding
+  );
+
+  // eslint-disable-next-line react/prop-types
+  const FollowUpSteps = ({ bondingAbsencePeriod }) => {
+    const typeOfProof = ["Foster Care", "Adoption"].includes(
+      // eslint-disable-next-line react/prop-types
+      bondingAbsencePeriod.reason_qualifier_one
+    )
+      ? "adoption"
+      : "newborn";
+
+    return (
+      <React.Fragment>
+        <Heading level="2">{t("pages.claimsStatus.whatYouNeedToDo")}</Heading>
+        <p>
+          {t("pages.claimsStatus.whatYouNeedToDoText", {
+            context: typeOfProof,
+          })}
+        </p>
+        <ButtonLink
+          className="measure-12"
+          href={routeWithParams(nextStepsRoute[typeOfProof], {
+            claim_id: applicationId,
+          })}
+        >
+          {t("pages.claimsStatus.whatHappensNextButton", {
+            context: typeOfProof,
+          })}
+        </ButtonLink>
+      </React.Fragment>
     );
-    if (
-      (shouldRenderProofOfBirthButton(absenceItemName, "bonding", docList) &&
-        isNewBornQualifier) ||
-      shouldRenderProofOfBirthButton(absenceItemName, "pregnancy", docList)
-    ) {
-      return "newborn";
-    } else if (
-      shouldRenderProofOfBirthButton(absenceItemName, "bonding", docList) &&
-      !isNewBornQualifier
-    ) {
-      return "adoption";
-    }
   };
 
-  return isEmpty(absenceDetails) ? null : (
+  const ApplicationTimeline = () => (
+    <React.Fragment>
+      <Heading level="2">{t("pages.claimsStatus.timelineHeading")}</Heading>
+      <Trans
+        i18nKey="pages.claimsStatus.timelineDescription"
+        components={{
+          ul: <ul className="usa-list" />,
+          li: <li />,
+        }}
+      />
+      <Trans
+        i18nKey={
+          employerFollowUpDate
+            ? "pages.claimsStatus.timelineTextFollowUpEmployer"
+            : "pages.claimsStatus.timelineTextFollowUpGenericEmployer"
+        }
+        tOptions={{
+          employerFollowUpDate: formatDate(employerFollowUpDate).short(),
+        }}
+      />
+      <Trans i18nKey="pages.claimsStatus.timelineTextFollowUpGenericDFML" />
+      <Trans
+        i18nKey="pages.claimsStatus.timelineTextLearnMore"
+        components={{
+          "timeline-link": <a href={routes.external.massgov.timeline} />,
+        }}
+      />
+    </React.Fragment>
+  );
+  return (
     <div className="border-bottom border-base-lighter padding-bottom-2 margin-bottom-2">
-      <Heading level="2">
-        {t("pages.claimsStatus.applicationUpdatesHeading")}
-      </Heading>
-      <Heading level="3">{t("pages.claimsStatus.whatHappensNext")}</Heading>
-      {
-        map(absenceDetails, (absenceItem, absenceItemName) => {
-          const typeOfProof = renderOptions(
-            absenceItemName,
-            absenceItem,
-            docList
-          );
-          return nextStepsRoute[typeOfProof] ? (
-            <div key={absenceItemName}>
-              <p>
-                {t("pages.claimsStatus.whatYouNeedToDoText", {
-                  context: typeOfProof,
-                })}
-              </p>
-              <ButtonLink
-                className="measure-12"
-                href={routeWithParams(`${nextStepsRoute[typeOfProof]}`, {
-                  claim_id: application_id,
-                })}
-              >
-                {t("pages.claimsStatus.whatHappensNextButton", {
-                  context: typeOfProof,
-                })}
-              </ButtonLink>
-            </div>
-          ) : null;
-        })[0]
-      }
+      {!bondingAbsencePeriod ||
+      // eslint-disable-next-line react/prop-types
+      !shouldRenderCertificationButton(bondingAbsencePeriod.reason, docList) ? (
+        <ApplicationTimeline />
+      ) : (
+        <FollowUpSteps bondingAbsencePeriod={bondingAbsencePeriod} />
+      )}
     </div>
   );
 };
 
-ApplicationUpdates.propTypes = {
-  absenceDetails: PropTypes.object,
-  application_id: PropTypes.string,
-  docList: PropTypes.array,
+Timeline.propTypes = {
+  absencePeriods: PropTypes.arrayOf(PropTypes.instanceOf(AbsencePeriod))
+    .isRequired,
+  applicationId: PropTypes.string,
+  employerFollowUpDate: PropTypes.string,
+  docList: PropTypes.array.isRequired,
 };
