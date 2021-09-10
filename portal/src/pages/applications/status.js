@@ -70,7 +70,7 @@ export const Status = ({ appLogic, query }) => {
      * provided the id tag exists.
      */
     if (location.hash) {
-      const anchorId = document.querySelector(location.hash);
+      const anchorId = document.getElementById(location.hash.substring(1));
       if (anchorId) anchorId.scrollIntoView();
     }
   }, [isLoadingClaimDetail, claimDetail]);

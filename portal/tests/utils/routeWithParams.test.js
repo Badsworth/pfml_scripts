@@ -6,7 +6,6 @@ import routes from "../../src/routes";
 
 describe("createRouteWithQuery", () => {
   let params, route, url;
-  const hash = "test";
 
   beforeEach(() => {
     route = "/test/route";
@@ -59,12 +58,12 @@ describe("createRouteWithQuery", () => {
       param2: "value2",
     };
 
-    expect(createRouteWithQuery(route, params, hash)).toEqual(
-      route + "?param1=value1&param2=value2#test"
+    expect(createRouteWithQuery(route, params, "hash")).toEqual(
+      route + "?param1=value1&param2=value2#hash"
     );
 
-    expect(createRouteWithQuery(route, undefined, hash)).toEqual(
-      route + "#test"
+    expect(createRouteWithQuery(route, undefined, "hash")).toEqual(
+      route + "#hash"
     );
   });
 });
