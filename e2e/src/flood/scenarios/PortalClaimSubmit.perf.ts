@@ -555,8 +555,6 @@ async function filterClaims(browser: Browser, status: DashboardClaimStatus) {
   await browser
     .findElement(By.visibleText("Apply filters"))
     .then((el) => el.click());
-  // Wait until loader is there
-  await Util.waitForElement(browser, By.css('span[role="progressbar"]'));
   // Check results
   await browser
     .findElements(By.css("table.usa-table > tbody > tr"))
@@ -574,5 +572,4 @@ async function filterClaims(browser: Browser, status: DashboardClaimStatus) {
   await browser
     .findElement(Util.byButtonText(status))
     .then((button) => button.click());
-  await Util.waitForElement(browser, By.css('span[role="progressbar"]'));
 }
