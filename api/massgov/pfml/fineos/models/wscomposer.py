@@ -61,6 +61,67 @@ class OCPartyAlias(pydantic.BaseModel):
     OCPartyAlias: List[OCPartyAliasItem]
 
 
+class OCPartyLocationAssociationItem(pydantic.BaseModel):
+    OID: str = "PE:11797:0000000001"
+    BOEVersion: int = 0
+    LastUpdateDate: str = "1753-01-01T00:00:00"
+    UserUpdatedBy: str = "EMAIL@MASS.GOV"
+    Description: Optional[str] = None
+    EffectiveFrom: str = "1753-01-01T00:00:00"
+    EffectiveTo: str = "1754-01-01T00:00:00"
+    ExternalReference: Any = None
+    Name: str = "HQ"
+    PartyLocationAssociationType: InstanceDomainAndFullId = InstanceDomainAndFullId(
+        InstanceDomainAndFullId=InstanceDomainAndFullIdItem(
+            InstanceName="Unknown", DomainName="PartyLocationAssociationType", FullId=6624000
+        )
+    )
+    SourceSystem: InstanceDomainAndFullId = InstanceDomainAndFullId(
+        InstanceDomainAndFullId=InstanceDomainAndFullIdItem(
+            InstanceName="Internal", DomainName="PartySourceSystem", FullId=8032000
+        )
+    )
+    UpperName: Any = None
+    ReferenceNumberValidated: bool = False
+
+
+class OCPartyLocationAssociation(pydantic.BaseModel):
+    OCPartyLocationAssociation: List[OCPartyLocationAssociationItem]
+
+
+class OCOrganisationUnitLocationLinkItem(pydantic.BaseModel):
+    OID: str = "PE:11797:0000000001"
+    BOEVersion: int = 0
+    LastUpdateDate: str = "1753-01-01T00:00:00"
+    UserUpdatedBy: str = "EMAIL@MASS.GOV"
+    partyLocationAssociation: OCPartyLocationAssociation
+
+
+class OCOrganisationUnitLocationLinks(pydantic.BaseModel):
+    OrgUnitLocationLink: List[OCOrganisationUnitLocationLinkItem]
+
+
+class OCOrganisationUnitItem(pydantic.BaseModel):
+    OID: str = "PE:11797:0000000001"
+    BOEVersion: int = 0
+    LastUpdateDate: str = "1753-01-01T00:00:00"
+    UserUpdatedBy: str = "EMAIL@MASS.GOV"
+    EffectiveFrom: str = "1753-01-01T00:00:00"
+    EffectiveTo: str = "1754-01-01T00:00:00"
+    ExternalReference: Any = None
+    Name: str = "HRD"
+    SourceSystem: InstanceDomainAndFullId = InstanceDomainAndFullId(
+        InstanceDomainAndFullId=InstanceDomainAndFullIdItem(
+            InstanceName="Internal", DomainName="PartySourceSystem", FullId=8032000
+        )
+    )
+    orgUnitLocationLinks: Optional[OCOrganisationUnitLocationLinks]
+
+
+class OCOrganisationUnit(pydantic.BaseModel):
+    OrganisationUnit: Optional[List[OCOrganisationUnitItem]]
+
+
 class OCOrganisationDefaultItem(pydantic.BaseModel):
     LastUpdateDate: str = "1753-01-01T00:00:00"
     UserUpdatedBy: str = "PFML_API"
@@ -139,6 +200,7 @@ class OCOrganisationDefaultItem(pydantic.BaseModel):
     UpperRegisteredNumber: Any = None
     UpperShortName: Any = None
     VatNumber: Any = None
+    organisationUnits: Optional[OCOrganisationUnit]
 
 
 class OCOrganisationWithDefault(pydantic.BaseModel):
@@ -252,6 +314,7 @@ class OCOrganisationItem(pydantic.BaseModel):
     UpperRegisteredNumber: Any = None
     UpperShortName: Any = None
     VatNumber: Any = None
+    organisationUnits: Optional[OCOrganisationUnit]
     names: Optional[OCOrganisationName]
 
 
