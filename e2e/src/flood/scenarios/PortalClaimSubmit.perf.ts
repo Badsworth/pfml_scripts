@@ -15,6 +15,7 @@ import type {
 } from "../../_api";
 import { splitClaimToParts } from "../../util/common";
 import assert from "assert";
+import { DashboardClaimStatus } from "../../../cypress/actions/portal";
 
 let authToken: string;
 let username: string;
@@ -171,7 +172,8 @@ async function submitEmployerResponse(
 ): Promise<void> {
   if (!data.employerResponse) return;
   await (await Util.waitForElement(browser, By.linkText("Dashboard"))).click();
-  await randomClaimSort(browser);
+  await filterClaims(browser, "Review by");
+  await randomClaimSort(browser); // filter for "Review by" status
   // Randomly Select Search Methods
   switch (randomNumber(2)) {
     case 0:
@@ -181,6 +183,7 @@ async function submitEmployerResponse(
       await searchName(browser, data);
       break;
   }
+
   console.log("Sort and Search Completed w/o errors!");
 
   // submit response directly to API
@@ -262,6 +265,7 @@ async function setFeatureFlags(browser: Browser): Promise<void> {
       pfmlTerriyay: true,
       employerShowDashboardSort: true,
       employerShowDashboardSearch: true,
+      employerShowReviewByStatus: true,
     }),
     url: config("PORTAL_BASEURL"),
   });
@@ -519,6 +523,7 @@ async function randomClaimSort(browser: Browser): Promise<void> {
     "Last name – A to Z",
     "Last name – Z to A",
     "Newest applications",
+    "Status",
   ] as const;
   const randomIndex = randomNumber(sorts.length);
   await Util.waitForElement(browser, Util.byLabelled("Sort"));
@@ -531,4 +536,43 @@ async function randomClaimSort(browser: Browser): Promise<void> {
 
 function randomNumber(n: number): number {
   return Math.floor(Math.random() * n);
+}
+
+/**
+ * Applies a single filter by status. Checks the results, clears filters.
+ * @param status
+ */
+async function filterClaims(browser: Browser, status: DashboardClaimStatus) {
+  // find filters button
+  await browser
+    .findElement(By.css('button[aria-controls="filters"]'))
+    .then((button) => button.click());
+  // Select the right filter
+  await Util.waitForElement(browser, Util.byContains("label", status)).then(
+    (el) => el.click()
+  );
+  // Apply filters
+  await browser
+    .findElement(By.visibleText("Apply filters"))
+    .then((el) => el.click());
+  // Wait until loader is there
+  await Util.waitForElement(browser, By.css('span[role="progressbar"]'));
+  // Check results
+  await browser
+    .findElements(By.css("table.usa-table > tbody > tr"))
+    .then(async (rows) => {
+      for (const row of rows) {
+        const text = await row.text();
+        console.log(text);
+        assert.ok(
+          text.includes(status),
+          `Expected all rows to have status: ${status}`
+        );
+      }
+    });
+  // Disable filter
+  await browser
+    .findElement(Util.byButtonText(status))
+    .then((button) => button.click());
+  await Util.waitForElement(browser, By.css('span[role="progressbar"]'));
 }
