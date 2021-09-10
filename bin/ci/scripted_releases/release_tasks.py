@@ -1,4 +1,5 @@
 from scripted_releases import git_utils
+import git
 import logging
 
 logger = logging.getLogger(__name__)
@@ -43,12 +44,22 @@ def update(args):
         return False
 
     old_head = git_utils.head_of_branch(args.release_version)
-    logger.info(f"Current HEAD of branch '{args.release_version}' on origin is '{old_head[0:9]}'.")
+    logger.info(f"HEAD of '{args.release_version}' on origin is '{old_head[0:9]}'")
     logger.info("Will save this HEAD and revert back to it if anything goes wrong.")
+
+    try:
+        git_utils.checkout(args.release_version)
+        logger.info(f"Checked out '{args.release_version}'.")
+        logger.info(f"Now {'cherry picking commits' if args.git_commits else f'merging in {args.source_branch}'}...")
+    except git.exc.GitCommandError as e:
+        logger.warning(f"Ran into a problem: {e}")
+        logger.warning(f"Reverting '{args.release_version}' back to previous HEAD...")
+        git_utils.reset_head()
+        logger.warning("Done. Will now halt.")
+        return False
 
     #   check out the branch at args.release_version
     #       NB: will the check-out break everything if the release branch lacks this code?
-    #       NB: save a pointer to the old HEAD of args.release_version in case of error
     #   for each git commit in args.git_commits:
     #       cherry-pick that commit onto the branch at args.release_version
     #       if merge conflicts or any other Git error, STOP. Hard reset to the saved pointer and exit 1.

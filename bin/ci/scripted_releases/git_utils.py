@@ -24,6 +24,10 @@ def checkout_main():
     git.checkout("main")
 
 
+def checkout(branch_name):
+    git.checkout(branch_name)
+
+
 def reset_head():
     git.reset("--hard", "HEAD")
 
@@ -36,6 +40,10 @@ def cherrypick(commit_hash):
     git.cherry_pick(commit_hash)
 
 
+def merge_branch(branch_name):
+    raise NotImplementedError
+
+
 def create_branch(branch_name):
     fetch_remotes()
     git.branch(branch_name)
@@ -45,7 +53,8 @@ def create_branch(branch_name):
 
 def most_recent_tag(app):
     t = git.describe("--tags", "--match", f"{app}/v*", "--abbrev=0", "origin/main")
-    logger.info(f"Detected latest {app} tag is '{t}'")
+    sha = git.rev_parse(t)
+    logger.info(f"Latest {app} tag is '{t}' with commit SHA '{sha[0:9]}'")
     return t
 
 
