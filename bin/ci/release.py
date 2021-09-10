@@ -34,9 +34,9 @@ def main(raw_args: list) -> None:
     # Avert your eyes!
     sys.excepthook = audit_logging_exception_hook
 
-    logger.info("*** Scripted Releases v. 00004 ***")
-    logger.info(f"Args: {repr(args)}")
+    logger.info("*** Scripted Releases v. 00005 ***")
     logger.info(f"Script is running in {'interactive' if args.interactive else 'autonomous'} mode.")
+    logger.info(f"Args: {repr(args)}")
 
     if not hasattr(args, 'func'):
         raise RuntimeError(NO_SUBCOMMAND)
@@ -59,8 +59,8 @@ def parse_args(raw_args: list) -> argparse.Namespace:
     parser.add_argument("-i", "--interactive", action="store_true",
                         help="If present: run the script interactively. "
                              "If not present: run the script from command-line arguments.")
-    parser.add_argument("-a", "--app", choices=['api', 'portal'], required=True,
-                        help='Are you releasing the Portal or the API?')
+    parser.add_argument("-a", "--app", choices=['api', 'portal', 'foobar'], required=True,
+                        help='Are you releasing the Portal or the API? (Foobar for internal testing ONLY.)')
 
     subparsers = parser.add_subparsers()
 

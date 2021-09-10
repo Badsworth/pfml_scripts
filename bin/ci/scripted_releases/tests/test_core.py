@@ -97,6 +97,21 @@ def test_update_release_arg_handling():
         release.main(["--app", "api", "-i", "update-release", "-r", "release/api/v1.2.0"])
         release.main(["--app", "api", "-i", "update-release", "-c", "abc123"])
 
+    # A release branch can be updated with EITHER arbitrary commits OR an arbitrary branch, not both.
+    with pytest.raises(SystemExit):
+        release.main(
+            ["--app", "api", "update-release",
+             "-r", "release/api/v1.2.0",
+             "-c", "a1b2c3d4",
+             "--with-branch", "main"]
+        )
+        release.main(
+            ["--app", "portal", "update-release",
+             "-r", "release/portal/v4.0",
+             "-c", "a1b2c3d4",
+             "--with-branch", "main"]
+        )
+
     release.main(["--app", "api", "-i", "update-release"])
 
 

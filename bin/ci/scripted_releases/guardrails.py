@@ -1,4 +1,5 @@
 from re import match
+from . import git_utils
 
 """
 Argument-handling guardrails for the various different ways to invoke release.py.
@@ -6,7 +7,7 @@ Each set of subcommands takes slightly different arguments and has slightly diff
 """
 
 # TODO: regex polishing: don't match portal versions with >2 semver numbers.
-RELEASE_VERSION_REGEX = r"release\/(api|portal)\/v([0-9]+)\.([0-9]+)\.{0,1}([0-9]+){0,1}"
+RELEASE_VERSION_REGEX = r"release\/(api|portal|foobar)\/v([0-9]+)\.([0-9]+)\.{0,1}([0-9]+){0,1}"
 COMMIT_REGEX = r"[0-9a-f]{7,40}"  # allows both short and long-form hash types
 
 CLI_ARGS_WHEN_INTERACTIVE = "No additional command-line arguments should be provided in interactive mode."
@@ -14,8 +15,10 @@ CLI_ARGS_WHEN_INTERACTIVE = "No additional command-line arguments should be prov
 NO_RELEASE_VERSION = "No release version was supplied."
 BAD_RELEASE_VERSION = "The provided release version wasn't recognized as a valid API or Portal release branch name."
 
-NO_GIT_COMMITS = "No Git commits were supplied."
+NO_SOURCE_DATA = "Neither Git commits nor the name of a source branch were supplied."
 BAD_GIT_COMMITS = "One or more commit hashes weren't recognized as valid commits."
+BAD_SOURCE_BRANCH = "The provided source branch does not appear to exist on GitHub. " \
+                    "Check your spelling, push the branch to origin, or use commit hashes instead."
 
 
 def for_new_release():
@@ -24,7 +27,7 @@ def for_new_release():
 
 
 def for_altered_release(args):
-    if args.interactive and any([args.release_version, args.git_commits]):
+    if args.interactive and any([args.release_version, args.git_commits, args.source_branch]):
         raise RuntimeError(CLI_ARGS_WHEN_INTERACTIVE)
 
     if not args.interactive:
@@ -33,8 +36,10 @@ def for_altered_release(args):
         elif not match(RELEASE_VERSION_REGEX, args.release_version):
             raise ValueError(BAD_RELEASE_VERSION)
 
-        if len(args.git_commits) <= 0:
-            raise ValueError(NO_GIT_COMMITS)
+        if len(args.git_commits) <= 0 and not args.source_branch:
+            raise ValueError(NO_SOURCE_DATA)
+        elif len(args.git_commits) <= 0 and not git_utils.branch_exists(args.source_branch):
+            raise ValueError(BAD_SOURCE_BRANCH)
         elif not all(match(COMMIT_REGEX, git_commit) for git_commit in args.git_commits):
             raise ValueError(BAD_GIT_COMMITS)
 
