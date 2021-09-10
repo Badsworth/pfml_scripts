@@ -12,12 +12,14 @@ import { Trans } from "react-i18next";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
+import useLoggedInRedirect from "../../hooks/useLoggedInRedirect";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 
 export const CreateAccount = (props) => {
   const { appLogic } = props;
   const { t } = useTranslation();
+  useLoggedInRedirect(appLogic.portalFlow);
 
   const { formState, updateFields } = useFormState({
     password: "",
@@ -141,6 +143,9 @@ CreateAccount.propTypes = {
     appErrors: PropTypes.instanceOf(AppErrorInfoCollection),
     auth: PropTypes.shape({
       createEmployerAccount: PropTypes.func.isRequired,
+    }).isRequired,
+    portalFlow: PropTypes.shape({
+      goTo: PropTypes.func.isRequired,
     }).isRequired,
   }).isRequired,
 };
