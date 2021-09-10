@@ -12,6 +12,7 @@ import LegalNoticeList from "../components/LegalNoticeList";
 import PropTypes from "prop-types";
 import React from "react";
 import findKeyByValue from "../utils/findKeyByValue";
+import getLegalNotices from "../utils/getLegalNotices";
 import { useTranslation } from "../locales/i18n";
 import withClaimDocuments from "../hoc/withClaimDocuments";
 
@@ -123,12 +124,13 @@ ManageDocumentSection.propTypes = {
 const LegalNoticeSection = (props) => {
   const { t } = useTranslation();
   const isSubmitted = props.claim.status === "Submitted";
+  const legalNotices = getLegalNotices(props.documents);
 
   /**
    * If application is not submitted,
    * don't display section
    */
-  if (!isSubmitted) return null;
+  if (!isSubmitted || !legalNotices.length) return null;
 
   return (
     <div

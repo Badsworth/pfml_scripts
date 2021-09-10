@@ -34,6 +34,8 @@ describe("ApplicationCardV2", () => {
         <ApplicationCardV2 appLogic={appLogic} claim={claim} number={2} />
       );
 
+      const legalNoticeSection = wrapper.find("LegalNoticeSection");
+      expect(legalNoticeSection.isEmptyRender()).toBe(true);
       expect(wrapper).toMatchSnapshot();
     });
 
