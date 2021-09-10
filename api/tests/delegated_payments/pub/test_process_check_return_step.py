@@ -6,6 +6,7 @@ import datetime
 import decimal
 import pathlib
 
+import faker
 import freezegun
 import pytest
 
@@ -28,6 +29,8 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.pub import check_return, process_check_return_step
 from massgov.pfml.delegated_payments.pub.check_return import PaidStatus
+
+fake = faker.Faker()
 
 
 def check_payment_factory(
@@ -65,6 +68,13 @@ def payment(local_test_db_session, local_initialize_factories_session):
 def payment_complete(local_test_db_session, local_initialize_factories_session):
     return payment_by_check_sent_to_pub_factory(
         1, local_test_db_session, State.DELEGATED_PAYMENT_COMPLETE
+    )
+
+
+@pytest.fixture
+def payment_error_with_bank(local_test_db_session, local_initialize_factories_session):
+    return payment_by_check_sent_to_pub_factory(
+        1, local_test_db_session, State.DELEGATED_PAYMENT_ERROR_FROM_BANK
     )
 
 
@@ -141,12 +151,10 @@ def test_process_single_check_payment_paid(step, payment, payment_state, local_t
 def test_process_single_check_payment_previously_paid(step, payment_complete):
     step.process_single_check_payment(check_payment_factory(PaidStatus.PAID))
 
-    assert (
-        payment_complete.check.payment_check_status_id
-        == PaymentCheckStatus.PAID.payment_check_status_id
-    )
-    assert payment_complete.check.check_posted_date == datetime.date(2021, 3, 22)
-    step.log_entry.metrics["payment_complete_by_paid_check"] == 1
+    # Previously processed payments won't be processed again (normally would have these set from prior runs)
+    assert payment_complete.check.payment_check_status_id is None
+    assert payment_complete.check.check_posted_date is None
+    step.log_entry.metrics["payment_already_complete_by_paid_check"] == 1
 
 
 @pytest.mark.parametrize("check_status", (PaidStatus.OUTSTANDING, PaidStatus.FUTURE))
@@ -208,6 +216,19 @@ def test_process_single_check_payment_failed(
     assert pub_error.payment_id == payment.payment_id
 
 
+def test_process_single_check_payment_previously_failed(
+    step, payment_error_with_bank, local_test_db_session
+):
+    step.process_single_check_payment(check_payment_factory(PaidStatus.STOP))
+
+    # Previously errored payment not processed again
+    assert len(payment_error_with_bank.state_logs) == 1
+    step.log_entry.metrics["payment_already_failed_by_check"] == 1
+
+    pub_errors = local_test_db_session.query(PubError).all()
+    assert len(pub_errors) == 0
+
+
 def test_process_single_check_payment_not_found(step, payment, local_test_db_session):
     step.process_single_check_payment(check_payment_factory(PaidStatus.PAID, "999"))
 
@@ -252,6 +273,24 @@ def test_process_single_check_payment_without_state(
     assert pub_error.raw_data == "abcd"
     assert pub_error.details == {"check_number": "501"}
     assert pub_error.payment_id == payment_without_state.payment_id
+
+
+def test_increment_metric_by_paid_status(step):
+    status_counts = {}
+    for status in PaidStatus:
+        status_counts[status] = fake.random_int(min=1, max=5)
+
+    for status, count in status_counts.items():
+        for _ in range(count):
+            step.increment_metric_by_paid_status(status)
+
+    log_entry = step.log_entry
+    assert log_entry.metrics["payment_paid_count"] == status_counts[PaidStatus.PAID]
+    assert log_entry.metrics["payment_outstanding_count"] == status_counts[PaidStatus.OUTSTANDING]
+    assert log_entry.metrics["payment_future_count"] == status_counts[PaidStatus.FUTURE]
+    assert log_entry.metrics["payment_void_count"] == status_counts[PaidStatus.VOID]
+    assert log_entry.metrics["payment_stale_count"] == status_counts[PaidStatus.STALE]
+    assert log_entry.metrics["payment_stop_count"] == status_counts[PaidStatus.STOP]
 
 
 @freezegun.freeze_time("2021-04-12 08:00:00", tz_offset=0)
@@ -432,8 +471,8 @@ def test_process_check_return_step_full(
     assert errors[4].details == {}
     assert errors[5].reference_file == reference_files[1]
     assert errors[5].line_number == 2
-    assert errors[5].message == "unexpected state for payment: Payment Errored from Bank (182)"
-    assert errors[5].details == {"check_number": "505"}
+    assert errors[5].message == "payment previously processed errored, unsure of correct behavior"
+    assert errors[5].details == {"check_number": "505", "status": "PAID"}
 
 
 def payment_by_check_sent_to_pub_factory(

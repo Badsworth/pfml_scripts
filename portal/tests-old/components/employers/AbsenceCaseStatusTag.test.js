@@ -3,12 +3,6 @@ import React from "react";
 import { shallow } from "enzyme";
 
 describe("AbsenceCaseStatusTag", () => {
-  beforeEach(() => {
-    process.env.featureFlags = {
-      employerShowReviewByStatus: true,
-    };
-  });
-
   const renderComponent = (status, managedRequirements) => {
     return shallow(
       <AbsenceCaseStatusTag
@@ -43,6 +37,7 @@ describe("AbsenceCaseStatusTag", () => {
   });
 
   it("renders the component with 'Review By {{date}}' when managedRequirements is not empty", () => {
+    process.env.featureFlags = { employerShowReviewByStatus: true };
     const managedRequirementsData = [
       { follow_up_date: "2021-08-22" },
       { follow_up_date: "2021-07-22" },
@@ -52,7 +47,18 @@ describe("AbsenceCaseStatusTag", () => {
     expect(wrapper).toMatchSnapshot();
   });
 
+  it("renders the component with '--' when managedRequirements is not empty, but Review By feature flag is not enabled", () => {
+    const managedRequirementsData = [
+      { follow_up_date: "2021-08-22" },
+      { follow_up_date: "2021-07-22" },
+    ];
+    const wrapper = renderComponent("Approved", managedRequirementsData);
+
+    expect(wrapper.text()).toEqual("--");
+  });
+
   it("renders the component with 'No Action Required' when managedRequirements is empty and has a pending-line status value", () => {
+    process.env.featureFlags = { employerShowReviewByStatus: true };
     const managedRequirementsData = [];
     const wrapper = renderComponent(
       "Intake In Progress",

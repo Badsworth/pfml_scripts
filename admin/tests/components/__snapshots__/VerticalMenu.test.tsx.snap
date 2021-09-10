@@ -1,0 +1,14 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`VerticalMenu renders the default component 1`] = `
+<div
+  className="vertical-menu"
+>
+  <button
+    className="vertical-menu__icon pfml-icon--vmenu"
+    data-testid="vertical-menu-trigger"
+    onClick={[Function]}
+    type="button"
+  />
+</div>
+`;
