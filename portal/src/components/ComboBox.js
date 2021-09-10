@@ -117,6 +117,7 @@ function ComboBox(props) {
       const onChangeEvent = new Event("onchange");
       inputRef.current.dispatchEvent(onChangeEvent);
       onChangeEvent.target.value = selectedOption.label;
+      hideOptionsList();
       props.onChange(onChangeEvent);
     }
   };
@@ -126,7 +127,6 @@ function ComboBox(props) {
   };
   const onComboBoxMouseLeave = (e) => {
     setIsMouseSelectingOption(false);
-    hideOptionsList();
   };
 
   const clearSearch = (e) => {
@@ -229,25 +229,6 @@ function ComboBox(props) {
           onKeyDown={onKeyDown}
           value={props.value}
         />
-        <span className="usa-combo-box__clear-input__wrapper" tabIndex="-1">
-          <button
-            onClick={clearSearch}
-            type="button"
-            className="usa-combo-box__clear-input"
-            aria-label="Clear the select contents"
-            style={customBtnSpacing}
-          >
-            &nbsp;
-          </button>
-        </span>
-        {isPristine && (
-          <span
-            className="usa-combo-box__input-button-separator"
-            style={customBtnSpacing}
-          >
-            &nbsp;
-          </span>
-        )}
         <span className="usa-combo-box__toggle-list__wrapper" tabIndex="-1">
           <button
             type="button"
