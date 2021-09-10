@@ -87,7 +87,7 @@ export default class ArtilleryPFMLInteractor {
           leaveAdminCredentials,
           childLoggerClaimInfo
         );
-        childLoggerClaimInfo.info("Claim Submitted Succesffully", submission);
+        childLoggerClaimInfo.info("Claim Submitted Successfully", submission);
         return submission;
       } catch (e) {
         childLoggerClaimInfo.error(e);

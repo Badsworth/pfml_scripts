@@ -74,9 +74,19 @@ export const submitAndAdjudicate = fn(
       throw new Error("LST Failure");
     } finally {
       logger.info("LST Results (each method)", {
-        generateClaim: !claim ? "Failure" : "Success",
-        submitClaim: !subClaimRes ? "Failure" : "Success",
-        postProcessClaim: !processClaim ? "Failure" : "Success",
+        generateClaim: claim ? "Success" : "Failure",
+        submitClaim:
+          claim && !subClaimRes
+            ? "Failure"
+            : claim && subClaimRes
+            ? "Success"
+            : "Skipped",
+        postProcessClaim:
+          claim && subClaimRes && !processClaim
+            ? "Failure"
+            : claim && subClaimRes && processClaim
+            ? "Success"
+            : "Skipped",
       });
     }
   }
