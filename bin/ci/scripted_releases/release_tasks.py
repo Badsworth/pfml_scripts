@@ -57,6 +57,9 @@ def update(args):
         git_utils.reset_head()
         logger.warning("Done. Will now halt.")
         return False
+    finally:
+        logger.warning("Task is finishing, will check out 'main' locally")
+        git_utils.checkout("main")
 
     #   check out the branch at args.release_version
     #       NB: will the check-out break everything if the release branch lacks this code?
