@@ -34,6 +34,7 @@ def update(args):
     # guardrails will have vetted args.git_commits
 
     # autonomous flow:
+    # TODO - most_recent_tag is not detecting 'foobar' RC tags correctly; finds only rc1 as newest, not rc2
     git_utils.fetch_remotes()
     recent_tag = git_utils.most_recent_tag(args.app)
     v = git_utils.to_semver(recent_tag)
@@ -58,7 +59,7 @@ def update(args):
         logger.warning("Done. Will now halt.")
         return False
     finally:
-        logger.warning("Task is finishing, will check out 'main' locally")
+        logger.warning("Task is finishing, will check out 'main' locally")  # TODO: check out original branch instead
         git_utils.checkout("main")
 
     #   check out the branch at args.release_version
