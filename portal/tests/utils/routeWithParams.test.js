@@ -1,10 +1,13 @@
 import routeWithParams, {
   createRouteWithQuery,
 } from "../../src/utils/routeWithParams";
+
 import routes from "../../src/routes";
 
 describe("createRouteWithQuery", () => {
   let params, route, url;
+  const hash = "test";
+
   beforeEach(() => {
     route = "/test/route";
   });
@@ -48,6 +51,21 @@ describe("createRouteWithQuery", () => {
     };
     url = createRouteWithQuery(route, params);
     expect(url).toEqual(route);
+  });
+
+  it("hash link is appended to URL as expected", () => {
+    params = {
+      param1: "value1",
+      param2: "value2",
+    };
+
+    expect(createRouteWithQuery(route, params, hash)).toEqual(
+      route + "?param1=value1&param2=value2#test"
+    );
+
+    expect(createRouteWithQuery(route, undefined, hash)).toEqual(
+      route + "#test"
+    );
   });
 });
 

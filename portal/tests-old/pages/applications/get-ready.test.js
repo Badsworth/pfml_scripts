@@ -51,15 +51,15 @@ describe("GetReady", () => {
     const { wrapper } = render({}, { claims });
 
     expect(wrapper.find("Link")).toMatchInlineSnapshot(`
-      <Link
-        href="/applications"
-      >
-        <a
-          className="display-inline-block margin-bottom-5"
-        >
-          View all applications
-        </a>
-      </Link>
-    `);
+<Link
+  href="/applications"
+>
+  <a
+    className="display-inline-block margin-bottom-5"
+  >
+    View all applications
+  </a>
+</Link>
+`);
   });
 });

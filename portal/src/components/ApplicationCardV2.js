@@ -78,13 +78,15 @@ const ManageDocumentSection = ({ claim }) => {
   const { fineos_absence_id: absence_case_id } = claim;
 
   const viewNoticesLink = createRouteWithQuery(
-    "/applications/status/#view_notices",
-    { absence_case_id }
+    "/applications/status/",
+    { absence_case_id },
+    "view_notices"
   );
 
   const uploadDocumentsLink = createRouteWithQuery(
-    "/applications/status/#upload_documents",
-    { absence_case_id }
+    "/applications/status/",
+    { absence_case_id },
+    "upload_documents"
   );
 
   return (

@@ -444,15 +444,15 @@ exports[`ApplicationCardV2 components match their snapshots completed status mat
               </Heading>
               <ButtonLink
                 className="display-block margin-bottom-3"
-                href="/applications/status/#view_notices?absence_case_id=NTN-111-ABS-01"
+                href="/applications/status/?absence_case_id=NTN-111-ABS-01#view_notices"
                 variation="unstyled"
               >
                 <Link
-                  href="/applications/status/#view_notices?absence_case_id=NTN-111-ABS-01"
+                  href="/applications/status/?absence_case_id=NTN-111-ABS-01#view_notices"
                 >
                   <a
                     className="usa-button display-block margin-bottom-3 usa-button--unstyled"
-                    href="/applications/status/#view_notices?absence_case_id=NTN-111-ABS-01"
+                    href="/applications/status/?absence_case_id=NTN-111-ABS-01#view_notices"
                   >
                     View notices
                   </a>
@@ -460,15 +460,15 @@ exports[`ApplicationCardV2 components match their snapshots completed status mat
               </ButtonLink>
               <ButtonLink
                 className="display-block margin-bottom-2"
-                href="/applications/status/#upload_documents?absence_case_id=NTN-111-ABS-01"
+                href="/applications/status/?absence_case_id=NTN-111-ABS-01#upload_documents"
                 variation="unstyled"
               >
                 <Link
-                  href="/applications/status/#upload_documents?absence_case_id=NTN-111-ABS-01"
+                  href="/applications/status/?absence_case_id=NTN-111-ABS-01#upload_documents"
                 >
                   <a
                     className="usa-button display-block margin-bottom-2 usa-button--unstyled"
-                    href="/applications/status/#upload_documents?absence_case_id=NTN-111-ABS-01"
+                    href="/applications/status/?absence_case_id=NTN-111-ABS-01#upload_documents"
                   >
                     Upload documents
                   </a>

@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { find, get, has, isEmpty, map } from "lodash";
+
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
@@ -62,6 +63,18 @@ export const Status = ({ appLogic, query }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [claimDetail]);
 
+  useEffect(() => {
+    /**
+     * If URL includes a location.hash then page
+     * should scroll into view on that id tag,
+     * provided the id tag exists.
+     */
+    if (location.hash) {
+      const anchorId = document.querySelector(location.hash);
+      if (anchorId) anchorId.scrollIntoView();
+    }
+  }, [isLoadingClaimDetail, claimDetail]);
+
   const hasClaimDetailLoadError = appLogic.appErrors.items.some(
     (error) => error.name === "ClaimDetailLoadError"
   );
@@ -84,7 +97,6 @@ export const Status = ({ appLogic, query }) => {
   );
 
   const ViewYourNotices = () => {
-    const className = "border-top border-base-lighter padding-y-2";
     const legalNotices = getLegalNotices(documentsForApplication);
 
     const shouldShowSpinner =
@@ -94,14 +106,30 @@ export const Status = ({ appLogic, query }) => {
       hasDocumentsLoadError(appLogic.appErrors, claimDetail.application_id) ||
       legalNotices.length === 0;
 
+    const SectionWrapper = ({ children }) => (
+      <div
+        className="border-top border-base-lighter padding-y-2"
+        id="view_notices"
+      >
+        {children}
+      </div>
+    );
+
+    SectionWrapper.propTypes = {
+      children: PropTypes.oneOfType([
+        PropTypes.arrayOf(PropTypes.node),
+        PropTypes.node,
+      ]).isRequired,
+    };
+
     if (shouldShowSpinner) {
       // claim documents are loading.
       return (
-        <div className={className}>
+        <SectionWrapper>
           <Spinner
             aria-valuetext={t("pages.claimsStatus.loadingLegalNoticesLabel")}
           />
-        </div>
+        </SectionWrapper>
       );
     }
 
@@ -115,12 +143,12 @@ export const Status = ({ appLogic, query }) => {
     );
 
     return (
-      <div className={className}>
+      <SectionWrapper>
         <Heading className="margin-bottom-1" level="2" id="view_notices">
           {t("pages.claimsStatus.viewNoticesHeading")}
         </Heading>
         {sectionBody}
-      </div>
+      </SectionWrapper>
     );
   };
 
@@ -213,7 +241,7 @@ export const Status = ({ appLogic, query }) => {
         <ViewYourNotices />
 
         {/* Upload documents section */}
-        <div className={containerClassName}>
+        <div className={containerClassName} id="upload_documents">
           <Heading level="2">
             {t("pages.claimsStatus.uploadDocumentsHeading")}
           </Heading>
