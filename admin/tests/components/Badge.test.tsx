@@ -1,6 +1,6 @@
 import React from "react";
 import { create } from "react-test-renderer";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import "@testing-library/jest-dom";
 import Badge, { Props as BadgeProps } from "../../src/components/Badge";
 

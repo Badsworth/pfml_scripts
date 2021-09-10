@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ActionCard renders the default component 1`] = `
+<div
+  className="card"
+>
+  <div
+    className="card__info"
+  >
+    <h2
+      className="card__title"
+    >
+      Test Title
+    </h2>
+    <p
+      className="card__description"
+    >
+      Test description for action card
+    </p>
+  </div>
+  <div
+    className="card__controls"
+  />
+</div>
+`;
