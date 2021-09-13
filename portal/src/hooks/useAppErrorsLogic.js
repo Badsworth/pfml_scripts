@@ -1,6 +1,7 @@
 import {
   ApiRequestError,
   AuthSessionMissingError,
+  ClaimWithdrawnError,
   CognitoAuthError,
   DocumentsLoadError,
   DocumentsUploadError,
@@ -61,6 +62,8 @@ const useAppErrorsLogic = ({ portalFlow }) => {
       handleCognitoAuthError(error);
     } else if (error instanceof LeaveAdminForbiddenError) {
       handleLeaveAdminForbiddenError(error);
+    } else if (error instanceof ClaimWithdrawnError) {
+      handleClaimWithdrawnError(error);
     } else {
       console.error(error);
       handleError(error);
@@ -101,7 +104,11 @@ const useAppErrorsLogic = ({ portalFlow }) => {
    * @returns {string | Trans} Internationalized error message or Trans component
    * @example getMessageFromIssue(issue, "applications");
    */
-  const getMessageFromIssue = ({ field, message, rule, type }, i18nPrefix) => {
+  const getMessageFromIssue = (
+    { field, message, rule, type },
+    i18nPrefix,
+    context = null
+  ) => {
     let issueMessageKey;
 
     if (field) {
@@ -117,7 +124,11 @@ const useAppErrorsLogic = ({ portalFlow }) => {
       issueMessageKey = `errors.${i18nPrefix}.${type}`;
     }
 
-    const htmlErrorMessage = maybeGetHtmlErrorMessage(type, issueMessageKey);
+    const htmlErrorMessage = maybeGetHtmlErrorMessage(
+      type,
+      issueMessageKey,
+      context
+    );
     if (htmlErrorMessage) return htmlErrorMessage;
 
     // 1. Display a field or rule-level message if present:
@@ -148,9 +159,10 @@ const useAppErrorsLogic = ({ portalFlow }) => {
    * Create the custom HTML error message, if the given error type requires HTML formatting/links
    * @param {string} type
    * @param {string} issueMessageKey
+   * @param {Object} context - additional context used in the i18n message interpolation
    * @returns {Trans} React node for the message, if the given error type should have an HTML message
    */
-  const maybeGetHtmlErrorMessage = (type, issueMessageKey) => {
+  const maybeGetHtmlErrorMessage = (type, issueMessageKey, context) => {
     // TODO (CP-1532): Remove once links in error messages are fully supported
     if (type === "fineos_case_creation_issues") {
       return (
@@ -233,6 +245,20 @@ const useAppErrorsLogic = ({ portalFlow }) => {
         />
       );
     }
+
+    if (type === "fineos_claim_withdrawn") {
+      return (
+        <Trans
+          i18nKey={issueMessageKey}
+          tOptions={context}
+          components={{
+            "contact-center-phone-link": (
+              <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+            ),
+          }}
+        />
+      );
+    }
   };
 
   /**
@@ -291,6 +317,27 @@ const useAppErrorsLogic = ({ portalFlow }) => {
         application_id: error.application_id,
         file_id: error.file_id,
       },
+    });
+
+    addError(appError);
+
+    tracker.trackEvent(error.name, {
+      issueField: error.issue ? error.issue.field : null,
+      issueRule: error.issue ? error.issue.rule : null,
+      issueType: error.issue ? error.issue.type : null,
+    });
+  };
+
+  /**
+   * Add and track claim detail withdrawn error
+   * @param {ClaimWithdrawnError} error
+   */
+  const handleClaimWithdrawnError = (error) => {
+    const appError = new AppErrorInfo({
+      name: error.name,
+      message: getMessageFromIssue(error.issue, "claimStatus", {
+        absenceId: error.fineos_absence_id,
+      }),
     });
 
     addError(appError);

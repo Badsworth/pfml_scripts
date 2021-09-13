@@ -575,6 +575,10 @@ const errors = {
     "Sorry, we were unable to retrieve what you were looking for. Check that the link you are visiting is correct. If this continues to happen, please log out and try again.",
   caughtError_UserNotReceivedError:
     "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak)",
+  claimStatus: {
+    fineos_claim_withdrawn:
+      "Application <strong>{{absenceId}}</strong> has been withdrawn and is no longer being processed.  If you believe this application has been withdrawn in error, check if any additional applications in your account cover the same leave period.  If you have additional questions, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
+  },
   documents: {
     file: {
       required: "Upload at least one file to continue.",
