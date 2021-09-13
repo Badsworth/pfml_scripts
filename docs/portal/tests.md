@@ -2,7 +2,7 @@
 
 ## Introduction
 
-[Jest](https://jestjs.io/) is used as our JS test runner and is very similar to Jasmine.
+[Jest](https://jestjs.io/) is used as our JS test runner and is very similar to Jasmine.  We also use [jest-dom](https://github.com/testing-library/jest-dom) custom matchers.
 
 **Read the [Jest documentation](https://jestjs.io/en/) to learn how to write assertions.** A good place to start if you are new to JS testing is to learn about [Using Matchers](https://jestjs.io/docs/en/using-matchers).
 
@@ -24,28 +24,31 @@ describe("sum", () => {
 
 A test file should be placed in the appropriate `tests` directory (e.g. `portal/tests`) rather than alongside the file it tests. These test files should have the same name as the file they're testing, and have `.test.js` as the extension. For example, `pages/index.js` and `tests/pages/index.test.js`.
 
+**A Migration Note (Sept 2021)**
+We are migrating from enzyme to React Test Library. Our enzyme tests live in tests-old/ while we work on migrating. If you're writing new tests, please write them in tests/. Our lint rules enforse that nothing in tests/ can rely on enzyme or anything in tests-old.
+
+
 ## Unit tests
 
-[Enzyme](http://airbnb.io/enzyme/) is a test utility used alongside Jest to test React components. Read the [Enzyme documentation](http://airbnb.io/enzyme/) to learn how to Render React components and how to pull information from those React components in order to run test assertions against them.
+We use [React Testing Library](https://testing-library.com/docs/react-testing-library/intro/) alongside Jest. React Testing Library (RTL), enables us to interact with rendered DOM nodes directly in our tests. This helps us to write tests that resemble the way our software is used (more on that in the [RTL guiding principles](https://testing-library.com/docs/guiding-principles)). 
 
-For simple, stateless components (which hopefully will be most components), you can ["Shallow render"](https://airbnb.io/enzyme/docs/api/shallow.html) the component. Shallow rendering is useful to constrain yourself to testing a component as a unit, and to ensure that your tests aren't indirectly asserting on behavior of child components. It's also helps reduce test suite runtime.
+**React Testing Library Resources:**
+- [React Testing Library Docs](https://testing-library.com/docs/react-testing-library/intro/)
+- [Cheatsheet guide](https://testing-library.com/docs/react-testing-library/cheatsheet/) to reference all the available React Testing Library fucntions
+- [Playground](https://testing-playground.com/) to test out your queries
 
 Below is an example of a React component test:
 
 ```js
-import UploadForm from "./UploadForm";
-import { shallow } from "enzyme";
+import { fireEvent, render, screen } from "@testing-library/react";
+import Button from "./Button";
 
-describe("<UploadForm>", () => {
-  describe("when the form is submitted", () => {
-    it("calls onSubmit", () => {
-      const mockSubmit = jest.fn();
-      const wrapper = shallow(<UploadForm onSubmit={mockSubmit} />);
-
-      wrapper.simulate("submit");
-
-      expect(mockSubmit).toHaveBeenCalled();
-    });
+describe("Button", () => {
+  it("is clickable", () => {
+    const onClickHandler = jest.fn();
+    render(<Button onClick={onClickHandler}>Click me</Button>);
+    fireEvent.click(screen.getByText(/Click me/));
+    expect(onClickHandler).toHaveBeenCalled();
   });
 });
 ```
@@ -80,12 +83,11 @@ it("renders the fields with the expected content and attributes", () => {
 #### React snapshot example
 
 ```js
-it("renders the fields with the expected content and attributes", () => {
-  const wrapper = shallow(<UploadFields />);
+it("renders the component as expected", () => {
+    const { container } = render(<ExampleComponent />);
 
-  // You can output the snapshot to a separate file if its output is verbose:
-  expect(wrapper).toMatchSnapshot();
-});
+    expect(container.firstChild).toMatchSnapshot();
+  });
 ```
 
 ### Mocks
