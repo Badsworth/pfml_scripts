@@ -13,7 +13,6 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import Dict, List
 
-import massgov.pfml.db as db
 import massgov.pfml.payments.mock.payments_test_scenario_generator as scenario_generator
 import massgov.pfml.payments.payments_util as payments_util
 import massgov.pfml.util.files as file_util
@@ -26,7 +25,6 @@ from massgov.pfml.payments.mock.payments_test_scenario_generator import (
     ScenarioDataConfig,
     ScenarioNameWithCount,
 )
-from massgov.pfml.util.bg import background_task
 
 logger = logging.get_logger(__name__)
 
