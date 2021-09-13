@@ -129,18 +129,18 @@ function ComboBox(props) {
     setIsMouseSelectingOption(false);
   };
 
-  const clearSearch = (e) => {
-    // change button event target as if it's an input element
-    e.target.name = props.name;
-    e.target.value = "";
-    // trigger value change
-    props.onChange(e);
-    inputRef.current.focus();
-  };
+  // const clearSearch = (e) => {
+  //   // change button event target as if it's an input element
+  //   e.target.name = props.name;
+  //   e.target.value = "";
+  //   // trigger value change
+  //   props.onChange(e);
+  //   inputRef.current.focus();
+  // };
 
-  const customBtnSpacing = {
-    right: "calc(2.45em + 2px)",
-  };
+  // const customBtnSpacing = {
+  //   right: "calc(2.45em + 2px)",
+  // };
 
   let searchResults = props.choices.reduce((choices, choice, i) => {
     const isSelected = choice.label === props.value;

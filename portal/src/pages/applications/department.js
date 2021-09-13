@@ -6,14 +6,13 @@ import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ComboBox from "../../components/ComboBox";
 import ConditionalContent from "../../components/ConditionalContent";
-import Details from "../../components/Details";
 import Fieldset from "../../components/Fieldset";
 import FormLabel from "../../components/FormLabel";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
-// import { isFeatureEnabled } from "../../services/featureFlags";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -26,16 +25,19 @@ export const Department = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  // const showDepartments = isFeatureEnabled("claimantShowDepartments");
+  const showDepartments = isFeatureEnabled("claimantShowDepartments");
 
   const initialFormState = pick(props, fields).claim;
 
   const { formState, updateFields, getField, clearField } =
     useFormState(initialFormState);
 
-  // if (!showDepartments) {
-  // @todo: go to next page and ignore departments, auto-select "I'm not sure"
-  // }
+  if (!showDepartments) {
+    // @todo: go to next page and ignore departments, auto-select "I'm not sure"
+    // delete formState.radio_reporting_unit;
+    // formState.reporting_unit = "I'm not sure";
+    // appLogic.benefitsApplications.update(claim.application_id, formState);
+  }
 
   const [departments, setDepartments] = useState([]);
   const [employerDepartments, setEmployerDepartments] = useState([]);
@@ -98,8 +100,6 @@ export const Department = (props) => {
 
     appLogic.setAppErrors(new AppErrorInfoCollection(errors));
 
-    console.log("Selected", finalDepartmentDecision);
-
     if (errors.length > 0) return;
 
     delete formState.radio_reporting_unit;
@@ -127,7 +127,7 @@ export const Department = (props) => {
       // employerDeps = [];
       employerDeps = [...claimantDeps].slice(1);
     }
-    claimantDeps = claimantDeps.slice(0, 1);
+    // claimantDeps = claimantDeps.slice(0, 1);
 
     setDepartments(claimantDeps?.length ? claimantDeps : employerDeps);
     setEmployerDepartments(employerDeps);
@@ -236,7 +236,7 @@ export const Department = (props) => {
                 }}
               />
               {/* <div className="margin-top-2">
-                <Details label={t("pages.claimsDepartment.moreThanOne")}>
+                <http://localhost:3000/img/usa-icons/chevrons.svgDetails label={t("pages.claimsDepartment.moreThanOne")}>
                   {t("pages.claimsDepartment.hint")}
                 </Details>
               </div> */}

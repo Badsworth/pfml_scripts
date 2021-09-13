@@ -1145,12 +1145,12 @@ const pages = {
       "Based on what you’ve entered, our records show you work at <strong>{{department}}</strong>. Is this the department where you are applying to take leave?",
     confirmSectionLabel: "Confirm your department",
     errors: {
+      departmentsNotFound:
+        "We couldn't find any departments associated to you for this employer. Please go back and make sure you've entered the correct FEIN.",
       missingConfirmation:
         "Please confirm if this is the department you are taking leave from.",
       missingDepartment:
         "Please select the department you are taking leave from.",
-      departmentsNotFound:
-        "We couldn't find any departments associated to you for this employer. Please go back and make sure you've entered the correct FEIN."
     },
     followupInfo:
       "We will follow up with you after you apply to make sure the right department reviews your application.",
@@ -1705,6 +1705,7 @@ const pages = {
     concurrentLeaveLabel: "Accrued paid leave",
     documentsLoadError: "$t(shared.documentsLoadError)",
     editLink: "Edit",
+    employeeDepartment: "Department",
     employerBenefitEntryLabel:
       "$t(shared.employerBenefitEntryPrefix) {{count}}",
     employerBenefitIsFullSalaryContinuous: "Full wage replacement",
@@ -1717,7 +1718,6 @@ const pages = {
     employerBenefitType_shortTermDisability:
       "$t(shared.employerBenefitType_shortTermDisability)",
     employerFeinLabel: "Employer’s EIN",
-    employeeDepartment: "Department",
     employerNotifiedLabel: "Notified employer",
     employerNotifiedValue: "No",
     employerNotifiedValue_true: "Notified employer on {{date}}",
