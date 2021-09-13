@@ -44,7 +44,7 @@ from massgov.pfml.db.queries.managed_requirements import (
     create_managed_requirement_from_fineos,
     get_managed_requirement_by_fineos_managed_requirement_id,
 )
-from massgov.pfml.fineos import models
+from massgov.pfml.fineos import exception, models
 from massgov.pfml.fineos.mock_client import MockFINEOSClient
 from massgov.pfml.fineos.models.group_client_api import (
     Base64EncodedFileData,
@@ -1592,14 +1592,15 @@ def leave_period_response_equal_leave_period_query(
     )
 
 
+# TODO (CP-2636): Refactor tests to use fixtures
 class TestGetClaimEndpoint:
     def test_get_claim_claim_does_not_exist(self, caplog, client, employer_auth_token):
         response = client.get(
             "/v1/claims/NTN-100-ABS-01", headers={"Authorization": f"Bearer {employer_auth_token}"},
         )
 
-        assert response.status_code == 400
-        tests.api.validate_error_response(response, 400, message="Claim not in PFML database.")
+        assert response.status_code == 404
+        tests.api.validate_error_response(response, 404, message="Claim not in PFML database.")
         assert "Claim not in PFML database." in caplog.text
 
     def test_get_claim_user_has_no_access(self, caplog, client, employer_auth_token):
@@ -1721,6 +1722,48 @@ class TestGetClaimEndpoint:
         claim_data = response_body.get("data")
         assert len(claim_data["absence_periods"]) == 0
 
+    @mock.patch("massgov.pfml.api.claims.get_absence_periods")
+    def test_withdrawn_claim_returns_403(
+        self, mock_get_absence_periods, client, auth_token, user, test_db_session
+    ):
+        error_msg = """{
+            "error" : "User does not have permission to access the resource or the instance data",
+            "correlationId" : "foo"
+        }"""
+        error = exception.FINEOSClientBadResponse("get_absence", 200, 403, error_msg)
+        mock_get_absence_periods.side_effect = error
+
+        employer = EmployerFactory.create(employer_fein="813648030")
+        tax_identifier = TaxIdentifierFactory.create(tax_identifier="587777091")
+        employee = EmployeeFactory.create(tax_identifier_id=tax_identifier.tax_identifier_id)
+        fineos_web_id_ext = FINEOSWebIdExt()
+        fineos_web_id_ext.employee_tax_identifier = employee.tax_identifier.tax_identifier
+        fineos_web_id_ext.employer_fein = employer.employer_fein
+        fineos_web_id_ext.fineos_web_id = "pfml_api_468df93c-cb2d-424e-9690-f61cc65506bb"
+        test_db_session.add(fineos_web_id_ext)
+
+        test_db_session.commit()
+        claim = ClaimFactory.create(
+            employer=employer,
+            employee=employee,
+            fineos_absence_status_id=1,
+            claim_type_id=1,
+            fineos_absence_id="NTN-304363-ABS-01",
+        )
+
+        ApplicationFactory.create(user=user, claim=claim)
+
+        response = client.get(
+            f"/v1/claims/{claim.fineos_absence_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+
+        assert response.status_code == 403
+
+        response_body = response.get_json()
+        issues = response_body.get("errors")
+        assert issues[0].get("type") == "fineos_claim_withdrawn"
+
     def test_get_claim_with_leave_periods(self, caplog, client, auth_token, user, test_db_session):
         employer = EmployerFactory.create(employer_fein="813648030")
         tax_identifier = TaxIdentifierFactory.create(tax_identifier="587777091")
@@ -1764,6 +1807,60 @@ class TestGetClaimEndpoint:
         assert_detailed_claim_response_equal_to_claim_query(claim_data, claim, application)
         assert leave_period_response_equal_leave_period_query(
             claim_data["absence_periods"][0], leave_period
+        )
+
+    def test_get_claim_with_managed_requirements(self, client, auth_token, user, test_db_session):
+        employer = EmployerFactory.create(employer_fein="813648030")
+        tax_identifier = TaxIdentifierFactory.create(tax_identifier="587777091")
+        employee = EmployeeFactory.create(tax_identifier_id=tax_identifier.tax_identifier_id)
+
+        fineos_web_id_ext = FINEOSWebIdExt()
+        fineos_web_id_ext.employee_tax_identifier = employee.tax_identifier.tax_identifier
+        fineos_web_id_ext.employer_fein = employer.employer_fein
+        fineos_web_id_ext.fineos_web_id = "pfml_api_468df93c-cb2d-424e-9690-f61cc65506bb"
+        test_db_session.add(fineos_web_id_ext)
+
+        test_db_session.commit()
+        claim = ClaimFactory.create(
+            employer=employer,
+            employee=employee,
+            fineos_absence_status_id=1,
+            claim_type_id=1,
+            fineos_absence_id="NTN-304363-ABS-01",
+        )
+
+        managed_requirement: ManagedRequirement = ManagedRequirementFactory.create(
+            claim=claim, claim_id=claim.claim_id
+        )
+        ManagedRequirementFactory.create(claim=claim, claim_id=claim.claim_id)
+
+        application = ApplicationFactory.create(user=user, claim=claim)
+        response = client.get(
+            f"/v1/claims/{claim.fineos_absence_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+
+        assert response.status_code == 200
+        response_body = response.get_json()
+        claim_data = response_body.get("data")
+        assert_detailed_claim_response_equal_to_claim_query(claim_data, claim, application)
+        managed_requirement_response = claim_data["managed_requirements"]
+        assert len(managed_requirement_response) == 2
+        assert (
+            managed_requirement.follow_up_date.strftime("%Y-%m-%d")
+            == managed_requirement_response[0]["follow_up_date"]
+        )
+        assert (
+            managed_requirement.managed_requirement_status.managed_requirement_status_description
+            == managed_requirement_response[0]["status"]
+        )
+        assert (
+            managed_requirement.managed_requirement_type.managed_requirement_type_description
+            == managed_requirement_response[0]["type"]
+        )
+        assert (
+            managed_requirement.managed_requirement_category.managed_requirement_category_description
+            == managed_requirement_response[0]["category"]
         )
 
 
@@ -2990,6 +3087,16 @@ class TestGetClaimsEndpoint:
             response_body = response.get_json()
 
             assert len(response_body["data"]) >= 7
+
+        def test_get_claims_search_no_employee(self, client, employer_auth_token, employer):
+            claim = ClaimFactory.create(
+                employer=employer, employee_id=None, employee=None, claim_type_id=1
+            )
+            response = self.perform_search(claim.fineos_absence_id, client, employer_auth_token)
+            response_body = response.get_json()
+            assert len(response_body["data"]) == 1
+            assert response_body["data"][0]["fineos_absence_id"] == claim.fineos_absence_id
+            assert response_body["data"][0]["employee"] is None
 
     class TestClaimsSearchFullName:
         @pytest.fixture()

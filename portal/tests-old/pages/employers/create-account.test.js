@@ -34,9 +34,9 @@ describe("CreateAccount", () => {
     const password = "TestP@ssw0rd!";
     const ein = "123456789";
 
-    changeField("username", email);
+    changeField("email_address", email);
     changeField("password", password);
-    changeField("ein", ein);
+    changeField("user_leave_administrator.employer_fein", ein);
     await submitForm();
     expect(appLogic.auth.createEmployerAccount).toHaveBeenCalledWith(
       email,

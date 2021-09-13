@@ -31,7 +31,7 @@ describe("CreateAccount", () => {
       const email = "email@test.com";
       const password = "TestP@ssw0rd!";
 
-      changeField("username", email);
+      changeField("email_address", email);
       changeField("password", password);
       await submitForm();
       expect(appLogic.auth.createAccount).toHaveBeenCalledWith(email, password);

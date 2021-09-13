@@ -723,6 +723,8 @@ class DocumentType(LookupTable):
     CHILD_BONDING_EVIDENCE_FORM = LkDocumentType(11, "Child bonding evidence form")
     CARE_FOR_A_FAMILY_MEMBER_FORM = LkDocumentType(12, "Care for a family member form")
     MILITARY_EXIGENCY_FORM = LkDocumentType(13, "Military exigency form")
+    WITHDRAWAL_NOTICE = LkDocumentType(14, "Pending Application Withdrawn")
+    APPEAL_ACKNOWLEDGEMENT = LkDocumentType(15, "Appeal Acknowledgement")
 
 
 class ContentType(LookupTable):

@@ -13,6 +13,7 @@ import {
   approveClaim,
   denyClaim,
   closeDocuments,
+  closeDocumentsErOpen,
 } from "../submission/PostSubmit";
 import { Fineos } from "../submission/fineos.pages";
 
@@ -76,6 +77,9 @@ export const postSubmit: PostSubmitCallback = async (claim, response) => {
             break;
           case "APPROVEDOCS":
             await closeDocuments(page, claim, fineos_absence_id);
+            break;
+          case "APPROVEDOCSEROPEN":
+            await closeDocumentsErOpen(page, claim, fineos_absence_id);
             break;
           default:
             throw new Error(

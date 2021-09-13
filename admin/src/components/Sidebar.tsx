@@ -16,6 +16,7 @@ export default function Sidebar() {
                 className={classNames("menu__link", "menu__link--dashboard", {
                   "menu__link--active": router.pathname == routes.dashboard,
                 })}
+                data-testid="dashboard-navigation-link"
               >
                 Dashboard
               </a>
@@ -27,6 +28,7 @@ export default function Sidebar() {
                 className={classNames("menu__link", "menu__link--user-lookup", {
                   "menu__link--active": router.pathname == routes.users,
                 })}
+                data-testid="users-navigation-link"
               >
                 User Lookup
               </a>
@@ -38,6 +40,7 @@ export default function Sidebar() {
                 className={classNames("menu__link", "menu__link--maintenance", {
                   "menu__link--active": router.pathname == routes.maintenance,
                 })}
+                data-testid="maintenance-navigation-link"
               >
                 Maintenance
               </a>
@@ -49,6 +52,7 @@ export default function Sidebar() {
                 className={classNames("menu__link", "menu__link--features", {
                   "menu__link--active": router.pathname == routes.features,
                 })}
+                data-testid="features-navigation-link"
               >
                 Features
               </a>
@@ -68,6 +72,7 @@ export default function Sidebar() {
                     "menu__link--active": router.pathname == routes.settings,
                   },
                 )}
+                data-testid="settings-navigation-link"
               >
                 Settings
               </a>
@@ -83,6 +88,7 @@ export default function Sidebar() {
                     "menu__link--active": router.pathname == routes.help,
                   },
                 )}
+                data-testid="help-navigation-link"
               >
                 Help
               </a>
@@ -92,7 +98,9 @@ export default function Sidebar() {
       </div>
       <div className="environment">
         <div className="environment__label">Environment</div>
-        <div className="environment__flag">Production</div>
+        <div className="environment__flag" data-testid="environment-flag">
+          Production
+        </div>
       </div>
     </aside>
   );

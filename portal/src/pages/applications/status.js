@@ -1,9 +1,9 @@
+import ClaimDetail, { AbsencePeriod } from "../../models/ClaimDetail";
 import React, { useEffect } from "react";
-import { find, get, groupBy, has, isEmpty, map } from "lodash";
+import { find, get, has, map } from "lodash";
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
-import ClaimDetail from "../../models/ClaimDetail";
 import DocumentCollection from "../../models/DocumentCollection";
 import { DocumentType } from "../../models/Document";
 import Heading from "../../components/Heading";
@@ -17,25 +17,21 @@ import { Trans } from "react-i18next";
 import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDate from "../../utils/formatDate";
+import getLegalNotices from "../../utils/getLegalNotices";
+import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import { isFeatureEnabled } from "../../services/featureFlags";
-import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-
-const nextStepsRoute = {
-  newborn: "applications.upload.bondingProofOfBirth",
-  adoption: "applications.upload.bondingProofOfPlacement",
-};
 
 export const Status = ({ appLogic, query }) => {
   const { t } = useTranslation();
   const {
     claims: { claimDetail, isLoadingClaimDetail, loadClaimDetail },
     documents: {
-      documents,
+      documents: allClaimDocuments,
       download: downloadDocument,
       hasLoadedClaimDocuments,
-      loadAll: loadClaimDocuments,
+      loadAll: loadAllClaimDocuments,
     },
     portalFlow,
   } = appLogic;
@@ -55,14 +51,28 @@ export const Status = ({ appLogic, query }) => {
   useEffect(() => {
     const application_id = get(claimDetail, "application_id");
     if (application_id) {
-      loadClaimDocuments(application_id);
+      loadAllClaimDocuments(application_id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [claimDetail]);
 
-  const appErrorsByType = groupBy(appLogic.appErrors.items, "name");
+  useEffect(() => {
+    /**
+     * If URL includes a location.hash then page
+     * should scroll into view on that id tag,
+     * provided the id tag exists.
+     */
+    if (location.hash) {
+      const anchorId = document.getElementById(location.hash.substring(1));
+      if (anchorId) anchorId.scrollIntoView();
+    }
+  }, [isLoadingClaimDetail, claimDetail]);
 
-  if (has(appErrorsByType, "ClaimDetailLoadError")) return null;
+  const hasClaimDetailLoadError = appLogic.appErrors.items.some(
+    (error) => error.name === "ClaimDetailLoadError"
+  );
+
+  if (hasClaimDetailLoadError) return null;
 
   // Check both because claimDetail could be cached from a different status page.
   if (isLoadingClaimDetail || !claimDetail)
@@ -75,41 +85,66 @@ export const Status = ({ appLogic, query }) => {
     );
 
   const absenceDetails = claimDetail.absencePeriodsByReason;
-  const legalNotices = documents.legalNotices;
+  const hasPendingStatus = claimDetail.absence_periods.some(
+    (absenceItem) => absenceItem.request_decision === "Pending"
+  );
+  const documentsForApplication = allClaimDocuments.filterByApplication(
+    claimDetail.application_id
+  );
 
   const ViewYourNotices = () => {
-    const className = "border-top border-base-lighter padding-y-2";
-    const hasDocumentsLoadError = has(appErrorsByType, "DocumentsLoadError");
+    const legalNotices = getLegalNotices(documentsForApplication);
+
     const shouldShowSpinner =
       !hasLoadedClaimDocuments(claimDetail.application_id) &&
-      !hasDocumentsLoadError;
-    const nothingToShow = legalNotices.length === 0 || hasDocumentsLoadError;
+      !hasDocumentsLoadError(appLogic.appErrors, claimDetail.application_id);
+    const hasNothingToShow =
+      hasDocumentsLoadError(appLogic.appErrors, claimDetail.application_id) ||
+      legalNotices.length === 0;
+
+    const SectionWrapper = ({ children }) => (
+      <div
+        className="border-top border-base-lighter padding-y-2"
+        id="view_notices"
+      >
+        {children}
+      </div>
+    );
+
+    SectionWrapper.propTypes = {
+      children: PropTypes.oneOfType([
+        PropTypes.arrayOf(PropTypes.node),
+        PropTypes.node,
+      ]).isRequired,
+    };
 
     if (shouldShowSpinner) {
       // claim documents are loading.
       return (
-        <div className={className}>
+        <SectionWrapper>
           <Spinner
             aria-valuetext={t("pages.claimsStatus.loadingLegalNoticesLabel")}
           />
-        </div>
+        </SectionWrapper>
       );
     }
 
-    if (nothingToShow) {
-      return null;
-    }
+    const sectionBody = hasNothingToShow ? (
+      <p>{t("pages.claimsStatus.legalNoticesFallback")}</p>
+    ) : (
+      <LegalNoticeList
+        documents={legalNotices}
+        onDownloadClick={downloadDocument}
+      />
+    );
 
     return (
-      <div className={className}>
+      <SectionWrapper>
         <Heading className="margin-bottom-1" level="2" id="view_notices">
           {t("pages.claimsStatus.viewNoticesHeading")}
         </Heading>
-        <LegalNoticeList
-          documents={legalNotices}
-          onDownloadClick={downloadDocument}
-        />
-      </div>
+        {sectionBody}
+      </SectionWrapper>
     );
   };
 
@@ -193,16 +228,24 @@ export const Status = ({ appLogic, query }) => {
             <p className="text-bold">{claimDetail.employer.employer_fein}</p>
           </div>
         </div>
-        <ApplicationUpdates
-          absenceDetails={absenceDetails}
-          applicationId={claimDetail.application_id}
-          docList={documents.items}
-        />
+        {hasPendingStatus && (
+          <Timeline
+            absencePeriods={claimDetail.absence_periods}
+            employerFollowUpDate={
+              claimDetail.managed_requirements[0]?.follow_up_date
+            }
+            absenceDetails={absenceDetails}
+            applicationId={claimDetail.application_id}
+            docList={documentsForApplication}
+            absenceCaseId={claimDetail.fineos_absence_id}
+            appLogic={appLogic}
+          />
+        )}
         <LeaveDetails absenceDetails={absenceDetails} />
         <ViewYourNotices />
 
         {/* Upload documents section */}
-        <div className={containerClassName}>
+        <div className={containerClassName} id="upload_documents">
           <Heading level="2">
             {t("pages.claimsStatus.uploadDocumentsHeading")}
           </Heading>
@@ -212,9 +255,11 @@ export const Status = ({ appLogic, query }) => {
           <p>{t("pages.claimsStatus.infoRequestsBody")}</p>
           <ButtonLink
             className="measure-6 margin-bottom-3"
-            href={routeWithParams("applications.uploadDocsOptions", {
-              claim_id: claimDetail.application_id,
-            })}
+            href={appLogic.portalFlow.getNextPageRoute(
+              "UPLOAD_DOC_OPTIONS",
+              {},
+              { absence_case_id: claimDetail.fineos_absence_id }
+            )}
           >
             {t("pages.claimsStatus.uploadDocumentsButton")}
           </ButtonLink>
@@ -275,6 +320,7 @@ Status.propTypes = {
     }),
     portalFlow: PropTypes.shape({
       goTo: PropTypes.func.isRequired,
+      getNextPageRoute: PropTypes.func.isRequired,
     }).isRequired,
   }).isRequired,
   query: PropTypes.shape({
@@ -352,82 +398,115 @@ LeaveDetails.propTypes = {
   absenceDetails: PropTypes.object,
 };
 
-export const ApplicationUpdates = ({
-  absenceDetails = {},
-  application_id,
-  docList = [],
+export const Timeline = ({
+  employerFollowUpDate = null,
+  applicationId,
+  docList,
+  absencePeriods,
+  absenceCaseId,
+  appLogic,
 }) => {
   const { t } = useTranslation();
 
-  const shouldRenderProofOfBirthButton = (
-    absenceItemName,
-    absenceType,
-    docList
-  ) =>
-    absenceItemName === LeaveReason[absenceType] &&
+  const shouldRenderCertificationButton = (absencePeriodReason, docList) =>
     !findDocumentsByTypes(docList, [
-      DocumentType.certification[absenceItemName],
+      DocumentType.certification[absencePeriodReason],
     ]).length;
 
-  const renderOptions = (absenceItemName, absenceItem, docList) => {
-    const isNewBornQualifier = find(
-      absenceItem,
-      (item) => item && item.reason_qualifier_one === "Newborn"
+  const bondingAbsencePeriod = find(
+    absencePeriods,
+    (absencePeriod) =>
+      absencePeriod.reason === LeaveReason.pregnancy ||
+      absencePeriod.reason === LeaveReason.bonding
+  );
+
+  // eslint-disable-next-line react/prop-types
+  const FollowUpSteps = ({ bondingAbsencePeriod }) => {
+    const typeOfProof = ["Foster Care", "Adoption"].includes(
+      // eslint-disable-next-line react/prop-types
+      bondingAbsencePeriod.reason_qualifier_one
+    )
+      ? "adoption"
+      : "newborn";
+
+    return (
+      <React.Fragment>
+        <Heading level="2">{t("pages.claimsStatus.whatYouNeedToDo")}</Heading>
+        <p>
+          {t("pages.claimsStatus.whatYouNeedToDoText", {
+            context: typeOfProof,
+          })}
+        </p>
+        <ButtonLink
+          className="measure-12"
+          href={appLogic.portalFlow.getNextPageRoute(
+            typeOfProof === "adoption"
+              ? "UPLOAD_PROOF_OF_PLACEMENT"
+              : "UPLOAD_PROOF_OF_BIRTH",
+            {},
+            { claim_id: applicationId, absence_case_id: absenceCaseId }
+          )}
+        >
+          {t("pages.claimsStatus.whatHappensNextButton", {
+            context: typeOfProof,
+          })}
+        </ButtonLink>
+      </React.Fragment>
     );
-    if (
-      (shouldRenderProofOfBirthButton(absenceItemName, "bonding", docList) &&
-        isNewBornQualifier) ||
-      shouldRenderProofOfBirthButton(absenceItemName, "pregnancy", docList)
-    ) {
-      return "newborn";
-    } else if (
-      shouldRenderProofOfBirthButton(absenceItemName, "bonding", docList) &&
-      !isNewBornQualifier
-    ) {
-      return "adoption";
-    }
   };
 
-  return isEmpty(absenceDetails) ? null : (
+  const ApplicationTimeline = () => (
+    <React.Fragment>
+      <Heading level="2">{t("pages.claimsStatus.timelineHeading")}</Heading>
+      <Trans
+        i18nKey="pages.claimsStatus.timelineDescription"
+        components={{
+          ul: <ul className="usa-list" />,
+          li: <li />,
+        }}
+      />
+      <Trans
+        i18nKey={
+          employerFollowUpDate
+            ? "pages.claimsStatus.timelineTextFollowUpEmployer"
+            : "pages.claimsStatus.timelineTextFollowUpGenericEmployer"
+        }
+        tOptions={{
+          employerFollowUpDate: formatDate(employerFollowUpDate).short(),
+        }}
+      />
+      <Trans i18nKey="pages.claimsStatus.timelineTextFollowUpGenericDFML" />
+      <Trans
+        i18nKey="pages.claimsStatus.timelineTextLearnMore"
+        components={{
+          "timeline-link": <a href={routes.external.massgov.timeline} />,
+        }}
+      />
+    </React.Fragment>
+  );
+  return (
     <div className="border-bottom border-base-lighter padding-bottom-2 margin-bottom-2">
-      <Heading level="2">
-        {t("pages.claimsStatus.applicationUpdatesHeading")}
-      </Heading>
-      <Heading level="3">{t("pages.claimsStatus.whatHappensNext")}</Heading>
-      {
-        map(absenceDetails, (absenceItem, absenceItemName) => {
-          const typeOfProof = renderOptions(
-            absenceItemName,
-            absenceItem,
-            docList
-          );
-          return nextStepsRoute[typeOfProof] ? (
-            <div key={absenceItemName}>
-              <p>
-                {t("pages.claimsStatus.whatYouNeedToDoText", {
-                  context: typeOfProof,
-                })}
-              </p>
-              <ButtonLink
-                className="measure-12"
-                href={routeWithParams(`${nextStepsRoute[typeOfProof]}`, {
-                  claim_id: application_id,
-                })}
-              >
-                {t("pages.claimsStatus.whatHappensNextButton", {
-                  context: typeOfProof,
-                })}
-              </ButtonLink>
-            </div>
-          ) : null;
-        })[0]
-      }
+      {!bondingAbsencePeriod ||
+      // eslint-disable-next-line react/prop-types
+      !shouldRenderCertificationButton(bondingAbsencePeriod.reason, docList) ? (
+        <ApplicationTimeline />
+      ) : (
+        <FollowUpSteps bondingAbsencePeriod={bondingAbsencePeriod} />
+      )}
     </div>
   );
 };
 
-ApplicationUpdates.propTypes = {
-  absenceDetails: PropTypes.object,
-  application_id: PropTypes.string,
-  docList: PropTypes.array,
+Timeline.propTypes = {
+  absencePeriods: PropTypes.arrayOf(PropTypes.instanceOf(AbsencePeriod))
+    .isRequired,
+  applicationId: PropTypes.string,
+  employerFollowUpDate: PropTypes.string,
+  docList: PropTypes.array.isRequired,
+  absenceCaseId: PropTypes.string.isRequired,
+  appLogic: PropTypes.shape({
+    portalFlow: PropTypes.shape({
+      getNextPageRoute: PropTypes.func.isRequired,
+    }),
+  }),
 };

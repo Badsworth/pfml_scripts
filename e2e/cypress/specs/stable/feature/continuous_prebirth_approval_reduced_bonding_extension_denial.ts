@@ -84,11 +84,7 @@ describe("Submit medical pre-birth application via the web portal", () => {
     portal.before({
       claimantShowStatusPage: config("HAS_CLAIMANT_STATUS_PAGE") === "true",
     });
-    const credentials: Credentials = {
-      username: config("PORTAL_USERNAME"),
-      password: config("PORTAL_PASSWORD"),
-    };
-    portal.login(credentials);
+    portal.loginClaimant();
     cy.unstash<Submission>("submission").then((submission) => {
       // @todo: remove if statement after release into all envs
       if (config("HAS_CLAIMANT_STATUS_PAGE") === "true") {

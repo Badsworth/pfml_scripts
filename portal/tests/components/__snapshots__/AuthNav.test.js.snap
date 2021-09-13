@@ -1,0 +1,59 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AuthNav renders the logged-in state 1`] = `
+<div
+  class="flex-fill margin-y-1"
+>
+  <div
+    class="grid-row grid-gap"
+  >
+    <div
+      class="grid-col text-right"
+    >
+      <span
+        class="display-inline-block margin-right-1"
+        data-testid="email_address"
+      >
+        email@address.com
+      </span>
+      <button
+        class="usa-button position-relative width-auto usa-button--unstyled usa-button--inverse usa-button--outline"
+        type="button"
+      >
+        Log out
+      </button>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`AuthNav renders the logged-out state 1`] = `
+<div
+  class="flex-fill margin-y-1"
+>
+  <div
+    class="grid-row grid-gap"
+  >
+    <div
+      class="grid-col"
+    >
+      <a
+        class="usa-button width-auto usa-button--unstyled usa-button--inverse usa-button--outline"
+        href="https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts"
+      >
+        Back to Mass.gov
+      </a>
+    </div>
+    <div
+      class="grid-col text-right"
+    >
+      <a
+        class="usa-button width-auto usa-button--unstyled usa-button--inverse usa-button--outline"
+        href="/login"
+      >
+        Log in
+      </a>
+    </div>
+  </div>
+</div>
+`;

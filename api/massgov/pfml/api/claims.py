@@ -46,6 +46,7 @@ from massgov.pfml.db.queries.managed_requirements import (
     get_managed_requirement_by_fineos_managed_requirement_id,
     update_managed_requirement_from_fineos,
 )
+from massgov.pfml.fineos import exception
 from massgov.pfml.fineos.models.group_client_api import (
     Base64EncodedFileData,
     ManagedRequirementDetails,
@@ -87,6 +88,20 @@ class VerificationRequired(Forbidden):
             message=self.description,
             errors=[],
             data={"employer_id": employer_id, "has_verification_data": has_verification_data},
+        ).to_api_response()
+
+
+class ClaimWithdrawn(Forbidden):
+    def to_api_response(self):
+        issue = ValidationErrorDetail(
+            message="Claim has been withdrawn.", type=IssueType.fineos_claim_withdrawn,
+        )
+
+        return response_util.error_response(
+            status_code=Forbidden,
+            message="Claim has been withdrawn. Unable to display claim status.",
+            errors=[issue],
+            data=None,
         ).to_api_response()
 
 
@@ -444,7 +459,7 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
             extra={"absence_case_id": fineos_absence_id},
         )
         return response_util.error_response(
-            status_code=BadRequest, message="Claim not in PFML database.", errors=[], data={},
+            status_code=NotFound, message="Claim not in PFML database.", errors=[], data={},
         ).to_api_response()
 
     if not user_has_access_to_claim(claim):
@@ -470,9 +485,20 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
             ):
                 employee_tax_identifier = claim.employee.tax_identifier.tax_identifier
                 employer_fein = claim.employer.employer_fein
-                detailed_claim.absence_periods = get_absence_periods(
-                    employee_tax_identifier, employer_fein, fineos_absence_id, db_session
-                )
+                try:
+                    detailed_claim.absence_periods = get_absence_periods(
+                        employee_tax_identifier, employer_fein, fineos_absence_id, db_session
+                    )
+                except exception.FINEOSClientError as error:
+                    if _is_withdrawn_claim_error(error):
+                        logger.warning(
+                            "get_claim - Claim has been withdrawn. Unable to display claim status.",
+                            extra={"absence_id": fineos_absence_id},
+                        )
+
+                        return ClaimWithdrawn().to_api_response()
+
+                    raise error
             else:
                 logger.info(
                     "get_claim info - No employee or employer tied to this claim. Cannot retrieve absence periods from FINEOS.",
@@ -486,6 +512,22 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
     return response_util.success_response(
         message="Successfully retrieved claim", data=detailed_claim.dict(), status_code=200,
     ).to_api_response()
+
+
+# Check if the given error is the result of a withdrawn claim.
+# FINEOS returns a 403 for some - but not all - withdrawn claim scenarios.
+def _is_withdrawn_claim_error(error: exception.FINEOSClientError) -> bool:
+    if not isinstance(error, exception.FINEOSClientBadResponse):
+        return False
+
+    if not error.response_status == Forbidden.code:
+        return False
+
+    withdrawn_msg = "User does not have permission to access the resource or the instance data"
+    if withdrawn_msg not in error.message:
+        return False
+
+    return True
 
 
 def get_claim_from_db(fineos_absence_id: Optional[str]) -> Optional[Claim]:

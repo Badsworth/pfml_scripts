@@ -101,11 +101,13 @@ register-leave-admins-with-fineos = "massgov.pfml.fineos.leave_admin_creation.re
 dor-generate = "massgov.pfml.dor.mock.generate:main"
 dor-import = "massgov.pfml.dor.importer.import_dor:handler"
 generate-wagesandcontributions = "massgov.pfml.api.generate_wagesandcontributions:main"
+evaluate-new-eligibility = "massgov.pfml.evaluate_new_eligibility.report:evaluate_new_eligibility"
 load-employers-to-fineos = "massgov.pfml.fineos.employer_load:handler"
 fineos-eligibility-feed-export = "massgov.pfml.fineos.eligibility_feed_export.eligibility_export:main"
 pub-payments-process-fineos = "massgov.pfml.delegated_payments.task.process_fineos_extracts:main"
 pub-payments-create-pub-files = "massgov.pfml.delegated_payments.task.process_pub_payments:main"
 pub-payments-process-pub-returns = "massgov.pfml.delegated_payments.task.process_pub_responses:main"
+pub-payments-mock-generate = "massgov.pfml.delegated_payments.mock.mock_generate:main"
 ach-reader = "massgov.pfml.delegated_payments.util.ach.ach_tool:ach_reader"
 check-reader = "massgov.pfml.delegated_payments.pub.check_tool:check_reader"
 fineos-daily-generate = "massgov.pfml.fineos.mock.generate:main"
@@ -119,6 +121,7 @@ reductions-send-claimant-lists-to-agencies = "massgov.pfml.reductions.send_claim
 transmogrify-state-logs = "massgov.pfml.util.tasks.transmogrify_states:transmogrify_states"
 delegated-payment-audit-rejects-generate = "massgov.pfml.delegated_payments.audit.mock.delegated_payment_audit_generator:generate_payment_rejects_file"
 delegated-payment-check-response-generate = "massgov.pfml.delegated_payments.mock.generate_check_response:generate_check_response_files"
+report-sequential-employment = "massgov.pfml.report.sequential_employment:main"
 update-gender-data-from-rmv = "massgov.pfml.rmv.update_gender_data:main"
 
 [tool.black]

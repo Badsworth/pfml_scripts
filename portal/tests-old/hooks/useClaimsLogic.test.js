@@ -316,7 +316,36 @@ describe("useClaimsLogic", () => {
       expect(appLogic.current.appErrors.items).toHaveLength(0);
     });
 
-    it("catches exceptions thrown from the API module", async () => {
+    it("triggers a ClaimWithdrawnError if the absence case has been withdrawn", async () => {
+      jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
+      mockFetch({
+        status: 403,
+        response: {
+          data: null,
+          message: "Claim has been withdrawn. Unable to display claim status.",
+          errors: [
+            {
+              message: "Claim has been withdrawn.",
+              type: "fineos_claim_withdrawn",
+            },
+          ],
+        },
+      });
+
+      const { appLogic } = setup();
+
+      await act(async () => {
+        await appLogic.current.claims.loadClaimDetail("absence_id_1");
+      });
+
+      expect(appLogic.current.appErrors.items).toHaveLength(1);
+      expect(appLogic.current.appErrors.items[0].name).toEqual(
+        "ClaimWithdrawnError"
+      );
+      expect(appLogic.current.claims.isLoadingClaimDetail).toBe(false);
+    });
+
+    it("triggers a ClaimDetailLoadError if the request fails", async () => {
       jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
       mockFetch({
         status: 400,
@@ -328,9 +357,11 @@ describe("useClaimsLogic", () => {
         await appLogic.current.claims.loadClaimDetail("absence_id_1");
       });
 
+      expect(appLogic.current.appErrors.items).toHaveLength(1);
       expect(appLogic.current.appErrors.items[0].name).toEqual(
         "ClaimDetailLoadError"
       );
+      expect(appLogic.current.claims.isLoadingClaimDetail).toBe(false);
     });
   });
 });

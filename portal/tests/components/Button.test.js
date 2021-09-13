@@ -14,7 +14,7 @@ describe("Button", () => {
         Button label
       </button>
     `);
-    expect(button).toHaveAccessibleName();
+    expect(button).toHaveAccessibleName("Button label");
   });
 
   it("calls on click handler as expected", () => {

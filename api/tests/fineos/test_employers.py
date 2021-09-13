@@ -7,7 +7,7 @@ import massgov.pfml.db
 import massgov.pfml.fineos
 import massgov.pfml.fineos.employers as fineos_employers
 from massgov.pfml.db.models.employees import Employer, EmployerLog
-from massgov.pfml.db.models.factories import EmployerOnlyDORDataFactory
+from massgov.pfml.db.models.factories import EmployerFactory, EmployerOnlyDORDataFactory
 
 # every test in here requires real resources
 pytestmark = pytest.mark.integration
@@ -130,6 +130,42 @@ def test_load_updates_simple(module_persistent_db_session, create_triggers):
     module_persistent_db_session.refresh(employer)
 
     assert employer.fineos_employer_id is not None
+
+
+def test_load_updates_with_service_agreement(module_persistent_db_session):
+    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+    employer_num = 5
+    update_sa_num = 3
+    action_name = "UPDATE_SA"
+
+    EmployerFactory.create_batch(size=employer_num)
+
+    employer_log_entries_before = module_persistent_db_session.query(EmployerLog).all()
+    assert len(employer_log_entries_before) == employer_num
+
+    updated_log_ids = [log.employer_log_id for log in employer_log_entries_before][:update_sa_num]
+
+    # Set up some employers to be UPDATE_SA actions
+    updated_logs_count = (
+        module_persistent_db_session.query(EmployerLog)
+        .filter(EmployerLog.employer_log_id.in_(updated_log_ids))
+        .update({EmployerLog.action: action_name}, synchronize_session="fetch")
+    )
+    module_persistent_db_session.commit()
+    assert updated_logs_count == update_sa_num
+
+    employer_log_entries_after = (
+        module_persistent_db_session.query(EmployerLog)
+        .filter(EmployerLog.action == action_name)
+        .all()
+    )
+    assert len(employer_log_entries_after) == update_sa_num
+
+    result = fineos_employers.load_updates(module_persistent_db_session, fineos_client)
+
+    assert result.total_employers_count == employer_num
+    assert result.loaded_employers_count == employer_num
+    assert result.updated_service_agreements_count == update_sa_num
 
 
 def test_load_updates_limit(module_persistent_db_session, create_triggers):
@@ -406,14 +442,14 @@ def test_get_new_or_updated_employers(module_persistent_db_session, create_trigg
     skip_locked_query_spy = mocker.spy(fineos_employers.db, "skip_locked_query")
 
     # with 10 fresh Employers, grab them 5 at a time
-    employers_to_process = fineos_employers.get_new_or_updated_employers(
+    values = fineos_employers.get_new_or_updated_employers(
         module_persistent_db_session, batch_size=5, process_id=1
     )
-
-    # for each of them, their log entry should be updated to this process
-    for i, employer in enumerate(employers_to_process, 1):
+    for i, (employer, actions) in enumerate(values, 1):
         assert employer in employers
+        assert "INSERT" in actions
 
+        # for each of them, their log entry should be updated to this process
         employer_log_entries = (
             module_persistent_db_session.query(EmployerLog.process_id)
             .filter(EmployerLog.employer_id == employer.employer_id)
@@ -432,7 +468,6 @@ def test_get_new_or_updated_employers(module_persistent_db_session, create_trigg
                 .count()
             ) == 5
 
-    # should only have been called once per batch
     assert skip_locked_query_spy.call_count == 2
 
     # if we try to grab updates again, but only fresh ones

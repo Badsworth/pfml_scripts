@@ -151,7 +151,7 @@ class EmployerOnlyDORDataFactory(EmployerOnlyRequiredFactory):
 
 
 class EmployerFactory(EmployerOnlyDORDataFactory):
-    fineos_employer_id = factory.Sequence(lambda n: n)
+    fineos_employer_id = factory.Sequence(lambda n: n + 1)
 
 
 class TaxIdentifierFactory(BaseFactory):
@@ -441,6 +441,9 @@ class PaymentFactory(BaseFactory):
 
     claim = factory.SubFactory(ClaimFactory)
     claim_id = factory.LazyAttribute(lambda a: a.claim.claim_id)
+
+    fineos_employee_first_name = factory.Faker("first_name")
+    fineos_employee_last_name = factory.Faker("last_name")
 
 
 class PaymentReferenceFileFactory(BaseFactory):

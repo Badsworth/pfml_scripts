@@ -180,13 +180,8 @@ pub-payments-create-pub-files:
 pub-payments-process-pub-returns:
 	$(PY_RUN_CMD) pub-payments-process-pub-returns --steps ALL $(DECODE_LOG)
 
-fineos-test-vendor-export-generate:
-	mkdir -p mock_fineos_test_vendor_export
-	$(PY_RUN_CMD) fineos-test-vendor-export-generate --folder mock_fineos_test_vendor_export --fein 103000000 --ssn 253000000 --cvalue 5100 --employeecustomernumber 200 --absencecaseid 200 $(DECODE_LOG)
-
-fineos-test-vendor-export-generate-more:
-	mkdir -p mock_fineos_test_vendor_export_more
-	$(PY_RUN_CMD) fineos-test-vendor-export-generate --folder mock_fineos_test_vendor_export_more --fein 104000000 --ssn 254000000 --cvalue 5200 --employeecustomernumber 300 --absencecaseid 300 $(DECODE_LOG)
+pub-payments-mock-generate:
+	$(PY_RUN_CMD)  pub-payments-mock-generate $(DECODE_LOG)
 
 delegated-payment-audit-rejects-generate:
 	mkdir -p mock_payment_rejects_files
@@ -456,14 +451,14 @@ API_PATHS := . ../infra/api ../infra/ecs-tasks ../infra/env-shared ../infra/modu
 release-notes: refs=origin/deploy/api/stage..origin/main
 release-notes: ## Generate API release notes for $refs (defaults between stage and test)
 	@git log --pretty='format: * %s' $(refs) -- $(API_PATHS) | \
-	sed -E 's;^ \* \[*((API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD|PFMLPB)-[0-9]+)[] :]*(.*); \* [\1](https://lwd.atlassian.net/browse/\1): \3;' | \
+	sed -E 's;^ \* \[*([A-Za-z]{2,}-[0-9]+)[] :]*(.*); \* [\1](https://lwd.atlassian.net/browse/\1): \2;' | \
 	sed -E 's;\(#([0-9]+)\);([#\1](https://github.com/EOLWD/pfml/pull/\1));'
 
 release-list: refs=origin/deploy/api/stage..origin/main
 release-list: ## Generate comma-separated list of ticket ids for $refs
-	@git log --pretty='format: * %s' $(refs) -- $(API_PATHS) | \
-	grep -E '(API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD|PFMLPB)-[0-9]+' | \
-	sed -E 's/.*((API|CP|EDM|EMPLOYER|END|INFRA|PUB|DFMLBI|PSD|PFMLPB)-[0-9]+)[] :]*(.*)/\1/g' | tr '\n' ',' | sed 's/,$$//'
+	@git log --pretty='format: %s' $(refs) -- $(API_PATHS) | \
+	grep --extended-regexp --only-matching '[A-Za-z]{2,}-[0-9]+' | \
+	tr '\n' ',' | sed 's/,$$//'
 
 
 API_RELEASE_BRANCHES := $(addprefix origin/, main deploy/api/stage deploy/api/prod deploy/api/performance deploy/api/training deploy/api/uat deploy/api/breakfix deploy/api/cps-preview)

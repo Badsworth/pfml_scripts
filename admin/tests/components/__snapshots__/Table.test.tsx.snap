@@ -1,0 +1,58 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ActionCard renders the default component 1`] = `
+<table
+  cellPadding="0"
+  cellSpacing="0"
+  className="table"
+>
+  <thead>
+    <tr
+      className="table__head"
+    >
+      <th
+        className="table__header"
+      >
+        Title
+      </th>
+      <th
+        className="table__header"
+      >
+        Description
+      </th>
+    </tr>
+  </thead>
+  <tbody
+    className="table__body"
+  >
+    <tr>
+      <td
+        className="table__col"
+        width="25%"
+      >
+        Test One
+      </td>
+      <td
+        className="table__col"
+        width="75%"
+      >
+        Test description one
+      </td>
+    </tr>
+    <tr>
+      <td
+        className="table__col"
+        width="25%"
+      >
+        Test Two
+      </td>
+      <td
+        className="table__col"
+        width="75%"
+      >
+        Test description two
+      </td>
+    </tr>
+  </tbody>
+</table>
+`;

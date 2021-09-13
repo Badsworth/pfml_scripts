@@ -11,22 +11,26 @@ import { Trans } from "react-i18next";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
 import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
+import useLoggedInRedirect from "../hooks/useLoggedInRedirect";
 import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
 export const CreateAccount = (props) => {
   const { appLogic } = props;
   const { t } = useTranslation();
+  useLoggedInRedirect(appLogic.portalFlow);
 
   const { formState, updateFields } = useFormState({
     password: "",
-    // TODO (CP-1931) Rename username to email_address to match the field name sent to the API, so errors show up inline
-    username: "",
+    email_address: "",
   });
 
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
-    await appLogic.auth.createAccount(formState.username, formState.password);
+    await appLogic.auth.createAccount(
+      formState.email_address,
+      formState.password
+    );
   });
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -65,7 +69,7 @@ export const CreateAccount = (props) => {
         />
       </p>
       <InputText
-        {...getFunctionalInputProps("username")}
+        {...getFunctionalInputProps("email_address")}
         type="email"
         label={t("pages.authCreateAccount.usernameLabel")}
         smallLabel

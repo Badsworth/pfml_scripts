@@ -1,6 +1,5 @@
 import { FineosSecurityGroups } from "../../../../src/submission/fineos.pages";
 import { fineos, fineosPages } from "../../../actions";
-import { config } from "../../../actions/common";
 import { assertValidClaim } from "util/typeUtils";
 
 const SECURITY_GROUP: FineosSecurityGroups = "SaviLinx Agents (sec)";
@@ -20,21 +19,13 @@ const permissions: Record<FineosSecurityGroups, boolean> = {
 };
 
 describe("Supress correspondence secure actions", () => {
-  const credentials: Credentials = {
-    username: config("PORTAL_USERNAME"),
-    password: config("PORTAL_PASSWORD"),
-  };
-
   let ssn: string;
   const approval = it("Given a fully approved claim", () => {
     fineos.before();
     // Submit a claim via the API, including Employer Response.
     cy.task("generateClaim", "REDUCED_ER").then((claim) => {
       cy.stash("claim", claim.claim);
-      cy.task("submitClaimToAPI", {
-        ...claim,
-        credentials,
-      }).then(() => {
+      cy.task("submitClaimToAPI", claim).then(() => {
         assertValidClaim(claim.claim);
         ssn = claim.claim.tax_identifier;
       });

@@ -19,7 +19,11 @@ from massgov.pfml.db.models.employees import (
     State,
     StateLog,
 )
-from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
+from massgov.pfml.db.models.payments import (
+    FineosWritebackDetails,
+    FineosWritebackTransactionStatus,
+    LkFineosWritebackTransactionStatus,
+)
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
     PaymentAuditCSV,
@@ -66,6 +70,20 @@ ACCEPTED_OUTCOME = state_log_util.build_outcome(
     "Accepted payment to be added to FINEOS Writeback - sampled"
 )
 
+AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS = {
+    "DUA Additional Income": FineosWritebackTransactionStatus.DUA_ADDITIONAL_INCOME,
+    "DIA Additional Income": FineosWritebackTransactionStatus.DIA_ADDITIONAL_INCOME,
+    "Self-Reported Additional Income": FineosWritebackTransactionStatus.SELF_REPORTED_ADDITIONAL_INCOME,
+    "Exempt Employer": FineosWritebackTransactionStatus.EXEMPT_EMPLOYER,
+    "Weekly benefit amount exceeds $850": FineosWritebackTransactionStatus.WEEKLY_BENEFITS_AMOUNT_EXCEEDS_850,
+    "Waiting Week": FineosWritebackTransactionStatus.WAITING_WEEK,
+    "Already paid for dates": FineosWritebackTransactionStatus.ALREADY_PAID_FOR_DATES,
+    "Leave Dates Change": FineosWritebackTransactionStatus.LEAVE_DATES_CHANGE,
+    "Under or Over payments(Adhocs needed)": FineosWritebackTransactionStatus.UNDER_OR_OVERPAY_ADJUSTMENT,
+    "Name mismatch": FineosWritebackTransactionStatus.NAME_MISMATCH,
+    "Other": FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION,
+}
+
 
 class PaymentRejectsException(Exception):
     """An error during Payment Rejects file processing."""
@@ -88,6 +106,8 @@ class PaymentRejectsStep(Step):
         REJECTED_PAYMENT_COUNT = "rejected_payment_count"
         SKIPPED_PAYMENT_COUNT = "skipped_payment_count"
         STATE_LOGS_COUNT = "state_logs_count"
+        MISSING_REJECT_NOTES = "missing_reject_notes"
+        UNKNOWN_REJECT_NOTES = "unknown_reject_notes"
 
     def __init__(
         self,
@@ -221,7 +241,10 @@ class PaymentRejectsStep(Step):
                 self.db_session,
             )
 
-            writeback_transaction_status = FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION
+            writeback_transaction_status = self.get_rejected_payment_writeback_status(
+                payment, rejected_notes
+            )
+
             state_log_util.create_finished_state_log(
                 payment,
                 State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
@@ -265,6 +288,61 @@ class PaymentRejectsStep(Step):
             state_log_util.create_finished_state_log(
                 payment, ACCEPTED_STATE, ACCEPTED_OUTCOME, self.db_session
             )
+
+    def get_rejected_payment_writeback_status(
+        self, payment: Payment, rejected_notes: Optional[str] = None
+    ) -> LkFineosWritebackTransactionStatus:
+        default_reject_transaction_status = (
+            FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION
+        )
+
+        use_audit_reject_transaction_status = (
+            os.environ.get("USE_AUDIT_REJECT_TRANSACTION_STATUS", "0") == "1"
+        )
+        if use_audit_reject_transaction_status:
+            # Set writeback status from reject notes if available and matching, otherwise use default reject status
+            try:
+                if rejected_notes is None:
+                    self.increment(self.Metrics.MISSING_REJECT_NOTES)
+                    logger.warning(
+                        "Empty reject note for audit rejected payment: %s", payment.payment_id
+                    )
+                    writeback_transaction_status = default_reject_transaction_status
+                else:
+                    writeback_transaction_status = AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS[
+                        rejected_notes
+                    ]
+            except KeyError:
+                # No exact match, try a close match
+                # - ignore case
+                # - key is substring of reject writeback status
+                found = False
+                if rejected_notes:
+                    rejected_notes_lowercase = rejected_notes.lower()
+                    for reject_note_expected in AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS.keys():
+                        reject_note_expected_lowercase = reject_note_expected.lower()
+                        if (
+                            rejected_notes_lowercase == reject_note_expected_lowercase
+                            or rejected_notes_lowercase.find(reject_note_expected_lowercase) >= 0
+                        ):
+                            writeback_transaction_status = AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS[
+                                reject_note_expected
+                            ]
+                            found = True
+                            break
+
+                if not found:
+                    self.increment(self.Metrics.UNKNOWN_REJECT_NOTES)
+                    logger.warning(
+                        "Could not get writeback transaction status from reject notes for payment: %s, notes: %s",
+                        payment.payment_id,
+                        rejected_notes,
+                    )
+                    writeback_transaction_status = default_reject_transaction_status
+        else:
+            writeback_transaction_status = default_reject_transaction_status
+
+        return writeback_transaction_status
 
     def transition_audit_pending_payment_states(
         self, payment_rejects_rows: List[PaymentAuditCSV]

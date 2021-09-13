@@ -77,7 +77,7 @@ def test_update_gender_data_successfully(test_db_session, initialize_factories_s
     )
     claimants = [employee]
 
-    caller = MockZeepCaller({"Sex": "M"})
+    caller = MockZeepCaller({"Sex": "MALE"})
     rmv_client = RmvClient(caller)
     report = update_gender_data(test_db_session, rmv_client, RMVAPIBehavior.NO_MOCK, claimants)
 

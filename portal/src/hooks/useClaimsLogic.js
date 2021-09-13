@@ -1,6 +1,10 @@
+import {
+  ClaimDetailLoadError,
+  ClaimWithdrawnError,
+  ValidationError,
+} from "../errors";
 import { get, isEqual } from "lodash";
 import ClaimCollection from "../models/ClaimCollection";
-import { ClaimDetailLoadError } from "../errors";
 import ClaimsApi from "../api/ClaimsApi";
 import PaginationMeta from "../models/PaginationMeta";
 import useCollectionState from "./useCollectionState";
@@ -100,9 +104,20 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
       const data = await claimsApi.getClaimDetail(absenceId);
 
       setClaimDetail(data.claimDetail);
-      setIsLoadingClaimDetail(false);
     } catch (error) {
-      appErrorsLogic.catchError(new ClaimDetailLoadError(absenceId));
+      if (
+        error instanceof ValidationError &&
+        error.issues[0].type === "fineos_claim_withdrawn"
+      ) {
+        // The claim was withdrawn -- we'll need to show an error message to the user
+        appErrorsLogic.catchError(
+          new ClaimWithdrawnError(absenceId, error.issues[0])
+        );
+      } else {
+        appErrorsLogic.catchError(new ClaimDetailLoadError(absenceId));
+      }
+    } finally {
+      setIsLoadingClaimDetail(false);
     }
   };
 

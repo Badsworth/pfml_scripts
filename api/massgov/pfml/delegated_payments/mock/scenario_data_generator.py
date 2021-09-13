@@ -26,6 +26,7 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ClaimFactory,
+    CtrAddressPairFactory,
     EmployeeFactory,
     EmployeePubEftPairFactory,
     EmployerFactory,
@@ -138,23 +139,85 @@ def get_mock_address_client() -> soap_api.Client:
 # == Helpers ==
 
 
-def create_employer(fein: str, fineos_employer_id: str) -> Employer:
+def create_employer(fein: str, fineos_employer_id: str, db_session: db.Session) -> Employer:
+    employer = (
+        db_session.query(Employer)
+        .filter(Employer.employer_fein == fein, Employer.fineos_employer_id == fineos_employer_id)
+        .one_or_none()
+    )
+    if employer is not None:
+        logger.info(
+            "reusing existing employer with fein %s %s and fineos_employer_id %s %s: %s",
+            fein[:2],
+            fein[2:],
+            fineos_employer_id[:3],
+            fineos_employer_id[3:],
+            employer.employer_name,
+        )
+        return employer
     return EmployerFactory.create(
         employer_id=uuid.uuid4(), employer_fein=fein, fineos_employer_id=fineos_employer_id
     )
 
 
-def create_employee(ssn: str, fineos_customer_number: str) -> Employee:
+def create_employee(ssn: str, fineos_customer_number: str, db_session: db.Session) -> Employee:
+    employee = (
+        db_session.query(Employee)
+        .join(TaxIdentifier)
+        .filter(
+            TaxIdentifier.tax_identifier == ssn,
+            Employee.fineos_customer_number == fineos_customer_number,
+        )
+        .one_or_none()
+    )
+    if employee is not None:
+        logger.info(
+            "reusing existing employee with ssn %s %s and fineos_customer_number %s %s: %s %s",
+            ssn[:3],
+            ssn[3:],
+            fineos_customer_number[:3],
+            fineos_customer_number[3:],
+            employee.first_name,
+            employee.last_name,
+        )
+        return employee
+    tax_identifier = TaxIdentifier(tax_identifier=ssn)
     return EmployeeFactory.create(
         employee_id=uuid.uuid4(),
-        tax_identifier=TaxIdentifier(tax_identifier=ssn),
+        tax_identifier=tax_identifier,
         fineos_customer_number=fineos_customer_number,
+        ctr_address_pair=CtrAddressPairFactory.create(),
     )
 
 
 def create_claim(
-    employer: Employer, employee: Employee, absence_status: LkAbsenceStatus, fineos_absence_id: str
+    employer: Employer,
+    employee: Optional[Employee],
+    absence_status: LkAbsenceStatus,
+    fineos_absence_id: str,
+    db_session: db.Session,
 ) -> Claim:
+    claim = (
+        db_session.query(Claim)
+        .filter(
+            Claim.employer == employer,
+            Claim.employee == employee,
+            Claim.fineos_absence_status_id == absence_status.absence_status_id,
+            Claim.fineos_absence_id == fineos_absence_id,
+        )
+        .one_or_none()
+    )
+    if claim is not None:
+        logger.info("reusing existing claim with fineos_absence_id %s", fineos_absence_id)
+        return claim
+    if employee is None:
+        return ClaimFactory.create(
+            employer=employer,
+            employee=None,
+            employee_id=None,
+            fineos_absence_status_id=absence_status.absence_status_id,
+            fineos_absence_id=fineos_absence_id,
+        )
     return ClaimFactory.create(
         employer=employer,
         employee=employee,
@@ -176,9 +239,9 @@ def generate_scenario_data_in_db(
     db_session: db.Session,
 ) -> ScenarioData:
 
-    employer = create_employer(fein, fineos_employer_id)
+    employer = create_employer(fein, fineos_employer_id, db_session)
 
-    employee = create_employee(ssn, fineos_customer_number)
+    employee = create_employee(ssn, fineos_customer_number, db_session)
 
     add_eft = (
         scenario_descriptor.payment_method.payment_method_id == PaymentMethod.ACH.payment_method_id
@@ -212,12 +275,12 @@ def generate_scenario_data_in_db(
     if not scenario_descriptor.has_existing_claim:
         claim = None
     elif scenario_descriptor.claim_missing_employee:
-        claim = ClaimFactory.create(
+        claim = create_claim(
             employer=employer,
             employee=None,
-            employee_id=None,
-            fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
             fineos_absence_id=absence_case_id,
+            absence_status=AbsenceStatus.APPROVED,
+            db_session=db_session,
         )
     else:
         claim = create_claim(
@@ -225,6 +288,7 @@ def generate_scenario_data_in_db(
             employee=employee,
             fineos_absence_id=absence_case_id,
             absence_status=AbsenceStatus.APPROVED,
+            db_session=db_session,
         )
 
     return ScenarioData(

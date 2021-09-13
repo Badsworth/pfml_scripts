@@ -1,0 +1,8 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`StatusIcon renders the default component 1`] = `
+<span
+  className="statusicon statusicon--disabled"
+  data-testid="status-icon"
+/>
+`;

@@ -1,8 +1,6 @@
 import { fineos, fineosPages, portal } from "../../../actions";
 import { Submission } from "../../../../src/types";
-import { config } from "../../../actions/common";
 
-//Portal and API call to submit claim
 describe("Submit a claim through Portal: Verify it creates an absence case in Fineos", () => {
   const submissionTest =
     it("As a claimant, I should be able to submit a claim application through the portal", () => {
@@ -13,13 +11,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
         cy.stash("claim", claim);
         const application: ApplicationRequestBody = claim.claim;
         const paymentPreference = claim.paymentPreference;
-
-        const credentials: Credentials = {
-          username: config("PORTAL_USERNAME"),
-          password: config("PORTAL_PASSWORD"),
-        };
-        cy.stash("credentials", credentials);
-        portal.login(credentials);
+        portal.loginClaimant();
         portal.goToDashboardFromApplicationsPage();
 
         // Submit Claim
