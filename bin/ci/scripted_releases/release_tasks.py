@@ -78,9 +78,27 @@ def finalize(args):
     logger.debug(f"Args: {repr(args)}")
 
 
-def hotfix(args):
-    logger.info(f"Running 'hotfix'...")
-    logger.debug(f"Args: {repr(args)}")
+def hotfix(args): # production hotfix, args are a branch name and a list of commits
+    # TODO write more utils
+    # get one that gets the head of the branch
+    # one that branches from a branch that isn't origin
+    # way to confirm that a branch exists
+    #  add more loggers
+    # guardrails are supposed to vet args.release_verison and args.commits
+    logger.info(f"Running 'hotfix'; args: {repr(args)}")
+
+    git_utils.fetch_remotes()
+    recent_tag = git_utils.most_recent_tag(args.app)
+
+    # find proper version num
+    v = git_utils.to_semver(recent_tag)  # convert tag to semver object
+
+    # produce incremented semver tags
+    # cut release branch
+    # branch off of the release branch created above
+    # cherrypick commits -> may need to update util to expect a hash
+    git_utils.cherrypick(args.git_commits)
+    
 
 
 def major(args):
