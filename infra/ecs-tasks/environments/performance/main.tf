@@ -72,8 +72,6 @@ module "tasks" {
   fineos_report_export_path       = "s3://fin-somdev-data-export/PERF/reportExtracts"
   pfml_fineos_inbound_path        = "s3://massgov-pfml-performance-agency-transfer/cps/inbound"
   pfml_fineos_outbound_path       = "s3://massgov-pfml-performance-agency-transfer/cps/outbound"
-  fineos_vendor_max_history_date  = "2021-01-09"
-  fineos_payment_max_history_date = "2021-01-21"
 
   payment_audit_report_outbound_folder_path = "s3://massgov-pfml-performance-agency-transfer/audit/outbound"
   payment_audit_report_sent_folder_path     = "s3://massgov-pfml-performance-agency-transfer/audit/sent"

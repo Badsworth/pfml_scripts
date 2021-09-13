@@ -73,10 +73,6 @@ module "tasks" {
   pfml_fineos_inbound_path  = "s3://massgov-pfml-breakfix-agency-transfer/cps/inbound"
   pfml_fineos_outbound_path = "s3://massgov-pfml-breakfix-agency-transfer/cps/outbound"
 
-  # TODO: Not sure what these should be configured to by default.
-  fineos_vendor_max_history_date  = "2021-01-11"
-  fineos_payment_max_history_date = "2021-01-21"
-
   payment_audit_report_outbound_folder_path = "s3://massgov-pfml-breakfix-agency-transfer/audit/outbound"
   payment_audit_report_sent_folder_path     = "s3://massgov-pfml-breakfix-agency-transfer/audit/sent"
 
