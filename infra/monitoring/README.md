@@ -16,9 +16,11 @@ An assortment of New Relic and Cloudwatch alerts are generated for each environm
 
 This module launches a cross-environment lambda which listens for ECS tasks that failed to start, and sends a notification to Slack. This mainly exists to notify us of any tasks that were broken by a code change, notably for missing Parameter Store secrets.
 
-### API Daily Restart Lambda
+### DUA Daily Email Lambda
 
-This module also launches a lambda which runs on a daily basis and does a rolling refresh of the API servers in each environment. This is a temporary workaround for the memory leak introduced by the New Relic infrastructure-bundle sidecar.
+This module also launches a lambda which runs on a daily basis. The lambda pulls the previous day's DUA_DFML reporting csv, compresses it, and sends it to email recipients.
+
+Usually, the background DUA job would send the file automatically; however, when the file is too big, it cannot be sent through SES. See: [OPSS-120](https://lwd.atlassian.net/browse/OPSS-120).
 
 ## Testing
 
