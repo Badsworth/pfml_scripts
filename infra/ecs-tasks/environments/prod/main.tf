@@ -66,12 +66,12 @@ module "tasks" {
   dfml_business_operations_email_address = "EOL-DL-DFML-GAXVCC_Confirmation@mass.gov"
   agency_reductions_email_address        = "EOL-DL-DFML-Agency-Reductions@mass.gov"
 
-  fineos_data_export_path         = "s3://fin-somprod-data-export/PRD/dataexports"
-  fineos_data_import_path         = "s3://fin-somprod-data-import/PRD/peiupdate"
-  fineos_error_export_path        = "s3://fin-somprod-data-export/PRD/errorExtracts"
-  fineos_report_export_path       = "s3://fin-somprod-data-export/PRD/reportExtracts"
-  pfml_fineos_inbound_path        = "s3://massgov-pfml-prod-agency-transfer/cps/inbound"
-  pfml_fineos_outbound_path       = "s3://massgov-pfml-prod-agency-transfer/cps/outbound"
+  fineos_data_export_path   = "s3://fin-somprod-data-export/PRD/dataexports"
+  fineos_data_import_path   = "s3://fin-somprod-data-import/PRD/peiupdate"
+  fineos_error_export_path  = "s3://fin-somprod-data-export/PRD/errorExtracts"
+  fineos_report_export_path = "s3://fin-somprod-data-export/PRD/reportExtracts"
+  pfml_fineos_inbound_path  = "s3://massgov-pfml-prod-agency-transfer/cps/inbound"
+  pfml_fineos_outbound_path = "s3://massgov-pfml-prod-agency-transfer/cps/outbound"
 
   payment_audit_report_outbound_folder_path = "s3://massgov-pfml-prod-agency-transfer/audit/outbound"
   payment_audit_report_sent_folder_path     = "s3://massgov-pfml-prod-agency-transfer/audit/sent"

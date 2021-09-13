@@ -65,12 +65,12 @@ module "tasks" {
   dfml_business_operations_email_address = "mass-pfml-payments-test-email@navapbc.com"
   agency_reductions_email_address        = "mass-pfml-payments-test-email@navapbc.com"
 
-  fineos_data_export_path         = "s3://fin-somdev-data-export/DT2/dataexports"
-  fineos_data_import_path         = "s3://fin-somdev-data-import/DT2/peiupdate"
-  fineos_error_export_path        = "s3://fin-somdev-data-export/DT2/errorExtracts"
-  fineos_report_export_path       = "s3://fin-somdev-data-export/DT2/reportExtracts"
-  pfml_fineos_inbound_path        = "s3://massgov-pfml-test-agency-transfer/cps/inbound"
-  pfml_fineos_outbound_path       = "s3://massgov-pfml-test-agency-transfer/cps/outbound"
+  fineos_data_export_path   = "s3://fin-somdev-data-export/DT2/dataexports"
+  fineos_data_import_path   = "s3://fin-somdev-data-import/DT2/peiupdate"
+  fineos_error_export_path  = "s3://fin-somdev-data-export/DT2/errorExtracts"
+  fineos_report_export_path = "s3://fin-somdev-data-export/DT2/reportExtracts"
+  pfml_fineos_inbound_path  = "s3://massgov-pfml-test-agency-transfer/cps/inbound"
+  pfml_fineos_outbound_path = "s3://massgov-pfml-test-agency-transfer/cps/outbound"
 
   payment_audit_report_outbound_folder_path = "s3://massgov-pfml-test-agency-transfer/audit/outbound"
   payment_audit_report_sent_folder_path     = "s3://massgov-pfml-test-agency-transfer/audit/sent"
