@@ -1044,7 +1044,7 @@
                 
                 <h1 id="tests">Tests</h1>
 <h2 id="introduction">Introduction</h2>
-<p><a href="https://jestjs.io/">Jest</a> is used as our JS test runner and is very similar to Jasmine.</p>
+<p><a href="https://jestjs.io/">Jest</a> is used as our JS test runner and is very similar to Jasmine.  We also use <a href="https://github.com/testing-library/jest-dom">jest-dom</a> custom matchers.</p>
 <p><strong>Read the <a href="https://jestjs.io/en/">Jest documentation</a> to learn how to write assertions.</strong> A good place to start if you are new to JS testing is to learn about <a href="https://jestjs.io/docs/en/using-matchers">Using Matchers</a>.</p>
 <p>Below is an example of a test:</p>
 <div class="highlight"><pre><span></span><code><span class="k">import</span> <span class="nx">sum</span> <span class="kr">from</span> <span class="s2">&quot;./sum&quot;</span><span class="p">;</span>
@@ -1059,23 +1059,24 @@
 </code></pre></div>
 <h2 id="creating-new-test-files">Creating new test files</h2>
 <p>A test file should be placed in the appropriate <code>tests</code> directory (e.g. <code>portal/tests</code>) rather than alongside the file it tests. These test files should have the same name as the file they're testing, and have <code>.test.js</code> as the extension. For example, <code>pages/index.js</code> and <code>tests/pages/index.test.js</code>.</p>
+<p><strong>A Migration Note (Sept 2021)</strong>
+We are migrating from enzyme to React Test Library. Our enzyme tests live in tests-old/ while we work on migrating. If you're writing new tests, please write them in tests/. Our lint rules enforse that nothing in tests/ can rely on enzyme or anything in tests-old.</p>
 <h2 id="unit-tests">Unit tests</h2>
-<p><a href="http://airbnb.io/enzyme/">Enzyme</a> is a test utility used alongside Jest to test React components. Read the <a href="http://airbnb.io/enzyme/">Enzyme documentation</a> to learn how to Render React components and how to pull information from those React components in order to run test assertions against them.</p>
-<p>For simple, stateless components (which hopefully will be most components), you can <a href="https://airbnb.io/enzyme/docs/api/shallow.html">"Shallow render"</a> the component. Shallow rendering is useful to constrain yourself to testing a component as a unit, and to ensure that your tests aren't indirectly asserting on behavior of child components. It's also helps reduce test suite runtime.</p>
+<p>We use <a href="https://testing-library.com/docs/react-testing-library/intro/">React Testing Library</a> alongside Jest. React Testing Library (RTL), enables us to interact with rendered DOM nodes directly in our tests. This helps us to write tests that resemble the way our software is used (more on that in the <a href="https://testing-library.com/docs/guiding-principles">RTL guiding principles</a>). </p>
+<p><strong>React Testing Library Resources:</strong>
+- <a href="https://testing-library.com/docs/react-testing-library/intro/">React Testing Library Docs</a>
+- <a href="https://testing-library.com/docs/react-testing-library/cheatsheet/">Cheatsheet guide</a> to reference all the available React Testing Library fucntions
+- <a href="https://testing-playground.com/">Playground</a> to test out your queries</p>
 <p>Below is an example of a React component test:</p>
-<div class="highlight"><pre><span></span><code><span class="k">import</span> <span class="nx">UploadForm</span> <span class="kr">from</span> <span class="s2">&quot;./UploadForm&quot;</span><span class="p">;</span>
-<span class="k">import</span> <span class="p">{</span> <span class="nx">shallow</span> <span class="p">}</span> <span class="kr">from</span> <span class="s2">&quot;enzyme&quot;</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><code><span class="k">import</span> <span class="p">{</span> <span class="nx">fireEvent</span><span class="p">,</span> <span class="nx">render</span><span class="p">,</span> <span class="nx">screen</span> <span class="p">}</span> <span class="kr">from</span> <span class="s2">&quot;@testing-library/react&quot;</span><span class="p">;</span>
+<span class="k">import</span> <span class="nx">Button</span> <span class="kr">from</span> <span class="s2">&quot;./Button&quot;</span><span class="p">;</span>
 
-<span class="nx">describe</span><span class="p">(</span><span class="s2">&quot;&lt;UploadForm&gt;&quot;</span><span class="p">,</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
-  <span class="nx">describe</span><span class="p">(</span><span class="s2">&quot;when the form is submitted&quot;</span><span class="p">,</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
-    <span class="nx">it</span><span class="p">(</span><span class="s2">&quot;calls onSubmit&quot;</span><span class="p">,</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
-      <span class="kd">const</span> <span class="nx">mockSubmit</span> <span class="o">=</span> <span class="nx">jest</span><span class="p">.</span><span class="nx">fn</span><span class="p">();</span>
-      <span class="kd">const</span> <span class="nx">wrapper</span> <span class="o">=</span> <span class="nx">shallow</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">UploadForm</span> <span class="nx">onSubmit</span><span class="o">=</span><span class="p">{</span><span class="nx">mockSubmit</span><span class="p">}</span> <span class="o">/&gt;</span><span class="p">);</span>
-
-      <span class="nx">wrapper</span><span class="p">.</span><span class="nx">simulate</span><span class="p">(</span><span class="s2">&quot;submit&quot;</span><span class="p">);</span>
-
-      <span class="nx">expect</span><span class="p">(</span><span class="nx">mockSubmit</span><span class="p">).</span><span class="nx">toHaveBeenCalled</span><span class="p">();</span>
-    <span class="p">});</span>
+<span class="nx">describe</span><span class="p">(</span><span class="s2">&quot;Button&quot;</span><span class="p">,</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
+  <span class="nx">it</span><span class="p">(</span><span class="s2">&quot;is clickable&quot;</span><span class="p">,</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="nx">onClickHandler</span> <span class="o">=</span> <span class="nx">jest</span><span class="p">.</span><span class="nx">fn</span><span class="p">();</span>
+    <span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">Button</span> <span class="nx">onClick</span><span class="o">=</span><span class="p">{</span><span class="nx">onClickHandler</span><span class="p">}</span><span class="o">&gt;</span><span class="nx">Click</span> <span class="nx">me</span><span class="o">&lt;</span><span class="err">/Button&gt;);</span>
+    <span class="nx">fireEvent</span><span class="p">.</span><span class="nx">click</span><span class="p">(</span><span class="nx">screen</span><span class="p">.</span><span class="nx">getByText</span><span class="p">(</span><span class="sr">/Click me/</span><span class="p">));</span>
+    <span class="nx">expect</span><span class="p">(</span><span class="nx">onClickHandler</span><span class="p">).</span><span class="nx">toHaveBeenCalled</span><span class="p">();</span>
   <span class="p">});</span>
 <span class="p">});</span>
 </code></pre></div>
@@ -1096,12 +1097,11 @@
 <span class="p">});</span>
 </code></pre></div>
 <h4 id="react-snapshot-example">React snapshot example</h4>
-<div class="highlight"><pre><span></span><code><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;renders the fields with the expected content and attributes&quot;</span><span class="p">,</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
-  <span class="kd">const</span> <span class="nx">wrapper</span> <span class="o">=</span> <span class="nx">shallow</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">UploadFields</span> <span class="o">/&gt;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><span class="nx">it</span><span class="p">(</span><span class="s2">&quot;renders the component as expected&quot;</span><span class="p">,</span> <span class="p">()</span> <span class="p">=&gt;</span> <span class="p">{</span>
+    <span class="kd">const</span> <span class="p">{</span> <span class="nx">container</span> <span class="p">}</span> <span class="o">=</span> <span class="nx">render</span><span class="p">(</span><span class="o">&lt;</span><span class="nx">ExampleComponent</span> <span class="o">/&gt;</span><span class="p">);</span>
 
-  <span class="c1">// You can output the snapshot to a separate file if its output is verbose:</span>
-  <span class="nx">expect</span><span class="p">(</span><span class="nx">wrapper</span><span class="p">).</span><span class="nx">toMatchSnapshot</span><span class="p">();</span>
-<span class="p">});</span>
+    <span class="nx">expect</span><span class="p">(</span><span class="nx">container</span><span class="p">.</span><span class="nx">firstChild</span><span class="p">).</span><span class="nx">toMatchSnapshot</span><span class="p">();</span>
+  <span class="p">});</span>
 </code></pre></div>
 <h3 id="mocks">Mocks</h3>
 <p>Mock functions make it easy to test the links between code by erasing the actual implementation of a function, capturing calls to the function (and the parameters passed in those calls), capturing instances of constructor functions when instantiated with new, and allowing test-time configuration of return values.</p>
