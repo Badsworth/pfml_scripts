@@ -17,6 +17,7 @@ jest.mock("../../../src/hooks/useAppLogic");
 
 const CLAIM_DETAIL = new ClaimDetail({
   application_id: "application-id",
+  fineos_absence_id: "fineos-abence-id",
   employer: {
     employer_fein: "employer-fein",
   },
@@ -318,7 +319,7 @@ describe("status page", () => {
     expect(button.exists()).toBe(true);
     expect(wrapper).toMatchSnapshot();
     expect(button.prop("href")).toBe(
-      `${routes.applications.uploadDocsOptions}?claim_id=${CLAIM_DETAIL.application_id}`
+      `${routes.applications.upload.index}?absence_case_id=${CLAIM_DETAIL.fineos_absence_id}`
     );
   });
 });

@@ -259,8 +259,8 @@ export const Status = ({ appLogic, query }) => {
           <p>{t("pages.claimsStatus.infoRequestsBody")}</p>
           <ButtonLink
             className="measure-6 margin-bottom-3"
-            href={routeWithParams("applications.uploadDocsOptions", {
-              claim_id: claimDetail.application_id,
+            href={routeWithParams("applications.upload.index", {
+              absence_case_id: claimDetail.fineos_absence_id,
             })}
           >
             {t("pages.claimsStatus.uploadDocumentsButton")}
