@@ -51,11 +51,9 @@ def create_branch(branch_name):
     logger.info(f"Branch '{branch_name}' created from origin/main")
 
 
-def branch_from_release(release_branch, hotfix_branch):
+def branch_from_release(hotfix_branch, release_branch):
     fetch_remotes()
-    # git branch <new branch name> <branch to branch off of>
-    git.branch(hotfix_branch, release_branch)
-    git.push("-u", "origin", branch_name)
+    git.checkout("-b" , hotfix_branch, release_branch)
     logger.info(f"Branch '{hotfix_branch}' created from {release_branch}")
 
 def most_recent_tag(app):
