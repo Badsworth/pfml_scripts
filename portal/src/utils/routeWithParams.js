@@ -1,21 +1,24 @@
 import { get, isNil, omitBy } from "lodash";
+
 import routes from "../routes";
 
 /**
- * Append a query string params to the given route
+ * Append a query string params and optional hash to a given route
  * @param {string} route - url path
  * @param {object|string} params - object of query string params
+ * @param {string} [hash=''] - Optional hash to append to URL.
  * @returns {string} - route with query string "e.g. /claims/ssn?claim_id=12345"
  */
-export const createRouteWithQuery = (route, params) => {
+export const createRouteWithQuery = (route, params, hash = "") => {
   // Remove null and undefined
   params = omitBy(params, isNil);
-  const queryString = new URLSearchParams(params).toString();
-  if (queryString) {
-    return `${route}?${queryString}`;
-  } else {
-    return route;
-  }
+  let queryString = new URLSearchParams(params).toString();
+
+  // Include prefixes (e.g., ?, #) if args/values exist
+  if (queryString) queryString = `?${queryString}`;
+  if (hash) hash = `#${hash}`;
+
+  return `${route}${queryString}${hash}`;
 };
 
 /**

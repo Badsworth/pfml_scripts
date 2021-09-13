@@ -575,6 +575,10 @@ const errors = {
     "Sorry, we were unable to retrieve what you were looking for. Check that the link you are visiting is correct. If this continues to happen, please log out and try again.",
   caughtError_UserNotReceivedError:
     "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak)",
+  claimStatus: {
+    fineos_claim_withdrawn:
+      "Application <strong>{{absenceId}}</strong> has been withdrawn and is no longer being processed.  If you believe this application has been withdrawn in error, check if any additional applications in your account cover the same leave period.  If you have additional questions, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
+  },
   documents: {
     file: {
       required: "Upload at least one file to continue.",
@@ -887,6 +891,11 @@ const shared = {
 };
 
 const pages = {
+  404: {
+    body: "<p>The page you’re looking for might have been removed, have a new name, or is otherwise unavailable.</p><p>If you typed the URL directly, check your spelling and capitalization. Our URLs look like this: <url-example>{{ url }}</url-example></p>",
+    homepageButton: "Visit homepage",
+    title: "Page not found",
+  },
   app: {
     seoDescription: "$t(shared.siteDescription)",
   },
@@ -1940,6 +1949,17 @@ const pages = {
     reportOtherBenefitsBody:
       "<p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report changes to:</p><ul><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for disability benefit after you submitted your application, report this change.</li></ul>",
     reportOtherBenefitsHeading: "Report other benefits or income",
+    timelineDescription:
+      "<p>Your application is complete when:</p><ul><li>You have submitted all required documents</li><li>Your employer has responded or their deadline passes</li></ul>",
+    timelineHeading: "Timeline",
+    timelineTextFollowUpEmployer:
+      "<p>Your employer has until <strong>{{employerFollowUpDate}}</strong> to respond to your application.</p>",
+    timelineTextFollowUpGenericDFML:
+      "<p>We have <strong>14 calendar days</strong> after receiving your completed application to make a decision to approve, deny or request more information.</p><p>The process may take longer if we request more information to complete your application or if you request changes to your application.</p>",
+    timelineTextFollowUpGenericEmployer:
+      "<p>Your employer has <strong>10 business days</strong> to respond to your application.</p>",
+    timelineTextLearnMore:
+      "<p>Learn more about the <timeline-link>application approval process.</timeline-link></p>",
     uploadDocumentsButton: "Upload additional documents",
     uploadDocumentsHeading: "Upload Documents",
     viewNoticesHeading: "View your notices",
@@ -2018,6 +2038,38 @@ const pages = {
     sectionLabel: "What kind of document are you uploading?",
     stateIdLabel: "Massachusetts driver’s license or ID",
     title: "Additional documentation",
+  },
+  claimsUploadDocumentType: {
+    addAnotherFileButton: "$t(shared.fileUpload_addAnotherFileButton)",
+    addFirstFileButton: "$t(shared.fileUpload_addFirstFileButton)",
+    documentsLoadError: "$t(shared.documentsLoadError)",
+    fileHeadingPrefix: "$t(shared.fileUpload_fileHeadingPrefix)",
+    idAccordionContent:
+      "<p><strong>If you don’t have any of those, you can provide one of the following plus proof of your Social Security Number or Individual Tax Identification Number:</strong></p><ul><li>Valid, unexpired U.S. State or Territory License or ID, both front and back</li><li>Certified copy of a birth certificate filed with a State Office of Vital Statistics or equivalent agency in the individual’s state of birth. (You can only use a <puerto-rican-birth-certificate-link>Puerto Rican birth certificate</puerto-rican-birth-certificate-link> if it was issued on or after July 1, 2010.)</li><li>Certificate of Citizenship (Form N$t(chars.nbhyphen)560, or Form N$t(chars.nbhyphen)561)</li><li>Certificate of Naturalization (Form N$t(chars.nbhyphen)550 or N$t(chars.nbhyphen)570)</li></ul><p><strong>You can provide proof of your Social Security Number using one of the following documents displaying your complete Social Security Number:</strong></p><ul><li>Social Security card</li><li>W$t(chars.nbhyphen)2 Form</li><li>SSA$t(chars.nbhyphen)1099 Form</li><li>Non$t(chars.nbhyphen)SSA$t(chars.nbhyphen)1099 Form</li><li>Pay stub with your name on it</li></ul><p><identity-proof-link>Learn more about verifying your identity with different documents.</identity-proof-link></p>",
+    idAccordionHeading: "If you don’t have any of those documents:",
+    leadListNewborn: [
+      "Your child’s birth certificate.",
+      "A note from your child’s health care provider stating your child’s date of birth.",
+      "A note from the health care provider of the person who gave birth stating your child’s date of birth.",
+    ],
+    lead_bonding_adopt_foster:
+      "You need to upload a statement from your adoption or foster agency or from the Massachusetts Department of Children and Families to confirm the placement and the date of the placement.",
+    lead_bonding_newborn:
+      "You need to upload one of the following documents to confirm your child’s date of birth:",
+    lead_care:
+      "You need to upload a completed <caregiver-certification-form-link>$t(shared.certificationFormCare)</caregiver-certification-form-link> to prove that you need to take leave to care for a family member with a serious medical condition.",
+    lead_medical:
+      "You need to upload a completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link> to prove that you need to take medical leave.",
+    otherIdentityDocs:
+      "<p><strong>You can upload a copy of one of the following documents:</strong></p><ul><li>U.S. State or Territory Real ID, both front and back</li><li>U.S. passport or passport card</li><li>Permanent Resident Card issued by DHS or INS</li><li>Employment Authorization Document (EAD) issued by DHS</li><li>Foreign passport <strong>and</strong> a <work-visa-link>work visa</work-visa-link></li></ul>",
+    sectionLabel_bonding: "Upload your documentation",
+    sectionLabel_certification: "Upload your certification form",
+    sectionLabel_massId:
+      "Upload the front and back of your Massachusetts driver’s license or ID card",
+    sectionLabel_otherId:
+      "Upload an identification document issued by state or federal government",
+    title_certification: "Upload certification",
+    title_id: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsUploadId: {
     accordionContent:
@@ -2924,6 +2976,9 @@ const components = {
   },
   withBenefitsApplications: {
     loadingLabel: "Loading applications",
+  },
+  withClaimDocuments: {
+    loadingLabel: "Loading documents",
   },
   withClaims: {
     loadingLabel: "Loading claims",

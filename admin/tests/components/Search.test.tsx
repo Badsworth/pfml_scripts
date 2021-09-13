@@ -1,6 +1,7 @@
 import React from "react";
 import { create } from "react-test-renderer";
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import { mocked } from "ts-jest/utils";
 import Search, { Props as SearchProps } from "../../src/components/Search";
@@ -74,9 +75,7 @@ describe("Search", () => {
       setResults: setResults,
     });
 
-    fireEvent.change(screen.getByTestId("search-input"), {
-      target: { value: "User" },
-    });
+    userEvent.type(screen.getByTestId("search-input"), "User");
 
     expect(screen.getByTestId("search-input")).toHaveValue("User");
 
@@ -98,9 +97,7 @@ describe("Search", () => {
     const setItem = jest.spyOn(Storage.prototype, "setItem");
 
     renderComponent();
-    fireEvent.change(screen.getByTestId("search-input"), {
-      target: { value: "User" },
-    });
+    userEvent.type(screen.getByTestId("search-input"), "User");
 
     expect(setItem).toHaveBeenCalled();
   });
@@ -110,9 +107,7 @@ describe("Search", () => {
     const setItem = jest.spyOn(Storage.prototype, "setItem");
 
     renderComponent();
-    fireEvent.change(screen.getByTestId("search-input"), {
-      target: { value: "User" },
-    });
+    userEvent.type(screen.getByTestId("search-input"), "User");
 
     expect(setItem).not.toHaveBeenCalled();
   });

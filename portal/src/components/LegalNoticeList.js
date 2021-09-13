@@ -1,10 +1,9 @@
-import Document, { DocumentType } from "../models/Document";
-
+import Document from "../models/Document";
 import DownloadableDocument from "./DownloadableDocument";
 import Icon from "./Icon";
 import PropTypes from "prop-types";
 import React from "react";
-import findDocumentsByTypes from "../utils/findDocumentsByTypes";
+import getLegalNotices from "../utils/getLegalNotices";
 import { useTranslation } from "../locales/i18n";
 
 /**
@@ -13,21 +12,13 @@ import { useTranslation } from "../locales/i18n";
 export default function LegalNoticeList(props) {
   const { t } = useTranslation();
   const { documents, onDownloadClick } = props;
-  const hasDocuments = Boolean(documents?.length);
 
+  const legalNotices = getLegalNotices(documents);
   /**
    * If application is not submitted or has
    * no documents, don't display section
    */
-  if (!hasDocuments) return null;
-
-  const legalNotices = findDocumentsByTypes(documents, [
-    DocumentType.approvalNotice,
-    DocumentType.denialNotice,
-    DocumentType.requestForInfoNotice,
-    DocumentType.withdrawalNotice,
-    DocumentType.appealAcknowledgement,
-  ]);
+  if (!legalNotices.length) return null;
 
   const legalNoticeList = legalNotices.map((document) => (
     <li

@@ -1,6 +1,7 @@
 import React from "react";
 import { create } from "react-test-renderer";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import "@testing-library/jest-dom";
 import Alert, { Props as AlertProps } from "../../src/components/Alert";
 
@@ -103,7 +104,7 @@ describe("Alert", () => {
       closeable: true,
     });
 
-    fireEvent.click(screen.getByTestId("alert-close-button"));
+    userEvent.click(screen.getByTestId("alert-close-button"));
 
     expect(screen.queryByTestId("alert-close-button")).not.toBeInTheDocument();
   });
@@ -116,7 +117,7 @@ describe("Alert", () => {
       onClose: onClose,
     });
 
-    fireEvent.click(screen.getByTestId("alert-close-button"));
+    userEvent.click(screen.getByTestId("alert-close-button"));
 
     expect(onClose).toHaveBeenCalledTimes(1);
   });

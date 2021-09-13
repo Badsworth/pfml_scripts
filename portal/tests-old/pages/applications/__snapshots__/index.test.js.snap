@@ -468,8 +468,10 @@ Array [
             "meta": Object {},
             "on": Object {
               "CONTINUE": "/applications/upload-docs-options",
+              "STATUS": "/applications/status",
             },
           },
+          "pageRoute": "",
           "pathWithParams": "",
           "pathname": "/applications",
           "updateQuery": [Function],
@@ -1021,8 +1023,10 @@ Array [
             "meta": Object {},
             "on": Object {
               "CONTINUE": "/applications/upload-docs-options",
+              "STATUS": "/applications/status",
             },
           },
+          "pageRoute": "",
           "pathWithParams": "",
           "pathname": "/applications",
           "updateQuery": [Function],
@@ -1615,8 +1619,10 @@ Array [
             "meta": Object {},
             "on": Object {
               "CONTINUE": "/applications/upload-docs-options",
+              "STATUS": "/applications/status",
             },
           },
+          "pageRoute": "",
           "pathWithParams": "",
           "pathname": "/applications",
           "updateQuery": [Function],

@@ -31,19 +31,21 @@ const AbsenceCaseStatusTag = ({ status, managedRequirements }) => {
     return formatDate(sortedDates[0].follow_up_date).short();
   };
 
-  if (
-    // TODO (EMPLOYER-1542): Remove feature condition -- Keep managedRequirements check.
-    isFeatureEnabled("employerShowReviewByStatus") &&
-    managedRequirements?.length > 0
-  ) {
-    return (
-      <Tag
-        state="warning"
-        label={t("components.absenceCaseStatusTag.status_openRequirements", {
-          followupDate: findClosestFollowupDate(),
-        })}
-      />
-    );
+  if (managedRequirements?.length > 0) {
+    // TODO (EMPLOYER-1542): Remove feature condition
+    if (isFeatureEnabled("employerShowReviewByStatus")) {
+      return (
+        <Tag
+          state="warning"
+          label={t("components.absenceCaseStatusTag.status_openRequirements", {
+            followupDate: findClosestFollowupDate(),
+          })}
+        />
+      );
+    }
+
+    // TODO (EMPLOYER-1542): Remove this once Review By feature is always enabled
+    return "--";
   }
 
   // TODO (EMPLOYER-1542): Remove condition

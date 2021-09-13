@@ -5,12 +5,14 @@ import getLegalNotices from "../../src/utils/getLegalNotices";
 describe("getLegalNotices", () => {
   it("filters out all non-legal notices", () => {
     const legalNoticeTypes = new Set([
+      DocumentType.appealAcknowledgement,
       DocumentType.approvalNotice,
       DocumentType.denialNotice,
       DocumentType.requestForInfoNotice,
       DocumentType.withdrawalNotice,
     ]);
     const manyDocumentTypes = [
+      DocumentType.appealAcknowledgement,
       DocumentType.approvalNotice,
       DocumentType.certification.certificationForm,
       DocumentType.certification[LeaveReason.care],

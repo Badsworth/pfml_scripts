@@ -185,6 +185,22 @@ export class DocumentsUploadError extends BasePortalError {
 }
 
 /**
+ * A GET request to the /claims/:id endpoint failed because the claim was withdrawn in FINEOS
+ */
+export class ClaimWithdrawnError extends BasePortalError {
+  /**
+   * @param {string} fineos_absence_id - ID of the Claim that was withdrawn
+   * @example new ClaimWithdrawnError('mock_absence_id')
+   */
+  constructor(fineos_absence_id, issue, ...params) {
+    super(...params);
+    this.fineos_absence_id = fineos_absence_id;
+    this.issue = issue;
+    this.name = "ClaimWithdrawnError";
+  }
+}
+
+/**
  *  An API response returned a 503 status code
  */
 export class ServiceUnavailableError extends ApiRequestError {
