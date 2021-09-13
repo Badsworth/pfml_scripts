@@ -49,11 +49,12 @@ class Response:
 
     def to_api_response(self) -> flask.Response:
         # If other warnings are passed in, merge with warnings set from validators.py
-        if flask.request.__dict__.get("warning_list", None) is not None:
+        request_warning_list = flask.request.__dict__.get("warning_list", None)
+        if request_warning_list is not None:
             if self.warnings is None:
-                self.warnings = flask.request.warning_list
+                self.warnings = request_warning_list
             else:
-                self.warnings = self.warnings + flask.request.warning_list
+                self.warnings = self.warnings + request_warning_list
 
         if self.meta is None:
             self.meta = MetaData(resource=flask.request.path, method=flask.request.method)

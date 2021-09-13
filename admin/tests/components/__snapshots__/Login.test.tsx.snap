@@ -1,0 +1,30 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Login renders the default component 1`] = `
+Array [
+  <h1>
+    Paid Family & Medical Leave Administrative Portal
+  </h1>,
+  <div
+    className="login"
+  >
+    <h2
+      className="login__sub-heading"
+    >
+      Log in to manage settings and functions for the PFML Portal.
+    </h2>
+    <p
+      className="login__info"
+    >
+      A mass.gov account is required to log in.
+    </p>
+    <a
+      className="btn btn--login"
+      href="#"
+      onClick={[Function]}
+    >
+      Login
+    </a>
+  </div>,
+]
+`;

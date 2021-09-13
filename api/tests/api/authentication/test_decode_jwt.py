@@ -5,14 +5,10 @@ from flask import g
 from jose import jws, jwt
 from jose.constants import ALGORITHMS
 from jose.exceptions import JWTError
+from werkzeug.exceptions import Unauthorized
 
 import massgov.pfml.api.authentication as authentication
-
-
-@pytest.fixture(scope="session")
-def auth_token_unit(auth_claims_unit, auth_private_key):
-    encoded = jwt.encode(auth_claims_unit, auth_private_key, algorithm=ALGORITHMS.RS256)
-    return encoded
+from massgov.pfml.db.models.employees import AzureGroup, AzureGroupPermission, AzurePermission
 
 
 @pytest.fixture(scope="session")
@@ -81,13 +77,86 @@ def auth_token_alg_hs256(auth_claims):
     return b".".join([encoded_header, encoded_payload, signature]).decode("utf-8")
 
 
-def test_decode_cognito_token_success(set_auth_public_keys, auth_claims_unit, auth_token_unit):
-    decoded = authentication._decode_cognito_token(auth_token_unit)
+def test_is_azure_token_true(mock_azure, azure_auth_token_unit):
+    assert authentication._is_azure_token(azure_auth_token_unit) is True
+
+
+def test_is_azure_token_false(mock_azure, auth_claims_unit, azure_auth_private_key):
+    # This token is created with an azure private key but lacks the key ID.
+    # Therefore, it should not be recognized as an Azure token.
+    token = jwt.encode(auth_claims_unit, azure_auth_private_key, algorithm=ALGORITHMS.RS256,)
+    assert authentication._is_azure_token(token) is False
+
+
+def test_decode_azure_jwt_success(mock_azure, auth_claims_unit, azure_auth_token_unit):
+    decoded = authentication._decode_jwt(azure_auth_token_unit, is_azure_token=True)
 
     assert decoded == auth_claims_unit
 
 
-def test_decode_cognito_token_invalid_key(monkeypatch, auth_token_unit):
+def test_process_azure_token_success(app, mock_azure, auth_claims_unit, test_db_session):
+    decoded_azure_token = auth_claims_unit.copy()
+    decoded_azure_token["groups"] = [
+        AzureGroup.NON_PROD.azure_group_guid,
+        AzureGroup.NON_PROD_ADMIN.azure_group_guid,
+    ]
+    test_db_session.add(
+        AzureGroupPermission(
+            azure_group_id=AzureGroup.NON_PROD_ADMIN.azure_group_id,
+            azure_permission_id=AzurePermission.USER_READ.azure_permission_id,
+        )
+    )
+    test_db_session.add(
+        AzureGroupPermission(
+            azure_group_id=AzureGroup.NON_PROD_ADMIN.azure_group_id,
+            azure_permission_id=AzurePermission.USER_EDIT.azure_permission_id,
+        )
+    )
+    with app.app.app_context():
+        authentication._process_azure_token(test_db_session, decoded_azure_token)
+        assert g.azure_user.sub_id == decoded_azure_token["sub"]
+        assert g.azure_user.groups == decoded_azure_token["groups"]
+        assert g.azure_user_sub_id == decoded_azure_token["sub"]
+        assert g.azure_user.permissions == [
+            AzurePermission.USER_READ.azure_permission_id,
+            AzurePermission.USER_EDIT.azure_permission_id,
+        ]
+
+
+def test_process_azure_token_unauthorized(app, mock_azure, auth_claims_unit, test_db_session):
+    decoded_azure_token = auth_claims_unit.copy()
+    # The user lacks the NON_PROD group and receives an unauthorized exception.
+    decoded_azure_token["groups"] = [AzureGroup.NON_PROD_ADMIN.azure_group_guid]
+    with pytest.raises(
+        Unauthorized, match="You do not have the correct group to access the Admin Portal.",
+    ):
+        with app.app.app_context():
+            authentication._process_azure_token(test_db_session, decoded_azure_token)
+
+
+def test_decode_jwt_success(set_auth_public_keys, auth_claims_unit, auth_token_unit):
+    decoded = authentication._decode_jwt(auth_token_unit)
+
+    assert decoded == auth_claims_unit
+
+
+def test_decode_azure_jwt_invalid_key(monkeypatch, mock_azure, azure_auth_token_unit):
+    pub_keys = [
+        {
+            "alg": "RS256",
+            "e": "AQAB",
+            "kid": "azure_kid",
+            "kty": "RSA",
+            "n": "tyg_ywBEcanke5ZuBdz94fUcdPi7MgQLwLNtASF6kqdLBuiNqYMfBYYyaZJP7s1aSOEFS74Tc1-8UtdpmBEfTbqi_sKIGGWdLe_B9EKSzU7wx8KSXgfWGnl12y3ph4JI0M7_tPUzBnyu2ir0BxXMdcL5xDk5FlUKqhAlZAGcPYU",
+            "use": "sig",
+        }
+    ]
+    monkeypatch.setattr(authentication.azure_config, "public_keys", pub_keys)
+    with pytest.raises(JWTError, match="Signature verification failed."):
+        authentication._decode_jwt(azure_auth_token_unit, is_azure_token=True)
+
+
+def test_decode_jwt_invalid_key(monkeypatch, auth_token_unit):
     pub_key = {
         "keys": [
             {
@@ -102,29 +171,29 @@ def test_decode_cognito_token_invalid_key(monkeypatch, auth_token_unit):
     }
     monkeypatch.setattr(authentication, "public_keys", pub_key)
     with pytest.raises(JWTError, match="Signature verification failed."):
-        authentication._decode_cognito_token(auth_token_unit)
+        authentication._decode_jwt(auth_token_unit)
 
 
-def test_decode_cognito_token_without_public_key(monkeypatch, auth_token_unit):
+def test_decode_jwt_without_public_key(monkeypatch, auth_token_unit):
     pub_key = {"keys": []}
     monkeypatch.setattr(authentication, "public_keys", pub_key)
     with pytest.raises(JWTError, match="Signature verification failed."):
-        authentication._decode_cognito_token(auth_token_unit)
+        authentication._decode_jwt(auth_token_unit)
 
 
-def test_decode_cognito_token_no_exp(set_auth_public_keys, auth_token_with_no_exp):
+def test_decode_jwt_no_exp(set_auth_public_keys, auth_token_with_no_exp):
     with pytest.raises(JWTError, match='missing required key "exp" among claims'):
-        authentication._decode_cognito_token(auth_token_with_no_exp)
+        authentication._decode_jwt(auth_token_with_no_exp)
 
 
-def test_decode_cognito_token_no_sub(set_auth_public_keys, auth_token_with_no_sub):
+def test_decode_jwt_no_sub(set_auth_public_keys, auth_token_with_no_sub):
     with pytest.raises(JWTError, match='missing required key "sub" among claims'):
-        authentication._decode_cognito_token(auth_token_with_no_sub)
+        authentication._decode_jwt(auth_token_with_no_sub)
 
 
-def test_decode_cognito_token_expired(set_auth_public_keys, auth_token_expired):
+def test_decode_jwt_expired(set_auth_public_keys, auth_token_expired):
     with pytest.raises(JWTError, match="Signature has expired."):
-        authentication._decode_cognito_token(auth_token_expired)
+        authentication._decode_jwt(auth_token_expired)
 
 
 def test_without_token(client, auth_token):
@@ -156,14 +225,14 @@ def test_claims_with_invalid_user_id(client, app, user, auth_token_invalid_user_
         assert response.status_code == 401
 
 
-def test_decode_cognito_token_rejects_alg_none(set_auth_public_keys, auth_token_alg_none):
+def test_decode_jwt_rejects_alg_none(set_auth_public_keys, auth_token_alg_none):
     with pytest.raises(JWTError, match=r"The specified alg value is not allowed.*"):
-        authentication._decode_cognito_token(auth_token_alg_none)
+        authentication._decode_jwt(auth_token_alg_none)
 
 
-def test_decode_cognito_token_rejects_alg_hs256(set_auth_public_keys, auth_token_alg_hs256):
+def test_decode_jwt_rejects_alg_hs256(set_auth_public_keys, auth_token_alg_hs256):
     with pytest.raises(JWTError, match=r"The specified alg value is not allowed.*"):
-        authentication._decode_cognito_token(auth_token_alg_hs256)
+        authentication._decode_jwt(auth_token_alg_hs256)
 
 
 def test_endpoint_rejects_token_with_alg_none(client, app, user, auth_token_alg_none):

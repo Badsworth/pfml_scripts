@@ -12,6 +12,7 @@ import re
 from datetime import date
 from typing import TYPE_CHECKING, List, Optional, cast
 
+from bouncer.constants import EDIT, READ  # noqa: F401 F403
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import (
     TIMESTAMP,
@@ -943,6 +944,25 @@ class HealthCareProviderAddress(Base, TimestampMixin):
     address = relationship("Address", back_populates="health_care_providers")
 
 
+class AzureUser:
+    """ Not a database table but necessary for type-checking """
+
+    sub_id: str
+    first_name: str
+    last_name: str
+    email_address: str
+    groups: List[str]
+    permissions: List[int]
+
+    def __init__(self, sub_id, first_name, last_name, email_address, groups, permissions):
+        self.sub_id = sub_id
+        self.first_name = first_name
+        self.last_name = last_name
+        self.email_address = email_address
+        self.groups = groups
+        self.permissions = permissions
+
+
 class User(Base, TimestampMixin):
     __tablename__ = "user"
     user_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -1006,6 +1026,54 @@ class UserLeaveAdministrator(Base, TimestampMixin):
     @typed_hybrid_property
     def verified(self) -> bool:
         return bool(self.verification_id)
+
+
+class LkAzurePermission(Base):
+    __tablename__ = "lk_azure_permission"
+    azure_permission_id = Column(Integer, primary_key=True, autoincrement=True)
+    azure_permission_resource = Column(Text, nullable=False)
+    azure_permission_action = Column(Text, nullable=False)
+
+    def __init__(self, azure_permission_id, azure_permission_resource, azure_permission_action):
+        self.azure_permission_id = azure_permission_id
+        self.azure_permission_resource = azure_permission_resource
+        self.azure_permission_action = azure_permission_action
+
+
+class AzureGroupPermission(Base):
+    __tablename__ = "link_azure_group_permission"
+    __table_args__ = (UniqueConstraint("azure_permission_id", "azure_group_id"),)
+    azure_permission_id = Column(
+        Integer, ForeignKey("lk_azure_permission.azure_permission_id"), primary_key=True
+    )
+    azure_group_id = Column(Integer, ForeignKey("lk_azure_group.azure_group_id"), primary_key=True)
+
+
+class LkAzureGroup(Base):
+    __tablename__ = "lk_azure_group"
+    azure_group_id = Column(Integer, primary_key=True, autoincrement=True)
+    azure_group_name = Column(Text, nullable=False)
+    azure_group_guid = Column(Text, nullable=False)
+    azure_group_parent_id = Column(Integer, nullable=True)
+    permissions = relationship(AzureGroupPermission, uselist=True)
+
+    def __init__(self, azure_group_id, azure_group_name, azure_group_guid, azure_group_parent_id):
+        self.azure_group_id = azure_group_id
+        self.azure_group_name = azure_group_name
+        self.azure_group_guid = azure_group_guid
+        self.azure_group_parent_id = azure_group_parent_id
+
+
+class UserAzurePermissionLog(Base, TimestampMixin):
+    __tablename__ = "user_azure_permission_log"
+    user_azure_permission_log_id = Column(Integer, primary_key=True, autoincrement=True)
+    email_address = Column(Text, nullable=False)
+    sub_id = Column(Text, nullable=False)
+    family_name = Column(Text, nullable=False)
+    given_name = Column(Text, nullable=False)
+    azure_permission_id = Column(Integer, ForeignKey("lk_azure_permission.azure_permission_id"))
+    azure_group_id = Column(Integer, ForeignKey("lk_azure_group.azure_group_id"))
+    action = Column(Text, nullable=False)
 
 
 class LkManagedRequirementStatus(Base):
@@ -2593,6 +2661,67 @@ class LeaveRequestDecision(LookupTable):
     VOIDED = LkLeaveRequestDecision(8, "Voided")
 
 
+class AzureGroup(LookupTable):
+    model = LkAzureGroup
+    column_names = (
+        "azure_group_id",
+        "azure_group_name",
+        "azure_group_guid",
+        "azure_group_parent_id",
+    )
+
+    NON_PROD = LkAzureGroup(
+        1, "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD", "67f909a7-049b-4844-98eb-beec1bd35fc0", None
+    )
+    NON_PROD_ADMIN = LkAzureGroup(
+        2, "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD_ADMIN", "1af1bd6d-2a32-405d-9d90-7b126be8b9fa", 1
+    )
+    NON_PROD_DEV = LkAzureGroup(
+        3, "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD_DEV", "d268edaa-4c0e-48ff-82c0-012e224ddda3", 1
+    )
+    NON_PROD_CONTACT_CENTER = LkAzureGroup(
+        4,
+        "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD_CONTACT_CENTER",
+        "13d579da-bb84-4c5f-a382-93584fc9e91f",
+        1,
+    )
+    NON_PROD_SERVICE_DESK = LkAzureGroup(
+        5,
+        "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD_SERVICE_DESK",
+        "e483a1df-5ce4-4e94-a9bc-48dacf4a14f4",
+        1,
+    )
+    NON_PROD_DFML_OPS = LkAzureGroup(
+        6, "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD_DFML_OPS", "be96c3c2-5d2b-4845-9ed5-bb0aa109009e", 1
+    )
+    PROD = LkAzureGroup(7, "TSS-SG-PFML_ADMIN_PORTAL_PROD", "7", None)
+    PROD_ADMIN = LkAzureGroup(8, "TSS-SG-PFML_ADMIN_PORTAL_PROD_ADMIN", "8", 7)
+    PROD_DEV = LkAzureGroup(9, "TSS-SG-PFML_ADMIN_PORTAL_PROD_DEV", "9", 7)
+    PROD_CONTACT_CENTER = LkAzureGroup(10, "TSS-SG-PFML_ADMIN_PORTAL_PROD_CONTACT_CENTER", "10", 7)
+    PROD_SERVICE_DESK = LkAzureGroup(11, "TSS-SG-PFML_ADMIN_PORTAL_PROD_SERVICE_DESK", "11", 7)
+    PROD_DFML_OPS = LkAzureGroup(12, "TSS-SG-PFML_ADMIN_PORTAL_PROD_DFML_OPS", "12", 7)
+
+
+class AzurePermission(LookupTable):
+    model = LkAzurePermission
+    column_names = ("azure_permission_id", "azure_permission_resource", "azure_permission_action")
+
+    USER_READ = LkAzurePermission(1, "USER", READ)
+    USER_EDIT = LkAzurePermission(2, "USER", EDIT)
+    LOG_READ = LkAzurePermission(3, "LOG", READ)
+    DASHBOARD_READ = LkAzurePermission(4, "DASHBOARD", READ)
+    SETTINGS_READ = LkAzurePermission(5, "SETTINGS", READ)
+    SETTINGS_EDIT = LkAzurePermission(6, "SETTINGS", EDIT)
+    MAINTENANCE_READ = LkAzurePermission(7, "MAINTENANCE", READ)
+    MAINTENANCE_EDIT = LkAzurePermission(8, "MAINTENANCE", EDIT)
+    FEATURES_READ = LkAzurePermission(9, "FEATURES", READ)
+    FEATURES_EDIT = LkAzurePermission(10, "FEATURES", EDIT)
+
+    @classmethod
+    def get_all(cls):
+        return [p for p in vars(cls).values() if isinstance(p, cls.model)]
+
+
 def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
     AbsencePeriodType.sync_to_database(db_session)
@@ -2626,4 +2755,6 @@ def sync_lookup_tables(db_session):
     ManagedRequirementStatus.sync_to_database(db_session)
     ManagedRequirementCategory.sync_to_database(db_session)
     ManagedRequirementType.sync_to_database(db_session)
+    AzureGroup.sync_to_database(db_session)
+    AzurePermission.sync_to_database(db_session)
     db_session.commit()

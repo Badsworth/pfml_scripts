@@ -1,4 +1,4 @@
-from typing import Any, Callable, List, Union
+from typing import Callable, List, Union
 
 from bouncer.constants import CREATE, EDIT, READ  # noqa: F401 F403
 from bouncer.models import RuleList
@@ -12,7 +12,14 @@ from massgov.pfml.db.models.applications import (
     Notification,
     RMVCheck,
 )
-from massgov.pfml.db.models.employees import Employee, LkRole, Role, User
+from massgov.pfml.db.models.employees import (
+    AzurePermission,
+    AzureUser,
+    Employee,
+    LkRole,
+    Role,
+    User,
+)
 
 
 def has_role_in(user: User, accepted_roles: List[LkRole]) -> bool:
@@ -24,10 +31,16 @@ def has_role_in(user: User, accepted_roles: List[LkRole]) -> bool:
     return False
 
 
-def create_authorization(enable_employees: bool) -> Callable[[User, Any], None]:
-    def define_authorization(user: User, they: RuleList) -> None:
+def create_authorization(
+    enable_employees: bool,
+) -> Callable[[Union[User, AzureUser], RuleList], None]:
+    def define_authorization(user: Union[User, AzureUser], they: RuleList) -> None:
+        # Admin portal azure authentication/authorization
+        if isinstance(user, AzureUser):
+            administrator(user, they)
+
         # FINEOS endpoint auth
-        if has_role_in(user, [Role.FINEOS]):
+        elif has_role_in(user, [Role.FINEOS]):
             financial_eligibility(user, they)
             rmv_check(user, they)
             notifications(user, they)
@@ -40,6 +53,18 @@ def create_authorization(enable_employees: bool) -> Callable[[User, Any], None]:
                 employees(user, they)
 
     return define_authorization
+
+
+def administrator(azure_user: AzureUser, they: RuleList) -> None:
+    they.can((EDIT, READ), AzureUser, sub_id=azure_user.sub_id)
+
+    for permission in AzurePermission.get_all():
+        if permission.azure_permission_id in azure_user.permissions:
+            # If user can do something else than READ, they can also READ
+            # Deduplicate by first creating a set. Otherwise, the tuple would
+            # READ, READ if the action was READ.
+            access = tuple({READ, permission.azure_permission_action})
+            they.can(access, permission)
 
 
 def leave_admins(user: User, they: RuleList) -> None:

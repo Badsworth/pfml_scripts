@@ -98,6 +98,18 @@ class BaseFactory(factory.alchemy.SQLAlchemyModelFactory):
         sqlalchemy_session_persistence = "commit"
 
 
+class AzureUserFactory(factory.Factory):
+    class Meta:
+        model = employee_models.AzureUser
+
+    sub_id = factory.Faker("uuid4")
+    first_name = factory.Faker("first_name")
+    last_name = factory.Faker("last_name")
+    email_address = factory.Faker("email")
+    groups = fake.pylist(3, True, "uuid4")
+    permissions = fake.pylist(10, True, "int")
+
+
 class UserFactory(BaseFactory):
     class Meta:
         model = employee_models.User

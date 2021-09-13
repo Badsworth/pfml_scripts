@@ -19,6 +19,7 @@ import pytest
 import sqlalchemy
 from jose import jwt
 from jose.constants import ALGORITHMS
+from mock import patch
 from pytest import Item
 
 import massgov.pfml.api.app
@@ -101,6 +102,12 @@ def auth_claims_unit():
     return claims
 
 
+@pytest.fixture(scope="session")
+def auth_token_unit(auth_claims_unit, auth_private_key):
+    encoded = jwt.encode(auth_claims_unit, auth_private_key, algorithm=ALGORITHMS.RS256)
+    return encoded
+
+
 @pytest.fixture
 def auth_claims(auth_claims_unit, user):
     auth_claims = auth_claims_unit.copy()
@@ -172,6 +179,22 @@ def fineos_user_claims(fineos_user):
 
 
 @pytest.fixture(scope="session")
+def azure_auth_keys():
+    return {
+        "keys": [
+            {
+                "alg": "RS256",
+                "e": "AQAB",
+                "kid": "azure_kid",
+                "kty": "RSA",
+                "n": "iWBm-DQbycUqrPBSD5yk73zxyIr66hBUCyPCShW-btQ-nyBk1E-h4AvtqHpl4Y1aghQDTnn2gLHiRtV_XJtCpK1PEJ3SCqw6wGOEw5bbG7Q88KDvTMUF5k6gzRMHMBTD7lMNPIY-oCuh_Rwvg19hGBD2O6rA2sMHyTB-O2ZwL6M",
+                "use": "sig",
+            },
+        ]
+    }
+
+
+@pytest.fixture(scope="session")
 def auth_key():
     hmac_key = {
         "alg": "RS256",
@@ -205,6 +228,26 @@ def auth_private_key():
     return hmac_key
 
 
+@pytest.fixture(scope="session")
+def azure_auth_private_key():
+    hmac_key = {
+        "alg": "RS256",
+        "d": "WC8GyisA73teUpcNxjHCem0U86urN5b1rBTvQglFLfWWoST1NIhNm_lsPGsdfTT0tW1NVhHaV3BYlSm06AFKphL1UtHI0z_xS-CnRuqYljyca1YQWhuFETP01c1tVmA4g8iFGUW_VkQ6QgyHiC_kaz_v8skOLLgLoR6KPeo_yPE",
+        "dp": "i8Sa6tKsKrSGsjE6H98dDiTbc_CDogP2-VgNPN5SMa02rki4972o5WmZhiQvcjxlU7NZbeE3fRiiXHt_E_wZan9MFkk",
+        "dq": "QRYM74mdgrYHqutTmTY5tuEOsddFiE2NFa-qPagjKQKzvUPhl9EZbkm1VR06K1omw0SoFpxMLc4O3K8Z",
+        "e": "AQAB",
+        "kid": "azure_kid",
+        "kty": "RSA",
+        "n": "iWBm-DQbycUqrPBSD5yk73zxyIr66hBUCyPCShW-btQ-nyBk1E-h4AvtqHpl4Y1aghQDTnn2gLHiRtV_XJtCpK1PEJ3SCqw6wGOEw5bbG7Q88KDvTMUF5k6gzRMHMBTD7lMNPIY-oCuh_Rwvg19hGBD2O6rA2sMHyTB-O2ZwL6M",
+        "p": "o2tSqdoRyCMnzT_CZx1Oq8WCwMo7rWMKFx-wlwaXOoxzqDv0YhjP1t7DqDn5V8yERCVBUP9ZPDIzNmBUQMul7bwIpfs",
+        "q": "1zQdXV-7I2VNSUhzRAYvhJAOFvAKiJv8lJc2_66XNGww0g3og_sBPrGwFsO2stVd-rJ1mZWV8D78LHR5",
+        "qi": "SebQz5QdxAvqGSDUvchSLpxXf0Ry0NhYdBCCMftTwqqVcNjY3GKQ8-YET5Y_dwMmEYM51DCCDolVxBAjbNDlKU7JIjU",
+        "use": "sig",
+    }
+
+    return hmac_key
+
+
 @pytest.fixture
 def consented_user_token(consented_user_claims, auth_private_key):
     encoded = jwt.encode(consented_user_claims, auth_private_key, algorithm=ALGORITHMS.RS256)
@@ -220,6 +263,17 @@ def fineos_user_token(fineos_user_claims, auth_private_key):
 @pytest.fixture
 def auth_token(auth_claims, auth_private_key):
     encoded = jwt.encode(auth_claims, auth_private_key, algorithm=ALGORITHMS.RS256)
+    return encoded
+
+
+@pytest.fixture(scope="session")
+def azure_auth_token_unit(auth_claims_unit, azure_auth_private_key):
+    encoded = jwt.encode(
+        auth_claims_unit,
+        azure_auth_private_key,
+        algorithm=ALGORITHMS.RS256,
+        headers={"kid": azure_auth_private_key.get("kid")},
+    )
     return encoded
 
 
@@ -270,6 +324,23 @@ def mock_cognito_user_pool(monkeypatch, mock_cognito):
         monkeypatch.setenv("COGNITO_USER_POOL_CLIENT_ID", user_pool_client_id)
 
         yield {"id": user_pool_id, "client_id": user_pool_client_id}
+
+
+@pytest.fixture
+def mock_azure(monkeypatch, azure_auth_keys):
+    monkeypatch.setenv("AZURE_AD_APPLICATION_CLIENT_ID", "client_id")
+    monkeypatch.setenv("AZURE_AD_DIRECTORY_TENANT_ID", "tenant_id")
+    monkeypatch.setenv("AZURE_AD_AUTHORITY_DOMAIN", "login.microsoftonline.com")
+    monkeypatch.setenv("AZURE_AD_AUTHORIZATION_GUID", "1")
+    monkeypatch.setenv("AZURE_AD_SECRET_VALUE", "secret_value")
+    monkeypatch.setenv("ADMIN_PORTAL_BASE_URL", "http://localhost:3000")
+
+    with patch.object(
+        authentication.msalConfig.MSALClientConfig,
+        "_get_public_keys",
+        return_value=azure_auth_keys.get("keys"),
+    ):
+        return authentication.configure_azure_ad()
 
 
 @pytest.fixture

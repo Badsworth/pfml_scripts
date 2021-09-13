@@ -992,6 +992,78 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/VerificationRequest"
 
+  /admin/authorize:
+    get:
+      security:
+        - {} # no authentication required
+      tags:
+        - Admin
+      summary: Returns azure ad authentication url to initiate user auth code flow
+      operationId: massgov.pfml.api.admin.admin_authorization_url
+      responses:
+        "200":
+          description: Initiated authentication code flow
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthURIResponse"
+
+  /admin/token:
+    post:
+      security:
+        - {} # no authentication required
+      tags:
+        - Admin
+      summary: Trade an authentication code for an access token
+      operationId: massgov.pfml.api.admin.admin_token
+      requestBody:
+        $ref: "#/components/requestBodies/AdminTokenRequest"
+      responses:
+        "200":
+          $ref: "#/components/responses/AdminTokenResponse"
+        "401":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /admin/login:
+    get:
+      security:
+        - jwt: []
+      tags:
+        - Admin
+      summary: Login as admin user
+      operationId: massgov.pfml.api.admin.admin_login
+      responses:
+        "200":
+          description: Successfully logged in as admin account!
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminUserResponse"
+        "400":
+          $ref: "#/components/responses/Unauthorized"
+        "401":
+          $ref: "#/components/responses/BadRequest"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /admin/logout:
+    get:
+      security:
+        - {} # no authentication required
+      tags:
+        - Admin
+      summary: Logout admin user
+      operationId: massgov.pfml.api.admin.admin_logout
+      responses:
+        "200":
+          description: Retrieved logout url
+          content: 
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AdminLogoutResponse"
+
 tags:
   - name: Test Endpoints
   - name: Users
@@ -1003,6 +1075,7 @@ tags:
   - name: ID Proofing
   - name: Notifications
   - name: Feature Flags
+  - name: Admin
 
 components:
   securitySchemes:
@@ -1010,11 +1083,10 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      x-bearerInfoFunc: massgov.pfml.api.authentication.decode_cognito_token
+      x-bearerInfoFunc: massgov.pfml.api.authentication.decode_jwt
     oauth2:
       type: oauth2
-      description: AWS Cognito OAuth2
-      x-tokenInfoFunc: massgov.pfml.api.authentication.decode_cognito_token
+      x-tokenInfoFunc: massgov.pfml.api.authentication.decode_jwt
       flows:
         clientCredentials:
           tokenUrl: /api/v1/oauth2/token
@@ -1057,6 +1129,12 @@ components:
         enum: ["ascending", "descending"]
 
   requestBodies:
+    AdminTokenRequest:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/AdminTokenRequest"
+      required: true
     UserUpdateRequest:
       content:
         application/json:
@@ -1118,6 +1196,12 @@ components:
             $ref: "#/components/schemas/EmployerAddFeinRequestBody"
 
   responses:
+    AdminTokenResponse:
+      description: User has successfully logged into microsoft account
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/AdminTokenResponse"
     ApplicationResponse:
       description: Application found
       content:
@@ -1182,6 +1266,61 @@ components:
             $ref: "#/components/schemas/ErrorResponse"
 
   schemas:
+    AuthURIResponse:
+      type: object
+      properties:
+        auth_uri:
+          type: string
+        claims_challenge:
+          type: string
+          nullable: true
+        code_verifier:
+          type: string
+        nonce:
+          type: string
+        redirect_uri:
+          type: string
+        scope:
+          type: array
+          items:
+            type: string
+        state:
+          type: string
+
+    AdminLogoutResponse:
+      type: object
+      properties:
+        logout_uri:
+          type: string
+
+    AuthCodeResponse:
+      type: object
+      properties:
+        code:
+          type: string
+        session_state:
+          type: string
+        state:
+          type: string
+
+    AdminTokenRequest:
+      type: object
+      properties:
+        authURIRes:
+          $ref: "#/components/schemas/AuthURIResponse"
+        authCodeRes:
+          $ref: "#/components/schemas/AuthCodeResponse"
+
+    AdminTokenResponse:
+      type: object
+      properties:
+        access_token:
+          type: string
+        refresh_token:
+          type: string
+        id_token:
+          type: string
+
     SuccessfulResponse:
       type: object
       properties:
@@ -1367,6 +1506,27 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/UserLeaveAdminResponse"
+
+    AdminUserResponse:
+      type: object
+      properties:
+        email_address:
+          type: string
+          format: email
+          example: "janedoe@example.com"
+        first_name:
+          type: string
+          example: "Jane"
+        last_name:
+          type: string
+          example: "Doe"
+        groups:
+          type: array
+          items:
+            type: string
+        sub_id:
+          type: string
+          example: "QfbsFWS4NTwEUFQKUCmwipIyJiZOxxKBLGSQC0tNFAB"
 
     RoleResponse:
       type: object
