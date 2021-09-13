@@ -23,11 +23,17 @@ const usePortalFlow = () => {
   const { pathname, asPath: pathWithParams } = router;
 
   /**
+   * Path in format expected by state machine
+   * @type {string}
+   */
+  const pageRoute = getRouteFromPathWithParams(pathWithParams);
+
+  /**
    * The routing machine's active State Node
    * @type {{ meta?: { applicableRules?: string[], fields?: string[], step?: string }, on: object}}
    * @see https://xstate.js.org/docs/guides/statenodes.html
    */
-  const page = machineConfigs.states[pathname];
+  const page = machineConfigs.states[pageRoute || pathname];
 
   /**
    * Navigate to a page route
@@ -57,7 +63,10 @@ const usePortalFlow = () => {
    */
   const getNextPageRoute = (event, context, params) => {
     const nextRoutingMachine = routingMachine.withContext(context);
-    const nextPageRoute = nextRoutingMachine.transition(pathname, event);
+    const nextPageRoute = nextRoutingMachine.transition(
+      pageRoute || pathname,
+      event
+    );
     if (!nextPageRoute) {
       throw new RouteTransitionError(`Next page not found for: ${event}`);
     }
@@ -108,8 +117,29 @@ const usePortalFlow = () => {
     goTo,
     goToNextPage,
     goToPageFor,
+    pageRoute,
     updateQuery,
   };
 };
+
+/**
+ * Coerce `asPath` property from next/router to the route format expected
+ * from our routes.js files (no query, no trailing slash)
+ * @param  {string} pathWithParams path with query string and hashtag
+ * @returns {string}
+ */
+export function getRouteFromPathWithParams(pathWithParams) {
+  if (!pathWithParams) return pathWithParams;
+
+  let route = pathWithParams;
+
+  route = route.split("?")[0];
+  route = route.split("#")[0];
+
+  // remove trailing slash
+  route = route.replace(/\/$/, "");
+
+  return route;
+}
 
 export default usePortalFlow;

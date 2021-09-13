@@ -54,7 +54,11 @@ export const Default = ({ documentType, ...args }) => {
       {...args}
       appLogic={appLogic}
       documents={[]}
-      query={{ claim_id: "mock-claim-id", documentType }}
+      query={{
+        claim_id: "mock-claim-id",
+        absence_case_id: "mock-absence-case-id",
+        documentType,
+      }}
     />
   );
 };

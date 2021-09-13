@@ -190,8 +190,10 @@ export const DocumentUpload = (props) => {
   // Flag indicating the claimant is uploading additional documents
   // after the application has been completed.
   // If true, the document is immediately marked as received in the CPS,
-  // and the user will be navigated back to the claim's status page
-  const isAdditionalDoc = query.additionalDoc === "true";
+  // and the user will be navigated back to the claim's status page.
+  // The absence_case_id param is only set when claimant is uploading
+  // a document after the application has been completed.
+  const isAdditionalDoc = !!query.absence_case_id;
 
   const handleSave = async () => {
     if (files.isEmpty && existingDocuments.length) {
@@ -219,7 +221,7 @@ export const DocumentUpload = (props) => {
     if (success) {
       portalFlow.goToNextPage(
         { isAdditionalDoc },
-        { claim_id: query.claim_id }
+        { claim_id: query.claim_id, absence_case_id: query.absence_case_id }
       );
     }
   };
@@ -291,6 +293,7 @@ DocumentUpload.propTypes = {
   isLoadingDocuments: PropTypes.bool,
   query: PropTypes.shape({
     claim_id: PropTypes.string.isRequired,
+    absence_case_id: PropTypes.string.isRequired,
     additionalDoc: PropTypes.string,
     documentType: PropTypes.oneOf([
       "state-id",

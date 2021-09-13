@@ -14,12 +14,11 @@ import { useTranslation } from "react-i18next";
 export const UploadType = {
   mass_id: "UPLOAD_MASS_ID",
   non_mass_id: "UPLOAD_ID",
-  upload_medical_certification: "UPLOAD_MEDICAL_CERTIFICATION",
-  upload_proof_of_birth: "UPLOAD_PROOF_OF_BIRTH",
-  upload_proof_of_placement: "UPLOAD_PROOF_OF_PLACEMENT",
-  upload_pregnancy_medical_certification:
-    "UPLOAD_PREGNANCY_MEDICAL_CERTIFICATION",
-  upload_caring_leave_certification: "UPLOAD_CARING_LEAVE_CERTIFICATION",
+  medical_certification: "UPLOAD_MEDICAL_CERTIFICATION",
+  proof_of_birth: "UPLOAD_PROOF_OF_BIRTH",
+  proof_of_placement: "UPLOAD_PROOF_OF_PLACEMENT",
+  pregnancy_medical_certification: "UPLOAD_PREGNANCY_MEDICAL_CERTIFICATION",
+  caring_leave_certification: "UPLOAD_CARING_LEAVE_CERTIFICATION",
 };
 
 export const UploadDocsOptions = (props) => {
@@ -85,7 +84,10 @@ export const UploadDocsOptions = (props) => {
 
     return await portalFlow.goToNextPage(
       {},
-      { claim_id: claimDetail.application_id, additionalDoc: "true" },
+      {
+        claim_id: claimDetail.application_id,
+        absence_case_id: claimDetail.fineos_absence_id,
+      },
       upload_docs_options
     );
   };
@@ -145,11 +147,11 @@ const getInputChoices = (absencePeriods, currentValue, t) => {
     })
   ) {
     choices.push({
-      checked: currentValue === UploadType.upload_proof_of_birth,
+      checked: currentValue === UploadType.proof_of_birth,
       label: t("pages.claimsUploadDocsOptions.certLabel_bonding_newborn", {
         context: "bonding_newborn",
       }),
-      value: UploadType.upload_proof_of_birth,
+      value: UploadType.proof_of_birth,
     });
   }
 
@@ -163,11 +165,11 @@ const getInputChoices = (absencePeriods, currentValue, t) => {
     })
   ) {
     choices.push({
-      checked: currentValue === UploadType.upload_proof_of_placement,
+      checked: currentValue === UploadType.proof_of_placement,
       label: t("pages.claimsUploadDocsOptions.certLabel_bonding_adopt_foster", {
         context: "bonding_adopt_foster",
       }),
-      value: UploadType.upload_proof_of_placement,
+      value: UploadType.proof_of_placement,
     });
   }
 
@@ -177,13 +179,12 @@ const getInputChoices = (absencePeriods, currentValue, t) => {
     })
   ) {
     choices.push({
-      checked:
-        currentValue === UploadType.upload_pregnancy_medical_certification,
+      checked: currentValue === UploadType.pregnancy_medical_certification,
       label: t("pages.claimsUploadDocsOptions.certLabel_medical", {
         // TODO (CP-2660): change context for pregnancy
         context: "medical",
       }),
-      value: UploadType.upload_pregnancy_medical_certification,
+      value: UploadType.pregnancy_medical_certification,
     });
   }
 
@@ -193,11 +194,11 @@ const getInputChoices = (absencePeriods, currentValue, t) => {
     })
   ) {
     choices.push({
-      checked: currentValue === UploadType.upload_medical_certification,
+      checked: currentValue === UploadType.medical_certification,
       label: t("pages.claimsUploadDocsOptions.certLabel_medical", {
         context: "medical",
       }),
-      value: UploadType.upload_medical_certification,
+      value: UploadType.medical_certification,
     });
   }
 
@@ -207,11 +208,11 @@ const getInputChoices = (absencePeriods, currentValue, t) => {
     })
   ) {
     choices.push({
-      checked: currentValue === UploadType.upload_caring_leave_certification,
+      checked: currentValue === UploadType.caring_leave_certification,
       label: t("pages.claimsUploadDocsOptions.certLabel_care", {
         context: "care",
       }),
-      value: UploadType.upload_caring_leave_certification,
+      value: UploadType.caring_leave_certification,
     });
   }
 

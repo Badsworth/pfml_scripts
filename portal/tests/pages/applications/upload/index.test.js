@@ -39,7 +39,7 @@ const absencePeriodScenarios = {
       reason: LeaveReason.bonding,
       reason_qualifier_one: "Newborn",
     }),
-    uploadType: UploadType.upload_proof_of_birth,
+    uploadType: UploadType.proof_of_birth,
     labelText: "Proof of birth",
   },
   bondingWithFoster: {
@@ -47,7 +47,7 @@ const absencePeriodScenarios = {
       reason: LeaveReason.bonding,
       reason_qualifier_one: "Foster Care",
     }),
-    uploadType: UploadType.upload_proof_of_placement,
+    uploadType: UploadType.proof_of_placement,
     labelText: "Proof of placement",
   },
   bondingWithAdoption: {
@@ -55,22 +55,22 @@ const absencePeriodScenarios = {
       reason: LeaveReason.bonding,
       reason_qualifier_one: "Adoption",
     }),
-    uploadType: UploadType.upload_proof_of_placement,
+    uploadType: UploadType.proof_of_placement,
     labelText: "Proof of placement",
   },
   medical: {
     absencePeriod: new AbsencePeriod({ reason: LeaveReason.medical }),
-    uploadType: UploadType.upload_medical_certification,
+    uploadType: UploadType.medical_certification,
     labelText: "Certification of Your Serious Health Condition",
   },
   pregnancy: {
     absencePeriod: new AbsencePeriod({ reason: LeaveReason.pregnancy }),
-    uploadType: UploadType.upload_pregnancy_medical_certification,
+    uploadType: UploadType.pregnancy_medical_certification,
     labelText: "Certification of Your Serious Health Condition",
   },
   caring: {
     absencePeriod: new AbsencePeriod({ reason: LeaveReason.care }),
-    uploadType: UploadType.upload_caring_leave_certification,
+    uploadType: UploadType.caring_leave_certification,
     labelText: "Certification of Your Family Member’s Serious Health Condition",
   },
 };
@@ -83,6 +83,7 @@ describe("UploadDocsOptions", () => {
         "absencePeriod"
       ),
       application_id: "mock-claim-id",
+      fineos_absence_id: "mock-absence-id",
     });
 
     const { container } = render(
@@ -104,6 +105,7 @@ describe("UploadDocsOptions", () => {
     beforeEach(() => {
       const claimDetail = new ClaimDetail({
         absence_periods: [],
+        fineos_absence_id: "mock-absence-id",
         application_id: "mock-claim-id",
       });
 
@@ -143,7 +145,7 @@ describe("UploadDocsOptions", () => {
 
       expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledWith(
         {},
-        { claim_id: "mock-claim-id", additionalDoc: "true" },
+        { claim_id: "mock-claim-id", absence_case_id: "mock-absence-id" },
         UploadType.mass_id
       );
     });
@@ -167,7 +169,7 @@ describe("UploadDocsOptions", () => {
 
       expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledWith(
         {},
-        { claim_id: "mock-claim-id", additionalDoc: "true" },
+        { claim_id: "mock-claim-id", absence_case_id: "mock-absence-id" },
         UploadType.non_mass_id
       );
     });
@@ -176,6 +178,7 @@ describe("UploadDocsOptions", () => {
   it("shows a validation error when a user does not choose a doc type option", async () => {
     const claimDetail = new ClaimDetail({
       application_id: "mock-claim-id",
+      fineos_absence_id: "mock-absence-id",
       absence_periods: [],
     });
 
@@ -215,6 +218,7 @@ describe("UploadDocsOptions", () => {
         beforeEach(() => {
           const claimDetail = new ClaimDetail({
             application_id: "mock-claim-id",
+            fineos_absence_id: "mock-absence-id",
             absence_periods: [absencePeriod],
           });
           render(
@@ -253,7 +257,7 @@ describe("UploadDocsOptions", () => {
 
           expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledWith(
             {},
-            { claim_id: "mock-claim-id", additionalDoc: "true" },
+            { claim_id: "mock-claim-id", absence_case_id: "mock-absence-id" },
             uploadType
           );
         });

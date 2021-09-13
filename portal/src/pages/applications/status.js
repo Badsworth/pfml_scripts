@@ -20,14 +20,8 @@ import formatDate from "../../utils/formatDate";
 import getLegalNotices from "../../utils/getLegalNotices";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import { isFeatureEnabled } from "../../services/featureFlags";
-import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-
-const nextStepsRoute = {
-  newborn: "applications.upload.bondingProofOfBirth",
-  adoption: "applications.upload.bondingProofOfPlacement",
-};
 
 export const Status = ({ appLogic, query }) => {
   const { t } = useTranslation();
@@ -243,6 +237,8 @@ export const Status = ({ appLogic, query }) => {
             absenceDetails={absenceDetails}
             applicationId={claimDetail.application_id}
             docList={documentsForApplication}
+            absenceCaseId={claimDetail.fineos_absence_id}
+            appLogic={appLogic}
           />
         )}
         <LeaveDetails absenceDetails={absenceDetails} />
@@ -259,9 +255,11 @@ export const Status = ({ appLogic, query }) => {
           <p>{t("pages.claimsStatus.infoRequestsBody")}</p>
           <ButtonLink
             className="measure-6 margin-bottom-3"
-            href={routeWithParams("applications.upload.index", {
-              absence_case_id: claimDetail.fineos_absence_id,
-            })}
+            href={appLogic.portalFlow.getNextPageRoute(
+              "UPLOAD_DOC_OPTIONS",
+              {},
+              { absence_case_id: claimDetail.fineos_absence_id }
+            )}
           >
             {t("pages.claimsStatus.uploadDocumentsButton")}
           </ButtonLink>
@@ -322,6 +320,7 @@ Status.propTypes = {
     }),
     portalFlow: PropTypes.shape({
       goTo: PropTypes.func.isRequired,
+      getNextPageRoute: PropTypes.func.isRequired,
     }).isRequired,
   }).isRequired,
   query: PropTypes.shape({
@@ -404,6 +403,8 @@ export const Timeline = ({
   applicationId,
   docList,
   absencePeriods,
+  absenceCaseId,
+  appLogic,
 }) => {
   const { t } = useTranslation();
 
@@ -438,9 +439,13 @@ export const Timeline = ({
         </p>
         <ButtonLink
           className="measure-12"
-          href={routeWithParams(nextStepsRoute[typeOfProof], {
-            claim_id: applicationId,
-          })}
+          href={appLogic.portalFlow.getNextPageRoute(
+            typeOfProof === "adoption"
+              ? "UPLOAD_PROOF_OF_PLACEMENT"
+              : "UPLOAD_PROOF_OF_BIRTH",
+            {},
+            { claim_id: applicationId, absence_case_id: absenceCaseId }
+          )}
         >
           {t("pages.claimsStatus.whatHappensNextButton", {
             context: typeOfProof,
@@ -498,4 +503,10 @@ Timeline.propTypes = {
   applicationId: PropTypes.string,
   employerFollowUpDate: PropTypes.string,
   docList: PropTypes.array.isRequired,
+  absenceCaseId: PropTypes.string.isRequired,
+  appLogic: PropTypes.shape({
+    portalFlow: PropTypes.shape({
+      getNextPageRoute: PropTypes.func.isRequired,
+    }),
+  }),
 };

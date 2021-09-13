@@ -3,17 +3,20 @@ import Status, {
   LeaveDetails,
   Timeline,
 } from "../../../src/pages/applications/status";
-import { generateNotice, renderWithAppLogic, testHook } from "../../test-utils";
+import { generateNotice, renderWithAppLogic } from "../../test-utils";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import ClaimDetail from "../../../src/models/ClaimDetail";
 import DocumentCollection from "../../../src/models/DocumentCollection";
 import LeaveReason from "../../../src/models/LeaveReason";
 import { act } from "react-dom/test-utils";
-import routes from "../../../src/routes";
-import useAppLogic from "../../../src/hooks/useAppLogic";
+import { mockRouter } from "next/router";
 
-jest.mock("../../../src/hooks/useAppLogic");
+import routes from "../../../src/routes";
+
+jest.mock("next/router");
+
+mockRouter.asPath = routes.applications.status;
 
 const CLAIM_DETAIL = new ClaimDetail({
   application_id: "application-id",
@@ -109,20 +112,22 @@ describe("status page", () => {
   } = {}) => {
     const hasLoadedClaimDocuments = () => !isLoadingDocuments;
     let appLogic;
-
-    testHook(() => {
-      appLogic = useAppLogic();
+    const mockAppLogic = (_appLogic) => {
+      appLogic = _appLogic;
       appLogic.appErrors = appErrors;
       appLogic.claims.claimDetail = claimDetail;
+      appLogic.claims.loadClaimDetail = jest.fn();
       appLogic.claims.isLoadingClaimDetail = isLoadingClaimDetail;
       appLogic.documents.documents = documentCollection;
+      appLogic.documents.loadAll = jest.fn();
       appLogic.documents.hasLoadedClaimDocuments = hasLoadedClaimDocuments;
-    });
+      appLogic.portalFlow.goTo = jest.fn();
+    };
 
     const { wrapper } = renderWithAppLogic(Status, {
       diveLevels: 0,
+      mockAppLogic,
       props: {
-        appLogic,
         query: {
           absence_case_id: "absence-case-id",
         },
@@ -325,6 +330,7 @@ describe("status page", () => {
 });
 
 const SECONDARY_CLAIM_DETAIL = new ClaimDetail({
+  fineos_absence_id: "fineos-abence-id",
   absence_periods: [
     {
       period_type: "Reduced",
@@ -356,6 +362,7 @@ const SECONDARY_CLAIM_DETAIL = new ClaimDetail({
 });
 
 const TERTIARY_CLAIM_DETAIL = new ClaimDetail({
+  fineos_absence_id: "fineos-abence-id",
   absence_periods: [
     {
       period_type: "Continuous",
@@ -424,6 +431,7 @@ describe("Timeline component", () => {
       props: {
         absencePeriods: TERTIARY_CLAIM_DETAIL.absence_periods,
         applicationId: "123456789",
+        absenceCaseId: "NTN-12345-ABS-01",
         docList: TEST_DOCS,
       },
     });
@@ -438,6 +446,7 @@ describe("Timeline component", () => {
       props: {
         absencePeriods: [SECONDARY_CLAIM_DETAIL.absence_periods[0]],
         applicationId: "123456789",
+        absenceCaseId: "NTN-12345-ABS-01",
         docList: TEST_DOCS,
       },
     });
@@ -451,6 +460,7 @@ describe("Timeline component", () => {
       props: {
         absencePeriods: [SECONDARY_CLAIM_DETAIL.absence_periods[1]],
         applicationId: "123456789",
+        absenceCaseId: "NTN-12345-ABS-01",
         docList: TEST_DOCS,
       },
     });
@@ -464,6 +474,7 @@ describe("Timeline component", () => {
       props: {
         absencePeriods: TERTIARY_CLAIM_DETAIL.absence_periods,
         applicationId: "123456789",
+        absenceCaseId: "NTN-12345-ABS-01",
         docList: TEST_DOCS,
       },
     });
@@ -472,6 +483,7 @@ describe("Timeline component", () => {
     wrapper.setProps({
       absencePeriods: SECONDARY_CLAIM_DETAIL.absence_periods,
       applicationId: "123456789",
+      absenceCaseId: "NTN-12345-ABS-01",
       docList: TEST_DOCS,
     });
     button = wrapper.find("FollowUpSteps").dive().find("ButtonLink");
@@ -484,6 +496,7 @@ describe("Timeline component", () => {
       props: {
         absencePeriods: [SECONDARY_CLAIM_DETAIL.absence_periods[2]],
         applicationId: "123456789",
+        absenceCaseId: "NTN-12345-ABS-01",
         docList: TEST_DOCS,
       },
     });
@@ -496,6 +509,7 @@ describe("Timeline component", () => {
       props: {
         absencePeriods: [SECONDARY_CLAIM_DETAIL.absence_periods[0]],
         applicationId: "123456789",
+        absenceCaseId: "NTN-12345-ABS-01",
         docList: CERTIFICATION_DOC,
       },
     });
@@ -508,6 +522,7 @@ describe("Timeline component", () => {
       props: {
         employerFollowUpDate: "09-02-2020",
         applicationId: "123456789",
+        absenceCaseId: "NTN-12345-ABS-01",
         absencePeriods: [SECONDARY_CLAIM_DETAIL.absence_periods[0]],
         docList: CERTIFICATION_DOC,
       },

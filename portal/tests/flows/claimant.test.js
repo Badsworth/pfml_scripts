@@ -310,6 +310,51 @@ const machineTests = {
       },
     },
   },
+  [routes.applications.upload.index]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.upload.bondingProofOfBirth]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.upload.bondingProofOfPlacement]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.upload.caringCertification]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.upload.medicalCertification]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.upload.otherId]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.upload.pregnancyCertification]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.upload.stateId]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.status]: {
+    meta: {
+      test: () => {},
+    },
+  },
 };
 
 const machineConfigsWithTests = {
@@ -405,10 +450,18 @@ describe("claimFlowConfigs", () => {
     REVIEW_AND_CONFIRM: {},
     SHOW_APPLICATIONS: {},
     START_APPLICATION: { cases: testData },
+    STATUS: {},
     UPLOAD_CERTIFICATION: {},
     UPLOAD_DOCS: {},
     UPLOAD_ID: {},
     UPLOAD_MASS_ID: {},
+    UPLOAD_PROOF_OF_BIRTH: {},
+    UPLOAD_PROOF_OF_PLACEMENT: {},
+    UPLOAD_MEDICAL_CERTIFICATION: {},
+    UPLOAD_PREGNANCY_MEDICAL_CERTIFICATION: {},
+    UPLOAD_CARING_LEAVE_CERTIFICATION: {},
+    UPLOAD_DOC_OPTIONS: {},
+
     VERIFY_ID: {},
   });
 
