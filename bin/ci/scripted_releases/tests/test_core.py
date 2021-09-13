@@ -25,11 +25,11 @@ def clean_up_audit_logs():
 # Make sure the unit tests never perform any real GitOps.
 @pytest.fixture(autouse=True)
 def mock_each_release_task(monkeypatch):
-    monkeypatch.setattr(release_tasks, 'start', lambda args, logger: None)
-    monkeypatch.setattr(release_tasks, 'update', lambda args, logger: None)
-    monkeypatch.setattr(release_tasks, 'finalize', lambda args, logger: None)
-    monkeypatch.setattr(release_tasks, 'hotfix', lambda args, logger: None)
-    monkeypatch.setattr(release_tasks, 'major', lambda args, logger: None)
+    monkeypatch.setattr(release_tasks, 'start', lambda args: None)
+    monkeypatch.setattr(release_tasks, 'update', lambda args: None)
+    monkeypatch.setattr(release_tasks, 'finalize', lambda args: None)
+    monkeypatch.setattr(release_tasks, 'hotfix', lambda args: None)
+    monkeypatch.setattr(release_tasks, 'major', lambda args: None)
 
 
 def test_basic_arg_handling():

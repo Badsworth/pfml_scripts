@@ -4,7 +4,9 @@ The Portal includes the ability to have maintenance pages that we can turn on in
 
 Maintenance pages are controlled through the `maintenance` entry in the [S3 feature-gate file](../../feature_flags/) corresponding to the environment.
 
-To update the maintenance status, you should update the appropriate file (`feature_flags/test.yaml` to update the test environment) in a new branch. Once that branch is merged into the main branch, it will update the maintenance status on that environment due to the [Github workflow](../../.github/workflows/feature-flags-sync.yml) that will sync the yaml files in that directory to s3.
+To update the maintenance status, you should update the appropriate file (`feature_flags/test.yaml` to update the test environment) in a new branch. In your pull request, request the [Production Admin on-call engineer](https://lwd.atlassian.net/wiki/spaces/DD/pages/1086259205/Who+s+On+Call) for review. The Prod Admin will be accountable for any issues that may come up during that time, if it’s off-hours.
+
+Once that branch is merged into the main branch, it will update the maintenance status on that environment due to the [Github workflow](../../.github/workflows/feature-flags-sync.yml) that will sync the yaml files in that directory to s3.
 
 The data is retrieved from the file via API request in the portal and then set in `appLogic.featureFlags.flags`. The API request is cached for five minutes and only executed once for every full page request (not on react render/re-render).
 

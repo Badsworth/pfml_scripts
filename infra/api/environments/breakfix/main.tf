@@ -72,7 +72,7 @@ module "api" {
 
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-breakfix/rmv_client_certificate-dkPhSI"
-  rmv_check_behavior                = "fully_mocked"
+  rmv_api_behavior                  = "fully_mocked"
   rmv_check_mock_success            = "1"
 
   # TODO: These values are provided by FINEOS.

@@ -346,7 +346,7 @@ class FineosPeiWritebackStep(Step):
         try:
             state_log_util.create_finished_state_log(
                 associated_model=reference_file,
-                end_state=State.PEI_WRITEBACK_SENT,  # TODO - we should create a new state and not reuse the old one
+                end_state=State.PEI_WRITEBACK_SENT,
                 outcome=state_log_util.build_outcome(
                     "Archived PEI writeback after sending to FINEOS"
                 ),

@@ -1,0 +1,7 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`InfoRow renders the default component 1`] = `
+<p>
+  Test child
+</p>
+`;

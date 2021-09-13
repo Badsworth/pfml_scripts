@@ -1,67 +1,58 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`AuthNav when a user is NOT authenticated doesn't render the logged-in state 1`] = `
+exports[`AuthNav renders the logged-in state 1`] = `
 <div
-  className="flex-fill margin-y-1"
+  class="flex-fill margin-y-1"
 >
   <div
-    className="grid-row grid-gap"
+    class="grid-row grid-gap"
   >
     <div
-      className="grid-col"
+      class="grid-col text-right"
     >
-      <ButtonLink
-        className="width-auto"
-        data-test-auth-nav="massgov_link"
-        href="https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts"
-        inversed={true}
-        variation="unstyled"
+      <span
+        class="display-inline-block margin-right-1"
+        data-testid="email_address"
       >
-        Back to Mass.gov
-      </ButtonLink>
-    </div>
-    <div
-      className="grid-col text-right"
-    >
-      <ButtonLink
-        className="width-auto"
-        data-test-auth-nav="login_link"
-        href="/login"
-        inversed={true}
-        variation="unstyled"
+        email@address.com
+      </span>
+      <button
+        class="usa-button position-relative width-auto usa-button--unstyled usa-button--inverse usa-button--outline"
+        type="button"
       >
-        Log in
-      </ButtonLink>
+        Log out
+      </button>
     </div>
   </div>
 </div>
 `;
 
-exports[`AuthNav when a user is authenticated renders the logged-in state 1`] = `
+exports[`AuthNav renders the logged-out state 1`] = `
 <div
-  className="flex-fill margin-y-1"
+  class="flex-fill margin-y-1"
 >
   <div
-    className="grid-row grid-gap"
+    class="grid-row grid-gap"
   >
     <div
-      className="grid-col text-right"
+      class="grid-col"
     >
-      <span
-        className="display-inline-block margin-right-1"
-        data-test-auth-nav="email_address"
+      <a
+        class="usa-button width-auto usa-button--unstyled usa-button--inverse usa-button--outline"
+        href="https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts"
       >
-        email@address.com
-      </span>
-      <Button
-        className="width-auto"
-        data-test-auth-nav="logout_button"
-        inversed={true}
-        onClick={[Function]}
-        variation="unstyled"
+        Back to Mass.gov
+      </a>
+    </div>
+    <div
+      class="grid-col text-right"
+    >
+      <a
+        class="usa-button width-auto usa-button--unstyled usa-button--inverse usa-button--outline"
+        href="/login"
       >
-        Log out
-      </Button>
+        Log in
+      </a>
     </div>
   </div>
 </div>

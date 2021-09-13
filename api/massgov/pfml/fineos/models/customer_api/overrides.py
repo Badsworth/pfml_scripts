@@ -1,4 +1,5 @@
 # just to get the namespace
+from datetime import date
 from enum import Enum
 from typing import List, Optional
 
@@ -54,4 +55,38 @@ class ContactDetails(base.ContactDetails):
     )
     emailAddresses: Optional[List[EmailAddress]] = Field(  # type: ignore
         None, description="Email Address of the customer.", max_items=100, min_items=0
+    )
+
+
+class AbsenceCaseSummary(base.AbsenceCaseSummary):
+    # The FINEOS API spec indicates these should be date-times (e.g.,
+    # YYYY-MM-DDTHH:MM), but FINEOS only returns a date (YYYY-MM-DD)
+    startDate: Optional[date] = Field(  # type: ignore
+        None, description="ISO 8601 date time format", example="1999-12-31T23:59:59Z"
+    )
+    endDate: Optional[date] = Field(  # type: ignore
+        None, description="ISO 8601 date time format", example="1999-12-31T23:59:59Z"
+    )
+    createdDate: Optional[date] = Field(  # type: ignore
+        None, description="ISO 8601 date time format", example="1999-12-31T23:59:59Z"
+    )
+
+
+class NotificationAbsenceCaseSummary(base.NotificationAbsenceCaseSummary):
+    # The FINEOS API spec indicates these should be date-times (e.g.,
+    # YYYY-MM-DDTHH:MM), but FINEOS only returns a date (YYYY-MM-DD)
+    startDate: Optional[date] = Field(  # type: ignore
+        None, description="ISO 8601 date time format", example="1999-12-31T23:59:59Z"
+    )
+    endDate: Optional[date] = Field(  # type: ignore
+        None, description="ISO 8601 date time format", example="1999-12-31T23:59:59Z"
+    )
+    createdDate: Optional[date] = Field(  # type: ignore
+        None, description="ISO 8601 date time format", example="1999-12-31T23:59:59Z"
+    )
+
+
+class NotificationCaseSummary(base.NotificationCaseSummary):
+    absences: Optional[List[NotificationAbsenceCaseSummary]] = Field(  # type: ignore
+        None, description="The child absence cases under this notification case."
     )

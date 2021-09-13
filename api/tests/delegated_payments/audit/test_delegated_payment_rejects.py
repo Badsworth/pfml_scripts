@@ -20,7 +20,10 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.db.models.factories import ClaimFactory, PaymentFactory
 from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
-from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import PaymentAuditCSV
+from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
+    PAYMENT_AUDIT_CSV_HEADERS,
+    PaymentAuditCSV,
+)
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
     PaymentAuditData,
     build_audit_report_row,
@@ -28,6 +31,7 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
 from massgov.pfml.delegated_payments.audit.delegated_payment_rejects import (
     ACCEPTED_OUTCOME,
     ACCEPTED_STATE,
+    AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS,
     NOT_SAMPLED_PAYMENT_NEXT_STATE_BY_CURRENT_STATE,
     NOT_SAMPLED_PAYMENT_OUTCOME_BY_CURRENT_STATE,
     NOT_SAMPLED_STATE_TRANSITIONS,
@@ -82,6 +86,49 @@ def test_parse_payment_rejects_file(tmp_path, test_db_session, payment_rejects_s
     assert rejects_count > 0
 
 
+@freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time
+def test_parse_payment_rejects_file_missing_columns(
+    tmp_path, test_db_session, payment_rejects_step
+):
+    # Test that if columns are missing during parsing,
+    # it won't throw any errors. Required columns
+    # are validated later in processing (See: test_rejects_column_validation)
+    # This avoids issues if we create a new column and
+    # the deployment happens between the file generation
+    # in ECS task #1, and the parsing in ECS task #2
+    expected_rejects_folder = os.path.join(
+        str(tmp_path),
+        payments_util.Constants.S3_OUTBOUND_SENT_DIR,
+        payments_util.get_now().strftime("%Y-%m-%d"),
+    )
+
+    file_path = os.path.join(
+        expected_rejects_folder, "2021-01-15-12-00-00-Payment-Audit-Report-Response.csv"
+    )
+    # Create a partial output, only putting two real column and a fake (which gets ignored)
+    with file_util.write_file(file_path) as output_file:
+        output_file.write(
+            f"{PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id},{PAYMENT_AUDIT_CSV_HEADERS.leave_type},FAKE_COLUMN_HEADER\n"
+        )
+        output_file.write("1,1,1\n")
+        output_file.write("2,2,2\n")
+        output_file.write("3,3,3")
+
+    payment_rejects_rows: List[PaymentAuditCSV] = payment_rejects_step.parse_payment_rejects_file(
+        file_path
+    )
+    assert len(payment_rejects_rows) == 3
+    for row in payment_rejects_rows:
+        assert row.pfml_payment_id is not None
+        assert row.pfml_payment_id == row.leave_type
+
+        # Just verify a few others aren't set
+        assert row.rejected_by_program_integrity is None
+        assert row.skipped_by_program_integrity is None
+        assert row.max_weekly_benefits_details is None
+        assert row.dua_dia_reduction_details is None
+
+
 def test_rejects_column_validation(test_db_session, payment_rejects_step):
     claim = ClaimFactory.create(claim_type_id=ClaimType.FAMILY_LEAVE.claim_type_id)
     payment = PaymentFactory.create(
@@ -101,7 +148,9 @@ def test_rejects_column_validation(test_db_session, payment_rejects_step):
         previously_errored_payment_count=1,
         previously_skipped_payment_count=0,
     )
-    payment_rejects_row = build_audit_report_row(payment_audit_data)
+    payment_rejects_row = build_audit_report_row(
+        payment_audit_data, payments_util.get_now(), test_db_session
+    )
 
     payment_rejects_row.pfml_payment_id = None
     payment_rejects_row.rejected_by_program_integrity = "Y"
@@ -165,7 +214,9 @@ def test_valid_combination_of_reject_and_skip(
         previously_skipped_payment_count=0,
     )
 
-    payment_rejects_row = build_audit_report_row(payment_audit_data)
+    payment_rejects_row = build_audit_report_row(
+        payment_audit_data, payments_util.get_now(), test_db_session
+    )
     payment_rejects_row.rejected_by_program_integrity = rejected_by_program_integrity
     payment_rejects_row.skipped_by_program_integrity = skipped_by_program_integrity
 
@@ -323,6 +374,66 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
     )
 
 
+def test_rejected_writeback_status_from_reject_notes(
+    test_db_session, payment_rejects_step, monkeypatch
+):
+    monkeypatch.setenv("USE_AUDIT_REJECT_TRANSACTION_STATUS", "1")
+
+    test_cases = []
+
+    for (reject_note, expected_status) in AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS.items():
+        test_cases.append(
+            {"reject_notes": reject_note, "expected_status": expected_status,}
+        )
+
+    # Close matches
+    test_cases.append(
+        {
+            "reject_notes": "Dua Additional Income",
+            "expected_status": FineosWritebackTransactionStatus.DUA_ADDITIONAL_INCOME,
+        }
+    )
+
+    test_cases.append(
+        {
+            "reject_notes": "DUA Additional Income.",
+            "expected_status": FineosWritebackTransactionStatus.DUA_ADDITIONAL_INCOME,
+        }
+    )
+
+    # No matches
+    test_cases.append(
+        {
+            "reject_notes": None,
+            "expected_status": FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION,
+        }
+    )
+    test_cases.append(
+        {
+            "reject_notes": "",
+            "expected_status": FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION,
+        }
+    )
+    test_cases.append(
+        {
+            "reject_notes": "Unknown reject status note",
+            "expected_status": FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION,
+        }
+    )
+
+    for test_case in test_cases:
+        payment_1 = PaymentFactory.create()
+
+        writeback_status = payment_rejects_step.get_rejected_payment_writeback_status(
+            payment_1, test_case["reject_notes"]
+        )
+
+        assert (
+            writeback_status.transaction_status_id
+            == test_case["expected_status"].transaction_status_id
+        )
+
+
 def test_transition_not_sampled_payment_audit_pending_states(test_db_session, payment_rejects_step):
     # create payments with pending states
     payment_to_pending_state = {}
@@ -359,7 +470,7 @@ def test_transition_not_sampled_payment_audit_pending_states(test_db_session, pa
         assert payment_state_log.outcome["message"] == outcome["message"]
 
 
-def _generate_audit_file(payment_rejects_received_folder_path, file_name, db_session):
+def _generate_rejects_file(payment_rejects_received_folder_path, file_name, db_session):
     # generate the rejects file
     audit_scenario_data = generate_payment_audit_data_set_and_rejects_file(
         DEFAULT_AUDIT_SCENARIO_DATA_SET,
@@ -405,7 +516,7 @@ def test_process_rejects(
     timestamp_file_prefix = "2021-01-15-12-00-00"
 
     # generate the rejects file
-    audit_scenario_data = _generate_audit_file(
+    audit_scenario_data = _generate_rejects_file(
         payment_rejects_received_folder_path, "Payment-Audit-Report-Response", test_db_session
     )
 
@@ -466,10 +577,10 @@ def test_process_rejects_error(
     monkeypatch.setenv("PFML_PAYMENT_REJECTS_ARCHIVE_PATH", payment_rejects_archive_folder_path)
 
     # generate two rejects files to trigger a processing error
-    _generate_audit_file(
+    _generate_rejects_file(
         payment_rejects_received_folder_path, "Payment-Audit-Report-Response-1", test_db_session
     )
-    _generate_audit_file(
+    _generate_rejects_file(
         payment_rejects_received_folder_path, "Payment-Audit-Report-Response-2", test_db_session
     )
 

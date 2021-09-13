@@ -1,0 +1,33 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`404 page renders the page with expected content and links 1`] = `
+<div>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+    tabindex="-1"
+  >
+    Page not found
+  </h1>
+  <div
+    class="usa-intro measure-5 margin-bottom-2"
+  >
+    <p>
+      The page you’re looking for might have been removed, have a new name, or is otherwise unavailable.
+    </p>
+    <p>
+      If you typed the URL directly, check your spelling and capitalization. Our URLs look like this: 
+      <a
+        href="/login"
+      >
+        http://localhost/login
+      </a>
+    </p>
+  </div>
+  <a
+    class="usa-button"
+    href="/"
+  >
+    Visit homepage
+  </a>
+</div>
+`;

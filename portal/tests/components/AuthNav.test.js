@@ -1,96 +1,63 @@
+import { render, screen } from "@testing-library/react";
 import AuthNav from "../../src/components/AuthNav";
 import React from "react";
 import User from "../../src/models/User";
-import { shallow } from "enzyme";
+import userEvent from "@testing-library/user-event";
 
 describe("AuthNav", () => {
-  describe("when a user is NOT authenticated", () => {
-    it("doesn't render the logged-in state", () => {
-      const wrapper = shallow(<AuthNav onLogout={jest.fn()} />);
-
-      expect(wrapper).toMatchSnapshot();
-    });
-
-    it("doesn't render the user's name", () => {
-      const wrapper = shallow(<AuthNav onLogout={jest.fn()} />);
-
-      expect(wrapper.exists("[data-test-auth-nav='email_address']")).toBe(
-        false
-      );
-    });
-
-    it("doesn't render a log out link", () => {
-      const wrapper = shallow(<AuthNav onLogout={jest.fn()} />);
-
-      expect(wrapper.exists("[data-test-auth-nav='logout_button']")).toBe(
-        false
-      );
-    });
-
-    it("renders a Mass.gov link", () => {
-      const wrapper = shallow(<AuthNav onLogout={jest.fn()} />);
-
-      expect(wrapper.exists("[data-test-auth-nav='massgov_link']")).toBe(true);
-    });
+  const user = new User({
+    email_address: "email@address.com",
+    user_id: "mock-user-id",
   });
 
-  describe("when a user is authenticated", () => {
-    const user = new User({
-      email_address: "email@address.com",
-      user_id: "mock-user-id",
-    });
+  it("renders the logged-out state", () => {
+    const { container } = render(<AuthNav onLogout={jest.fn()} />);
 
-    it("renders the logged-in state", () => {
-      const wrapper = shallow(
-        <AuthNav user={user} onLogout={() => jest.fn()} />
-      );
+    expect(container.firstChild).toMatchSnapshot();
+    const [backToMass, logIn] = screen.getAllByRole("link");
+    expect(backToMass).toHaveAccessibleName("Back to Mass.gov");
+    expect(logIn).toHaveAccessibleName("Log in");
+  });
 
-      expect(wrapper).toMatchSnapshot();
-    });
+  it("doesn't render the user's name", () => {
+    render(<AuthNav onLogout={jest.fn()} />);
 
-    it("renders the user's name", () => {
-      const wrapper = shallow(<AuthNav user={user} onLogout={jest.fn()} />);
+    expect(screen.queryByTestId("email_address")).toBeNull();
+  });
 
-      expect(wrapper.text("[data-test-auth-nav='email_address']")).toMatch(
-        user.email_address
-      );
-    });
+  it("doesn't render a log out link", () => {
+    render(<AuthNav onLogout={jest.fn()} />);
 
-    it("doesn't render a Mass.gov link", () => {
-      const wrapper = shallow(<AuthNav user={user} onLogout={jest.fn()} />);
+    expect(screen.queryByRole("button", { name: "Log out" })).toBe(null);
+  });
 
-      expect(wrapper.exists("[data-test-auth-nav='massgov_link']")).toBe(false);
-    });
+  it("renders the logged-in state", () => {
+    const { container } = render(
+      <AuthNav user={user} onLogout={() => jest.fn()} />
+    );
+    expect(container.firstChild).toMatchSnapshot();
+    expect(screen.getByRole("button")).toHaveAccessibleName("Log out");
+  });
 
-    it("renders a log out link", () => {
-      const wrapper = shallow(
-        <AuthNav user={user} onLogout={() => jest.fn()} />
-      );
+  it("renders the user's name", () => {
+    render(<AuthNav user={user} onLogout={() => jest.fn()} />);
+    expect(screen.getByTestId("email_address")).toHaveTextContent(
+      user.email_address
+    );
+  });
 
-      expect(wrapper.find("[data-test-auth-nav='logout_button']"))
-        .toMatchInlineSnapshot(`
-        <Button
-          className="width-auto"
-          data-test-auth-nav="logout_button"
-          inversed={true}
-          onClick={[Function]}
-          variation="unstyled"
-        >
-          Log out
-        </Button>
-      `);
-    });
+  it("doesn't render a Mass.gov link", () => {
+    render(<AuthNav user={user} onLogout={() => jest.fn()} />);
 
-    describe("when log out button is clicked", () => {
-      it("logs the user out", async () => {
-        const signOut = jest.fn();
-        const wrapper = shallow(<AuthNav user={user} onLogout={signOut} />);
-        await wrapper
-          .find("[data-test-auth-nav='logout_button']")
-          .simulate("click");
+    expect(screen.queryByRole("link", { name: "Back to Mass.gov" })).toBe(null);
+  });
 
-        expect(signOut.mock.calls.length).toBe(1);
-      });
-    });
+  it("logs the user out when log out button is clicked", () => {
+    const onLogoutMock = jest.fn();
+    render(<AuthNav user={user} onLogout={onLogoutMock} />);
+    const logOutButton = screen.getByRole("button", { name: "Log out" });
+
+    userEvent.click(logOutButton);
+    expect(onLogoutMock).toHaveBeenCalled();
   });
 });

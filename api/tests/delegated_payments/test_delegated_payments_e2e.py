@@ -9,6 +9,7 @@ from dataclasses import asdict
 from typing import Any, Dict, List, Optional
 from unittest import mock
 
+import pytest
 from freezegun import freeze_time
 
 import massgov.pfml.api.util.state_log_util as state_log_util
@@ -981,11 +982,7 @@ def test_e2e_pub_payments(
 
     with freeze_time("2021-05-02 18:00:00", tz_offset=5):
         # == Run the task
-        run_process_pub_payments_ecs_task(
-            db_session=test_db_session,
-            log_entry_db_session=test_db_other_session,
-            config=ProcessPubPaymentsTaskConfiguration(["--steps", "ALL"]),
-        )
+        process_pub_payments(test_db_session, test_db_other_session)
 
         # == Validate file contents
         date_folder = get_current_date_folder()
@@ -1332,11 +1329,7 @@ def test_e2e_pub_payments(
     with freeze_time("2021-05-03 11:00:00", tz_offset=5):
 
         # == Run the task
-        run_process_pub_responses_ecs_task(
-            db_session=test_db_session,
-            log_entry_db_session=test_db_other_session,
-            config=ProcessPubResponsesTaskConfiguration(["--steps", "ALL"]),
-        )
+        process_pub_responses(test_db_session, test_db_other_session)
 
         # == Validate payment states
 
@@ -1936,11 +1929,7 @@ def test_e2e_pub_payments_delayed_scenarios(
     # ============================================================================================================
 
     with freeze_time("2021-05-02 18:00:00", tz_offset=5):
-        run_process_pub_payments_ecs_task(
-            db_session=local_test_db_session,
-            log_entry_db_session=local_test_db_other_session,
-            config=ProcessPubPaymentsTaskConfiguration(["--steps", "ALL"]),
-        )
+        process_pub_payments(local_test_db_session, local_test_db_other_session)
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
@@ -2031,11 +2020,7 @@ def test_e2e_pub_payments_delayed_scenarios(
     # with freeze_time("2021-05-03 11:00:00", tz_offset=5):
 
     #     # == Run the task
-    #     run_process_pub_responses_ecs_task(
-    #         db_session=test_db_session,
-    #         log_entry_db_session=test_db_other_session,
-    #         config=ProcessPubResponsesTaskConfiguration(["--steps", "ALL"]),
-    #     )
+    #     process_pub_responses(test_db_session, test_db_other_session)
 
     # ===============================================================================
     # [Day 3 - Before 5:00 PM] Payment Integrity Team returns Payment Rejects File
@@ -2049,11 +2034,7 @@ def test_e2e_pub_payments_delayed_scenarios(
     # ============================================================================================================
 
     with freeze_time("2021-05-03 18:00:00", tz_offset=5):
-        run_process_pub_payments_ecs_task(
-            db_session=local_test_db_session,
-            log_entry_db_session=local_test_db_other_session,
-            config=ProcessPubPaymentsTaskConfiguration(["--steps", "ALL"]),
-        )
+        process_pub_payments(local_test_db_session, local_test_db_other_session)
 
         assert_payment_state_for_scenarios(
             test_dataset=test_dataset,
@@ -2093,6 +2074,62 @@ def test_e2e_pub_payments_delayed_scenarios(
     # TODO Scenario: Day 6 Prenote Rejection
     # TODO Scenario: Fix for invalid ach return
     # TODO Scenario: Fix for invalid check return
+
+
+def test_e2e_pub_payments_fails(
+    local_test_db_session,
+    local_test_db_other_session,
+    local_initialize_factories_session,
+    monkeypatch,
+    set_exporter_env_vars,
+    mock_s3_bucket,
+):
+    test_db_session = local_test_db_session
+    test_db_other_session = local_test_db_other_session
+    setup_common_env_variables(monkeypatch)
+
+    # Make it error when the first step in the task runs
+    with mock.patch(
+        "massgov.pfml.delegated_payments.step.Step.set_metrics", side_effect=Exception("Error msg"),
+    ):
+
+        # Run and error all 3 ECS tasks
+        with pytest.raises(Exception, match="Error msg"):
+            run_fineos_ecs_task(
+                db_session=test_db_session,
+                log_entry_db_session=test_db_other_session,
+                config=FineosTaskConfiguration(["--steps", "ALL"]),
+            )
+
+        with pytest.raises(Exception, match="Error msg"):
+            run_process_pub_payments_ecs_task(
+                db_session=test_db_session,
+                log_entry_db_session=test_db_other_session,
+                config=ProcessPubPaymentsTaskConfiguration(["--steps", "ALL"]),
+            )
+
+        with pytest.raises(Exception, match="Error msg"):
+            run_process_pub_responses_ecs_task(
+                db_session=test_db_session,
+                log_entry_db_session=test_db_other_session,
+                config=ProcessPubResponsesTaskConfiguration(["--steps", "ALL"]),
+            )
+
+        # Despite the failure, the metrics are still written to S3
+        # although the only "metric" is the error message as it failed
+        # to initialize the metrics with how it errors above
+        # The PickupResponseFilesStep appears twice as it's the first
+        # step in the 2nd & 3rd ECS task
+        expected_metrics = {"message": "Exception: Error msg"}
+        assert_metrics(test_db_other_session, "StateCleanupStep", expected_metrics)
+        assert_metrics(test_db_other_session, "PickupResponseFilesStep", expected_metrics)
+        assert_metrics(
+            test_db_other_session, "PickupResponseFilesStep", expected_metrics, log_report_index=1
+        )
+
+        # Nothing should have been written to s3
+        all_files = file_util.list_files(f"s3://{mock_s3_bucket}", recursive=True)
+        assert len(all_files) == 0
 
 
 # == Common E2E Workflow Segments ==
@@ -2206,9 +2243,6 @@ def process_fineos_extracts(
     log_entry_db_session: db.Session,
 ):
     with mock.patch(
-        "massgov.pfml.delegated_payments.address_validation._get_experian_rest_client",
-        return_value=None,
-    ), mock.patch(
         "massgov.pfml.delegated_payments.address_validation._get_experian_soap_client",
         return_value=mock_experian_client,
     ):
@@ -2218,8 +2252,27 @@ def process_fineos_extracts(
             config=FineosTaskConfiguration(["--steps", "ALL"]),
         )
 
+    assert_success_file("pub-payments-process-fineos")
     test_dataset.populate_scenario_data_payments(db_session)
     test_dataset.populate_scenario_dataset_claims(db_session)
+
+
+def process_pub_payments(db_session: db.Session, log_entry_db_session: db.Session):
+    run_process_pub_payments_ecs_task(
+        db_session=db_session,
+        log_entry_db_session=log_entry_db_session,
+        config=ProcessPubPaymentsTaskConfiguration(["--steps", "ALL"]),
+    )
+    assert_success_file("pub-payments-create-pub-files")
+
+
+def process_pub_responses(db_session: db.Session, log_entry_db_session: db.Session):
+    run_process_pub_responses_ecs_task(
+        db_session=db_session,
+        log_entry_db_session=log_entry_db_session,
+        config=ProcessPubResponsesTaskConfiguration(["--steps", "ALL"]),
+    )
+    assert_success_file("pub-payments-process-pub-returns")
 
 
 def setup_common_env_variables(monkeypatch):
@@ -2229,7 +2282,6 @@ def setup_common_env_variables(monkeypatch):
     monkeypatch.setenv("DFML_PUB_ACCOUNT_NUMBER", "123456789")
     monkeypatch.setenv("DFML_PUB_ROUTING_NUMBER", "234567890")
     monkeypatch.setenv("PUB_PAYMENT_STARTING_CHECK_NUMBER", "100")
-    monkeypatch.setenv("USE_EXPERIAN_SOAP_CLIENT", "1")
 
 
 # == Assertion Helpers ==
@@ -2399,6 +2451,18 @@ def assert_reports(
             ReferenceFileType.DELEGATED_PAYMENT_REPORT_FILE,
             db_session,
         )
+
+
+def assert_success_file(process_name):
+    s3_config = payments_config.get_s3_config()
+
+    processed_folder = os.path.join(
+        s3_config.pfml_error_reports_archive_path,
+        payments_util.Constants.S3_INBOUND_PROCESSED_DIR,
+        get_current_date_folder(),
+    )
+    expected_file_name = f"{process_name}.SUCCESS"
+    assert_files(processed_folder, [expected_file_name], get_current_timestamp_prefix())
 
 
 def assert_metrics(

@@ -13,6 +13,12 @@
     "max-nesting-depth": 2,
     "selector-no-qualifying-type": true,
     "scss/dollar-variable-pattern": "^[a-zA-Z]",
-    "scss/at-mixin-pattern": "^[A-Z].*$"
+    "scss/at-mixin-pattern": "^[A-Z].*$",
+    "selector-no-qualifying-type": [
+      true,
+      {
+        "ignore": ["attribute"]
+      }
+    ]
   }
 }

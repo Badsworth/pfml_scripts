@@ -31,15 +31,10 @@ a:focus {
   text-decoration: underline;
 }
 
-.page {
-  background: #e5e5e5;
-  display: grid;
-  grid-template-columns: 15.79em auto;
-  grid-template-rows: minmax(min-content, max-content) auto;
-  height: 100vh;
-}
-
-input {
+// general input styling:
+// changes here will apply to all inputs, therefore
+// custom overrides should happen at the component level
+input[type='text'] {
   appearance: none;
   border: 1px solid #ddd;
   border-radius: $Border-Radius;
@@ -70,6 +65,40 @@ input {
   }
 }
 
+input[type='checkbox'] {
+  appearance: none;
+  background: #fff;
+  border: solid 1px $Color-GraniteGray-200;
+  border-radius: 4px;
+  color: $Color-GraniteGray-200;
+  height: 16px;
+  margin: 0;
+  padding: 0;
+  position: relative;
+  width: 16px;
+
+  &:checked {
+    background: $Color-BayBlue-50;
+    border-color: $Color-BayBlue-500;
+    color: $Color-BayBlue-500;
+  }
+
+  &:checked::after {
+    @include IconFontProps;
+    content: $IconCheck;
+    font-size: 0.6em;
+    left: 2px;
+    position: absolute;
+    top: 3px;
+  }
+
+  &[disabled]:checked {
+    background: $Color-GraniteGray-50;
+    border-color: $Color-GraniteGray-300;
+    color: $Color-GraniteGray-300;
+  }
+}
+
 .users__warning-wrapper {
   margin: 1.71em 0;
 }
@@ -80,3 +109,10 @@ input {
   width: 400px;
 }
 
+.page {
+  background: #e5e5e5;
+  display: grid;
+  grid-template-columns: 15.79em auto;
+  grid-template-rows: minmax(min-content, max-content) auto;
+  height: 100vh;
+}

@@ -11,7 +11,8 @@
 type Credentials = import("./src/types").Credentials;
 type ApplicationRequestBody = import("./src/api").ApplicationRequestBody;
 type ApplicationResponse = import("./src/api").ApplicationResponse;
-type waitForClaimDocuments = import("./cypress/plugins/DocumentWaiter").default["waitForClaimDocuments"];
+type waitForClaimDocuments =
+  import("./cypress/plugins/DocumentWaiter").default["waitForClaimDocuments"];
 type Email = import("./src/submission/TestMailClient").Email;
 type GetEmailsOpts = import("./src/submission/TestMailClient").GetEmailsOpts;
 type Result = import("pdf-parse").Result;
@@ -23,7 +24,10 @@ type Scenarios = import("./src/types").Scenarios;
 type ScenarioSpecs = import("./src/types").ScenarioSpecs;
 type APIClaimSpec = import("./src/generation/Claim").APIClaimSpec;
 type GeneratedClaim = import("./src/generation/Claim").GeneratedClaim;
-type FineosExclusiveLeaveReasons = import("./src/generation/Claim").FineosExclusiveLeaveReasons;
+type FineosExclusiveLeaveReasons =
+  import("./src/generation/Claim").FineosExclusiveLeaveReasons;
+type ApplicationSubmissionResponse =
+  import("./src/types").ApplicationSubmissionResponse;
 
 declare namespace Cypress {
   interface Cypress {
@@ -32,7 +36,6 @@ declare namespace Cypress {
     runner: Cypress.Runner;
   }
   interface Chainable<Subject = any> {
-    labelled(label: string | RegExp): Chainable<HTMLElement>;
     typeMasked(
       text: string,
       options?: Partial<Cypress.TypeOptions>
@@ -51,14 +54,17 @@ declare namespace Cypress {
         : GeneratedClaim
     >;
     task(event: "getAuthVerification", mail: string): Chainable<string>;
-    task(event: "completeSSOLoginFineos"): Chainable<string>;
+    task(
+      event: "completeSSOLoginFineos",
+      credentials?: Credentials
+    ): Chainable<string>;
     task(event: "generateCredentials"): Chainable<Credentials>;
     task(event: "getParsedPDF", filename: string): Promise<pdf>;
     task(event: "deleteDownloadFolder", folderName: string): Chainable<true>;
     task(
       event: "getNoticeFileName",
       folderName: string,
-      options: Partial<Cypress.TypeOptions>
+      options?: Partial<Cypress.TypeOptions>
     ): Promise<string[]>;
 
     // Supplying multiple forms of submitClaimToAPI seems to be necessary to provide typing for
@@ -75,6 +81,15 @@ declare namespace Cypress {
         employerCredentials?: Credentials;
       }
     ): Chainable<ApplicationSubmissionResponse>;
+    task(
+      event: "chooseFineosRole",
+      arg: {
+        /**ID of the account you want to switch the roles for */
+        userId: string;
+        /**Role preset you want to switch to. */
+        preset: FineosSecurityGroups;
+      }
+    ): Chainable<null>;
     task(event: "pickEmployer", spec: EmployerPickSpec): Chainable<Employer>;
     task(event: "getEmails", opts: GetEmailsOpts): Chainable<Email[]>;
     task(event: "registerClaimant", options: Credentials): Chainable<true>;

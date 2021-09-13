@@ -8,23 +8,32 @@ import {
   ReducedScheduleLeavePeriods,
 } from "../../api";
 import { differenceInWeeks, format, parseISO, subYears } from "date-fns";
+import { extractLatestLeaveDate } from "../../util/claims";
 
 export default class HealthCareProviderForm extends AbstractDocumentGenerator<{
   invalid?: boolean;
 }> {
   documentSource(): string {
-    return this.path("hcp-v3.pdf");
+    return this.path("hcp-v3.1.1.pdf");
   }
   getFormData(
     claim: ApplicationRequestBody,
     config: { invalid?: boolean }
   ): PDFFormData {
-    if (!claim.first_name || !claim.last_name || !claim.date_of_birth) {
+    if (
+      !claim.first_name ||
+      !claim.last_name ||
+      !claim.date_of_birth ||
+      !claim.leave_details
+    ) {
       throw new Error("Unable to generate document due to missing properties");
     }
     // Note: To debug this PDF's fields, follow this: https://stackoverflow.com/a/38257183
     const dob = parseISO(claim.date_of_birth);
     const conditionStart = subYears(new Date(), 2);
+    const is_prebirth = !!claim.leave_details.pregnant_or_recent_birth;
+    // For training purposes, make child birth date the leave end date.
+    const childBirthDate = extractLatestLeaveDate(claim.leave_details);
     const data: { [k: string]: string | boolean } = {
       // Employee Info - Section 1
       "Employee name": `${claim.first_name} ${claim.last_name}`,
@@ -49,12 +58,13 @@ export default class HealthCareProviderForm extends AbstractDocumentGenerator<{
       "Condition start dd": format(conditionStart, "dd"),
       "Conditiion start yyyy": format(conditionStart, "yyyy"),
       "Provider initial Page 4": "TC",
-      "Yes Pregnancy": claim.leave_details?.pregnant_or_recent_birth
-        ? "On"
-        : false,
-      "No pregnancy": claim.leave_details?.pregnant_or_recent_birth
-        ? false
-        : "On",
+      "No – Childbirth or recovery": true,
+      "Yes – Childbirth or post birth recovery": false,
+      "Yes Pregnancy": is_prebirth,
+      "No pregnancy": !is_prebirth,
+      "Delivery mm": is_prebirth ? format(childBirthDate, "MM") : "",
+      "Delivery dd": is_prebirth ? format(childBirthDate, "dd") : "",
+      "Delivery yyyy": is_prebirth ? format(childBirthDate, "yyyy") : "",
       "Is this health condition a jobrelated injury": "No_3",
 
       // Section 3 #14

@@ -4,7 +4,7 @@ export type Props<T = unknown> = {
   title: string;
 } & Partial<CommonProps<T>>;
 
-const SlideOut = <T,>(props: Props<T>) => {
+function SlideOut<T>(props: Props<T>): JSX.Element {
   const { isOpen, close, title, children, data } = props;
   return (
     <dialog className="slide-out" open={isOpen}>
@@ -19,12 +19,12 @@ const SlideOut = <T,>(props: Props<T>) => {
             aria-label={`Close ${title} window`}
           ></button>
         </div>
-        <div className="slide-out__body">
+        <div className="slide-out__body" data-testid="slideout-body">
           {typeof children === "function" ? children(data) : children}
         </div>
       </div>
     </dialog>
   );
-};
+}
 
 export default SlideOut;

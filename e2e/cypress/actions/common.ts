@@ -19,3 +19,14 @@ export const config: ConfigFunction = (name): string => {
   }
   throw new Error(`Unable to determine config value for ${name}.`);
 };
+
+export function getFineosBaseUrl(
+  username = config("FINEOS_USERNAME"),
+  password = config("FINEOS_PASSWORD")
+): string {
+  const base = config("FINEOS_BASEURL");
+  const url = new URL(base);
+  url.username = username;
+  url.password = password;
+  return url.toString();
+}

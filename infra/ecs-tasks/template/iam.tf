@@ -104,11 +104,13 @@ resource "aws_iam_role_policy" "task_executor" {
 # User Bulk Import task stuff
 # ------------------------------------------------------------------------------------------------------
 
+# TODO (EMPLOYER-1654): Bulk User Import code has been archived. S3 bucket can be removed once its data is removed.
 resource "aws_iam_role" "task_bulk_import_task_role" {
   name               = "${local.app_name}-${var.environment_name}-ecs-tasks-bulk-import-task-role"
   assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
 }
 
+# TODO (EMPLOYER-1654): Bulk User Import code has been archived. S3 bucket can be removed once its data is removed.
 data "aws_iam_policy_document" "task_bulk_import_s3_policy_doc" {
   # Allow ECS User Bulk Import task access S3 files
   statement {
@@ -1329,5 +1331,80 @@ data "aws_iam_policy_document" "cps_errors_crawler_role_policy_document" {
     ]
 
     effect = "Allow"
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for update-gender-data-from-rmv
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "update_gender_data_from_rmv_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-update-gender-data-from-rmv-task-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy" "update_gender_data_from_rmv_role_policy" {
+  name   = "${local.app_name}-${var.environment_name}-update-gender-data-from-rmv-role-policy"
+  role   = aws_iam_role.update_gender_data_from_rmv_task_role.id
+  policy = data.aws_iam_policy_document.update_gender_data_from_rmv.json
+}
+
+data "aws_iam_policy_document" "update_gender_data_from_rmv" {
+  statement {
+    effect = "Allow"
+    actions = [
+      "secretsmanager:GetSecretValue",
+    ]
+    resources = [
+      var.rmv_client_certificate_binary_arn,
+    ]
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for evaluate-new-financial-eligibility
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "evaluate_new_financial_eligibility_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-new-financial-eligibility-task-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy" "evaluate_new_financial_eligibility_role_policy" {
+  name   = "${local.app_name}-${var.environment_name}-evaluate-new-financial-eligibility-role-policy"
+  role   = aws_iam_role.evaluate_new_financial_eligibility_task_role.id
+  policy = data.aws_iam_policy_document.evaluate_new_financial_eligibility.json
+}
+
+# Defined in infra/api/ and referenced here.
+data "aws_cloudwatch_log_group" "service_logs" {
+  name = "service/${local.app_name}-${var.environment_name}"
+}
+
+data "aws_iam_policy_document" "evaluate_new_financial_eligibility" {
+  # Allow writing results to S3.
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:PutObject",
+    ]
+    resources = [
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-execute-sql-export",
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-execute-sql-export/*",
+    ]
+  }
+
+  # Allow reading API server logs from CloudWatch logs.
+  statement {
+    effect = "Allow"
+    actions = [
+      "logs:GetLogEvents",
+      "logs:StartQuery",
+      "logs:GetQueryResults",
+      "logs:DescribeQueries"
+    ]
+    resources = [
+      "${data.aws_cloudwatch_log_group.service_logs.arn}:*",
+    ]
   }
 }

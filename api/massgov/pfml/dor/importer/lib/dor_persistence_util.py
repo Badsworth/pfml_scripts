@@ -1,5 +1,6 @@
+import datetime
 import uuid
-from typing import Any, Dict, Iterable, List
+from typing import Any, Dict, Iterable, Tuple
 
 from sqlalchemy.orm.exc import MultipleResultsFound, NoResultFound
 
@@ -320,13 +321,12 @@ def check_and_update_wages_and_contributions(
 
 def get_employer_quarterly_info_by_employer_id(
     db_session: massgov.pfml.db.Session, employer_ids: Iterable[uuid.UUID]
-) -> List[EmployerQuarterlyContribution]:
-    employer_rows = (
-        db_session.query(EmployerQuarterlyContribution)
-        .filter(EmployerQuarterlyContribution.employer_id.in_(employer_ids))
-        .all()
+) -> Dict[Tuple[uuid.UUID, datetime.date], EmployerQuarterlyContribution]:
+    """Return a map from (employer id, period date) to EmployerQuarterlyContribution object."""
+    employer_contributions = db_session.query(EmployerQuarterlyContribution).filter(
+        EmployerQuarterlyContribution.employer_id.in_(employer_ids)
     )
-    return employer_rows
+    return {(c.employer_id, c.filing_period): c for c in employer_contributions}
 
 
 def get_tax_ids(db_session, ssns):
@@ -388,14 +388,14 @@ def get_all_employers_fein(db_session):
     return employer_rows
 
 
-def get_employers_account_key(db_session, account_keys):
-    employer_rows = (
-        db_session.query(Employer)
-        .filter(Employer.account_key.in_(account_keys))
-        .with_entities(Employer.employer_id, Employer.account_key, Employer.dor_updated_date)
-        .all()
+def get_employers_by_account_key(
+    db_session: massgov.pfml.db.Session, account_keys: Iterable[str]
+) -> Dict[str, uuid.UUID]:
+    """Return a map from account key to employer id for the given account keys."""
+    employer_rows = db_session.query(Employer.account_key, Employer.employer_id).filter(
+        Employer.account_key.in_(account_keys)
     )
-    return employer_rows
+    return dict(employer_rows)
 
 
 def get_employer_by_fein(db_session, fein):

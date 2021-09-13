@@ -23,8 +23,12 @@ on:
       title_override:
         description: "Title Override (replaces commit message in Cypress Dashboard)"
         required: false
-      only_stable:
-        description: "Only run 'stable' tests? (true/false)"
+      run_unstable:
+        description: "Run tests in unstable group"
+        required: false
+        default: "false"
+      run_nightly:
+        description: "Run tests in nightly group"
         required: false
         default: "false"
 
@@ -37,6 +41,7 @@ env:
   # as determined by the E2E_ENVIRONMENT variable.
   E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
   E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
+  E2E_EMPLOYER_PORTAL_PASSWORD: ${{ secrets.E2E_EMPLOYER_PORTAL_PASSWORD }}
   E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
   E2E_SSO_PASSWORD: ${{ secrets.E2E_SSO_PASSWORD }}
   E2E_SSO_USERNAME: ${{ secrets.E2E_SSO_USERNAME }}
@@ -58,12 +63,26 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        containers: [1,2,3,4,5,6,7]
+        containers: [1, 2, 3, 4, 5, 6, 7]
     steps:
       - uses: actions/checkout@v2
 
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+      - name: Pull the newrelic API key from parameter store for reporting
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/service/pfml-api/common/newrelic-license-key"
+          env_variable_name: "E2E_NEWRELIC_INGEST_KEY"
+
       # Run Cypress tests.
-      - name: Cypress Tests (Stable)
+      - name: Cypress Tests (Commit Stable)
         uses: cypress-io/github-action@v2
         timeout-minutes: 15
         with:
@@ -71,11 +90,12 @@ jobs:
           record: true
           parallel: true
           working-directory: e2e
-          group: Stable
+          group: Commit Stable
           tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
+          config: reporter=cypress/reporters/new-relic.js
 
       # Run Cypress tests.
-      - name: Cypress Tests (Unstable)
+      - name: Cypress Tests (Commit Unstable)
         uses: cypress-io/github-action@v2
         with:
           spec: "cypress/specs/unstable/**"
@@ -85,14 +105,27 @@ jobs:
           group: Unstable
           install: false # Skip install on second run.
           tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
-          config: trashAssetsBeforeRuns=false
+          config: trashAssetsBeforeRuns=false,reporter=cypress/reporters/new-relic.js
         # Always run this step if requested, even if stable tests fail.
-        if: github.event.inputs.only_stable == 'false' && always()
+        if: github.event.inputs.run_unstable == 'true' && always()
         # Do not allow this step to fail the job. It is informational, not mandatory.
         continue-on-error: true
         # Setting a step timeout here prevents a hung unstable test from timing out at the job level - it times out at
         # the step level instead, allowing continue-on-error to do its job.
-        timeout-minutes: 10
+        timeout-minutes: 15
+
+      # Run Cypress tests.
+      - name: Cypress Tests (Nightly)
+        uses: cypress-io/github-action@v2
+        timeout-minutes: 15
+        with:
+          spec: "cypress/specs/nightly/**"
+          record: true
+          parallel: true
+          working-directory: e2e
+          group: Nightly
+          tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
+        if: github.events.inputs.run_nightly == 'true' && always()
 
       - name: "Archive screenshots"
         uses: actions/upload-artifact@v2
@@ -139,4 +172,4 @@ jobs:
         run: npm ci
       - name: Integration Tests
         working-directory: e2e
-        run: npm run test:integration
+        run: npm run test:integration -- --group=stable${{ github.event.inputs.run_unstable == 'true' && ' --group=unstable' || '' }}${{ github.event.inputs.run_nightly == 'true' && ' --group=nightly' || '' }}

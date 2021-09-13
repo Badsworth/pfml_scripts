@@ -1,5 +1,4 @@
 import { fineos, portal, email, fineosPages } from "../../actions";
-import { getFineosBaseUrl } from "../../config";
 import { Submission } from "../../../src/types";
 import { waitForAjaxComplete } from "../../actions/fineos";
 import { addDays, formatISO, startOfWeek, subDays } from "date-fns";
@@ -9,50 +8,55 @@ describe("Report of intermittent leave hours notification", () => {
     portal.deleteDownloadsFolder();
   });
 
-  const submit = it(
-    "Given a fully approved claim and leave hours correctly recorded by CSR rep",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      fineos.before();
-      cy.visit("/");
-      // Submit a claim via the API, including Employer Response.
-      cy.task("generateClaim", "BIAP60ER").then((claim) => {
-        cy.stash("claim", claim);
-        cy.task("submitClaimToAPI", {
-          ...claim,
-        }).then(({ fineos_absence_id, application_id }) => {
+  const submit = it("Can submit a claim via API", () => {
+    cy.task("generateClaim", "BIAP60ER").then((claim) => {
+      cy.stash("claim", claim);
+      cy.task("submitClaimToAPI", claim).then(
+        ({ fineos_absence_id, application_id }) => {
           cy.stash("submission", {
             application_id,
             fineos_absence_id,
             timestamp_from: Date.now(),
           });
+        }
+      );
+    });
+  });
+
+  const approval =
+    it("Given a fully approved claim and leave hours correctly recorded by CSR rep", () => {
+      cy.dependsOnPreviousPass([submit]);
+      cy.unstash<DehydratedClaim>("claim").then((claim) => {
+        cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
+          fineos.before();
+          cy.visit("/");
           const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id);
-          claimPage.shouldHaveStatus("Eligibility", "Met");
-          claimPage
-            .adjudicate((adjudication) => {
-              adjudication
-                .evidence((evidence) => {
-                  claim.documents.forEach(({ document_type }) =>
-                    evidence.receive(document_type)
-                  );
-                })
-                .certificationPeriods((certPeriods) => certPeriods.prefill())
-                .acceptLeavePlan();
-            })
-            .approve();
-          waitForAjaxComplete();
+          // This check safeguards us against failure cases where we try to approve an already approved claim.
+          fineos.getClaimStatus().then((status) => {
+            if (status === "Approved") return;
+            claimPage.shouldHaveStatus("Eligibility", "Met");
+            claimPage
+              .adjudicate((adjudication) => {
+                adjudication
+                  .evidence((evidence) => {
+                    claim.documents.forEach(({ document_type }) =>
+                      evidence.receive(document_type)
+                    );
+                  })
+                  .certificationPeriods((certPeriods) => certPeriods.prefill())
+                  .acceptLeavePlan();
+              })
+              .approve();
+            waitForAjaxComplete();
+          });
         });
       });
-    }
-  );
+    });
 
-  const hoursRecorded = it(
-    "CSR Representative can record actual leave hours",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      cy.dependsOnPreviousPass([submit]);
+  const hoursRecorded =
+    it("CSR Representative can record actual leave hours", () => {
+      cy.dependsOnPreviousPass([submit, approval]);
       fineos.before();
-      cy.visit("/");
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
           // Those are the specific dates fit to the scenario spec.
@@ -67,7 +71,6 @@ describe("Report of intermittent leave hours notification", () => {
               representation: "date",
             }
           );
-          cy.visit("/");
           fineosPages.ClaimPage.visit(fineos_absence_id).recordActualLeave(
             (recordActualTime) => {
               if (
@@ -94,14 +97,13 @@ describe("Report of intermittent leave hours notification", () => {
           );
         });
       });
-    }
-  );
+    });
 
   it(
     "Employer should receive a '{Employee Name} reported their intermittent leave hours' notification",
     { retries: 0 },
     () => {
-      cy.dependsOnPreviousPass([submit, hoursRecorded]);
+      cy.dependsOnPreviousPass([submit, approval, hoursRecorded]);
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;

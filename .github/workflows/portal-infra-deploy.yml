@@ -88,6 +88,6 @@ jobs:
             {
               "target_environment": ${{ toJSON(env[github.ref] || 'test') }},
               "cypress_tags": "Deploy,Deploy-Infra",
-              "only_stable": "${{ (env[github.ref] || 'test') == 'test' && 'false' || 'true' }}",
+              "run_unstable": "${{ (env[github.ref] || 'test') != 'test' && 'false' || 'true' }}",
               "title_override": ${{ toJSON(format('Infra Deploy: {0} to {1}', env.version, (env[github.ref] || 'test'))) }
             }

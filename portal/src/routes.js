@@ -18,7 +18,6 @@ const routes = {
     concurrentLeaves: "/applications/concurrent-leaves",
     concurrentLeavesDetails: "/applications/concurrent-leaves-details",
     concurrentLeavesIntro: "/applications/concurrent-leaves-intro",
-    dashboard: "/dashboard",
     dateOfBirth: "/applications/date-of-birth",
     dateOfChild: "/applications/date-of-child",
     employerBenefits: "/applications/employer-benefits",
@@ -65,6 +64,18 @@ const routes = {
     // to a placeholder page. This allows us to search our code for routes.applications.todo,
     // which is less confusing than seeing routes.applications.checklist
     todo: "/applications/checklist",
+    upload: {
+      bondingProofOfBirth: "/applications/upload/proof-of-birth",
+      bondingProofOfPlacement: "/applications/upload/proof-of-placement",
+      caringCertification:
+        "/applications/upload/family-member-medical-certification",
+      index: "/applications/upload",
+      medicalCertification: "/applications/upload/medical-certification",
+      otherId: "/applications/upload/other-id",
+      pregnancyCertification:
+        "/applications/upload/pregnancy-medical-certification",
+      stateId: "/applications/upload/state-id",
+    },
     uploadCertification: "/applications/upload-certification",
     uploadDocsOptions: "/applications/upload-docs-options",
     uploadId: "/applications/upload-id",
@@ -120,7 +131,7 @@ const routes = {
         "https://www.mass.gov/info-details/massachusetts-department-of-family-and-medical-leave-informed-consent-agreement",
       dfml: "https://www.mass.gov/orgs/department-of-family-and-medical-leave",
       dfmlRegulations:
-        "https://www.mass.gov/regulations/458-CMR-200-department-of-family-and-medical-leave-1",
+        "https://www.mass.gov/regulations/458-CMR-200-family-and-medical-leave",
       employerAccount:
         "https://www.mass.gov/how-to/creating-an-employer-account-to-review-paid-family-and-medical-leave-pfml-applications",
       employerReimbursements:
@@ -154,12 +165,14 @@ const routes = {
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions#earned-time-off-through-your-employer-",
       reductionsOverview:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions",
+      requestAnAppealForPFML:
+        "https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim",
       schedulingLeaveGuide:
         "https://www.mass.gov/info-details/intermittent-and-reduced-leave-schedules",
       taxLiability: "https://www.mass.gov/pfml-tax-liability",
+      timeline:
+        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-application-approval-timeline",
       verifyEmployer: "https://www.mass.gov/pfml-verify-employer",
-      whatToExpect:
-        "https://www.mass.gov/guides/what-to-expect-when-you-apply-for-paid-family-and-medical-leave-benefits",
       whenCanIUsePFML:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-",
       whichPaidLeave: "https://www.mass.gov/which-paid-leave",

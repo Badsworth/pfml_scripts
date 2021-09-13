@@ -435,6 +435,7 @@ export const Review = (props) => {
         onKeyDown={handleKeyDown}
       >
         <SupportingWorkDetails
+          appErrors={appErrors}
           clearField={clearField}
           getField={getField}
           getFunctionalInputProps={getFunctionalInputProps}

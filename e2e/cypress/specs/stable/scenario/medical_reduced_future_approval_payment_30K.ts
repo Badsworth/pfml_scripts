@@ -1,5 +1,4 @@
 import { portal, fineos, fineosPages } from "../../../actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
@@ -13,12 +12,8 @@ describe("Submit medical application via the web portal: Adjudication Approval &
         const application: ApplicationRequestBody = claim.claim;
         const paymentPreference = claim.paymentPreference;
 
-        const credentials: Credentials = {
-          username: config("PORTAL_USERNAME"),
-          password: config("PORTAL_PASSWORD"),
-        };
-        portal.login(credentials);
-        portal.goToDashboardFromApplicationsPage();
+        portal.loginClaimant();
+        portal.skipLoadingClaimantApplications();
 
         // Submit Claim
         portal.startClaim();
@@ -40,10 +35,10 @@ describe("Submit medical application via the web portal: Adjudication Approval &
     cy.unstash<DehydratedClaim>("claim").then((claim) => {
       cy.unstash<Submission>("submission").then((submission) => {
         assertValidClaim(claim.claim);
-        portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
+        portal.loginLeaveAdmin(claim.claim.employer_fein);
         portal.selectClaimFromEmployerDashboard(
           submission.fineos_absence_id,
-          "--"
+          config("PORTAL_HAS_LA_STATUS_UPDATES") === "true" ? "Review by" : "--"
         );
         portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
         portal.respondToLeaveAdminRequest(false, true, true);
@@ -51,61 +46,51 @@ describe("Submit medical application via the web portal: Adjudication Approval &
     });
   });
 
-  it(
-    "CSR rep will approve reduced medical application",
-    { retries: 0, baseUrl: getFineosBaseUrl() },
-    () => {
-      cy.dependsOnPreviousPass();
-      fineos.before();
-      cy.visit("/");
-      cy.unstash<DehydratedClaim>("claim").then((claim) => {
-        cy.unstash<Submission>("submission").then((submission) => {
-          const claimPage = fineosPages.ClaimPage.visit(
-            submission.fineos_absence_id
-          );
-          claimPage.adjudicate((adjudication) => {
-            adjudication.evidence((evidence) => {
-              // Receive all of the claim documentation.
-              claim.documents.forEach((document) => {
-                evidence.receive(document.document_type);
-              });
+  it("CSR rep will approve reduced medical application", { retries: 0 }, () => {
+    cy.dependsOnPreviousPass();
+    fineos.before();
+    cy.unstash<DehydratedClaim>("claim").then((claim) => {
+      cy.unstash<Submission>("submission").then((submission) => {
+        const claimPage = fineosPages.ClaimPage.visit(
+          submission.fineos_absence_id
+        );
+        claimPage.adjudicate((adjudication) => {
+          adjudication.evidence((evidence) => {
+            // Receive all of the claim documentation.
+            claim.documents.forEach((document) => {
+              evidence.receive(document.document_type);
             });
-            adjudication.certificationPeriods((cert) => cert.prefill());
-            adjudication.acceptLeavePlan();
           });
-          claimPage.shouldHaveStatus("Applicability", "Applicable");
-          claimPage.shouldHaveStatus("Eligibility", "Met");
-          claimPage.shouldHaveStatus("Evidence", "Satisfied");
-          claimPage.shouldHaveStatus("Availability", "Time Available");
-          claimPage.shouldHaveStatus("Restriction", "Passed");
-          claimPage.shouldHaveStatus("PlanDecision", "Accepted");
-          claimPage.approve();
+          adjudication.certificationPeriods((cert) => cert.prefill());
+          adjudication.acceptLeavePlan();
         });
+        claimPage.shouldHaveStatus("Applicability", "Applicable");
+        claimPage.shouldHaveStatus("Eligibility", "Met");
+        claimPage.shouldHaveStatus("Evidence", "Satisfied");
+        claimPage.shouldHaveStatus("Availability", "Time Available");
+        claimPage.shouldHaveStatus("Restriction", "Passed");
+        claimPage.shouldHaveStatus("PlanDecision", "Accepted");
+        claimPage.approve();
       });
-    }
-  );
+    });
+  });
 
-  it(
-    "Should be able to confirm the weekly payment amount for a reduced schedule",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      cy.dependsOnPreviousPass();
-      fineos.before();
-      cy.visit("/");
+  it("Should be able to confirm the weekly payment amount for a reduced schedule", () => {
+    cy.dependsOnPreviousPass();
+    fineos.before();
 
-      cy.unstash<DehydratedClaim>("claim").then((claim) => {
-        cy.unstash<Submission>("submission").then((submission) => {
-          const payment = claim.metadata
-            ?.expected_weekly_payment as unknown as number;
-          fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
-            (leaveCase) => {
-              leaveCase
-                .assertAmountsPending([{ net_payment_amount: payment }])
-                .assertMatchingPaymentDates();
-            }
-          );
-        });
+    cy.unstash<DehydratedClaim>("claim").then((claim) => {
+      cy.unstash<Submission>("submission").then((submission) => {
+        const payment = claim.metadata
+          ?.expected_weekly_payment as unknown as number;
+        fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
+          (leaveCase) => {
+            leaveCase
+              .assertAmountsPending([{ net_payment_amount: payment }])
+              .assertMatchingPaymentDates();
+          }
+        );
       });
-    }
-  );
+    });
+  });
 });

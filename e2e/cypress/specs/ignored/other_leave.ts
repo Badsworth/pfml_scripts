@@ -1,7 +1,5 @@
 import { fineos, portal } from "../../actions";
-import { getFineosBaseUrl } from "../../config";
 import { Submission } from "../../../src/types";
-import { config } from "../../actions/common";
 
 describe("Submit a bonding claim with other income and other leave - BHAP1", () => {
   const submit =
@@ -16,11 +14,7 @@ describe("Submit a bonding claim with other income and other leave - BHAP1", () 
         const application = claim.claim;
         const paymentPreference = claim.paymentPreference;
 
-        const credentials: Credentials = {
-          username: config("PORTAL_USERNAME"),
-          password: config("PORTAL_PASSWORD"),
-        };
-        portal.login(credentials);
+        portal.loginClaimant();
         portal.goToDashboardFromApplicationsPage();
 
         // Submit Claim
@@ -37,16 +31,12 @@ describe("Submit a bonding claim with other income and other leave - BHAP1", () 
       });
     });
   // Check for Other Leave Document
-  it(
-    "In Fineos, check for Other Leave E-Form",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      cy.dependsOnPreviousPass([submit]);
-      fineos.before();
-      cy.unstash<Submission>("submission").then((submission) => {
-        cy.visit("/");
-        fineos.findOtherLeaveEForm(submission.fineos_absence_id);
-      });
-    }
-  );
+  it("In Fineos, check for Other Leave E-Form", () => {
+    cy.dependsOnPreviousPass([submit]);
+    fineos.before();
+    cy.unstash<Submission>("submission").then((submission) => {
+      cy.visit("/");
+      fineos.findOtherLeaveEForm(submission.fineos_absence_id);
+    });
+  });
 });

@@ -1,199 +1,86 @@
+import { render, screen, within } from "@testing-library/react";
 import Dropdown from "../../src/components/Dropdown";
 import React from "react";
-import { shallow } from "enzyme";
+import userEvent from "@testing-library/user-event";
 
-function render(customProps = {}) {
-  const props = Object.assign(
-    {
-      choices: [
-        {
-          label: "Apple",
-          value: "a",
-        },
-        {
-          label: "Banana",
-          value: "b",
-        },
-      ],
-      emptyChoiceLabel: "Select an answer",
-      label: "Field Label",
-      name: "field-name",
-      onChange: jest.fn(),
-    },
-    customProps
-  );
-
-  const component = <Dropdown {...props} />;
-
-  return {
-    props,
-    wrapper: shallow(component),
+const renderComponent = (customProps = {}) => {
+  const props = {
+    choices: [
+      {
+        label: "Apple",
+        value: "a",
+      },
+      {
+        label: "Banana",
+        value: "b",
+      },
+    ],
+    emptyChoiceLabel: "Select an answer",
+    label: "Field Label",
+    name: "field-name",
+    onChange: jest.fn(),
+    ...customProps,
   };
-}
+  return render(<Dropdown {...props} />);
+};
 
 describe("Dropdown", () => {
   it("renders select field with list of options", () => {
-    const { wrapper } = render();
-
-    expect(wrapper.exists(".usa-combo-box")).toBe(false);
-    expect(wrapper.find("select")).toMatchSnapshot();
+    renderComponent();
+    expect(screen.getByRole("combobox")).toBeInTheDocument();
+    expect(screen.getByRole("combobox")).toMatchSnapshot();
+    const [placeholder, optionOne, optionTwo] = screen.getAllByRole("option");
+    expect(placeholder).toHaveTextContent("Select an answer");
+    expect(optionOne).toHaveValue("a");
+    expect(optionTwo).toHaveValue("b");
+    expect(screen.getByRole("combobox")).toHaveAccessibleName("Field Label");
   });
 
-  it("sets the field's name", () => {
-    const name = "foo";
-    const { wrapper } = render({ name });
-    const field = wrapper.find(".usa-select");
-
-    expect(field.prop("name")).toBe(name);
+  it("enables users to select an option from the dropdown", () => {
+    const onChange = jest.fn();
+    renderComponent({ onChange });
+    userEvent.selectOptions(screen.getByRole("combobox"), ["a"]);
+    expect(onChange).toHaveBeenCalled();
   });
 
-  it("sets the field's value", () => {
-    const value = "Yay";
-    const { wrapper } = render({ value });
-    const field = wrapper.find(".usa-select");
-
-    expect(field.prop("value")).toBe(value);
+  it("can display optionalText in the form label", () => {
+    renderComponent({ optionalText: "(optional)" });
+    expect(
+      screen.getByRole("combobox", { name: "Field Label (optional)" })
+    ).toBeInTheDocument();
   });
 
-  it("generates a unique id", () => {
-    const { wrapper: wrapper1 } = render({ name: "one" });
-    const { wrapper: wrapper2 } = render({ name: "two" });
-
-    const input1 = wrapper1.find(".usa-select");
-    const label1 = wrapper1.find("FormLabel");
-    const input2 = wrapper2.find(".usa-select");
-
-    const idRegex = /Dropdown[0-9]+/;
-
-    expect(input1.prop("id")).toMatch(idRegex);
-    expect(input1.prop("id")).not.toBe(input2.prop("id"));
-    expect(label1.prop("inputId")).toBe(input1.prop("id"));
+  it("can display a hint in the form label", () => {
+    const { container } = renderComponent({ hint: "this is a pro tip" });
+    const hint = container.querySelector("span");
+    expect(within(hint).getByText(/this is a pro tip/)).toBeTruthy();
   });
 
-  it("renders a label component", () => {
-    const { props, wrapper } = render();
-    const label = wrapper.find("FormLabel");
-
-    expect(label.prop("children")).toBe(props.label);
+  it("can render the label small", () => {
+    renderComponent({ smallLabel: true });
+    const label = screen.getByText(/Field Label/);
+    expect(label).toHaveClass("usa-label text-bold font-heading-xs measure-5");
   });
 
-  describe("when hint prop is set", () => {
-    it("passes the hint to FormLabel", () => {
-      const { props, wrapper } = render({ hint: "123" });
-      const label = wrapper.find("FormLabel");
-
-      expect(label.prop("hint")).toBe(props.hint);
-    });
+  it("can handle errors", () => {
+    renderComponent({ errorMsg: "Oh no" });
+    const select = screen.getByRole("combobox");
+    expect(select).toHaveClass("usa-input--error");
+    expect(screen.getByText(/Oh no/)).toBeInTheDocument();
   });
 
-  describe("when optionalText prop is set", () => {
-    it("passes the optionalText to FormLabel", () => {
-      const { props, wrapper } = render({ optionalText: "(optional)" });
-      const label = wrapper.find("FormLabel");
-
-      expect(label.prop("optionalText")).toBe(props.optionalText);
-    });
+  it("when autocomplete is true, user can click input to see dropdown values", () => {
+    renderComponent({ autocomplete: true });
+    const input = screen.getByRole("combobox");
+    expect(screen.queryAllByRole("option")).toHaveLength(0);
+    userEvent.click(input);
+    expect(screen.getAllByRole("option")).toHaveLength(2);
   });
 
-  describe("when errorMsg is set", () => {
-    it("passes errorMsg to FormLabel", () => {
-      const { props, wrapper } = render({ errorMsg: "Oh no." });
-
-      expect(wrapper.find("FormLabel").prop("errorMsg")).toBe(props.errorMsg);
-    });
-
-    it("adds error classes to the form group", () => {
-      const { wrapper } = render({ errorMsg: "Oh no." });
-      const formGroup = wrapper.find(".usa-form-group");
-
-      expect(formGroup.hasClass("usa-form-group--error")).toBe(true);
-    });
-
-    it("adds error classes to the field", () => {
-      const { wrapper } = render({ errorMsg: "Oh no." });
-      const formGroup = wrapper.find(".usa-select");
-
-      expect(formGroup.hasClass("usa-input--error")).toBe(true);
-    });
-  });
-
-  describe("when `smallLabel` is true", () => {
-    it("sets the FormLabel small prop to true", () => {
-      const { wrapper } = render({ smallLabel: true });
-      const label = wrapper.find("FormLabel");
-
-      expect(label.prop("small")).toBe(true);
-    });
-  });
-
-  describe("when change event is triggered", () => {
-    it("calls onChange", () => {
-      const { props, wrapper } = render();
-
-      wrapper.find(".usa-select").simulate("change");
-
-      expect(props.onChange).toHaveBeenCalledTimes(1);
-    });
-  });
-
-  describe("when `labelClassName` is set", () => {
-    it("overrides the FormLabel .text-bold class", () => {
-      const { wrapper } = render({ labelClassName: "text-normal" });
-      const label = wrapper.find("FormLabel");
-
-      expect(label.prop("labelClassName")).toBe("text-normal");
-    });
-  });
-
-  describe("when formGroupClassName prop is set", () => {
-    it("includes the formGroupClassName on the containing element", () => {
-      const { wrapper } = render({ formGroupClassName: "custom-input-class" });
-
-      expect(wrapper.hasClass("custom-input-class")).toBe(true);
-    });
-  });
-
-  describe("when selectClassName prop is set", () => {
-    it("includes the formGroupClassName on the containing element", () => {
-      const { wrapper } = render({ selectClassName: "custom-input-class" });
-
-      expect(wrapper.find("select").hasClass("custom-input-class")).toBe(true);
-    });
-  });
-
-  describe("when `hideEmptyChoice` is not set", () => {
-    it("displays empty choice as first option by default", () => {
-      const { wrapper } = render();
-
-      expect(wrapper.find("option")).toHaveLength(3);
-      expect(wrapper.find("option").first().prop("value")).toEqual("");
-    });
-  });
-
-  describe("when `hideEmptyChoice` is false", () => {
-    it("displays empty choice as first option", () => {
-      const { wrapper } = render({ hideEmptyChoice: false });
-
-      expect(wrapper.find("option")).toHaveLength(3);
-      expect(wrapper.find("option").first().prop("value")).toEqual("");
-    });
-  });
-
-  describe("when `hideEmptyChoice` is true", () => {
-    it("hides empty choice as first option", () => {
-      const { wrapper } = render({ hideEmptyChoice: true });
-
-      expect(wrapper.find("option")).toHaveLength(2);
-      expect(wrapper.find("option").first().prop("value")).toEqual("a");
-    });
-  });
-
-  describe("when `autocomplete` is true", () => {
-    it("renders the list of options as combo-box", () => {
-      const { wrapper } = render({ autocomplete: true });
-
-      expect(wrapper.exists(".usa-combo-box")).toBe(true);
-      expect(wrapper.find(".usa-combo-box")).toMatchSnapshot();
-    });
+  it("when autocomplete is true, users have option to close out via x in ui", () => {
+    renderComponent({ autocomplete: true });
+    const [clearButton, toggleDropDownbtn] = screen.getAllByRole("button");
+    expect(clearButton).toBeInTheDocument();
+    expect(toggleDropDownbtn).toBeInTheDocument();
   });
 });

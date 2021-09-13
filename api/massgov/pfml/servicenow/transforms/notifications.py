@@ -1,7 +1,7 @@
 import os
 from typing import List
 
-from pydantic import BaseModel
+from pydantic import BaseModel, HttpUrl, parse_obj_as
 
 import massgov.pfml.util.logging
 from massgov.pfml.api.models.notifications.requests import NotificationRequest, RecipientDetails
@@ -81,13 +81,17 @@ class TransformNotificationRequest(BaseModel):
     def to_service_now(
         cls, notification_request: NotificationRequest, employer: Employer
     ) -> OutboundMessage:
+        if not employer.fineos_employer_id:
+            raise ValueError(
+                "Employer must have a Fineos employer ID to send a ServiceNow notification."
+            )
         return OutboundMessage(
             u_absence_id=notification_request.absence_case_id,
             u_document_type=format_document_type(notification_request),
             u_source=SOURCE_MAPPING[notification_request.source],
             u_user_type=RECIPIENT_TYPE_MAPPING[notification_request.recipient_type],
             u_trigger=notification_request.trigger,
-            u_link=format_link(notification_request),
+            u_link=parse_obj_as(HttpUrl, format_link(notification_request)),
             u_recipients=format_recipients(notification_request),
             u_organization_name=notification_request.organization_name,
             u_employer_customer_number=employer.fineos_employer_id,

@@ -1,9 +1,11 @@
+import AlertBar from "../components/AlertBar";
 import AuthNav from "./AuthNav";
 import BetaBanner from "./BetaBanner";
 import HeaderSlim from "@massds/mayflower-react/dist/HeaderSlim";
 import PropTypes from "prop-types";
 import React from "react";
 import SiteLogo from "@massds/mayflower-react/dist/SiteLogo";
+import { Trans } from "react-i18next";
 import User from "../models/User";
 import logo from "@massds/mayflower-assets/static/images/logo/stateseal.png";
 import routes from "../routes";
@@ -19,6 +21,12 @@ const Header = (props) => {
     props.user && props.user.hasEmployerRole
       ? routes.external.massgov.feedbackEmployer
       : routes.external.massgov.feedbackClaimant;
+
+  const {
+    showUpcomingMaintenanceAlertBar,
+    maintenanceStartTime,
+    maintenanceEndTime,
+  } = props;
 
   const headerProps = {
     siteLogo: (
@@ -43,6 +51,18 @@ const Header = (props) => {
       <a href="#main" className="usa-skipnav">
         {t("components.header.skipToContent")}
       </a>
+      {showUpcomingMaintenanceAlertBar && maintenanceStartTime && (
+        <AlertBar>
+          <Trans
+            i18nKey="components.maintenanceAlertBar.message"
+            tOptions={{ context: maintenanceEndTime ? "withEndTime" : null }}
+            values={{
+              start: maintenanceStartTime,
+              end: maintenanceEndTime,
+            }}
+          />
+        </AlertBar>
+      )}
       {isLoggedIn && <BetaBanner feedbackUrl={feedbackUrl} />}
       <HeaderSlim {...headerProps} />
     </React.Fragment>
@@ -52,6 +72,9 @@ const Header = (props) => {
 Header.propTypes = {
   user: PropTypes.instanceOf(User),
   onLogout: PropTypes.func.isRequired,
+  showUpcomingMaintenanceAlertBar: PropTypes.bool,
+  maintenanceStartTime: PropTypes.string,
+  maintenanceEndTime: PropTypes.string,
 };
 
 export default Header;

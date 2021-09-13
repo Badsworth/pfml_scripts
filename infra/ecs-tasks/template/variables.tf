@@ -315,6 +315,24 @@ variable "enable_pub_automation_process_returns" {
   default     = false
 }
 
+variable "rmv_client_base_url" {
+  description = "The base URL for the Registry of Motor Vehicles (RMV) API."
+  type        = string
+  default     = ""
+}
+
+variable "rmv_client_certificate_binary_arn" {
+  description = "The secretsmanager ARN for the Registry of Motor Vehicles (RMV) certificate."
+  type        = string
+  default     = ""
+}
+
+variable "rmv_api_behavior" {
+  description = "Specifies if the RMV response is mocked"
+  type        = string
+  default     = "fully_mocked"
+}
+
 ########## Variables for Step Functions ################
 
 variable "st_use_mock_dor_data" {

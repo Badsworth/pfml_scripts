@@ -137,6 +137,16 @@ export class RequestTimeoutError extends ApiRequestError {
 }
 
 /**
+ * A GET request to the `/claims` endpoint for claim detail failed.
+ */
+export class ClaimDetailLoadError extends BasePortalError {
+  constructor(...params) {
+    super(...params);
+    this.name = "ClaimDetailLoadError";
+  }
+}
+
+/**
  * A GET request to an Application's `/documents` endpoint failed
  */
 export class DocumentsLoadError extends BasePortalError {
@@ -171,6 +181,22 @@ export class DocumentsUploadError extends BasePortalError {
     this.file_id = file_id;
     this.issue = issue;
     this.name = "DocumentsUploadError";
+  }
+}
+
+/**
+ * A GET request to the /claims/:id endpoint failed because the claim was withdrawn in FINEOS
+ */
+export class ClaimWithdrawnError extends BasePortalError {
+  /**
+   * @param {string} fineos_absence_id - ID of the Claim that was withdrawn
+   * @example new ClaimWithdrawnError('mock_absence_id')
+   */
+  constructor(fineos_absence_id, issue, ...params) {
+    super(...params);
+    this.fineos_absence_id = fineos_absence_id;
+    this.issue = issue;
+    this.name = "ClaimWithdrawnError";
   }
 }
 

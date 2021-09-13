@@ -345,6 +345,10 @@ export const MED_PRE: ScenarioSpecification = {
       MASSID: {},
       PREGNANCY_MATERNITY_FORM: {},
     },
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+    },
   },
 };
 
@@ -447,14 +451,16 @@ export const BHAP1_OLB: ScenarioSpecification = {
 
 // This only being used for CPS Service Pack testing.
 const currentDate = new Date();
+const startDate = addDays(currentDate, 65);
+const endDate = addDays(currentDate, 90);
 export const CPS_SP: ScenarioSpecification = {
   // @todo wages can be adjusted from eligible/ineligible to wage per year
   employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "CPS_SP",
     // @todo Choose a reason for leave? If Child Bonding need a reason_qualifier.
-    reason: "Serious Health Condition - Employee",
-    // reason: "Care for a Family Member",
+    // reason: "Serious Health Condition - Employee",
+    reason: "Care for a Family Member",
     // reason: "Pregnancy/Maternity",
     // reason: "Child Bonding",
     // @todo Pregnant or birth leave option in Portal.
@@ -464,9 +470,9 @@ export const CPS_SP: ScenarioSpecification = {
     // @todo Documents must be update for each reason. MASSID is used for all.
     docs: {
       MASSID: {},
-      HCP: {},
+      // HCP: {},
       // FOSTERPLACEMENT: {},
-      // CARING: {},
+      CARING: {},
       // PREGNANCY_MATERNITY_FORM: {},
     },
     // @todo Adjust work pattern if needed?
@@ -478,7 +484,7 @@ export const CPS_SP: ScenarioSpecification = {
     // reduced_leave_spec: "0,240,240,240,240,240,0",
     // @todo Choose the period of time for the leave here?
     // @todo If care leave use the start, end.
-    // leave_dates: [start, end],
+    // leave_dates: [startDate, endDate],
     // @todo If you want certain days from today.
     leave_dates: [subDays(currentDate, 10), addDays(currentDate, 10)],
     // @todo this will start most recent Sunday with weeks.

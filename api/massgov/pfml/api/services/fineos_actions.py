@@ -17,7 +17,7 @@ import mimetypes
 import uuid
 from enum import Enum
 from itertools import chain
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import phonenumbers
 
@@ -27,6 +27,7 @@ import massgov.pfml.util.logging as logging
 from massgov.pfml.api.models.applications.common import LeaveReason as LeaveReasonApi
 from massgov.pfml.api.models.applications.common import OtherIncome
 from massgov.pfml.api.models.applications.responses import DocumentResponse
+from massgov.pfml.api.models.claims.responses import AbsencePeriodStatusResponse
 from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit, PreviousLeave
 from massgov.pfml.db.models.applications import (
     Application,
@@ -48,7 +49,8 @@ from massgov.pfml.db.models.employees import (
     TaxIdentifier,
     User,
 )
-from massgov.pfml.fineos.exception import FINEOSNotFound
+from massgov.pfml.fineos.exception import FINEOSClientError, FINEOSNotFound
+from massgov.pfml.fineos.models.customer_api import AbsenceDetails, ReflexiveQuestionType
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employee import (
     OtherIncomesEFormBuilder,
@@ -156,12 +158,22 @@ def send_to_fineos(
     # Create the FINEOS client.
     fineos = massgov.pfml.fineos.create_client()
 
-    fineos_user_id = register_employee(
-        fineos, tax_identifier, application.employer_fein, db_session
-    )
+    fineos_web_id = register_employee(fineos, tax_identifier, application.employer_fein, db_session)
 
-    fineos.update_customer_details(fineos_user_id, customer)
-    new_case = fineos.start_absence(fineos_user_id, absence_case)
+    fineos.update_customer_details(fineos_web_id, customer)
+
+    occupation = get_customer_occupation(fineos, fineos_web_id, customer.idNumber)
+    if occupation is None:
+        logger.error(
+            "Did not find customer occupation.", extra={"fineos_web_id": fineos_web_id,},
+        )
+
+        raise ValueError("customer occupation is None")
+
+    upsert_week_based_work_pattern(fineos, fineos_web_id, application, occupation.occupationId)
+    update_occupation_details(fineos, application, str(occupation.occupationId))
+
+    new_case = fineos.start_absence(fineos_web_id, absence_case)
 
     employee = (
         db_session.query(Employee)
@@ -214,9 +226,7 @@ def send_to_fineos(
 
     application.claim = new_claim
 
-    updated_contact_details = fineos.update_customer_contact_details(
-        fineos_user_id, contact_details
-    )
+    updated_contact_details = fineos.update_customer_contact_details(fineos_web_id, contact_details)
     phone_numbers = updated_contact_details.phoneNumbers
     if phone_numbers is not None and len(phone_numbers) > 0:
         application.phone.fineos_phone_id = phone_numbers[0].id
@@ -231,18 +241,14 @@ def send_to_fineos(
     ]:
         reflexive_question = build_bonding_date_reflexive_question(application)
         fineos.update_reflexive_questions(
-            fineos_user_id, application.claim.fineos_absence_id, reflexive_question
+            fineos_web_id, application.claim.fineos_absence_id, reflexive_question
         )
 
     if application.leave_reason_id == LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_id:
         reflexive_question = build_caring_leave_reflexive_question(application)
         fineos.update_reflexive_questions(
-            fineos_user_id, application.claim.fineos_absence_id, reflexive_question
+            fineos_web_id, application.claim.fineos_absence_id, reflexive_question
         )
-
-    occupation = get_occupation(fineos, fineos_user_id, application)
-    upsert_week_based_work_pattern(fineos, fineos_user_id, application, occupation.occupationId)
-    update_occupation_details(fineos, application, occupation.occupationId)
 
     db_session.add(application)
     db_session.add(new_claim)
@@ -262,13 +268,11 @@ def complete_intake(application: Application, db_session: massgov.pfml.db.Sessio
 
     tax_identifier = application.tax_identifier.tax_identifier
 
-    fineos_user_id = register_employee(
-        fineos, tax_identifier, application.employer_fein, db_session
-    )
+    fineos_web_id = register_employee(fineos, tax_identifier, application.employer_fein, db_session)
 
-    fineos_user_id = str(fineos_user_id)
+    fineos_web_id = str(fineos_web_id)
     db_session.commit()
-    fineos.complete_intake(fineos_user_id, str(application.claim.fineos_notification_id))
+    fineos.complete_intake(fineos_web_id, str(application.claim.fineos_notification_id))
 
 
 DOCUMENT_TYPES_ASSOCIATED_WITH_EVIDENCE = (
@@ -282,6 +286,13 @@ DOCUMENT_TYPES_ASSOCIATED_WITH_EVIDENCE = (
 )
 
 
+def document_log_attrs(doc: Document) -> Dict[str, Any]:
+    return {
+        "document_id": doc.document_id,
+        "document.document_type": doc.document_type_instance.document_type_description,
+    }
+
+
 def mark_documents_as_received(
     application: Application, db_session: massgov.pfml.db.Session
 ) -> None:
@@ -291,23 +302,35 @@ def mark_documents_as_received(
         raise ValueError("application.claim.fineos_absence_id is None")
 
     fineos = massgov.pfml.fineos.create_client()
-    fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
+    fineos_web_id = get_or_register_employee_fineos_web_id(fineos, application, db_session)
 
     documents = (
         db_session.query(Document)
         .filter(Document.application_id == application.application_id)
         .filter(Document.document_type_id.in_(DOCUMENT_TYPES_ASSOCIATED_WITH_EVIDENCE))
     )
+
+    exception_count = 0
     for document in documents:
         if document.fineos_id is None:
             logger.warning(
-                "Document does not have a fineos_id", extra={"document_id": document.document_id},
+                "Document does not have a fineos_id", extra={**document_log_attrs(document)},
             )
             raise ValueError("Document does not have a fineos_id")
 
-        fineos.mark_document_as_received(
-            fineos_user_id, str(application.claim.fineos_absence_id), str(document.fineos_id)
-        )
+        try:
+            fineos.mark_document_as_received(
+                fineos_web_id, str(application.claim.fineos_absence_id), str(document.fineos_id)
+            )
+        except FINEOSClientError as ex:
+            exception_count += 1
+            logger.warning(
+                "Unable to mark document as received",
+                extra={**document_log_attrs(document)},
+                exc_info=ex,
+            )
+    if exception_count > 0:
+        raise RuntimeError
 
 
 def mark_single_document_as_received(
@@ -323,10 +346,18 @@ def mark_single_document_as_received(
         raise ValueError("document.fineos_id is None")
 
     fineos = massgov.pfml.fineos.create_client()
-    fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
-    fineos.mark_document_as_received(
-        fineos_user_id, str(application.claim.fineos_absence_id), str(document.fineos_id)
-    )
+    try:
+        fineos_web_id = get_or_register_employee_fineos_web_id(fineos, application, db_session)
+        fineos.mark_document_as_received(
+            fineos_web_id, str(application.claim.fineos_absence_id), str(document.fineos_id)
+        )
+    except FINEOSClientError as ex:
+        logger.warning(
+            "Unable to mark document as received",
+            extra={**document_log_attrs(document)},
+            exc_info=ex,
+        )
+        raise
 
 
 def build_customer_model(application, current_user):
@@ -460,6 +491,9 @@ def build_leave_periods(
 ]:
     reduced_schedule_leave_periods = []
     for reduced_leave_period in application.reduced_schedule_leave_periods:
+        if not reduced_leave_period.start_date or not reduced_leave_period.end_date:
+            raise ValueError("Leave periods must have a start and end date.")
+
         [
             monday_hours_minutes,
             tuesday_hours_minutes,
@@ -508,6 +542,8 @@ def build_leave_periods(
 
     intermittent_leave_periods = []
     for int_leave_period in application.intermittent_leave_periods:
+        if not int_leave_period.start_date or not int_leave_period.end_date:
+            raise ValueError("Leave periods must have a start and end date.")
         intermittent_leave_periods.append(
             massgov.pfml.fineos.models.customer_api.EpisodicLeavePeriod(
                 startDate=int_leave_period.start_date,
@@ -652,6 +688,9 @@ def build_absence_case(
     continuous_leave_periods = []
 
     for leave_period in application.continuous_leave_periods:
+        if not leave_period.start_date or not leave_period.end_date:
+            raise ValueError("Leave periods must have a start and end date.")
+
         # determine the status of the absence period
         absence_period_status = determine_absence_period_status(application)
 
@@ -701,7 +740,7 @@ def build_absence_case(
     return absence_case
 
 
-def get_or_register_employee_fineos_user_id(
+def get_or_register_employee_fineos_web_id(
     fineos: massgov.pfml.fineos.AbstractFINEOSClient,
     application: Application,
     db_session: massgov.pfml.db.Session,
@@ -757,7 +796,7 @@ def build_caring_leave_reflexive_question(
 
     caring_leave_metadata = application.caring_leave_metadata
 
-    reflexive_question_details = []
+    reflexive_question_details: List[ReflexiveQuestionType] = []
     # first name
     first_name_details = massgov.pfml.fineos.models.customer_api.Attribute(
         fieldName=f"{reflexive_question_field_name}.firstName",
@@ -784,7 +823,7 @@ def build_caring_leave_reflexive_question(
     if caring_leave_metadata.family_member_date_of_birth:
         date_of_birth_details = massgov.pfml.fineos.models.customer_api.Attribute(
             fieldName=f"{reflexive_question_field_name}.dateOfBirth",
-            dateValue=caring_leave_metadata.family_member_date_of_birth.isoformat(),
+            dateValue=caring_leave_metadata.family_member_date_of_birth,
         )
         reflexive_question_details.append(date_of_birth_details)
 
@@ -794,6 +833,25 @@ def build_caring_leave_reflexive_question(
     )
 
     return reflexive_question
+
+
+def get_customer_occupation(
+    fineos_client: massgov.pfml.fineos.AbstractFINEOSClient, fineos_web_id: str, customer_id: str
+) -> Optional[massgov.pfml.fineos.models.customer_api.ReadCustomerOccupation]:
+    logger.info("getting occupation for customer %s", customer_id)
+    try:
+        # fineos_web_id is associated with a specific employee and employer, so this will only return the occupations for the employee from the associated employer
+        occupations = fineos_client.get_customer_occupations_customer_api(
+            fineos_web_id, customer_id
+        )
+        return occupations[0]
+    except Exception as error:
+        logger.warning(
+            "get_customer_occuption failure",
+            extra={"customer_id": customer_id, "status": getattr(error, "response_status", None),},
+            exc_info=True,
+        )
+        raise error
 
 
 def get_occupation(
@@ -825,37 +883,50 @@ def upsert_week_based_work_pattern(fineos_client, user_id, application, occupati
 
     week_based_work_pattern = build_week_based_work_pattern(application)
     log_attributes = {
-        "absence_case_id": application.claim.fineos_absence_id,
-        "application.absence_case_id": application.claim.fineos_absence_id,
         "application.application_id": application.application_id,
         "occupation_id": occupation_id,
     }
-    logger.info(
-        "upserting work_pattern for absence case %s",
-        application.claim.fineos_absence_id,
-        extra=log_attributes,
-    )
+
+    if application.claim is not None:
+        log_attributes["application.absence_case_id"] = application.claim.fineos_absence_id
+        logger.info(
+            "upserting work_pattern for absence case %s",
+            application.claim.fineos_absence_id,
+            extra=log_attributes,
+        )
+    else:
+        logger.info(
+            "upserting work_pattern for empty claim", extra=log_attributes,
+        )
 
     try:
         add_week_based_work_pattern(
             fineos_client, user_id, occupation_id, week_based_work_pattern, log_attributes
         )
+
         logger.info(
-            "added work_pattern successfully for absence case %s",
-            application.claim.fineos_absence_id,
+            "added work_pattern successfully for customer occupation %s",
+            occupation_id,
             extra=log_attributes,
         )
+
     except massgov.pfml.fineos.exception.FINEOSClientBadResponse as error:
         # FINEOS returns 403 when attempting to add a work pattern for an occupation when one already exists.
         if error.response_status == 403:
             update_week_based_work_pattern(
                 fineos_client, user_id, occupation_id, week_based_work_pattern, log_attributes
             )
-            logger.info(
-                "updated work_pattern successfully for absence case %s",
-                application.claim.fineos_absence_id,
-                extra=log_attributes,
-            )
+            if application.claim is not None:
+                logger.info(
+                    "updated work_pattern successfully for absence case %s",
+                    application.claim.fineos_absence_id,
+                    extra=log_attributes,
+                )
+            else:
+                logger.info(
+                    "updated work_pattern successfully", extra=log_attributes,
+                )
+
         else:
             raise error
 
@@ -897,7 +968,7 @@ def update_week_based_work_pattern(
 def update_occupation_details(
     fineos_client: massgov.pfml.fineos.AbstractFINEOSClient,
     application: Application,
-    occupation_id: Optional[int],
+    occupation_id: Optional[str],
 ) -> None:
     if occupation_id is None:
         raise ValueError("occupation_id is None")
@@ -907,7 +978,7 @@ def update_occupation_details(
         employment_status_label = application.employment_status.fineos_label
 
     fineos_client.update_occupation(
-        occupation_id, employment_status_label, application.hours_worked_per_week,
+        int(occupation_id), employment_status_label, application.hours_worked_per_week,
     )
 
 
@@ -918,14 +989,17 @@ def build_week_based_work_pattern(
     fineos_work_pattern_days = []
 
     for day in application.work_pattern.work_pattern_days:
+        if not day.day_of_week or not day.day_of_week.day_of_week_description:
+            raise ValueError("Work pattern days must include the day of the week.")
+
         (hours, minutes) = convert_minutes_to_hours_minutes(day.minutes or 0)
 
         fineos_work_pattern_days.append(
             massgov.pfml.fineos.models.customer_api.WorkPatternDay(
                 dayOfWeek=day.day_of_week.day_of_week_description,
                 weekNumber=1,
-                hours=hours,
-                minutes=minutes,
+                hours=hours or 0,
+                minutes=minutes or 0,
             )
         )
 
@@ -954,11 +1028,11 @@ def upload_document(
 ) -> massgov.pfml.fineos.models.customer_api.Document:
     fineos = massgov.pfml.fineos.create_client()
 
-    fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
+    fineos_web_id = get_or_register_employee_fineos_web_id(fineos, application, db_session)
     absence_id = get_fineos_absence_id_from_application(application)
 
     fineos_document = fineos.upload_document(
-        fineos_user_id,
+        fineos_web_id,
         absence_id,
         document_type,
         file_content,
@@ -986,9 +1060,9 @@ def fineos_document_response_to_document_response(
         created_at=created_at,
         document_type=fineos_document_response.name,
         content_type=content_type,
-        fineos_document_id=fineos_document_response.documentId,
-        name=fineos_document_response.originalFilename,
-        description=fineos_document_response.description,
+        fineos_document_id=str(fineos_document_response.documentId),
+        name=fineos_document_response.originalFilename or "",
+        description=fineos_document_response.description or "",
     )
     return document_response
 
@@ -998,10 +1072,10 @@ def get_documents(
 ) -> List[DocumentResponse]:
     fineos = massgov.pfml.fineos.create_client()
 
-    fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
+    fineos_web_id = get_or_register_employee_fineos_web_id(fineos, application, db_session)
     absence_id = get_fineos_absence_id_from_application(application)
 
-    fineos_documents = fineos.get_documents(fineos_user_id, absence_id)
+    fineos_documents = fineos.get_documents(fineos_web_id, absence_id)
     document_responses = list(
         map(
             lambda fd: fineos_document_response_to_document_response(fd, application),
@@ -1018,6 +1092,11 @@ def build_payment_preference(
     payment_preference = application.payment_preference
     override_postal_addr = True if payment_address else None
     if payment_preference.payment_method_id == PaymentMethod.ACH.payment_method_id:
+        if not payment_preference.account_number or not payment_preference.routing_number:
+            raise ValueError(
+                "ACH payment preference must include an account number and routing number."
+            )
+
         account_details = massgov.pfml.fineos.models.customer_api.AccountDetails(
             accountName=f"{application.first_name} {application.last_name}",
             accountNo=payment_preference.account_number,
@@ -1048,7 +1127,7 @@ def submit_payment_preference(
     application: Application, db_session: massgov.pfml.db.Session
 ) -> massgov.pfml.fineos.models.customer_api.PaymentPreferenceResponse:
     fineos = massgov.pfml.fineos.create_client()
-    fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
+    fineos_web_id = get_or_register_employee_fineos_web_id(fineos, application, db_session)
 
     if application.has_mailing_address and application.mailing_address:
         fineos_payment_addr: Optional[
@@ -1058,7 +1137,7 @@ def submit_payment_preference(
         fineos_payment_addr = None
 
     fineos_payment_preference = build_payment_preference(application, fineos_payment_addr)
-    return fineos.add_payment_preference(fineos_user_id, fineos_payment_preference)
+    return fineos.add_payment_preference(fineos_web_id, fineos_payment_preference)
 
 
 def download_document(
@@ -1066,10 +1145,10 @@ def download_document(
 ) -> massgov.pfml.fineos.models.customer_api.Base64EncodedFileData:
     fineos = massgov.pfml.fineos.create_client()
 
-    fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
+    fineos_web_id = get_or_register_employee_fineos_web_id(fineos, application, db_session)
     absence_id = get_fineos_absence_id_from_application(application)
 
-    return fineos.download_document(fineos_user_id, absence_id, fineos_document_id)
+    return fineos.download_document(fineos_web_id, absence_id, fineos_document_id)
 
 
 def create_or_update_employer(
@@ -1094,6 +1173,11 @@ def create_or_update_employer(
             )
             is_create = True
             pass
+
+    if not employer.employer_name:
+        raise ValueError(
+            "An Employer must have a employer_name in order to create or update an employer."
+        )
 
     employer_request_body = massgov.pfml.fineos.models.CreateOrUpdateEmployer(
         # `fineos_customer_nbr` is used as the Organization's CustomerNo
@@ -1207,9 +1291,9 @@ def create_eform(
     application: Application, db_session: massgov.pfml.db.Session, eform: EFormBody
 ) -> None:
     fineos = massgov.pfml.fineos.create_client()
-    fineos_user_id = get_or_register_employee_fineos_user_id(fineos, application, db_session)
+    fineos_web_id = get_or_register_employee_fineos_web_id(fineos, application, db_session)
     fineos_absence_id = get_fineos_absence_id_from_application(application)
-    fineos.customer_create_eform(fineos_user_id, fineos_absence_id, eform)
+    fineos.customer_create_eform(fineos_web_id, fineos_absence_id, eform)
 
 
 def create_other_leaves_and_other_incomes_eforms(
@@ -1240,3 +1324,40 @@ def create_other_leaves_and_other_incomes_eforms(
         eform = OtherIncomesEFormBuilder.build(employer_benefits, other_incomes,)
         create_eform(application, db_session, eform)
         logger.info("Created Other Incomes eform", extra=log_attributes)
+
+
+def get_absence_periods(
+    employee_tax_identifier: str,
+    employer_fein: str,
+    fineos_absence_id: str,
+    db_session: massgov.pfml.db.Session,
+) -> List[AbsencePeriodStatusResponse]:
+    fineos = massgov.pfml.fineos.create_client()
+
+    # Get FINEOS web admin id
+    try:
+        fineos_web_id = register_employee(
+            fineos, employee_tax_identifier, employer_fein, db_session,
+        )
+    except Exception:
+        return []
+
+    # Get absence periods
+    response: AbsenceDetails = fineos.get_absence(fineos_web_id, fineos_absence_id)
+    # Map FINEOS response to PFML response
+    absence_periods = []
+    if response and response.absencePeriods:
+        for absence_period in response.absencePeriods:
+            absence_period_status = AbsencePeriodStatusResponse()
+            absence_period_status.absence_period_start_date = absence_period.startDate
+            absence_period_status.absence_period_end_date = absence_period.endDate
+            absence_period_status.period_type = absence_period.absenceType
+            absence_period_status.reason = absence_period.reason
+            absence_period_status.reason_qualifier_one = absence_period.reasonQualifier1
+            absence_period_status.reason_qualifier_two = absence_period.reasonQualifier2
+            absence_period_status.request_decision = absence_period.requestStatus
+            absence_period_status.fineos_leave_period_id = absence_period.id
+
+            absence_periods.append(absence_period_status)
+
+    return absence_periods

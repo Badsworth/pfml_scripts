@@ -1,5 +1,4 @@
 import { fineos, fineosPages, portal } from "../../actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
 import { Submission } from "../../../src/types";
 import { config } from "../../actions/common";
 import { assertValidClaim } from "../../../src/util/typeUtils";
@@ -13,11 +12,7 @@ describe("Submit bonding application via the web portal: Adjudication Approval &
         const application: ApplicationRequestBody = claim.claim;
         const paymentPreference = claim.paymentPreference;
 
-        const credentials: Credentials = {
-          username: config("PORTAL_USERNAME"),
-          password: config("PORTAL_PASSWORD"),
-        };
-        portal.login(credentials);
+        portal.loginClaimant();
         portal.goToDashboardFromApplicationsPage();
 
         // Submit Claim
@@ -40,10 +35,10 @@ describe("Submit bonding application via the web portal: Adjudication Approval &
     cy.unstash<DehydratedClaim>("claim").then((claim) => {
       cy.unstash<Submission>("submission").then((submission) => {
         assertValidClaim(claim.claim);
-        portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
+        portal.loginLeaveAdmin(claim.claim.employer_fein);
         portal.selectClaimFromEmployerDashboard(
           submission.fineos_absence_id,
-          "--"
+          config("PORTAL_HAS_LA_STATUS_UPDATES") === "true" ? "Review by" : "--"
         );
         portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
         portal.respondToLeaveAdminRequest(false, true, true);
@@ -53,11 +48,10 @@ describe("Submit bonding application via the web portal: Adjudication Approval &
 
   it(
     "CSR rep will approve continuous bonding application",
-    { retries: 0, baseUrl: getFineosBaseUrl() },
+    { retries: 0 },
     () => {
       cy.dependsOnPreviousPass();
       fineos.before();
-      cy.visit("/");
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then((submission) => {
           const claimPage = fineosPages.ClaimPage.visit(
@@ -85,34 +79,27 @@ describe("Submit bonding application via the web portal: Adjudication Approval &
     }
   );
 
-  it(
-    "Should be able to confirm the weekly payment amount",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      cy.dependsOnPreviousPass();
-      fineos.before();
-      cy.visit("/");
+  it("Should be able to confirm the weekly payment amount", () => {
+    cy.dependsOnPreviousPass();
+    fineos.before();
 
-      cy.unstash<DehydratedClaim>("claim").then((claim) => {
-        cy.unstash<Submission>("submission").then((submission) => {
-          const page = fineosPages.ClaimPage.visit(
-            submission.fineos_absence_id
-          );
-          page.paidLeave((paidLeavePage) => {
-            if (claim.claim.mailing_address)
-              paidLeavePage.assertPaymentAddress(claim.claim.mailing_address);
-            if (claim.paymentPreference)
-              paidLeavePage.assertPaymentPreference(claim.paymentPreference);
-            paidLeavePage.assertAmountsPending([
-              {
-                net_payment_amount: parseInt(
-                  claim.metadata?.expected_weekly_payment as string
-                ),
-              },
-            ]);
-          });
+    cy.unstash<DehydratedClaim>("claim").then((claim) => {
+      cy.unstash<Submission>("submission").then((submission) => {
+        const page = fineosPages.ClaimPage.visit(submission.fineos_absence_id);
+        page.paidLeave((paidLeavePage) => {
+          if (claim.claim.mailing_address)
+            paidLeavePage.assertPaymentAddress(claim.claim.mailing_address);
+          if (claim.paymentPreference)
+            paidLeavePage.assertPaymentPreference(claim.paymentPreference);
+          paidLeavePage.assertAmountsPending([
+            {
+              net_payment_amount: parseInt(
+                claim.metadata?.expected_weekly_payment as string
+              ),
+            },
+          ]);
         });
       });
-    }
-  );
+    });
+  });
 });

@@ -1,34 +1,24 @@
 import datetime
-import uuid
 from decimal import Decimal
-from typing import TYPE_CHECKING
 
 from sqlalchemy import JSON, TIMESTAMP, Column, Date, ForeignKey, Integer, Numeric, Text
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql.functions import now as sqlnow
-from sqlalchemy.types import TypeEngine
 
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import ImportLog, Payment, ReferenceFile
 
 from ..lookup import LookupTable
 from .base import Base, TimestampMixin, utc_timestamp_gen, uuid_gen
+from .common import PostgreSQLUUID
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
-
-
-# (PostgreSQLUUID) https://github.com/dropbox/sqlalchemy-stubs/issues/94
-if TYPE_CHECKING:
-    PostgreSQLUUID = TypeEngine[uuid.UUID]
-else:
-    PostgreSQLUUID = UUID(as_uuid=True)
 
 
 class FineosExtractVpei(Base, TimestampMixin):
     __tablename__ = "fineos_extract_vpei"
 
-    vpei_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    vpei_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
 
     c = Column(Text)
     i = Column(Text)
@@ -113,7 +103,7 @@ class FineosExtractVpei(Base, TimestampMixin):
     summarystatus = Column(Text)
     transstatusda = Column(Text)
     reference_file_id = Column(
-        UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
     )
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
@@ -125,7 +115,7 @@ class FineosExtractVpei(Base, TimestampMixin):
 class FineosExtractVpeiPaymentDetails(Base, TimestampMixin):
     __tablename__ = "fineos_extract_vpei_payment_details"
 
-    vpei_payment_details_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    vpei_payment_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
 
     c = Column(Text)
     i = Column(Text)
@@ -149,7 +139,7 @@ class FineosExtractVpeiPaymentDetails(Base, TimestampMixin):
     claimdetailsindexid = Column(Text)
     dateinterface = Column(Text)
     reference_file_id = Column(
-        UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
     )
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
@@ -161,7 +151,7 @@ class FineosExtractVpeiPaymentDetails(Base, TimestampMixin):
 class FineosExtractVpeiClaimDetails(Base, TimestampMixin):
     __tablename__ = "fineos_extract_vpei_claim_details"
 
-    vpei_claim_details_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    vpei_claim_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
 
     c = Column(Text)
     i = Column(Text)
@@ -220,7 +210,7 @@ class FineosExtractVpeiClaimDetails(Base, TimestampMixin):
     peindexid = Column(Text)
     dateinterface = Column(Text)
     reference_file_id = Column(
-        UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
     )
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
@@ -232,7 +222,7 @@ class FineosExtractVpeiClaimDetails(Base, TimestampMixin):
 class FineosExtractVbiRequestedAbsenceSom(Base, TimestampMixin):
     __tablename__ = "fineos_extract_vbi_requested_absence_som"
 
-    vbi_requested_absence_som_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    vbi_requested_absence_som_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
 
     notification_casenumber = Column(Text)
     absence_casenumber = Column(Text)
@@ -283,7 +273,7 @@ class FineosExtractVbiRequestedAbsenceSom(Base, TimestampMixin):
     episode_duration = Column(Text)
     episodic_duration_unit = Column(Text)
     reference_file_id = Column(
-        UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
     )
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
@@ -294,7 +284,7 @@ class FineosExtractVbiRequestedAbsenceSom(Base, TimestampMixin):
 class FineosExtractVbiRequestedAbsence(Base, TimestampMixin):
     __tablename__ = "fineos_extract_vbi_requested_absence"
 
-    vbi_requested_absence_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    vbi_requested_absence_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
 
     notification_casenumber = Column(Text)
     absence_casenumber = Column(Text)
@@ -344,7 +334,7 @@ class FineosExtractVbiRequestedAbsence(Base, TimestampMixin):
     episode_duration = Column(Text)
     episodic_duration_unit = Column(Text)
     reference_file_id = Column(
-        UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
     )
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
@@ -355,7 +345,7 @@ class FineosExtractVbiRequestedAbsence(Base, TimestampMixin):
 class FineosExtractEmployeeFeed(Base, TimestampMixin):
     __tablename__ = "fineos_extract_employee_feed"
 
-    employee_feed_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    employee_feed_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
 
     c = Column(Text)
     i = Column(Text)
@@ -417,7 +407,7 @@ class FineosExtractEmployeeFeed(Base, TimestampMixin):
     active_absence_flag = Column(Text)
 
     reference_file_id = Column(
-        UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
     )
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
@@ -443,7 +433,7 @@ class MaximumWeeklyBenefitAmount(Base):
 
 class FineosWritebackDetails(Base):
     __tablename__ = "fineos_writeback_details"
-    fineos_writeback_details_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    fineos_writeback_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     payment_id = Column(
         PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True, nullable=False
     )
@@ -470,7 +460,7 @@ class FineosWritebackDetails(Base):
 class LkFineosWritebackTransactionStatus(Base):
     __tablename__ = "lk_fineos_writeback_transaction_status"
     transaction_status_id = Column(Integer, primary_key=True, autoincrement=True)
-    transaction_status_description = Column(Text)
+    transaction_status_description = Column(Text, nullable=False)
     writeback_record_status = Column(Text)
 
     def __init__(
@@ -495,7 +485,7 @@ PENDING_ACTIVE_WRITEBACK_RECORD_STATUS = (
 
 class PaymentLog(Base, TimestampMixin):
     __tablename__ = "payment_log"
-    payment_log_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    payment_log_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     payment_id = Column(
         PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True, nullable=False
     )
@@ -516,9 +506,6 @@ class FineosWritebackTransactionStatus(LookupTable):
         "writeback_record_status",
     )
 
-    FAILED_MANUAL_VALIDATION = LkFineosWritebackTransactionStatus(
-        1, "Payment Audit Error", ACTIVE_WRITEBACK_RECORD_STATUS
-    )
     FAILED_AUTOMATED_VALIDATION = LkFineosWritebackTransactionStatus(
         2, "Payment Validation Error", ACTIVE_WRITEBACK_RECORD_STATUS
     )
@@ -550,9 +537,113 @@ class FineosWritebackTransactionStatus(LookupTable):
         13, "Leave Plan In Review", PENDING_ACTIVE_WRITEBACK_RECORD_STATUS
     )
 
+    # == Payment Rejection Statuses
+    FAILED_MANUAL_VALIDATION = LkFineosWritebackTransactionStatus(
+        1, "Payment Audit Error", ACTIVE_WRITEBACK_RECORD_STATUS
+    )  # Default rejection status
+
+    DUA_ADDITIONAL_INCOME = LkFineosWritebackTransactionStatus(
+        14, "DUA Additional Income", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    DIA_ADDITIONAL_INCOME = LkFineosWritebackTransactionStatus(
+        15, "DIA Additional Income", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    SELF_REPORTED_ADDITIONAL_INCOME = LkFineosWritebackTransactionStatus(
+        16, "SelfReported Additional Income", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    EXEMPT_EMPLOYER = LkFineosWritebackTransactionStatus(
+        17, "Exempt Employer", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    WEEKLY_BENEFITS_AMOUNT_EXCEEDS_850 = LkFineosWritebackTransactionStatus(
+        18, "Max Weekly Benefits Exceeded", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    WAITING_WEEK = LkFineosWritebackTransactionStatus(
+        19, "InvalidPayment WaitingWeek", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    ALREADY_PAID_FOR_DATES = LkFineosWritebackTransactionStatus(
+        20, "InvalidPayment PaidDate", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    LEAVE_DATES_CHANGE = LkFineosWritebackTransactionStatus(
+        21, "InvalidPayment LeaveDateChange", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    UNDER_OR_OVERPAY_ADJUSTMENT = LkFineosWritebackTransactionStatus(
+        22, "InvalidPayment PayAdjustment", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+    NAME_MISMATCH = LkFineosWritebackTransactionStatus(
+        23, "InvalidPayment NameMismatch", ACTIVE_WRITEBACK_RECORD_STATUS
+    )
+
+
+PAYMENT_AUDIT_REPORT_ACTION_REJECTED = "REJECTED"
+PAYMENT_AUDIT_REPORT_ACTION_SKIPPED = "SKIPPED"
+PAYMENT_AUDIT_REPORT_ACTION_INFORMATIONAL = ""
+
+
+class LkPaymentAuditReportType(Base):
+    __tablename__ = "lk_payment_audit_report_type"
+    payment_audit_report_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    payment_audit_report_type_description = Column(Text, nullable=False)
+    payment_audit_report_action = Column(Text, nullable=False)
+
+    def __init__(
+        self,
+        payment_audit_report_type_id,
+        payment_audit_report_type_description,
+        payment_audit_report_action,
+    ):
+        self.payment_audit_report_type_id = payment_audit_report_type_id
+        self.payment_audit_report_type_description = payment_audit_report_type_description
+        self.payment_audit_report_action = payment_audit_report_action
+
+
+class PaymentAuditReportType(LookupTable):
+    model = LkPaymentAuditReportType
+    column_names = (
+        "payment_audit_report_type_id",
+        "payment_audit_report_type_description",
+        "payment_audit_report_action",
+    )
+
+    MAX_WEEKLY_BENEFITS = LkPaymentAuditReportType(
+        1, "Max Weekly Benefits", PAYMENT_AUDIT_REPORT_ACTION_REJECTED
+    )
+    DUA_DIA_REDUCTION = LkPaymentAuditReportType(
+        2, "DUA DIA Reduction", PAYMENT_AUDIT_REPORT_ACTION_SKIPPED
+    )
+
+
+class PaymentAuditReportDetails(Base, TimestampMixin):
+    __tablename__ = "payment_audit_details"
+    payment_audit_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    payment_id = Column(
+        PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True, nullable=False
+    )
+    audit_report_type_id = Column(
+        Integer,
+        ForeignKey("lk_payment_audit_report_type.payment_audit_report_type_id"),
+        nullable=False,
+    )
+    details = Column(JSON, nullable=False)
+    added_to_audit_report_at = Column(TIMESTAMP(timezone=True), nullable=True,)
+    import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
+
+    payment = relationship(Payment)
+    audit_report_type = relationship(LkPaymentAuditReportType)
+    import_log = relationship(ImportLog)
+
 
 def sync_lookup_tables(db_session):
     FineosWritebackTransactionStatus.sync_to_database(db_session)
+    PaymentAuditReportType.sync_to_database(db_session)
 
 
 def sync_maximum_weekly_benefit_amount(db_session):

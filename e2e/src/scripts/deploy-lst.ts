@@ -1,35 +1,35 @@
-import { spawn as _spawn, SpawnOptions } from "child_process";
-import { format } from "date-fns";
-
-type ProcessData = {
-  stdout: string[];
-  stderr: string[];
-  code: number;
-};
-
-interface SpawnError {
-  command: string;
-  args: string[] | undefined;
-  options: SpawnOptions | undefined;
-  result: ProcessData;
-}
+import { spawn as _spawn } from "child_process";
+import config from "../config";
+import { v4 as uuid } from "uuid";
+import ArtilleryDeployer from "../artillery/ArtilleryDeployer";
 
 /**
- * This command is to be used to build images and push them to AWS ECR.
+ * This command is to be used to build images and push them to AWS ECR and
+ * then running the image via AWS ECS Fargate
  *
  * In order to use this command you'll need your SSO creds to use AWS CLI -
- * then authenticate to our repo w/this command:
+ * then authenticate (to Docker) to our repo w/this command:
  *
  * AWS_PROFILE=lcm-pfml aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 233259245172.dkr.ecr.us-east-1.amazonaws.com
  *
  * Once authenticated you can use this script to build, tag and push the image our AWS ECR
  *
- * @todo
- * Complete https://lwd.atlassian.net/browse/PFMLPB-1757
  */
 
 (async () => {
-  const image_name = `e2e-lst:${format(new Date(), "t")}`;
+  const configARN =
+    "arn:aws:ssm:us-east-1:233259245172:parameter/lst-worker-config";
+
+  const deployer = await ArtilleryDeployer.createFromConfigParameter(
+    configARN,
+    {
+      // Optional config overrides can be added here in development. Move them into
+      // the configuration parameter once you're ready for others to use them.
+    }
+  );
+  const run_id = uuid();
+  const local_tag = `e2e-lst:${run_id}`;
+  const remote_tag = `${deployer.registry}:${run_id}`;
   const cmd_args = {
     build: [
       "build",
@@ -38,82 +38,63 @@ interface SpawnError {
       "-f",
       "Dockerfile",
       "-t",
-      `${image_name}`,
+      local_tag,
+      "-t",
+      remote_tag,
       ".",
     ],
-    tag: [
-      "tag",
-      `${image_name}`,
-      `233259245172.dkr.ecr.us-east-1.amazonaws.com/${image_name}`,
-    ],
-    push: [
-      "push",
-      `233259245172.dkr.ecr.us-east-1.amazonaws.com/${image_name}`,
-    ],
+    push: ["push", remote_tag],
   };
 
-  try {
-    console.log("Building Docker Image ...");
-    await run_command("docker", cmd_args.build);
-    console.log("Docker Image Build Complete!\n");
+  console.log("Building Docker Image ...\n-----------------------");
+  await spawn("docker", cmd_args.build);
+  console.log("Docker Image Build Complete!\n");
 
-    console.log("Tagging the Docker Image ...");
-    await run_command("docker", cmd_args.tag);
-    console.log("Image Tag Successful!\n");
+  console.log(
+    "Pushing Image to ECR-LST repository...\n-----------------------"
+  );
+  await spawn("docker", cmd_args.push);
+  console.log(`Image Pushed to ${remote_tag}!`);
 
-    console.log("Pushing Image to ECR-LST repository ...");
-    await run_command("docker", cmd_args.push);
-    console.log("Image Push Successful!\n");
-  } catch (e) {
-    throw e;
-  }
+  const secretNames = [
+    "ENVIRONMENT" as const,
+    "PORTAL_PASSWORD" as const,
+    "FINEOS_PASSWORD" as const,
+    "TESTMAIL_APIKEY" as const,
+    "FINEOS_USERS" as const,
+  ];
+  const environment = secretNames.reduce(
+    (env, name) => {
+      env[`E2E_${name}`] = config(name);
+      return env;
+    },
+    {
+      LST_RUN_ID: run_id,
+      E2E_DEBUG: process.env.E2E_DEBUG,
+      IS_ECS: "true",
+    } as Record<string, string>
+  );
+
+  const result = await deployer.deploy(remote_tag, run_id, environment);
+  console.log(
+    `LST has been triggered...\n\n\tCluster: ${result.cluster}\n\n\n`
+  );
+  console.log(`Check AWS Cloudwatch with RUN_ID: ${run_id} for any logs.`);
 })().catch((e) => {
   console.error(e);
   process.exit(1);
 });
 
-/**
- * spwawn function to handle bash commands
- */
-function run_command(
-  command: string,
-  args?: string[],
-  options?: SpawnOptions
-): Promise<ProcessData> {
-  const spawnArgs = args || ([] as string[]),
-    spawnOptions = options || ({} as SpawnOptions);
-  return new Promise<ProcessData>((resolve, reject) => {
-    const child = _spawn(command, spawnArgs, spawnOptions);
-    const result: ProcessData = {
-      stdout: [],
-      stderr: [],
-      code: -1,
-    };
-    child.stderr?.on("data", (d) => {
-      result.stderr.push(d.toString());
-    });
-    child.stdout?.on("data", (d) => {
-      result.stdout.push(d.toString());
+function spawn(command: string, args: string[] = []): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const child = _spawn(command, args, {
+      stdio: "inherit",
     });
     child.on("close", (code) => {
-      result.code = code as number;
-      return code
-        ? reject(makeSpawnErrorFor(result, command, args, options))
-        : resolve(result);
+      code === 0 ? resolve() : reject(`Received ${code}`);
+    });
+    child.on("error", (err) => {
+      reject(err);
     });
   });
-}
-
-function makeSpawnErrorFor(
-  result: ProcessData,
-  command: string,
-  args: string[] | undefined,
-  options: SpawnOptions | undefined
-): SpawnError {
-  return {
-    result,
-    command,
-    args,
-    options,
-  };
 }

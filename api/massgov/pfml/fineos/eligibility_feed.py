@@ -353,22 +353,6 @@ def filter_to_first_employer_employee_pair(
     return first_employee_records
 
 
-def query_employees_and_most_recent_wages_for_employer(
-    query: "Query[_T]", employer: Employer
-) -> "Query[_T]":
-    return (
-        query.select_from(WagesAndContributions)
-        .join(WagesAndContributions.employee)
-        .filter(WagesAndContributions.employer_id == employer.employer_id)
-        .order_by(
-            WagesAndContributions.employer_id,
-            WagesAndContributions.employee_id,
-            WagesAndContributions.filing_period.desc(),
-        )
-        .distinct(WagesAndContributions.employer_id, WagesAndContributions.employee_id)
-    )
-
-
 # When loading employers to FINEOS the API we use requires us to
 # generate a unique key which we pass in the attribute CustomerNo.
 #
@@ -504,14 +488,10 @@ def process_employee_batch(
             number_of_employees = len(employee_ids)
             report.employee_and_employer_pairs_total_count += number_of_employees
 
-            employees_and_most_recent_wages: Iterable[
-                Tuple[Employee, WagesAndContributions]
-            ] = query_employees_and_most_recent_wages_for_employer(
-                db_session.query(Employee, WagesAndContributions), employer
-            ).filter(
-                Employee.employee_id.in_(employee_ids)
-            ).yield_per(
-                1000
+            employees = (
+                db_session.query(Employee)
+                .filter(Employee.employee_id.in_(employee_ids))
+                .yield_per(1000)
             )
 
             open_and_write_to_eligibility_file(
@@ -519,7 +499,7 @@ def process_employee_batch(
                 fineos_employer_id,
                 employer,
                 number_of_employees,
-                employees_and_most_recent_wages,
+                employees,
                 output_transport_params,
             )
 
@@ -615,11 +595,7 @@ def process_all_worker(
             db_session.query(Employee.employee_id), employer
         ).count()
 
-        employees_and_most_recent_wages: Iterable[
-            Tuple[Employee, WagesAndContributions]
-        ] = query_employees_and_most_recent_wages_for_employer(
-            db_session.query(Employee, WagesAndContributions), employer
-        ).yield_per(
+        employees = query_employees_for_employer(db_session.query(Employee), employer).yield_per(
             1000
         )
 
@@ -632,7 +608,7 @@ def process_all_worker(
             fineos_employer_id,
             employer,
             number_of_employees,
-            employees_and_most_recent_wages,
+            employees,
             output_transport_params,
         )
         return (TaskResultStatus.SUCCESS, number_of_employees)
@@ -778,20 +754,16 @@ def process_a_list_of_employers(
                 db_session.query(Employee.employee_id), employer
             ).count()
 
-            employees_and_most_recent_wages: Iterable[
-                Tuple[Employee, WagesAndContributions]
-            ] = query_employees_and_most_recent_wages_for_employer(
-                db_session.query(Employee, WagesAndContributions), employer
-            ).yield_per(
-                1000
-            )
+            employees = query_employees_for_employer(
+                db_session.query(Employee), employer
+            ).yield_per(1000)
 
             open_and_write_to_eligibility_file(
                 output_dir_path,
                 fineos_employer_id,
                 employer,
                 number_of_employees,
-                employees_and_most_recent_wages,
+                employees,
                 output_transport_params,
             )
 
@@ -850,7 +822,7 @@ def open_and_write_to_eligibility_file(
     fineos_employer_id: int,
     employer: Employer,
     number_of_employees: int,
-    employees: Iterable[Tuple[Employee, WagesAndContributions]],
+    employees: Iterable[Employee],
     output_transport_params: Optional[OutputTransportParams] = None,
 ) -> str:
     output_file_path = (
@@ -904,7 +876,7 @@ def write_employees_to_csv(
     employer: Employer,
     fineos_employer_id: str,
     number_of_employees: int,
-    employees_with_most_recent_wages: Iterable[Tuple[Employee, WagesAndContributions]],
+    employees: Iterable[Employee],
     output_file: TextIO,
 ) -> None:
     start_time = utcnow()
@@ -933,9 +905,9 @@ def write_employees_to_csv(
     )
     writer.writeheader()
 
-    employees_with_most_recent_wages_with_logging = massgov.pfml.util.logging.log_every(
+    employees_with_logging = massgov.pfml.util.logging.log_every(
         logger,
-        employees_with_most_recent_wages,
+        employees,
         count=1000,
         start_time=start_time,
         total_count=number_of_employees,
@@ -949,12 +921,12 @@ def write_employees_to_csv(
 
     logger.debug("Writing CSV rows")
     processed_employee_count = 0
-    for (employee, most_recent_wages) in employees_with_most_recent_wages_with_logging:
+    for employee in employees_with_logging:
         logger.debug("Writing row for employee", extra={"employee_id": employee.employee_id})
         try:
             writer.writerow(
                 csv_util.encode_row(
-                    employee_to_eligibility_feed_record(employee, most_recent_wages, employer),
+                    employee_to_eligibility_feed_record(employee, employer),
                     ELIGIBILITY_FEED_CSV_ENCODERS,
                 )
             )
@@ -1000,11 +972,11 @@ def write_employees_to_csv(
 
 
 def employee_to_eligibility_feed_record(
-    employee: Employee, most_recent_wages: WagesAndContributions, employer: Employer
+    employee: Employee, employer: Employer
 ) -> Optional[EligibilityFeedRecord]:
     record = EligibilityFeedRecord(
         # FINEOS required fields, without a general default we can set
-        employeeIdentifier=employee.employee_id,
+        employeeIdentifier=str(employee.employee_id),
         employeeFirstName=employee.first_name,
         employeeLastName=employee.last_name,
         # FINEOS required fields, but with an agreed upon default we can fall

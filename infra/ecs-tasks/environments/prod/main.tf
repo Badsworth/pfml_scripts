@@ -89,7 +89,7 @@ module "tasks" {
   payment_audit_report_outbound_folder_path = "s3://massgov-pfml-prod-agency-transfer/audit/outbound"
   payment_audit_report_sent_folder_path     = "s3://massgov-pfml-prod-agency-transfer/audit/sent"
 
-  enable_recurring_payments_schedule = true
+  enable_recurring_payments_schedule = false
   enable_register_admins_job         = true
 
   enable_pub_automation_fineos           = true
@@ -98,6 +98,10 @@ module "tasks" {
 
   enable_reductions_send_claimant_lists_to_agencies_schedule = true
   enable_reductions_process_agency_data_schedule             = true
+
+  rmv_client_base_url               = "https://atlas-gateway.massdot.state.ma.us"
+  rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-prod/rmv_client_certificate-Mo2HJu"
+  rmv_api_behavior                  = "not_mocked"
 
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com", "EOL-DL-DFML-ITSUPPORT@MassMail.State.MA.US"]
 
