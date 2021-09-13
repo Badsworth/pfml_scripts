@@ -30,12 +30,10 @@ def update(args):
     logger.info(f"Running 'update-release'...")
     logger.debug(f"Args: {repr(args)}")
 
-    # guardrails will have vetted args.release_version
-    # guardrails will have vetted args.git_commits
-
-    # autonomous flow:
     # TODO - most_recent_tag is not detecting 'foobar' RC tags correctly; finds only rc1 as newest, not rc2
     git_utils.fetch_remotes()
+    original_branch = git_utils.current_branch()  # Save this to check it back out after work's done
+
     recent_tag = git_utils.most_recent_tag(args.app)
     v = git_utils.to_semver(recent_tag)
 
@@ -43,6 +41,8 @@ def update(args):
         logger.error(f"Could not find the branch '{args.release_version}' on GitHub.")
         logger.error("Script cannot proceed and will now terminate.")
         return False
+
+    # TODO: terminate early if Git history of args.release_version contains semver tags w/o RC numbers
 
     old_head = git_utils.head_of_branch(args.release_version)
     logger.info(f"HEAD of '{args.release_version}' on origin is '{old_head[0:9]}'")
@@ -54,13 +54,10 @@ def update(args):
         logger.info(f"Now {'cherry picking commits' if args.git_commits else f'merging in {args.source_branch}'}...")
     except git.exc.GitCommandError as e:
         logger.warning(f"Ran into a problem: {e}")
-        logger.warning(f"Reverting '{args.release_version}' back to previous HEAD...")
-        git_utils.reset_head()
-        logger.warning("Done. Will now halt.")
         return False
     finally:
-        logger.warning("Task is finishing, will check out 'main' locally")  # TODO: check out original branch instead
-        git_utils.checkout("main")
+        logger.warning(f"Task is finishing, will check out '{original_branch}' locally")
+        git_utils.checkout(original_branch)
 
     #   check out the branch at args.release_version
     #       NB: will the check-out break everything if the release branch lacks this code?

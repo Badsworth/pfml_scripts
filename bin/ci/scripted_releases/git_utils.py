@@ -51,6 +51,10 @@ def create_branch(branch_name):
     logger.info(f"Branch '{branch_name}' created from origin/main")
 
 
+def current_branch():
+    return git.branch("--show-current")
+
+
 def most_recent_tag(app):
     t = git.describe("--tags", "--match", f"{app}/v*", "--abbrev=0", "origin/main")
     sha = git.rev_parse(t)
