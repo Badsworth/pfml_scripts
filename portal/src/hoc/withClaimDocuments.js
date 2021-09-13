@@ -12,14 +12,14 @@ import withUser from "./withUser";
  */
 const withClaimDocuments = (Component) => {
   const ComponentWithDocuments = (props) => {
-    const {
-      appLogic,
-      claim: { application_id },
-    } = props;
+    const { appLogic, claim, query } = props;
     const {
       documents: { loadAll, documents, hasLoadedClaimDocuments },
       users,
     } = appLogic;
+
+    // TODO (CP-2589): Clean up once application flow uses the same document upload components
+    const application_id = claim ? claim.application_id : query.claim_id;
 
     const shouldLoad = !hasLoadedClaimDocuments(application_id);
 
@@ -57,6 +57,9 @@ const withClaimDocuments = (Component) => {
     }).isRequired,
     claim: PropTypes.shape({
       application_id: PropTypes.string.isRequired,
+    }),
+    query: PropTypes.shape({
+      claim_id: PropTypes.string.isRequired,
     }),
   };
 

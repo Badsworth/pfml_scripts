@@ -2035,6 +2035,38 @@ const pages = {
     stateIdLabel: "Massachusetts driver’s license or ID",
     title: "Additional documentation",
   },
+  claimsUploadDocumentType: {
+    addAnotherFileButton: "$t(shared.fileUpload_addAnotherFileButton)",
+    addFirstFileButton: "$t(shared.fileUpload_addFirstFileButton)",
+    documentsLoadError: "$t(shared.documentsLoadError)",
+    fileHeadingPrefix: "$t(shared.fileUpload_fileHeadingPrefix)",
+    idAccordionContent:
+      "<p><strong>If you don’t have any of those, you can provide one of the following plus proof of your Social Security Number or Individual Tax Identification Number:</strong></p><ul><li>Valid, unexpired U.S. State or Territory License or ID, both front and back</li><li>Certified copy of a birth certificate filed with a State Office of Vital Statistics or equivalent agency in the individual’s state of birth. (You can only use a <puerto-rican-birth-certificate-link>Puerto Rican birth certificate</puerto-rican-birth-certificate-link> if it was issued on or after July 1, 2010.)</li><li>Certificate of Citizenship (Form N$t(chars.nbhyphen)560, or Form N$t(chars.nbhyphen)561)</li><li>Certificate of Naturalization (Form N$t(chars.nbhyphen)550 or N$t(chars.nbhyphen)570)</li></ul><p><strong>You can provide proof of your Social Security Number using one of the following documents displaying your complete Social Security Number:</strong></p><ul><li>Social Security card</li><li>W$t(chars.nbhyphen)2 Form</li><li>SSA$t(chars.nbhyphen)1099 Form</li><li>Non$t(chars.nbhyphen)SSA$t(chars.nbhyphen)1099 Form</li><li>Pay stub with your name on it</li></ul><p><identity-proof-link>Learn more about verifying your identity with different documents.</identity-proof-link></p>",
+    idAccordionHeading: "If you don’t have any of those documents:",
+    leadListNewborn: [
+      "Your child’s birth certificate.",
+      "A note from your child’s health care provider stating your child’s date of birth.",
+      "A note from the health care provider of the person who gave birth stating your child’s date of birth.",
+    ],
+    lead_bonding_adopt_foster:
+      "You need to upload a statement from your adoption or foster agency or from the Massachusetts Department of Children and Families to confirm the placement and the date of the placement.",
+    lead_bonding_newborn:
+      "You need to upload one of the following documents to confirm your child’s date of birth:",
+    lead_care:
+      "You need to upload a completed <caregiver-certification-form-link>$t(shared.certificationFormCare)</caregiver-certification-form-link> to prove that you need to take leave to care for a family member with a serious medical condition.",
+    lead_medical:
+      "You need to upload a completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link> to prove that you need to take medical leave.",
+    otherIdentityDocs:
+      "<p><strong>You can upload a copy of one of the following documents:</strong></p><ul><li>U.S. State or Territory Real ID, both front and back</li><li>U.S. passport or passport card</li><li>Permanent Resident Card issued by DHS or INS</li><li>Employment Authorization Document (EAD) issued by DHS</li><li>Foreign passport <strong>and</strong> a <work-visa-link>work visa</work-visa-link></li></ul>",
+    sectionLabel_bonding: "Upload your documentation",
+    sectionLabel_certification: "Upload your certification form",
+    sectionLabel_massId:
+      "Upload the front and back of your Massachusetts driver’s license or ID card",
+    sectionLabel_otherId:
+      "Upload an identification document issued by state or federal government",
+    title_certification: "Upload certification",
+    title_id: "$t(shared.claimsVerifyIdTitle)",
+  },
   claimsUploadId: {
     accordionContent:
       "<p><strong>If you don’t have any of those, you can provide one of the following plus proof of your Social Security Number or Individual Tax Identification Number:</strong></p><ul><li>Valid, unexpired U.S. State or Territory License or ID, both front and back</li><li>Certified copy of a birth certificate filed with a State Office of Vital Statistics or equivalent agency in the individual’s state of birth. (You can only use a <puerto-rican-birth-certificate-link>Puerto Rican birth certificate</puerto-rican-birth-certificate-link> if it was issued on or after July 1, 2010.)</li><li>Certificate of Citizenship (Form N$t(chars.nbhyphen)560, or Form N$t(chars.nbhyphen)561)</li><li>Certificate of Naturalization (Form N$t(chars.nbhyphen)550 or N$t(chars.nbhyphen)570)</li></ul><p><strong>You can provide proof of your Social Security Number using one of the following documents displaying your complete Social Security Number:</strong></p><ul><li>Social Security card</li><li>W$t(chars.nbhyphen)2 Form</li><li>SSA$t(chars.nbhyphen)1099 Form</li><li>Non$t(chars.nbhyphen)SSA$t(chars.nbhyphen)1099 Form</li><li>Pay stub with your name on it</li></ul><p><identity-proof-link>Learn more about verifying your identity with different documents.</identity-proof-link></p>",
@@ -2940,6 +2972,9 @@ const components = {
   },
   withBenefitsApplications: {
     loadingLabel: "Loading applications",
+  },
+  withClaimDocuments: {
+    loadingLabel: "Loading documents",
   },
   withClaims: {
     loadingLabel: "Loading claims",
