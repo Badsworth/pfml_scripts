@@ -594,7 +594,7 @@ class TasksPage {
     // Search for the task type
     cy.findByLabelText(`Find Work Types Named`).type(`${name}{enter}`);
     // Create task
-    cy.findByTitle(name, { exact: false }).click({ force: true });
+    cy.findByTitle(name).click({ force: true });
     clickBottomWidgetButton("Next");
     return this;
   }
