@@ -2,13 +2,13 @@
 # Dockerfile for PFML API.
 #
 
-FROM python:3.8-slim-buster as build
+FROM python:3.9-slim-buster as build
 
 # core project tools
 RUN pip install poetry
 RUN apt-get update \
  && apt-get install --no-install-recommends --yes \
-        make \
+        libffi-dev make \
         build-essential git curl \
         postgresql gnupg
 

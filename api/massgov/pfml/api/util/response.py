@@ -51,9 +51,9 @@ class Response:
         # If other warnings are passed in, merge with warnings set from validators.py
         if flask.request.__dict__.get("warning_list", None) is not None:
             if self.warnings is None:
-                self.warnings = flask.request.warning_list
+                self.warnings = flask.request.warning_list  # type: ignore
             else:
-                self.warnings = self.warnings + flask.request.warning_list
+                self.warnings = self.warnings + flask.request.warning_list  # type: ignore
 
         if self.meta is None:
             self.meta = MetaData(resource=flask.request.path, method=flask.request.method)
