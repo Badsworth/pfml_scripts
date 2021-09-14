@@ -109,6 +109,8 @@ const routes = {
       "https://www.dol.gov/agencies/whd/fact-sheets/28C-fmla-eldercare",
     massTaxConnect: "https://mtc.dor.state.ma.us/mtc/_/",
     massgov: {
+      approvalTimeline:
+        "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-application-approval-timeline",
       benefitsGuide:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide",
       benefitsGuide_aboutBondingLeave:

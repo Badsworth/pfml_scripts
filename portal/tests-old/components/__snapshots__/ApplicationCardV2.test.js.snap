@@ -261,7 +261,7 @@ exports[`ApplicationCardV2 components match their snapshots completed status mat
         }
       >
         <HeaderSection
-          title="Medical leave"
+          title="Leave for an illness or injury"
         >
           <Heading
             className="margin-bottom-1 padding-2 padding-top-3"
@@ -270,7 +270,7 @@ exports[`ApplicationCardV2 components match their snapshots completed status mat
             <h2
               className="margin-bottom-1 padding-2 padding-top-3 font-heading-md text-bold"
             >
-              Medical leave
+              Leave for an illness or injury
             </h2>
           </Heading>
         </HeaderSection>
@@ -466,7 +466,7 @@ exports[`ApplicationCardV2 components match their snapshots completed status mat
               <h4
                 className="padding-y-3 font-heading-xs text-bold"
               >
-                Manage your application documents
+                Other actions
               </h4>
             </Heading>
             <ButtonLink
@@ -481,7 +481,7 @@ exports[`ApplicationCardV2 components match their snapshots completed status mat
                   className="usa-button display-block margin-bottom-3 usa-button--unstyled"
                   href="/applications/status/?absence_case_id=NTN-111-ABS-01#view_notices"
                 >
-                  View notices
+                  View your notices
                 </a>
               </Link>
             </ButtonLink>
@@ -497,7 +497,7 @@ exports[`ApplicationCardV2 components match their snapshots completed status mat
                   className="usa-button display-block margin-bottom-2 usa-button--unstyled"
                   href="/applications/status/?absence_case_id=NTN-111-ABS-01#upload_documents"
                 >
-                  Upload documents
+                  Respond to a request for information
                 </a>
               </Link>
             </ButtonLink>

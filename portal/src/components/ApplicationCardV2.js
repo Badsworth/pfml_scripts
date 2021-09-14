@@ -106,7 +106,7 @@ const ManageDocumentSection = ({ claim }) => {
   return (
     <div className="border-top border-base-lighter margin-2 margin-top-0 padding-bottom-1">
       <Heading className="padding-y-3" level="4">
-        {t("components.applicationCardV2.manageApplicationDocuments")}
+        {t("components.applicationCardV2.otherActions")}
       </Heading>
       <ButtonLink
         className="display-block margin-bottom-3"
@@ -121,7 +121,7 @@ const ManageDocumentSection = ({ claim }) => {
         href={uploadDocumentsLink}
         variation="unstyled"
       >
-        {t("components.applicationCardV2.uploadDocuments")}
+        {t("components.applicationCardV2.respondToRequest")}
       </ButtonLink>
     </div>
   );
@@ -151,7 +151,7 @@ const LegalNoticeSection = (props) => {
       style={{ maxWidth: 385 }}
     >
       <Heading level="3">
-        {t("components.applicationCardV2.viewYourNotices")}
+        {t("components.applicationCardV2.viewNotices")}
       </Heading>
       <LegalNoticeList
         onDownloadClick={props.appLogic.documents.download}
