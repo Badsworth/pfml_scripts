@@ -51,3 +51,4 @@ Formats the Terraform files.
 
 foo
 bar!
+baz???
