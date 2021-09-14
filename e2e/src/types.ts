@@ -123,7 +123,11 @@ export type OtherTasks =
 /**Tasks avalable in fineos */
 export type FineosTasks = DocumentReviewTasks | ERTasks | OtherTasks;
 
-export type ClaimStatus = "Adjudication" | "Approved" | "Completed";
+export type ClaimStatus =
+  | "Adjudication"
+  | "Approved"
+  | "Completed"
+  | "Declined";
 
 /**
  * @note UTILITY TYPES

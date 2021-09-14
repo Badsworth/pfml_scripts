@@ -27,7 +27,7 @@ export function logSubmissions(
     const [now] = process.hrtime();
     processed++;
     const elapsed = now - start;
-    const cpm = ((processed / elapsed) * 60).toPrecision(1);
+    const cpm = ((processed / elapsed) * 60).toFixed(1);
     if (result.error) {
       errors++;
       log(
@@ -167,11 +167,11 @@ function getDelayMS(consecutiveErrors: number) {
   return 0;
 }
 
-/* 
+/*
  This function is used to reset the consecutiveError value
  If the current amount of consectuive errors is greater than 6, we
  should reset the amount of consecutive errors to 3.
- 
+
  This extra step will help determine if the submission should run at full speed (submission was successful on subsequent submissions after reset)
 */
 function handleSucess(consecutiveErrors: number) {

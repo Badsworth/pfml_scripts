@@ -15,6 +15,10 @@ export async function click(
   await Promise.all([element.click(), page.waitForNavigation()]);
 }
 
+/**
+ * @deprecated This function should no longer be used. Select the label directly using
+ * a text or text-is selector, and run fill() or selectOption() on that.
+ */
 export async function labelled(
   page: playwright.Page,
   label: string
@@ -30,6 +34,10 @@ export async function labelled(
   throw new Error(`Unable to find input labelled by: ${label}`);
 }
 
+/**
+ * @deprecated This function should no longer be used. There are lots of better ways
+ * to do text selection with Playwright.
+ */
 export async function contains(
   page: playwright.Page,
   selector: string,
@@ -66,16 +74,13 @@ export async function selectListTableRow(
   page: Page,
   rowSelector: string
 ): Promise<void> {
-  await page.waitForSelector(rowSelector).then(async (el) => {
-    // Only click the table row if it's not already selected.
-    const cl = await el.getAttribute("classList");
-    if (cl && cl.includes("ListRowSelected")) {
-      return;
-    }
-    await el.click();
-    // Wait for it to be selected before moving on. Sometimes, this requires a page refresh.
-    await page.waitForSelector(`${rowSelector}.ListRowSelected`);
-  });
+  const row = await page.locator(rowSelector);
+  const cl = await row.getAttribute("classList");
+  if (cl && cl.includes("ListRowSelected")) {
+    return;
+  }
+  await row.click();
+  await page.waitForSelector(`${rowSelector}.ListRowSelected`);
 }
 
 export async function waitForStablePage(page: playwright.Page): Promise<void> {
@@ -103,13 +108,11 @@ export async function gotoCase(
 ): Promise<void> {
   await page.click('.menulink a.Link[aria-label="Cases"]');
   await clickTab(page, "Case");
-  await labelled(page, "Case Number").then((el) => el.fill(id));
+  await page.fill("label:text-is('Case Number')", id);
   // Uncheck "Search Case Alias".
-  await labelled(page, "Search Case Alias").then((el) => el.click());
+  await page.uncheck("label:text-is('Search Case Alias')");
   await page.click('input[type="submit"][value="Search"]');
-  const title = await page
-    .waitForSelector(".case_pageheader_title")
-    .then((el) => el.innerText());
+  const title = await page.textContent(".case_pageheader_title");
   if (!(typeof title === "string") || !title.match(id)) {
     throw new Error("Page title should include case ID");
   }
