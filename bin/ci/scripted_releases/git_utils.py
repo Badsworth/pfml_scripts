@@ -1,7 +1,7 @@
 # low level methods and processes for scripted releases here
 from git import Repo
 import os
-import re
+from re import match
 import semver
 import logging
 
@@ -60,6 +60,22 @@ def most_recent_tag(app):
     sha = git.rev_parse(t)
     logger.info(f"Latest {app} tag is '{t}' with commit SHA '{sha[0:9]}'")
     return t
+
+
+def is_finalized(release_branch) -> bool:
+    formal_release_tag_regex = r"(api|portal|foobar)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0-9]+){0,1})$"
+
+    # hideous triple data munging: 'release/api/v2.23.0' --> 'api/v2.23.0' --> 'api/v2.23.*'
+    release_branch_version_series: str = "/".join(release_branch.split("/")[1:])[:-1] + "*"
+    print(f"SERIES: {release_branch_version_series}")
+
+    version_series_tags: list = git.tag("-l", release_branch_version_series).split("\n")
+    print(f"TAGS: {version_series_tags}")
+
+    formal_release_statuses = list(bool(match(formal_release_tag_regex, tag)) for tag in version_series_tags)
+    print(f"STATUS: {formal_release_statuses}")
+
+    return any(formal_release_statuses)
 
 
 def head_of_branch(branch_name):

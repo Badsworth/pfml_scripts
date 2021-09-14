@@ -42,7 +42,7 @@ def update(args):
         logger.error("Script cannot proceed and will now terminate.")
         return False
 
-    # TODO: terminate early if Git history of args.release_version contains semver tags w/o RC numbers
+    # TODO: terminate early if git_utils.is_finalized(args.release_version)
 
     old_head = git_utils.head_of_branch(args.release_version)
     logger.info(f"HEAD of '{args.release_version}' on origin is '{old_head[0:9]}'")
