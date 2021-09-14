@@ -5,12 +5,6 @@ import { render } from "@testing-library/react";
 describe("FormLabel", () => {
   const text = "Form label text";
 
-  const expectElementClasses = (element, ...classList) => {
-    classList.forEach((className) => {
-      expect(element).toHaveClass(className);
-    });
-  };
-
   describe("FormLabel rendering", () => {
     it("renders the form label and its children", () => {
       const label = render(<FormLabel>{text}</FormLabel>);
@@ -77,11 +71,7 @@ describe("FormLabel", () => {
   describe("FormLabel class lists", () => {
     it("renders component `label` with expected classes when small", () => {
       const label = render(<FormLabel small>{text}</FormLabel>);
-      expectElementClasses(
-        label.getByText(text),
-        "font-heading-xs",
-        "measure-5"
-      );
+      expect(label.getByText(text)).toHaveClass("font-heading-xs", "measure-5");
     });
 
     it("renders component `legend` with expected classes when small", () => {
@@ -90,11 +80,7 @@ describe("FormLabel", () => {
           {text}
         </FormLabel>
       );
-      expectElementClasses(
-        label.getByText(text),
-        "font-heading-xs",
-        "measure-5"
-      );
+      expect(label.getByText(text)).toHaveClass("font-heading-xs", "measure-5");
     });
 
     it("renders the example text with expected classes", () => {
@@ -102,8 +88,7 @@ describe("FormLabel", () => {
       const label = render(<FormLabel example={exampleText}>{text}</FormLabel>);
       const example = label.getByText(exampleText);
 
-      expectElementClasses(
-        example,
+      expect(example).toHaveClass(
         "display-block",
         "line-height-sans-5",
         "measure-5",
@@ -119,8 +104,7 @@ describe("FormLabel", () => {
       );
       const optionalItem = label.getByText(optionalText);
 
-      expectElementClasses(
-        optionalItem,
+      expect(optionalItem).toHaveClass(
         "text-base-dark",
         "text-normal",
         "usa-hint"
