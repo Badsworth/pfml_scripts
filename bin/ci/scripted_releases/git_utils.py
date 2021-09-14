@@ -12,7 +12,7 @@ repo = Repo(os.path.join(os.path.dirname(__file__), "../../.."))
 git = repo.git
 
 rc_match = r".+-rc[0-9]+"
-
+FORMAL_RELEASE_TAG_REGEX = r"(api|portal|foobar)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0-9]+){0,1})$"
 
 def fetch_remotes():
     # fetch remotes
@@ -63,8 +63,6 @@ def most_recent_tag(app):
 
 
 def is_finalized(release_branch) -> bool:
-    formal_release_tag_regex = r"(api|portal|foobar)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0-9]+){0,1})$"
-
     # hideous triple data munging: 'release/api/v2.23.0' --> 'api/v2.23.0' --> 'api/v2.23.*'
     release_branch_version_series: str = "/".join(release_branch.split("/")[1:])[:-1] + "*"
     print(f"SERIES: {release_branch_version_series}")
@@ -72,7 +70,7 @@ def is_finalized(release_branch) -> bool:
     version_series_tags: list = git.tag("-l", release_branch_version_series).split("\n")
     print(f"TAGS: {version_series_tags}")
 
-    formal_release_statuses = list(bool(match(formal_release_tag_regex, tag)) for tag in version_series_tags)
+    formal_release_statuses = list(bool(match(FORMAL_RELEASE_TAG_REGEX, tag)) for tag in version_series_tags)
     print(f"STATUS: {formal_release_statuses}")
 
     return any(formal_release_statuses)

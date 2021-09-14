@@ -1,5 +1,6 @@
 # testing for the git internals for the automated deploy process
 from scripted_releases import git_utils
+
 from semver import VersionInfo
 import pytest
 
@@ -37,11 +38,19 @@ def test_from_semver_portal():
                                  app='portal') == "portal/v15.0-rc1"
 
 
-def test_release_series_is_not_finalized():
+# NB: Inputs to the Git binary cannot be mocked. This test depends on a real "mock release branch" in the PFML repo.
+def test_release_series_is_not_finalized(monkeypatch):
+    monkeypatch.setattr(
+        git_utils, 'FORMAL_RELEASE_TAG_REGEX', r"(finished|unfinished)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0-9]+){0,1})$"
+    )
     assert git_utils.is_finalized("release/unfinished/v5.5.0") is False
 
 
-def test_release_series_is_finalized():
+# NB: Inputs to the Git binary cannot be mocked. This test depends on a real "mock release branch" in the PFML repo.
+def test_release_series_is_finalized(monkeypatch):
+    monkeypatch.setattr(
+        git_utils, 'FORMAL_RELEASE_TAG_REGEX', r"(finished|unfinished)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0-9]+){0,1})$"
+    )
     assert git_utils.is_finalized("release/finished/v7.7.0") is True
 
 # update these when working on major/minor releases
