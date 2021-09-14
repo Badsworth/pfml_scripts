@@ -224,6 +224,13 @@ export const Department = (props) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [departments]);
 
+  if (!showDepartments) {
+    // @todo: go to next page and ignore departments, auto-select "I'm not sure"
+    appLogic.portalFlow.goTo(routes.applications.notifiedEmployer, {
+      claim_id: claim.application_id,
+    });
+  }
+
   return (
     <QuestionPage
       title={t("pages.claimsEmploymentStatus.title")}
@@ -281,17 +288,19 @@ export const Department = (props) => {
               {t("pages.claimsDepartment.sectionLabel")}
             </FormLabel>
           </ConditionalContent>
-          <ComboBox
-            {...getFunctionalInputProps("reporting_unit", {
-              fallbackValue: formState.reporting_unit || "",
-            })}
-            choices={
-              hasSelectedRadioWorkaround ? employerChoices : claimantChoices
-            }
-            label={t("pages.claimsDepartment.comboBoxLabel")}
-            smallLabel
-            required
-          />
+          <ConditionalContent visible={showDepartments}>
+            <ComboBox
+              {...getFunctionalInputProps("reporting_unit", {
+                fallbackValue: formState.reporting_unit || "",
+              })}
+              choices={
+                hasSelectedRadioWorkaround ? employerChoices : claimantChoices
+              }
+              label={t("pages.claimsDepartment.comboBoxLabel")}
+              smallLabel
+              required
+            />
+          </ConditionalContent>
           <ConditionalContent visible={hasSelectedComboboxWorkaround}>
             <Alert className="measure-6" state="info" slim>
               {t("pages.claimsDepartment.followupInfo")}

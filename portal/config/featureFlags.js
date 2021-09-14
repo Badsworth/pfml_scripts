@@ -38,6 +38,9 @@ const flagsConfig = {
     // See docs/portal/maintenance-pages.md for more details.
     noMaintenance: false,
 
+    // When this flag is false, you can bypass the deparment capture form when applying
+    claimantShowDepartments: false,
+
     // When this flag is enabled, the user can see the site.
     // To immediately hide the site from people who previously overrode this
     // flag in a cookie, you can rename this flag to something else (and also
