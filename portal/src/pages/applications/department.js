@@ -24,9 +24,8 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 export const fields = ["claim.reporting_unit"];
 
 export const Department = (props) => {
-  const { appLogic, claim, user } = props;
+  const { appLogic, claim } = props;
   const { t } = useTranslation();
-  const historyApi = props.history || globalThis.history;
 
   const showDepartments = isFeatureEnabled("claimantShowDepartments");
 
@@ -34,17 +33,6 @@ export const Department = (props) => {
 
   const { formState, updateFields, getField, clearField } =
     useFormState(initialFormState);
-
-  useEffect(() => {
-    console.log(historyApi.state.url, routes.applications.notifiedEmployer)
-    if (!showDepartments) {
-      // @todo: go to next page and ignore departments, auto-select "I'm not sure"
-      // delete formState.radio_reporting_unit;
-      // formState.reporting_unit = "I'm not sure";
-      // appLogic.benefitsApplications.update(claim.application_id, formState);
-      appLogic.portalFlow.goToNextPage({ claim, user }, { claim_id: claim.application_id });
-    }
-  }, [claim, showDepartments, appLogic, user]);
 
   const [departments, setDepartments] = useState([]);
   const [employerDepartments, setEmployerDepartments] = useState([]);
