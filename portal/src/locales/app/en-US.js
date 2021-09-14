@@ -2494,7 +2494,7 @@ const components = {
   downloadableDocument: {
     createdAtDate: "Posted {{date}}",
     noticeName: "Other notice $t(shared.pdfNoticeSuffix)", // it should fallback to this if we receive an unexpected or undefined enum
-    noticeName_appealAcknowledgement:
+    noticeName_appealAcknowledgment:
       "Appeal Acknowledgment $t(shared.pdfNoticeSuffix)",
     noticeName_approvalNotice: "Approval notice $t(shared.pdfNoticeSuffix)",
     noticeName_denialNotice: "Denial notice $t(shared.pdfNoticeSuffix)",

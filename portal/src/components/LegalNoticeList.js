@@ -26,7 +26,7 @@ export default function LegalNoticeList(props) {
     DocumentType.denialNotice,
     DocumentType.requestForInfoNotice,
     DocumentType.withdrawalNotice,
-    DocumentType.appealAcknowledgement,
+    DocumentType.appealAcknowledgment,
   ]);
 
   const legalNoticeList = legalNotices.map((document) => (
