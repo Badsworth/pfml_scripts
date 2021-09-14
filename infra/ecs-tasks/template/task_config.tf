@@ -49,19 +49,10 @@ locals {
   # Provides access to EOLWD's SFTP server (MoveIT)
   eolwd_moveit_access = [
     { name : "EOLWD_MOVEIT_SFTP_URI", value : var.eolwd_moveit_sftp_uri },
-    { name : "CTR_MOVEIT_SSH_KEY", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key" },
-    { name : "CTR_MOVEIT_SSH_KEY_PASSWORD", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key-password" },
     # Duplicate this for now since reductions has a different name
     { name : "MOVEIT_SFTP_URI", value : var.eolwd_moveit_sftp_uri },
     { name : "MOVEIT_SSH_KEY", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key" },
     { name : "MOVEIT_SSH_KEY_PASSWORD", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key-password" }
-  ]
-
-  # Provides access to CTR datamart
-  datamart_access = [
-    { name : "CTR_DATA_MART_HOST", value : var.ctr_data_mart_host },
-    { name : "CTR_DATA_MART_USERNAME", value : var.ctr_data_mart_username },
-    { name : "CTR_DATA_MART_PASSWORD", valueFrom : "/service/${local.app_name}/${var.environment_name}/ctr-data-mart-password" }
   ]
 
   # S3 path configurations for PUB
@@ -97,8 +88,6 @@ locals {
 
   # Configuration for email sending + destinations required for payments
   emails_ctr = concat(local.emails, [
-    { name : "CTR_GAX_BIEVNT_EMAIL_ADDRESS", value : var.ctr_gax_bievnt_email_address },
-    { name : "CTR_VCC_BIEVNT_EMAIL_ADDRESS", value : var.ctr_vcc_bievnt_email_address },
     { name : "DFML_PROJECT_MANAGER_EMAIL_ADDRESS", value : var.dfml_project_manager_email_address },
     { name : "DFML_BUSINESS_OPERATIONS_EMAIL_ADDRESS", value : var.dfml_business_operations_email_address },
   ])

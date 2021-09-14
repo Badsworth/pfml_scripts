@@ -59,26 +59,6 @@ module "register_leave_admins_with_fineos_scheduler" {
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Run payments-payment-voucher-plus at 3am EST (4am EDT) (8am UTC)
-module "payments_payment_voucher_plus_scheduler" {
-  source     = "../../modules/ecs_task_scheduler"
-  is_enabled = var.enable_recurring_payments_schedule
-
-  task_name           = "payments-payment-voucher-plus"
-  schedule_expression = "cron(0 8 ? * MON-FRI *)"
-  environment_name    = var.environment_name
-
-  cluster_arn        = data.aws_ecs_cluster.cluster.arn
-  app_subnet_ids     = var.app_subnet_ids
-  security_group_ids = [aws_security_group.tasks.id]
-
-  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["payments-payment-voucher-plus"].arn
-  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["payments-payment-voucher-plus"].family
-  ecs_task_executor_role     = aws_iam_role.task_executor.arn
-  ecs_task_role              = aws_iam_role.payments_fineos_process_task_role.arn
-}
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Run fineos-bucket-tool daily at 3am EST (4am EDT) (8am UTC)
 module "fineos_bucket_tool_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
@@ -153,6 +133,7 @@ module "fineos_extract_scheduler" {
   }
   JSON
 }
+
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Run import-fineos-to-warehouse at 10pm EST (11pm EDT) (3am UTC +1 day)
 module "import_fineos_to_warehouse" {
@@ -400,45 +381,6 @@ module "weekend-pub-payments-process-fineos" {
         "command": [
           "pub-payments-process-fineos",
           "--steps=claimant-extract"
-        ]
-      }
-    ]
-  }
-  JSON
-}
-
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Process CPS extracts at 3am EST (4am EDT) (8am UTC) on the weekend
-#
-# This happens during the work week as a part of
-# payments_payment_voucher_plus_scheduler.
-module "weekend_cps_extract_processing_scheduler" {
-  source = "../../modules/ecs_task_scheduler"
-  # This technically impacts more than just payments, but the week day
-  # processing is also tied to this var at the moment, so using the same here.
-  is_enabled = var.enable_recurring_payments_schedule
-
-  task_name           = "weekend-cps-extract-processing"
-  schedule_expression = "cron(0 8 ? * SUN,SAT *)"
-  environment_name    = var.environment_name
-
-  cluster_arn        = data.aws_ecs_cluster.cluster.arn
-  app_subnet_ids     = var.app_subnet_ids
-  security_group_ids = [aws_security_group.tasks.id]
-
-  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["payments-fineos-process"].arn
-  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["payments-fineos-process"].family
-  ecs_task_executor_role     = aws_iam_role.task_executor.arn
-  ecs_task_role              = aws_iam_role.payments_fineos_process_task_role.arn
-
-  input = <<JSON
-  {
-    "containerOverrides": [
-      {
-        "name": "payments-fineos-process",
-        "command": [
-          "payments-fineos-process",
-          "--steps=vendor-extract"
         ]
       }
     ]

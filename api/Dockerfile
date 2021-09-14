@@ -10,11 +10,7 @@ RUN apt-get update \
  && apt-get install --no-install-recommends --yes \
         libffi-dev make \
         build-essential git curl \
-        postgresql libpq-dev gnupg \
- && curl https://packages.microsoft.com/keys/microsoft.asc | apt-key add - \
- && curl https://packages.microsoft.com/config/debian/10/prod.list > /etc/apt/sources.list.d/mssql-release.list \
- && apt-get update \
- && ACCEPT_EULA=Y apt-get install --no-install-recommends --yes msodbcsql17 unixodbc-dev mssql-tools
+        postgresql libpq-dev gnupg
 
 # setup user stuff
 ARG RUN_UID
@@ -46,12 +42,10 @@ WORKDIR /app
 
 # install dependencies
 COPY pyproject.toml poetry.lock ./
-RUN poetry install --no-root --extras "mssql-server api-only-dependencies"
+RUN poetry install --no-root --extras "api-only-dependencies"
 
 # grab the application
 COPY . ./
-
-ENV PATH="/opt/mssql-tools/bin:$PATH"
 
 # run the server
 CMD ["poetry", "run", "python", "-m", "massgov.pfml.api"]
@@ -70,13 +64,13 @@ WORKDIR /app
 # use a project-local virtualenv to be easy to find
 ENV POETRY_VIRTUALENVS_IN_PROJECT true
 COPY pyproject.toml poetry.lock ./
-RUN poetry install --no-root --no-dev --extras "mssql-server api-only-dependencies"
+RUN poetry install --no-root --no-dev --extras "api-only-dependencies"
 
 # for simplicity, grab the whole project
 COPY . ./
 # then install just the application by building and installing the project
 # Python package (excludes non-essential files, like tests)
-RUN poetry build --format wheel && poetry run pip install 'dist/massgov.pfml.api-0.1.0-py3-none-any.whl[mssql-server]'
+RUN poetry build --format wheel && poetry run pip install 'dist/massgov.pfml.api-0.1.0-py3-none-any.whl'
 
 #-------------------------------------------------------------------------------
 # Application only
@@ -112,10 +106,6 @@ COPY --from=app-build /usr/local/lib/ /usr/local/lib/
 COPY --from=app-build /usr/local/include/python* /usr/local/include/
 COPY --from=app-build /lib64/* /lib64/
 COPY --from=app-build --chown=${RUN_USER} /tmp/ /tmp/
-
-# Include ODBC/MS SQL Sever stuff
-COPY --from=app-build /opt/microsoft/ /opt/microsoft/
-COPY --from=app-build /etc/odbcinst.ini /etc/
 
 ENV PATH="/app/.venv/bin:$PATH"
 
