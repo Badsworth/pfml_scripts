@@ -14,6 +14,7 @@ git = repo.git
 rc_match = r".+-rc[0-9]+"
 FORMAL_RELEASE_TAG_REGEX = r"(api|portal|foobar)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0-9]+){0,1})$"
 
+
 def fetch_remotes():
     # fetch remotes
     origin = repo.remotes.origin
@@ -60,6 +61,12 @@ def most_recent_tag(app, release_branch):
     sha = git.rev_parse(t)
     logger.info(f"Latest {app} tag on '{release_branch}' is '{t}' with commit SHA '{sha[0:9]}'")
     return t
+
+
+def branch_from_release(hotfix_branch, release_branch):
+    fetch_remotes()
+    git.checkout("-b", hotfix_branch, release_branch)
+    logger.info(f"Branch '{hotfix_branch}' created from {release_branch}")
 
 
 def is_finalized(release_branch) -> bool:

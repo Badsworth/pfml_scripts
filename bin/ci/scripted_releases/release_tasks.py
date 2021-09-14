@@ -77,9 +77,23 @@ def finalize(args):
     logger.debug(f"Args: {repr(args)}")
 
 
-def hotfix(args):
-    logger.info(f"Running 'hotfix'...")
-    logger.debug(f"Args: {repr(args)}")
+def hotfix(args): # production hotfix, args are a branch name and a list of commits
+    # args are a release branch and a list of commits
+    # release branch will be cut from the prod deploy branch
+    #  add more loggers
+    # guardrails are supposed to vet args.release_verison and args.commits
+    # add guardrails for make finalize_release
+    logger.info(f"Running 'hotfix'; args: {repr(args)}")
+
+    git_utils.fetch_remotes()
+    recent_tag = git_utils.most_recent_tag(args.app)
+    v = git_utils.to_semver(recent_tag)
+
+    version_name = git_utils.from_semver(v.bump_patch(), args.app)
+ 
+    git_utils.branch_from_release(args.release_version, f"origin/deploy/{args.app}/prod")
+    git_utils.tag_branch(args.release_version, version_name)
+    git_utils.cherrypick(args.git_commits) # assumes these are coming from main
 
 
 def major(args):
