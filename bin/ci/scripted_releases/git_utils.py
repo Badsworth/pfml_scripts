@@ -55,10 +55,10 @@ def current_branch():
     return git.branch("--show-current")
 
 
-def most_recent_tag(app):
-    t = git.describe("--tags", "--match", f"{app}/v*", "--abbrev=0", "origin/main")
+def most_recent_tag(app, release_branch):
+    t = git.describe("--tags", "--match", f"{app}/v*", "--abbrev=0", f"origin/{release_branch}")
     sha = git.rev_parse(t)
-    logger.info(f"Latest {app} tag is '{t}' with commit SHA '{sha[0:9]}'")
+    logger.info(f"Latest {app} tag on '{release_branch}' is '{t}' with commit SHA '{sha[0:9]}'")
     return t
 
 

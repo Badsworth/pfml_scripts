@@ -12,7 +12,7 @@ def start(args):
 
     # getting the proper tags/branches for the release
     git_utils.fetch_remotes()
-    recent_tag = git_utils.most_recent_tag(args.app)
+    recent_tag = git_utils.most_recent_tag(args.app, args.release_version)
 
     v = git_utils.to_semver(recent_tag)  # convert tag to semver object
     version_name = git_utils.from_semver(v.bump_minor(), args.app)
@@ -30,11 +30,10 @@ def update(args):
     logger.info(f"Running 'update-release'...")
     logger.debug(f"Args: {repr(args)}")
 
-    # TODO - most_recent_tag is not detecting 'foobar' RC tags correctly; finds only rc1 as newest, not rc2
     git_utils.fetch_remotes()
     original_branch = git_utils.current_branch()  # Save this to check it back out after work's done
 
-    recent_tag = git_utils.most_recent_tag(args.app)
+    recent_tag = git_utils.most_recent_tag(args.app, args.release_version)
     v = git_utils.to_semver(recent_tag)
 
     if not git_utils.branch_exists(args.release_version):
@@ -93,7 +92,7 @@ def major(args):
     else:
         # getting the proper tags/branches for the release
         git_utils.fetch_remotes()
-        recent_tag = git_utils.most_recent_tag(args.app)
+        recent_tag = git_utils.most_recent_tag(args.app, args.release_version)
 
         v = git_utils.to_semver(recent_tag)  # convert tag to semver object
         version_name = git_utils.from_semver(v.bump_major(), args.app)
