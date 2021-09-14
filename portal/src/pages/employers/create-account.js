@@ -19,19 +19,18 @@ export const CreateAccount = (props) => {
   const { appLogic } = props;
   const { t } = useTranslation();
 
-  // TODO (CP-1931) Rename email/ein fields to match the field names sent to the API, so errors show up inline
   const { formState, updateFields } = useFormState({
     password: "",
-    username: "",
-    ein: "",
+    email_address: "",
+    user_leave_administrator: { employer_fein: "" },
   });
 
   const handleSubmit = useThrottledHandler(async (event) => {
     event.preventDefault();
     await appLogic.auth.createEmployerAccount(
-      formState.username,
+      formState.email_address,
       formState.password,
-      formState.ein
+      formState.user_leave_administrator.employer_fein
     );
   });
 
@@ -68,7 +67,7 @@ export const CreateAccount = (props) => {
           />
         </Details>
         <InputText
-          {...getFunctionalInputProps("username")}
+          {...getFunctionalInputProps("email_address")}
           type="email"
           hint={t("pages.employersAuthCreateAccount.usernameHint")}
           label={t("pages.employersAuthCreateAccount.usernameLabel")}
@@ -82,7 +81,7 @@ export const CreateAccount = (props) => {
           smallLabel
         />
         <InputText
-          {...getFunctionalInputProps("ein")}
+          {...getFunctionalInputProps("user_leave_administrator.employer_fein")}
           inputMode="numeric"
           mask="fein"
           hint={

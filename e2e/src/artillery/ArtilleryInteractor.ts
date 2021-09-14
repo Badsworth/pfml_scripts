@@ -6,18 +6,12 @@ import * as scenarios from "../scenarios/lst";
 import { ClaimGenerator, GeneratedClaim } from "../generation/Claim";
 import { Credentials } from "../types";
 import faker from "faker";
-import { ApplicationResponse } from "../api";
 import { approveClaim } from "../submission/PostSubmit";
 import { Fineos } from "../submission/fineos.pages";
 import config from "../../src/config";
 import getArtillerySubmitter from "./ArtilleryClaimSubmitter";
-
-export type ArtilleryContext = {
-  claimantCredentials?: Credentials;
-  claim?: GeneratedClaim;
-  submission?: ApplicationResponse;
-  [k: string]: unknown;
-};
+import winston from "winston";
+import { getDataFromClaim, UsefulClaimData } from "./util";
 
 /**
  * This is the interaction layer.
@@ -34,93 +28,118 @@ export default class ArtilleryPFMLInteractor {
 
   private async employees(): Promise<EmployeePool> {
     if (!this.employeePool) {
-      this.employeePool = await EmployeePool.load(config("EMPLOYEES_FILE"));
+      this.employeePool = await EmployeePool.load(config("LST_EMPLOYEES_FILE"));
     }
     return this.employeePool;
   }
-  registerClaimant(context: ArtilleryContext, ee: EventEmitter): Promise<void> {
+  registerClaimant(ee: EventEmitter): Promise<Credentials> {
     return timed(ee, "registerClaimant", async () => {
       const credentials = generateCredentials();
       await this.authManager.registerClaimant(
         credentials.username,
         credentials.password
       );
-      context.claimantCredentials = credentials;
+      return credentials;
     });
   }
   generateClaim(
-    context: ArtilleryContext,
     ee: EventEmitter,
-    scenario: string
-  ): Promise<void> {
+    scenario: string,
+    logger: winston.Logger
+  ): Promise<GeneratedClaim> {
     return timed(ee, "generateClaim", async () => {
       const pool = await this.employees();
       if (!(scenario in scenarios)) {
         throw new Error("Invalid or missing scenario");
       }
       const scenarioObj = scenarios[scenario as keyof typeof scenarios];
-      context.claim = ClaimGenerator.generate(
+      logger.info("Generating Claim now ...");
+      const claim = ClaimGenerator.generate(
         pool,
         scenarioObj.employee,
         scenarioObj.claim
       );
+      logger.info("Claim Generation Success", getDataFromClaim(claim));
+      logger.debug("Fully generated claim", claim.claim);
+      return claim;
     });
   }
 
-  submitClaim(context: ArtilleryContext, ee: EventEmitter): Promise<void> {
+  submitClaim(
+    claim: GeneratedClaim,
+    ee: EventEmitter,
+    childLoggerClaimInfo: winston.Logger,
+    creds?: Credentials
+  ): Promise<ApplicationSubmissionResponse> {
     return timed(ee, "submitClaim", async () => {
-      const claim = context.claim as GeneratedClaim | undefined;
-      if (!claim) {
-        throw new Error("No claim given");
-      }
-      if (!claim.claim.employer_fein) {
-        throw new Error("No FEIN given on claim");
-      }
-      const claimantCredentials =
-        (context.claimantCredentials as Credentials | undefined) ??
-        getClaimantCredentials();
+      const claimantCredentials = creds ?? getClaimantCredentials();
       const leaveAdminCredentials = getLeaveAdminCredentials(
-        claim.claim.employer_fein
+        claim.claim.employer_fein as string
       );
       const submitter = getArtillerySubmitter();
-      context.submission = await submitter.lstSubmit(
-        claim,
-        claimantCredentials,
-        leaveAdminCredentials
+      childLoggerClaimInfo.info(
+        "Attempt to submit claim for the following employee..."
       );
+      try {
+        const submission = await submitter.lstSubmit(
+          claim,
+          claimantCredentials,
+          leaveAdminCredentials,
+          childLoggerClaimInfo
+        );
+        childLoggerClaimInfo.info("Claim Submitted Succesffully", submission);
+        return submission;
+      } catch (e) {
+        childLoggerClaimInfo.error(e);
+        throw new Error("Claim Submission Error!");
+      }
     });
   }
 
-  postProcessClaim(context: ArtilleryContext, ee: EventEmitter): Promise<void> {
-    if (!context.submission?.fineos_absence_id || !context.claim) {
-      throw new Error(
-        `Cannot post-process because no claim was successfully submitted`
-      );
-    }
+  postProcessClaim(
+    claim: GeneratedClaim,
+    submission: ApplicationSubmissionResponse,
+    ee: EventEmitter,
+    childLoggerSubmission: winston.Logger
+  ): Promise<UsefulClaimData> {
     return timed(ee, "postProcessClaim", async () => {
+      childLoggerSubmission.info(
+        "Post Processing Claim in Fineos ...",
+        submission
+      );
       await Fineos.withBrowser(
         async (page) =>
           await approveClaim(
             page,
-            context.claim as GeneratedClaim,
-            context.submission?.fineos_absence_id as string
+            claim,
+            submission?.fineos_absence_id,
+            childLoggerSubmission
           ),
-        false
+        { debug: false }
       );
-      console.log("Claim post-processed");
+      childLoggerSubmission.info(
+        "Claim has been processed w/o errors:",
+        submission
+      );
+      return getDataFromClaim(claim);
     });
   }
 }
 
-async function timed(ee: EventEmitter, name: string, cb: () => Promise<void>) {
+async function timed<T>(
+  ee: EventEmitter,
+  name: string,
+  cb: () => Promise<T>
+): Promise<T> {
   const startedAt = process.hrtime();
   ee.emit("counter", `${name}.count.started`, 1);
-  await cb();
+  const res = await cb();
   const endedAt = process.hrtime(startedAt);
   const delta = endedAt[0] * 1e9 + endedAt[1];
   // Convert to milliseconds.
   ee.emit("histogram", `${name}.time`, delta / 1e6);
   ee.emit("counter", `${name}.count.completed`, 1);
+  return res;
 }
 
 /**

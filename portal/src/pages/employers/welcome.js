@@ -10,7 +10,6 @@ import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
@@ -31,7 +30,6 @@ export const Welcome = ({ appLogic, user }) => {
     fill: "currentColor",
   };
   const hasVerifiableEmployer = user.hasVerifiableEmployer;
-  const shouldShowOtherLeave = isFeatureEnabled("claimantShowOtherLeaveStep");
   return (
     <React.Fragment>
       <div className="grid-row">
@@ -59,13 +57,11 @@ export const Welcome = ({ appLogic, user }) => {
             </Alert>
           )}
 
-          {shouldShowOtherLeave && (
-            <Alert state="info">
-              <p>
-                <Trans i18nKey="pages.employersWelcome.otherLeaveInfoAlertBody" />
-              </p>
-            </Alert>
-          )}
+          <Alert state="info">
+            <p>
+              <Trans i18nKey="pages.employersWelcome.otherLeaveInfoAlertBody" />
+            </p>
+          </Alert>
 
           <p>{t("pages.employersWelcome.welcomeBody")}</p>
 

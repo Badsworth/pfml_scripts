@@ -11,7 +11,8 @@ This is a [Next.js](https://nextjs.org/docs)-powered React app to bootstrap the 
 
 ## Prerequisites
 
-Node v10 (or greater)
+- Node v15 (or greater)
+- NPM v7 (or greater)
 
 ## Env Configuration
 
@@ -30,6 +31,11 @@ Run the development server with live reloading:
 ```
 npm run dev
 ```
+
+### Configure your code editor
+
+- [Integrate ESLint into your IDE or a git hook](https://eslint.org/docs/user-guide/integrations) if you'd like to catch linting errors before it reaches the CI.
+- [Setup your IDE to run Prettier upon save.](https://prettier.io/docs/en/editors.html)
 
 ## Build and Export the static site
 
@@ -84,6 +90,24 @@ Run the UI component explorer sandbox, [Storybook](https://storybook.js.org/). A
 Exports the Storybook site as a static HTML site.
 
 ## Additional commands
+
+### `npm run format`
+
+Automatically format files using [Prettier](https://prettier.io/).
+
+This can be ran in a pull request by adding a comment with a body of:
+
+```
+/gh portal format
+```
+
+### `npm run lint`
+
+Run ESLint. Fixes any [auto-fixable ESLint errors](https://eslint.org/docs/user-guide/command-line-interface#fixing-problems).
+
+#### `npm run lint:ci`
+
+Runs ESLint and fails on errors. Does not attempt to auto-fix ESLint errors.
 
 ### `npm run analyze-bundle`
 

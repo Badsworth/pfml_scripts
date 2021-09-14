@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional
+from typing import List, Optional
 from uuid import UUID
 
 import connexion
@@ -15,14 +15,32 @@ import massgov.pfml.util.logging
 from massgov.pfml import db
 from massgov.pfml.api.authorization.flask import CREATE, ensure
 from massgov.pfml.api.models.notifications.requests import NotificationRequest
+from massgov.pfml.api.services.fineos_actions import register_employee
+from massgov.pfml.api.services.managed_requirements import (
+    get_fineos_managed_requirements_from_notification,
+)
 from massgov.pfml.api.services.service_now_actions import send_notification_to_service_now
 from massgov.pfml.db.models.applications import Notification
-from massgov.pfml.db.models.employees import Claim, Employee, Employer, ManagedRequirementType
+from massgov.pfml.db.models.employees import (
+    AbsencePeriod,
+    AbsencePeriodType,
+    AbsenceReason,
+    AbsenceReasonQualifierOne,
+    AbsenceReasonQualifierTwo,
+    Claim,
+    Employee,
+    Employer,
+    LeaveRequestDecision,
+    ManagedRequirementType,
+)
 from massgov.pfml.db.queries.managed_requirements import (
     create_managed_requirement_from_fineos,
     create_or_update_managed_requirement_from_fineos,
-    get_fineos_managed_requirements_from_notification,
     get_managed_requirement_by_fineos_managed_requirement_id,
+)
+from massgov.pfml.fineos import AbstractFINEOSClient, FINEOSClientError
+from massgov.pfml.util.logging.managed_requirements import (
+    get_fineos_managed_requirement_log_attributes,
 )
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -87,7 +105,7 @@ def notifications_post():
             if employer:
                 log_attributes = {
                     **log_attributes,
-                    "employer_id": employer.employer_id,
+                    "employer_id": str(employer.employer_id),
                 }
                 newrelic.agent.add_custom_parameter("employer_id", employer.employer_id)
         except MultipleResultsFound:
@@ -96,17 +114,18 @@ def notifications_post():
         if employer is None:
             return _err400_employer_fein_not_found(notification_request, log_attributes)
 
-        employee_id = get_employee_id_from_fineos_customer_number(
+        employee = get_employee_from_fineos_customer_number(
             db_session, log_attributes, notification_request.claimant_info.customer_id
         )
-        if employee_id:
-            log_attributes = {**log_attributes, "employee_id": employee_id}
-            newrelic.agent.add_custom_parameter("employee_id", employee_id)
+
+        if employee:
+            log_attributes = {**log_attributes, "employee_id": str(employee.employee_id)}
+            newrelic.agent.add_custom_parameter("employee_id", employee.employee_id)
 
         if claim is None:
             claim = Claim(
                 employer_id=employer.employer_id,
-                employee_id=employee_id,
+                employee_id=employee.employee_id if employee else None,
                 fineos_absence_id=notification_request.absence_case_id,
             )
             db_session.add(claim)
@@ -122,9 +141,9 @@ def notifications_post():
                 db_changed = True
                 claim.employer_id = employer.employer_id
                 logger.info("Associated Employer to Claim", extra=log_attributes)
-            if claim.employee_id is None and employee_id is not None:
+            if claim.employee_id is None and employee is not None:
                 db_changed = True
-                claim.employee_id = employee_id
+                claim.employee_id = employee.employee_id
                 logger.info("Associated Employee to Claim", extra=log_attributes)
             if db_changed:
                 db_session.add(claim)
@@ -136,10 +155,36 @@ def notifications_post():
             )
         except Exception as error:  # catch all exception handler
             logger.error(
-                "Failed to handle the claim's managed requirements in notification call",
+                "Failed to handle the claim's managed requirements in notification call.",
                 extra=log_attributes,
                 exc_info=error,
             )
+            db_session.rollback()  # handle insert errors
+
+        # Update absence period table
+        try:
+            if not employee or not employee.tax_identifier:
+                logger.info(
+                    "Unable to find Employee or Employee has no tax_identifier, can't get absence periods"
+                )
+            else:
+                fineos_client = massgov.pfml.fineos.create_client()
+                update_absence_period(
+                    notification_request.absence_case_id,
+                    claim,
+                    employee.tax_identifier.tax_identifier,
+                    employer.employer_fein,
+                    fineos_client,
+                    db_session,
+                    log_attributes,
+                )
+        except Exception as error:  # catch all exception handler
+            logger.error(
+                "Failed to handle update of absence period table.",
+                extra=log_attributes,
+                exc_info=error,
+            )
+            db_session.rollback()  # handle insert errors
 
     # Send the request to Service Now
     send_notification_to_service_now(notification_request, employer)
@@ -150,10 +195,10 @@ def notifications_post():
     ).to_api_response()
 
 
-def get_employee_id_from_fineos_customer_number(
+def get_employee_from_fineos_customer_number(
     db_session: db.Session, log_attributes: dict, fineos_customer_number: str
-) -> Optional[str]:
-    """Get employee ID by fineos_customer_number. Fails without raising an exception since an Employee ID isn't required for sending a notification."""
+) -> Optional[Employee]:
+    """Get employee by fineos_customer_number. Fails without raising an exception since an Employee ID isn't required for sending a notification."""
     try:
         employee = (
             db_session.query(Employee)
@@ -161,7 +206,7 @@ def get_employee_id_from_fineos_customer_number(
             .one_or_none()
         )
         if employee:
-            return employee.employee_id
+            return employee
         logger.warning(
             "Failed to lookup the specified Employee Fineos Customer Number to associate Claim record",
             extra=log_attributes,
@@ -248,12 +293,8 @@ def handle_managed_requirements_create(
 
     for fineos_requirement in fineos_requirements:
         log_attr = {
-            "fineos_managed_requirement.managedReqId": fineos_requirement.managedReqId,
-            "fineos_managed_requirement.status": fineos_requirement.status,
-            "fineos_managed_requirement.category": fineos_requirement.category,
-            "fineos_managed_requirement.type": fineos_requirement.type,
-            "fineos_managed_requirement.followUpDate": fineos_requirement.followUpDate,
             **log_attributes.copy(),
+            **get_fineos_managed_requirement_log_attributes(fineos_requirement),
         }
         try:
             type_id = ManagedRequirementType.get_id(fineos_requirement.type)
@@ -290,12 +331,8 @@ def handle_managed_requirements_update(
 
     for fineos_requirement in fineos_requirements:
         log_attr = {
-            "fineos_managed_requirement.managedReqId": fineos_requirement.managedReqId,
-            "fineos_managed_requirement.status": fineos_requirement.status,
-            "fineos_managed_requirement.category": fineos_requirement.category,
-            "fineos_managed_requirement.type": fineos_requirement.type,
-            "fineos_managed_requirement.followUpDate": fineos_requirement.followUpDate,
             **log_attributes.copy(),
+            **get_fineos_managed_requirement_log_attributes(fineos_requirement),
         }
         create_or_update_managed_requirement_from_fineos(
             db_session, claim_id, fineos_requirement, log_attr
@@ -322,3 +359,90 @@ def handle_managed_requirements(
         handle_managed_requirements_update(notification, claim_id, db_session, log_attributes)
     elif should_create_managed_requirements:
         handle_managed_requirements_create(notification, claim_id, db_session, log_attributes)
+
+
+def update_absence_period(
+    absence_case_id: str,
+    claim: Claim,
+    employee_ssn: str,
+    employer_fein: str,
+    fineos_client: AbstractFINEOSClient,
+    db_session: Session,
+    log_attributes: dict,
+) -> None:
+    fineos_user_id = register_employee(fineos_client, employee_ssn, employer_fein, db_session)
+
+    # call fineos to get absence case details
+    try:
+        absence_detail = fineos_client.get_absence(fineos_user_id, absence_case_id)
+        absence_periods = absence_detail.absencePeriods
+
+        if absence_periods is None:
+            logger.info("No absence periods returned by Fineos", extra=log_attributes)
+            return
+
+        # update absence period table
+        populate_absence_period_table(absence_periods, claim, db_session, log_attributes)
+    except FINEOSClientError:
+        logger.exception(
+            "Failed to get absence detail from FINEOS", extra=log_attributes,
+        )
+        return
+
+
+def populate_absence_period_table(
+    absence_periods: List[massgov.pfml.fineos.models.customer_api.AbsencePeriod],
+    claim: Claim,
+    db_session: Session,
+    log_attributes: dict,
+) -> None:
+    """ Update AbsencePeriod Table with given list of absence periods"""
+
+    for absence_period in absence_periods:
+        # get class and index id
+        if absence_period.id:
+            period_id = absence_period.id.split("-")
+            class_id = int(period_id[1])
+            index_id = int(period_id[2])
+        else:
+            logger.error(
+                "Failed to extract class and index id.", extra=log_attributes,
+            )
+            return
+
+        # check if absence period is present
+        db_absence_period = (
+            db_session.query(AbsencePeriod)
+            .filter(
+                AbsencePeriod.claim_id == claim.claim_id,
+                AbsencePeriod.fineos_absence_period_class_id == class_id,
+                AbsencePeriod.fineos_absence_period_index_id == index_id,
+            )
+            .one_or_none()
+        )
+
+        if db_absence_period is None:
+            db_absence_period = AbsencePeriod()
+            db_absence_period.fineos_absence_period_class_id = class_id
+            db_absence_period.fineos_absence_period_index_id = index_id
+            db_session.add(db_absence_period)
+
+        db_absence_period.absence_period_start_date = absence_period.startDate
+        db_absence_period.absence_period_end_date = absence_period.endDate
+        db_absence_period.absence_period_type_id = AbsencePeriodType.get_id(
+            absence_period.absenceType
+        )
+        db_absence_period.absence_reason_qualifier_one_id = AbsenceReasonQualifierOne.get_id(
+            absence_period.reasonQualifier1
+        )
+        db_absence_period.absence_reason_qualifier_two_id = AbsenceReasonQualifierTwo.get_id(
+            absence_period.reasonQualifier2
+        )
+        db_absence_period.absence_reason_id = AbsenceReason.get_id(absence_period.reason)
+        db_absence_period.leave_request_decision_id = LeaveRequestDecision.get_id(
+            absence_period.requestStatus
+        )
+        db_absence_period.claim_id = claim.claim_id
+
+    # save to db
+    db_session.commit()

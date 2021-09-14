@@ -23,7 +23,6 @@ import claimantConfig from "../../flows/claimant";
 import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
 import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
@@ -46,8 +45,7 @@ export const Checklist = (props) => {
 
   const certificationDocuments = findDocumentsByLeaveReason(
     documents,
-    get(claim, "leave_details.reason"),
-    get(claim, "leave_details.pregnant_or_recent_birth")
+    get(claim, "leave_details.reason")
   );
 
   const partOneSubmitted = query["part-one-submitted"];
@@ -60,12 +58,10 @@ export const Checklist = (props) => {
    */
   const allSteps = StepModel.createClaimStepsFromMachine(
     claimantConfig,
-    // TODO (CP-1658) Remove feature flag check once feature flag is no longer relevant
     {
       claim,
       idDocuments,
       certificationDocuments,
-      showOtherLeaveStep: isFeatureEnabled("claimantShowOtherLeaveStep"),
     },
     warnings
   );
@@ -117,14 +113,13 @@ export const Checklist = (props) => {
    */
   // TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
   function getStepSubmittedContent(step) {
-    const reductionsEnabled = isFeatureEnabled("claimantShowOtherLeaveStep");
     const hasReductionsData =
       get(claim, "has_employer_benefits") !== null ||
       get(claim, "has_other_incomes") !== null ||
       get(claim, "has_previous_leaves_same_reason") !== null ||
       get(claim, "has_previous_leaves_other_reason") !== null ||
       get(claim, "has_concurrent_leave") !== null;
-    const showReportReductions = reductionsEnabled && !hasReductionsData;
+    const showReportReductions = !hasReductionsData;
 
     if (step.name === ClaimSteps.otherLeave && showReportReductions) {
       return (

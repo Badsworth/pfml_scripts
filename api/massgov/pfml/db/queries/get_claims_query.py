@@ -2,6 +2,7 @@ import re
 from datetime import date
 from enum import Enum
 from typing import Any, Callable, List, Optional, Set, Type, Union
+from uuid import UUID
 
 from sqlalchemy import Column, and_, asc, desc, func, or_
 from sqlalchemy.orm import contains_eager
@@ -12,6 +13,7 @@ from massgov.pfml import db
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.base import Base
 from massgov.pfml.db.models.employees import (
+    AbsenceStatus,
     Claim,
     Employee,
     LkAbsenceStatus,
@@ -40,20 +42,30 @@ class ActionRequiredStatusFilter(str, Enum):
         return [cls.PENDING, cls.OPEN_REQUIREMENT, cls.PENDING_NO_ACTION]
 
 
-PendingAbsenceStatuses = ["Intake In Progress", "In Review", "Adjudication", None]
-
+PendingAbsenceStatuses = [
+    AbsenceStatus.INTAKE_IN_PROGRESS.absence_status_description,
+    AbsenceStatus.IN_REVIEW.absence_status_description,
+    AbsenceStatus.ADJUDICATION.absence_status_description,
+    None,
+]
+NoOpenRequirementAbsenceStatuses = [
+    AbsenceStatus.APPROVED.absence_status_description,
+    AbsenceStatus.CLOSED.absence_status_description,
+    AbsenceStatus.DECLINED.absence_status_description,
+    AbsenceStatus.COMPLETED.absence_status_description,
+]
 # Wrapper for the DB layer of the `get_claims` endpoint
 # Create a query for filtering and ordering Claim results
 # The "get" methods are idempotent, the rest will change the query and affect the results
 
 
 class GetClaimsQuery:
-    joined: List[Union[Type[Base], Alias]]
+    joined: Set[Union[Type[Base], Alias]]
 
     def __init__(self, db_session: db.Session):
         self.session = db_session
         self.query = db_session.query(Claim)
-        self.joined = []
+        self.joined = set()
 
     # prevents duplicate joining of a table
     def join(
@@ -62,16 +74,15 @@ class GetClaimsQuery:
         isouter: bool = False,
         join_filter: Optional[Any] = None,
     ) -> None:
-        for joined in self.joined:
-            if model is joined:
-                return
-        self.joined.append(model)
+        if model in self.joined:
+            return
+        self.joined.add(model)
         if join_filter is not None:  # use join_filter when query filter would not work
             self.query = self.query.join(model, join_filter, isouter=isouter)
         else:
             self.query = self.query.join(model, isouter=isouter)
 
-    def add_employer_ids_filter(self, employer_ids: List[str]) -> None:
+    def add_employer_ids_filter(self, employer_ids: List[UUID]) -> None:
         self.query = self.query.filter(Claim.employer_id.in_(employer_ids))
 
     # TODO: current_user shouldn't be Optional - `get_claims` should throw an error instead
@@ -83,41 +94,55 @@ class GetClaimsQuery:
         has_pending_no_action = ActionRequiredStatusFilter.PENDING_NO_ACTION in absence_statuses
         has_open_requirement = ActionRequiredStatusFilter.OPEN_REQUIREMENT in absence_statuses
         has_pending = ActionRequiredStatusFilter.PENDING in absence_statuses
-
+        # remove absence status not in database
+        absence_statuses.difference_update(ActionRequiredStatusFilter.all())
         filters = []
-        filter = Claim.managed_requirements.any(  # type: ignore
-            ManagedRequirement.managed_requirement_status_id
-            == ManagedRequirementStatus.OPEN.managed_requirement_status_id
+        has_open_requirements_filter = Claim.managed_requirements.any(  # type: ignore
+            and_(
+                *[
+                    ManagedRequirement.managed_requirement_type_id
+                    == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+                    ManagedRequirement.managed_requirement_status_id
+                    == ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+                    ManagedRequirement.follow_up_date >= date.today(),
+                ]
+            )
         )
+
+        # handles Approved, Closed, Denied, those should only be returned if they do not have open managed requirements
+        no_requirement_statuses = list(
+            set(absence_statuses).intersection(NoOpenRequirementAbsenceStatuses)
+        )
+        if len(no_requirement_statuses):
+            no_requirement_statuses_filters = [
+                LkAbsenceStatus.absence_status_description.in_(no_requirement_statuses),
+                ~has_open_requirements_filter,
+            ]
+            filters.append(and_(*no_requirement_statuses_filters))
+
         if has_open_requirement:
-            filters.append(filter)
+            filters.append(has_open_requirements_filter)
         if has_pending_no_action:
             pending_no_action_filters = [
                 or_(
                     LkAbsenceStatus.absence_status_description.in_(PendingAbsenceStatuses),
                     Claim.fineos_absence_status_id.is_(None),
                 ),
-                ~filter,
+                ~has_open_requirements_filter,
             ]
             filters.append(and_(*pending_no_action_filters))
         if has_pending:
-            absence_statuses.update(PendingAbsenceStatuses)  # type: ignore
+            filters.append(LkAbsenceStatus.absence_status_description.in_(PendingAbsenceStatuses))
+            filters.append(Claim.fineos_absence_status_id.is_(None))
 
-        # remove absence status not in database
-        absence_statuses.difference_update(ActionRequiredStatusFilter.all())  # update in place
         return filters
 
     def add_absence_status_filter(self, absence_statuses: Set[str]) -> None:
+        # use outer join to return claims without fineos_absence_status_id
         self.join(Claim.fineos_absence_status, isouter=True)  # type:ignore
         filters = self.get_managed_requirement_status_filters(absence_statuses)
-        if not len(absence_statuses):
+        if len(filters):
             self.query = self.query.filter(or_(*filters))
-            return
-
-        filters.append(LkAbsenceStatus.absence_status_description.in_(absence_statuses))
-        if None in absence_statuses:
-            filters.append(Claim.fineos_absence_status_id.is_(None))
-        self.query = self.query.filter(or_(*filters))
 
     def employee_search_sub_query(self) -> Alias:
         search_columns = [
@@ -134,26 +159,37 @@ class GetClaimsQuery:
         return re.sub(r"\s+", " ", search_string).strip()
 
     def add_search_filter(self, search_string: str) -> None:
+        # use outer join to return claims with missing relationship data
         self.join(Claim.employee, isouter=True)  # type:ignore
-        self.query = self.query.filter(Employee.employee_id == Claim.employee_id)
+
         search_string = self.format_search_string(search_string)
-        search_sub_query = self.employee_search_sub_query()
-        self.join(search_sub_query, isouter=True)
-        self.query = self.query.filter(search_sub_query.c.employee_id == Claim.employee_id)
+        # if there is no space in the search string
+        # then it is either a first_name, last_name, middle_name or absence_case_id search
+        #  if there is a space then we run the full_name search
         if " " in search_string:
-            filters = [
-                search_sub_query.c.first_last.ilike(f"%{search_string}%"),
-                search_sub_query.c.last_first.ilike(f"%{search_string}%"),
-                search_sub_query.c.full_name.ilike(f"%{search_string}%"),
-            ]
+            search_sub_query = self.employee_search_sub_query()
+            self.join(search_sub_query, isouter=True)
+            filters = and_(
+                search_sub_query.c.employee_id == Claim.employee_id,
+                or_(
+                    search_sub_query.c.first_last.ilike(f"%{search_string}%"),
+                    search_sub_query.c.last_first.ilike(f"%{search_string}%"),
+                    search_sub_query.c.full_name.ilike(f"%{search_string}%"),
+                ),
+            )
         else:
-            filters = [
+            filters = or_(
                 Claim.fineos_absence_id.ilike(f"%{search_string}%"),
-                Employee.first_name.ilike(f"%{search_string}%"),
-                Employee.middle_name.ilike(f"%{search_string}%"),
-                Employee.last_name.ilike(f"%{search_string}%"),
-            ]
-        self.query = self.query.filter(or_(*filters))
+                and_(
+                    Employee.employee_id == Claim.employee_id,
+                    or_(
+                        Employee.first_name.ilike(f"%{search_string}%"),
+                        Employee.middle_name.ilike(f"%{search_string}%"),
+                        Employee.last_name.ilike(f"%{search_string}%"),
+                    ),
+                ),
+            )
+        self.query = self.query.filter(filters)
 
     def add_managed_requirements_filter(self) -> None:
         filters = [
@@ -164,6 +200,7 @@ class GetClaimsQuery:
             == ManagedRequirementStatus.OPEN.managed_requirement_status_id,
             ManagedRequirement.follow_up_date >= date.today(),
         ]
+        # use outer join to return claims without managed_requirements (one to many)
         self.join(ManagedRequirement, isouter=True, join_filter=and_(*filters))
         self.query = self.query.options(contains_eager("managed_requirements"))
 
@@ -186,7 +223,7 @@ class GetClaimsQuery:
             sort_fn(Employee.first_name),
             sort_fn(Employee.middle_name),
         ]
-
+        # use outer join to return claims with missing relationship data
         self.join(Claim.employee, isouter=True)  # type:ignore
         self.query = self.query.order_by(*order_keys)
 
@@ -194,8 +231,13 @@ class GetClaimsQuery:
         sort_fn = asc_null_first if is_asc else desc_null_last
         # oldest follow up date first if ascending
         sort_req = asc if is_asc else desc
+
+        # use outer join to return claims without fineos_absence_status_id
         self.join(Claim.fineos_absence_status, isouter=True)  # type:ignore
+
+        # use outer join to return claims with missing relationship data
         self.join(Claim.employee, isouter=True)  # type:ignore
+
         order = [
             sort_req(Claim.soonest_open_requirement_date),  # type:ignore
             sort_fn(LkAbsenceStatus.sort_order),

@@ -1,4 +1,4 @@
-import playwright from "playwright-chromium";
+import playwright, { Page } from "playwright-chromium";
 import delay from "delay";
 
 /**********
@@ -58,19 +58,24 @@ export async function clickTab(
   await page.click(
     `:is(.TabStrip td.TabOn :text("${label}"), .TabStrip td.TabOff :text("${label}"))`
   );
-
-  // await page.waitForSelector("td.TabOn");
-  // const tab = await page.waitForSelector(
-  //   `:is(.TabStrip td.TabOn :text("${label}"), .TabStrip td.TabOff :text("${label}"))`
-  // );
-  // // Remove the TabOn class before we start so we can detect when it has been re-added.
-  // await tab.evaluate((tab) => {
-  //   tab.classList.remove("TabOn");
-  // });
-
-  // await tab.click();
   await waitForStablePage(page);
   await delay(200);
+}
+
+export async function selectListTableRow(
+  page: Page,
+  rowSelector: string
+): Promise<void> {
+  await page.waitForSelector(rowSelector).then(async (el) => {
+    // Only click the table row if it's not already selected.
+    const cl = await el.getAttribute("classList");
+    if (cl && cl.includes("ListRowSelected")) {
+      return;
+    }
+    await el.click();
+    // Wait for it to be selected before moving on. Sometimes, this requires a page refresh.
+    await page.waitForSelector(`${rowSelector}.ListRowSelected`);
+  });
 }
 
 export async function waitForStablePage(page: playwright.Page): Promise<void> {
@@ -98,7 +103,7 @@ export async function gotoCase(
 ): Promise<void> {
   await page.click('.menulink a.Link[aria-label="Cases"]');
   await clickTab(page, "Case");
-  await labelled(page, "Case Number").then((el) => el.type(id));
+  await labelled(page, "Case Number").then((el) => el.fill(id));
   // Uncheck "Search Case Alias".
   await labelled(page, "Search Case Alias").then((el) => el.click());
   await page.click('input[type="submit"][value="Search"]');

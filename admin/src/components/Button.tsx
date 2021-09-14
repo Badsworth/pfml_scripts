@@ -1,33 +1,33 @@
 import React from "react";
 import classNames from "classnames";
 
-type Props = {
-  additionalClasses?: string[];
-  disabled?: boolean;
+export type Props = {
+  className?: string;
   onClick: Function;
+  disabled?: boolean;
   children?: React.ReactNode;
 };
 
 const Button = ({
-  additionalClasses = [],
+  className = "",
   onClick,
-  disabled = false,
   children,
+  disabled = false,
 }: Props) => {
   const handleOnClick = (event: React.MouseEvent) => {
     event.preventDefault();
-
     onClick(event);
   };
 
-  const classes = classNames([...additionalClasses, "btn"]);
+  const classes = classNames([...className?.split(" "), "btn"]);
 
   return (
     <button
       type="button"
       className={classes}
-      disabled={disabled}
       onClick={handleOnClick}
+      data-testid="button"
+      disabled={disabled}
     >
       {children}
     </button>

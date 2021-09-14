@@ -1,6 +1,4 @@
 import { fineos, portal, fineosPages } from "../../../actions";
-import { getFineosBaseUrl } from "../../../config";
-import { config } from "../../../actions/common";
 import { Submission } from "../../../../src/types";
 import {
   findCertificationDoc,
@@ -12,20 +10,12 @@ describe("Approval (notifications/notices)", () => {
     portal.deleteDownloadsFolder();
   });
 
-  const credentials: Credentials = {
-    username: config("PORTAL_USERNAME"),
-    password: config("PORTAL_PASSWORD"),
-  };
-
-  it("Given a fully approved claim", { baseUrl: getFineosBaseUrl() }, () => {
+  it("Given a fully approved claim", () => {
     fineos.before();
     cy.visit("/");
     // Submit a claim via the API, including Employer Response.
     cy.task("generateClaim", "REDUCED_ER").then((claim) => {
-      cy.task("submitClaimToAPI", {
-        ...claim,
-        credentials,
-      }).then((response) => {
+      cy.task("submitClaimToAPI", claim).then((response) => {
         if (!response.fineos_absence_id) {
           throw new Error("Response contained no fineos_absence_id property");
         }
@@ -65,7 +55,7 @@ describe("Approval (notifications/notices)", () => {
     });
   });
 
-  it("Records Cancellation", { baseUrl: getFineosBaseUrl() }, () => {
+  it("Records Cancellation", () => {
     cy.dependsOnPreviousPass();
     fineos.before();
     cy.visit("/");

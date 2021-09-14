@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, Generator, List, Optional, Union, cast
+from typing import Any, Dict, Generator, List, Optional, Union
 from uuid import UUID
 
 from sqlalchemy import func
@@ -103,7 +103,7 @@ class EmployeeQueryParamHelper(QueryParamHelper):
     associated_model: Employee
 
     def get_associated_model_id(self) -> UUID:
-        return cast(UUID, self.associated_model.employee_id)
+        return self.associated_model.employee_id
 
     def get_latest_filter_params(self) -> List[Any]:
         return [LatestStateLog.employee_id == self.associated_model.employee_id]

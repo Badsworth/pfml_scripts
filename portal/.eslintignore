@@ -1,0 +1,13 @@
+__snapshots__
+coverage
+examples
+node_modules
+# Web apps
+*/public/**/*.css
+*/public/**/*.js
+new-relic.js
+# Compiled code
+.next
+build
+out
+out-storybook

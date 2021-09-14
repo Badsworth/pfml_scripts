@@ -1,0 +1,49 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Header renders the default component 1`] = `
+<header
+  className="page__header"
+>
+  <div
+    className="page__logo"
+  >
+    <a
+      className="page__logo-link"
+      href="/"
+      onClick={[Function]}
+      onMouseEnter={[Function]}
+      title="Paid Family & Medical Leave - Massachusetts"
+    />
+  </div>
+  <div
+    className="page__user-options"
+  >
+    <a
+      aria-label="FirstName LastName - User Options"
+      className="user-options"
+      href="#"
+      role="button"
+    >
+      <span
+        className="user-options__avatar"
+      >
+        <img
+          alt="FirstName LastName"
+          className="user-options__avatar-image"
+          height="32px"
+          src="https://via.placeholder.com/32"
+          width="32px"
+        />
+      </span>
+      <span
+        className="user-options__name"
+      >
+        FirstName LastName
+      </span>
+      <span
+        className="user-options__dropdown"
+      />
+    </a>
+  </div>
+</header>
+`;

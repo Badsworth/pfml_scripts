@@ -1,6 +1,7 @@
 import Claim, { AbsenceCaseStatus } from "../models/Claim";
 import BaseApi from "./BaseApi";
 import ClaimCollection from "../models/ClaimCollection";
+import ClaimDetail from "../models/ClaimDetail";
 import PaginationMeta from "../models/PaginationMeta";
 import routes from "../routes";
 
@@ -57,6 +58,19 @@ export default class ClaimsApi extends BaseApi {
     return {
       claims: new ClaimCollection(claims),
       paginationMeta: meta ? new PaginationMeta(meta.paging) : null,
+    };
+  };
+
+  /**
+   * Fetches claim details given a FINEOS absence ID
+   * @param {string} absenceId - FINEOS absence ID of the claim we want to load
+   * @returns {Promise<{ claimDetail: ClaimDetail }>}
+   */
+  getClaimDetail = async (absenceId) => {
+    const { data } = await this.request("GET", absenceId);
+
+    return {
+      claimDetail: new ClaimDetail(data),
     };
   };
 }

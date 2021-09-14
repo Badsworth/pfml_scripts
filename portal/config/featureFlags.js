@@ -17,11 +17,6 @@ const flagsConfig = {
     // TODO (CP-534): Show all options when portal supports activeDutyFamily, serviceMemberFamily
     claimantShowMilitaryLeaveTypes: false,
 
-    // When this flag is enabled, the "Other leave, income, and benefits" step of
-    // the Claim flow becomes visible, and its validation rules are applied via
-    // a X-FF-Require-Other-Leaves header on API requests.
-    claimantShowOtherLeaveStep: true,
-
     // When this flag is enabled, the claim status page for claimants will show
     claimantShowStatusPage: false,
 
@@ -58,17 +53,33 @@ const flagsConfig = {
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
   // environment config files.
-  "cps-preview": {},
+  "cps-preview": {
+    employerShowDashboardSearch: true,
+  },
   development: {
     example: true,
     pfmlTerriyay: true,
+    employerShowDashboardSearch: true,
   },
-  test: {},
-  stage: {},
-  training: {},
-  performance: {},
-  uat: {},
-  prod: { pfmlTerriyay: true },
+  test: {
+    employerShowDashboardSearch: true,
+  },
+  stage: {
+    employerShowDashboardSearch: true,
+  },
+  training: {
+    employerShowDashboardSearch: true,
+  },
+  performance: {
+    employerShowDashboardSearch: true,
+  },
+  uat: {
+    employerShowDashboardSearch: true,
+  },
+  prod: {
+    employerShowDashboardSearch: true,
+    pfmlTerriyay: true,
+  },
 };
 
 /**

@@ -71,8 +71,8 @@ def test_compute_financial_eligibility_multiple_scenarios(
     employer = EmployerFactory.create(employer_fein=employer_fein)
     application_submitted_date = date(2021, 1, 1)
     leave_start_date = date(2021, 1, 1)
-    employee_id = UUID(str(employee.employee_id))
-    employer_id = UUID(str(employer.employer_id))
+    employee_id = employee.employee_id
+    employer_id = employer.employer_id
     employment_status = "Employed"
 
     WagesAndContributionsFactory.create(
@@ -143,8 +143,8 @@ def test_scenario_A_case_B(test_db_session, initialize_factories_session):
     employer = EmployerFactory.create(employer_fein=employer_fein)
     application_submitted_date = date(2020, 10, 1)
     leave_start_date = date(2020, 10, 1)
-    employee_id = UUID(str(employee.employee_id))
-    employer_id = UUID(str(employer.employer_id))
+    employee_id = employee.employee_id
+    employer_id = employer.employer_id
     employment_status = "Employed"
 
     WagesAndContributionsFactory.create(

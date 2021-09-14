@@ -1,7 +1,6 @@
 import logging  # noqa: B1
 import os
-import xml.dom.minidom as minidom
-from datetime import date, datetime, timedelta
+from datetime import datetime
 
 import boto3
 import faker
@@ -9,14 +8,12 @@ import pytest
 from freezegun import freeze_time
 from sqlalchemy.exc import SQLAlchemyError
 
-import massgov.pfml.db as db
 import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     BankAccountType,
     Country,
-    CtrBatchIdentifier,
     GeoState,
     ImportLog,
     PaymentCheck,
@@ -27,11 +24,8 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ClaimFactory,
-    CtrBatchIdentifierFactory,
-    CtrDocumentIdentifierFactory,
     EmployeeFactory,
     EmployeePubEftPairFactory,
-    EmployeeReferenceFileFactory,
     EmployerFactory,
     ExperianAddressPairFactory,
     PaymentFactory,
@@ -42,9 +36,6 @@ from massgov.pfml.db.models.payments import FineosExtractVpei, PaymentLog
 from massgov.pfml.delegated_payments.delegated_payments_util import (
     find_existing_address_pair,
     find_existing_eft,
-    get_fineos_vendor_customer_numbers_from_reference_file,
-    get_inf_data_as_plain_text,
-    get_inf_data_from_reference_file,
     is_same_address,
     is_same_eft,
     move_reference_file,
@@ -387,27 +378,27 @@ def test_copy_fineos_data_to_archival_bucket_skip_old_payment(
     )
 
 
-def test_copy_fineos_data_to_archival_bucket_skip_old_vendor(
+def test_copy_fineos_data_to_archival_bucket_skip_old_claimant_Extract(
     test_db_session, mock_fineos_s3_bucket, mock_s3_bucket, set_exporter_env_vars, monkeypatch
 ):
     # Monkey path the max history date
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2020-01-02")
 
-    # Add 3 top level files: should be processed
+    # Add 2 top level files: should be processed
     expected_timestamp_1 = "2020-01-03-11-30-00"
     s3_prefix = "DT2/dataexports/"
     upload_timestamped_s3_files(
         mock_fineos_s3_bucket, s3_prefix, expected_timestamp_1, CLAIMANT_EXTRACT_FILENAMES
     )
 
-    # Add 3 files in a date folder: should be processed
+    # Add 2 files in a date folder: should be processed
     expected_timestamp_2 = "2020-01-02-11-30-00"
     s3_prefix = f"DT2/dataexports/{expected_timestamp_2}/"
     upload_timestamped_s3_files(
         mock_fineos_s3_bucket, s3_prefix, expected_timestamp_2, CLAIMANT_EXTRACT_FILENAMES
     )
 
-    # Add 3 files in a date folder: should NOT be processed
+    # Add 2 files in a date folder: should NOT be processed
     not_expected_timestamp_1 = "2020-01-01-11-30-00"
     s3_prefix = f"DT2/dataexports/{not_expected_timestamp_1}/"
     upload_timestamped_s3_files(
@@ -539,73 +530,6 @@ def test_group_s3_files_by_date(mock_s3_bucket, set_exporter_env_vars):
                 f"{expected_path_to_file}vpeipaymentdetails.csv",
             ]
         )
-
-
-def _create_ctr_batch_identifier(
-    now: datetime, batch_counter: int, db_session: db.Session
-) -> CtrBatchIdentifier:
-    batch_id = payments_util.Constants.BATCH_ID_TEMPLATE.format(
-        now.strftime("%m%d"), "VCC", batch_counter
-    )
-    ctr_batch_id = CtrBatchIdentifierFactory(
-        ctr_batch_identifier=batch_id,
-        year=now.year,
-        batch_date=now.date(),
-        batch_counter=batch_counter,
-    )
-    db_session.add(ctr_batch_id)
-    db_session.commit()
-
-    return ctr_batch_id
-
-
-def test_create_next_batch_id_first_batch_id(test_db_session):
-    ctr_batch_id = payments_util.create_next_batch_id(datetime.now(), "VCC", test_db_session)
-    assert (
-        ctr_batch_id.batch_counter == 10
-    ), "First batch ID today does not start with expected value"
-
-
-def test_create_next_batch_id_with_existing_values(initialize_factories_session, test_db_session):
-    now = datetime.now()
-    yesterday = datetime.now() - timedelta(days=1)
-
-    # Add several batches for today. range() does not include the stop value.
-    # https://docs.python.org/3.8/library/stdtypes.html#ranges
-    next_batch_counter = 13
-    for batch_counter in range(10, next_batch_counter):
-        _create_ctr_batch_identifier(now, batch_counter, test_db_session)
-
-    # Add more batches for yesterday so that there are batch_counters larger than the one we
-    # will be inserting.
-    for batch_counter in range(10, 2 * next_batch_counter):
-        _create_ctr_batch_identifier(yesterday, batch_counter, test_db_session)
-
-    ctr_batch_id = payments_util.create_next_batch_id(now, "VCC", test_db_session)
-    assert ctr_batch_id.batch_counter == next_batch_counter
-
-
-def test_create_mmars_files_in_s3(mock_s3_bucket):
-    bucket_path = f"s3://{mock_s3_bucket}"
-    filename = "example_filename"
-    dat_xml_document = minidom.Document()
-    inf_dict = {"NewMmarsBatchDeptCode": payments_util.Constants.COMPTROLLER_DEPT_CODE}
-
-    payments_util.create_mmars_files_in_s3(bucket_path, filename, dat_xml_document, inf_dict)
-
-    # Expect the files to have been uploaded to S3.
-    files_in_mock_s3_bucket = file_util.list_files(bucket_path)
-    expected_filename_extensions = [".DAT", ".INF"]
-    for filename_extension in expected_filename_extensions:
-        assert f"{filename}{filename_extension}" in files_in_mock_s3_bucket
-
-    # Expect the files to have the proper contents.
-    #
-    # Testing only the INF file here because it is simpler (does not involve XML formatting) and
-    # the DAT file should follow a similar pattern.
-    s3 = boto3.client("s3")
-    inf_file = s3.get_object(Bucket=mock_s3_bucket, Key=f"{filename}.INF")
-    assert inf_file["Body"].read() == b"NewMmarsBatchDeptCode = EOL;\n"
 
 
 def test_same_address(initialize_factories_session):
@@ -904,60 +828,6 @@ def test_find_existing_eft():
     assert find_existing_eft(employee, eft1)
 
 
-def test_get_inf_data_from_reference_file(test_db_session, initialize_factories_session):
-    ctr_batch_identifier = CtrBatchIdentifierFactory.create()
-    reference_file = ReferenceFileFactory.create()
-    reference_file.ctr_batch_identifier_id = ctr_batch_identifier.ctr_batch_identifier_id
-
-    inf_data = get_inf_data_from_reference_file(reference_file, test_db_session)
-
-    assert inf_data is not None
-    assert inf_data == ctr_batch_identifier.inf_data
-
-
-def test_get_inf_data_as_plain_text(test_db_session):
-    inf_data_dict = {
-        "NewMmarsBatchID": "EOL0101GAX11",
-        "NewMmarsBatchDeptCode": "EOL",
-        "NewMmarsUnitCode": "8770",
-        "NewMmarsImportDate": "2020-01-01",
-        "NewMmarsTransCode": "GAX",
-        "NewMmarsTableName": "",
-        "NewMmarsTransCount": "2",
-        "NewMmarsTransDollarAmount": "2500.00",
-    }
-    inf_data_text = get_inf_data_as_plain_text(inf_data_dict)
-
-    for key in inf_data_dict.keys():
-        expected_line = f"{key} = {inf_data_dict[key]}"
-        assert expected_line in inf_data_text
-
-
-def test_get_fineos_vendor_customer_numbers_from_reference_file(initialize_factories_session):
-    ctr_doc_identfier = CtrDocumentIdentifierFactory.create()
-    ref_file = ReferenceFileFactory.create()
-    employee1 = EmployeeFactory.create(fineos_customer_number="111")
-    employee2 = EmployeeFactory.create(fineos_customer_number="222")
-
-    EmployeeReferenceFileFactory(
-        reference_file=ref_file, ctr_document_identifier=ctr_doc_identfier, employee=employee1
-    )
-    EmployeeReferenceFileFactory(
-        reference_file=ref_file, ctr_document_identifier=ctr_doc_identfier, employee=employee2
-    )
-
-    data = get_fineos_vendor_customer_numbers_from_reference_file(ref_file)
-
-    assert len(data) == 2
-    for d in data:
-        assert {"fineos_customer_number", "ctr_vendor_customer_code"} == set(d.keys())
-        assert d["fineos_customer_number"] in ["111", "222"]
-        assert d["ctr_vendor_customer_code"] in [
-            employee1.ctr_vendor_customer_code,
-            employee2.ctr_vendor_customer_code,
-        ]
-
-
 def test_move_reference_file(test_db_session, initialize_factories_session, mock_s3_bucket):
     (ref_file, src_path, dest_path) = create_test_reference_file(test_db_session, mock_s3_bucket)
 
@@ -1042,37 +912,14 @@ def test_move_reference_file_db_failure(
     assert ref_file.file_location == os.path.join(src_path, TEST_FILENAME)
 
 
-def test_create_batch_id_and_reference_file(test_db_session):
-    now = datetime.now()
-    file_type = ReferenceFileType.VCC
-    path = "s3://massgov-pfml-test-agency-transfer/ctr/outbound/"
-    expected_filename = (
-        payments_util.Constants.COMPTROLLER_DEPT_CODE + now.strftime("%Y%m%d") + "VCC" + "10"
-    )
-
-    # We already have tests for create_next_batch_id() so we don't test that return value here.
-    _ctr_batch_id, ref_file, batch_filename = payments_util.create_batch_id_and_reference_file(
-        now, file_type, test_db_session, path
-    )
-
-    assert str(batch_filename) == expected_filename
-
-    expected_file_location = os.path.join(
-        path, payments_util.Constants.S3_OUTBOUND_READY_DIR, expected_filename
-    )
-    assert ref_file.file_location == expected_file_location
-    assert ref_file.ctr_batch_identifier
-    assert ref_file.reference_file_type_id == file_type.reference_file_type_id
-
-
 def test_get_fineos_max_history_date(monkeypatch):
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2021-01-01")
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2021-01-15")
 
-    vendor_datetime = payments_util.get_fineos_max_history_date(
+    claimant_datetime = payments_util.get_fineos_max_history_date(
         ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
     )
-    assert vendor_datetime == datetime(2021, 1, 1, 0, 0)
+    assert claimant_datetime == datetime(2021, 1, 1, 0, 0)
 
     payment_datetime = payments_util.get_fineos_max_history_date(
         ReferenceFileType.FINEOS_PAYMENT_EXTRACT
@@ -1118,31 +965,6 @@ def test_create_staging_table_instance(test_db_session, initialize_factories_ses
     )
 
     assert len(employee) == 1
-
-
-@pytest.mark.parametrize(
-    "start, end, weeks",
-    (
-        (datetime(2021, 1, 1, 11, 0, 0), datetime(2021, 1, 1, 11, 0, 0), 1),
-        (datetime(2021, 1, 1, 11, 0, 0), datetime(2021, 1, 4, 11, 0, 0), 1),
-        (datetime(2021, 1, 1, 11, 0, 0), datetime(2021, 1, 7, 11, 0, 0), 1),
-        (datetime(2021, 1, 1, 11, 0, 0), datetime(2021, 1, 8, 11, 0, 0), 2),
-        (datetime(2021, 1, 1, 11, 0, 0), datetime(2021, 1, 14, 11, 0, 0), 2),
-        (datetime(2021, 1, 1, 11, 0, 0), datetime(2021, 1, 15, 11, 0, 0), 3),
-        (datetime(2021, 1, 1, 11, 0, 0), datetime(2021, 1, 7, 10, 0, 0), 1),
-        (datetime(2021, 1, 1, 11, 0, 0), datetime(2021, 1, 7, 12, 0, 0), 1),
-        (datetime(2021, 1, 28, 11, 0, 0), datetime(2021, 2, 3, 11, 0, 0), 1),
-        (datetime(2021, 1, 28, 11, 0, 0), datetime(2021, 2, 4, 11, 0, 0), 2),
-        (date(2021, 1, 1), date(2021, 1, 7), 1),
-        (date(2021, 1, 1), date(2021, 1, 8), 2),
-        (date(2021, 1, 1), date(2021, 1, 14), 2),
-        (date(2021, 1, 1), date(2021, 1, 15), 3),
-        (datetime(2021, 1, 1, 11, 0, 0), date(2021, 1, 8), 2),
-        (date(2021, 1, 1), datetime(2021, 1, 8, 11, 0, 0), 2),
-    ),
-)
-def test_get_period_in_weeks(start, end, weeks):
-    assert payments_util.get_period_in_weeks(start, end) == weeks
 
 
 def test_create_payment_log(test_db_session, initialize_factories_session):

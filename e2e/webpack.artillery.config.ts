@@ -48,15 +48,9 @@ module.exports = () => {
       }),
       new CopyPlugin({
         patterns: [
-          { from: "./.env", to: "./" },
-          { from: "./employees/*.employees.json", to: "./" },
-          { from: "./forms/*.pdf", to: "./" },
           { from: "./src/artillery/package.json", to: "./" },
           { from: "./src/artillery/spec.yml", to: "./" },
         ],
-      }),
-      new webpack.EnvironmentPlugin({
-        E2E_ENVIRONMENT: process.env.E2E_ENVIRONMENT,
       }),
     ],
   };

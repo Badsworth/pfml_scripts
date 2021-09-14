@@ -32,8 +32,20 @@ import withClaims from "../../hoc/withClaims";
 import withUser from "../../hoc/withUser";
 
 export const Dashboard = (props) => {
+  const showReviewByStatus = isFeatureEnabled("employerShowReviewByStatus");
   const { t } = useTranslation();
   const introElementRef = useRef(null);
+  const apiParams = {
+    // Default the dashboard to show claims requiring action first
+    order_by: showReviewByStatus ? "absence_status" : "created_at",
+    order_direction: showReviewByStatus ? "ascending" : "descending",
+    ...props.query,
+  };
+
+  const PaginatedClaimsTableWithClaims = withClaims(
+    PaginatedClaimsTable,
+    apiParams
+  );
 
   /**
    * Update the page's query string, to load a different page number,
@@ -65,8 +77,6 @@ export const Dashboard = (props) => {
     // Scroll user back to top of the table actions
     if (introElementRef.current) introElementRef.current.scrollIntoView();
   };
-
-  const showReviewByStatus = isFeatureEnabled("employerShowReviewByStatus");
 
   return (
     <React.Fragment>
@@ -138,23 +148,22 @@ export const Dashboard = (props) => {
       </section>
 
       <Search
-        initialValue={get(props.query, "search", "")}
+        initialValue={get(apiParams, "search", "")}
         updatePageQuery={updatePageQuery}
       />
       <Filters
-        query={props.query}
+        params={apiParams}
         updatePageQuery={updatePageQuery}
         user={props.user}
       />
-      <PaginatedClaimsTable
+      <PaginatedClaimsTableWithClaims
         appLogic={props.appLogic}
         user={props.user}
-        query={props.query}
         updatePageQuery={updatePageQuery}
         sort={
           <SortDropdown
-            order_by={props.query.order_by}
-            order_direction={props.query.order_direction}
+            order_by={apiParams.order_by}
+            order_direction={apiParams.order_direction}
             updatePageQuery={updatePageQuery}
           />
         }
@@ -174,14 +183,15 @@ Dashboard.propTypes = {
   query: PropTypes.shape({
     claim_status: PropTypes.string,
     employer_id: PropTypes.string,
-    order_by: PropTypes.string,
+    order_by: PropTypes.oneOf(["absence_status", "created_at", "employee"]),
     order_direction: PropTypes.oneOf(["ascending", "descending"]),
+    page_offset: PropTypes.string,
     search: PropTypes.string,
-  }),
+  }).isRequired,
   user: PropTypes.instanceOf(User).isRequired,
 };
 
-const PaginatedClaimsTable = withClaims((props) => {
+const PaginatedClaimsTable = (props) => {
   const { paginationMeta, updatePageQuery, user } = props;
   const { t } = useTranslation();
 
@@ -284,7 +294,7 @@ const PaginatedClaimsTable = withClaims((props) => {
       )}
     </React.Fragment>
   );
-});
+};
 
 PaginatedClaimsTable.propTypes = {
   appLogic: Dashboard.propTypes.appLogic,
@@ -295,7 +305,7 @@ PaginatedClaimsTable.propTypes = {
   sort: PropTypes.node.isRequired,
   user: PropTypes.instanceOf(User).isRequired,
   query: PropTypes.shape({
-    order_by: PropTypes.string,
+    order_by: PropTypes.oneOf(["absence_status", "created_at", "employee"]),
     order_direction: PropTypes.oneOf(["ascending", "descending"]),
   }),
 };
@@ -472,17 +482,17 @@ const Filters = (props) => {
 
   /**
    * Returns all filter fields with their values set based on
-   * what's currently in the URL query string
+   * what's currently being applied to the API requests
    * @returns { { employer_id: string, claim_status: string[] } }
    */
   const getFormStateFromQuery = useCallback(() => {
-    const claim_status = get(props.query, "claim_status");
+    const claim_status = get(props.params, "claim_status");
     return {
-      employer_id: get(props.query, "employer_id", ""),
+      employer_id: get(props.params, "employer_id", ""),
       // Convert checkbox field query param into array, to conform to how we manage checkbox form state
       claim_status: claim_status ? claim_status.split(",") : [],
     };
-  }, [props.query]);
+  }, [props.params]);
 
   /**
    * Form visibility and state management
@@ -714,7 +724,7 @@ const Filters = (props) => {
 };
 
 Filters.propTypes = {
-  query: PropTypes.shape({
+  params: PropTypes.shape({
     claim_status: PropTypes.string,
     employer_id: PropTypes.string,
   }).isRequired,
@@ -878,7 +888,7 @@ const SortDropdown = (props) => {
 };
 
 SortDropdown.propTypes = {
-  order_by: PropTypes.oneOf(["created_at", "employee"]),
+  order_by: PropTypes.oneOf(["absence_status", "created_at", "employee"]),
   order_direction: PropTypes.oneOf(["ascending", "descending"]),
   updatePageQuery: PropTypes.func.isRequired,
 };

@@ -7,7 +7,6 @@ import EmployerClaim from "../../../models/EmployerClaim";
 import Heading from "../../../components/Heading";
 import InputChoiceGroup from "../../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
-import ReviewHeading from "../../../components/ReviewHeading";
 import StatusRow from "../../../components/StatusRow";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
@@ -96,9 +95,9 @@ export const NewApplication = (props) => {
               },
             ]}
             label={
-              <ReviewHeading level="2">
+              <Heading level="2">
                 {t("pages.employersClaimsNewApplication.instructionsLabel")}
-              </ReviewHeading>
+              </Heading>
             }
             name="hasReviewerVerified"
             onChange={handleOnChange}

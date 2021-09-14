@@ -1,5 +1,4 @@
 import { fineos, fineosPages, portal } from "../../../actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { config } from "../../../actions/common";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
@@ -14,12 +13,8 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
         const application: ApplicationRequestBody = claim.claim;
         const paymentPreference = claim.paymentPreference;
 
-        const credentials: Credentials = {
-          username: config("PORTAL_USERNAME"),
-          password: config("PORTAL_PASSWORD"),
-        };
-        portal.login(credentials);
-        portal.goToDashboardFromApplicationsPage();
+        portal.loginClaimant();
+        portal.skipLoadingClaimantApplications();
 
         // Submit Claim
         portal.startClaim();
@@ -41,10 +36,10 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
     cy.unstash<DehydratedClaim>("claim").then((claim) => {
       cy.unstash<Submission>("submission").then((submission) => {
         assertValidClaim(claim.claim);
-        portal.login(getLeaveAdminCredentials(claim.claim.employer_fein));
+        portal.loginLeaveAdmin(claim.claim.employer_fein);
         portal.selectClaimFromEmployerDashboard(
           submission.fineos_absence_id,
-          "--"
+          config("PORTAL_HAS_LA_STATUS_UPDATES") === "true" ? "Review by" : "--"
         );
         portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
         portal.respondToLeaveAdminRequest(false, true, true, true);
@@ -54,11 +49,10 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
 
   it(
     "CSR rep will approve continous caring application",
-    { retries: 0, baseUrl: getFineosBaseUrl() },
+    { retries: 0 },
     () => {
       cy.dependsOnPreviousPass();
       fineos.before();
-      cy.visit("/");
       cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
         cy.unstash<DehydratedClaim>("claim").then((claim) => {
           fineosPages.ClaimPage.visit(fineos_absence_id)
@@ -87,30 +81,25 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
     }
   );
 
-  it(
-    "Should be able to confirm the weekly payment amount and check Ownership is Assigned To",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      cy.dependsOnPreviousPass();
-      fineos.before();
-      cy.visit("/");
+  it("Should be able to confirm the weekly payment amount and check Ownership is Assigned To", () => {
+    cy.dependsOnPreviousPass();
+    fineos.before();
 
-      cy.unstash<DehydratedClaim>("claim").then((claim) => {
-        cy.unstash<Submission>("submission").then((submission) => {
-          const payment = claim.metadata
-            ?.expected_weekly_payment as unknown as number;
-          fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
-            (leaveCase) => {
-              leaveCase.assertOwnershipAssignTo("DFML Program Integrity");
-              leaveCase.assertAmountsPending([
-                {
-                  net_payment_amount: payment,
-                },
-              ]);
-            }
-          );
-        });
+    cy.unstash<DehydratedClaim>("claim").then((claim) => {
+      cy.unstash<Submission>("submission").then((submission) => {
+        const payment = claim.metadata
+          ?.expected_weekly_payment as unknown as number;
+        fineosPages.ClaimPage.visit(submission.fineos_absence_id).paidLeave(
+          (leaveCase) => {
+            leaveCase.assertOwnershipAssignTo("DFML Program Integrity");
+            leaveCase.assertAmountsPending([
+              {
+                net_payment_amount: payment,
+              },
+            ]);
+          }
+        );
       });
-    }
-  );
+    });
+  });
 });

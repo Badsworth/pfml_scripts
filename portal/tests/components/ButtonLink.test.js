@@ -1,81 +1,105 @@
+import { render, screen } from "@testing-library/react";
 import ButtonLink from "../../src/components/ButtonLink";
 import React from "react";
-import { shallow } from "enzyme";
-
-function render(customProps = {}) {
-  const props = Object.assign(
-    {
-      children: "Button label",
-      href: "http://www.example.com",
-    },
-    customProps
-  );
-
-  const component = <ButtonLink {...props} />;
-
-  return {
-    props,
-    wrapper: shallow(component),
-  };
-}
+import userEvent from "@testing-library/user-event";
 
 describe("ButtonLink", () => {
-  it("renders with default styling", () => {
-    const { wrapper } = render();
-
-    expect(wrapper).toMatchInlineSnapshot(`
-      <Link
+  it("renders button link with default styling", () => {
+    render(<ButtonLink href="http://www.example.com">Click Me</ButtonLink>);
+    const buttonLink = screen.getByRole("link");
+    expect(buttonLink).toMatchInlineSnapshot(`
+      <a
+        class="usa-button"
         href="http://www.example.com"
       >
-        <a
-          className="usa-button"
-        >
-          Button label
-        </a>
-      </Link>
+        Click Me
+      </a>
     `);
+    expect(buttonLink).toHaveAccessibleName("Click Me");
   });
 
-  it("accepts a variation property", () => {
-    const { wrapper } = render({ variation: "outline" });
-    const anchor = wrapper.find("a");
-
-    expect(anchor.hasClass("usa-button--outline")).toBe(true);
+  it("renders a vanilla button if disabled", () => {
+    render(
+      <ButtonLink disabled={true} href="http://www.example.com">
+        Click Me
+      </ButtonLink>
+    );
+    expect(screen.queryByRole("link")).not.toBeInTheDocument();
+    const buttonLink = screen.getByRole("button");
+    expect(buttonLink).toMatchInlineSnapshot(`
+      <button
+        class="usa-button disabled"
+        disabled=""
+        type="button"
+      >
+        Click Me
+      </button>
+    `);
+    expect(buttonLink).toBeDisabled();
   });
 
-  it("accepts an onClick property", () => {
-    const onClick = jest.fn();
-    const { wrapper } = render({ onClick });
-
-    wrapper.find("a").simulate("click");
-
-    expect(onClick).toHaveBeenCalledTimes(1);
+  it("can accept an onClick and use it", () => {
+    const onClickHandler = jest.fn();
+    render(
+      <ButtonLink onClick={onClickHandler} href="http://www.example.com">
+        Click me
+      </ButtonLink>
+    );
+    userEvent.click(screen.getByText(/Click me/));
+    expect(onClickHandler).toHaveBeenCalled();
   });
 
-  describe("when className is set", () => {
-    it("adds the className to the link", () => {
-      const { wrapper } = render({ className: "custom-class" });
-      const anchor = wrapper.find("a");
-
-      expect(anchor.hasClass("custom-class")).toBe(true);
-    });
+  it("can receive styling variations that take effect", () => {
+    render(
+      <ButtonLink variation="outline" href="http://www.example.com">
+        Click Me
+      </ButtonLink>
+    );
+    expect(screen.getByRole("link")).toHaveClass(
+      "usa-button usa-button--outline"
+    );
   });
 
-  describe("when disabled is true", () => {
-    it("it renders a button with disabled attribute and style", () => {
-      const { wrapper } = render({ disabled: true });
-
-      expect(wrapper.find("button").prop("disabled")).toBe(true);
-      expect(wrapper.find("button").hasClass("disabled")).toBe(true);
-    });
+  it("inversed passes through with impact on class styles", () => {
+    render(
+      <ButtonLink inversed={true} href="http://www.example.com">
+        Click Me
+      </ButtonLink>
+    );
+    expect(screen.getByRole("link")).toHaveClass(
+      "usa-button usa-button--inverse"
+    );
   });
 
-  describe("when ariaLabel is set", () => {
-    it("it renders a button with an aria-label attribute", () => {
-      const { wrapper } = render({ ariaLabel: "example text" });
-      const anchor = wrapper.find("a");
+  it("inversed passes through with expected impact on class styles when unstyled", () => {
+    render(
+      <ButtonLink
+        inversed={true}
+        variation="unstyled"
+        href="http://www.example.com"
+      >
+        Click Me
+      </ButtonLink>
+    );
+    expect(screen.getByRole("link")).toHaveClass("usa-button--outline");
+  });
 
-      expect(anchor.prop("aria-label")).toEqual("example text");
-    });
+  it("can render a button with an aria-label", () => {
+    render(
+      <ButtonLink ariaLabel="example label" href="http://www.example.com">
+        Click Me
+      </ButtonLink>
+    );
+    const button = screen.getByLabelText("example label");
+    expect(button).toBeInTheDocument();
+  });
+
+  it("can handle additional custom classes passed through", () => {
+    render(
+      <ButtonLink className="hi hi hi" href="http://www.example.com">
+        Click Me
+      </ButtonLink>
+    );
+    expect(screen.getByRole("link")).toHaveClass("usa-button hi hi hi");
   });
 });

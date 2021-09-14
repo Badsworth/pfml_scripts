@@ -1,0 +1,1311 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Review Page CaringLeave renders family member's relationship 1`] = `
+<ReviewRow
+  label="Family member's relationship"
+  level="4"
+>
+  Child
+</ReviewRow>
+`;
+
+exports[`Review Page EmployerBenefitList when all data are present renders all data fields 1`] = `
+Array [
+  <OtherLeaveEntry
+    amount="$250.00 per month"
+    dates="8/12/2021 to 12/30/2021"
+    key="0"
+    label="Benefit 1"
+    reviewRowLevel="4"
+    type="Accrued paid leave"
+  />,
+  <OtherLeaveEntry
+    amount="$250.00 per month"
+    dates="8/12/2021 to 12/30/2021"
+    key="1"
+    label="Benefit 2"
+    reviewRowLevel="4"
+    type="Temporary disability insurance"
+  />,
+  <OtherLeaveEntry
+    amount="Full wage replacement"
+    dates="8/12/2021 to 12/30/2021"
+    key="2"
+    label="Benefit 3"
+    reviewRowLevel="4"
+    type="Permanent disability insurance"
+  />,
+  <OtherLeaveEntry
+    amount="Full wage replacement"
+    dates="8/12/2021 to 12/30/2021"
+    key="3"
+    label="Benefit 4"
+    reviewRowLevel="4"
+    type="Family or medical leave insurance"
+  />,
+]
+`;
+
+exports[`Review Page EmployerBenefitList when amount fields are missing doesn't render missing data 1`] = `
+<OtherLeaveEntry
+  amount={null}
+  dates="8/12/2021 to 12/30/2021"
+  key="0"
+  label="Benefit 1"
+  reviewRowLevel="4"
+  type="Permanent disability insurance"
+/>
+`;
+
+exports[`Review Page Final Review Page when the claim is complete renders Review page with final review page content and only edit links for Part 2/3 sections 1`] = `
+<div
+  className="measure-6"
+>
+  <BackButton />
+  <Title
+    hidden={true}
+  >
+    Check your answers before submitting your application.
+  </Title>
+  <Heading
+    className="margin-top-0"
+    level="2"
+    size="1"
+  >
+    <HeadingPrefix>
+      Part 1
+    </HeadingPrefix>
+    Review: Tell us about yourself and your leave
+  </Heading>
+  <Lead>
+    <Trans
+      components={
+        Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344-7365"
+          />,
+        }
+      }
+      i18nKey="pages.claimsReview.partDescription"
+      tOptions={
+        Object {
+          "context": "1",
+        }
+      }
+      values={
+        Object {
+          "absence_id": "NTN-111-ABS-01",
+        }
+      }
+    />
+  </Lead>
+  <ReviewHeading
+    editText="Edit"
+    level="2"
+  >
+    Your identification
+  </ReviewHeading>
+  <ReviewRow
+    label="Name"
+    level="3"
+  >
+    Jane  Doe
+  </ReviewRow>
+  <ReviewRow
+    label="Gender Identity"
+    level="3"
+  >
+    Woman
+  </ReviewRow>
+  <ReviewRow
+    label="Phone number"
+    level="3"
+  >
+    Mobile
+    <br />
+    123-456-****
+  </ReviewRow>
+  <ReviewRow
+    label="Residential address"
+    level="3"
+  >
+    1234 My St., Boston, MA 00000
+  </ReviewRow>
+  <ReviewRow
+    label="Driver’s License Number"
+    level="3"
+  >
+    *********
+  </ReviewRow>
+  <ReviewRow
+    label="Social Security Number or ITIN"
+    level="3"
+  >
+    ***-**-****
+  </ReviewRow>
+  <ReviewRow
+    label="Date of birth"
+    level="3"
+  >
+    7/17/****
+  </ReviewRow>
+  <ReviewHeading
+    editText="Edit"
+    level="2"
+  >
+    Employment information
+  </ReviewHeading>
+  <ReviewRow
+    label="Employer’s EIN"
+    level="3"
+  >
+    12-3456789
+  </ReviewRow>
+  <ReviewRow
+    label="Notified employer"
+    level="3"
+  >
+    Notified employer on 1/1/2021
+  </ReviewRow>
+  <ReviewRow
+    label="Work schedule type"
+    level="3"
+  >
+    Each week I work the same number of hours on the same days.
+  </ReviewRow>
+  <ReviewHeading
+    editText="Edit"
+    level="2"
+  >
+    Leave details
+  </ReviewHeading>
+  <ReviewRow
+    label="Leave type"
+    level="3"
+  >
+    Medical leave
+  </ReviewRow>
+  <ReviewRow
+    label="Medical leave for pregnancy or birth"
+    level="3"
+  >
+    No
+  </ReviewRow>
+  <ReviewRow
+    label="Continuous leave"
+    level="3"
+  >
+    1/1/2021 to 6/1/2021
+  </ReviewRow>
+  <ReviewRow
+    label="Reduced leave"
+    level="3"
+  >
+    No
+  </ReviewRow>
+  <ReviewRow
+    label="Intermittent leave"
+    level="3"
+  >
+    No
+  </ReviewRow>
+  <div
+    data-test="other-leave"
+  >
+    <ReviewHeading
+      editText="Edit"
+      level="2"
+    >
+      Other leave, benefits, and income
+    </ReviewHeading>
+    <ReviewRow
+      label="Previous leave?"
+      level="3"
+    >
+      No
+    </ReviewRow>
+    <PreviousLeaveList
+      entries={Array []}
+      reviewRowLevel="3"
+      startIndex={0}
+      type="sameReason"
+    />
+    <PreviousLeaveList
+      entries={Array []}
+      reviewRowLevel="3"
+      startIndex={0}
+      type="otherReason"
+    />
+    <ReviewRow
+      label="Concurrent leave?"
+      level="3"
+    >
+      No
+    </ReviewRow>
+    <ReviewRow
+      label="Employer-sponsored benefits?"
+      level="3"
+    >
+      No
+    </ReviewRow>
+    <ReviewRow
+      label="Other sources of income?"
+      level="3"
+    >
+      No
+    </ReviewRow>
+  </div>
+  <Heading
+    level="2"
+    size="1"
+  >
+    <HeadingPrefix>
+      Part 2
+    </HeadingPrefix>
+    Review: Your payment information
+  </Heading>
+  <ReviewHeading
+    level="2"
+  >
+    Payment information
+  </ReviewHeading>
+  <ReviewRow
+    label="Payment method"
+    level="3"
+  >
+    Direct deposit into my bank account
+  </ReviewRow>
+  <ReviewRow
+    label="Routing number"
+    level="3"
+  >
+    1234567890
+  </ReviewRow>
+  <ReviewRow
+    label="Account number"
+    level="3"
+  >
+    091000022
+  </ReviewRow>
+  <ReviewRow
+    label="Account type"
+    level="3"
+  >
+    Checking
+  </ReviewRow>
+  <Heading
+    level="2"
+    size="1"
+  >
+    <HeadingPrefix>
+      Part 3
+    </HeadingPrefix>
+    Review: Upload document
+  </Heading>
+  <div
+    className="margin-top-8 text-center"
+  >
+    <Spinner
+      aria-valuetext="Loading"
+    />
+  </div>
+  <Trans
+    i18nKey="pages.claimsReview.employerWarning"
+  />
+  <Button
+    className="margin-top-3"
+    loading={false}
+    loadingMessage="Submitting… Do not refresh or go back."
+    onClick={[Function]}
+    type="button"
+  >
+    Submit application
+  </Button>
+</div>
+`;
+
+exports[`Review Page Final Review Page when the claim is complete renders Review page with final review page content and only edit links for Part 2/3 sections 2`] = `
+Array [
+  "If you need to make edits to Part 1, you’ll need to call our Contact Center at ",
+  <a
+    href="tel:(833) 344-7365"
+    key="1"
+  >
+    (833) 344‑7365
+  </a>,
+  ". Your application ID is ",
+  <strong
+    key="strong-3"
+  >
+    NTN-111-ABS-01
+  </strong>,
+]
+`;
+
+exports[`Review Page Intermittent leave frequency renders the leave frequency and duration in plain language 1`] = `"Estimated 2 absences per month, each lasting 3 days."`;
+
+exports[`Review Page Intermittent leave frequency renders the leave frequency and duration in plain language 2`] = `"Estimated 2 absences per week, each lasting 3 days."`;
+
+exports[`Review Page Intermittent leave frequency renders the leave frequency and duration in plain language 3`] = `"Estimated 2 absences per month, each lasting 3 days."`;
+
+exports[`Review Page Intermittent leave frequency renders the leave frequency and duration in plain language 4`] = `"Estimated 2 absences per month, each lasting 3 hours."`;
+
+exports[`Review Page Intermittent leave frequency renders the leave frequency and duration in plain language 5`] = `"Estimated 2 absences per week, each lasting 3 hours."`;
+
+exports[`Review Page Intermittent leave frequency renders the leave frequency and duration in plain language 6`] = `"Estimated 2 absences per month, each lasting 3 hours."`;
+
+exports[`Review Page Leave reason When the reason is caring leave renders caring leave details 1`] = `
+<div
+  className="measure-6"
+>
+  <BackButton />
+  <Title
+    hidden={true}
+  >
+    Check your answers before submitting your application.
+  </Title>
+  <Heading
+    className="margin-top-0"
+    level="2"
+    size="1"
+  >
+    <HeadingPrefix>
+      Part 1
+    </HeadingPrefix>
+    Review and confirm: Tell us about yourself and your leave
+  </Heading>
+  <ReviewHeading
+    editHref="/applications/name?claim_id=mock_application_id"
+    editText="Edit"
+    level="3"
+  >
+    Your identification
+  </ReviewHeading>
+  <ReviewRow
+    label="Name"
+    level="4"
+  >
+    Jane  Doe
+  </ReviewRow>
+  <ReviewRow
+    label="Gender Identity"
+    level="4"
+  >
+    Woman
+  </ReviewRow>
+  <ReviewRow
+    label="Phone number"
+    level="4"
+  >
+    Mobile
+    <br />
+    123-456-****
+  </ReviewRow>
+  <ReviewRow
+    label="Residential address"
+    level="4"
+  >
+    1234 My St., Boston, MA 00000
+  </ReviewRow>
+  <ReviewRow
+    label="Driver’s License Number"
+    level="4"
+  >
+    *********
+  </ReviewRow>
+  <ReviewRow
+    label="Social Security Number or ITIN"
+    level="4"
+  >
+    ***-**-****
+  </ReviewRow>
+  <ReviewRow
+    label="Date of birth"
+    level="4"
+  >
+    7/17/****
+  </ReviewRow>
+  <ReviewHeading
+    editHref="/applications/employment-status?claim_id=mock_application_id"
+    editText="Edit"
+    level="3"
+  >
+    Employment information
+  </ReviewHeading>
+  <ReviewRow
+    label="Employer’s EIN"
+    level="4"
+  >
+    12-3456789
+  </ReviewRow>
+  <ReviewRow
+    label="Notified employer"
+    level="4"
+  >
+    Notified employer on 1/1/2021
+  </ReviewRow>
+  <ReviewRow
+    label="Work schedule type"
+    level="4"
+  >
+    Each week I work the same number of hours on the same days.
+  </ReviewRow>
+  <ReviewHeading
+    editHref="/applications/leave-reason?claim_id=mock_application_id"
+    editText="Edit"
+    level="3"
+  >
+    Leave details
+  </ReviewHeading>
+  <ReviewRow
+    label="Leave type"
+    level="4"
+  >
+    Care for a family member
+  </ReviewRow>
+  <ReviewRow
+    label="Family member's relationship"
+    level="4"
+  >
+    Child
+  </ReviewRow>
+  <ReviewRow
+    label="Family member's name"
+    level="4"
+  >
+    Luther James Toggle
+  </ReviewRow>
+  <ReviewRow
+    label="Family member's date of birth"
+    level="4"
+  >
+    10/14/****
+  </ReviewRow>
+  <ReviewRow
+    label="Continuous leave"
+    level="4"
+  >
+    1/1/2021 to 6/1/2021
+  </ReviewRow>
+  <ReviewRow
+    label="Reduced leave"
+    level="4"
+  >
+    No
+  </ReviewRow>
+  <ReviewRow
+    label="Intermittent leave"
+    level="4"
+  >
+    No
+  </ReviewRow>
+  <div
+    data-test="other-leave"
+  >
+    <ReviewHeading
+      editHref="/applications/previous-leaves-intro?claim_id=mock_application_id"
+      editText="Edit"
+      level="3"
+    >
+      Other leave, benefits, and income
+    </ReviewHeading>
+    <ReviewRow
+      label="Previous leave?"
+      level="4"
+    >
+      No
+    </ReviewRow>
+    <PreviousLeaveList
+      entries={Array []}
+      reviewRowLevel="4"
+      startIndex={0}
+      type="sameReason"
+    />
+    <PreviousLeaveList
+      entries={Array []}
+      reviewRowLevel="4"
+      startIndex={0}
+      type="otherReason"
+    />
+    <ReviewRow
+      label="Concurrent leave?"
+      level="4"
+    >
+      No
+    </ReviewRow>
+    <ReviewRow
+      label="Employer-sponsored benefits?"
+      level="4"
+    >
+      No
+    </ReviewRow>
+    <ReviewRow
+      label="Other sources of income?"
+      level="4"
+    >
+      No
+    </ReviewRow>
+  </div>
+  <div
+    className="margin-top-6 margin-bottom-2"
+  >
+    <Trans
+      components={
+        Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344-7365"
+          />,
+        }
+      }
+      i18nKey="pages.claimsReview.partOneNextSteps"
+    />
+  </div>
+  <Button
+    className="margin-top-3"
+    loading={false}
+    loadingMessage="Submitting… Do not refresh or go back."
+    onClick={[Function]}
+    type="button"
+  >
+    Submit Part 1
+  </Button>
+</div>
+`;
+
+exports[`Review Page OtherIncomeList when all data are present renders all data fields 1`] = `
+Array [
+  <OtherLeaveEntry
+    amount="$250.00 per month"
+    dates="8/12/2021 to 12/30/2021"
+    key="0"
+    label="Income 1"
+    reviewRowLevel="4"
+    type="Workers Compensation"
+  />,
+  <OtherLeaveEntry
+    amount="$250.00 per month"
+    dates="8/12/2021 to 12/30/2021"
+    key="1"
+    label="Income 2"
+    reviewRowLevel="4"
+    type="Unemployment Insurance"
+  />,
+  <OtherLeaveEntry
+    amount="$250.00 per month"
+    dates="8/12/2021 to 12/30/2021"
+    key="2"
+    label="Income 3"
+    reviewRowLevel="4"
+    type="Social Security Disability Insurance"
+  />,
+  <OtherLeaveEntry
+    amount="$250.00 per month"
+    dates="8/12/2021 to 12/30/2021"
+    key="3"
+    label="Income 4"
+    reviewRowLevel="4"
+    type="Disability benefits under a governmental retirement plan"
+  />,
+  <OtherLeaveEntry
+    amount="$250.00 per month"
+    dates="8/12/2021 to 12/30/2021"
+    key="4"
+    label="Income 5"
+    reviewRowLevel="4"
+    type="Jones Act benefits"
+  />,
+  <OtherLeaveEntry
+    amount="$250.00 per month"
+    dates="8/12/2021 to 12/30/2021"
+    key="5"
+    label="Income 6"
+    reviewRowLevel="4"
+    type="Railroad Retirement benefits"
+  />,
+  <OtherLeaveEntry
+    amount="$250.00 per month"
+    dates="8/12/2021 to 12/30/2021"
+    key="6"
+    label="Income 7"
+    reviewRowLevel="4"
+    type="Earnings or benefits from another employer, or through self-employment"
+  />,
+]
+`;
+
+exports[`Review Page OtherIncomeList when amount fields are missing doesn't render missing data 1`] = `
+<OtherLeaveEntry
+  amount={null}
+  dates="8/12/2021 to 12/30/2021"
+  key="0"
+  label="Income 1"
+  reviewRowLevel="4"
+  type="Earnings or benefits from another employer, or through self-employment"
+/>
+`;
+
+exports[`Review Page OtherLeaveEntry when all data are present renders all data fields 1`] = `
+<ReviewRow
+  label="Benefit 1"
+  level="4"
+>
+  <p
+    className="text-base-darker margin-top-1"
+  >
+    07-22-2020 - 09-22-2020
+  </p>
+  <ul
+    className="usa-list margin-top-1"
+  >
+    <li>
+      Medical or family leave
+    </li>
+    <li>
+      $250 per month
+    </li>
+  </ul>
+</ReviewRow>
+`;
+
+exports[`Review Page OtherLeaveEntry when amount is missing doesn't render missing data 1`] = `
+<ReviewRow
+  label="Benefit 1"
+  level="4"
+>
+  <p
+    className="text-base-darker margin-top-1"
+  >
+    07-22-2020 - 09-22-2020
+  </p>
+  <ul
+    className="usa-list margin-top-1"
+  >
+    <li>
+      Medical or family leave
+    </li>
+  </ul>
+</ReviewRow>
+`;
+
+exports[`Review Page Part 1 Review Page renders a custom Alert when there are required field errors for specific fields 1`] = `
+<Alert
+  className="margin-bottom-3"
+  data-test="missing-required-fields-alert"
+>
+  <div
+    className="usa-alert usa-alert--error margin-bottom-3"
+    tabIndex="-1"
+  >
+    <div
+      className="usa-alert__body"
+      role="region"
+    >
+      <div
+        className="usa-alert__text"
+      >
+        <Trans
+          components={
+            Object {
+              "checklist-link": <a
+                href="/applications/checklist?claim_id=mock_application_id"
+              />,
+            }
+          }
+          i18nKey="pages.claimsReview.missingRequiredFieldError"
+        >
+          We’ve added some new questions since you last updated your application. Return to the 
+          <a
+            href="/applications/checklist?claim_id=mock_application_id"
+            key="1"
+          >
+            checklist
+          </a>
+           to make sure you’ve completed every step.
+        </Trans>
+      </div>
+    </div>
+  </div>
+</Alert>
+`;
+
+exports[`Review Page Part 1 Review Page when all data is present renders Review page with Part 1 content and edit links 1`] = `
+<div
+  className="measure-6"
+>
+  <BackButton />
+  <Title
+    hidden={true}
+  >
+    Check your answers before submitting your application.
+  </Title>
+  <Heading
+    className="margin-top-0"
+    level="2"
+    size="1"
+  >
+    <HeadingPrefix>
+      Part 1
+    </HeadingPrefix>
+    Review and confirm: Tell us about yourself and your leave
+  </Heading>
+  <ReviewHeading
+    editHref="/applications/name?claim_id=mock_application_id"
+    editText="Edit"
+    level="3"
+  >
+    Your identification
+  </ReviewHeading>
+  <ReviewRow
+    label="Name"
+    level="4"
+  >
+    Jane  Doe
+  </ReviewRow>
+  <ReviewRow
+    label="Gender Identity"
+    level="4"
+  >
+    Woman
+  </ReviewRow>
+  <ReviewRow
+    label="Phone number"
+    level="4"
+  >
+    Mobile
+    <br />
+    123-456-****
+  </ReviewRow>
+  <ReviewRow
+    label="Residential address"
+    level="4"
+  >
+    1234 My St., Boston, MA 00000
+  </ReviewRow>
+  <ReviewRow
+    label="Mailing address"
+    level="4"
+  >
+    124 My St., Boston, MA 00000
+  </ReviewRow>
+  <ReviewRow
+    label="Driver’s License Number"
+    level="4"
+  >
+    *********
+  </ReviewRow>
+  <ReviewRow
+    label="Social Security Number or ITIN"
+    level="4"
+  >
+    ***-**-****
+  </ReviewRow>
+  <ReviewRow
+    label="Date of birth"
+    level="4"
+  >
+    7/17/****
+  </ReviewRow>
+  <ReviewHeading
+    editHref="/applications/employment-status?claim_id=mock_application_id"
+    editText="Edit"
+    level="3"
+  >
+    Employment information
+  </ReviewHeading>
+  <ReviewRow
+    label="Employer’s EIN"
+    level="4"
+  >
+    12-3456789
+  </ReviewRow>
+  <ReviewRow
+    label="Notified employer"
+    level="4"
+  >
+    Notified employer on 1/1/2021
+  </ReviewRow>
+  <ReviewRow
+    label="Work schedule type"
+    level="4"
+  >
+    Each week I work the same number of hours on the same days.
+  </ReviewRow>
+  <ReviewRow
+    label="Weekly work hours"
+    level="4"
+    noBorder={true}
+  >
+    <WeeklyTimeTable
+      days={
+        Array [
+          WorkPatternDay {
+            "day_of_week": "Sunday",
+            "minutes": 0,
+          },
+          WorkPatternDay {
+            "day_of_week": "Monday",
+            "minutes": 480,
+          },
+          WorkPatternDay {
+            "day_of_week": "Tuesday",
+            "minutes": 480,
+          },
+          WorkPatternDay {
+            "day_of_week": "Wednesday",
+            "minutes": 480,
+          },
+          WorkPatternDay {
+            "day_of_week": "Thursday",
+            "minutes": 480,
+          },
+          WorkPatternDay {
+            "day_of_week": "Friday",
+            "minutes": 480,
+          },
+          WorkPatternDay {
+            "day_of_week": "Saturday",
+            "minutes": 0,
+          },
+        ]
+      }
+    />
+  </ReviewRow>
+  <ReviewHeading
+    editHref="/applications/leave-reason?claim_id=mock_application_id"
+    editText="Edit"
+    level="3"
+  >
+    Leave details
+  </ReviewHeading>
+  <ReviewRow
+    label="Leave type"
+    level="4"
+  >
+    Medical leave
+  </ReviewRow>
+  <ReviewRow
+    label="Medical leave for pregnancy or birth"
+    level="4"
+  >
+    No
+  </ReviewRow>
+  <ReviewRow
+    label="Continuous leave"
+    level="4"
+  >
+    1/1/2021 to 6/1/2021
+  </ReviewRow>
+  <ReviewRow
+    label="Reduced leave"
+    level="4"
+  >
+    No
+  </ReviewRow>
+  <ReviewRow
+    label="Intermittent leave"
+    level="4"
+  >
+    No
+  </ReviewRow>
+  <div
+    data-test="other-leave"
+  >
+    <ReviewHeading
+      editHref="/applications/previous-leaves-intro?claim_id=mock_application_id"
+      editText="Edit"
+      level="3"
+    >
+      Other leave, benefits, and income
+    </ReviewHeading>
+    <ReviewRow
+      label="Previous leave?"
+      level="4"
+    >
+      Yes
+    </ReviewRow>
+    <PreviousLeaveList
+      entries={
+        Array [
+          PreviousLeave {
+            "is_for_current_employer": true,
+            "leave_end_date": "2021-05-01",
+            "leave_minutes": 1200,
+            "leave_reason": null,
+            "leave_start_date": "2021-07-01",
+            "previous_leave_id": null,
+            "type": "same_reason",
+            "worked_per_week_minutes": 2400,
+          },
+        ]
+      }
+      reviewRowLevel="4"
+      startIndex={0}
+      type="sameReason"
+    />
+    <PreviousLeaveList
+      entries={
+        Array [
+          PreviousLeave {
+            "is_for_current_employer": null,
+            "leave_end_date": null,
+            "leave_minutes": null,
+            "leave_reason": null,
+            "leave_start_date": null,
+            "previous_leave_id": null,
+            "type": "other_reason",
+            "worked_per_week_minutes": null,
+          },
+        ]
+      }
+      reviewRowLevel="4"
+      startIndex={1}
+      type="otherReason"
+    />
+    <ReviewRow
+      label="Concurrent leave?"
+      level="4"
+    >
+      Yes
+    </ReviewRow>
+    <ReviewRow
+      label="Accrued paid leave"
+      level="4"
+    >
+      <p
+        className="text-base-darker margin-top-1"
+      >
+        1/1/2021 to 3/1/2021
+      </p>
+      <ul
+        className="usa-list margin-top-1"
+      >
+        <li>
+          From this employer
+        </li>
+      </ul>
+    </ReviewRow>
+    <ReviewRow
+      label="Employer-sponsored benefits?"
+      level="4"
+    >
+      Yes
+    </ReviewRow>
+    <EmployerBenefitList
+      entries={
+        Array [
+          EmployerBenefit {
+            "benefit_amount_dollars": 500,
+            "benefit_amount_frequency": "Per Week",
+            "benefit_end_date": "2021-02-01",
+            "benefit_start_date": "2021-01-01",
+            "benefit_type": "Family or medical leave insurance",
+            "employer_benefit_id": 1,
+            "is_full_salary_continuous": false,
+          },
+          EmployerBenefit {
+            "benefit_amount_dollars": 200,
+            "benefit_amount_frequency": "Unknown",
+            "benefit_end_date": "2021-02-01",
+            "benefit_start_date": "2021-01-01",
+            "benefit_type": "Family or medical leave insurance",
+            "employer_benefit_id": 2,
+            "is_full_salary_continuous": false,
+          },
+          EmployerBenefit {
+            "benefit_amount_dollars": 0,
+            "benefit_amount_frequency": "Unknown",
+            "benefit_end_date": "2021-02-01",
+            "benefit_start_date": "2021-01-01",
+            "benefit_type": "Short-term disability insurance",
+            "employer_benefit_id": 3,
+            "is_full_salary_continuous": true,
+          },
+          EmployerBenefit {
+            "benefit_amount_dollars": 0,
+            "benefit_amount_frequency": "Unknown",
+            "benefit_end_date": "2021-02-01",
+            "benefit_start_date": "2021-01-01",
+            "benefit_type": "Permanent disability insurance",
+            "employer_benefit_id": 4,
+            "is_full_salary_continuous": false,
+          },
+        ]
+      }
+      reviewRowLevel="4"
+    />
+    <ReviewRow
+      label="Other sources of income?"
+      level="4"
+    >
+      Yes
+    </ReviewRow>
+    <OtherIncomeList
+      entries={
+        Array [
+          OtherIncome {
+            "income_amount_dollars": 125,
+            "income_amount_frequency": "Per Week",
+            "income_end_date": "2021-01-01",
+            "income_start_date": "2021-01-30",
+            "income_type": "Earnings from another employment/self-employment",
+            "other_income_id": null,
+          },
+        ]
+      }
+      reviewRowLevel="4"
+    />
+  </div>
+  <div
+    className="margin-top-6 margin-bottom-2"
+  >
+    <Trans
+      components={
+        Object {
+          "contact-center-phone-link": <a
+            href="tel:(833) 344-7365"
+          />,
+        }
+      }
+      i18nKey="pages.claimsReview.partOneNextSteps"
+    />
+  </div>
+  <Button
+    className="margin-top-3"
+    loading={false}
+    loadingMessage="Submitting… Do not refresh or go back."
+    onClick={[Function]}
+    type="button"
+  >
+    Submit Part 1
+  </Button>
+</div>
+`;
+
+exports[`Review Page PreviousLeaveList renders other reason list 1`] = `
+Array [
+  <ReviewRow
+    key="otherReason-0"
+    label="Previous leave 2"
+    level="4"
+  >
+    <p
+      className="text-base-darker margin-top-1"
+    >
+      7/1/2021 to 5/1/2021
+    </p>
+    <ul
+      className="usa-list margin-top-1"
+    >
+      <li>
+        Leave for a different qualifying reason
+      </li>
+      <li>
+        From this employer
+      </li>
+      <li>
+        Leave was for caring for a family member
+      </li>
+      <li>
+        Hours worked at time of leave: 
+        40h
+      </li>
+      <li>
+        Total hours of leave taken: 
+        20h
+      </li>
+    </ul>
+  </ReviewRow>,
+  <ReviewRow
+    key="otherReason-1"
+    label="Previous leave 3"
+    level="4"
+  >
+    <p
+      className="text-base-darker margin-top-1"
+    >
+      7/1/2021 to 5/1/2021
+    </p>
+    <ul
+      className="usa-list margin-top-1"
+    >
+      <li>
+        Leave for a different qualifying reason
+      </li>
+      <li>
+        From a different employer
+      </li>
+      <li>
+        Leave was for bonding with a child after birth or placement
+      </li>
+      <li>
+        Hours worked at time of leave: 
+        40h
+      </li>
+      <li>
+        Total hours of leave taken: 
+        20h
+      </li>
+    </ul>
+  </ReviewRow>,
+]
+`;
+
+exports[`Review Page PreviousLeaveList renders same reason list 1`] = `
+Array [
+  <ReviewRow
+    key="sameReason-0"
+    label="Previous leave 2"
+    level="4"
+  >
+    <p
+      className="text-base-darker margin-top-1"
+    >
+      7/1/2021 to 5/1/2021
+    </p>
+    <ul
+      className="usa-list margin-top-1"
+    >
+      <li>
+        Leave for the same qualifying reason
+      </li>
+      <li>
+        From this employer
+      </li>
+      <li>
+        Hours worked at time of leave: 
+        40h
+      </li>
+      <li>
+        Total hours of leave taken: 
+        20h
+      </li>
+    </ul>
+  </ReviewRow>,
+  <ReviewRow
+    key="sameReason-1"
+    label="Previous leave 3"
+    level="4"
+  >
+    <p
+      className="text-base-darker margin-top-1"
+    >
+      7/1/2021 to 5/1/2021
+    </p>
+    <ul
+      className="usa-list margin-top-1"
+    >
+      <li>
+        Leave for the same qualifying reason
+      </li>
+      <li>
+        From a different employer
+      </li>
+      <li>
+        Hours worked at time of leave: 
+        40h
+      </li>
+      <li>
+        Total hours of leave taken: 
+        20h
+      </li>
+    </ul>
+  </ReviewRow>,
+]
+`;
+
+exports[`Review Page Reduced leave renders WeeklyTimeTable for the reduced leave period when work pattern is Fixed 1`] = `
+<ReviewRow
+  label="Hours off per week"
+  level="4"
+  noBorder={true}
+>
+  <WeeklyTimeTable
+    className="margin-bottom-0"
+    days={
+      Array [
+        Object {
+          "day_of_week": "Sunday",
+          "minutes": null,
+        },
+        Object {
+          "day_of_week": "Monday",
+          "minutes": 390,
+        },
+        Object {
+          "day_of_week": "Tuesday",
+          "minutes": null,
+        },
+        Object {
+          "day_of_week": "Wednesday",
+          "minutes": null,
+        },
+        Object {
+          "day_of_week": "Thursday",
+          "minutes": null,
+        },
+        Object {
+          "day_of_week": "Friday",
+          "minutes": 480,
+        },
+        Object {
+          "day_of_week": "Saturday",
+          "minutes": null,
+        },
+      ]
+    }
+  />
+</ReviewRow>
+`;
+
+exports[`Review Page Reduced leave renders total time for the reduced leave period when work pattern is Variable 1`] = `
+<ReviewRow
+  label="Hours off per week"
+  level="4"
+  noBorder={false}
+>
+  14h 30m
+</ReviewRow>
+`;
+
+exports[`Review Page Work patterns has internationalized strings for each work pattern type 1`] = `"Each week I work the same number of hours on the same days."`;
+
+exports[`Review Page Work patterns has internationalized strings for each work pattern type 2`] = `"My schedule is not consistent from week to week."`;
+
+exports[`Review Page Work patterns shows average weekly hours if work pattern type is variable 1`] = `"40h"`;
+
+exports[`Review Page Work patterns shows work pattern days if work pattern type is fixed 1`] = `
+<WeeklyTimeTable
+  days={
+    Array [
+      WorkPatternDay {
+        "day_of_week": "Sunday",
+        "minutes": 0,
+      },
+      WorkPatternDay {
+        "day_of_week": "Monday",
+        "minutes": 480,
+      },
+      WorkPatternDay {
+        "day_of_week": "Tuesday",
+        "minutes": 480,
+      },
+      WorkPatternDay {
+        "day_of_week": "Wednesday",
+        "minutes": 480,
+      },
+      WorkPatternDay {
+        "day_of_week": "Thursday",
+        "minutes": 480,
+      },
+      WorkPatternDay {
+        "day_of_week": "Friday",
+        "minutes": 480,
+      },
+      WorkPatternDay {
+        "day_of_week": "Saturday",
+        "minutes": 0,
+      },
+    ]
+  }
+/>
+`;

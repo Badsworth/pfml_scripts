@@ -55,8 +55,6 @@
 # ===============
 #
 # CPU and memory defaults are 1024 (CPU units) and 2048 (MB).
-# 1/4th of that allocation (256 CPU units, 512MB RAM) is reserved for the New Relic infra sidecar.
-# This leaves the default resource allocation available to your business logic as: 768 CPU units, 1.5GB RAM.
 
 # If you need more resources than this, add "cpu" or "memory" keys to your ECS task's
 # entry in locals.tasks. The defaults will be used if these keys are absent.
@@ -342,6 +340,33 @@ locals {
         { name : "BI_WAREHOUSE_PATH", value : "s3://massgov-pfml-${var.environment_name}-business-intelligence-tool/warehouse/raw/fineos/" }
       ]
     },
+
+    "update-gender-data-from-rmv" = {
+      command   = ["update-gender-data-from-rmv"]
+      task_role = aws_iam_role.update_gender_data_from_rmv_task_role.arn
+      env = [
+        local.db_access,
+        local.rmv_api_access
+      ]
+    },
+
+    "evaluate-new-financial-eligibility" = {
+      command   = ["evaluate-new-financial-eligibility"]
+      task_role = aws_iam_role.evaluate_new_financial_eligibility_task_role.arn
+      env = [
+        local.db_access,
+        { name : "S3_EXPORT_BUCKET", value : "massgov-pfml-${var.environment_name}-execute-sql-export" }
+      ]
+    },
+
+    "report-sequential-employment" = {
+      command   = ["report-sequential-employment"]
+      task_role = aws_iam_role.task_execute_sql_task_role.arn
+      env = [
+        local.db_access,
+        { name : "S3_BUCKET", value : "massgov-pfml-${var.environment_name}-execute-sql-export" }
+      ]
+    },
   }
 }
 
@@ -369,8 +394,8 @@ resource "aws_ecs_task_definition" "ecs_tasks" {
       name                   = each.key,
       image                  = format("%s:%s", data.aws_ecr_repository.app.repository_url, var.service_docker_tag),
       command                = each.value.command,
-      cpu                    = tonumber(lookup(each.value, "cpu", 1024)) - 256,
-      memory                 = tonumber(lookup(each.value, "memory", 2048)) - 512,
+      cpu                    = lookup(each.value, "cpu", 1024),
+      memory                 = lookup(each.value, "memory", 2048),
       networkMode            = "awsvpc",
       essential              = true,
       readonlyRootFilesystem = false, # False by default; some tasks write local files.
@@ -397,54 +422,7 @@ resource "aws_ecs_task_definition" "ecs_tasks" {
       # silently cause env vars to go missing which would definitely confuse someone for a day or two.
       #
       environment = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if contains(keys(val), "value")]
-      secrets     = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if ! contains(keys(val), "value")]
-    },
-    ###### ↑ Generic "business logic" container definition ↑ | ↓ New Relic infrastructure sidecar definition ↓ ######
-    {
-      name              = "newrelic-infra",
-      image             = "498823821309.dkr.ecr.us-east-1.amazonaws.com/eolwd-pfml-dockerhub-mirror:newrelic.infrastructure-bundle.2.6.1",
-      cpu               = 256,
-      memoryReservation = 512,
-      environment = [
-        {
-          name  = "NRIA_OVERRIDE_HOST_ROOT",
-          value = ""
-        },
-        {
-          name  = "NRIA_IS_FORWARD_ONLY",
-          value = "true"
-        },
-        {
-          name  = "FARGATE",
-          value = "true"
-        },
-        {
-          name  = "ENABLE_NRI_ECS",
-          value = "true"
-        },
-        {
-          name  = "NRIA_PASSTHROUGH_ENVIRONMENT",
-          value = "ECS_CONTAINER_METADATA_URI,ENABLE_NRI_ECS,FARGATE"
-        },
-        {
-          name  = "NRIA_CUSTOM_ATTRIBUTES",
-          value = "{\"nrDeployMethod\":\"downloadPage\"}"
-        }
-      ],
-      secrets = [
-        {
-          valueFrom : "/service/${local.app_name}/common/newrelic-license-key",
-          name : "NRIA_LICENSE_KEY"
-        }
-      ],
-      logConfiguration = {
-        logDriver = "awslogs",
-        options = {
-          "awslogs-group"         = aws_cloudwatch_log_group.ecs_tasks.name,
-          "awslogs-region"        = data.aws_region.current.name,
-          "awslogs-stream-prefix" = var.environment_name
-        }
-      }
+      secrets     = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if !contains(keys(val), "value")]
     }
   ])
 }

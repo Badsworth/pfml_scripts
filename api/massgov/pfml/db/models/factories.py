@@ -151,7 +151,7 @@ class EmployerOnlyDORDataFactory(EmployerOnlyRequiredFactory):
 
 
 class EmployerFactory(EmployerOnlyDORDataFactory):
-    fineos_employer_id = factory.Sequence(lambda n: n)
+    fineos_employer_id = factory.Sequence(lambda n: n + 1)
 
 
 class TaxIdentifierFactory(BaseFactory):
@@ -203,6 +203,8 @@ class EmployeeFactory(EmployeeOnlyDORDataFactory):
     phone_number = "+19425290727"
     ctr_vendor_customer_code = "VC0001201168"
     gender_id = None
+    fineos_employee_first_name = factory.LazyAttribute(lambda e: e.first_name)
+    fineos_employee_last_name = factory.LazyAttribute(lambda e: e.last_name)
 
 
 class EmployeeWithFineosNumberFactory(EmployeeFactory):
@@ -439,6 +441,9 @@ class PaymentFactory(BaseFactory):
 
     claim = factory.SubFactory(ClaimFactory)
     claim_id = factory.LazyAttribute(lambda a: a.claim.claim_id)
+
+    fineos_employee_first_name = factory.Faker("first_name")
+    fineos_employee_last_name = factory.Faker("last_name")
 
 
 class PaymentReferenceFileFactory(BaseFactory):

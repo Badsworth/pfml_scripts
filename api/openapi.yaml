@@ -373,6 +373,7 @@ paths:
           in: query
           schema:
             type: string
+            pattern: '[a-zA-Z0-9 ,]+'
           description: > 
             claim status used to filter the request,
             single claim status or a comma seperated list of claim status (i.e claim_status="Pending,Closed"),
@@ -488,11 +489,6 @@ paths:
             example: "NTN-00-ABS-00"
           description: "FINEOS absence ID of the claim data to be retrieved"
           required: true
-        - name: X-FF-Default-To-V2
-          description: "Checks if we should default to V2 for claims with no eforms"
-          in: header
-          schema:
-            type: string
       responses:
         "200":
           description: A successful request returns a 200 status code.
@@ -1137,6 +1133,7 @@ components:
       schema:
         type: string
         default: "created_at"
+        enum: ["fineos_absence_status", "created_at", "employee"]
     orderDirection:
       name: "order_direction"
       in: query
@@ -2131,6 +2128,8 @@ components:
             - Child bonding evidence form
             - Care for a family member form
             - Military exigency form
+            - Pending Application Withdrawn
+            - Appeal Acknowledgement
             - Certification Form # Only used when Claimant Portal uploads certification docs
           example: "Passport"
         name:
@@ -2190,7 +2189,7 @@ components:
     AbsencePeriodStatusResponse:
       type: object
       properties:
-        fineos_leave_request_id:
+        fineos_leave_period_id:
           type: string
           example: "PL-14432-0000002026"
         absence_period_start_date:
@@ -2250,6 +2249,10 @@ components:
           $ref: "#/components/schemas/EmployerResponse"
         employee:
           $ref: "#/components/schemas/EmployeeResponse"
+        application_id:
+          type: string
+          format: uuid
+          example: "fdc23456-c8fa-48bf-89a1-5c7c6a3af164"
         fineos_absence_id:
           format: string
           example: "NTN-01-ABS-01"
@@ -2355,6 +2358,8 @@ components:
             - Child bonding evidence form
             - Care for a family member form
             - Military exigency form
+            - Pending Application Withdrawn
+            - Appeal Acknowledgement
           example: "Denial Notice"
         content_type:
           type: string
@@ -2407,6 +2412,8 @@ components:
             - Child bonding evidence form
             - Care for a family member form
             - Military exigency form
+            - Pending Application Withdrawn
+            - Appeal Acknowledgement
           example: "Passport"
         content_type:
           type: string

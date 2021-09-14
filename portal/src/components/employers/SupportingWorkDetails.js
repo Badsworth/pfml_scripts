@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
+import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../ConditionalContent";
 import Heading from "../Heading";
 import InputNumber from "../InputNumber";
 import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
+import { get } from "lodash";
 import usePreviousValue from "../../hooks/usePreviousValue";
 import { useTranslation } from "../../locales/i18n";
 
@@ -25,20 +27,23 @@ const SupportingWorkDetails = (props) => {
 
   // this forces open the amendment form if an error exists for it.
   // without tracking the previous value, we run into this scenario:
-  // - "errorMsg" is truthy; component opens amendment form.
+  // - "errorMessage" is truthy; component opens amendment form.
   // - user clicks "Cancel amendment"; calls setIsAmendmentFormDisplayed(false).
   // - component re-renders.
-  // - "errorMsg" is truthy; component opens amendment form.
+  // - "errorMessage" is truthy; component opens amendment form.
   // - user cannot ever close the amendment form.
+  const errorMessage = get(props, "appErrors.items[0].message");
   const amendmentFormPreviouslyDisplayed = usePreviousValue(
     isAmendmentFormDisplayed
   );
   useEffect(() => {
     if (!amendmentFormPreviouslyDisplayed) {
-      setIsAmendmentFormDisplayed(!!functionalInputProps.errorMsg);
+      setIsAmendmentFormDisplayed(!!errorMessage);
     }
+    // use errorMessage instead of functionalInputProps.errorMsg because the
+    // dependency list does a shallow comparison, and the latter returns objects.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [functionalInputProps.errorMsg]);
+  }, [errorMessage]);
 
   return (
     <React.Fragment>
@@ -92,6 +97,7 @@ const SupportingWorkDetails = (props) => {
 };
 
 SupportingWorkDetails.propTypes = {
+  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
   clearField: PropTypes.func.isRequired,
   getField: PropTypes.func.isRequired,
   getFunctionalInputProps: PropTypes.func.isRequired,

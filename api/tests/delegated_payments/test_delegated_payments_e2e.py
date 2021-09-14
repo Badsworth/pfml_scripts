@@ -2243,9 +2243,6 @@ def process_fineos_extracts(
     log_entry_db_session: db.Session,
 ):
     with mock.patch(
-        "massgov.pfml.delegated_payments.address_validation._get_experian_rest_client",
-        return_value=None,
-    ), mock.patch(
         "massgov.pfml.delegated_payments.address_validation._get_experian_soap_client",
         return_value=mock_experian_client,
     ):
@@ -2285,7 +2282,6 @@ def setup_common_env_variables(monkeypatch):
     monkeypatch.setenv("DFML_PUB_ACCOUNT_NUMBER", "123456789")
     monkeypatch.setenv("DFML_PUB_ROUTING_NUMBER", "234567890")
     monkeypatch.setenv("PUB_PAYMENT_STARTING_CHECK_NUMBER", "100")
-    monkeypatch.setenv("USE_EXPERIAN_SOAP_CLIENT", "1")
 
 
 # == Assertion Helpers ==

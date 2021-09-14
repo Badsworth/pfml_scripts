@@ -95,6 +95,10 @@ module "tasks" {
   enable_recurring_payments_schedule = false
   enable_register_admins_job         = true
 
+  rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
+  rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-breakfix/rmv_client_certificate-dkPhSI"
+  rmv_api_behavior                  = "fully_mocked"
+
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
 
   dor_fineos_etl_schedule_expression = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour

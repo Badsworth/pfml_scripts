@@ -6,7 +6,6 @@ config:
     - ./forms
   environments:
     performance:
-      target: https://paidleave-performance.mass.gov/
       phases:
         - duration: 300 # Run minutes 0-5
           arrivalRate: .25 # When starting our load test, we send one user per instance every 4 seconds until we reach maxVusers
@@ -33,7 +32,6 @@ config:
           arrivalRate: 1
           name: Cool Down
     test:
-      target: https://paidleave-test.mass.gov/
       phases:
         - duration: 1
           arrivalRate: 1

@@ -1,4 +1,4 @@
-import { describe, beforeAll, test, expect } from "@jest/globals";
+import { jest, describe, beforeAll, test, expect } from "@jest/globals";
 import {
   DocumentUploadRequest,
   RequestOptions,
@@ -21,6 +21,9 @@ const defaultClaimantCredentials = getClaimantCredentials();
 let application_id: string;
 let pmflApiOptions: RequestOptions;
 
+/**
+ * @group stable
+ */
 describe("API Documents Test of various file sizes", () => {
   beforeAll(async () => {
     jest.retryTimes(3);

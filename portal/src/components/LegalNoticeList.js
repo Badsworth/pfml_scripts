@@ -1,4 +1,5 @@
 import Document, { DocumentType } from "../models/Document";
+
 import DownloadableDocument from "./DownloadableDocument";
 import Icon from "./Icon";
 import PropTypes from "prop-types";
@@ -9,44 +10,53 @@ import { useTranslation } from "../locales/i18n";
 /**
  * Legal notices list and content
  */
-export default function LegalNoticeList({ documents, onDownloadClick }) {
+export default function LegalNoticeList(props) {
   const { t } = useTranslation();
+  const { documents, onDownloadClick } = props;
+  const hasDocuments = Boolean(documents?.length);
 
-  const legalNotices = documents.length
-    ? findDocumentsByTypes(documents, [
-        DocumentType.approvalNotice,
-        DocumentType.denialNotice,
-        DocumentType.requestForInfoNotice,
-      ])
-    : [];
+  /**
+   * If application is not submitted or has
+   * no documents, don't display section
+   */
+  if (!hasDocuments) return null;
+
+  const legalNotices = findDocumentsByTypes(documents, [
+    DocumentType.approvalNotice,
+    DocumentType.denialNotice,
+    DocumentType.requestForInfoNotice,
+    DocumentType.withdrawalNotice,
+    DocumentType.appealAcknowledgement,
+  ]);
+
+  const legalNoticeList = legalNotices.map((document) => (
+    <li
+      className="grid-row flex-row flex-justify-start flex-align-start margin-bottom-1 text-primary"
+      key={document.fineos_document_id}
+    >
+      <Icon
+        className="margin-right-1"
+        fill="currentColor"
+        name="file_present"
+        size={3}
+      />
+      <div>
+        <DownloadableDocument
+          className="margin-left-2"
+          document={document}
+          onDownloadClick={onDownloadClick}
+          showCreatedAt
+        />
+      </div>
+    </li>
+  ));
 
   return (
     <React.Fragment>
-      {legalNotices.length === 0 && (
-        <p>{t("components.applicationCard.noticesFallback")}</p>
-      )}
-
-      {legalNotices.length > 0 && (
-        <React.Fragment>
-          <p className="margin-bottom-2">
-            {t("components.applicationCard.noticesDownload")}
-          </p>
-          <ul className="usa-list usa-list--unstyled">
-            {legalNotices.map((notice) => (
-              <li key={notice.fineos_document_id} className="margin-bottom-2">
-                <DownloadableDocument
-                  document={notice}
-                  showCreatedAt
-                  onDownloadClick={onDownloadClick}
-                  icon={
-                    <Icon fill="currentColor" name="file_present" size={3} />
-                  }
-                />
-              </li>
-            ))}
-          </ul>
-        </React.Fragment>
-      )}
+      <p className="padding-bottom-2 margin-top-05">
+        {t("components.applicationCardV2.noticeOnClickDetails")}
+      </p>
+      <ul className="add-list-reset">{legalNoticeList}</ul>
     </React.Fragment>
   );
 }
@@ -55,6 +65,6 @@ LegalNoticeList.propTypes = {
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
   /** 
     The function called when the document's link is clicked. It will receive an instance of the document as an argument.
-  */
+   */
   onDownloadClick: PropTypes.func,
 };

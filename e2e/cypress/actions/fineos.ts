@@ -1,15 +1,16 @@
 import { DocumentUploadRequest } from "_api";
-import { format, addMonths, addDays, startOfWeek, subDays } from "date-fns";
-import { config } from "./common";
+import { format, addMonths, addDays } from "date-fns";
+import { config, getFineosBaseUrl } from "./common";
+import { Credentials } from "../../src/types";
 /**
  * This function is used to fetch and set the proper cookies for access Fineos UAT
  *
  * Note: Only used for UAT enviornment
  */
-function SSO(): void {
+function SSO(credentials?: Credentials): void {
   cy.clearCookies();
   // Perform SSO login in a task. We can't visit other domains in Cypress.
-  cy.task("completeSSOLoginFineos").then((cookiesJson) => {
+  cy.task("completeSSOLoginFineos", credentials).then((cookiesJson) => {
     const deserializedCookies: Record<string, string>[] =
       JSON.parse(cookiesJson);
     // Filter out any cookies that will fail to be set. Those are ones where secure: false
@@ -23,7 +24,25 @@ function SSO(): void {
   });
 }
 
-export function before(): void {
+/**
+ * Sets up Cypress to work with fineos. This includes:
+ * 1. Intercepting known errors and error pages.
+ * 2. Handling authentication and SSO Login.
+ * 3. Setting the baseURL
+ * 4. Navigating to fineos home page.
+ * @param credentials you can override the credentials used for authenticating to fineos,
+ * an example use case would be testing secure actions in `uat` environment,
+ * where we need to use 2 different fineos accounts.
+ * @example
+ * fineos.before() // set's up fineos with default credentials.
+ * fineos.before({username:config('SSO2_USERNAME'), password: config('SSO2_PASSWORD')})
+ * // set's up login for the second SSO account
+ */
+export function before(credentials?: Credentials): void {
+  Cypress.config(
+    "baseUrl",
+    getFineosBaseUrl(credentials?.username, credentials?.password)
+  );
   // Fineos error pages have been found to cause test crashes when rendered. This is very hard to debug, as Cypress
   // crashes with no warning and removes the entire run history, so when a Fineos error page is detected, we replace the
   // page with an error page and capture the real response to a file for future debugging.
@@ -61,8 +80,9 @@ export function before(): void {
   ).as("ajaxRender");
 
   if (config("ENVIRONMENT") === "uat") {
-    SSO();
+    SSO(credentials);
   }
+  cy.visit("/");
 }
 
 export function visitClaim(claimId: string): void {
@@ -146,7 +166,7 @@ export function wait(): void {
 }
 
 export function waitForAjaxComplete(): void {
-  cy.window()
+  cy.window({ timeout: 30000 })
     .invoke("axGetAjaxQueueManager")
     .should((q) => {
       const inFlight = Object.values(q.requests).filter(
@@ -228,79 +248,6 @@ export function findOtherLeaveEForm(claimNumber: string): void {
   onTab("Documents");
   assertHasDocument("Other Leaves");
   cy.wait(200);
-}
-
-/**
- * Adding a  Historical Absence case, assumes being navigated to `Absence Hub` tab on the Claim page.
- */
-export function addHistoricalAbsenceCase(): void {
-  cy.contains("Options").click();
-  cy.contains("Add Historical Absence").click();
-  cy.findByLabelText("Absence relates to").select("Employee");
-  waitForAjaxComplete();
-  cy.findByLabelText("Absence Reason").select(
-    "Serious Health Condition - Employee"
-  );
-  waitForAjaxComplete();
-  cy.findByLabelText("Qualifier 1").select("Not Work Related");
-  waitForAjaxComplete();
-  cy.findByLabelText("Qualifier 2").select("Sickness");
-  waitForAjaxComplete();
-  cy.contains("div", "timeOffHistoricalAbsencePeriodsListviewWidget")
-    .find("input")
-    .click();
-  const mostRecentSunday = startOfWeek(new Date());
-  const startDate = subDays(mostRecentSunday, 13);
-  const startDateFormatted = format(startDate, "MM/dd/yyyy");
-  const endDateFormatted = format(addDays(startDate, 4), "MM/dd/yyyy");
-  // Fill in end date
-  cy.findByLabelText("End Date").type(
-    `{selectall}{backspace}${endDateFormatted}{enter}`
-  );
-  wait();
-  cy.wait(200);
-  // Fill start date
-  cy.findByLabelText("Start Date").type(
-    `{selectall}{backspace}${startDateFormatted}{enter}`
-  );
-  wait();
-  cy.wait(200);
-  // First all day checkbox
-  cy.get(
-    'span[id^="historicalTimeOffAbsencePeriodDetailsWidget"][id$="startDateAllDay_WRAPPER"]'
-  ).click();
-  wait();
-  cy.wait(200);
-  // Second all day checkbox
-  cy.get(
-    'span[id^="historicalTimeOffAbsencePeriodDetailsWidget"][id$="endDateAllDay_WRAPPER"]'
-  ).click();
-  wait();
-  cy.wait(200);
-
-  // Click on Okay to exit popup window
-  cy.get(
-    'input[id^="addHistoricalTimeOffAbsencePeriodPopupWidget"][id$="okButtonBean"]'
-  ).click({ force: true });
-  // Select Leave Plan
-  cy.contains("div", "historicalAbsenceSelectedLeavePlansListViewWidget")
-    .find("input")
-    .click();
-  wait();
-  cy.get(
-    "input[name='historicalCasePlanSelectionListviewWidget_un0_Checkbox_RowId_0_CHECKBOX']"
-  ).click();
-  clickBottomWidgetButton();
-  clickBottomWidgetButton();
-  // Click on Claimaints name to view their cases
-  cy.get(
-    'a[id="com.fineos.frontoffice.casemanager.casekeyinformation.CaseKeyInfoBar_un8_KeyInfoBarLink_0"]'
-  ).click();
-  onTab("Cases");
-  cy.get(".ListRowSelected > td").should(($td) => {
-    expect($td.eq(4)).to.contain("Absence Historical Case");
-  });
-  cy.get('input[title="Open"]').click();
 }
 
 /**Clicks on the 'Next' or 'Previous' button to move to the next/previous step during the intake process or recording actual leave */

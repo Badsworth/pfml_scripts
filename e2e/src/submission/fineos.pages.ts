@@ -4,22 +4,27 @@ import { Page, chromium } from "playwright-chromium";
 import config from "../config";
 import { v4 as uuid } from "uuid";
 import * as util from "../util/playwright";
-import { ClaimStatus, FineosTasks } from "../types";
+import { ClaimStatus, Credentials, FineosTasks } from "../types";
 
+export type FineosBrowserOptions = {
+  debug: boolean;
+  screenshots?: string;
+  credentials?: Credentials;
+};
 export class Fineos {
   static async withBrowser<T extends unknown>(
     next: (page: Page) => Promise<T>,
-    debug = false,
-    screenshots?: string
+    { debug = false, screenshots, credentials }: FineosBrowserOptions
   ): Promise<T> {
     const isSSO = config("ENVIRONMENT") === "uat";
     const browser = await chromium.launch({
       headless: !debug,
       slowMo: debug ? 100 : undefined,
+      executablePath: process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH,
     });
     const httpCredentials = isSSO
       ? undefined
-      : {
+      : credentials ?? {
           username: config("FINEOS_USERNAME"),
           password: config("FINEOS_PASSWORD"),
         };
@@ -64,14 +69,18 @@ export class Fineos {
       await page.goto(config("FINEOS_BASEURL"));
 
       if (isSSO) {
+        const ssoCredentials = credentials ?? {
+          username: config("SSO_USERNAME"),
+          password: config("SSO_PASSWORD"),
+        };
         await page.fill(
           "input[type='email'][name='loginfmt']",
-          config("SSO_USERNAME")
+          ssoCredentials.username
         );
         await page.click("input[value='Next']");
         await page.fill(
           "input[type='password'][name='passwd']",
-          config("SSO_PASSWORD")
+          ssoCredentials.password
         );
         await page.click("input[value='Sign in']");
         // Sometimes we end up with a "Do you want to stay logged in" question.
@@ -222,9 +231,6 @@ export class CertificationPeriods extends FineosPage {
 }
 
 export class Evidence extends FineosPage {
-  constructor(page: Page) {
-    super(page);
-  }
   async receive(
     evidenceType: string,
     receipt: "Pending" | "Received" | "Not Received" = "Received",
@@ -235,7 +241,8 @@ export class Evidence extends FineosPage {
       | "Waived" = "Satisfied",
     reason = "Evidence has been reviewed and approved"
   ): Promise<void> {
-    await this.page.click(`td[title="${evidenceType}"]`, { timeout: 1000 });
+    const row = `table[id*='evidenceResultListviewWidget'] tr:has-text('${evidenceType}')`;
+    await util.selectListTableRow(this.page, row);
     await this.page.click('input[value="Manage Evidence"]');
     await this.page.waitForSelector(".WidgetPanel_PopupWidget");
     await util
@@ -251,13 +258,13 @@ export class Evidence extends FineosPage {
       .labelled(this.page, "Evidence Decision Reason")
       .then((el) => el.fill(reason));
     await this.page.click('.WidgetPanel_PopupWidget input[value="OK"]');
-    await this.page.waitForSelector(".WidgetPanel_PopupWidget", {
-      state: "hidden",
-    });
-    await this.page
-      .waitForSelector("#disablingLayer")
-      .then((el) => el.waitForElementState("hidden"));
-    await delay(150);
+    // Wait for the row to update before moving on.
+    await this.page.waitForSelector(
+      `${row} :nth-child(3):has-text('${receipt}')`
+    );
+    await this.page.waitForSelector(
+      `${row} :nth-child(5):has-text('${decision}')`
+    );
   }
 }
 
@@ -267,15 +274,11 @@ export class Tasks extends FineosPage {
   }
   async close(task: FineosTasks): Promise<void> {
     await util.clickTab(this.page, "Tasks");
-    await Promise.race([
-      this.page.waitForNavigation(),
-      this.page.click(`td[title="${task}"]`),
-    ]);
-    await Promise.race([
-      this.page.waitForNavigation(),
-      this.page.click('input[type="submit"][value="Close"]'),
-    ]);
-    await delay(150);
+    await util.selectListTableRow(
+      this.page,
+      `table[id*='TasksForCaseWidget'] tr:has-text('${task}')`
+    );
+    await this.page.click('input[type="submit"][value="Close"]');
   }
   async open(task: FineosTasks): Promise<void> {
     await Promise.race([
@@ -283,7 +286,7 @@ export class Tasks extends FineosPage {
       this.page.click(`input[title="Add a task to this case"][type=submit]`),
     ]);
     await util.labelled(this.page, "Find Work Types Named").then(async (el) => {
-      await el.type(task);
+      await el.fill(task);
       await el.press("Enter");
     });
     await Promise.race([

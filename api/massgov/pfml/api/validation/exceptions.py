@@ -123,6 +123,8 @@ class IssueType(str, Enum):
     fineos_case_creation_issues = "fineos_case_creation_issues"
     # An unspecified error related to creating/completing the absence case in fineos
     fineos_case_error = "fineos_case_error"
+    # Indicates that the requested FINEOS claim has been withdrawn and can no longer be accessed
+    fineos_claim_withdrawn = "fineos_claim_withdrawn"
     # If duration of intermittent leave is in hours, hours must be less than a day (24)
     intermittent_duration_hours_maximum = "intermittent_duration_hours_maximum"
     # Total days in an intermittent interval cannot exceed total days in the leave period

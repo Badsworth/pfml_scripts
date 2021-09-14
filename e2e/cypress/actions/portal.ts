@@ -36,46 +36,30 @@ import {
   dateToReviewFormat,
   minutesToHoursAndMinutes,
 } from "../../src/util/claims";
+import { APILeaveReason } from "generation/Claim";
+import { getClaimantCredentials, getLeaveAdminCredentials } from "../config";
 
-/**
- *
- * @param flags set feature flags you want to override from defaults
- * @default {
-    pfmlTerriyay: true,
-    claimantShowAuth: true,
-    claimantShowMedicalLeaveType: true,
-    noMaintenance: true,
-    employerShowSelfRegistrationForm: true,
-    claimantShowOtherLeaveStep: true,
-    claimantAuthThroughApi: true,
-    employerShowAddOrganization: true,
-    employerShowVerifications: true,
-    employerShowDashboard: true,
-    useNewPlanProofs: config("HAS_FINEOS_SP") === "true",
-    showCaringLeaveType: config("HAS_FINEOS_SP") === "true",
-  }
- */
-export function before(flags?: Partial<FeatureFlags>): void {
+/**Set portal feature flags */
+function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
   // Set the feature flag necessary to see the portal.
   const defaults: FeatureFlags = {
     pfmlTerriyay: true,
-    claimantShowAuth: true,
-    claimantShowMedicalLeaveType: true,
     noMaintenance: true,
-    employerShowSelfRegistrationForm: true,
-    claimantShowOtherLeaveStep: true,
-    claimantAuthThroughApi: true,
-    employerShowAddOrganization: true,
-    employerShowVerifications: true,
-    employerShowDashboard: true,
-    useNewPlanProofs: true,
-    showCaringLeaveType: true,
+    claimantShowStatusPage: false,
+    employerShowReviewByStatus:
+      config("PORTAL_HAS_LA_STATUS_UPDATES") === "true",
   };
-  cy.setCookie(
-    "_ff",
-    JSON.stringify(flags ? { ...defaults, ...flags } : defaults),
-    { log: true }
-  );
+  cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });
+}
+
+/**
+ *
+ * @param flags feature flags you want to override from defaults
+ */
+export function before(flags?: Partial<FeatureFlags>): void {
+  Cypress.config("baseUrl", config("PORTAL_BASEURL"));
+  // Set the feature flags necessary to see the portal.
+  setFeatureFlags(flags);
 
   // Setup a route for application submission so we can extract claim ID later.
   cy.intercept({
@@ -90,6 +74,7 @@ export function before(flags?: Partial<FeatureFlags>): void {
   cy.intercept(/\/api\/v1\/claims\?page_offset=\d+$/).as(
     "dashboardDefaultQuery"
   );
+  // cy.intercept(/\/api\/v1\/applications$/).as("getApplications");
   cy.intercept(/\/api\/v1\/claims\?(page_offset=\d+)?&?(order_by)/).as(
     "dashboardClaimQueries"
   );
@@ -210,6 +195,15 @@ export function downloadLegalNotice(claim_id: string): void {
   });
 }
 
+export function loginClaimant(credentials = getClaimantCredentials()): void {
+  login(credentials);
+}
+
+export function loginLeaveAdmin(employer_fein: string): void {
+  const credentials = getLeaveAdminCredentials(employer_fein);
+  login(credentials);
+}
+
 export function login(credentials: Credentials): void {
   cy.visit(`${config("PORTAL_BASEURL")}/login`);
   cy.findByLabelText("Email address").type(credentials.username);
@@ -230,8 +224,14 @@ export function registerAsClaimant(credentials: Credentials): void {
   cy.contains("button", "Create account").click();
   cy.task("getAuthVerification", credentials.username).then((code) => {
     cy.findByLabelText("6-digit code").type(code as string);
-    cy.contains("button", "Submit").click();
   });
+  // Wait for cognito to finish before declaring registration complete.
+  cy.intercept({
+    url: `https://cognito-idp.us-east-1.amazonaws.com/`,
+    times: 1,
+  }).as("cognito");
+  cy.contains("button", "Submit").click();
+  cy.wait("@cognito");
 }
 
 export function registerAsLeaveAdmin(
@@ -246,16 +246,15 @@ export function registerAsLeaveAdmin(
   cy.task("getAuthVerification", credentials.username as string).then(
     (code: string) => {
       cy.findByLabelText("6-digit code").type(code as string);
-      cy.contains("button", "Submit").click();
     }
   );
-}
-
-export function employerLogin(credentials: Credentials): void {
-  cy.findByLabelText("Email address").type(credentials.username);
-  cy.findByLabelText("Password").typeMasked(credentials.password);
-  cy.contains("button", "Log in").click();
-  cy.url().should("not.include", "login");
+  // Wait for cognito to finish before declaring registration complete.
+  cy.intercept({
+    url: `https://cognito-idp.us-east-1.amazonaws.com/`,
+    times: 1,
+  }).as("cognito");
+  cy.contains("button", "Submit").click();
+  cy.wait("@cognito");
 }
 
 export function assertLoggedIn(): void {
@@ -1008,7 +1007,9 @@ export function addOrganization(fein: string, withholding: number): void {
   cy.get('input[name="ein"]').type(fein);
   cy.get('button[type="submit"').click();
   if (withholding !== 0) {
-    cy.get('input[name="withholdingAmount"]').type(withholding.toString());
+    cy.get('input[name="withholdingAmount"]', { timeout: 30000 }).type(
+      withholding.toString()
+    );
     cy.get('button[type="submit"]').click();
     cy.contains("h1", "Thanks for verifying your paid leave contributions");
     cy.contains("p", "Your account has been verified");
@@ -1026,15 +1027,27 @@ export function addOrganization(fein: string, withholding: number): void {
  */
 export function assertZeroWithholdings(): void {
   cy.contains(
-    /(Employer has no verification data|Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications)/
+    /(Employer has no verification data|Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications)/,
+    { timeout: 30000 }
   );
 }
-export type DashboardClaimStatus = "Approved" | "Denied" | "Closed" | "--";
+export type DashboardClaimStatus =
+  | "Approved"
+  | "Denied"
+  | "Closed"
+  | "Withdrawn"
+  | "--"
+  | "No action required"
+  | "Review by";
 export function selectClaimFromEmployerDashboard(
   fineosAbsenceId: string,
   status: DashboardClaimStatus
 ): void {
   goToEmployerDashboard();
+  // With the status updates enabled, claims are sorted by status by default
+  // which means we won't see our claim show up on the first page.
+  if (config("PORTAL_HAS_LA_STATUS_UPDATES") === "true")
+    sortClaims("new", false);
   cy.contains("tr", fineosAbsenceId).should("contain.text", status);
   cy.findByText(fineosAbsenceId).click();
 }
@@ -1430,7 +1443,7 @@ export function uploadAdditionalDocument(
   } else {
     addLeaveDocs(docName);
   }
-  cy.contains("You successfully submitted your documents");
+  cy.contains("You successfully submitted your documents", { timeout: 30000 });
 }
 
 /**
@@ -1758,8 +1771,8 @@ export function filterLADashboardBy(filters: FilterOptions): void {
   }
   cy.findByText("Apply filters").should("not.be.disabled").click();
   cy.get('span[role="progressbar"]').should("be.visible");
+  cy.wait("@dashboardClaimQueries");
   cy.contains("table", "Employer ID number").should("be.visible");
-  // cy.wait("@dashboardClaimQueries");
 }
 /**Looks if dashboard is empty */
 function checkDashboardIsEmpty() {
@@ -1791,16 +1804,22 @@ export function clearFilters(): void {
         cy.findByText("Show filters", { exact: false }).click();
       cy.findByText("Reset all filters").click();
       cy.get('span[role="progressbar"]').should("be.visible");
+      cy.wait("@dashboardClaimQueries");
       cy.contains("table", "Employer ID number").should("be.visible");
-      cy.wait("@dashboardDefaultQuery");
     });
 }
 
 /**Sorts claims on the dashboard*/
-export function sortClaims(by: "new" | "old" | "name_asc" | "name_desc"): void {
+export function sortClaims(
+  by: "new" | "old" | "name_asc" | "name_desc" | "status",
+  // @TODO split the query assertion into it's own function.
+  assertQuery = true
+): void {
   const sortValuesMap = {
     new: {
+      // Value of the <option> tag for the sort select
       value: "created_at,descending",
+      // Query associated with it
       query: "order_by=created_at&order_direction=descending",
     },
     old: {
@@ -1815,13 +1834,60 @@ export function sortClaims(by: "new" | "old" | "name_asc" | "name_desc"): void {
       value: "employee,descending",
       query: "order_by=employee&order_direction=descending",
     },
+    status: {
+      value: "absence_status,ascending",
+      query: "fineos_absence_status&order_direction=ascending",
+    },
   };
   cy.findByLabelText("Sort").then((el) => {
     if (el.val() === sortValuesMap[by].value) return;
     cy.wrap(el).select(sortValuesMap[by].value);
     cy.get('span[role="progressbar"]').should("be.visible");
-    cy.wait("@dashboardClaimQueries")
-      .its("request.url")
-      .should("include", sortValuesMap[by].query);
+    if (assertQuery)
+      cy.wait("@dashboardClaimQueries")
+        .its("request.url")
+        .should("include", sortValuesMap[by].query);
   });
 }
+
+export function claimantGoToClaimStatus(fineosAbsenceId: string): void {
+  cy.get(`a[href$="/applications/status/?absence_case_id=${fineosAbsenceId}"`)
+    .should("be.visible")
+    // Force to overcome DOM instability.
+    .click({ force: true });
+}
+
+type LeaveStatus = {
+  leave: NonNullable<APILeaveReason>;
+  status: DashboardClaimStatus;
+};
+
+export function claimantAssertClaimStatus(leaves: LeaveStatus[]): void {
+  const leaveReasonHeadings = {
+    "Serious Health Condition - Employee": "Medical leave",
+    "Child Bonding": "Leave to bond with a child",
+    "Care for a Family Member": "",
+    "Pregnancy/Maternity": "",
+  } as const;
+
+  for (const { leave, status } of leaves) {
+    cy.contains(leaveReasonHeadings[leave])
+      .parent()
+      .within(() => {
+        cy.contains(status);
+      });
+  }
+}
+
+/**
+ * Stubs the response of `GET: /applications` endpoint to contain no applications.
+ * Claimant is redirected straight to "Start Application" page if he has no open aplications.
+ */
+export const skipLoadingClaimantApplications = (): void => {
+  cy.intercept(/\/api\/v1\/applications$/, { times: 1 }, (req) => {
+    req.reply((res) => {
+      res.body.data = [];
+      res.send();
+    });
+  });
+};

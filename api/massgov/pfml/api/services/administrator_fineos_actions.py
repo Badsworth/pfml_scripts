@@ -3,8 +3,6 @@ import uuid
 from datetime import date, datetime
 from typing import Dict, List, Optional, Tuple
 
-from pydantic import UUID4
-
 import massgov.pfml.db
 import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
@@ -188,7 +186,6 @@ def get_claim_as_leave_admin(
     absence_id: str,
     employer: Employer,
     fineos_client: Optional[massgov.pfml.fineos.AbstractFINEOSClient] = None,
-    default_to_v2: bool = False,
 ) -> Tuple[Optional[ClaimReviewResponse], List[ManagedRequirementDetails]]:
     """
     Given an absence ID, gets a full claim for the claim review page by calling multiple endpoints from FINEOS
@@ -307,11 +304,8 @@ def get_claim_as_leave_admin(
         )
         raise ContainsV1AndV2Eforms()
 
-    # Cases that contain version two eforms should always use V2. Cases that have no eforms should use V2 only if
-    # the feature toggle has been set.
-    uses_second_eform_version = contains_version_two_eforms or (
-        not contains_version_one_eforms and default_to_v2
-    )
+    # Default to version two eforms unless this is a legacy case containing version one eforms
+    uses_second_eform_version = not contains_version_one_eforms
 
     leave_details = get_leave_details(absence_periods)
 
@@ -323,7 +317,7 @@ def get_claim_as_leave_admin(
             employer_benefits=employer_benefits,
             employer_fein=FEINFormattedStr(employer.employer_fein),
             employer_dba=employer.employer_dba,
-            employer_id=UUID4(str(employer.employer_id)),
+            employer_id=employer.employer_id,
             fineos_absence_id=absence_id,
             first_name=customer_info["firstName"],
             hours_worked_per_week=hours_worked_per_week,
