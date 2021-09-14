@@ -12,8 +12,10 @@ import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
+import User from "../../models/User";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import { pick } from "lodash";
+import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -22,8 +24,9 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 export const fields = ["claim.reporting_unit"];
 
 export const Department = (props) => {
-  const { appLogic, claim } = props;
+  const { appLogic, claim, user } = props;
   const { t } = useTranslation();
+  const historyApi = props.history || globalThis.history;
 
   const showDepartments = isFeatureEnabled("claimantShowDepartments");
 
@@ -32,12 +35,16 @@ export const Department = (props) => {
   const { formState, updateFields, getField, clearField } =
     useFormState(initialFormState);
 
-  if (!showDepartments) {
-    // @todo: go to next page and ignore departments, auto-select "I'm not sure"
-    // delete formState.radio_reporting_unit;
-    // formState.reporting_unit = "I'm not sure";
-    // appLogic.benefitsApplications.update(claim.application_id, formState);
-  }
+  useEffect(() => {
+    console.log(historyApi.state.url, routes.applications.notifiedEmployer)
+    if (!showDepartments) {
+      // @todo: go to next page and ignore departments, auto-select "I'm not sure"
+      // delete formState.radio_reporting_unit;
+      // formState.reporting_unit = "I'm not sure";
+      // appLogic.benefitsApplications.update(claim.application_id, formState);
+      appLogic.portalFlow.goToNextPage({ claim, user }, { claim_id: claim.application_id });
+    }
+  }, [claim, showDepartments, appLogic, user]);
 
   const [departments, setDepartments] = useState([]);
   const [employerDepartments, setEmployerDepartments] = useState([]);
@@ -299,6 +306,7 @@ export const Department = (props) => {
 Department.propTypes = {
   appLogic: PropTypes.object.isRequired,
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
+  user: PropTypes.instanceOf(User).isRequired,
 };
 
 export default withBenefitsApplication(Department);

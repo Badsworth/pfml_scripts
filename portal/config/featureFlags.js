@@ -49,6 +49,8 @@ const flagsConfig = {
     // are updated to reflect the new "Certification of Your Serious Health Condition"
     // TODO (CP-2205): Remove this flag once updated medical leave form is effective
     updateMedicalCertForm: false,
+
+    claimantShowDepartments: false,
   },
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in

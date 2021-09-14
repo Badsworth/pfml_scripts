@@ -343,7 +343,7 @@ export const Review = (props) => {
         </ReviewRow>
       )}
 
-      {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
+      {get(claim, "employment_status") === EmploymentStatus.employed && isFeatureEnabled("claimantShowDepartments") && ( // only display this if the claimant is Employed
         <ReviewRow
           level={reviewRowLevel}
           label={t("pages.claimsReview.employeeDepartment")}
