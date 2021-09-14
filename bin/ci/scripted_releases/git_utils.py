@@ -65,13 +65,13 @@ def most_recent_tag(app):
 def is_finalized(release_branch) -> bool:
     # hideous triple data munging: 'release/api/v2.23.0' --> 'api/v2.23.0' --> 'api/v2.23.*'
     release_branch_version_series: str = "/".join(release_branch.split("/")[1:])[:-1] + "*"
-    print(f"SERIES: {release_branch_version_series}")
+    logger.debug(f"Scanning for finalization status on '{release_branch_version_series}'")
 
     version_series_tags: list = git.tag("-l", release_branch_version_series).split("\n")
-    print(f"TAGS: {version_series_tags}")
+    logger.debug(f"Found these release tags: {version_series_tags}")
 
     formal_release_statuses = list(bool(match(FORMAL_RELEASE_TAG_REGEX, tag)) for tag in version_series_tags)
-    print(f"STATUS: {formal_release_statuses}")
+    logger.debug(f"Formal-release status of those tags: {tuple(zip(version_series_tags, formal_release_statuses))}")
 
     return any(formal_release_statuses)
 
