@@ -74,7 +74,7 @@ export function before(flags?: Partial<FeatureFlags>): void {
   cy.intercept(/\/api\/v1\/claims\?page_offset=\d+$/).as(
     "dashboardDefaultQuery"
   );
-  // cy.intercept(/\/api\/v1\/applications$/).as("getApplications");
+  cy.intercept(/\/api\/v1\/applications$/).as("getApplications");
   cy.intercept(/\/api\/v1\/claims\?(page_offset=\d+)?&?(order_by)/).as(
     "dashboardClaimQueries"
   );
@@ -1851,10 +1851,10 @@ export function sortClaims(
 }
 
 export function claimantGoToClaimStatus(fineosAbsenceId: string): void {
-  cy.get(`a[href$="/applications/status/?absence_case_id=${fineosAbsenceId}"`)
-    .should("be.visible")
-    // Force to overcome DOM instability.
-    .click({ force: true });
+  cy.wait("@getApplications").wait(150);
+  cy.contains("article", fineosAbsenceId).within(() => {
+    cy.contains("View status updates and details").click();
+  });
 }
 
 type LeaveStatus = {
@@ -1866,7 +1866,7 @@ export function claimantAssertClaimStatus(leaves: LeaveStatus[]): void {
   const leaveReasonHeadings = {
     "Serious Health Condition - Employee": "Medical leave",
     "Child Bonding": "Leave to bond with a child",
-    "Care for a Family Member": "",
+    "Care for a Family Member": "Leave to care for a family member schedule",
     "Pregnancy/Maternity": "",
   } as const;
 
