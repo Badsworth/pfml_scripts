@@ -158,6 +158,7 @@ def generate_report(cli_args, db_session, output_csv, diff_reason_csv):
         claimaint_id = str(claim.employee_id)
         time = old_claim_result.get("application_submitted_date")
         old_aww = old_claim_result.get("employer_average_weekly_wage")
+        new_aww, new_decision = None, None
 
         try:
             eligibility = compute_financial_eligibility(
@@ -174,8 +175,6 @@ def generate_report(cli_args, db_session, output_csv, diff_reason_csv):
             if current_eligibility != prior_eligibility:
                 new_decision = current_eligibility
                 new_aww = eligibility.employer_average_weekly_wage
-        except Exception:
-            new_aww, new_decision = None, None
         finally:
             result = [
                 claimaint_id,
