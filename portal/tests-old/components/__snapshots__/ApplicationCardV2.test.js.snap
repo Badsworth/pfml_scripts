@@ -2,6 +2,25 @@
 
 exports[`ApplicationCardV2 components match their snapshots completed status matches snapshot 1`] = `
 <ApplicationCardV2
+  appLogic={
+    Object {
+      "appErrors": AppErrorInfoCollection {
+        "items": Array [],
+        "itemsById": Object {},
+      },
+      "claims": Object {
+        "claimDetail": Object {},
+        "isLoadingClaimDetail": false,
+        "loadClaimDetail": [MockFunction],
+      },
+      "documents": Object {
+        "download": [Function],
+      },
+      "portalFlow": Object {
+        "goTo": [MockFunction],
+      },
+    }
+  }
   claim={
     BenefitsApplication {
       "application_id": "mock_application_id",
@@ -116,8 +135,222 @@ exports[`ApplicationCardV2 components match their snapshots completed status mat
     <article
       className="border-x border-bottom border-base-lighter"
     >
-      <StatusCard>
-        <CompletedStatusCard
+      <CompletedStatusCard
+        appLogic={
+          Object {
+            "appErrors": AppErrorInfoCollection {
+              "items": Array [],
+              "itemsById": Object {},
+            },
+            "claims": Object {
+              "claimDetail": Object {},
+              "isLoadingClaimDetail": false,
+              "loadClaimDetail": [MockFunction],
+            },
+            "documents": Object {
+              "download": [Function],
+            },
+            "portalFlow": Object {
+              "goTo": [MockFunction],
+            },
+          }
+        }
+        claim={
+          BenefitsApplication {
+            "application_id": "mock_application_id",
+            "concurrent_leave": null,
+            "created_at": null,
+            "date_of_birth": "****-07-17",
+            "employer_benefits": Array [],
+            "employer_fein": "12-3456789",
+            "employment_status": "Employed",
+            "fineos_absence_id": "NTN-111-ABS-01",
+            "first_name": "Jane",
+            "gender": "Woman",
+            "has_concurrent_leave": false,
+            "has_continuous_leave_periods": true,
+            "has_employer_benefits": false,
+            "has_intermittent_leave_periods": null,
+            "has_mailing_address": false,
+            "has_other_incomes": false,
+            "has_previous_leaves_other_reason": false,
+            "has_previous_leaves_same_reason": false,
+            "has_reduced_schedule_leave_periods": null,
+            "has_state_id": true,
+            "has_submitted_payment_preference": true,
+            "hours_worked_per_week": 30,
+            "last_name": "Doe",
+            "leave_details": Object {
+              "caring_leave_metadata": null,
+              "child_birth_date": null,
+              "child_placement_date": null,
+              "continuous_leave_periods": Array [
+                ContinuousLeavePeriod {
+                  "end_date": "2021-06-01",
+                  "leave_period_id": "mock-leave-period-id",
+                  "start_date": "2021-01-01",
+                },
+              ],
+              "employer_notification_date": "2021-01-01",
+              "employer_notified": true,
+              "has_future_child_date": null,
+              "pregnant_or_recent_birth": null,
+              "reason": "Serious Health Condition - Employee",
+              "reason_qualifier": null,
+            },
+            "mailing_address": null,
+            "mass_id": "*********",
+            "middle_name": "",
+            "other_incomes": Array [],
+            "payment_preference": Object {
+              "account_number": "091000022",
+              "bank_account_type": "Checking",
+              "payment_method": "Elec Funds Transfer",
+              "routing_number": "1234567890",
+            },
+            "phone": Object {
+              "int_code": null,
+              "phone_number": "123-456-****",
+              "phone_type": "Cell",
+            },
+            "previous_leaves_other_reason": Array [],
+            "previous_leaves_same_reason": Array [],
+            "residential_address": Address {
+              "city": "Boston",
+              "line_1": "1234 My St.",
+              "line_2": null,
+              "state": "MA",
+              "zip": "00000",
+            },
+            "status": "Completed",
+            "tax_identifier": "***-**-****",
+            "work_pattern": WorkPattern {
+              "work_pattern_days": Array [
+                WorkPatternDay {
+                  "day_of_week": "Sunday",
+                  "minutes": null,
+                },
+                WorkPatternDay {
+                  "day_of_week": "Monday",
+                  "minutes": null,
+                },
+                WorkPatternDay {
+                  "day_of_week": "Tuesday",
+                  "minutes": null,
+                },
+                WorkPatternDay {
+                  "day_of_week": "Wednesday",
+                  "minutes": null,
+                },
+                WorkPatternDay {
+                  "day_of_week": "Thursday",
+                  "minutes": null,
+                },
+                WorkPatternDay {
+                  "day_of_week": "Friday",
+                  "minutes": null,
+                },
+                WorkPatternDay {
+                  "day_of_week": "Saturday",
+                  "minutes": null,
+                },
+              ],
+              "work_pattern_type": "Fixed",
+            },
+          }
+        }
+      >
+        <HeaderSection
+          title="Medical leave"
+        >
+          <Heading
+            className="margin-bottom-1 padding-2 padding-top-3"
+            level="2"
+          >
+            <h2
+              className="margin-bottom-1 padding-2 padding-top-3 font-heading-md text-bold"
+            >
+              Medical leave
+            </h2>
+          </Heading>
+        </HeaderSection>
+        <TitleAndDetailSectionItem
+          details="NTN-111-ABS-01"
+          title="Application ID"
+        >
+          <div
+            className="padding-2 padding-bottom-1 padding-top-0 margin-top-0"
+          >
+            <p>
+              Application ID
+            </p>
+            <p
+              className="margin-bottom-05 margin-top-05 text-bold"
+            >
+              NTN-111-ABS-01
+            </p>
+          </div>
+        </TitleAndDetailSectionItem>
+        <TitleAndDetailSectionItem
+          details="12-3456789"
+          title="Employer Identification Number (EIN)"
+        >
+          <div
+            className="padding-2 padding-bottom-1 padding-top-0 margin-top-0"
+          >
+            <p>
+              Employer Identification Number (EIN)
+            </p>
+            <p
+              className="margin-bottom-05 margin-top-05 text-bold"
+            >
+              12-3456789
+            </p>
+          </div>
+        </TitleAndDetailSectionItem>
+        <LoadButton
+          isLoaded={true}
+          onClick={[Function]}
+          onLoad={[Function]}
+        >
+          <div
+            className="border-top border-base-lighter padding-y-2 margin-2 margin-bottom-0"
+          >
+            <Button
+              className="width-full display-flex flex-align-center flex-justify-center flex-column margin-right-0"
+              loading={false}
+              onClick={[Function]}
+            >
+              <button
+                className="usa-button position-relative width-full display-flex flex-align-center flex-justify-center flex-column margin-right-0"
+                disabled={false}
+                onClick={[Function]}
+                type="button"
+              >
+                View status updates and details
+                <Icon
+                  className="position-absolute flex-align-self-end margin-right-neg-105"
+                  fill="white"
+                  name="arrow_forward"
+                  size={3}
+                >
+                  <svg
+                    aria-hidden="true"
+                    className="usa-icon--size-3 position-absolute flex-align-self-end margin-right-neg-105"
+                    fill="white"
+                    focusable="false"
+                    role="img"
+                  >
+                    <use
+                      xlinkHref="/img/sprite.svg#arrow_forward"
+                    />
+                  </svg>
+                </Icon>
+              </button>
+            </Button>
+          </div>
+        </LoadButton>
+        <ManageDocumentSection
           claim={
             BenefitsApplication {
               "application_id": "mock_application_id",
@@ -223,261 +456,54 @@ exports[`ApplicationCardV2 components match their snapshots completed status mat
             }
           }
         >
-          <HeaderSection
-            title="Medical leave"
+          <div
+            className="border-top border-base-lighter margin-2 margin-top-0 padding-bottom-1"
           >
             <Heading
-              className="margin-bottom-1 padding-2 padding-top-3"
-              level="2"
+              className="padding-y-3"
+              level="4"
             >
-              <h2
-                className="margin-bottom-1 padding-2 padding-top-3 font-heading-md text-bold"
+              <h4
+                className="padding-y-3 font-heading-xs text-bold"
               >
-                Medical leave
-              </h2>
+                Manage your application documents
+              </h4>
             </Heading>
-          </HeaderSection>
-          <TitleAndDetailSectionItem
-            details="NTN-111-ABS-01"
-            title="Application ID"
-          >
-            <div
-              className="padding-2 padding-bottom-1 padding-top-0 margin-top-0"
+            <ButtonLink
+              className="display-block margin-bottom-3"
+              href="/applications/status/?absence_case_id=NTN-111-ABS-01#view_notices"
+              variation="unstyled"
             >
-              <p>
-                Application ID
-              </p>
-              <p
-                className="margin-bottom-05 margin-top-05 text-bold"
-              >
-                NTN-111-ABS-01
-              </p>
-            </div>
-          </TitleAndDetailSectionItem>
-          <TitleAndDetailSectionItem
-            details="12-3456789"
-            title="Employer Identification Number (EIN)"
-          >
-            <div
-              className="padding-2 padding-bottom-1 padding-top-0 margin-top-0"
-            >
-              <p>
-                Employer Identification Number (EIN)
-              </p>
-              <p
-                className="margin-bottom-05 margin-top-05 text-bold"
-              >
-                12-3456789
-              </p>
-            </div>
-          </TitleAndDetailSectionItem>
-          <ButtonSection
-            buttonText="View status updates and details"
-            href="/applications/status?absence_case_id=NTN-111-ABS-01"
-            iconComponent={
-              <Icon
-                className="position-absolute flex-align-self-end margin-right-neg-105"
-                fill="white"
-                name="arrow_forward"
-                size={3}
-              />
-            }
-          >
-            <div
-              className="border-top border-base-lighter padding-y-2 margin-2 margin-bottom-0"
-            >
-              <ButtonLink
-                className="display-flex flex-align-center flex-justify-center flex-column margin-right-0"
-                href="/applications/status?absence_case_id=NTN-111-ABS-01"
-              >
-                <Link
-                  href="/applications/status?absence_case_id=NTN-111-ABS-01"
-                >
-                  <a
-                    className="usa-button display-flex flex-align-center flex-justify-center flex-column margin-right-0"
-                    href="/applications/status?absence_case_id=NTN-111-ABS-01"
-                  >
-                    <div>
-                      View status updates and details
-                    </div>
-                    <Icon
-                      className="position-absolute flex-align-self-end margin-right-neg-105"
-                      fill="white"
-                      name="arrow_forward"
-                      size={3}
-                    >
-                      <svg
-                        aria-hidden="true"
-                        className="usa-icon--size-3 position-absolute flex-align-self-end margin-right-neg-105"
-                        fill="white"
-                        focusable="false"
-                        role="img"
-                      >
-                        <use
-                          xlinkHref="/img/sprite.svg#arrow_forward"
-                        />
-                      </svg>
-                    </Icon>
-                  </a>
-                </Link>
-              </ButtonLink>
-            </div>
-          </ButtonSection>
-          <ManageDocumentSection
-            claim={
-              BenefitsApplication {
-                "application_id": "mock_application_id",
-                "concurrent_leave": null,
-                "created_at": null,
-                "date_of_birth": "****-07-17",
-                "employer_benefits": Array [],
-                "employer_fein": "12-3456789",
-                "employment_status": "Employed",
-                "fineos_absence_id": "NTN-111-ABS-01",
-                "first_name": "Jane",
-                "gender": "Woman",
-                "has_concurrent_leave": false,
-                "has_continuous_leave_periods": true,
-                "has_employer_benefits": false,
-                "has_intermittent_leave_periods": null,
-                "has_mailing_address": false,
-                "has_other_incomes": false,
-                "has_previous_leaves_other_reason": false,
-                "has_previous_leaves_same_reason": false,
-                "has_reduced_schedule_leave_periods": null,
-                "has_state_id": true,
-                "has_submitted_payment_preference": true,
-                "hours_worked_per_week": 30,
-                "last_name": "Doe",
-                "leave_details": Object {
-                  "caring_leave_metadata": null,
-                  "child_birth_date": null,
-                  "child_placement_date": null,
-                  "continuous_leave_periods": Array [
-                    ContinuousLeavePeriod {
-                      "end_date": "2021-06-01",
-                      "leave_period_id": "mock-leave-period-id",
-                      "start_date": "2021-01-01",
-                    },
-                  ],
-                  "employer_notification_date": "2021-01-01",
-                  "employer_notified": true,
-                  "has_future_child_date": null,
-                  "pregnant_or_recent_birth": null,
-                  "reason": "Serious Health Condition - Employee",
-                  "reason_qualifier": null,
-                },
-                "mailing_address": null,
-                "mass_id": "*********",
-                "middle_name": "",
-                "other_incomes": Array [],
-                "payment_preference": Object {
-                  "account_number": "091000022",
-                  "bank_account_type": "Checking",
-                  "payment_method": "Elec Funds Transfer",
-                  "routing_number": "1234567890",
-                },
-                "phone": Object {
-                  "int_code": null,
-                  "phone_number": "123-456-****",
-                  "phone_type": "Cell",
-                },
-                "previous_leaves_other_reason": Array [],
-                "previous_leaves_same_reason": Array [],
-                "residential_address": Address {
-                  "city": "Boston",
-                  "line_1": "1234 My St.",
-                  "line_2": null,
-                  "state": "MA",
-                  "zip": "00000",
-                },
-                "status": "Completed",
-                "tax_identifier": "***-**-****",
-                "work_pattern": WorkPattern {
-                  "work_pattern_days": Array [
-                    WorkPatternDay {
-                      "day_of_week": "Sunday",
-                      "minutes": null,
-                    },
-                    WorkPatternDay {
-                      "day_of_week": "Monday",
-                      "minutes": null,
-                    },
-                    WorkPatternDay {
-                      "day_of_week": "Tuesday",
-                      "minutes": null,
-                    },
-                    WorkPatternDay {
-                      "day_of_week": "Wednesday",
-                      "minutes": null,
-                    },
-                    WorkPatternDay {
-                      "day_of_week": "Thursday",
-                      "minutes": null,
-                    },
-                    WorkPatternDay {
-                      "day_of_week": "Friday",
-                      "minutes": null,
-                    },
-                    WorkPatternDay {
-                      "day_of_week": "Saturday",
-                      "minutes": null,
-                    },
-                  ],
-                  "work_pattern_type": "Fixed",
-                },
-              }
-            }
-          >
-            <div
-              className="border-top border-base-lighter margin-2 margin-top-0 padding-bottom-1"
-            >
-              <Heading
-                className="padding-y-3"
-                level="4"
-              >
-                <h4
-                  className="padding-y-3 font-heading-xs text-bold"
-                >
-                  Manage your application documents
-                </h4>
-              </Heading>
-              <ButtonLink
-                className="display-block margin-bottom-3"
+              <Link
                 href="/applications/status/?absence_case_id=NTN-111-ABS-01#view_notices"
-                variation="unstyled"
               >
-                <Link
+                <a
+                  className="usa-button display-block margin-bottom-3 usa-button--unstyled"
                   href="/applications/status/?absence_case_id=NTN-111-ABS-01#view_notices"
                 >
-                  <a
-                    className="usa-button display-block margin-bottom-3 usa-button--unstyled"
-                    href="/applications/status/?absence_case_id=NTN-111-ABS-01#view_notices"
-                  >
-                    View notices
-                  </a>
-                </Link>
-              </ButtonLink>
-              <ButtonLink
-                className="display-block margin-bottom-2"
+                  View notices
+                </a>
+              </Link>
+            </ButtonLink>
+            <ButtonLink
+              className="display-block margin-bottom-2"
+              href="/applications/status/?absence_case_id=NTN-111-ABS-01#upload_documents"
+              variation="unstyled"
+            >
+              <Link
                 href="/applications/status/?absence_case_id=NTN-111-ABS-01#upload_documents"
-                variation="unstyled"
               >
-                <Link
+                <a
+                  className="usa-button display-block margin-bottom-2 usa-button--unstyled"
                   href="/applications/status/?absence_case_id=NTN-111-ABS-01#upload_documents"
                 >
-                  <a
-                    className="usa-button display-block margin-bottom-2 usa-button--unstyled"
-                    href="/applications/status/?absence_case_id=NTN-111-ABS-01#upload_documents"
-                  >
-                    Upload documents
-                  </a>
-                </Link>
-              </ButtonLink>
-            </div>
-          </ManageDocumentSection>
-        </CompletedStatusCard>
-      </StatusCard>
+                  Upload documents
+                </a>
+              </Link>
+            </ButtonLink>
+          </div>
+        </ManageDocumentSection>
+      </CompletedStatusCard>
     </article>
   </div>
 </ApplicationCardV2>
@@ -491,8 +517,16 @@ exports[`ApplicationCardV2 components match their snapshots in progress status m
         "items": Array [],
         "itemsById": Object {},
       },
+      "claims": Object {
+        "claimDetail": Object {},
+        "isLoadingClaimDetail": false,
+        "loadClaimDetail": [MockFunction],
+      },
       "documents": Object {
         "download": [Function],
+      },
+      "portalFlow": Object {
+        "goTo": [MockFunction],
       },
     }
   }
@@ -606,16 +640,175 @@ exports[`ApplicationCardV2 components match their snapshots in progress status m
     <article
       className="border-x border-bottom border-base-lighter"
     >
-      <StatusCard>
-        <InProgressStatusCard
+      <InProgressStatusCard
+        appLogic={
+          Object {
+            "appErrors": AppErrorInfoCollection {
+              "items": Array [],
+              "itemsById": Object {},
+            },
+            "claims": Object {
+              "claimDetail": Object {},
+              "isLoadingClaimDetail": false,
+              "loadClaimDetail": [MockFunction],
+            },
+            "documents": Object {
+              "download": [Function],
+            },
+            "portalFlow": Object {
+              "goTo": [MockFunction],
+            },
+          }
+        }
+        claim={
+          BenefitsApplication {
+            "application_id": "mock_application_id",
+            "concurrent_leave": null,
+            "created_at": null,
+            "date_of_birth": "****-07-17",
+            "employer_benefits": Array [],
+            "employer_fein": "12-3456789",
+            "employment_status": "Employed",
+            "fineos_absence_id": "NTN-111-ABS-01",
+            "first_name": "Jane",
+            "gender": "Woman",
+            "has_concurrent_leave": false,
+            "has_continuous_leave_periods": true,
+            "has_employer_benefits": false,
+            "has_intermittent_leave_periods": null,
+            "has_mailing_address": false,
+            "has_other_incomes": false,
+            "has_previous_leaves_other_reason": false,
+            "has_previous_leaves_same_reason": false,
+            "has_reduced_schedule_leave_periods": null,
+            "has_state_id": true,
+            "has_submitted_payment_preference": null,
+            "hours_worked_per_week": 30,
+            "last_name": "Doe",
+            "leave_details": Object {
+              "caring_leave_metadata": null,
+              "child_birth_date": null,
+              "child_placement_date": null,
+              "continuous_leave_periods": Array [
+                ContinuousLeavePeriod {
+                  "end_date": "2021-06-01",
+                  "leave_period_id": "mock-leave-period-id",
+                  "start_date": "2021-01-01",
+                },
+              ],
+              "employer_notification_date": "2021-01-01",
+              "employer_notified": true,
+              "has_future_child_date": null,
+              "pregnant_or_recent_birth": null,
+              "reason": "Serious Health Condition - Employee",
+              "reason_qualifier": null,
+            },
+            "mailing_address": null,
+            "mass_id": "*********",
+            "middle_name": "",
+            "other_incomes": Array [],
+            "payment_preference": null,
+            "phone": Object {
+              "int_code": null,
+              "phone_number": "123-456-****",
+              "phone_type": "Cell",
+            },
+            "previous_leaves_other_reason": Array [],
+            "previous_leaves_same_reason": Array [],
+            "residential_address": Address {
+              "city": "Boston",
+              "line_1": "1234 My St.",
+              "line_2": null,
+              "state": "MA",
+              "zip": "00000",
+            },
+            "status": "Submitted",
+            "tax_identifier": "***-**-****",
+            "work_pattern": WorkPattern {
+              "work_pattern_days": Array [
+                WorkPatternDay {
+                  "day_of_week": "Sunday",
+                  "minutes": null,
+                },
+                WorkPatternDay {
+                  "day_of_week": "Monday",
+                  "minutes": null,
+                },
+                WorkPatternDay {
+                  "day_of_week": "Tuesday",
+                  "minutes": null,
+                },
+                WorkPatternDay {
+                  "day_of_week": "Wednesday",
+                  "minutes": null,
+                },
+                WorkPatternDay {
+                  "day_of_week": "Thursday",
+                  "minutes": null,
+                },
+                WorkPatternDay {
+                  "day_of_week": "Friday",
+                  "minutes": null,
+                },
+                WorkPatternDay {
+                  "day_of_week": "Saturday",
+                  "minutes": null,
+                },
+              ],
+              "work_pattern_type": "Fixed",
+            },
+          }
+        }
+        number={2}
+      >
+        <HeaderSection
+          title="Application 2"
+        >
+          <Heading
+            className="margin-bottom-1 padding-2 padding-top-3"
+            level="2"
+          >
+            <h2
+              className="margin-bottom-1 padding-2 padding-top-3 font-heading-md text-bold"
+            >
+              Application 2
+            </h2>
+          </Heading>
+        </HeaderSection>
+        <TitleAndDetailSectionItem
+          details="12-3456789"
+          title="Employer Identification Number (EIN)"
+        >
+          <div
+            className="padding-2 padding-bottom-1 padding-top-0 margin-top-0"
+          >
+            <p>
+              Employer Identification Number (EIN)
+            </p>
+            <p
+              className="margin-bottom-05 margin-top-05 text-bold"
+            >
+              12-3456789
+            </p>
+          </div>
+        </TitleAndDetailSectionItem>
+        <LegalNoticeSection
           appLogic={
             Object {
               "appErrors": AppErrorInfoCollection {
                 "items": Array [],
                 "itemsById": Object {},
               },
+              "claims": Object {
+                "claimDetail": Object {},
+                "isLoadingClaimDetail": false,
+                "loadClaimDetail": [MockFunction],
+              },
               "documents": Object {
                 "download": [Function],
+              },
+              "portalFlow": Object {
+                "goTo": [MockFunction],
               },
             }
           }
@@ -718,182 +911,31 @@ exports[`ApplicationCardV2 components match their snapshots in progress status m
               },
             }
           }
+          documents={Array []}
           number={2}
+        />
+        <div
+          className="border-top border-base-lighter padding-y-2 margin-2 margin-bottom-0"
         >
-          <HeaderSection
-            title="Application 2"
-          >
-            <Heading
-              className="margin-bottom-1 padding-2 padding-top-3"
-              level="2"
-            >
-              <h2
-                className="margin-bottom-1 padding-2 padding-top-3 font-heading-md text-bold"
-              >
-                Application 2
-              </h2>
-            </Heading>
-          </HeaderSection>
-          <TitleAndDetailSectionItem
-            details="12-3456789"
-            title="Employer Identification Number (EIN)"
-          >
-            <div
-              className="padding-2 padding-bottom-1 padding-top-0 margin-top-0"
-            >
-              <p>
-                Employer Identification Number (EIN)
-              </p>
-              <p
-                className="margin-bottom-05 margin-top-05 text-bold"
-              >
-                12-3456789
-              </p>
-            </div>
-          </TitleAndDetailSectionItem>
-          <LegalNoticeSection
-            appLogic={
-              Object {
-                "appErrors": AppErrorInfoCollection {
-                  "items": Array [],
-                  "itemsById": Object {},
-                },
-                "documents": Object {
-                  "download": [Function],
-                },
-              }
-            }
-            claim={
-              BenefitsApplication {
-                "application_id": "mock_application_id",
-                "concurrent_leave": null,
-                "created_at": null,
-                "date_of_birth": "****-07-17",
-                "employer_benefits": Array [],
-                "employer_fein": "12-3456789",
-                "employment_status": "Employed",
-                "fineos_absence_id": "NTN-111-ABS-01",
-                "first_name": "Jane",
-                "gender": "Woman",
-                "has_concurrent_leave": false,
-                "has_continuous_leave_periods": true,
-                "has_employer_benefits": false,
-                "has_intermittent_leave_periods": null,
-                "has_mailing_address": false,
-                "has_other_incomes": false,
-                "has_previous_leaves_other_reason": false,
-                "has_previous_leaves_same_reason": false,
-                "has_reduced_schedule_leave_periods": null,
-                "has_state_id": true,
-                "has_submitted_payment_preference": null,
-                "hours_worked_per_week": 30,
-                "last_name": "Doe",
-                "leave_details": Object {
-                  "caring_leave_metadata": null,
-                  "child_birth_date": null,
-                  "child_placement_date": null,
-                  "continuous_leave_periods": Array [
-                    ContinuousLeavePeriod {
-                      "end_date": "2021-06-01",
-                      "leave_period_id": "mock-leave-period-id",
-                      "start_date": "2021-01-01",
-                    },
-                  ],
-                  "employer_notification_date": "2021-01-01",
-                  "employer_notified": true,
-                  "has_future_child_date": null,
-                  "pregnant_or_recent_birth": null,
-                  "reason": "Serious Health Condition - Employee",
-                  "reason_qualifier": null,
-                },
-                "mailing_address": null,
-                "mass_id": "*********",
-                "middle_name": "",
-                "other_incomes": Array [],
-                "payment_preference": null,
-                "phone": Object {
-                  "int_code": null,
-                  "phone_number": "123-456-****",
-                  "phone_type": "Cell",
-                },
-                "previous_leaves_other_reason": Array [],
-                "previous_leaves_same_reason": Array [],
-                "residential_address": Address {
-                  "city": "Boston",
-                  "line_1": "1234 My St.",
-                  "line_2": null,
-                  "state": "MA",
-                  "zip": "00000",
-                },
-                "status": "Submitted",
-                "tax_identifier": "***-**-****",
-                "work_pattern": WorkPattern {
-                  "work_pattern_days": Array [
-                    WorkPatternDay {
-                      "day_of_week": "Sunday",
-                      "minutes": null,
-                    },
-                    WorkPatternDay {
-                      "day_of_week": "Monday",
-                      "minutes": null,
-                    },
-                    WorkPatternDay {
-                      "day_of_week": "Tuesday",
-                      "minutes": null,
-                    },
-                    WorkPatternDay {
-                      "day_of_week": "Wednesday",
-                      "minutes": null,
-                    },
-                    WorkPatternDay {
-                      "day_of_week": "Thursday",
-                      "minutes": null,
-                    },
-                    WorkPatternDay {
-                      "day_of_week": "Friday",
-                      "minutes": null,
-                    },
-                    WorkPatternDay {
-                      "day_of_week": "Saturday",
-                      "minutes": null,
-                    },
-                  ],
-                  "work_pattern_type": "Fixed",
-                },
-              }
-            }
-            documents={Array []}
-            number={2}
-          />
-          <ButtonSection
-            buttonText="Continue application"
+          <ButtonLink
+            className="display-flex flex-align-center flex-justify-center flex-column margin-right-0"
             href="/applications/checklist?claim_id=mock_application_id"
-            iconComponent={null}
           >
-            <div
-              className="border-top border-base-lighter padding-y-2 margin-2 margin-bottom-0"
+            <Link
+              href="/applications/checklist?claim_id=mock_application_id"
             >
-              <ButtonLink
-                className="display-flex flex-align-center flex-justify-center flex-column margin-right-0"
+              <a
+                className="usa-button display-flex flex-align-center flex-justify-center flex-column margin-right-0"
                 href="/applications/checklist?claim_id=mock_application_id"
               >
-                <Link
-                  href="/applications/checklist?claim_id=mock_application_id"
-                >
-                  <a
-                    className="usa-button display-flex flex-align-center flex-justify-center flex-column margin-right-0"
-                    href="/applications/checklist?claim_id=mock_application_id"
-                  >
-                    <div>
-                      Continue application
-                    </div>
-                  </a>
-                </Link>
-              </ButtonLink>
-            </div>
-          </ButtonSection>
-        </InProgressStatusCard>
-      </StatusCard>
+                <div>
+                  Continue application
+                </div>
+              </a>
+            </Link>
+          </ButtonLink>
+        </div>
+      </InProgressStatusCard>
     </article>
   </div>
 </ApplicationCardV2>
@@ -907,8 +949,16 @@ exports[`ApplicationCardV2 components match their snapshots in progress status w
         "items": Array [],
         "itemsById": Object {},
       },
+      "claims": Object {
+        "claimDetail": Object {},
+        "isLoadingClaimDetail": false,
+        "loadClaimDetail": [MockFunction],
+      },
       "documents": Object {
         "download": [Function],
+      },
+      "portalFlow": Object {
+        "goTo": [MockFunction],
       },
     }
   }
@@ -1046,16 +1096,199 @@ exports[`ApplicationCardV2 components match their snapshots in progress status w
     <article
       className="border-x border-bottom border-base-lighter"
     >
-      <StatusCard>
-        <InProgressStatusCard
+      <InProgressStatusCard
+        appLogic={
+          Object {
+            "appErrors": AppErrorInfoCollection {
+              "items": Array [],
+              "itemsById": Object {},
+            },
+            "claims": Object {
+              "claimDetail": Object {},
+              "isLoadingClaimDetail": false,
+              "loadClaimDetail": [MockFunction],
+            },
+            "documents": Object {
+              "download": [Function],
+            },
+            "portalFlow": Object {
+              "goTo": [MockFunction],
+            },
+          }
+        }
+        claim={
+          BenefitsApplication {
+            "application_id": "mock_application_id",
+            "concurrent_leave": null,
+            "created_at": null,
+            "date_of_birth": "****-07-17",
+            "employer_benefits": Array [],
+            "employer_fein": "12-3456789",
+            "employment_status": "Employed",
+            "fineos_absence_id": "NTN-111-ABS-01",
+            "first_name": "Jane",
+            "gender": "Woman",
+            "has_concurrent_leave": false,
+            "has_continuous_leave_periods": true,
+            "has_employer_benefits": false,
+            "has_intermittent_leave_periods": null,
+            "has_mailing_address": false,
+            "has_other_incomes": false,
+            "has_previous_leaves_other_reason": false,
+            "has_previous_leaves_same_reason": false,
+            "has_reduced_schedule_leave_periods": null,
+            "has_state_id": true,
+            "has_submitted_payment_preference": null,
+            "hours_worked_per_week": 30,
+            "last_name": "Doe",
+            "leave_details": Object {
+              "caring_leave_metadata": null,
+              "child_birth_date": null,
+              "child_placement_date": null,
+              "continuous_leave_periods": Array [
+                ContinuousLeavePeriod {
+                  "end_date": "2021-06-01",
+                  "leave_period_id": "mock-leave-period-id",
+                  "start_date": "2021-01-01",
+                },
+              ],
+              "employer_notification_date": "2021-01-01",
+              "employer_notified": true,
+              "has_future_child_date": null,
+              "pregnant_or_recent_birth": null,
+              "reason": "Serious Health Condition - Employee",
+              "reason_qualifier": null,
+            },
+            "mailing_address": null,
+            "mass_id": "*********",
+            "middle_name": "",
+            "other_incomes": Array [],
+            "payment_preference": null,
+            "phone": Object {
+              "int_code": null,
+              "phone_number": "123-456-****",
+              "phone_type": "Cell",
+            },
+            "previous_leaves_other_reason": Array [],
+            "previous_leaves_same_reason": Array [],
+            "residential_address": Address {
+              "city": "Boston",
+              "line_1": "1234 My St.",
+              "line_2": null,
+              "state": "MA",
+              "zip": "00000",
+            },
+            "status": "Submitted",
+            "tax_identifier": "***-**-****",
+            "work_pattern": WorkPattern {
+              "work_pattern_days": Array [
+                WorkPatternDay {
+                  "day_of_week": "Sunday",
+                  "minutes": null,
+                },
+                WorkPatternDay {
+                  "day_of_week": "Monday",
+                  "minutes": null,
+                },
+                WorkPatternDay {
+                  "day_of_week": "Tuesday",
+                  "minutes": null,
+                },
+                WorkPatternDay {
+                  "day_of_week": "Wednesday",
+                  "minutes": null,
+                },
+                WorkPatternDay {
+                  "day_of_week": "Thursday",
+                  "minutes": null,
+                },
+                WorkPatternDay {
+                  "day_of_week": "Friday",
+                  "minutes": null,
+                },
+                WorkPatternDay {
+                  "day_of_week": "Saturday",
+                  "minutes": null,
+                },
+              ],
+              "work_pattern_type": "Fixed",
+            },
+          }
+        }
+        documents={
+          Array [
+            Document {
+              "application_id": null,
+              "content_type": null,
+              "created_at": "2021-01-15",
+              "description": null,
+              "document_type": "Request for more Information",
+              "fineos_document_id": "a",
+              "name": null,
+              "user_id": null,
+            },
+            Document {
+              "application_id": null,
+              "content_type": null,
+              "created_at": "2021-01-30",
+              "description": null,
+              "document_type": "Denial Notice",
+              "fineos_document_id": "b",
+              "name": null,
+              "user_id": null,
+            },
+          ]
+        }
+        number={2}
+      >
+        <HeaderSection
+          title="Application 2"
+        >
+          <Heading
+            className="margin-bottom-1 padding-2 padding-top-3"
+            level="2"
+          >
+            <h2
+              className="margin-bottom-1 padding-2 padding-top-3 font-heading-md text-bold"
+            >
+              Application 2
+            </h2>
+          </Heading>
+        </HeaderSection>
+        <TitleAndDetailSectionItem
+          details="12-3456789"
+          title="Employer Identification Number (EIN)"
+        >
+          <div
+            className="padding-2 padding-bottom-1 padding-top-0 margin-top-0"
+          >
+            <p>
+              Employer Identification Number (EIN)
+            </p>
+            <p
+              className="margin-bottom-05 margin-top-05 text-bold"
+            >
+              12-3456789
+            </p>
+          </div>
+        </TitleAndDetailSectionItem>
+        <LegalNoticeSection
           appLogic={
             Object {
               "appErrors": AppErrorInfoCollection {
                 "items": Array [],
                 "itemsById": Object {},
               },
+              "claims": Object {
+                "claimDetail": Object {},
+                "isLoadingClaimDetail": false,
+                "loadClaimDetail": [MockFunction],
+              },
               "documents": Object {
                 "download": [Function],
+              },
+              "portalFlow": Object {
+                "goTo": [MockFunction],
               },
             }
           }
@@ -1184,494 +1417,327 @@ exports[`ApplicationCardV2 components match their snapshots in progress status w
           }
           number={2}
         >
-          <HeaderSection
-            title="Application 2"
+          <div
+            className="margin-2 margin-top-0 padding-bottom-1"
+            style={
+              Object {
+                "maxWidth": 385,
+              }
+            }
           >
             <Heading
-              className="margin-bottom-1 padding-2 padding-top-3"
-              level="2"
+              level="3"
             >
-              <h2
-                className="margin-bottom-1 padding-2 padding-top-3 font-heading-md text-bold"
+              <h3
+                className="font-heading-sm text-bold"
               >
-                Application 2
-              </h2>
+                View your notices
+              </h3>
             </Heading>
-          </HeaderSection>
-          <TitleAndDetailSectionItem
-            details="12-3456789"
-            title="Employer Identification Number (EIN)"
-          >
-            <div
-              className="padding-2 padding-bottom-1 padding-top-0 margin-top-0"
-            >
-              <p>
-                Employer Identification Number (EIN)
-              </p>
-              <p
-                className="margin-bottom-05 margin-top-05 text-bold"
-              >
-                12-3456789
-              </p>
-            </div>
-          </TitleAndDetailSectionItem>
-          <LegalNoticeSection
-            appLogic={
-              Object {
-                "appErrors": AppErrorInfoCollection {
-                  "items": Array [],
-                  "itemsById": Object {},
-                },
-                "documents": Object {
-                  "download": [Function],
-                },
-              }
-            }
-            claim={
-              BenefitsApplication {
-                "application_id": "mock_application_id",
-                "concurrent_leave": null,
-                "created_at": null,
-                "date_of_birth": "****-07-17",
-                "employer_benefits": Array [],
-                "employer_fein": "12-3456789",
-                "employment_status": "Employed",
-                "fineos_absence_id": "NTN-111-ABS-01",
-                "first_name": "Jane",
-                "gender": "Woman",
-                "has_concurrent_leave": false,
-                "has_continuous_leave_periods": true,
-                "has_employer_benefits": false,
-                "has_intermittent_leave_periods": null,
-                "has_mailing_address": false,
-                "has_other_incomes": false,
-                "has_previous_leaves_other_reason": false,
-                "has_previous_leaves_same_reason": false,
-                "has_reduced_schedule_leave_periods": null,
-                "has_state_id": true,
-                "has_submitted_payment_preference": null,
-                "hours_worked_per_week": 30,
-                "last_name": "Doe",
-                "leave_details": Object {
-                  "caring_leave_metadata": null,
-                  "child_birth_date": null,
-                  "child_placement_date": null,
-                  "continuous_leave_periods": Array [
-                    ContinuousLeavePeriod {
-                      "end_date": "2021-06-01",
-                      "leave_period_id": "mock-leave-period-id",
-                      "start_date": "2021-01-01",
-                    },
-                  ],
-                  "employer_notification_date": "2021-01-01",
-                  "employer_notified": true,
-                  "has_future_child_date": null,
-                  "pregnant_or_recent_birth": null,
-                  "reason": "Serious Health Condition - Employee",
-                  "reason_qualifier": null,
-                },
-                "mailing_address": null,
-                "mass_id": "*********",
-                "middle_name": "",
-                "other_incomes": Array [],
-                "payment_preference": null,
-                "phone": Object {
-                  "int_code": null,
-                  "phone_number": "123-456-****",
-                  "phone_type": "Cell",
-                },
-                "previous_leaves_other_reason": Array [],
-                "previous_leaves_same_reason": Array [],
-                "residential_address": Address {
-                  "city": "Boston",
-                  "line_1": "1234 My St.",
-                  "line_2": null,
-                  "state": "MA",
-                  "zip": "00000",
-                },
-                "status": "Submitted",
-                "tax_identifier": "***-**-****",
-                "work_pattern": WorkPattern {
-                  "work_pattern_days": Array [
-                    WorkPatternDay {
-                      "day_of_week": "Sunday",
-                      "minutes": null,
-                    },
-                    WorkPatternDay {
-                      "day_of_week": "Monday",
-                      "minutes": null,
-                    },
-                    WorkPatternDay {
-                      "day_of_week": "Tuesday",
-                      "minutes": null,
-                    },
-                    WorkPatternDay {
-                      "day_of_week": "Wednesday",
-                      "minutes": null,
-                    },
-                    WorkPatternDay {
-                      "day_of_week": "Thursday",
-                      "minutes": null,
-                    },
-                    WorkPatternDay {
-                      "day_of_week": "Friday",
-                      "minutes": null,
-                    },
-                    WorkPatternDay {
-                      "day_of_week": "Saturday",
-                      "minutes": null,
-                    },
-                  ],
-                  "work_pattern_type": "Fixed",
-                },
-              }
-            }
-            documents={
-              Array [
-                Document {
-                  "application_id": null,
-                  "content_type": null,
-                  "created_at": "2021-01-15",
-                  "description": null,
-                  "document_type": "Request for more Information",
-                  "fineos_document_id": "a",
-                  "name": null,
-                  "user_id": null,
-                },
-                Document {
-                  "application_id": null,
-                  "content_type": null,
-                  "created_at": "2021-01-30",
-                  "description": null,
-                  "document_type": "Denial Notice",
-                  "fineos_document_id": "b",
-                  "name": null,
-                  "user_id": null,
-                },
-              ]
-            }
-            number={2}
-          >
-            <div
-              className="margin-2 margin-top-0 padding-bottom-1"
-              style={
+            <LegalNoticeList
+              appLogic={
                 Object {
-                  "maxWidth": 385,
+                  "appErrors": AppErrorInfoCollection {
+                    "items": Array [],
+                    "itemsById": Object {},
+                  },
+                  "claims": Object {
+                    "claimDetail": Object {},
+                    "isLoadingClaimDetail": false,
+                    "loadClaimDetail": [MockFunction],
+                  },
+                  "documents": Object {
+                    "download": [Function],
+                  },
+                  "portalFlow": Object {
+                    "goTo": [MockFunction],
+                  },
                 }
               }
+              claim={
+                BenefitsApplication {
+                  "application_id": "mock_application_id",
+                  "concurrent_leave": null,
+                  "created_at": null,
+                  "date_of_birth": "****-07-17",
+                  "employer_benefits": Array [],
+                  "employer_fein": "12-3456789",
+                  "employment_status": "Employed",
+                  "fineos_absence_id": "NTN-111-ABS-01",
+                  "first_name": "Jane",
+                  "gender": "Woman",
+                  "has_concurrent_leave": false,
+                  "has_continuous_leave_periods": true,
+                  "has_employer_benefits": false,
+                  "has_intermittent_leave_periods": null,
+                  "has_mailing_address": false,
+                  "has_other_incomes": false,
+                  "has_previous_leaves_other_reason": false,
+                  "has_previous_leaves_same_reason": false,
+                  "has_reduced_schedule_leave_periods": null,
+                  "has_state_id": true,
+                  "has_submitted_payment_preference": null,
+                  "hours_worked_per_week": 30,
+                  "last_name": "Doe",
+                  "leave_details": Object {
+                    "caring_leave_metadata": null,
+                    "child_birth_date": null,
+                    "child_placement_date": null,
+                    "continuous_leave_periods": Array [
+                      ContinuousLeavePeriod {
+                        "end_date": "2021-06-01",
+                        "leave_period_id": "mock-leave-period-id",
+                        "start_date": "2021-01-01",
+                      },
+                    ],
+                    "employer_notification_date": "2021-01-01",
+                    "employer_notified": true,
+                    "has_future_child_date": null,
+                    "pregnant_or_recent_birth": null,
+                    "reason": "Serious Health Condition - Employee",
+                    "reason_qualifier": null,
+                  },
+                  "mailing_address": null,
+                  "mass_id": "*********",
+                  "middle_name": "",
+                  "other_incomes": Array [],
+                  "payment_preference": null,
+                  "phone": Object {
+                    "int_code": null,
+                    "phone_number": "123-456-****",
+                    "phone_type": "Cell",
+                  },
+                  "previous_leaves_other_reason": Array [],
+                  "previous_leaves_same_reason": Array [],
+                  "residential_address": Address {
+                    "city": "Boston",
+                    "line_1": "1234 My St.",
+                    "line_2": null,
+                    "state": "MA",
+                    "zip": "00000",
+                  },
+                  "status": "Submitted",
+                  "tax_identifier": "***-**-****",
+                  "work_pattern": WorkPattern {
+                    "work_pattern_days": Array [
+                      WorkPatternDay {
+                        "day_of_week": "Sunday",
+                        "minutes": null,
+                      },
+                      WorkPatternDay {
+                        "day_of_week": "Monday",
+                        "minutes": null,
+                      },
+                      WorkPatternDay {
+                        "day_of_week": "Tuesday",
+                        "minutes": null,
+                      },
+                      WorkPatternDay {
+                        "day_of_week": "Wednesday",
+                        "minutes": null,
+                      },
+                      WorkPatternDay {
+                        "day_of_week": "Thursday",
+                        "minutes": null,
+                      },
+                      WorkPatternDay {
+                        "day_of_week": "Friday",
+                        "minutes": null,
+                      },
+                      WorkPatternDay {
+                        "day_of_week": "Saturday",
+                        "minutes": null,
+                      },
+                    ],
+                    "work_pattern_type": "Fixed",
+                  },
+                }
+              }
+              documents={
+                Array [
+                  Document {
+                    "application_id": null,
+                    "content_type": null,
+                    "created_at": "2021-01-15",
+                    "description": null,
+                    "document_type": "Request for more Information",
+                    "fineos_document_id": "a",
+                    "name": null,
+                    "user_id": null,
+                  },
+                  Document {
+                    "application_id": null,
+                    "content_type": null,
+                    "created_at": "2021-01-30",
+                    "description": null,
+                    "document_type": "Denial Notice",
+                    "fineos_document_id": "b",
+                    "name": null,
+                    "user_id": null,
+                  },
+                ]
+              }
+              number={2}
+              onDownloadClick={[Function]}
             >
-              <Heading
-                level="3"
+              <p
+                className="padding-bottom-2 margin-top-05"
               >
-                <h3
-                  className="font-heading-sm text-bold"
-                >
-                  View your notices
-                </h3>
-              </Heading>
-              <LegalNoticeList
-                appLogic={
-                  Object {
-                    "appErrors": AppErrorInfoCollection {
-                      "items": Array [],
-                      "itemsById": Object {},
-                    },
-                    "documents": Object {
-                      "download": [Function],
-                    },
-                  }
-                }
-                claim={
-                  BenefitsApplication {
-                    "application_id": "mock_application_id",
-                    "concurrent_leave": null,
-                    "created_at": null,
-                    "date_of_birth": "****-07-17",
-                    "employer_benefits": Array [],
-                    "employer_fein": "12-3456789",
-                    "employment_status": "Employed",
-                    "fineos_absence_id": "NTN-111-ABS-01",
-                    "first_name": "Jane",
-                    "gender": "Woman",
-                    "has_concurrent_leave": false,
-                    "has_continuous_leave_periods": true,
-                    "has_employer_benefits": false,
-                    "has_intermittent_leave_periods": null,
-                    "has_mailing_address": false,
-                    "has_other_incomes": false,
-                    "has_previous_leaves_other_reason": false,
-                    "has_previous_leaves_same_reason": false,
-                    "has_reduced_schedule_leave_periods": null,
-                    "has_state_id": true,
-                    "has_submitted_payment_preference": null,
-                    "hours_worked_per_week": 30,
-                    "last_name": "Doe",
-                    "leave_details": Object {
-                      "caring_leave_metadata": null,
-                      "child_birth_date": null,
-                      "child_placement_date": null,
-                      "continuous_leave_periods": Array [
-                        ContinuousLeavePeriod {
-                          "end_date": "2021-06-01",
-                          "leave_period_id": "mock-leave-period-id",
-                          "start_date": "2021-01-01",
-                        },
-                      ],
-                      "employer_notification_date": "2021-01-01",
-                      "employer_notified": true,
-                      "has_future_child_date": null,
-                      "pregnant_or_recent_birth": null,
-                      "reason": "Serious Health Condition - Employee",
-                      "reason_qualifier": null,
-                    },
-                    "mailing_address": null,
-                    "mass_id": "*********",
-                    "middle_name": "",
-                    "other_incomes": Array [],
-                    "payment_preference": null,
-                    "phone": Object {
-                      "int_code": null,
-                      "phone_number": "123-456-****",
-                      "phone_type": "Cell",
-                    },
-                    "previous_leaves_other_reason": Array [],
-                    "previous_leaves_same_reason": Array [],
-                    "residential_address": Address {
-                      "city": "Boston",
-                      "line_1": "1234 My St.",
-                      "line_2": null,
-                      "state": "MA",
-                      "zip": "00000",
-                    },
-                    "status": "Submitted",
-                    "tax_identifier": "***-**-****",
-                    "work_pattern": WorkPattern {
-                      "work_pattern_days": Array [
-                        WorkPatternDay {
-                          "day_of_week": "Sunday",
-                          "minutes": null,
-                        },
-                        WorkPatternDay {
-                          "day_of_week": "Monday",
-                          "minutes": null,
-                        },
-                        WorkPatternDay {
-                          "day_of_week": "Tuesday",
-                          "minutes": null,
-                        },
-                        WorkPatternDay {
-                          "day_of_week": "Wednesday",
-                          "minutes": null,
-                        },
-                        WorkPatternDay {
-                          "day_of_week": "Thursday",
-                          "minutes": null,
-                        },
-                        WorkPatternDay {
-                          "day_of_week": "Friday",
-                          "minutes": null,
-                        },
-                        WorkPatternDay {
-                          "day_of_week": "Saturday",
-                          "minutes": null,
-                        },
-                      ],
-                      "work_pattern_type": "Fixed",
-                    },
-                  }
-                }
-                documents={
-                  Array [
-                    Document {
-                      "application_id": null,
-                      "content_type": null,
-                      "created_at": "2021-01-15",
-                      "description": null,
-                      "document_type": "Request for more Information",
-                      "fineos_document_id": "a",
-                      "name": null,
-                      "user_id": null,
-                    },
-                    Document {
-                      "application_id": null,
-                      "content_type": null,
-                      "created_at": "2021-01-30",
-                      "description": null,
-                      "document_type": "Denial Notice",
-                      "fineos_document_id": "b",
-                      "name": null,
-                      "user_id": null,
-                    },
-                  ]
-                }
-                number={2}
-                onDownloadClick={[Function]}
+                When you click the notice link, the file will download to your device.
+              </p>
+              <ul
+                className="add-list-reset"
               >
-                <p
-                  className="padding-bottom-2 margin-top-05"
+                <li
+                  className="grid-row flex-row flex-justify-start flex-align-start margin-bottom-1 text-primary"
+                  key="a"
                 >
-                  When you click the notice link, the file will download to your device.
-                </p>
-                <ul
-                  className="add-list-reset"
-                >
-                  <li
-                    className="grid-row flex-row flex-justify-start flex-align-start margin-bottom-1 text-primary"
-                    key="a"
+                  <Icon
+                    className="margin-right-1"
+                    fill="currentColor"
+                    name="file_present"
+                    size={3}
                   >
-                    <Icon
-                      className="margin-right-1"
+                    <svg
+                      aria-hidden="true"
+                      className="usa-icon--size-3 margin-right-1"
                       fill="currentColor"
-                      name="file_present"
-                      size={3}
+                      focusable="false"
+                      role="img"
                     >
-                      <svg
-                        aria-hidden="true"
-                        className="usa-icon--size-3 margin-right-1"
-                        fill="currentColor"
-                        focusable="false"
-                        role="img"
-                      >
-                        <use
-                          xlinkHref="/img/sprite.svg#file_present"
-                        />
-                      </svg>
-                    </Icon>
-                    <div>
-                      <DownloadableDocument
-                        className="margin-left-2"
-                        document={
-                          Document {
-                            "application_id": null,
-                            "content_type": null,
-                            "created_at": "2021-01-15",
-                            "description": null,
-                            "document_type": "Request for more Information",
-                            "fineos_document_id": "a",
-                            "name": null,
-                            "user_id": null,
-                          }
+                      <use
+                        xlinkHref="/img/sprite.svg#file_present"
+                      />
+                    </svg>
+                  </Icon>
+                  <div>
+                    <DownloadableDocument
+                      className="margin-left-2"
+                      document={
+                        Document {
+                          "application_id": null,
+                          "content_type": null,
+                          "created_at": "2021-01-15",
+                          "description": null,
+                          "document_type": "Request for more Information",
+                          "fineos_document_id": "a",
+                          "name": null,
+                          "user_id": null,
                         }
-                        onDownloadClick={[Function]}
-                        showCreatedAt={true}
+                      }
+                      onDownloadClick={[Function]}
+                      showCreatedAt={true}
+                    >
+                      <Button
+                        className="text-bold"
+                        onClick={[Function]}
+                        type="button"
+                        variation="unstyled"
                       >
-                        <Button
-                          className="text-bold"
+                        <button
+                          className="usa-button position-relative text-bold usa-button--unstyled"
                           onClick={[Function]}
                           type="button"
-                          variation="unstyled"
                         >
-                          <button
-                            className="usa-button position-relative text-bold usa-button--unstyled"
-                            onClick={[Function]}
-                            type="button"
-                          >
-                            Request for more information (PDF)
-                          </button>
-                        </Button>
-                        <div
-                          className="text-base-dark"
-                        >
-                          Posted 1/15/2021
-                        </div>
-                      </DownloadableDocument>
-                    </div>
-                  </li>
-                  <li
-                    className="grid-row flex-row flex-justify-start flex-align-start margin-bottom-1 text-primary"
-                    key="b"
+                          Request for more information (PDF)
+                        </button>
+                      </Button>
+                      <div
+                        className="text-base-dark"
+                      >
+                        Posted 1/15/2021
+                      </div>
+                    </DownloadableDocument>
+                  </div>
+                </li>
+                <li
+                  className="grid-row flex-row flex-justify-start flex-align-start margin-bottom-1 text-primary"
+                  key="b"
+                >
+                  <Icon
+                    className="margin-right-1"
+                    fill="currentColor"
+                    name="file_present"
+                    size={3}
                   >
-                    <Icon
-                      className="margin-right-1"
+                    <svg
+                      aria-hidden="true"
+                      className="usa-icon--size-3 margin-right-1"
                       fill="currentColor"
-                      name="file_present"
-                      size={3}
+                      focusable="false"
+                      role="img"
                     >
-                      <svg
-                        aria-hidden="true"
-                        className="usa-icon--size-3 margin-right-1"
-                        fill="currentColor"
-                        focusable="false"
-                        role="img"
-                      >
-                        <use
-                          xlinkHref="/img/sprite.svg#file_present"
-                        />
-                      </svg>
-                    </Icon>
-                    <div>
-                      <DownloadableDocument
-                        className="margin-left-2"
-                        document={
-                          Document {
-                            "application_id": null,
-                            "content_type": null,
-                            "created_at": "2021-01-30",
-                            "description": null,
-                            "document_type": "Denial Notice",
-                            "fineos_document_id": "b",
-                            "name": null,
-                            "user_id": null,
-                          }
+                      <use
+                        xlinkHref="/img/sprite.svg#file_present"
+                      />
+                    </svg>
+                  </Icon>
+                  <div>
+                    <DownloadableDocument
+                      className="margin-left-2"
+                      document={
+                        Document {
+                          "application_id": null,
+                          "content_type": null,
+                          "created_at": "2021-01-30",
+                          "description": null,
+                          "document_type": "Denial Notice",
+                          "fineos_document_id": "b",
+                          "name": null,
+                          "user_id": null,
                         }
-                        onDownloadClick={[Function]}
-                        showCreatedAt={true}
+                      }
+                      onDownloadClick={[Function]}
+                      showCreatedAt={true}
+                    >
+                      <Button
+                        className="text-bold"
+                        onClick={[Function]}
+                        type="button"
+                        variation="unstyled"
                       >
-                        <Button
-                          className="text-bold"
+                        <button
+                          className="usa-button position-relative text-bold usa-button--unstyled"
                           onClick={[Function]}
                           type="button"
-                          variation="unstyled"
                         >
-                          <button
-                            className="usa-button position-relative text-bold usa-button--unstyled"
-                            onClick={[Function]}
-                            type="button"
-                          >
-                            Denial notice (PDF)
-                          </button>
-                        </Button>
-                        <div
-                          className="text-base-dark"
-                        >
-                          Posted 1/30/2021
-                        </div>
-                      </DownloadableDocument>
-                    </div>
-                  </li>
-                </ul>
-              </LegalNoticeList>
-            </div>
-          </LegalNoticeSection>
-          <ButtonSection
-            buttonText="Continue application"
+                          Denial notice (PDF)
+                        </button>
+                      </Button>
+                      <div
+                        className="text-base-dark"
+                      >
+                        Posted 1/30/2021
+                      </div>
+                    </DownloadableDocument>
+                  </div>
+                </li>
+              </ul>
+            </LegalNoticeList>
+          </div>
+        </LegalNoticeSection>
+        <div
+          className="border-top border-base-lighter padding-y-2 margin-2 margin-bottom-0"
+        >
+          <ButtonLink
+            className="display-flex flex-align-center flex-justify-center flex-column margin-right-0"
             href="/applications/checklist?claim_id=mock_application_id"
-            iconComponent={null}
           >
-            <div
-              className="border-top border-base-lighter padding-y-2 margin-2 margin-bottom-0"
+            <Link
+              href="/applications/checklist?claim_id=mock_application_id"
             >
-              <ButtonLink
-                className="display-flex flex-align-center flex-justify-center flex-column margin-right-0"
+              <a
+                className="usa-button display-flex flex-align-center flex-justify-center flex-column margin-right-0"
                 href="/applications/checklist?claim_id=mock_application_id"
               >
-                <Link
-                  href="/applications/checklist?claim_id=mock_application_id"
-                >
-                  <a
-                    className="usa-button display-flex flex-align-center flex-justify-center flex-column margin-right-0"
-                    href="/applications/checklist?claim_id=mock_application_id"
-                  >
-                    <div>
-                      Continue application
-                    </div>
-                  </a>
-                </Link>
-              </ButtonLink>
-            </div>
-          </ButtonSection>
-        </InProgressStatusCard>
-      </StatusCard>
+                <div>
+                  Continue application
+                </div>
+              </a>
+            </Link>
+          </ButtonLink>
+        </div>
+      </InProgressStatusCard>
     </article>
   </div>
 </ApplicationCardV2>

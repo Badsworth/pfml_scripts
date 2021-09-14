@@ -1,8 +1,10 @@
+import React, { useEffect, useState } from "react";
 import routeWithParams, {
   createRouteWithQuery,
 } from "../utils/routeWithParams";
 
 import BenefitsApplication from "../models/BenefitsApplication";
+import Button from "../components/Button";
 import ButtonLink from "../components/ButtonLink";
 import Document from "../models/Document";
 import Heading from "../components/Heading";
@@ -10,7 +12,6 @@ import Icon from "../components/Icon";
 import LeaveReason from "../models/LeaveReason";
 import LegalNoticeList from "../components/LegalNoticeList";
 import PropTypes from "prop-types";
-import React from "react";
 import findKeyByValue from "../utils/findKeyByValue";
 import getLegalNotices from "../utils/getLegalNotices";
 import { useTranslation } from "../locales/i18n";
@@ -45,30 +46,42 @@ TitleAndDetailSectionItem.propTypes = {
 };
 
 /**
- * Button section with top border and optional header text/section
+ * Styled load data button. Performs an async load operation when clicked. Calls an onLoad
+ * handler when loading has completed.
  */
-const ButtonSection = ({ buttonText, href, iconComponent = null }) => {
+const LoadButton = ({ children, onClick, onLoad, isLoaded }) => {
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (isLoading && isLoaded) {
+      setIsLoading(false);
+      onLoad();
+    }
+  }, [isLoading, isLoaded, onLoad]);
+
+  const onClickHandler = () => {
+    setIsLoading(true);
+    onClick();
+  };
+
   return (
     <div className="border-top border-base-lighter padding-y-2 margin-2 margin-bottom-0">
-      <ButtonLink
-        className="display-flex flex-align-center flex-justify-center flex-column margin-right-0"
-        href={href}
+      <Button
+        className="width-full display-flex flex-align-center flex-justify-center flex-column margin-right-0"
+        onClick={onClickHandler}
+        loading={isLoading}
       >
-        <div>{buttonText}</div>
-        {iconComponent}
-      </ButtonLink>
+        {children}
+      </Button>
     </div>
   );
 };
 
-ButtonSection.propTypes = {
-  buttonText: PropTypes.string.isRequired,
-  href: PropTypes.string.isRequired,
-  iconComponent: PropTypes.object,
-};
-
-ButtonSection.defaultProps = {
-  iconComponent: null,
+LoadButton.propTypes = {
+  onClick: PropTypes.func.isRequired,
+  onLoad: PropTypes.func.isRequired,
+  isLoaded: PropTypes.bool.isRequired,
+  children: PropTypes.node.isRequired,
 };
 
 /**
@@ -184,12 +197,16 @@ const InProgressStatusCard = (props) => {
         />
       )}
       <LegalNoticeSection {...props} />
-      <ButtonSection
-        buttonText={t("components.applicationCardV2.continueApplication")}
-        href={routeWithParams("applications.checklist", {
-          claim_id: claim.application_id,
-        })}
-      />
+      <div className="border-top border-base-lighter padding-y-2 margin-2 margin-bottom-0">
+        <ButtonLink
+          className="display-flex flex-align-center flex-justify-center flex-column margin-right-0"
+          href={routeWithParams("applications.checklist", {
+            claim_id: claim.application_id,
+          })}
+        >
+          <div>{t("components.applicationCardV2.continueApplication")}</div>
+        </ButtonLink>
+      </div>
     </React.Fragment>
   );
 };
@@ -203,7 +220,7 @@ InProgressStatusCard.propTypes = {
 /**
  * Status card for claim.status = "Completed"
  */
-const CompletedStatusCard = ({ claim }) => {
+const CompletedStatusCard = ({ appLogic, claim }) => {
   const { t } = useTranslation();
 
   const leaveReasonText = t("components.applicationCardV2.leaveReasonValue", {
@@ -219,6 +236,22 @@ const CompletedStatusCard = ({ claim }) => {
     />
   );
 
+  const absenceId = claim.fineos_absence_id;
+  const href = routeWithParams("applications.status", {
+    absence_case_id: claim.fineos_absence_id,
+  });
+
+  const onClickHandler = () => {
+    appLogic.claims.loadClaimDetail(absenceId);
+  };
+
+  const onLoadHandler = () => {
+    // Make sure our claim successfully loaded before redirecting
+    if (appLogic.claims.claimDetail?.fineos_absence_id === absenceId) {
+      appLogic.portalFlow.goTo(href);
+    }
+  };
+
   return (
     <React.Fragment>
       <HeaderSection title={leaveReasonText} />
@@ -231,15 +264,14 @@ const CompletedStatusCard = ({ claim }) => {
         details={claim.employer_fein}
       />
 
-      <ButtonSection
-        buttonText={t(
-          "components.applicationCardV2.viewStatusUpdatesAndDetails"
-        )}
-        href={routeWithParams("applications.status", {
-          absence_case_id: claim.fineos_absence_id,
-        })}
-        iconComponent={iconComponent}
-      />
+      <LoadButton
+        onClick={onClickHandler}
+        onLoad={onLoadHandler}
+        isLoaded={!appLogic.claims.isLoadingClaimDetail}
+      >
+        {t("components.applicationCardV2.viewStatusUpdatesAndDetails")}
+        {iconComponent}
+      </LoadButton>
       <ManageDocumentSection claim={claim} />
     </React.Fragment>
   );
@@ -247,6 +279,16 @@ const CompletedStatusCard = ({ claim }) => {
 
 CompletedStatusCard.propTypes = {
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
+  appLogic: PropTypes.shape({
+    claims: PropTypes.shape({
+      isLoadingClaimDetail: PropTypes.bool,
+      loadClaimDetail: PropTypes.func.isRequired,
+      claimDetail: PropTypes.object,
+    }).isRequired,
+    portalFlow: PropTypes.shape({
+      goTo: PropTypes.func.isRequired,
+    }).isRequired,
+  }).isRequired,
 };
 
 /**
@@ -260,21 +302,15 @@ export const ApplicationCardV2 = (props) => {
     claim: { status },
   } = props;
 
-  const StatusCard = () => {
-    switch (status) {
-      case "Completed":
-        return <CompletedStatusCard {...props} />;
-
-      default:
-        return <InProgressStatusCard {...props} />;
-    }
-  };
-
   return (
     <div className="maxw-mobile-lg margin-bottom-3">
       <aside className="border-top-1 border-primary" />
       <article className="border-x border-bottom border-base-lighter">
-        <StatusCard />
+        {status === "Completed" ? (
+          <CompletedStatusCard {...props} />
+        ) : (
+          <InProgressStatusCard {...props} />
+        )}
       </article>
     </div>
   );
@@ -282,6 +318,20 @@ export const ApplicationCardV2 = (props) => {
 
 ApplicationCardV2.propTypes = {
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
+  appLogic: PropTypes.shape({
+    appErrors: PropTypes.object.isRequired,
+    claims: PropTypes.shape({
+      isLoadingClaimDetail: PropTypes.bool,
+      loadClaimDetail: PropTypes.func.isRequired,
+      claimDetail: PropTypes.object,
+    }).isRequired,
+    documents: PropTypes.shape({
+      download: PropTypes.func.isRequired,
+    }),
+    portalFlow: PropTypes.shape({
+      goTo: PropTypes.func.isRequired,
+    }).isRequired,
+  }).isRequired,
 };
 
 export default withClaimDocuments(ApplicationCardV2);
