@@ -43,8 +43,8 @@ def update(args):
         return False
 
     if git_utils.is_finalized(args.release_version):
-        logger.error("This branch is already finalized and can only take hotfixes. "
-                     "Try running this script again, but with the 'hotfix' task instead.")
+        logger.error(f"'{args.release_version}' can only take hotfixes.")
+        logger.error("Try running this script again, but with the 'hotfix' task instead.")
         return False
 
     old_head = git_utils.head_of_branch(args.release_version)

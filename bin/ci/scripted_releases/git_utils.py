@@ -73,7 +73,12 @@ def is_finalized(release_branch) -> bool:
     formal_release_statuses = list(bool(match(FORMAL_RELEASE_TAG_REGEX, tag)) for tag in version_series_tags)
     logger.debug(f"Formal-release status of those tags: {tuple(zip(version_series_tags, formal_release_statuses))}")
 
-    return any(formal_release_statuses)
+    if any(formal_release_statuses):
+        logger.info(f"The release series '{release_branch}' has already been finalized.")
+        return True
+    else:
+        logger.info(f"The release series '{release_branch}' has not yet been finalized.")
+        return False
 
 
 def head_of_branch(branch_name):
