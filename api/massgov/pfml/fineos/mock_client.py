@@ -11,7 +11,7 @@ import datetime
 import pathlib
 import typing
 from decimal import Decimal
-from typing import Any, List, Optional, Union
+from typing import Any, List, Optional, Tuple, Union
 
 import faker
 import requests
@@ -700,8 +700,9 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
 
     def create_or_update_leave_admin(
         self, leave_admin_create_or_update: models.CreateOrUpdateLeaveAdmin
-    ) -> None:
+    ) -> Tuple[Optional[str], Optional[str]]:
         _capture_call("create_or_update_leave_admin", None)
+        return "", ""
 
     def update_reflexive_questions(
         self,

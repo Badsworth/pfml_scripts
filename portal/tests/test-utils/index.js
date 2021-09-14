@@ -8,6 +8,7 @@ import {
 import { createInputElement, makeFile } from "./makeFile";
 import mockFetch from "./mockFetch";
 import mockLoggedInAuthSession from "./mockLoggedInAuthSession";
+import { renderPage } from "../../tests/test-utils/renderPage";
 import simulateEvents from "./simulateEvents";
 
 export {
@@ -20,5 +21,6 @@ export {
   MockEmployerClaimBuilder,
   mockFetch,
   mockLoggedInAuthSession,
+  renderPage,
   simulateEvents,
 };

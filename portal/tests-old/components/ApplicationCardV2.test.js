@@ -9,8 +9,16 @@ import { mount } from "enzyme";
 describe("ApplicationCardV2", () => {
   const appLogic = {
     appErrors: new AppErrorInfoCollection([]),
+    claims: {
+      isLoadingClaimDetail: false,
+      loadClaimDetail: jest.fn(),
+      claimDetail: {},
+    },
     documents: {
       download: () => {},
+    },
+    portalFlow: {
+      goTo: jest.fn(),
     },
   };
 
@@ -64,7 +72,9 @@ describe("ApplicationCardV2", () => {
 
     it("completed status matches snapshot", () => {
       const claim = new MockBenefitsApplicationBuilder().completed().create();
-      const wrapper = mount(<ApplicationCardV2 claim={claim} />);
+      const wrapper = mount(
+        <ApplicationCardV2 appLogic={appLogic} claim={claim} />
+      );
 
       expect(wrapper).toMatchSnapshot();
     });

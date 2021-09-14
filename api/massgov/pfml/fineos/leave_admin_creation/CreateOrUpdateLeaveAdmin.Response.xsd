@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xs:schema xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:tns="http://www.fineos.com/frontoffice/externaluserprovisioning/external" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://www.fineos.com/frontoffice/externaluserprovisioning/external" xmlns:xs="http://www.w3.org/2001/XMLSchema">
+  <xs:import schemaLocation="./UserOIDSchema.xsd" />
+  <xs:element name="CreateOrUpdateEmployerViewpointUserResponse">
+    <xs:complexType>
+      <xs:sequence>
+        <xs:element name="errorCode" type="xs:string" />
+        <xs:element name="errorMessage" type="xs:string" />
+        <xs:element name="result" minOccurs="0">
+          <xs:complexType>
+            <xs:sequence>
+              <xs:element name="partyReference" type="xs:string" />
+              <xs:element name="userId" type="xs:string" />
+              <xs:element name="userOID">
+                <xs:complexType>
+                  <xs:sequence>
+                    <xs:element ref="ClassID" />
+                    <xs:element ref="IndexID" />
+                    <xs:element ref="Flags" />
+                  </xs:sequence>
+                </xs:complexType>
+              </xs:element>
+              <xs:element name="userAlreadyExisted" type="xs:string" />
+            </xs:sequence>
+          </xs:complexType>
+        </xs:element>
+      </xs:sequence>
+    </xs:complexType>
+  </xs:element>
+</xs:schema>

@@ -848,6 +848,7 @@ const shared = {
   leaveReasonCare: "Care for a family member",
   leaveReasonCareHeader: "Leave to care for a family member",
   leaveReasonMedical: "Medical leave",
+  leaveReasonMedicalIllness: "Leave for an illness or injury",
   leaveReasonMedicalSchedule: "Medical leave schedule",
   leaveReasonPregnancy: "Medical leave for pregnancy or birth",
   leaveReasonPregnancyHeader: "Medical leave for pregnancy",
@@ -900,14 +901,14 @@ const pages = {
     seoDescription: "$t(shared.siteDescription)",
   },
   applications: {
-    claimsReflectPortal:
-      "Your applications only reflect what you entered using this website. Any changes you made through the Contact Center will not be shown here.",
+    claimsApprovalProcess:
+      "Learn more about the <approval-process-link>application review and approval process</approval-process-link>.",
     createApplicationHeading: "Create a new application",
     getReadyLink: "Start a new application",
     inProgressHeading: "In-progress applications",
     noClaims: "You don’t have any applications yet.",
     submittedHeading: "Submitted applications",
-    title: "Applications",
+    title: "Your applications",
     uploadSuccessHeading: "You successfully submitted your documents",
     uploadSuccessMessage:
       "Our Contact Center staff will review your documents for {{absence_id}}.",
@@ -2504,17 +2505,16 @@ const components = {
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
     leaveReasonValue_bonding: "$t(shared.leaveReasonBondingHeader)",
     leaveReasonValue_care: "$t(shared.leaveReasonCareHeader)",
-    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_medical: "$t(shared.leaveReasonMedicalIllness)",
     leaveReasonValue_pregnancy: "$t(shared.leaveReasonPregnancyHeader)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
-    manageApplicationDocuments: "Manage your application documents",
     noticeOnClickDetails:
       "When you click the notice link, the file will download to your device.",
-    uploadDocuments: "Upload documents",
-    viewNotices: "View notices",
+    otherActions: "Other actions",
+    respondToRequest: "Respond to a request for information",
+    viewNotices: "View your notices",
     viewStatusUpdatesAndDetails: "View status updates and details",
-    viewYourNotices: "View your notices",
   },
   authNav: {
     logOutButton: "Log out",
