@@ -83,11 +83,11 @@ DownloadableDocument.propTypes = {
 function getDocumentName(document, t) {
   if (
     [
+      DocumentType.appealAcknowledgment,
       DocumentType.approvalNotice,
       DocumentType.denialNotice,
       DocumentType.requestForInfoNotice,
       DocumentType.withdrawalNotice,
-      DocumentType.appealAcknowledgement,
     ].includes(document.document_type)
   ) {
     return t("components.downloadableDocument.noticeName", {
