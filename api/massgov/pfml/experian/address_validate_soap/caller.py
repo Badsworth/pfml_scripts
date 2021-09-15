@@ -4,16 +4,18 @@ from functools import cached_property
 from typing import Any, Dict, Optional
 
 import zeep
-from pydantic import BaseSettings, Field
+from pydantic import Field
 from requests import Session
 from zeep.transports import Transport
+
+import massgov.pfml.util.pydantic
 
 # https://docs.experianaperture.io/address-validation/address-validate-soap/api-reference/api-specification/#v3-endpoint
 # Note: After running into issues with non secure imports in the WSDL, using a modified version of the WSDL we ship with the code
 SOAP_WSDL_DEFAULT_URL = os.path.join(os.path.dirname(__file__), "wsdl/ProOnDemandV3.wsdl")
 
 
-class ExperianSOAPConfig(BaseSettings):
+class ExperianSOAPConfig(massgov.pfml.util.pydantic.PydanticBaseSettings):
     auth_token: str = Field(..., min_length=1)
     # Code expects a v3 endpoint. Defaults to US regional endpoint.
     soap_wsdl_uri: str = Field(SOAP_WSDL_DEFAULT_URL, min_length=1)

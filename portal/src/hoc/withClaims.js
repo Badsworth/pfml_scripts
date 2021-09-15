@@ -13,11 +13,19 @@ import withUser from "./withUser";
  * Higher order component that provides the current user's claims to the wrapped component.
  * The higher order component also loads the claims if they have not already been loaded.
  * @param {React.Component} Component - Component to receive claims prop
+ * @param {object} apiParams
+ * @param {string} [apiParams.claim_status]
+ * @param {string} [apiParams.employer_id]
+ * @param {string} [apiParams.order_by]
+ * @param {string} [apiParams.order_direction]
+ * @param {string} [apiParams.page_offset]
+ * @param {string} [apiParams.search]
  * @returns {React.Component} - Component with claims prop
  */
-const withClaims = (Component) => {
+const withClaims = (Component, apiParams = {}) => {
   const ComponentWithClaims = (props) => {
-    const { appLogic, query } = props;
+    const { appLogic } = props;
+    const { page_offset } = apiParams;
     const { t } = useTranslation();
 
     assert(appLogic.claims);
@@ -25,7 +33,6 @@ const withClaims = (Component) => {
     assert(appLogic.users.user);
 
     const { isLoadingClaims } = appLogic.claims;
-    const { page_offset } = query;
 
     // Exclude null or undefined values since we don't want to
     // send those into the API request's query string, and our
@@ -33,16 +40,16 @@ const withClaims = (Component) => {
     // how many filters are active.
     const order = omitBy(
       {
-        order_by: query.order_by,
-        order_direction: query.order_direction,
+        order_by: apiParams.order_by,
+        order_direction: apiParams.order_direction,
       },
       isNil
     );
     const filters = omitBy(
       {
-        claim_status: query.claim_status,
-        employer_id: query.employer_id,
-        search: query.search,
+        claim_status: apiParams.claim_status,
+        employer_id: apiParams.employer_id,
+        search: apiParams.search,
       },
       isNil
     );
@@ -84,14 +91,6 @@ const withClaims = (Component) => {
         paginationMeta: PropTypes.instanceOf(PaginationMeta),
       }).isRequired,
     }).isRequired,
-    query: PropTypes.shape({
-      claim_status: PropTypes.string,
-      employer_id: PropTypes.string,
-      order_by: PropTypes.string,
-      order_direction: PropTypes.string,
-      page_offset: PropTypes.string,
-      search: PropTypes.string,
-    }),
   };
 
   return withUser(ComponentWithClaims);

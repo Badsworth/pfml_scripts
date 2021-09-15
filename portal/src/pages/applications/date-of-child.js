@@ -46,7 +46,10 @@ export const DateOfChild = (props) => {
     const isFutureChildDate = getField(dateFieldName) > now;
     set(formState, hasFutureChildDateField, isFutureChildDate);
 
-    appLogic.benefitsApplications.update(claim.application_id, formState);
+    return appLogic.benefitsApplications.update(
+      claim.application_id,
+      formState
+    );
   };
 
   const getFunctionalInputProps = useFunctionalInputProps({

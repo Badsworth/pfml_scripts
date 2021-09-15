@@ -1,24 +1,15 @@
-import math
 import os
-import pathlib
 import re
-import uuid
-import xml.dom.minidom as minidom
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import date, datetime
+from decimal import Decimal, InvalidOperation
 from enum import Enum
-from typing import Any, Callable, Dict, List, Optional, Tuple, Type, Union, cast
-from xml.etree.ElementTree import Element
+from typing import Any, Callable, Dict, List, Optional, Set, Type, Union, cast
 
-import boto3
-import botocore
 import pytz
-import smart_open
-from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import ColumnProperty, class_mapper
-from sqlalchemy.orm.exc import MultipleResultsFound
 
 import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.util.files as file_util
@@ -30,15 +21,11 @@ from massgov.pfml.db.models.employees import (
     Address,
     Claim,
     ClaimType,
-    CtrBatchIdentifier,
-    CtrDocumentIdentifier,
     Employee,
-    EmployeeReferenceFile,
     ExperianAddressPair,
     LkClaimType,
     LkReferenceFileType,
     Payment,
-    PaymentReferenceFile,
     PubEft,
     ReferenceFile,
     ReferenceFileType,
@@ -51,6 +38,7 @@ from massgov.pfml.db.models.payments import (
     FineosExtractVpei,
     FineosExtractVpeiClaimDetails,
     FineosExtractVpeiPaymentDetails,
+    PaymentLog,
 )
 from massgov.pfml.util.csv import CSVSourceWrapper
 from massgov.pfml.util.routing_number_validation import validate_routing_number
@@ -59,15 +47,6 @@ logger = logging.get_logger(__package__)
 
 
 class Constants:
-    COMPTROLLER_UNIT_CODE = "8770"
-    COMPTROLLER_DEPT_CODE = "EOL"
-    COMPTROLLER_AD_ID = "AD010"
-    COMPTROLLER_AD_TYPE = "PA"
-    DOC_PHASE_CD_FINAL_STATUS = "3 - Final"
-
-    BATCH_ID_TEMPLATE = COMPTROLLER_DEPT_CODE + "{}{}{}"  # Date, GAX/VCC, batch number.
-    MMARS_FILE_SKIPPED = "Did not create file for MMARS because there was no work to do"
-
     S3_OUTBOUND_READY_DIR = "ready"
     S3_OUTBOUND_SENT_DIR = "sent"
     S3_OUTBOUND_ERROR_DIR = "error"
@@ -141,6 +120,7 @@ class ValidationReason(str, Enum):
     MISSING_FIELD = "MissingField"
     MISSING_DATASET = "MissingDataset"
     MISSING_IN_DB = "MissingInDB"
+    MISSING_FINEOS_NAME = "MissingFineosName"
     FIELD_TOO_SHORT = "FieldTooShort"
     FIELD_TOO_LONG = "FieldTooLong"
     INVALID_LOOKUP_VALUE = "InvalidLookupValue"
@@ -154,6 +134,7 @@ class ValidationReason(str, Enum):
     CLAIM_NOT_ID_PROOFED = "ClaimNotIdProofed"
     PAYMENT_EXCEEDS_PAY_PERIOD_CAP = "PaymentExceedsPayPeriodCap"
     ROUTING_NUMBER_FAILS_CHECKSUM = "RoutingNumberFailsChecksum"
+    LEAVE_REQUEST_IN_REVIEW = "LeaveRequestInReview"
 
 
 @dataclass(frozen=True, eq=True)
@@ -197,22 +178,6 @@ def get_date_folder(current_time: Optional[datetime] = None) -> str:
         current_time = get_now()
 
     return current_time.strftime("%Y-%m-%d")
-
-
-def get_period_in_weeks(period_start: date, period_end: date) -> int:
-    period_start_date = period_start.date() if isinstance(period_start, datetime) else period_start
-    period_end_date = period_end.date() if isinstance(period_end, datetime) else period_end
-
-    # We add 1 to the period in days because we want to consider a week to be
-    # 7 days inclusive. For example:
-    #    Jan 1st - Jan 1st is 1 day even though no time passes.
-    #    Jan 1st - Jan 2nd is 2 days
-    #    Jan 1st - Jan 7th is 7 days (eg. Monday -> Sunday)
-    #    Jan 1st - Jan 8th is 8 days (eg. Monday -> the next Monday)
-
-    period_in_days = (period_end_date - period_start_date).days + 1
-    weeks = math.ceil(period_in_days / 7.0)
-    return weeks
 
 
 def build_archive_path(
@@ -273,6 +238,14 @@ def routing_number_validator(routing_number: str) -> Optional[ValidationReason]:
     return None
 
 
+def amount_validator(amount_str: str) -> Optional[ValidationReason]:
+    try:
+        Decimal(amount_str)
+    except (InvalidOperation, TypeError):  # Amount is not numeric
+        return ValidationReason.INVALID_VALUE
+    return None
+
+
 def validate_csv_input(
     key: str,
     data: Dict[str, str],
@@ -317,229 +290,6 @@ def validate_csv_input(
         return None
 
     return value
-
-
-def validate_db_input(
-    key: str,
-    db_object: Any,
-    required: bool,
-    max_length: int,
-    truncate: bool,
-    func: Optional[Callable[[Any], Optional[str]]] = None,
-) -> Optional[str]:
-    value = getattr(db_object, key, None)
-
-    if required and not value:
-        raise Exception(f"Value for {key} is required to generate document.")
-    elif not required and not value:
-        return None
-
-    if func is not None:
-        value_str = func(value)
-    else:
-        value_str = str(value)  # Everything else should be safe to convert to string
-
-    if value_str and len(value_str) > max_length:
-        if truncate:
-            return value_str[:max_length]
-        # Don't add the value itself, these can include SSNs and other PII
-        raise Exception(f"Value for {key} is longer than allowed length of {max_length}.")
-
-    return value_str
-
-
-def validate_xml_input(
-    key: str,
-    element: Element,
-    errors: ValidationContainer,
-    find_attribute: bool = False,
-    required: Optional[bool] = False,
-    acceptable_values: Optional[List[str]] = None,
-) -> Optional[str]:
-    """Validate XML input
-
-    Primarily used to validate XML input from CTR Outbound Return files
-    """
-    if find_attribute:
-        value = get_xml_attribute(element, key)
-    else:
-        value = get_xml_subelement(element, key)
-
-    # If this attribute is required and it is either not present or set to
-    # "null", then add a validation issue and return None
-    if required and value is None:
-        errors.add_validation_issue(ValidationReason.MISSING_FIELD, key)
-        return None
-
-    # If this attribute can only be within a set of acceptable values, then
-    # add a validation issue if it isn't one of those values
-    if acceptable_values and value not in acceptable_values:
-        errors.add_validation_issue(ValidationReason.INVALID_VALUE, key)
-
-    return value
-
-
-def get_xml_attribute(element: Element, key: str) -> Optional[str]:
-    """Get an attribute from an XML element
-
-    Returns:
-        None: if the attribute is missing
-    """
-    if key in element.attrib:
-        return element.attrib[key]
-    else:
-        return None
-
-
-def get_xml_subelement(element: Element, key: str) -> Optional[str]:
-    """Get a subelement from an XML element
-
-    Returns:
-        None: if the subelement is missing or is set to "null"
-    """
-    sub_elem = element.find(key)
-    if sub_elem is not None and sub_elem.text and sub_elem.text.lower() != "null":
-        return sub_elem.text.strip("\n")
-    else:
-        return None
-
-
-def validate_input(
-    key: str,
-    doc_data: Dict[str, Any],
-    required: bool,
-    max_length: int,
-    truncate: bool,
-    func: Optional[Callable[[Any], str]] = None,
-) -> Optional[str]:
-    # This will need to be adjusted to use getattr once doc_data is a db model
-    value = doc_data.get(key)
-
-    if required and not value:
-        raise Exception(f"Value for {key} is required to generate document.")
-    elif not required and not value:
-        return None
-
-    if func is not None:
-        value_str = func(value)
-    else:
-        value_str = str(value)  # Everything else should be safe to convert to string
-
-    if len(value_str) > max_length:
-        if truncate:
-            return value_str[:max_length]
-        # Don't add the value itself, these can include SSNs and other PII
-        raise Exception(f"Value for {key} is longer than allowed length of {max_length}.")
-
-    return value_str
-
-
-def add_attributes(element: minidom.Element, attributes: Dict[str, str]) -> None:
-    for k, v in attributes.items():
-        value = v if v else "null"
-        element.setAttribute(k, value)
-
-
-def add_cdata_elements(
-    parent: minidom.Element,
-    document: minidom.Document,
-    elements: Dict[str, Any],
-    add_y_attribute: bool = True,
-) -> None:
-    for key, val in elements.items():
-        elem = document.createElement(key)
-        if add_y_attribute:
-            add_attributes(elem, {"Attribute": "Y"})
-        parent.appendChild(elem)
-
-        if val is None:
-            cdata = document.createCDATASection("null")
-        else:
-            # Anything in the CDATA tag is passed directly and markup ignored
-            # CTR wants DFML to send all values in as uppercase
-            cdata = document.createCDATASection(str(val).upper())
-        elem.appendChild(cdata)
-
-
-def create_next_batch_id(
-    now: datetime, file_type_descr: str, db_session: db.Session
-) -> CtrBatchIdentifier:
-    ctr_batch_id_pattern = Constants.BATCH_ID_TEMPLATE.format(
-        now.strftime("%m%d"), file_type_descr, "%"
-    )
-    max_batch_id_today = (
-        db_session.query(func.max(CtrBatchIdentifier.batch_counter))
-        .filter(
-            CtrBatchIdentifier.batch_date == now.date(),
-            CtrBatchIdentifier.ctr_batch_identifier.like(ctr_batch_id_pattern),
-        )
-        .scalar()
-    )
-
-    # Start batch counters at 10.
-    # Other agencies use suffixes 1-7 (for days of the week). We start our suffixes at 10 so we
-    # don't conflict with their batch IDs and have a logical starting point (10 instead of 8).
-    batch_counter = 10
-    if max_batch_id_today:
-        batch_counter = max_batch_id_today + 1
-
-    batch_id = Constants.BATCH_ID_TEMPLATE.format(
-        now.strftime("%m%d"), file_type_descr, batch_counter
-    )
-    ctr_batch_id = CtrBatchIdentifier(
-        ctr_batch_identifier_id=uuid.uuid4(),
-        ctr_batch_identifier=batch_id,
-        year=now.year,
-        batch_date=now.date(),
-        batch_counter=batch_counter,
-    )
-    db_session.add(ctr_batch_id)
-
-    return ctr_batch_id
-
-
-def create_batch_id_and_reference_file(
-    now: datetime, file_type: LkReferenceFileType, db_session: db.Session, ctr_outbound_path: str
-) -> Tuple[CtrBatchIdentifier, ReferenceFile, pathlib.Path]:
-    ctr_batch_id = create_next_batch_id(
-        now, file_type.reference_file_type_description or "", db_session
-    )
-
-    s3_path = os.path.join(ctr_outbound_path, Constants.S3_OUTBOUND_READY_DIR)
-    batch_filename = pathlib.Path(
-        Constants.BATCH_ID_TEMPLATE.format(
-            now.strftime("%Y%m%d"),
-            file_type.reference_file_type_description,
-            ctr_batch_id.batch_counter,
-        )
-    )
-    dir_path = os.path.join(s3_path, batch_filename)
-
-    ref_file = ReferenceFile(
-        reference_file_id=uuid.uuid4(),
-        file_location=dir_path,
-        reference_file_type_id=file_type.reference_file_type_id,
-        ctr_batch_identifier=ctr_batch_id,
-    )
-    db_session.add(ref_file)
-
-    return (ctr_batch_id, ref_file, batch_filename)
-
-
-def create_files(
-    directory: str, filename: str, dat_xml_document: minidom.Document, inf_dict: Dict[str, str]
-) -> Tuple[str, str]:
-    dat_filepath = os.path.join(directory, f"{filename}.DAT")
-    inf_filepath = os.path.join(directory, f"{filename}.INF")
-
-    with open(dat_filepath, "wb") as dat_file:
-        dat_file.write(dat_xml_document.toprettyxml(indent="   ", encoding="ISO-8859-1"))
-
-    with open(inf_filepath, "w") as inf_file:
-        for k, v in inf_dict.items():
-            inf_file.write(f"{k} = {v};\n")
-
-    return (dat_filepath, inf_filepath)
 
 
 def get_date_group_str_from_path(path: str) -> Optional[str]:
@@ -816,35 +566,6 @@ def group_s3_files_by_date(expected_file_names: List[str]) -> Dict[str, List[str
     return date_to_full_path
 
 
-def create_mmars_files_in_s3(
-    path: str,
-    filename: str,
-    dat_xml_document: minidom.Document,
-    inf_dict: Dict[str, str],
-    session: Optional[boto3.Session] = None,
-) -> Tuple[str, str]:
-    if not path.startswith("s3:"):
-        os.makedirs(path, exist_ok=True)
-
-    dat_filepath = os.path.join(path, f"{filename}.DAT")
-    inf_filepath = os.path.join(path, f"{filename}.INF")
-
-    config = botocore.client.Config(retries={"max_attempts": 10, "mode": "standard"})
-    transport_params = {
-        "session": session or boto3.Session(),
-        "resource_kwargs": {"config": config},
-    }
-
-    with smart_open.open(dat_filepath, "wb", transport_params=transport_params) as dat_file:
-        dat_file.write(dat_xml_document.toprettyxml(indent="   ", encoding="ISO-8859-1"))
-
-    with smart_open.open(inf_filepath, "w", transport_params=transport_params) as inf_file:
-        for k, v in inf_dict.items():
-            inf_file.write(f"{k} = {v};\n")
-
-    return (dat_filepath, inf_filepath)
-
-
 def datetime_str_to_date(datetime_str: Optional[str]) -> Optional[date]:
     if not datetime_str:
         return None
@@ -947,38 +668,6 @@ def move_file_and_update_ref_file(
     ref_file.file_location = destination
 
 
-def get_inf_data_from_reference_file(
-    reference: ReferenceFile, db_session: db.Session
-) -> Optional[Dict]:
-    ctr_id = reference.ctr_batch_identifier_id
-
-    try:
-        ctr_batch = (
-            db_session.query(CtrBatchIdentifier)
-            .filter(CtrBatchIdentifier.ctr_batch_identifier_id == ctr_id)
-            .one_or_none()
-        )
-
-        if ctr_batch and ctr_batch.inf_data:
-            # convert to Dict from sql alchemy JSON data type which has type Union[Dict, List]
-            return cast(Dict, ctr_batch.inf_data)
-    except SQLAlchemyError as e:
-        logger.exception(
-            "CtrBatchIdentifier query failed: %s",
-            type(e),
-            extra={"CtrBatchIdentifier.ctr_batch_identifier_id": ctr_id},
-        )
-    return None
-
-
-def get_inf_data_as_plain_text(inf_data: Dict) -> str:
-    text = ""
-    for key, value in inf_data.items():
-        text += f"{key} = {value}\n"
-
-    return text
-
-
 def get_mapped_claim_type(claim_type_str: str) -> LkClaimType:
     """Given a string from a Vendor Extract, return a LkClaimType
 
@@ -991,36 +680,6 @@ def get_mapped_claim_type(claim_type_str: str) -> LkClaimType:
         return ClaimType.MEDICAL_LEAVE
     else:
         raise ValueError("Unknown claim type")
-
-
-def get_fineos_vendor_customer_numbers_from_reference_file(reference: ReferenceFile) -> List[Dict]:
-    return [
-        {
-            "fineos_customer_number": emp.employee.fineos_customer_number,
-            "ctr_vendor_customer_code": emp.employee.ctr_vendor_customer_code,
-        }
-        for emp in reference.employees
-    ]
-
-
-def read_reference_file(ref_file: ReferenceFile, ref_file_type: LkReferenceFileType) -> str:
-    """ Reads a ReferenceFile
-
-    Must have a file_location and a matching file_type
-
-    Raises:
-        ValueError: if the file_type is wrong or if the file_location is missing
-        Also: various errors from actually reading the file
-    """
-
-    if ref_file.file_location is None:
-        raise ValueError(f"ReferenceFile {ref_file.reference_file_id} is missing a file_location")
-    elif ref_file.reference_file_type_id != ref_file_type.reference_file_type_id:
-        raise ValueError(
-            f"ReferenceFile {ref_file.reference_file_id} is not of the expected ReferenceFileType {ref_file_type.reference_file_type_description}"
-        )
-    else:
-        return file_util.read_file(ref_file.file_location)  # May raise file handling errors
 
 
 def move_reference_file(
@@ -1072,107 +731,6 @@ def move_reference_file(
                 "src_dir": src_dir,
                 "dest_dir": dest_dir,
             },
-        )
-        raise
-
-
-def get_payment_by_doc_id(
-    db_session: db.Session, doc_id: str
-) -> Tuple[Payment, CtrDocumentIdentifier]:
-    """Return the payment associated with the given DOC_ID"""
-    payment_ref_file = (
-        db_session.query(PaymentReferenceFile)
-        .join(PaymentReferenceFile.ctr_document_identifier)
-        .filter(CtrDocumentIdentifier.ctr_document_identifier == doc_id)
-        .first()
-    )
-    if payment_ref_file is None or payment_ref_file.payment is None:
-        raise ValueError("No payment was found")
-    else:
-        return (payment_ref_file.payment, payment_ref_file.ctr_document_identifier)
-
-
-def get_model_by_doc_id(
-    db_session: db.Session, doc_id: str
-) -> Tuple[Union[Employee, Payment], CtrDocumentIdentifier]:
-    """Return the payment or employee associated with the given DOC_ID"""
-    try:
-        return get_payment_by_doc_id(db_session, doc_id)
-    except ValueError:
-        # If no payment was found, look for an employee
-        employee_ref_file = (
-            db_session.query(EmployeeReferenceFile)
-            .join(EmployeeReferenceFile.ctr_document_identifier)
-            .filter(CtrDocumentIdentifier.ctr_document_identifier == doc_id)
-            .first()
-        )
-        if employee_ref_file is None or employee_ref_file.employee is None:
-            raise ValueError("No employee or payment was found")
-        else:
-            return (employee_ref_file.employee, employee_ref_file.ctr_document_identifier)
-
-
-def create_model_reference_file(
-    db_session: db.Session,
-    ref_file: ReferenceFile,
-    associated_model: Union[Payment, Employee],
-    ctr_document_identifier_model: CtrDocumentIdentifier,
-) -> None:
-    """Creates a PaymentReferenceFile or EmployeeReferenceFile for a Payment or Employee
-
-    Raises:
-        SQLAlchemyError: if there is an issue creating the db record
-    """
-    model_ref_file: Union[EmployeeReferenceFile, PaymentReferenceFile]
-    try:
-        if isinstance(associated_model, Payment):
-            model_ref_file = PaymentReferenceFile(
-                payment=associated_model,
-                reference_file=ref_file,
-                ctr_document_identifier=ctr_document_identifier_model,
-            )
-        elif isinstance(associated_model, Employee):
-            model_ref_file = EmployeeReferenceFile(
-                employee=associated_model,
-                reference_file=ref_file,
-                ctr_document_identifier=ctr_document_identifier_model,
-            )
-
-        db_session.add(model_ref_file)
-    except SQLAlchemyError:
-        # It's possible for SQLAlchemy to raise an IntegrityError if we try to
-        # add a second PaymentReferenceFile/EmployeeReferenceFile with the
-        # same payment + reference_file combination. IntegrityErrors blow up
-        # the db transaction and require a rollback. If we rollback, we've
-        # broken all processing.
-        db_session.rollback()
-        logger.exception(
-            "Unable to create a <Model>ReferenceFile",
-            extra={
-                "file_location": ref_file.file_location,
-                "ctr_document_identifier": ctr_document_identifier_model.ctr_document_identifier,
-            },
-        )
-        raise
-
-
-def get_reference_file(source_filepath: str, db_session: db.Session) -> Optional[ReferenceFile]:
-    """Returns a ReferenceFile for a given file location
-
-    Raises:
-        MultipleResultsFound: if multiple ReferenceFiles have the same file_location
-                              This should not happen. The db is broken.
-    """
-    try:
-        return (
-            db_session.query(ReferenceFile)
-            .filter(ReferenceFile.file_location == source_filepath)
-            .one_or_none()
-        )
-    except MultipleResultsFound:
-        logger.exception(
-            f"Found more than one ReferenceFile with the same file_location: {source_filepath}",
-            extra={"source_filepath": source_filepath},
         )
         raise
 
@@ -1281,3 +839,115 @@ def get_transaction_status_date(payment: Payment) -> date:
 
     # Otherwise the transaction status date is calculated using the current time.
     return get_now().date()
+
+
+def filter_dict(dict: Dict[str, Any], allowed_keys: Set[str]) -> Dict[str, Any]:
+    """
+    Filter a dictionary to a specified set of allowed keys.
+    If the key isn't present, will not cause an issue (ie. when we delete columns in the DB)
+    """
+    new_dict = {}
+    for k, v in dict.items():
+        if k in allowed_keys:
+            new_dict[k] = v
+
+    return new_dict
+
+
+employee_audit_log_keys = set(
+    [
+        "employee_id",
+        "tax_identifier_id",
+        "first_name",
+        "last_name",
+        "date_of_birth",
+        "fineos_customer_number",
+        "latest_import_log_id",
+        "created_at",
+        "updated_at",
+    ]
+)
+employer_audit_log_keys = set(
+    [
+        "employer_id",
+        "employer_fein",
+        "employer_name",
+        "dor_updated_date",
+        "latest_import_log_id",
+        "fineos_employer_id",
+        "created_at",
+        "updated_at",
+    ]
+)
+
+
+def create_payment_log(
+    payment: Payment,
+    import_log_id: Optional[int],
+    db_session: db.Session,
+    additional_details: Optional[Dict[str, Any]] = None,
+) -> None:
+    """
+    Create a log in the DB for information about a payment at a particular point
+    in the processing. Automatically adds a snapshot of
+    employee/employer/claim/absence period/payment check
+    """
+    absence_period = payment.leave_request
+    claim = payment.claim
+
+    snapshot = {}
+    if absence_period:
+        snapshot["absence_period"] = absence_period.for_json()
+    # When we refactor claim to be fetched from absence period, change this
+    # to be in the above if statement
+    claim = payment.claim
+    if claim:
+        snapshot["claim"] = claim.for_json()
+
+        employee = claim.employee
+        if employee:
+            employee_json = employee.for_json()
+            snapshot["employee"] = filter_dict(employee_json, employee_audit_log_keys)
+
+        employer = claim.employer
+        if employer:
+            employer_json = employer.for_json()
+            snapshot["employer"] = filter_dict(employer_json, employer_audit_log_keys)
+
+    check_details = payment.check
+    if check_details:
+        snapshot["payment_check"] = check_details.for_json()
+
+    audit_details = {}
+    audit_details["snapshot"] = snapshot
+    if additional_details:
+        audit_details.update(additional_details)
+
+    payment_log = PaymentLog(payment=payment, import_log_id=import_log_id, details=audit_details)
+    db_session.add(payment_log)
+
+
+def create_success_file(start_time: datetime, process_name: str) -> None:
+    """
+    Create a file that indicates the ECS process was successful. Will
+    be put in a folder for the date the processing started, but
+    the file will be timestamped with the time it completed.
+
+    s3://bucket/reports/processed/{start_date}/{completion_timestamp}-{process_name}.SUCCESS
+    """
+    s3_config = payments_config.get_s3_config()
+
+    end_time = get_now()
+    timestamp_prefix = end_time.strftime("%Y-%m-%d-%H-%M-%S")
+    success_file_name = f"{timestamp_prefix}-{process_name}.SUCCESS"
+
+    archive_path = s3_config.pfml_error_reports_archive_path
+    output_path = build_archive_path(
+        archive_path, Constants.S3_INBOUND_PROCESSED_DIR, success_file_name, current_time=start_time
+    )
+
+    # What is the easiest way to create an empty file to upload?
+    with file_util.write_file(output_path) as success_file:
+        success_file.write("SUCCESS")
+
+    logger.info("Creating success file at %s", output_path)

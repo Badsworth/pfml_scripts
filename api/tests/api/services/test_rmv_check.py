@@ -45,6 +45,7 @@ def matching_check_data():
         street2=rmv_check_request.residential_address_line_2,
         city=rmv_check_request.residential_address_city,
         zip=rmv_check_request.residential_address_zip_code,
+        sex="F",
     )
 
     return (rmv_check_request, license_inquiry_response)

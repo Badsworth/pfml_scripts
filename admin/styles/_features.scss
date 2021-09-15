@@ -1,0 +1,209 @@
+// Features page specific styles
+
+.features-section {
+  background: #fff;
+  border: 1px solid hsla(220, 13%, 91%, 1);
+  border-radius: 0.6;
+  box-shadow: $Box-Shadow;
+  margin-top: 1.146em;
+}
+
+.features-section__header {
+  background-color: $Color-GraniteGray-50;
+  border-radius: 0.6em 0.6em 0 0;
+}
+
+.features-section__heading {
+  font-size: 0.857em;
+  font-weight: 700;
+}
+
+.features-section__heading--left,
+.features-section__heading--right {
+  display: inline-block;
+  padding: 0.286em 1.714em;
+  width: 55%;
+}
+
+.features-section__heading--right {
+  padding: 0.286em 1.714em 0.6em 0.857em;
+  width: 45%;
+}
+
+.features-row {
+  border-top: 1px solid hsla(220, 13%, 91%, 1);
+  height: 100%;
+  padding: 2.286em;
+}
+
+.features-row__content {
+  display: inline-block;
+  padding-right: 4em;
+  vertical-align: middle;
+  width: 56%;
+}
+
+.features-row__section1 {
+  margin: 2em 0.71em;
+}
+
+.features-row__title {
+  display: inline-block;
+  font-size: 1em;
+  margin-bottom: 0;
+  margin-left: 1.146em;
+}
+
+.features-row__description {
+  color: $Color-GraniteGray-400;
+  font-size: 0.857em;
+  line-height: 1em;
+  margin: 0.6em 1.714em;
+}
+
+.features-row__badges {
+  margin-left: 1.714em;
+  margin-top: 1.146em;
+}
+
+.features-badge {
+  border: 1px solid #000;
+  border-radius: 10px;
+  margin-right: 0.6em;
+  padding: 0.143em 0.6em;
+}
+
+.features-badge--employer {
+  background-color: $Color-BayBlue-50;
+  border: 1px solid $Color-BayBlue-300;
+}
+
+.features-badge--employee {
+  background-color: $Color-BerkshiresGreen-50;
+  border: 1px solid $Color-BerkshiresGreen-300;
+}
+
+.features-badge--leave-admin {
+  background: $Color-DucklingYellow-50;
+  border: 1px solid $Color-DucklingYellow-300;
+}
+
+.features-flagname {
+  display: inline-block;
+  vertical-align: 10%;
+  width: 27%;
+}
+
+.features-flagname__text {
+  background: hsla(0, 0%, 93%, 1);
+  border-radius: 0.429em;
+  font-size: 0.857em;
+  padding: 0.286em 0.6em;
+}
+
+.features-status {
+  display: inline-block;
+  float: right;
+  padding-right: 2.286em;
+}
+
+.features__menu-container {
+  display: inline-block;
+  margin: 0 1.146em;
+}
+
+.features__toggle-container {
+  display: inline-block;
+  margin: 0 2.286em;
+  max-width: 33%;
+}
+/* Navigation */
+.menu {
+  padding: 0 0 0.82em;
+}
+
+.menu__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.menu__link,
+.settings__link {
+  border-left: solid 0.29em transparent;
+  color: $Color-RevolutionGray;
+  display: block;
+  padding: 1.18em 1.29em 1.18em 3.14em;
+  position: relative;
+  text-decoration: none;
+  transition: all 0.2s ease 0s;
+}
+
+.menu__link::before,
+.settings__link::before {
+  @include IconFontProps;
+  display: block;
+  font-size: 1.14em;
+  left: 0.85em;
+  position: absolute;
+  top: 1em;
+}
+
+.menu__link:hover,
+.menu__link:focus,
+.menu__link--active,
+.settings__link:hover,
+.settings__link:focus,
+.settings__link--active {
+  background: $Color-BerkshiresGreen-100;
+  border-color: $Color-BerkshiresGreen-600;
+}
+
+.menu__link--dashboard::before {
+  content: $IconHome;
+}
+
+.menu__link--user-lookup::before {
+  content: $IconUsers;
+}
+
+.menu__link--maintenance::before {
+  content: $IconAlert1;
+}
+
+.menu__link--features::before {
+  content: $IconFlag;
+}
+
+/* Settings */
+.settings {
+  border-top: 1px solid #9cc2ab;
+  flex: 1 1 auto;
+  padding: 0.82em 0 0;
+}
+
+.settings__list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.settings__link--settings::before {
+  content: $IconSettings;
+}
+
+.settings__link--help::before {
+  content: $IconHelp;
+}
+
+/* Environment Flag */
+.environment {
+  font-size: 0.86em;
+  line-height: 1.5;
+  padding: 0.71em 1.28em 1.48em;
+}
+
+.environment__label {
+  font-weight: 700;
+  text-transform: uppercase;
+}

@@ -1,18 +1,18 @@
 import { DocumentUploadRequest } from "_api";
-import { format, addMonths, addDays, startOfWeek, subDays } from "date-fns";
-import { config } from "./common";
+import { format, addMonths, addDays } from "date-fns";
+import { config, getFineosBaseUrl } from "./common";
+import { Credentials } from "../../src/types";
 /**
  * This function is used to fetch and set the proper cookies for access Fineos UAT
  *
  * Note: Only used for UAT enviornment
  */
-function SSO(): void {
+function SSO(credentials?: Credentials): void {
   cy.clearCookies();
   // Perform SSO login in a task. We can't visit other domains in Cypress.
-  cy.task("completeSSOLoginFineos").then((cookiesJson) => {
-    const deserializedCookies: Record<string, string>[] = JSON.parse(
-      cookiesJson
-    );
+  cy.task("completeSSOLoginFineos", credentials).then((cookiesJson) => {
+    const deserializedCookies: Record<string, string>[] =
+      JSON.parse(cookiesJson);
     // Filter out any cookies that will fail to be set. Those are ones where secure: false
     // and sameSite: "None"
     const noSecure = deserializedCookies.filter(
@@ -24,13 +24,25 @@ function SSO(): void {
   });
 }
 
-export function before(): void {
-  // Block new-relic.js outright due to issues with Cypress networking code.
-  // Without this block, test retries on the portal error out due to fetch() errors.
-  cy.intercept("https://js-agent.newrelic.com/*", (req) => {
-    req.reply("console.log('Fake New Relic script loaded');");
-  });
-
+/**
+ * Sets up Cypress to work with fineos. This includes:
+ * 1. Intercepting known errors and error pages.
+ * 2. Handling authentication and SSO Login.
+ * 3. Setting the baseURL
+ * 4. Navigating to fineos home page.
+ * @param credentials you can override the credentials used for authenticating to fineos,
+ * an example use case would be testing secure actions in `uat` environment,
+ * where we need to use 2 different fineos accounts.
+ * @example
+ * fineos.before() // set's up fineos with default credentials.
+ * fineos.before({username:config('SSO2_USERNAME'), password: config('SSO2_PASSWORD')})
+ * // set's up login for the second SSO account
+ */
+export function before(credentials?: Credentials): void {
+  Cypress.config(
+    "baseUrl",
+    getFineosBaseUrl(credentials?.username, credentials?.password)
+  );
   // Fineos error pages have been found to cause test crashes when rendered. This is very hard to debug, as Cypress
   // crashes with no warning and removes the entire run history, so when a Fineos error page is detected, we replace the
   // page with an error page and capture the real response to a file for future debugging.
@@ -51,9 +63,9 @@ export function before(): void {
       //   })
       // );
 
-      // We need to extract this obsructive logic included in a FINEOS error page and replace it with a setTimeout to throw an error letting us know this page was encountered
+      // We need to extract this obstructive logic included in a FINEOS error page and replace it with a setTimeout to throw an error letting us know this page was encountered
       // Using the "modifyObstuctiveCode" property in the cypress.json was enough to get the error page to display but it was not enough to mitigate the test from hanging.
-      // This approach behaves in a much more predicatble manner (Error thrown)
+      // This approach behaves in a much more predictable manner (Error thrown)
       const body: string = res.body.replace(
         "if (top != self) { top.location=self.location }",
         "window.setTimeout(function _() { throw new Error('A FINEOS error page was detected during this test. An error is being thrown in order to prevent Cypress from crashing.') }, 500)\n"
@@ -68,15 +80,16 @@ export function before(): void {
   ).as("ajaxRender");
 
   if (config("ENVIRONMENT") === "uat") {
-    SSO();
+    SSO(credentials);
   }
+  cy.visit("/");
 }
 
 export function visitClaim(claimId: string): void {
   cy.get('a[aria-label="Cases"]').click();
   onTab("Case");
-  cy.labelled("Case Number").type(claimId);
-  cy.labelled("Case Type").select("Absence Case");
+  cy.findByLabelText("Case Number").type(claimId);
+  cy.findByLabelText("Case Type").select("Absence Case");
   cy.get('input[type="submit"][value="Search"]').click();
   assertAbsenceCaseNumber(claimId);
 }
@@ -121,7 +134,7 @@ export function onTab(label: string): void {
       return; // We're already on the correct tab.
     }
     // Here we are splitting the action and assertion, because the tab class can be added after a re-render.
-    cy.contains(".TabStrip td", label).click();
+    cy.contains(".TabStrip td", label).click({ force: true });
     waitForAjaxComplete();
     cy.contains(".TabStrip td", label).should("have.class", "TabOn");
   });
@@ -153,7 +166,7 @@ export function wait(): void {
 }
 
 export function waitForAjaxComplete(): void {
-  cy.window()
+  cy.window({ timeout: 30000 })
     .invoke("axGetAjaxQueueManager")
     .should((q) => {
       const inFlight = Object.values(q.requests).filter(
@@ -175,19 +188,19 @@ export function addBondingLeaveFlow(timeStamp: Date): void {
   cy.wait("@ajaxRender");
   cy.wait(200);
   cy.get(".popup-container").within(() => {
-    cy.labelled("Absence status").select("Known");
+    cy.findByLabelText("Absence status").select("Known");
     cy.wait("@ajaxRender");
     cy.wait(200);
     const startDate = addMonths(timeStamp, 2);
     const startDateFormatted = format(startDate, "MM/dd/yyyy");
     const endDateFormatted = format(addDays(startDate, 2), "MM/dd/yyyy");
 
-    cy.labelled("Absence start date").type(
+    cy.findByLabelText("Absence start date").type(
       `{selectall}{backspace}${startDateFormatted}{enter}`
     );
     cy.wait("@ajaxRender");
     cy.wait(200);
-    cy.labelled("Absence end date").type(
+    cy.findByLabelText("Absence end date").type(
       `{selectall}{backspace}${endDateFormatted}{enter}`
     );
     cy.wait("@ajaxRender");
@@ -201,17 +214,17 @@ export function addBondingLeaveFlow(timeStamp: Date): void {
   cy.wait(200);
   // Work Pattern
   cy.get("input[type='checkbox'][id*='standardWorkWeek_CHECKBOX']").click();
-  cy.labelled("Pattern Status").select("Known");
+  cy.findByLabelText("Pattern Status").select("Known");
   clickBottomWidgetButton("Next");
   cy.wait("@ajaxRender");
   cy.wait(200);
   // Complete Details
-  cy.labelled("Primary Relationship to Employee").select("Child");
+  cy.findByLabelText("Primary Relationship to Employee").select("Child");
   cy.wait("@ajaxRender");
   cy.wait(200);
   cy.wait("@ajaxRender");
   cy.wait(200);
-  cy.labelled("Qualifier 1").select("Biological");
+  cy.findByLabelText("Qualifier 1").select("Biological");
   clickBottomWidgetButton("Next");
   // Additional Info
   clickBottomWidgetButton("Next");
@@ -235,79 +248,6 @@ export function findOtherLeaveEForm(claimNumber: string): void {
   onTab("Documents");
   assertHasDocument("Other Leaves");
   cy.wait(200);
-}
-
-/**
- * Adding a  Historical Absence case, assumes being navigated to `Absence Hub` tab on the Claim page.
- */
-export function addHistoricalAbsenceCase(): void {
-  cy.contains("Options").click();
-  cy.contains("Add Historical Absence").click();
-  cy.findByLabelText("Absence relates to").select("Employee");
-  waitForAjaxComplete();
-  cy.findByLabelText("Absence Reason").select(
-    "Serious Health Condition - Employee"
-  );
-  waitForAjaxComplete();
-  cy.findByLabelText("Qualifier 1").select("Not Work Related");
-  waitForAjaxComplete();
-  cy.findByLabelText("Qualifier 2").select("Sickness");
-  waitForAjaxComplete();
-  cy.contains("div", "timeOffHistoricalAbsencePeriodsListviewWidget")
-    .find("input")
-    .click();
-  const mostRecentSunday = startOfWeek(new Date());
-  const startDate = subDays(mostRecentSunday, 13);
-  const startDateFormatted = format(startDate, "MM/dd/yyyy");
-  const endDateFormatted = format(addDays(startDate, 4), "MM/dd/yyyy");
-  // Fill in end date
-  cy.findByLabelText("End Date").type(
-    `{selectall}{backspace}${endDateFormatted}{enter}`
-  );
-  wait();
-  cy.wait(200);
-  // Fill start date
-  cy.findByLabelText("Start Date").type(
-    `{selectall}{backspace}${startDateFormatted}{enter}`
-  );
-  wait();
-  cy.wait(200);
-  // First all day checkbox
-  cy.get(
-    'span[id^="historicalTimeOffAbsencePeriodDetailsWidget"][id$="startDateAllDay_WRAPPER"]'
-  ).click();
-  wait();
-  cy.wait(200);
-  // Second all day checkbox
-  cy.get(
-    'span[id^="historicalTimeOffAbsencePeriodDetailsWidget"][id$="endDateAllDay_WRAPPER"]'
-  ).click();
-  wait();
-  cy.wait(200);
-
-  // Click on Okay to exit popup window
-  cy.get(
-    'input[id^="addHistoricalTimeOffAbsencePeriodPopupWidget"][id$="okButtonBean"]'
-  ).click({ force: true });
-  // Select Leave Plan
-  cy.contains("div", "historicalAbsenceSelectedLeavePlansListViewWidget")
-    .find("input")
-    .click();
-  wait();
-  cy.get(
-    "input[name='historicalCasePlanSelectionListviewWidget_un0_Checkbox_RowId_0_CHECKBOX']"
-  ).click();
-  clickBottomWidgetButton();
-  clickBottomWidgetButton();
-  // Click on Claimaints name to view their cases
-  cy.get(
-    'a[id="com.fineos.frontoffice.casemanager.casekeyinformation.CaseKeyInfoBar_un8_KeyInfoBarLink_0"]'
-  ).click();
-  onTab("Cases");
-  cy.get(".ListRowSelected > td").should(($td) => {
-    expect($td.eq(4)).to.contain("Absence Historical Case");
-  });
-  cy.get('input[title="Open"]').click();
 }
 
 /**Clicks on the 'Next' or 'Previous' button to move to the next/previous step during the intake process or recording actual leave */
@@ -342,4 +282,111 @@ export function getFixtureDocumentName(
     default:
       return "HCP" as const;
   }
+}
+
+/**
+ * Asserts there's an error message displayed which matches a given text.
+ * @param message text of the message
+ * @example
+ * fineos.assertErrorMessage("Hours worked per week must be entered");
+ */
+export function assertErrorMessage(message: string): void {
+  cy.get(`#page_messages_container`).should("contain.text", message);
+}
+
+/**
+ * Selects the folder at the end of the path, opening subfolders along the way as needed.
+ * @param path path leading to the folder
+ * @example
+ * selectFolder(["State of Mass", "eForms"])
+ */
+export function selectFolder(path: string[]): void {
+  const log = Cypress.log({
+    displayName: "SELECT FOLDER",
+    message: [`Opening path: ${JSON.stringify(path)}`],
+    // @ts-ignore
+    autoEnd: false,
+  });
+  log.snapshot("before");
+  // Set a helper, since we need to reselect the whole tree widget often.
+  const withinTree = (
+    cb: () => unknown
+  ): Cypress.Chainable<JQuery<HTMLElement>> =>
+    cy
+      .get(`#DocTypeFolderTreeviewWidget .TreeRootContainer`, { log: false })
+      .within(cb);
+
+  path.forEach((subfolder, i) => {
+    if (i === path.length - 1) {
+      withinTree(() =>
+        cy.contains("#nodeElement", subfolder, { log: false }).then((el) => {
+          if (el.parent().hasClass("TreeNodeSelected")) return;
+          cy.wrap(el, { log: false }).click({ log: false });
+          waitForAjaxComplete();
+        })
+      );
+      withinTree(() => {
+        cy.contains("#nodeElement", subfolder, { log: false })
+          .parent({ log: false })
+          .should("have.class", "TreeNodeSelected", { log: false });
+      });
+      return;
+    }
+    withinTree(() =>
+      // Click on the handle to expand the subfolder.
+      cy
+        .contains("div.TreeNodeContainer", subfolder, { log: false })
+        .find(`#nodeHandle`, { log: false })
+        .then((el) => {
+          if (el.hasClass("TreeNodeHandleExpanded")) return;
+          cy.wrap(el, { log: false }).click({ log: false });
+          waitForAjaxComplete();
+        })
+    );
+    withinTree(() =>
+      cy
+        .contains("div.TreeNodeContainer", subfolder, { log: false })
+        .find(`#nodeHandle`, { log: false })
+        .should("have.class", "TreeNodeHandleExpanded", { log: false })
+    );
+  });
+  log.snapshot("after");
+  log.end();
+}
+
+/**
+ * Opens the folder at the end of a given path, checks if contains given document(s)
+ * @param documentName a string or an array of strings describing documents you expect to find.
+ * @param path path to folder containing the documents as an array of strings.
+ * @example
+ * const certificationDocuments = ["Own serious health condition form", "Pregnancy/Maternity form"]
+ * assertDocumentsInFolder(certificationDocuments, ["State of Mass", "Inbound Documents"]);
+ * //Opens folder located at root/"State of Mass"/"Inbound Documents"
+ */
+export function assertDocumentsInFolder(
+  documentName: string | string[],
+  path: string[]
+): void {
+  selectFolder(path);
+  if (Array.isArray(documentName))
+    return documentName.forEach((name) =>
+      cy.get("#DocumentTypeListviewWidget").should("contain.text", name)
+    );
+  cy.get("#DocumentTypeListviewWidget").should("contain.text", documentName);
+}
+
+/**
+ * Returns claim adjudication status wrapped in Cypress.Chainable.
+ * @returns Adjudication status of the claim
+ * @example
+ * fineos.getClaimStatus().then((status) => {
+ *  if (status === "Approved"){
+ *    //...your code here
+ *  }
+ * }
+ */
+export function getClaimStatus(): Cypress.Chainable<
+  "Adjudication" | "Approved" | "Declined" | "Closed" | "In Review"
+> {
+  return cy.get(".key-info-bar .status dd").invoke("text");
 }

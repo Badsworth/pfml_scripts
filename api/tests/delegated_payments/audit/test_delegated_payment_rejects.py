@@ -20,7 +20,10 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.db.models.factories import ClaimFactory, PaymentFactory
 from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
-from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import PaymentAuditCSV
+from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
+    PAYMENT_AUDIT_CSV_HEADERS,
+    PaymentAuditCSV,
+)
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
     PaymentAuditData,
     build_audit_report_row,
@@ -28,6 +31,7 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
 from massgov.pfml.delegated_payments.audit.delegated_payment_rejects import (
     ACCEPTED_OUTCOME,
     ACCEPTED_STATE,
+    AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS,
     NOT_SAMPLED_PAYMENT_NEXT_STATE_BY_CURRENT_STATE,
     NOT_SAMPLED_PAYMENT_OUTCOME_BY_CURRENT_STATE,
     NOT_SAMPLED_STATE_TRANSITIONS,
@@ -59,7 +63,9 @@ def test_parse_payment_rejects_file(tmp_path, test_db_session, payment_rejects_s
         payments_util.get_now().strftime("%Y-%m-%d"),
     )
 
-    file_path = os.path.join(expected_rejects_folder, "2021-01-15-12-00-00-Payment-Rejects.csv")
+    file_path = os.path.join(
+        expected_rejects_folder, "2021-01-15-12-00-00-Payment-Audit-Report-Response.csv"
+    )
     payment_rejects_rows: List[PaymentAuditCSV] = payment_rejects_step.parse_payment_rejects_file(
         file_path
     )
@@ -78,6 +84,49 @@ def test_parse_payment_rejects_file(tmp_path, test_db_session, payment_rejects_s
             rejects_count += 1
 
     assert rejects_count > 0
+
+
+@freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time
+def test_parse_payment_rejects_file_missing_columns(
+    tmp_path, test_db_session, payment_rejects_step
+):
+    # Test that if columns are missing during parsing,
+    # it won't throw any errors. Required columns
+    # are validated later in processing (See: test_rejects_column_validation)
+    # This avoids issues if we create a new column and
+    # the deployment happens between the file generation
+    # in ECS task #1, and the parsing in ECS task #2
+    expected_rejects_folder = os.path.join(
+        str(tmp_path),
+        payments_util.Constants.S3_OUTBOUND_SENT_DIR,
+        payments_util.get_now().strftime("%Y-%m-%d"),
+    )
+
+    file_path = os.path.join(
+        expected_rejects_folder, "2021-01-15-12-00-00-Payment-Audit-Report-Response.csv"
+    )
+    # Create a partial output, only putting two real column and a fake (which gets ignored)
+    with file_util.write_file(file_path) as output_file:
+        output_file.write(
+            f"{PAYMENT_AUDIT_CSV_HEADERS.pfml_payment_id},{PAYMENT_AUDIT_CSV_HEADERS.leave_type},FAKE_COLUMN_HEADER\n"
+        )
+        output_file.write("1,1,1\n")
+        output_file.write("2,2,2\n")
+        output_file.write("3,3,3")
+
+    payment_rejects_rows: List[PaymentAuditCSV] = payment_rejects_step.parse_payment_rejects_file(
+        file_path
+    )
+    assert len(payment_rejects_rows) == 3
+    for row in payment_rejects_rows:
+        assert row.pfml_payment_id is not None
+        assert row.pfml_payment_id == row.leave_type
+
+        # Just verify a few others aren't set
+        assert row.rejected_by_program_integrity is None
+        assert row.skipped_by_program_integrity is None
+        assert row.max_weekly_benefits_details is None
+        assert row.dua_dia_reduction_details is None
 
 
 def test_rejects_column_validation(test_db_session, payment_rejects_step):
@@ -99,7 +148,9 @@ def test_rejects_column_validation(test_db_session, payment_rejects_step):
         previously_errored_payment_count=1,
         previously_skipped_payment_count=0,
     )
-    payment_rejects_row = build_audit_report_row(payment_audit_data)
+    payment_rejects_row = build_audit_report_row(
+        payment_audit_data, payments_util.get_now(), test_db_session
+    )
 
     payment_rejects_row.pfml_payment_id = None
     payment_rejects_row.rejected_by_program_integrity = "Y"
@@ -163,7 +214,9 @@ def test_valid_combination_of_reject_and_skip(
         previously_skipped_payment_count=0,
     )
 
-    payment_rejects_row = build_audit_report_row(payment_audit_data)
+    payment_rejects_row = build_audit_report_row(
+        payment_audit_data, payments_util.get_now(), test_db_session
+    )
     payment_rejects_row.rejected_by_program_integrity = rejected_by_program_integrity
     payment_rejects_row.skipped_by_program_integrity = skipped_by_program_integrity
 
@@ -321,6 +374,62 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
     )
 
 
+def test_rejected_writeback_status_from_reject_notes(test_db_session, payment_rejects_step):
+    test_cases = []
+
+    for (reject_note, expected_status) in AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS.items():
+        test_cases.append(
+            {"reject_notes": reject_note, "expected_status": expected_status,}
+        )
+
+    # Close matches
+    test_cases.append(
+        {
+            "reject_notes": "Dua Additional Income",
+            "expected_status": FineosWritebackTransactionStatus.DUA_ADDITIONAL_INCOME,
+        }
+    )
+
+    test_cases.append(
+        {
+            "reject_notes": "DUA Additional Income.",
+            "expected_status": FineosWritebackTransactionStatus.DUA_ADDITIONAL_INCOME,
+        }
+    )
+
+    # No matches
+    test_cases.append(
+        {
+            "reject_notes": None,
+            "expected_status": FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION,
+        }
+    )
+    test_cases.append(
+        {
+            "reject_notes": "",
+            "expected_status": FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION,
+        }
+    )
+    test_cases.append(
+        {
+            "reject_notes": "Unknown reject status note",
+            "expected_status": FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION,
+        }
+    )
+
+    for test_case in test_cases:
+        payment_1 = PaymentFactory.create()
+
+        writeback_status = payment_rejects_step.get_rejected_payment_writeback_status(
+            payment_1, test_case["reject_notes"]
+        )
+
+        assert (
+            writeback_status.transaction_status_id
+            == test_case["expected_status"].transaction_status_id
+        )
+
+
 def test_transition_not_sampled_payment_audit_pending_states(test_db_session, payment_rejects_step):
     # create payments with pending states
     payment_to_pending_state = {}
@@ -357,8 +466,37 @@ def test_transition_not_sampled_payment_audit_pending_states(test_db_session, pa
         assert payment_state_log.outcome["message"] == outcome["message"]
 
 
+def _generate_rejects_file(payment_rejects_received_folder_path, file_name, db_session):
+    # generate the rejects file
+    audit_scenario_data = generate_payment_audit_data_set_and_rejects_file(
+        DEFAULT_AUDIT_SCENARIO_DATA_SET,
+        payment_rejects_received_folder_path,
+        db_session,
+        1,
+        file_name,
+    )
+    # The above method creates the audit report in a dated folder
+    # as it uses the audit report generation logic. Move it out of that folder
+    # as we don't expect it to be there when we are processing reject files.
+    dated_input_folder = os.path.join(
+        payment_rejects_received_folder_path,
+        payments_util.Constants.S3_OUTBOUND_SENT_DIR,
+        payments_util.get_now().strftime("%Y-%m-%d"),
+    )
+    files = file_util.list_files(dated_input_folder)
+    assert len(files) == 1
+    file_util.rename_file(
+        os.path.join(dated_input_folder, files[0]),
+        os.path.join(payment_rejects_received_folder_path, files[0]),
+    )
+
+    return audit_scenario_data
+
+
 @freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time
-def test_process_rejects(test_db_session, payment_rejects_step, monkeypatch):
+def test_process_rejects(
+    test_db_session, test_db_other_session, initialize_factories_session, monkeypatch
+):
     # setup folder path configs
     payment_rejects_archive_folder_path = str(tempfile.mkdtemp())
     payment_rejects_received_folder_path = os.path.join(
@@ -370,26 +508,12 @@ def test_process_rejects(test_db_session, payment_rejects_step, monkeypatch):
 
     monkeypatch.setenv("PFML_PAYMENT_REJECTS_ARCHIVE_PATH", payment_rejects_archive_folder_path)
 
-    date_folder = "2021-01-15"
+    date_folder = payments_util.get_now().strftime("%Y-%m-%d")
     timestamp_file_prefix = "2021-01-15-12-00-00"
 
     # generate the rejects file
-    audit_scenario_data = generate_payment_audit_data_set_and_rejects_file(
-        DEFAULT_AUDIT_SCENARIO_DATA_SET, payment_rejects_received_folder_path, test_db_session, 1
-    )
-    # The above method creates the audit report in a dated folder
-    # as it uses the audit report generation logic. Move it out of that folder
-    # as we don't expect it to be there when we are processing reject files.
-    dated_input_folder = os.path.join(
-        payment_rejects_received_folder_path,
-        payments_util.Constants.S3_OUTBOUND_SENT_DIR,
-        date_folder,
-    )
-    files = file_util.list_files(dated_input_folder)
-    assert len(files) == 1
-    file_util.rename_file(
-        os.path.join(dated_input_folder, files[0]),
-        os.path.join(payment_rejects_received_folder_path, files[0]),
+    audit_scenario_data = _generate_rejects_file(
+        payment_rejects_received_folder_path, "Payment-Audit-Report-Response", test_db_session
     )
 
     # Create a few more payments in pending state (not sampled)
@@ -402,6 +526,9 @@ def test_process_rejects(test_db_session, payment_rejects_step, monkeypatch):
     )
 
     # process rejects
+    payment_rejects_step = PaymentRejectsStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
+    )
     payment_rejects_step.process_rejects()
 
     # check some are rejected
@@ -425,21 +552,52 @@ def test_process_rejects(test_db_session, payment_rejects_step, monkeypatch):
     expected_processed_folder_path = os.path.join(
         payment_rejects_processed_folder_path, date_folder
     )
-    rejects_file_name = f"{timestamp_file_prefix}-Payment-Rejects.csv"
+    rejects_file_name = f"{timestamp_file_prefix}-Payment-Audit-Report-Response.csv"
     assert_files(expected_processed_folder_path, [rejects_file_name])
 
     # check reference files created for proccessed reject file
-    assert (
-        test_db_session.query(ReferenceFile)
-        .filter(
-            ReferenceFile.file_location
-            == str(os.path.join(expected_processed_folder_path, rejects_file_name)),
-            ReferenceFile.reference_file_type_id
-            == ReferenceFileType.DELEGATED_PAYMENT_REJECTS.reference_file_type_id,
-        )
-        .one_or_none()
-        is not None
+    assert_reference_file(expected_processed_folder_path, [rejects_file_name], test_db_session)
+
+
+@freeze_time("2021-01-15 12:00:00", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_rejects_error(
+    test_db_session, test_db_other_session, initialize_factories_session, monkeypatch
+):
+    # setup folder path configs
+    payment_rejects_archive_folder_path = str(tempfile.mkdtemp())
+    payment_rejects_received_folder_path = os.path.join(
+        payment_rejects_archive_folder_path, "received"
     )
+    payment_rejects_errored_folder_path = os.path.join(payment_rejects_archive_folder_path, "error")
+
+    monkeypatch.setenv("PFML_PAYMENT_REJECTS_ARCHIVE_PATH", payment_rejects_archive_folder_path)
+
+    # generate two rejects files to trigger a processing error
+    _generate_rejects_file(
+        payment_rejects_received_folder_path, "Payment-Audit-Report-Response-1", test_db_session
+    )
+    _generate_rejects_file(
+        payment_rejects_received_folder_path, "Payment-Audit-Report-Response-2", test_db_session
+    )
+
+    current_timestamp = payments_util.get_now().strftime("%Y-%m-%d-%H-%M-%S")
+    rejects_file_name_1 = f"{current_timestamp}-Payment-Audit-Report-Response-1.csv"
+    rejects_file_name_2 = f"{current_timestamp}-Payment-Audit-Report-Response-2.csv"
+
+    payment_rejects_step = PaymentRejectsStep(
+        db_session=test_db_session, log_entry_db_session=test_db_other_session
+    )
+    with pytest.raises(
+        PaymentRejectsException,
+        match=f"Too many Payment Rejects files found: {rejects_file_name_1}, {rejects_file_name_2}",
+    ):
+        payment_rejects_step.process_rejects()
+
+    # check rejects file was moved to processed folder
+    expected_errored_folder_path = os.path.join(
+        payment_rejects_errored_folder_path, payments_util.get_now().strftime("%Y-%m-%d")
+    )
+    assert_files(expected_errored_folder_path, [rejects_file_name_1, rejects_file_name_2])
 
 
 # Assertion helpers
@@ -449,4 +607,15 @@ def assert_files(folder_path, expected_files):
         assert expected_file in files_in_folder
 
 
-# TODO test all exception scenarios
+def assert_reference_file(folder_path, expected_files, db_session):
+    for expected_file in expected_files:
+        assert (
+            db_session.query(ReferenceFile)
+            .filter(
+                ReferenceFile.file_location == str(os.path.join(folder_path, expected_file)),
+                ReferenceFile.reference_file_type_id
+                == ReferenceFileType.DELEGATED_PAYMENT_REJECTS.reference_file_type_id,
+            )
+            .one_or_none()
+            is not None
+        )

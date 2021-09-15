@@ -57,6 +57,12 @@ create_or_update_leave_admin_request_schema = xmlschema.XMLSchema(
     )
 )
 
+create_or_update_leave_admin_response_schema = xmlschema.XMLSchema(
+    os.path.join(
+        os.path.dirname(__file__), "leave_admin_creation", "CreateOrUpdateLeaveAdmin.Response.xsd"
+    )
+)
+
 service_agreement_service_request_schema = xmlschema.XMLSchema(
     os.path.join(os.path.dirname(__file__), "wscomposer", "ServiceAgreementService.Request.xsd")
 )
@@ -322,6 +328,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         url = urllib.parse.urljoin(self.customer_api_url, path)
         content_type_header = {"Content-Type": header_content_type} if header_content_type else {}
         headers = dict({"userid": user_id}, **content_type_header)
+
         response = self._request(method, url, method_name, headers, **args)
         return response
 
@@ -559,7 +566,13 @@ class FINEOSClient(client.AbstractFINEOSClient):
         response = self._customer_api(
             "GET", f"customer/absence/absences/{absence_id}", user_id, "get_absence"
         )
-        return models.customer_api.AbsenceDetails.parse_obj(response.json())
+        json = response.json()
+        logger.debug("json %r", json)
+
+        for item in json["absencePeriods"]:
+            set_empty_dates_to_none(item, ["startDate", "endDate", "expectedReturnToWorkDate"])
+
+        return models.customer_api.AbsenceDetails.parse_obj(json)
 
     def get_absence_period_decisions(
         self, user_id: str, absence_id: str
@@ -750,6 +763,20 @@ class FINEOSClient(client.AbstractFINEOSClient):
             data=json.dumps(eform.eformAttributes),
         )
 
+    def get_customer_occupations_customer_api(
+        self, user_id: str, customer_id: str
+    ) -> List[models.customer_api.ReadCustomerOccupation]:
+
+        response = self._customer_api(
+            "GET", "customer/occupations", user_id, "get_customer_occupations_customer_api",
+        )
+
+        json = response.json()
+        for item in json:
+            set_empty_dates_to_none(item, ["dateJobBegan", "dateJobEnded"])
+
+        return pydantic.parse_obj_as(List[models.customer_api.ReadCustomerOccupation], json)
+
     def get_case_occupations(
         self, user_id: str, case_id: str
     ) -> List[models.customer_api.ReadCustomerOccupation]:
@@ -805,14 +832,14 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         # Occupation ID is the only identifier we use to specify which occupation record we want to update in FINEOS.
         additional_data_set.additional_data.append(
-            models.AdditionalData(name="OccupationId", value=occupation_id)
+            models.AdditionalData(name="OccupationId", value=str(occupation_id))
         )
 
         # Application's hours_worked_per_week field is optional so we only update this value in FINEOS
         # if we've set it on the Application object in our database.
         if hours_worked_per_week:
             additional_data_set.additional_data.append(
-                models.AdditionalData(name="HoursPerWeek", value=hours_worked_per_week)
+                models.AdditionalData(name="HoursPerWeek", value=str(hours_worked_per_week))
             )
 
         if employment_status:
@@ -1091,16 +1118,18 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
     def create_or_update_leave_admin(
         self, leave_admin_create_or_update: models.CreateOrUpdateLeaveAdmin
-    ) -> None:
+    ) -> Tuple[Optional[str], Optional[str]]:
         """Create or update a leave admin in FINEOS."""
         xml_body = self._create_or_update_leave_admin_payload(leave_admin_create_or_update)
-        self._integration_services_api(
+        response = self._integration_services_api(
             "POST",
             "rest/externalUserProvisioningService/createOrUpdateEmployerViewpointUser",
             self.wscomposer_user_id,
             "create_or_update_leave_admin",
             data=xml_body.encode("utf-8"),
         )
+        response_decoded = create_or_update_leave_admin_response_schema.decode(response.text)
+        return response_decoded["ns2:errorCode"], response_decoded["ns2:errorMessage"]
 
     def create_or_update_employer(
         self,
@@ -1176,7 +1205,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         )
         leave_admin_create_payload = models.CreateOrUpdateLeaveAdminRequest(
             full_name=leave_admin_create_or_update.admin_full_name,
-            party_reference=leave_admin_create_or_update.fineos_employer_id,
+            party_reference=str(leave_admin_create_or_update.fineos_employer_id),
             user_id=leave_admin_create_or_update.fineos_web_id,
             email=leave_admin_create_or_update.admin_email,
             phone=leave_admin_phone,
@@ -1267,6 +1296,22 @@ class FINEOSClient(client.AbstractFINEOSClient):
         employer_create_payload.update_data = models.UpdateData(PartyIntegrationDTO=[party_dto])
 
         payload_as_dict = employer_create_payload.dict(by_alias=True)
+
+        """
+        Relevant tickets: EDM-291, CPS-2703
+        After updating the OCOrganisation model to include the organisationUnits field for the ReadEmployer.Response, it did not match the previous OCOrganisation schema used for UpdateOrCreateParty.Request.
+        TODO Once FINEOS adds the organisationUnits field in the UpdateOrCreateParty.Request to allow creation of employers with a predefined list of org. units, the code deleting the organisationUnits key needs to be removed.
+        TODO The XSDS and the test file of expected XML will also need to be regenerated.
+        """
+        del payload_as_dict["update-data"]["PartyIntegrationDTO"][0]["organisation"][
+            "OCOrganisation"
+        ][0]["organisationUnits"]
+        del payload_as_dict["update-data"]["PartyIntegrationDTO"][0]["organisation"][
+            "OCOrganisation"
+        ][0]["names"]["OCOrganisationName"][0]["organisationWithDefault"]["OCOrganisation"][0][
+            "organisationUnits"
+        ]
+
         xml_element = update_or_create_party_request_schema.encode(payload_as_dict)
         return xml.etree.ElementTree.tostring(xml_element, encoding="unicode", xml_declaration=True)
 
@@ -1320,13 +1365,13 @@ class FINEOSClient(client.AbstractFINEOSClient):
             name="CustomerNumber", value=str(fineos_employer_id)
         )
         absence_management_data = models.AdditionalData(
-            name="AbsenceManagement", value=service_agreement_inputs.absence_management_flag
+            name="AbsenceManagement", value=str(service_agreement_inputs.absence_management_flag)
         )
         leave_plans_data = models.AdditionalData(
             name="LeavePlans", value=service_agreement_inputs.leave_plans
         )
         unlink_leave_plans_data = models.AdditionalData(
-            name="UnlinkAllExistingLeavePlans", value=True
+            name="UnlinkAllExistingLeavePlans", value=str(True)
         )
 
         additional_data_set = models.AdditionalDataSet()

@@ -1,0 +1,322 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Employer welcome displays links to Organizations page 1`] = `
+<h2
+  className="font-heading-md text-bold"
+>
+  Settings
+</h2>
+`;
+
+exports[`Employer welcome displays links to Organizations page 2`] = `
+<h2
+  className="font-heading-md text-bold"
+>
+  Learn more
+</h2>
+`;
+
+exports[`Employer welcome displays links to Organizations page 3`] = `
+<ul
+  className="usa-list desktop:font-body-2xs desktop:padding-top-05"
+  key="0"
+>
+  <li
+    key="0"
+  >
+    <a
+      href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
+      key="0"
+      rel="noopener"
+      target="_blank"
+    >
+      Your role as a Massachusetts employer
+    </a>
+  </li>
+  <li
+    key="1"
+  >
+    <a
+      href="https://www.mass.gov/forms/request-reimbursement-for-your-employees-paid-leave-benefits"
+      key="0"
+      rel="noopener"
+      target="_blank"
+    >
+      Employer reimbursements
+    </a>
+  </li>
+</ul>
+`;
+
+exports[`Employer welcome renders other leave alert 1`] = `"The Department of Family and Medical Leave has updated the Review page. Employees can now report other leaves and benefits in their paid leave application. If your employee reported other leaves or benefits, you can review the information provided, and add any that they missed."`;
+
+exports[`Employer welcome renders page 1`] = `
+<Fragment>
+  <div
+    className="grid-row"
+  >
+    <EmployerNavigationTabs
+      activePath="/mock-portalFlow-pathname"
+    />
+  </div>
+  <div
+    className="grid-row"
+  >
+    <div
+      className="desktop:grid-col-8"
+    >
+      <Title>
+        Welcome
+      </Title>
+      <Alert
+        heading="Verify your account to continue"
+        state="warning"
+      >
+        <p>
+          <Trans
+            components={
+              Object {
+                "your-organizations-link": <a
+                  href="/employers/organizations"
+                />,
+              }
+            }
+            i18nKey="pages.employersWelcome.verificationAlertBody"
+          />
+        </p>
+      </Alert>
+      <Alert
+        state="info"
+      >
+        <p>
+          <Trans
+            i18nKey="pages.employersWelcome.otherLeaveInfoAlertBody"
+          />
+        </p>
+      </Alert>
+      <p>
+        Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family and medical leave.
+      </p>
+      <Heading
+        level="2"
+      >
+        <Icon
+          className="margin-right-2 text-secondary text-middle"
+          fill="currentColor"
+          height={32}
+          name="list"
+          size={4}
+          width={32}
+        />
+        View all applications
+        <NewTag />
+      </Heading>
+      <p>
+        <Trans
+          components={
+            Object {
+              "dashboard-link": <a
+                href="/employers/dashboard"
+              />,
+            }
+          }
+          i18nKey="pages.employersWelcome.viewApplicationsBody"
+        />
+      </p>
+      <Heading
+        level="2"
+      >
+        <SvgIconMail
+          className="margin-right-2 text-secondary text-middle"
+          fill="currentColor"
+          height={32}
+          width={32}
+        />
+        Check your email regularly
+      </Heading>
+      <p>
+        When an employee applies for leave, you’ll receive email updates about their application status and any steps you need to take. We’ll include everyone who has an employer account with your company in case you’re out of the office.
+      </p>
+      <Heading
+        level="2"
+      >
+        <IconWait
+          className="margin-right-2 text-secondary text-middle"
+          fill="currentColor"
+          height={32}
+          width={32}
+        />
+        Respond to applications within 10 business days
+      </Heading>
+      <p>
+        When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your company before the deadline, we’ll process the application solely based on the information the employee provided.
+      </p>
+      <Heading
+        level="2"
+      >
+        <SvgIconPdf
+          className="margin-right-2 text-secondary text-middle"
+          fill="currentColor"
+          height={32}
+          width={32}
+        />
+        View forms and notices online
+      </Heading>
+      <p>
+        <Trans
+          components={
+            Object {
+              "caregiver-certification-form-link": <a
+                href="https://www.mass.gov/family-caring-form"
+                rel="noopener"
+                target="_blank"
+              />,
+              "healthcare-provider-form-link": <a
+                href="https://www.mass.gov/medical-leave-form"
+                rel="noopener"
+                target="_blank"
+              />,
+            }
+          }
+          i18nKey="pages.employersWelcome.viewFormsBody"
+        />
+      </p>
+    </div>
+    <div
+      className="grid-col-fill"
+    />
+    <aside
+      className="desktop:grid-col-3 margin-top-7 desktop:margin-top-1"
+    >
+      <Heading
+        level="2"
+      >
+        Settings
+      </Heading>
+      <ul
+        className="usa-list desktop:font-body-2xs desktop:padding-top-05"
+      >
+        <li>
+          <Link
+            href="/employers/organizations"
+          >
+            <a>
+              Your organizations
+            </a>
+          </Link>
+        </li>
+      </ul>
+      <Heading
+        level="2"
+      >
+        Learn more
+      </Heading>
+      <Trans
+        components={
+          Object {
+            "li": <li />,
+            "mass-employer-role-link": <a
+              href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
+              rel="noopener"
+              target="_blank"
+            />,
+            "reimbursements-link": <a
+              href="https://www.mass.gov/forms/request-reimbursement-for-your-employees-paid-leave-benefits"
+              rel="noopener"
+              target="_blank"
+            />,
+            "ul": <ul
+              className="usa-list desktop:font-body-2xs desktop:padding-top-05"
+            />,
+          }
+        }
+        i18nKey="pages.employersWelcome.learnMoreLinks"
+      />
+    </aside>
+  </div>
+</Fragment>
+`;
+
+exports[`Employer welcome renders page 2`] = `
+Array [
+  "We require every employer to verify paid leave contributions when creating an account. You need to ",
+  <a
+    href="/employers/organizations"
+    key="1"
+  >
+    complete this process
+  </a>,
+  " to review applications from your team.",
+]
+`;
+
+exports[`Employer welcome renders page 3`] = `"The Department of Family and Medical Leave has updated the Review page. Employees can now report other leaves and benefits in their paid leave application. If your employee reported other leaves or benefits, you can review the information provided, and add any that they missed."`;
+
+exports[`Employer welcome renders page 4`] = `
+Array [
+  "When you log into your account you can now use the ",
+  <a
+    href="/employers/dashboard"
+    key="1"
+  >
+    dashboard
+  </a>,
+  " to see all the applications submitted by employees from your organization.",
+]
+`;
+
+exports[`Employer welcome renders page 5`] = `
+Array [
+  "You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the ",
+  <a
+    href="https://www.mass.gov/medical-leave-form"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    Certification of Your Serious Health Condition form
+  </a>,
+  " during the review process. For leave to care for a family member you can download the ",
+  <a
+    href="https://www.mass.gov/family-caring-form"
+    key="3"
+    rel="noopener"
+    target="_blank"
+  >
+    Certification to Care for a Family Member
+  </a>,
+  " during the review process. ",
+]
+`;
+
+exports[`Employer welcome renders page 6`] = `
+<ul
+  className="usa-list desktop:font-body-2xs desktop:padding-top-05"
+  key="0"
+>
+  <li
+    key="0"
+  >
+    <a
+      href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
+      key="0"
+      rel="noopener"
+      target="_blank"
+    >
+      Your role as a Massachusetts employer
+    </a>
+  </li>
+  <li
+    key="1"
+  >
+    <a
+      href="https://www.mass.gov/forms/request-reimbursement-for-your-employees-paid-leave-benefits"
+      key="0"
+      rel="noopener"
+      target="_blank"
+    >
+      Employer reimbursements
+    </a>
+  </li>
+</ul>
+`;

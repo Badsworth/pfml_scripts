@@ -18,11 +18,8 @@ export default function Home() {
     setShowConfirmationDialog(false);
   };
 
-  const { SlideOutPopup, openSlideOut } = usePopup<SlideOutProps>(SlideOut);
-
-  if (!SlideOutPopup || !openSlideOut) {
-    throw "Popup was not initialized!";
-  }
+  const { Popup: SlideOutPopup, open: openSlideOut } =
+    usePopup<SlideOutProps>(SlideOut);
 
   return (
     <>
@@ -40,7 +37,7 @@ export default function Home() {
       {showConfirmationDialog && (
         <ConfirmationDialog
           title="Enable Caring Leave Type"
-          body="Lorum ipsum"
+          body="Lorem ipsum, dolor sit amet consectetur adip elit. Eius aliquam laudantium explicabo pari dolorem."
           handleCancelCallback={confirmationDialogCancelCallback}
           handleContinueCallback={confirmationDialogContinueCallback}
         />

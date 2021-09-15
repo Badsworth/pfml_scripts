@@ -1,0 +1,22 @@
+{
+  "rules": {
+    "react/prop-types": "off",
+    "no-restricted-imports": [
+      "error",
+      {
+        "paths": [
+          {
+            "name": "enzyme",
+            "message": "Use of Enzyme in tests folder is deprecated"
+          }
+        ],
+        "patterns": [
+          {
+            "group": ["*tests-old*"],
+            "message": "New tests cannot rely on old-tests"
+          }
+        ]
+      }
+    ]
+  }
+}

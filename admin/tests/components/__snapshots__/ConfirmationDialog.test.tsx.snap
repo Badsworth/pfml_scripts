@@ -1,51 +1,53 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ConfirmationDialog component renders correctly 1`] = `
+exports[`ConfirmationDialog default component renders correctly 1`] = `
 <dialog
   className="confirmation-dialog"
   open={true}
 >
   <div
     className="confirmation-dialog__background"
+    onClick={[Function]}
   />
   <div
     className="confirmation-dialog__content"
   >
     <h2
       className="confirmation-dialog__title"
+      data-testid="confirmation-dialog-title"
     >
-      test
+      Test Title
       ?
     </h2>
     <div
       className="confirmation-dialog__body"
     >
-      <p>
-        body
+      <p
+        data-testid="confirmation-dialog-body"
+      >
+        This is a test body.
       </p>
     </div>
     <div
-      className="confirmation-dialog__action-buttons confirmation-dialog__action-buttons--stacked"
+      className="confirmation-dialog__action-buttons"
     >
       <button
-        className="btn"
+        className="confirmation-dialog__btn confirmation-dialog__btn-continue btn"
+        data-testid="button"
+        disabled={false}
         onClick={[Function]}
+        type="button"
       >
-        <span
-          className="btn__text"
-        >
-          Continue
-        </span>
+        Continue
       </button>
       <button
-        className="btn btn-cancel"
+        className="confirmation-dialog__btn confirmation-dialog__btn-cancel btn--cancel btn"
+        data-testid="button"
+        disabled={false}
         onClick={[Function]}
+        type="button"
       >
-        <span
-          className="btn__text"
-        >
-          Cancel
-        </span>
+        Cancel
       </button>
     </div>
   </div>

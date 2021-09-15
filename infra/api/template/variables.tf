@@ -123,7 +123,7 @@ variable "cors_origins" {
 variable "runtime_py" {
   description = "Pointer to the Python runtime used by the PFML API lambdas"
   type        = string
-  default     = "python3.8"
+  default     = "python3.9"
 }
 
 variable "cognito_user_pool_arn" {
@@ -138,16 +138,6 @@ variable "cognito_user_pool_id" {
 
 variable "cognito_user_pool_client_id" {
   type = string
-}
-
-variable "cognito_post_confirmation_lambda_artifact_s3_key" {
-  description = "The S3 object key of the Cognito Post Confirmation hook Lambda artifact"
-  type        = string
-}
-
-variable "cognito_pre_signup_lambda_artifact_s3_key" {
-  description = "The S3 object key of the Cognito Pre Signup hook Lambda artifact"
-  type        = string
 }
 
 variable "cognito_user_pool_keys_url" {
@@ -174,14 +164,14 @@ variable "rmv_client_certificate_binary_arn" {
   default     = ""
 }
 
-variable "rmv_check_behavior" {
+variable "rmv_api_behavior" {
   description = "Specifies if the RMV response is mocked"
   type        = string
   default     = "fully_mocked"
 }
 
 variable "rmv_check_mock_success" {
-  description = "Specifies if RMV mock response always passes. '1' always passes id proofing, '0' always fails id proofing."
+  description = "Specifies if RMV check mock response always passes. '1' always passes id proofing, '0' always fails id proofing."
   type        = string
   default     = "1"
 }

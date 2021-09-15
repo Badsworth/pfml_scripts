@@ -1,7 +1,9 @@
 import Document, { DocumentType } from "../models/Document";
+
 import Button from "./Button";
 import PropTypes from "prop-types";
 import React from "react";
+import classnames from "classnames";
 import download from "downloadjs";
 import findKeyByValue from "../utils/findKeyByValue";
 import formatDateRange from "../utils/formatDateRange";
@@ -18,8 +20,13 @@ const DownloadableDocument = (props) => {
     onDownloadClick,
     showCreatedAt,
     displayDocumentName,
+    icon,
   } = props;
   const { t } = useTranslation();
+
+  const classes = classnames("text-bold", {
+    "display-flex flex-align-center": icon,
+  });
 
   const documentName = getDocumentName(document, t);
 
@@ -43,11 +50,12 @@ const DownloadableDocument = (props) => {
   return (
     <React.Fragment>
       <Button
-        className="text-bold"
+        className={classes}
         onClick={handleClick}
         type="button"
         variation="unstyled"
       >
+        {icon}
         {displayDocumentName || documentName}
       </Button>
       {showCreatedAt && (
@@ -69,14 +77,17 @@ DownloadableDocument.propTypes = {
   displayDocumentName: PropTypes.string,
   onDownloadClick: PropTypes.func.isRequired,
   showCreatedAt: PropTypes.bool,
+  icon: PropTypes.node,
 };
 
 function getDocumentName(document, t) {
   if (
     [
+      DocumentType.appealAcknowledgment,
       DocumentType.approvalNotice,
       DocumentType.denialNotice,
       DocumentType.requestForInfoNotice,
+      DocumentType.withdrawalNotice,
     ].includes(document.document_type)
   ) {
     return t("components.downloadableDocument.noticeName", {

@@ -110,6 +110,7 @@ export default class BaseApi {
     try {
       tracker.trackFetchRequest(url);
       response = await fetch(url, options);
+      tracker.markFetchRequestEnd();
 
       ({ data, errors, meta, warnings } = await response.json());
     } catch (error) {

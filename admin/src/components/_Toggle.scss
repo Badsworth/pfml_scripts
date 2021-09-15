@@ -1,0 +1,18 @@
+.toggle {
+  border-radius: 12px;
+  color: #fff;
+  cursor: pointer;
+  font-size: 0.71em;
+  font-weight: 700;
+  line-height: 1.6;
+  padding: 0.46em 1.72em;
+  text-align: center;
+}
+
+.toggle--on {
+  background-color: $Color-BerkshiresGreen-600;
+}
+
+.toggle--off {
+  background-color: $Color-GraniteGray-300;
+}

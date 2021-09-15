@@ -1,12 +1,25 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`UserFeedback renders the component 1`] = `
-<a
-  href="https://example.com"
-  key="0"
-  rel="noopener"
-  target="_blank"
+<div
+  class="border-top-2px border-base-lighter margin-top-4 padding-top-4"
 >
-  Take the survey
-</a>
+  <h2
+    class="font-heading-md text-bold"
+  >
+    Help us improve this site
+  </h2>
+  <p>
+    We’d like to hear more about your experience on this site. Please take a few minutes to share your feedback.
+  </p>
+  <p>
+    <a
+      href="https://example.com"
+      rel="noopener"
+      target="_blank"
+    >
+      Take the survey
+    </a>
+  </p>
+</div>
 `;

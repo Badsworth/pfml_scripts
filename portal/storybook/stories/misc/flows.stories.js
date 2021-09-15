@@ -50,11 +50,13 @@ export const ClaimantFields = () => {
             <article key={page.route}>
               <h3>{page.route}</h3>
               <ul>
-                {page.meta.fields.map((field) => (
-                  <li key={field}>
-                    <code>{field}</code>
-                  </li>
-                ))}
+                {page.meta.fields
+                  ? page.meta.fields.map((field) => (
+                      <li key={field}>
+                        <code>{field}</code>
+                      </li>
+                    ))
+                  : null}
               </ul>
             </article>
           );

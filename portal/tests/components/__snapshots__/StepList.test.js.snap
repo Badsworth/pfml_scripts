@@ -2,29 +2,54 @@
 
 exports[`StepList renders component 1`] = `
 <div
-  className="margin-bottom-8"
+  class="margin-bottom-8"
 >
-  <Heading
-    level="2"
-    size="1"
+  <h2
+    class="font-heading-lg text-bold"
   >
-    Step List
-  </Heading>
-  <Step
-    completedText="Completed"
-    editText="Edit"
-    editable={true}
-    key=".0"
-    number={1}
-    resumeScreenReaderText="Continue with"
-    resumeText="Resume"
-    screenReaderNumberPrefix="Step"
-    startText="Start"
-    status="not_started"
-    stepHref="#"
-    title="Step 1"
+    Create an application
+  </h2>
+  <p>
+    Complete these steps.
+  </p>
+  <div
+    class="display-flex border-bottom border-base-light padding-y-3"
   >
-    Step Description
-  </Step>
+    <div
+      aria-label="Step 1"
+      class="radius-pill text-center height-5 width-5 margin-top-2px font-sans-md text-base-lightest line-height-sans-6 bg-secondary"
+    >
+      1
+    </div>
+    <div
+      class="flex-fill margin-left-2 grid-row margin-top-1"
+    >
+      <div
+        class="tablet:grid-col-8"
+      >
+        <h3
+          class="font-heading-sm text-bold"
+        >
+          Household info
+        </h3>
+        <div
+          class="usa-prose"
+        >
+          Enter details about your household.
+        </div>
+      </div>
+      <div
+        class="margin-top-2 tablet:margin-top-0 tablet:text-right tablet:grid-col-4"
+      >
+        <a
+          aria-label="Start: Household info"
+          class="usa-button width-auto"
+          href="#household"
+        >
+          Start
+        </a>
+      </div>
+    </div>
+  </div>
 </div>
 `;

@@ -38,7 +38,7 @@ variable "enforce_fortinet_managed_rules" {
 variable "runtime_py" {
   description = "Pointer to the Python runtime used by the PFML API lambdas"
   type        = string
-  default     = "python3.8"
+  default     = "python3.9"
 }
 
 variable "is_adhoc_workspace" {

@@ -6,9 +6,14 @@ export default {
   component: Index,
 };
 
-export const Page = () => {
+export const DefaultStory = () => {
   const appLogic = {
-    portalFlow: { goTo: () => {} },
+    appErrors: { items: [] },
+    documents: { download: () => {} },
+    portalFlow: {
+      getNextPageRoute: () => "/storybook-mock",
+      goTo: () => {},
+    },
   };
 
   return <Index appLogic={appLogic} />;

@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Iterable, Optional
+from typing import Dict, Iterable, List, Optional, Tuple
 
 import massgov.pfml.api.services.fineos_actions as fineos_actions
 import massgov.pfml.db as db
@@ -18,6 +18,7 @@ class LoadEmployersReport:
     total_employers_count: int = 0
     loaded_employers_count: int = 0
     errored_employers_count: int = 0
+    updated_service_agreements_count: int = 0
     end: Optional[str] = None
     process_duration_in_seconds: float = 0
 
@@ -81,20 +82,20 @@ def load_updates(
         extra={"process_id": process_id, "employer_update_limit": employer_update_limit},
     )
 
-    employers = get_new_or_updated_employers(
+    employers_actions = get_new_or_updated_employers(
         db_session, batch_size, process_id, pickup_existing_at_start=True
     )
 
-    employers_with_logging = massgov.pfml.util.logging.log_every(
+    employers_actions_with_logging = massgov.pfml.util.logging.log_every(
         logger,
-        employers,
+        employers_actions,
         count=1,
         start_time=start_time,
-        item_name="Employer",
+        item_name="Tuple[Employer, Actions]",
         extra={"process_id": process_id},
     )
 
-    for employer in employers_with_logging:
+    for employer, actions in employers_actions_with_logging:
         report.total_employers_count += 1
         # we must commit or rollback the transaction for each item to ensure the
         # row lock put in place by `skip_locked_query` is released
@@ -102,7 +103,12 @@ def load_updates(
             with fineos_log_tables_util.update_entity_and_remove_log_entry(
                 db_session, employer, commit=True
             ):
-                fineos_actions.create_or_update_employer(fineos, employer)
+                if "INSERT" in actions or "UPDATE" in actions:
+                    fineos_actions.create_or_update_employer(fineos, employer)
+
+                if "INSERT" not in actions and "UPDATE_SA" in actions:
+                    fineos_actions.create_service_agreement_for_employer(fineos, employer)
+                    report.updated_service_agreements_count += 1
 
             report.loaded_employers_count += 1
 
@@ -147,7 +153,7 @@ def load_updates(
 
 def get_new_or_updated_employers(
     db_session: db.Session, batch_size: int, process_id: int, pickup_existing_at_start: bool = True
-) -> Iterable[Employer]:
+) -> Iterable[Tuple[Employer, List[str]]]:
     """Yields Employers with entries in EmployerLog that have not been marked as being processed by another process_id, until none are left.
 
     This claims `batch_size` number of Employers for the given `process_id` at a
@@ -184,7 +190,7 @@ def get_new_or_updated_employers(
         # the basic WHERE clauses, looking at only EmployerLog records that have
         # not been tagged by another process yet
         core_filter = [
-            EmployerLog.action.in_(["INSERT", "UPDATE"]),
+            EmployerLog.action.in_(["INSERT", "UPDATE", "UPDATE_SA"]),
             EmployerLog.process_id.is_(None),
             EmployerLog.employer_id.notin_(
                 employer_ids_that_are_already_tagged_with_different_process_id_query
@@ -216,6 +222,21 @@ def get_new_or_updated_employers(
             )
             updated_employer_ids.extend(existing_employer_ids_for_this_process_id)
 
+        # build dictionary of employer_id: actions
+        employer_logs = (
+            db_session.query(EmployerLog)
+            .filter(EmployerLog.employer_id.in_(updated_employer_ids))
+            .all()
+        )
+        employer_actions_map: Dict[str, List[str]] = {}
+        for log in employer_logs:
+            if log.employer_id and log.action:
+                employer_id = str(log.employer_id)
+                if employer_id in employer_actions_map:
+                    employer_actions_map[employer_id] += log.action
+                else:
+                    employer_actions_map[employer_id] = [log.action]
+
         # if there are no more records to handle, release the lock by committing
         # transaction and break the loop
         if len(updated_employer_ids) == 0:
@@ -237,7 +258,8 @@ def get_new_or_updated_employers(
 
         # yielding them one at a time
         for employer in db.skip_locked_query(updated_employers_query, Employer.employer_id):
-            yield employer
+            actions = employer_actions_map[str(employer.employer_id)]
+            yield employer, actions
 
         # after we've done our first batch trying any failed records from a
         # previous run, don't pickup new failed records

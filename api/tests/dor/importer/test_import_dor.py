@@ -1,6 +1,12 @@
+#
+# Tests for massgov.pfml.dor.importer.import_dor.
+#
+
+import copy
+import datetime
+import decimal
 import pathlib
 import tempfile
-from datetime import datetime
 
 import boto3
 import botocore
@@ -18,9 +24,11 @@ from massgov.pfml.db.models.employees import (
     Employee,
     EmployeeLog,
     Employer,
+    EmployerQuarterlyContribution,
     GeoState,
     WagesAndContributions,
 )
+from massgov.pfml.db.models.factories import EmployerQuarterlyContributionFactory
 from massgov.pfml.dor.importer.import_dor import (
     PROCESSED_FOLDER,
     RECEIVED_FOLDER,
@@ -254,6 +262,33 @@ def test_employer_address(test_db_session):
     assert persisted_address.country_id == Country.get_id(
         employer_international_address["employer_address_country"]
     )
+
+
+def test_employer_invalid_fein(test_db_session):
+    employer_data_invalid_type = copy.deepcopy(test_data.new_employer)
+    employer_data_invalid_length = copy.deepcopy(test_data.new_employer)
+    employer_data_invalid_type["fein"] = "abcdefghi"
+    employer_data_invalid_type["account_key"] = "00000000002"
+    employer_data_invalid_length["fein"] = "12345678"
+
+    before_employer_count = test_db_session.query(Employer).count()
+
+    report, report_log_entry = get_new_import_report(test_db_session)
+    import_dor.import_employers(
+        test_db_session,
+        [employer_data_invalid_type, employer_data_invalid_length,],
+        report,
+        report_log_entry.import_log_id,
+    )
+
+    assert report.created_employers_count == 0
+    assert len(report.invalid_employer_feins_by_account_key) == 2
+    assert employer_data_invalid_type["account_key"] in report.invalid_employer_feins_by_account_key
+    assert (
+        employer_data_invalid_length["account_key"] in report.invalid_employer_feins_by_account_key
+    )
+    after_employer_count = test_db_session.query(Employer).count()
+    assert before_employer_count == after_employer_count
 
 
 def test_log_employees_with_new_employers(test_db_session):
@@ -539,7 +574,7 @@ def test_parse_employer_file(test_fs_path):
     employer_file_path = "{}/{}".format(str(test_fs_path), employer_file)
 
     report = import_dor.ImportReport(
-        start=datetime.now().isoformat(),
+        start=datetime.datetime.now().isoformat(),
         status="in progress",
         employer_file=employer_file_path,
         employee_file=employer_file_path,
@@ -671,3 +706,155 @@ def test_move_file_to_processed(mock_s3_bucket):
 def get_temp_file_path():
     handle, path = tempfile.mkstemp()
     return path
+
+
+employer_quarterly_info_list = [
+    # This employer / filing period combination is repeated below.
+    {
+        "record_type": "A",
+        "account_key": "44100000001",
+        "filing_period": datetime.date(2020, 3, 31),
+        "employer_name": "Boone PLC",
+        "employer_fein": "100000001",
+        "amended_flag": False,
+        "pfm_account_id": "100000001",
+        "total_pfml_contribution": decimal.Decimal("46723.66"),
+        "received_date": datetime.date(2020, 4, 7),
+        "updated_date": datetime.datetime(2020, 9, 17, 23, 0, tzinfo=datetime.timezone.utc),
+    },
+    {
+        "record_type": "A",
+        "account_key": "44100000002",
+        "filing_period": datetime.date(2019, 6, 30),
+        "employer_name": "Gould, Brown & Miller",
+        "employer_fein": "100000002",
+        "amended_flag": False,
+        "pfm_account_id": "100000002",
+        "total_pfml_contribution": decimal.Decimal("57034.87"),
+        "received_date": datetime.date(2019, 7, 18),
+        "updated_date": datetime.datetime(2020, 10, 12, 23, 0, tzinfo=datetime.timezone.utc),
+    },
+    # Repeat of 1st record above.
+    {
+        "record_type": "A",
+        "account_key": "44100000001",
+        "filing_period": datetime.date(2020, 3, 31),
+        "employer_name": "Boone PLC",
+        "employer_fein": "100000001",
+        "amended_flag": False,
+        "pfm_account_id": "100000001",
+        "total_pfml_contribution": decimal.Decimal("46723.66"),
+        "received_date": datetime.date(2020, 4, 7),
+        "updated_date": datetime.datetime(2020, 9, 17, 23, 0, tzinfo=datetime.timezone.utc),
+    },
+    {
+        "record_type": "A",
+        "account_key": "44100000003",
+        "filing_period": datetime.date(2019, 6, 30),
+        "employer_name": "Stephens LLC",
+        "employer_fein": "100000003",
+        "amended_flag": True,
+        "pfm_account_id": "100000003",
+        "total_pfml_contribution": decimal.Decimal("15493.23"),
+        "received_date": datetime.date(2019, 7, 28),
+        "updated_date": datetime.datetime(2020, 10, 5, 23, 0, tzinfo=datetime.timezone.utc),
+    },
+]
+
+
+def test_import_employer_pfml_contributions_repeated_record(test_db_session, employers):
+    report, log_entry = get_new_import_report(test_db_session)
+
+    import_dor.import_employer_pfml_contributions(
+        test_db_session, employer_quarterly_info_list, report, log_entry.import_log_id
+    )
+
+    def row(index, period, total, account, received, updated, log_id=log_entry.import_log_id):
+        return (
+            employers[index].employer_id,
+            datetime.date.fromisoformat(period),
+            decimal.Decimal(total),
+            account,
+            datetime.datetime.fromisoformat(f"{received} 00:00+00:00"),
+            datetime.datetime.fromisoformat(f"{updated}+00:00"),
+            log_id,
+        )
+
+    rows = (
+        test_db_session.query(
+            EmployerQuarterlyContribution.employer_id,
+            EmployerQuarterlyContribution.filing_period,
+            EmployerQuarterlyContribution.employer_total_pfml_contribution,
+            EmployerQuarterlyContribution.pfm_account_id,
+            EmployerQuarterlyContribution.dor_received_date,
+            EmployerQuarterlyContribution.dor_updated_date,
+            EmployerQuarterlyContribution.latest_import_log_id,
+        )
+        .order_by(EmployerQuarterlyContribution.dor_received_date)
+        .all()
+    )
+    assert rows == [
+        row(1, "2019-06-30", "57034.87", "100000002", "2019-07-18", "2020-10-12 23:00"),
+        row(2, "2019-06-30", "15493.23", "100000003", "2019-07-28", "2020-10-05 23:00"),
+        row(0, "2020-03-31", "46723.66", "100000001", "2020-04-07", "2020-09-17 23:00"),
+    ]
+
+
+def test_import_employer_pfml_contributions_with_updates(test_db_session, employers):
+    EmployerQuarterlyContributionFactory.create(
+        employer=employers[1],
+        filing_period=datetime.date(2019, 6, 30),
+        employer_total_pfml_contribution=decimal.Decimal("1000.00"),
+        dor_received_date=datetime.date(2019, 6, 10),
+    )
+    EmployerQuarterlyContributionFactory.create(
+        employer=employers[0],
+        filing_period=datetime.date(2020, 3, 31),
+        employer_total_pfml_contribution=decimal.Decimal("2000.00"),
+        dor_received_date=datetime.date(2020, 3, 20),
+    )
+    EmployerQuarterlyContributionFactory.create(
+        employer=employers[0],
+        filing_period=datetime.date(2019, 9, 30),
+        employer_total_pfml_contribution=decimal.Decimal("3000.00"),
+        dor_received_date=datetime.date(2019, 9, 30),
+        dor_updated_date=datetime.datetime(2019, 8, 30, 3, 30, tzinfo=datetime.timezone.utc),
+        pfm_account_id="300000",
+    )
+
+    report, log_entry = get_new_import_report(test_db_session)
+
+    import_dor.import_employer_pfml_contributions(
+        test_db_session, employer_quarterly_info_list, report, log_entry.import_log_id
+    )
+
+    def row(index, period, total, account, received, updated, log_id=log_entry.import_log_id):
+        return (
+            employers[index].employer_id,
+            datetime.date.fromisoformat(period),
+            decimal.Decimal(total),
+            account,
+            datetime.datetime.fromisoformat(f"{received} 00:00+00:00"),
+            datetime.datetime.fromisoformat(f"{updated}+00:00"),
+            log_id,
+        )
+
+    rows = (
+        test_db_session.query(
+            EmployerQuarterlyContribution.employer_id,
+            EmployerQuarterlyContribution.filing_period,
+            EmployerQuarterlyContribution.employer_total_pfml_contribution,
+            EmployerQuarterlyContribution.pfm_account_id,
+            EmployerQuarterlyContribution.dor_received_date,
+            EmployerQuarterlyContribution.dor_updated_date,
+            EmployerQuarterlyContribution.latest_import_log_id,
+        )
+        .order_by(EmployerQuarterlyContribution.dor_received_date)
+        .all()
+    )
+    assert rows == [
+        row(1, "2019-06-30", "57034.87", "100000002", "2019-07-18", "2020-10-12 23:00"),
+        row(2, "2019-06-30", "15493.23", "100000003", "2019-07-28", "2020-10-05 23:00"),
+        row(0, "2019-09-30", "3000.00", "300000", "2019-09-30", "2019-08-30 03:30", None),
+        row(0, "2020-03-31", "46723.66", "100000001", "2020-04-07", "2020-09-17 23:00"),
+    ]

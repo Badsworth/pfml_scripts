@@ -60,6 +60,29 @@ class ManagedRequirementResponse(PydanticBaseModel):
         return managed_requirement_response
 
 
+class AbsencePeriodStatusResponse(PydanticBaseModel):
+    fineos_leave_period_id: Optional[str]
+    absence_period_start_date: Optional[date]
+    absence_period_end_date: Optional[date]
+    reason: Optional[str]
+    reason_qualifier_one: Optional[str]
+    reason_qualifier_two: Optional[str]
+    period_type: Optional[str]
+    request_decision: Optional[str]
+    # Not in absence_period yet. Should be N/A, Pending, Waived, Satisfied, Not Satisfied, Not Required
+    evidence_status: Optional[str]
+
+
+class EvidenceDetail(PydanticBaseModel):
+    document_name: Optional[str]
+    is_document_received: Optional[bool]
+
+
+class OutstandingEvidenceResponse(PydanticBaseModel):
+    employee_evidence: Optional[List[EvidenceDetail]]
+    employer_evidence: Optional[List[EvidenceDetail]]
+
+
 class ClaimResponse(PydanticBaseModel):
     fineos_absence_id: Optional[str]
     employer: Optional[EmployerResponse]
@@ -79,6 +102,32 @@ class ClaimResponse(PydanticBaseModel):
             claim_response.claim_status = claim.fineos_absence_status.absence_status_description
         if claim.claim_type:
             claim_response.claim_type_description = claim.claim_type.claim_type_description
+        return claim_response
+
+
+# This class is intended to show more granular data about a claim that is not shown in the dashboard,
+# where ClaimResponse is used. For now the detailed data is absence_periods and outstanding evidence.
+class DetailedClaimResponse(PydanticBaseModel):
+    application_id: Optional[str]
+    fineos_absence_id: Optional[str]
+    employer: Optional[EmployerResponse]
+    employee: Optional[EmployeeResponse]
+    fineos_notification_id: Optional[str]
+    claim_status: Optional[str]
+    created_at: Optional[date]
+    absence_periods: Optional[List[AbsencePeriodStatusResponse]]
+    managed_requirements: Optional[List[ManagedRequirementResponse]]
+    # Place holder for future implementation.
+    outstanding_evidence: Optional[OutstandingEvidenceResponse]
+
+    @classmethod
+    def from_orm(cls, claim: Claim) -> "DetailedClaimResponse":
+        claim_response = super().from_orm(claim)
+        if claim.fineos_absence_status:
+            claim_response.claim_status = claim.fineos_absence_status.absence_status_description
+        # Dropping data from DB acquired automatically through the super()_from_orm call.
+        # The periods are populated using FINEOS API data.
+        claim_response.absence_periods = []
         return claim_response
 
 
@@ -106,8 +155,8 @@ class ClaimReviewResponse(PydanticBaseModel):
 
 class DocumentResponse(PydanticBaseModel):
     created_at: Optional[date]
-    document_type: Optional[str]
+    document_type: str
     content_type: Optional[str]
-    fineos_document_id: Optional[str]
-    name: str
-    description: str
+    fineos_document_id: str
+    name: Optional[str]
+    description: Optional[str]

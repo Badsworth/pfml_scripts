@@ -61,6 +61,8 @@ def _random_payment_with_state_log(
         disb_method_id=method.payment_method_id,
         experian_address_pair=address_pair,
         claim_type=claim.claim_type,
+        fineos_employee_first_name=employee.first_name,
+        fineos_employee_last_name=employee.last_name,
     )
 
     state_log_util.create_finished_state_log(
@@ -314,5 +316,7 @@ def test_format_employee_name_for_ez_check_success(
     last_name,
     expected_result,
 ):
-    employee = EmployeeFactory(first_name=first_name, last_name=last_name)
-    assert pub_check._format_employee_name_for_ez_check(employee) == expected_result
+    payment = PaymentFactory(
+        fineos_employee_first_name=first_name, fineos_employee_last_name=last_name
+    )
+    assert pub_check._format_employee_name_for_ez_check(payment) == expected_result

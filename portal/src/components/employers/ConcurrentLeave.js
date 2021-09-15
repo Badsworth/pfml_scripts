@@ -38,9 +38,10 @@ const ConcurrentLeave = (props) => {
       <Table className="width-full">
         <thead>
           <tr>
-            <th scope="col" colSpan="2">
+            <th scope="col">
               {t("components.employersConcurrentLeave.dateRangeLabel")}
             </th>
+            <th></th>
           </tr>
         </thead>
         <tbody>
@@ -53,8 +54,8 @@ const ConcurrentLeave = (props) => {
             />
           ) : (
             <tr>
-              <th scope="row">{t("shared.noneReported")}</th>
-              <td colSpan="3" />
+              <td>{t("shared.noneReported")}</td>
+              <td></td>
             </tr>
           )}
           {currentConcurrentLeave && !originalConcurrentLeave && (
@@ -67,12 +68,13 @@ const ConcurrentLeave = (props) => {
           )}
           {!currentConcurrentLeave && (
             <tr>
-              <td colSpan="2" className="padding-y-2 padding-left-0">
+              <td className="padding-y-2 padding-left-0">
                 <AddButton
                   label={t("components.employersConcurrentLeave.addButton")}
                   onClick={addConcurrentLeave}
                 />
               </td>
+              <td></td>
             </tr>
           )}
         </tbody>

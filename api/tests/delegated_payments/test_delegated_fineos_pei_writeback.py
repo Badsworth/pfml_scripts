@@ -60,8 +60,8 @@ def local_fineos_pei_writeback_step(
 
 def _generate_payment(payment_method: LkPaymentMethod = PaymentMethod.ACH) -> Payment:
     payment = PaymentFactory.create(
-        fineos_pei_c_value=str(fake.random_int(min=1000, max=9999)),
-        fineos_pei_i_value=str(fake.random_int(min=1000, max=9999)),
+        fineos_pei_c_value="1000",
+        fineos_pei_i_value=str(fake.unique.random_int(min=1000, max=9999)),
         fineos_extraction_date=date.today() - timedelta(days=fake.random_int()),
         disb_method_id=payment_method.payment_method_id,
     )

@@ -1,0 +1,204 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LeaveSchedule renders continuous schedule 1`] = `
+<Fragment>
+  <ReviewHeading
+    level="2"
+  >
+    Leave schedule
+  </ReviewHeading>
+  <p>
+    <Trans
+      i18nKey="components.employersLeaveSchedule.caption"
+      tOptions={
+        Object {
+          "context": "",
+        }
+      }
+    />
+  </p>
+  <Table
+    className="width-full"
+  >
+    <thead>
+      <tr>
+        <th
+          scope="col"
+        >
+          Date range
+        </th>
+        <th
+          scope="col"
+        >
+          Leave frequency
+        </th>
+        <th
+          scope="col"
+        >
+          Details
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th
+          scope="row"
+        >
+          1/1/2021 to 6/1/2021
+        </th>
+        <td>
+          Continuous leave
+        </td>
+        <td />
+      </tr>
+    </tbody>
+  </Table>
+</Fragment>
+`;
+
+exports[`LeaveSchedule renders intermittent schedule 1`] = `
+<Fragment>
+  <ReviewHeading
+    level="2"
+  >
+    Leave schedule
+  </ReviewHeading>
+  <p>
+    <Trans
+      i18nKey="components.employersLeaveSchedule.caption"
+      tOptions={
+        Object {
+          "context": "",
+        }
+      }
+    />
+  </p>
+  <Table
+    className="width-full"
+  >
+    <thead>
+      <tr>
+        <th
+          scope="col"
+        >
+          Date range
+        </th>
+        <th
+          scope="col"
+        >
+          Leave frequency
+        </th>
+        <th
+          scope="col"
+        >
+          Details
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <IntermittentLeaveSchedule
+        hasDocuments={false}
+        intermittentLeavePeriods={
+          Array [
+            IntermittentLeavePeriod {
+              "duration": 3,
+              "duration_basis": "Hours",
+              "end_date": "2021-07-01",
+              "frequency": 6,
+              "frequency_interval": 6,
+              "frequency_interval_basis": "Months",
+              "leave_period_id": "mock-leave-period-id",
+              "start_date": "2021-02-01",
+            },
+          ]
+        }
+      />
+    </tbody>
+  </Table>
+</Fragment>
+`;
+
+exports[`LeaveSchedule renders intermittent schedule 2`] = `"This is your employee’s expected leave schedule."`;
+
+exports[`LeaveSchedule renders reduced schedule 1`] = `
+<Fragment>
+  <ReviewHeading
+    level="2"
+  >
+    Leave schedule
+  </ReviewHeading>
+  <p>
+    <Trans
+      i18nKey="components.employersLeaveSchedule.caption"
+      tOptions={
+        Object {
+          "context": "",
+        }
+      }
+    />
+  </p>
+  <Table
+    className="width-full"
+  >
+    <thead>
+      <tr>
+        <th
+          scope="col"
+        >
+          Date range
+        </th>
+        <th
+          scope="col"
+        >
+          Leave frequency
+        </th>
+        <th
+          scope="col"
+        >
+          Details
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th
+          scope="row"
+        />
+        <td>
+          Reduced leave schedule
+        </td>
+        <td>
+          <Trans
+            components={
+              Object {
+                "contact-center-phone-link": <a
+                  href="tel:(833) 344-7365"
+                />,
+              }
+            }
+            i18nKey="components.employersLeaveSchedule.lead"
+            tOptions={
+              Object {
+                "context": "noDocs",
+              }
+            }
+          />
+        </td>
+      </tr>
+    </tbody>
+  </Table>
+</Fragment>
+`;
+
+exports[`LeaveSchedule renders reduced schedule 2`] = `
+Array [
+  "Contact us at ",
+  <a
+    href="tel:(833) 344-7365"
+    key="1"
+  >
+    (833) 344‑7365
+  </a>,
+  " for details about the leave schedule.",
+]
+`;

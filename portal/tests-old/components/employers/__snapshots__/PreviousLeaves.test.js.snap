@@ -1,0 +1,158 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PreviousLeaves renders the component 1`] = `
+<Fragment>
+  <Heading
+    level="3"
+  >
+    Previous leave
+  </Heading>
+  <p>
+    <Trans
+      components={
+        Object {
+          "calculate-reductions-link": <a
+            href="https://www.mass.gov/guides/what-to-expect-when-you-apply-for-paid-family-and-medical-leave-benefits#-calculate-any-reductions-"
+            rel="noopener"
+            target="_blank"
+          />,
+        }
+      }
+      i18nKey="components.employersPreviousLeaves.explanation"
+    />
+  </p>
+  <Details
+    className="text-bold"
+    label="What counts as a qualifying reason?"
+  >
+    <p>
+      An employee or contractor can take paid or unpaid leave to:
+    </p>
+    <ul
+      className="usa-list"
+    >
+      <li>
+        <Trans
+          components={
+            Object {
+              "mass-benefits-guide-serious-health-condition-link": <a
+                href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-"
+                rel="noopener"
+                target="_blank"
+              />,
+            }
+          }
+          i18nKey="components.employersPreviousLeaves.qualifyingReason_manageHealth"
+        />
+      </li>
+      <li>
+        Bond with a child after birth or placement
+      </li>
+      <li>
+        Manage family affairs when a family member is on active duty in the armed forces
+      </li>
+      <li>
+        Care for a family member who serves in the armed forces
+      </li>
+      <li>
+        <Trans
+          components={
+            Object {
+              "mass-benefits-guide-serious-health-condition-link": <a
+                href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-"
+                rel="noopener"
+                target="_blank"
+              />,
+            }
+          }
+          i18nKey="components.employersPreviousLeaves.qualifyingReason_careForFamilyMedical"
+        />
+      </li>
+    </ul>
+  </Details>
+  <Table
+    className="width-full"
+  >
+    <thead>
+      <tr>
+        <th
+          scope="col"
+        >
+          Date range
+        </th>
+        <th
+          scope="col"
+        >
+          Leave type
+        </th>
+        <th />
+      </tr>
+    </thead>
+    <tbody>
+      <AmendablePreviousLeave
+        appErrors={
+          AppErrorInfoCollection {
+            "items": Array [],
+            "itemsById": Object {},
+          }
+        }
+        isAddedByLeaveAdmin={false}
+        key="0"
+        onChange={[Function]}
+        onRemove={[Function]}
+        previousLeave={
+          PreviousLeave {
+            "is_for_current_employer": true,
+            "leave_end_date": "2020-03-06",
+            "leave_minutes": 2400,
+            "leave_reason": "Caring for a family member who serves in the armed forces",
+            "leave_start_date": "2020-03-01",
+            "previous_leave_id": 0,
+            "type": "other_reason",
+            "worked_per_week_minutes": 1440,
+          }
+        }
+        shouldShowV2={true}
+      />
+      <AmendablePreviousLeave
+        appErrors={
+          AppErrorInfoCollection {
+            "items": Array [],
+            "itemsById": Object {},
+          }
+        }
+        isAddedByLeaveAdmin={false}
+        key="1"
+        onChange={[Function]}
+        onRemove={[Function]}
+        previousLeave={
+          PreviousLeave {
+            "is_for_current_employer": true,
+            "leave_end_date": "2020-05-10",
+            "leave_minutes": 4800,
+            "leave_reason": "Bonding with my child after birth or placement",
+            "leave_start_date": "2020-05-01",
+            "previous_leave_id": 1,
+            "type": "same_reason",
+            "worked_per_week_minutes": 960,
+          }
+        }
+        shouldShowV2={true}
+      />
+      <tr>
+        <td
+          className="padding-y-2 padding-left-0"
+        >
+          <AddButton
+            disabled={false}
+            label="Add a previous leave"
+            onClick={[Function]}
+          />
+        </td>
+        <td />
+        <td />
+      </tr>
+    </tbody>
+  </Table>
+</Fragment>
+`;

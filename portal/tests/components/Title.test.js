@@ -1,90 +1,63 @@
+import { render, screen } from "@testing-library/react";
 import React from "react";
 import Title from "../../src/components/Title";
-import { shallow } from "enzyme";
+
+jest.mock("react-helmet", () => {
+  // Render <title> directly in document.body so we can assert its value
+  return { Helmet: ({ children }) => children };
+});
 
 describe("Title", () => {
-  describe("when the `component` prop isn't set", () => {
-    it("renders an <h1>", () => {
-      const wrapper = shallow(<Title>Hello world</Title>);
+  it("renders an <h1> by default", () => {
+    render(<Title>Hello world</Title>);
 
-      expect(wrapper).toMatchInlineSnapshot(`
-        <Fragment>
-          <HelmetWrapper
-            defer={true}
-            encodeSpecialCharacters={true}
-          >
-            <title>
-              Hello world
-            </title>
-          </HelmetWrapper>
-          <h1
-            className="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
-            tabIndex="-1"
-          >
-            Hello world
-          </h1>
-        </Fragment>
-      `);
-    });
+    expect(
+      screen.getByRole("heading", { name: "Hello world", level: 1 })
+    ).toBeInTheDocument();
+  });
+
+  it("sets the page title", () => {
+    render(<Title>Hello world</Title>);
+
+    expect(document.title).toBe("Hello world");
+  });
+
+  it("supports setting a custom the page title", () => {
+    render(<Title seoTitle="Custom page title">Hello world</Title>);
+
+    expect(document.title).toBe("Custom page title");
   });
 
   it("adds a tabIndex and js-title class to the heading so we can manually move user focus to it", () => {
-    const wrapper = shallow(<Title>Hello world</Title>);
-    const h1 = wrapper.find("h1");
+    render(<Title>Hello world</Title>);
+    const heading = screen.getByRole("heading");
 
-    expect(h1.hasClass("js-title")).toBe(true);
-    expect(h1.prop("tabIndex")).toBe("-1");
+    expect(heading).toHaveClass("js-title");
+    expect(heading.tabIndex).toBe(-1);
   });
 
-  describe("when the `bottomMargin` prop is set", () => {
-    it("overrides the default bottom margin", () => {
-      const defaultBottomMargin = shallow(<Title>Hello world</Title>).find(
-        "h1"
-      );
-      const withBottomMargin = shallow(
-        <Title marginBottom="4">Hello world</Title>
-      ).find("h1");
+  it("overrides the default bottom margin when the `bottomMargin` prop is set", () => {
+    render(<Title marginBottom="4">Hello world</Title>);
 
-      expect(defaultBottomMargin.hasClass("margin-bottom-2")).toBe(true);
-      expect(withBottomMargin.hasClass("margin-bottom-2")).toBe(false);
-      expect(withBottomMargin.hasClass("margin-bottom-4")).toBe(true);
-    });
+    expect(screen.getByRole("heading")).toHaveClass("margin-bottom-4");
   });
 
-  describe("when the `component` prop is set to 'legend'", () => {
-    it("renders a <legend>", () => {
-      const wrapper = shallow(<Title component="legend">Hello world</Title>);
+  it("renders a <legend> when the `component` prop is set to 'legend'", () => {
+    const { container } = render(<Title component="legend">Hello world</Title>);
 
-      expect(wrapper.find("legend").hasClass("usa-legend")).toBe(true);
-    });
+    expect(container.querySelector("legend")).toHaveClass("usa-legend");
   });
 
-  describe("when the `hidden` prop is set to true", () => {
-    it("visually hides the heading", () => {
-      const heading = shallow(<Title hidden>Hello world</Title>).find("h1");
-
-      expect(heading.hasClass("usa-sr-only")).toBe(true);
-    });
+  it("visually hides the heading when the `hidden` prop is set to true", () => {
+    render(<Title hidden>Hello world</Title>);
+    expect(screen.getByRole("heading")).toHaveClass("usa-sr-only");
   });
 
-  describe("when the `seoTitle` prop is set", () => {
-    it("overrides the text used for the <title>", () => {
-      const wrapper = shallow(
-        <Title seoTitle="Custom title">Default title</Title>
-      );
+  it("adds classes for a smaller type size when `small` prop is true", () => {
+    render(<Title small>Hello world</Title>);
 
-      expect(wrapper.find("title").text()).toBe("Custom title");
-      expect(wrapper.find("h1").text()).toBe("Default title");
-    });
-  });
-
-  describe("when `small` is true", () => {
-    it("adds classes for a smaller type size", () => {
-      const wrapper = shallow(<Title small>Hello world</Title>);
-
-      expect(wrapper.find("h1").prop("className")).toMatchInlineSnapshot(
-        `"js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"`
-      );
-    });
+    expect(screen.getByRole("heading")).toHaveClass(
+      "font-heading-sm line-height-sans-3"
+    );
   });
 });

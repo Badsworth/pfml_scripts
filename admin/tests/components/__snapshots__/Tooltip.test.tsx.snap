@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Tooltip renders the default component 1`] = `
+<span
+  className="tooltip tooltip--right"
+  data-testid="tooltip"
+>
+  <span
+    aria-describedby=""
+    className="tooltip__trigger"
+    data-testid="tooltip-trigger"
+    role="button"
+    tabIndex={0}
+  />
+  <span
+    className="tooltip__container"
+    data-testid="tooltip-container"
+    id=""
+    role="tooltip"
+  >
+    <span
+      className="tooltip__text"
+      data-testid="tooltip-text"
+    >
+      This is a test tooltip.
+    </span>
+  </span>
+</span>
+`;

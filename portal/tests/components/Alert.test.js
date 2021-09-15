@@ -1,144 +1,103 @@
-import { mount, shallow } from "enzyme";
+import { render, screen } from "@testing-library/react";
 import Alert from "../../src/components/Alert";
 import React from "react";
 
-function render(customProps = {}) {
-  const props = Object.assign(
-    {
-      children: "Alert body text",
-    },
-    customProps
-  );
-
-  const component = <Alert {...props} />;
-
-  return {
-    props,
-    wrapper: shallow(component),
-  };
-}
+const renderComponent = (customProps = {}) => {
+  return render(<Alert {...customProps}>This is an alert</Alert>);
+};
 
 describe("Alert", () => {
   it("renders the children as the alert body text", () => {
-    const { wrapper } = render({ children: <p>Body text</p> });
+    const { container } = renderComponent();
 
-    expect(wrapper.find(".usa-alert__text")).toMatchInlineSnapshot(`
-      <div
-        className="usa-alert__text"
-      >
-        <p>
-          Body text
-        </p>
-      </div>
-    `);
+    expect(container.firstChild).toMatchSnapshot();
+    expect(screen.getByText("This is an alert")).toBeInTheDocument();
   });
 
   it("renders an h2 when the heading prop is set", () => {
-    const { wrapper } = render({ heading: "Alert heading" });
-
-    expect(wrapper.find("Heading")).toMatchInlineSnapshot(`
-      <Heading
-        className="usa-alert__heading"
-        level="2"
-      >
-        Alert heading
-      </Heading>
-    `);
+    renderComponent({ heading: "Alert heading" });
+    expect(
+      screen.getByRole("heading", { level: 2, name: "Alert heading" })
+    ).toBeInTheDocument();
   });
 
   it("renders an h3 when headingLevel is set to 3", () => {
-    const { wrapper } = render({ heading: "Alert heading", headingLevel: "3" });
+    renderComponent({ heading: "Alert heading", headingLevel: "3" });
 
-    expect(wrapper.find("Heading").prop("level")).toBe("3");
-    expect(wrapper.find("Heading").prop("size")).toBeUndefined();
+    const h3 = screen.getByRole("heading", { level: 3 });
+    expect(h3).toBeInTheDocument();
   });
 
-  it("renders overrides the Heading size when headingSize is set to 3", () => {
-    const { wrapper } = render({ heading: "Alert heading", headingSize: "3" });
+  it("overrides the Heading size when headingSize is set to 3", () => {
+    renderComponent({ heading: "Alert heading", headingSize: "3" });
 
-    expect(wrapper.find("Heading").prop("level")).toBe("2");
-    expect(wrapper.find("Heading").prop("size")).toBe("3");
+    const h2 = screen.getByRole("heading", { level: 2 });
+    expect(h2).toBeInTheDocument();
+    expect(h2).toHaveClass("font-heading-sm");
   });
 
   it("renders the 'error' state by default", () => {
-    const { wrapper } = render();
+    const { container } = renderComponent();
 
-    expect(wrapper.hasClass("usa-alert--error")).toBe(true);
+    expect(container.firstChild).toHaveClass("usa-alert--error");
   });
 
   it("forwards the ref to the alert element", () => {
     const alertRef = React.createRef();
-    // We need to wrap this with another component in order to test this
-    const wrapper = mount(
-      <React.Fragment>
-        <Alert ref={alertRef}>Test</Alert>
-      </React.Fragment>
-    );
+    const { container } = renderComponent({ ref: alertRef });
 
-    expect(wrapper.find(".usa-alert").instance()).toBe(alertRef.current);
+    expect(container.firstChild).toBe(alertRef.current);
   });
 
-  describe("when the role prop isn't set", () => {
-    it("adds role='region' to the alert body element", () => {
-      const { wrapper } = render();
-
-      const bodyElement = wrapper.find(".usa-alert__body");
-
-      expect(bodyElement.prop("role")).toBe("region");
-    });
+  it("renders role='region' by default", () => {
+    renderComponent();
+    const alertBody = screen.getByRole("region");
+    expect(alertBody).toBeInTheDocument();
+    expect(alertBody).toHaveClass("usa-alert__body");
   });
 
-  describe("when the role prop is set", () => {
-    it("adds the role to the alert body element", () => {
-      const role = "alert";
-      const { wrapper } = render({ role });
-
-      const bodyElement = wrapper.find(".usa-alert__body");
-
-      expect(bodyElement.prop("role")).toBe(role);
-    });
+  it("adds the role to the alert body element", () => {
+    renderComponent({ role: "alert" });
+    expect(screen.getByRole("alert")).toBeInTheDocument();
   });
 
   it("renders the 'info' state when the state prop is set to 'info'", () => {
-    const { wrapper } = render({ state: "info" });
-
-    expect(wrapper.hasClass("usa-alert--info")).toBe(true);
+    const { container } = renderComponent({ state: "info" });
+    expect(container.firstChild).toHaveClass("usa-alert--info");
   });
 
   it("renders the 'success' state when the state prop is set to 'success'", () => {
-    const { wrapper } = render({ state: "success" });
-
-    expect(wrapper.hasClass("usa-alert--success")).toBe(true);
+    const { container } = renderComponent({ state: "success" });
+    expect(container.firstChild).toHaveClass("usa-alert--success");
   });
 
   it("renders the 'warning' state when the state prop is set to 'warning'", () => {
-    const { wrapper } = render({ state: "warning" });
-
-    expect(wrapper.hasClass("usa-alert--warning")).toBe(true);
+    const { container } = renderComponent({ state: "warning" });
+    expect(container.firstChild).toHaveClass("usa-alert--warning");
   });
 
   it("renders with an icon when the noIcon prop is not set", () => {
-    const { wrapper } = render();
-    expect(wrapper.hasClass("usa-alert--no-icon")).toBe(false);
+    const { container } = renderComponent();
+    expect(container.firstChild).not.toHaveClass("usa-alert--no-icon");
   });
 
   it("renders without an icon when the noIcon prop is set", () => {
-    const { wrapper } = render({ noIcon: true });
-    expect(wrapper.hasClass("usa-alert--no-icon")).toBe(true);
+    const { container } = renderComponent({ noIcon: true });
+    expect(container.firstChild).toHaveClass("usa-alert--no-icon");
   });
 
   it("renders slim when the slim prop is set", () => {
-    const { wrapper } = render({ slim: true });
-    expect(wrapper.hasClass("usa-alert--slim")).toBe(true);
+    const { container } = renderComponent({ slim: true });
+    expect(container.firstChild).toHaveClass("usa-alert--slim");
   });
 
   it("renders with a neutral background color when the neutral prop is set", () => {
-    const { wrapper } = render({ neutral: true });
-    expect(wrapper.hasClass("c-alert--neutral")).toBe(true);
+    const { container } = renderComponent({ neutral: true });
+    expect(container.firstChild).toHaveClass("c-alert--neutral");
   });
 
   it("renders auto-width when the autoWidth prop is set", () => {
-    const { wrapper } = render({ autoWidth: true });
-    expect(wrapper.hasClass("c-alert--auto-width")).toBe(true);
+    const { container } = renderComponent({ autoWidth: true });
+    expect(container.firstChild).toHaveClass("c-alert--auto-width");
   });
 });

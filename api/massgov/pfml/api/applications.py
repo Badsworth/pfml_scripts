@@ -1,21 +1,21 @@
 import base64
+from uuid import UUID
 
 import connexion
-import flask
 import puremagic
-from flask import Response
+from flask import Response, request
 from puremagic import PureError
 from pydantic import ValidationError
-from sqlalchemy import desc
+from sqlalchemy import asc, desc
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, ServiceUnavailable, Unauthorized
 
 import massgov.pfml.api.app as app
-import massgov.pfml.api.services.application_rules as application_rules
 import massgov.pfml.api.services.applications as applications_service
 import massgov.pfml.api.util.response as response_util
+import massgov.pfml.api.validation.application_rules as application_rules
 import massgov.pfml.util.datetime as datetime_util
 import massgov.pfml.util.logging
-from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, can, ensure
+from massgov.pfml.api.authorization.flask import CREATE, EDIT, READ, ensure
 from massgov.pfml.api.models.applications.common import ContentType as AllowedContentTypes
 from massgov.pfml.api.models.applications.common import DocumentType as IoDocumentTypes
 from massgov.pfml.api.models.applications.requests import (
@@ -25,9 +25,6 @@ from massgov.pfml.api.models.applications.requests import (
 )
 from massgov.pfml.api.models.applications.responses import ApplicationResponse, DocumentResponse
 from massgov.pfml.api.services.applications import get_document_by_id
-from massgov.pfml.api.services.employment_validator import (
-    get_contributing_employer_or_employee_issue,
-)
 from massgov.pfml.api.services.fineos_actions import (
     complete_intake,
     create_other_leaves_and_other_incomes_eforms,
@@ -39,8 +36,14 @@ from massgov.pfml.api.services.fineos_actions import (
     submit_payment_preference,
     upload_document,
 )
-from massgov.pfml.api.util.response import Issue, IssueType
-from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
+from massgov.pfml.api.validation.employment_validator import (
+    get_contributing_employer_or_employee_issue,
+)
+from massgov.pfml.api.validation.exceptions import (
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.db.models.applications import (
     Application,
     ContentType,
@@ -58,6 +61,11 @@ from massgov.pfml.fineos.exception import (
     FINEOSNotFound,
 )
 from massgov.pfml.util.logging.applications import get_application_log_attributes
+from massgov.pfml.util.paginate.paginator import (
+    ApplicationPaginationAPIContext,
+    OrderDirection,
+    page_for_api_context,
+)
 from massgov.pfml.util.sqlalchemy import get_or_404
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -83,7 +91,7 @@ def application_get(application_id):
         ensure(READ, existing_application)
         application_response = ApplicationResponse.from_orm(existing_application)
 
-    issues = application_rules.get_application_issues(existing_application, flask.request.headers)
+    issues = application_rules.get_application_issues(existing_application)
 
     return response_util.success_response(
         message="Successfully retrieved application",
@@ -97,26 +105,23 @@ def applications_get():
         user_id = user.user_id
     else:
         raise Unauthorized
+    with ApplicationPaginationAPIContext(Application, request=request) as pagination_context:
+        with app.db_session() as db_session:
+            is_asc = pagination_context.order_direction == OrderDirection.asc.value
+            sort_fn = asc if is_asc else desc
+            application_query = (
+                db_session.query(Application)
+                .filter(Application.user_id == user_id)
+                .order_by(sort_fn(pagination_context.order_key))
+            )
+            page = page_for_api_context(pagination_context, application_query)
 
-    with app.db_session() as db_session:
-        applications = (
-            db_session.query(Application)
-            .filter(Application.user_id == user_id)
-            .order_by(desc(Application.start_time))
-            .limit(50)  # Mitigate slow queries for end-to-end test user
-            .all()
-        )
-
-        filtered_applications = filter(lambda a: can(READ, a), applications)
-
-    applications_response = list(
-        map(
-            lambda application: ApplicationResponse.from_orm(application).dict(),
-            filtered_applications,
-        )
-    )
-    return response_util.success_response(
-        message="Successfully retrieved applications", data=applications_response
+    return response_util.paginated_success_response(
+        message="Successfully retrieved applications",
+        model=ApplicationResponse,
+        page=page,
+        context=pagination_context,
+        status_code=200,
     ).to_api_response()
 
 
@@ -183,7 +188,7 @@ def applications_update(application_id):
             db_session, application_request, existing_application
         )
 
-    issues = application_rules.get_application_issues(existing_application, flask.request.headers)
+    issues = application_rules.get_application_issues(existing_application)
     employer_issue = get_contributing_employer_or_employee_issue(
         db_session, existing_application.employer_fein, existing_application.tax_identifier
     )
@@ -212,7 +217,7 @@ def get_fineos_submit_issues_response(err, existing_application):
                 existing_application.application_id
             ),
             errors=[
-                Issue(
+                ValidationErrorDetail(
                     IssueType.fineos_case_creation_issues, "register_employee did not find a match"
                 )
             ],
@@ -228,7 +233,7 @@ def get_fineos_submit_issues_response(err, existing_application):
                 existing_application.application_id
             ),
             errors=[
-                Issue(
+                ValidationErrorDetail(
                     IssueType.fineos_case_error,
                     "Unexpected error encountered when submitting to the Claims Processing System",
                 )
@@ -249,9 +254,7 @@ def applications_submit(application_id):
 
         log_attributes = get_application_log_attributes(existing_application)
 
-        issues = application_rules.get_application_issues(
-            existing_application, flask.request.headers
-        )
+        issues = application_rules.get_application_issues(existing_application)
         employer_issue = get_contributing_employer_or_employee_issue(
             db_session, existing_application.employer_fein, existing_application.tax_identifier
         )
@@ -376,9 +379,7 @@ def applications_complete(application_id):
 
         log_attributes = get_application_log_attributes(existing_application)
 
-        issues = application_rules.get_application_issues(
-            existing_application, flask.request.headers
-        )
+        issues = application_rules.get_application_issues(existing_application)
         if issues:
             logger.info(
                 "applications_complete failure - application failed validation",
@@ -426,7 +427,10 @@ def validate_content_type(content_type):
         message = "Incorrect file type: {}".format(content_type)
         logger.warning(message)
         validation_error = ValidationErrorDetail(
-            message=message, type="file_type", rule=allowed_content_types, field="file",
+            message=message,
+            type=IssueType.file_type,
+            rule=", ".join(allowed_content_types),
+            field="file",
         )
         raise ValidationException(errors=[validation_error], message=message, data={})
 
@@ -445,7 +449,7 @@ def get_valid_content_type(file):
             logger.warning(message)
             validation_error = ValidationErrorDetail(
                 message=message,
-                type="file_type_mismatch",
+                type=IssueType.file_type_mismatch,
                 rule="Detected content type and mime type do not match.",
                 field="file",
             )
@@ -465,7 +469,7 @@ def validate_file_name(file_name):
         message = "Missing extension on file name: {}".format(file_name)
         validation_error = ValidationErrorDetail(
             message=message,
-            type="file_name_extension",
+            type=IssueType.file_name_extension,
             rule="File name extension required.",
             field="file",
         )
@@ -521,7 +525,7 @@ def document_upload(application_id, body, file):
             return response_util.error_response(
                 status_code=BadRequest,
                 message="File validation error.",
-                errors=[response_util.validation_issue(error) for error in ve.errors],
+                errors=ve.errors,
                 data=document_details.dict(),
             ).to_api_response()
 
@@ -597,7 +601,7 @@ def document_upload(application_id, body, file):
                 return response_util.error_response(
                     status_code=BadRequest,
                     message=message,
-                    errors=[response_util.custom_issue("fineos_client", message)],
+                    errors=[ValidationErrorDetail(type=IssueType.fineos_client, message=message)],
                     data=document_details.dict(),
                 ).to_api_response()
 
@@ -679,7 +683,7 @@ def documents_get(application_id):
         ).to_api_response()
 
 
-def document_download(application_id: str, document_id: str) -> Response:
+def document_download(application_id: UUID, document_id: str) -> Response:
     with app.db_session() as db_session:
         # Get the referenced application or return 404
         existing_application = get_or_404(db_session, Application, application_id)
@@ -693,8 +697,8 @@ def document_download(application_id: str, document_id: str) -> Response:
 
         ensure(READ, document)
 
-        document_data: massgov.pfml.fineos.models.customer_api.Base64EncodedFileData = download_document(
-            existing_application, document_id, db_session
+        document_data: massgov.pfml.fineos.models.customer_api.Base64EncodedFileData = (
+            download_document(existing_application, document_id, db_session)
         )
         file_bytes = base64.b64decode(document_data.base64EncodedFileContents.encode("ascii"))
 
@@ -707,7 +711,7 @@ def document_download(application_id: str, document_id: str) -> Response:
         )
 
 
-def employer_benefit_delete(application_id: str, employer_benefit_id: str) -> Response:
+def employer_benefit_delete(application_id: UUID, employer_benefit_id: UUID) -> Response:
     with app.db_session() as db_session:
         existing_application = get_or_404(db_session, Application, application_id)
 
@@ -728,7 +732,7 @@ def employer_benefit_delete(application_id: str, employer_benefit_id: str) -> Re
     ).to_api_response()
 
 
-def other_income_delete(application_id: str, other_income_id: str) -> Response:
+def other_income_delete(application_id: UUID, other_income_id: UUID) -> Response:
     with app.db_session() as db_session:
         existing_application = get_or_404(db_session, Application, application_id)
 
@@ -747,7 +751,7 @@ def other_income_delete(application_id: str, other_income_id: str) -> Response:
     ).to_api_response()
 
 
-def previous_leave_delete(application_id: str, previous_leave_id: str) -> Response:
+def previous_leave_delete(application_id: UUID, previous_leave_id: UUID) -> Response:
     with app.db_session() as db_session:
         existing_application = get_or_404(db_session, Application, application_id)
 
@@ -768,7 +772,7 @@ def previous_leave_delete(application_id: str, previous_leave_id: str) -> Respon
     ).to_api_response()
 
 
-def payment_preference_submit(application_id: str) -> Response:
+def payment_preference_submit(application_id: UUID) -> Response:
     body = connexion.request.json
 
     with app.db_session() as db_session:

@@ -11,14 +11,7 @@ import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
 import massgov.pfml.experian.address_validate_soap.client as soap_api
 import massgov.pfml.experian.address_validate_soap.models as sm
-from massgov.pfml.db.models.employees import (
-    Address,
-    LkState,
-    Payment,
-    PaymentMethod,
-    State,
-    StateLog,
-)
+from massgov.pfml.db.models.employees import LkState, Payment, PaymentMethod, State, StateLog
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ClaimFactory,
@@ -27,15 +20,8 @@ from massgov.pfml.db.models.factories import (
     PaymentFactory,
 )
 from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
-from massgov.pfml.delegated_payments.address_validation import (
-    AddressValidationStep,
-    Constants,
-    _get_end_state_and_message_for_multiple_matches,
-    _normalize_address_string,
-)
+from massgov.pfml.delegated_payments.address_validation import AddressValidationStep, Constants
 from massgov.pfml.experian.address_validate_soap.mock_caller import MockVerificationZeepCaller
-from massgov.pfml.experian.physical_address.client.mock import MockClient
-from massgov.pfml.experian.physical_address.client.models.search import Confidence
 
 fake = faker.Faker()
 
@@ -70,36 +56,6 @@ def _random_valid_payment_with_state_log(db_session: db.Session, payment_method_
     db_session.commit()
 
     return payment
-
-
-def _set_up_payments(
-    client: MockClient,
-    db_session: db.Session,
-    payment_count: int,
-    confidence: Optional[Confidence] = None,
-    payment_method_id: int = PaymentMethod.CHECK.payment_method_id,
-    suggested_address_mismatch: bool = False,
-) -> List[Payment]:
-    payments = []
-    for _i in range(payment_count):
-        payment = _random_valid_payment_with_state_log(db_session, payment_method_id)
-
-        if confidence is not None:
-            # Unset the experian_address_pair.experian_address so _address_has_been_validated()
-            # returns False and we make a request to the Experian API.
-            payment.experian_address_pair.experian_address = None
-
-            # Add experian_address_pair.fineos_address to mock client.
-            address = payment.experian_address_pair.fineos_address
-
-            # Mock client returns input address in suggestions list unless we explicitly
-            # indicate that we want a mismatch.
-            suggested_address = "Fake address string" if suggested_address_mismatch else None
-            client.add_mock_address_response(address, confidence, suggested_address)
-
-        payments.append(payment)
-
-    return payments
 
 
 def _setup_soap_payments(
@@ -180,119 +136,9 @@ def _assert_payment_state_log_outcome(
         )
 
 
-def test_run_step_state_transitions(
-    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
-):
-    client = MockClient()
-
-    check_payments_with_validated_addresses = _set_up_payments(
-        client, local_test_db_session, fake.random_int(min=2, max=4)
-    )
-    check_payments_with_single_verified_matching_addresses = _set_up_payments(
-        client, local_test_db_session, fake.random_int(min=2, max=4), Confidence.VERIFIED_MATCH
-    )
-    check_payments_with_non_matching_addresses = _set_up_payments(
-        client, local_test_db_session, fake.random_int(min=2, max=4), Confidence.NO_MATCHES
-    )
-    check_payments_with_multiple_matching_addresses = _set_up_payments(
-        client,
-        local_test_db_session,
-        fake.random_int(min=2, max=4),
-        Confidence.MULTIPLE_MATCHES,
-        suggested_address_mismatch=True,
-    )
-    check_payments_with_multiple_matching_addresses_and_near_match = _set_up_payments(
-        client, local_test_db_session, fake.random_int(min=2, max=4), Confidence.MULTIPLE_MATCHES
-    )
-
-    # Commit the various experian_address_pair.experian_address = None changes to the database.
-    local_test_db_session.commit()
-
-    with mock.patch(
-        "massgov.pfml.delegated_payments.address_validation._get_experian_rest_client",
-        return_value=client,
-    ), mock.patch(
-        "massgov.pfml.delegated_payments.address_validation._get_experian_soap_client",
-        return_value=None,
-    ):
-        AddressValidationStep(
-            db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
-        ).run()
-
-    for payment in check_payments_with_validated_addresses:
-        address_pair = payment.experian_address_pair
-        assert address_pair.experian_address is not None
-
-    # Expect to have received a newly formatted address in Experian /format response.
-    for payment in check_payments_with_single_verified_matching_addresses:
-        address_pair = payment.experian_address_pair
-        assert address_pair.experian_address is not None
-        assert address_pair.experian_address != address_pair.fineos_address
-
-    # Expect payments with already valid addresses to transition into the
-    # DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING state.
-    _assert_payment_state(
-        local_test_db_other_session,
-        State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK,
-        check_payments_with_validated_addresses,
-    )
-
-    # Expect payments with verified matching addresses according to Experian to transition into the
-    # DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING state.
-    _assert_payment_state(
-        local_test_db_other_session,
-        State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK,
-        check_payments_with_single_verified_matching_addresses,
-    )
-
-    # Expect payments with no matching addresses according to Experian to transition into the
-    # PAYMENT_FAILED_ADDRESS_VALIDATION state and DELEGATED_ADD_TO_FINEOS_WRITEBACK state.
-    _assert_payment_state(
-        local_test_db_other_session,
-        State.PAYMENT_FAILED_ADDRESS_VALIDATION,
-        check_payments_with_non_matching_addresses,
-    )
-    _assert_payment_state(
-        local_test_db_other_session,
-        State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-        check_payments_with_non_matching_addresses,
-    )
-    _assert_fineos_writeback_details(
-        local_test_db_other_session, check_payments_with_non_matching_addresses
-    )
-
-    # Expect payments with multiple matching addresses according to Experian to transition into the
-    # PAYMENT_FAILED_ADDRESS_VALIDATION state and DELEGATED_ADD_TO_FINEOS_WRITEBACK state.
-    _assert_payment_state(
-        local_test_db_other_session,
-        State.PAYMENT_FAILED_ADDRESS_VALIDATION,
-        check_payments_with_multiple_matching_addresses,
-    )
-    _assert_payment_state(
-        local_test_db_other_session,
-        State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-        check_payments_with_multiple_matching_addresses,
-    )
-    _assert_fineos_writeback_details(
-        local_test_db_other_session, check_payments_with_multiple_matching_addresses
-    )
-
-    # Expect payments with a near match in the multiple matching addresses set to transition into
-    # the DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING state.
-    _assert_payment_state(
-        local_test_db_other_session,
-        State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK,
-        check_payments_with_multiple_matching_addresses_and_near_match,
-    )
-
-
 def test_run_step_state_transitions_soap(
-    local_initialize_factories_session,
-    local_test_db_session,
-    local_test_db_other_session,
-    monkeypatch,
+    local_initialize_factories_session, local_test_db_session, local_test_db_other_session,
 ):
-    monkeypatch.setenv("USE_EXPERIAN_SOAP_CLIENT", "1")
     mock_caller = MockVerificationZeepCaller()
 
     check_payments_with_validated_addresses = _setup_soap_payments(
@@ -326,9 +172,6 @@ def test_run_step_state_transitions_soap(
     client = soap_api.Client(mock_caller)
 
     with mock.patch(
-        "massgov.pfml.delegated_payments.address_validation._get_experian_rest_client",
-        return_value=None,
-    ), mock.patch(
         "massgov.pfml.delegated_payments.address_validation._get_experian_soap_client",
         return_value=client,
     ):
@@ -402,14 +245,10 @@ def test_run_step_state_transitions_soap(
 
 
 def test_run_step_state_transitions_malformed_address(
-    local_initialize_factories_session,
-    local_test_db_session,
-    local_test_db_other_session,
-    monkeypatch,
+    local_initialize_factories_session, local_test_db_session, local_test_db_other_session,
 ):
     # Testing that if the address is missing pieces, it'll still move to the appropriate
     # state and that Experian will not be called at all.
-    monkeypatch.setenv("USE_EXPERIAN_SOAP_CLIENT", "1")
     mock_caller = MockVerificationZeepCaller()
 
     check_payment = _random_valid_payment_with_state_log(
@@ -430,9 +269,6 @@ def test_run_step_state_transitions_malformed_address(
     client = soap_api.Client(mock_caller)
 
     with mock.patch(
-        "massgov.pfml.delegated_payments.address_validation._get_experian_rest_client",
-        return_value=None,
-    ), mock.patch(
         "massgov.pfml.delegated_payments.address_validation._get_experian_soap_client",
         return_value=client,
     ):
@@ -454,62 +290,9 @@ def test_run_step_state_transitions_malformed_address(
     )
 
 
-def test_run_step_no_database_changes_on_exception(
-    initialize_factories_session, test_db_session, test_db_other_session
-):
-    client = MockClient()
-
-    _set_up_payments(client, test_db_session, fake.random_int(min=2, max=4))
-    _set_up_payments(
-        client, test_db_session, fake.random_int(min=2, max=4), Confidence.VERIFIED_MATCH
-    )
-    _set_up_payments(client, test_db_session, fake.random_int(min=2, max=4), Confidence.NO_MATCHES)
-    _set_up_payments(
-        client, test_db_session, fake.random_int(min=2, max=4), Confidence.MULTIPLE_MATCHES
-    )
-
-    # Commit the various experian_address_pair.experian_address = None changes to the database.
-    test_db_session.commit()
-
-    # Mock _get_payments_awaiting_address_validation() to raise an error so we can test rolling back
-    # the changes we would have made previously to the claimant addresses.
-    with mock.patch(
-        "massgov.pfml.delegated_payments.address_validation._get_payments_awaiting_address_validation",
-        side_effect=Exception("Raising error to test rollback"),
-    ), mock.patch(
-        "massgov.pfml.delegated_payments.address_validation._get_experian_rest_client",
-        return_value=client,
-    ), mock.patch(
-        "massgov.pfml.delegated_payments.address_validation._get_experian_soap_client",
-        return_value=None,
-    ), pytest.raises(
-        Exception, match="Raising error to test rollback"
-    ):
-        AddressValidationStep(
-            db_session=test_db_session, log_entry_db_session=test_db_other_session
-        ).run()
-
-    # We expect to find no payments in any of the post-address validation states.
-    post_address_validation_states = [
-        State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK.state_id,
-        State.PAYMENT_FAILED_ADDRESS_VALIDATION.state_id,
-        State.DELEGATED_ADD_TO_FINEOS_WRITEBACK.state_id,
-    ]
-    assert (
-        test_db_other_session.query(sqlalchemy.func.count(StateLog.state_log_id))
-        .filter(StateLog.end_state_id.in_(post_address_validation_states))
-        .scalar()
-        == 0
-    )
-
-
 def test_run_step_no_database_changes_on_exception_soap(
-    local_initialize_factories_session,
-    local_test_db_session,
-    local_test_db_other_session,
-    monkeypatch,
+    local_initialize_factories_session, local_test_db_session, local_test_db_other_session,
 ):
-    monkeypatch.setenv("USE_EXPERIAN_SOAP_CLIENT", "1")
     mock_caller = MockVerificationZeepCaller()
 
     _setup_soap_payments(mock_caller, local_test_db_session, fake.random_int(min=2, max=4))
@@ -537,9 +320,6 @@ def test_run_step_no_database_changes_on_exception_soap(
         "massgov.pfml.delegated_payments.address_validation._get_payments_awaiting_address_validation",
         side_effect=Exception("Raising error to test rollback"),
     ), mock.patch(
-        "massgov.pfml.delegated_payments.address_validation._get_experian_rest_client",
-        return_value=None,
-    ), mock.patch(
         "massgov.pfml.delegated_payments.address_validation._get_experian_soap_client",
         return_value=client,
     ), pytest.raises(
@@ -563,69 +343,9 @@ def test_run_step_no_database_changes_on_exception_soap(
     )
 
 
-def test_run_step_experian_exception(
-    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
-):
-    client = MockClient()
-
-    valid_check_payments = _set_up_payments(
-        client, local_test_db_session, fake.random_int(min=2, max=4), Confidence.VERIFIED_MATCH
-    )
-    eft_payments_with_multiple_matching_addresses = _set_up_payments(
-        client,
-        local_test_db_session,
-        fake.random_int(min=2, max=4),
-        Confidence.MULTIPLE_MATCHES,
-        PaymentMethod.ACH.payment_method_id,
-    )
-    # Commit the various experian_address_pair.experian_address = None changes to the database.
-    local_test_db_session.commit()
-
-    with mock.patch(
-        "massgov.pfml.delegated_payments.address_validation._experian_rest_response_for_address",
-        side_effect=Exception("Example error"),
-    ), mock.patch(
-        "massgov.pfml.delegated_payments.address_validation._get_experian_rest_client",
-        return_value=client,
-    ), mock.patch(
-        "massgov.pfml.delegated_payments.address_validation._get_experian_soap_client",
-        return_value=None,
-    ):
-        AddressValidationStep(
-            db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
-        ).run()
-
-    # Despite having valid addresses, these payments failed because Experian threw an exception
-    _assert_payment_state_log_outcome(
-        local_test_db_other_session,
-        valid_check_payments,
-        State.PAYMENT_FAILED_ADDRESS_VALIDATION,
-        Constants.UNKNOWN,
-    )
-    _assert_payment_state_log_outcome(
-        local_test_db_other_session,
-        valid_check_payments,
-        State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-        Constants.UNKNOWN,
-    )
-    _assert_fineos_writeback_details(local_test_db_other_session, valid_check_payments)
-
-    # EFT payments will always pass even if Experian throws an exception
-    _assert_payment_state_log_outcome(
-        local_test_db_other_session,
-        eft_payments_with_multiple_matching_addresses,
-        State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK,
-        Constants.UNKNOWN,
-    )
-
-
 def test_run_step_experian_soap_exception(
-    local_initialize_factories_session,
-    local_test_db_session,
-    local_test_db_other_session,
-    monkeypatch,
+    local_initialize_factories_session, local_test_db_session, local_test_db_other_session,
 ):
-    monkeypatch.setenv("USE_EXPERIAN_SOAP_CLIENT", "1")
     mock_caller = MockVerificationZeepCaller()
 
     valid_check_payments = _setup_soap_payments(
@@ -646,9 +366,6 @@ def test_run_step_experian_soap_exception(
     with mock.patch(
         "massgov.pfml.delegated_payments.address_validation._experian_soap_response_for_address",
         side_effect=Exception("Example error"),
-    ), mock.patch(
-        "massgov.pfml.delegated_payments.address_validation._get_experian_rest_client",
-        return_value=None,
     ), mock.patch(
         "massgov.pfml.delegated_payments.address_validation._get_experian_soap_client",
         return_value=client,
@@ -681,137 +398,9 @@ def test_run_step_experian_soap_exception(
     )
 
 
-def test_run_step_state_log_outcome_field(
-    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
-):
-    experian_api_multiple_match_count = fake.random_int(min=2, max=9)
-    client = MockClient(multiple_count=experian_api_multiple_match_count)
-
-    check_payments_with_validated_addresses = _set_up_payments(
-        client, local_test_db_session, fake.random_int(min=5, max=8)
-    )
-    check_payments_with_single_verified_matching_addresses = _set_up_payments(
-        client, local_test_db_session, fake.random_int(min=7, max=11), Confidence.VERIFIED_MATCH
-    )
-    check_payments_with_non_matching_addresses = _set_up_payments(
-        client, local_test_db_session, fake.random_int(min=1, max=6), Confidence.NO_MATCHES
-    )
-    check_payments_with_multiple_matching_addresses = _set_up_payments(
-        client,
-        local_test_db_session,
-        fake.random_int(min=4, max=7),
-        Confidence.MULTIPLE_MATCHES,
-        suggested_address_mismatch=True,
-    )
-    check_payments_with_multiple_matching_addresses_and_near_match = _set_up_payments(
-        client, local_test_db_session, fake.random_int(min=1, max=4), Confidence.MULTIPLE_MATCHES
-    )
-
-    eft_payments_with_multiple_matching_addresses = _set_up_payments(
-        client,
-        local_test_db_session,
-        fake.random_int(min=4, max=7),
-        Confidence.MULTIPLE_MATCHES,
-        PaymentMethod.ACH.payment_method_id,
-    )
-
-    # Commit the various experian_address_pair.experian_address = None changes to the database.
-    local_test_db_session.commit()
-
-    with mock.patch(
-        "massgov.pfml.delegated_payments.address_validation._get_experian_rest_client",
-        return_value=client,
-    ), mock.patch(
-        "massgov.pfml.delegated_payments.address_validation._get_experian_soap_client",
-        return_value=None,
-    ):
-        AddressValidationStep(
-            db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
-        ).run()
-
-    # Expect payments with already valid addresses to not have any an experian_result element
-    # of the state_log.outcome field.
-    _assert_payment_state_log_outcome(
-        local_test_db_other_session,
-        check_payments_with_validated_addresses,
-        State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK,
-        Constants.PREVIOUSLY_VERIFIED,
-    )
-
-    # Expect payments with addresses that return a verified match to have a
-    # state_log.outcome.experian_result element with the correct confidence level.
-    _assert_payment_state_log_outcome(
-        local_test_db_other_session,
-        check_payments_with_single_verified_matching_addresses,
-        State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK,
-        Confidence.VERIFIED_MATCH.value,
-    )
-
-    # Expect payments with addresses that return no matches to have a
-    # state_log.outcome.experian_result element with the correct confidence level.
-    _assert_payment_state_log_outcome(
-        local_test_db_other_session,
-        check_payments_with_non_matching_addresses,
-        State.PAYMENT_FAILED_ADDRESS_VALIDATION,
-        Confidence.NO_MATCHES.value,
-    )
-    _assert_payment_state_log_outcome(
-        local_test_db_other_session,
-        check_payments_with_non_matching_addresses,
-        State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-        Confidence.NO_MATCHES.value,
-    )
-    _assert_fineos_writeback_details(
-        local_test_db_other_session, check_payments_with_non_matching_addresses
-    )
-
-    # Expect payments with addresses that return no matches to have a
-    # state_log.outcome.experian_result element with multiple output_address_ elements.
-    _assert_payment_state_log_outcome(
-        local_test_db_other_session,
-        check_payments_with_multiple_matching_addresses,
-        State.PAYMENT_FAILED_ADDRESS_VALIDATION,
-        Confidence.MULTIPLE_MATCHES.value,
-        experian_api_multiple_match_count,
-    )
-    _assert_payment_state_log_outcome(
-        local_test_db_other_session,
-        check_payments_with_multiple_matching_addresses,
-        State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-        Confidence.MULTIPLE_MATCHES.value,
-        experian_api_multiple_match_count,
-    )
-    _assert_fineos_writeback_details(
-        local_test_db_other_session, check_payments_with_multiple_matching_addresses
-    )
-
-    _assert_payment_state_log_outcome(
-        local_test_db_other_session,
-        check_payments_with_multiple_matching_addresses_and_near_match,
-        State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK,
-        Confidence.MULTIPLE_MATCHES.value,
-        experian_api_multiple_match_count,
-    )
-
-    # Expect EFT payments with addresses that return multiple
-    # state_log.outcome.experian_result element with multiple output_address_ elements.
-    # BUT still go to the success state
-    _assert_payment_state_log_outcome(
-        local_test_db_other_session,
-        eft_payments_with_multiple_matching_addresses,
-        State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK,
-        Confidence.MULTIPLE_MATCHES.value,
-        experian_api_multiple_match_count,
-    )
-
-
 def test_run_step_state_log_outcome_field_soap(
-    local_initialize_factories_session,
-    local_test_db_session,
-    local_test_db_other_session,
-    monkeypatch,
+    local_initialize_factories_session, local_test_db_session, local_test_db_other_session,
 ):
-    monkeypatch.setenv("USE_EXPERIAN_SOAP_CLIENT", "1")
     mock_caller = MockVerificationZeepCaller()
 
     check_payments_with_validated_addresses = _setup_soap_payments(
@@ -844,9 +433,6 @@ def test_run_step_state_log_outcome_field_soap(
 
     client = soap_api.Client(mock_caller)
     with mock.patch(
-        "massgov.pfml.delegated_payments.address_validation._get_experian_rest_client",
-        return_value=None,
-    ), mock.patch(
         "massgov.pfml.delegated_payments.address_validation._get_experian_soap_client",
         return_value=client,
     ):
@@ -897,70 +483,3 @@ def test_run_step_state_log_outcome_field_soap(
         State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK,
         sm.VerifyLevel.NONE.value,
     )
-
-
-@pytest.mark.parametrize(
-    "_description, suggested_address, expected_end_state, new_address_count",
-    (
-        ("Near match in multiple matches", None, State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK, 1,),
-        (
-            "Near match in multiple matches",
-            "9999 Obviously fake BLVD",
-            State.PAYMENT_FAILED_ADDRESS_VALIDATION,
-            0,
-        ),
-    ),
-)
-def test_get_end_state_and_outcome_for_multiple_matches(
-    local_initialize_factories_session,
-    local_test_db_session,
-    local_test_db_other_session,
-    _description,
-    suggested_address,
-    expected_end_state,
-    new_address_count,
-):
-    address_pair = ExperianAddressPairFactory()
-    client = MockClient()
-    mocked_response = client.add_mock_address_response(
-        address_pair.fineos_address, Confidence.MULTIPLE_MATCHES, suggested_address
-    )
-
-    address_count_before = local_test_db_other_session.query(
-        sqlalchemy.func.count(Address.address_id)
-    ).scalar()
-
-    end_state, _message = _get_end_state_and_message_for_multiple_matches(
-        mocked_response.result, client, address_pair
-    )
-
-    # Commit the new address_pair.experian_address to the database.
-    local_test_db_session.commit()
-
-    assert end_state == expected_end_state
-
-    # Either None (if no near match) or new Address.
-    assert address_pair.experian_address != address_pair.fineos_address
-    assert (
-        address_count_before + new_address_count
-        == local_test_db_other_session.query(sqlalchemy.func.count(Address.address_id)).scalar()
-    )
-
-
-@pytest.mark.parametrize(
-    "_description, address_in, expected_address",
-    (
-        (
-            "Excess spaces removed",
-            " 4 S   Market St  , Boston MA 02109 ",
-            "4 s market st, boston ma 02109",
-        ),
-        (
-            "Address with no changes needed untouched",
-            "1040 mass moca way, north adams ma 01247",
-            "1040 mass moca way, north adams ma 01247",
-        ),
-    ),
-)
-def test_normalize_address_string(_description, address_in, expected_address):
-    assert _normalize_address_string(address_in) == expected_address

@@ -85,14 +85,12 @@ module "api" {
   cognito_user_pool_arn                               = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_HhQSLYSIe"
   cognito_user_pool_id                                = "us-east-1_HhQSLYSIe"
   cognito_user_pool_client_id                         = "7sjb96tvg8251lrq5vdk7de9"
-  cognito_post_confirmation_lambda_artifact_s3_key    = local.cognito_post_confirmation_lambda_artifact_s3_key
-  cognito_pre_signup_lambda_artifact_s3_key           = local.cognito_pre_signup_lambda_artifact_s3_key
   cognito_user_pool_keys_url                          = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_HhQSLYSIe/.well-known/jwks.json"
   cognito_enable_provisioned_concurrency              = false
   logging_level                                       = "massgov.pfml.fineos.fineos_client=DEBUG"
   rmv_client_base_url                                 = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn                   = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-test/rmv_client_certificate-zWimpc"
-  rmv_check_behavior                                  = "fully_mocked"
+  rmv_api_behavior                                    = "fully_mocked"
   rmv_check_mock_success                              = "1"
   fineos_client_integration_services_api_url          = "https://dt2-api.masspfml.fineos.com/integration-services/"
   fineos_client_group_client_api_url                  = "https://dt2-api.masspfml.fineos.com/groupclientapi/"

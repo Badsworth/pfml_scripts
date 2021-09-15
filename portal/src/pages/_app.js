@@ -1,15 +1,17 @@
 import "../../styles/app.scss";
+
 import React, { useEffect, useState } from "react";
+
 import { Auth } from "@aws-amplify/auth";
 import PageWrapper from "../components/PageWrapper";
 import PropTypes from "prop-types";
 import { initializeI18n } from "../locales/i18n";
-import { snakeCase } from "lodash";
 import tracker from "../services/tracker";
 import useAppLogic from "../hooks/useAppLogic";
 import useFeatureFlagsFromQueryEffect from "../hooks/useFeatureFlagsFromQueryEffect";
 import { useRouter } from "next/router";
 import useSessionTimeout from "../hooks/useSessionTimeout";
+import useTrackerPageView from "../hooks/useTrackerPageView";
 
 // Configure Amplify for Auth behavior throughout the app
 Auth.configure({
@@ -29,9 +31,8 @@ Auth.configure({
   userPoolId: process.env.awsConfig.cognitoUserPoolId,
   userPoolWebClientId: process.env.awsConfig.cognitoUserPoolWebClientId,
 });
-
-tracker.initialize();
 initializeI18n();
+tracker.initialize();
 
 /**
  * Overrides the default Next.js App so that we can persist common layout
@@ -51,6 +52,7 @@ export const App = ({ Component, pageProps }) => {
 
   // Global UI state, such as whether to display the loading indicator
   const [ui, setUI] = useState({ isLoading: false });
+  useTrackerPageView(appLogic.users.user);
 
   /**
    * Attach route change event handlers
@@ -96,16 +98,6 @@ export const App = ({ Component, pageProps }) => {
      *  focus should change. Learn more: https://nextjs.org/docs/routing/shallow-routing
      */
     const handleRouteChangeStart = (url = "", { shallow } = {}) => {
-      const [routeName, queryString] = url.split("?");
-      const pageAttributes = {
-        ...getPageAttributesFromQueryString(queryString),
-        ...getPageAttributesForUser(
-          appLogic.auth.isLoggedIn,
-          appLogic.users.user
-        ),
-      };
-      tracker.startPageView(routeName, pageAttributes);
-
       if (!shallow) {
         appLogic.clearErrors();
         setUI((ui) => {
@@ -141,7 +133,6 @@ export const App = ({ Component, pageProps }) => {
 
     // Passing this empty array causes this effect to be run only once upon mount. See:
     // https://reactjs.org/docs/hooks-effect.html#tip-optimizing-performance-by-skipping-effects
-
     return function cleanup() {
       router.events.off("routeChangeStart", handleRouteChangeStart);
       router.events.off("routeChangeComplete", handleRouteChangeComplete);
@@ -149,13 +140,23 @@ export const App = ({ Component, pageProps }) => {
     };
   }, [router.events, appLogic]);
 
+  useEffect(() => {
+    appLogic.featureFlags.loadFlags();
+    /**
+     * We only want feature flags to load one time and not when app re-renders. Removing
+     * the empty array or passing a appLogic.featureFlags dependency creates an infinite
+     * loop that calls the api and ultimately crashes the browser.
+     */
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Get maintenance feature flag
+  const maintenance = appLogic.featureFlags.getFlag("maintenance");
   return (
     <PageWrapper
       appLogic={appLogic}
       isLoading={ui.isLoading}
-      maintenancePageRoutes={process.env.maintenancePageRoutes || []}
-      maintenanceStart={process.env.maintenanceStart}
-      maintenanceEnd={process.env.maintenanceEnd}
+      maintenance={maintenance}
     >
       <Component appLogic={appLogic} query={router.query} {...pageProps} />
     </PageWrapper>
@@ -169,44 +170,5 @@ App.propTypes = {
   // Next.js sets pageProps for us
   pageProps: PropTypes.object,
 };
-
-/**
- * Given a query string, returns an object containing custom attributes to send to New Relic.
- * For each query string key the object will contain a key of the form "page_[query_string_key]"
- * where query_string_key is a snake cased version of the query string key. The value will be
- * the query string value. We should never put PII in query strings, so we should also be comfortable
- * sending all of these values to New Relic as custom attributes.
- * @param {string} [queryString] Optional query string
- * @returns {object}
- */
-function getPageAttributesFromQueryString(queryString) {
-  const pageAttributes = {};
-  // note that URLSearchParams accepts null/undefined in its constructor
-  for (const [key, value] of new URLSearchParams(queryString)) {
-    pageAttributes[`query_${snakeCase(key)}`] = value;
-  }
-  return pageAttributes;
-}
-
-/**
- * Given the current user object, returns an object containing custom attributes to send to New Relic.
- * @param {?boolean} isLoggedIn
- * @param {?User} user The user object or null
- */
-function getPageAttributesForUser(isLoggedIn, user) {
-  if (isLoggedIn === null) return { "user.is_logged_in": "loading" };
-
-  if (!user) {
-    return {
-      "user.is_logged_in": false,
-    };
-  } else {
-    return {
-      "user.is_logged_in": true,
-      "user.auth_id": user.auth_id,
-      "user.has_employer_role": user.hasEmployerRole,
-    };
-  }
-}
 
 export default App;

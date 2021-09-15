@@ -45,7 +45,6 @@ Additional information about [PFML system components](https://lwd.atlassian.net/
 
 ```
 .
-├── lambdas                     Build/packaging configurations for AWS Lambdas
 ├── massgov                     Python package directory
 │   └── pfml
 │       └── api                 Application code

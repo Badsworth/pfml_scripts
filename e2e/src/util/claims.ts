@@ -4,7 +4,7 @@ import {
   LeavePeriods,
   Submission,
 } from "../types";
-import { parseISO, format } from "date-fns";
+import { parseISO, format, min } from "date-fns";
 import { isNotNull } from "./typeUtils";
 
 export function extractLeavePeriod(
@@ -100,6 +100,36 @@ export function getLeavePeriod(
   } else {
     throw new Error("Claim missing leave periods");
   }
+}
+
+export function extractEarliestLeaveDate(
+  leave_details: ApplicationLeaveDetails
+): Date {
+  const dates = [
+    ...(leave_details.continuous_leave_periods ?? []),
+    ...(leave_details.reduced_schedule_leave_periods ?? []),
+    ...(leave_details.intermittent_leave_periods ?? []),
+  ]
+    .filter((period) => !!period.start_date)
+    .map((period) => period.start_date as string)
+    .map((dateStr) => parseISO(dateStr));
+
+  return min(dates);
+}
+
+export function extractLatestLeaveDate(
+  leave_details: ApplicationLeaveDetails
+): Date {
+  const dates = [
+    ...(leave_details.continuous_leave_periods ?? []),
+    ...(leave_details.reduced_schedule_leave_periods ?? []),
+    ...(leave_details.intermittent_leave_periods ?? []),
+  ]
+    .filter((period) => !!period.end_date)
+    .map((period) => period.end_date as string)
+    .map((dateStr) => parseISO(dateStr));
+
+  return min(dates);
 }
 
 /**

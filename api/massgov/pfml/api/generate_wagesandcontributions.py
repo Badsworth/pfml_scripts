@@ -9,6 +9,7 @@ import argparse
 import datetime
 import random
 from decimal import Decimal
+from uuid import UUID
 
 from factory.faker import faker
 
@@ -62,7 +63,7 @@ def get_or_create_tax_identifier(employee_ssn: str, db_session: db.Session) -> T
     return tax_identifier
 
 
-def get_or_create_employee(tax_identifier_id: str, db_session: db.Session) -> Employee:
+def get_or_create_employee(tax_identifier_id: UUID, db_session: db.Session) -> Employee:
 
     employee = (
         db_session.query(Employee)

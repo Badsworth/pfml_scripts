@@ -1,4 +1,4 @@
-import playwright from "playwright-chromium";
+import playwright, { Page } from "playwright-chromium";
 import delay from "delay";
 
 /**********
@@ -15,6 +15,10 @@ export async function click(
   await Promise.all([element.click(), page.waitForNavigation()]);
 }
 
+/**
+ * @deprecated This function should no longer be used. Select the label directly using
+ * a text or text-is selector, and run fill() or selectOption() on that.
+ */
 export async function labelled(
   page: playwright.Page,
   label: string
@@ -30,6 +34,10 @@ export async function labelled(
   throw new Error(`Unable to find input labelled by: ${label}`);
 }
 
+/**
+ * @deprecated This function should no longer be used. There are lots of better ways
+ * to do text selection with Playwright.
+ */
 export async function contains(
   page: playwright.Page,
   selector: string,
@@ -58,19 +66,21 @@ export async function clickTab(
   await page.click(
     `:is(.TabStrip td.TabOn :text("${label}"), .TabStrip td.TabOff :text("${label}"))`
   );
-
-  // await page.waitForSelector("td.TabOn");
-  // const tab = await page.waitForSelector(
-  //   `:is(.TabStrip td.TabOn :text("${label}"), .TabStrip td.TabOff :text("${label}"))`
-  // );
-  // // Remove the TabOn class before we start so we can detect when it has been re-added.
-  // await tab.evaluate((tab) => {
-  //   tab.classList.remove("TabOn");
-  // });
-
-  // await tab.click();
   await waitForStablePage(page);
   await delay(200);
+}
+
+export async function selectListTableRow(
+  page: Page,
+  rowSelector: string
+): Promise<void> {
+  const row = await page.locator(rowSelector);
+  const cl = await row.getAttribute("classList");
+  if (cl && cl.includes("ListRowSelected")) {
+    return;
+  }
+  await row.click();
+  await page.waitForSelector(`${rowSelector}.ListRowSelected`);
 }
 
 export async function waitForStablePage(page: playwright.Page): Promise<void> {
@@ -98,13 +108,11 @@ export async function gotoCase(
 ): Promise<void> {
   await page.click('.menulink a.Link[aria-label="Cases"]');
   await clickTab(page, "Case");
-  await labelled(page, "Case Number").then((el) => el.type(id));
+  await page.fill("label:text-is('Case Number')", id);
   // Uncheck "Search Case Alias".
-  await labelled(page, "Search Case Alias").then((el) => el.click());
+  await page.uncheck("label:text-is('Search Case Alias')");
   await page.click('input[type="submit"][value="Search"]');
-  const title = await page
-    .waitForSelector(".case_pageheader_title")
-    .then((el) => el.innerText());
+  const title = await page.textContent(".case_pageheader_title");
   if (!(typeof title === "string") || !title.match(id)) {
     throw new Error("Page title should include case ID");
   }

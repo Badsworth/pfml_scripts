@@ -1,4 +1,4 @@
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { camelCase, compact, find, get, isEqual, startCase } from "lodash";
 import { AbsenceCaseStatus } from "../../models/Claim";
 import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
@@ -29,9 +29,23 @@ import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withClaims from "../../hoc/withClaims";
+import withUser from "../../hoc/withUser";
 
 export const Dashboard = (props) => {
+  const showReviewByStatus = isFeatureEnabled("employerShowReviewByStatus");
   const { t } = useTranslation();
+  const introElementRef = useRef(null);
+  const apiParams = {
+    // Default the dashboard to show claims requiring action first
+    order_by: showReviewByStatus ? "absence_status" : "created_at",
+    order_direction: showReviewByStatus ? "ascending" : "descending",
+    ...props.query,
+  };
+
+  const PaginatedClaimsTableWithClaims = withClaims(
+    PaginatedClaimsTable,
+    apiParams
+  );
 
   /**
    * Update the page's query string, to load a different page number,
@@ -59,9 +73,10 @@ export const Dashboard = (props) => {
     // Our withClaims component watches the query string and
     // will trigger an API request when it changes.
     props.appLogic.portalFlow.updateQuery(paramsObj);
-  };
 
-  const showReviewByStatus = isFeatureEnabled("employerShowReviewByStatus");
+    // Scroll user back to top of the table actions
+    if (introElementRef.current) introElementRef.current.scrollIntoView();
+  };
 
   return (
     <React.Fragment>
@@ -90,7 +105,7 @@ export const Dashboard = (props) => {
         <DashboardInfoAlert user={props.user} />
       </div>
 
-      <section className="margin-bottom-4">
+      <section className="margin-bottom-4" ref={introElementRef}>
         <p className="margin-y-2">
           {!showReviewByStatus && t("pages.employersDashboard.instructions")}
         </p>
@@ -133,25 +148,22 @@ export const Dashboard = (props) => {
       </section>
 
       <Search
-        initialValue={get(props.query, "search", "")}
+        initialValue={get(apiParams, "search", "")}
         updatePageQuery={updatePageQuery}
       />
       <Filters
-        query={props.query}
-        showFilters={props.query["show-filters"] === "true"}
+        params={apiParams}
         updatePageQuery={updatePageQuery}
         user={props.user}
       />
-      <PaginatedClaimsTable
+      <PaginatedClaimsTableWithClaims
         appLogic={props.appLogic}
-        claims={props.claims}
         user={props.user}
-        paginationMeta={props.paginationMeta}
         updatePageQuery={updatePageQuery}
         sort={
           <SortDropdown
-            order_by={props.query.order_by}
-            order_direction={props.query.order_direction}
+            order_by={apiParams.order_by}
+            order_direction={apiParams.order_direction}
             updatePageQuery={updatePageQuery}
           />
         }
@@ -168,16 +180,14 @@ Dashboard.propTypes = {
       updateQuery: PropTypes.func.isRequired,
     }).isRequired,
   }).isRequired,
-  claims: PropTypes.instanceOf(ClaimCollection),
   query: PropTypes.shape({
     claim_status: PropTypes.string,
     employer_id: PropTypes.string,
-    "show-filters": PropTypes.oneOf(["false", "true"]),
-    order_by: PropTypes.string,
+    order_by: PropTypes.oneOf(["absence_status", "created_at", "employee"]),
     order_direction: PropTypes.oneOf(["ascending", "descending"]),
+    page_offset: PropTypes.string,
     search: PropTypes.string,
-  }),
-  paginationMeta: PropTypes.instanceOf(PaginationMeta),
+  }).isRequired,
   user: PropTypes.instanceOf(User).isRequired,
 };
 
@@ -295,7 +305,7 @@ PaginatedClaimsTable.propTypes = {
   sort: PropTypes.node.isRequired,
   user: PropTypes.instanceOf(User).isRequired,
   query: PropTypes.shape({
-    order_by: PropTypes.string,
+    order_by: PropTypes.oneOf(["absence_status", "created_at", "employee"]),
     order_direction: PropTypes.oneOf(["ascending", "descending"]),
   }),
 };
@@ -400,7 +410,7 @@ const ClaimTableRows = (props) => {
 
 ClaimTableRows.propTypes = {
   appLogic: Dashboard.propTypes.appLogic,
-  claims: Dashboard.propTypes.claims,
+  claims: PropTypes.instanceOf(ClaimCollection),
   tableColumnKeys: PropTypes.arrayOf(PropTypes.string).isRequired,
   user: PropTypes.instanceOf(User).isRequired,
 };
@@ -467,32 +477,44 @@ DashboardInfoAlert.propTypes = {
 };
 
 const Filters = (props) => {
-  const { showFilters, updatePageQuery, user } = props;
+  const { updatePageQuery, user } = props;
   const { t } = useTranslation();
 
   /**
    * Returns all filter fields with their values set based on
-   * what's currently in the URL query string
+   * what's currently being applied to the API requests
    * @returns { { employer_id: string, claim_status: string[] } }
    */
   const getFormStateFromQuery = useCallback(() => {
-    const claim_status = get(props.query, "claim_status");
+    const claim_status = get(props.params, "claim_status");
     return {
-      employer_id: get(props.query, "employer_id", ""),
+      employer_id: get(props.params, "employer_id", ""),
       // Convert checkbox field query param into array, to conform to how we manage checkbox form state
       claim_status: claim_status ? claim_status.split(",") : [],
     };
-  }, [props.query]);
+  }, [props.params]);
 
   /**
    * Form visibility and state management
    */
   const activeFilters = getFormStateFromQuery();
+  const [showFilters, setShowFilters] = useState(false);
   const { formState, updateFields } = useFormState(activeFilters);
   const getFunctionalInputProps = useFunctionalInputProps({
     formState,
     updateFields,
   });
+
+  /**
+   * Watch the query string for changes, and update the selected form fields
+   * anytime those change. This is handy since a filter might get removed
+   * outside of this component, and it also saves us from calling
+   * updateFields every time we call updatePageQuery. Instead, we treat
+   * the query string as the source of truth, and react to its changes.
+   */
+  useEffect(() => {
+    updateFields(getFormStateFromQuery());
+  }, [getFormStateFromQuery, updateFields]);
 
   /**
    * UI variables
@@ -517,15 +539,13 @@ const Filters = (props) => {
     updatePageQuery([
       ...params,
       {
-        name: "show-filters",
-        value: false,
-      },
-      {
         // Reset the page to 1 since filters affect what shows on the first page
         name: "page_offset",
         value: "1",
       },
     ]);
+
+    setShowFilters(false);
   };
 
   /**
@@ -570,15 +590,7 @@ const Filters = (props) => {
   };
 
   const handleFilterToggleClick = () => {
-    // We use a query param instead of useState since the page re-mounts
-    // every time a filter changes, so we lose any local component state
-    // each time that happens.
-    updatePageQuery([
-      {
-        name: "show-filters",
-        value: !showFilters,
-      },
-    ]);
+    setShowFilters(!showFilters);
   };
 
   // TODO (EMPLOYER-1587): Remove variable
@@ -632,7 +644,6 @@ const Filters = (props) => {
             ...pendingStatusChoices,
           ].map((value) => ({
             checked: get(formState, "claim_status", []).includes(value),
-            className: "bg-transparent",
             label: t("pages.employersDashboard.filterStatusChoice", {
               context: startCase(camelCase(value)).replace(/[-\s]/g, ""),
             }),
@@ -713,11 +724,10 @@ const Filters = (props) => {
 };
 
 Filters.propTypes = {
-  query: PropTypes.shape({
+  params: PropTypes.shape({
     claim_status: PropTypes.string,
     employer_id: PropTypes.string,
   }).isRequired,
-  showFilters: PropTypes.bool,
   updatePageQuery: PropTypes.func.isRequired,
   user: PropTypes.instanceOf(User).isRequired,
 };
@@ -807,12 +817,18 @@ Search.propTypes = {
 
 const SortDropdown = (props) => {
   const { order_by, order_direction, updatePageQuery } = props;
-  const choices = {
-    newest: "created_at,descending",
-    oldest: "created_at,ascending",
-    employee_az: "employee,ascending",
-    employee_za: "employee,descending",
-  };
+  const choices = new Map([
+    ["newest", "created_at,descending"],
+    ["oldest", "created_at,ascending"],
+    ["employee_az", "employee,ascending"],
+    ["employee_za", "employee,descending"],
+  ]);
+
+  // TODO (EMPLOYER-1587): Move the choice directly into the choices object definition
+  if (isFeatureEnabled("employerShowReviewByStatus")) {
+    choices.set("status", "absence_status,ascending");
+  }
+
   const { t } = useTranslation();
   const { formState, updateFields } = useFormState({
     orderAndDirection: compact([order_by, order_direction]).join(","),
@@ -853,13 +869,11 @@ const SortDropdown = (props) => {
     ]);
   };
 
-  if (!isFeatureEnabled("employerShowDashboardSort")) return null;
-
   return (
     <Dropdown
       {...getFunctionalInputProps("orderAndDirection")}
       onChange={handleChange}
-      choices={Object.entries(choices).map(([key, value]) => ({
+      choices={Array.from(choices).map(([key, value]) => ({
         label: t("pages.employersDashboard.sortChoice", { context: key }),
         value,
       }))}
@@ -874,9 +888,9 @@ const SortDropdown = (props) => {
 };
 
 SortDropdown.propTypes = {
-  order_by: PropTypes.oneOf(["created_at", "employee"]),
+  order_by: PropTypes.oneOf(["absence_status", "created_at", "employee"]),
   order_direction: PropTypes.oneOf(["ascending", "descending"]),
   updatePageQuery: PropTypes.func.isRequired,
 };
 
-export default withClaims(Dashboard);
+export default withUser(Dashboard);

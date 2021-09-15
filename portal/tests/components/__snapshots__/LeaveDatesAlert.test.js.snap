@@ -1,14 +1,24 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`LeaveDatesAlert renders Alert with given dates 1`] = `
-<Alert
-  className="margin-top-2 margin-bottom-4"
-  heading="Your leave dates for paid leave"
-  headingSize="2"
-  neutral={true}
-  noIcon={true}
-  state="info"
+<div
+  class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-4"
+  tabindex="-1"
 >
-  1/1/2021 to 1/30/2021
-</Alert>
+  <div
+    class="usa-alert__body"
+    role="region"
+  >
+    <h2
+      class="usa-alert__heading font-heading-md text-bold"
+    >
+      Your leave dates for paid leave
+    </h2>
+    <div
+      class="usa-alert__text"
+    >
+      1/1/2021 to 1/30/2021
+    </div>
+  </div>
+</div>
 `;

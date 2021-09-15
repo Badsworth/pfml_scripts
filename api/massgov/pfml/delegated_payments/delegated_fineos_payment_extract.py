@@ -7,7 +7,7 @@ import uuid
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from datetime import datetime
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 from typing import Any, Callable, Dict, List, Optional, Tuple, cast
 
 from sqlalchemy.exc import SQLAlchemyError
@@ -33,6 +33,7 @@ from massgov.pfml.db.models.employees import (
     LkPaymentTransactionType,
     LkState,
     Payment,
+    PaymentDetails,
     PaymentMethod,
     PaymentReferenceFile,
     PaymentTransactionType,
@@ -54,8 +55,8 @@ from massgov.pfml.db.models.payments import (
     FineosWritebackTransactionStatus,
     LkFineosWritebackTransactionStatus,
 )
+from massgov.pfml.delegated_payments.delegated_payments_util import get_now
 from massgov.pfml.delegated_payments.step import Step
-from massgov.pfml.payments.payments_util import get_now
 
 logger = logging.get_logger(__name__)
 
@@ -205,6 +206,8 @@ class PaymentData:
     account_nbr: Optional[str] = None
     raw_account_type: Optional[str] = None
 
+    payment_detail_records: Optional[List[PaymentDetails]] = None
+
     payment_transaction_type: LkPaymentTransactionType
     is_standard_payment: bool
 
@@ -257,6 +260,19 @@ class PaymentData:
         self.payment_amount = self.get_payment_amount(pei_record)
 
         self.payment_transaction_type = self.get_payment_transaction_type()
+
+        # Process the payment details records in order to get specific
+        # pay-period information for payments. This is needed for non-standard
+        # payments like overpayments.
+        payment_details = extract_data.payment_details.indexed_data.get(index)
+        if not payment_details:
+            self.validation_container.add_validation_issue(
+                payments_util.ValidationReason.MISSING_DATASET, "payment_details"
+            )
+
+        if payment_details:
+            self.aggregate_payment_details(payment_details)
+
         # We only want to do specific checks if it is a standard payment
         # There is no need to error a cancellation/overpayment/etc. if the payment
         # is missing EFT or address info that we are never going to use.
@@ -270,12 +286,9 @@ class PaymentData:
         #######################################
 
         # Find the record in the other datasets.
-        payment_details = extract_data.payment_details.indexed_data.get(index)
+
         claim_details = extract_data.claim_details.indexed_data.get(index)
-        if not payment_details and self.is_standard_payment:
-            self.validation_container.add_validation_issue(
-                payments_util.ValidationReason.MISSING_DATASET, "payment_details"
-            )
+
         if not claim_details and self.is_standard_payment:
             self.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_DATASET, "claim_details"
@@ -290,9 +303,6 @@ class PaymentData:
                 payments_util.ValidationReason.MISSING_FIELD, "ABSENCECASENU"
             )
 
-        if payment_details:
-            self.aggregate_payment_details(payment_details)
-
         self.raw_payment_method = payments_util.validate_csv_input(
             "PAYMENTMETHOD",
             pei_record,
@@ -300,9 +310,7 @@ class PaymentData:
             self.is_standard_payment,
             custom_validator_func=payments_util.lookup_validator(
                 PaymentMethod,
-                disallowed_lookup_values=[
-                    cast(str, PaymentMethod.DEBIT.payment_method_description)
-                ],
+                disallowed_lookup_values=[PaymentMethod.DEBIT.payment_method_description],
             ),
         )
 
@@ -375,19 +383,12 @@ class PaymentData:
         )
 
     def get_payment_amount(self, pei_record: Dict[str, str]) -> Optional[Decimal]:
-        def amount_validator(amount_str: str) -> Optional[payments_util.ValidationReason]:
-            try:
-                Decimal(amount_str)
-            except (InvalidOperation, TypeError):  # Amount is not numeric
-                return payments_util.ValidationReason.INVALID_VALUE
-            return None
-
         raw_payment_amount = payments_util.validate_csv_input(
             "AMOUNT_MONAMT",
             pei_record,
             self.validation_container,
             True,
-            custom_validator_func=amount_validator,
+            custom_validator_func=payments_util.amount_validator,
         )
         if raw_payment_amount:
             return Decimal(raw_payment_amount)
@@ -462,10 +463,14 @@ class PaymentData:
             def leave_request_decision_validator(
                 leave_request_decision: str,
             ) -> Optional[payments_util.ValidationReason]:
-                if leave_request_decision not in ["In Review", "Pending", "Approved"]:
+                if leave_request_decision == "In Review":
+                    if count_incrementer is not None:
+                        count_incrementer(PaymentExtractStep.Metrics.IN_REVIEW_LEAVE_REQUEST_COUNT)
+                    return payments_util.ValidationReason.LEAVE_REQUEST_IN_REVIEW
+                if leave_request_decision != "Approved":
                     if count_incrementer is not None:
                         count_incrementer(
-                            PaymentExtractStep.Metrics.NOT_PENDING_OR_APPROVED_LEAVE_REQUEST_COUNT
+                            PaymentExtractStep.Metrics.NOT_APPROVED_LEAVE_REQUEST_COUNT
                         )
                     return payments_util.ValidationReason.INVALID_VALUE
                 return None
@@ -505,25 +510,44 @@ class PaymentData:
         """
         start_periods = []
         end_periods = []
+        self.payment_detail_records = []
         for payment_detail_row in payment_details:
             row_start_period = payments_util.validate_csv_input(
                 "PAYMENTSTARTP",
                 payment_detail_row,
                 self.validation_container,
-                self.is_standard_payment,
+                True,
                 custom_validator_func=self.payment_period_date_validator,
             )
             row_end_period = payments_util.validate_csv_input(
                 "PAYMENTENDPER",
                 payment_detail_row,
                 self.validation_container,
-                self.is_standard_payment,
+                True,
                 custom_validator_func=self.payment_period_date_validator,
             )
+            row_amount = payments_util.validate_csv_input(
+                "BALANCINGAMOU_MONAMT",
+                payment_detail_row,
+                self.validation_container,
+                True,
+                custom_validator_func=payments_util.amount_validator,
+            )
+
             if row_start_period is not None:
                 start_periods.append(row_start_period)
             if row_end_period is not None:
                 end_periods.append(row_end_period)
+
+            if all(field is not None for field in [row_start_period, row_end_period, row_amount]):
+                self.payment_detail_records.append(
+                    PaymentDetails(
+                        period_start_date=payments_util.datetime_str_to_date(row_start_period),
+                        period_end_date=payments_util.datetime_str_to_date(row_end_period),
+                        amount=Decimal(cast(str, row_amount)),
+                    )
+                )
+
         if start_periods:
             self.payment_start_period = min(start_periods)
         if end_periods:
@@ -561,11 +585,13 @@ class PaymentExtractStep(Step):
         CLAIMANT_MISMATCH_COUNT = "claimant_mismatch_count"
         EFT_FOUND_COUNT = "eft_found_count"
         EMPLOYEE_MISSING_IN_DB_COUNT = "employee_in_payment_extract_missing_in_db_count"
+        EMPLOYEE_FINEOS_NAME_MISSING = "employee_fineos_name_missing"
         EMPLOYER_REIMBURSEMENT_COUNT = "employer_reimbursement_count"
         ERRORED_PAYMENT_COUNT = "errored_payment_count"
         NEW_EFT_COUNT = "new_eft_count"
         NOT_APPROVED_PRENOTE_COUNT = "not_approved_prenote_count"
-        NOT_PENDING_OR_APPROVED_LEAVE_REQUEST_COUNT = "not_pending_or_approved_leave_request_count"
+        NOT_APPROVED_LEAVE_REQUEST_COUNT = "not_approved_leave_request_count"
+        IN_REVIEW_LEAVE_REQUEST_COUNT = "in_review_leave_request_count"
         OVERPAYMENT_COUNT = "overpayment_count"
         PAYMENT_DETAILS_RECORD_COUNT = "payment_details_record_count"
         PEI_RECORD_COUNT = "pei_record_count"
@@ -660,7 +686,7 @@ class PaymentExtractStep(Step):
         payment_details = self.download_and_parse_data(
             extract_data.payment_details.file_location, download_directory
         )
-        # claim details needs to be indexed on PECLASSID and PEINDEXID
+        # payment details needs to be indexed on PECLASSID and PEINDEXID
         # which point to the vpei.C and vpei.I columns
         for record in payment_details:
             index = CiIndex(record["PECLASSID"], record["PEINDEXID"])
@@ -669,10 +695,13 @@ class PaymentExtractStep(Step):
             extract_data.payment_details.indexed_data[index].append(record)
 
             lower_key_record = payments_util.make_keys_lowercase(record)
-            claim_details_record = payments_util.create_staging_table_instance(
-                lower_key_record, FineosExtractVpeiClaimDetails, ref_file, self.get_import_log_id()
+            payment_details_record = payments_util.create_staging_table_instance(
+                lower_key_record,
+                FineosExtractVpeiPaymentDetails,
+                ref_file,
+                self.get_import_log_id(),
             )
-            self.db_session.add(claim_details_record)
+            self.db_session.add(payment_details_record)
             self.increment(self.Metrics.PAYMENT_DETAILS_RECORD_COUNT)
             logger.debug(
                 "indexed payment details file row with CI: %s, %s",
@@ -692,13 +721,10 @@ class PaymentExtractStep(Step):
             ] = record
 
             lower_key_record = payments_util.make_keys_lowercase(record)
-            payment_details_record = payments_util.create_staging_table_instance(
-                lower_key_record,
-                FineosExtractVpeiPaymentDetails,
-                ref_file,
-                self.get_import_log_id(),
+            claim_details_record = payments_util.create_staging_table_instance(
+                lower_key_record, FineosExtractVpeiClaimDetails, ref_file, self.get_import_log_id(),
             )
-            self.db_session.add(payment_details_record)
+            self.db_session.add(claim_details_record)
             self.increment(self.Metrics.CLAIM_DETAILS_RECORD_COUNT)
             logger.debug(
                 "indexed claim details file row with CI: %s, %s",
@@ -997,6 +1023,11 @@ class PaymentExtractStep(Step):
 
         self.db_session.add(payment)
 
+        if payment_data.payment_detail_records:
+            for payment_detail in payment_data.payment_detail_records:
+                payment_detail.payment = payment
+                self.db_session.add(payment_detail)
+
         return payment
 
     def update_eft(
@@ -1141,6 +1172,22 @@ class PaymentExtractStep(Step):
 
         # Create the payment record
         payment = self.create_payment(payment_data, claim, payment_data.validation_container)
+
+        # Capture the fineos provided employee name for the payment
+        if employee:
+            if (
+                employee.fineos_employee_first_name is None
+                or employee.fineos_employee_last_name is None
+            ):
+                self.increment(self.Metrics.EMPLOYEE_FINEOS_NAME_MISSING)
+                payment_data.validation_container.add_validation_issue(
+                    payments_util.ValidationReason.MISSING_FINEOS_NAME,
+                    f"Missing name from FINEOS on employee {employee.employee_id}",
+                )
+            else:
+                payment.fineos_employee_first_name = employee.fineos_employee_first_name
+                payment.fineos_employee_middle_name = employee.fineos_employee_middle_name
+                payment.fineos_employee_last_name = employee.fineos_employee_last_name
 
         # Specify whether the Payment has an address update
         # TODO - is this still needed?
@@ -1309,6 +1356,7 @@ class PaymentExtractStep(Step):
         # https://lwd.atlassian.net/wiki/spaces/API/pages/1319272855/Payment+Transaction+Scenarios
         validation_reasons = payment_data.validation_container.get_reasons()
         has_unfixable_issues = False
+        has_leave_in_review = False
         has_pending_prenote = False
         has_rejected_prenote = False
 
@@ -1321,12 +1369,18 @@ class PaymentExtractStep(Step):
             # records in the extract
             if reason in [
                 payments_util.ValidationReason.MISSING_IN_DB,
+                payments_util.ValidationReason.MISSING_FINEOS_NAME,
                 payments_util.ValidationReason.CLAIM_NOT_ID_PROOFED,
                 payments_util.ValidationReason.MISSING_DATASET,
                 payments_util.ValidationReason.CLAIMANT_MISMATCH,
                 payments_util.ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
             ]:
                 has_unfixable_issues = True
+
+            # Payments with In Review leave decision status will be put in PendingActive as we are just
+            # waiting for them to be Approved on FINEOS
+            elif reason == payments_util.ValidationReason.LEAVE_REQUEST_IN_REVIEW:
+                has_leave_in_review = True
 
             # Pending prenotes will also be put in PendingActive as we are just
             # waiting to get the payment
@@ -1348,6 +1402,9 @@ class PaymentExtractStep(Step):
         # Unfixable issues take next precendence
         if has_unfixable_issues:
             return FineosWritebackTransactionStatus.DATA_ISSUE_IN_SYSTEM
+
+        if has_leave_in_review:
+            return FineosWritebackTransactionStatus.LEAVE_IN_REVIEW
 
         # Pending and rejected can't happen at the same time, so ordering
         # won't matter

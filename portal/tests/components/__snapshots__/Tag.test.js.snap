@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Tag render tag with error classes 1`] = `"usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-error-darker bg-error-lighter padding-x-205"`;
+
+exports[`Tag render tag with inactive classes 1`] = `"usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-base-darker bg-base-lightest padding-x-205"`;
+
+exports[`Tag render tag with pending classes 1`] = `"usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap bg-primary-lighter text-primary padding-x-205"`;
+
+exports[`Tag render tag with success classes 1`] = `"usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-success-dark bg-success-lighter padding-x-205"`;
+
+exports[`Tag render tag with warning classes 1`] = `"usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-base-darkest bg-warning-lighter padding-x-205"`;

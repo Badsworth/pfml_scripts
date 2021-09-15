@@ -33,17 +33,6 @@ See _[Seven Rules](https://chris.beams.io/posts/git-commit/#seven-rules)_ for an
 It's still possible to rebase and force-push your branch using `git rebase main`, but this pathway should be avoided
 if your branch is being worked on by more than one person at a time, due to the risk of causing unnecessary conflicts.
 
-## Code Owners
-
-Many parts of the code have owners, defined in the [`CODEOWNERS` file](../.github/CODEOWNERS).
-
-Code owners help to improve the quality of the code by:
-- Reviewing changes (see below)
-- Encouraging consistency and maintainability
-- Refactoring the code as it grows
-
-Normally each module or file has two or more owners that share these tasks.
-
 ## Code Reviews
 
 Code reviews are intended to help all of us grow as engineers and improve the quality of what we ship.
@@ -51,9 +40,13 @@ These guidelines are meant to reinforce those two goals.
 
 ### For authors or requesters:
 
-- Include the JIRA ticket number in the title. For example: `PFML-123: Implement API endpoint`. Every change should have an associated JIRA ticket unless it is a documentation change. A single JIRA ticket may be associated with multiple pull requests.
+- Include the JIRA ticket number in the title. For example: `PFML-123: Implement API endpoint`. A single JIRA ticket may be associated with multiple pull requests.
 
-- If it is a documentation change, please prefix with docs: `docs: Clean up CONTRIBUTING.md`.
+    Every change should have an associated JIRA ticket unless it is a documentation change. This makes it easier to search for PRs and generates a link in the Jira ticket to the pull request, which provides the program with an audit trail for verifying the relevant code changes, approvals, and test cases.
+
+  - For tickets that have subtasks, use the parent ticket's id in the title, and include the subtask in the PR description. 
+
+  - If it is a documentation change, please prefix with docs: `docs: Clean up CONTRIBUTING.md`.
 
 - Include a [GitHub label](https://github.com/EOLWD/pfml/labels) if relevant.
 These labels can be a helpful wayfinding and context building tool, especially for new engineers onboarding into the codebase.
@@ -68,7 +61,7 @@ These labels can be a helpful wayfinding and context building tool, especially f
 create a [Draft Pull Request](https://help.github.com/en/github/collaborating-with-issues-and-pull-requests/about-pull-requests#draft-pull-requests)
 and state what you are looking for in the description.
 
-Your PR should be small enough that a reviewer can reasonably respond within 1 business day.
+Your PR should be small enough that a reviewer can reasonably respond within 1-2 business days.
 For larger changes, break them down into a series of PRs.
 If refactors are included in your changes, try to split them out as recommended below.
 
@@ -79,6 +72,8 @@ for sections of code that may be confusing or worth debate.
 
 When you're ready to request a review, consider including folks who are less familiar with that part of the codebase.
 This allows others to see what you're working on, along with your development/communication style and ways of working.
+
+You may also reference a specific team for review using the teams defined in [Github Teams and Codeowners](./github-teams-and-codeowners.md).
 
 Once you've received feedback, acknowledge each comment with a response or code change.
 
@@ -98,47 +93,38 @@ Send a vote of approval if the PR looks ready except for small minor changes,
 and trust that the recipient will address your comments before merging by replying via comment or code to any asks.
 Use "request changes" sparingly, unless there's a blocking issue or major refactors that should be done.
 
-### Auto assignment
-
-Code review assignment can be setup to occur automatically when a Pull Request is created,
-through a combination of the [`CODEOWNERS` file](../.github/CODEOWNERS)
-and [GitHub teams](https://help.github.com/en/github/setting-up-and-managing-organizations-and-teams/organizing-members-into-teams).
-
-Teams exist for the API and Portal engineers:
-
-- API engineers: [`@pfml-api`](https://github.com/orgs/EOLWD/teams/pfml-api)
-- Portal engineers: [`@pfml-portal`](https://github.com/orgs/EOLWD/teams/pfml-portal)
-
-The Portal engineering team [is configured](https://github.com/orgs/EOLWD/teams/pfml-portal/edit/review_assignment)
-so that PR reviews are automatically assigned to a member of the team via a round robin algorithm,
-with the goal of equally distributing PR reviews across the team.
-
-Since the Portal engineering team includes those working on either the Claimant Portal or Employer Portal, PR reviews are distributed between both groups.
-
-The API team has configured code owners for slices of the codebase in [the CODEOWNERS file](../.github/CODEOWNERS). These code owners will be automatically assigned when the relevant code paths are edited.
-
-## Pull Request Titles
-
-Please title Pull Requests in GitHub as "API-nnn: summary", "CP-nnn: summary", etc. For tickets that have subtasks, use the parent ticket's id in the title, and include the subtask in the PR description.
-When making a fix with no ticket, please use "API: summary" or "Portal: summary".
-
-This makes it easier to search for PRs and also links JIRA tickets to GitHub PRs automatically.
-
 ## Merging a PR
 
 ### How to merge
 
-When merging a PR, use the PR description as a starting point. Copy it into the merge commit body and clean it up as desired. Please verify that the commit title includes the JIRA ticket.
+When merging a PR, _use the PR description as a starting point_. Copy it into the merge commit body and clean it up as desired.
 
-Example:
+**Please verify that the commit title includes the JIRA ticket.**
+
+If the PR only has a single commit, GitHub will default to using that commit
+subject and description. This is often incorrect, missing the JIRA ticket.
+
+Example to follow:
 
     PFML-540: Implement GET claims endpoint (#145)
 
-    https://jira.cms.gov/browse/PFML-540
+    https://lwd.atlassian.net/browse/PFML-540
 
     Implements /claims endpoint which is a GET that takes a valid user ID and returns their first claim from the database.
 
     Demo: Unit tests and adhoc testing via swagger UI.
+    
+Example to avoid:
+
+    add claims endpoint (#145)
+    
+    * formatting
+    
+    * fix
+    
+    * change endpoint
+    
+    * initial endpoint
 
 ### When to merge
 

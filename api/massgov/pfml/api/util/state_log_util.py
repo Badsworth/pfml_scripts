@@ -3,7 +3,7 @@ from contextlib import contextmanager
 from dataclasses import asdict
 from datetime import datetime, timedelta
 from enum import Enum
-from typing import Any, Dict, Generator, List, Optional, Union, cast
+from typing import Any, Dict, Generator, List, Optional, Union
 from uuid import UUID
 
 from sqlalchemy import func
@@ -22,10 +22,7 @@ from massgov.pfml.db.models.employees import (
     ReferenceFile,
     StateLog,
 )
-from massgov.pfml.delegated_payments.delegated_payments_util import (
-    ValidationContainer as DelegatedValidationContainer,
-)
-from massgov.pfml.payments.payments_util import ValidationContainer
+from massgov.pfml.delegated_payments.delegated_payments_util import ValidationContainer
 
 logger = logging.get_logger(__name__)
 
@@ -103,7 +100,7 @@ class EmployeeQueryParamHelper(QueryParamHelper):
     associated_model: Employee
 
     def get_associated_model_id(self) -> UUID:
-        return cast(UUID, self.associated_model.employee_id)
+        return self.associated_model.employee_id
 
     def get_latest_filter_params(self) -> List[Any]:
         return [LatestStateLog.employee_id == self.associated_model.employee_id]
@@ -591,7 +588,7 @@ def get_state_counts(db_session: db.Session) -> Dict[str, int]:
 
 def build_outcome(
     message: str,
-    validation_container: Optional[Union[ValidationContainer, DelegatedValidationContainer]] = None,
+    validation_container: Optional[ValidationContainer] = None,
     **extra_attributes: str,
 ) -> Dict[str, Any]:
     outcome: Dict[str, Any] = {}

@@ -1,157 +1,151 @@
 import Mask, { maskValue } from "../../src/components/Mask";
-import { mount, shallow } from "enzyme";
+import { fireEvent, render, screen } from "@testing-library/react";
 import React from "react";
-import { createInputElement } from "../test-utils";
+import userEvent from "@testing-library/user-event";
 
 const masks = ["currency", "fein", "hours", "phone", "ssn", "zip"];
 
-function render(customProps = {}, inputProps = {}, mountComponent = false) {
+const renderMask = (customProps = {}, inputProps = {}) => {
   const component = (
     <Mask {...customProps}>
       <input name="foo" type="text" {...inputProps} />
     </Mask>
   );
 
-  return {
-    props: customProps,
-    wrapper: mountComponent ? mount(component) : shallow(component),
-  };
-}
+  return render(component);
+};
 
 describe("Mask", () => {
   masks.forEach((mask) => {
     describe(`${mask} fallbacks`, () => {
       it("renders a blank field when value is empty", () => {
-        const { wrapper } = render({ mask }, { value: "" });
-        const input = wrapper.find("input");
+        renderMask({ mask }, { value: "", onChange: jest.fn() });
+        const input = screen.getByRole("textbox");
 
-        expect(input.prop("value")).toBe("");
+        expect(input).toHaveAttribute("value", "");
       });
     });
   });
 
   it("renders ssn mask", () => {
-    const data = render({
+    const { container } = renderMask({
       mask: "ssn",
     });
 
-    expect(data.wrapper).toMatchSnapshot();
+    expect(container.firstChild).toMatchSnapshot();
   });
 
   it("adds `type='text'` to the ssn masked element", () => {
-    const { wrapper } = render({ mask: "ssn" }, { value: "123456789" });
-    const input = wrapper.find("input");
+    renderMask({ mask: "ssn" }, { value: "123456789", onChange: jest.fn() });
+    const input = screen.getByRole("textbox");
 
-    expect(input.prop("type")).toBe("text");
+    expect(input).toHaveAttribute("type", "text");
   });
 
   it("adds `type='tel'` to the phone masked element", () => {
-    const { wrapper } = render({ mask: "phone" }, { value: "123456789" });
-    const input = wrapper.find("input");
+    renderMask({ mask: "phone" }, { value: "123456789", onChange: jest.fn() });
+    const input = screen.getByRole("textbox");
 
-    expect(input.prop("type")).toBe("tel");
+    expect(input).toHaveAttribute("type", "tel");
   });
 
   it("adds `inputMode='number'` to the child element", () => {
-    const { wrapper } = render({ mask: "ssn" }, { value: "123456789" });
-    const input = wrapper.find("input");
+    renderMask({ mask: "ssn" }, { value: "123456789", onChange: jest.fn() });
+    const input = screen.getByRole("textbox");
 
-    expect(input.prop("inputMode")).toBe("numeric");
+    expect(input).toHaveAttribute("inputMode", "numeric");
   });
 
   it("adds `inputMode='decimal'` to the child element when mask is currency", () => {
-    const { wrapper } = render({ mask: "currency" }, { value: "123456789" });
-    const input = wrapper.find("input");
+    renderMask(
+      { mask: "currency" },
+      { value: "123456789", onChange: jest.fn() }
+    );
+    const input = screen.getByRole("textbox");
 
-    expect(input.prop("inputMode")).toBe("decimal");
+    expect(input).toHaveAttribute("inputMode", "decimal");
   });
 
-  it("applies overlay styling to the child element when mask is currency", () => {
-    const { wrapper } = render({ mask: "currency" }, { value: "123456789" });
-    const input = wrapper.find("div").last();
-
-    expect(input.prop("className")).toEqual(
-      "c-inputtext-mask__before--currency"
+  it("applies icon prefix to the child element when mask is currency", () => {
+    const { container } = renderMask(
+      { mask: "currency" },
+      { value: "123456789", onChange: jest.fn() }
     );
+    expect(container.firstChild).toMatchSnapshot();
   });
 
   it("adds `inputMode='decimal'` to the child element when mask is hours", () => {
-    const { wrapper } = render({ mask: "hours" }, { value: "123456789" });
-    const input = wrapper.find("input");
+    renderMask({ mask: "hours" }, { value: "123456789", onChange: jest.fn() });
+    const input = screen.getByRole("textbox");
 
-    expect(input.prop("inputMode")).toBe("decimal");
+    expect(input).toHaveAttribute("inputMode", "decimal");
   });
 
   it("does not mask if an invalid mask value is passed in", () => {
     //   Suppress the console.error that otherwise gets logged in the test.
     jest.spyOn(console, "error").mockImplementation(jest.fn());
-    const { wrapper } = render({ mask: "foo" }, { value: "12345" });
-    const input = wrapper.find("input");
-
-    expect(input.prop("value")).toBe("12345");
+    renderMask({ mask: "foo" }, { value: "12345", onChange: jest.fn() });
+    const input = screen.getByRole("textbox");
+    expect(input).toHaveAttribute("value", "12345");
   });
 
   it("calls onChange on the InputText on a blur event", () => {
     const inputOnChange = jest.fn();
-    const wrapper = render(
-      { mask: "ssn" },
-      { value: "12345678", onChange: inputOnChange }
-    ).wrapper;
+    renderMask({ mask: "ssn" }, { value: "12345678", onChange: inputOnChange });
 
-    const input = wrapper.find("input");
+    const input = screen.getByRole("textbox");
 
-    input.simulate("blur", {
-      target: createInputElement({ value: "12345678" }),
-    });
+    fireEvent.blur(input);
 
     expect(inputOnChange).toHaveBeenCalledTimes(1);
   });
 
   it("masking is triggered by a blur event", () => {
     const inputOnChange = jest.fn();
-    const wrapper = render(
+    renderMask(
       { mask: "ssn" },
       { value: "123456789", onChange: inputOnChange }
-    ).wrapper;
+    );
 
-    const input = wrapper.find("input");
+    const input = screen.getByRole("textbox");
 
-    input.simulate("blur", {
-      target: createInputElement({ value: "123456789" }),
-    });
+    fireEvent.blur(input);
 
     expect(inputOnChange.mock.calls[0][0].target.value).toBe("123-45-6789");
   });
 
   it("masking is triggered by keypress on Enter key", () => {
     const inputOnChange = jest.fn();
-    const wrapper = render(
+    renderMask(
       { mask: "ssn" },
       { value: "123456789", onChange: inputOnChange }
-    ).wrapper;
+    );
 
-    const input = wrapper.find("input");
+    const input = screen.getByRole("textbox");
 
-    input.simulate("keyDown", {
-      key: "Enter",
-      target: createInputElement({ value: "123456789" }),
-    });
+    userEvent.type(input, "{enter}");
 
     expect(inputOnChange.mock.calls[0][0].target.value).toBe("123-45-6789");
   });
 
   it("masking is not triggered by a change event", () => {
-    const inputOnChange = jest.fn();
-    const wrapper = render(
-      { mask: "ssn" },
-      { value: "12345678", onChange: inputOnChange }
-    ).wrapper;
+    const MaskedInputWithState = ({ initialValue }) => {
+      const [value, setValue] = React.useState(initialValue);
+      const handleChange = ({ target: { value } }) => setValue(value);
 
-    const input = wrapper.find("input");
+      return (
+        <Mask mask="ssn">
+          <input name="foo" type="text" value={value} onChange={handleChange} />
+        </Mask>
+      );
+    };
 
-    input.simulate("change", { target: { value: "123456789" } });
+    render(<MaskedInputWithState initialValue="12345678" />);
 
-    expect(inputOnChange.mock.calls[0][0].target.value).toBe("123456789");
+    const input = screen.getByRole("textbox");
+    userEvent.type(input, "9");
+
+    expect(input.value).toBe("123456789");
   });
 
   describe("maskValue", () => {

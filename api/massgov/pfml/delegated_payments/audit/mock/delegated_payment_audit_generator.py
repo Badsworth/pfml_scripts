@@ -33,9 +33,13 @@ from massgov.pfml.db.models.factories import (
     ExperianAddressPairFactory,
     PaymentFactory,
 )
+from massgov.pfml.db.models.payments import PaymentAuditReportType
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
+    PaymentAuditCSV,
     PaymentAuditData,
-    write_audit_report,
+    build_audit_report_row,
+    stage_payment_audit_report_details,
+    write_audit_report_rows,
 )
 from massgov.pfml.delegated_payments.delegated_payments_util import Constants
 
@@ -64,18 +68,22 @@ class AuditScenarioName(Enum):
     MEDICAL_LEAVE_ACH = "MEDICAL_LEAVE_ACH"
     MEDICAL_LEAVE_CHECK = "MEDICAL_LEAVE_CHECK"
 
-    SECOND_TIME_PAYMENT = "First Time Payment"
-    ERROR_PAYMENT = "Error Payment"
-    ERROR_PAYMENT_RESTARTABLE = "Error Payment"
+    SECOND_TIME_PAYMENT = "SECOND_TIME_PAYMENT"
+    ERROR_PAYMENT = "ERROR_PAYMENT"
+    ERROR_PAYMENT_RESTARTABLE = "ERROR_PAYMENT_RESTARTABLE"
     ADDRESS_VALIDATION_ERROR = "ADDRESS_VALIDATION_ERROR"
-    REJECTED_PAYMENT = "Rejected Payment"
-    REJECTED_PAYMENT_RESTARTABLE = "Rejected Payment"
-    MULTIPLE_DAYS_IN_ERROR_STATE = "Multiple Days in Error State"
-    MULTIPLE_DAYS_IN_REJECTED_STATE = "Multiple Days in Rejected State"
-    MIXED_DAYS_IN_ERROR_OR_REJECTED_STATE = "Mixed Days in Error or Rejected State"
+    REJECTED_PAYMENT = "REJECTED_PAYMENT"
+    REJECTED_PAYMENT_RESTARTABLE = "REJECTED_PAYMENT_RESTARTABLE"
+    MULTIPLE_DAYS_IN_ERROR_STATE = "MULTIPLE_DAYS_IN_ERROR_STATE"
+    MULTIPLE_DAYS_IN_REJECTED_STATE = "MULTIPLE_DAYS_IN_REJECTED_STATE"
+    MIXED_DAYS_IN_ERROR_OR_REJECTED_STATE = "MIXED_DAYS_IN_ERROR_OR_REJECTED_STATE"
 
-    ADDRESS_PAIR_DOES_NOT_EXIST = "Address pair does not exist"
-    ADDRESS_IS_NOT_VERIFIED = "Address is not verified"
+    ADDRESS_PAIR_DOES_NOT_EXIST = "ADDRESS_PAIR_DOES_NOT_EXIST"
+    ADDRESS_IS_NOT_VERIFIED = "ADDRESS_IS_NOT_VERIFIED"
+
+    AUDIT_REPORT_DETAIL_REJECTED = "AUDIT_REPORT_DETAIL_REJECTED"
+    AUDIT_REPORT_DETAIL_SKIPPED = "AUDIT_REPORT_DETAIL_SKIPPED"
+    AUDIT_REPORT_DETAIL_MIXED = "AUDIT_REPORT_DETAIL_MIXED"
 
 
 @dataclass
@@ -90,6 +98,9 @@ class AuditScenarioDescriptor:
 
     has_address_pair: bool = True
     is_address_verified: bool = True
+
+    audit_report_detail_rejected: bool = False
+    audit_report_detail_skipped: bool = False
 
 
 @dataclass
@@ -208,6 +219,22 @@ AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.ADDRESS_PAIR_DOES_NOT_EXIST] = Audi
 
 AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.ADDRESS_IS_NOT_VERIFIED] = AuditScenarioDescriptor(
     scenario_name=AuditScenarioName.ADDRESS_IS_NOT_VERIFIED, is_address_verified=False,
+)
+
+AUDIT_SCENARIO_DESCRIPTORS[
+    AuditScenarioName.AUDIT_REPORT_DETAIL_REJECTED
+] = AuditScenarioDescriptor(
+    scenario_name=AuditScenarioName.AUDIT_REPORT_DETAIL_REJECTED, audit_report_detail_rejected=True
+)
+
+AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.AUDIT_REPORT_DETAIL_SKIPPED] = AuditScenarioDescriptor(
+    scenario_name=AuditScenarioName.AUDIT_REPORT_DETAIL_SKIPPED, audit_report_detail_skipped=True
+)
+
+AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.AUDIT_REPORT_DETAIL_MIXED] = AuditScenarioDescriptor(
+    scenario_name=AuditScenarioName.AUDIT_REPORT_DETAIL_MIXED,
+    audit_report_detail_rejected=True,
+    audit_report_detail_skipped=True,
 )
 
 DEFAULT_AUDIT_SCENARIO_DATA_SET = [
@@ -417,6 +444,16 @@ def generate_scenario_data(
         previously_skipped_payment_count=previously_skipped_payment_count,
     )
 
+    if scenario_descriptor.audit_report_detail_rejected:
+        stage_payment_audit_report_details(
+            payment, PaymentAuditReportType.MAX_WEEKLY_BENEFITS, "Test Message", None, db_session
+        )
+
+    if scenario_descriptor.audit_report_detail_skipped:
+        stage_payment_audit_report_details(
+            payment, PaymentAuditReportType.DUA_DIA_REDUCTION, "Test Message", None, db_session
+        )
+
     return AuditScenarioData(
         scenario_name=scenario_descriptor.scenario_name, payment_audit_data=payment_audit_data
     )
@@ -444,6 +481,7 @@ def generate_payment_audit_data_set_and_rejects_file(
     folder_path: str,
     db_session: db.Session,
     reject_rate: Optional[decimal.Decimal] = None,
+    file_name: str = "Payment-Audit-Report-Response",
 ) -> List[AuditScenarioData]:
     if not reject_rate:
         reject_rate = decimal.Decimal(0.5)
@@ -451,13 +489,22 @@ def generate_payment_audit_data_set_and_rejects_file(
         config, db_session
     )
 
-    payment_audit_data_set: List[PaymentAuditData] = []
+    audit_report_time = datetime.now()
+    payment_audit_report_rows: List[PaymentAuditCSV] = []
+
     for payment_audit_scenario_data in payment_audit_scenario_data_set:
         payment_audit_data: PaymentAuditData = payment_audit_scenario_data.payment_audit_data
-        payment_audit_data.rejected_by_program_integrity = (
-            True if random.random() <= reject_rate else False
+
+        audit_report_row = build_audit_report_row(payment_audit_data, audit_report_time, db_session)
+
+        audit_report_row.rejected_by_program_integrity = (
+            "Y" if random.random() <= reject_rate else ""
         )
-        payment_audit_data_set.append(payment_audit_data)
+        audit_report_row.skipped_by_program_integrity = (
+            ""  # clear this in case it was set by audit report details flow
+        )
+
+        payment_audit_report_rows.append(audit_report_row)
 
         # transition to sent state to simulate the payment audit report step
         state_log_util.create_finished_state_log(
@@ -467,9 +514,10 @@ def generate_payment_audit_data_set_and_rejects_file(
             db_session,
         )
 
-    write_audit_report(
-        payment_audit_data_set, folder_path, db_session, report_name="Payment-Rejects"
+    write_audit_report_rows(
+        payment_audit_report_rows, folder_path, db_session, report_name=file_name
     )
+
     return payment_audit_scenario_data_set
 
 

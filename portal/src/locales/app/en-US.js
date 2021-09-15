@@ -575,6 +575,10 @@ const errors = {
     "Sorry, we were unable to retrieve what you were looking for. Check that the link you are visiting is correct. If this continues to happen, please log out and try again.",
   caughtError_UserNotReceivedError:
     "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak)",
+  claimStatus: {
+    fineos_claim_withdrawn:
+      "Application <strong>{{absenceId}}</strong> has been withdrawn and is no longer being processed.  If you believe this application has been withdrawn in error, check if any additional applications in your account cover the same leave period.  If you have additional questions, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
+  },
   documents: {
     file: {
       required: "Upload at least one file to continue.",
@@ -606,9 +610,6 @@ const errors = {
         "The employer ID you entered is already associated with your account.",
       employer_verification_data_required:
         "$t(shared.ein.employer_verification_data_required)",
-      // TODO (EMPLOYER-1565): Remove this once the API no longer returns it
-      invalid:
-        "Enter your 9-digit Employer Identification Number in the correct format.",
       pattern:
         "Enter your 9-digit Employer Identification Number in the correct format.",
       require_contributing_employer:
@@ -681,6 +682,7 @@ const shared = {
   absenceCaseStatus_closed: "Closed",
   absenceCaseStatus_denied: "Denied",
   absenceCaseStatus_noAction: "No action required",
+  absenceCaseStatus_pending: "Pending",
   achTypeChecking: "Checking",
   achTypeSavings: "Savings",
   amountFrequencyLabel: "Frequency",
@@ -713,6 +715,7 @@ const shared = {
   choiceYes: "Yes",
   claimDurationTypeContinuous: "Continuous leave",
   claimDurationTypeIntermittent: "Intermittent leave",
+  claimDurationTypeReduced: "Reduced leave",
   claimDurationTypeReducedSchedule: "Reduced leave schedule",
   claimsEmploymentInfoTitle: "Employment information",
   claimsLeaveDetailsTitle: "Leave details",
@@ -788,6 +791,10 @@ const shared = {
   displayTime: "{{hours}}h {{minutes}}m",
   // TODO (CP-1335): Add i18next formatter for time
   displayTime_noMinutes: "{{hours}}h",
+  docsRequired: {
+    newborn:
+      "Once your child is born, submit proof of birth so that we can review your application. Learn more about <proof-document-link>proof of birth documents</proof-document-link> we accept.",
+  },
   documentsLoadError:
     "An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
   documentsUploadError:
@@ -837,9 +844,14 @@ const shared = {
     "If you have already taken leave for this condition in 2021, tell us the first day you missed work this year, and the last day you expect to be on leave.<br /><br />Your answer must match the reduced leave start and end dates in the $t(shared.certificationFormMedical).",
   leaveReasonActiveDutyFamily: "Active duty",
   leaveReasonBonding: "Bond with a child",
+  leaveReasonBondingHeader: "Leave to bond with a child",
   leaveReasonCare: "Care for a family member",
+  leaveReasonCareHeader: "Leave to care for a family member",
   leaveReasonMedical: "Medical leave",
+  leaveReasonMedicalIllness: "Leave for an illness or injury",
+  leaveReasonMedicalSchedule: "Medical leave schedule",
   leaveReasonPregnancy: "Medical leave for pregnancy or birth",
+  leaveReasonPregnancyHeader: "Medical leave for pregnancy",
   leaveReasonServiceMemberFamily: "Military family",
   maxEmployerCommentLengthError:
     "Please shorten your comment. We cannot accept comments that are longer than 9999 characters.",
@@ -880,18 +892,23 @@ const shared = {
 };
 
 const pages = {
+  404: {
+    body: "<p>The page you’re looking for might have been removed, have a new name, or is otherwise unavailable.</p><p>If you typed the URL directly, check your spelling and capitalization. Our URLs look like this: <url-example>{{ url }}</url-example></p>",
+    homepageButton: "Visit homepage",
+    title: "Page not found",
+  },
   app: {
     seoDescription: "$t(shared.siteDescription)",
   },
   applications: {
-    claimsReflectPortal:
-      "Your applications only reflect what you entered using this website. Any changes you made through the Contact Center will not be shown here.",
+    claimsApprovalProcess:
+      "Learn more about the <approval-process-link>application review and approval process</approval-process-link>.",
     createApplicationHeading: "Create a new application",
     getReadyLink: "Start a new application",
     inProgressHeading: "In-progress applications",
     noClaims: "You don’t have any applications yet.",
     submittedHeading: "Submitted applications",
-    title: "Applications",
+    title: "Your applications",
     uploadSuccessHeading: "You successfully submitted your documents",
     uploadSuccessMessage:
       "Our Contact Center staff will review your documents for {{absence_id}}.",
@@ -1883,6 +1900,78 @@ const pages = {
     idLabel: "Enter your license or ID number",
     title: "$t(shared.claimsVerifyIdTitle)",
   },
+  claimsStatus: {
+    applicationDetails: "Application details",
+    applicationID: "Application ID",
+    applicationUpdatesHeading: "Application updates",
+    backButtonLabel: "Back to your applications",
+    employerEIN: "Employer Identification Number (EIN)",
+    infoAlertBody_bonding:
+      "You can take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if you need <about-bonding-leave-link>medical leave after giving birth.</about-bonding-leave-link>",
+    infoAlertBody_pregnancy:
+      "You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. <about-bonding-leave-link>Family leave to bond with your child</about-bonding-leave-link> can be easily added to your claim by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
+    infoAlertHeading_bonding:
+      "If you gave birth, you may be eligible for paid medical leave",
+    infoAlertHeading_pregnancy:
+      "You may also be eligible for paid family leave",
+    infoRequestsBody:
+      "If you have a request for more information, use this button to upload the requested documentation.",
+    infoRequestsHeading: "Respond to requests for information",
+    leavePeriodLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
+    leavePeriodLabel_intermittent: "$t(shared.claimDurationTypeIntermittent)",
+    leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReduced)",
+    leaveReasonValueHeader_bonding: "$t(shared.leaveReasonBondingHeader)",
+    leaveReasonValueHeader_care: "$t(shared.leaveReasonCareHeader)",
+    leaveReasonValueHeader_medical: "$t(shared.leaveReasonMedical)",
+    leaveReasonValueHeader_pregnancy: "$t(shared.leaveReasonPregnancyHeader)",
+    leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
+    leaveReasonValue_bonding: "Leave to bond with a child schedule",
+    leaveReasonValue_care: "Leave to care for a family member schedule",
+    leaveReasonValue_medical: "$t(shared.leaveReasonMedicalSchedule)",
+    leaveReasonValue_pregnancy: "$t(shared.leaveReasonMedicalSchedule)",
+    leaveReasonValue_serviceMemberFamily:
+      "$t(shared.leaveReasonServiceMemberFamily)",
+    leaveStatusMessage_Approved:
+      "<p><strong>This leave was approved.</strong></p><p>View your approval notice below for more details about your benefit amount, payment schedule, and how to appeal if your benefits appear incorrect.</p>",
+    leaveStatusMessage_Denied:
+      "<p><strong>This leave was denied.</strong></p><p>View your denial notice below for more details and an explanation of the appeal process.</p><p>If you would like to appeal, you must submit your request within 10 calendar days of the date on your denial notice.</p><p><request-appeal-link>Learn more about the appeal process</request-appeal-link>.</p>",
+    leaveStatusMessage_Pending:
+      "<p><strong>This leave is being reviewed.</strong></p>",
+    leaveStatusMessage_Withdrawn:
+      "<p><strong>This leave was withdrawn.</strong></p><p>You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
+    legalNoticesFallback:
+      "Once we’ve made a decision, you can download the decision notice here. You’ll also get an email notification.",
+    loadingClaimDetailLabel: "Loading claim details",
+    loadingLegalNoticesLabel: "Loading legal notices",
+    makeChangesBody:
+      "<p>To make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. If you request a change to your start and end dates, we may need to review your application again.</p>",
+    makeChangesHeading: "Make changes",
+    manageApplicationHeading: "Manage your application",
+    reportOtherBenefitsBody:
+      "<p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report changes to:</p><ul><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for disability benefit after you submitted your application, report this change.</li></ul>",
+    reportOtherBenefitsHeading: "Report other benefits or income",
+    timelineDescription:
+      "<p>Your application is complete when:</p><ul><li>You have submitted all required documents</li><li>Your employer has responded or their deadline passes</li></ul>",
+    timelineHeading: "Timeline",
+    timelineTextFollowUpEmployer:
+      "<p>Your employer has until <strong>{{employerFollowUpDate}}</strong> to respond to your application.</p>",
+    timelineTextFollowUpGenericDFML:
+      "<p>We have <strong>14 calendar days</strong> after receiving your completed application to make a decision to approve, deny or request more information.</p><p>The process may take longer if we request more information to complete your application or if you request changes to your application.</p>",
+    timelineTextFollowUpGenericEmployer:
+      "<p>Your employer has <strong>10 business days</strong> to respond to your application.</p>",
+    timelineTextLearnMore:
+      "<p>Learn more about the <timeline-link>application approval process.</timeline-link></p>",
+    uploadDocumentsButton: "Upload additional documents",
+    uploadDocumentsHeading: "Upload Documents",
+    viewNoticesHeading: "View your notices",
+    whatHappensNext: "What happens next",
+    whatHappensNextButton_adoption: "Upload proof of placement",
+    whatHappensNextButton_newborn: "Upload proof of birth",
+    whatYouNeedToDo: "What you need to do",
+    whatYouNeedToDoText_adoption:
+      "Once your child is adopted, submit a certificate of proof, including the date of the adoption, so that we can review your application. Learn more about the <proof-document-link>proof of adoption documents</proof-document-link> we accept.",
+    whatYouNeedToDoText_newborn: "$t(shared.docsRequired.newborn)",
+  },
   claimsSuccess: {
     adjudicationProcess:
       "<ul> <li>Your employer has 10 business days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.</li><li>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</li></ul>",
@@ -1914,8 +2003,6 @@ const pages = {
     reportReductionsHeading: "We may need more information from you",
     reportReductionsMessage:
       "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if any of these are true:</p><ul><li>You have already taken leave to care for a family member since July 1, 2021</li><li>You have already taken leave since January 1, 2021 for <when-can-i-use-pfml>any other reason that qualifies for PFML</when-can-i-use-pfml></li><li>You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)</li><li>You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)</li></ul>",
-    reportReductionsProcess:
-      "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if you’ll receive:</p><ul><li>Any <reductions-employer-benefits-link>benefits from your employer</reductions-employer-benefits-link> that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)</li><li>Income from <reductions-overview-link>any other sources</reductions-overview-link> during your leave</li></ul>",
     title: "You submitted your application",
   },
   claimsUploadCertification: {
@@ -1952,6 +2039,38 @@ const pages = {
     sectionLabel: "What kind of document are you uploading?",
     stateIdLabel: "Massachusetts driver’s license or ID",
     title: "Additional documentation",
+  },
+  claimsUploadDocumentType: {
+    addAnotherFileButton: "$t(shared.fileUpload_addAnotherFileButton)",
+    addFirstFileButton: "$t(shared.fileUpload_addFirstFileButton)",
+    documentsLoadError: "$t(shared.documentsLoadError)",
+    fileHeadingPrefix: "$t(shared.fileUpload_fileHeadingPrefix)",
+    idAccordionContent:
+      "<p><strong>If you don’t have any of those, you can provide one of the following plus proof of your Social Security Number or Individual Tax Identification Number:</strong></p><ul><li>Valid, unexpired U.S. State or Territory License or ID, both front and back</li><li>Certified copy of a birth certificate filed with a State Office of Vital Statistics or equivalent agency in the individual’s state of birth. (You can only use a <puerto-rican-birth-certificate-link>Puerto Rican birth certificate</puerto-rican-birth-certificate-link> if it was issued on or after July 1, 2010.)</li><li>Certificate of Citizenship (Form N$t(chars.nbhyphen)560, or Form N$t(chars.nbhyphen)561)</li><li>Certificate of Naturalization (Form N$t(chars.nbhyphen)550 or N$t(chars.nbhyphen)570)</li></ul><p><strong>You can provide proof of your Social Security Number using one of the following documents displaying your complete Social Security Number:</strong></p><ul><li>Social Security card</li><li>W$t(chars.nbhyphen)2 Form</li><li>SSA$t(chars.nbhyphen)1099 Form</li><li>Non$t(chars.nbhyphen)SSA$t(chars.nbhyphen)1099 Form</li><li>Pay stub with your name on it</li></ul><p><identity-proof-link>Learn more about verifying your identity with different documents.</identity-proof-link></p>",
+    idAccordionHeading: "If you don’t have any of those documents:",
+    leadListNewborn: [
+      "Your child’s birth certificate.",
+      "A note from your child’s health care provider stating your child’s date of birth.",
+      "A note from the health care provider of the person who gave birth stating your child’s date of birth.",
+    ],
+    lead_bonding_adopt_foster:
+      "You need to upload a statement from your adoption or foster agency or from the Massachusetts Department of Children and Families to confirm the placement and the date of the placement.",
+    lead_bonding_newborn:
+      "You need to upload one of the following documents to confirm your child’s date of birth:",
+    lead_care:
+      "You need to upload a completed <caregiver-certification-form-link>$t(shared.certificationFormCare)</caregiver-certification-form-link> to prove that you need to take leave to care for a family member with a serious medical condition.",
+    lead_medical:
+      "You need to upload a completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link> to prove that you need to take medical leave.",
+    otherIdentityDocs:
+      "<p><strong>You can upload a copy of one of the following documents:</strong></p><ul><li>U.S. State or Territory Real ID, both front and back</li><li>U.S. passport or passport card</li><li>Permanent Resident Card issued by DHS or INS</li><li>Employment Authorization Document (EAD) issued by DHS</li><li>Foreign passport <strong>and</strong> a <work-visa-link>work visa</work-visa-link></li></ul>",
+    sectionLabel_bonding: "Upload your documentation",
+    sectionLabel_certification: "Upload your certification form",
+    sectionLabel_massId:
+      "Upload the front and back of your Massachusetts driver’s license or ID card",
+    sectionLabel_otherId:
+      "Upload an identification document issued by state or federal government",
+    title_certification: "Upload certification",
+    title_id: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsUploadId: {
     accordionContent:
@@ -2046,14 +2165,14 @@ const pages = {
   },
   employersClaimsNewApplication: {
     agreementBody:
-      "I understand that I need to give true answers to all questions in order to fulfill my responsibilities as a Massachusetts employer. I certify under penalty of perjury that my answers will be complete and accurate.",
+      "I understand that I need to give true answers to all questions in order to fulfill my responsibilities as a Massachusetts employer, and that my response may be shared with the employee and third parties. I certify under penalty of perjury that my answers will be complete and accurate.",
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     dobLabel: "Date of birth",
     employeeNameLabel: "Employee name",
     employerIdNumberLabel: "Employer ID number (EIN)",
     instructions:
-      "<p>This takes about 10 minutes. We use the information you provide to determine the leave time and benefit amount your employee will receive.</p><p>We need true answers to every question so that we can manage the program the way the law requires. Please confirm that you will answer as truthfully as you can.</p>",
+      "<p>This takes about 10 minutes. We use the information you provide to determine the leave time and benefit amount your employee will receive.</p><p>Your response may be shared with the employee and third parties for purposes of processing and adjudicating this application.</p><p>We need true answers to every question so that we can manage the program the way the law requires. Please confirm that you will answer as truthfully as you can.</p>",
     instructionsFollowUpDate: "$t(shared.employerInstructions_followUpDate)",
     instructionsLabel:
       "Are you the right person to respond to this application?",
@@ -2144,6 +2263,7 @@ const pages = {
     sortChoice_employee_za: "Last name – Z to A",
     sortChoice_newest: "Newest applications",
     sortChoice_oldest: "Oldest applications",
+    sortChoice_status: "Status",
     sortLabel: "Sort",
     startDateTooltip: "When an employee started a new leave application",
     statusDescription_approved:
@@ -2338,6 +2458,7 @@ const components = {
     status_declined: "$t(shared.absenceCaseStatus_denied)",
     status_noAction: "$t(shared.absenceCaseStatus_noAction)",
     status_openRequirements: "Review by {{followupDate}}",
+    status_pending: "$t(shared.absenceCaseStatus_pending)",
   },
   amendButton: {
     amend: "Amend",
@@ -2349,8 +2470,7 @@ const components = {
     actionsHeading: "Actions",
     bondingLeaveDocsRequired_adopt_foster:
       "Once your child arrives, submit proof of placement so that we can make a decision.",
-    bondingLeaveDocsRequired_newborn:
-      "Once your child is born, submit proof of birth so that we can make a decision.",
+    bondingLeaveDocsRequired_newborn: "$t(shared.docsRequired.newborn)",
     documentsLoadError: "$t(shared.documentsLoadError)",
     feinHeading: "Employer EIN",
     heading: "Application {{number}}",
@@ -2373,10 +2493,28 @@ const components = {
       "<p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report changes to:</p><ul><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer-sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for a disability benefit after you submitted your application, report this change.</li></ul>",
     reductionsInstructions_missingData:
       "<p>If you have other leave, benefits, and income to report, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report any of these situations:</p><ul><li>You have already taken leave to care for a family member since July 1, 2021</li><li>You have already taken leave since January 1, 2021 for <when-can-i-use-pfml>any other reason that qualifies for PFML</when-can-i-use-pfml></li><li>You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)</li><li>You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)</li></ul>",
-    reductionsInstructions_old:
-      "<p>If you’ll receive <reductions-overview-link>other benefits or income</reductions-overview-link>, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. This includes:</p><ul><li>Any benefits from your employer that you’ll be using in addition to Massachusetts paid leave (for example, maternity leave, or paid sick time)</li><li>Income from any other sources during your leave</li></ul>",
     resumeClaimButton: "Continue application",
     uploadDocsButton: "Upload additional documents",
+  },
+  applicationCardV2: {
+    applicationID: "Application ID",
+    continueApplication: "Continue application",
+    employerEIN: "Employer Identification Number (EIN)",
+    heading: "Application {{number}}",
+    leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReducedSchedule)",
+    leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
+    leaveReasonValue_bonding: "$t(shared.leaveReasonBondingHeader)",
+    leaveReasonValue_care: "$t(shared.leaveReasonCareHeader)",
+    leaveReasonValue_medical: "$t(shared.leaveReasonMedicalIllness)",
+    leaveReasonValue_pregnancy: "$t(shared.leaveReasonPregnancyHeader)",
+    leaveReasonValue_serviceMemberFamily:
+      "$t(shared.leaveReasonServiceMemberFamily)",
+    noticeOnClickDetails:
+      "When you click the notice link, the file will download to your device.",
+    otherActions: "Other actions",
+    respondToRequest: "Respond to a request for information",
+    viewNotices: "View your notices",
+    viewStatusUpdatesAndDetails: "View status updates and details",
   },
   authNav: {
     logOutButton: "Log out",
@@ -2408,10 +2546,14 @@ const components = {
   downloadableDocument: {
     createdAtDate: "Posted {{date}}",
     noticeName: "Other notice $t(shared.pdfNoticeSuffix)", // it should fallback to this if we receive an unexpected or undefined enum
+    noticeName_appealAcknowledgment:
+      "Appeal Acknowledgment $t(shared.pdfNoticeSuffix)",
     noticeName_approvalNotice: "Approval notice $t(shared.pdfNoticeSuffix)",
     noticeName_denialNotice: "Denial notice $t(shared.pdfNoticeSuffix)",
     noticeName_requestForInfoNotice:
       "Request for more information $t(shared.pdfNoticeSuffix)",
+    noticeName_withdrawalNotice:
+      "Pending Application Withdrawn $t(shared.pdfNoticeSuffix)",
   },
   dropdown: {
     emptyChoiceLabel: "- Select an answer -",
@@ -2768,10 +2910,19 @@ const components = {
   leaveDatesAlert: {
     heading: "Your leave dates for paid leave",
   },
+  maintenanceAlertBar: {
+    message_withEndTime:
+      "We will be performing some maintenance on our system from <strong>{{start}}</strong> to <strong>{{end}}</strong>.",
+    message:
+      "We will be performing some maintenance on our system starting <strong>{{start}}</strong>.",
+  },
   maintenanceTakeover: {
-    lead: "This page is currently unavailable while the site is undergoing maintenance. Please check back$t(chars.nbsp)shortly.",
-    scheduled:
-      "We are performing scheduled maintenance to improve functionality and our overall service. Paid leave applications will be back online on <strong>{{scheduledRemovalDayAndTime}}</strong>.<br/><br/>When we are back, you will be able to access your existing applications or create a new one. Employers will be able to respond to information requests. We appreciate your understanding and patience. To get ready, review <what-to-expect-link>what to expect when you apply for paid family and medical leave benefits</what-to-expect-link>.",
+    noSchedule:
+      "We’re performing some maintenance on our system. Please check back in a few hours, or call the Contact Center at $t(shared.contactCenterPhoneNumberNoBreak) between 8 a.m.-5 p.m. ET.",
+    scheduledWithEndAndNoStart:
+      "We're performing some maintenance on our system, so you can't log in or work on any applications right now. The system will be back online and available on <strong>{{end}}</strong>.",
+    scheduledWithStartAndEnd:
+      "We're performing some maintenance on our system, so you can't log in or work on any applications right now. The system will be offline from <strong>{{start}}</strong> to <strong>{{end}}</strong>.",
     title: "We’re undergoing maintenance",
   },
   newTag: "New",
@@ -2825,6 +2976,9 @@ const components = {
   },
   withBenefitsApplications: {
     loadingLabel: "Loading applications",
+  },
+  withClaimDocuments: {
+    loadingLabel: "Loading documents",
   },
   withClaims: {
     loadingLabel: "Loading claims",

@@ -13,7 +13,7 @@ def mock_fineos_s3_bucket(mock_s3_bucket):
 
 
 @pytest.fixture
-def set_exporter_env_vars(mock_s3_bucket, mock_fineos_s3_bucket, mock_sftp_client, monkeypatch):
+def set_exporter_env_vars(mock_s3_bucket, mock_fineos_s3_bucket, monkeypatch):
     monkeypatch.setenv("FINEOS_DATA_EXPORT_PATH", f"s3://{mock_fineos_s3_bucket}/DT2/dataexports/")
     monkeypatch.setenv("PFML_FINEOS_EXTRACT_ARCHIVE_PATH", f"s3://{mock_s3_bucket}/cps/inbound/")
     monkeypatch.setenv("FINEOS_DATA_IMPORT_PATH", f"s3://{mock_fineos_s3_bucket}/DT2/dataimports/")

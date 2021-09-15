@@ -1,177 +1,176 @@
-import {
-  MockBenefitsApplicationBuilder,
-  renderWithAppLogic,
-  testHook,
-} from "../../test-utils";
-import ApplicationCard from "../../../src/components/ApplicationCard";
-import Applications from "../../../src/pages/applications/index";
-import BenefitsApplication from "../../../src/models/BenefitsApplication";
+import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
+import { screen, within } from "@testing-library/react";
 import BenefitsApplicationCollection from "../../../src/models/BenefitsApplicationCollection";
-import React from "react";
-import User from "../../../src/models/User";
-import { act } from "react-dom/test-utils";
+import Index from "../../../src/pages/applications/index";
 import { mockRouter } from "next/router";
-import { mount } from "enzyme";
 import routes from "../../../src/routes";
-import useAppLogic from "../../../src/hooks/useAppLogic";
 
-jest.mock("@aws-amplify/auth");
+const inProgressClaim = new MockBenefitsApplicationBuilder()
+  .id("mock_application_id_one")
+  .create();
+
+const submittedClaim = new MockBenefitsApplicationBuilder()
+  .submitted()
+  .create();
+submittedClaim.fineos_absence_id = "NTN-111-ABS-03";
+
+const completedClaim = new MockBenefitsApplicationBuilder()
+  .completed()
+  .create();
+
+const setUpHelper = (appLogicHook) => {
+  appLogicHook.benefitsApplications.loadAll = jest.fn();
+  appLogicHook.benefitsApplications.hasLoadedAll = true;
+  appLogicHook.benefitsApplications.benefitsApplications =
+    new BenefitsApplicationCollection([]);
+};
 
 describe("Applications", () => {
-  let appLogic, wrapper;
-
-  function render() {
-    ({ wrapper } = renderWithAppLogic(Applications, {
-      props: { appLogic },
-    }));
-  }
-
   beforeEach(() => {
     mockRouter.pathname = routes.applications.index;
-
-    testHook(() => {
-      appLogic = useAppLogic();
-      appLogic.users.user = new User({ consented_to_data_sharing: true });
-      appLogic.benefitsApplications.hasLoadedAll = true;
-    });
-
-    jest.spyOn(appLogic.benefitsApplications, "loadAll").mockResolvedValue();
   });
 
-  describe("when no claims exist", () => {
-    it("redirects to getReady", () => {
-      appLogic.benefitsApplications.benefitsApplications =
-        new BenefitsApplicationCollection([]);
-      const goToSpy = jest.spyOn(appLogic.portalFlow, "goTo");
-      render();
+  it("redirects to getReady when no claims exist", () => {
+    let goToSpy;
 
-      expect(goToSpy).toHaveBeenCalledWith("/applications/get-ready");
+    renderPage(Index, {
+      addCustomSetup: (appLogicHook) => {
+        setUpHelper(appLogicHook);
+        goToSpy = jest.spyOn(appLogicHook.portalFlow, "goTo");
+      },
     });
+    expect(goToSpy).toHaveBeenCalledWith("/applications/get-ready");
   });
 
-  describe("when applications have been started or submitted", () => {
+  it("user can view their in-progress + submitted applications", () => {
+    renderPage(Index, {
+      addCustomSetup: (appLogicHook) => {
+        setUpHelper(appLogicHook);
+        appLogicHook.documents.loadAll = jest.fn();
+        appLogicHook.benefitsApplications.benefitsApplications =
+          new BenefitsApplicationCollection([inProgressClaim, submittedClaim]);
+      },
+    });
+
+    expect(screen.getByText(/In-progress applications/)).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Application 1" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "NTN-111-ABS-03" })
+    ).toBeInTheDocument();
+  });
+
+  it("displays completed applications", () => {
+    renderPage(Index, {
+      addCustomSetup: (appLogicHook) => {
+        setUpHelper(appLogicHook);
+        appLogicHook.documents.loadAll = jest.fn();
+        appLogicHook.benefitsApplications.benefitsApplications =
+          new BenefitsApplicationCollection([completedClaim]);
+      },
+    });
+
+    expect(screen.getByText(/Submitted applications/)).toBeInTheDocument();
+    expect(screen.getByText(/Download your notices/)).toBeInTheDocument();
+  });
+
+  describe("When multiple claims of different statuses exist", () => {
     beforeEach(() => {
-      appLogic.benefitsApplications.benefitsApplications =
-        new BenefitsApplicationCollection([
-          new MockBenefitsApplicationBuilder().create(),
-          new MockBenefitsApplicationBuilder().submitted().create(),
-        ]);
-      jest
-        .spyOn(appLogic.documents, "hasLoadedClaimDocuments")
-        .mockImplementation(() => true);
-      render();
-    });
-
-    it("renders a heading for the started applications", () => {
-      expect(wrapper.find("Heading").first()).toMatchInlineSnapshot(`
-        <Heading
-          level="2"
-        >
-          In-progress applications
-        </Heading>
-      `);
-    });
-
-    it("renders list of started and completed applications", () => {
-      expect(wrapper.find(ApplicationCard)).toHaveLength(2);
-    });
-  });
-
-  describe("when applications have been completed", () => {
-    beforeEach(() => {
-      appLogic.benefitsApplications.benefitsApplications =
-        new BenefitsApplicationCollection([
-          new MockBenefitsApplicationBuilder().completed().create(),
-        ]);
-      render();
-    });
-
-    it("renders a heading for the completed applications", () => {
-      expect(wrapper.find("Heading").first()).toMatchInlineSnapshot(`
-        <Heading
-          level="2"
-        >
-          Submitted applications
-        </Heading>
-      `);
-    });
-
-    it("renders list of completed applications", () => {
-      expect(wrapper.find(ApplicationCard)).toHaveLength(1);
-    });
-  });
-
-  describe("when in progress and completed applications both exist", () => {
-    let completedClaim, startedClaim, submittedClaim;
-
-    beforeEach(() => {
-      startedClaim = new MockBenefitsApplicationBuilder().create();
-      submittedClaim = new MockBenefitsApplicationBuilder()
-        .submitted()
-        .create();
-      completedClaim = new MockBenefitsApplicationBuilder()
-        .completed()
-        .create();
-      appLogic.benefitsApplications.benefitsApplications =
-        new BenefitsApplicationCollection([
-          startedClaim,
-          submittedClaim,
-          completedClaim,
-        ]);
-      render();
-    });
-
-    it("increments the submitted ApplicationCard numbers by the number of in progress claims", () => {
-      expect(wrapper.find(ApplicationCard).last().prop("number")).toBe(3);
-    });
-
-    it("separates completed claims into 'Submitted' section", () => {
-      const sections = wrapper.findWhere((el) => {
-        // using "ComponentWithUser" here because the "withClaimDocuments" HOC uses the
-        // "withUser" HOC, which returns a "ComponentWithUser"
-        return ["Heading", "ComponentWithUser"].includes(el.name());
-      });
-
-      expect(sections.get(1).props.claim).toEqual(startedClaim);
-      expect(sections.get(2).props.claim).toEqual(submittedClaim);
-      expect(sections.get(4).props.claim).toEqual(completedClaim);
-    });
-  });
-
-  describe("when multiple claims exist", () => {
-    const claim1 = new MockBenefitsApplicationBuilder().submitted().create();
-    claim1.application_id = "claim1";
-    const claim2 = new MockBenefitsApplicationBuilder().submitted().create();
-    claim2.application_id = "claim2";
-
-    beforeEach(() => {
-      act(() => {
-        const newClaims = [
-          new BenefitsApplication(claim1),
-          new BenefitsApplication(claim2),
-        ];
-
-        appLogic.benefitsApplications.benefitsApplications =
-          new BenefitsApplicationCollection(newClaims);
+      renderPage(Index, {
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.documents.loadAll = jest.fn();
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new BenefitsApplicationCollection([
+              inProgressClaim,
+              submittedClaim,
+              completedClaim,
+            ]);
+        },
       });
     });
 
-    it("should only load documents for each claim once", async () => {
-      const spy = jest
-        .spyOn(appLogic.documents, "loadAll")
-        .mockImplementation(() => jest.fn());
-
-      await act(async () => {
-        jest
-          .spyOn(appLogic.users, "requireUserConsentToDataAgreement")
-          .mockImplementation(() => {});
-        jest
-          .spyOn(appLogic.users, "requireUserRole")
-          .mockImplementation(() => {});
-        await mount(<Applications appLogic={appLogic} />);
-      });
-
-      expect(spy).toHaveBeenCalledTimes(2);
+    it("Displays Application Card for each claim", () => {
+      const applicationCards = screen.getAllByRole("article");
+      expect(applicationCards).toHaveLength(3);
+      expect(screen.getByText(/Application 1/)).toBeInTheDocument();
+      expect(
+        screen.getAllByRole("link", { name: "Continue application" })
+      ).toHaveLength(2);
+      expect(screen.getByText(/NTN-111-ABS-01/)).toBeInTheDocument();
+      expect(screen.getByText(/NTN-111-ABS-03/)).toBeInTheDocument();
     });
+
+    it("Displays headers for each section", () => {
+      expect(screen.getByText(/In-progress applications/)).toBeInTheDocument();
+      expect(screen.getByText(/Submitted applications/)).toBeInTheDocument();
+    });
+
+    it("Displays claims in expected order", () => {
+      const [inProgClaim, subClaim, compClaim] = screen.getAllByRole("article");
+      expect(
+        within(inProgClaim).getByText(/Application 1/)
+      ).toBeInTheDocument();
+      expect(within(subClaim).getByText(/NTN-111-ABS-03/)).toBeInTheDocument();
+      expect(within(compClaim).getByText(/NTN-111-ABS-01/)).toBeInTheDocument();
+    });
+  });
+
+  it("only loads documents for each claim once", () => {
+    const inProgressClaim2 = new MockBenefitsApplicationBuilder().create();
+    inProgressClaim2.application_id = "mock_application_id_two";
+
+    const spy = jest.fn();
+
+    renderPage(Index, {
+      addCustomSetup: (appLogicHook) => {
+        setUpHelper(appLogicHook);
+        appLogicHook.documents.loadAll = spy;
+        appLogicHook.benefitsApplications.benefitsApplications =
+          new BenefitsApplicationCollection([
+            inProgressClaim,
+            inProgressClaim2,
+          ]);
+      },
+    });
+    expect(spy).toHaveBeenCalledTimes(2);
+  });
+
+  it("renders v2 application card when feature flags are enabled", () => {
+    process.env.featureFlags = {
+      claimantShowStatusPage: true,
+    };
+    renderPage(Index, {
+      addCustomSetup: (appLogicHook) => {
+        setUpHelper(appLogicHook);
+        appLogicHook.documents.loadAll = jest.fn();
+        appLogicHook.benefitsApplications.benefitsApplications =
+          new BenefitsApplicationCollection([inProgressClaim, submittedClaim]);
+      },
+    });
+    const [v2CardOne, v2CardTwo] = screen.getAllByRole("article");
+    expect(within(v2CardOne).getByText(/Application 1/)).toBeInTheDocument();
+    expect(within(v2CardTwo).getByText(/Application 2/)).toBeInTheDocument();
+  });
+
+  it("displays success alert when uploaded absence id is present", () => {
+    renderPage(
+      Index,
+      {
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.documents.loadAll = jest.fn();
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new BenefitsApplicationCollection([inProgressClaim]);
+        },
+      },
+      { query: { uploadedAbsenceId: "mock_id" } }
+    );
+    expect(
+      screen.getByText(
+        /Our Contact Center staff will review your documents for mock_id./
+      )
+    ).toBeInTheDocument();
   });
 });

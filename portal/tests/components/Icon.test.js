@@ -1,63 +1,36 @@
 import Icon from "../../src/components/Icon";
 import React from "react";
-import { shallow } from "enzyme";
-
-function render(customProps = {}) {
-  const props = Object.assign(
-    {
-      className: "",
-    },
-    customProps
-  );
-  const component = <Icon name="edit" {...props} />;
-  return {
-    component,
-    wrapper: shallow(component),
-  };
-}
+import { render } from "@testing-library/react";
 
 describe("Icon", () => {
   it("renders the component", () => {
-    const { wrapper } = render();
-    expect(wrapper).toMatchInlineSnapshot(`
+    const { container } = render(<Icon name="edit" />);
+    expect(container.firstChild).toMatchInlineSnapshot(`
       <svg
         aria-hidden="true"
-        className="usa-icon"
+        class="usa-icon"
         focusable="false"
         role="img"
       >
         <use
-          xlinkHref="/img/sprite.svg#edit"
+          xlink:href="/img/sprite.svg#edit"
         />
       </svg>
     `);
   });
 
-  describe("when className is set", () => {
-    it("adds the className to the icon", () => {
-      const { wrapper } = render({ className: "custom-class" });
-      const svg = wrapper.find("svg");
-
-      expect(svg.hasClass("custom-class")).toBe(true);
-    });
+  it("adds the className to the icon as needed", () => {
+    const { container } = render(<Icon name="edit" className="custom-class" />);
+    expect(container.firstChild).toHaveClass("custom-class");
   });
 
-  describe("when fill is set", () => {
-    it('adds "fill" to the svg', () => {
-      const { wrapper } = render({ fill: "currentColor" });
-      const svg = wrapper.find("svg");
-
-      expect(svg.prop("fill")).toBe("currentColor");
-    });
+  it('adds "fill" to the svg as needed', () => {
+    const { container } = render(<Icon name="edit" fill="currentColor" />);
+    expect(container.firstChild).toHaveAttribute("fill", "currentColor");
   });
 
-  describe("when size is set", () => {
-    it("adds the className to the icon", () => {
-      const { wrapper } = render({ size: 4 });
-      const svg = wrapper.find("svg");
-
-      expect(svg.hasClass("usa-icon--size-4")).toBe(true);
-      expect(svg.hasClass("usa-icon")).toBe(false);
-    });
+  it("can pass through size to the className", () => {
+    const { container } = render(<Icon name="edit" size={4} />);
+    expect(container.firstChild).toHaveClass("usa-icon--size-4");
   });
 });

@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 import React from "react";
 
 /**
- * A details element that expands and collopses.
+ * A details element that expands and collapses.
  */
 function Details(props) {
   return (

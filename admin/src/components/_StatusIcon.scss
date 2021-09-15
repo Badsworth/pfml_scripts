@@ -1,0 +1,14 @@
+.statusicon {
+  border-radius: 50%;
+  display: inline-block;
+  height: 0.6em;
+  width: 0.6em;
+}
+
+.statusicon--disabled {
+  background: $Color-GraniteGray-300;
+}
+
+.statusicon--enabled {
+  background: $Color-BerkshiresGreen-600;
+}

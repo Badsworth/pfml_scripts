@@ -1,18 +1,17 @@
+import { render, screen } from "@testing-library/react";
 import React from "react";
 import UnsupportedBrowserBanner from "../../src/components/UnsupportedBrowserBanner";
-import { shallow } from "enzyme";
 
 describe("UnsupportedBrowserBanner", () => {
   it("renders conditional HTML comment and the banner message", () => {
-    const wrapper = shallow(<UnsupportedBrowserBanner />);
+    const { container } = render(<UnsupportedBrowserBanner />);
 
-    expect(wrapper.find("span").html()).toMatchSnapshot();
-    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 
   it("adds display-block when forceRender prop is set", () => {
-    const wrapper = shallow(<UnsupportedBrowserBanner forceRender />);
+    render(<UnsupportedBrowserBanner forceRender />);
 
-    expect(wrapper.find(".display-block").exists()).toBe(true);
+    expect(screen.getByRole("alert")).toHaveClass("display-block");
   });
 });

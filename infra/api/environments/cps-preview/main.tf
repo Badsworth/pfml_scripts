@@ -69,16 +69,13 @@ module "api" {
   cognito_user_pool_keys_url  = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_1OVYp4aZo/.well-known/jwks.json"
   portal_base_url             = "https://paidleave-cps-preview.eol.mass.gov"
 
-  cognito_post_confirmation_lambda_artifact_s3_key = local.cognito_post_confirmation_lambda_artifact_s3_key
-  cognito_pre_signup_lambda_artifact_s3_key        = local.cognito_pre_signup_lambda_artifact_s3_key
-
   logging_level = "massgov.pfml.fineos.fineos_client=DEBUG"
 
   # TODO: Connect to an RMV endpoint if desired. All nonprod environments are connected to the staging API
   #       in either a fully-mocked or partially-mocked setting.
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-cps-preview/rmv_client_certificate-alAlg3"
-  rmv_check_behavior                = "partially_mocked"
+  rmv_api_behavior                  = "partially_mocked"
   rmv_check_mock_success            = "1"
 
   # TODO: These values are provided by FINEOS.

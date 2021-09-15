@@ -67,13 +67,11 @@ module "api" {
   cognito_user_pool_id                                = "us-east-1_HpL4XslLg"
   cognito_user_pool_client_id                         = "10rjcp71r8bnk4459c67bn18t8"
   cognito_user_pool_keys_url                          = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_HpL4XslLg/.well-known/jwks.json"
-  cognito_post_confirmation_lambda_artifact_s3_key    = local.cognito_post_confirmation_lambda_artifact_s3_key
-  cognito_pre_signup_lambda_artifact_s3_key           = local.cognito_pre_signup_lambda_artifact_s3_key
   cognito_enable_provisioned_concurrency              = false
   logging_level                                       = "massgov.pfml.fineos.fineos_client=DEBUG"
   rmv_client_base_url                                 = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn                   = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-stage/rmv_client_certificate-QlZaMl"
-  rmv_check_behavior                                  = "partially_mocked"
+  rmv_api_behavior                                    = "partially_mocked"
   rmv_check_mock_success                              = "1"
   fineos_client_customer_api_url                      = "https://idt-api.masspfml.fineos.com/customerapi/"
   fineos_client_integration_services_api_url          = "https://idt-api.masspfml.fineos.com/integration-services/"

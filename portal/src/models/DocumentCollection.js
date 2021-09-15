@@ -1,7 +1,5 @@
 import BaseCollection from "./BaseCollection";
 
-/** @typedef {import('./Document').default} Document */
-
 export default class DocumentCollection extends BaseCollection {
   get idProperty() {
     return "fineos_document_id";

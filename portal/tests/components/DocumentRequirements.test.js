@@ -1,16 +1,21 @@
+import { render, screen } from "@testing-library/react";
 import DocumentRequirements from "../../src/components/DocumentRequirements";
 import React from "react";
-import { shallow } from "enzyme";
 
 describe("DocumentRequirements", () => {
   it("renders ID Document Requirements content", () => {
-    const wrapper = shallow(<DocumentRequirements type="id" />);
-    expect(wrapper.find("Heading")).toMatchSnapshot();
-    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+    render(<DocumentRequirements type="id" />);
+    expect(screen.getByRole("heading")).toHaveAccessibleName(
+      "Document Requirements:"
+    );
+    expect(screen.getByRole("list")).toMatchSnapshot();
   });
+
   it("renders Certification Document Requirements content", () => {
-    const wrapper = shallow(<DocumentRequirements type="certification" />);
-    expect(wrapper.find("Heading")).toMatchSnapshot();
-    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+    render(<DocumentRequirements type="certification" />);
+    expect(screen.getByRole("heading")).toHaveAccessibleName(
+      "Document Requirements:"
+    );
+    expect(screen.getByRole("list")).toMatchSnapshot();
   });
 });

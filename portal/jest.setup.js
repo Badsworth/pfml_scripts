@@ -3,6 +3,7 @@
  * @see https://jestjs.io/docs/en/configuration#setupfilesafterenv-array
  */
 
+import "@testing-library/jest-dom";
 import Adapter from "enzyme-adapter-react-16";
 import Enzyme from "enzyme";
 import { format } from "util";
@@ -11,6 +12,8 @@ import { initializeI18n } from "./src/locales/i18n";
 initializeI18n();
 
 Enzyme.configure({ adapter: new Adapter() });
+
+jest.mock("@aws-amplify/auth");
 
 /**
  * Mock environment variables

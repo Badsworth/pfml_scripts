@@ -1,167 +1,124 @@
 import FormLabel from "../../src/components/FormLabel";
 import React from "react";
-import { shallow } from "enzyme";
-
-function render(customProps = {}) {
-  const props = Object.assign(
-    {
-      children: "Field Label",
-      inputId: "foo",
-    },
-    customProps
-  );
-
-  const component = <FormLabel {...props} />;
-
-  return {
-    props,
-    wrapper: shallow(component),
-  };
-}
+import { render } from "@testing-library/react";
 
 describe("FormLabel", () => {
-  it("renders the component children as the label's text", () => {
-    const text = "Foo Bar";
-    const { wrapper } = render({ children: text });
-    const label = wrapper.find(".usa-label");
+  const text = "Form label text";
 
-    expect(label.text()).toMatch(text);
+  describe("FormLabel rendering", () => {
+    it("renders the form label and its children", () => {
+      const label = render(<FormLabel>{text}</FormLabel>);
+      expect(label.getByText(text)).toBeInTheDocument();
+    });
   });
 
-  it("uses inputId as the label's `for` attribute", () => {
+  describe("FormLabel attributes", () => {
     const inputId = "foo";
-    const { wrapper } = render({ inputId });
-    const field = wrapper.find(".usa-label");
 
-    expect(field.prop("htmlFor")).toBe(inputId);
-  });
+    it("sets the label's `for` attribute when component is a `label`", () => {
+      const label = render(<FormLabel inputId={inputId}>{text}</FormLabel>);
+      expect(label.getByText(text)).toHaveAttribute("for", inputId);
+    });
 
-  describe("when the type prop isn't set", () => {
-    it("renders label with expected classes", () => {
-      const { wrapper } = render();
+    it("doesn't set the label's `for` attribute when component is a `legend`", () => {
+      const legend = render(
+        <FormLabel component="legend" inputId={inputId}>
+          {text}
+        </FormLabel>
+      );
+      expect(legend.getByText(text)).not.toHaveAttribute("for");
+    });
 
-      expect(wrapper).toMatchSnapshot();
+    it("doesn't set the label's `id` attribute when `inputId` is not set", () => {
+      const label = render(<FormLabel>{text}</FormLabel>);
+      expect(label.getByText(text)).not.toHaveAttribute("id");
     });
   });
 
-  describe("when component prop is set to legend", () => {
-    it("renders legend with expected classes", () => {
-      const { wrapper } = render({ component: "legend" });
+  describe("FormLabel labelClassName", () => {
+    const labelClassName = "custom-class-name";
 
-      expect(wrapper).toMatchSnapshot();
+    it("renders custom label class names as expected", () => {
+      const label = render(
+        <FormLabel labelClassName={labelClassName}>{text}</FormLabel>
+      );
+      expect(label.getByText(text)).toHaveClass(labelClassName);
+    });
+
+    it("custom label class names override the `text-bold` class", () => {
+      const label = render(
+        <FormLabel labelClassName={labelClassName}>{text}</FormLabel>
+      );
+      expect(label.getByText(text)).not.toHaveClass("text-bold");
     });
   });
 
-  describe("when component prop is set to label", () => {
-    it("renders label with expected classes", () => {
-      const { wrapper } = render({ component: "label", inputId: "foo" });
+  describe("FormLabel Hint", () => {
+    const hintText = "hint text";
 
-      expect(wrapper).toMatchSnapshot();
+    it("renders the hint when provided", () => {
+      const label = render(<FormLabel hint={hintText}>{text}</FormLabel>);
+      expect(label.getByText(hintText)).toBeInTheDocument();
+    });
+
+    it("doesn't render the hint when it's not provided", () => {
+      const label = render(<FormLabel hint={hintText}>{text}</FormLabel>);
+      const hint = label.getByText(hintText);
+      expect(hint).toBeInTheDocument();
     });
   });
 
-  describe("when hint prop is set", () => {
-    it("renders the hint", () => {
-      const { wrapper } = render({ hint: "Hint text" });
-      const hint = wrapper.find("Hint").last();
-
-      expect(hint).toMatchInlineSnapshot(`
-        <Hint
-          inputId="foo"
-          small={false}
-        >
-          Hint text
-        </Hint>
-      `);
+  describe("FormLabel class lists", () => {
+    it("renders component `label` with expected classes when small", () => {
+      const label = render(<FormLabel small>{text}</FormLabel>);
+      expect(label.getByText(text)).toHaveClass("font-heading-xs", "measure-5");
     });
 
-    describe("when the label is small", () => {
-      it("passes small prop to Hint", () => {
-        const { wrapper } = render({ hint: "Hint text", small: true });
-        const hint = wrapper.find("Hint");
-
-        expect(hint.prop("small")).toBe(true);
-      });
+    it("renders component `legend` with expected classes when small", () => {
+      const label = render(
+        <FormLabel component="legend" small>
+          {text}
+        </FormLabel>
+      );
+      expect(label.getByText(text)).toHaveClass("font-heading-xs", "measure-5");
     });
-  });
 
-  describe("when example prop is set", () => {
-    it("it renders the example text with expected classes", () => {
-      const { wrapper } = render({ example: "Example text" });
-      const example = wrapper.find(".usa-hint").last();
+    it("renders the example text with expected classes", () => {
+      const exampleText = "example text";
+      const label = render(<FormLabel example={exampleText}>{text}</FormLabel>);
+      const example = label.getByText(exampleText);
 
-      expect(example).toMatchInlineSnapshot(`
-        <span
-          className="display-block line-height-sans-5 usa-hint text-base-dark measure-5"
-        >
-          Example text
-        </span>
-      `);
+      expect(example).toHaveClass(
+        "display-block",
+        "line-height-sans-5",
+        "measure-5",
+        "text-base-dark",
+        "usa-hint"
+      );
     });
-  });
 
-  describe("when optionalText prop is set", () => {
     it("renders the optional text with expected classes", () => {
-      const { wrapper } = render({ optionalText: "(optional)" });
-      const node = wrapper.find(".usa-label .usa-hint").first();
-
-      expect(node).toMatchInlineSnapshot(`
-        <span
-          className="usa-hint text-base-dark text-normal"
-        >
-           (optional)
-        </span>
-      `);
-    });
-  });
-
-  describe("when errorMsg is set", () => {
-    it("renders the errorMsg", () => {
-      const { props, wrapper } = render({ errorMsg: "Oh no." });
-      const node = wrapper.find(".usa-error-message");
-
-      expect(node.text()).toBe(props.errorMsg);
-      expect(node.prop("role")).toBe("alert");
-      expect(node.prop("id")).toBeDefined();
-    });
-
-    it("adds error classes to the label", () => {
-      const { wrapper } = render({ errorMsg: "Oh no." });
-      const label = wrapper.find(".usa-label");
-
-      expect(label.hasClass("usa-label--error")).toBe(true);
-    });
-  });
-
-  describe("when `small` is true", () => {
-    it("adds classes for a smaller type size to the label", () => {
-      const { wrapper } = render({ small: true });
-
-      const label = wrapper.find(".usa-label");
-
-      expect(label.prop("className")).toMatchInlineSnapshot(
-        `"usa-label text-bold font-heading-xs measure-5"`
+      const optionalText = "optional text";
+      const label = render(
+        <FormLabel optionalText={optionalText}>{text}</FormLabel>
       );
-    });
+      const optionalItem = label.getByText(optionalText);
 
-    it("adds classes for a smaller type size to the legend", () => {
-      const { wrapper } = render({ small: true, component: "legend" });
-
-      const label = wrapper.find(".usa-label");
-
-      expect(label.prop("className")).toMatchInlineSnapshot(
-        `"usa-label text-bold usa-legend font-heading-xs measure-5"`
+      expect(optionalItem).toHaveClass(
+        "text-base-dark",
+        "text-normal",
+        "usa-hint"
       );
     });
   });
 
-  describe("when `labelClassName` is set", () => {
-    it("overrides the .text-bold class", () => {
-      const { wrapper } = render({ labelClassName: "text-normal" });
-      const label = wrapper.find(".usa-label");
+  describe("FormLabel errorMsg", () => {
+    it("renders error message when `errorMsg` is set", () => {
+      const errorMsg = "error message";
+      const label = render(<FormLabel errorMsg={errorMsg}>{text}</FormLabel>);
+      const error = label.getByText(errorMsg);
 
-      expect(label.hasClass("text-normal")).toBe(true);
-      expect(label.hasClass("text-bold")).toBe(false);
+      expect(error).toBeInTheDocument();
     });
   });
 });

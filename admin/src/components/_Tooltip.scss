@@ -1,0 +1,103 @@
+/** @define tooltip */
+.tooltip {
+  align-items: center;
+  display: inline-flex;
+  justify-content: center;
+  position: relative;
+  top: 1px;
+}
+
+.tooltip__trigger {
+  align-items: center;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  justify-content: center;
+  line-height: 1;
+  padding: 0;
+}
+
+.tooltip__trigger::before {
+  @include IconFontProps;
+  color: $Color-GraniteGray-300;
+  content: $IconInfo;
+  font-size: 1.16em;
+}
+
+.tooltip__container {
+  align-items: center;
+  background: $Color-GraniteGray-600;
+  border-radius: 6px;
+  display: none;
+  justify-content: center;
+  padding: 0.93em 1.1em;
+  position: absolute;
+  width: 156px;
+}
+
+.tooltip--top .tooltip__container {
+  bottom: 100%;
+  margin-bottom: 0.7em;
+}
+
+.tooltip--bottom .tooltip__container {
+  margin-top: 0.7em;
+  top: 100%;
+}
+
+.tooltip--left .tooltip__container {
+  margin-right: 0.7em;
+  right: 100%;
+}
+
+.tooltip--right .tooltip__container {
+  left: 100%;
+  margin-left: 0.7em;
+}
+
+.tooltip__trigger:hover + .tooltip__container,
+.tooltip__trigger:focus + .tooltip__container {
+  display: flex;
+}
+
+.tooltip__container::before {
+  border-style: solid;
+  content: '';
+  display: block;
+  height: 0;
+  position: absolute;
+  width: 0;
+}
+
+.tooltip--top .tooltip__container::before {
+  border-color: $Color-GraniteGray-600 transparent transparent transparent;
+  border-width: 8px 5.5px 0;
+  top: 100%;
+}
+
+.tooltip--bottom .tooltip__container::before {
+  border-color: transparent transparent $Color-GraniteGray-600 transparent;
+  border-width: 0 5.5px 8px;
+  bottom: 100%;
+}
+
+.tooltip--left .tooltip__container::before {
+  border-color: transparent transparent transparent $Color-GraniteGray-600;
+  border-width: 5.5px 0 5.5px 8px;
+  left: 100%;
+}
+
+.tooltip--right .tooltip__container::before {
+  border-color: transparent $Color-GraniteGray-600 transparent transparent;
+  border-width: 5.5px 8px 5.5px 0;
+  right: 100%;
+}
+
+.tooltip__text {
+  color: #fff;
+  flex: none;
+  font-size: 0.86em;
+  line-height: 1.33;
+  width: 100%;
+}

@@ -15,7 +15,11 @@ from massgov.pfml.api.models.common import (
     LookupEnum,
     PreviousLeaveQualifyingReason,
 )
-from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
+from massgov.pfml.api.validation.exceptions import (
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
     FinancialRoutingNumber,
@@ -347,6 +351,8 @@ class DocumentType(str, LookupEnum):
     child_bonding_evidence_form = "Child bonding evidence form"
     care_for_a_family_member_form = "Care for a family member form"
     military_exigency_form = "Military exigency form"
+    withdrawal_notice = "Pending Application Withdrawn"
+    appeal_acknowledgment = "Appeal Acknowledgment"
 
 
 class ContentType(str, LookupEnum):
@@ -403,7 +409,7 @@ class Phone(PydanticBaseModel):
             error_list.append(
                 ValidationErrorDetail(
                     message="Phone number must be a valid number",
-                    type="invalid_phone_number",
+                    type=IssueType.invalid_phone_number,
                     rule="phone_number_must_be_valid_number",
                     field="phone.phone_number",
                 )
@@ -413,7 +419,7 @@ class Phone(PydanticBaseModel):
             error_list.append(
                 ValidationErrorDetail(
                     message="Phone number must be a valid number",
-                    type="invalid_phone_number",
+                    type=IssueType.invalid_phone_number,
                     rule="phone_number_must_be_valid_number",
                     field="phone.phone_number",
                 )

@@ -19,12 +19,16 @@ class OrderDirection(str, Enum):
 
 
 class PaginationAPIContext:
+    default_order_by: str = "created_at"
+
     def __init__(
         self, entity: Any, request: flask.Request,
     ):
         page_size = request.args.get("page_size", default=DEFAULT_PAGE_SIZE, type=int)
         page_offset = request.args.get("page_offset", default=DEFAULT_PAGE_OFFSET, type=int)
-        order_by = request.args.get("order_by", default="created_at", type=str).strip().lower()
+        order_by = (
+            request.args.get("order_by", default=self.default_order_by, type=str).strip().lower()
+        )
         order_direction = request.args.get(
             "order_direction", default=OrderDirection.desc.value, type=str
         )
@@ -47,6 +51,11 @@ class PaginationAPIContext:
 
     def __exit__(self, exc_type, exc_val, exc_tb):
         return False
+
+
+# TODO (API-1776): remove when Application model uses create_at field
+class ApplicationPaginationAPIContext(PaginationAPIContext):
+    default_order_by: str = "start_time"
 
 
 class Page:

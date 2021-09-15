@@ -36,7 +36,10 @@ export const PreviousLeavesOtherReason = (props) => {
     ) {
       patchData.previous_leaves_other_reason = null;
     }
-    await appLogic.benefitsApplications.update(claim.application_id, patchData);
+    return await appLogic.benefitsApplications.update(
+      claim.application_id,
+      patchData
+    );
   };
 
   return (

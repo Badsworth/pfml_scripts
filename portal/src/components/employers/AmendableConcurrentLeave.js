@@ -8,6 +8,7 @@ import InputDate from "../InputDate";
 import PropTypes from "prop-types";
 import { cloneDeep } from "lodash";
 import formatDateRange from "../../utils/formatDateRange";
+import useAutoFocusEffect from "../../hooks/useAutoFocusEffect";
 import { useTranslation } from "../../locales/i18n";
 
 /**
@@ -23,7 +24,9 @@ const AmendableConcurrentLeave = ({
 }) => {
   const { t } = useTranslation();
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
-    useState(false);
+    useState(isAddedByLeaveAdmin);
+  const containerRef = React.createRef();
+  useAutoFocusEffect({ containerRef, isAmendmentFormDisplayed });
 
   const handleCancelAmendment = () => {
     setIsAmendmentFormDisplayed(false);
@@ -63,10 +66,8 @@ const AmendableConcurrentLeave = ({
   return (
     <React.Fragment>
       {!isAddedByLeaveAdmin && <ConcurrentLeaveDetailsRow />}
-      <ConditionalContent
-        visible={isAddedByLeaveAdmin || isAmendmentFormDisplayed}
-      >
-        <tr>
+      <ConditionalContent visible={isAmendmentFormDisplayed}>
+        <tr ref={containerRef}>
           <td
             colSpan="3"
             className="padding-top-2 padding-bottom-2 padding-left-0"
