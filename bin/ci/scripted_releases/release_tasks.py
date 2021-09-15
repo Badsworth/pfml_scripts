@@ -63,7 +63,8 @@ def update(args):
             git_utils.merge_in_branch(args.source_branch)
 
         logger.info("Done.")
-        git_utils.tag_branch(args.release_version, v.bump_prerelease())
+        git_utils.tag_branch(args.release_version, f"{args.app}/{v.bump_prerelease()}")
+        # push to origin!!!
 
     except git.exc.GitCommandError as e:
         # hard reset to old_head, and discard any tags or commits descended from old_head
