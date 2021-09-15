@@ -50,8 +50,6 @@ export const Index = (props) => {
         <div className="desktop:grid-col">
           <Title>{t("pages.applications.title")}</Title>
 
-          {!hasClaims && <p>{t("pages.applications.noClaims")}</p>}
-
           {hasInProgressClaims && (
             <React.Fragment>
               <div className="measure-6">
