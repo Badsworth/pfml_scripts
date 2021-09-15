@@ -71,7 +71,15 @@ def update(args):
 
     except git.exc.GitCommandError as e:
         # hard reset to old_head, and discard any tags or commits descended from old_head
+        # also abort any in-process cherry pick; these leave dirty state if not cleaned up
         logger.warning(f"Ran into a problem: {e}")
+
+        try:
+            git_utils.cherrypick("--abort")  # not actually a "commit_hash", but a valid switch for `git cherry-pick`
+            logger.info("Cleaned up an in-process cherry-pick")
+        except git.exc.GitCommandError as e2:
+            logger.debug(f"No cherry-pick was in progress (or something else went wrong) - {e2}")
+
         logger.warning(f"Resetting '{args.release_version}' back to {old_head}.")
         git_utils.reset_head(old_head)
         return False
