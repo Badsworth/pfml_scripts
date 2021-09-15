@@ -1,4 +1,5 @@
 # low level methods and processes for scripted releases here
+# TODO: this module could be made into a class and instantiated in release_tasks
 from git import Repo
 import os
 from re import match
