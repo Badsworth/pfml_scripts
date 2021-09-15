@@ -1043,10 +1043,14 @@ data "aws_iam_policy_document" "evaluate_new_financial_eligibility" {
     effect = "Allow"
     actions = [
       "s3:PutObject",
+      "logs:StartQuery",
+      "logs:GetLogEvents"
     ]
     resources = [
       "arn:aws:s3:::massgov-pfml-${var.environment_name}-execute-sql-export",
       "arn:aws:s3:::massgov-pfml-${var.environment_name}-execute-sql-export/*",
+      "${data.aws_cloudwatch_log_group.service_logs.arn}:*",
+
     ]
   }
 
@@ -1054,13 +1058,11 @@ data "aws_iam_policy_document" "evaluate_new_financial_eligibility" {
   statement {
     effect = "Allow"
     actions = [
-      "logs:GetLogEvents",
-      "logs:StartQuery",
-      "logs:GetQueryResults",
-      "logs:DescribeQueries"
+      "logs:DescribeQueries",
+      "logs:GetQueryResults"
     ]
     resources = [
-      "${data.aws_cloudwatch_log_group.service_logs.arn}:*",
+      "*",
     ]
   }
 }
