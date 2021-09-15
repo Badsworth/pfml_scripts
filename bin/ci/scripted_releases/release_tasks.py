@@ -76,7 +76,7 @@ def update(args):
 
         try:
             git_utils.cherrypick("--abort")  # not actually a "commit_hash", but a valid switch for `git cherry-pick`
-            logger.info("Cleaned up an in-process cherry-pick")
+            logger.warning("Cleaned up an in-process cherry-pick")
         except git.exc.GitCommandError as e2:
             logger.debug(f"No cherry-pick was in progress (or something else went wrong) - {e2}")
 
