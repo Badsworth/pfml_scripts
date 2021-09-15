@@ -46,8 +46,8 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     pfmlTerriyay: true,
     noMaintenance: true,
     claimantShowStatusPage: false,
-    employerShowReviewByStatus:
-      config("PORTAL_HAS_LA_STATUS_UPDATES") === "true",
+    employerShowDashboardSearch: true,
+    employerShowReviewByStatus: true,
   };
   cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });
 }
@@ -1040,15 +1040,10 @@ export type DashboardClaimStatus =
   | "No action required"
   | "Review by";
 export function selectClaimFromEmployerDashboard(
-  fineosAbsenceId: string,
-  status: DashboardClaimStatus
+  fineosAbsenceId: string
 ): void {
   goToEmployerDashboard();
-  // With the status updates enabled, claims are sorted by status by default
-  // which means we won't see our claim show up on the first page.
-  if (config("PORTAL_HAS_LA_STATUS_UPDATES") === "true")
-    sortClaims("new", false);
-  cy.contains("tr", fineosAbsenceId).should("contain.text", status);
+  searchClaims(fineosAbsenceId);
   cy.findByText(fineosAbsenceId).click();
 }
 
@@ -1891,3 +1886,20 @@ export const skipLoadingClaimantApplications = (): void => {
     });
   });
 };
+
+/**
+ * Search claims in LA dashboard by id or employee name.
+ * Expects to only find a single match.
+ * @param idOrName
+ */
+export function searchClaims(idOrName: string): void {
+  cy.findByLabelText("Search for employee name or application ID").type(
+    `${idOrName}{enter}`
+  );
+  cy.get('span[role="progressbar"]').should("be.visible");
+  cy.wait("@dashboardClaimQueries");
+  cy.get("table tbody").should(($table) => {
+    expect($table.children()).to.have.length(1);
+    expect($table.children()).to.contain.text(idOrName);
+  });
+}

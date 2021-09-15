@@ -218,7 +218,8 @@ describe("status page", () => {
         ...CLAIM_DETAIL,
         absence_periods: [
           { reason: LeaveReason.bonding },
-          { reason: LeaveReason.care },
+          { reason_qualifier_one: "Newborn" },
+          { reason_qualifier_two: "Newborn" },
         ],
       });
 

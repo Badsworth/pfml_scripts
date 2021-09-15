@@ -352,7 +352,7 @@ class DocumentType(str, LookupEnum):
     care_for_a_family_member_form = "Care for a family member form"
     military_exigency_form = "Military exigency form"
     withdrawal_notice = "Pending Application Withdrawn"
-    appeal_acknowledgement = "Appeal Acknowledgement"
+    appeal_acknowledgment = "Appeal Acknowledgment"
 
 
 class ContentType(str, LookupEnum):

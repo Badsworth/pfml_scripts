@@ -1,5 +1,4 @@
 import { fineos } from "../../../actions";
-import { getFineosBaseUrl } from "../../../config";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import {
   AbsenceReasonDescription,
@@ -8,9 +7,7 @@ import {
   PrimaryRelationshipDescription,
 } from "../../../actions/fineos.pages";
 import { addDays, formatISO, startOfWeek, subWeeks } from "date-fns";
-import { getLeavePeriod } from "../../../../src/util/claims";
 
-// Top level env override to use old employees/employers
 Cypress.env({
   E2E_EMPLOYEES_FILE: "./employees/e2e-2021-06-30.json",
   E2E_EMPLOYERS_FILE: "./employers/e2e-2021-06-30.json",

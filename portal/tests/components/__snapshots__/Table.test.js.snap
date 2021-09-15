@@ -1,0 +1,25 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Table renders children within a table 1`] = `
+<table
+  class="usa-table usa-table--borderless c-table"
+>
+  <caption>
+    Test table
+  </caption>
+  <thead>
+    <tr>
+      <th>
+        Header 1
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td>
+        Cell 1
+      </td>
+    </tr>
+  </tbody>
+</table>
+`;

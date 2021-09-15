@@ -41,6 +41,7 @@ function Button({ type = "button", ...props }) {
     <button
       aria-controls={props["aria-controls"]}
       aria-expanded={props["aria-expanded"]}
+      aria-label={props["aria-label"]}
       className={classes}
       name={props.name}
       onClick={props.onClick}
@@ -79,6 +80,7 @@ function Button({ type = "button", ...props }) {
 Button.propTypes = {
   "aria-controls": PropTypes.string,
   "aria-expanded": PropTypes.oneOf(["true", "false"]),
+  "aria-label": PropTypes.string,
   /**
    * Button text
    */

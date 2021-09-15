@@ -296,51 +296,43 @@ class PaymentRejectsStep(Step):
             FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION
         )
 
-        use_audit_reject_transaction_status = (
-            os.environ.get("USE_AUDIT_REJECT_TRANSACTION_STATUS", "0") == "1"
-        )
-        if use_audit_reject_transaction_status:
-            # Set writeback status from reject notes if available and matching, otherwise use default reject status
-            try:
-                if rejected_notes is None:
-                    self.increment(self.Metrics.MISSING_REJECT_NOTES)
-                    logger.warning(
-                        "Empty reject note for audit rejected payment: %s", payment.payment_id
-                    )
-                    writeback_transaction_status = default_reject_transaction_status
-                else:
-                    writeback_transaction_status = AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS[
-                        rejected_notes
-                    ]
-            except KeyError:
-                # No exact match, try a close match
-                # - ignore case
-                # - key is substring of reject writeback status
-                found = False
-                if rejected_notes:
-                    rejected_notes_lowercase = rejected_notes.lower()
-                    for reject_note_expected in AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS.keys():
-                        reject_note_expected_lowercase = reject_note_expected.lower()
-                        if (
-                            rejected_notes_lowercase == reject_note_expected_lowercase
-                            or rejected_notes_lowercase.find(reject_note_expected_lowercase) >= 0
-                        ):
-                            writeback_transaction_status = AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS[
-                                reject_note_expected
-                            ]
-                            found = True
-                            break
+        # Set writeback status from reject notes if available and matching, otherwise use default reject status
+        try:
+            if rejected_notes is None:
+                self.increment(self.Metrics.MISSING_REJECT_NOTES)
+                logger.warning(
+                    "Empty reject note for audit rejected payment: %s", payment.payment_id
+                )
+                writeback_transaction_status = default_reject_transaction_status
+            else:
+                writeback_transaction_status = AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS[rejected_notes]
+        except KeyError:
+            # No exact match, try a close match
+            # - ignore case
+            # - key is substring of reject writeback status
+            found = False
+            if rejected_notes:
+                rejected_notes_lowercase = rejected_notes.lower()
+                for reject_note_expected in AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS.keys():
+                    reject_note_expected_lowercase = reject_note_expected.lower()
+                    if (
+                        rejected_notes_lowercase == reject_note_expected_lowercase
+                        or rejected_notes_lowercase.find(reject_note_expected_lowercase) >= 0
+                    ):
+                        writeback_transaction_status = AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS[
+                            reject_note_expected
+                        ]
+                        found = True
+                        break
 
-                if not found:
-                    self.increment(self.Metrics.UNKNOWN_REJECT_NOTES)
-                    logger.warning(
-                        "Could not get writeback transaction status from reject notes for payment: %s, notes: %s",
-                        payment.payment_id,
-                        rejected_notes,
-                    )
-                    writeback_transaction_status = default_reject_transaction_status
-        else:
-            writeback_transaction_status = default_reject_transaction_status
+            if not found:
+                self.increment(self.Metrics.UNKNOWN_REJECT_NOTES)
+                logger.warning(
+                    "Could not get writeback transaction status from reject notes for payment: %s, notes: %s",
+                    payment.payment_id,
+                    rejected_notes,
+                )
+                writeback_transaction_status = default_reject_transaction_status
 
         return writeback_transaction_status
 

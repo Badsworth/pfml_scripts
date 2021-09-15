@@ -157,9 +157,7 @@ describe("ApplicationCard", () => {
         );
         const actions = wrapper.find("ApplicationActions").dive();
 
-        expect(actions.html()).toMatch(
-          `Once your child is born, submit proof of birth so that we can make a decision.`
-        );
+        expect(actions.html()).toMatchSnapshot();
       });
 
       it("renders guidance to upload an adoption cert doc for adoption", () => {
