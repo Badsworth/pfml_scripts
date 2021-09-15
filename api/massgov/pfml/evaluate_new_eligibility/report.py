@@ -175,16 +175,21 @@ def generate_report(cli_args, db_session, output_csv, diff_reason_csv):
             if current_eligibility != prior_eligibility:
                 new_decision = current_eligibility
                 new_aww = eligibility.employer_average_weekly_wage
-        finally:
-            result = [
-                claimaint_id,
-                time,
-                prior_eligibility,
-                new_decision,
-                old_aww,
-                new_aww,
-            ]
-            output_csv.writerow(result)
+                result = [
+                    claimaint_id,
+                    time,
+                    prior_eligibility,
+                    new_decision,
+                    old_aww,
+                    new_aww,
+                ]
+                output_csv.writerow(result)
+        except Exception as ex:
+            logger.warning(
+                "unable to process claim ",
+                exc_info=ex,
+                extra={"employee_id": claim.employee_id, "employer_id": claim.employer_id},
+            )
 
 
 def main(cli_args, db_session):
