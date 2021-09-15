@@ -1,13 +1,14 @@
+import { render, screen } from "@testing-library/react";
 import QuestionPage from "../../src/components/QuestionPage";
 import React from "react";
-import { shallow } from "enzyme";
+import userEvent from "@testing-library/user-event";
 
 describe("QuestionPage", () => {
   const sampleRoute = "/";
   const sampleTitle = "This is a question page";
 
   it("renders the form", () => {
-    const wrapper = shallow(
+    const { container } = render(
       <QuestionPage
         title={sampleTitle}
         onSave={jest.fn(() => Promise.resolve())}
@@ -16,20 +17,19 @@ describe("QuestionPage", () => {
         <div>Some stuff here</div>
       </QuestionPage>
     );
-    expect(wrapper).toMatchSnapshot();
+    expect(container.firstChild).toMatchSnapshot();
   });
 
-  it("calls onSave with formData", async () => {
-    const handleSave = jest.fn(() => Promise.resolve());
-    const wrapper = shallow(
-      <QuestionPage title={sampleTitle} onSave={handleSave}>
+  it("calls onSave with formData", () => {
+    const handleSaveMock = jest.fn(() => Promise.resolve());
+    render(
+      <QuestionPage title={sampleTitle} onSave={handleSaveMock}>
         <div>Some stuff here</div>
       </QuestionPage>
     );
-    const event = { preventDefault: jest.fn() };
 
-    await wrapper.find("form").simulate("submit", event);
+    userEvent.click(screen.getByRole("button"));
 
-    expect(handleSave).toHaveBeenCalled();
+    expect(handleSaveMock).toHaveBeenCalled();
   });
 });
