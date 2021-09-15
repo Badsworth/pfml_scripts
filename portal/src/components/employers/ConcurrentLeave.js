@@ -48,7 +48,6 @@ const ConcurrentLeave = (props) => {
           {originalConcurrentLeave ? (
             <AmendableConcurrentLeave
               getFunctionalInputProps={getFunctionalInputProps}
-              isAddedByLeaveAdmin={false}
               originalConcurrentLeave={originalConcurrentLeave}
               updateFields={updateFields}
             />
@@ -61,8 +60,6 @@ const ConcurrentLeave = (props) => {
           {currentConcurrentLeave && !originalConcurrentLeave && (
             <AmendableConcurrentLeave
               getFunctionalInputProps={getFunctionalInputProps}
-              isAddedByLeaveAdmin
-              originalConcurrentLeave={originalConcurrentLeave}
               updateFields={updateFields}
             />
           )}

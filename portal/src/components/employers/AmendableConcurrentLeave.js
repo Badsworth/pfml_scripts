@@ -6,7 +6,7 @@ import ConditionalContent from "../ConditionalContent";
 import Heading from "../Heading";
 import InputDate from "../InputDate";
 import PropTypes from "prop-types";
-import { cloneDeep } from "lodash";
+import { cloneDeep, isNil } from "lodash";
 import formatDateRange from "../../utils/formatDateRange";
 import useAutoFocusEffect from "../../hooks/useAutoFocusEffect";
 import { useTranslation } from "../../locales/i18n";
@@ -18,11 +18,11 @@ import { useTranslation } from "../../locales/i18n";
 
 const AmendableConcurrentLeave = ({
   getFunctionalInputProps,
-  isAddedByLeaveAdmin,
   originalConcurrentLeave,
   updateFields,
 }) => {
   const { t } = useTranslation();
+  const isAddedByLeaveAdmin = isNil(originalConcurrentLeave);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
     useState(isAddedByLeaveAdmin);
   const containerRef = React.createRef();
@@ -122,7 +122,6 @@ const AmendableConcurrentLeave = ({
 
 AmendableConcurrentLeave.propTypes = {
   getFunctionalInputProps: PropTypes.func.isRequired,
-  isAddedByLeaveAdmin: PropTypes.bool.isRequired,
   originalConcurrentLeave: PropTypes.instanceOf(ConcurrentLeave),
   updateFields: PropTypes.func.isRequired,
 };
