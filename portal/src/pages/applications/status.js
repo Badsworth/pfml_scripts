@@ -104,10 +104,7 @@ export const Status = ({ appLogic, query }) => {
       legalNotices.length === 0;
 
     const SectionWrapper = ({ children }) => (
-      <div
-        className="border-top border-base-lighter padding-y-2"
-        id="view_notices"
-      >
+      <div className="border-top border-base-lighter padding-y-2">
         {children}
       </div>
     );
@@ -141,7 +138,7 @@ export const Status = ({ appLogic, query }) => {
 
     return (
       <SectionWrapper>
-        <Heading className="margin-bottom-1" level="2" id="view_notices">
+        <Heading className="margin-bottom-1" level="2">
           {t("pages.claimsStatus.viewNoticesHeading")}
         </Heading>
         {sectionBody}
@@ -152,8 +149,12 @@ export const Status = ({ appLogic, query }) => {
   const getInfoAlertContext = (absenceDetails) => {
     const hasBondingReason = has(absenceDetails, LeaveReason.bonding);
     const hasPregnancyReason = has(absenceDetails, LeaveReason.pregnancy);
-
-    if (hasBondingReason && !hasPregnancyReason) {
+    const hasNewBorn = claimDetail.absence_periods.some(
+      (absenceItem) =>
+        (absenceItem.reason_qualifier_one ||
+          absenceItem.reason_qualifier_two) === "Newborn"
+    );
+    if (hasBondingReason && !hasPregnancyReason && hasNewBorn) {
       return "bonding";
     }
 
@@ -379,7 +380,6 @@ export const LeaveDetails = ({ absenceDetails = {} }) => {
                     "application-link": (
                       <a href={routes.applications.getReady} />
                     ),
-                    "notice-link": <a href="#view_notices" />,
                     "request-appeal-link": (
                       <a
                         href={routes.external.massgov.requestAnAppealForPFML}
@@ -434,9 +434,15 @@ export const Timeline = ({
       <React.Fragment>
         <Heading level="2">{t("pages.claimsStatus.whatYouNeedToDo")}</Heading>
         <p>
-          {t("pages.claimsStatus.whatYouNeedToDoText", {
-            context: typeOfProof,
-          })}
+          <Trans
+            i18nKey="pages.claimsStatus.whatYouNeedToDoText"
+            tOptions={{ context: typeOfProof }}
+            components={{
+              "proof-document-link": (
+                <a href={routes.external.massgov.proofOfBirthOrPlacement} />
+              ),
+            }}
+          />
         </p>
         <ButtonLink
           className="measure-12"

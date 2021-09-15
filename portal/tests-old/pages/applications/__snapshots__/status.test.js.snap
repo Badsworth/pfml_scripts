@@ -37,9 +37,6 @@ Array [
             "application-link": <a
               href="/applications/get-ready"
             />,
-            "notice-link": <a
-              href="#view_notices"
-            />,
             "request-appeal-link": <a
               href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
             />,
@@ -87,9 +84,6 @@ Array [
             "application-link": <a
               href="/applications/get-ready"
             />,
-            "notice-link": <a
-              href="#view_notices"
-            />,
             "request-appeal-link": <a
               href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
             />,
@@ -136,9 +130,6 @@ Array [
           Object {
             "application-link": <a
               href="/applications/get-ready"
-            />,
-            "notice-link": <a
-              href="#view_notices"
             />,
             "request-appeal-link": <a
               href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
@@ -191,9 +182,6 @@ exports[`leave details page does render page with one section if absenceDetails 
           "application-link": <a
             href="/applications/get-ready"
           />,
-          "notice-link": <a
-            href="#view_notices"
-          />,
           "request-appeal-link": <a
             href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
           />,
@@ -215,16 +203,13 @@ exports[`status page ViewYourNotices displays only legal notices for the current
   <SectionWrapper>
     <div
       className="border-top border-base-lighter padding-y-2"
-      id="view_notices"
     >
       <Heading
         className="margin-bottom-1"
-        id="view_notices"
         level="2"
       >
         <h2
           className="margin-bottom-1 font-heading-md text-bold"
-          id="view_notices"
         >
           View your notices
         </h2>
@@ -1088,7 +1073,7 @@ exports[`status page includes a button to upload additional documents 1`] = `
         Respond to requests for information
       </Heading>
       <p>
-        If you have a request for more information, use this to upload the requested documentation.
+        If you have a request for more information, use this button to upload the requested documentation.
       </p>
       <ButtonLink
         className="measure-6 margin-bottom-3"
@@ -1108,7 +1093,7 @@ exports[`status page includes a button to upload additional documents 1`] = `
       <Heading
         level="3"
       >
-        Make changes to your application
+        Make changes
       </Heading>
       <Trans
         components={
@@ -1968,7 +1953,7 @@ exports[`status page renders the page 1`] = `
         Respond to requests for information
       </Heading>
       <p>
-        If you have a request for more information, use this to upload the requested documentation.
+        If you have a request for more information, use this button to upload the requested documentation.
       </p>
       <ButtonLink
         className="measure-6 margin-bottom-3"
@@ -1988,7 +1973,7 @@ exports[`status page renders the page 1`] = `
       <Heading
         level="3"
       >
-        Make changes to your application
+        Make changes
       </Heading>
       <Trans
         components={

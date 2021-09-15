@@ -793,7 +793,7 @@ const shared = {
   displayTime_noMinutes: "{{hours}}h",
   docsRequired: {
     newborn:
-      "Once your child is born, submit proof of birth so that we can make a decision.",
+      "Once your child is born, submit proof of birth so that we can review your application. Learn more about <proof-document-link>proof of birth documents</proof-document-link> we accept.",
   },
   documentsLoadError:
     "An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
@@ -1915,7 +1915,7 @@ const pages = {
     infoAlertHeading_pregnancy:
       "You may also be eligible for paid family leave",
     infoRequestsBody:
-      "If you have a request for more information, use this to upload the requested documentation.",
+      "If you have a request for more information, use this button to upload the requested documentation.",
     infoRequestsHeading: "Respond to requests for information",
     leavePeriodLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
     leavePeriodLabel_intermittent: "$t(shared.claimDurationTypeIntermittent)",
@@ -1932,9 +1932,9 @@ const pages = {
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     leaveStatusMessage_Approved:
-      "<p><strong>This leave was approved.</strong></p><p><notice-link>View your approval notice</notice-link> for more details about your benefit amount, payment schedule, and how to appeal if your benefits appear incorrect.</p>",
+      "<p><strong>This leave was approved.</strong></p><p>View your approval notice below for more details about your benefit amount, payment schedule, and how to appeal if your benefits appear incorrect.</p>",
     leaveStatusMessage_Denied:
-      "<p><strong>This leave was denied.</strong></p><p><notice-link>View your denial notice</notice-link> for more details and an explanation of the appeal process.</p><p>If you would like to appeal, you must submit your request within 10 calendar days of the date on your denial notice.</p><p>Learn more about <request-appeal-link>the appeal process</request-appeal-link>.</p>",
+      "<p><strong>This leave was denied.</strong></p><p>View your denial notice below for more details and an explanation of the appeal process.</p><p>If you would like to appeal, you must submit your request within 10 calendar days of the date on your denial notice.</p><p><request-appeal-link>Learn more about the appeal process</request-appeal-link>.</p>",
     leaveStatusMessage_Pending:
       "<p><strong>This leave is being reviewed.</strong></p>",
     leaveStatusMessage_Withdrawn:
@@ -1944,8 +1944,8 @@ const pages = {
     loadingClaimDetailLabel: "Loading claim details",
     loadingLegalNoticesLabel: "Loading legal notices",
     makeChangesBody:
-      "<p>If you need to make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Some changes to your application, such as changing your start and end dates, may mean your application needs to be reviewed by your employer again.</p>",
-    makeChangesHeading: "Make changes to your application",
+      "<p>To make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. If you request a change to your start and end dates, we may need to review your application again.</p>",
+    makeChangesHeading: "Make changes",
     manageApplicationHeading: "Manage your application",
     reportOtherBenefitsBody:
       "<p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report changes to:</p><ul><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for disability benefit after you submitted your application, report this change.</li></ul>",
@@ -1969,7 +1969,7 @@ const pages = {
     whatHappensNextButton_newborn: "Upload proof of birth",
     whatYouNeedToDo: "What you need to do",
     whatYouNeedToDoText_adoption:
-      "After your child arrives in your home, submit proof of placement so that the department can make a decision.",
+      "Once your child is adopted, submit a certificate of proof, including the date of the adoption, so that we can review your application. Learn more about the <proof-document-link>proof of adoption documents</proof-document-link> we accept.",
     whatYouNeedToDoText_newborn: "$t(shared.docsRequired.newborn)",
   },
   claimsSuccess: {
