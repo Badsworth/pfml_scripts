@@ -89,12 +89,7 @@ describe("Denial Notification and Notice", () => {
           assertValidClaim(claim);
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
           portal.loginLeaveAdmin(claim.employer_fein);
-          portal.selectClaimFromEmployerDashboard(
-            submission.fineos_absence_id,
-            config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"
-              ? "No action required"
-              : "--"
-          );
+          portal.selectClaimFromEmployerDashboard(submission.fineos_absence_id);
           portal.checkNoticeForLeaveAdmin(
             submission.fineos_absence_id,
             employeeFullName,
