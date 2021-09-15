@@ -29,8 +29,8 @@ def checkout(branch_name):
     git.checkout(branch_name)
 
 
-def reset_head():
-    git.reset("--hard", "HEAD")
+def reset_head(head="HEAD"):
+    git.reset("--hard", head)
 
 
 def pull_main():
@@ -41,8 +41,9 @@ def cherrypick(commit_hash):
     git.cherry_pick(commit_hash)
 
 
-def merge_branch(branch_name):
-    raise NotImplementedError
+# Merges :param branch_to_merge into the currently checked-out branch.
+def merge_in_branch(branch_to_merge):
+    git.merge(branch_to_merge)
 
 
 def create_branch(branch_name):

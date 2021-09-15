@@ -53,6 +53,12 @@ def test_release_series_is_finalized(monkeypatch):
     )
     assert git_utils.is_finalized("release/finished/v7.7.0") is True
 
+# notes for testing with a fake repo - session or test-scoped pytest fixture
+# in a tmpdir: git init, commit some garbage, make branches, create tags, etc.
+# would need to monkeypatch git_utils.repo, or refactor git_utils to take repo location as an arg
+# git_utils could be refactored to a class, instantiate one instance in release_tasks.py or release.py
+
+
 # update these when working on major/minor releases
 # def test_incrementer_api():
 #   # major release

@@ -26,6 +26,7 @@ def start(args):
     git_utils.tag_branch(branch_name, tag_name)
 
 
+# Produces new release candidates from an arbitrary list of git commits, or an arbitrary source branch
 def update(args):
     logger.info(f"Running 'update-release'...")
     logger.debug(f"Args: {repr(args)}")
@@ -53,9 +54,22 @@ def update(args):
     try:
         git_utils.checkout(args.release_version)
         logger.info(f"Checked out '{args.release_version}'.")
-        logger.info(f"Now {'cherry picking commits' if args.git_commits else f'merging in {args.source_branch}'}...")
+
+        if args.git_commits:
+            logger.info("Now cherry picking commits...")
+            git_utils.cherrypick(args.git_commits)
+        else:
+            logger.info(f"Now merging in {args.source_branch}...")
+            git_utils.merge_in_branch(args.source_branch)
+
+        logger.info("Done.")
+        git_utils.tag_branch(args.release_version, v.bump_prerelease())
+
     except git.exc.GitCommandError as e:
+        # hard reset to old_head, and discard any tags or commits descended from old_head
         logger.warning(f"Ran into a problem: {e}")
+        logger.warning(f"Resetting '{args.release_version}' back to {old_head}.")
+        git_utils.reset_head(old_head)
         return False
     finally:
         logger.warning(f"Task is finishing, will check out '{original_branch}' locally")
