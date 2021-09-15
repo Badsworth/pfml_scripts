@@ -119,7 +119,8 @@ export type OtherTasks =
   | "Manual Intervention required to Approve Periods"
   | "Review Appeal "
   | "Schedule Hearing"
-  | "Conduct Hearing";
+  | "Conduct Hearing"
+  | "Send Decision Notice";
 /**Tasks avalable in fineos */
 export type FineosTasks = DocumentReviewTasks | ERTasks | OtherTasks;
 
