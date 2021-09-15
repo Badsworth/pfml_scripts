@@ -73,7 +73,7 @@ def can_download(user: User, doc: Union[Document, DocumentResponse]) -> bool:
                 DocumentType.REQUEST_FOR_MORE_INFORMATION.document_type_description,
                 DocumentType.DENIAL_NOTICE.document_type_description,
                 DocumentType.WITHDRAWAL_NOTICE.document_type_description,
-                DocumentType.APPEAL_ACKNOWLEDGEMENT.document_type_description,
+                DocumentType.APPEAL_ACKNOWLEDGMENT.document_type_description,
             ]
         ]
 

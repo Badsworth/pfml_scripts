@@ -73,4 +73,12 @@ describe("Button", () => {
     const button = screen.getByRole("button");
     expect(button).toHaveAttribute("type", "submit");
   });
+
+  it("supports aria-label", () => {
+    render(<Button aria-label="Save and continue">Submit</Button>);
+
+    expect(
+      screen.getByRole("button", { name: "Save and continue" })
+    ).toBeInTheDocument();
+  });
 });

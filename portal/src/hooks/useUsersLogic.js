@@ -88,12 +88,12 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     // Portal currently does not support hybrid account (both Employer AND Claimant account)
     // If user has Employer role, they cannot access Claimant Portal regardless of multiple roles
     if (!user.hasEmployerRole && isEmployersRoute(pathname)) {
-      portalFlow.goTo(routes.applications.index);
+      portalFlow.goTo(routes.applications.index, {}, { redirect: true });
       return;
     }
 
     if (user.hasEmployerRole && isApplicationsRoute(pathname)) {
-      portalFlow.goTo(routes.employers.welcome);
+      portalFlow.goTo(routes.employers.welcome, {}, { redirect: true });
     }
   };
 

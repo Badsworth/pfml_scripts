@@ -1,7 +1,9 @@
 import logging  # noqa: B1
 from datetime import datetime, timedelta
+from unittest import mock
 
 import pytest
+from werkzeug.exceptions import ServiceUnavailable
 
 import tests.api
 from massgov.pfml.db.models.employees import UserLeaveAdministrator
@@ -38,7 +40,10 @@ def verification():
     return VerificationFactory.create()
 
 
-def test_error_if_user_not_connected_to_employer(caplog, client, employer_auth_token):
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.create_or_update_leave_admin")
+def test_error_if_user_not_connected_to_employer(
+    mock_fineos_call, caplog, client, employer_auth_token
+):
     response = client.post(
         "/v1/employers/verifications",
         headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -49,16 +54,14 @@ def test_error_if_user_not_connected_to_employer(caplog, client, employer_auth_t
         response, 400, message="User not associated with this employer."
     )
     assert "User not associated with this employer." in caplog.text
+    mock_fineos_call.assert_not_called()
 
 
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.create_or_update_leave_admin")
 def test_error_if_withholding_data_not_in_db(
-    caplog, client, employer_auth_token, test_db_session, employer_user, employer
+    mock_fineos_call, caplog, client, employer_auth_token, test_db_session, employer_user, employer
 ):
-    link = UserLeaveAdministrator(
-        user_id=employer_user.user_id,
-        employer_id=employer.employer_id,
-        fineos_web_id="fake-fineos-web-id",
-    )
+    link = UserLeaveAdministrator(user_id=employer_user.user_id, employer_id=employer.employer_id,)
     test_db_session.add(link)
     test_db_session.commit()
 
@@ -74,15 +77,20 @@ def test_error_if_withholding_data_not_in_db(
         response, 400, message="Employer has no quarterly contribution data."
     )
     assert "Employer has no quarterly contribution data." in caplog.text
+    mock_fineos_call.assert_not_called()
 
 
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.create_or_update_leave_admin")
 def test_error_if_withholding_amount_is_outside_threshold(
-    client, employer_auth_token, test_db_session, employer_quarterly_contribution, employer_user,
+    mock_fineos_call,
+    client,
+    employer_auth_token,
+    test_db_session,
+    employer_quarterly_contribution,
+    employer_user,
 ):
     link = UserLeaveAdministrator(
-        user_id=employer_user.user_id,
-        employer_id=employer_quarterly_contribution.employer_id,
-        fineos_web_id="fake-fineos-web-id",
+        user_id=employer_user.user_id, employer_id=employer_quarterly_contribution.employer_id,
     )
     test_db_session.add(link)
     test_db_session.commit()
@@ -101,9 +109,12 @@ def test_error_if_withholding_amount_is_outside_threshold(
 
     assert response.status_code == 400
     tests.api.validate_error_response(response, 400, message="Withholding amount is incorrect.")
+    mock_fineos_call.assert_not_called()
 
 
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.create_or_update_leave_admin")
 def test_verification_successful_for_valid_data(
+    mock_fineos_call,
     caplog,
     client,
     employer_auth_token,
@@ -111,11 +122,10 @@ def test_verification_successful_for_valid_data(
     employer_quarterly_contribution,
     employer_user,
 ):
+    mock_fineos_call.return_value = ["", ""]
     caplog.set_level(logging.INFO)  # noqa: B1
     link = UserLeaveAdministrator(
-        user_id=employer_user.user_id,
-        employer_id=employer_quarterly_contribution.employer_id,
-        fineos_web_id="fake-fineos-web-id",
+        user_id=employer_user.user_id, employer_id=employer_quarterly_contribution.employer_id,
     )
 
     # Must be at least 1 day ago for employer.has_verification_data to be True
@@ -132,6 +142,7 @@ def test_verification_successful_for_valid_data(
         "withholding_amount"
     ] = employer_quarterly_contribution.employer_total_pfml_contribution
     verifications_body["withholding_quarter"] = employer_quarterly_contribution.filing_period
+    assert link.fineos_web_id is None
 
     response = client.post(
         "/v1/employers/verifications",
@@ -173,9 +184,13 @@ def test_verification_successful_for_valid_data(
             "has_verification_data": True,
         }
     ]
+    assert user_leave_administrator.fineos_web_id is not None
+    mock_fineos_call.assert_called_once()
 
 
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.create_or_update_leave_admin")
 def test_verification_successful_for_data_within_threshold(
+    mock_fineos_call,
     caplog,
     client,
     employer_auth_token,
@@ -183,11 +198,10 @@ def test_verification_successful_for_data_within_threshold(
     employer_quarterly_contribution,
     employer_user,
 ):
+    mock_fineos_call.return_value = ["", ""]
     caplog.set_level(logging.INFO)  # noqa: B1
     link = UserLeaveAdministrator(
-        user_id=employer_user.user_id,
-        employer_id=employer_quarterly_contribution.employer_id,
-        fineos_web_id="fake-fineos-web-id",
+        user_id=employer_user.user_id, employer_id=employer_quarterly_contribution.employer_id,
     )
 
     # Must be at least 1 day ago for employer.has_verification_data to be True
@@ -204,6 +218,7 @@ def test_verification_successful_for_data_within_threshold(
         employer_quarterly_contribution.employer_total_pfml_contribution - 0.10
     )
     verifications_body["withholding_quarter"] = employer_quarterly_contribution.filing_period
+    assert link.fineos_web_id is None
 
     response = client.post(
         "/v1/employers/verifications",
@@ -245,16 +260,22 @@ def test_verification_successful_for_data_within_threshold(
             "has_verification_data": True,
         }
     ]
+    assert user_leave_administrator.fineos_web_id is not None
+    mock_fineos_call.assert_called_once()
 
 
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.create_or_update_leave_admin")
 def test_error_if_users_been_verified(
-    client, employer_auth_token, test_db_session, employer_user, employer, verification
+    mock_fineos_call,
+    client,
+    employer_auth_token,
+    test_db_session,
+    employer_user,
+    employer,
+    verification,
 ):
     link = UserLeaveAdministrator(
-        user_id=employer_user.user_id,
-        employer_id=employer.employer_id,
-        fineos_web_id="fake-fineos-web-id",
-        verification=verification,
+        user_id=employer_user.user_id, employer_id=employer.employer_id, verification=verification,
     )
 
     test_db_session.add(link)
@@ -270,6 +291,122 @@ def test_error_if_users_been_verified(
 
     assert response.status_code == 409
     tests.api.validate_error_response(response, 409, message="User has already been verified.")
+    mock_fineos_call.assert_not_called()
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.create_or_update_leave_admin")
+def test_rollback_when_fineos_call_failed(
+    mock_fineos_call,
+    caplog,
+    client,
+    employer_auth_token,
+    test_db_session,
+    employer_quarterly_contribution,
+    employer_user,
+):
+    mock_fineos_call.return_value = ["400", "Unepexted error on fineos side"]
+    caplog.set_level(logging.INFO)  # noqa: B1
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id, employer_id=employer_quarterly_contribution.employer_id,
+    )
+    # Must be at least 1 day ago for employer.has_verification_data to be True
+    employer_quarterly_contribution.filing_period = (datetime.now() - timedelta(1)).strftime(
+        "%Y-%m-%d"
+    )
+
+    test_db_session.add(link)
+    test_db_session.add(employer_quarterly_contribution)
+    test_db_session.commit()
+
+    verifications_body["employer_id"] = employer_quarterly_contribution.employer_id
+    verifications_body[
+        "withholding_amount"
+    ] = employer_quarterly_contribution.employer_total_pfml_contribution
+    verifications_body["withholding_quarter"] = employer_quarterly_contribution.filing_period
+
+    assert link.fineos_web_id is None
+    response = client.post(
+        "/v1/employers/verifications",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json=verifications_body,
+    )
+
+    verification = test_db_session.query(Verification).one_or_none()
+
+    user_leave_administrator = (
+        test_db_session.query(UserLeaveAdministrator)
+        .filter(
+            UserLeaveAdministrator.user_leave_administrator_id == link.user_leave_administrator_id
+        )
+        .one_or_none()
+    )
+
+    assert verification is None
+    assert response.status_code == ServiceUnavailable.code
+    assert user_leave_administrator.employer_id == employer_quarterly_contribution.employer_id
+    assert user_leave_administrator.verification_id is None
+    assert user_leave_administrator.fineos_web_id is None
+    assert "Failed to verify user, fineos error." in caplog.text
+    mock_fineos_call.assert_called_once()
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.create_or_update_leave_admin")
+def test_rollback_when_fineos_call_failed_unexpected_raise_error(
+    mock_fineos_call,
+    caplog,
+    client,
+    employer_auth_token,
+    test_db_session,
+    employer_quarterly_contribution,
+    employer_user,
+):
+    # exception raise by fineos request failure
+    mock.side_effect = Exception("Unepexted error on fineos side")
+
+    caplog.set_level(logging.INFO)  # noqa: B1
+    link = UserLeaveAdministrator(
+        user_id=employer_user.user_id, employer_id=employer_quarterly_contribution.employer_id,
+    )
+
+    # Must be at least 1 day ago for employer.has_verification_data to be True
+    employer_quarterly_contribution.filing_period = (datetime.now() - timedelta(1)).strftime(
+        "%Y-%m-%d"
+    )
+
+    test_db_session.add(link)
+    test_db_session.add(employer_quarterly_contribution)
+    test_db_session.commit()
+
+    verifications_body["employer_id"] = employer_quarterly_contribution.employer_id
+    verifications_body[
+        "withholding_amount"
+    ] = employer_quarterly_contribution.employer_total_pfml_contribution
+    verifications_body["withholding_quarter"] = employer_quarterly_contribution.filing_period
+    assert link.fineos_web_id is None
+
+    response = client.post(
+        "/v1/employers/verifications",
+        headers={"Authorization": f"Bearer {employer_auth_token}"},
+        json=verifications_body,
+    )
+
+    verification = test_db_session.query(Verification).one_or_none()
+
+    user_leave_administrator = (
+        test_db_session.query(UserLeaveAdministrator)
+        .filter(
+            UserLeaveAdministrator.user_leave_administrator_id == link.user_leave_administrator_id
+        )
+        .one_or_none()
+    )
+
+    assert verification is None
+    assert response.status_code == ServiceUnavailable.code
+    assert user_leave_administrator.employer_id == employer_quarterly_contribution.employer_id
+    assert user_leave_administrator.verification_id is None
+    assert user_leave_administrator.fineos_web_id is None
+    assert "Failed to verify user, fineos error." in caplog.text
+    mock_fineos_call.assert_called_once()
 
 
 def test_manual_verification(client, test_db_session):

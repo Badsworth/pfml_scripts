@@ -1,6 +1,5 @@
 import { fineos, portal, fineosPages } from "../../actions";
 import { Submission } from "../../../src/types";
-import { config } from "../../actions/common";
 import { extractLeavePeriod } from "../../../src/util/claims";
 import { assertValidClaim } from "../../../src/util/typeUtils";
 import { format, addDays, parse } from "date-fns";
@@ -106,12 +105,7 @@ describe("Claim date change", () => {
           ([startDate, endDate]) => {
             assertValidClaim(claim);
             portal.loginLeaveAdmin(claim.employer_fein);
-            portal.selectClaimFromEmployerDashboard(
-              fineos_absence_id,
-              config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"
-                ? "Review by"
-                : "--"
-            );
+            portal.selectClaimFromEmployerDashboard(fineos_absence_id);
             const portalFormatStart = format(new Date(startDate), "M/d/yyyy");
             const portalFormatEnd = format(
               parse(endDate, "MM/dd/yyyy", new Date(endDate)),

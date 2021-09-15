@@ -67,16 +67,14 @@ data "aws_iam_policy_document" "restrict_ses_senders" {
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/aws-service-role/email.cognito-idp.amazonaws.com/AWSServiceRoleForAmazonCognitoIdpEmailService",
         # Payments and Reductions ECS tasks created in infra/ecs-tasks.
         # Since ecs tasks are created after the fact, we hardcode their ARNs here.
-        "arn:aws:sts::${data.aws_caller_identity.current.account_id}:assumed-role/pfml-api-*-ecs-tasks-payments-fineos-process/*",
-        "arn:aws:sts::${data.aws_caller_identity.current.account_id}:assumed-role/pfml-api-*-ecs-tasks-payments-ctr-process/*",
+        "arn:aws:sts::${data.aws_caller_identity.current.account_id}:assumed-role/mass-pfml-dua-email-automation-lambda-role/*",
         "arn:aws:sts::${data.aws_caller_identity.current.account_id}:assumed-role/pfml-api-*-ecs-tasks-pub-payments-process-fineos/*",
         "arn:aws:sts::${data.aws_caller_identity.current.account_id}:assumed-role/pfml-api-*-ecs-tasks-pub-payments-create-pub-files/*",
         "arn:aws:sts::${data.aws_caller_identity.current.account_id}:assumed-role/pfml-api-*-ecs-tasks-pub-payments-process-pub-returns/*",
         "arn:aws:sts::${data.aws_caller_identity.current.account_id}:assumed-role/pfml-api-*-ecs-tasks-reductions-workflow/*",
 
         # Duplicate the roles above but in the normal IAM format.
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/pfml-api-*-ecs-tasks-payments-fineos-process",
-        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/pfml-api-*-ecs-tasks-payments-ctr-process",
+        "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/mass-pfml-dua-email-automation-lambda-role",
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/pfml-api-*-ecs-tasks-pub-payments-process-fineos",
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/pfml-api-*-ecs-tasks-pub-payments-create-pub-files",
         "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/pfml-api-*-ecs-tasks-pub-payments-process-pub-returns",

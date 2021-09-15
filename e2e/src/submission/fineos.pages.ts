@@ -143,24 +143,19 @@ export class Claim extends FineosPage {
   async adjudicate(cb: FineosPageCallback<Adjudication>): Promise<void> {
     await this.page.click('input[type="submit"][value="Adjudicate"]');
     await cb(new Adjudication(this.page));
-    await Promise.all([
-      this.page.waitForNavigation(),
-      this.page.click("#footerButtonsBar input[value='OK']"),
-    ]);
+    await this.page.click("#footerButtonsBar input[value='OK']");
   }
 
   async approve(): Promise<void> {
-    await Promise.all([
-      this.page.waitForNavigation(),
-      this.page.click("a[title='Approve the Pending Leaving Request']"),
-    ]);
+    await this.page.click("a[title='Approve the Pending Leaving Request']", {
+      // This sometimes takes a while. Wait for it to complete.
+      timeout: 60000,
+    });
     await this.assertClaimStatus("Approved");
   }
 
   async assertClaimStatus(expected: ClaimStatus): Promise<void> {
-    const status = await this.page
-      .waitForSelector(`.key-info-bar .status dd`)
-      .then(async (el) => el.innerText());
+    const status = await this.page.textContent(".key-info-bar .status dd");
     if (status !== expected)
       throw new Error(
         `Expected status to be ${expected}, but it was ${status}`
@@ -169,14 +164,12 @@ export class Claim extends FineosPage {
 
   async deny(): Promise<void> {
     await this.page.click("div[title='Deny the Pending Leave Request']");
-    await util
-      .labelled(this.page, "Denial Reason")
-      .then((el) => el.selectOption("5"));
-    await Promise.all([
-      this.page.waitForNavigation(),
-      this.page.click('input[type="submit"][value="OK"]'),
-    ]);
-    await this.assertClaimStatus("Completed");
+    await this.page.selectOption("label:text-is('Denial Reason')", "5");
+    await this.page.click('input[type="submit"][value="OK"]', {
+      // This sometimes takes a while. Wait for it to complete.
+      timeout: 60000,
+    });
+    await this.assertClaimStatus("Declined");
   }
 }
 
@@ -197,19 +190,13 @@ class Adjudication extends FineosPage {
 
   async denyLeavePlan(): Promise<void> {
     await this.onTab(`Manage Request`);
-    await Promise.all([
-      this.page.waitForNavigation(),
-      this.page.click('input[type="submit"][value="Reject"]'),
-    ]);
+    await this.page.click('input[type="submit"][value="Reject"]');
     await delay(150);
   }
 
   async acceptLeavePlan(): Promise<void> {
     await this.onTab(`Manage Request`);
-    await Promise.all([
-      this.page.waitForNavigation(),
-      this.page.click('input[type="submit"][value="Accept"]'),
-    ]);
+    await this.page.click('input[type="submit"][value="Accept"]');
     await delay(150);
   }
 }
@@ -222,10 +209,7 @@ export class CertificationPeriods extends FineosPage {
     await this.page.click(
       'input[value="Prefill with Requested Absence Periods"]'
     );
-    await Promise.all([
-      this.page.waitForNavigation(),
-      this.page.click('#PopupContainer input[value="Yes"]'),
-    ]);
+    await this.page.click('#PopupContainer input[value="Yes"]');
     await delay(150);
   }
 }
@@ -245,18 +229,13 @@ export class Evidence extends FineosPage {
     await util.selectListTableRow(this.page, row);
     await this.page.click('input[value="Manage Evidence"]');
     await this.page.waitForSelector(".WidgetPanel_PopupWidget");
-    await util
-      .labelled(this.page, "Evidence Receipt")
-      .then((el) => el.selectOption({ label: receipt }));
-    await util
-      .labelled(this.page, "Evidence Decision")
-      .then((el) => el.selectOption({ label: decision }));
-    await util
-      .labelled(this.page, "Evidence Decision Reason")
-      .then((el) => el.fill(""));
-    await util
-      .labelled(this.page, "Evidence Decision Reason")
-      .then((el) => el.fill(reason));
+    await this.page.selectOption('label:text-is("Evidence Receipt")', {
+      label: receipt,
+    });
+    await this.page.selectOption('label:text-is("Evidence Decision")', {
+      label: decision,
+    });
+    await this.page.fill('label:text-is("Evidence Decision Reason")', reason);
     await this.page.click('.WidgetPanel_PopupWidget input[value="OK"]');
     // Wait for the row to update before moving on.
     await this.page.waitForSelector(

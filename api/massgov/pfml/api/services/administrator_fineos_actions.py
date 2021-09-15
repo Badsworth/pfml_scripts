@@ -339,6 +339,10 @@ def get_claim_as_leave_admin(
     )
 
 
+def generate_fineos_web_id() -> str:
+    return f"pfml_leave_admin_{str(uuid.uuid4())}"
+
+
 def register_leave_admin_with_fineos(
     admin_full_name: str,
     admin_email: str,
@@ -372,7 +376,7 @@ def register_leave_admin_with_fineos(
             return leave_admin_record
 
     fineos = fineos_client if fineos_client else massgov.pfml.fineos.create_client()
-    fineos_web_id = f"pfml_leave_admin_{str(uuid.uuid4())}"
+    fineos_web_id = generate_fineos_web_id()
     logger.info(
         "Calling FINEOS to Create Leave Admin",
         extra={"email": admin_email, "fineos_web_id": fineos_web_id},

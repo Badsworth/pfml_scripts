@@ -149,7 +149,6 @@ function Mask(props) {
   const dispatchChange = (value, originalEvent) => {
     const target = originalEvent.target.cloneNode(true);
     target.value = value;
-
     field.props.onChange({
       _originalEvent: originalEvent,
       target,
@@ -162,7 +161,6 @@ function Mask(props) {
    */
   const maskAndDispatchChangeFromEvent = (event) => {
     const maskedValue = maskValue(event.target.value, props.mask);
-
     dispatchChange(maskedValue, event);
   };
 

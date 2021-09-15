@@ -1,5 +1,4 @@
-import { AllNotNull, Submission } from "../../../../src/types";
-import { dateToMMddyyyy } from "../../../../src/util/claims";
+import { Submission } from "../../../../src/types";
 import {
   assertIsTypedArray,
   assertValidClaim,
@@ -7,7 +6,6 @@ import {
   isValidEmployerBenefit,
   isValidPreviousLeave,
 } from "../../../../src/util/typeUtils";
-import { Address } from "../../../../src/_api";
 import { fineos, fineosPages, portal } from "../../../actions";
 
 describe("Claimant can call call-center to submit a claim for leave with other leaves and benefits", () => {
@@ -21,14 +19,6 @@ describe("Claimant can call call-center to submit a claim for leave with other l
         const claimantPage = fineosPages.ClaimantPage.visit(
           claim.claim.tax_identifier
         );
-        // This is done in case the claimant is missing DOB or an address.
-        claimantPage
-          .editPersonalIdentification({
-            date_of_birth: dateToMMddyyyy(claim.claim.date_of_birth),
-          })
-          .addAddress({
-            ...(claim.claim.mailing_address as AllNotNull<Address>),
-          });
 
         claimantPage
           .createNotification(claim.claim)

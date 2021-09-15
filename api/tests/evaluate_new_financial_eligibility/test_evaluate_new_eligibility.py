@@ -2,6 +2,7 @@ import os
 from dataclasses import dataclass
 from datetime import date
 
+import boto3
 import pytest
 
 import massgov.pfml.evaluate_new_eligibility.report as new_eligiblity
@@ -13,22 +14,23 @@ from massgov.pfml.db.models.factories import (
 
 
 @pytest.fixture
-def cli_args(tmpdir):
+def cli_args(tmpdir, mock_s3_bucket):
+    s3_bucket_uri = "s3://" + mock_s3_bucket
+
     @dataclass
     class CliArgs:
         historical_len: int = 0
-        s3_output_reason_for_difference: None = None
-        s3_output_different_result: None = None
-        s3_bucket: None = None
-        save_path = tmpdir
+        s3_bucket: str = s3_bucket_uri
 
     return CliArgs()
 
 
 @pytest.mark.integration
 def test_full_generate_evaluate_new_eligibility(
-    test_db_session, initialize_factories_session, monkeypatch, cli_args,
+    test_db_session, initialize_factories_session, monkeypatch, cli_args, mock_s3_bucket
 ):
+    s3_bucket_uri = f"s3://{mock_s3_bucket}/"
+    monkeypatch.setenv("S3_EXPORT_BUCKET", s3_bucket_uri)
     employer = EmployerFactory.create(employer_fein="999999999")
     employer2 = EmployerFactory.create(employer_fein="553897622")
 
@@ -68,32 +70,41 @@ def test_full_generate_evaluate_new_eligibility(
 
     monkeypatch.setattr(new_eligiblity, "pull_data_from_cloudwatch", mock_new_relic)
     monkeypatch.setattr(new_eligiblity, "parse_args", lambda x: None)
-    monkeypatch.setattr(new_eligiblity, "upload_csvs", lambda x, y, z: None)
 
     # generate the files
     new_eligiblity.main(cli_args, test_db_session)
 
-    for filename in ["reason_for_difference.csv", "diff_eligibility_results.csv"]:
-        assert filename in os.listdir(cli_args.save_path)
+    s3 = boto3.client("s3")
+    dest_dir = f"financial_eligibility/{os.getenv('ENVIRONMENT')}/"
+    object_list = s3.list_objects(Bucket=mock_s3_bucket, Prefix=dest_dir)["Contents"]
+    assert len(object_list) == 2
 
-    with open(cli_args.save_path / "reason_for_difference.csv") as reason_diff_file:
-        file_lines = reason_diff_file.read()
-        assert (
-            file_lines
-            == f"{claim.employee_id},{employer2.employer_id},,zero_wage\n{claim.employee_id},{employer.employer_id},2021-08-05,multiple_employers\n"
-        )
-    with open(cli_args.save_path / "diff_eligibility_results.csv") as diff_eligibility_file:
-        file_lines = diff_eligibility_file.read()
-        assert (
-            file_lines
-            == f"claimaint_id,time,previous_decision,new_decision,old_aww,new_aww\n{claim.employee_id},2021-08-31,True,False,100,0.08\n"
-        )
+    output_csv_is_first = object_list[0]["Key"].endswith("/output.csv")
+    output_csv_path = object_list[0]["Key"] if output_csv_is_first else object_list[1]
+    diff_csv_path = object_list[1]["Key"] if output_csv_is_first else object_list[0]
+
+    output_csv = s3.get_object(Bucket=mock_s3_bucket, Key=output_csv_path["Key"])
+    diff_csv = s3.get_object(Bucket=mock_s3_bucket, Key=diff_csv_path["Key"])
+    output_csv_str = output_csv["Body"].read().decode("utf-8")
+    diff_csv_str = diff_csv["Body"].read().decode("utf-8")
+
+    assert (
+        output_csv_str
+        == f"claimaint_id,time,previous_decision,new_decision,old_aww,new_aww\n{claim.employee_id},2021-08-31,True,False,100,0.08\n"
+    )
+    assert (
+        diff_csv_str
+        == f"employee_id,employer_id,leave_start_date,reason\n{claim.employee_id},{employer2.employer_id},,zero_wage\n{claim.employee_id},{employer.employer_id},2021-08-05,multiple_employers\n"
+    )
 
 
 @pytest.mark.integration
 def test_full_generate_evaluate_new_eligibility_missing_data(
-    test_db_session, initialize_factories_session, monkeypatch, cli_args,
+    test_db_session, initialize_factories_session, monkeypatch, cli_args, mock_s3_bucket
 ):
+    s3_bucket_uri = f"s3://{mock_s3_bucket}/"
+    monkeypatch.setenv("S3_EXPORT_BUCKET", s3_bucket_uri)
+
     employer = EmployerFactory.create(employer_fein="813648030")
     claim = ClaimFactory.create(
         employer_id=employer.employer_id, absence_period_start_date="2021-08-05"
@@ -123,20 +134,28 @@ def test_full_generate_evaluate_new_eligibility_missing_data(
 
     monkeypatch.setattr(new_eligiblity, "pull_data_from_cloudwatch", mock_new_relic)
     monkeypatch.setattr(new_eligiblity, "parse_args", lambda x: None)
-    monkeypatch.setattr(new_eligiblity, "upload_csvs", lambda x, y, z: None)
 
     # generate the files
     new_eligiblity.main(cli_args, test_db_session)
+    s3 = boto3.client("s3")
+    dest_dir = f"financial_eligibility/{os.getenv('ENVIRONMENT')}/"
+    object_list = s3.list_objects(Bucket=mock_s3_bucket, Prefix=dest_dir)["Contents"]
+    assert len(object_list) == 2
 
-    for filename in ["reason_for_difference.csv", "diff_eligibility_results.csv"]:
-        assert filename in os.listdir(cli_args.save_path)
+    output_csv_is_first = object_list[0]["Key"].endswith("/output.csv")
+    output_csv_path = object_list[0]["Key"] if output_csv_is_first else object_list[1]
+    diff_csv_path = object_list[1]["Key"] if output_csv_is_first else object_list[0]
 
-    with open(cli_args.save_path / "reason_for_difference.csv") as reason_diff_file:
-        file_lines = reason_diff_file.read()
-        assert file_lines == f"{claim.employee_id},{employer.employer_id},,zero_wage\n"
-    with open(cli_args.save_path / "diff_eligibility_results.csv") as diff_eligibility_file:
-        file_lines = diff_eligibility_file.read()
-        assert (
-            file_lines
-            == f"claimaint_id,time,previous_decision,new_decision,old_aww,new_aww\n{claim.employee_id},2021-08-31,True,False,,0\n"
-        )
+    output_csv = s3.get_object(Bucket=mock_s3_bucket, Key=output_csv_path["Key"])
+    diff_csv = s3.get_object(Bucket=mock_s3_bucket, Key=diff_csv_path["Key"])
+    output_csv_str = output_csv["Body"].read().decode("utf-8")
+    diff_csv_str = diff_csv["Body"].read().decode("utf-8")
+
+    assert (
+        output_csv_str
+        == f"claimaint_id,time,previous_decision,new_decision,old_aww,new_aww\n{claim.employee_id},2021-08-31,True,False,,0\n"
+    )
+    assert (
+        diff_csv_str
+        == f"employee_id,employer_id,leave_start_date,reason\n{claim.employee_id},{employer.employer_id},,zero_wage\n"
+    )

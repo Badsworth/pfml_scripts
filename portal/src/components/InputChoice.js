@@ -50,6 +50,7 @@ InputChoice.propTypes = {
   /**
    * HTML `aria-controls` attribute. Used to indicate that the input affects
    * another element.
+   * TODO (EMPLOYER-1718) - Use hyphen-casing for ARIA attributes
    */
   ariaControls: PropTypes.string,
   /**

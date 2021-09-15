@@ -83,6 +83,8 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     try {
       trackAuthRequest("forgotPassword");
       await Auth.forgotPassword(username);
+      tracker.markFetchRequestEnd();
+
       return true;
     } catch (error) {
       const authError = getForgotPasswordError(error);
@@ -115,6 +117,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     try {
       trackAuthRequest("signIn");
       await Auth.signIn(username, password);
+      tracker.markFetchRequestEnd();
 
       setIsLoggedIn(true);
 
@@ -141,7 +144,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    */
   const logout = async (options = {}) => {
     const { sessionTimedOut = false } = options;
-    trackAuthRequest("signOut");
+
     // Set global: true to invalidate all refresh tokens associated with the user on the Cognito servers
     // Notes:
     // 1. This invalidates tokens across all user sessions on all devices, not just the current session.
@@ -153,7 +156,9 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     //    - https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_GlobalSignOut.html
     //    - https://github.com/aws-amplify/amplify-js/issues/3435
     try {
+      trackAuthRequest("signOut");
       await Auth.signOut({ global: true });
+      tracker.markFetchRequestEnd();
     } catch (error) {
       tracker.noticeError(error);
     }
@@ -281,6 +286,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     try {
       trackAuthRequest("resendSignUp");
       await Auth.resendSignUp(username);
+      tracker.markFetchRequestEnd();
 
       // TODO (CP-600): Show success message
     } catch (error) {
@@ -331,6 +337,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     try {
       trackAuthRequest("forgotPasswordSubmit");
       await Auth.forgotPasswordSubmit(username, code, password);
+      tracker.markFetchRequestEnd();
 
       portalFlow.goToPageFor("SET_NEW_PASSWORD");
     } catch (error) {
@@ -349,6 +356,8 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     try {
       trackAuthRequest("confirmSignUp");
       await Auth.confirmSignUp(username, code);
+      tracker.markFetchRequestEnd();
+
       portalFlow.goToPageFor(
         "SUBMIT",
         {},

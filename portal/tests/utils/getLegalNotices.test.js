@@ -1,16 +1,19 @@
 import Document, { DocumentType } from "../../src/models/Document";
+
 import LeaveReason from "../../src/models/LeaveReason";
 import getLegalNotices from "../../src/utils/getLegalNotices";
 
 describe("getLegalNotices", () => {
   it("filters out all non-legal notices", () => {
     const legalNoticeTypes = new Set([
+      DocumentType.appealAcknowledgment,
       DocumentType.approvalNotice,
       DocumentType.denialNotice,
       DocumentType.requestForInfoNotice,
       DocumentType.withdrawalNotice,
     ]);
     const manyDocumentTypes = [
+      DocumentType.appealAcknowledgment,
       DocumentType.approvalNotice,
       DocumentType.certification.certificationForm,
       DocumentType.certification[LeaveReason.care],

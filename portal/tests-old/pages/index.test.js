@@ -47,7 +47,11 @@ describe("Index", () => {
         await wrapper.update();
       });
 
-      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith("/applications");
+      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
+        "/applications",
+        {},
+        { redirect: true }
+      );
     });
   });
 

@@ -13,6 +13,7 @@ import {
 } from "../../src/errors";
 import { Auth } from "@aws-amplify/auth";
 import BaseApi from "../../src/api/BaseApi";
+import tracker from "../../src/services/tracker";
 
 jest.mock("@aws-amplify/auth");
 jest.mock("../../src/services/tracker");
@@ -108,6 +109,17 @@ describe("BaseApi", () => {
         headers: expect.any(Object),
       }
     );
+  });
+
+  it("tracks the fetch request", async () => {
+    expect.assertions();
+
+    await testsApi.request("GET", "users");
+
+    expect(tracker.trackFetchRequest).toHaveBeenCalledWith(
+      `${process.env.apiUrl}/api/users`
+    );
+    expect(tracker.markFetchRequestEnd).toHaveBeenCalled();
   });
 
   it("sends a POST request to the API", async () => {
