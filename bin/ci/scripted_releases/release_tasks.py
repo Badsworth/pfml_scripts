@@ -57,6 +57,10 @@ def update(args):
 
         if args.git_commits:
             logger.info("Now cherry picking commits...")
+            # DIRTY STATE on the originally checked-out branch if unsuccessful cherry-pick in update-release/hotfix
+            # cherry-pick process remains "in process" no matter what branch is checked out
+            # `git cherry-pick --abort` exits (128) if no cherry-pick is in progress
+            # `git cherry-pick --abort` exits (0) if cherry-pick IS in progress
             git_utils.cherrypick(args.git_commits)
         else:
             logger.info(f"Now merging in {args.source_branch}...")
