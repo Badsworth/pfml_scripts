@@ -1,0 +1,20 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AmendButton renders the component 1`] = `
+<button
+  class="usa-button position-relative text-no-wrap usa-button--unstyled"
+  type="button"
+>
+  <svg
+    aria-hidden="true"
+    class="usa-icon text-middle margin-right-05 margin-top-neg-05"
+    focusable="false"
+    role="img"
+  >
+    <use
+      xlink:href="/img/sprite.svg#edit"
+    />
+  </svg>
+  Amend
+</button>
+`;
