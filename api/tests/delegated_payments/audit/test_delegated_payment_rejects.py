@@ -374,11 +374,7 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
     )
 
 
-def test_rejected_writeback_status_from_reject_notes(
-    test_db_session, payment_rejects_step, monkeypatch
-):
-    monkeypatch.setenv("USE_AUDIT_REJECT_TRANSACTION_STATUS", "1")
-
+def test_rejected_writeback_status_from_reject_notes(test_db_session, payment_rejects_step):
     test_cases = []
 
     for (reject_note, expected_status) in AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS.items():
