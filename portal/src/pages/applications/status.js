@@ -1,3 +1,4 @@
+// @ts-nocheck
 import ClaimDetail, { AbsencePeriod } from "../../models/ClaimDetail";
 import React, { useEffect } from "react";
 import { find, get, has, map } from "lodash";
