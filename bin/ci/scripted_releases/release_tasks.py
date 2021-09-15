@@ -23,7 +23,7 @@ def start(args):
     git_utils.create_branch(branch_name)
 
     # add -rc before tagging and pushing branch
-    git_utils.tag_branch(branch_name, tag_name)
+    git_utils.tag_and_push(branch_name, tag_name)
 
 
 # Produces new release candidates from an arbitrary list of git commits, or an arbitrary source branch
@@ -63,7 +63,7 @@ def update(args):
             git_utils.merge_in_branch(args.source_branch)
 
         logger.info("Done.")
-        git_utils.tag_branch(args.release_version, f"{args.app}/{v.bump_prerelease()}")
+        git_utils.tag_and_push(args.release_version, f"{args.app}/{v.bump_prerelease()}")
         # push to origin!!!
 
     except git.exc.GitCommandError as e:
@@ -107,7 +107,7 @@ def hotfix(args): # production hotfix, args are a branch name and a list of comm
     version_name = git_utils.from_semver(v.bump_patch(), args.app)
  
     git_utils.branch_from_release(args.release_version, f"origin/deploy/{args.app}/prod")
-    git_utils.tag_branch(args.release_version, version_name)
+    git_utils.tag_and_push(args.release_version, version_name)
     git_utils.cherrypick(args.git_commits) # assumes these are coming from main
 
 
@@ -132,4 +132,4 @@ def major(args):
         git_utils.create_branch(branch_name)
 
         # add -rc before tagging and pushing branch
-        git_utils.tag_branch(branch_name, tag_name)
+        git_utils.tag_and_push(branch_name, tag_name)

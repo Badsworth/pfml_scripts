@@ -93,11 +93,12 @@ def head_of_branch(branch_name):
     return git.rev_parse(f"origin/{branch_name}")
 
 
-def tag_branch(branch_name, tag_name):
+def tag_and_push(branch_name, tag_name):
     fetch_remotes()
     git.tag(tag_name, branch_name)  # possible without checking out branch
-    logger.info(f"Pushing tag '{tag_name}' to origin")
     git.push("origin", tag_name)
+    git.push("origin", branch_name)
+    logger.info(f"Pushed tag '{tag_name}' and branch '{branch_name}' to GitHub.")
 
 
 def branch_exists(branch_name: str) -> bool:
