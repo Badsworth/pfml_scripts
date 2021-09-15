@@ -63,8 +63,7 @@ def update(args):
             git_utils.merge_in_branch(args.source_branch)
 
         logger.info("Done.")
-        git_utils.tag_and_push(args.release_version, f"{args.app}/{v.bump_prerelease()}")
-        # push to origin!!!
+        git_utils.tag_and_push(args.release_version, f"{args.app}/v{v.bump_prerelease()}")
 
     except git.exc.GitCommandError as e:
         # hard reset to old_head, and discard any tags or commits descended from old_head
@@ -75,16 +74,6 @@ def update(args):
     finally:
         logger.warning(f"Task is finishing, will check out '{original_branch}' locally")
         git_utils.checkout(original_branch)
-
-    #   check out the branch at args.release_version
-    #       NB: will the check-out break everything if the release branch lacks this code?
-    #   for each git commit in args.git_commits:
-    #       cherry-pick that commit onto the branch at args.release_version
-    #       if merge conflicts or any other Git error, STOP. Hard reset to the saved pointer and exit 1.
-    #   once all commits cherry-picked:
-    #       increment semver 'prerelease' version by one
-    #       tag new HEAD of args.release_version with incremented semver
-    #       push (force-push?) updated branch to origin
 
 
 def finalize(args):
