@@ -79,23 +79,38 @@ def finalize(args):
 
 
 def hotfix(args): # production hotfix, args are a branch name and a list of commits
-    # args are a release branch and a list of commits
-    # release branch will be cut from the prod deploy branch
-    #  add more loggers
-    # guardrails are supposed to vet args.release_verison and args.commits
-    # add guardrails for make finalize_release
     logger.info(f"Running 'hotfix'; args: {repr(args)}")
 
     git_utils.fetch_remotes()
     recent_tag = git_utils.most_recent_tag(args.app)
+    logger.info(f"Tag found: {recent_tag}")
+
     v = git_utils.to_semver(recent_tag)
-
     version_name = git_utils.from_semver(v.bump_patch(), args.app)
- 
-    git_utils.branch_from_release(args.release_version, f"origin/deploy/{args.app}/prod")
-    git_utils.tag_branch(args.release_version, version_name)
-    git_utils.cherrypick(args.git_commits) # assumes these are coming from main
 
+    logger.info(f"Updated verison number: {version_name}, BRANCH: {args.release_version}")
+
+    logger.info(f"Tag {version_name} created on {args.release_version}")
+    git_utils.tag_branch(branch_name=args.release_version, tag_name=version_name)
+
+    logger.warn("If there is a merge conflict, it must be resolved manually.")
+    try:
+        git_utils.checkout(args.release_version)
+        # if there are no commits provided, merge
+        if not args.git_commits:
+            logger.info(f"Merging {args.source_branch} into {args.release_version}")
+            git_utils.merge_branch(args.source_branch)
+            git_utils.push_branch(args.release_version)
+        else:
+            logger.info(f"Cherry-picking {args.git_commits} into {args.release_version}")
+            git_utils.cherrypick(args.git_commits)
+    except git.exc.GitCommandError as e:
+        logger.warning(f"Ran into a problem: {e}")
+        logger.info("Shutting down")
+        return False
+    finally:
+        logger.info("'Hotfix' task is finishing. Will checkout 'main' locally")
+        git_utils.checkout_main() 
 
 def major(args):
     # API ONLY!!! Increments major release number
