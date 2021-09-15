@@ -1,0 +1,94 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`WeeklyTimeTable renders a table with days of the week and times 1`] = `
+<table
+  class="usa-table usa-table--borderless c-table"
+>
+  <thead>
+    <tr>
+      <th
+        scope="col"
+      >
+        Day
+      </th>
+      <th
+        scope="col"
+      >
+        Hours
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th
+        scope="row"
+      >
+        Sunday
+      </th>
+      <td>
+        8h
+      </td>
+    </tr>
+    <tr>
+      <th
+        scope="row"
+      >
+        Monday
+      </th>
+      <td>
+        8h
+      </td>
+    </tr>
+    <tr>
+      <th
+        scope="row"
+      >
+        Tuesday
+      </th>
+      <td>
+        8h
+      </td>
+    </tr>
+    <tr>
+      <th
+        scope="row"
+      >
+        Wednesday
+      </th>
+      <td>
+        8h
+      </td>
+    </tr>
+    <tr>
+      <th
+        scope="row"
+      >
+        Thursday
+      </th>
+      <td>
+        8h
+      </td>
+    </tr>
+    <tr>
+      <th
+        scope="row"
+      >
+        Friday
+      </th>
+      <td>
+        8h
+      </td>
+    </tr>
+    <tr>
+      <th
+        scope="row"
+      >
+        Saturday
+      </th>
+      <td>
+        0h
+      </td>
+    </tr>
+  </tbody>
+</table>
+`;

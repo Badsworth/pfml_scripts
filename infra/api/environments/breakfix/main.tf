@@ -65,10 +65,10 @@ module "api" {
   release_version                = var.release_version
   portal_base_url                = "https://paidleave-breakfix.eol.mass.gov"
 
-  cognito_user_pool_arn       = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_Bi6tPV5hz"
-  cognito_user_pool_id        = "us-east-1_Bi6tPV5hz"
-  cognito_user_pool_client_id = "606qc6fmb1sn3pcujrav20h66l"
-  cognito_user_pool_keys_url  = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_Bi6tPV5hz/.well-known/jwks.json"
+  cognito_user_pool_arn       = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_ZM6ztWTcs"
+  cognito_user_pool_id        = "us-east-1_ZM6ztWTcs"
+  cognito_user_pool_client_id = "1ijqntaslj2des88rlrdvoqlm5"
+  cognito_user_pool_keys_url  = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_ZM6ztWTcs/.well-known/jwks.json"
 
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-breakfix/rmv_client_certificate-dkPhSI"

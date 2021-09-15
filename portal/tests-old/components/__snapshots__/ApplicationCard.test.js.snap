@@ -122,6 +122,8 @@ Array [
 ]
 `;
 
+exports[`ApplicationCard when the claim status is Completed when it's a bonding claim with no cert doc renders guidance to upload a birth cert doc for new birth 1`] = `"<div><h3 class=\\"font-heading-sm text-normal\\">Actions</h3><p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <a href=\\"tel:(833) 344-7365\\">(833) 344‑7365</a>. Report changes to:</p><ul class=\\"usa-list\\"><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer-sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for a disability benefit after you submitted your application, report this change.</li></ul><p>Once your child is born, submit proof of birth so that we can review your application. Learn more about &lt;proof-document-link&gt;proof of birth documents&lt;/proof-document-link&gt; we accept.</p><a class=\\"usa-button display-block\\" href=\\"/applications/upload-docs-options?claim_id=mock_application_id\\">Upload additional documents</a></div>"`;
+
 exports[`ApplicationCard when the claim status is Submitted includes a link to complete the claim 1`] = `
 <ButtonLink
   className="display-block margin-top-2"

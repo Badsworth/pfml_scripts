@@ -4,7 +4,6 @@ import { Submission } from "../../../src/types";
 import { extractLeavePeriod } from "../../../src/util/claims";
 import { assertValidClaim } from "../../../src/util/typeUtils";
 import { format, addDays, parse } from "date-fns";
-import { config } from "../../actions/common";
 
 describe("Post-approval (notifications/notices)", () => {
   const submit = it("Given a fully approved claim", () => {
@@ -82,10 +81,7 @@ describe("Post-approval (notifications/notices)", () => {
               assertValidClaim(claim);
               portal.loginLeaveAdmin(claim.employer_fein);
               portal.selectClaimFromEmployerDashboard(
-                submission.fineos_absence_id,
-                config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"
-                  ? "Review by"
-                  : "--"
+                submission.fineos_absence_id
               );
               const portalFormatStart = format(new Date(startDate), "M/d/yyyy");
               const portalFormatEnd = format(

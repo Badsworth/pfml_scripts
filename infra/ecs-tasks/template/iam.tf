@@ -101,73 +101,6 @@ resource "aws_iam_role_policy" "task_executor" {
 }
 
 # ------------------------------------------------------------------------------------------------------
-# User Bulk Import task stuff
-# ------------------------------------------------------------------------------------------------------
-
-# TODO (EMPLOYER-1654): Bulk User Import code has been archived. S3 bucket can be removed once its data is removed.
-resource "aws_iam_role" "task_bulk_import_task_role" {
-  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-bulk-import-task-role"
-  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
-}
-
-# TODO (EMPLOYER-1654): Bulk User Import code has been archived. S3 bucket can be removed once its data is removed.
-data "aws_iam_policy_document" "task_bulk_import_s3_policy_doc" {
-  # Allow ECS User Bulk Import task access S3 files
-  statement {
-    actions = [
-      "s3:PutObject",
-      "s3:GetObject",
-      "s3:ListBucket"
-    ]
-
-    resources = [
-      "arn:aws:s3:::massgov-pfml-${var.environment_name}-bulk-user-import",
-      "arn:aws:s3:::massgov-pfml-${var.environment_name}-bulk-user-import/*"
-    ]
-  }
-}
-
-resource "aws_iam_policy" "task_bulk_import_s3_policy" {
-  name        = "${local.app_name}-${var.environment_name}-ecs-tasks-bulk-import-task-s3-policy"
-  description = "Policy for accessing S3 files for Bulk Import Tasks"
-  policy      = data.aws_iam_policy_document.task_bulk_import_s3_policy_doc.json
-}
-
-resource "aws_iam_role_policy_attachment" "task_import_s3_policy_attachment" {
-  role       = aws_iam_role.task_bulk_import_task_role.name
-  policy_arn = aws_iam_policy.task_bulk_import_s3_policy.arn
-}
-
-
-data "aws_iam_policy_document" "task_import_cognito_doc" {
-  # Allow ECS User Bulk Import task access to Cognito IDP
-  statement {
-    actions = [
-      "cognito-idp:ListUsers",
-      "cognito-idp:AdminCreateUser",
-      "cognito-idp:AdminSetUserPassword",
-      "cognito-idp:AdminGetUser"
-    ]
-
-    resources = [
-      "arn:aws:cognito-idp:us-east-1:498823821309:userpool/${var.cognito_user_pool_id}"
-    ]
-  }
-}
-
-resource "aws_iam_policy" "task_import_cognito_policy" {
-  name        = "${local.app_name}-${var.environment_name}-ecs-tasks-bulk-import-task-cognito-policy"
-  description = "Policy for accessing Cognito for ECS Bulk User Import Tasks"
-  policy      = data.aws_iam_policy_document.task_import_cognito_doc.json
-}
-
-resource "aws_iam_role_policy_attachment" "task_import_cognito_policy_attachment" {
-  role       = aws_iam_role.task_bulk_import_task_role.name
-  policy_arn = aws_iam_policy.task_import_cognito_policy.arn
-}
-
-
-# ------------------------------------------------------------------------------------------------------
 # Execute SQL Export Task Stuff
 # ------------------------------------------------------------------------------------------------------
 
@@ -464,277 +397,6 @@ data "aws_iam_policy_document" "fineos_feeds_role_policy" {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
-# IAM role and policies for payments-fineos-process
-# ----------------------------------------------------------------------------------------------------------------------
-
-resource "aws_iam_role" "payments_fineos_process_task_role" {
-  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-payments-fineos-process"
-  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
-}
-
-# We may not always have a value for `fineos_aws_iam_role_arn` and a policy has
-# to list a resource, so make this part conditional with the count hack
-resource "aws_iam_role_policy" "payments_fineos_process_task_fineos_role_policy" {
-  count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
-
-  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-payments-fineos-process-fineos-assume-policy"
-  role   = aws_iam_role.payments_fineos_process_task_role.id
-  policy = data.aws_iam_policy_document.fineos_feeds_role_policy[0].json
-}
-
-resource "aws_iam_role_policy" "payments_fineos_process_task_role_extras" {
-  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-payments-fineos-process-extras"
-  role   = aws_iam_role.payments_fineos_process_task_role.id
-  policy = data.aws_iam_policy_document.payments_fineos_process_task_role_extras.json
-}
-
-data "aws_iam_policy_document" "payments_fineos_process_task_role_extras" {
-  statement {
-    sid = "AllowListingOfBucket"
-    actions = [
-      "s3:ListBucket"
-    ]
-
-    resources = [
-      data.aws_s3_bucket.agency_transfer.arn,
-      "${data.aws_s3_bucket.agency_transfer.arn}/*"
-    ]
-
-    effect = "Allow"
-  }
-
-  statement {
-    sid = "AllowS3ReadOnBucket"
-    actions = [
-      "s3:Get*",
-      "s3:List*"
-    ]
-
-    resources = [
-      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
-      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/payments",
-      "${data.aws_s3_bucket.agency_transfer.arn}/payments/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports",
-      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports/*",
-    ]
-
-    effect = "Allow"
-  }
-
-  statement {
-    sid = "AllowS3WriteOnBucket"
-    actions = [
-      "s3:PutObject",
-      "s3:DeleteObject",
-      "s3:AbortMultipartUpload"
-    ]
-
-    resources = [
-      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
-      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/payments",
-      "${data.aws_s3_bucket.agency_transfer.arn}/payments/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports",
-      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports/*",
-    ]
-
-    effect = "Allow"
-  }
-
-  # See /docs/api/ses.tf for full details on configuring SES permissions.
-  statement {
-    sid    = "AllowSESSendEmail"
-    effect = "Allow"
-
-    actions = [
-      "ses:SendEmail",
-      "ses:SendRawEmail"
-    ]
-
-    condition {
-      test     = "ForAllValues:StringLike"
-      variable = "ses:Recipients"
-      values = [
-        var.dfml_project_manager_email_address,
-        var.ctr_gax_bievnt_email_address,
-        var.ctr_vcc_bievnt_email_address,
-        var.dfml_business_operations_email_address
-      ]
-    }
-
-    resources = [
-      "*"
-    ]
-  }
-}
-
-# ----------------------------------------------------------------------------------------------------------------------
-# IAM role and policies for payments-ctr-process
-# ----------------------------------------------------------------------------------------------------------------------
-
-resource "aws_iam_role" "payments_ctr_process_task_role" {
-  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-payments-ctr-process"
-  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
-}
-
-resource "aws_iam_role_policy" "payments_ctr_process_task_role_extras" {
-  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-payments-ctr-process-extras"
-  role   = aws_iam_role.payments_ctr_process_task_role.id
-  policy = data.aws_iam_policy_document.payments_ctr_process_task_role_extras.json
-}
-
-data "aws_iam_policy_document" "payments_ctr_process_task_role_extras" {
-  statement {
-    sid = "AllowListingOfBucket"
-    actions = [
-      "s3:ListBucket"
-    ]
-
-    resources = [
-      data.aws_s3_bucket.agency_transfer.arn,
-      "${data.aws_s3_bucket.agency_transfer.arn}/*"
-    ]
-
-    effect = "Allow"
-  }
-
-  statement {
-    sid = "AllowS3ReadOnBucket"
-    actions = [
-      "s3:Get*",
-      "s3:List*"
-    ]
-
-    resources = [
-      "${data.aws_s3_bucket.agency_transfer.arn}/ctr",
-      "${data.aws_s3_bucket.agency_transfer.arn}/ctr/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports",
-      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports/*",
-    ]
-
-    effect = "Allow"
-  }
-
-  statement {
-    sid = "AllowS3WriteOnBucket"
-    actions = [
-      "s3:PutObject",
-      "s3:DeleteObject",
-      "s3:AbortMultipartUpload"
-    ]
-
-    resources = [
-      "${data.aws_s3_bucket.agency_transfer.arn}/ctr",
-      "${data.aws_s3_bucket.agency_transfer.arn}/ctr/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports",
-      "${data.aws_s3_bucket.agency_transfer.arn}/error-reports/*",
-    ]
-
-    effect = "Allow"
-  }
-
-  # See /docs/api/ses.tf for full details on configuring SES permissions.
-  statement {
-    sid    = "AllowSESSendEmail"
-    effect = "Allow"
-
-    actions = [
-      "ses:SendEmail",
-      "ses:SendRawEmail"
-    ]
-
-    condition {
-      test     = "ForAllValues:StringLike"
-      variable = "ses:Recipients"
-      values = [
-        var.dfml_project_manager_email_address,
-        var.ctr_gax_bievnt_email_address,
-        var.ctr_vcc_bievnt_email_address,
-        var.dfml_business_operations_email_address
-      ]
-    }
-
-    resources = ["*"]
-  }
-}
-
-resource "aws_iam_role" "payments_ctr_import_execution_role" {
-  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-ctr-import-execution-role"
-  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
-}
-
-resource "aws_iam_role_policy_attachment" "payments_ctr_import_execution_role_extras" {
-  role       = aws_iam_role.payments_ctr_import_execution_role.name
-  policy_arn = aws_iam_policy.payments_ctr_import_execution_role_extras.arn
-}
-
-resource "aws_iam_policy" "payments_ctr_import_execution_role_extras" {
-  name        = "${local.app_name}-${var.environment_name}-ecs-tasks-ctr-import-execution-policy"
-  description = "A clone of the standard execution role with extra SSM permissions for Payments CTR Import's decryption keys."
-  policy      = data.aws_iam_policy_document.payments_ctr_import_execution_role_extras.json
-}
-
-data "aws_iam_policy_document" "payments_ctr_import_execution_role_extras" {
-  # Allow ECS to log to Cloudwatch.
-  statement {
-    actions = [
-      "logs:CreateLogStream",
-      "logs:PutLogEvents",
-      "logs:DescribeLogStreams"
-    ]
-
-    resources = [
-      "${aws_cloudwatch_log_group.ecs_tasks.arn}:*"
-    ]
-  }
-
-  # Allow ECS to authenticate with ECR and download images.
-  statement {
-    actions = [
-      "ecr:GetAuthorizationToken",
-      "ecr:BatchCheckLayerAvailability",
-      "ecr:GetDownloadUrlForLayer",
-      "ecr:BatchGetImage",
-    ]
-
-    # ECS Fargate doesn't like it when you restrict the access to a single
-    # repository. Instead, it needs access to all of them.
-    resources = [
-      "*"
-    ]
-  }
-
-  # Allow ECS to access secrets from parameter store.
-  statement {
-    actions = [
-      "ssm:GetParameter",
-      "ssm:GetParameters",
-    ]
-
-    resources = [
-      "${local.ssm_arn_prefix}/${local.app_name}/common/*",
-      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}/*",
-      "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}/*",
-      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/admin/*"
-    ]
-  }
-
-  statement {
-    actions = [
-      "ssm:GetParametersByPath",
-    ]
-
-    resources = [
-      "${local.ssm_arn_prefix}/${local.app_name}/common",
-      "${local.ssm_arn_prefix}/${local.app_name}/${var.environment_name}",
-      "${local.ssm_arn_prefix}/${local.app_name}-comptroller/${var.environment_name}",
-      "arn:aws:ssm:${data.aws_region.current.name}:${data.aws_caller_identity.current.account_id}:parameter/admin"
-    ]
-  }
-}
-
-# ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for pub-payments-process-fineos
 # ----------------------------------------------------------------------------------------------------------------------
 
@@ -814,8 +476,6 @@ data "aws_iam_policy_document" "pub_payments_process_fineos_task_role_extras" {
       variable = "ses:Recipients"
       values = [
         var.dfml_project_manager_email_address,
-        var.ctr_gax_bievnt_email_address,
-        var.ctr_vcc_bievnt_email_address,
         var.dfml_business_operations_email_address
       ]
     }
@@ -911,8 +571,6 @@ data "aws_iam_policy_document" "pub_payments_create_pub_files_task_role_extras" 
       variable = "ses:Recipients"
       values = [
         var.dfml_project_manager_email_address,
-        var.ctr_gax_bievnt_email_address,
-        var.ctr_vcc_bievnt_email_address,
         var.dfml_business_operations_email_address
       ]
     }
@@ -1004,8 +662,6 @@ data "aws_iam_policy_document" "pub_payments_process_pub_returns_task_role_extra
       variable = "ses:Recipients"
       values = [
         var.dfml_project_manager_email_address,
-        var.ctr_gax_bievnt_email_address,
-        var.ctr_vcc_bievnt_email_address,
         var.dfml_business_operations_email_address
       ]
     }
@@ -1387,10 +1043,14 @@ data "aws_iam_policy_document" "evaluate_new_financial_eligibility" {
     effect = "Allow"
     actions = [
       "s3:PutObject",
+      "logs:StartQuery",
+      "logs:GetLogEvents"
     ]
     resources = [
       "arn:aws:s3:::massgov-pfml-${var.environment_name}-execute-sql-export",
       "arn:aws:s3:::massgov-pfml-${var.environment_name}-execute-sql-export/*",
+      "${data.aws_cloudwatch_log_group.service_logs.arn}:*",
+
     ]
   }
 
@@ -1398,13 +1058,11 @@ data "aws_iam_policy_document" "evaluate_new_financial_eligibility" {
   statement {
     effect = "Allow"
     actions = [
-      "logs:GetLogEvents",
-      "logs:StartQuery",
-      "logs:GetQueryResults",
-      "logs:DescribeQueries"
+      "logs:DescribeQueries",
+      "logs:GetQueryResults"
     ]
     resources = [
-      "${data.aws_cloudwatch_log_group.service_logs.arn}:*",
+      "*",
     ]
   }
 }

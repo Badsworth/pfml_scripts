@@ -459,7 +459,7 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
             extra={"absence_case_id": fineos_absence_id},
         )
         return response_util.error_response(
-            status_code=BadRequest, message="Claim not in PFML database.", errors=[], data={},
+            status_code=NotFound, message="Claim not in PFML database.", errors=[], data={},
         ).to_api_response()
 
     if not user_has_access_to_claim(claim):

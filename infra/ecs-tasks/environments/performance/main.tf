@@ -56,41 +56,27 @@ module "tasks" {
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/PERF/dataexports"
   logging_level                                       = "massgov.pfml.fineos.fineos_client=DEBUG"
 
-  eolwd_moveit_sftp_uri    = "sftp://DFML@transferwebtest.eolwd.aws"
-  ctr_moveit_incoming_path = "/DFML/Comptroller_Office/Incoming/nmmarsload"
-  ctr_moveit_outgoing_path = "/DFML/Comptroller_Office/Outgoing/nmmarsload"
-  ctr_moveit_archive_path  = "/DFML/Comptroller_Office/Archive"
-  pfml_ctr_inbound_path    = "s3://massgov-pfml-performance-agency-transfer/ctr/inbound"
-  pfml_ctr_outbound_path   = "s3://massgov-pfml-performance-agency-transfer/ctr/outbound"
-  pfml_error_reports_path  = "s3://massgov-pfml-performance-agency-transfer/error-reports/outbound"
-  pfml_voucher_output_path = "s3://massgov-pfml-performance-agency-transfer/payments/manual-payment-voucher"
+  eolwd_moveit_sftp_uri   = "sftp://DFML@transferwebtest.eolwd.aws"
+  pfml_error_reports_path = "s3://massgov-pfml-performance-agency-transfer/error-reports/outbound"
 
   dfml_project_manager_email_address     = "mass-pfml-payments-test-email@navapbc.com"
   pfml_email_address                     = "PFML_DoNotReply@eol.mass.gov"
   bounce_forwarding_email_address        = "PFML_DoNotReply@eol.mass.gov"
   bounce_forwarding_email_address_arn    = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
-  ctr_gax_bievnt_email_address           = "mass-pfml-payments-test-email@navapbc.com"
-  ctr_vcc_bievnt_email_address           = "mass-pfml-payments-test-email@navapbc.com"
   dfml_business_operations_email_address = "mass-pfml-payments-test-email@navapbc.com"
   agency_reductions_email_address        = "mass-pfml-payments-test-email@navapbc.com"
 
-  ctr_data_mart_host     = "duaua-fdm-wdb1.cs.govt.state.ma.us"
-  ctr_data_mart_username = "SRV-LWD-DFML-NONPROD"
-
-  fineos_data_export_path         = "s3://fin-somdev-data-export/PERF/dataexports"
-  fineos_data_import_path         = "s3://fin-somdev-data-import/PERF/peiupdate"
-  fineos_error_export_path        = "s3://fin-somdev-data-export/PERF/errorExtracts"
-  fineos_report_export_path       = "s3://fin-somdev-data-export/PERF/reportExtracts"
-  pfml_fineos_inbound_path        = "s3://massgov-pfml-performance-agency-transfer/cps/inbound"
-  pfml_fineos_outbound_path       = "s3://massgov-pfml-performance-agency-transfer/cps/outbound"
-  fineos_vendor_max_history_date  = "2021-01-09"
-  fineos_payment_max_history_date = "2021-01-21"
+  fineos_data_export_path   = "s3://fin-somdev-data-export/PERF/dataexports"
+  fineos_data_import_path   = "s3://fin-somdev-data-import/PERF/peiupdate"
+  fineos_error_export_path  = "s3://fin-somdev-data-export/PERF/errorExtracts"
+  fineos_report_export_path = "s3://fin-somdev-data-export/PERF/reportExtracts"
+  pfml_fineos_inbound_path  = "s3://massgov-pfml-performance-agency-transfer/cps/inbound"
+  pfml_fineos_outbound_path = "s3://massgov-pfml-performance-agency-transfer/cps/outbound"
 
   payment_audit_report_outbound_folder_path = "s3://massgov-pfml-performance-agency-transfer/audit/outbound"
   payment_audit_report_sent_folder_path     = "s3://massgov-pfml-performance-agency-transfer/audit/sent"
 
-  enable_recurring_payments_schedule = false
-  enable_register_admins_job         = true
+  enable_register_admins_job = true
 
   enable_pub_automation_fineos           = true
   enable_pub_automation_create_pub_files = false

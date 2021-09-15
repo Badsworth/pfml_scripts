@@ -53,6 +53,12 @@ describe("tracker", () => {
       });
     });
 
+    it("markFetchRequestEnd ends the interaction", () => {
+      tracker.trackFetchRequest("https://example.com");
+
+      expect(newrelic.interaction().end).toHaveBeenCalledTimes(1);
+    });
+
     it("trackFetchRequest tracks interaction with the given URL and environment", () => {
       tracker.trackFetchRequest("https://example.com");
 

@@ -12,5 +12,5 @@ DOWNLOADABLE_DOC_TYPES = [
     "child bonding evidence form",
     "military exigency form",
     "pending application withdrawn",
-    "appeal acknowledgement",
+    "appeal acknowledgment",
 ]

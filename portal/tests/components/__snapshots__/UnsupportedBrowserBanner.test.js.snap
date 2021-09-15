@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`UnsupportedBrowserBanner renders conditional HTML comment and the banner message 1`] = `
+<div>
+  <span>
+    <!--[if lte IE 9]&gt;&lt;style&gt;.c-unsupported-browser-banner { display: block }&lt;/style&gt;&lt;![endif]-->
+  </span>
+  <div
+    class="c-unsupported-browser-banner bg-yellow padding-1 text-center"
+    role="alert"
+  >
+    <strong>
+      Your browser is out of date
+    </strong>
+    . Please 
+    <a
+      href="https://browser-update.org/update.html"
+      rel="noreferrer noopener"
+      target="_blank"
+    >
+      update your browser
+    </a>
+     for more security, speed and the best experience on our site.
+  </div>
+</div>
+`;

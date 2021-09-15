@@ -1599,8 +1599,8 @@ class TestGetClaimEndpoint:
             "/v1/claims/NTN-100-ABS-01", headers={"Authorization": f"Bearer {employer_auth_token}"},
         )
 
-        assert response.status_code == 400
-        tests.api.validate_error_response(response, 400, message="Claim not in PFML database.")
+        assert response.status_code == 404
+        tests.api.validate_error_response(response, 404, message="Claim not in PFML database.")
         assert "Claim not in PFML database." in caplog.text
 
     def test_get_claim_user_has_no_access(self, caplog, client, employer_auth_token):

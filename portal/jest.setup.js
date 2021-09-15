@@ -13,6 +13,8 @@ initializeI18n();
 
 Enzyme.configure({ adapter: new Adapter() });
 
+jest.mock("@aws-amplify/auth");
+
 /**
  * Mock environment variables
  */

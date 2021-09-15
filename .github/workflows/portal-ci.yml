@@ -47,6 +47,10 @@ jobs:
         run: npm run lint:ci
         working-directory: ${{ env.working-dir }}
 
+      - name: TypeScript
+        run: npm run ts:check
+        working-directory: ${{ env.working-dir }}
+
       - name: test
         run: npm run test:ci
         working-directory: ${{ env.working-dir }}

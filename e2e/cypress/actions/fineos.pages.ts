@@ -116,6 +116,12 @@ export class ClaimPage {
     onTab("Absence Hub");
     return this;
   }
+  alerts(cb: (page: AlertsPage) => unknown): this {
+    onTab("Alerts");
+    cb(new AlertsPage());
+    onTab("Absence Hub");
+    return this;
+  }
   availability(cb: (page: AvailabilityPage) => unknown): this {
     onTab("Availability");
     cb(new AvailabilityPage());
@@ -588,7 +594,7 @@ class TasksPage {
     // Search for the task type
     cy.findByLabelText(`Find Work Types Named`).type(`${name}{enter}`);
     // Create task
-    cy.findByTitle(name, { exact: false }).click({ force: true });
+    cy.findByTitle(name).click({ force: true });
     clickBottomWidgetButton("Next");
     return this;
   }
@@ -1128,6 +1134,27 @@ export class DocumentsPage {
     cy.get(`select[id$=TotalMinutes${i}]`).select(
       `${minutesTotal === 0 ? "00" : minutesTotal}`
     );
+  }
+}
+
+/**
+ * This class represents the alerts page/tab within the broader Claim page/view in Fineos.
+ */
+export class AlertsPage {
+  assertAlertMessage(hasMessage: boolean, alertMessage: string): this {
+    if (hasMessage) {
+      cy.get(`#alertsHeader`).should((alerts) => {
+        expect(
+          alerts,
+          `Expected to find the following "${alertMessage}".`
+        ).to.have.descendants(`:contains("${alertMessage}")`);
+      });
+    } else {
+      cy.get(
+        `table[id^="ValidationsListViewWidget_"][id$="_ValidationList"]`
+      ).should("not.be.visible");
+    }
+    return this;
   }
 }
 
@@ -1823,7 +1850,7 @@ abstract class CreateNotificationStep {
       })
       .select(option);
     // Wait for ajax
-    wait();
+    waitForAjaxComplete();
   }
 }
 
@@ -1841,6 +1868,16 @@ class OccupationDetails extends CreateNotificationStep {
   nextStep<T>(cb: (step: NotificationOptions) => T): T {
     this.clickNext();
     return cb(new NotificationOptions());
+  }
+
+  employmentStatus(status: string) {
+    cy.findByLabelText("Employment status").select(`${status}`);
+  }
+
+  enterDateJobEnded(dateJobEnded: string) {
+    cy.findByLabelText("Date job ended").type(
+      `${dateToMMddyyyy(dateJobEnded)}{enter}`
+    );
   }
 }
 

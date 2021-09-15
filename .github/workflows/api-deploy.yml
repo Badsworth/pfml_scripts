@@ -61,7 +61,7 @@ env:
   terraform-env-shared-dir: ./infra/env-shared/environments
   terraform-ecs-tasks-dir: ./infra/ecs-tasks/environments
   terraform-version: 0.14.7
-  python-version: 3.8
+  python-version: 3.9
 
   # Set a timeout of two minutes for all terraform commands in the workflow
   # to account for parallel jobs working in the same environment with the same

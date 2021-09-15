@@ -1,5 +1,6 @@
 import {
   AuthSessionMissingError,
+  ClaimWithdrawnError,
   DocumentsLoadError,
   DocumentsUploadError,
   ForbiddenError,
@@ -184,6 +185,38 @@ describe("useAppErrorsLogic", () => {
         expect(appErrorsLogic.appErrors.items[0].meta).toEqual({
           application_id: "mock-application-id",
         });
+      });
+    });
+
+    describe("when ClaimWithdrawnError is thrown", () => {
+      it("displays an html error message and tOptions includes an absenceId", () => {
+        act(() => {
+          appErrorsLogic.catchError(
+            new ClaimWithdrawnError("mock-absence-id", {
+              type: "fineos_claim_withdrawn",
+            })
+          );
+        });
+
+        expect(appErrorsLogic.appErrors.items).toHaveLength(1);
+        expect(appErrorsLogic.appErrors.items[0].message)
+          .toMatchInlineSnapshot(`
+          <Trans
+            components={
+              Object {
+                "contact-center-phone-link": <a
+                  href="tel:(833) 344-7365"
+                />,
+              }
+            }
+            i18nKey="errors.claimStatus.fineos_claim_withdrawn"
+            tOptions={
+              Object {
+                "absenceId": "mock-absence-id",
+              }
+            }
+          />
+        `);
       });
     });
 

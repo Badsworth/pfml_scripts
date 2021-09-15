@@ -1,6 +1,5 @@
 import { fineos, fineosPages, portal } from "../../../actions";
 import { Submission } from "../../../../src/types";
-import { config } from "../../../actions/common";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { getDocumentReviewTaskName } from "../../../../src/util/documents";
 
@@ -37,10 +36,7 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
       cy.unstash<Submission>("submission").then((submission) => {
         assertValidClaim(claim.claim);
         portal.loginLeaveAdmin(claim.claim.employer_fein);
-        portal.selectClaimFromEmployerDashboard(
-          submission.fineos_absence_id,
-          config("PORTAL_HAS_LA_STATUS_UPDATES") === "true" ? "Review by" : "--"
-        );
+        portal.selectClaimFromEmployerDashboard(submission.fineos_absence_id);
         portal.visitActionRequiredERFormPage(submission.fineos_absence_id);
         portal.respondToLeaveAdminRequest(false, true, true, true);
       });

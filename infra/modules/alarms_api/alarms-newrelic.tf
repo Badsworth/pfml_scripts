@@ -378,41 +378,6 @@ resource "newrelic_nrql_alert_condition" "notifications_endpoint_infinite_email_
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
-# Alarms relating to problems in the payments pipeline
-
-module "payments_errors_from_fineos" {
-  count  = (var.environment_name == "prod") ? 1 : 0
-  source = "../newrelic_single_error_alarm"
-
-  enabled   = true
-  name      = "Errors encountered by the payments-fineos-process task"
-  policy_id = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_api_alerts.id : newrelic_alert_policy.api_alerts.id
-
-  nrql = <<-NRQL
-    SELECT count(*) FROM Log
-    WHERE aws.logGroup = 'service/pfml-api-prod/ecs-tasks'
-      AND aws.logStream LIKE 'prod/payments-fineos-process/%'
-      AND levelname = 'ERROR'
-  NRQL
-}
-
-module "payments_errors_from_comptroller" {
-  count  = (var.environment_name == "prod") ? 1 : 0
-  source = "../newrelic_single_error_alarm"
-
-  enabled   = true
-  name      = "Errors encountered by the payments-ctr-process task"
-  policy_id = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_api_alerts.id : newrelic_alert_policy.api_alerts.id
-
-  nrql = <<-NRQL
-    SELECT count(*) FROM Log
-    WHERE aws.logGroup = 'service/pfml-api-prod/ecs-tasks'
-      AND aws.logStream LIKE 'prod/payments-ctr-process/%'
-      AND levelname = 'ERROR'
-    NRQL
-}
-
-# ----------------------------------------------------------------------------------------------------------------------
 # Alarms relating to problems in the PUB delegated payments pipeline
 
 module "pub_delegated_payments_errors" {

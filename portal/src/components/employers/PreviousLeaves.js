@@ -172,7 +172,6 @@ const PreviousLeaves = (props) => {
               </td>
               <td></td>
               <td></td>
-              <td></td>
             </tr>
           )}
         </tbody>
