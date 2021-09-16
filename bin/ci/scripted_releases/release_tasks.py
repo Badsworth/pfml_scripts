@@ -29,6 +29,8 @@ def start(args):
 # ----------------------------------------------------------------------------------------------------
 # Produces new release candidates from an arbitrary list of git commits, or an arbitrary source branch
 def update(args):
+    # TODO: is it safe to delete any local copy of args.release_version before making git changes?
+    # TODO: vet safety and correctness of hotfix/update tasks when run across multiple computers
     logger.info(f"Running 'update-release'...")
     logger.debug(f"Args: {repr(args)}")
 
@@ -91,7 +93,10 @@ def finalize(args):
     logger.debug(f"Args: {repr(args)}")
 
 
+# ----------------------------------------------------------------------------------------------------
 def hotfix(args):  # production hotfix, args are a branch name and a list of commits
+    # TODO: is it safe to delete any local copy of args.release_version before making git changes?
+    # TODO: vet safety and correctness of hotfix/update tasks when run across multiple computers
     logger.info(f"Running 'hotfix'...")
     logger.debug(f"Args: {repr(args)}")
 
