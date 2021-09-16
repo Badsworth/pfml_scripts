@@ -90,38 +90,61 @@ def finalize(args):
 
 
 def hotfix(args): # production hotfix, args are a branch name and a list of commits
-    logger.info(f"Running 'hotfix'; args: {repr(args)}")
+    logger.info(f"Running 'hotfix'...")
+    logger.debug(f"Args: {repr(args)}")
 
     git_utils.fetch_remotes()
-    recent_tag = git_utils.most_recent_tag(args.app)
-    logger.info(f"Tag found: {recent_tag}")
+    original_branch = git_utils.current_branch()  # Save this to check it back out after work's done
 
+    recent_tag = git_utils.most_recent_tag(args.app, args.release_version)
     v = git_utils.to_semver(recent_tag)
-    version_name = git_utils.from_semver(v.bump_patch(), args.app)
 
-    logger.info(f"Updated verison number: {version_name}, BRANCH: {args.release_version}")
+    if not git_utils.branch_exists(args.release_version):
+        logger.error(f"Could not find the branch '{args.release_version}' on GitHub.")
+        logger.error("Script cannot proceed and will now terminate.")
+        return False
 
-    logger.info(f"Tag {version_name} created on {args.release_version}")
-    git_utils.tag_branch(branch_name=args.release_version, tag_name=version_name)
+    if not git_utils.is_finalized(args.release_version):
+        logger.error(f"'{args.release_version}' can only take new RCs.")
+        logger.error("Try running this script again, but with the 'update-release' task instead.")
+        return False
+
+    old_head = git_utils.head_of_branch(args.release_version)
+    logger.info(f"HEAD of '{args.release_version}' on origin is '{old_head[0:9]}'")
+    logger.info("Will save this HEAD and revert back to it if anything goes wrong.")
 
     logger.warn("If there is a merge conflict, it must be resolved manually.")
     try:
         git_utils.checkout(args.release_version)
-        # if there are no commits provided, merge
-        if not args.git_commits:
-            logger.info(f"Merging {args.source_branch} into {args.release_version}")
-            git_utils.merge_branch(args.source_branch)
-            git_utils.push_branch(args.release_version)
-        else:
-            logger.info(f"Cherry-picking {args.git_commits} into {args.release_version}")
+        logger.info(f"Checked out '{args.release_version}'.")
+
+        if args.git_commits:
+            logger.info("Now cherry picking commits...")
             git_utils.cherrypick(args.git_commits)
+        else:
+            logger.info(f"Now merging in {args.source_branch}...")
+            git_utils.merge_in_branch(args.source_branch)
+
+        logger.info("Done.")
+        git_utils.tag_and_push(args.release_version, f"{args.app}/v{v.bump_patch()}")
+
     except git.exc.GitCommandError as e:
+        # hard reset to old_head, and discard any tags or commits descended from old_head
+        # also abort any in-process cherry pick; these leave dirty state if not cleaned up
         logger.warning(f"Ran into a problem: {e}")
-        logger.info("Shutting down")
+
+        try:
+            git_utils.cherrypick("--abort")  # not actually a "commit_hash", but a valid switch for `git cherry-pick`
+            logger.warning("Cleaned up an in-process cherry-pick")
+        except git.exc.GitCommandError as e2:
+            logger.debug(f"No cherry-pick was in progress (or something else went wrong) - {e2}")
+
+        logger.warning(f"Resetting '{args.release_version}' back to {old_head}.")
+        git_utils.reset_head(old_head)
         return False
     finally:
-        logger.info("'Hotfix' task is finishing. Will checkout 'main' locally")
-        git_utils.checkout_main() 
+        logger.warning(f"Task is finishing, will check out '{original_branch}' locally")
+        git_utils.checkout(original_branch)
 
 def major(args):
     # API ONLY!!! Increments major release number

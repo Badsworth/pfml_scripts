@@ -22,10 +22,6 @@ def fetch_remotes():
     return origin.fetch()
 
 
-def checkout_main():
-    git.checkout("main")
-
-
 def checkout(branch_name):
     git.checkout(branch_name)
 
