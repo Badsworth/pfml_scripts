@@ -1,4 +1,4 @@
-import { render, screen, within } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import Dropdown from "../../src/components/Dropdown";
 import React from "react";
 import userEvent from "@testing-library/user-event";
@@ -51,9 +51,11 @@ describe("Dropdown", () => {
   });
 
   it("can display a hint in the form label", () => {
-    const { container } = renderComponent({ hint: "this is a pro tip" });
-    const hint = container.querySelector("span");
-    expect(within(hint).getByText(/this is a pro tip/)).toBeTruthy();
+    renderComponent({ hint: "this is a pro tip" });
+
+    expect(
+      screen.getByRole("combobox", { name: /this is a pro tip/i })
+    ).toBeInTheDocument();
   });
 
   it("can render the label small", () => {
@@ -72,7 +74,7 @@ describe("Dropdown", () => {
   it("when autocomplete is true, user can click input to see dropdown values", () => {
     renderComponent({ autocomplete: true });
     const input = screen.getByRole("combobox");
-    expect(screen.queryAllByRole("option")).toHaveLength(0);
+    expect(screen.queryByRole("option")).not.toBeInTheDocument();
     userEvent.click(input);
     expect(screen.getAllByRole("option")).toHaveLength(2);
   });

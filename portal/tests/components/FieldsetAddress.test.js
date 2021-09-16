@@ -1,8 +1,8 @@
+import { render, screen } from "@testing-library/react";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import FieldsetAddress from "../../src/components/FieldsetAddress";
 import React from "react";
-import { render } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
 const renderComponent = (customProps = {}) => {
@@ -14,7 +14,7 @@ const renderComponent = (customProps = {}) => {
     zip: null,
   };
 
-  const { container, getByLabelText, getByRole, getByText } = render(
+  const { container } = render(
     <FieldsetAddress
       appErrors={new AppErrorInfoCollection()}
       label={"What is your address?"}
@@ -26,9 +26,6 @@ const renderComponent = (customProps = {}) => {
   );
   return {
     container,
-    getByLabelText,
-    getByRole,
-    getByText,
   };
 };
 
@@ -72,9 +69,9 @@ describe("FieldsetAddress", () => {
         />
       );
     };
-    const { getByLabelText } = render(<FieldsetAddressWithState />);
+    render(<FieldsetAddressWithState />);
 
-    const zipInput = getByLabelText("ZIP");
+    const zipInput = screen.getByLabelText("ZIP");
     userEvent.type(zipInput, "205001234");
     userEvent.click(document.body);
     expect(zipInput).toHaveValue("20500-1234");
@@ -108,13 +105,14 @@ describe("FieldsetAddress", () => {
         message: "ZIP is required",
       }),
     ]);
-    const { getByRole } = renderComponent({ appErrors });
+    renderComponent({ appErrors });
 
     const getAlertElemByName = (
       name,
       role = "textbox",
       nodes = "previousSibling.textContent"
-    ) => nodes.split(".").reduce((o, i) => o[i], getByRole(role, { name }));
+    ) =>
+      nodes.split(".").reduce((o, i) => o[i], screen.getByRole(role, { name }));
 
     expect(getAlertElemByName("Address")).toEqual("Address is required");
     expect(getAlertElemByName("Address line 2 (optional)")).toEqual(
@@ -138,24 +136,25 @@ describe("FieldsetAddress", () => {
   });
 
   it("renders with a small label when the smallLabel prop is set", () => {
-    const { getByLabelText } = renderComponent({ smallLabel: true });
+    renderComponent({ smallLabel: true });
 
-    expect(getByLabelText("City").previousSibling).toHaveClass(
+    expect(screen.getByLabelText("City").previousSibling).toHaveClass(
       "font-heading-xs"
     );
   });
 
   it("renders the hint text when the hint prop is set", () => {
     const hintText = "This is a hint";
-    const { getByText } = renderComponent({ hint: hintText });
+    renderComponent({ hint: hintText });
 
-    expect(getByText(hintText)).toBeInTheDocument();
+    expect(screen.getByText(hintText)).toBeInTheDocument();
   });
 
   it("renders alterative mailing address labels when the addressType prop is mailing", () => {
-    const { getByLabelText } = renderComponent({ addressType: "mailing" });
+    renderComponent({ addressType: "mailing" });
 
-    expect(getByLabelText("Mailing address").getAttribute("name")).toBe(
+    expect(screen.getByLabelText("Mailing address")).toHaveAttribute(
+      "name",
       "address.line_1"
     );
   });

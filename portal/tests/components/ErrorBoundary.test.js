@@ -14,7 +14,7 @@ describe("ErrorBoundary", () => {
     );
 
     expect(screen.getByText(/Hello/)).toBeInTheDocument();
-    expect(screen.queryByRole("region")).toBeNull();
+    expect(screen.queryByRole("region")).not.toBeInTheDocument();
   });
 
   describe("when an error is thrown by a descendant component", () => {

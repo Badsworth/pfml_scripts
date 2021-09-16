@@ -138,7 +138,7 @@ describe("AmendablePreviousLeave", () => {
       });
       fireEvent.change(startYearInput, { target: { value: "2021" } });
       fireEvent.change(endYearInput, { target: { value: "2021" } });
-      expect(endYearInput).toHaveAttribute("value", "2021");
+      expect(endYearInput).toHaveValue("2021");
 
       const cancelButton = screen.getByRole("button", {
         name: "Cancel amendment",

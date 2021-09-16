@@ -121,9 +121,9 @@ describe("EmployerBenefits", () => {
         shouldShowV2: false,
       });
 
-      expect(screen.queryAllByTestId("added-benefit-details-row")).toHaveLength(
-        0
-      );
+      expect(
+        screen.queryByTestId("added-benefit-details-row")
+      ).not.toBeInTheDocument();
     });
 
     it("does not display the 'Add benefit' button", () => {

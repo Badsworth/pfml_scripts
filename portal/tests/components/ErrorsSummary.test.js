@@ -19,7 +19,7 @@ describe("ErrorsSummary", () => {
   it("does not render an alert when no errors exist", () => {
     renderComponent({ errors: new AppErrorInfoCollection() });
 
-    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 
   describe("when only one error exists", () => {
@@ -57,10 +57,10 @@ describe("ErrorsSummary", () => {
         new AppErrorInfo({ message: <Trans i18nKey="errors.caughtError" /> }),
       ]);
 
-      const { getByText } = renderComponent({ errors });
+      renderComponent({ errors });
 
       expect(
-        getByText(
+        screen.getByText(
           "Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365."
         )
       ).toBeInTheDocument();
@@ -74,9 +74,9 @@ describe("ErrorsSummary", () => {
         new AppErrorInfo({ message: "Mock error message #2" }),
       ]);
 
-      const { getByText } = renderComponent({ errors });
+      renderComponent({ errors });
 
-      expect(getByText("2 errors occurred")).toBeInTheDocument();
+      expect(screen.getByText("2 errors occurred")).toBeInTheDocument();
       expect(screen.queryAllByRole("listitem")).toHaveLength(2);
     });
 
@@ -87,9 +87,9 @@ describe("ErrorsSummary", () => {
         new AppErrorInfo({ message: "Mock error message #1" }),
       ]);
 
-      const { getByText } = renderComponent({ errors });
+      renderComponent({ errors });
 
-      expect(getByText("An error occurred")).toBeInTheDocument();
+      expect(screen.getByText("An error occurred")).toBeInTheDocument();
     });
 
     it("removes any duplicate error messages", () => {
@@ -104,10 +104,10 @@ describe("ErrorsSummary", () => {
 
       const listContainer = screen.getByRole("list");
 
-      expect(listContainer.firstChild.textContent).toEqual(
+      expect(listContainer.firstChild).toHaveTextContent(
         errors.items[0].message
       );
-      expect(listContainer.lastChild.textContent).toEqual(
+      expect(listContainer.lastChild).toHaveTextContent(
         errors.items[2].message
       );
     });
@@ -147,7 +147,7 @@ describe("ErrorsSummary", () => {
 
       renderComponent({ errors });
       const alert = screen.getByRole("alert");
-      expect(alert.parentElement).toEqual(document.activeElement);
+      expect(alert.parentElement).toHaveFocus();
     });
 
     it("scrolls to the top of the window", () => {
@@ -199,6 +199,6 @@ describe("ErrorsSummary", () => {
     expect(() => {
       renderComponent({ errors: null });
     }).toThrowError();
-    expect(screen.queryByRole("alert")).toBeNull();
+    expect(screen.queryByRole("alert")).not.toBeInTheDocument();
   });
 });

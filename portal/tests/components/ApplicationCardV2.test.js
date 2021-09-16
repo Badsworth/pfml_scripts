@@ -61,11 +61,11 @@ describe("ApplicationCardV2", () => {
     );
 
     const button = screen.getByRole("button");
-    expect(button).not.toHaveAttribute("disabled");
+    expect(button).toBeEnabled();
     await act(async () => {
       await userEvent.click(button);
     });
-    expect(button).toHaveAttribute("disabled");
+    expect(button).toBeDisabled();
   });
 
   it("with a completed application when the user clicks the view status button loads claim details", async () => {

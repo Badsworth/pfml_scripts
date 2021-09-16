@@ -63,7 +63,7 @@ describe("ThrottledButton", () => {
       await userEvent.click(button);
     });
     expect(onClickHandler).not.toHaveBeenCalled();
-    expect(button).toHaveAttribute("disabled");
+    expect(button).toBeDisabled();
   });
 
   it("loading state disables button and displays loading spinner", async () => {
@@ -84,22 +84,25 @@ describe("ThrottledButton", () => {
     );
 
     const button = screen.getByRole("button");
-    await act(async () => {
-      // Click the button but don't wait for its operation to complete
-      userEvent.click(button);
-      await waitFor(() => expect(onClickHandler).toHaveBeenCalled());
-      // At this point the button has been clicked and has entered its
-      // loading state. It will stay loading until we call resolveOnclick()
-    });
+
+    // Click the button but don't wait for its operation to complete
+    userEvent.click(button);
+    await waitFor(() => expect(onClickHandler).toHaveBeenCalled());
+
+    // At this point the button has been clicked and has entered its
+    // loading state. It will stay loading until we call resolveOnclick()
     // Verify button is in a loading state
-    expect(screen.findByRole("progressbar")).toBeTruthy();
-    expect(screen.getByText(/loading message/)).toBeTruthy();
+    expect(screen.getByRole("progressbar")).toBeInTheDocument();
+    expect(screen.getByText(/loading message/)).toBeInTheDocument();
     // Verify the button can't be clicked while it's loading
     onClickHandler.mockClear();
-    await userEvent.click(button);
+    userEvent.click(button);
     expect(onClickHandler).not.toHaveBeenCalled();
+
     // Finally, resolve the onClick handler
-    resolveOnClick();
+    await act(async () => {
+      await resolveOnClick();
+    });
   });
 
   it("button is clickable again after onClick has resolved", async () => {
@@ -116,7 +119,7 @@ describe("ThrottledButton", () => {
     const button = screen.getByRole("button");
     await act(async () => {
       await userEvent.click(button);
-      await waitFor(() => expect(button).not.toHaveAttribute("disabled"));
+      await waitFor(() => expect(button).toBeEnabled());
       await userEvent.click(button);
     });
     expect(onClickHandler).toHaveBeenCalledTimes(2);

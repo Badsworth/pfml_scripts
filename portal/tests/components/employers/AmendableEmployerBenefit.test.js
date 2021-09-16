@@ -211,7 +211,7 @@ describe("AmendableEmployerBenefit", () => {
     });
     fireEvent.change(startYearInput, { target: { value: "2020" } });
     fireEvent.change(endYearInput, { target: { value: "2020" } });
-    expect(endYearInput).toHaveAttribute("value", "2020");
+    expect(endYearInput).toHaveValue("2020");
 
     const cancelButton = screen.getByRole("button", {
       name: "Cancel amendment",
@@ -222,7 +222,9 @@ describe("AmendableEmployerBenefit", () => {
       "amendedBenefits"
     );
     expect(screen.getByText("2/1/2021 to 3/1/2021")).toBeInTheDocument();
-    expect(screen.queryByText(/Amend employer-sponsored benefit/)).toBeNull();
+    expect(
+      screen.queryByText(/Amend employer-sponsored benefit/)
+    ).not.toBeInTheDocument();
   });
 
   it("for added benefits, form expanded by default (and no table row with the amend button)", () => {

@@ -1,6 +1,7 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import Button from "../../src/components/Button";
 import React from "react";
+import userEvent from "@testing-library/user-event";
 
 describe("Button", () => {
   it("renders the button with default styling", () => {
@@ -20,7 +21,7 @@ describe("Button", () => {
   it("calls on click handler as expected", () => {
     const onClickHandler = jest.fn();
     render(<Button onClick={onClickHandler}>Click me</Button>);
-    fireEvent.click(screen.getByText(/Click me/));
+    userEvent.click(screen.getByText(/Click me/));
     expect(onClickHandler).toHaveBeenCalled();
   });
 
@@ -32,9 +33,9 @@ describe("Button", () => {
       </Button>
     );
     const button = screen.getByRole("button");
-    fireEvent.click(button);
+    userEvent.click(button);
     expect(onClickHandler).not.toHaveBeenCalled();
-    expect(button).toHaveAttribute("disabled");
+    expect(button).toBeDisabled();
   });
 
   it("loading state disables button and displays loading spinner", () => {
@@ -48,9 +49,9 @@ describe("Button", () => {
         Click me I dare you
       </Button>
     );
-    expect(screen.findByRole("progressbar")).toBeTruthy();
-    expect(screen.getByText(/loading message/)).toBeTruthy();
-    fireEvent.click(screen.getByText(/Click me I dare you/));
+    expect(screen.getByRole("progressbar")).toBeInTheDocument();
+    expect(screen.getByText(/loading message/)).toBeInTheDocument();
+    userEvent.click(screen.getByText(/Click me I dare you/));
     expect(onClickHandler).not.toHaveBeenCalled();
   });
 

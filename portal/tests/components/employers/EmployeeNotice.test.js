@@ -45,7 +45,7 @@ describe("EmployeeNotice", () => {
 
     for (const choice of choices) {
       expect(choice.checked).toBe(false);
-      expect(choice).not.toBeDisabled();
+      expect(choice).toBeEnabled();
     }
   });
 

@@ -1,17 +1,17 @@
+import { render, screen } from "@testing-library/react";
 import Heading from "../../src/components/Heading";
 import React from "react";
-import { render } from "@testing-library/react";
 
 describe("Heading", () => {
   describe("Heading classes", () => {
     it("adds the className to the other heading classes", () => {
-      const { getByRole } = render(
+      render(
         <Heading className="margin-bottom-2" level="2">
           Foobar
         </Heading>
       );
 
-      const header = getByRole("heading", { name: "Foobar" });
+      const header = screen.getByRole("heading", { name: "Foobar" });
       expect(header).toHaveClass(
         "margin-bottom-2",
         "font-heading-md",
@@ -24,25 +24,25 @@ describe("Heading", () => {
 
   describe("Heading weight", () => {
     it("default heading weight is correct", () => {
-      const { getByRole } = render(
+      render(
         <Heading level="2" weight="normal">
           Foobar
         </Heading>
       );
-      const header = getByRole("heading", { name: "Foobar" });
+      const header = screen.getByRole("heading", { name: "Foobar" });
       expect(header).toHaveClass("text-normal");
       expect(header).not.toHaveClass("text-bold");
       expect(header).toMatchSnapshot();
     });
 
     it("overrides default heading weight", () => {
-      const { getByRole } = render(
+      render(
         <Heading level="2" weight="bold">
           Foobar
         </Heading>
       );
 
-      const header = getByRole("heading", { name: "Foobar" });
+      const header = screen.getByRole("heading", { name: "Foobar" });
       expect(header).toHaveClass("text-bold");
       expect(header).not.toHaveClass("text-normal");
       expect(header).toMatchSnapshot();
@@ -54,10 +54,8 @@ describe("Heading", () => {
       const headingLevels = [2, 3, 4, 5, 6];
 
       headingLevels.forEach((headingLevel) => {
-        const { getByRole } = render(
-          <Heading level={`${headingLevel}`}>{headingLevel}</Heading>
-        );
-        const heading = getByRole("heading", { name: headingLevel });
+        render(<Heading level={`${headingLevel}`}>{headingLevel}</Heading>);
+        const heading = screen.getByRole("heading", { name: headingLevel });
         expect(heading).toBeInTheDocument();
         expect(heading).toMatchSnapshot();
       });
@@ -84,13 +82,13 @@ describe("Heading", () => {
         // levels 2 through 6 (max)
         const level = sizeNumber === 6 ? 6 : sizeNumber + 1;
 
-        const { getByRole } = render(
+        render(
           <Heading level={`${level}`} size={size}>
             {size}
           </Heading>
         );
 
-        const heading = getByRole("heading", { name: size });
+        const heading = screen.getByRole("heading", { name: size });
 
         expect(heading).toHaveClass(...sizeClasses[size]);
         expect(heading).toMatchSnapshot();

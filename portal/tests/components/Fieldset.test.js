@@ -16,8 +16,6 @@ describe("Fieldset", () => {
   it("appends classname to fieldset classnames when className prop is set", () => {
     const { container } = renderComponent({ className: "a-class" });
 
-    expect(container.querySelector(".a-class").className).toEqual(
-      "usa-fieldset a-class"
-    );
+    expect(container.firstChild).toHaveClass("usa-fieldset a-class");
   });
 });

@@ -42,7 +42,9 @@ describe("AmendableConcurrentLeave", () => {
 
   it("employer can click amend, view amendment form, and make edits", () => {
     renderComponent();
-    expect(screen.queryByText(/Amend accrued paid leave/)).toBeNull();
+    expect(
+      screen.queryByText(/Amend accrued paid leave/)
+    ).not.toBeInTheDocument();
     userEvent.click(screen.getByRole("button", { name: "Amend" }));
 
     expect(screen.getByText(/Amend accrued paid leave/)).toBeInTheDocument();
@@ -55,11 +57,11 @@ describe("AmendableConcurrentLeave", () => {
     const [startYearInput, endYearInput] = screen.getAllByRole("textbox", {
       name: "Year",
     });
-    expect(startMonthInput).toHaveAttribute("value", "03");
-    expect(startDayInput).toHaveAttribute("value", "01");
-    expect(endMonthInput).toHaveAttribute("value", "03");
-    expect(endDayInput).toHaveAttribute("value", "06");
-    expect(endYearInput).toHaveAttribute("value", "2020");
+    expect(startMonthInput).toHaveValue("03");
+    expect(startDayInput).toHaveValue("01");
+    expect(endMonthInput).toHaveValue("03");
+    expect(endDayInput).toHaveValue("06");
+    expect(endYearInput).toHaveValue("2020");
     expect(onChange).toHaveBeenCalledTimes(0);
 
     expect(startMonthInput).toHaveAttribute("maxLength", "2");
@@ -73,7 +75,7 @@ describe("AmendableConcurrentLeave", () => {
       { leave_end_date: "2021-03-06" },
       "amendedConcurrentLeave"
     );
-    expect(endYearInput).toHaveAttribute("value", "2021");
+    expect(endYearInput).toHaveValue("2021");
   });
 
   it("formats empty dates as null instead of empty string", () => {
@@ -101,7 +103,7 @@ describe("AmendableConcurrentLeave", () => {
     });
     fireEvent.change(startYearInput, { target: { value: "2021" } });
     fireEvent.change(endYearInput, { target: { value: "2021" } });
-    expect(endYearInput).toHaveAttribute("value", "2021");
+    expect(endYearInput).toHaveValue("2021");
 
     const cancelButton = screen.getByRole("button", {
       name: "Cancel amendment",
@@ -109,7 +111,9 @@ describe("AmendableConcurrentLeave", () => {
     userEvent.click(cancelButton);
     expect(onChange).toHaveBeenLastCalledWith(concurrentLeave);
     expect(screen.getByText("3/1/2020 to 3/6/2020")).toBeInTheDocument();
-    expect(screen.queryByText(/Amend accrued paid leave/)).toBeNull();
+    expect(
+      screen.queryByText(/Amend accrued paid leave/)
+    ).not.toBeInTheDocument();
   });
 
   it("renders expected ui for admin added leaves", () => {
@@ -128,6 +132,8 @@ describe("AmendableConcurrentLeave", () => {
 
   it("does not display ConcurrentLeaveDetailsRow for admin added leaves", () => {
     renderComponent({ isAddedByLeaveAdmin: true });
-    expect(screen.queryByRole("button", { name: "Amend" })).toBeNull();
+    expect(
+      screen.queryByRole("button", { name: "Amend" })
+    ).not.toBeInTheDocument();
   });
 });

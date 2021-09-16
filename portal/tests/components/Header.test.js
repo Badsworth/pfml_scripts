@@ -1,15 +1,13 @@
 import User, { RoleDescription, UserRole } from "../../src/models/User";
-
+import { render, screen, within } from "@testing-library/react";
 import Header from "../../src/components/Header";
 import React from "react";
-import { render } from "@testing-library/react";
-import { within } from "@testing-library/dom";
 
 describe("Header", () => {
   describe("Header navigation links", () => {
     it("includes a Skip Nav link with correct class and href", () => {
-      const header = render(<Header onLogout={jest.fn()} />);
-      const skipNavLink = header.getByRole("link", {
+      render(<Header onLogout={jest.fn()} />);
+      const skipNavLink = screen.getByRole("link", {
         name: /skip to main content/i,
       });
 
@@ -19,8 +17,8 @@ describe("Header", () => {
     });
 
     it("includes a Back to Mass.gov link with correct class and href", () => {
-      const header = render(<Header onLogout={jest.fn()} />);
-      const backToMassLink = header.getByRole("link", {
+      render(<Header onLogout={jest.fn()} />);
+      const backToMassLink = screen.getByRole("link", {
         name: /back to mass\.gov/i,
       });
 
@@ -40,9 +38,9 @@ describe("Header", () => {
         user_id: "mock-user-id",
       });
 
-      const header = render(<Header onLogout={jest.fn()} user={user} />);
-      const betaSection = header.queryByText(/beta/i);
-      const emailSection = header.getByTestId("email_address");
+      render(<Header onLogout={jest.fn()} user={user} />);
+      const betaSection = screen.queryByText(/beta/i);
+      const emailSection = screen.getByTestId("email_address");
       const userEmailAddress = within(emailSection).getByText(
         user.email_address
       );
@@ -54,8 +52,8 @@ describe("Header", () => {
     });
 
     it("doesn't render beta banner when user isn't logged in", () => {
-      const header = render(<Header onLogout={jest.fn()} />);
-      const betaSection = header.queryByText(/beta/i);
+      render(<Header onLogout={jest.fn()} />);
+      const betaSection = screen.queryByText(/beta/i);
       expect(betaSection).not.toBeInTheDocument();
     });
 
@@ -70,8 +68,8 @@ describe("Header", () => {
         ],
       });
 
-      const header = render(<Header onLogout={jest.fn()} user={user} />);
-      const feedbackLink = header.getByText(/your feedback/);
+      render(<Header onLogout={jest.fn()} user={user} />);
+      const feedbackLink = screen.getByText(/your feedback/);
 
       expect(feedbackLink).toHaveAttribute(
         "href",
@@ -87,7 +85,7 @@ describe("Header", () => {
     const maintenanceEndTime = "12:45 AM (EST)";
 
     it("renders maintenance alert bar when maintenance is enabled", () => {
-      const header = render(
+      render(
         <Header
           onLogout={jest.fn()}
           showUpcomingMaintenanceAlertBar
@@ -96,9 +94,9 @@ describe("Header", () => {
         />
       );
 
-      const alert = header.queryByText(maintenanceText);
-      const startTimeText = header.getByText(maintenanceStartTime);
-      const endTimeText = header.getByText(maintenanceEndTime);
+      const alert = screen.queryByText(maintenanceText);
+      const startTimeText = screen.getByText(maintenanceStartTime);
+      const endTimeText = screen.getByText(maintenanceEndTime);
 
       expect(alert).toBeInTheDocument();
       expect(startTimeText).toBeInTheDocument();
@@ -109,7 +107,7 @@ describe("Header", () => {
     });
 
     it("renders maintenance alert bar when only start time is provided", () => {
-      const header = render(
+      render(
         <Header
           onLogout={jest.fn()}
           showUpcomingMaintenanceAlertBar
@@ -117,8 +115,8 @@ describe("Header", () => {
         />
       );
 
-      const alert = header.queryByText(maintenanceText);
-      const startTimeText = header.getByText(maintenanceStartTime);
+      const alert = screen.queryByText(maintenanceText);
+      const startTimeText = screen.getByText(maintenanceStartTime);
 
       expect(alert).toBeInTheDocument();
       expect(startTimeText).toBeInTheDocument();
@@ -127,20 +125,20 @@ describe("Header", () => {
     });
 
     it("doesn't render maintenance alert bar when maintenance is disabled", () => {
-      const header = render(<Header onLogout={jest.fn()} />);
-      const alert = header.queryByText(maintenanceText);
+      render(<Header onLogout={jest.fn()} />);
+      const alert = screen.queryByText(maintenanceText);
       expect(alert).not.toBeInTheDocument();
     });
 
     it("doesn't render maintenance alert bar when only end time is provided", () => {
-      const header = render(
+      render(
         <Header
           onLogout={jest.fn()}
           showUpcomingMaintenanceAlertBar
           maintenanceEndTime={maintenanceEndTime}
         />
       );
-      const alert = header.queryByText(maintenanceText);
+      const alert = screen.queryByText(maintenanceText);
       expect(alert).not.toBeInTheDocument();
     });
   });
