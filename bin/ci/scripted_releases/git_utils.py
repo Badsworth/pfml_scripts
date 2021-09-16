@@ -36,8 +36,8 @@ def pull_main():
     git.pull("origin", "main")
 
 
-def cherrypick(commit_hash):
-    git.cherry_pick(commit_hash)
+def cherrypick(*args):
+    git.cherry_pick(*args)
 
 
 # Merges :param branch_to_merge into the currently checked-out branch.
