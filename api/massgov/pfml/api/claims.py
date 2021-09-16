@@ -449,7 +449,6 @@ def user_has_access_to_claim(claim: Claim) -> bool:
 
 
 def get_claim(fineos_absence_id: str) -> flask.Response:
-    current_user = app.current_user()
     is_employer = can(READ, "EMPLOYER_API")
     claim = get_claim_from_db(fineos_absence_id)
 
@@ -478,36 +477,41 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
 
     # Expectation this endpoint is for the claimant dashboard only as it uses
     # the FINEOS customer API.
-    if not (is_employer and current_user and current_user.employers):
+    if is_employer:
+        return response_util.success_response(
+            message="Successfully retrieved claim", data=detailed_claim.dict(), status_code=200,
+        ).to_api_response()
+
+    employee_tax_id = claim.employee_tax_identifier
+    employer_fein = claim.employer_fein
+
+    if employee_tax_id and employer_fein:
         with app.db_session() as db_session:
-            if (claim.employee and claim.employee.tax_identifier) and (
-                claim.employer and claim.employer.employer_fein
-            ):
-                employee_tax_identifier = claim.employee.tax_identifier.tax_identifier
-                employer_fein = claim.employer.employer_fein
-                try:
-                    detailed_claim.absence_periods = get_absence_periods(
-                        employee_tax_identifier, employer_fein, fineos_absence_id, db_session
-                    )
-                except exception.FINEOSClientError as error:
-                    if _is_withdrawn_claim_error(error):
-                        logger.warning(
-                            "get_claim - Claim has been withdrawn. Unable to display claim status.",
-                            extra={"absence_id": fineos_absence_id},
-                        )
-
-                        return ClaimWithdrawn().to_api_response()
-
-                    raise error
-            else:
-                logger.info(
-                    "get_claim info - No employee or employer tied to this claim. Cannot retrieve absence periods from FINEOS.",
-                    extra={"absence_case_id": fineos_absence_id, "claim_id": claim.claim_id},
+            try:
+                absence_periods = get_absence_periods(
+                    employee_tax_id, employer_fein, fineos_absence_id, db_session
                 )
-                detailed_claim.absence_periods = []
+            except exception.FINEOSClientError as error:
+                if _is_withdrawn_claim_error(error):
+                    logger.warning(
+                        "get_claim - Claim has been withdrawn. Unable to display claim status.",
+                        extra={"absence_id": fineos_absence_id},
+                    )
 
-            if claim.application:  # type: ignore
-                detailed_claim.application_id = claim.application.application_id  # type: ignore
+                    return ClaimWithdrawn().to_api_response()
+
+                raise error
+    else:
+        logger.info(
+            "get_claim info - No employee or employer tied to this claim. Cannot retrieve absence periods from FINEOS.",
+            extra={"absence_case_id": fineos_absence_id, "claim_id": claim.claim_id},
+        )
+        absence_periods = []
+
+    detailed_claim.absence_periods = absence_periods
+
+    if claim.application:  # type: ignore
+        detailed_claim.application_id = claim.application.application_id  # type: ignore
 
     return response_util.success_response(
         message="Successfully retrieved claim", data=detailed_claim.dict(), status_code=200,

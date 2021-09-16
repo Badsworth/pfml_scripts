@@ -703,6 +703,23 @@ class Claim(Base, TimestampMixin):
             .label("follow_up_date")
         )
 
+    @typed_hybrid_property
+    def employee_tax_identifier(self) -> Optional[str]:
+        if not self.employee:
+            return None
+
+        if self.employee.tax_identifier is None:
+            return None
+
+        return self.employee.tax_identifier.tax_identifier
+
+    @typed_hybrid_property
+    def employer_fein(self) -> Optional[str]:
+        if not self.employer:
+            return None
+
+        return self.employer.employer_fein
+
 
 class Payment(Base, TimestampMixin):
     __tablename__ = "payment"
