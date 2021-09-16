@@ -68,7 +68,7 @@ describe("PageWrapper", () => {
   it("sets description meta tag", () => {
     const { container } = render(<PageWrapperWithAppLogic />);
     // meta element
-    expect(container.firstChild).toMatchSnapshot();
+    expect(container.querySelector("meta")).toMatchSnapshot();
   });
 
   it("renders the Header", () => {
@@ -78,14 +78,14 @@ describe("PageWrapper", () => {
   });
 
   it("renders Spinner when isLoading is true", () => {
-    render(<PageWrapperWithAppLogic isLoading={true} />);
-    expect(screen.getByRole("main")).toMatchSnapshot();
+    const { container } = render(<PageWrapperWithAppLogic isLoading={true} />);
+    expect(container.querySelector("#page")).toMatchSnapshot();
   });
 
   it("renders the children as the page's body", () => {
-    render(<PageWrapperWithAppLogic />);
+    const { container } = render(<PageWrapperWithAppLogic />);
 
-    expect(screen.getByRole("main")).toMatchSnapshot();
+    expect(container.querySelector("#page")).toMatchSnapshot();
   });
 
   it("renders MaintenanceTakeover when maintenancePageRoutes includes the current page's route and no start/end time is set", () => {

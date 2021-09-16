@@ -1,52 +1,26 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`PageWrapper renders Spinner when isLoading is true 1`] = `
-<main
-  class="l-main grid-container margin-top-5 margin-bottom-8"
-  id="main"
+<section
+  class="margin-top-8 text-center"
+  id="page"
 >
-  <div
-    class="grid-row"
-  >
-    <div
-      class="grid-col-fill"
-    >
-      <section
-        class="margin-top-8 text-center"
-        id="page"
-      >
-        <span
-          aria-valuetext="Loading"
-          class="c-spinner"
-          role="progressbar"
-        />
-      </section>
-    </div>
-  </div>
-</main>
+  <span
+    aria-valuetext="Loading"
+    class="c-spinner"
+    role="progressbar"
+  />
+</section>
 `;
 
 exports[`PageWrapper renders the children as the page's body 1`] = `
-<main
-  class="l-main grid-container margin-top-5 margin-bottom-8"
-  id="main"
+<section
+  id="page"
 >
-  <div
-    class="grid-row"
-  >
-    <div
-      class="grid-col-fill"
-    >
-      <section
-        id="page"
-      >
-        <div>
-          Page
-        </div>
-      </section>
-    </div>
+  <div>
+    Page
   </div>
-</main>
+</section>
 `;
 
 exports[`PageWrapper sets description meta tag 1`] = `
