@@ -10,9 +10,11 @@ def start(args):
     logger.info(f"Running 'start-release'...")
     logger.debug(f"Args: {repr(args)}")
 
-    # getting the proper tags/branches for the release
+    # getting the proper tags/branches for the release.
+    # NB: most_recent_tag() will return incorrect results on main (compared to the correct result on a release branch)
+    # ...but it will return a "correct enough" tag for the purposes of just bumping its minor version number.
     git_utils.fetch_remotes()
-    recent_tag = git_utils.most_recent_tag(args.app, args.release_version)
+    recent_tag = git_utils.most_recent_tag(args.app, "main")
 
     v = git_utils.to_semver(recent_tag)  # convert tag to semver object
     version_name = git_utils.from_semver(v.bump_minor(), args.app)
@@ -165,8 +167,10 @@ def major(args):
         raise NotImplementedError("This task is for API releases only")
     else:
         # getting the proper tags/branches for the release
+        # NB: most_recent_tag() returns incorrect results on main (compared to the correct result on a release branch)
+        # ...but it will return a "correct enough" tag for the purposes of just bumping its minor version number.
         git_utils.fetch_remotes()
-        recent_tag = git_utils.most_recent_tag(args.app, args.release_version)
+        recent_tag = git_utils.most_recent_tag(args.app, "main")
 
         v = git_utils.to_semver(recent_tag)  # convert tag to semver object
         version_name = git_utils.from_semver(v.bump_major(), args.app)
