@@ -89,7 +89,7 @@ const PageWrapper = (props) => {
     );
   } else if (showMaintenancePageBody && !isFeatureEnabled("noMaintenance")) {
     pageBody = (
-      <section id="page" data-test="maintenance page">
+      <section id="page" data-testid="maintenance page">
         <MaintenanceTakeover
           maintenanceStartTime={maintenanceStartTime}
           maintenanceEndTime={maintenanceEndTime}
@@ -107,7 +107,7 @@ const PageWrapper = (props) => {
         <meta name="description" content={t("pages.app.seoDescription")} />
       </Helmet>
       <div className="l-container">
-        <div>
+        <div data-testid="Header">
           {/* Wrap header children in a div because its parent is a flex container */}
           <Header
             user={appLogic.users.user}
