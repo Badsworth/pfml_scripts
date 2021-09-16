@@ -9,8 +9,16 @@ resource "newrelic_synthetics_monitor" "fineos_uptime" {
 
 resource "newrelic_synthetics_monitor_script" "fineos_uptime" {
   monitor_id = newrelic_synthetics_monitor.fineos_uptime.id
-  text = templatefile("${path.module}/uptime.js", {
-    TF_ENVIRONMENT_NAME = var.environment
-    TF_FINEOS_DOMAIN    = var.fineos_domain
-  })
+  text       = <<EOD
+/**
+ * This synthetic check lives in Terraform.
+ *
+ * Do not edit this script in New Relic.
+ */
+const config = {
+    fineos_url: "${var.fineos_url}",
+    environment: "${var.environment}"
+}
+${file("${path.module}/uptime.js")}
+EOD
 }

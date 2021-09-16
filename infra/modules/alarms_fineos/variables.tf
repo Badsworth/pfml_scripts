@@ -1,6 +1,6 @@
 variable "environment" {
   type = string
 }
-variable "fineos_domain" {
+variable "fineos_url" {
   type = string
 }

@@ -23,8 +23,8 @@ locals {
 }
 
 module "fineos" {
-  for_each      = toset(keys(local.fineos_urls))
-  source        = "../modules/alarms_fineos"
-  environment   = each.key
-  fineos_domain = local.fineos_urls[each.key]
+  for_each    = toset(keys(local.fineos_urls))
+  source      = "../modules/alarms_fineos"
+  environment = each.key
+  fineos_url  = local.fineos_urls[each.key]
 }
