@@ -17,9 +17,7 @@ FORMAL_RELEASE_TAG_REGEX = r"(api|portal|foobar)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0
 
 
 def fetch_remotes():
-    # fetch remotes
-    origin = repo.remotes.origin
-    return origin.fetch()
+    git.fetch("--all", "--tags")
 
 
 def checkout_main():
