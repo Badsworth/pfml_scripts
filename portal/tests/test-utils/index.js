@@ -6,8 +6,8 @@ import {
   generateNotice,
 } from "./mock-model-builder";
 import { createInputElement, makeFile } from "./makeFile";
+import mockAuth from "./mockAuth";
 import mockFetch from "./mockFetch";
-import mockLoggedInAuthSession from "./mockLoggedInAuthSession";
 import { renderPage } from "../../tests/test-utils/renderPage";
 import simulateEvents from "./simulateEvents";
 
@@ -19,8 +19,8 @@ export {
   makeFile,
   MockBenefitsApplicationBuilder,
   MockEmployerClaimBuilder,
+  mockAuth,
   mockFetch,
-  mockLoggedInAuthSession,
   renderPage,
   simulateEvents,
 };
