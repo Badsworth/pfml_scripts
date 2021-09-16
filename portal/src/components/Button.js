@@ -4,7 +4,7 @@ import Spinner from "./Spinner";
 import classnames from "classnames";
 
 /**
- * Renders a `button` or `a` element styled as a Button component
+ * Renders a `button` element styled as a Button component
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/button/)
  */
 function Button({ type = "button", ...props }) {

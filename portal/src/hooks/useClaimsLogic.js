@@ -3,10 +3,10 @@ import {
   ClaimWithdrawnError,
   ValidationError,
 } from "../errors";
-import { get, isEqual } from "lodash";
 import ClaimCollection from "../models/ClaimCollection";
 import ClaimsApi from "../api/ClaimsApi";
 import PaginationMeta from "../models/PaginationMeta";
+import { isEqual } from "lodash";
 import useCollectionState from "./useCollectionState";
 import { useState } from "react";
 
@@ -86,24 +86,29 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
   };
 
   /**
-   * Load details for a single claim
+   * Load details for a single claim. Note that if there is already a claim detail being loaded then
+   * this function will immediately return undefined.
    * @param {string} absenceId - FINEOS absence ID for the claim to load
+   * @returns {ClaimDetail|undefined} claim detail if we were able to load it. Returns undefined if
+   * we're already loading a claim detail or if the request to load the claim detail fails.
    */
   const loadClaimDetail = async (absenceId) => {
     if (isLoadingClaimDetail) return;
 
     // Have we already loaded this claim?
-    if (get(claimDetail, "fineos_absence_id") === absenceId) {
-      return;
+    if (claimDetail?.fineos_absence_id === absenceId) {
+      return claimDetail;
     }
 
     setIsLoadingClaimDetail(true);
     appErrorsLogic.clearErrors();
 
+    let loadedClaimDetail;
     try {
       const data = await claimsApi.getClaimDetail(absenceId);
+      loadedClaimDetail = data.claimDetail;
 
-      setClaimDetail(data.claimDetail);
+      setClaimDetail(loadedClaimDetail);
     } catch (error) {
       if (
         error instanceof ValidationError &&
@@ -119,6 +124,8 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
     } finally {
       setIsLoadingClaimDetail(false);
     }
+
+    return loadedClaimDetail;
   };
 
   return {

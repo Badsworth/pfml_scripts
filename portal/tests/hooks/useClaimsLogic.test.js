@@ -245,11 +245,15 @@ describe("useClaimsLogic", () => {
 
       const { appLogic } = setup();
 
+      let claimDetail;
       await act(async () => {
-        await appLogic.current.claims.loadClaimDetail("absence_case_id");
+        claimDetail = await appLogic.current.claims.loadClaimDetail(
+          "absence_case_id"
+        );
       });
 
       expect(appLogic.current.claims.claimDetail).toBeInstanceOf(ClaimDetail);
+      expect(claimDetail).toBe(appLogic.current.claims.claimDetail);
     });
 
     it("it sets isLoadingClaimDetail to true when a claim is being loaded", async () => {
@@ -284,18 +288,27 @@ describe("useClaimsLogic", () => {
             data: mockResponseData,
           },
         });
-        await appLogic.current.claims.loadClaimDetail("absence_id_1");
+        let claimDetail = await appLogic.current.claims.loadClaimDetail(
+          "absence_id_1"
+        );
         expect(global.fetch).toHaveBeenCalled();
+        expect(claimDetail).toBeInstanceOf(ClaimDetail);
 
         // but this shouldn't, since we've already loaded this claim
         mockFetch();
-        await appLogic.current.claims.loadClaimDetail("absence_id_1");
+        claimDetail = await appLogic.current.claims.loadClaimDetail(
+          "absence_id_1"
+        );
         expect(global.fetch).not.toHaveBeenCalled();
+        expect(claimDetail).toBeInstanceOf(ClaimDetail);
 
         // this should make an API request since the absence case ID changed
         mockFetch();
-        await appLogic.current.claims.loadClaimDetail("absence_id_2");
+        claimDetail = await appLogic.current.claims.loadClaimDetail(
+          "absence_id_2"
+        );
         expect(global.fetch).toHaveBeenCalled();
+        expect(claimDetail).toBeInstanceOf(ClaimDetail);
       });
     });
 
@@ -334,10 +347,14 @@ describe("useClaimsLogic", () => {
 
       const { appLogic } = setup();
 
+      let claimDetail;
       await act(async () => {
-        await appLogic.current.claims.loadClaimDetail("absence_id_1");
+        claimDetail = await appLogic.current.claims.loadClaimDetail(
+          "absence_id_1"
+        );
       });
 
+      expect(claimDetail).toBeUndefined();
       expect(appLogic.current.appErrors.items).toHaveLength(1);
       expect(appLogic.current.appErrors.items[0].name).toEqual(
         "ClaimWithdrawnError"
@@ -353,10 +370,14 @@ describe("useClaimsLogic", () => {
 
       const { appLogic } = setup();
 
+      let claimDetail;
       await act(async () => {
-        await appLogic.current.claims.loadClaimDetail("absence_id_1");
+        claimDetail = await appLogic.current.claims.loadClaimDetail(
+          "absence_id_1"
+        );
       });
 
+      expect(claimDetail).toBeUndefined();
       expect(appLogic.current.appErrors.items).toHaveLength(1);
       expect(appLogic.current.appErrors.items[0].name).toEqual(
         "ClaimDetailLoadError"

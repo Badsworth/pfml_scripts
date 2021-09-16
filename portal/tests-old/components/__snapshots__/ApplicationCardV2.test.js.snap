@@ -9,7 +9,6 @@ exports[`ApplicationCardV2 components match their snapshots completed status mat
         "itemsById": Object {},
       },
       "claims": Object {
-        "claimDetail": Object {},
         "isLoadingClaimDetail": false,
         "loadClaimDetail": [MockFunction],
       },
@@ -143,7 +142,6 @@ exports[`ApplicationCardV2 components match their snapshots completed status mat
               "itemsById": Object {},
             },
             "claims": Object {
-              "claimDetail": Object {},
               "isLoadingClaimDetail": false,
               "loadClaimDetail": [MockFunction],
             },
@@ -308,13 +306,12 @@ exports[`ApplicationCardV2 components match their snapshots completed status mat
             </p>
           </div>
         </TitleAndDetailSectionItem>
-        <LoadButton
-          isLoaded={true}
-          onClick={[Function]}
-          onLoad={[Function]}
+        <div
+          className="border-top border-base-lighter padding-y-2 margin-2 margin-bottom-0"
         >
-          <div
-            className="border-top border-base-lighter padding-y-2 margin-2 margin-bottom-0"
+          <ThrottledButton
+            className="width-full display-flex flex-align-center flex-justify-center flex-column margin-right-0"
+            onClick={[Function]}
           >
             <Button
               className="width-full display-flex flex-align-center flex-justify-center flex-column margin-right-0"
@@ -348,8 +345,8 @@ exports[`ApplicationCardV2 components match their snapshots completed status mat
                 </Icon>
               </button>
             </Button>
-          </div>
-        </LoadButton>
+          </ThrottledButton>
+        </div>
         <ManageDocumentSection
           claim={
             BenefitsApplication {
@@ -518,7 +515,6 @@ exports[`ApplicationCardV2 components match their snapshots in progress status m
         "itemsById": Object {},
       },
       "claims": Object {
-        "claimDetail": Object {},
         "isLoadingClaimDetail": false,
         "loadClaimDetail": [MockFunction],
       },
@@ -648,7 +644,6 @@ exports[`ApplicationCardV2 components match their snapshots in progress status m
               "itemsById": Object {},
             },
             "claims": Object {
-              "claimDetail": Object {},
               "isLoadingClaimDetail": false,
               "loadClaimDetail": [MockFunction],
             },
@@ -800,7 +795,6 @@ exports[`ApplicationCardV2 components match their snapshots in progress status m
                 "itemsById": Object {},
               },
               "claims": Object {
-                "claimDetail": Object {},
                 "isLoadingClaimDetail": false,
                 "loadClaimDetail": [MockFunction],
               },
@@ -950,7 +944,6 @@ exports[`ApplicationCardV2 components match their snapshots in progress status w
         "itemsById": Object {},
       },
       "claims": Object {
-        "claimDetail": Object {},
         "isLoadingClaimDetail": false,
         "loadClaimDetail": [MockFunction],
       },
@@ -1104,7 +1097,6 @@ exports[`ApplicationCardV2 components match their snapshots in progress status w
               "itemsById": Object {},
             },
             "claims": Object {
-              "claimDetail": Object {},
               "isLoadingClaimDetail": false,
               "loadClaimDetail": [MockFunction],
             },
@@ -1280,7 +1272,6 @@ exports[`ApplicationCardV2 components match their snapshots in progress status w
                 "itemsById": Object {},
               },
               "claims": Object {
-                "claimDetail": Object {},
                 "isLoadingClaimDetail": false,
                 "loadClaimDetail": [MockFunction],
               },
@@ -1442,7 +1433,6 @@ exports[`ApplicationCardV2 components match their snapshots in progress status w
                     "itemsById": Object {},
                   },
                   "claims": Object {
-                    "claimDetail": Object {},
                     "isLoadingClaimDetail": false,
                     "loadClaimDetail": [MockFunction],
                   },

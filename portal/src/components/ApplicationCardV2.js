@@ -1,11 +1,9 @@
 // @ts-nocheck
-import React, { useEffect, useState } from "react";
 import routeWithParams, {
   createRouteWithQuery,
 } from "../utils/routeWithParams";
 
 import BenefitsApplication from "../models/BenefitsApplication";
-import Button from "../components/Button";
 import ButtonLink from "../components/ButtonLink";
 import Document from "../models/Document";
 import Heading from "../components/Heading";
@@ -13,6 +11,8 @@ import Icon from "../components/Icon";
 import LeaveReason from "../models/LeaveReason";
 import LegalNoticeList from "../components/LegalNoticeList";
 import PropTypes from "prop-types";
+import React from "react";
+import ThrottledButton from "../components/ThrottledButton";
 import findKeyByValue from "../utils/findKeyByValue";
 import getLegalNotices from "../utils/getLegalNotices";
 import { useTranslation } from "../locales/i18n";
@@ -44,45 +44,6 @@ const TitleAndDetailSectionItem = ({ details, title }) => (
 TitleAndDetailSectionItem.propTypes = {
   details: PropTypes.string.isRequired,
   title: PropTypes.string.isRequired,
-};
-
-/**
- * Styled load data button. Performs an async load operation when clicked. Calls an onLoad
- * handler when loading has completed.
- */
-const LoadButton = ({ children, onClick, onLoad, isLoaded }) => {
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (isLoading && isLoaded) {
-      setIsLoading(false);
-      onLoad();
-    }
-  }, [isLoading, isLoaded, onLoad]);
-
-  const onClickHandler = () => {
-    setIsLoading(true);
-    onClick();
-  };
-
-  return (
-    <div className="border-top border-base-lighter padding-y-2 margin-2 margin-bottom-0">
-      <Button
-        className="width-full display-flex flex-align-center flex-justify-center flex-column margin-right-0"
-        onClick={onClickHandler}
-        loading={isLoading}
-      >
-        {children}
-      </Button>
-    </div>
-  );
-};
-
-LoadButton.propTypes = {
-  onClick: PropTypes.func.isRequired,
-  onLoad: PropTypes.func.isRequired,
-  isLoaded: PropTypes.bool.isRequired,
-  children: PropTypes.node.isRequired,
 };
 
 /**
@@ -237,18 +198,15 @@ const CompletedStatusCard = ({ appLogic, claim }) => {
     />
   );
 
-  const absenceId = claim.fineos_absence_id;
-  const href = routeWithParams("applications.status", {
-    absence_case_id: claim.fineos_absence_id,
-  });
+  const onClickHandler = async () => {
+    const absenceId = claim.fineos_absence_id;
+    const claimDetail = await appLogic.claims.loadClaimDetail(absenceId);
 
-  const onClickHandler = () => {
-    appLogic.claims.loadClaimDetail(absenceId);
-  };
-
-  const onLoadHandler = () => {
-    // Make sure our claim successfully loaded before redirecting
-    if (appLogic.claims.claimDetail?.fineos_absence_id === absenceId) {
+    if (claimDetail?.fineos_absence_id === absenceId) {
+      const href = routeWithParams("applications.status", {
+        absence_case_id: claim.fineos_absence_id,
+      });
+      // Redirect to claim status page if we were able to load the claim
       appLogic.portalFlow.goTo(href);
     }
   };
@@ -265,14 +223,15 @@ const CompletedStatusCard = ({ appLogic, claim }) => {
         details={claim.employer_fein}
       />
 
-      <LoadButton
-        onClick={onClickHandler}
-        onLoad={onLoadHandler}
-        isLoaded={!appLogic.claims.isLoadingClaimDetail}
-      >
-        {t("components.applicationCardV2.viewStatusUpdatesAndDetails")}
-        {iconComponent}
-      </LoadButton>
+      <div className="border-top border-base-lighter padding-y-2 margin-2 margin-bottom-0">
+        <ThrottledButton
+          className="width-full display-flex flex-align-center flex-justify-center flex-column margin-right-0"
+          onClick={onClickHandler}
+        >
+          {t("components.applicationCardV2.viewStatusUpdatesAndDetails")}
+          {iconComponent}
+        </ThrottledButton>
+      </div>
       <ManageDocumentSection claim={claim} />
     </React.Fragment>
   );
@@ -284,7 +243,6 @@ CompletedStatusCard.propTypes = {
     claims: PropTypes.shape({
       isLoadingClaimDetail: PropTypes.bool,
       loadClaimDetail: PropTypes.func.isRequired,
-      claimDetail: PropTypes.object,
     }).isRequired,
     portalFlow: PropTypes.shape({
       goTo: PropTypes.func.isRequired,
@@ -324,7 +282,6 @@ ApplicationCardV2.propTypes = {
     claims: PropTypes.shape({
       isLoadingClaimDetail: PropTypes.bool,
       loadClaimDetail: PropTypes.func.isRequired,
-      claimDetail: PropTypes.object,
     }).isRequired,
     documents: PropTypes.shape({
       download: PropTypes.func.isRequired,

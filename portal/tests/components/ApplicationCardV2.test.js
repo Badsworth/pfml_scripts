@@ -97,14 +97,12 @@ describe("ApplicationCardV2", () => {
       <ApplicationCardV2WithAppLogic
         addAppLogicMocks={(_appLogic) => {
           appLogic = _appLogic;
-          appLogic.claims.claimDetail = new ClaimDetail({
-            fineos_absence_id: claim.fineos_absence_id,
-          });
-          appLogic.claims.loadClaimDetail = jest.fn(
-            () =>
-              new Promise((resolve, reject) => {
-                resolve();
+          appLogic.claims.loadClaimDetail = jest.fn(() =>
+            Promise.resolve(
+              new ClaimDetail({
+                fineos_absence_id: claim.fineos_absence_id,
               })
+            )
           );
           appLogic.portalFlow.goTo = jest.fn();
         }}
@@ -128,9 +126,6 @@ describe("ApplicationCardV2", () => {
       <ApplicationCardV2WithAppLogic
         addAppLogicMocks={(_appLogic) => {
           appLogic = _appLogic;
-          appLogic.claims.claimDetail = new ClaimDetail({
-            fineos_absence_id: "some-other-absence-id",
-          });
           appLogic.claims.loadClaimDetail = jest.fn(
             () =>
               new Promise((resolve, reject) => {
