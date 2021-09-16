@@ -55,7 +55,7 @@ def create_branch(branch_name):
 
 
 def current_branch():
-    return git.branch("--show-current")
+    return git.rev_parse("--abbrev-ref", "HEAD")
 
 
 def most_recent_tag(app, release_branch):
@@ -63,12 +63,6 @@ def most_recent_tag(app, release_branch):
     sha = git.rev_parse(t)
     logger.info(f"Latest {app} tag on '{release_branch}' is '{t}' with commit SHA '{sha[0:9]}'")
     return t
-
-
-def branch_from_release(hotfix_branch, release_branch):
-    fetch_remotes()
-    git.checkout("-b", hotfix_branch, release_branch)
-    logger.info(f"Branch '{hotfix_branch}' created from {release_branch}")
 
 
 def is_finalized(release_branch) -> bool:
