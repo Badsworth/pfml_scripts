@@ -29,6 +29,7 @@ function AccordionItem(props) {
       </h2>
       <div
         id={id}
+        data-testid={id}
         className="usa-accordion__content usa-prose"
         hidden={!isExpanded}
       >

@@ -1,11 +1,11 @@
 import Accordion from "../../src/components/Accordion";
 import AccordionItem from "../../src/components/AccordionItem";
 import React from "react";
-import { shallow } from "enzyme";
+import { render } from "@testing-library/react";
 
 describe("Accordion", () => {
   it("renders an AccordionItem for each item", () => {
-    const wrapper = shallow(
+    const { container } = render(
       <Accordion>
         <AccordionItem heading="Heading 1">Body 1</AccordionItem>
         <AccordionItem heading="Heading 2">
@@ -14,6 +14,6 @@ describe("Accordion", () => {
       </Accordion>
     );
 
-    expect(wrapper).toMatchSnapshot();
+    expect(container.firstChild).toMatchSnapshot();
   });
 });

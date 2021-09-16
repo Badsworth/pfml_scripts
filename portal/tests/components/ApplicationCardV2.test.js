@@ -1,5 +1,5 @@
+import Document, { DocumentType } from "../../src/models/Document";
 import { act, render, screen } from "@testing-library/react";
-
 import { ApplicationCardV2 } from "../../src/components/ApplicationCardV2";
 import ClaimDetail from "../../src/models/ClaimDetail";
 import { MockBenefitsApplicationBuilder } from "../test-utils";
@@ -143,5 +143,61 @@ describe("ApplicationCardV2", () => {
       await userEvent.click(button);
     });
     expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
+  });
+
+  it("in progress claims don't show EIN in the title section", () => {
+    const claim = new MockBenefitsApplicationBuilder().submitted().create();
+    render(<ApplicationCardV2WithAppLogic claim={claim} number={2} />);
+    expect(
+      screen.getByRole("heading", { name: "Application 2" })
+    ).toBeInTheDocument();
+  });
+
+  it("can display legal notices", () => {
+    const claim = new MockBenefitsApplicationBuilder().completed().create();
+    render(
+      <ApplicationCardV2WithAppLogic
+        claim={claim}
+        number={2}
+        documents={[
+          new Document({
+            application_id: "mock-claim-id",
+            document_type: DocumentType.appealAcknowledgment,
+          }),
+          new Document({
+            application_id: "mock-claim-id",
+            document_type: DocumentType.approvalNotice,
+            fineos_document_id: "mock-document-3",
+          }),
+        ]}
+      />
+    );
+    expect(
+      screen.getByRole("link", { name: /View your notices/ })
+    ).toBeInTheDocument();
+  });
+
+  it("doesn't display notices if application is submitted", () => {
+    const claim = new MockBenefitsApplicationBuilder().submitted().create();
+    render(
+      <ApplicationCardV2WithAppLogic
+        claim={claim}
+        number={2}
+        documents={[
+          new Document({
+            application_id: "mock-claim-id",
+            document_type: DocumentType.appealAcknowledgment,
+          }),
+          new Document({
+            application_id: "mock-claim-id",
+            document_type: DocumentType.approvalNotice,
+            fineos_document_id: "mock-document-3",
+          }),
+        ]}
+      />
+    );
+    expect(
+      screen.queryByRole("link", { name: /View your notices/ })
+    ).not.toBeInTheDocument();
   });
 });
