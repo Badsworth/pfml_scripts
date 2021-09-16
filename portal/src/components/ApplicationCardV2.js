@@ -22,7 +22,11 @@ import withClaimDocuments from "../hoc/withClaimDocuments";
  * Main header for the top of status cards
  */
 const HeaderSection = ({ title }) => (
-  <Heading className="margin-bottom-1 padding-2 padding-top-3" level="2">
+  <Heading
+    className="margin-bottom-1 padding-2 padding-top-3"
+    level="3"
+    size="2"
+  >
     {title}
   </Heading>
 );

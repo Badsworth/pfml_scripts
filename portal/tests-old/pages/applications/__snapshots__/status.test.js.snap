@@ -1089,11 +1089,6 @@ exports[`status page includes a button to upload additional documents 1`] = `
       <Heading
         level="2"
       >
-        Upload Documents
-      </Heading>
-      <Heading
-        level="3"
-      >
         Respond to requests for information
       </Heading>
       <p>
@@ -1199,7 +1194,7 @@ exports[`status page info alert displays if claimant has bonding but not pregnan
 
 exports[`status page info alert displays if claimant has bonding but not pregnancy claims 2`] = `
 Array [
-  "You can take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at ",
+  "You may be able to take 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at ",
   <a
     href="tel:(833) 344-7365"
     key="1"
@@ -1264,7 +1259,7 @@ exports[`status page info alert displays if claimant has pregnancy but not bondi
 
 exports[`status page info alert displays if claimant has pregnancy but not bonding claims 2`] = `
 Array [
-  "You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. ",
+  "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. ",
   <a
     href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
     key="1"
@@ -1968,11 +1963,6 @@ exports[`status page renders the page 1`] = `
     >
       <Heading
         level="2"
-      >
-        Upload Documents
-      </Heading>
-      <Heading
-        level="3"
       >
         Respond to requests for information
       </Heading>

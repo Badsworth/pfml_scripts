@@ -264,9 +264,6 @@ export const Status = ({ appLogic, query }) => {
         {/* Upload documents section */}
         <div className={containerClassName} id="upload_documents">
           <Heading level="2">
-            {t("pages.claimsStatus.uploadDocumentsHeading")}
-          </Heading>
-          <Heading level="3">
             {t("pages.claimsStatus.infoRequestsHeading")}
           </Heading>
           <p>{t("pages.claimsStatus.infoRequestsBody")}</p>
