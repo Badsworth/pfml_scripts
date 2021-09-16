@@ -446,11 +446,13 @@ def generate_payment_extract_files(
             payment_end_period = cast(date, prior_payment.period_end_date)
             c_value = scenario_data.additional_payment_c_value
             i_value = scenario_data.additional_payment_i_value
+            absence_case_id = scenario_data.additional_payment_absence_case_id
         else:
             payment_start_period = payment_date
             payment_end_period = payment_date + timedelta(days=15)
             c_value = scenario_data.payment_c_value
             i_value = scenario_data.payment_i_value
+            absence_case_id = scenario_data.absence_case_id
 
         is_eft = scenario_descriptor.payment_method == PaymentMethod.ACH
         routing_nbr = generate_routing_nbr_from_ssn(ssn) if is_eft else ""
@@ -515,7 +517,7 @@ def generate_payment_extract_files(
             include_payment_details=True,
             include_requested_absence=True,
             tin=ssn,
-            absence_case_number=scenario_data.absence_case_id,
+            absence_case_number=absence_case_id,
             payment_address_1=mock_address["line_1"],
             payment_address_2=mock_address["line_2"],
             city=mock_address["city"],
@@ -574,7 +576,10 @@ def create_fineos_claimant_extract_files(
 
 
 def generate_claimant_data_files(
-    scenario_dataset: List[ScenarioData], folder_path: str, date_of_extract: datetime
+    scenario_dataset: List[ScenarioData],
+    folder_path: str,
+    date_of_extract: datetime,
+    round: int = 1,
 ) -> None:
     # create the scenario based fineos data for the extract
     fineos_claimant_dataset: List[FineosClaimantData] = []
@@ -590,7 +595,11 @@ def generate_claimant_data_files(
         ssn = employee.tax_identifier.tax_identifier.replace("-", "")
         if scenario_descriptor.claim_extract_employee_identifier_unknown:
             ssn = "UNKNOWNSSN"
-        absence_case_number = scenario_data.absence_case_id
+
+        if round > 1 and scenario_descriptor.has_additional_payment_in_period:
+            absence_case_number = scenario_data.additional_payment_absence_case_id
+        else:
+            absence_case_number = scenario_data.absence_case_id
 
         date_of_birth = "1991-01-01 12:00:00"
         payment_method = scenario_descriptor.payment_method.payment_method_description
@@ -633,7 +642,7 @@ def generate_claimant_data_files(
         leave_type = scenario_descriptor.claim_type
 
         # Auto generated: c_value, i_value, leave_request_id
-        fineos_payments_data = FineosClaimantData(
+        fineos_claimant_data = FineosClaimantData(
             generate_defaults=True,
             date_of_birth=date_of_birth,
             payment_method=payment_method,
@@ -658,6 +667,6 @@ def generate_claimant_data_files(
             employer_customer_num=fineos_employer_id,
         )
 
-        fineos_claimant_dataset.append(fineos_payments_data)
+        fineos_claimant_dataset.append(fineos_claimant_data)
     # create the files
     create_fineos_claimant_extract_files(fineos_claimant_dataset, folder_path, date_of_extract)

@@ -914,6 +914,13 @@ def create_payment_log(
             employer_json = employer.for_json()
             snapshot["employer"] = filter_dict(employer_json, employer_audit_log_keys)
 
+    payment_details = payment.payment_details
+    if payment_details:
+        payment_details_info = []
+        for payment_detail in payment_details:
+            payment_details_info.append(payment_detail.for_json())
+        snapshot["payment_details"] = payment_details_info
+
     check_details = payment.check
     if check_details:
         snapshot["payment_check"] = check_details.for_json()

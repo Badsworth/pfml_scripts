@@ -446,6 +446,25 @@ class PaymentFactory(BaseFactory):
     fineos_employee_last_name = factory.Faker("last_name")
 
 
+class PaymentDetailsFactory(BaseFactory):
+    class Meta:
+        model = employee_models.PaymentDetails
+
+    payment_details_id = Generators.UuidObj
+
+    payment = None
+    payment_id = factory.LazyAttribute(lambda a: a.payment.payment_id if a.payment else None)
+
+    period_start_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 1, 1), date_end=date(2021, 1, 15)
+    )
+    period_end_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 1, 16), date_end=date(2021, 1, 28)
+    )
+
+    amount = Generators.Money
+
+
 class PaymentReferenceFileFactory(BaseFactory):
     class Meta:
         model = employee_models.PaymentReferenceFile

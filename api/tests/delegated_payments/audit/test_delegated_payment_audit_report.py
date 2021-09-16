@@ -21,6 +21,7 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_report import
     PaymentAuditReportStep,
 )
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
+    AUDIT_REPORT_NOTES_OVERRIDE,
     PaymentAuditData,
     bool_to_str,
     get_leave_type,
@@ -96,7 +97,7 @@ def test_get_payment_audit_report_details(test_db_session, initialize_factories_
     assert not audit_report_details.skipped_by_program_integrity
     assert (
         audit_report_details.rejected_notes
-        == f"{PaymentAuditReportType.MAX_WEEKLY_BENEFITS.payment_audit_report_type_description} (Rejected), {PaymentAuditReportType.DUA_DIA_REDUCTION.payment_audit_report_type_description} (Skipped)"
+        == f"{AUDIT_REPORT_NOTES_OVERRIDE[PaymentAuditReportType.MAX_WEEKLY_BENEFITS.payment_audit_report_type_id]} (Rejected), {PaymentAuditReportType.DUA_DIA_REDUCTION.payment_audit_report_type_description} (Skipped)"
     )
 
     # test that theaudit report time was set

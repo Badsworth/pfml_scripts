@@ -1992,16 +1992,9 @@ def test_e2e_pub_payments_delayed_scenarios(
                 ScenarioName.INVALID_ADDRESS_FIXED,
                 ScenarioName.HAPPY_PATH_TWO_PAYMENTS_UNDER_WEEKLY_CAP,
                 ScenarioName.HAPPY_PATH_TWO_ADHOC_PAYMENTS_OVER_CAP,
+                ScenarioName.SECOND_PAYMENT_FOR_PERIOD_OVER_CAP,
             ],
             end_state=State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
-            db_session=local_test_db_session,
-            check_additional_payment=True,
-        )
-
-        assert_payment_state_for_scenarios(
-            test_dataset=test_dataset,
-            scenario_names=[ScenarioName.SECOND_PAYMENT_FOR_PERIOD_OVER_CAP],
-            end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
             db_session=local_test_db_session,
             check_additional_payment=True,
         )
@@ -2045,6 +2038,16 @@ def test_e2e_pub_payments_delayed_scenarios(
                 ScenarioName.HAPPY_PATH_TWO_ADHOC_PAYMENTS_OVER_CAP,
             ],
             end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
+            db_session=local_test_db_session,
+            check_additional_payment=True,
+        )
+
+        # We set these to be rejected in the file we sent
+        # and the file comes back unmodified, so they will be rejected.
+        assert_payment_state_for_scenarios(
+            test_dataset=test_dataset,
+            scenario_names=[ScenarioName.SECOND_PAYMENT_FOR_PERIOD_OVER_CAP],
+            end_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
             db_session=local_test_db_session,
             check_additional_payment=True,
         )
@@ -2155,7 +2158,9 @@ def generate_fineos_extract_files(scenario_dataset: List[ScenarioData], round: i
     fineos_extract_date_prefix = get_current_timestamp_prefix()
 
     # claimant extract
-    generate_claimant_data_files(scenario_dataset, fineos_data_export_path, payments_util.get_now())
+    generate_claimant_data_files(
+        scenario_dataset, fineos_data_export_path, payments_util.get_now(), round=round
+    )
     # Confirm expected claimant files were generated
     assert_files(fineos_data_export_path, FINEOS_CLAIMANT_EXPORT_FILES, fineos_extract_date_prefix)
 
@@ -2282,6 +2287,8 @@ def setup_common_env_variables(monkeypatch):
     monkeypatch.setenv("DFML_PUB_ACCOUNT_NUMBER", "123456789")
     monkeypatch.setenv("DFML_PUB_ROUTING_NUMBER", "234567890")
     monkeypatch.setenv("PUB_PAYMENT_STARTING_CHECK_NUMBER", "100")
+    monkeypatch.setenv("USE_NEW_MAXIMUM_WEEKLY_LOGIC", "1")
+    monkeypatch.setenv("USE_AUDIT_REJECT_TRANSACTION_STATUS", "1")
 
 
 # == Assertion Helpers ==

@@ -97,6 +97,8 @@ class ScenarioData:
     additional_payment_c_value: Optional[str] = None
     additional_payment_i_value: Optional[str] = None
 
+    additional_payment_absence_case_id: Optional[str] = None
+
     payment: Optional[Payment] = None
     additional_payment: Optional[Payment] = None
 
@@ -272,6 +274,24 @@ def generate_scenario_data_in_db(
 
     absence_case_id = f"{fineos_notification_id}-ABS-001"
 
+    claim = construct_claim(scenario_descriptor, employee, employer, absence_case_id, db_session)
+
+    return ScenarioData(
+        scenario_descriptor=scenario_descriptor,
+        employer=employer,
+        employee=employee,
+        claim=claim,
+        absence_case_id=absence_case_id,
+    )
+
+
+def construct_claim(
+    scenario_descriptor: ScenarioDescriptor,
+    employee: Employee,
+    employer: Employer,
+    absence_case_id: str,
+    db_session: db.Session,
+) -> Optional[Claim]:
     if not scenario_descriptor.has_existing_claim:
         claim = None
     elif scenario_descriptor.claim_missing_employee:
@@ -291,13 +311,7 @@ def generate_scenario_data_in_db(
             db_session=db_session,
         )
 
-    return ScenarioData(
-        scenario_descriptor=scenario_descriptor,
-        employer=employer,
-        employee=employee,
-        claim=claim,
-        absence_case_id=absence_case_id,
-    )
+    return claim
 
 
 def generate_scenario_dataset(
@@ -343,6 +357,17 @@ def generate_scenario_dataset(
                 if scenario_descriptor.has_additional_payment_in_period:
                     scenario_data.additional_payment_c_value = "7326"
                     scenario_data.additional_payment_i_value = str(fake.unique.random_int())
+
+                    scenario_data.additional_payment_absence_case_id = (
+                        f"{scenario_data.absence_case_id}_additional"
+                    )
+                    construct_claim(
+                        scenario_descriptor,
+                        scenario_data.employee,
+                        scenario_data.employer,
+                        scenario_data.additional_payment_absence_case_id,
+                        db_session,
+                    )
 
                 scenario_dataset.append(scenario_data)
 

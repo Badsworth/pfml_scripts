@@ -43,7 +43,7 @@ def to_datetime(date_or_datetime: date) -> datetime:
     return datetime.combine(date_or_datetime, time.min, tzinfo=timezone.utc)
 
 
-def get_period_in_weeks(period_start: date, period_end: date) -> int:
+def get_period_in_days(period_start: date, period_end: date) -> int:
     period_start_date = period_start.date() if isinstance(period_start, datetime) else period_start
     period_end_date = period_end.date() if isinstance(period_end, datetime) else period_end
 
@@ -54,6 +54,12 @@ def get_period_in_weeks(period_start: date, period_end: date) -> int:
     #    Jan 1st - Jan 7th is 7 days (eg. Monday -> Sunday)
     #    Jan 1st - Jan 8th is 8 days (eg. Monday -> the next Monday)
 
-    period_in_days = (period_end_date - period_start_date).days + 1
-    weeks = math.ceil(period_in_days / 7.0)
+    return (period_end_date - period_start_date).days + 1
+
+
+def get_period_in_weeks(period_start: date, period_end: date) -> int:
+    """
+    Get the length of a period of time in weeks, rounded up (eg. 5 days -> 1 week, 8 days -> 2 weeks)
+    """
+    weeks = math.ceil(get_period_in_days(period_start, period_end) / 7.0)
     return weeks

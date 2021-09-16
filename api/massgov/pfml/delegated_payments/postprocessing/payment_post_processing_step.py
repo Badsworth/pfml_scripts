@@ -1,33 +1,35 @@
-import enum
+import os
 import uuid
 from datetime import date
 from decimal import Decimal
-from typing import Dict, List, Optional, Tuple, cast
+from typing import Dict, List, Tuple, cast
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.employees import (
-    Claim,
-    LatestStateLog,
-    Payment,
-    PaymentTransactionType,
-    State,
-    StateLog,
-)
+from massgov.pfml.db.models.employees import State
 from massgov.pfml.db.models.payments import (
     FineosWritebackDetails,
     FineosWritebackTransactionStatus,
     MaximumWeeklyBenefitAmount,
+    PaymentAuditReportType,
+)
+from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
+    stage_payment_audit_report_details,
+)
+from massgov.pfml.delegated_payments.postprocessing.maximum_weekly_benefits_processor import (
+    MaximumWeeklyBenefitsStepProcessor,
 )
 from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_util import (
     EmployeePaymentGroup,
     PaymentContainer,
-    _determine_best_payments_under_cap,
-    _format_dates,
-    _get_date_tuple,
-    _make_payment_log,
-    _sum_payments,
+    PostProcessingMetrics,
+    determine_best_payments_under_cap,
+    format_dates,
+    get_all_paid_payments_associated_with_employee,
+    get_date_tuple,
+    make_payment_log,
+    sum_payments,
 )
 from massgov.pfml.delegated_payments.step import Step
 from massgov.pfml.util.datetime import get_period_in_weeks
@@ -43,15 +45,9 @@ class PaymentPostProcessingStep(Step):
     a wider swath of data (eg. comparing all payments for a claimant)
     """
 
-    class Metrics(str, enum.Enum):
-        # General metrics
-        PAYMENTS_PROCESSED_COUNT = "payments_processed_count"
-        PAYMENTS_FAILED_VALIDATION_COUNT = "payments_failed_validation_count"
-        PAYMENTS_PASSED_VALIDATION_COUNT = "payments_passed_valdiation_count"
-        # Metrics specific to the payment cap check
-        PAYMENT_CAP_ALL_ACCEPTED_COUNT = "payment_cap_all_accepted_count"
-        PAYMENT_CAP_PAYMENT_ERROR_COUNT = "payment_cap_payment_error_count"
-        PAYMENT_CAP_PAYMENT_ACCEPTED_COUNT = "payment_cap_payment_accepted_count"
+    use_new_maximum_weekly_logic: bool = False
+
+    Metrics = PostProcessingMetrics
 
     def _get_maximum_amount_for_period(self, start_date: date, end_date: date) -> Decimal:
         # TODO - We haven't received guidance on how to handle pay periods
@@ -96,6 +92,9 @@ class PaymentPostProcessingStep(Step):
         run even if a payment has errored in a prior step so that
         all issues can be communicated in the eventual error report.
         """
+        self.use_new_maximum_weekly_logic = (
+            os.environ.get("USE_NEW_MAXIMUM_WEEKLY_LOGIC", "0") == "1"
+        )
 
         try:
             payment_containers = self._get_payments_awaiting_post_processing_validation()
@@ -105,7 +104,10 @@ class PaymentPostProcessingStep(Step):
             self._process_payments_across_employee(payment_containers)
 
             # After all validations are run, move states of the payments
-            self._move_payments_to_new_state(payment_containers)
+            if self.use_new_maximum_weekly_logic:
+                self._handle_state_transition(payment_containers)
+            else:
+                self._move_payments_to_new_state(payment_containers)
 
             self.db_session.commit()
         except Exception:
@@ -123,9 +125,7 @@ class PaymentPostProcessingStep(Step):
         payment_containers = []
         for state_log in state_logs:
             self.increment(self.Metrics.PAYMENTS_PROCESSED_COUNT)
-            payment = state_log.payment
-            validation_container = payments_util.ValidationContainer(str(payment.payment_id))
-            payment_containers.append(PaymentContainer(payment, validation_container))
+            payment_containers.append(PaymentContainer(state_log.payment))
 
         return payment_containers
 
@@ -142,52 +142,21 @@ class PaymentPostProcessingStep(Step):
 
             employee_to_containers[employee_id].append(container)
 
+        maximum_weekly_processor = MaximumWeeklyBenefitsStepProcessor(self)
         # Run various validation rules on these groups
         for employee_id, payment_containers in employee_to_containers.items():
+            # Employee ID was useful for grouping, but we want the employee itself
+            employee = payment_containers[0].payment.claim.employee
             logger.info(
                 "Processing %i payments in batch for employee ID %s",
                 len(payment_containers),
                 employee_id,
             )
             # Validate that payments aren't exceeding a maximum cap
-            self._validate_payments_not_exceeding_cap(employee_id, payment_containers)
-
-    def _get_all_active_payments_associated_with_employee(
-        self, employee_id: uuid.UUID, current_payment_ids: Optional[List[uuid.UUID]] = None
-    ) -> List[Payment]:
-        if not current_payment_ids:
-            current_payment_ids = []
-
-        # Get all payment IDs of payments associated with the same employee
-        # That aren't the payments we're attempting to validate, that are
-        # standard payments (eg. no cancellations, overpayments, etc.) that are
-        # not adhoc payments (adhoc payments don't factor into the calculation whatsoever)
-        subquery = (
-            self.db_session.query(Payment.payment_id)
-            .join(Claim)
-            .filter(
-                Claim.employee_id == employee_id,
-                Payment.payment_transaction_type_id
-                == PaymentTransactionType.STANDARD.payment_transaction_type_id,
-                Payment.payment_id.notin_(current_payment_ids),
-                Payment.is_adhoc_payment != True,  # noqa: E712
-            )
-        )
-
-        # For the payment IDs fetched above, look for any payments
-        # that we have sent to PUB or have returned as paid
-        # Payments that errored after sending to PUB will be excluded
-        # as they're moved to a separate end state
-        return (
-            self.db_session.query(Payment)
-            .join(StateLog)
-            .join(LatestStateLog)
-            .filter(
-                Payment.payment_id.in_(subquery),
-                StateLog.end_state_id.in_(payments_util.Constants.PAID_STATE_IDS),
-            )
-            .all()
-        )
+            if self.use_new_maximum_weekly_logic:
+                maximum_weekly_processor.process(employee, payment_containers)
+            else:
+                self._validate_payments_not_exceeding_cap(employee_id, payment_containers)
 
     def _validate_payments_not_exceeding_cap(
         self, employee_id: uuid.UUID, payment_containers: List[PaymentContainer]
@@ -207,8 +176,8 @@ class PaymentPostProcessingStep(Step):
         current_payment_ids = [
             payment_container.payment.payment_id for payment_container in payment_containers
         ]
-        prior_payments = self._get_all_active_payments_associated_with_employee(
-            employee_id, current_payment_ids
+        prior_payments = get_all_paid_payments_associated_with_employee(
+            employee_id, current_payment_ids, self.db_session
         )
 
         # group the payments by start+end period. We only care about the periods
@@ -224,12 +193,12 @@ class PaymentPostProcessingStep(Step):
             if payment_container.payment.is_adhoc_payment:
                 logger.info(
                     "Payment %s is an adhoc payment and will not factor into the maximum weekly cap calculation.",
-                    _make_payment_log(payment_container.payment),
+                    make_payment_log(payment_container.payment),
                     extra=payment_container.get_traceable_details(False),
                 )
                 continue
 
-            date_tuple = _get_date_tuple(payment_container.payment)
+            date_tuple = get_date_tuple(payment_container.payment)
 
             if date_tuple not in date_range_to_payments:
                 date_range_to_payments[date_tuple] = EmployeePaymentGroup(employee_id)
@@ -238,10 +207,10 @@ class PaymentPostProcessingStep(Step):
 
         # For any prior payments that have the same leave periods, add them to the list as well
         for prior_payment in prior_payments:
-            date_tuple = _get_date_tuple(prior_payment)
+            date_tuple = get_date_tuple(prior_payment.payment)
 
             if date_tuple in date_range_to_payments:
-                date_range_to_payments[date_tuple].prior_payments.append(prior_payment)
+                date_range_to_payments[date_tuple].prior_payments.append(prior_payment.payment)
 
         for period, payment_group in date_range_to_payments.items():
             self._validate_payment_cap_for_period(period[0], period[1], payment_group)
@@ -258,13 +227,13 @@ class PaymentPostProcessingStep(Step):
 
         # First, a simple check, if they all sum to less than the maximum
         # we don't need to do anything complicated below
-        if _sum_payments(prior_payment_sum, current_payment_containers) <= max_amount:
+        if sum_payments(prior_payment_sum, current_payment_containers) <= max_amount:
             # Increment the counter for each accepted payment
             for _ in current_payment_containers:
                 self.increment(self.Metrics.PAYMENT_CAP_ALL_ACCEPTED_COUNT)
             return
 
-        accepted_payment_containers = _determine_best_payments_under_cap(
+        accepted_payment_containers = determine_best_payments_under_cap(
             prior_payment_sum, max_amount, current_payment_containers
         )
         accepted_payment_ids = set(
@@ -279,12 +248,12 @@ class PaymentPostProcessingStep(Step):
         for payment_container in current_payment_containers:
             if payment_container.payment.payment_id not in accepted_payment_ids:
                 self.increment(self.Metrics.PAYMENT_CAP_PAYMENT_ERROR_COUNT)
-                msg = f"This payment for ${payment_container.payment.amount} exceeded the maximum amount allowable (${max_amount}) for a claimant for the pay period of {_format_dates(period_start, period_end)}."
+                msg = f"This payment for ${payment_container.payment.amount} exceeded the maximum amount allowable (${max_amount}) for a claimant for the pay period of {format_dates(period_start, period_end)}."
 
                 if payment_group.prior_payments:
                     prior_payment_msgs = []
                     for prior_payment in payment_group.prior_payments:
-                        prior_payment_msgs.append(_make_payment_log(prior_payment, True))
+                        prior_payment_msgs.append(make_payment_log(prior_payment, True))
 
                     msg += f" We previously paid {', '.join(prior_payment_msgs)}."
 
@@ -292,7 +261,7 @@ class PaymentPostProcessingStep(Step):
                     accepted_payment_msgs = []
                     for accepted_payment in accepted_payment_containers:
                         accepted_payment_msgs.append(
-                            _make_payment_log(accepted_payment.payment, True)
+                            make_payment_log(accepted_payment.payment, True)
                         )
 
                     msg += f" We chose these payments from this batch instead {', '.join(accepted_payment_msgs)}"
@@ -316,7 +285,7 @@ class PaymentPostProcessingStep(Step):
                 self.increment(self.Metrics.PAYMENTS_FAILED_VALIDATION_COUNT)
                 logger.info(
                     "Payment %s failed a validation rule",
-                    _make_payment_log(payment_container.payment),
+                    make_payment_log(payment_container.payment),
                     extra=payment_container.get_traceable_details(True),
                 )
 
@@ -338,7 +307,7 @@ class PaymentPostProcessingStep(Step):
                 self.increment(self.Metrics.PAYMENTS_PASSED_VALIDATION_COUNT)
                 logger.info(
                     "Payment %s passed all validation rules",
-                    _make_payment_log(payment_container.payment),
+                    make_payment_log(payment_container.payment),
                     extra=payment_container.get_traceable_details(False),
                 )
 
@@ -371,7 +340,7 @@ class PaymentPostProcessingStep(Step):
         else:
             raise Exception(
                 "No transaction status configured for any validation issue %s for payment %s"
-                % (reasons, _make_payment_log(payment_container.payment))
+                % (reasons, make_payment_log(payment_container.payment))
             )
 
         writeback_details = FineosWritebackDetails(
@@ -380,3 +349,59 @@ class PaymentPostProcessingStep(Step):
             import_log_id=cast(int, self.get_import_log_id()),
         )
         self.db_session.add(writeback_details)
+
+    def _handle_state_transition(self, payment_containers: List[PaymentContainer]) -> None:
+        for payment_container in payment_containers:
+
+            # Create a payment log to track what was done
+            payments_util.create_payment_log(
+                payment_container.payment,
+                self.get_import_log_id(),
+                self.db_session,
+                payment_container.get_payment_log_record(),
+            )
+            maximum_weekly_audit_msg = payment_container.maximum_weekly_audit_report_msg
+
+            # If it has issues, add an audit log report
+            if maximum_weekly_audit_msg:
+                stage_payment_audit_report_details(
+                    payment_container.payment,
+                    PaymentAuditReportType.MAX_WEEKLY_BENEFITS,
+                    maximum_weekly_audit_msg,
+                    self.get_import_log_id(),
+                    self.db_session,
+                )
+
+                self.increment(self.Metrics.PAYMENTS_FAILED_VALIDATION_COUNT)
+                logger.info(
+                    "Payment %s failed a validation rule, creating audit report details",
+                    make_payment_log(payment_container.payment),
+                    extra=payment_container.get_traceable_details(),
+                )
+
+            else:
+                self.increment(self.Metrics.PAYMENTS_PASSED_VALIDATION_COUNT)
+
+                logger.info(
+                    "Payment %s passed all validation rules",
+                    make_payment_log(payment_container.payment),
+                    extra=payment_container.get_traceable_details(),
+                )
+
+            additional_outcome_details = {}
+            if payment_container.maximum_weekly_full_details_msg:
+                additional_outcome_details[
+                    "maximum_weekly_details"
+                ] = payment_container.maximum_weekly_full_details_msg
+
+            # Always allow it past this step, we simply add info for the audit report here.
+            state_log_util.create_finished_state_log(
+                end_state=State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
+                outcome=state_log_util.build_outcome(
+                    "Completed post processing",
+                    validation_container=None,
+                    **additional_outcome_details,
+                ),
+                associated_model=payment_container.payment,
+                db_session=self.db_session,
+            )

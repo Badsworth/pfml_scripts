@@ -21,6 +21,7 @@ from massgov.pfml.db.models.payments import (
     PAYMENT_AUDIT_REPORT_ACTION_SKIPPED,
     LkPaymentAuditReportType,
     PaymentAuditReportDetails,
+    PaymentAuditReportType,
 )
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
@@ -34,6 +35,12 @@ from massgov.pfml.delegated_payments.reporting.delegated_abstract_reporting impo
     ReportGroup,
 )
 from massgov.pfml.util.datetime import get_period_in_weeks
+
+# Specify an override for the notes to put if the
+# description on the audit report type doesn't match the message
+AUDIT_REPORT_NOTES_OVERRIDE = {
+    PaymentAuditReportType.MAX_WEEKLY_BENEFITS.payment_audit_report_type_id: "Weekly benefit amount exceeds $850"
+}
 
 
 class PaymentAuditRowError(Exception):
@@ -268,12 +275,17 @@ def get_payment_audit_report_details(
         is_rejected_or_skipped = (
             staged_audit_report_detail.audit_report_type.payment_audit_report_action
         )
+        # The notes we add are based on the audit report description
+        # unless an override is specified above for that particular type
+        notes_to_add = AUDIT_REPORT_NOTES_OVERRIDE.get(
+            staged_audit_report_detail.audit_report_type_id, audit_report_type
+        )
         if is_rejected_or_skipped == PAYMENT_AUDIT_REPORT_ACTION_REJECTED:
             rejected = True
-            program_integrity_notes.append(f"{audit_report_type} (Rejected)")
+            program_integrity_notes.append(f"{notes_to_add} (Rejected)")
         elif is_rejected_or_skipped == PAYMENT_AUDIT_REPORT_ACTION_SKIPPED:
             skipped = True
-            program_integrity_notes.append(f"{audit_report_type} (Skipped)")
+            program_integrity_notes.append(f"{notes_to_add} (Skipped)")
 
         # Mark the details row as processed
         staged_audit_report_detail.added_to_audit_report_at = added_to_audit_report_at
