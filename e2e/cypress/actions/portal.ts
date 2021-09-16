@@ -1849,6 +1849,10 @@ export function claimantGoToClaimStatus(fineosAbsenceId: string): void {
   cy.wait("@getApplications").wait(150);
   cy.contains("article", fineosAbsenceId).within(() => {
     cy.contains("View status updates and details").click();
+    cy.url().should(
+      "include",
+      `/applications/status/?absence_case_id=${fineosAbsenceId}`
+    );
   });
 }
 
