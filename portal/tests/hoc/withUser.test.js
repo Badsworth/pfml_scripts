@@ -95,7 +95,7 @@ describe("withUser", () => {
     });
   });
 
-  it("does redirect authenticated users who have not consented to data sharing when on the consent page", async () => {
+  it("does not redirect authenticated users who have not consented to data sharing when on the consent page", async () => {
     mockLoggedInUser(false);
     setup({ pathname: routes.user.consentToDataSharing });
 
