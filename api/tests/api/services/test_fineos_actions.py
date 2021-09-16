@@ -42,9 +42,6 @@ from massgov.pfml.fineos.models import CreateOrUpdateEmployer, CreateOrUpdateSer
 from massgov.pfml.fineos.models.customer_api import Address as FineosAddress
 from massgov.pfml.fineos.models.customer_api import CustomerAddress
 
-# almost every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 def test_register_employee_pass(test_db_session):
     fineos_client = massgov.pfml.fineos.MockFINEOSClient()
@@ -477,8 +474,6 @@ def test_employer_creation_exception(test_db_session):
         fineos_actions.create_or_update_employer(fineos_client, employer)
 
 
-# not an integration test, but marked as such by global pytest.mark.integration
-# at top of file
 def test_creating_request_payload():
     create_or_update_request = CreateOrUpdateEmployer(
         fineos_customer_nbr="pfml_test_payload",
@@ -496,8 +491,6 @@ def test_creating_request_payload():
     assert payload.__contains__("<DoingBusinessAs>Test Organization DBA</DoingBusinessAs>")
 
 
-# not an integration test, but marked as such by global pytest.mark.integration
-# at top of file
 def test_creating_request_payload_with_other_names():
     create_or_update_request = CreateOrUpdateEmployer(
         fineos_customer_nbr="pfml_test_payload",
@@ -748,8 +741,6 @@ def test_create_service_agreement_for_employer(test_db_session):
     assert fineos_sa_id == "SA-123"
 
 
-# not an integration test, but marked as such by global pytest.mark.integration
-# at top of file
 def test_create_service_agreement_payload():
     service_agreement_inputs = CreateOrUpdateServiceAgreement(
         absence_management_flag=True, leave_plans="MA PFML - Family, MA PFML - Military Care"
@@ -788,8 +779,6 @@ def test_create_service_agreement_payload():
     )
 
 
-# not an integration test, but marked as such by global pytest.mark.integration
-# at top of file
 def test_resolve_leave_plans():
     # Family Exemption = false
     # Medical Exemption = false

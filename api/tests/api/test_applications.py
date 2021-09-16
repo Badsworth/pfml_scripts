@@ -68,9 +68,6 @@ from massgov.pfml.fineos.exception import (
 from massgov.pfml.fineos.factory import FINEOSClientConfig
 from massgov.pfml.util.paginate.paginator import DEFAULT_PAGE_SIZE
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 def sqlalchemy_object_as_dict(obj):
     return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}

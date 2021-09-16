@@ -65,10 +65,6 @@ from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
 )
 from massgov.pfml.delegated_payments.mock.mock_util import generate_routing_nbr_from_ssn
 
-# every test in here requires real resources
-
-pytestmark = pytest.mark.integration
-
 EXPECTED_OUTCOME = {"message": "Success"}
 
 ### UTILITY METHODS

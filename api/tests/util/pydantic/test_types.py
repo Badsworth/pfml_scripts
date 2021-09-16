@@ -23,7 +23,6 @@ def test_masked_tax_id_formatted_str_with_str():
     assert model.masked_tax_id_formatted == "***-**-2123"
 
 
-@pytest.mark.integration
 def test_masked_tax_id_formatted_str_with_tax_identifier(
     test_db_session, initialize_factories_session
 ):

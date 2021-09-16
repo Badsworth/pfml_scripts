@@ -25,7 +25,6 @@ def cli_args(tmpdir, mock_s3_bucket):
     return CliArgs()
 
 
-@pytest.mark.integration
 def test_full_generate_evaluate_new_eligibility(
     test_db_session, initialize_factories_session, monkeypatch, cli_args, mock_s3_bucket
 ):
@@ -98,7 +97,6 @@ def test_full_generate_evaluate_new_eligibility(
     )
 
 
-@pytest.mark.integration
 def test_full_generate_evaluate_new_eligibility_missing_data(
     test_db_session, initialize_factories_session, monkeypatch, cli_args, mock_s3_bucket
 ):
