@@ -31,6 +31,6 @@ describe("LeaveDatesAlert", () => {
   it("is empty render when one of the dates is missing", () => {
     const { container } = render(<LeaveDatesAlert startDate="2021-01-01" />);
 
-    expect(container.firstChild).toBeNull();
+    expect(container).toBeEmptyDOMElement();
   });
 });

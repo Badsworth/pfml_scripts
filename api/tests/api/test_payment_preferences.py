@@ -1,14 +1,9 @@
-import pytest
-
 import massgov.pfml.fineos.mock_client as fineos_mock
 import tests.api
 from massgov.pfml.api.validation.exceptions import IssueRule, IssueType
 from massgov.pfml.db.models.applications import Address, ApplicationPaymentPreference
 from massgov.pfml.db.models.employees import BankAccountType, PaymentMethod
 from massgov.pfml.db.models.factories import ApplicationFactory
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 
 def submit_payment_pref_helper(client, user, auth_token, post_data, application):

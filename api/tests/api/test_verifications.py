@@ -15,9 +15,6 @@ from massgov.pfml.db.models.factories import (
 from massgov.pfml.db.models.verifications import Verification, VerificationType
 from massgov.pfml.util.strings import format_fein
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 verifications_body = {
     "employer_id": "6e441845-a933-4a0b-827b-ec5bf467429e",
     "withholding_amount": 10,

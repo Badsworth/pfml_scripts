@@ -862,7 +862,6 @@ class PaymentExtractStep(Step):
         # A claim to have a claim type
         # The employee we fetched above to already be connected to the claim
         if claim:
-            # TODO - ask Mass about non-standard payments
             if not claim.is_id_proofed:
                 payment_data.validation_container.add_validation_issue(
                     payments_util.ValidationReason.CLAIM_NOT_ID_PROOFED,
@@ -935,6 +934,7 @@ class PaymentExtractStep(Step):
         self,
         payment_data: PaymentData,
         claim: Optional[Claim],
+        employee: Optional[Employee],
         validation_container: payments_util.ValidationContainer,
     ) -> Payment:
         # We always create a new payment record. This may be completely new
@@ -951,10 +951,12 @@ class PaymentExtractStep(Step):
         if payment_data.raw_payment_method:
             payment.disb_method_id = PaymentMethod.get_id(payment_data.raw_payment_method)
 
-        # Note that these values may have validation issues
+        # Note that these values may have validation issues and not be set
         # that is fine as it will get moved to an error state
         if claim:
             payment.claim = claim
+        if employee:
+            payment.employee = employee
         payment.period_start_date = payments_util.datetime_str_to_date(
             payment_data.payment_start_period
         )
@@ -1171,7 +1173,9 @@ class PaymentExtractStep(Step):
             payment_eft, has_eft_update = self.update_eft(payment_data, employee)
 
         # Create the payment record
-        payment = self.create_payment(payment_data, claim, payment_data.validation_container)
+        payment = self.create_payment(
+            payment_data, claim, employee, payment_data.validation_container
+        )
 
         # Capture the fineos provided employee name for the payment
         if employee:

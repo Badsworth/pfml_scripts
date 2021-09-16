@@ -1,4 +1,10 @@
 {
+  "extends": [
+    "plugin:jest-dom/recommended",
+    "plugin:testing-library/dom",
+    "plugin:testing-library/react"
+  ],
+  "plugins": ["jest-dom", "testing-library"],
   "rules": {
     "react/prop-types": "off",
     "no-restricted-imports": [
@@ -16,6 +22,16 @@
             "message": "New tests cannot rely on old-tests"
           }
         ]
+      }
+    ],
+    // allow container.firstChild for snapshot tests
+    "testing-library/no-node-access": "off",
+    "testing-library/prefer-user-event": [
+      "error",
+      {
+        // Use native blur() if simulating a blur event: https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/blur
+        // Allow fireEvent.change() since userEvent.type() sometimes doesn't trigger a change event from what we've seen.
+        "allowedMethods": ["change"]
       }
     ]
   }

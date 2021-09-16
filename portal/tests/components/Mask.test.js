@@ -22,7 +22,7 @@ describe("Mask", () => {
         renderMask({ mask }, { value: "", onChange: jest.fn() });
         const input = screen.getByRole("textbox");
 
-        expect(input).toHaveAttribute("value", "");
+        expect(input).toHaveValue("");
       });
     });
   });
@@ -86,7 +86,7 @@ describe("Mask", () => {
     jest.spyOn(console, "error").mockImplementation(jest.fn());
     renderMask({ mask: "foo" }, { value: "12345", onChange: jest.fn() });
     const input = screen.getByRole("textbox");
-    expect(input).toHaveAttribute("value", "12345");
+    expect(input).toHaveValue("12345");
   });
 
   it("calls onChange on the InputText on a blur event", () => {
@@ -145,7 +145,7 @@ describe("Mask", () => {
     const input = screen.getByRole("textbox");
     userEvent.type(input, "9");
 
-    expect(input.value).toBe("123456789");
+    expect(input).toHaveValue("123456789");
   });
 
   describe("maskValue", () => {

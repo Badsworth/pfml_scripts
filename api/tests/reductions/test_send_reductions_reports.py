@@ -6,9 +6,6 @@ from massgov.pfml.db.models.employees import ReferenceFileType
 from massgov.pfml.db.models.factories import ReferenceFileFactory
 from massgov.pfml.reductions.reports import dua_payments_reports
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 def _setup_reductions_reporting(
     test_db_session, mock_s3_bucket, mock_ses, monkeypatch, initialize_factories_session

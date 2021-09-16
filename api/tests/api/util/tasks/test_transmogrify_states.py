@@ -5,9 +5,6 @@ from massgov.pfml.db.models.employees import State
 from massgov.pfml.db.models.factories import EmployeeFactory
 from massgov.pfml.util.tasks.transmogrify_states import Configuration, _transmogrify_states
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 def setup_state_logs(test_db_session):
     employee1 = EmployeeFactory.create()

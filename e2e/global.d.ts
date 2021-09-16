@@ -88,6 +88,7 @@ declare namespace Cypress {
         userId: string;
         /**Role preset you want to switch to. */
         preset: FineosSecurityGroups;
+        debug?: boolean;
       }
     ): Chainable<null>;
     task(event: "pickEmployer", spec: EmployerPickSpec): Chainable<Employer>;

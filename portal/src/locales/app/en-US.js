@@ -795,6 +795,10 @@ const shared = {
     newborn:
       "Once your child is born, submit proof of birth so that we can review your application. Learn more about <proof-document-link>proof of birth documents</proof-document-link> we accept.",
   },
+  documentCategory: {
+    certification: "certification form",
+    identification: "identification documents",
+  },
   documentsLoadError:
     "An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
   documentsUploadError:
@@ -1963,6 +1967,21 @@ const pages = {
       "<p>Learn more about the <timeline-link>application approval process.</timeline-link></p>",
     uploadDocumentsButton: "Upload additional documents",
     uploadDocumentsHeading: "Upload Documents",
+    uploadSuccessHeading: "You've successfully submitted your {{document}}",
+    "uploadSuccessHeadingDocumentName_family-member-medical-certification":
+      "$t(shared.documentCategory.certification)",
+    "uploadSuccessHeadingDocumentName_medical-certification":
+      "$t(shared.documentCategory.certification)",
+    "uploadSuccessHeadingDocumentName_other-id":
+      "$t(shared.documentCategory.identification)",
+    "uploadSuccessHeadingDocumentName_pregnancy-medical-certification":
+      "$t(shared.documentCategory.certification)",
+    "uploadSuccessHeadingDocumentName_proof-of-birth":
+      "proof of birth documents",
+    "uploadSuccessHeadingDocumentName_proof-of-placement":
+      "proof of placement documents",
+    "uploadSuccessHeadingDocumentName_state-id":
+      "$t(shared.documentCategory.identification)",
     viewNoticesHeading: "View your notices",
     whatHappensNext: "What happens next",
     whatHappensNextButton_adoption: "Upload proof of placement",

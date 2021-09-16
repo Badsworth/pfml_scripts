@@ -7,33 +7,64 @@ import {
   clickBottomWidgetButton,
   waitForAjaxComplete,
 } from "../../../actions/fineos";
+import { config, getFineosBaseUrl } from "../../../actions/common";
 
-const userSecurityGroup: FineosSecurityGroups = "DFML Claims Examiners(sec)";
+const ssoAccount2Credentials: Credentials = {
+  username: config("SSO2_USERNAME"),
+  password: config("SSO2_PASSWORD"),
+};
 
-describe("Historical absence secure actions", () => {
-  it("Given a submitted claim", () => {
-    fineos.before();
-    cy.visit("/");
-    //Submit a claim via the API, including Employer Response.
-    cy.task("generateClaim", "CHAP_ER").then((claim) => {
-      cy.stash("claim", claim);
-      cy.task("submitClaimToAPI", claim).then((response) => {
-        cy.stash("submission", getSubmissionFromApiResponse(response));
+const securityGroups: [FineosSecurityGroups, boolean][] = [
+  ["DFML Claims Examiners(sec)", true],
+  ["DFML Claims Supervisors(sec)", true],
+  ["DFML Compliance Analyst(sec)", true],
+  ["DFML Compliance Supervisors(sec)", true],
+  ["DFML Appeals Administrator(sec)", true],
+  ["DFML Appeals Examiner I(sec)", true],
+  ["DFML Appeals Examiner II(sec)", true],
+  ["SaviLinx Agents (sec)", false],
+  ["SaviLinx Secured Agents(sec)", false],
+  ["SaviLinx Supervisors(sec)", false],
+  ["DFML IT(sec)", false],
+];
+// Set baseurl before running the spec.
+Cypress.config("baseUrl", getFineosBaseUrl());
+
+securityGroups.forEach(([userSecurityGroup, canUseSecureAction]) => {
+  describe("Historical absence secure actions", () => {
+    const claimSubmit = it("Given a submitted claim", () => {
+      //Submit a claim via the API, including Employer Response.
+      cy.task("generateClaim", "CHAP_ER").then((claim) => {
+        cy.stash("claim", claim);
+        cy.task("submitClaimToAPI", claim).then((response) => {
+          cy.stash("submission", getSubmissionFromApiResponse(response));
+          // Set the security group for second sso account.
+          cy.task("chooseFineosRole", {
+            userId: ssoAccount2Credentials.username,
+            preset: userSecurityGroup,
+          });
+        });
       });
     });
-  });
 
-  it(`${userSecurityGroup} can create historical absence case within Absence Case`, () => {
-    cy.unstash<DehydratedClaim>("claim").then((claim) => {
-      cy.unstash<Submission>("submission").then(
-        ({ application_id, fineos_absence_id }) => {
-          fineos.before();
-          cy.visit("/");
-          cy.stash("claim", claim.claim);
-          cy.stash("submission", {
-            application_id: application_id,
-            fineos_absence_id: fineos_absence_id,
-            timestamp_from: Date.now(),
+    it(`${userSecurityGroup} can${
+      canUseSecureAction ? "" : "'t"
+    } create/modify/delete historical absence case within Absence Case`, () => {
+      // Login as second SSO account
+      fineos.before(ssoAccount2Credentials);
+      cy.dependsOnPreviousPass([claimSubmit]);
+      cy.unstash<DehydratedClaim>("claim").then(() => {
+        cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
+          // Expect failure if user can't perform secure action.
+          cy.on("fail", (e) => {
+            if (
+              !canUseSecureAction &&
+              e.message.includes(`Control is protected by a Secured Action.`)
+            ) {
+              console.log("Failed as expected");
+            } else {
+              throw e;
+            }
           });
           // Create historical absence
           const historicalAbsence =
@@ -87,8 +118,8 @@ describe("Historical absence secure actions", () => {
           waitForAjaxComplete();
           // Check for changed avaiability again.
           historicalAbsence.checkAvailability("19.20 Weeks");
-        }
-      );
+        });
+      });
     });
   });
 });

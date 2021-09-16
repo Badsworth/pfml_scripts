@@ -6,12 +6,8 @@ import dataclasses
 import datetime
 
 import freezegun
-import pytest
 
 import massgov.pfml.util.batch.log
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 
 @dataclasses.dataclass

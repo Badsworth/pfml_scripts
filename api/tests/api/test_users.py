@@ -19,9 +19,6 @@ from massgov.pfml.util.strings import format_fein
 
 fake = faker.Faker()
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 @pytest.fixture
 def valid_claimant_creation_request_body() -> Dict[str, Any]:

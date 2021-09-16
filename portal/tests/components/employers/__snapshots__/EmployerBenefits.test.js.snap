@@ -1,0 +1,241 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EmployerBenefits renders the component for v1 eforms 1`] = `
+<div>
+  <h3
+    class="font-heading-sm text-bold"
+  >
+    Employer-sponsored benefits
+  </h3>
+  <p>
+    Your employee is planning to use these benefits. Employer sponsored benefits include temporary disability insurance, permanent disability insurance, paid time off (PTO) or accrued paid leave, and family or medical leave benefits such as a parental leave program. 
+    <a
+      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+      rel="noopener"
+      target="_blank"
+    >
+      Learn more about how these affect payments.
+    </a>
+  </p>
+  <table
+    class="usa-table usa-table--borderless c-table width-full"
+  >
+    <thead>
+      <tr>
+        <th
+          scope="col"
+        >
+          Date range
+        </th>
+        <th
+          scope="col"
+        >
+          Benefit type
+        </th>
+        <th
+          scope="col"
+        >
+          Details
+        </th>
+        <th />
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+        data-testid="benefit-details-row"
+      >
+        <th
+          scope="row"
+        >
+          2/1/2021 to 3/1/2021
+        </th>
+        <td>
+          Short-term disability insurance
+        </td>
+        <td>
+          $1,000.00 per week
+        </td>
+        <td>
+          <button
+            class="usa-button position-relative text-no-wrap usa-button--unstyled"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="usa-icon text-middle margin-right-05 margin-top-neg-05"
+              focusable="false"
+              role="img"
+            >
+              <use
+                xlink:href="/img/sprite.svg#edit"
+              />
+            </svg>
+            Amend
+          </button>
+        </td>
+      </tr>
+      <tr
+        data-testid="benefit-details-row"
+      >
+        <th
+          scope="row"
+        >
+          5/1/2021 to 5/11/2021
+        </th>
+        <td>
+          Accrued paid leave
+        </td>
+        <td>
+          Full salary continuous
+        </td>
+        <td>
+          <button
+            class="usa-button position-relative text-no-wrap usa-button--unstyled"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="usa-icon text-middle margin-right-05 margin-top-neg-05"
+              focusable="false"
+              role="img"
+            >
+              <use
+                xlink:href="/img/sprite.svg#edit"
+              />
+            </svg>
+            Amend
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+`;
+
+exports[`EmployerBenefits renders the component for v2 eforms 1`] = `
+<div>
+  <h3
+    class="font-heading-sm text-bold"
+  >
+    Employer-sponsored benefits
+  </h3>
+  <p>
+    Your employee is planning to use these benefits during their paid leave under PFML. Employer sponsored benefits include temporary disability insurance, permanent disability insurance, and family or medical leave benefits such as a parental leave program. For paid time off (PTO) and other accrued paid leave your employee will use, review “Concurrent accrued paid leave” above. 
+    <a
+      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+      rel="noopener"
+      target="_blank"
+    >
+      Learn more about how these affect payments.
+    </a>
+  </p>
+  <table
+    class="usa-table usa-table--borderless c-table width-full"
+  >
+    <thead>
+      <tr>
+        <th
+          scope="col"
+        >
+          Date range
+        </th>
+        <th
+          scope="col"
+        >
+          Benefit type
+        </th>
+        <th
+          scope="col"
+        >
+          Details
+        </th>
+        <th />
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+        data-testid="benefit-details-row"
+      >
+        <th
+          scope="row"
+        >
+          2/1/2021 to 3/1/2021
+        </th>
+        <td>
+          Short-term disability insurance
+        </td>
+        <td>
+          $1,000.00 per week
+        </td>
+        <td>
+          <button
+            class="usa-button position-relative text-no-wrap usa-button--unstyled"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="usa-icon text-middle margin-right-05 margin-top-neg-05"
+              focusable="false"
+              role="img"
+            >
+              <use
+                xlink:href="/img/sprite.svg#edit"
+              />
+            </svg>
+            Amend
+          </button>
+        </td>
+      </tr>
+      <tr
+        data-testid="benefit-details-row"
+      >
+        <th
+          scope="row"
+        >
+          5/1/2021 to 5/11/2021
+        </th>
+        <td>
+          Accrued paid leave
+        </td>
+        <td>
+          Full salary continuous
+        </td>
+        <td>
+          <button
+            class="usa-button position-relative text-no-wrap usa-button--unstyled"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="usa-icon text-middle margin-right-05 margin-top-neg-05"
+              focusable="false"
+              role="img"
+            >
+              <use
+                xlink:href="/img/sprite.svg#edit"
+              />
+            </svg>
+            Amend
+          </button>
+        </td>
+      </tr>
+      <tr>
+        <td
+          class="padding-y-2 padding-left-0"
+        >
+          <button
+            class="usa-button position-relative usa-button--outline bg-white"
+            name="add-entry-button"
+            type="button"
+          >
+            Add an employer-sponsored benefit
+          </button>
+        </td>
+        <td />
+        <td />
+        <td />
+      </tr>
+    </tbody>
+  </table>
+</div>
+`;

@@ -36,8 +36,7 @@ export const Status = ({ appLogic, query }) => {
     },
     portalFlow,
   } = appLogic;
-  const { absence_case_id } = query;
-
+  const { absence_case_id, uploaded_document_type } = query;
   useEffect(() => {
     if (!isFeatureEnabled("claimantShowStatusPage")) {
       portalFlow.goTo(routes.applications.index);
@@ -167,9 +166,25 @@ export const Status = ({ appLogic, query }) => {
   const infoAlertContext = getInfoAlertContext(absenceDetails);
   const [firstAbsenceDetail] = Object.keys(absenceDetails);
   const containerClassName = "border-top border-base-lighter padding-top-2";
-
   return (
     <React.Fragment>
+      {uploaded_document_type && (
+        <Alert
+          className="margin-bottom-3"
+          heading={t("pages.claimsStatus.uploadSuccessHeading", {
+            document: t("pages.claimsStatus.uploadSuccessHeadingDocumentName", {
+              context: uploaded_document_type,
+            }),
+          })}
+          name="upload-success-message"
+          state="success"
+        >
+          {t("pages.applications.uploadSuccessMessage", {
+            absence_id: absence_case_id,
+          })}
+        </Alert>
+      )}
+
       {!!infoAlertContext && (
         <Alert
           className="margin-bottom-3"
@@ -327,6 +342,8 @@ Status.propTypes = {
   }).isRequired,
   query: PropTypes.shape({
     absence_case_id: PropTypes.string,
+    claim_id: PropTypes.string,
+    uploaded_document_type: PropTypes.string,
   }).isRequired,
 };
 

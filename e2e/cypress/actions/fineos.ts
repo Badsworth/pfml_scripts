@@ -9,18 +9,20 @@ import { Credentials } from "../../src/types";
  */
 function SSO(credentials?: Credentials): void {
   cy.clearCookies();
-  // Perform SSO login in a task. We can't visit other domains in Cypress.
-  cy.task("completeSSOLoginFineos", credentials).then((cookiesJson) => {
-    const deserializedCookies: Record<string, string>[] =
-      JSON.parse(cookiesJson);
-    // Filter out any cookies that will fail to be set. Those are ones where secure: false
-    // and sameSite: "None"
-    const noSecure = deserializedCookies.filter(
-      (cookie) => !(!cookie.secure && cookie.sameSite === "None")
-    );
-    for (const cookie_info of noSecure) {
-      cy.setCookie(cookie_info.name, cookie_info.value, cookie_info);
-    }
+  cy.session(credentials?.username ?? "default", () => {
+    // Perform SSO login in a task. We can't visit other domains in Cypress.
+    cy.task("completeSSOLoginFineos", credentials).then((cookiesJson) => {
+      const deserializedCookies: Record<string, string>[] =
+        JSON.parse(cookiesJson);
+      // Filter out any cookies that will fail to be set. Those are ones where secure: false
+      // and sameSite: "None"
+      const noSecure = deserializedCookies.filter(
+        (cookie) => !(!cookie.secure && cookie.sameSite === "None")
+      );
+      for (const cookie_info of noSecure) {
+        cy.setCookie(cookie_info.name, cookie_info.value, cookie_info);
+      }
+    });
   });
 }
 

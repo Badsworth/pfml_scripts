@@ -109,6 +109,7 @@ describe("status page", () => {
     isLoadingClaimDetail = false,
     isLoadingDocuments = false,
     render = "shallow",
+    query,
   } = {}) => {
     const hasLoadedClaimDocuments = () => !isLoadingDocuments;
     let appLogic;
@@ -130,6 +131,7 @@ describe("status page", () => {
       props: {
         query: {
           absence_case_id: "absence-case-id",
+          ...query,
         },
       },
       render,
@@ -210,6 +212,40 @@ describe("status page", () => {
   it("renders the page", () => {
     const { wrapper } = setup();
     expect(wrapper).toMatchSnapshot();
+  });
+
+  describe("", () => {
+    it("renders success alert when document type param is given", () => {
+      const { wrapper } = setup({
+        query: {
+          uploaded_document_type: "proof-of-birth",
+          claim_id: "12342323",
+          absence_case_id: "absence-case-id",
+        },
+      });
+      const uploadSuccessAlertComponent = wrapper.find("Alert");
+      expect(uploadSuccessAlertComponent.exists()).toBe(true);
+      expect(uploadSuccessAlertComponent.dive()).toMatchSnapshot();
+    });
+    it("displays the category message depending on uploaded document type", () => {
+      const { wrapper } = setup({
+        query: {
+          uploaded_document_type: "state-id",
+        },
+      });
+
+      expect(
+        wrapper.find("Alert").dive().find("Heading").children().text()
+      ).toBe("You've successfully submitted your identification documents");
+      wrapper.setProps({
+        query: {
+          uploaded_document_type: "family-member-medical-certification",
+        },
+      });
+      expect(
+        wrapper.find("Alert").dive().find("Heading").children().text()
+      ).toBe("You've successfully submitted your certification form");
+    });
   });
 
   describe("info alert", () => {

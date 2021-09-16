@@ -24,9 +24,6 @@ from massgov.pfml.db.models.factories import (
 )
 from tests.helpers.state_log import default_outcome, setup_state_log
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 ### Setup methods for various state log scenarios ###
 
 

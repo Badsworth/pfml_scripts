@@ -91,14 +91,12 @@ describe(UploadDocument, () => {
       const spinner = screen.getByRole("progressbar");
 
       expect(spinner).toBeInTheDocument();
-      expect(spinner.getAttribute("aria-valuetext")).toEqual(
-        "Loading documents"
-      );
+      expect(spinner).toHaveAttribute("aria-valuetext", "Loading documents");
     });
 
     it("does not show file card rows", () => {
-      const fileCards = screen.queryAllByTestId("file-card");
-      expect(fileCards).toHaveLength(0);
+      const fileCards = screen.queryByTestId("file-card");
+      expect(fileCards).not.toBeInTheDocument();
     });
   });
 
@@ -124,8 +122,8 @@ describe(UploadDocument, () => {
     });
 
     it("does not show file card rows", () => {
-      const fileCards = screen.queryAllByTestId("file-card");
-      expect(fileCards).toHaveLength(0);
+      const fileCards = screen.queryByTestId("file-card");
+      expect(fileCards).not.toBeInTheDocument();
     });
 
     it("shows error when saving without files", async () => {
@@ -171,16 +169,16 @@ describe(UploadDocument, () => {
     });
 
     it("renders unremovable FileCard", async () => {
-      const fileCards = await screen.findAllByRole("heading", {
+      const fileCards = await screen.findByRole("heading", {
         level: 3,
         name: /File \d+/,
       });
-      const unremovableFileCards = await screen.findAllByText(
+      const unremovableFileCards = await screen.findByText(
         /You can’t remove files previously uploaded./
       );
 
-      expect(fileCards).toHaveLength(1);
-      expect(unremovableFileCards).toHaveLength(1);
+      expect(fileCards).toBeInTheDocument();
+      expect(unremovableFileCards).toBeInTheDocument();
     });
 
     it("navigates to checklist when saving without new files and does not make an API request", async () => {
@@ -275,18 +273,18 @@ describe(UploadDocument, () => {
       });
       await act(async () => await userEvent.click(submitButton));
 
-      const fileCards = await screen.findAllByText(/File \d+/);
-      const unremovableFileCards = await screen.queryAllByText(
+      const fileCards = await screen.findByText(/File \d+/);
+      const unremovableFileCards = screen.queryByText(
         /You can’t remove files previously uploaded./
       );
-      expect(fileCards).toHaveLength(1);
-      expect(unremovableFileCards).toHaveLength(0);
+      expect(fileCards).toBeInTheDocument();
+      expect(unremovableFileCards).not.toBeInTheDocument();
       expect(appLogic.portalFlow.goToNextPage).not.toHaveBeenCalled();
     });
   });
 
   it("renders alert when there is an error loading documents ", async () => {
-    const { findByRole } = render(
+    render(
       <UploadDocumentWithAppLogic
         addAppLogicMocks={(appLogic) => {
           appLogic.appErrors = new AppErrorInfoCollection([
@@ -304,7 +302,7 @@ describe(UploadDocument, () => {
       />
     );
 
-    const alert = await findByRole("alert");
+    const alert = await screen.findByRole("alert");
     expect(alert).toMatchInlineSnapshot(`
       <div
         class="usa-alert__body"
@@ -426,7 +424,11 @@ describe(UploadDocument, () => {
 
       expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledWith(
         { isAdditionalDoc: true },
-        { claim_id: "mock-claim-id", absence_case_id: "mock-absence-case-id" }
+        {
+          claim_id: "mock-claim-id",
+          absence_case_id: "mock-absence-case-id",
+          uploaded_document_type: documentTypeParam,
+        }
       );
     }
   );

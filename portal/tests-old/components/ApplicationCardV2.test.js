@@ -12,7 +12,6 @@ describe("ApplicationCardV2", () => {
     claims: {
       isLoadingClaimDetail: false,
       loadClaimDetail: jest.fn(),
-      claimDetail: {},
     },
     documents: {
       download: () => {},

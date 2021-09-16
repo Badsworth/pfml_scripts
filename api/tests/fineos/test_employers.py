@@ -9,9 +9,6 @@ import massgov.pfml.fineos.employers as fineos_employers
 from massgov.pfml.db.models.employees import Employer, EmployerLog
 from massgov.pfml.db.models.factories import EmployerFactory, EmployerOnlyDORDataFactory
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 # Use a persistent database for all the tests here, as they need to support multiple concurrent
 # connections. This means we can't use a transaction based fixture, so wipe relevant tables before

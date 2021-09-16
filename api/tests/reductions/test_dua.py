@@ -132,7 +132,6 @@ def _get_loaded_reference_file_in_s3(
     ((0), (1), (random.randint(2, 10)),),
     ids=["no_file", "one_file", "many_files"],
 )
-@pytest.mark.integration
 def test_get_pending_dua_payment_reference_files(
     initialize_factories_session, test_db_session, pending_ref_file_count
 ):
@@ -219,7 +218,6 @@ def test_get_pending_dua_payment_reference_files(
         "some_existing-one_new-one_dupe",
     ],
 )
-@pytest.mark.integration
 def test_load_new_rows_from_file_success(
     dua_reduction_payment_unique_index,
     test_db_session,
@@ -279,7 +277,6 @@ def test_load_new_rows_from_file_success(
         )
 
 
-@pytest.mark.integration
 def test_load_new_rows_from_file_dua_example(dua_reduction_payment_unique_index, test_db_session):
     data_row_count = 180
     filepath = os.path.join(
@@ -336,7 +333,6 @@ def test_load_new_rows_from_file_dua_example(dua_reduction_payment_unique_index,
         ),
     ),
 )
-@pytest.mark.integration
 def test_load_new_rows_from_file_error(
     dua_reduction_payment_unique_index, test_db_session, headers, csv_rows
 ):
@@ -364,7 +360,6 @@ def test_load_new_rows_from_file_error(
     )
 
 
-@pytest.mark.integration
 def test_load_new_dua_payments_success(
     dua_reduction_payment_unique_index, test_db_session, mock_s3_bucket, monkeypatch
 ):
@@ -426,7 +421,6 @@ def test_load_new_dua_payments_success(
     )
 
 
-@pytest.mark.integration
 def test_load_new_dua_payments_error(
     dua_reduction_payment_unique_index, test_db_session, mock_s3_bucket, monkeypatch
 ):
@@ -486,7 +480,6 @@ def test_load_new_dua_payments_error(
     )
 
 
-@pytest.mark.integration
 def test_load_dua_payment_from_reference_file_success(
     dua_reduction_payment_unique_index, test_db_session, mock_s3_bucket
 ):
@@ -542,7 +535,6 @@ def test_load_dua_payment_from_reference_file_success(
     )
 
 
-@pytest.mark.integration
 def test_load_dua_payment_from_reference_file_existing_dest_filepath_error(
     dua_reduction_payment_unique_index, test_db_session, mock_s3_bucket
 ):
@@ -581,7 +573,6 @@ def test_load_dua_payment_from_reference_file_existing_dest_filepath_error(
     )
 
 
-@pytest.mark.integration
 def test_copy_to_sftp_and_archive_s3_files(
     initialize_factories_session,
     test_db_session,
@@ -703,7 +694,6 @@ def test_format_claimants_for_dua_claimant_list_null_fineos_customer_number_id()
         3,
     ),
 )
-@pytest.mark.integration
 def test_create_list_of_claimants_uploads_csv_to_s3_and_adds_state_log(
     initialize_factories_session, test_db_session, mock_s3_bucket, monkeypatch, claims_count,
 ):
@@ -800,7 +790,6 @@ def test_create_list_of_claimants_uploads_csv_to_s3_and_adds_state_log(
     ),
     ids=["no_files", "one_waiting", "multiple_files"],
 )
-@pytest.mark.integration
 def test_download_payment_list_from_moveit(
     initialize_factories_session,
     test_db_session,
@@ -982,7 +971,6 @@ def test_generate_reduction_payment_report_information_with_payments(
     assert report[0] == expected_report
 
 
-@pytest.mark.integration
 def test_create_report_new_dua_payments_to_dfml(
     initialize_factories_session, monkeypatch, mock_s3_bucket, test_db_session,
 ):
