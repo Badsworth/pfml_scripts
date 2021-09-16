@@ -565,6 +565,26 @@
     Integration test marker
   </a>
   
+    <nav class="md-nav" aria-label="Integration test marker">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#automatic-marking" class="md-nav__link">
+    Automatic marking
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#manual-marking" class="md-nav__link">
+    Manual marking
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -957,6 +977,26 @@
     Integration test marker
   </a>
   
+    <nav class="md-nav" aria-label="Integration test marker">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#automatic-marking" class="md-nav__link">
+    Automatic marking
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#manual-marking" class="md-nav__link">
+    Manual marking
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
     </ul>
@@ -1077,7 +1117,23 @@ file-like objects, should generally prefer using in-memory constructs like
 <code>StringIO</code> or <code>BytesIO</code> to avoid ever touching the filesystem. But currently if
 a test needs to load test fixture files or use <code>tmp_path</code> to work with a real
 file for some purpose, those do not need to be tagged <code>integration</code>.</p>
-<p>Decorate any individual test with <code>@pytest.mark.integration</code>.</p>
+<p><strong>In the vast majority of cases, the appropriate tests will get automatically tagged with the <code>integration</code> marker behind the scenes via the fixtures it uses.</strong></p>
+<h3 id="automatic-marking">Automatic marking</h3>
+<p>Test fixtures that use real resources should request the fixture
+<code>has_external_dependencies</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="nd">@pytest</span><span class="o">.</span><span class="n">fixture</span>
+<span class="k">def</span> <span class="nf">some_fixture_using_real_resources</span><span class="p">(</span><span class="n">has_external_dependencies</span><span class="p">):</span>
+  <span class="o">...</span>
+</code></pre></div>
+<p>Fixtures that have the <code>has_external_dependencies</code> fixture
+in their dependency graph do not need to explicitly
+request the <code>has_external_dependencies</code> fixture.</p>
+<p>All tests that request a fixture with <code>has_external_dependencies</code>
+in their dependency graph will be automatically marked
+with the <code>integration</code> marker.</p>
+<h3 id="manual-marking">Manual marking</h3>
+<p>To manually mark integration tests, decorate any individual test
+with <code>@pytest.mark.integration</code>.</p>
 <p>If all (or almost all) tests in a given test file are integration tests, they
 can be tagged all at once with a declaration like the following at the top of
 the file (after imports):</p>
