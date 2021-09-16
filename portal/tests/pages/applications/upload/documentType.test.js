@@ -426,7 +426,11 @@ describe(UploadDocument, () => {
 
       expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledWith(
         { isAdditionalDoc: true },
-        { claim_id: "mock-claim-id", absence_case_id: "mock-absence-case-id" }
+        {
+          claim_id: "mock-claim-id",
+          absence_case_id: "mock-absence-case-id",
+          uploaded_document_type: documentTypeParam,
+        }
       );
     }
   );

@@ -198,6 +198,30 @@ exports[`leave details page does render page with one section if absenceDetails 
 </div>
 `;
 
+exports[`status page  renders success alert when document type param is given 1`] = `
+<div
+  className="usa-alert usa-alert--success margin-bottom-3"
+  tabIndex="-1"
+>
+  <div
+    className="usa-alert__body"
+    role="region"
+  >
+    <Heading
+      className="usa-alert__heading"
+      level="2"
+    >
+      You've successfully submitted your proof of birth documents
+    </Heading>
+    <div
+      className="usa-alert__text"
+    >
+      Our Contact Center staff will review your documents for absence-case-id.
+    </div>
+  </div>
+</div>
+`;
+
 exports[`status page ViewYourNotices displays only legal notices for the current application_id 1`] = `
 <ViewYourNotices>
   <SectionWrapper>
