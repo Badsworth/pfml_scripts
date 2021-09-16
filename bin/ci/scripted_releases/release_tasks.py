@@ -26,6 +26,7 @@ def start(args):
     git_utils.tag_and_push(branch_name, tag_name)
 
 
+# ----------------------------------------------------------------------------------------------------
 # Produces new release candidates from an arbitrary list of git commits, or an arbitrary source branch
 def update(args):
     logger.info(f"Running 'update-release'...")
@@ -84,12 +85,13 @@ def update(args):
         git_utils.checkout(original_branch)
 
 
+# ----------------------------------------------------------------------------------------------------
 def finalize(args):
     logger.info(f"Running 'finalize-release'...")
     logger.debug(f"Args: {repr(args)}")
 
 
-def hotfix(args): # production hotfix, args are a branch name and a list of commits
+def hotfix(args):  # production hotfix, args are a branch name and a list of commits
     logger.info(f"Running 'hotfix'...")
     logger.debug(f"Args: {repr(args)}")
 
@@ -135,7 +137,7 @@ def hotfix(args): # production hotfix, args are a branch name and a list of comm
         logger.warning(f"Ran into a problem: {e}")
 
         try:
-            git_utils.cherrypick("--abort")  # not actually a "commit_hash", but a valid switch for `git cherry-pick`
+            git_utils.cherrypick("--abort")
             logger.warning("Cleaned up an in-process cherry-pick")
         except git.exc.GitCommandError as e2:
             logger.debug(f"No cherry-pick was in progress (or something else went wrong) - {e2}")
@@ -148,6 +150,7 @@ def hotfix(args): # production hotfix, args are a branch name and a list of comm
         git_utils.checkout(original_branch)
 
 
+# ----------------------------------------------------------------------------------------------------
 def major(args):
     # API ONLY!!! Increments major release number
     logger.info(f"Running 'major-release'...")

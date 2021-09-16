@@ -32,6 +32,7 @@ def pull_main():
     git.pull("origin", "main")
 
 
+# Ostensibly for cherry-picking one or more commit hashes, but takes any valid CLI arg to `git cherry-pick`
 def cherrypick(*args):
     git.cherry_pick(*args)
 
