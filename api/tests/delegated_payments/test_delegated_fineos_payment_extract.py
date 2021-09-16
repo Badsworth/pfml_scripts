@@ -65,10 +65,6 @@ from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
 )
 from massgov.pfml.delegated_payments.mock.mock_util import generate_routing_nbr_from_ssn
 
-# every test in here requires real resources
-
-pytestmark = pytest.mark.integration
-
 EXPECTED_OUTCOME = {"message": "Success"}
 
 ### UTILITY METHODS
@@ -1672,6 +1668,212 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
         employer_payment, State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
     )
     assert employer_payment.claim_id is None
+
+
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_extract_additional_payment_types_can_be_missing_claim(
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    local_test_db_session,
+    local_payment_extract_step,
+    tmp_path,
+    local_initialize_factories_session,
+    monkeypatch,
+    local_create_triggers,
+):
+    # This tests that non-standard payments can be missing a claim
+    # and will still be successful as long as the employee exists
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+    datasets = []
+
+    # Create a zero dollar payment
+    zero_dollar_data = FineosPaymentData(payment_amount="0.00")
+    add_db_records_from_fineos_data(local_test_db_session, zero_dollar_data, add_claim=False)
+    datasets.append(zero_dollar_data)
+
+    # Create an overpayment
+    # note that the event reason for an overpayment is Unknown which is treated as
+    # None in our approach, setting it here to make sure that doesn't cause a validation issue.
+    overpayment_data = FineosPaymentData(event_type="Overpayment", event_reason="Unknown")
+
+    add_db_records_from_fineos_data(local_test_db_session, overpayment_data, add_claim=False)
+    datasets.append(overpayment_data)
+
+    # Create a cancellation
+    cancellation_data = FineosPaymentData(
+        event_type="PaymentOut Cancellation", payment_amount="-123.45",
+    )
+    add_db_records_from_fineos_data(local_test_db_session, cancellation_data, add_claim=False)
+    datasets.append(cancellation_data)
+
+    # Unknown - negative payment amount, but PaymentOut
+    negative_payment_out_data = FineosPaymentData(event_type="PaymentOut", payment_amount="-100.00")
+    add_db_records_from_fineos_data(
+        local_test_db_session, negative_payment_out_data, add_claim=False
+    )
+    datasets.append(negative_payment_out_data)
+
+    # Unknown - missing payment amount
+    no_payment_out_data = FineosPaymentData(
+        payment_amount=None, payment_method="Elec Funds Transfer"
+    )
+    add_db_records_from_fineos_data(local_test_db_session, no_payment_out_data, add_claim=False)
+    datasets.append(no_payment_out_data)
+
+    # Unknown - missing event type
+    missing_event_payment_out_data = FineosPaymentData(event_type=None)
+    add_db_records_from_fineos_data(
+        local_test_db_session, missing_event_payment_out_data, add_claim=False
+    )
+    datasets.append(missing_event_payment_out_data)
+
+    # Create a record for an employer reimbursement
+    employer_reimbursement_data = FineosPaymentData(
+        event_reason=extractor.AUTO_ALT_EVENT_REASON,
+        event_type=extractor.PAYMENT_OUT_TRANSACTION_TYPE,
+        payee_identifier=extractor.TAX_IDENTIFICATION_NUMBER,
+    )
+    add_db_records_from_fineos_data(
+        local_test_db_session, employer_reimbursement_data, add_claim=False
+    )
+    datasets.append(employer_reimbursement_data)
+
+    upload_fineos_data(tmp_path, mock_s3_bucket, datasets)
+
+    # Run the extract process
+    local_payment_extract_step.run()
+
+    # No PUB EFT records should exist
+    len(local_test_db_session.query(PubEft).all()) == 0
+
+    # Zero dollar payment should be in DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT
+    zero_dollar_payment = (
+        local_test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == zero_dollar_data.i_value)
+        .one_or_none()
+    )
+    assert zero_dollar_payment.claim_id is None
+    assert zero_dollar_payment.employee_id
+    validate_non_standard_payment_state(
+        zero_dollar_payment, State.DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT
+    )
+
+    # Overpayment should be in DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT
+    overpayment_payment = (
+        local_test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == overpayment_data.i_value)
+        .one_or_none()
+    )
+    assert overpayment_payment.claim_id is None
+    assert overpayment_payment.employee_id
+    validate_non_standard_payment_state(
+        overpayment_payment, State.DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT
+    )
+
+    # ACH Cancellation should be in DELEGATED_PAYMENT_PROCESSED_CANCELLATION
+    cancellation_payment = (
+        local_test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == cancellation_data.i_value)
+        .one_or_none()
+    )
+    assert cancellation_payment.claim_id is None
+    assert cancellation_payment.employee_id
+    validate_non_standard_payment_state(
+        cancellation_payment, State.DELEGATED_PAYMENT_PROCESSED_CANCELLATION
+    )
+
+    # Negative payment will cause an unknown transaction type which is restartable
+    # DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE and
+    # DELEGATED_ADD_TO_FINEOS_WRITEBACK
+    negative_payment = (
+        local_test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == negative_payment_out_data.i_value)
+        .one_or_none()
+    )
+    assert negative_payment.claim_id is None
+    assert negative_payment.employee_id
+    validate_non_standard_payment_state(
+        negative_payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
+    )
+
+    # No payment amount means the payment needs to be updated, so we error
+    # the payment and add it to two states.
+    # DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT and
+    # DELEGATED_ADD_TO_FINEOS_WRITEBACK
+    no_amount_payment = (
+        local_test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == no_payment_out_data.i_value)
+        .one_or_none()
+    )
+    assert no_amount_payment.claim_id is None
+    assert no_amount_payment.employee_id
+    validate_non_standard_payment_state(
+        no_amount_payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
+    )
+
+    # No event type means the payment needs to be updated, so we error
+    # the payment and add it to two states.
+    # DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT and
+    # DELEGATED_ADD_TO_FINEOS_WRITEBACK
+    missing_event_payment = (
+        local_test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == missing_event_payment_out_data.i_value)
+        .one_or_none()
+    )
+    assert missing_event_payment.claim_id is None
+    assert missing_event_payment.employee_id
+    validate_non_standard_payment_state(
+        missing_event_payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
+    )
+
+    # Employer reimbursement should be in DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
+    employer_payment = (
+        local_test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == employer_reimbursement_data.i_value)
+        .one_or_none()
+    )
+    assert employer_payment.claim_id is None
+    assert employer_payment.employee_id is None  # We don't fetch the employee for employers
+    validate_non_standard_payment_state(
+        employer_payment, State.DELEGATED_PAYMENT_PROCESSED_EMPLOYER_REIMBURSEMENT
+    )
+
+
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_extract_additional_payment_types_still_require_employee(
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    local_test_db_session,
+    local_payment_extract_step,
+    tmp_path,
+    local_initialize_factories_session,
+    monkeypatch,
+    local_create_triggers,
+):
+    # This tests that non-standard payments can be missing a claim
+    # and will still be successful as long as the employee exists
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+
+    # Create a zero dollar payment
+    zero_dollar_data = FineosPaymentData(payment_amount="0.00")
+    add_db_records_from_fineos_data(local_test_db_session, zero_dollar_data, add_employee=False)
+
+    upload_fineos_data(tmp_path, mock_s3_bucket, [zero_dollar_data])
+
+    # Run the extract process
+    local_payment_extract_step.run()
+
+    # The payment will error because the employee isn't found
+    zero_dollar_payment = (
+        local_test_db_session.query(Payment)
+        .filter(Payment.fineos_pei_i_value == zero_dollar_data.i_value)
+        .one_or_none()
+    )
+    assert zero_dollar_payment.claim_id is None  # Not attached without employee
+    assert zero_dollar_payment.employee_id is None
+    validate_non_standard_payment_state(
+        zero_dollar_payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
+    )
 
 
 def make_payment_data_from_fineos_data(fineos_data):

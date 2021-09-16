@@ -5,8 +5,6 @@
 import datetime
 import decimal
 
-import pytest
-
 from massgov.pfml.api.eligibility import eligibility_util
 from massgov.pfml.db.models.factories import StateMetricFactory
 
@@ -78,7 +76,6 @@ def test_wages_gte_thirty_times_wba_mid():
     assert is_eligible is True
 
 
-@pytest.mark.integration
 def test_fetch_state_metric(test_db_session):
     effective_date = datetime.date(2020, 10, 1)
     state_metric = eligibility_util.fetch_state_metric(test_db_session, effective_date)
@@ -87,7 +84,6 @@ def test_fetch_state_metric(test_db_session):
     assert state_metric.average_weekly_wage == decimal.Decimal("1431.66")
 
 
-@pytest.mark.integration
 def test_fetch_state_metric_multiple_yrs(initialize_factories_session, test_db_session):
     StateMetricFactory.create(
         effective_date=datetime.date(2018, 10, 1),

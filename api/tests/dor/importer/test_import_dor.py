@@ -38,9 +38,6 @@ from massgov.pfml.util.encryption import GpgCrypt, Utf8Crypt
 
 from . import dor_test_data as test_data
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 decrypter = Utf8Crypt()
 employee_file = "DORDFML_20200519120622"
 employer_file = "DORDFMLEMP_20200519120622"

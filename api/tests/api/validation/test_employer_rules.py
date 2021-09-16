@@ -19,7 +19,6 @@ class TestEmployerAddFeinIssue:
     def employer_with_fineos_id(self):
         return EmployerFactory.create(fineos_employer_id=1)
 
-    @pytest.mark.integration
     def test_employer_is_valid(self, initialize_factories_session, employer_with_fineos_id):
         filing_period = datetime.now() - timedelta(days=1)
         EmployerQuarterlyContributionFactory.create(
@@ -44,7 +43,6 @@ class TestEmployerAddFeinIssue:
                 )
             ]
 
-    @pytest.mark.integration
     def test_employer_verification_data_too_far_in_past(
         self, initialize_factories_session, employer_with_fineos_id
     ):
@@ -64,7 +62,6 @@ class TestEmployerAddFeinIssue:
                 )
             ]
 
-    @pytest.mark.integration
     def test_employer_verification_data_only_in_future(
         self, initialize_factories_session, employer_with_fineos_id
     ):

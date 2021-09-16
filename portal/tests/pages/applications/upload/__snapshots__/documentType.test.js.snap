@@ -872,6 +872,7 @@ exports[`ComponentWithUser renders the appropriate identification upload content
       </h2>
       <div
         class="usa-accordion__content usa-prose"
+        data-testid="accordion1"
         hidden=""
         id="accordion1"
       >

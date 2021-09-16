@@ -48,9 +48,6 @@ from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
 from massgov.pfml.util import datetime
 from tests.delegated_payments.conftest import upload_file_to_s3
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 @pytest.fixture
 def claimant_extract_step(initialize_factories_session, test_db_session, test_db_other_session):

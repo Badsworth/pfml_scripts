@@ -34,9 +34,6 @@ from massgov.pfml.db.models.payments import (
     LkFineosWritebackTransactionStatus,
 )
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 fake = faker.Faker()
 
 check_number_provider = {"check_number": 1}

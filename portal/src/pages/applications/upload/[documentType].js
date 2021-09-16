@@ -221,7 +221,11 @@ export const DocumentUpload = (props) => {
     if (success) {
       portalFlow.goToNextPage(
         { isAdditionalDoc },
-        { claim_id: query.claim_id, absence_case_id: query.absence_case_id }
+        {
+          uploaded_document_type: query.documentType,
+          claim_id: query.claim_id,
+          absence_case_id: query.absence_case_id,
+        }
       );
     }
   };

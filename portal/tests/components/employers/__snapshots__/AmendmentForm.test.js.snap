@@ -1,0 +1,29 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AmendmentForm renders the component 1`] = `
+<div
+  class="usa-alert usa-alert--info usa-alert--no-icon usa-form c-amendment-form border-y border-y-width-1px border-right border-right-width-1px"
+>
+  <div
+    class="usa-alert__body"
+  >
+    <div
+      class="usa-alert__text"
+    >
+      <p>
+        Testing
+      </p>
+    </div>
+    <div
+      class="border-top border-width-1px margin-top-4 margin-bottom-1 border-base-light"
+    >
+      <button
+        class="usa-button position-relative margin-top-3 text-red usa-button--unstyled"
+        type="button"
+      >
+        Destroy
+      </button>
+    </div>
+  </div>
+</div>
+`;

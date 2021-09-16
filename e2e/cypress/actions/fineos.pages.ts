@@ -332,8 +332,8 @@ export class ClaimPage {
         cy.contains(
           "Automatic Notifications and Correspondence have been suppressed."
         );
-        clickBottomWidgetButton("Close");
       });
+      clickBottomWidgetButton("Close");
     } else {
       cy.contains(
         "span[title='Control is protected by a Secured Action.']",
@@ -720,10 +720,11 @@ export class DocumentsPage {
         .next()
         .should("not.contain.html", 'title="Document Search."');
     }
-    clickBottomWidgetButton("OK");
-    cy.get(
-      'table[id^="DocumentsForCaseListviewWidget_"][id$="_DocumentsViewControl"]'
-    ).should("contain.text", newDocType);
+    clickBottomWidgetButton(shouldBeAvailable ? "OK" : "Close");
+    if (shouldBeAvailable)
+      cy.get(
+        'table[id^="DocumentsForCaseListviewWidget_"][id$="_DocumentsViewControl"]'
+      ).should("contain.text", newDocType);
   }
   /**
    * Goes through the document upload process and returns back to the documents page
@@ -1594,15 +1595,15 @@ class BenefitsExtensionPage {
 export class ClaimantPage {
   static visit(ssn: string): ClaimantPage {
     ssn = ssn.replace(/-/g, "");
-    cy.get('a[aria-label="Parties"]').click();
+    cy.get('a[aria-label="Parties"]').click({ force: true });
     waitForAjaxComplete();
-    cy.contains("td", "Identification Number")
-      .next()
-      .within(() => cy.get("input").type(ssn));
-    cy.get('input[type="submit"][value="Search"]').click();
+    cy.findByLabelText("Identification Number")
+      .click({ force: true })
+      .type(ssn, { delay: 10 });
+    cy.get('input[type="submit"][value="Search"]').click({ force: true });
     waitForAjaxComplete();
     fineos.clickBottomWidgetButton("OK");
-    waitForAjaxComplete();
+
     return new ClaimantPage();
   }
   /**
@@ -1813,7 +1814,7 @@ export class ClaimantPage {
    */
   startCreateNotification<T>(cb: (step: OccupationDetails) => T): T {
     // Start the process
-    cy.contains("span", "Create Notification").click();
+    cy.contains("span", "Create Notification").click({ force: true });
     // "Notification details" step, we are not changing anything here, so we just skip it.
     this.clickNext();
     return cb(new OccupationDetails());
@@ -1857,7 +1858,8 @@ abstract class CreateNotificationStep {
 class OccupationDetails extends CreateNotificationStep {
   enterHoursWorkedPerWeek(hoursWorkedPerWeek: number) {
     cy.findByLabelText("Hours worked per week").type(
-      `{selectall}{backspace}${hoursWorkedPerWeek}`
+      `{selectall}{backspace}${hoursWorkedPerWeek}`,
+      { force: true }
     );
   }
   /**
@@ -1890,7 +1892,8 @@ type TypeOfRequestOptions =
   | "Out of work for another reason";
 class NotificationOptions extends CreateNotificationStep {
   chooseTypeOfRequest(type: TypeOfRequestOptions): this {
-    cy.contains("div", type).prev().find("input").click();
+    cy.contains("div", type).prev().find("input").click({ force: true });
+    waitForAjaxComplete();
     cy.findByText("Request a Leave").should("be.visible");
     return this;
   }

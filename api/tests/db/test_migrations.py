@@ -1,12 +1,8 @@
-import pytest
 from alembic.script import ScriptDirectory
 from alembic.script.revision import MultipleHeads
 from alembic.util.exc import CommandError
 
 from massgov.pfml.db.migrations.run import alembic_cfg
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 
 def test_only_single_head_revision_in_migrations():
@@ -32,11 +28,9 @@ def test_only_single_head_revision_in_migrations():
         )
 
 
-@pytest.mark.integration
 def test_running_migrations_fixture(logging_fix, test_db_via_migrations):
     pass
 
 
-@pytest.mark.integration
 def test_running_migrations_session_fixture(logging_fix, test_db_session_via_migrations):
     pass

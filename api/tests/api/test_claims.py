@@ -53,9 +53,6 @@ from massgov.pfml.fineos.models.group_client_api import (
 from massgov.pfml.util.pydantic.types import FEINFormattedStr
 from massgov.pfml.util.strings import format_fein
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 # Run `initialize_factories_session` for all tests,
 # so that it doesn't need to be manually included
@@ -117,7 +114,6 @@ def user_leave_admin(employer_user, employer, test_verification):
     )
 
 
-@pytest.mark.integration
 class TestVerificationEnforcement:
     # This class groups the tests that ensure that existing users with UserLeaveAdministrator records
     # get 403s when attempting to access claim data without a Verification
@@ -185,7 +181,6 @@ class TestVerificationEnforcement:
         assert response.get_json()["message"] == "User does not have access to claim."
 
 
-@pytest.mark.integration
 class TestNotAuthorizedForAccess:
     # This class groups the tests that ensure that users get 403s when
     # attempting to access claim data without an associated user leave administrator
@@ -261,7 +256,8 @@ class TestNotAuthorizedForAccess:
 
 
 # testing class for employer_get_claim_documents
-@pytest.mark.integration
+
+
 class TestEmployerGetClaimDocuments:
     @pytest.fixture(autouse=True)
     def setup_db(self, claim, employer, user_leave_admin, test_db_session):
@@ -390,7 +386,6 @@ class TestEmployerDocumentDownload:
         assert error_message in caplog.text
 
 
-@pytest.mark.integration
 class TestGetClaimReview:
     def test_non_employers_cannot_access_get_claim_review(self, client, auth_token):
         response = client.get(
@@ -799,7 +794,6 @@ class TestGetClaimReview:
         assert response.status_code == 200
 
 
-@pytest.mark.integration
 class TestUpdateClaim:
     @pytest.fixture(autouse=True)
     def setup_db(self, claim, employer, user_leave_admin, test_db_session):

@@ -26,10 +26,6 @@ from massgov.pfml.db.queries.managed_requirements import (
 )
 from massgov.pfml.fineos.models.group_client_api import ManagedRequirementDetails
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
-
 leave_admin_body = {
     "absence_case_id": "NTN-111-ABS-01",
     "document_type": "Approval Notice",

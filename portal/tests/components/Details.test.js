@@ -15,12 +15,12 @@ describe("Details", () => {
   });
 
   it("uses label as summary", () => {
-    const { container } = render(
+    render(
       <Details label="ExpandableLabel">
         <h1>Expandable Content</h1>
       </Details>
     );
-    const summary = container.querySelector("summary");
-    expect(summary).toHaveTextContent("Expandable");
+
+    expect(screen.getByText("ExpandableLabel")).toBeInTheDocument();
   });
 });

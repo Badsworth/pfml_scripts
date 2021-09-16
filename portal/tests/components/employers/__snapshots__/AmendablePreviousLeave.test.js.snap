@@ -1,0 +1,36 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AmendablePreviousLeave for amended leaves renders the component with a table row for existing data 1`] = `
+<table>
+  <tbody>
+    <tr>
+      <th
+        scope="row"
+      >
+        3/1/2020 to 3/6/2020
+      </th>
+      <td>
+        Caring for a family member who served in the armed forces
+      </td>
+      <td>
+        <button
+          class="usa-button position-relative text-no-wrap usa-button--unstyled"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="usa-icon text-middle margin-right-05 margin-top-neg-05"
+            focusable="false"
+            role="img"
+          >
+            <use
+              xlink:href="/img/sprite.svg#edit"
+            />
+          </svg>
+          Amend
+        </button>
+      </td>
+    </tr>
+  </tbody>
+</table>
+`;

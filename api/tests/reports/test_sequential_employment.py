@@ -30,8 +30,6 @@ LAST_2_QUARTERS_WAGES = [1000, 1000, 0, 0]
 LAST_4_QUARTERS_WAGES = [1000, 1000, 1000, 1000]
 WAGES_3_AND_4_QUARTERS_AGO = [0, 0, 1000, 1000]
 
-pytestmark = pytest.mark.integration
-
 
 def generate_prev_4_quarters_wages(employee: Employee, employer: Employer, wages_list: List[int]):
     """

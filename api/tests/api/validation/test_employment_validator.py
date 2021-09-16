@@ -1,5 +1,3 @@
-import pytest
-
 from massgov.pfml.api.validation.employment_validator import (
     get_contributing_employer_or_employee_issue,
 )
@@ -10,9 +8,6 @@ from massgov.pfml.db.models.factories import (
     TaxIdentifierFactory,
     WagesAndContributionsFactory,
 )
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 
 def test_valid_contributing_employer_and_employee(test_db_session, initialize_factories_session):

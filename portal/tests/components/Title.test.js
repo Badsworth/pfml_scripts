@@ -43,9 +43,9 @@ describe("Title", () => {
   });
 
   it("renders a <legend> when the `component` prop is set to 'legend'", () => {
-    const { container } = render(<Title component="legend">Hello world</Title>);
+    render(<Title component="legend">Hello world</Title>);
 
-    expect(container.querySelector("legend")).toHaveClass("usa-legend");
+    expect(screen.getAllByText("Hello world")[1]).toHaveClass("usa-legend");
   });
 
   it("visually hides the heading when the `hidden` prop is set to true", () => {

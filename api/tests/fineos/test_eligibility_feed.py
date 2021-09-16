@@ -27,16 +27,9 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.util.pydantic.types import TaxIdUnformattedStr
 
-# almost every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 class SpecialTestException(Exception):
     """Exception only defined here for ensure mocked exception is bubbled up"""
-
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 
 def test_employee_to_eligibility_feed_record(initialize_factories_session):

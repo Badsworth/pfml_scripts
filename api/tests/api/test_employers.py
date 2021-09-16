@@ -1,15 +1,11 @@
 from datetime import date, datetime, timedelta
 from decimal import Decimal
 
-import pytest
 from freezegun import freeze_time
 
 from massgov.pfml.db.models.employees import EmployerQuarterlyContribution, UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory, EmployerQuarterlyContributionFactory
 from massgov.pfml.util.strings import format_fein
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 
 def test_employers_receive_201_from_add_fein(

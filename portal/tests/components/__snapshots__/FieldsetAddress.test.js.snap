@@ -1,0 +1,829 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FieldsetAddress renders the component with existing values 1`] = `
+<div>
+  <fieldset
+    class="usa-fieldset"
+  >
+    <span>
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        What is your address?
+      </legend>
+      <div
+        class="usa-form-group"
+      >
+        <label
+          class="usa-label text-bold font-heading-xs measure-5"
+          for="InputText6"
+          id="InputText6_label"
+        >
+          Address
+        </label>
+        <input
+          aria-labelledby="InputText6_label InputText6_hint"
+          autocomplete="address-line1"
+          class="usa-input maxw-mobile-lg"
+          id="InputText6"
+          name="address.line_1"
+          type="text"
+          value="1600 Pennsylvania Avenue NW"
+        />
+      </div>
+      <div
+        class="usa-form-group"
+      >
+        <label
+          class="usa-label text-bold font-heading-xs measure-5"
+          for="InputText7"
+          id="InputText7_label"
+        >
+          Address line 2
+          <span
+            class="usa-hint text-base-dark text-normal"
+          >
+             (optional)
+          </span>
+        </label>
+        <input
+          aria-labelledby="InputText7_label InputText7_hint"
+          autocomplete="address-line2"
+          class="usa-input maxw-mobile-lg"
+          id="InputText7"
+          name="address.line_2"
+          type="text"
+          value="Rose Garden"
+        />
+      </div>
+      <div
+        class="usa-form-group"
+      >
+        <label
+          class="usa-label text-bold font-heading-xs measure-5"
+          for="InputText8"
+          id="InputText8_label"
+        >
+          City
+        </label>
+        <input
+          aria-labelledby="InputText8_label InputText8_hint"
+          autocomplete="address-level2"
+          class="usa-input maxw-mobile-lg"
+          id="InputText8"
+          name="address.city"
+          type="text"
+          value="Washington"
+        />
+      </div>
+      <div
+        class="usa-form-group"
+      >
+        <label
+          class="usa-label text-bold font-heading-xs measure-5"
+          for="Dropdown9"
+          id="Dropdown9_label"
+        >
+          State
+        </label>
+        <div
+          class=""
+          data-default-value="DC"
+        >
+          <select
+            aria-labelledby="Dropdown9_label Dropdown9_hint"
+            class="usa-select maxw-mobile-lg"
+            id="Dropdown9"
+            name="address.state"
+          >
+            <option
+              value=""
+            >
+              - Select an answer -
+            </option>
+            <option
+              value="AL"
+            >
+              Alabama
+            </option>
+            <option
+              value="AK"
+            >
+              Alaska
+            </option>
+            <option
+              value="AS"
+            >
+              American Samoa
+            </option>
+            <option
+              value="AZ"
+            >
+              Arizona
+            </option>
+            <option
+              value="AR"
+            >
+              Arkansas
+            </option>
+            <option
+              value="CA"
+            >
+              California
+            </option>
+            <option
+              value="CO"
+            >
+              Colorado
+            </option>
+            <option
+              value="CT"
+            >
+              Connecticut
+            </option>
+            <option
+              value="DE"
+            >
+              Delaware
+            </option>
+            <option
+              value="DC"
+            >
+              District of Columbia
+            </option>
+            <option
+              value="FL"
+            >
+              Florida
+            </option>
+            <option
+              value="GA"
+            >
+              Georgia
+            </option>
+            <option
+              value="GU"
+            >
+              Guam
+            </option>
+            <option
+              value="HI"
+            >
+              Hawaii
+            </option>
+            <option
+              value="ID"
+            >
+              Idaho
+            </option>
+            <option
+              value="IL"
+            >
+              Illinois
+            </option>
+            <option
+              value="IN"
+            >
+              Indiana
+            </option>
+            <option
+              value="IA"
+            >
+              Iowa
+            </option>
+            <option
+              value="KS"
+            >
+              Kansas
+            </option>
+            <option
+              value="KY"
+            >
+              Kentucky
+            </option>
+            <option
+              value="LA"
+            >
+              Louisiana
+            </option>
+            <option
+              value="ME"
+            >
+              Maine
+            </option>
+            <option
+              value="MD"
+            >
+              Maryland
+            </option>
+            <option
+              value="MA"
+            >
+              Massachusetts
+            </option>
+            <option
+              value="MI"
+            >
+              Michigan
+            </option>
+            <option
+              value="MN"
+            >
+              Minnesota
+            </option>
+            <option
+              value="MS"
+            >
+              Mississippi
+            </option>
+            <option
+              value="MO"
+            >
+              Missouri
+            </option>
+            <option
+              value="MT"
+            >
+              Montana
+            </option>
+            <option
+              value="NE"
+            >
+              Nebraska
+            </option>
+            <option
+              value="NV"
+            >
+              Nevada
+            </option>
+            <option
+              value="NH"
+            >
+              New Hampshire
+            </option>
+            <option
+              value="NJ"
+            >
+              New Jersey
+            </option>
+            <option
+              value="NM"
+            >
+              New Mexico
+            </option>
+            <option
+              value="NY"
+            >
+              New York
+            </option>
+            <option
+              value="NC"
+            >
+              North Carolina
+            </option>
+            <option
+              value="ND"
+            >
+              North Dakota
+            </option>
+            <option
+              value="MP"
+            >
+              Northern Mariana Islands
+            </option>
+            <option
+              value="OH"
+            >
+              Ohio
+            </option>
+            <option
+              value="OK"
+            >
+              Oklahoma
+            </option>
+            <option
+              value="OR"
+            >
+              Oregon
+            </option>
+            <option
+              value="PA"
+            >
+              Pennsylvania
+            </option>
+            <option
+              value="PR"
+            >
+              Puerto Rico
+            </option>
+            <option
+              value="RI"
+            >
+              Rhode Island
+            </option>
+            <option
+              value="SC"
+            >
+              South Carolina
+            </option>
+            <option
+              value="SD"
+            >
+              South Dakota
+            </option>
+            <option
+              value="TN"
+            >
+              Tennessee
+            </option>
+            <option
+              value="TX"
+            >
+              Texas
+            </option>
+            <option
+              value="VI"
+            >
+              U.S. Virgin Islands
+            </option>
+            <option
+              value="UT"
+            >
+              Utah
+            </option>
+            <option
+              value="VT"
+            >
+              Vermont
+            </option>
+            <option
+              value="VA"
+            >
+              Virginia
+            </option>
+            <option
+              value="WA"
+            >
+              Washington
+            </option>
+            <option
+              value="WV"
+            >
+              West Virginia
+            </option>
+            <option
+              value="WI"
+            >
+              Wisconsin
+            </option>
+            <option
+              value="WY"
+            >
+              Wyoming
+            </option>
+          </select>
+        </div>
+      </div>
+      <div
+        class="usa-form-group"
+      >
+        <label
+          class="usa-label text-bold font-heading-xs measure-5"
+          for="InputText10"
+          id="InputText10_label"
+        >
+          ZIP
+        </label>
+        <div
+          class=""
+        >
+          <input
+            aria-labelledby="InputText10_label InputText10_hint"
+            autocomplete="postal-code"
+            class="usa-input usa-input--medium"
+            id="InputText10"
+            inputmode="numeric"
+            name="address.zip"
+            type="text"
+            value="20500"
+          />
+        </div>
+      </div>
+    </span>
+  </fieldset>
+</div>
+`;
+
+exports[`FieldsetAddress renders the component with null values 1`] = `
+<div>
+  <fieldset
+    class="usa-fieldset"
+  >
+    <span>
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        What is your address?
+      </legend>
+      <div
+        class="usa-form-group"
+      >
+        <label
+          class="usa-label text-bold font-heading-xs measure-5"
+          for="InputText1"
+          id="InputText1_label"
+        >
+          Address
+        </label>
+        <input
+          aria-labelledby="InputText1_label InputText1_hint"
+          autocomplete="address-line1"
+          class="usa-input maxw-mobile-lg"
+          id="InputText1"
+          name="address.line_1"
+          type="text"
+          value=""
+        />
+      </div>
+      <div
+        class="usa-form-group"
+      >
+        <label
+          class="usa-label text-bold font-heading-xs measure-5"
+          for="InputText2"
+          id="InputText2_label"
+        >
+          Address line 2
+          <span
+            class="usa-hint text-base-dark text-normal"
+          >
+             (optional)
+          </span>
+        </label>
+        <input
+          aria-labelledby="InputText2_label InputText2_hint"
+          autocomplete="address-line2"
+          class="usa-input maxw-mobile-lg"
+          id="InputText2"
+          name="address.line_2"
+          type="text"
+          value=""
+        />
+      </div>
+      <div
+        class="usa-form-group"
+      >
+        <label
+          class="usa-label text-bold font-heading-xs measure-5"
+          for="InputText3"
+          id="InputText3_label"
+        >
+          City
+        </label>
+        <input
+          aria-labelledby="InputText3_label InputText3_hint"
+          autocomplete="address-level2"
+          class="usa-input maxw-mobile-lg"
+          id="InputText3"
+          name="address.city"
+          type="text"
+          value=""
+        />
+      </div>
+      <div
+        class="usa-form-group"
+      >
+        <label
+          class="usa-label text-bold font-heading-xs measure-5"
+          for="Dropdown4"
+          id="Dropdown4_label"
+        >
+          State
+        </label>
+        <div
+          class=""
+          data-default-value=""
+        >
+          <select
+            aria-labelledby="Dropdown4_label Dropdown4_hint"
+            class="usa-select maxw-mobile-lg"
+            id="Dropdown4"
+            name="address.state"
+          >
+            <option
+              value=""
+            >
+              - Select an answer -
+            </option>
+            <option
+              value="AL"
+            >
+              Alabama
+            </option>
+            <option
+              value="AK"
+            >
+              Alaska
+            </option>
+            <option
+              value="AS"
+            >
+              American Samoa
+            </option>
+            <option
+              value="AZ"
+            >
+              Arizona
+            </option>
+            <option
+              value="AR"
+            >
+              Arkansas
+            </option>
+            <option
+              value="CA"
+            >
+              California
+            </option>
+            <option
+              value="CO"
+            >
+              Colorado
+            </option>
+            <option
+              value="CT"
+            >
+              Connecticut
+            </option>
+            <option
+              value="DE"
+            >
+              Delaware
+            </option>
+            <option
+              value="DC"
+            >
+              District of Columbia
+            </option>
+            <option
+              value="FL"
+            >
+              Florida
+            </option>
+            <option
+              value="GA"
+            >
+              Georgia
+            </option>
+            <option
+              value="GU"
+            >
+              Guam
+            </option>
+            <option
+              value="HI"
+            >
+              Hawaii
+            </option>
+            <option
+              value="ID"
+            >
+              Idaho
+            </option>
+            <option
+              value="IL"
+            >
+              Illinois
+            </option>
+            <option
+              value="IN"
+            >
+              Indiana
+            </option>
+            <option
+              value="IA"
+            >
+              Iowa
+            </option>
+            <option
+              value="KS"
+            >
+              Kansas
+            </option>
+            <option
+              value="KY"
+            >
+              Kentucky
+            </option>
+            <option
+              value="LA"
+            >
+              Louisiana
+            </option>
+            <option
+              value="ME"
+            >
+              Maine
+            </option>
+            <option
+              value="MD"
+            >
+              Maryland
+            </option>
+            <option
+              value="MA"
+            >
+              Massachusetts
+            </option>
+            <option
+              value="MI"
+            >
+              Michigan
+            </option>
+            <option
+              value="MN"
+            >
+              Minnesota
+            </option>
+            <option
+              value="MS"
+            >
+              Mississippi
+            </option>
+            <option
+              value="MO"
+            >
+              Missouri
+            </option>
+            <option
+              value="MT"
+            >
+              Montana
+            </option>
+            <option
+              value="NE"
+            >
+              Nebraska
+            </option>
+            <option
+              value="NV"
+            >
+              Nevada
+            </option>
+            <option
+              value="NH"
+            >
+              New Hampshire
+            </option>
+            <option
+              value="NJ"
+            >
+              New Jersey
+            </option>
+            <option
+              value="NM"
+            >
+              New Mexico
+            </option>
+            <option
+              value="NY"
+            >
+              New York
+            </option>
+            <option
+              value="NC"
+            >
+              North Carolina
+            </option>
+            <option
+              value="ND"
+            >
+              North Dakota
+            </option>
+            <option
+              value="MP"
+            >
+              Northern Mariana Islands
+            </option>
+            <option
+              value="OH"
+            >
+              Ohio
+            </option>
+            <option
+              value="OK"
+            >
+              Oklahoma
+            </option>
+            <option
+              value="OR"
+            >
+              Oregon
+            </option>
+            <option
+              value="PA"
+            >
+              Pennsylvania
+            </option>
+            <option
+              value="PR"
+            >
+              Puerto Rico
+            </option>
+            <option
+              value="RI"
+            >
+              Rhode Island
+            </option>
+            <option
+              value="SC"
+            >
+              South Carolina
+            </option>
+            <option
+              value="SD"
+            >
+              South Dakota
+            </option>
+            <option
+              value="TN"
+            >
+              Tennessee
+            </option>
+            <option
+              value="TX"
+            >
+              Texas
+            </option>
+            <option
+              value="VI"
+            >
+              U.S. Virgin Islands
+            </option>
+            <option
+              value="UT"
+            >
+              Utah
+            </option>
+            <option
+              value="VT"
+            >
+              Vermont
+            </option>
+            <option
+              value="VA"
+            >
+              Virginia
+            </option>
+            <option
+              value="WA"
+            >
+              Washington
+            </option>
+            <option
+              value="WV"
+            >
+              West Virginia
+            </option>
+            <option
+              value="WI"
+            >
+              Wisconsin
+            </option>
+            <option
+              value="WY"
+            >
+              Wyoming
+            </option>
+          </select>
+        </div>
+      </div>
+      <div
+        class="usa-form-group"
+      >
+        <label
+          class="usa-label text-bold font-heading-xs measure-5"
+          for="InputText5"
+          id="InputText5_label"
+        >
+          ZIP
+        </label>
+        <div
+          class=""
+        >
+          <input
+            aria-labelledby="InputText5_label InputText5_hint"
+            autocomplete="postal-code"
+            class="usa-input usa-input--medium"
+            id="InputText5"
+            inputmode="numeric"
+            name="address.zip"
+            type="text"
+            value=""
+          />
+        </div>
+      </div>
+    </span>
+  </fieldset>
+</div>
+`;

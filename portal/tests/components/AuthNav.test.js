@@ -22,13 +22,15 @@ describe("AuthNav", () => {
   it("doesn't render the user's name", () => {
     render(<AuthNav onLogout={jest.fn()} />);
 
-    expect(screen.queryByTestId("email_address")).toBeNull();
+    expect(screen.queryByTestId("email_address")).not.toBeInTheDocument();
   });
 
   it("doesn't render a log out link", () => {
     render(<AuthNav onLogout={jest.fn()} />);
 
-    expect(screen.queryByRole("button", { name: "Log out" })).toBe(null);
+    expect(
+      screen.queryByRole("button", { name: "Log out" })
+    ).not.toBeInTheDocument();
   });
 
   it("renders the logged-in state", () => {
@@ -49,7 +51,9 @@ describe("AuthNav", () => {
   it("doesn't render a Mass.gov link", () => {
     render(<AuthNav user={user} onLogout={() => jest.fn()} />);
 
-    expect(screen.queryByRole("link", { name: "Back to Mass.gov" })).toBe(null);
+    expect(
+      screen.queryByRole("link", { name: "Back to Mass.gov" })
+    ).not.toBeInTheDocument();
   });
 
   it("logs the user out when log out button is clicked", () => {

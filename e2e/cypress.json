@@ -2,6 +2,7 @@
   "integrationFolder": "cypress/specs",
   "watchForFileChanges": false,
   "defaultCommandTimeout": 10000,
+  "experimentalSessionSupport": true,
   "video": true,
   "videosFolder": "cypress/videos",
   "projectId": "wjoxhr",
