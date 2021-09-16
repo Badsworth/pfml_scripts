@@ -18,13 +18,6 @@ FORMAL_RELEASE_TAG_REGEX = r"(api|portal|foobar)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0
 
 def fetch_remotes():
     git.fetch("--all", "--tags")
-<<<<<<< HEAD
-
-
-def checkout_main():
-    git.checkout("main")
-=======
->>>>>>> alsia/hotfix-release-task
 
 
 def checkout(branch_name):
