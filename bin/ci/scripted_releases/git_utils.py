@@ -49,7 +49,7 @@ def create_branch(branch_name):
 
 
 def current_branch():
-    return git.branch("--show-current")
+    return git.rev_parse("--abbrev-ref", "HEAD")
 
 
 def most_recent_tag(app, release_branch):
