@@ -1,7 +1,7 @@
 import { fineos, fineosPages } from "../../../actions";
 import { FineosSecurityGroups } from "../../../../src/submission/fineos.pages";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
-import { config } from "../../../actions/common";
+import { config, getFineosBaseUrl } from "../../../actions/common";
 
 const userTypes: {
   security_group: FineosSecurityGroups;
@@ -52,6 +52,7 @@ const userTypes: {
     can_add_case: false,
   },
 ];
+Cypress.config("baseUrl", getFineosBaseUrl());
 
 describe("Historical absence secure actions", () => {
   userTypes.forEach((userType) => {
