@@ -128,7 +128,7 @@ def hotfix(args):  # production hotfix, args are a branch name and a list of com
 
         if args.git_commits:
             logger.info("Now cherry picking commits...")
-            git_utils.cherrypick(args.git_commits)
+            git_utils.cherrypick("-x", args.git_commits)
         else:
             logger.info(f"Now merging in {args.source_branch}...")
             git_utils.merge_in_branch(args.source_branch)
