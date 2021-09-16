@@ -7,9 +7,6 @@ from massgov.pfml.db.models.employees import State, StateLog
 from massgov.pfml.db.models.factories import PaymentFactory
 from massgov.pfml.db.models.payments import FineosWritebackDetails
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 # A few miscellaneous states that won't be cleaned up
 misc_states = [
     State.DELEGATED_PAYMENT_COMPLETE,

@@ -117,12 +117,7 @@ describe("Approval (notifications/notices)", () => {
           }
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
           portal.loginLeaveAdmin(claim.employer_fein);
-          portal.selectClaimFromEmployerDashboard(
-            submission.fineos_absence_id,
-            config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"
-              ? "No action required"
-              : "--"
-          );
+          portal.selectClaimFromEmployerDashboard(submission.fineos_absence_id);
           portal.checkNoticeForLeaveAdmin(
             submission.fineos_absence_id,
             employeeFullName,
@@ -172,12 +167,7 @@ describe("Approval (notifications/notices)", () => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
           assertValidClaim(claim);
           portal.loginLeaveAdmin(claim.employer_fein);
-          portal.selectClaimFromEmployerDashboard(
-            submission.fineos_absence_id,
-            config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"
-              ? "No action required"
-              : "--"
-          );
+          portal.selectClaimFromEmployerDashboard(submission.fineos_absence_id);
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
           const subjectEmployer = email.getNotificationSubject(
             `${claim.first_name} ${claim.last_name}`,

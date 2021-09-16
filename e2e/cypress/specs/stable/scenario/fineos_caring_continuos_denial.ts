@@ -1,7 +1,6 @@
 import { portal, fineos, fineosPages } from "../../../actions";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { Submission } from "../../../../src/types";
-import { config } from "../../../actions/common";
 describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
   const fineosSubmission = it("Should be able to create a claim", () => {
     fineos.before();
@@ -52,12 +51,7 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
         cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
           assertValidClaim(claim.claim);
           portal.loginLeaveAdmin(claim.claim.employer_fein);
-          portal.selectClaimFromEmployerDashboard(
-            fineos_absence_id,
-            config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"
-              ? "Review by"
-              : "--"
-          );
+          portal.selectClaimFromEmployerDashboard(fineos_absence_id);
           portal.visitActionRequiredERFormPage(fineos_absence_id);
           portal.respondToLeaveAdminRequest(false, true, false, true);
         });

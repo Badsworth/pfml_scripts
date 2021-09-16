@@ -38,8 +38,6 @@ from massgov.pfml.delegated_payments.audit.mock.delegated_payment_audit_generato
 from massgov.pfml.delegated_payments.pub.pub_check import _format_check_memo
 from massgov.pfml.util.datetime import get_period_in_weeks
 
-pytestmark = pytest.mark.integration
-
 
 @pytest.fixture
 def payment_audit_report_step(initialize_factories_session, test_db_session, test_db_other_session):

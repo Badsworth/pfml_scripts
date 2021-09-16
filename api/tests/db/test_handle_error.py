@@ -33,7 +33,6 @@ def test_sqlalchemy_event_handle_error():
     )
 
 
-@pytest.mark.integration
 def test_exception_is_cleaned(test_db_session):
     t1 = TaxIdentifier(tax_identifier="999009999")
     t2 = TaxIdentifier(tax_identifier="999009999")

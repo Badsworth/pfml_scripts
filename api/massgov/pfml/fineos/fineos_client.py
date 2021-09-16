@@ -57,6 +57,12 @@ create_or_update_leave_admin_request_schema = xmlschema.XMLSchema(
     )
 )
 
+create_or_update_leave_admin_response_schema = xmlschema.XMLSchema(
+    os.path.join(
+        os.path.dirname(__file__), "leave_admin_creation", "CreateOrUpdateLeaveAdmin.Response.xsd"
+    )
+)
+
 service_agreement_service_request_schema = xmlschema.XMLSchema(
     os.path.join(os.path.dirname(__file__), "wscomposer", "ServiceAgreementService.Request.xsd")
 )
@@ -1112,16 +1118,18 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
     def create_or_update_leave_admin(
         self, leave_admin_create_or_update: models.CreateOrUpdateLeaveAdmin
-    ) -> None:
+    ) -> Tuple[Optional[str], Optional[str]]:
         """Create or update a leave admin in FINEOS."""
         xml_body = self._create_or_update_leave_admin_payload(leave_admin_create_or_update)
-        self._integration_services_api(
+        response = self._integration_services_api(
             "POST",
             "rest/externalUserProvisioningService/createOrUpdateEmployerViewpointUser",
             self.wscomposer_user_id,
             "create_or_update_leave_admin",
             data=xml_body.encode("utf-8"),
         )
+        response_decoded = create_or_update_leave_admin_response_schema.decode(response.text)
+        return response_decoded["ns2:errorCode"], response_decoded["ns2:errorMessage"]
 
     def create_or_update_employer(
         self,
@@ -1288,6 +1296,22 @@ class FINEOSClient(client.AbstractFINEOSClient):
         employer_create_payload.update_data = models.UpdateData(PartyIntegrationDTO=[party_dto])
 
         payload_as_dict = employer_create_payload.dict(by_alias=True)
+
+        """
+        Relevant tickets: EDM-291, CPS-2703
+        After updating the OCOrganisation model to include the organisationUnits field for the ReadEmployer.Response, it did not match the previous OCOrganisation schema used for UpdateOrCreateParty.Request.
+        TODO Once FINEOS adds the organisationUnits field in the UpdateOrCreateParty.Request to allow creation of employers with a predefined list of org. units, the code deleting the organisationUnits key needs to be removed.
+        TODO The XSDS and the test file of expected XML will also need to be regenerated.
+        """
+        del payload_as_dict["update-data"]["PartyIntegrationDTO"][0]["organisation"][
+            "OCOrganisation"
+        ][0]["organisationUnits"]
+        del payload_as_dict["update-data"]["PartyIntegrationDTO"][0]["organisation"][
+            "OCOrganisation"
+        ][0]["names"]["OCOrganisationName"][0]["organisationWithDefault"]["OCOrganisation"][0][
+            "organisationUnits"
+        ]
+
         xml_element = update_or_create_party_request_schema.encode(payload_as_dict)
         return xml.etree.ElementTree.tostring(xml_element, encoding="unicode", xml_declaration=True)
 

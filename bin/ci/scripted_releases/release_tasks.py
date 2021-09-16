@@ -12,7 +12,7 @@ def start(args):
 
     # getting the proper tags/branches for the release
     git_utils.fetch_remotes()
-    recent_tag = git_utils.most_recent_tag(args.app)
+    recent_tag = git_utils.most_recent_tag(args.app, args.release_version)
 
     v = git_utils.to_semver(recent_tag)  # convert tag to semver object
     version_name = git_utils.from_semver(v.bump_minor(), args.app)
@@ -23,25 +23,28 @@ def start(args):
     git_utils.create_branch(branch_name)
 
     # add -rc before tagging and pushing branch
-    git_utils.tag_branch(branch_name, tag_name)
+    git_utils.tag_and_push(branch_name, tag_name)
 
 
+# Produces new release candidates from an arbitrary list of git commits, or an arbitrary source branch
 def update(args):
     logger.info(f"Running 'update-release'...")
     logger.debug(f"Args: {repr(args)}")
 
-    # guardrails will have vetted args.release_version
-    # guardrails will have vetted args.git_commits
-
-    # autonomous flow:
-    # TODO - most_recent_tag is not detecting 'foobar' RC tags correctly; finds only rc1 as newest, not rc2
     git_utils.fetch_remotes()
-    recent_tag = git_utils.most_recent_tag(args.app)
+    original_branch = git_utils.current_branch()  # Save this to check it back out after work's done
+
+    recent_tag = git_utils.most_recent_tag(args.app, args.release_version)
     v = git_utils.to_semver(recent_tag)
 
     if not git_utils.branch_exists(args.release_version):
         logger.error(f"Could not find the branch '{args.release_version}' on GitHub.")
         logger.error("Script cannot proceed and will now terminate.")
+        return False
+
+    if git_utils.is_finalized(args.release_version):
+        logger.error(f"'{args.release_version}' can only take hotfixes.")
+        logger.error("Try running this script again, but with the 'hotfix' task instead.")
         return False
 
     old_head = git_utils.head_of_branch(args.release_version)
@@ -51,26 +54,34 @@ def update(args):
     try:
         git_utils.checkout(args.release_version)
         logger.info(f"Checked out '{args.release_version}'.")
-        logger.info(f"Now {'cherry picking commits' if args.git_commits else f'merging in {args.source_branch}'}...")
+
+        if args.git_commits:
+            logger.info("Now cherry picking commits...")
+            git_utils.cherrypick(args.git_commits)
+        else:
+            logger.info(f"Now merging in {args.source_branch}...")
+            git_utils.merge_in_branch(args.source_branch)
+
+        logger.info("Done.")
+        git_utils.tag_and_push(args.release_version, f"{args.app}/v{v.bump_prerelease()}")
+
     except git.exc.GitCommandError as e:
+        # hard reset to old_head, and discard any tags or commits descended from old_head
+        # also abort any in-process cherry pick; these leave dirty state if not cleaned up
         logger.warning(f"Ran into a problem: {e}")
-        logger.warning(f"Reverting '{args.release_version}' back to previous HEAD...")
-        git_utils.reset_head()
-        logger.warning("Done. Will now halt.")
+
+        try:
+            git_utils.cherrypick("--abort")  # not actually a "commit_hash", but a valid switch for `git cherry-pick`
+            logger.warning("Cleaned up an in-process cherry-pick")
+        except git.exc.GitCommandError as e2:
+            logger.debug(f"No cherry-pick was in progress (or something else went wrong) - {e2}")
+
+        logger.warning(f"Resetting '{args.release_version}' back to {old_head}.")
+        git_utils.reset_head(old_head)
         return False
     finally:
-        logger.warning("Task is finishing, will check out 'main' locally")  # TODO: check out original branch instead
-        git_utils.checkout("main")
-
-    #   check out the branch at args.release_version
-    #       NB: will the check-out break everything if the release branch lacks this code?
-    #   for each git commit in args.git_commits:
-    #       cherry-pick that commit onto the branch at args.release_version
-    #       if merge conflicts or any other Git error, STOP. Hard reset to the saved pointer and exit 1.
-    #   once all commits cherry-picked:
-    #       increment semver 'prerelease' version by one
-    #       tag new HEAD of args.release_version with incremented semver
-    #       push (force-push?) updated branch to origin
+        logger.warning(f"Task is finishing, will check out '{original_branch}' locally")
+        git_utils.checkout(original_branch)
 
 
 def finalize(args):
@@ -122,7 +133,7 @@ def major(args):
     else:
         # getting the proper tags/branches for the release
         git_utils.fetch_remotes()
-        recent_tag = git_utils.most_recent_tag(args.app)
+        recent_tag = git_utils.most_recent_tag(args.app, args.release_version)
 
         v = git_utils.to_semver(recent_tag)  # convert tag to semver object
         version_name = git_utils.from_semver(v.bump_major(), args.app)
@@ -133,4 +144,4 @@ def major(args):
         git_utils.create_branch(branch_name)
 
         # add -rc before tagging and pushing branch
-        git_utils.tag_branch(branch_name, tag_name)
+        git_utils.tag_and_push(branch_name, tag_name)

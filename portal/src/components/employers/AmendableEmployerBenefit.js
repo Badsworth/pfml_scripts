@@ -141,7 +141,7 @@ const AmendableEmployerBenefit = ({
     : handleCancelAmendment;
 
   const BenefitDetailsRow = () => (
-    <tr>
+    <tr data-testid="benefit-details-row">
       <th scope="row">
         {formatDateRange(
           employerBenefit.benefit_start_date,
@@ -160,7 +160,7 @@ const AmendableEmployerBenefit = ({
     <React.Fragment>
       {!isAddedByLeaveAdmin && <BenefitDetailsRow />}
       <ConditionalContent visible={isAmendmentFormDisplayed}>
-        <tr ref={containerRef}>
+        <tr ref={containerRef} data-testid="added-benefit-details-row">
           <td colSpan="4" className="padding-y-2 padding-left-0">
             <AmendmentForm
               className={className}

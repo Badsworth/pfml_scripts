@@ -19,7 +19,6 @@ const AuthNav = (props) => {
       className="width-auto"
       inversed
       variation="unstyled"
-      data-test-auth-nav="massgov_link"
     >
       {t("pages.authCreateAccount.backButton")}
     </ButtonLink>
@@ -31,7 +30,6 @@ const AuthNav = (props) => {
       className="width-auto"
       inversed
       variation="unstyled"
-      data-test-auth-nav="login_link"
     >
       {t("pages.authCreateAccount.logInFooterLink")}
     </ButtonLink>
@@ -41,7 +39,7 @@ const AuthNav = (props) => {
     <React.Fragment>
       <span
         className="display-inline-block margin-right-1"
-        data-test-auth-nav="email_address"
+        data-testid="email_address"
       >
         {user.email_address}
       </span>
@@ -50,7 +48,6 @@ const AuthNav = (props) => {
         inversed
         onClick={props.onLogout}
         variation="unstyled"
-        data-test-auth-nav="logout_button"
       >
         {t("components.authNav.logOutButton")}
       </Button>

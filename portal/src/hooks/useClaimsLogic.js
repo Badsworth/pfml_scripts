@@ -1,8 +1,12 @@
-import { get, isEqual } from "lodash";
+import {
+  ClaimDetailLoadError,
+  ClaimWithdrawnError,
+  ValidationError,
+} from "../errors";
 import ClaimCollection from "../models/ClaimCollection";
-import { ClaimDetailLoadError } from "../errors";
 import ClaimsApi from "../api/ClaimsApi";
 import PaginationMeta from "../models/PaginationMeta";
+import { isEqual } from "lodash";
 import useCollectionState from "./useCollectionState";
 import { useState } from "react";
 
@@ -82,28 +86,46 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
   };
 
   /**
-   * Load details for a single claim
+   * Load details for a single claim. Note that if there is already a claim detail being loaded then
+   * this function will immediately return undefined.
    * @param {string} absenceId - FINEOS absence ID for the claim to load
+   * @returns {ClaimDetail|undefined} claim detail if we were able to load it. Returns undefined if
+   * we're already loading a claim detail or if the request to load the claim detail fails.
    */
   const loadClaimDetail = async (absenceId) => {
     if (isLoadingClaimDetail) return;
 
     // Have we already loaded this claim?
-    if (get(claimDetail, "fineos_absence_id") === absenceId) {
-      return;
+    if (claimDetail?.fineos_absence_id === absenceId) {
+      return claimDetail;
     }
 
     setIsLoadingClaimDetail(true);
     appErrorsLogic.clearErrors();
 
+    let loadedClaimDetail;
     try {
       const data = await claimsApi.getClaimDetail(absenceId);
+      loadedClaimDetail = data.claimDetail;
 
-      setClaimDetail(data.claimDetail);
-      setIsLoadingClaimDetail(false);
+      setClaimDetail(loadedClaimDetail);
     } catch (error) {
-      appErrorsLogic.catchError(new ClaimDetailLoadError(absenceId));
+      if (
+        error instanceof ValidationError &&
+        error.issues[0].type === "fineos_claim_withdrawn"
+      ) {
+        // The claim was withdrawn -- we'll need to show an error message to the user
+        appErrorsLogic.catchError(
+          new ClaimWithdrawnError(absenceId, error.issues[0])
+        );
+      } else {
+        appErrorsLogic.catchError(new ClaimDetailLoadError(absenceId));
+      }
+    } finally {
+      setIsLoadingClaimDetail(false);
     }
+
+    return loadedClaimDetail;
   };
 
   return {

@@ -1,5 +1,7 @@
 import "../../styles/app.scss";
+
 import React, { useEffect, useState } from "react";
+
 import { Auth } from "@aws-amplify/auth";
 import PageWrapper from "../components/PageWrapper";
 import PropTypes from "prop-types";
@@ -131,7 +133,6 @@ export const App = ({ Component, pageProps }) => {
 
     // Passing this empty array causes this effect to be run only once upon mount. See:
     // https://reactjs.org/docs/hooks-effect.html#tip-optimizing-performance-by-skipping-effects
-
     return function cleanup() {
       router.events.off("routeChangeStart", handleRouteChangeStart);
       router.events.off("routeChangeComplete", handleRouteChangeComplete);

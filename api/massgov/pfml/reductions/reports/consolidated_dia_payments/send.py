@@ -4,7 +4,7 @@ from typing import Optional
 from sqlalchemy.orm.exc import NoResultFound
 
 import massgov.pfml.api.util.state_log_util as state_log_util
-import massgov.pfml.payments.payments_util as payments_util
+import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.reductions.config as reductions_config
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db

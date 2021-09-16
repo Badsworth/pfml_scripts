@@ -11,9 +11,6 @@ from massgov.pfml.db.models.applications import DocumentType, LeaveReason
 from massgov.pfml.db.models.factories import ApplicationFactory, ClaimFactory, DocumentFactory
 from massgov.pfml.fineos import fineos_client, models
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 CERTIFICATION_FORM_DATA = {
     "document_type": "Certification Form",
     "name": "certification_form.png",

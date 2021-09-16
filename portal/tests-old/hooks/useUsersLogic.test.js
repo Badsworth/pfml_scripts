@@ -274,7 +274,11 @@ describe("useUsersLogic", () => {
 
         usersLogic.requireUserRole();
 
-        expect(goToSpy).toHaveBeenCalledWith("/employers/welcome");
+        expect(goToSpy).toHaveBeenCalledWith(
+          "/employers/welcome",
+          {},
+          { redirect: true }
+        );
       });
 
       it("does not redirect if user has Employer role and currently in Employer Portal", async () => {
@@ -308,7 +312,11 @@ describe("useUsersLogic", () => {
 
         usersLogic.requireUserRole();
 
-        expect(goToSpy).toHaveBeenCalledWith("/employers/welcome");
+        expect(goToSpy).toHaveBeenCalledWith(
+          "/employers/welcome",
+          {},
+          { redirect: true }
+        );
       });
 
       it("redirects to Claims index if user does not have a role", async () => {
@@ -321,7 +329,11 @@ describe("useUsersLogic", () => {
 
         usersLogic.requireUserRole();
 
-        expect(goToSpy).toHaveBeenCalledWith("/applications");
+        expect(goToSpy).toHaveBeenCalledWith(
+          "/applications",
+          {},
+          { redirect: true }
+        );
       });
     });
   });

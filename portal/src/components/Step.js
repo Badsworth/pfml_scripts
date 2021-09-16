@@ -47,7 +47,7 @@ const Step = (props) => {
   const disabledStartButton = (
     <Button
       className="width-auto"
-      ariaLabel={`${props.startText}: ${props.title}`}
+      aria-label={`${props.startText}: ${props.title}`}
       disabled
     >
       {props.startText}

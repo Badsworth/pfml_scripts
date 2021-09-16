@@ -1,0 +1,1161 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ComponentWithUser renders the appropriate certification upload content for applications/upload/family-member-medical-certification 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+    tabindex="-1"
+  >
+    Upload certification
+  </h1>
+  <h2
+    class="font-heading-lg text-bold"
+  >
+    Upload your certification form
+  </h2>
+  <p
+    class="usa-intro"
+  >
+    You need to upload a completed 
+    <a
+      href="https://www.mass.gov/family-caring-form"
+      rel="noopener"
+      target="_blank"
+    >
+      Certification of Your Family Member’s Serious Health Condition
+    </a>
+     to prove that you need to take leave to care for a family member with a serious medical condition.
+  </p>
+  <div
+    class="usa-summary-box margin-bottom-2"
+    role="complementary"
+  >
+    <div
+      class="usa-summary-box__body"
+    >
+      <h3
+        class="usa-summary-box__heading font-heading-xs text-bold"
+      >
+        Document Requirements:
+      </h3>
+      <div
+        class="usa-summary-box__text"
+      >
+        <ul
+          class="usa-list"
+        >
+          <li>
+            The text must be clear and readable
+          </li>
+          <li>
+            Upload every page of the document where you or your health care provider have entered information
+          </li>
+          <li>
+            Each file you upload must be smaller than 4.5 MB
+          </li>
+        </ul>
+        <p>
+          It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
+          <a
+            href="https://www.mass.gov/pfmlsubmitinfo"
+            rel="noopener"
+            target="_blank"
+          >
+            fax and mail instructions
+          </a>
+          .
+        </p>
+      </div>
+    </div>
+  </div>
+  <details
+    class="c-details"
+  >
+    <summary
+      class="margin-bottom-2 text-primary text-underline font-ui-xs"
+    >
+      Tips for uploading images or PDFs
+    </summary>
+    <div
+      class="margin-bottom-2"
+    >
+      <div>
+        <h2
+          class="font-heading-xs text-bold"
+        >
+          This website only accepts:
+        </h2>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            PDF documents
+          </li>
+          <li>
+            Images (.jpg, .jpeg, .png)
+          </li>
+        </ul>
+        <h2
+          class="font-heading-xs text-bold"
+        >
+          If your file is not in one of these formats, try one of the following:
+        </h2>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            Take a picture of the document
+          </li>
+          <li>
+            Take a screenshot of the document
+          </li>
+          <li>
+            Save the document as a PDF or image, and try uploading again
+          </li>
+        </ul>
+        <h2
+          class="font-heading-xs text-bold"
+        >
+          If your document is attached to an email:
+        </h2>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            Open the file on your computer or phone
+          </li>
+          <li>
+            Save it as a PDF or image, and try uploading again
+          </li>
+        </ul>
+      </div>
+    </div>
+  </details>
+  <div
+    class="margin-top-8 text-center"
+  >
+    <span
+      aria-valuetext="Loading documents"
+      class="c-spinner"
+      role="progressbar"
+    />
+  </div>
+  <button
+    class="usa-button position-relative margin-top-4"
+    type="submit"
+  >
+    Save and continue
+  </button>
+</form>
+`;
+
+exports[`ComponentWithUser renders the appropriate certification upload content for applications/upload/medical-certification 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+    tabindex="-1"
+  >
+    Upload certification
+  </h1>
+  <h2
+    class="font-heading-lg text-bold"
+  >
+    Upload your certification form
+  </h2>
+  <p
+    class="usa-intro"
+  >
+    You need to upload a completed 
+    <a
+      href="https://www.mass.gov/medical-leave-form"
+      rel="noopener"
+      target="_blank"
+    >
+      Certification of Your Serious Health Condition
+    </a>
+     to prove that you need to take medical leave.
+  </p>
+  <div
+    class="usa-summary-box margin-bottom-2"
+    role="complementary"
+  >
+    <div
+      class="usa-summary-box__body"
+    >
+      <h3
+        class="usa-summary-box__heading font-heading-xs text-bold"
+      >
+        Document Requirements:
+      </h3>
+      <div
+        class="usa-summary-box__text"
+      >
+        <ul
+          class="usa-list"
+        >
+          <li>
+            The text must be clear and readable
+          </li>
+          <li>
+            Upload every page of the document where you or your health care provider have entered information
+          </li>
+          <li>
+            Each file you upload must be smaller than 4.5 MB
+          </li>
+        </ul>
+        <p>
+          It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
+          <a
+            href="https://www.mass.gov/pfmlsubmitinfo"
+            rel="noopener"
+            target="_blank"
+          >
+            fax and mail instructions
+          </a>
+          .
+        </p>
+      </div>
+    </div>
+  </div>
+  <details
+    class="c-details"
+  >
+    <summary
+      class="margin-bottom-2 text-primary text-underline font-ui-xs"
+    >
+      Tips for uploading images or PDFs
+    </summary>
+    <div
+      class="margin-bottom-2"
+    >
+      <div>
+        <h2
+          class="font-heading-xs text-bold"
+        >
+          This website only accepts:
+        </h2>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            PDF documents
+          </li>
+          <li>
+            Images (.jpg, .jpeg, .png)
+          </li>
+        </ul>
+        <h2
+          class="font-heading-xs text-bold"
+        >
+          If your file is not in one of these formats, try one of the following:
+        </h2>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            Take a picture of the document
+          </li>
+          <li>
+            Take a screenshot of the document
+          </li>
+          <li>
+            Save the document as a PDF or image, and try uploading again
+          </li>
+        </ul>
+        <h2
+          class="font-heading-xs text-bold"
+        >
+          If your document is attached to an email:
+        </h2>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            Open the file on your computer or phone
+          </li>
+          <li>
+            Save it as a PDF or image, and try uploading again
+          </li>
+        </ul>
+      </div>
+    </div>
+  </details>
+  <div
+    class="margin-top-8 text-center"
+  >
+    <span
+      aria-valuetext="Loading documents"
+      class="c-spinner"
+      role="progressbar"
+    />
+  </div>
+  <button
+    class="usa-button position-relative margin-top-4"
+    type="submit"
+  >
+    Save and continue
+  </button>
+</form>
+`;
+
+exports[`ComponentWithUser renders the appropriate certification upload content for applications/upload/pregnancy-medical-certification 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+    tabindex="-1"
+  >
+    Upload certification
+  </h1>
+  <h2
+    class="font-heading-lg text-bold"
+  >
+    Upload your certification form
+  </h2>
+  <p
+    class="usa-intro"
+  >
+    You need to upload a completed 
+    <a
+      href="https://www.mass.gov/medical-leave-form"
+      rel="noopener"
+      target="_blank"
+    >
+      Certification of Your Serious Health Condition
+    </a>
+     to prove that you need to take medical leave.
+  </p>
+  <div
+    class="usa-summary-box margin-bottom-2"
+    role="complementary"
+  >
+    <div
+      class="usa-summary-box__body"
+    >
+      <h3
+        class="usa-summary-box__heading font-heading-xs text-bold"
+      >
+        Document Requirements:
+      </h3>
+      <div
+        class="usa-summary-box__text"
+      >
+        <ul
+          class="usa-list"
+        >
+          <li>
+            The text must be clear and readable
+          </li>
+          <li>
+            Upload every page of the document where you or your health care provider have entered information
+          </li>
+          <li>
+            Each file you upload must be smaller than 4.5 MB
+          </li>
+        </ul>
+        <p>
+          It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
+          <a
+            href="https://www.mass.gov/pfmlsubmitinfo"
+            rel="noopener"
+            target="_blank"
+          >
+            fax and mail instructions
+          </a>
+          .
+        </p>
+      </div>
+    </div>
+  </div>
+  <details
+    class="c-details"
+  >
+    <summary
+      class="margin-bottom-2 text-primary text-underline font-ui-xs"
+    >
+      Tips for uploading images or PDFs
+    </summary>
+    <div
+      class="margin-bottom-2"
+    >
+      <div>
+        <h2
+          class="font-heading-xs text-bold"
+        >
+          This website only accepts:
+        </h2>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            PDF documents
+          </li>
+          <li>
+            Images (.jpg, .jpeg, .png)
+          </li>
+        </ul>
+        <h2
+          class="font-heading-xs text-bold"
+        >
+          If your file is not in one of these formats, try one of the following:
+        </h2>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            Take a picture of the document
+          </li>
+          <li>
+            Take a screenshot of the document
+          </li>
+          <li>
+            Save the document as a PDF or image, and try uploading again
+          </li>
+        </ul>
+        <h2
+          class="font-heading-xs text-bold"
+        >
+          If your document is attached to an email:
+        </h2>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            Open the file on your computer or phone
+          </li>
+          <li>
+            Save it as a PDF or image, and try uploading again
+          </li>
+        </ul>
+      </div>
+    </div>
+  </details>
+  <div
+    class="margin-top-8 text-center"
+  >
+    <span
+      aria-valuetext="Loading documents"
+      class="c-spinner"
+      role="progressbar"
+    />
+  </div>
+  <button
+    class="usa-button position-relative margin-top-4"
+    type="submit"
+  >
+    Save and continue
+  </button>
+</form>
+`;
+
+exports[`ComponentWithUser renders the appropriate certification upload content for applications/upload/proof-of-birth 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+    tabindex="-1"
+  >
+    Upload certification
+  </h1>
+  <h2
+    class="font-heading-lg text-bold"
+  >
+    Upload your documentation
+  </h2>
+  <p
+    class="usa-intro"
+  >
+    You need to upload one of the following documents to confirm your child’s date of birth:
+  </p>
+  <div
+    class="usa-summary-box margin-bottom-2"
+    role="complementary"
+  >
+    <div
+      class="usa-summary-box__body"
+    >
+      <h3
+        class="usa-summary-box__heading font-heading-xs text-bold"
+      >
+        Document Requirements:
+      </h3>
+      <div
+        class="usa-summary-box__text"
+      >
+        <ul
+          class="usa-list"
+        >
+          <li>
+            The text must be clear and readable
+          </li>
+          <li>
+            Upload every page of the document where you or your health care provider have entered information
+          </li>
+          <li>
+            Each file you upload must be smaller than 4.5 MB
+          </li>
+        </ul>
+        <p>
+          It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
+          <a
+            href="https://www.mass.gov/pfmlsubmitinfo"
+            rel="noopener"
+            target="_blank"
+          >
+            fax and mail instructions
+          </a>
+          .
+        </p>
+      </div>
+    </div>
+  </div>
+  <details
+    class="c-details"
+  >
+    <summary
+      class="margin-bottom-2 text-primary text-underline font-ui-xs"
+    >
+      Tips for uploading images or PDFs
+    </summary>
+    <div
+      class="margin-bottom-2"
+    >
+      <div>
+        <h2
+          class="font-heading-xs text-bold"
+        >
+          This website only accepts:
+        </h2>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            PDF documents
+          </li>
+          <li>
+            Images (.jpg, .jpeg, .png)
+          </li>
+        </ul>
+        <h2
+          class="font-heading-xs text-bold"
+        >
+          If your file is not in one of these formats, try one of the following:
+        </h2>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            Take a picture of the document
+          </li>
+          <li>
+            Take a screenshot of the document
+          </li>
+          <li>
+            Save the document as a PDF or image, and try uploading again
+          </li>
+        </ul>
+        <h2
+          class="font-heading-xs text-bold"
+        >
+          If your document is attached to an email:
+        </h2>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            Open the file on your computer or phone
+          </li>
+          <li>
+            Save it as a PDF or image, and try uploading again
+          </li>
+        </ul>
+      </div>
+    </div>
+  </details>
+  <div
+    class="margin-top-8 text-center"
+  >
+    <span
+      aria-valuetext="Loading documents"
+      class="c-spinner"
+      role="progressbar"
+    />
+  </div>
+  <button
+    class="usa-button position-relative margin-top-4"
+    type="submit"
+  >
+    Save and continue
+  </button>
+</form>
+`;
+
+exports[`ComponentWithUser renders the appropriate certification upload content for applications/upload/proof-of-placement 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+    tabindex="-1"
+  >
+    Upload certification
+  </h1>
+  <h2
+    class="font-heading-lg text-bold"
+  >
+    Upload your documentation
+  </h2>
+  <p
+    class="usa-intro"
+  >
+    You need to upload a statement from your adoption or foster agency or from the Massachusetts Department of Children and Families to confirm the placement and the date of the placement.
+  </p>
+  <ul
+    class="usa-list"
+  >
+    <li>
+      Your child’s birth certificate.
+    </li>
+    <li>
+      A note from your child’s health care provider stating your child’s date of birth.
+    </li>
+    <li>
+      A note from the health care provider of the person who gave birth stating your child’s date of birth.
+    </li>
+  </ul>
+  <div
+    class="usa-summary-box margin-bottom-2"
+    role="complementary"
+  >
+    <div
+      class="usa-summary-box__body"
+    >
+      <h3
+        class="usa-summary-box__heading font-heading-xs text-bold"
+      >
+        Document Requirements:
+      </h3>
+      <div
+        class="usa-summary-box__text"
+      >
+        <ul
+          class="usa-list"
+        >
+          <li>
+            The text must be clear and readable
+          </li>
+          <li>
+            Upload every page of the document where you or your health care provider have entered information
+          </li>
+          <li>
+            Each file you upload must be smaller than 4.5 MB
+          </li>
+        </ul>
+        <p>
+          It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
+          <a
+            href="https://www.mass.gov/pfmlsubmitinfo"
+            rel="noopener"
+            target="_blank"
+          >
+            fax and mail instructions
+          </a>
+          .
+        </p>
+      </div>
+    </div>
+  </div>
+  <details
+    class="c-details"
+  >
+    <summary
+      class="margin-bottom-2 text-primary text-underline font-ui-xs"
+    >
+      Tips for uploading images or PDFs
+    </summary>
+    <div
+      class="margin-bottom-2"
+    >
+      <div>
+        <h2
+          class="font-heading-xs text-bold"
+        >
+          This website only accepts:
+        </h2>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            PDF documents
+          </li>
+          <li>
+            Images (.jpg, .jpeg, .png)
+          </li>
+        </ul>
+        <h2
+          class="font-heading-xs text-bold"
+        >
+          If your file is not in one of these formats, try one of the following:
+        </h2>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            Take a picture of the document
+          </li>
+          <li>
+            Take a screenshot of the document
+          </li>
+          <li>
+            Save the document as a PDF or image, and try uploading again
+          </li>
+        </ul>
+        <h2
+          class="font-heading-xs text-bold"
+        >
+          If your document is attached to an email:
+        </h2>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            Open the file on your computer or phone
+          </li>
+          <li>
+            Save it as a PDF or image, and try uploading again
+          </li>
+        </ul>
+      </div>
+    </div>
+  </details>
+  <div
+    class="margin-top-8 text-center"
+  >
+    <span
+      aria-valuetext="Loading documents"
+      class="c-spinner"
+      role="progressbar"
+    />
+  </div>
+  <button
+    class="usa-button position-relative margin-top-4"
+    type="submit"
+  >
+    Save and continue
+  </button>
+</form>
+`;
+
+exports[`ComponentWithUser renders the appropriate identification upload content for applications/upload/other-id 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+    tabindex="-1"
+  >
+    Your identification
+  </h1>
+  <h2
+    class="font-heading-lg text-bold"
+  >
+    Upload an identification document issued by state or federal government
+  </h2>
+  <div
+    class="usa-summary-box margin-bottom-2"
+    role="complementary"
+  >
+    <div
+      class="usa-summary-box__body"
+    >
+      <h3
+        class="usa-summary-box__heading font-heading-xs text-bold"
+      >
+        Document Requirements:
+      </h3>
+      <div
+        class="usa-summary-box__text"
+      >
+        <ul
+          class="usa-list"
+        >
+          <li>
+            The image of the card must be in full color
+          </li>
+          <li>
+            The text must be clear and readable
+          </li>
+          <li>
+            The front and back can be in one file, or in two separate files
+          </li>
+          <li>
+            Each file must be smaller than 4.5 MB
+          </li>
+        </ul>
+        <p>
+          It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
+          <a
+            href="https://www.mass.gov/pfmlsubmitinfo"
+            rel="noopener"
+            target="_blank"
+          >
+            fax and mail instructions
+          </a>
+          .
+        </p>
+      </div>
+    </div>
+  </div>
+  <div
+    class="border-bottom border-base-light margin-bottom-4 padding-bottom-4"
+  >
+    <p>
+      <strong>
+        You can upload a copy of one of the following documents:
+      </strong>
+    </p>
+    <ul
+      class="usa-list"
+    >
+      <li>
+        U.S. State or Territory Real ID, both front and back
+      </li>
+      <li>
+        U.S. passport or passport card
+      </li>
+      <li>
+        Permanent Resident Card issued by DHS or INS
+      </li>
+      <li>
+        Employment Authorization Document (EAD) issued by DHS
+      </li>
+      <li>
+        Foreign passport 
+        <strong>
+          and
+        </strong>
+         a 
+        <a
+          href="https://travel.state.gov/content/travel/en/us-visas/employment/temporary-worker-visas.html"
+        >
+          work visa
+        </a>
+      </li>
+    </ul>
+    <div
+      aria-multiselectable="true"
+      class="usa-accordion usa-accordion--bordered"
+    >
+      <h2
+        class="usa-accordion__heading"
+      >
+        <button
+          aria-controls="accordion1"
+          aria-expanded="false"
+          class="usa-accordion__button"
+          type="button"
+        >
+          If you don’t have any of those documents:
+        </button>
+      </h2>
+      <div
+        class="usa-accordion__content usa-prose"
+        data-testid="accordion1"
+        hidden=""
+        id="accordion1"
+      >
+        <p>
+          <strong>
+            If you don’t have any of those, you can provide one of the following plus proof of your Social Security Number or Individual Tax Identification Number:
+          </strong>
+        </p>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            Valid, unexpired U.S. State or Territory License or ID, both front and back
+          </li>
+          <li>
+            Certified copy of a birth certificate filed with a State Office of Vital Statistics or equivalent agency in the individual’s state of birth. (You can only use a 
+            <a
+              href="https://prfaa.pr.gov/faqs"
+            >
+              Puerto Rican birth certificate
+            </a>
+             if it was issued on or after July 1, 2010.)
+          </li>
+          <li>
+            Certificate of Citizenship (Form N‑560, or Form N‑561)
+          </li>
+          <li>
+            Certificate of Naturalization (Form N‑550 or N‑570)
+          </li>
+        </ul>
+        <p>
+          <strong>
+            You can provide proof of your Social Security Number using one of the following documents displaying your complete Social Security Number:
+          </strong>
+        </p>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            Social Security card
+          </li>
+          <li>
+            W‑2 Form
+          </li>
+          <li>
+            SSA‑1099 Form
+          </li>
+          <li>
+            Non‑SSA‑1099 Form
+          </li>
+          <li>
+            Pay stub with your name on it
+          </li>
+        </ul>
+        <p>
+          <a
+            href="https://www.mass.gov/info-details/identity-proof-for-paid-leave"
+          >
+            Learn more about verifying your identity with different documents.
+          </a>
+        </p>
+      </div>
+    </div>
+  </div>
+  <details
+    class="c-details"
+  >
+    <summary
+      class="margin-bottom-2 text-primary text-underline font-ui-xs"
+    >
+      Tips for uploading images or PDFs
+    </summary>
+    <div
+      class="margin-bottom-2"
+    >
+      <div>
+        <h2
+          class="font-heading-xs text-bold"
+        >
+          This website only accepts:
+        </h2>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            PDF documents
+          </li>
+          <li>
+            Images (.jpg, .jpeg, .png)
+          </li>
+        </ul>
+        <h2
+          class="font-heading-xs text-bold"
+        >
+          If your file is not in one of these formats, try one of the following:
+        </h2>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            Take a picture of the document
+          </li>
+          <li>
+            Take a screenshot of the document
+          </li>
+          <li>
+            Save the document as a PDF or image, and try uploading again
+          </li>
+        </ul>
+        <h2
+          class="font-heading-xs text-bold"
+        >
+          If your document is attached to an email:
+        </h2>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            Open the file on your computer or phone
+          </li>
+          <li>
+            Save it as a PDF or image, and try uploading again
+          </li>
+        </ul>
+      </div>
+    </div>
+  </details>
+  <div
+    class="margin-top-8 text-center"
+  >
+    <span
+      aria-valuetext="Loading documents"
+      class="c-spinner"
+      role="progressbar"
+    />
+  </div>
+  <button
+    class="usa-button position-relative margin-top-4"
+    type="submit"
+  >
+    Save and continue
+  </button>
+</form>
+`;
+
+exports[`ComponentWithUser renders the appropriate identification upload content for applications/upload/state-id 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+    tabindex="-1"
+  >
+    Your identification
+  </h1>
+  <h2
+    class="font-heading-lg text-bold"
+  >
+    Upload the front and back of your Massachusetts driver’s license or ID card
+  </h2>
+  <div
+    class="usa-summary-box margin-bottom-2"
+    role="complementary"
+  >
+    <div
+      class="usa-summary-box__body"
+    >
+      <h3
+        class="usa-summary-box__heading font-heading-xs text-bold"
+      >
+        Document Requirements:
+      </h3>
+      <div
+        class="usa-summary-box__text"
+      >
+        <ul
+          class="usa-list"
+        >
+          <li>
+            The image of the card must be in full color
+          </li>
+          <li>
+            The text must be clear and readable
+          </li>
+          <li>
+            The front and back can be in one file, or in two separate files
+          </li>
+          <li>
+            Each file must be smaller than 4.5 MB
+          </li>
+        </ul>
+        <p>
+          It’s faster to upload your documents online, but you can fax or mail color copies of your documents if you prefer. Follow the 
+          <a
+            href="https://www.mass.gov/pfmlsubmitinfo"
+            rel="noopener"
+            target="_blank"
+          >
+            fax and mail instructions
+          </a>
+          .
+        </p>
+      </div>
+    </div>
+  </div>
+  <details
+    class="c-details"
+  >
+    <summary
+      class="margin-bottom-2 text-primary text-underline font-ui-xs"
+    >
+      Tips for uploading images or PDFs
+    </summary>
+    <div
+      class="margin-bottom-2"
+    >
+      <div>
+        <h2
+          class="font-heading-xs text-bold"
+        >
+          This website only accepts:
+        </h2>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            PDF documents
+          </li>
+          <li>
+            Images (.jpg, .jpeg, .png)
+          </li>
+        </ul>
+        <h2
+          class="font-heading-xs text-bold"
+        >
+          If your file is not in one of these formats, try one of the following:
+        </h2>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            Take a picture of the document
+          </li>
+          <li>
+            Take a screenshot of the document
+          </li>
+          <li>
+            Save the document as a PDF or image, and try uploading again
+          </li>
+        </ul>
+        <h2
+          class="font-heading-xs text-bold"
+        >
+          If your document is attached to an email:
+        </h2>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            Open the file on your computer or phone
+          </li>
+          <li>
+            Save it as a PDF or image, and try uploading again
+          </li>
+        </ul>
+      </div>
+    </div>
+  </details>
+  <div
+    class="margin-top-8 text-center"
+  >
+    <span
+      aria-valuetext="Loading documents"
+      class="c-spinner"
+      role="progressbar"
+    />
+  </div>
+  <button
+    class="usa-button position-relative margin-top-4"
+    type="submit"
+  >
+    Save and continue
+  </button>
+</form>
+`;

@@ -1,4 +1,4 @@
-type Props<T> = {
+export type Props<T> = {
   rows: T[];
   cols: {
     title?: string;

@@ -1,0 +1,92 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Header Header log-in behavior renders employer feedback link when user is an employer 1`] = `
+<a
+  href="https://www.mass.gov/paidleave-employer-feedback"
+  rel="noopener"
+  target="_blank"
+>
+  your feedback
+</a>
+`;
+
+exports[`Header Header log-in behavior renders header with user's information for a logged-in claimant 1`] = `
+<span
+  class="display-inline-block bg-secondary margin-right-1 padding-x-2 text-bold text-white"
+>
+  Beta
+</span>
+`;
+
+exports[`Header Header log-in behavior renders header with user's information for a logged-in claimant 2`] = `
+<span
+  class="display-inline-block margin-right-1"
+  data-testid="email_address"
+>
+  email@address.com
+</span>
+`;
+
+exports[`Header Header maintenance alert bar renders maintenance alert bar when maintenance is enabled 1`] = `
+<p
+  class="margin-0 text-ink"
+>
+  We will be performing some maintenance on our system from 
+  <strong>
+    10:15 PM (EST)
+  </strong>
+   to 
+  <strong>
+    12:45 AM (EST)
+  </strong>
+  .
+</p>
+`;
+
+exports[`Header Header maintenance alert bar renders maintenance alert bar when maintenance is enabled 2`] = `
+<strong>
+  10:15 PM (EST)
+</strong>
+`;
+
+exports[`Header Header maintenance alert bar renders maintenance alert bar when maintenance is enabled 3`] = `
+<strong>
+  12:45 AM (EST)
+</strong>
+`;
+
+exports[`Header Header maintenance alert bar renders maintenance alert bar when only start time is provided 1`] = `
+<p
+  class="margin-0 text-ink"
+>
+  We will be performing some maintenance on our system starting 
+  <strong>
+    10:15 PM (EST)
+  </strong>
+  .
+</p>
+`;
+
+exports[`Header Header maintenance alert bar renders maintenance alert bar when only start time is provided 2`] = `
+<strong>
+  10:15 PM (EST)
+</strong>
+`;
+
+exports[`Header Header navigation links includes a Back to Mass.gov link with correct class and href 1`] = `
+<a
+  class="usa-button width-auto usa-button--unstyled usa-button--inverse usa-button--outline"
+  href="https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts"
+>
+  Back to Mass.gov
+</a>
+`;
+
+exports[`Header Header navigation links includes a Skip Nav link with correct class and href 1`] = `
+<a
+  class="usa-skipnav"
+  href="#main"
+>
+  Skip to main content
+</a>
+`;

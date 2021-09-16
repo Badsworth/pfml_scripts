@@ -46,8 +46,8 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
     pfmlTerriyay: true,
     noMaintenance: true,
     claimantShowStatusPage: false,
-    employerShowReviewByStatus:
-      config("PORTAL_HAS_LA_STATUS_UPDATES") === "true",
+    employerShowDashboardSearch: true,
+    employerShowReviewByStatus: true,
   };
   cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });
 }
@@ -74,7 +74,7 @@ export function before(flags?: Partial<FeatureFlags>): void {
   cy.intercept(/\/api\/v1\/claims\?page_offset=\d+$/).as(
     "dashboardDefaultQuery"
   );
-  // cy.intercept(/\/api\/v1\/applications$/).as("getApplications");
+  cy.intercept(/\/api\/v1\/applications$/).as("getApplications");
   cy.intercept(/\/api\/v1\/claims\?(page_offset=\d+)?&?(order_by)/).as(
     "dashboardClaimQueries"
   );
@@ -1040,15 +1040,10 @@ export type DashboardClaimStatus =
   | "No action required"
   | "Review by";
 export function selectClaimFromEmployerDashboard(
-  fineosAbsenceId: string,
-  status: DashboardClaimStatus
+  fineosAbsenceId: string
 ): void {
   goToEmployerDashboard();
-  // With the status updates enabled, claims are sorted by status by default
-  // which means we won't see our claim show up on the first page.
-  if (config("PORTAL_HAS_LA_STATUS_UPDATES") === "true")
-    sortClaims("new", false);
-  cy.contains("tr", fineosAbsenceId).should("contain.text", status);
+  searchClaims(fineosAbsenceId);
   cy.findByText(fineosAbsenceId).click();
 }
 
@@ -1851,10 +1846,14 @@ export function sortClaims(
 }
 
 export function claimantGoToClaimStatus(fineosAbsenceId: string): void {
-  cy.get(`a[href$="/applications/status/?absence_case_id=${fineosAbsenceId}"`)
-    .should("be.visible")
-    // Force to overcome DOM instability.
-    .click({ force: true });
+  cy.wait("@getApplications").wait(150);
+  cy.contains("article", fineosAbsenceId).within(() => {
+    cy.contains("View status updates and details").click();
+    cy.url().should(
+      "include",
+      `/applications/status/?absence_case_id=${fineosAbsenceId}`
+    );
+  });
 }
 
 type LeaveStatus = {
@@ -1866,7 +1865,7 @@ export function claimantAssertClaimStatus(leaves: LeaveStatus[]): void {
   const leaveReasonHeadings = {
     "Serious Health Condition - Employee": "Medical leave",
     "Child Bonding": "Leave to bond with a child",
-    "Care for a Family Member": "",
+    "Care for a Family Member": "Leave to care for a family member schedule",
     "Pregnancy/Maternity": "",
   } as const;
 
@@ -1891,3 +1890,20 @@ export const skipLoadingClaimantApplications = (): void => {
     });
   });
 };
+
+/**
+ * Search claims in LA dashboard by id or employee name.
+ * Expects to only find a single match.
+ * @param idOrName
+ */
+export function searchClaims(idOrName: string): void {
+  cy.findByLabelText("Search for employee name or application ID").type(
+    `${idOrName}{enter}`
+  );
+  cy.get('span[role="progressbar"]').should("be.visible");
+  cy.wait("@dashboardClaimQueries");
+  cy.get("table tbody").should(($table) => {
+    expect($table.children()).to.have.length(1);
+    expect($table.children()).to.contain.text(idOrName);
+  });
+}

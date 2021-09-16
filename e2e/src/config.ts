@@ -26,7 +26,6 @@ function getRawEnvironment() {
     PORTAL_PASSWORD: process.env.E2E_PORTAL_PASSWORD,
     PORTAL_USERNAME: process.env.E2E_PORTAL_USERNAME,
     EMPLOYER_PORTAL_PASSWORD: process.env.E2E_EMPLOYER_PORTAL_PASSWORD,
-    PORTAL_HAS_LA_STATUS_UPDATES: process.env.E2E_PORTAL_HAS_LA_STATUS_UPDATES,
 
     COGNITO_POOL: process.env.E2E_COGNITO_POOL,
     COGNITO_CLIENTID: process.env.E2E_COGNITO_CLIENTID,
@@ -83,7 +82,6 @@ const file: Partial<Configuration> =
 
 // The default layer is a set of default values which will be used if nothing is set.
 const defaults: Partial<Configuration> = {
-  PORTAL_HAS_LA_STATUS_UPDATES: "false",
   NEWRELIC_ACCOUNTID: "2837112",
   HAS_CLAIMANT_STATUS_PAGE: "false",
 };

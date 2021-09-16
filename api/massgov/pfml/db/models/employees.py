@@ -708,6 +708,8 @@ class Payment(Base, TimestampMixin):
     __tablename__ = "payment"
     payment_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True)
+    # Attach the employee ID as well as some payments aren't associated with a claim
+    employee_id = Column(PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True)
     payment_transaction_type_id = Column(
         Integer, ForeignKey("lk_payment_transaction_type.payment_transaction_type_id")
     )
@@ -749,6 +751,7 @@ class Payment(Base, TimestampMixin):
     fineos_employee_last_name = Column(Text)
 
     claim = relationship("Claim", back_populates="payments")
+    employee = relationship("Employee")
     claim_type = relationship(LkClaimType)
     payment_transaction_type = relationship(LkPaymentTransactionType)
     disb_method = relationship(LkPaymentMethod, foreign_keys=disb_method_id)

@@ -12,11 +12,14 @@ export default {
   },
   argTypes: {
     claim: {
-      defaultValue: "Completed",
+      defaultValue: "Bonding",
       control: {
         type: "radio",
         options: [
-          "Completed",
+          "Bonding",
+          "Caring",
+          "Medical",
+          "Pregnancy",
           "In Progress",
           "In Progress + No EIN",
           "In Progress + Notices",
@@ -30,6 +33,11 @@ export const Story = ({ claim, ...args }) => {
   // Fake appLogic for stories
   const appLogic = {
     appErrors: new AppErrorInfoCollection([]),
+    claims: {
+      claimDetail: args,
+      isLoadingClaimDetail: false,
+      loadClaimDetail: () => {},
+    },
     documents: {
       download: () => {},
     },
@@ -38,8 +46,17 @@ export const Story = ({ claim, ...args }) => {
   // Configuration for ApplicationCard props
   const cardProps = Object.assign(
     {
-      Completed: {
-        claim: generateClaim("completed"),
+      Bonding: {
+        claim: generateClaim("completed", "bonding"),
+      },
+      Caring: {
+        claim: generateClaim("completed", "caring"),
+      },
+      Medical: {
+        claim: generateClaim("completed", "medical"),
+      },
+      Pregnancy: {
+        claim: generateClaim("completed", "pregnancy"),
       },
 
       "In Progress": {

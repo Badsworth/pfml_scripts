@@ -151,7 +151,6 @@ def simulate_rollback(db_session):
         db_session.commit()
 
 
-@pytest.mark.integration
 def test_db_doesnt_log_sql_params(test_db_session, verbose_test_db_session):
     ERROR_PARAMETERS = "[parameters: ({'tax_identifier_id': '638309eb-1981-4a13-aa35-8f1eb6f52e75', 'tax_identifier': '1234567890'}, {'tax_identifier_id': 'c28b9a52-cd53-445f-b3eb-a15a05ed287f', 'tax_identifier': '1234567890'})]"
 

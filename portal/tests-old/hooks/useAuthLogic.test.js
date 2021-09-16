@@ -123,6 +123,7 @@ describe("useAuthLogic", () => {
       });
 
       expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
     });
 
     it("requires all fields to not be empty and tracks the errors", () => {
@@ -273,6 +274,7 @@ describe("useAuthLogic", () => {
       });
 
       expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
     });
 
     it("sets isLoggedIn to true", async () => {
@@ -625,6 +627,7 @@ describe("useAuthLogic", () => {
       });
 
       expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
     });
   });
 
@@ -821,6 +824,7 @@ describe("useAuthLogic", () => {
       });
 
       expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
     });
 
     it("requires all fields to not be empty and tracks the errors", () => {
@@ -899,6 +903,7 @@ describe("useAuthLogic", () => {
       });
 
       expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
     });
 
     it("routes to login page", async () => {
@@ -1131,6 +1136,7 @@ describe("useAuthLogic", () => {
       });
 
       expect(tracker.trackFetchRequest).toHaveBeenCalledTimes(1);
+      expect(tracker.markFetchRequestEnd).toHaveBeenCalledTimes(1);
     });
 
     it("trims whitespace from code", () => {

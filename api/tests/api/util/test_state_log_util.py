@@ -5,7 +5,7 @@ import pytest
 from freezegun import freeze_time
 
 import massgov.pfml.api.util.state_log_util as state_log_util
-import massgov.pfml.payments.payments_util as payments_util
+import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 from massgov.pfml.db.models.employees import (
     Claim,
     Employee,
@@ -23,9 +23,6 @@ from massgov.pfml.db.models.factories import (
     ReferenceFileFactory,
 )
 from tests.helpers.state_log import default_outcome, setup_state_log
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 ### Setup methods for various state log scenarios ###
 

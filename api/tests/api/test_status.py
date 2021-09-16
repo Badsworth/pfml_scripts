@@ -1,7 +1,3 @@
-import pytest
-
-
-@pytest.mark.integration
 def test_status_get(client):
     response = client.get("/v1/status")
 

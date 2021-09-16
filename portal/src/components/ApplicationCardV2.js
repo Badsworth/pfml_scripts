@@ -1,3 +1,4 @@
+// @ts-nocheck
 import routeWithParams, {
   createRouteWithQuery,
 } from "../utils/routeWithParams";
@@ -11,7 +12,9 @@ import LeaveReason from "../models/LeaveReason";
 import LegalNoticeList from "../components/LegalNoticeList";
 import PropTypes from "prop-types";
 import React from "react";
+import ThrottledButton from "../components/ThrottledButton";
 import findKeyByValue from "../utils/findKeyByValue";
+import getLegalNotices from "../utils/getLegalNotices";
 import { useTranslation } from "../locales/i18n";
 import withClaimDocuments from "../hoc/withClaimDocuments";
 
@@ -44,33 +47,6 @@ TitleAndDetailSectionItem.propTypes = {
 };
 
 /**
- * Button section with top border and optional header text/section
- */
-const ButtonSection = ({ buttonText, href, iconComponent = null }) => {
-  return (
-    <div className="border-top border-base-lighter padding-y-2 margin-2 margin-bottom-0">
-      <ButtonLink
-        className="display-flex flex-align-center flex-justify-center flex-column margin-right-0"
-        href={href}
-      >
-        <div>{buttonText}</div>
-        {iconComponent}
-      </ButtonLink>
-    </div>
-  );
-};
-
-ButtonSection.propTypes = {
-  buttonText: PropTypes.string.isRequired,
-  href: PropTypes.string.isRequired,
-  iconComponent: PropTypes.object,
-};
-
-ButtonSection.defaultProps = {
-  iconComponent: null,
-};
-
-/**
  * Section to view notices and upload documents
  */
 const ManageDocumentSection = ({ claim }) => {
@@ -78,19 +54,21 @@ const ManageDocumentSection = ({ claim }) => {
   const { fineos_absence_id: absence_case_id } = claim;
 
   const viewNoticesLink = createRouteWithQuery(
-    "/applications/status/#view_notices",
-    { absence_case_id }
+    "/applications/status/",
+    { absence_case_id },
+    "view_notices"
   );
 
   const uploadDocumentsLink = createRouteWithQuery(
-    "/applications/status/#upload_documents",
-    { absence_case_id }
+    "/applications/status/",
+    { absence_case_id },
+    "upload_documents"
   );
 
   return (
     <div className="border-top border-base-lighter margin-2 margin-top-0 padding-bottom-1">
       <Heading className="padding-y-3" level="4">
-        {t("components.applicationCardV2.manageApplicationDocuments")}
+        {t("components.applicationCardV2.otherActions")}
       </Heading>
       <ButtonLink
         className="display-block margin-bottom-3"
@@ -105,7 +83,7 @@ const ManageDocumentSection = ({ claim }) => {
         href={uploadDocumentsLink}
         variation="unstyled"
       >
-        {t("components.applicationCardV2.uploadDocuments")}
+        {t("components.applicationCardV2.respondToRequest")}
       </ButtonLink>
     </div>
   );
@@ -121,12 +99,13 @@ ManageDocumentSection.propTypes = {
 const LegalNoticeSection = (props) => {
   const { t } = useTranslation();
   const isSubmitted = props.claim.status === "Submitted";
+  const legalNotices = getLegalNotices(props.documents);
 
   /**
    * If application is not submitted,
    * don't display section
    */
-  if (!isSubmitted) return null;
+  if (!isSubmitted || !legalNotices.length) return null;
 
   return (
     <div
@@ -134,7 +113,7 @@ const LegalNoticeSection = (props) => {
       style={{ maxWidth: 385 }}
     >
       <Heading level="3">
-        {t("components.applicationCardV2.viewYourNotices")}
+        {t("components.applicationCardV2.viewNotices")}
       </Heading>
       <LegalNoticeList
         onDownloadClick={props.appLogic.documents.download}
@@ -180,12 +159,16 @@ const InProgressStatusCard = (props) => {
         />
       )}
       <LegalNoticeSection {...props} />
-      <ButtonSection
-        buttonText={t("components.applicationCardV2.continueApplication")}
-        href={routeWithParams("applications.checklist", {
-          claim_id: claim.application_id,
-        })}
-      />
+      <div className="border-top border-base-lighter padding-y-2 margin-2 margin-bottom-0">
+        <ButtonLink
+          className="display-flex flex-align-center flex-justify-center flex-column margin-right-0"
+          href={routeWithParams("applications.checklist", {
+            claim_id: claim.application_id,
+          })}
+        >
+          <div>{t("components.applicationCardV2.continueApplication")}</div>
+        </ButtonLink>
+      </div>
     </React.Fragment>
   );
 };
@@ -199,7 +182,7 @@ InProgressStatusCard.propTypes = {
 /**
  * Status card for claim.status = "Completed"
  */
-const CompletedStatusCard = ({ claim }) => {
+const CompletedStatusCard = ({ appLogic, claim }) => {
   const { t } = useTranslation();
 
   const leaveReasonText = t("components.applicationCardV2.leaveReasonValue", {
@@ -215,6 +198,19 @@ const CompletedStatusCard = ({ claim }) => {
     />
   );
 
+  const onClickHandler = async () => {
+    const absenceId = claim.fineos_absence_id;
+    const claimDetail = await appLogic.claims.loadClaimDetail(absenceId);
+
+    if (claimDetail?.fineos_absence_id === absenceId) {
+      const href = routeWithParams("applications.status", {
+        absence_case_id: claim.fineos_absence_id,
+      });
+      // Redirect to claim status page if we were able to load the claim
+      appLogic.portalFlow.goTo(href);
+    }
+  };
+
   return (
     <React.Fragment>
       <HeaderSection title={leaveReasonText} />
@@ -227,15 +223,15 @@ const CompletedStatusCard = ({ claim }) => {
         details={claim.employer_fein}
       />
 
-      <ButtonSection
-        buttonText={t(
-          "components.applicationCardV2.viewStatusUpdatesAndDetails"
-        )}
-        href={routeWithParams("applications.status", {
-          absence_case_id: claim.fineos_absence_id,
-        })}
-        iconComponent={iconComponent}
-      />
+      <div className="border-top border-base-lighter padding-y-2 margin-2 margin-bottom-0">
+        <ThrottledButton
+          className="width-full display-flex flex-align-center flex-justify-center flex-column margin-right-0"
+          onClick={onClickHandler}
+        >
+          {t("components.applicationCardV2.viewStatusUpdatesAndDetails")}
+          {iconComponent}
+        </ThrottledButton>
+      </div>
       <ManageDocumentSection claim={claim} />
     </React.Fragment>
   );
@@ -243,6 +239,15 @@ const CompletedStatusCard = ({ claim }) => {
 
 CompletedStatusCard.propTypes = {
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
+  appLogic: PropTypes.shape({
+    claims: PropTypes.shape({
+      isLoadingClaimDetail: PropTypes.bool,
+      loadClaimDetail: PropTypes.func.isRequired,
+    }).isRequired,
+    portalFlow: PropTypes.shape({
+      goTo: PropTypes.func.isRequired,
+    }).isRequired,
+  }).isRequired,
 };
 
 /**
@@ -256,21 +261,15 @@ export const ApplicationCardV2 = (props) => {
     claim: { status },
   } = props;
 
-  const StatusCard = () => {
-    switch (status) {
-      case "Completed":
-        return <CompletedStatusCard {...props} />;
-
-      default:
-        return <InProgressStatusCard {...props} />;
-    }
-  };
-
   return (
     <div className="maxw-mobile-lg margin-bottom-3">
       <aside className="border-top-1 border-primary" />
       <article className="border-x border-bottom border-base-lighter">
-        <StatusCard />
+        {status === "Completed" ? (
+          <CompletedStatusCard {...props} />
+        ) : (
+          <InProgressStatusCard {...props} />
+        )}
       </article>
     </div>
   );
@@ -278,6 +277,19 @@ export const ApplicationCardV2 = (props) => {
 
 ApplicationCardV2.propTypes = {
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
+  appLogic: PropTypes.shape({
+    appErrors: PropTypes.object.isRequired,
+    claims: PropTypes.shape({
+      isLoadingClaimDetail: PropTypes.bool,
+      loadClaimDetail: PropTypes.func.isRequired,
+    }).isRequired,
+    documents: PropTypes.shape({
+      download: PropTypes.func.isRequired,
+    }),
+    portalFlow: PropTypes.shape({
+      goTo: PropTypes.func.isRequired,
+    }).isRequired,
+  }).isRequired,
 };
 
 export default withClaimDocuments(ApplicationCardV2);

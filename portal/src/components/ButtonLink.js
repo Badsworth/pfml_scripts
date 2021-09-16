@@ -59,6 +59,7 @@ ButtonLink.propTypes = {
   children: PropTypes.node.isRequired,
   /**
    * Button's aria-label text.
+   * TODO (EMPLOYER-1718) - Use hyphen-casing for ARIA attributes
    */
   ariaLabel: PropTypes.string,
   /**

@@ -1,11 +1,11 @@
 import {
+  Canvas,
   Description,
   Meta,
   Story,
-  Preview,
   Props,
   Title as StoryTitle,
-} from "@storybook/addon-docs/blocks";
+} from "@storybook/addon-docs";
 import Details from "src/components/Details";
 import FormLabel from "src/components/FormLabel";
 import InputChoice from "src/components/InputChoice";
@@ -32,7 +32,7 @@ import Title from "src/components/Title";
   - In an accordion or tab component
 - Avoid hiding content using the details component except when absolutely necessary for content on the page that applies to a specific subset of users
 
-<Preview>
+<Canvas>
   <Story name="Details">
     <Details label="When will I get paid?">
       Once your application is approved, you can expect your first payment to
@@ -42,7 +42,7 @@ import Title from "src/components/Title";
       receive your payments every week.
     </Details>
   </Story>
-</Preview>
+</Canvas>
 
 ## Supporting Information
 
@@ -66,13 +66,13 @@ Supporting information provides additional context after the main question. This
 - Explaining technical or program limitations. This information should be called out in a summary or info alert.
   - For example: - Currently unavailable leave types or file upload limitations
 
-<Preview>
+<Canvas>
   <Story name="LeaveReason">
     <FormLabel hint="You can only request one leave at a time.">
       Why do you need to take leave?
     </FormLabel>
   </Story>
-</Preview>
+</Canvas>
 
 ## Hint Text
 
@@ -82,7 +82,7 @@ Use hint text when adding additional context for answer options.
 
 - For example: Identifying which radio option is medical or family leave when selecting a leave reason
 
-<Preview>
+<Canvas>
   <Story name="Hint">
     <form className="usa-form">
       <h2>Why do you need to take leave?</h2>
@@ -104,7 +104,7 @@ Use hint text when adding additional context for answer options.
       </InputChoice>
     </form>
   </Story>
-</Preview>
+</Canvas>
 
 ## Summary Box
 
@@ -116,8 +116,8 @@ Use a summary box for content that is meant to guide the user through technical 
 
 - For example: Calling out document requirements.
 
-<Preview>
+<Canvas>
   <Story name="SummaryBox">
     <DocumentRequirements type="id" />
   </Story>
-</Preview>
+</Canvas>

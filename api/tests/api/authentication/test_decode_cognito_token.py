@@ -127,7 +127,6 @@ def test_decode_cognito_token_expired(set_auth_public_keys, auth_token_expired):
         authentication._decode_cognito_token(auth_token_expired)
 
 
-@pytest.mark.integration
 def test_without_token(client, auth_token):
     response = client.get("/v1/status")
     response_body = response.get_json()
@@ -136,7 +135,6 @@ def test_without_token(client, auth_token):
     assert response_body["message"] == "Service healthy"
 
 
-@pytest.mark.integration
 def test_current_user_is_set_successfully(client, app, user, auth_token):
     with app.app.test_request_context("/v1/users/current"):
         response = client.get(
@@ -148,7 +146,6 @@ def test_current_user_is_set_successfully(client, app, user, auth_token):
         assert response.status_code == 200
 
 
-@pytest.mark.integration
 def test_claims_with_invalid_user_id(client, app, user, auth_token_invalid_user_id):
     with app.app.test_request_context("/v1/users/current"):
         response = client.get(

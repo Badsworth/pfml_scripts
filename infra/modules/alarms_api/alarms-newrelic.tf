@@ -273,6 +273,34 @@ resource "newrelic_nrql_alert_condition" "get_claims_response_time" {
   }
 }
 
+resource "newrelic_nrql_alert_condition" "verifications_response_time" {
+  # WARN: 95th percentile response time for POST /verifications queries is > 8 second for any 15 minute period
+  # CRIT: 95th percentile response time for POST /verifications queries is > 15 seconds for any 15-minute period
+  policy_id                    = newrelic_alert_policy.low_priority_api_alerts.id
+  name                         = "POST Verifications response time too high (${upper(var.environment_name)})"
+  aggregation_window           = 900 # units: seconds
+  value_function               = "single_value"
+  violation_time_limit_seconds = 86400 # 24 hours
+
+  nrql {
+    query             = "SELECT percentile(duration, 95) FROM Transaction WHERE appName = 'PFML-API-${upper(var.environment_name)}' AND request.uri LIKE '/v1/employers/verifications' AND request.method = 'POST'"
+    evaluation_offset = 1
+  }
+
+  warning {
+    threshold_occurrences = "ALL"
+    threshold_duration    = 900 # units: seconds
+    operator              = "above"
+    threshold             = 8 # units: seconds
+  }
+
+  critical {
+    threshold_occurrences = "ALL"
+    threshold_duration    = 900 # units: seconds
+    operator              = "above"
+    threshold             = 15 # units: seconds
+  }
+}
 # ----------------------------------------------------------------------------------------------------------------------
 # Alerts relating to the API's RDS database
 
@@ -375,41 +403,6 @@ resource "newrelic_nrql_alert_condition" "notifications_endpoint_infinite_email_
     operator              = "above"
     threshold_occurrences = "all"
   }
-}
-
-# ----------------------------------------------------------------------------------------------------------------------
-# Alarms relating to problems in the payments pipeline
-
-module "payments_errors_from_fineos" {
-  count  = (var.environment_name == "prod") ? 1 : 0
-  source = "../newrelic_single_error_alarm"
-
-  enabled   = true
-  name      = "Errors encountered by the payments-fineos-process task"
-  policy_id = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_api_alerts.id : newrelic_alert_policy.api_alerts.id
-
-  nrql = <<-NRQL
-    SELECT count(*) FROM Log
-    WHERE aws.logGroup = 'service/pfml-api-prod/ecs-tasks'
-      AND aws.logStream LIKE 'prod/payments-fineos-process/%'
-      AND levelname = 'ERROR'
-  NRQL
-}
-
-module "payments_errors_from_comptroller" {
-  count  = (var.environment_name == "prod") ? 1 : 0
-  source = "../newrelic_single_error_alarm"
-
-  enabled   = true
-  name      = "Errors encountered by the payments-ctr-process task"
-  policy_id = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_api_alerts.id : newrelic_alert_policy.api_alerts.id
-
-  nrql = <<-NRQL
-    SELECT count(*) FROM Log
-    WHERE aws.logGroup = 'service/pfml-api-prod/ecs-tasks'
-      AND aws.logStream LIKE 'prod/payments-ctr-process/%'
-      AND levelname = 'ERROR'
-    NRQL
 }
 
 # ----------------------------------------------------------------------------------------------------------------------

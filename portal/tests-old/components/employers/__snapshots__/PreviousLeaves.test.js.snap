@@ -151,7 +151,6 @@ exports[`PreviousLeaves renders the component 1`] = `
         </td>
         <td />
         <td />
-        <td />
       </tr>
     </tbody>
   </Table>
