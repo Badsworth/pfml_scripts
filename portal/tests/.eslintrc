@@ -1,4 +1,7 @@
 {
+  "plugins": [
+    "testing-library"
+  ],
   "rules": {
     "react/prop-types": "off",
     "no-restricted-imports": [
@@ -16,6 +19,12 @@
             "message": "New tests cannot rely on old-tests"
           }
         ]
+      }
+    ],
+    "testing-library/prefer-user-event": [
+      "error",
+      {
+        "allowedMethods": ["click", "change"]
       }
     ]
   }

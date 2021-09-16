@@ -1,21 +1,20 @@
+import { render, screen } from "@testing-library/react";
 import ErrorBoundary from "../../src/components/ErrorBoundary";
 import React from "react";
-import { mount } from "enzyme";
+import userEvent from "@testing-library/user-event";
 
 describe("ErrorBoundary", () => {
-  describe("when no errors are thrown by a descendant component", () => {
+  it("renders descendant components when no errors are thrown by descendant component", () => {
     const GoodComponent = () => <div>Hello</div>;
 
-    it("renders its descendant components", () => {
-      const wrapper = mount(
-        <ErrorBoundary>
-          <GoodComponent />
-        </ErrorBoundary>
-      );
+    render(
+      <ErrorBoundary>
+        <GoodComponent />
+      </ErrorBoundary>
+    );
 
-      expect(wrapper.find("GoodComponent")).toHaveLength(1);
-      expect(wrapper.find("Alert")).toHaveLength(0);
-    });
+    expect(screen.getByText(/Hello/)).toBeInTheDocument();
+    expect(screen.queryByRole("region")).toBeNull();
   });
 
   describe("when an error is thrown by a descendant component", () => {
@@ -38,26 +37,27 @@ describe("ErrorBoundary", () => {
     });
 
     it("renders an Alert", () => {
-      const wrapper = mount(
+      render(
         <ErrorBoundary>
           <BadComponent />
         </ErrorBoundary>
       );
 
-      expect(wrapper.find("BadComponent")).toHaveLength(0);
-      expect(wrapper.find("Alert")).toMatchSnapshot();
+      expect(() => {
+        render(<BadComponent />);
+      }).toThrowError();
+      expect(screen.getByRole("region")).toMatchSnapshot();
     });
 
     it("reloads page when reload button is clicked", () => {
-      const wrapper = mount(
+      render(
         <ErrorBoundary>
           <BadComponent />
         </ErrorBoundary>
       );
 
-      wrapper.find("Button").simulate("click");
-
-      expect(window.location.reload).toHaveBeenCalledTimes(1);
+      userEvent.click(screen.getByRole("button"));
+      expect(window.location.reload).toHaveBeenCalled();
     });
   });
 });

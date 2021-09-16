@@ -1,11 +1,13 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Fieldset renders Fieldset component with children 1`] = `
-<fieldset
-  className="usa-fieldset"
->
-  <span>
-    child
-  </span>
-</fieldset>
+<div>
+  <fieldset
+    class="usa-fieldset"
+  >
+    <span>
+      child
+    </span>
+  </fieldset>
+</div>
 `;

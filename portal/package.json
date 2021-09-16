@@ -94,6 +94,7 @@
     "eslint-plugin-lodash": "^7.2.0",
     "eslint-plugin-react": "^7.24.0",
     "eslint-plugin-react-hooks": "^4.2.0",
+    "eslint-plugin-testing-library": "^4.12.2",
     "eslint-plugin-todo-plz": "^1.2.0",
     "faker": "^5.5.3",
     "jest": "^27.0.3",
