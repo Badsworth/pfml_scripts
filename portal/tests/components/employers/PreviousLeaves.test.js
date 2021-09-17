@@ -2,11 +2,12 @@ import PreviousLeave, {
   PreviousLeaveReason,
   PreviousLeaveType,
 } from "../../../src/models/PreviousLeave";
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import PreviousLeaves from "../../../src/components/employers/PreviousLeaves";
 import React from "react";
 import { times } from "lodash";
+import userEvent from "@testing-library/user-event";
 
 const BASE_PREVIOUS_LEAVE = new PreviousLeave({
   is_for_current_employer: true,
@@ -52,16 +53,16 @@ describe("PreviousLeaves", () => {
     it("allows for making amendments", () => {
       render(<PreviousLeaves {...defaultProps} />);
 
-      fireEvent.click(screen.getByRole("button", { name: /Amend/ }));
+      userEvent.click(screen.getByRole("button", { name: /Amend/ }));
 
       expect(queryAmendmentFormHeader()).toBeInTheDocument();
     });
 
     it("allows for canceling amendments", () => {
       render(<PreviousLeaves {...defaultProps} />);
-      fireEvent.click(screen.getByRole("button", { name: /Amend/ }));
+      userEvent.click(screen.getByRole("button", { name: /Amend/ }));
 
-      fireEvent.click(screen.getByRole("button", { name: /Cancel amendment/ }));
+      userEvent.click(screen.getByRole("button", { name: /Cancel amendment/ }));
 
       expect(onChange).toHaveBeenCalled();
       expect(queryAmendmentFormHeader()).not.toBeInTheDocument();
@@ -76,7 +77,7 @@ describe("PreviousLeaves", () => {
   it('calls "onAdd" when the add button is clicked', () => {
     render(<PreviousLeaves {...defaultProps} />);
 
-    fireEvent.click(
+    userEvent.click(
       screen.getByRole("button", { name: /Add a previous leave/ })
     );
 
@@ -109,7 +110,7 @@ describe("PreviousLeaves", () => {
       const addButton = screen.queryByRole("button", {
         name: /Add a previous leave/,
       });
-      expect(addButton).not.toBeDisabled();
+      expect(addButton).toBeEnabled();
     });
   });
 
@@ -122,7 +123,7 @@ describe("PreviousLeaves", () => {
       />
     );
 
-    fireEvent.click(screen.getByRole("button", { name: /Cancel addition/ }));
+    userEvent.click(screen.getByRole("button", { name: /Cancel addition/ }));
 
     expect(onRemove).toHaveBeenCalled();
   });

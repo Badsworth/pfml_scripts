@@ -1,4 +1,4 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import React from "react";
@@ -6,10 +6,10 @@ import SupportingWorkDetails from "../../../src/components/employers/SupportingW
 import userEvent from "@testing-library/user-event";
 
 const clickAmendButton = () =>
-  fireEvent.click(screen.getByRole("button", { name: /Amend/ }));
+  userEvent.click(screen.getByRole("button", { name: /Amend/ }));
 
 const clickCancelAmendButton = () =>
-  fireEvent.click(screen.getByRole("button", { name: /Cancel amendment/ }));
+  userEvent.click(screen.getByRole("button", { name: /Cancel amendment/ }));
 
 const getInputElement = () =>
   screen.getByLabelText(
@@ -53,7 +53,7 @@ describe("SupportingWorkDetails", () => {
       name: /Amend weekly hours worked/,
     });
     const inputElement = getInputElement();
-    expect(amendTitle).toBeTruthy();
+    expect(amendTitle).toBeInTheDocument();
     expect(inputElement.value).toBe("40");
     expect(container).toMatchSnapshot();
   });
@@ -89,7 +89,9 @@ describe("SupportingWorkDetails", () => {
 
       clickCancelAmendButton();
 
-      expect(screen.queryByRole("heading", { level: 4 })).toBeNull();
+      expect(
+        screen.queryByRole("heading", { level: 4 })
+      ).not.toBeInTheDocument();
       expect(functionalOnChange).toHaveBeenCalled();
     });
   });
@@ -106,7 +108,7 @@ describe("SupportingWorkDetails", () => {
         level: 4,
         name: /Amend weekly hours worked/,
       });
-      expect(amendTitle).toBeTruthy();
+      expect(amendTitle).toBeInTheDocument();
     });
 
     it("allows closing the opened amendment form", () => {
