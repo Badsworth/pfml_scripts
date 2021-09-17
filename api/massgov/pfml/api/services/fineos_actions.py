@@ -1327,23 +1327,20 @@ def create_other_leaves_and_other_incomes_eforms(
 
 
 def get_absence_periods(
-    employee_tax_identifier: str,
-    employer_fein: str,
-    fineos_absence_id: str,
-    db_session: massgov.pfml.db.Session,
+    employee_tax_id: str, employer_fein: str, absence_id: str, db_session: massgov.pfml.db.Session,
 ) -> List[AbsencePeriodStatusResponse]:
     fineos = massgov.pfml.fineos.create_client()
 
-    # Get FINEOS web admin id
     try:
-        fineos_web_id = register_employee(
-            fineos, employee_tax_identifier, employer_fein, db_session,
-        )
-    except Exception:
-        return []
+        # Get FINEOS web admin id
+        web_id = register_employee(fineos, employee_tax_id, employer_fein, db_session)
 
-    # Get absence periods
-    response: AbsenceDetails = fineos.get_absence(fineos_web_id, fineos_absence_id)
+        # Get absence periods
+        response: AbsenceDetails = fineos.get_absence(web_id, absence_id)
+    except FINEOSClientError as ex:
+        logger.warn("Unable to get absence periods", exc_info=ex, extra={"absence_id": absence_id})
+        raise
+
     # Map FINEOS response to PFML response
     absence_periods = []
     if response and response.absencePeriods:
