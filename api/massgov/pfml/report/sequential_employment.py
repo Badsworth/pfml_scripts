@@ -45,7 +45,7 @@ def create_report(db_session: db.Session) -> None:
     total_applicants = total_applicant_count(db_session)
     total_employees = total_employee_count(db_session)
 
-    def make_row(group: Set[UUID], group_name: str):
+    def make_row(group: Set[UUID], group_name: str) -> SequentialEmploymentReportRow:
         applicant_count = group_applicant_count(db_session, group)
         group_total = len(group)
         row = SequentialEmploymentReportRow()
@@ -80,7 +80,7 @@ def create_report(db_session: db.Session) -> None:
     logger.info("Finished writing sequential employment report to s3")
 
 
-def get_scenario_groups(db_session: db.Session) -> Tuple[Set[UUID]]:
+def get_scenario_groups(db_session: db.Session) -> Tuple[Set[UUID], Set[UUID]]:
     """
     Scenario One:
         - Subset of employee_ids that match an employee having non-zero wages reported in ONLY one of the last two quarters
@@ -193,7 +193,7 @@ def total_employee_count(db_session: db.Session) -> int:
     return db_session.query(func.count(Employee.employee_id)).scalar()
 
 
-def total_applicant_count(db_session) -> int:
+def total_applicant_count(db_session: db.Session) -> int:
     return db_session.query(func.count(Claim.employee_id)).distinct().scalar()
 
 

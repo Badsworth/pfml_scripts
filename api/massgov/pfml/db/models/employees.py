@@ -680,7 +680,7 @@ class Claim(Base, TimestampMixin):
         if not self.managed_requirements:
             return None
         filtered_requirements = filter(_filter, self.managed_requirements)
-        requirements = sorted(filtered_requirements, key=lambda x: x.follow_up_date)
+        requirements = sorted(filtered_requirements, key=lambda x: x.follow_up_date)  # type: ignore
         if len(requirements):
             return requirements[0].follow_up_date
         return None

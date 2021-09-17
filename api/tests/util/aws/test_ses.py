@@ -26,7 +26,8 @@ def get_raw_email_msg_object():
     # Attachment
     file_name = "test_file"
     csv_file_path = [create_csv_from_list([{"name": "test"}], ["name"], file_name)]
-    conn.create_email_attachments(message, csv_file_path)
+    if csv_file_path is not None:
+        conn.create_email_attachments(message, csv_file_path)
     return message
 
 
