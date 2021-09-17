@@ -163,6 +163,11 @@ jobs:
         with:
           ssm_parameter: "/service/pfml-api/${{ github.event.inputs.target_environment }}/cognito_internal_fineos_role_app_client_secret"
           env_variable_name: "E2E_API_FINEOS_CLIENT_SECRET"
+      - name: Pull the newrelic API key from parameter store for reporting
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/service/pfml-api/common/newrelic-license-key"
+          env_variable_name: "E2E_NEWRELIC_INGEST_KEY"
 
       - name: Setup Node
         uses: actions/setup-node@v1
