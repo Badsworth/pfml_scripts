@@ -23,6 +23,15 @@ locals {
     { name : "DB_PASSWORD", valueFrom : "/service/${local.app_name}/${var.environment_name}/db-password" }
   ]
 
+  # Readonly DB Access
+
+  db_read_only_access = [
+    { name : "DB_HOST", value : data.aws_db_instance.default.address },
+    { name : "DB_NAME", value : data.aws_db_instance.default.db_name },
+    { name : "DB_USERNAME", value : "pfml_svc_readonly" },
+    { name : "DB_PASSWORD", valueFrom : "/service/${local.app_name}/${var.environment_name}/db-password-readonly" }
+  ]
+
   # Provides access to the FINEOS APIs
   fineos_api_access = [
     { name : "FINEOS_CLIENT_CUSTOMER_API_URL", value : var.fineos_client_customer_api_url },
