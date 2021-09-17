@@ -703,7 +703,7 @@ export function goToDashboardFromApplicationsPage(): void {
 }
 
 export function goToDashboardFromSuccessPage(): void {
-  cy.get('a[href="/applications/"]').click();
+  cy.contains(/(Back to your|Return to) applications/).click();
 }
 
 export function confirmClaimSubmissionSucces(): void {
