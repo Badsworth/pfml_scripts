@@ -12,6 +12,8 @@ describe("Post-approval (notifications/notices)", () => {
     password: Cypress.env("E2E_PORTAL_PASSWORD"),
   };
 
+  const has_status = config("HAS_CLAIMANT_STATUS_PAGE") === "true";
+
   const submit = it("Given a fully approved claim", () => {
     fineos.before();
     // Submit a claim via the API, including Employer Response.
@@ -102,35 +104,34 @@ describe("Post-approval (notifications/notices)", () => {
       });
     }
   );
-
-  it(
-    "Should display updated leave period fnd status or the claimant",
-    { retries: 0 },
-    () => {
-      cy.dependsOnPreviousPass([approval]);
-      portal.before({
-        claimantShowStatusPage: config("HAS_CLAIMANT_STATUS_PAGE") === "true",
-      });
-      cy.unstash<Submission>("submission").then((submission) => {
-        cy.unstash<string[]>("extensionLeaveDates").then(
-          ([startDate, endDate]) => {
-            const portalFormatStart = format(
-              new Date(startDate),
-              "MMMM d, yyyy"
-            );
-            const portalFormatEnd = format(
-              parse(endDate, "MM/dd/yyyy", new Date(endDate)),
-              "MMMM d, yyyy"
-            );
-            portal.login(credentials);
-            portal.claimantGoToClaimStatus(submission.fineos_absence_id);
-            portal.claimantAssertClaimStatus([
-              {
-                leave: "Care for a Family Member",
-                status: "Approved",
-              },
-            ]);
-            if (config("HAS_CLAIMANT_STATUS_PAGE") === "true") {
+  if (has_status) {
+    it(
+      "Should display updated leave period fnd status or the claimant",
+      { retries: 0 },
+      () => {
+        cy.dependsOnPreviousPass([approval]);
+        portal.before({
+          claimantShowStatusPage: has_status,
+        });
+        cy.unstash<Submission>("submission").then((submission) => {
+          cy.unstash<string[]>("extensionLeaveDates").then(
+            ([startDate, endDate]) => {
+              const portalFormatStart = format(
+                new Date(startDate),
+                "MMMM d, yyyy"
+              );
+              const portalFormatEnd = format(
+                parse(endDate, "MM/dd/yyyy", new Date(endDate)),
+                "MMMM d, yyyy"
+              );
+              portal.login(credentials);
+              portal.claimantGoToClaimStatus(submission.fineos_absence_id);
+              portal.claimantAssertClaimStatus([
+                {
+                  leave: "Care for a Family Member",
+                  status: "Approved",
+                },
+              ]);
               cy.findAllByText(/Continuous leave/)
                 .eq(1)
                 .next()
@@ -139,11 +140,11 @@ describe("Post-approval (notifications/notices)", () => {
                   `From ${portalFormatStart} to ${portalFormatEnd}`
                 );
             }
-          }
-        );
-      });
-    }
-  );
+          );
+        });
+      }
+    );
+  }
   it(
     "Should generate an (Extension) notification for the Leave Administrator",
     { retries: 0 },
