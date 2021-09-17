@@ -70,7 +70,7 @@ module "tasks" {
   fineos_data_export_path   = "s3://fin-somprod-data-export/PRD/dataexports"
   fineos_data_import_path   = "s3://fin-somprod-data-import/PRD/peiupdate"
   fineos_error_export_path  = "s3://fin-somprod-data-export/PRD/errorExtracts"
-  fineos_report_export_path = "s3://fin-somprod-data-export/PRD/reportExtracts"
+  fineos_report_export_path = "s3://fin-somprod-data-export/PRD/reportExtract"
   pfml_fineos_inbound_path  = "s3://massgov-pfml-prod-agency-transfer/cps/inbound"
   pfml_fineos_outbound_path = "s3://massgov-pfml-prod-agency-transfer/cps/outbound"
 

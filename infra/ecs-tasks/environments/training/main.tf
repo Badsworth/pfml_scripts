@@ -44,7 +44,7 @@ module "tasks" {
   fineos_eligibility_feed_output_directory_path       = "s3://fin-somdev-data-import/TRN"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/TRN/dataexports"
   fineos_error_export_path                            = "s3://fin-somdev-data-export/TRN/errorExtracts"
-  fineos_report_export_path                           = "s3://fin-somdev-data-export/TRN/reportExtracts"
+  fineos_report_export_path                           = "s3://fin-somdev-data-export/TRN/reportExtract"
 
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-training/rmv_client_certificate-uUtNEp"
