@@ -487,6 +487,8 @@ const errors = {
         "Leave start dates for caring leave must be after June 30, 2021.",
       disallow_hybrid_intermittent_leave:
         "You cannot request intermittent leave in the same application as your continuous or reduced schedule leave. Create a separate application for your intermittent leave dates.",
+      disallow_overlapping_leave_period_with_previous_leave:
+        "Your previous leave dates cannot overlap with the PFML leave dates you are applying for. Check that you’ve entered the correct start and end dates for your leave details and previous leave.",
       disallow_overlapping_leave_periods:
         "Your reduced leave schedule cannot overlap with your continuous or intermittent leave. Check whether you’ve entered the correct start and end dates for each leave period.",
       disallow_submit_over_60_days_before_start_date:
