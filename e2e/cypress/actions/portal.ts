@@ -1735,11 +1735,11 @@ export function assertLeaveType(leaveType: "Active duty"): void {
     .next()
     .should("contain.text", leaveType);
 }
-
+export type FilterOptionsFlags = {
+  [key in DashboardClaimStatus]?: true | false;
+};
 type FilterOptions = {
-  status?: {
-    [key in DashboardClaimStatus]?: true;
-  };
+  status?: FilterOptionsFlags;
 };
 /**Filter claims by given parameters
  * @example
@@ -1761,14 +1761,19 @@ export function filterLADashboardBy(filters: FilterOptions): void {
   const { status } = filters;
   if (status) {
     cy.get("#filters fieldset").within(() => {
-      for (const key of Object.keys(status))
-        cy.findByLabelText(key).click({ force: true });
+      for (const [k, v] of Object.entries(status)) {
+        if (v) cy.findByLabelText(k).click({ force: true });
+      }
     });
+    for (const [_key, checkFilter] of Object.entries(status)) {
+      if (checkFilter) {
+        cy.findByText("Apply filters").should("not.be.disabled").click();
+        cy.get('span[role="progressbar"]').should("be.visible");
+        cy.wait("@dashboardClaimQueries");
+        cy.contains("table", "Employer ID number").should("be.visible");
+      }
+    }
   }
-  cy.findByText("Apply filters").should("not.be.disabled").click();
-  cy.get('span[role="progressbar"]').should("be.visible");
-  cy.wait("@dashboardClaimQueries");
-  cy.contains("table", "Employer ID number").should("be.visible");
 }
 /**Looks if dashboard is empty */
 function checkDashboardIsEmpty() {
