@@ -1424,13 +1424,10 @@ type UploadAdditonalDocumentOptions =
   | "Certification";
 
 export function uploadAdditionalDocument(
-  fineosClaimId: string,
   type: UploadAdditonalDocumentOptions,
   docName: string
 ): void {
-  cy.contains("article", fineosClaimId).within(() => {
-    cy.contains("Upload additional documents").click();
-  });
+  cy.contains("Upload additional documents").click();
   cy.contains("label", type).click();
   cy.contains("button", "Save and continue").click();
   if (type !== "Certification") {
@@ -1438,7 +1435,11 @@ export function uploadAdditionalDocument(
   } else {
     addLeaveDocs(docName);
   }
-  cy.contains("You successfully submitted your documents", { timeout: 30000 });
+  // @todo: success banner is not available in all environments yet - reinstate assertion after 9/22 https://nava.slack.com/archives/C023NUQ2Y0K/p1631810839125300?thread_ts=1631806074.115000&cid=C023NUQ2Y0K
+  // cy.contains(
+  //   /You('ve)? successfully submitted your (certification form|(identification )?documents)/,
+  //   { timeout: 30000 }
+  // );
 }
 
 /**
