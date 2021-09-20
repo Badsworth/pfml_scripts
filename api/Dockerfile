@@ -2,7 +2,7 @@
 # Dockerfile for PFML API.
 #
 
-FROM python:3.9-slim-buster as build
+FROM python:3.9-slim-bullseye as build
 
 # core project tools
 RUN pip install poetry
