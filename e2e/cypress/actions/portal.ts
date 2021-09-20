@@ -71,6 +71,11 @@ export function before(flags?: Partial<FeatureFlags>): void {
     /\/api\/v1\/(employers\/claims|applications)\/.*\/documents\/\d+/
   ).as("documentDownload");
 
+  cy.intercept({
+    url: /\/api\/v1\/applications\/.*\/documents/,
+    method: "POST",
+  }).as("documentUpload");
+
   cy.intercept(/\/api\/v1\/claims\?page_offset=\d+$/).as(
     "dashboardDefaultQuery"
   );
@@ -1435,6 +1440,9 @@ export function uploadAdditionalDocument(
   } else {
     addLeaveDocs(docName);
   }
+  // Hotfix: Wait for this to complete, plus a margin.
+  cy.wait("@documentUpload")
+    .its('response.statusCode').should('eq', 200)
   // @todo: success banner is not available in all environments yet - reinstate assertion after 9/22 https://nava.slack.com/archives/C023NUQ2Y0K/p1631810839125300?thread_ts=1631806074.115000&cid=C023NUQ2Y0K
   // cy.contains(
   //   /You('ve)? successfully submitted your (certification form|(identification )?documents)/,
