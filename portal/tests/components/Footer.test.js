@@ -1,11 +1,11 @@
 import Footer from "../../src/components/Footer";
 import React from "react";
-import { shallow } from "enzyme";
+import { render } from "@testing-library/react";
 
 describe("Footer", () => {
   it("renders footer with default settings", () => {
-    const wrapper = shallow(<Footer />);
+    const { container } = render(<Footer />);
 
-    expect(wrapper).toMatchSnapshot();
+    expect(container.firstChild).toMatchSnapshot();
   });
 });
