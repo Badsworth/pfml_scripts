@@ -1588,6 +1588,43 @@ def leave_period_response_equal_leave_period_query(
 
 # TODO (CP-2636): Refactor tests to use fixtures
 class TestGetClaimEndpoint:
+    @pytest.fixture
+    def setup_db(self, test_db_session, fineos_web_id_ext, application):
+        test_db_session.add(fineos_web_id_ext)
+        test_db_session.commit()
+
+    @pytest.fixture
+    def employer(self):
+        return EmployerFactory.create(employer_fein="112222222")
+
+    @pytest.fixture
+    def employee(self):
+        tax_identifier = TaxIdentifierFactory.create(tax_identifier="123456789")
+        return EmployeeFactory.create(tax_identifier_id=tax_identifier.tax_identifier_id)
+
+    @pytest.fixture
+    def fineos_web_id_ext(self, employee, employer):
+        fineos_web_id_ext = FINEOSWebIdExt()
+        fineos_web_id_ext.employee_tax_identifier = employee.tax_identifier.tax_identifier
+        fineos_web_id_ext.employer_fein = employer.employer_fein
+        fineos_web_id_ext.fineos_web_id = "web_id"
+
+        return fineos_web_id_ext
+
+    @pytest.fixture
+    def claim(self, employer, employee):
+        return ClaimFactory.create(
+            employer=employer,
+            employee=employee,
+            fineos_absence_status_id=1,
+            claim_type_id=1,
+            fineos_absence_id="foo",
+        )
+
+    @pytest.fixture
+    def application(self, user, claim):
+        return ApplicationFactory.create(user=user, claim=claim)
+
     def test_get_claim_claim_does_not_exist(self, caplog, client, employer_auth_token):
         response = client.get(
             "/v1/claims/NTN-100-ABS-01", headers={"Authorization": f"Bearer {employer_auth_token}"},
@@ -1802,6 +1839,22 @@ class TestGetClaimEndpoint:
         assert leave_period_response_equal_leave_period_query(
             claim_data["absence_periods"][0], leave_period
         )
+
+    @mock.patch("massgov.pfml.api.claims.get_absence_periods")
+    def test_get_claim_with_no_leave_periods_returns_500(
+        self, mock_get_absence_periods, claim, client, auth_token, setup_db
+    ):
+        mock_get_absence_periods.return_value = []
+
+        response = client.get(
+            f"/v1/claims/{claim.fineos_absence_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+
+        assert response.status_code == 500
+
+        message = response.get_json().get("message")
+        assert message == "No absence periods found for claim"
 
     def test_get_claim_with_managed_requirements(self, client, auth_token, user, test_db_session):
         employer = EmployerFactory.create(employer_fein="813648030")

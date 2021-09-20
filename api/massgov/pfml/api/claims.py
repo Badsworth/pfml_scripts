@@ -6,7 +6,7 @@ import connexion
 import flask
 from sqlalchemy.orm.session import Session
 from sqlalchemy_utils import escape_like
-from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
+from werkzeug.exceptions import BadRequest, Forbidden, InternalServerError, NotFound, Unauthorized
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
@@ -482,6 +482,8 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
             message="Successfully retrieved claim", data=detailed_claim.dict(), status_code=200,
         ).to_api_response()
 
+    absence_periods = []
+
     employee_tax_id = claim.employee_tax_identifier
     employer_fein = claim.employer_fein
 
@@ -501,12 +503,22 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
                     return ClaimWithdrawn().to_api_response()
 
                 raise error
+
+            if len(absence_periods) == 0:
+                logger.warn(
+                    "No absence periods found for claim", extra={"absence_id": fineos_absence_id}
+                )
+                return response_util.error_response(
+                    status_code=InternalServerError,
+                    message="No absence periods found for claim",
+                    errors=[],
+                    data={},
+                ).to_api_response()
     else:
         logger.info(
             "get_claim info - No employee or employer tied to this claim. Cannot retrieve absence periods from FINEOS.",
             extra={"absence_case_id": fineos_absence_id, "claim_id": claim.claim_id},
         )
-        absence_periods = []
 
     detailed_claim.absence_periods = absence_periods
 
