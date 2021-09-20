@@ -8,7 +8,7 @@ import {
 import { createInputElement, makeFile } from "./makeFile";
 import mockAuth from "./mockAuth";
 import mockFetch from "./mockFetch";
-import { renderPage } from "../../tests/test-utils/renderPage";
+import { renderPage } from "./renderPage";
 import simulateEvents from "./simulateEvents";
 
 export {

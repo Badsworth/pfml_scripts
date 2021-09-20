@@ -1,6 +1,6 @@
 import Address from "../../src/models/Address";
 import BaseBenefitsApplication from "../../src/models/BaseBenefitsApplication";
-import { BaseMockBenefitsApplicationBuilder } from "../../tests/test-utils";
+import { BaseMockBenefitsApplicationBuilder } from "../test-utils";
 
 describe("BaseBenefitsApplication", () => {
   class TestClaim extends BaseBenefitsApplication {}

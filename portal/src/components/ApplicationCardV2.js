@@ -4,15 +4,15 @@ import routeWithParams, {
 } from "../utils/routeWithParams";
 
 import BenefitsApplication from "../models/BenefitsApplication";
-import ButtonLink from "../components/ButtonLink";
+import ButtonLink from "./ButtonLink";
 import Document from "../models/Document";
-import Heading from "../components/Heading";
-import Icon from "../components/Icon";
+import Heading from "./Heading";
+import Icon from "./Icon";
 import LeaveReason from "../models/LeaveReason";
-import LegalNoticeList from "../components/LegalNoticeList";
+import LegalNoticeList from "./LegalNoticeList";
 import PropTypes from "prop-types";
 import React from "react";
-import ThrottledButton from "../components/ThrottledButton";
+import ThrottledButton from "./ThrottledButton";
 import findKeyByValue from "../utils/findKeyByValue";
 import getLegalNotices from "../utils/getLegalNotices";
 import { useTranslation } from "../locales/i18n";

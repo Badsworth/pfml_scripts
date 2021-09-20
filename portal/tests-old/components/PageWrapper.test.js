@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import Flag from "../../../portal/src/models/Flag";
+import Flag from "../../src/models/Flag";
 import PageWrapper from "../../src/components/PageWrapper";
 import React from "react";
 import { mockRouter } from "next/router";

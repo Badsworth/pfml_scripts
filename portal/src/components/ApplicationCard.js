@@ -3,10 +3,10 @@ import BenefitsApplication, {
 } from "../models/BenefitsApplication";
 import Document, { DocumentType } from "../models/Document";
 
-import Alert from "../components/Alert";
-import ButtonLink from "../components/ButtonLink";
-import DownloadableDocument from "../components/DownloadableDocument";
-import Heading from "../components/Heading";
+import Alert from "./Alert";
+import ButtonLink from "./ButtonLink";
+import DownloadableDocument from "./DownloadableDocument";
+import Heading from "./Heading";
 import LeaveReason from "../models/LeaveReason";
 import PropTypes from "prop-types";
 import React from "react";

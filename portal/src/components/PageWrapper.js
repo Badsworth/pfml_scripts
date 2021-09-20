@@ -10,7 +10,7 @@ import Header from "./Header";
 import { Helmet } from "react-helmet";
 import PropTypes from "prop-types";
 import React from "react";
-import Spinner from "../components/Spinner";
+import Spinner from "./Spinner";
 import dynamic from "next/dynamic";
 import { get } from "lodash";
 import { isFeatureEnabled } from "../services/featureFlags";

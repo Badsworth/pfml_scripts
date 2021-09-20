@@ -1,4 +1,4 @@
-import AlertBar from "../components/AlertBar";
+import AlertBar from "./AlertBar";
 import AuthNav from "./AuthNav";
 import BetaBanner from "./BetaBanner";
 import HeaderSlim from "@massds/mayflower-react/dist/HeaderSlim";

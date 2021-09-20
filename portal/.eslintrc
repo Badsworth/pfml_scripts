@@ -53,6 +53,7 @@
   ],
   "rules": {
     "camelcase": "off",
+    "import/no-useless-path-segments": "error",
     "jest/consistent-test-it": ["error", { "fn": "it" }],
     "jest/no-conditional-expect": "off",
     "jest/no-try-expect": "off",

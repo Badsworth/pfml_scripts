@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import { Spinner } from "../components/Spinner";
 import User from "../models/User";
 import assert from "assert";
-import routes from "../../src/routes";
+import routes from "../routes";
 import { useTranslation } from "react-i18next";
 import withUser from "./withUser";
 
