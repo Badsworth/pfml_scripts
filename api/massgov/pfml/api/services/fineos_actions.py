@@ -581,10 +581,7 @@ def application_reason_to_claim_reason(
     primary_relationship = primary_rel_qualifier_1 = primary_rel_qualifier_2 = None
     notification_reason = None
 
-    if application.leave_reason_id == LeaveReason.PREGNANCY_MATERNITY.leave_reason_id or (
-        application.leave_reason_id == LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
-        and application.pregnant_or_recent_birth
-    ):
+    if application.leave_reason_id == LeaveReason.PREGNANCY_MATERNITY.leave_reason_id:
         reason = LeaveReason.PREGNANCY_MATERNITY.leave_reason_description
         reason_qualifier_1 = (
             LeaveReasonQualifier.POSTNATAL_DISABILITY.leave_reason_qualifier_description
@@ -1270,12 +1267,12 @@ def format_other_leaves_data(application: Application) -> Optional[EFormBody]:
             application.previous_leaves_same_reason,
         )
     )
-    # Set the leave reason for previous leaves of the same reason to the claim's leave reason
-    # TODO (CP-1164): Begin using the application's claim reason instead once it's actually accurate
-    leave_reason_str, *ignored = application_reason_to_claim_reason(application)
-    leave_reason = LeaveReasonApi.validate_type(leave_reason_str)
+
+    leave_reason = LeaveReasonApi.to_previous_leave_qualifying_reason(
+        LeaveReasonApi.validate_type(application.leave_reason.leave_reason_description)
+    )
     for leave in previous_leave_same_reason_items:
-        leave.leave_reason = LeaveReasonApi.to_previous_leave_qualifying_reason(leave_reason)
+        leave.leave_reason = leave_reason
 
     previous_leave_items = chain(
         previous_leave_other_reason_items, previous_leave_same_reason_items
