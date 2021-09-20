@@ -1094,16 +1094,9 @@ def test_process_extract_data_leave_request_decision_validation(
         .one_or_none()
     )
     assert in_review_payment
-    assert len(in_review_payment.state_logs) == 2
+    assert len(in_review_payment.state_logs) == 1
     state_log = state_log_util.get_latest_state_log_in_flow(
         in_review_payment, Flow.DELEGATED_PAYMENT, local_test_db_session
-    )
-    assert (
-        state_log.end_state_id
-        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE.state_id
-    )
-    validate_pei_writeback_state_for_payment(
-        in_review_payment, local_test_db_session, is_leave_in_review=True
     )
 
     rejected_payment = (
@@ -1161,7 +1154,7 @@ def test_process_extract_data_leave_request_decision_validation(
     import_log_report = json.loads(rejected_payment.fineos_extract_import_log.report)
     assert import_log_report["in_review_leave_request_count"] == 1
     assert import_log_report["not_approved_leave_request_count"] == 2
-    assert import_log_report["standard_valid_payment_count"] == 2
+    assert import_log_report["standard_valid_payment_count"] == 3
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time

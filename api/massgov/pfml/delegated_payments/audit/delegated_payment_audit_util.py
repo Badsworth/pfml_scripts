@@ -17,8 +17,7 @@ from massgov.pfml.db.models.employees import (
     PaymentMethod,
 )
 from massgov.pfml.db.models.payments import (
-    PAYMENT_AUDIT_REPORT_ACTION_REJECTED,
-    PAYMENT_AUDIT_REPORT_ACTION_SKIPPED,
+    AuditReportAction,
     LkPaymentAuditReportType,
     PaymentAuditReportDetails,
     PaymentAuditReportType,
@@ -261,29 +260,26 @@ def get_payment_audit_report_details(
             staged_audit_report_detail.audit_report_type.payment_audit_report_type_description
         )
 
-        # Set the message in the correct column
-        key = f"{audit_report_type.lower()}_details".replace(" ", "_")
-
-        details_dict = cast(Dict[str, Any], staged_audit_report_detail.details)
-        audit_report_details[key] = details_dict["message"]
-
-        # Track rejected or skipped
-        is_rejected_or_skipped = (
+        audit_report_action = (
             staged_audit_report_detail.audit_report_type.payment_audit_report_action
         )
 
-        is_rejected_or_skipped = (
-            staged_audit_report_detail.audit_report_type.payment_audit_report_action
-        )
+        # Set the message in the correct column if the audit report action
+        # dictates that we should populate a column
+        if AuditReportAction.should_populate_column(audit_report_action):
+            key = f"{audit_report_type.lower()}_details".replace(" ", "_")
+            details_dict = cast(Dict[str, Any], staged_audit_report_detail.details)
+            audit_report_details[key] = details_dict["message"]
+
         # The notes we add are based on the audit report description
         # unless an override is specified above for that particular type
         notes_to_add = AUDIT_REPORT_NOTES_OVERRIDE.get(
             staged_audit_report_detail.audit_report_type_id, audit_report_type
         )
-        if is_rejected_or_skipped == PAYMENT_AUDIT_REPORT_ACTION_REJECTED:
+        if AuditReportAction.is_rejected(audit_report_action):
             rejected = True
             program_integrity_notes.append(f"{notes_to_add} (Rejected)")
-        elif is_rejected_or_skipped == PAYMENT_AUDIT_REPORT_ACTION_SKIPPED:
+        elif AuditReportAction.is_skipped(audit_report_action):
             skipped = True
             program_integrity_notes.append(f"{notes_to_add} (Skipped)")
 

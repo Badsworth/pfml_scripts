@@ -17,6 +17,7 @@ from massgov.pfml.db.models.payments import (
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
     stage_payment_audit_report_details,
 )
+from massgov.pfml.delegated_payments.postprocessing.in_review_processor import InReviewProcessor
 from massgov.pfml.delegated_payments.postprocessing.maximum_weekly_benefits_processor import (
     MaximumWeeklyBenefitsStepProcessor,
 )
@@ -99,6 +100,9 @@ class PaymentPostProcessingStep(Step):
         try:
             payment_containers = self._get_payments_awaiting_post_processing_validation()
 
+            # Run processing on payments
+            self._process_payments(payment_containers)
+
             # Run validations that process payments
             # by group them under a single employee
             self._process_payments_across_employee(payment_containers)
@@ -128,6 +132,11 @@ class PaymentPostProcessingStep(Step):
             payment_containers.append(PaymentContainer(state_log.payment))
 
         return payment_containers
+
+    def _process_payments(self, payment_containers: List[PaymentContainer]) -> None:
+        in_review_processor = InReviewProcessor(self)
+        for container in payment_containers:
+            in_review_processor.process(container)
 
     def _process_payments_across_employee(self, payment_containers: List[PaymentContainer]) -> None:
         # First group the payments by their employee

@@ -464,9 +464,10 @@ class PaymentData:
                 leave_request_decision: str,
             ) -> Optional[payments_util.ValidationReason]:
                 if leave_request_decision == "In Review":
+                    # These are allowed, but will be defaulted to skip in the audit report
                     if count_incrementer is not None:
                         count_incrementer(PaymentExtractStep.Metrics.IN_REVIEW_LEAVE_REQUEST_COUNT)
-                    return payments_util.ValidationReason.LEAVE_REQUEST_IN_REVIEW
+                    return None
                 if leave_request_decision != "Approved":
                     if count_incrementer is not None:
                         count_incrementer(
@@ -1360,7 +1361,6 @@ class PaymentExtractStep(Step):
         # https://lwd.atlassian.net/wiki/spaces/API/pages/1319272855/Payment+Transaction+Scenarios
         validation_reasons = payment_data.validation_container.get_reasons()
         has_unfixable_issues = False
-        has_leave_in_review = False
         has_pending_prenote = False
         has_rejected_prenote = False
 
@@ -1380,11 +1380,6 @@ class PaymentExtractStep(Step):
                 payments_util.ValidationReason.UNEXPECTED_PAYMENT_TRANSACTION_TYPE,
             ]:
                 has_unfixable_issues = True
-
-            # Payments with In Review leave decision status will be put in PendingActive as we are just
-            # waiting for them to be Approved on FINEOS
-            elif reason == payments_util.ValidationReason.LEAVE_REQUEST_IN_REVIEW:
-                has_leave_in_review = True
 
             # Pending prenotes will also be put in PendingActive as we are just
             # waiting to get the payment
@@ -1406,9 +1401,6 @@ class PaymentExtractStep(Step):
         # Unfixable issues take next precendence
         if has_unfixable_issues:
             return FineosWritebackTransactionStatus.DATA_ISSUE_IN_SYSTEM
-
-        if has_leave_in_review:
-            return FineosWritebackTransactionStatus.LEAVE_IN_REVIEW
 
         # Pending and rejected can't happen at the same time, so ordering
         # won't matter

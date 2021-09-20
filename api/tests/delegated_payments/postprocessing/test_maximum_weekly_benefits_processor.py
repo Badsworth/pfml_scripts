@@ -21,10 +21,7 @@ from . import _create_payment_container
 
 @pytest.fixture
 def payment_post_processing_step(
-    local_initialize_factories_session,
-    local_test_db_session,
-    local_test_db_other_session,
-    monkeypatch,
+    local_initialize_factories_session, local_test_db_session, local_test_db_other_session
 ):
     return PaymentPostProcessingStep(
         db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session

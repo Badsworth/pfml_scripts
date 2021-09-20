@@ -39,6 +39,9 @@ class PostProcessingMetrics(str, enum.Enum):
 
     PAYMENT_DETAIL_MISSING_COUNT = "payment_detail_missing_count"
 
+    # Metrics specific to the in review processor
+    PAYMENT_LEAVE_PLAN_IN_REVIEW_COUNT = "payment_leave_plan_in_review"
+
 
 @total_ordering  # Handles supporting sort with just __eq__ and __lt__
 @dataclass
