@@ -1,11 +1,11 @@
 import NewTag from "../../src/components/NewTag";
 import React from "react";
-import { shallow } from "enzyme";
+import { render } from "@testing-library/react";
 
 describe("NewTag", () => {
   it("renders the component", () => {
-    const wrapper = shallow(<NewTag />);
+    const { container } = render(<NewTag />);
 
-    expect(wrapper).toMatchSnapshot();
+    expect(container.firstChild).toMatchSnapshot();
   });
 });

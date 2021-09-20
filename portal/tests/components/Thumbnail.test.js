@@ -6,17 +6,17 @@ jest.mock("react", () => ({
 }));
 
 import React, { useEffect } from "react";
+import { render, screen } from "@testing-library/react";
 import Thumbnail from "../../src/components/Thumbnail";
-import { shallow } from "enzyme";
 
 describe("Thumbnail", () => {
   const file = new File(["foo"], "foo.png", { type: "image/png" });
 
   describe("when initially loading the preview", () => {
     it("renders nothing", () => {
-      const wrapper = shallow(<Thumbnail file={file} />);
+      const { container } = render(<Thumbnail file={file} />);
 
-      expect(wrapper.isEmptyRender()).toBe(true);
+      expect(container).toBeEmptyDOMElement();
     });
   });
 
@@ -25,9 +25,9 @@ describe("Thumbnail", () => {
       useEffect.mockImplementationOnce((didUpdate) => didUpdate());
       const pdfFile = new File(["foo"], "bar.pdf", { type: "application/pdf" });
 
-      const wrapper = shallow(<Thumbnail file={pdfFile} />);
+      const { container } = render(<Thumbnail file={pdfFile} />);
 
-      expect(wrapper).toMatchSnapshot();
+      expect(container.firstChild).toMatchSnapshot();
     });
   });
 
@@ -36,14 +36,14 @@ describe("Thumbnail", () => {
       useEffect.mockImplementationOnce((f) => f());
       const createUrlSpy = jest.spyOn(URL, "createObjectURL");
 
-      const wrapper = shallow(<Thumbnail file={file} />);
+      render(<Thumbnail file={file} />);
       expect(createUrlSpy).toHaveBeenCalledTimes(1);
-      expect(wrapper.find("img")).toMatchInlineSnapshot(`
-        <img
-          alt=""
-          src="image.png"
-        />
-      `);
+      expect(screen.getByRole("img")).toMatchInlineSnapshot(`
+          <img
+            alt=""
+            src="image.png"
+          />
+        `);
     });
 
     it("cleans up the created URL", () => {
@@ -53,7 +53,7 @@ describe("Thumbnail", () => {
       });
       const revokeUrlSpy = jest.spyOn(URL, "revokeObjectURL");
 
-      shallow(<Thumbnail file={file} />);
+      render(<Thumbnail file={file} />);
 
       expect(revokeUrlSpy).toHaveBeenCalledTimes(1);
     });
