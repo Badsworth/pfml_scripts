@@ -17,17 +17,30 @@ class CustomReporter {
         const event = {
           runId: process.env.GITHUB_RUN_ID,
           environment: process.env.E2E_ENVIRONMENT,
-          eventType: "IntergrationTestResult",
-          filename: file.testFilePath.split("e2e/")[1],
+          eventType: "IntegrationTestResult",
+          file: file.testFilePath.split("e2e/")[1],
           specStart: file.perfStats.start,
           specEnd: file.perfStats.end,
           specRuntime: file.perfStats.runtime,
+          passed: res.status === "passed",
           status: res.status,
           fullName: res.fullName,
-          duration: res.duration,
+          durationMs: res.duration,
           title: res.title,
           errorMessage: res.failureMessages.join("|"),
+          // res.invocations contains the number of times this block was run
+          // If it's more than 1 - it was retried.
+          flaky: res.status === "passed" && res.invocations > 1,
+          suite: res.ancestorTitles.join(" "),
         };
+        // If there was an error thrown during a test which isn't handled by the test itself
+        // Set error details
+        if (res.testExecError) {
+          event.errorCode = res.testExecError.code;
+          event.errorMessage = res.testExecError.message;
+          event.errorStack = res.testExecError.stack;
+          event.errorType = res.testExecError.type;
+        }
         events.push(event);
       });
     });
