@@ -6,6 +6,7 @@ import {
   IconCopy,
   IconPhone,
 } from "@massds/mayflower-react/dist/Icon";
+
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
@@ -131,7 +132,11 @@ export const Success = (props) => {
                   <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
                 ),
                 "when-can-i-use-pfml": (
-                  <a href={routes.external.massgov.whenCanIUsePFML} />
+                  <a
+                    href={routes.external.massgov.whenCanIUsePFML}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  />
                 ),
                 ul: <ul className="usa-list" />,
                 li: <li />,
@@ -183,7 +188,11 @@ export const Success = (props) => {
                     <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
                   ),
                   "medical-bonding-link": (
-                    <a href={routes.external.massgov.medicalBonding} />
+                    <a
+                      href={routes.external.massgov.medicalBonding}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    />
                   ),
                 }}
               />
@@ -205,7 +214,11 @@ export const Success = (props) => {
                     <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
                   ),
                   "medical-bonding-link": (
-                    <a href={routes.external.massgov.medicalBonding} />
+                    <a
+                      href={routes.external.massgov.medicalBonding}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    />
                   ),
                 }}
               />

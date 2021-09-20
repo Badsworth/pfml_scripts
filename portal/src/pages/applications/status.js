@@ -2,6 +2,7 @@
 import ClaimDetail, { AbsencePeriod } from "../../models/ClaimDetail";
 import React, { useEffect } from "react";
 import { find, get, has, map } from "lodash";
+
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
@@ -392,7 +393,11 @@ export const LeaveDetails = ({ absenceDetails = {} }) => {
                   tOptions={{ context: request_decision }}
                   components={{
                     "application-link": (
-                      <a href={routes.applications.getReady} />
+                      <a
+                        href={routes.applications.getReady}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      />
                     ),
                     "request-appeal-link": (
                       <a
@@ -453,7 +458,11 @@ export const Timeline = ({
             tOptions={{ context: typeOfProof }}
             components={{
               "proof-document-link": (
-                <a href={routes.external.massgov.proofOfBirthOrPlacement} />
+                <a
+                  href={routes.external.massgov.proofOfBirthOrPlacement}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                />
               ),
             }}
           />
@@ -500,7 +509,13 @@ export const Timeline = ({
       <Trans
         i18nKey="pages.claimsStatus.timelineTextLearnMore"
         components={{
-          "timeline-link": <a href={routes.external.massgov.timeline} />,
+          "timeline-link": (
+            <a
+              href={routes.external.massgov.timeline}
+              rel="noopener noreferrer"
+              target="_blank"
+            />
+          ),
         }}
       />
     </React.Fragment>

@@ -1,4 +1,5 @@
 import Document, { DocumentType } from "../../models/Document";
+
 import Accordion from "../../components/Accordion";
 import AccordionItem from "../../components/AccordionItem";
 import Alert from "../../components/Alert";
@@ -96,7 +97,13 @@ export const UploadId = (props) => {
               components={{
                 ul: <ul className="usa-list" />,
                 li: <li />,
-                "work-visa-link": <a href={routes.external.workVisa} />,
+                "work-visa-link": (
+                  <a
+                    href={routes.external.workVisa}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  />
+                ),
               }}
             />
 
@@ -110,10 +117,18 @@ export const UploadId = (props) => {
                     ul: <ul className="usa-list" />,
                     li: <li />,
                     "identity-proof-link": (
-                      <a href={routes.external.massgov.identityProof} />
+                      <a
+                        href={routes.external.massgov.identityProof}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      />
                     ),
                     "puerto-rican-birth-certificate-link": (
-                      <a href={routes.external.puertoRicanBirthCertificate} />
+                      <a
+                        href={routes.external.puertoRicanBirthCertificate}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      />
                     ),
                   }}
                 />

@@ -8,6 +8,7 @@
  * should be uploaded and what text should be displayed.
  */
 import Document, { DocumentType } from "../../../models/Document";
+
 import Accordion from "../../../components/Accordion";
 import AccordionItem from "../../../components/AccordionItem";
 import Alert from "../../../components/Alert";
@@ -133,7 +134,13 @@ const IdentificationUpload = ({ path }) => {
             components={{
               ul: <ul className="usa-list" />,
               li: <li />,
-              "work-visa-link": <a href={routes.external.workVisa} />,
+              "work-visa-link": (
+                <a
+                  href={routes.external.workVisa}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                />
+              ),
             }}
           />
 
@@ -147,10 +154,18 @@ const IdentificationUpload = ({ path }) => {
                   ul: <ul className="usa-list" />,
                   li: <li />,
                   "identity-proof-link": (
-                    <a href={routes.external.massgov.identityProof} />
+                    <a
+                      href={routes.external.massgov.identityProof}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    />
                   ),
                   "puerto-rican-birth-certificate-link": (
-                    <a href={routes.external.puertoRicanBirthCertificate} />
+                    <a
+                      href={routes.external.puertoRicanBirthCertificate}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    />
                   ),
                 }}
               />

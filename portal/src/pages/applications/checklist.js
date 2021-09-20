@@ -5,6 +5,7 @@ import BenefitsApplication, {
 import Document, { DocumentType } from "../../models/Document";
 import StepModel, { ClaimSteps } from "../../models/Step";
 import { camelCase, filter, findIndex, get } from "lodash";
+
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
@@ -139,7 +140,11 @@ export const Checklist = (props) => {
               i18nKey="pages.claimsChecklist.otherLeaveSubmittedDetailsBody"
               components={{
                 "when-can-i-use-pfml": (
-                  <a href={routes.external.massgov.whenCanIUsePFML} />
+                  <a
+                    href={routes.external.massgov.whenCanIUsePFML}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  />
                 ),
                 ul: <ul className="usa-list" />,
                 li: <li />,
