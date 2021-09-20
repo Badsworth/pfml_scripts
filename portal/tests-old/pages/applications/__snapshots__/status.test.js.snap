@@ -1162,7 +1162,7 @@ exports[`status page info alert displays if claimant has bonding but not pregnan
       level="2"
       size="4"
     >
-      If you gave birth, you may be eligible for paid medical leave
+      If you gave birth, you may also be eligible for paid medical leave
     </Heading>
     <div
       className="usa-alert__text"
@@ -1208,8 +1208,9 @@ Array [
     rel="noreferrer noopener"
     target="_blank"
   >
-    medical leave after giving birth.
+    medical leave after giving birth
   </a>,
+  ". You should not submit a second application.",
 ]
 `;
 
@@ -1275,7 +1276,7 @@ Array [
   >
     (833) 344‑7365
   </a>,
-  ".",
+  ". You should not submit a second application.",
 ]
 `;
 

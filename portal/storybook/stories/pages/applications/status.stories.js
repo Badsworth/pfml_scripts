@@ -23,7 +23,13 @@ const LEAVE_SCENARIO_MAP = {
       reason_qualifier_one: ReasonQualifier.newBorn,
     },
   ],
-  "Bonding-adoption/foster": [
+  "Bonding-adoption": [
+    {
+      reason: LeaveReason.bonding,
+      reason_qualifier_one: ReasonQualifier.adoption,
+    },
+  ],
+  "Bonding-foster": [
     {
       reason: LeaveReason.bonding,
       reason_qualifier_one: ReasonQualifier.fosterCare,

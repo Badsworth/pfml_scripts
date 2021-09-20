@@ -435,14 +435,15 @@ export const Timeline = ({
       absencePeriod.reason === LeaveReason.bonding
   );
 
-  // eslint-disable-next-line react/prop-types
   const FollowUpSteps = ({ bondingAbsencePeriod }) => {
-    const typeOfProof = ["Foster Care", "Adoption"].includes(
-      // eslint-disable-next-line react/prop-types
-      bondingAbsencePeriod.reason_qualifier_one
-    )
-      ? "adoption"
-      : "newborn";
+    let typeOfProof;
+    if (bondingAbsencePeriod.reason_qualifier_one === "Adoption") {
+      typeOfProof = "adoption";
+    } else if (bondingAbsencePeriod.reason_qualifier_one === "Foster Care") {
+      typeOfProof = "fosterCare";
+    } else {
+      typeOfProof = "newborn";
+    }
 
     return (
       <React.Fragment>
@@ -522,6 +523,9 @@ Timeline.propTypes = {
   absencePeriods: PropTypes.arrayOf(PropTypes.instanceOf(AbsencePeriod))
     .isRequired,
   applicationId: PropTypes.string,
+  bondingAbsencePeriod: PropTypes.shape({
+    reason_qualifier_one: PropTypes.string,
+  }),
   employerFollowUpDate: PropTypes.string,
   docList: PropTypes.array.isRequired,
   absenceCaseId: PropTypes.string.isRequired,

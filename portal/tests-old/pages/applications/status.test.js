@@ -462,7 +462,7 @@ describe("leave details page", () => {
 
 /** Test Timeline component */
 describe("Timeline component", () => {
-  it("does render Proof of Placement button if given 'Adoption' as reason_qualifier and leave_reason as 'Child Bonding'", () => {
+  it("does render Proof of Adoption button if given 'Adoption' as reason_qualifier and leave_reason as 'Child Bonding'", () => {
     const { wrapper } = renderWithAppLogic(Timeline, {
       diveLevels: 0,
       props: {
@@ -474,7 +474,7 @@ describe("Timeline component", () => {
     });
 
     const button = wrapper.find("FollowUpSteps").dive().find("ButtonLink");
-    expect(button.children().text()).toEqual("Upload proof of placement");
+    expect(button.children().text()).toEqual("Upload proof of adoption");
   });
 
   it("does render Proof of Birth button if given 'Newborn' as reason_qualifier and reason as 'Child Bonding'", () => {
@@ -516,7 +516,7 @@ describe("Timeline component", () => {
       },
     });
     let button = wrapper.find("FollowUpSteps").dive().find("ButtonLink");
-    expect(button.children().text()).toEqual("Upload proof of placement");
+    expect(button.children().text()).toEqual("Upload proof of adoption");
     wrapper.setProps({
       absencePeriods: SECONDARY_CLAIM_DETAIL.absence_periods,
       applicationId: "123456789",
