@@ -18,6 +18,8 @@ const RepeatableFieldsetCard = (props) => {
   return (
     <div
       key={id}
+      data-key={id}
+      data-testid="repeatable-fieldset-card"
       className={`margin-bottom-3 measure-5 padding-3 border-2px border-base-lighter ${props.className}`}
     >
       <fieldset className="usa-fieldset">

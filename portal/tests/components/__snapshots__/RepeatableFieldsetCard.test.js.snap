@@ -3,6 +3,8 @@
 exports[`RepeatableFieldsetCard renders with the given content 1`] = `
 <div
   class="margin-bottom-3 measure-5 padding-3 border-2px border-base-lighter custom-class-name"
+  data-key="RepeatableFieldsetCard1"
+  data-testid="repeatable-fieldset-card"
 >
   <fieldset
     class="usa-fieldset"
