@@ -91,17 +91,21 @@ def update(args):
 
 # ----------------------------------------------------------------------------------------------------
 def finalize(args):
-    logger.info(f"Running 'finalize-release', args: {repr(args)}")
-    # waiting on 545 and 543 for those utils to be merged
-    if not git_utils.is_finalized(args.release_version):
-        # git_utils.checkout(args.release_version)
-        # git_utils.tag_and_push(figure out the needed tag)
-        # git_utils.checkout(args.source_branch)
-        pass
-    else:
-        raise NotImplementedError(f"The series: {args.release_version} has already been finalized")
     logger.info(f"Running 'finalize-release'...")
     logger.debug(f"Args: {repr(args)}")
+
+    if not git_utils.is_finalized(args.release_version):
+        git_utils.checkout(args.release_version)
+
+        recent_tag = git_utils.most_recent_tag(args.app, args.release_version)
+        v = git_utils.to_semver(recent_tag)
+
+        tag_name = git_utils.from_semver(v.finalize_version(), args.app)
+        git_utils.tag_and_push(args.release_version, tag_name)
+        git_utils.checkout(args.source_branch)
+
+    else:
+        raise NotImplementedError(f"The series: {args.release_version} has already been finalized")
 
 
 # ----------------------------------------------------------------------------------------------------
