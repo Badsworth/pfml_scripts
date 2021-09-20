@@ -430,9 +430,7 @@ export const Timeline = ({
 
   const bondingAbsencePeriod = find(
     absencePeriods,
-    (absencePeriod) =>
-      absencePeriod.reason === LeaveReason.pregnancy ||
-      absencePeriod.reason === LeaveReason.bonding
+    (absencePeriod) => absencePeriod.reason === LeaveReason.bonding
   );
 
   const FollowUpSteps = ({ bondingAbsencePeriod }) => {

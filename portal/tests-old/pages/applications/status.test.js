@@ -491,7 +491,7 @@ describe("Timeline component", () => {
     expect(button.children().text()).toEqual("Upload proof of birth");
   });
 
-  it("does render Proof of Birth button if given reason is Pregnancy/Maternity", () => {
+  it("does render Timeline if given reason is Pregnancy/Maternity", () => {
     const { wrapper } = renderWithAppLogic(Timeline, {
       diveLevels: 0,
       props: {
@@ -501,8 +501,7 @@ describe("Timeline component", () => {
         docList: TEST_DOCS,
       },
     });
-    const button = wrapper.find("FollowUpSteps").dive().find("ButtonLink");
-    expect(button.children().text()).toEqual("Upload proof of birth");
+    expect(wrapper.find("ApplicationTimeline").exists()).toBe(true);
   });
 
   it("does update the rendered content on prop update", () => {
