@@ -31,6 +31,14 @@ def update(args):
 
 def finalize(args):
     logger.info(f"Running 'finalize-release', args: {repr(args)}")
+    # waiting on 545 and 543 for those utils to be merged
+    if not git_utils.is_finalized(args.release_version):
+        # git_utils.checkout(args.release_version)
+        # git_utils.tag_and_push(figure out the needed tag)
+        # git_utils.checkout(args.source_branch)
+        pass
+    else:
+        raise NotImplementedError(f"The series: {args.release_version} has already been finalized")
 
 
 def hotfix(args):
