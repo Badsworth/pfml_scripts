@@ -621,9 +621,6 @@ const errors = {
       required: "Enter your 9-digit Employer Identification Number.",
     },
     hours_worked_per_week: {
-      // TODO (EMPLOYER-723) remove this
-      invalid_hours_worked_per_week:
-        "Average weekly hours must be 168 or fewer.",
       maximum: "Average weekly hours must be 168 or fewer.",
       minimum: "Enter the average weekly hours.",
     },
