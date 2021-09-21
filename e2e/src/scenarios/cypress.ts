@@ -334,6 +334,7 @@ export const MED_OLB: ScenarioSpecification = {
     ],
   },
 };
+
 export const MED_PRE: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
@@ -349,6 +350,18 @@ export const MED_PRE: ScenarioSpecification = {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
     },
+  },
+};
+
+// @todo: PREGNANCY_AND_MATERNITY_FORM document is unable to be submitted when using reason: "Serious Health Condition - Employee"
+// with the most recent deployment. (https://github.com/EOLWD/pfml/pull/5359) Once change has been deployed to all envs, remove MED_PRE scenario above.
+export const PREBIRTH: ScenarioSpecification = {
+  ...MED_PRE,
+  claim: {
+    ...MED_PRE.claim,
+    label: "PREBIRTH",
+    reason: "Pregnancy/Maternity",
+    pregnant_or_recent_birth: undefined,
   },
 };
 

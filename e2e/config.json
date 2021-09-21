@@ -12,7 +12,8 @@
     "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
     "LST_EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
     "LST_EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
-    "HAS_CLAIMANT_STATUS_PAGE": "true"
+    "HAS_CLAIMANT_STATUS_PAGE": "true",
+    "HAS_PREGNANCY_DOC_UPDATES": "true"
   },
   "stage": {
     "PORTAL_BASEURL": "https://paidleave-stage.mass.gov",
@@ -24,7 +25,8 @@
     "FINEOS_USERNAME": "CONTENT",
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
-    "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json"
+    "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
+    "HAS_PREGNANCY_DOC_UPDATES": "false"
   },
   "training": {
     "PORTAL_BASEURL": "https://paidleave-training.mass.gov",
@@ -36,7 +38,8 @@
     "COGNITO_CLIENTID": "2hr6bckdopamvq92jahr542p5p",
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
-    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json"
+    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
+    "HAS_PREGNANCY_DOC_UPDATES": "false"
   },
   "performance": {
     "PORTAL_BASEURL": "https://paidleave-performance.mass.gov",
@@ -51,7 +54,8 @@
     "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
     "LST_EMPLOYEES_FILE": "./employees/lst-2021-08-18.employees.json",
     "LST_EMPLOYERS_FILE": "./employers/lst-2021-08-18.json",
-    "HAS_CLAIMANT_STATUS_PAGE": "true"
+    "HAS_CLAIMANT_STATUS_PAGE": "true",
+    "HAS_PREGNANCY_DOC_UPDATES": "false"
   },
   "uat": {
     "PORTAL_BASEURL": "https://paidleave-uat.mass.gov",
@@ -65,7 +69,8 @@
     "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
     "HAS_FINEOS_SP": "true",
-    "HAS_CLAIMANT_STATUS_PAGE": "true"
+    "HAS_CLAIMANT_STATUS_PAGE": "true",
+    "HAS_PREGNANCY_DOC_UPDATES": "false"
   },
   "cps-preview": {
     "PORTAL_BASEURL": "https://paidleave-cps-preview.eol.mass.gov",
@@ -78,7 +83,8 @@
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
-    "HAS_CLAIMANT_STATUS_PAGE": "true"
+    "HAS_CLAIMANT_STATUS_PAGE": "true",
+    "HAS_PREGNANCY_DOC_UPDATES": "false"
   },
   "local": {
     "PORTAL_BASEURL": "http://localhost:3000",
