@@ -4,8 +4,7 @@ from dataclasses import dataclass, field
 from datetime import date
 from decimal import Decimal
 from functools import total_ordering
-from itertools import combinations
-from typing import Any, Dict, Iterable, List, Optional, Set, Tuple, cast
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging
@@ -31,7 +30,6 @@ class PostProcessingMetrics(str, enum.Enum):
     PAYMENTS_FAILED_VALIDATION_COUNT = "payments_failed_validation_count"
     PAYMENTS_PASSED_VALIDATION_COUNT = "payments_passed_valdiation_count"
     # Metrics specific to the payment cap check
-    PAYMENT_CAP_ALL_ACCEPTED_COUNT = "payment_cap_all_accepted_count"
     PAYMENT_CAP_PAYMENT_ERROR_COUNT = "payment_cap_payment_error_count"
     PAYMENT_CAP_PAYMENT_ACCEPTED_COUNT = "payment_cap_payment_accepted_count"
 
@@ -51,7 +49,6 @@ class PaymentContainer:
     """
 
     payment: Payment
-    validation_container: payments_util.ValidationContainer = field(init=False)
 
     pay_periods_over_cap: List[Tuple["PayPeriodGroup", PaymentDetails]] = field(
         init=False, default_factory=list
@@ -218,14 +215,6 @@ class PayPeriodGroup:
         details_to_update[payment.payment_id].payment_details.append(payment_details)
 
 
-# TODO - legacy approach, can delete when we clean that up (TODO - make a ticket to mark what we can delete)
-@dataclass
-class EmployeePaymentGroup:
-    employee_id: uuid.UUID
-    prior_payments: List[Payment] = field(default_factory=list)
-    current_payments: List[PaymentContainer] = field(default_factory=list)
-
-
 #################
 # Helper Methods
 #################
@@ -306,46 +295,6 @@ def get_all_overpayments_associated_with_employee(
     return overpayment_containers
 
 
-def sum_payments(
-    prior_payment_sum: Decimal, current_payment_containers: Iterable[PaymentContainer]
-) -> Decimal:
-    current_sum = sum(
-        (
-            Decimal(payment_container.payment.amount)
-            for payment_container in current_payment_containers
-        ),
-        Decimal("0.00"),
-    )
-    return prior_payment_sum + current_sum
-
-
-def determine_best_payments_under_cap(
-    prior_payment_sum: Decimal,
-    max_amount: Decimal,
-    current_payment_containers: List[PaymentContainer],
-) -> Iterable[PaymentContainer]:
-    # We want to track the "best" scenario, that is, the one that maximizes
-    # the amount of money a claimant gets paid that doesn't exceed the cap
-    best_amount = prior_payment_sum
-    best_accepted_payments: Iterable[PaymentContainer] = []
-
-    # We want to try every combination of payments that don't sum to
-    # more than the cap. We'll start with combinations of 1 record, then 2 and so on
-    for combination_len in range(1, len(current_payment_containers) + 1):
-        payment_combinations = combinations(current_payment_containers, combination_len)
-
-        for payment_combination in payment_combinations:
-            payment_sum = sum_payments(prior_payment_sum, payment_combination)
-
-            # If the sum is under the cap + more than the prior best
-            # We want to set the payment_sum
-            if payment_sum <= max_amount and payment_sum > best_amount:
-                best_amount = payment_sum
-                best_accepted_payments = payment_combination
-
-    return best_accepted_payments
-
-
 def make_payment_log(payment: Payment, include_amount: bool = False) -> str:
     log_message = f"C={payment.fineos_pei_c_value},I={payment.fineos_pei_i_value},AbsenceCaseId={payment.claim.fineos_absence_id}"
     if include_amount:
@@ -374,17 +323,6 @@ def make_payment_detail_log(
             msg += f" is over the cap by ${reduction_amount}"
 
     return msg
-
-
-def format_dates(date_start: date, date_end: date) -> str:
-    date_start_str = date_start.strftime(DATE_FORMAT)
-    date_end_str = date_end.strftime(DATE_FORMAT)
-
-    return f"[{date_start_str} - {date_end_str}]"
-
-
-def get_date_tuple(payment: Payment) -> Tuple[date, date]:
-    return (cast(date, payment.period_start_date), cast(date, payment.period_end_date))
 
 
 @dataclass

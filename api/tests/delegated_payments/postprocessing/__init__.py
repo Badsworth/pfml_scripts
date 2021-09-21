@@ -10,59 +10,6 @@ from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_util
 )
 
 
-def _create_legacy_payment_container(
-    employee,
-    amount,
-    db_session,
-    start_date=None,
-    end_date=None,
-    has_processed_state=False,
-    has_errored_state=False,
-    is_adhoc_payment=False,
-    later_failed=False,
-    payment_transaction_type=PaymentTransactionType.STANDARD,
-):
-    if not start_date:
-        start_date = date(2021, 1, 1)
-    if not end_date:
-        end_date = date(2021, 1, 7)
-
-    claim = ClaimFactory.create(employee=employee)
-    payment = PaymentFactory.create(
-        claim=claim,
-        amount=amount,
-        period_start_date=start_date,
-        period_end_date=end_date,
-        is_adhoc_payment=is_adhoc_payment,
-        payment_transaction_type_id=payment_transaction_type.payment_transaction_type_id,
-    )
-
-    if has_processed_state:
-        state = random.choice(list(payments_util.Constants.PAID_STATES))
-    elif has_errored_state:
-        state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
-    else:
-        state = State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK
-
-    state_log_util.create_finished_state_log(
-        payment,
-        state,
-        state_log_util.build_outcome(f"Payment set to {state.state_description}"),
-        db_session,
-    )
-
-    # To represent a payment that succeeded and then failed with the bank
-    if has_processed_state and later_failed:
-        state_log_util.create_finished_state_log(
-            payment,
-            State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
-            state_log_util.build_outcome("Payment later failed with the bank"),
-            db_session,
-        )
-
-    return PaymentContainer(payment)
-
-
 def _create_payment_periods(total_amount, start_date, periods, length_of_period):
     amount_per_period = total_amount / periods
 
