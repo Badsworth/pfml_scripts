@@ -82,7 +82,7 @@ exports[`SupportingWorkDetails opens the amendment form when "Amend" is clicked 
             class=""
           >
             <input
-              aria-labelledby="InputText1_label InputText1_hint"
+              aria-labelledby="InputText1_label InputText1_hint InputText1_error"
               class="usa-input usa-input--small"
               data-value-type="integer"
               id="InputText1"

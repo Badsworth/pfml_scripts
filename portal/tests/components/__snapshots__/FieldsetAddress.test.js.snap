@@ -22,7 +22,7 @@ exports[`FieldsetAddress renders the component with existing values 1`] = `
           Address
         </label>
         <input
-          aria-labelledby="InputText6_label InputText6_hint"
+          aria-labelledby="InputText6_label InputText6_hint InputText6_error"
           autocomplete="address-line1"
           class="usa-input maxw-mobile-lg"
           id="InputText6"
@@ -47,7 +47,7 @@ exports[`FieldsetAddress renders the component with existing values 1`] = `
           </span>
         </label>
         <input
-          aria-labelledby="InputText7_label InputText7_hint"
+          aria-labelledby="InputText7_label InputText7_hint InputText7_error"
           autocomplete="address-line2"
           class="usa-input maxw-mobile-lg"
           id="InputText7"
@@ -67,7 +67,7 @@ exports[`FieldsetAddress renders the component with existing values 1`] = `
           City
         </label>
         <input
-          aria-labelledby="InputText8_label InputText8_hint"
+          aria-labelledby="InputText8_label InputText8_hint InputText8_error"
           autocomplete="address-level2"
           class="usa-input maxw-mobile-lg"
           id="InputText8"
@@ -91,7 +91,7 @@ exports[`FieldsetAddress renders the component with existing values 1`] = `
           data-default-value="DC"
         >
           <select
-            aria-labelledby="Dropdown9_label Dropdown9_hint"
+            aria-labelledby="Dropdown9_label Dropdown9_hint Dropdown9_error"
             class="usa-select maxw-mobile-lg"
             id="Dropdown9"
             name="address.state"
@@ -398,7 +398,7 @@ exports[`FieldsetAddress renders the component with existing values 1`] = `
           class=""
         >
           <input
-            aria-labelledby="InputText10_label InputText10_hint"
+            aria-labelledby="InputText10_label InputText10_hint InputText10_error"
             autocomplete="postal-code"
             class="usa-input usa-input--medium"
             id="InputText10"
@@ -436,7 +436,7 @@ exports[`FieldsetAddress renders the component with null values 1`] = `
           Address
         </label>
         <input
-          aria-labelledby="InputText1_label InputText1_hint"
+          aria-labelledby="InputText1_label InputText1_hint InputText1_error"
           autocomplete="address-line1"
           class="usa-input maxw-mobile-lg"
           id="InputText1"
@@ -461,7 +461,7 @@ exports[`FieldsetAddress renders the component with null values 1`] = `
           </span>
         </label>
         <input
-          aria-labelledby="InputText2_label InputText2_hint"
+          aria-labelledby="InputText2_label InputText2_hint InputText2_error"
           autocomplete="address-line2"
           class="usa-input maxw-mobile-lg"
           id="InputText2"
@@ -481,7 +481,7 @@ exports[`FieldsetAddress renders the component with null values 1`] = `
           City
         </label>
         <input
-          aria-labelledby="InputText3_label InputText3_hint"
+          aria-labelledby="InputText3_label InputText3_hint InputText3_error"
           autocomplete="address-level2"
           class="usa-input maxw-mobile-lg"
           id="InputText3"
@@ -505,7 +505,7 @@ exports[`FieldsetAddress renders the component with null values 1`] = `
           data-default-value=""
         >
           <select
-            aria-labelledby="Dropdown4_label Dropdown4_hint"
+            aria-labelledby="Dropdown4_label Dropdown4_hint Dropdown4_error"
             class="usa-select maxw-mobile-lg"
             id="Dropdown4"
             name="address.state"
@@ -812,7 +812,7 @@ exports[`FieldsetAddress renders the component with null values 1`] = `
           class=""
         >
           <input
-            aria-labelledby="InputText5_label InputText5_hint"
+            aria-labelledby="InputText5_label InputText5_hint InputText5_error"
             autocomplete="postal-code"
             class="usa-input usa-input--medium"
             id="InputText5"

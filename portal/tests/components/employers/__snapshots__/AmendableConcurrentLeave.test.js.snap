@@ -48,7 +48,7 @@ exports[`AmendableConcurrentLeave renders expected ui for admin added leaves 1`]
                         Month
                       </label>
                       <input
-                        aria-labelledby="InputText61_label InputText61_hint"
+                        aria-labelledby="InputText61_label InputText61_hint InputText61_error"
                         class="usa-input usa-input--inline maxw-mobile-lg"
                         id="InputText61"
                         inputmode="numeric"
@@ -69,7 +69,7 @@ exports[`AmendableConcurrentLeave renders expected ui for admin added leaves 1`]
                         Day
                       </label>
                       <input
-                        aria-labelledby="InputText62_label InputText62_hint"
+                        aria-labelledby="InputText62_label InputText62_hint InputText62_error"
                         class="usa-input usa-input--inline maxw-mobile-lg"
                         id="InputText62"
                         inputmode="numeric"
@@ -90,7 +90,7 @@ exports[`AmendableConcurrentLeave renders expected ui for admin added leaves 1`]
                         Year
                       </label>
                       <input
-                        aria-labelledby="InputText63_label InputText63_hint"
+                        aria-labelledby="InputText63_label InputText63_hint InputText63_error"
                         class="usa-input usa-input--inline maxw-mobile-lg"
                         id="InputText63"
                         inputmode="numeric"
@@ -126,7 +126,7 @@ exports[`AmendableConcurrentLeave renders expected ui for admin added leaves 1`]
                         Month
                       </label>
                       <input
-                        aria-labelledby="InputText64_label InputText64_hint"
+                        aria-labelledby="InputText64_label InputText64_hint InputText64_error"
                         class="usa-input usa-input--inline maxw-mobile-lg"
                         id="InputText64"
                         inputmode="numeric"
@@ -147,7 +147,7 @@ exports[`AmendableConcurrentLeave renders expected ui for admin added leaves 1`]
                         Day
                       </label>
                       <input
-                        aria-labelledby="InputText65_label InputText65_hint"
+                        aria-labelledby="InputText65_label InputText65_hint InputText65_error"
                         class="usa-input usa-input--inline maxw-mobile-lg"
                         id="InputText65"
                         inputmode="numeric"
@@ -168,7 +168,7 @@ exports[`AmendableConcurrentLeave renders expected ui for admin added leaves 1`]
                         Year
                       </label>
                       <input
-                        aria-labelledby="InputText66_label InputText66_hint"
+                        aria-labelledby="InputText66_label InputText66_hint InputText66_error"
                         class="usa-input usa-input--inline maxw-mobile-lg"
                         id="InputText66"
                         inputmode="numeric"

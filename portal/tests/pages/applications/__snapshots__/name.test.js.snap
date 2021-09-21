@@ -36,7 +36,7 @@ exports[`Name renders the page 1`] = `
           First name
         </label>
         <input
-          aria-labelledby="InputText1_label InputText1_hint"
+          aria-labelledby="InputText1_label InputText1_hint InputText1_error"
           class="usa-input maxw-mobile-lg"
           id="InputText1"
           name="first_name"
@@ -60,7 +60,7 @@ exports[`Name renders the page 1`] = `
           </span>
         </label>
         <input
-          aria-labelledby="InputText2_label InputText2_hint"
+          aria-labelledby="InputText2_label InputText2_hint InputText2_error"
           class="usa-input maxw-mobile-lg"
           id="InputText2"
           name="middle_name"
@@ -79,7 +79,7 @@ exports[`Name renders the page 1`] = `
           Last name
         </label>
         <input
-          aria-labelledby="InputText3_label InputText3_hint"
+          aria-labelledby="InputText3_label InputText3_hint InputText3_error"
           class="usa-input maxw-mobile-lg"
           id="InputText3"
           name="last_name"

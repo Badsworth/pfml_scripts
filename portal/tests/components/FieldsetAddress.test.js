@@ -107,32 +107,21 @@ describe("FieldsetAddress", () => {
     ]);
     renderComponent({ appErrors });
 
-    const getAlertElemByName = (
-      name,
-      role = "textbox",
-      nodes = "previousSibling.textContent"
-    ) =>
-      nodes.split(".").reduce((o, i) => o[i], screen.getByRole(role, { name }));
-
-    expect(getAlertElemByName("Address")).toEqual("Address is required");
-    expect(getAlertElemByName("Address line 2 (optional)")).toEqual(
-      "Address 2 is required"
-    );
-    expect(getAlertElemByName("City")).toEqual("City is required");
     expect(
-      getAlertElemByName(
-        "State",
-        "combobox",
-        "parentElement.previousSibling.textContent"
-      )
-    ).toEqual("State is required");
+      screen.getByRole("textbox", { name: /Address is required/i })
+    ).toBeInTheDocument();
     expect(
-      getAlertElemByName(
-        "ZIP",
-        "textbox",
-        "parentElement.previousSibling.textContent"
-      )
-    ).toEqual("ZIP is required");
+      screen.getByRole("textbox", { name: /Address 2 is required/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: /City is required/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("combobox", { name: /State is required/i })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: /ZIP is required/i })
+    ).toBeInTheDocument();
   });
 
   it("renders with a small label when the smallLabel prop is set", () => {
