@@ -110,6 +110,16 @@ export class ClaimPage {
     onTab("Absence Hub");
     return this;
   }
+  appealDocuments(cb: (page: DocumentsPage) => unknown): this {
+    onTab("Documents");
+    cb(new DocumentsPage());
+    return this;
+  }
+  appealTasks(cb: (page: TasksPage) => unknown): this {
+    onTab("Tasks");
+    cb(new TasksPage());
+    return this;
+  }
   documents(cb: (page: DocumentsPage) => unknown): this {
     onTab("Documents");
     cb(new DocumentsPage());
@@ -169,6 +179,7 @@ export class ClaimPage {
     type:
       | "Designation Notice"
       | "SOM Generate Legal Notice"
+      | "SOM Generate Appeals Notice"
       | "Leave Request Declined"
       | "Leave Request Withdrawn"
       | "Review Approval Notice"
@@ -239,6 +250,20 @@ export class ClaimPage {
       .find("select")
       .select(reason);
     cy.get('input[type="submit"][value="OK"]').click();
+    return this;
+  }
+
+  addAppeal(): this {
+    // This button turns out to be unclickable without force, because selecting
+    // it seems to scroll it out of view. Force works around that.
+    cy.get('a[title="Add Sub Case"]').click({
+      force: true,
+    });
+    waitForAjaxComplete();
+    cy.get('a[title="Create Appeal"]').click({
+      force: true,
+    });
+    waitForAjaxComplete();
     return this;
   }
 
@@ -668,6 +693,31 @@ class TasksPage {
     );
     cy.wait(150);
     cy.get("#footerButtonsBar input[value='OK']").click();
+    return this;
+  }
+
+  closeAppealReview(): this {
+    cy.findByText("Appeal", { selector: "a" }).click();
+    waitForAjaxComplete();
+    cy.contains("td", "Review Appeal").click();
+    waitForAjaxComplete();
+    cy.get('input[title="Close selected task"]').click();
+    waitForAjaxComplete();
+    fineos.clickBottomWidgetButton("OK");
+    waitForAjaxComplete();
+    return this;
+  }
+
+  closeConductHearing(): this {
+    cy.findByText("Appeal", { selector: "a" }).click();
+    waitForAjaxComplete();
+    cy.contains("td", "Conduct Hearing").click();
+    waitForAjaxComplete();
+    cy.contains("td", "Closed - Claim Decision Changed").click();
+    waitForAjaxComplete();
+    fineos.clickBottomWidgetButton("OK");
+    waitForAjaxComplete();
+    assertClaimStatus("Closed - Claim Decision Changed");
     return this;
   }
 
