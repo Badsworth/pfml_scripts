@@ -238,10 +238,12 @@ exports[`status page ViewYourNotices displays only legal notices for the current
     >
       <Heading
         className="margin-bottom-1"
+        id="view_notices"
         level="2"
       >
         <h2
           className="margin-bottom-1 font-heading-md text-bold"
+          id="view_notices"
         >
           View your notices
         </h2>

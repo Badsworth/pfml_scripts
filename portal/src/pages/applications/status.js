@@ -138,7 +138,7 @@ export const Status = ({ appLogic, query }) => {
 
     return (
       <SectionWrapper>
-        <Heading className="margin-bottom-1" level="2">
+        <Heading className="margin-bottom-1" level="2" id="view_notices">
           {t("pages.claimsStatus.viewNoticesHeading")}
         </Heading>
         {sectionBody}
