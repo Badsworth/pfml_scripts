@@ -92,6 +92,40 @@ exports[`Success renders content tailored to Caring Leave 1`] = `
         }
       }
     />
+    <Heading
+      level="2"
+    >
+      Learn more about paid leave benefits
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "benefits-amount-details-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+            rel="noreferrer noopener"
+            target="_blank"
+          />,
+          "benefits-calculator-link": <a
+            href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+            rel="noreferrer noopener"
+            target="_blank"
+          />,
+          "contact-center-phone-link": <a
+            href="tel:(833) 344-7365"
+          />,
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.learnMore"
+      tOptions={
+        Object {
+          "context": "caringLeave",
+        }
+      }
+    />
     <UserFeedback
       url="https://www.mass.gov/paidleave-claimant-feedback"
     />
@@ -228,6 +262,30 @@ exports[`Success renders content tailored to Caring Leave 4`] = `
 </ul>
 `;
 
+exports[`Success renders content tailored to Caring Leave 5`] = `
+Array [
+  "Review ",
+  <a
+    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+    key="1"
+    rel="noreferrer noopener"
+    target="_blank"
+  >
+    our benefits guide
+  </a>,
+  " to find out more about how benefits are determined. For a rough estimate of how much you might receive, ",
+  <a
+    href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+    key="3"
+    rel="noreferrer noopener"
+    target="_blank"
+  >
+    use this calculator
+  </a>,
+  ". The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.",
+]
+`;
+
 exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
 <Fragment>
   <BackButton
@@ -314,6 +372,40 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
         }
       }
       i18nKey="pages.claimsSuccess.adjudicationProcess"
+      tOptions={
+        Object {
+          "context": "leaveNotInFuture",
+        }
+      }
+    />
+    <Heading
+      level="2"
+    >
+      Learn more about paid leave benefits
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "benefits-amount-details-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+            rel="noreferrer noopener"
+            target="_blank"
+          />,
+          "benefits-calculator-link": <a
+            href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+            rel="noreferrer noopener"
+            target="_blank"
+          />,
+          "contact-center-phone-link": <a
+            href="tel:(833) 344-7365"
+          />,
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.learnMore"
       tOptions={
         Object {
           "context": "leaveNotInFuture",
@@ -445,6 +537,30 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 4`] = `
 </ul>
 `;
 
+exports[`Success renders content tailored to Family (Bonding Adoption) 5`] = `
+Array [
+  "Review ",
+  <a
+    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+    key="1"
+    rel="noreferrer noopener"
+    target="_blank"
+  >
+    our benefits guide
+  </a>,
+  " to find out more about how benefits are determined. For a rough estimate of how much you might receive, ",
+  <a
+    href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+    key="3"
+    rel="noreferrer noopener"
+    target="_blank"
+  >
+    use this calculator
+  </a>,
+  ". The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.",
+]
+`;
+
 exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`] = `
 <Fragment>
   <BackButton
@@ -516,6 +632,40 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
         }
       }
       i18nKey="pages.claimsSuccess.adjudicationProcess"
+      tOptions={
+        Object {
+          "context": "bondingAdoptFosterFuture",
+        }
+      }
+    />
+    <Heading
+      level="2"
+    >
+      Learn more about paid leave benefits
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "benefits-amount-details-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+            rel="noreferrer noopener"
+            target="_blank"
+          />,
+          "benefits-calculator-link": <a
+            href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+            rel="noreferrer noopener"
+            target="_blank"
+          />,
+          "contact-center-phone-link": <a
+            href="tel:(833) 344-7365"
+          />,
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.learnMore"
       tOptions={
         Object {
           "context": "bondingAdoptFosterFuture",
@@ -611,6 +761,30 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 4`
 </ul>
 `;
 
+exports[`Success renders content tailored to Family (Bonding Future Adoption) 5`] = `
+Array [
+  "Review ",
+  <a
+    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+    key="1"
+    rel="noreferrer noopener"
+    target="_blank"
+  >
+    our benefits guide
+  </a>,
+  " to find out more about how benefits are determined. For a rough estimate of how much you might receive, ",
+  <a
+    href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+    key="3"
+    rel="noreferrer noopener"
+    target="_blank"
+  >
+    use this calculator
+  </a>,
+  ". The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.",
+]
+`;
+
 exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`] = `
 <Fragment>
   <BackButton
@@ -682,6 +856,40 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
         }
       }
       i18nKey="pages.claimsSuccess.adjudicationProcess"
+      tOptions={
+        Object {
+          "context": "bondingNewbornFuture",
+        }
+      }
+    />
+    <Heading
+      level="2"
+    >
+      Learn more about paid leave benefits
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "benefits-amount-details-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+            rel="noreferrer noopener"
+            target="_blank"
+          />,
+          "benefits-calculator-link": <a
+            href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+            rel="noreferrer noopener"
+            target="_blank"
+          />,
+          "contact-center-phone-link": <a
+            href="tel:(833) 344-7365"
+          />,
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.learnMore"
       tOptions={
         Object {
           "context": "bondingNewbornFuture",
@@ -811,6 +1019,30 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 4`]
 
 exports[`Success renders content tailored to Family (Bonding Future Newborn) 5`] = `
 Array [
+  "Review ",
+  <a
+    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+    key="1"
+    rel="noreferrer noopener"
+    target="_blank"
+  >
+    our benefits guide
+  </a>,
+  " to find out more about how benefits are determined. For a rough estimate of how much you might receive, ",
+  <a
+    href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+    key="3"
+    rel="noreferrer noopener"
+    target="_blank"
+  >
+    use this calculator
+  </a>,
+  ". The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.",
+]
+`;
+
+exports[`Success renders content tailored to Family (Bonding Future Newborn) 6`] = `
+Array [
   "You may be able to take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at ",
   <a
     href="tel:(833) 344-7365"
@@ -917,6 +1149,40 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
         }
       }
       i18nKey="pages.claimsSuccess.adjudicationProcess"
+      tOptions={
+        Object {
+          "context": "leaveNotInFuture",
+        }
+      }
+    />
+    <Heading
+      level="2"
+    >
+      Learn more about paid leave benefits
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "benefits-amount-details-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+            rel="noreferrer noopener"
+            target="_blank"
+          />,
+          "benefits-calculator-link": <a
+            href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+            rel="noreferrer noopener"
+            target="_blank"
+          />,
+          "contact-center-phone-link": <a
+            href="tel:(833) 344-7365"
+          />,
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.learnMore"
       tOptions={
         Object {
           "context": "leaveNotInFuture",
@@ -1082,6 +1348,30 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 4`] = `
 
 exports[`Success renders content tailored to Family (Bonding Newborn) 5`] = `
 Array [
+  "Review ",
+  <a
+    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+    key="1"
+    rel="noreferrer noopener"
+    target="_blank"
+  >
+    our benefits guide
+  </a>,
+  " to find out more about how benefits are determined. For a rough estimate of how much you might receive, ",
+  <a
+    href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+    key="3"
+    rel="noreferrer noopener"
+    target="_blank"
+  >
+    use this calculator
+  </a>,
+  ". The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.",
+]
+`;
+
+exports[`Success renders content tailored to Family (Bonding Newborn) 6`] = `
+Array [
   "You may be able to take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at ",
   <a
     href="tel:(833) 344-7365"
@@ -1188,6 +1478,40 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
         }
       }
       i18nKey="pages.claimsSuccess.adjudicationProcess"
+      tOptions={
+        Object {
+          "context": "leaveNotInFuture",
+        }
+      }
+    />
+    <Heading
+      level="2"
+    >
+      Learn more about paid leave benefits
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "benefits-amount-details-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+            rel="noreferrer noopener"
+            target="_blank"
+          />,
+          "benefits-calculator-link": <a
+            href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+            rel="noreferrer noopener"
+            target="_blank"
+          />,
+          "contact-center-phone-link": <a
+            href="tel:(833) 344-7365"
+          />,
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.learnMore"
       tOptions={
         Object {
           "context": "leaveNotInFuture",
@@ -1319,6 +1643,30 @@ exports[`Success renders content tailored to Medical (Not pregnant) 4`] = `
 </ul>
 `;
 
+exports[`Success renders content tailored to Medical (Not pregnant) 5`] = `
+Array [
+  "Review ",
+  <a
+    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+    key="1"
+    rel="noreferrer noopener"
+    target="_blank"
+  >
+    our benefits guide
+  </a>,
+  " to find out more about how benefits are determined. For a rough estimate of how much you might receive, ",
+  <a
+    href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+    key="3"
+    rel="noreferrer noopener"
+    target="_blank"
+  >
+    use this calculator
+  </a>,
+  ". The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.",
+]
+`;
+
 exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
 <Fragment>
   <BackButton
@@ -1405,6 +1753,40 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
         }
       }
       i18nKey="pages.claimsSuccess.adjudicationProcess"
+      tOptions={
+        Object {
+          "context": "leaveNotInFuture",
+        }
+      }
+    />
+    <Heading
+      level="2"
+    >
+      Learn more about paid leave benefits
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "benefits-amount-details-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+            rel="noreferrer noopener"
+            target="_blank"
+          />,
+          "benefits-calculator-link": <a
+            href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+            rel="noreferrer noopener"
+            target="_blank"
+          />,
+          "contact-center-phone-link": <a
+            href="tel:(833) 344-7365"
+          />,
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.learnMore"
       tOptions={
         Object {
           "context": "leaveNotInFuture",
@@ -1570,6 +1952,30 @@ exports[`Success renders content tailored to Medical (Pregnant) 4`] = `
 
 exports[`Success renders content tailored to Medical (Pregnant) 5`] = `
 Array [
+  "Review ",
+  <a
+    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+    key="1"
+    rel="noreferrer noopener"
+    target="_blank"
+  >
+    our benefits guide
+  </a>,
+  " to find out more about how benefits are determined. For a rough estimate of how much you might receive, ",
+  <a
+    href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+    key="3"
+    rel="noreferrer noopener"
+    target="_blank"
+  >
+    use this calculator
+  </a>,
+  ". The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.",
+]
+`;
+
+exports[`Success renders content tailored to Medical (Pregnant) 6`] = `
+Array [
   "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. ",
   <a
     href="https://www.mass.gov/pfml-medical-bonding"
@@ -1676,6 +2082,40 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
         }
       }
       i18nKey="pages.claimsSuccess.adjudicationProcess"
+      tOptions={
+        Object {
+          "context": "medicalPregnantFuture",
+        }
+      }
+    />
+    <Heading
+      level="2"
+    >
+      Learn more about paid leave benefits
+    </Heading>
+    <Trans
+      components={
+        Object {
+          "benefits-amount-details-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+            rel="noreferrer noopener"
+            target="_blank"
+          />,
+          "benefits-calculator-link": <a
+            href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+            rel="noreferrer noopener"
+            target="_blank"
+          />,
+          "contact-center-phone-link": <a
+            href="tel:(833) 344-7365"
+          />,
+          "li": <li />,
+          "ul": <ul
+            className="usa-list"
+          />,
+        }
+      }
+      i18nKey="pages.claimsSuccess.learnMore"
       tOptions={
         Object {
           "context": "medicalPregnantFuture",
@@ -1832,6 +2272,30 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
 `;
 
 exports[`Success renders content tailored to Medical (Pregnant, applying in advance) 5`] = `
+Array [
+  "Review ",
+  <a
+    href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+    key="1"
+    rel="noreferrer noopener"
+    target="_blank"
+  >
+    our benefits guide
+  </a>,
+  " to find out more about how benefits are determined. For a rough estimate of how much you might receive, ",
+  <a
+    href="https://calculator.digital.mass.gov/pfml/yourbenefits/"
+    key="3"
+    rel="noreferrer noopener"
+    target="_blank"
+  >
+    use this calculator
+  </a>,
+  ". The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.",
+]
+`;
+
+exports[`Success renders content tailored to Medical (Pregnant, applying in advance) 6`] = `
 Array [
   "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. ",
   <a

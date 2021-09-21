@@ -155,6 +155,11 @@ exports[`GetReady renders get ready content 1`] = `
     <Trans
       components={
         Object {
+          "benefits-amount-details-link": <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+            rel="noopener"
+            target="_blank"
+          />,
           "contact-center-phone-link": <a
             href="tel:(833) 344-7365"
           />,
@@ -407,6 +412,19 @@ Array [
       possible tax implications
     </a>
      of your paid leave benefits.
+  </p>,
+  <p
+    key="p-5"
+  >
+    The maximum benefit a person can receive per week is $850. Learn more about 
+    <a
+      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+      key="1"
+      rel="noopener"
+      target="_blank"
+    >
+      how benefits are calculated.
+    </a>
   </p>,
 ]
 `;

@@ -126,6 +126,11 @@ exports[`PaymentMethod renders the page 1`] = `
       <Trans
         components={
           Object {
+            "benefits-guide-link": <a
+              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide"
+              rel="noreferrer noopener"
+              target="_blank"
+            />,
             "contact-center-phone-link": <a
               href="tel:(833) 344-7365"
             />,
@@ -157,6 +162,15 @@ Array [
       key="1"
     >
       (833) 344‑7365
+    </a>
+    . To learn more about benefit payments, 
+    <a
+      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide"
+      key="3"
+      rel="noreferrer noopener"
+      target="_blank"
+    >
+      see our benefits guide
     </a>
     .
   </p>,
