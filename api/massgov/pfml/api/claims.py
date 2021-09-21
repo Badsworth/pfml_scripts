@@ -65,7 +65,6 @@ from massgov.pfml.util.logging.managed_requirements import (
 )
 from massgov.pfml.util.paginate.paginator import PaginationAPIContext
 from massgov.pfml.util.sqlalchemy import get_or_404
-from massgov.pfml.util.strings import sanitize_fein
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 # HRD Employer FEIN. See https://lwd.atlassian.net/browse/EMPLOYER-1317
@@ -577,20 +576,26 @@ def get_claims() -> flask.Response:
             # The logic here is similar to that in user_has_access_to_claim (except it is applied to multiple claims)
             # so if something changes there it probably needs to be changed here
             if is_employer and current_user and current_user.employers:
-                if employer_id:
-                    employers_list = (
-                        db_session.query(Employer).filter(Employer.employer_id == employer_id).all()
-                    )
-                else:
-                    employers_list = list(current_user.employers)
-
-                employer_ids_list = [
-                    e.employer_id
-                    for e in employers_list
-                    if sanitize_fein(e.employer_fein or "") not in CLAIMS_DASHBOARD_BLOCKED_FEINS
-                    and current_user.verified_employer(e)
+                filters = [
+                    Employer.employer_fein.notin_(CLAIMS_DASHBOARD_BLOCKED_FEINS),
+                    UserLeaveAdministrator.verification_id.isnot(None),
+                    User.user_id == current_user.user_id,
                 ]
+                if employer_id:
+                    filters.append(Employer.employer_id == employer_id)
 
+                employer_ids_list = (
+                    db_session.query(Employer.employer_id)
+                    .join(
+                        UserLeaveAdministrator,
+                        Employer.employer_id == UserLeaveAdministrator.employer_id,
+                    )
+                    .join(User, User.user_id == UserLeaveAdministrator.user_id)
+                    .filter(*filters)
+                    .all()
+                )
+
+                # Get list of employers with non-blocked feins with left join for verified
                 query.add_employer_ids_filter(employer_ids_list)
             else:
                 query.add_user_owns_claim_filter(current_user)
