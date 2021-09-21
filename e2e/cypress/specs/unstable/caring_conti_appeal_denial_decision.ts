@@ -53,6 +53,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
         .deny("Covered family relationship not established")
         .triggerNotice("Leave Request Declined")
     });
+    cy.screenshot("Fineos Absence Case");
   });
 
   it(
@@ -110,7 +111,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
           );
           cy.contains(submission.fineos_absence_id);
           cy.get(`a[href*="${config("PORTAL_BASEURL")}/applications"]`);
-          cy.screenshot();
+          cy.screenshot("Claimant Email");
         });
       });
     }
@@ -121,13 +122,13 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
     () => {
       portal.before();
       cy.dependsOnPreviousPass([fineosSubmission]);
-      cy.unstash<Submission>("submission").then((submission) => {
-        cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-          assertValidClaim(claim);
-          portal.loginLeaveAdmin(claim.employer_fein);
+      cy.unstash<DehydratedClaim>("claim").then((claim) => {
+        cy.unstash<Submission>("submission").then((submission) => {
+          assertValidClaim(claim.claim);
+          portal.loginLeaveAdmin(claim.claim.employer_fein);
           portal.selectClaimFromEmployerDashboard(submission.fineos_absence_id);
           const subjectEmployer = email.getNotificationSubject(
-            `${claim.first_name} ${claim.last_name}`,
+            `${claim.claim.first_name} ${claim.claim.last_name}`,
             "appeal (employer)",
             submission.fineos_absence_id
           );
@@ -143,16 +144,11 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
               60000
             )
             .then(() => {
-              const dob =
-                claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
-              cy.log("DOB", dob);
-              cy.contains(dob);
-              cy.contains(`${claim.first_name} ${claim.last_name}`);
               cy.contains(submission.fineos_absence_id);
               cy.get(
                 `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
               );
-              cy.screenshot();
+              cy.screenshot("Leave Admin Email");
             });
         });
       });
@@ -173,7 +169,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
   //       portal.claimantAssertClaimStatus([
   //         {leave: "Care for a Family Member", status: "Denied"},
   //       ]);
-  //       cy.screenshot();
+  //       cy.screenshot("Claimant Portal Claim Status");
   //     } else {
   //       cy.task("waitForClaimDocuments",
   //         {
