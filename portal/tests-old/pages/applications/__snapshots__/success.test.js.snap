@@ -47,6 +47,8 @@ exports[`Success renders content tailored to Caring Leave 1`] = `
           />,
           "when-can-i-use-pfml": <a
             href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+            rel="noopener noreferrer"
+            target="_blank"
           />,
         }
       }
@@ -153,6 +155,8 @@ Array [
       <a
         href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
         key="1"
+        rel="noopener noreferrer"
+        target="_blank"
       >
         any other reason that qualifies for PFML
       </a>
@@ -271,6 +275,8 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
           />,
           "when-can-i-use-pfml": <a
             href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+            rel="noopener noreferrer"
+            target="_blank"
           />,
         }
       }
@@ -377,6 +383,8 @@ Array [
       <a
         href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
         key="1"
+        rel="noopener noreferrer"
+        target="_blank"
       >
         any other reason that qualifies for PFML
       </a>
@@ -703,6 +711,8 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
               />,
               "medical-bonding-link": <a
                 href="https://www.mass.gov/pfml-medical-bonding"
+                rel="noopener noreferrer"
+                target="_blank"
               />,
             }
           }
@@ -812,6 +822,8 @@ Array [
   <a
     href="https://www.mass.gov/pfml-medical-bonding"
     key="3"
+    rel="noopener noreferrer"
+    target="_blank"
   >
     medical leave after giving birth
   </a>,
@@ -866,6 +878,8 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
           />,
           "when-can-i-use-pfml": <a
             href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+            rel="noopener noreferrer"
+            target="_blank"
           />,
         }
       }
@@ -932,6 +946,8 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
               />,
               "medical-bonding-link": <a
                 href="https://www.mass.gov/pfml-medical-bonding"
+                rel="noopener noreferrer"
+                target="_blank"
               />,
             }
           }
@@ -1002,6 +1018,8 @@ Array [
       <a
         href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
         key="1"
+        rel="noopener noreferrer"
+        target="_blank"
       >
         any other reason that qualifies for PFML
       </a>
@@ -1075,6 +1093,8 @@ Array [
   <a
     href="https://www.mass.gov/pfml-medical-bonding"
     key="3"
+    rel="noopener noreferrer"
+    target="_blank"
   >
     medical leave after giving birth
   </a>,
@@ -1129,6 +1149,8 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
           />,
           "when-can-i-use-pfml": <a
             href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+            rel="noopener noreferrer"
+            target="_blank"
           />,
         }
       }
@@ -1235,6 +1257,8 @@ Array [
       <a
         href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
         key="1"
+        rel="noopener noreferrer"
+        target="_blank"
       >
         any other reason that qualifies for PFML
       </a>
@@ -1342,6 +1366,8 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
           />,
           "when-can-i-use-pfml": <a
             href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+            rel="noopener noreferrer"
+            target="_blank"
           />,
         }
       }
@@ -1408,6 +1434,8 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
               />,
               "medical-bonding-link": <a
                 href="https://www.mass.gov/pfml-medical-bonding"
+                rel="noopener noreferrer"
+                target="_blank"
               />,
             }
           }
@@ -1478,6 +1506,8 @@ Array [
       <a
         href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
         key="1"
+        rel="noopener noreferrer"
+        target="_blank"
       >
         any other reason that qualifies for PFML
       </a>
@@ -1544,6 +1574,8 @@ Array [
   <a
     href="https://www.mass.gov/pfml-medical-bonding"
     key="1"
+    rel="noopener noreferrer"
+    target="_blank"
   >
     Family leave to bond with your child
   </a>,
@@ -1605,6 +1637,8 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
           />,
           "when-can-i-use-pfml": <a
             href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+            rel="noopener noreferrer"
+            target="_blank"
           />,
         }
       }
@@ -1671,6 +1705,8 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
               />,
               "medical-bonding-link": <a
                 href="https://www.mass.gov/pfml-medical-bonding"
+                rel="noopener noreferrer"
+                target="_blank"
               />,
             }
           }
@@ -1741,6 +1777,8 @@ Array [
       <a
         href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
         key="1"
+        rel="noopener noreferrer"
+        target="_blank"
       >
         any other reason that qualifies for PFML
       </a>
@@ -1799,6 +1837,8 @@ Array [
   <a
     href="https://www.mass.gov/pfml-medical-bonding"
     key="1"
+    rel="noopener noreferrer"
+    target="_blank"
   >
     Family leave to bond with your child
   </a>,
@@ -1843,6 +1883,8 @@ Array [
       <a
         href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
         key="1"
+        rel="noopener noreferrer"
+        target="_blank"
       >
         any other reason that qualifies for PFML
       </a>

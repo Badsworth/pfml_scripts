@@ -58,7 +58,11 @@ export const Index = (props) => {
                     i18nKey="pages.applications.claimsApprovalProcess"
                     components={{
                       "approval-process-link": (
-                        <a href={routes.external.massgov.approvalTimeline} />
+                        <a
+                          href={routes.external.massgov.approvalTimeline}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        />
                       ),
                     }}
                   />

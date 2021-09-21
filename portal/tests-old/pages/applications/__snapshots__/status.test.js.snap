@@ -36,6 +36,8 @@ Array [
           Object {
             "application-link": <a
               href="/applications/get-ready"
+              rel="noopener noreferrer"
+              target="_blank"
             />,
             "request-appeal-link": <a
               href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
@@ -83,6 +85,8 @@ Array [
           Object {
             "application-link": <a
               href="/applications/get-ready"
+              rel="noopener noreferrer"
+              target="_blank"
             />,
             "request-appeal-link": <a
               href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
@@ -130,6 +134,8 @@ Array [
           Object {
             "application-link": <a
               href="/applications/get-ready"
+              rel="noopener noreferrer"
+              target="_blank"
             />,
             "request-appeal-link": <a
               href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
@@ -181,6 +187,8 @@ exports[`leave details page does render page with one section if absenceDetails 
         Object {
           "application-link": <a
             href="/applications/get-ready"
+            rel="noopener noreferrer"
+            target="_blank"
           />,
           "request-appeal-link": <a
             href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
