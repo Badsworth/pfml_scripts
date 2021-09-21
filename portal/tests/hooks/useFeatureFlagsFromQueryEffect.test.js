@@ -1,5 +1,5 @@
+import { renderHook } from "@testing-library/react-hooks";
 import { storeFeatureFlagsFromQuery } from "../../src/services/featureFlags";
-import { testHook } from "../test-utils";
 import useFeatureFlagsFromQueryEffect from "../../src/hooks/useFeatureFlagsFromQueryEffect";
 
 jest.mock("../../src/services/featureFlags");
@@ -18,7 +18,7 @@ describe("useFeatureFlagsFromQueryEffect", () => {
   });
 
   it("calls storeFeatureFlagsFromQuery with the query string params", () => {
-    testHook(() => {
+    renderHook(() => {
       useFeatureFlagsFromQueryEffect();
     });
 

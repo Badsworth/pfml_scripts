@@ -1,5 +1,4 @@
-import { act } from "react-dom/test-utils";
-import { testHook } from "../test-utils";
+import { act, renderHook } from "@testing-library/react-hooks";
 import useFormState from "../../src/hooks/useFormState";
 
 /** @typedef {import("../../src/hooks/useFormState").FormState} FormState */
@@ -9,7 +8,7 @@ describe("useFormState", () => {
   let formState;
 
   beforeEach(() => {
-    testHook(() => {
+    renderHook(() => {
       formState = useFormState();
     });
   });
@@ -20,7 +19,7 @@ describe("useFormState", () => {
         foo: "banana",
         bar: "watermelon",
       };
-      testHook(() => {
+      renderHook(() => {
         formState = useFormState(initialState);
       });
 
@@ -35,7 +34,7 @@ describe("useFormState", () => {
           employer_notification_method: "Unknown",
         },
       };
-      testHook(() => {
+      renderHook(() => {
         formState = useFormState(initialState);
       });
 
@@ -97,7 +96,7 @@ describe("useFormState", () => {
           },
         },
       };
-      testHook(() => {
+      renderHook(() => {
         formState = useFormState(initialState);
       });
     });
@@ -175,7 +174,7 @@ describe("useFormState", () => {
           employer_notification_method: "Email",
         },
       };
-      testHook(() => {
+      renderHook(() => {
         formState = useFormState(initialState);
       });
     });

@@ -2,7 +2,7 @@ import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import ClaimCollection from "../../src/models/ClaimCollection";
 import DocumentCollection from "../../src/models/DocumentCollection";
-import { testHook } from "../test-utils";
+import { renderHook } from "@testing-library/react-hooks";
 import useAppLogic from "../../src/hooks/useAppLogic";
 
 describe("useAppLogic", () => {
@@ -24,7 +24,7 @@ describe("useAppLogic", () => {
       setAppErrors,
       users;
 
-    testHook(() => {
+    renderHook(() => {
       ({
         appErrors,
         _appErrorsLogic,

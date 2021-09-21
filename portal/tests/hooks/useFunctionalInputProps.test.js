@@ -1,13 +1,13 @@
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import { testHook } from "../test-utils";
+import { renderHook } from "@testing-library/react-hooks";
 import useFormState from "../../src/hooks/useFormState";
 import useFunctionalInputProps from "../../src/hooks/useFunctionalInputProps";
 
 describe("useFunctionalInputProps", () => {
   it("sets the value to a blank string when a field value is null", () => {
     let getFunctionalInputProps;
-    testHook(() => {
+    renderHook(() => {
       const { formState, updateFields } = useFormState({
         first_name: null,
       });
@@ -26,7 +26,7 @@ describe("useFunctionalInputProps", () => {
 
   it("sets the value to a blank string when a field value is undefined", () => {
     let getFunctionalInputProps;
-    testHook(() => {
+    renderHook(() => {
       const { formState, updateFields } = useFormState({});
 
       getFunctionalInputProps = useFunctionalInputProps({
@@ -43,7 +43,7 @@ describe("useFunctionalInputProps", () => {
 
   it("sets the value to the given fallback value when a field value is null", () => {
     let getFunctionalInputProps;
-    testHook(() => {
+    renderHook(() => {
       const { formState, updateFields } = useFormState({});
 
       getFunctionalInputProps = useFunctionalInputProps({
@@ -62,7 +62,7 @@ describe("useFunctionalInputProps", () => {
 
   it("sets the value to 0 when the value is 0", () => {
     let getFunctionalInputProps;
-    testHook(() => {
+    renderHook(() => {
       const { formState, updateFields } = useFormState({ minutes: 0 });
 
       getFunctionalInputProps = useFunctionalInputProps({
@@ -79,7 +79,7 @@ describe("useFunctionalInputProps", () => {
 
   it("gets the value from the formState by the field path", () => {
     let getFunctionalInputProps;
-    testHook(() => {
+    renderHook(() => {
       const { formState, updateFields } = useFormState({
         leave_details: { employer_notified: true },
       });
@@ -103,7 +103,7 @@ describe("useFunctionalInputProps", () => {
       field: "first_name",
     });
 
-    testHook(() => {
+    renderHook(() => {
       const { formState, updateFields } = useFormState({
         leave_details: { employer_notified: true },
       });
@@ -123,7 +123,7 @@ describe("useFunctionalInputProps", () => {
   it("doesn't require appErrors to be defined", () => {
     let getFunctionalInputProps;
 
-    testHook(() => {
+    renderHook(() => {
       const { formState, updateFields } = useFormState({
         employer_notified: true,
       });
@@ -142,7 +142,7 @@ describe("useFunctionalInputProps", () => {
   it("sets the name and onChange props", () => {
     const name = "first_name";
     let getFunctionalInputProps;
-    testHook(() => {
+    renderHook(() => {
       const { formState, updateFields } = useFormState({
         first_name: null,
       });
