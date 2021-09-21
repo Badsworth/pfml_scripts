@@ -1,0 +1,69 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Leave Administrator Row renders verification blocked info as indicated 1`] = `
+<table>
+  <tbody>
+    <tr>
+      <th
+        data-label="Organization"
+        scope="row"
+      >
+        <a
+          class="margin-right-3"
+          href="/employers/organizations/cannot-verify?employer_id=mock-employer-id"
+        >
+          Dunder Mifflin
+        </a>
+        <a
+          href="/employers/organizations/cannot-verify?employer_id=mock-employer-id"
+        >
+          <span
+            class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-error-darker bg-error-lighter padding-x-205"
+          >
+            Verification blocked
+          </span>
+        </a>
+      </th>
+      <td
+        data-label="Employer ID number (EIN)"
+      >
+        11-111111
+      </td>
+    </tr>
+  </tbody>
+</table>
+`;
+
+exports[`Leave Administrator Row renders verification info as indicated 1`] = `
+<table>
+  <tbody>
+    <tr>
+      <th
+        data-label="Organization"
+        scope="row"
+      >
+        <a
+          class="margin-right-3"
+          href="/employers/organizations/verify-contributions?employer_id=mock-employer-id&next=%2Femployers%2Forganizations"
+        >
+          Dunder Mifflin
+        </a>
+        <a
+          href="/employers/organizations/verify-contributions?employer_id=mock-employer-id&next=%2Femployers%2Forganizations"
+        >
+          <span
+            class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-base-darkest bg-warning-lighter padding-x-205"
+          >
+            Verification required
+          </span>
+        </a>
+      </th>
+      <td
+        data-label="Employer ID number (EIN)"
+      >
+        11-111111
+      </td>
+    </tr>
+  </tbody>
+</table>
+`;
