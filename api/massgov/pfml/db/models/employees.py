@@ -788,7 +788,7 @@ class Payment(Base, TimestampMixin):
 class PaymentDetails(Base, TimestampMixin):
     __tablename__ = "payment_details"
     payment_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
-    payment_id = Column(PostgreSQLUUID, ForeignKey(Payment.payment_id))
+    payment_id = Column(PostgreSQLUUID, ForeignKey(Payment.payment_id), nullable=False)
 
     period_start_date = Column(Date)
     period_end_date = Column(Date)
