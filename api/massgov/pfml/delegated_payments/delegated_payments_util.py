@@ -26,6 +26,7 @@ from massgov.pfml.db.models.employees import (
     LkClaimType,
     LkReferenceFileType,
     Payment,
+    PaymentTransactionType,
     PubEft,
     ReferenceFile,
     ReferenceFileType,
@@ -103,6 +104,24 @@ class Constants:
         State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
         State.DELEGATED_PAYMENT_WAITING_FOR_PAYMENT_AUDIT_RESPONSE_NOT_SAMPLED,
     ]
+
+    # These overpayment transaction types don't have payment details
+    # which means in a few places we want to explicitly not expect to see payment details.
+    OVERPAYMENT_TYPES_WITHOUT_PAYMENT_DETAILS = frozenset(
+        [
+            PaymentTransactionType.OVERPAYMENT_ACTUAL_RECOVERY,
+            PaymentTransactionType.OVERPAYMENT_RECOVERY,
+            PaymentTransactionType.OVERPAYMENT_RECOVERY_CANCELLATION,
+            PaymentTransactionType.OVERPAYMENT_RECOVERY_REVERSE,
+            PaymentTransactionType.OVERPAYMENT_ADJUSTMENT,
+        ]
+    )
+    OVERPAYMENT_TYPES_WITHOUT_PAYMENT_DETAILS_IDS = frozenset(
+        [
+            overpayment_type.payment_transaction_type_id
+            for overpayment_type in OVERPAYMENT_TYPES_WITHOUT_PAYMENT_DETAILS
+        ]
+    )
 
 
 class Regexes:

@@ -284,12 +284,8 @@ def get_all_overpayments_associated_with_employee(
         .join(Claim)
         .filter(
             Claim.employee_id == employee_id,
-            Payment.payment_transaction_type_id.in_(
-                [
-                    PaymentTransactionType.OVERPAYMENT.payment_transaction_type_id,
-                    PaymentTransactionType.OVERPAYMENT_ADJUSTMENT.payment_transaction_type_id,
-                ]
-            ),
+            Payment.payment_transaction_type_id
+            == PaymentTransactionType.OVERPAYMENT.payment_transaction_type_id,
         )
     )
 

@@ -1575,7 +1575,7 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
     # note that the event reason for an overpayment is Unknown which is treated as
     # None in our approach, setting it here to make sure that doesn't cause a validation issue.
     overpayment_data = FineosPaymentData(
-        event_type="Overpayment Adjustment",
+        event_type="Overpayment",
         event_reason="Unknown",
         payment_method="Elec Funds Transfer",
         include_claim_details=False,
@@ -1664,7 +1664,35 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
-def test_process_extract_additional_payment_types_can_be_missing_claim(
+def test_process_extract_non_standard_overpayments_can_be_missing_all_additional_datasets(
+    mock_s3_bucket,
+    set_exporter_env_vars,
+    local_test_db_session,
+    local_payment_extract_step,
+    tmp_path,
+    local_initialize_factories_session,
+    monkeypatch,
+    local_create_triggers,
+):
+
+    # None of these overpayment types are ever expected to have payment details records
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+
+    datasets = []
+    for overpayment_type in payments_util.Constants.OVERPAYMENT_TYPES_WITHOUT_PAYMENT_DETAILS:
+        overpayment_data = FineosPaymentData(
+            event_type=overpayment_type.payment_transaction_type_description,
+            event_reason="Unknown",
+            payment_method="Elec Funds Transfer",
+            include_claim_details=False,
+            include_payment_details=False,
+            include_requested_absence=False,
+        )
+        add_db_records_from_fineos_data(local_test_db_session, overpayment_data)
+        datasets.append(overpayment_data)
+
+
+def test_process_extract_additional_payment_types_can_be_missing_all_additional_datasets_and_claim(
     mock_s3_bucket,
     set_exporter_env_vars,
     local_test_db_session,
@@ -1687,10 +1715,17 @@ def test_process_extract_additional_payment_types_can_be_missing_claim(
     # Create an overpayment
     # note that the event reason for an overpayment is Unknown which is treated as
     # None in our approach, setting it here to make sure that doesn't cause a validation issue.
-    overpayment_data = FineosPaymentData(event_type="Overpayment", event_reason="Unknown")
-
-    add_db_records_from_fineos_data(local_test_db_session, overpayment_data, add_claim=False)
-    datasets.append(overpayment_data)
+    for overpayment_type in payments_util.Constants.OVERPAYMENT_TYPES_WITHOUT_PAYMENT_DETAILS:
+        overpayment_data = FineosPaymentData(
+            event_type=overpayment_type.payment_transaction_type_description,
+            event_reason="Unknown",
+            payment_method="Elec Funds Transfer",
+            include_claim_details=False,
+            include_payment_details=False,
+            include_requested_absence=False,
+        )
+        add_db_records_from_fineos_data(local_test_db_session, overpayment_data, add_claim=False)
+        datasets.append(overpayment_data)
 
     # Create a cancellation
     cancellation_data = FineosPaymentData(
@@ -1736,6 +1771,24 @@ def test_process_extract_additional_payment_types_can_be_missing_claim(
     # Run the extract process
     local_payment_extract_step.run()
 
+    # No PUB EFT records should exist, overpayments won't make those
+    len(local_test_db_session.query(PubEft).all()) == 0
+
+    for (
+        overpayment_type_id
+    ) in payments_util.Constants.OVERPAYMENT_TYPES_WITHOUT_PAYMENT_DETAILS_IDS:
+        overpayment = (
+            local_test_db_session.query(Payment)
+            .filter(Payment.payment_transaction_type_id == overpayment_type_id)
+            .one_or_none()
+        )
+
+        # Successfully processes without error
+        validate_non_standard_payment_state(
+            overpayment, State.DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT
+        )
+        # But no claim as no record of it in the extract file
+        assert overpayment.claim_id is None
     # No PUB EFT records should exist
     len(local_test_db_session.query(PubEft).all()) == 0
 
@@ -1749,18 +1802,6 @@ def test_process_extract_additional_payment_types_can_be_missing_claim(
     assert zero_dollar_payment.employee_id
     validate_non_standard_payment_state(
         zero_dollar_payment, State.DELEGATED_PAYMENT_PROCESSED_ZERO_PAYMENT
-    )
-
-    # Overpayment should be in DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT
-    overpayment_payment = (
-        local_test_db_session.query(Payment)
-        .filter(Payment.fineos_pei_i_value == overpayment_data.i_value)
-        .one_or_none()
-    )
-    assert overpayment_payment.claim_id is None
-    assert overpayment_payment.employee_id
-    validate_non_standard_payment_state(
-        overpayment_payment, State.DELEGATED_PAYMENT_PROCESSED_OVERPAYMENT
     )
 
     # ACH Cancellation should be in DELEGATED_PAYMENT_PROCESSED_CANCELLATION

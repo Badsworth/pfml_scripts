@@ -262,10 +262,14 @@ class PaymentData:
         self.payment_transaction_type = self.get_payment_transaction_type()
 
         # Process the payment details records in order to get specific
-        # pay-period information for payments. This is needed for non-standard
-        # payments like overpayments.
+        # pay-period information for payments. Note that some non-standard payments
+        # like overpayment recoveries will never have payment details.
         payment_details = extract_data.payment_details.indexed_data.get(index)
-        if not payment_details:
+        if (
+            not payment_details
+            and self.payment_transaction_type.payment_transaction_type_id
+            not in payments_util.Constants.OVERPAYMENT_TYPES_WITHOUT_PAYMENT_DETAILS_IDS
+        ):
             self.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_DATASET, "payment_details"
             )
