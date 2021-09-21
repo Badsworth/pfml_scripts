@@ -1,5 +1,5 @@
-import { createInputElement, testHook } from "../test-utils";
-import { act } from "react-dom/test-utils";
+import { act, renderHook } from "@testing-library/react-hooks";
+import { createInputElement } from "../test-utils";
 import useFormState from "../../src/hooks/useFormState";
 import useHandleInputChange from "../../src/hooks/useHandleInputChange";
 
@@ -8,7 +8,7 @@ describe("useHandleInputChange", () => {
     it("changes form state", () => {
       let formState, handleInputChange, updateFields;
 
-      testHook(() => {
+      renderHook(() => {
         ({ formState, updateFields } = useFormState());
         handleInputChange = useHandleInputChange(updateFields, formState);
       });
@@ -32,7 +32,7 @@ describe("useHandleInputChange", () => {
     it("adds checkbox value to an array when checked", () => {
       let formState, handleInputChange, updateFields;
 
-      testHook(() => {
+      renderHook(() => {
         ({ formState, updateFields } = useFormState());
         handleInputChange = useHandleInputChange(updateFields, formState);
       });
@@ -69,7 +69,7 @@ describe("useHandleInputChange", () => {
     it("removes checkbox value from array when unchecked", () => {
       let formState, handleInputChange, updateFields;
 
-      testHook(() => {
+      renderHook(() => {
         ({ formState, updateFields } = useFormState({
           fruit: ["apple"],
         }));

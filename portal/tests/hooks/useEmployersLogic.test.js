@@ -1,4 +1,5 @@
 import { BadRequestError, LeaveAdminForbiddenError } from "../../src/errors";
+import { act, renderHook } from "@testing-library/react-hooks";
 import {
   addEmployerMock,
   downloadDocumentMock,
@@ -10,8 +11,6 @@ import {
 } from "../../src/api/EmployersApi";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import { act } from "react-dom/test-utils";
-import { testHook } from "../test-utils";
 import { uniqueId } from "lodash";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useEmployersLogic from "../../src/hooks/useEmployersLogic";
@@ -25,10 +24,10 @@ describe("useEmployersLogic", () => {
   const employerId = "mock-employer-id";
   let appErrorsLogic, clearClaims, employersLogic, portalFlow, setUser;
 
-  function renderHook() {
+  function setup() {
     clearClaims = jest.fn();
     setUser = jest.fn();
-    testHook(() => {
+    renderHook(() => {
       portalFlow = usePortalFlow();
       appErrorsLogic = useAppErrorsLogic({ portalFlow });
       employersLogic = useEmployersLogic({
@@ -41,7 +40,7 @@ describe("useEmployersLogic", () => {
   }
 
   beforeEach(() => {
-    renderHook();
+    setup();
   });
 
   afterEach(() => {

@@ -1,25 +1,23 @@
-jest.mock("../../src/api/OtherLeavesApi");
-/* eslint-disable import/first */
+import { act, renderHook } from "@testing-library/react-hooks";
 import {
   removeEmployerBenefit,
   removeOtherIncome,
   removePreviousLeave,
 } from "../../src/api/OtherLeavesApi";
 import { NotFoundError } from "../../src/errors";
-import { act } from "react-dom/test-utils";
-import { testHook } from "../test-utils";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useOtherLeavesLogic from "../../src/hooks/useOtherLeavesLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
 
+jest.mock("../../src/api/OtherLeavesApi");
 jest.mock("../../src/services/tracker");
 
 describe("useOtherLeavesLogic", () => {
   const applicationId = "mock-application-id-1";
   let appErrorsLogic, otherLeavesLogic;
 
-  function renderHook() {
-    testHook(() => {
+  function setup() {
+    renderHook(() => {
       const portalFlow = usePortalFlow();
       appErrorsLogic = useAppErrorsLogic({ portalFlow });
       otherLeavesLogic = useOtherLeavesLogic({
@@ -29,7 +27,7 @@ describe("useOtherLeavesLogic", () => {
   }
 
   beforeEach(() => {
-    renderHook();
+    setup();
   });
 
   afterEach(() => {

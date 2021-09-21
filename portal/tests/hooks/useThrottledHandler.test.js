@@ -1,22 +1,20 @@
-import { mount, shallow } from "enzyme";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import React from "react";
-import { act } from "react-dom/test-utils";
-import { testHook } from "../test-utils";
+import { renderHook } from "@testing-library/react-hooks";
 import useThrottledHandler from "../../src/hooks/useThrottledHandler";
+import userEvent from "@testing-library/user-event";
 
 describe("useThrottledHandler", () => {
-  let Component, handler, throttleHandler, wrapper;
+  let Component, handler, throttleHandler;
 
   beforeEach(() => {
     handler = jest.fn().mockResolvedValueOnce(null);
-    // eslint-disable-next-line react/display-name
     Component = (props) => {
-      // eslint-disable-next-line react/prop-types
       throttleHandler = useThrottledHandler(props.handler);
       return <button type="button" onClick={throttleHandler} />;
     };
 
-    wrapper = shallow(
+    render(
       <Component
         handler={async () => {
           await handler();
@@ -26,24 +24,23 @@ describe("useThrottledHandler", () => {
   });
 
   it("does not call handler simultaneously", async () => {
-    await act(async () => {
-      wrapper.find("button").simulate("click");
-      await wrapper.find("button").simulate("click");
-    });
+    userEvent.click(screen.getByRole("button"));
 
-    expect(handler).toHaveBeenCalledTimes(1);
-    expect(throttleHandler.isThrottled).toBe(false);
+    await waitFor(() => {
+      expect(handler).toHaveBeenCalledTimes(1);
+      expect(throttleHandler.isThrottled).toBe(false);
+    });
   });
 
   it("sets throttleHandler.isThrottled to true during call", async () => {
-    await act(async () => {
-      await wrapper.find("button").simulate("click");
+    userEvent.click(screen.getByRole("button"));
+
+    await waitFor(() => {
       expect(throttleHandler.isThrottled).toBe(true);
     });
   });
 
   it("does not reset state if component is unmounted", async () => {
-    /* eslint-disable react/prop-types */
     const HiddenComponent = (props) => {
       return (
         <div>
@@ -57,20 +54,19 @@ describe("useThrottledHandler", () => {
         </div>
       );
     };
-    /* eslint-enable react/prop-types */
 
-    wrapper = mount(<HiddenComponent />);
+    const { rerender } = render(<HiddenComponent />);
+    userEvent.click(screen.getAllByRole("button")[1]);
+    rerender(<HiddenComponent hide={true} />);
 
-    await act(async () => {
-      await wrapper.find("button").simulate("click");
-      wrapper.setProps({ hide: true });
+    await waitFor(() => {
       expect(throttleHandler.isThrottled).toBe(true);
     });
   });
 
   it("rejects handlers that do no return a promise", () => {
     let handler;
-    testHook(() => {
+    renderHook(() => {
       const nonAsyncHandler = () => {};
       handler = useThrottledHandler(nonAsyncHandler);
     });

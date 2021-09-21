@@ -1,15 +1,15 @@
 import { BadRequestError, ValidationError } from "../../src/errors";
+import { act, renderHook } from "@testing-library/react-hooks";
 import {
   attachDocumentMock,
   downloadDocumentMock,
   getDocumentsMock,
 } from "../../src/api/DocumentsApi";
-import { makeFile, testHook } from "../test-utils";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import Document from "../../src/models/Document";
 import DocumentCollection from "../../src/models/DocumentCollection";
-import { act } from "react-dom/test-utils";
+import { makeFile } from "../test-utils";
 import { uniqueId } from "lodash";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useDocumentsLogic from "../../src/hooks/useDocumentsLogic";
@@ -25,8 +25,8 @@ describe("useDocumentsLogic", () => {
   const mockFilename = "test_file.png";
   let appErrorsLogic, documentsLogic;
 
-  function renderHook() {
-    testHook(() => {
+  function setup() {
+    renderHook(() => {
       const portalFlow = usePortalFlow();
       appErrorsLogic = useAppErrorsLogic({ portalFlow });
       documentsLogic = useDocumentsLogic({ appErrorsLogic });
@@ -34,7 +34,7 @@ describe("useDocumentsLogic", () => {
   }
 
   beforeEach(() => {
-    renderHook();
+    setup();
   });
 
   afterEach(() => {
@@ -244,12 +244,14 @@ describe("useDocumentsLogic", () => {
 
     it("throws ValidationError when no files are included in the request", async () => {
       const files = [];
-      await documentsLogic.attach(
-        application_id,
-        files,
-        mockDocumentType,
-        false
-      );
+      await act(async () => {
+        await documentsLogic.attach(
+          application_id,
+          files,
+          mockDocumentType,
+          false
+        );
+      });
       expect(appErrorsLogic.appErrors.items[0]).toEqual(
         expect.objectContaining({
           field: "file",

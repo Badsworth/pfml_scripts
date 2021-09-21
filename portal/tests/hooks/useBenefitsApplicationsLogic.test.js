@@ -2,7 +2,7 @@ import { BadRequestError, NotFoundError } from "../../src/errors";
 import BenefitsApplication, {
   BenefitsApplicationStatus,
 } from "../../src/models/BenefitsApplication";
-import { MockBenefitsApplicationBuilder, testHook } from "../test-utils";
+import { act, renderHook } from "@testing-library/react-hooks";
 import {
   completeClaimMock,
   createClaimMock,
@@ -16,8 +16,8 @@ import {
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
+import { MockBenefitsApplicationBuilder } from "../test-utils";
 import User from "../../src/models/User";
-import { act } from "react-dom/test-utils";
 import { mockRouter } from "next/router";
 import routes from "../../src/routes";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
@@ -30,8 +30,8 @@ jest.mock("../../src/services/tracker");
 describe("useBenefitsApplicationsLogic", () => {
   let appErrorsLogic, applicationId, claimsLogic, portalFlow, user;
 
-  function renderHook() {
-    testHook(() => {
+  function setup() {
+    renderHook(() => {
       portalFlow = usePortalFlow();
       appErrorsLogic = useAppErrorsLogic({ portalFlow });
       claimsLogic = useBenefitsApplicationsLogic({
@@ -55,7 +55,7 @@ describe("useBenefitsApplicationsLogic", () => {
   });
 
   it("sets initial claims data to empty collection", () => {
-    renderHook();
+    setup();
 
     expect(claimsLogic.benefitsApplications).toBeInstanceOf(
       BenefitsApplicationCollection
@@ -68,7 +68,7 @@ describe("useBenefitsApplicationsLogic", () => {
       // Make sure the ID we're loading matches what the API will return to us so caching works as
       applicationId = getClaimMockApplicationId;
 
-      renderHook();
+      setup();
     });
 
     it("returns true when a claim and its warnings are loaded", async () => {
@@ -91,7 +91,7 @@ describe("useBenefitsApplicationsLogic", () => {
       // Make sure the ID we're loading matches what the API will return to us so caching works as
       applicationId = getClaimMockApplicationId;
 
-      renderHook();
+      setup();
     });
 
     it("asynchronously fetches a claim and adds it to claims collection", async () => {
@@ -155,7 +155,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
       it("throws an error if user has not been loaded", async () => {
         user = null;
-        renderHook();
+        setup();
         await expect(claimsLogic.load).rejects.toThrow(/Cannot load claim/);
       });
 
@@ -189,7 +189,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
   describe("loadAll", () => {
     beforeEach(() => {
-      renderHook();
+      setup();
     });
 
     it("asynchronously fetches all claims and adds to claims collection", async () => {
@@ -237,7 +237,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
       it("throws an error if user has not been loaded", async () => {
         user = null;
-        renderHook();
+        setup();
         await expect(claimsLogic.loadAll).rejects.toThrow(/Cannot load claims/);
       });
 
@@ -261,7 +261,7 @@ describe("useBenefitsApplicationsLogic", () => {
   describe("create", () => {
     beforeEach(() => {
       mockRouter.pathname = routes.applications.start;
-      renderHook();
+      setup();
     });
 
     it("sends API request", async () => {
@@ -375,7 +375,7 @@ describe("useBenefitsApplicationsLogic", () => {
     describe("complete", () => {
       beforeEach(async () => {
         mockRouter.pathname = routes.applications.review;
-        renderHook();
+        setup();
         const claim = new BenefitsApplication({
           application_id: applicationId,
         });
@@ -465,7 +465,7 @@ describe("useBenefitsApplicationsLogic", () => {
       it("updates claim and redirects to nextPage when successful", async () => {
         mockRouter.pathname = routes.applications.ssn;
 
-        renderHook();
+        setup();
 
         await act(async () => {
           await claimsLogic.create();
@@ -489,7 +489,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
       it("clears prior errors", async () => {
         mockRouter.pathname = routes.applications.name;
-        renderHook();
+        setup();
 
         await act(async () => {
           await claimsLogic.create();
@@ -518,7 +518,7 @@ describe("useBenefitsApplicationsLogic", () => {
             .create();
           const last_name = "Updated from API";
 
-          renderHook();
+          setup();
 
           await act(async () => {
             await claimsLogic.create();
@@ -552,7 +552,7 @@ describe("useBenefitsApplicationsLogic", () => {
             .create();
           const last_name = "Name in API";
 
-          renderHook();
+          setup();
 
           await act(async () => {
             await claimsLogic.create();
@@ -578,7 +578,7 @@ describe("useBenefitsApplicationsLogic", () => {
         it("reports warnings for fields on the Name page", async () => {
           mockRouter.pathname = routes.applications.name;
 
-          renderHook();
+          setup();
 
           await act(async () => {
             await claimsLogic.create();
@@ -612,7 +612,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
         it("reports warnings for applicable rules on the Intermittent Leave page", async () => {
           mockRouter.pathname = routes.applications.leavePeriodIntermittent;
-          renderHook();
+          setup();
 
           await act(async () => {
             await claimsLogic.create();
@@ -643,7 +643,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
         it("catches exceptions thrown from the API module", async () => {
           mockRouter.pathname = routes.applications.name;
-          renderHook();
+          setup();
 
           await act(async () => {
             await claimsLogic.create();
@@ -669,7 +669,7 @@ describe("useBenefitsApplicationsLogic", () => {
     describe("submit", () => {
       beforeEach(async () => {
         mockRouter.pathname = routes.applications.review;
-        renderHook(routes.applications);
+        setup(routes.applications);
 
         const claim = new BenefitsApplication({
           application_id: applicationId,
@@ -759,7 +759,7 @@ describe("useBenefitsApplicationsLogic", () => {
 
       beforeEach(async () => {
         mockRouter.pathname = routes.applications.paymentMethod;
-        renderHook(routes.applications);
+        setup(routes.applications);
 
         const claim = new BenefitsApplication({
           application_id: applicationId,

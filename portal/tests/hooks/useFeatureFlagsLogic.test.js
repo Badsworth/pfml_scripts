@@ -1,8 +1,7 @@
+import { act, renderHook } from "@testing-library/react-hooks";
 import FeatureFlagsApi from "../../src/api/FeatureFlagsApi";
 import Flag from "../../src/models/Flag";
 import { NetworkError } from "../../src/errors";
-import { act } from "react-dom/test-utils";
-import { testHook } from "../test-utils";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useFeatureFlagsLogic from "../../src/hooks/useFeatureFlagsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
@@ -12,8 +11,8 @@ jest.mock("../../src/api/FeatureFlagsApi");
 describe("useFeatureFlagsLogic", () => {
   let appErrorsLogic, featureFlagsApi, flagsLogic, portalFlow;
 
-  function renderHook() {
-    testHook(() => {
+  function setup() {
+    renderHook(() => {
       portalFlow = usePortalFlow();
       appErrorsLogic = useAppErrorsLogic({ portalFlow });
       flagsLogic = useFeatureFlagsLogic({ appErrorsLogic });
@@ -28,7 +27,7 @@ describe("useFeatureFlagsLogic", () => {
 
   describe("loadFlags", () => {
     beforeEach(() => {
-      renderHook();
+      setup();
     });
 
     it("fetches flags from the api", async () => {
@@ -52,7 +51,7 @@ describe("useFeatureFlagsLogic", () => {
 
   describe("getFlag", () => {
     beforeEach(() => {
-      renderHook();
+      setup();
     });
 
     it("returns a specified feature flag from the state", async () => {

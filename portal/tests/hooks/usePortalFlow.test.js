@@ -4,8 +4,8 @@ import usePortalFlow, {
 import RouteTransitionError from "../../src/errors";
 import machineConfigs from "../../src/flows";
 import { mockRouter } from "next/router";
+import { renderHook } from "@testing-library/react-hooks";
 import routes from "../../src/routes";
-import { testHook } from "../test-utils";
 
 jest.mock("next/router");
 
@@ -14,7 +14,7 @@ describe("usePortalFlow", () => {
     let portalFlow;
 
     beforeEach(() => {
-      testHook(() => {
+      renderHook(() => {
         mockRouter.pathname = "/dashboard";
         portalFlow = usePortalFlow();
       });
@@ -39,7 +39,7 @@ describe("usePortalFlow", () => {
       mockRouter.pathname = routes.applications.start;
       expectedRoute =
         machineConfigs.states[mockRouter.pathname].on.CREATE_CLAIM;
-      testHook(() => {
+      renderHook(() => {
         portalFlow = usePortalFlow();
       });
     });
@@ -69,7 +69,7 @@ describe("usePortalFlow", () => {
       it("throws error", () => {
         mockRouter.pathname = "/not/in/configs";
 
-        testHook(() => {
+        renderHook(() => {
           portalFlow = usePortalFlow();
         });
 
@@ -87,7 +87,7 @@ describe("usePortalFlow", () => {
     beforeEach(() => {
       mockRouter.pathname = routes.applications.checklist;
       expectedRoute = machineConfigs.states[mockRouter.pathname].on.VERIFY_ID;
-      testHook(() => {
+      renderHook(() => {
         portalFlow = usePortalFlow();
       });
     });
@@ -110,7 +110,7 @@ describe("usePortalFlow", () => {
       it("throws error", () => {
         mockRouter.pathname = "/not/in/configs";
 
-        testHook(() => {
+        renderHook(() => {
           portalFlow = usePortalFlow();
         });
 
@@ -129,7 +129,7 @@ describe("usePortalFlow", () => {
     beforeEach(() => {
       mockRouter.pathname = routes.applications.ssn;
       nextPageRoute = machineConfigs.states[mockRouter.pathname].on.CONTINUE;
-      testHook(() => {
+      renderHook(() => {
         portalFlow = usePortalFlow();
       });
     });
@@ -154,7 +154,7 @@ describe("usePortalFlow", () => {
         let portalFlow;
         mockRouter.pathname = "/not/in/configs";
 
-        testHook(() => {
+        renderHook(() => {
           portalFlow = usePortalFlow();
         });
 
@@ -172,7 +172,7 @@ describe("usePortalFlow", () => {
       let portalFlow;
       mockRouter.pathname = routes.applications.ssn;
 
-      testHook(() => {
+      renderHook(() => {
         portalFlow = usePortalFlow();
       });
 
