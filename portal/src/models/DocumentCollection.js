@@ -4,6 +4,7 @@ export default class DocumentCollection extends BaseCollection {
   get idProperty() {
     return "fineos_document_id";
   }
+  // TODO fix Document type import.
 
   /**
    * Get only documents associated with a given Application
