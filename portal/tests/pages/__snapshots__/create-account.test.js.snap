@@ -1,0 +1,139 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CreateAccount renders the empty page 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <div
+    class="usa-alert usa-alert--info c-alert--neutral margin-bottom-3"
+    tabindex="-1"
+  >
+    <div
+      class="usa-alert__body"
+      role="region"
+    >
+      <h2
+        class="usa-alert__heading font-heading-md text-bold"
+      >
+        You can now apply for paid family and medical leave.
+      </h2>
+      <div
+        class="usa-alert__text"
+      >
+        <p>
+          You can apply online if you’re currently employed in Massachusetts.
+        </p>
+        <p>
+          If you’re self-employed or unemployed, apply by calling the Department of Family and Medical Leave Contact Center at 
+          <a
+            href="tel:(833) 344-7365"
+          >
+            (833) 344‑7365
+          </a>
+          .
+        </p>
+      </div>
+    </div>
+  </div>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+    tabindex="-1"
+  >
+    Create a worker account to apply for paid leave
+  </h1>
+  <p>
+    Need to create an employer account? 
+    <a
+      href="/employers/create-account"
+    >
+      Register to manage leave for your team.
+    </a>
+  </p>
+  <div
+    class="usa-form-group"
+  >
+    <label
+      class="usa-label text-bold font-heading-xs measure-5"
+      for="InputText1"
+      id="InputText1_label"
+    >
+      Email address
+    </label>
+    <input
+      aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+      class="usa-input maxw-mobile-lg"
+      id="InputText1"
+      name="email_address"
+      type="email"
+      value=""
+    />
+  </div>
+  <div
+    class="usa-form-group"
+  >
+    <label
+      class="usa-label text-bold font-heading-xs measure-5"
+      for="InputPassword2"
+      id="InputPassword2_label"
+    >
+      Password
+    </label>
+    <span
+      class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+      id="InputPassword2_hint"
+    >
+      Your password must be at least 12 characters long and include at least 1 number, 1 symbol, and both uppercase and lowercase letters.
+    </span>
+    <input
+      aria-labelledby="InputPassword2_label InputPassword2_hint InputPassword2_error"
+      autocomplete="new-password"
+      class="usa-input maxw-mobile-lg"
+      id="InputPassword2"
+      name="password"
+      type="password"
+      value=""
+    />
+  </div>
+  <div
+    class="usa-checkbox measure-5 bg-transparent"
+  >
+    <input
+      aria-controls="InputPassword2"
+      class="usa-checkbox__input"
+      id="InputChoice4"
+      name="InputPassword2-toggle"
+      type="checkbox"
+      value="password"
+    />
+    <label
+      class="usa-checkbox__label"
+      for="InputChoice4"
+    >
+      Show password
+    </label>
+  </div>
+  <button
+    class="usa-button position-relative"
+    type="submit"
+  >
+    Create account
+  </button>
+  <div
+    class="border-top-2px border-base-lighter margin-top-4"
+  />
+  <div
+    class="margin-top-4 text-base-darkest"
+  >
+    <strong>
+      Have an account?
+    </strong>
+    <a
+      class="display-inline-block margin-left-1 text-bold"
+      href="/login"
+    >
+      Log in
+    </a>
+  </div>
+</form>
+`;
