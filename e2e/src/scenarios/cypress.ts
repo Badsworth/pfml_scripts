@@ -464,8 +464,10 @@ export const BHAP1_OLB: ScenarioSpecification = {
 
 // This only being used for CPS Service Pack testing.
 const currentDate = new Date();
+/* eslint-disable unused-imports/no-unused-vars */
 const startDate = addDays(currentDate, 65);
 const endDate = addDays(currentDate, 90);
+/* eslint-enable unused-imports/no-unused-vars */
 export const CPS_SP: ScenarioSpecification = {
   // @todo wages can be adjusted from eligible/ineligible to wage per year
   employee: { mass_id: true, wages: "eligible" },
