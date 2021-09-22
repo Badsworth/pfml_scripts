@@ -26,7 +26,7 @@
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
-    "HAS_PREGNANCY_DOC_UPDATES": "false"
+    "HAS_PREGNANCY_DOC_UPDATES": "true"
   },
   "training": {
     "PORTAL_BASEURL": "https://paidleave-training.mass.gov",
@@ -84,7 +84,7 @@
     "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
     "HAS_CLAIMANT_STATUS_PAGE": "true",
-    "HAS_PREGNANCY_DOC_UPDATES": "false"
+    "HAS_PREGNANCY_DOC_UPDATES": "true"
   },
   "local": {
     "PORTAL_BASEURL": "http://localhost:3000",
