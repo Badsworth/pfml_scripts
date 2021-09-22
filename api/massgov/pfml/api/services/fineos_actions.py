@@ -50,6 +50,7 @@ from massgov.pfml.db.models.employees import (
     User,
 )
 from massgov.pfml.fineos.exception import FINEOSClientError, FINEOSNotFound
+from massgov.pfml.fineos.models import CreateOrUpdateServiceAgreement
 from massgov.pfml.fineos.models.customer_api import AbsenceDetails, ReflexiveQuestionType
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employee import (
@@ -1201,39 +1202,104 @@ def create_or_update_employer(
     )
 
     employer.fineos_employer_id = fineos_employer_id
-
-    # API-1687 - Create service agreements only when employers are created.
-    # Updates to exemption status will be processed by a separate job.
-    if is_create and fineos_employer_id:
-        create_service_agreement_for_employer(fineos, employer)
-
     return fineos_employer_id
 
 
 def create_service_agreement_for_employer(
-    fineos: massgov.pfml.fineos.AbstractFINEOSClient, employer: Employer
-) -> str:
+    fineos: massgov.pfml.fineos.AbstractFINEOSClient,
+    employer: Employer,
+    is_create: bool,
+    prev_family_exemption: Optional[bool] = None,
+    prev_medical_exemption: Optional[bool] = None,
+    prev_exemption_cease_date: Optional[datetime.date] = None,
+) -> Optional[str]:
     if not employer.fineos_employer_id:
         raise ValueError(
             "An Employer must have a fineos_employer_id in order to create a service agreement."
         )
 
+    service_agreement_inputs = resolve_service_agreement_inputs(
+        is_create,
+        employer,
+        prev_family_exemption,
+        prev_medical_exemption,
+        prev_exemption_cease_date,
+    )
+
+    if service_agreement_inputs is not None:
+        return fineos.create_service_agreement_for_employer(
+            employer.fineos_employer_id, service_agreement_inputs
+        )
+
+    return None
+
+
+def resolve_service_agreement_inputs(
+    is_create: bool,
+    employer: Employer,
+    prev_family_exemption: Optional[bool] = None,
+    prev_medical_exemption: Optional[bool] = None,
+    prev_exemption_cease_date: Optional[datetime.date] = None,
+) -> Optional[CreateOrUpdateServiceAgreement]:
+    if not is_create and (prev_family_exemption is None or prev_medical_exemption is None):
+        logger.info(
+            "Previous exemption values were not provided when updating a service agreement.",
+            extra={
+                "internal_employer_id": employer.employer_id,
+                "fineos_employer_id": employer.fineos_employer_id,
+            },
+        )
+        return None
+
     family_exemption = bool(employer.family_exemption)
     medical_exemption = bool(employer.medical_exemption)
+    prev_family_exemption = bool(prev_family_exemption)
+    prev_medical_exemption = bool(prev_medical_exemption)
 
+    was_exempt = prev_family_exemption and prev_medical_exemption
+    was_not_exempt = not prev_family_exemption and not prev_medical_exemption
+    was_partially_exempt = (not prev_family_exemption and prev_medical_exemption) or (
+        prev_family_exemption and not prev_medical_exemption
+    )
+    is_exempt = family_exemption and medical_exemption
+    is_not_exempt = not family_exemption and not medical_exemption
+    is_partially_exempt = (not family_exemption and medical_exemption) or (
+        family_exemption and not medical_exemption
+    )
+
+    # If it's an update there should be previous exemption values.
     leave_plans = resolve_leave_plans(family_exemption, medical_exemption)
-
     absence_management_flag = False if len(leave_plans) == 0 else True
-
-    service_agreement_inputs = massgov.pfml.fineos.models.CreateOrUpdateServiceAgreement(
-        absence_management_flag=absence_management_flag, leave_plans=", ".join(leave_plans)
-    )
-
-    fineos_service_agreement_id = fineos.create_service_agreement_for_employer(
-        employer.fineos_employer_id, service_agreement_inputs
-    )
-
-    return fineos_service_agreement_id
+    if is_create:
+        return CreateOrUpdateServiceAgreement(
+            absence_management_flag=absence_management_flag,
+            leave_plans=", ".join(leave_plans),
+            unlink_leave_plans=True,
+        )
+    elif was_exempt and (is_not_exempt or is_partially_exempt):
+        # Set the start date to the previous exemption cease_date.
+        return CreateOrUpdateServiceAgreement(
+            absence_management_flag=absence_management_flag,
+            leave_plans=", ".join(leave_plans),
+            start_date=prev_exemption_cease_date,
+            unlink_leave_plans=True,
+        )
+    elif (was_not_exempt or was_partially_exempt) and is_exempt:
+        if employer.exemption_commence_date is None:
+            raise ValueError(
+                "An Employer's exemption_commence_date is required when the Employer is becoming exempt."
+            )
+        # Set end date to a day before the exemption_commence_date.
+        leave_plans = resolve_leave_plans(prev_family_exemption, prev_medical_exemption)
+        absence_management_flag = False if len(leave_plans) == 0 else True
+        unlink_leave_plans = False
+        return CreateOrUpdateServiceAgreement(
+            absence_management_flag=absence_management_flag,
+            leave_plans=", ".join(leave_plans),
+            end_date=employer.exemption_commence_date - datetime.timedelta(1),
+            unlink_leave_plans=unlink_leave_plans,
+        )
+    return None
 
 
 def resolve_leave_plans(family_exemption: bool, medical_exemption: bool) -> Set[str]:

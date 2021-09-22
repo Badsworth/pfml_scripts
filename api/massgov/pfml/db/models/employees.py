@@ -437,6 +437,10 @@ class EmployerLog(Base):
     action = Column(Text, index=True)
     modified_at = Column(TIMESTAMP(timezone=True), default=utc_timestamp_gen)
     process_id = Column(Integer, index=True)
+    family_exemption = Column(Boolean)
+    medical_exemption = Column(Boolean)
+    exemption_commence_date = Column(Date)
+    exemption_cease_date = Column(Date)
 
 
 class EFT(Base):
