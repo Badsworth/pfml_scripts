@@ -101,7 +101,7 @@ export const Dashboard = (props) => {
           </Alert>
         )}
 
-        <DashboardInfoAlert user={props.user} />
+        <DashboardInfoAlert />
       </div>
 
       <section className="margin-bottom-4" ref={introElementRef}>
@@ -414,42 +414,8 @@ ClaimTableRows.propTypes = {
   user: PropTypes.instanceOf(User).isRequired,
 };
 
-const DashboardInfoAlert = (props) => {
-  const { user } = props;
+const DashboardInfoAlert = () => {
   const { t } = useTranslation();
-
-  const getCommaDelimitedEmployerEINs = () => {
-    const employers = user.verifiedEmployersNotRegisteredInFineos;
-    return employers.map((employer) => employer.employer_fein).join(", ");
-  };
-
-  // Leave admins not registered in Fineos won't be able to access associated claim data from Fineos.
-  // We use this flag to communicate this to the user.
-  if (user.hasVerifiedEmployerNotRegisteredInFineos) {
-    return (
-      <Alert
-        state="info"
-        heading={t("pages.employersDashboard.unavailableClaimsTitle", {
-          employers: getCommaDelimitedEmployerEINs(),
-        })}
-      >
-        <p>
-          <Trans
-            i18nKey="pages.employersDashboard.unavailableClaimsBody"
-            components={{
-              "learn-more-link": (
-                <a
-                  href={routes.external.massgov.employerAccount}
-                  target="_blank"
-                  rel="noopener"
-                />
-              ),
-            }}
-          />
-        </p>
-      </Alert>
-    );
-  }
 
   return (
     <Alert state="info" heading={t("pages.employersDashboard.betaHeader")}>
@@ -469,10 +435,6 @@ const DashboardInfoAlert = (props) => {
       </p>
     </Alert>
   );
-};
-
-DashboardInfoAlert.propTypes = {
-  user: PropTypes.instanceOf(User).isRequired,
 };
 
 const Filters = (props) => {

@@ -161,41 +161,6 @@ describe("Employer dashboard", () => {
     ).toMatchSnapshot();
   });
 
-  it("renders an alert about claim availability when some employers aren't registered in FINEOS yet", () => {
-    const { wrapper } = setup({
-      userAttrs: {
-        user_leave_administrators: [
-          new UserLeaveAdministrator({
-            employer_dba: "Work Inc",
-            employer_fein: "12-3456789",
-            employer_id: "mock-employer-id-1",
-            has_fineos_registration: false,
-            has_verification_data: true,
-            verified: true,
-          }),
-          new UserLeaveAdministrator({
-            employer_dba: "Work Co",
-            employer_fein: "00-3456789",
-            employer_id: "mock-employer-id-2",
-            has_fineos_registration: false,
-            has_verification_data: true,
-            verified: true,
-          }),
-        ],
-      },
-    });
-
-    expect(
-      wrapper.find("DashboardInfoAlert").dive().find("Alert").prop("heading")
-    ).toMatchInlineSnapshot(
-      `"Your applications are not accessible right now for: 12-3456789, 00-3456789"`
-    );
-
-    expect(
-      wrapper.find("DashboardInfoAlert").dive().find("Alert Trans").dive()
-    ).toMatchSnapshot();
-  });
-
   it("renders a table of claims with links if employer is registered in FINEOS", () => {
     const claims = getClaims(verifiedUserLeaveAdministrator);
     const userAttrs = {

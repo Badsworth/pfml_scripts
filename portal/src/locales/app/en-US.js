@@ -2313,10 +2313,6 @@ const pages = {
     tableColHeading_fineos_absence_id: "Application ID",
     tableColHeading_status: "Status",
     title: "Dashboard",
-    unavailableClaimsBody:
-      "Your account has been verified. It may take up to 15 minutes for our systems to update so that you can log in and review applications. If anyone else on your team needs to review applications, they’ll also need to complete the <learn-more-link>verification process</learn-more-link>.",
-    unavailableClaimsTitle:
-      "Your applications are not accessible right now for: {{employers}}",
     verificationBody:
       "Every employer must verify paid leave contributions when creating an account. You need to <your-organizations-link>complete this process</your-organizations-link> to review applications from your team. If you have an EIN that isn't verified you won't see any applications related to that EIN.",
     verificationInstructions:
@@ -2353,7 +2349,7 @@ const pages = {
     continueButton: "Continue",
     employerIdNumberLabel: "<strong>Employer ID number (EIN):</strong> {{ein}}",
     instructions:
-      "Your account has been verified. It may take up to 15 minutes for our systems to update so that you can log in and review applications. If anyone else on your team needs to review applications, they’ll also need to complete the <learn-more-link>verification process</learn-more-link>.",
+      "Your account has been verified. If anyone else on your team needs to review applications, they’ll also need to complete the <learn-more-link>verification process</learn-more-link>.",
     title: "Thanks for verifying your paid leave contributions",
   },
   employersOrganizationsVerifyContributions: {
