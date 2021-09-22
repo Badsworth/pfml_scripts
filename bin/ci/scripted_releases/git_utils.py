@@ -44,7 +44,7 @@ def merge_in_branch(branch_to_merge):
 
 def create_branch(branch_name):
     fetch_remotes()
-    git.branch(branch_name)
+    git.switch("-c", branch_name, "main")
     git.push("-u", "origin", branch_name)
     logger.info(f"Branch '{branch_name}' created from origin/main")
 
