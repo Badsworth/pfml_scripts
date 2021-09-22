@@ -184,7 +184,7 @@ Array [
 exports[`Employer dashboard renders filters 1`] = `
 <Fragment>
   <div
-    className="margin-bottom-2"
+    className="padding-bottom-3 bg-base-lightest padding-x-3"
   >
     <Button
       aria-controls="filters"

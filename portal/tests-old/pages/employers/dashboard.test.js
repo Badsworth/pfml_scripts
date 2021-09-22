@@ -367,17 +367,7 @@ describe("Employer dashboard", () => {
     ).toMatchSnapshot();
   });
 
-  it("does not render search section when no search feature flag is enabled", () => {
-    const { wrapper } = setup();
-
-    expect(wrapper.find("Search").dive().isEmptyRender()).toBe(true);
-  });
-
   it("renders search section when feature flags are enabled", () => {
-    process.env.featureFlags = {
-      employerShowDashboardSearch: true,
-    };
-
     const { wrapper } = setup({
       query: {
         search: "Initial search field value",
@@ -388,10 +378,6 @@ describe("Employer dashboard", () => {
   });
 
   it("updates search param when a search is performed", async () => {
-    process.env.featureFlags = {
-      employerShowDashboardSearch: true,
-    };
-
     const { updateQuerySpy, wrapper } = setup();
 
     const search = wrapper.find("Search").dive();

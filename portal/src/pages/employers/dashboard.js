@@ -21,7 +21,6 @@ import Title from "../../components/Title";
 import TooltipIcon from "../../components/TooltipIcon";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
-import classnames from "classnames";
 import formatDateRange from "../../utils/formatDateRange";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
@@ -601,16 +600,7 @@ const Filters = (props) => {
 
   return (
     <React.Fragment>
-      <div
-        className={classnames({
-          // When search is enabled, we visually display this as if it's
-          // part of the same gray container box
-          "margin-bottom-2": !isFeatureEnabled("employerShowDashboardSearch"),
-          "padding-bottom-3 bg-base-lightest padding-x-3": isFeatureEnabled(
-            "employerShowDashboardSearch"
-          ),
-        })}
-      >
+      <div className="padding-bottom-3 bg-base-lightest padding-x-3">
         <Button
           aria-controls={filtersContainerId}
           aria-expanded={showFilters.toString()}
@@ -786,8 +776,6 @@ const Search = (props) => {
       },
     ]);
   };
-
-  if (!isFeatureEnabled("employerShowDashboardSearch")) return null;
 
   return (
     <div className="bg-base-lightest padding-x-3 padding-top-1px padding-bottom-2">

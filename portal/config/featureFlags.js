@@ -20,10 +20,6 @@ const flagsConfig = {
     // When this flag is enabled, the claim status page for claimants will show
     claimantShowStatusPage: false,
 
-    // When this flag is enabled, the Leave Admin dashboard supports search functionality
-    // TODO (EMPLOYER-1500): Remove flag
-    employerShowDashboardSearch: false,
-
     // When this flag is enabled, the "Previous leaves" section on Review page is visible
     // TODO (EMPLOYER-718): Remove flag
     employerShowPreviousLeaves: false,
@@ -53,31 +49,17 @@ const flagsConfig = {
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
   // environment config files.
-  "cps-preview": {
-    employerShowDashboardSearch: true,
-  },
+  "cps-preview": {},
   development: {
     example: true,
     pfmlTerriyay: true,
-    employerShowDashboardSearch: true,
   },
-  test: {
-    employerShowDashboardSearch: true,
-  },
-  stage: {
-    employerShowDashboardSearch: true,
-  },
-  training: {
-    employerShowDashboardSearch: true,
-  },
-  performance: {
-    employerShowDashboardSearch: true,
-  },
-  uat: {
-    employerShowDashboardSearch: true,
-  },
+  test: {},
+  stage: {},
+  training: {},
+  performance: {},
+  uat: {},
   prod: {
-    employerShowDashboardSearch: true,
     pfmlTerriyay: true,
   },
 };
