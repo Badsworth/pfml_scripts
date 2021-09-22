@@ -3,6 +3,8 @@ import { Submission } from "../../../../src/types";
 import { findCertificationDoc } from "../../../../src/util/documents";
 import { getClaimantCredentials } from "../../../config";
 import { config } from "../../../actions/common";
+import { format, addDays } from "date-fns";
+import { extractLeavePeriod } from "../../../../src/util/claims";
 
 describe("Request for More Information (notifications/notices)", () => {
   after(() => {
@@ -20,32 +22,52 @@ describe("Request for More Information (notifications/notices)", () => {
             fineos_absence_id: res.fineos_absence_id,
             timestamp_from: Date.now(),
           });
+          const [startDate, endDate] = extractLeavePeriod(claim.claim);
+          const newStartDate = format(
+            addDays(new Date(startDate), 1),
+            "MM/dd/yyyy"
+          );
+          const newEndDate = format(
+            addDays(new Date(endDate), 1),
+            "MM/dd/yyyy"
+          );
+          cy.stash("modifiedLeaveDates", [newStartDate, newEndDate]);
 
-          const page = fineosPages.ClaimPage.visit(res.fineos_absence_id);
-          page.adjudicate((adjudication) => {
-            adjudication.evidence((evidence) => {
-              const certificationDocument = findCertificationDoc(
-                claim.documents
+          fineosPages.ClaimPage.visit(res.fineos_absence_id)
+            .adjudicate((adjudication) => {
+              adjudication
+                .evidence((evidence) => {
+                  const certificationDocument = findCertificationDoc(
+                    claim.documents
+                  );
+                  evidence.requestAdditionalInformation(
+                    certificationDocument.document_type,
+                    {
+                      "Care Information incomplete": "This is incomplete",
+                    },
+                    "Please resubmit page 1 of the Caring Certification form to verify the claimant's demographic information.  The page provided is missing information.  Thank you."
+                  );
+                })
+                .requestInformation((requestInformation) => {
+                  requestInformation.editRequestDates(newStartDate, newEndDate);
+                });
+            })
+            .adjudicate((adjudicate) => {
+              adjudicate.certificationPeriods((certificationPeriods) =>
+                certificationPeriods.prefill()
               );
-              evidence.requestAdditionalInformation(
-                certificationDocument.document_type,
-                {
-                  "Care Information incomplete": "This is incomplete",
-                },
-                "Please resubmit page 1 of the Caring Certification form to verify the claimant's demographic information.  The page provided is missing information.  Thank you."
+            })
+            .tasks((task) => {
+              task.assertTaskExists("Caring Certification Review");
+              task.close("Caring Certification Review");
+            })
+            .documents((document) => {
+              document.assertDocumentUploads(
+                "Care for a family member form",
+                1
               );
-            });
-          });
-          page.tasks((task) => {
-            task.assertTaskExists("Caring Certification Review");
-            task.close("Caring Certification Review");
-          });
-          page.documents((document) => {
-            document.assertDocumentUploads("Care for a family member form", 1);
-          });
-          // This should trigger a change in plan status.
-          page.shouldHaveStatus("PlanDecision", "Pending Evidence");
-          page
+            })
+            .shouldHaveStatus("PlanDecision", "Undecided")
             .triggerNotice("SOM Generate Legal Notice")
             .documents((docPage) =>
               docPage.assertDocumentExists("Request for more Information")
@@ -76,11 +98,25 @@ describe("Request for More Information (notifications/notices)", () => {
         );
         cy.log("Finished waiting for documents");
         if (config("HAS_CLAIMANT_STATUS_PAGE") === "true") {
-          portal.claimantGoToClaimStatus(submission.fineos_absence_id);
-          cy.findByText("Request for more information (PDF)")
-            .should("be.visible")
-            .click({ force: true });
-          portal.downloadLegalNotice(submission.fineos_absence_id);
+          cy.unstash<[string, string]>("modifiedLeaveDates").then(
+            ([start, end]) => {
+              portal.claimantGoToClaimStatus(submission.fineos_absence_id);
+              portal.claimantAssertClaimStatus([
+                {
+                  leave: "Care for a Family Member",
+                  status: "Pending",
+                  leavePeriods: [
+                    format(new Date(start), "MMMM d, yyyy"),
+                    format(new Date(end), "MMMM d, yyyy"),
+                  ],
+                },
+              ]);
+              cy.findByText("Request for more information (PDF)")
+                .should("be.visible")
+                .click({ force: true });
+              portal.downloadLegalNotice(submission.fineos_absence_id);
+            }
+          );
         }
         portal.uploadAdditionalDocument("Certification", "caring");
       });
