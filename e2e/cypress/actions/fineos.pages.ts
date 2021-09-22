@@ -1185,6 +1185,15 @@ class AvailabilityPage {
       cy.findByText("Close").click({ force: true });
     });
   }
+
+  weightDaysCheck(amount_weeks: string) : this {
+    cy.contains("table.ListTable", "Weight")
+    const selector = ".divListviewGrid .ListTable td[id*='ListviewWidgetWeight0']";
+    cy.get(selector).should("contain.text", amount_weeks);
+    cy.screenshot();
+    fineos.clickBottomWidgetButton("Close");
+    return this;
+  }
 }
 
 const reductionCategories = {

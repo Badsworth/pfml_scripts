@@ -462,6 +462,23 @@ export const BHAP1_OLB: ScenarioSpecification = {
   },
 };
 
+const midweek = addDays(mostRecentSunday, 3);
+export const CPS_MID_WK: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "CPS_MID_WK",
+    reason: "Serious Health Condition - Employee",
+    docs: {
+      MASSID: {},
+      HCP: {},
+    },
+    work_pattern_spec: "standard",
+    has_continuous_leave_periods: true,
+    leave_dates: [subWeeks(midweek, 3), addWeeks(midweek, 3)],
+    metadata: { expected_weight: "0.20" },
+  }
+}
+
 // This only being used for CPS Service Pack testing.
 const currentDate = new Date();
 /* eslint-disable unused-imports/no-unused-vars */
