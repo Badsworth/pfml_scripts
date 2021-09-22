@@ -64,6 +64,7 @@ from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
     create_fineos_payment_extract_files,
 )
 from massgov.pfml.delegated_payments.mock.mock_util import generate_routing_nbr_from_ssn
+from tests.delegated_payments.conftest import upload_file_to_s3
 
 EXPECTED_OUTCOME = {"message": "Success"}
 
@@ -99,6 +100,28 @@ def upload_fineos_data(tmp_path, mock_s3_bucket, fineos_dataset):
     folder_path = os.path.join(f"s3://{mock_s3_bucket}", "cps/inbound/received")
     date_of_extract = datetime.strptime("2020-01-01-11-30-00", "%Y-%m-%d-%H-%M-%S")
     create_fineos_payment_extract_files(fineos_dataset, folder_path, date_of_extract)
+
+
+def create_malformed_fineos_extract(tmp_path, mock_fineos_s3_bucket, bad_fineos_extract):
+    file_prefix = "2020-01-01-11-30-00-"
+
+    bad_content_line_one = "Some,Other,Column,Names"
+    bad_content_line_two = "1,2,3,4"
+    bad_content = "\n".join([bad_content_line_one, bad_content_line_two])
+
+    for payment_extract_file in payments_util.PAYMENT_EXTRACT_FILES:
+        if payment_extract_file == bad_fineos_extract:
+            content = bad_content
+        else:
+            # Make the second line just the field names again so it
+            # gets found (we'll never get to parsing)
+            content_line = ",".join(payment_extract_file.field_names)
+            content = "\n".join([content_line, content_line])
+
+        file_name = f"{file_prefix}{payment_extract_file.file_name}"
+        payment_file = tmp_path / file_name
+        payment_file.write_text(content)
+        upload_file_to_s3(payment_file, mock_fineos_s3_bucket, f"DT2/dataexports/{file_name}")
 
 
 def add_db_records(
@@ -506,6 +529,30 @@ def test_process_extract_data(
     assert employee_log_count_after == employee_log_count_before
 
 
+@pytest.mark.parametrize(
+    "payment_extract_file",
+    payments_util.PAYMENT_EXTRACT_FILES,
+    ids=payments_util.PAYMENT_EXTRACT_FILE_NAMES,
+)
+@freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
+def test_process_extract_data_malformed_extracts(
+    payment_extract_file,
+    mock_fineos_s3_bucket,
+    set_exporter_env_vars,
+    local_payment_extract_step,
+    local_test_db_session,
+    tmp_path,
+    monkeypatch,
+):
+    monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+    create_malformed_fineos_extract(tmp_path, mock_fineos_s3_bucket, payment_extract_file)
+    with pytest.raises(
+        Exception,
+        match=f"FINEOS extract {payment_extract_file.file_name} is missing required fields",
+    ):
+        local_payment_extract_step.run()
+
+
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data_prior_payment_exists_is_being_processed(
     mock_s3_bucket,
@@ -764,7 +811,7 @@ def test_process_extract_unprocessed_folder_files(
     # confirm no files will be copied in a subsequent copy
     copied_files = payments_util.copy_fineos_data_to_archival_bucket(
         local_test_db_session,
-        extractor.expected_file_names,
+        payments_util.PAYMENT_EXTRACT_FILE_NAMES,
         ReferenceFileType.FINEOS_PAYMENT_EXTRACT,
     )
     assert len(copied_files) == 0
@@ -1911,7 +1958,9 @@ def test_process_extract_additional_payment_types_still_require_employee(
 
 
 def make_payment_data_from_fineos_data(fineos_data):
-    extract_data = extractor.ExtractData(extractor.expected_file_names, "2020-01-01-11-30-00")
+    extract_data = extractor.ExtractData(
+        payments_util.PAYMENT_EXTRACT_FILE_NAMES, "2020-01-01-11-30-00"
+    )
     ci_index = extractor.CiIndex(fineos_data.c_value, fineos_data.i_value)
 
     extract_data.pei.indexed_data = {ci_index: fineos_data.get_vpei_record()}

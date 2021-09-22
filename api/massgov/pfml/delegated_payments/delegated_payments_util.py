@@ -47,6 +47,17 @@ from massgov.pfml.util.routing_number_validation import validate_routing_number
 logger = logging.get_logger(__package__)
 
 
+@dataclass(frozen=True, eq=True)
+class FineosExtract:
+    file_name: str
+
+    # Note field names is simply a list
+    # of fields we care about. Extracts
+    # will contain many additional fields
+    # that we do not use.
+    field_names: List[str] = field(compare=False, repr=False)
+
+
 class Constants:
     S3_OUTBOUND_READY_DIR = "ready"
     S3_OUTBOUND_SENT_DIR = "sent"
@@ -122,6 +133,117 @@ class Constants:
             for overpayment_type in OVERPAYMENT_TYPES_WITHOUT_PAYMENT_DETAILS
         ]
     )
+
+
+@dataclass
+class FineosExtractConstants:
+    # FINEOS Claimant Extract Files
+    VBI_REQUESTED_ABSENCE_SOM = FineosExtract(
+        file_name="VBI_REQUESTEDABSENCE_SOM.csv",
+        field_names=[
+            "ABSENCEREASON_COVERAGE",
+            "ABSENCE_CASENUMBER",
+            "NOTIFICATION_CASENUMBER",
+            "ABSENCE_CASESTATUS",
+            "ABSENCEPERIOD_START",
+            "ABSENCEPERIOD_END",
+            "LEAVEREQUEST_EVIDENCERESULTTYPE",
+            "EMPLOYEE_CUSTOMERNO",
+            "EMPLOYER_CUSTOMERNO",
+        ],
+    )
+
+    EMPLOYEE_FEED = FineosExtract(
+        file_name="Employee_feed.csv",
+        field_names=[
+            "C",
+            "I",
+            "DEFPAYMENTPREF",
+            "CUSTOMERNO",
+            "NATINSNO",
+            "DATEOFBIRTH",
+            "PAYMENTMETHOD",
+            "ADDRESS1",
+            "ADDRESS2",
+            "ADDRESS4",
+            "ADDRESS6",
+            "POSTCODE",
+            "SORTCODE",
+            "ACCOUNTNO",
+            "ACCOUNTTYPE",
+            "FIRSTNAMES",
+            "INITIALS",
+            "LASTNAME",
+        ],
+    )
+
+    VPEI = FineosExtract(
+        file_name="vpei.csv",
+        field_names=[
+            "C",
+            "I",
+            "PAYEESOCNUMBE",
+            "PAYMENTADD1",
+            "PAYMENTADD2",
+            "PAYMENTADD4",
+            "PAYMENTADD6",
+            "PAYMENTPOSTCO",
+            "PAYMENTMETHOD",
+            "PAYMENTDATE",
+            "AMOUNT_MONAMT",
+            "PAYEEBANKSORT",
+            "PAYEEACCOUNTN",
+            "PAYEEACCOUNTT",
+            "EVENTTYPE",
+            "PAYEEIDENTIFI",
+            "EVENTREASON",
+            "AMALGAMATIONC",
+        ],
+    )
+
+    PAYMENT_DETAILS = FineosExtract(
+        file_name="vpeipaymentdetails.csv",
+        field_names=[
+            "PECLASSID",
+            "PEINDEXID",
+            "PAYMENTSTARTP",
+            "PAYMENTENDPER",
+            "BALANCINGAMOU_MONAMT",
+        ],
+    )
+
+    CLAIM_DETAILS = FineosExtract(
+        file_name="vpeiclaimdetails.csv",
+        field_names=["PECLASSID", "PEINDEXID", "ABSENCECASENU", "LEAVEREQUESTI"],
+    )
+
+    # Note this is the one used in the payment extract
+    # do not confuse it with the similar _SOM one in the claimant extract
+    VBI_REQUESTED_ABSENCE = FineosExtract(
+        file_name="VBI_REQUESTEDABSENCE.csv",
+        field_names=[
+            "LEAVEREQUEST_DECISION",
+            "LEAVEREQUEST_ID",
+            "ABSENCEREASON_COVERAGE",
+            "ABSENCE_CASECREATIONDATE",
+        ],
+    )
+
+
+CLAIMANT_EXTRACT_FILES = [
+    FineosExtractConstants.VBI_REQUESTED_ABSENCE_SOM,
+    FineosExtractConstants.EMPLOYEE_FEED,
+]
+
+CLAIMANT_EXTRACT_FILE_NAMES = [extract_file.file_name for extract_file in CLAIMANT_EXTRACT_FILES]
+
+PAYMENT_EXTRACT_FILES = [
+    FineosExtractConstants.VPEI,
+    FineosExtractConstants.CLAIM_DETAILS,
+    FineosExtractConstants.PAYMENT_DETAILS,
+    FineosExtractConstants.VBI_REQUESTED_ABSENCE,
+]
+PAYMENT_EXTRACT_FILE_NAMES = [extract_file.file_name for extract_file in PAYMENT_EXTRACT_FILES]
 
 
 class Regexes:
@@ -977,3 +1099,17 @@ def create_success_file(start_time: datetime, process_name: str) -> None:
         success_file.write("SUCCESS")
 
     logger.info("Creating success file at %s", output_path)
+
+
+def validate_columns_present(record: Dict[str, Any], fineos_extract: FineosExtract) -> None:
+    missing_columns = []
+
+    for required_column in fineos_extract.field_names:
+        if required_column not in record:
+            missing_columns.append(required_column)
+
+    if len(missing_columns) > 0:
+        raise Exception(
+            "FINEOS extract %s is missing required fields: %s - found only %s"
+            % (fineos_extract.file_name, missing_columns, list(record.keys()))
+        )

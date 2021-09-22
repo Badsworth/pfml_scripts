@@ -25,96 +25,22 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 fake = faker.Faker()
 fake.seed_instance(1212)
 
-# Claimant extract file and field names
-EMPLOYEE_FEED_FILE_NAME = "Employee_feed.csv"
-LEAVE_PLAN_FILE_NAME = "LeavePlan_info.csv"
-REQUESTED_ABSENCE_SOM_FILE_NAME = "VBI_REQUESTEDABSENCE_SOM.csv"
+# We may want additional columns here from what we validate
+# so these field names extended from the constant values
+# This is mainly for new columns we want to implement logic for
+# but FINEOS hasn't yet made a change to a particular extract
+EMPLOYEE_FEED_FIELD_NAMES = payments_util.FineosExtractConstants.EMPLOYEE_FEED.field_names
+REQUESTED_ABSENCE_SOM_FIELD_NAMES = (
+    payments_util.FineosExtractConstants.VBI_REQUESTED_ABSENCE_SOM.field_names
+)
 
-EMPLOYEE_FEED_FIELD_NAMES = [
-    "C",
-    "I",
-    "DEFPAYMENTPREF",
-    "CUSTOMERNO",
-    "NATINSNO",
-    "DATEOFBIRTH",
-    "PAYMENTMETHOD",
-    "ADDRESS1",
-    "ADDRESS2",
-    "ADDRESS4",
-    "ADDRESS6",
-    "POSTCODE",
-    "SORTCODE",
-    "ACCOUNTNO",
-    "ACCOUNTTYPE",
-    "FIRSTNAMES",
-    "INITIALS",
-    "LASTNAME",
-]
-LEAVE_PLAN_FIELD_NAMES = [
-    "ABSENCE_CASENUMBER",
-    "LEAVETYPE",
-]
-REQUESTED_ABSENCE_SOM_FIELD_NAMES = [
-    "ABSENCEREASON_COVERAGE",
-    "ABSENCE_CASENUMBER",
-    "NOTIFICATION_CASENUMBER",
-    "ABSENCE_CASESTATUS",
-    "ABSENCEPERIOD_START",
-    "ABSENCEPERIOD_END",
-    "LEAVEREQUEST_EVIDENCERESULTTYPE",
-    "EMPLOYEE_CUSTOMERNO",
-    "EMPLOYER_CUSTOMERNO",
-]
-
-# Payment file and filed Names
-
-PEI_FILE_NAME = "vpei.csv"
-PEI_PAYMENT_DETAILS_FILE_NAME = "vpeipaymentdetails.csv"
-PEI_CLAIM_DETAILS_FILE_NAME = "vpeiclaimdetails.csv"
-REQUESTED_ABSENCE_FILE_NAME = "VBI_REQUESTEDABSENCE.csv"
-
-PEI_FIELD_NAMES = [
-    "C",
-    "I",
-    "PAYEESOCNUMBE",
-    "PAYMENTADD1",
-    "PAYMENTADD2",
-    "PAYMENTADD4",
-    "PAYMENTADD6",
-    "PAYMENTPOSTCO",
-    "PAYMENTMETHOD",
-    "PAYMENTDATE",
-    "AMOUNT_MONAMT",
-    "PAYEEBANKSORT",
-    "PAYEEACCOUNTN",
-    "PAYEEACCOUNTT",
-    "EVENTTYPE",
-    "PAYEEIDENTIFI",
-    "EVENTREASON",
-    "AMALGAMATIONC",
-]
-PEI_PAYMENT_DETAILS_FIELD_NAMES = [
-    "PECLASSID",
-    "PEINDEXID",
-    "PAYMENTSTARTP",
-    "PAYMENTENDPER",
-    "BALANCINGAMOU_MONAMT",
-]
-PEI_CLAIM_DETAILS_FIELD_NAMES = ["PECLASSID", "PEINDEXID", "ABSENCECASENU", "LEAVEREQUESTI"]
-REQUESTED_ABSENCE_FIELD_NAMES = [
-    "LEAVEREQUEST_DECISION",
-    "LEAVEREQUEST_ID",
-    "ABSENCEREASON_COVERAGE",
-    "ABSENCE_CASECREATIONDATE",
-]
-
-FINEOS_CLAIMANT_EXPORT_FILES = [EMPLOYEE_FEED_FILE_NAME, REQUESTED_ABSENCE_SOM_FILE_NAME]
-FINEOS_PAYMENT_EXTRACT_FILES = [
-    PEI_FILE_NAME,
-    PEI_PAYMENT_DETAILS_FILE_NAME,
-    PEI_CLAIM_DETAILS_FILE_NAME,
-    REQUESTED_ABSENCE_FILE_NAME,
-]
+# Payment files
+PEI_FIELD_NAMES = payments_util.FineosExtractConstants.VPEI.field_names
+PEI_PAYMENT_DETAILS_FIELD_NAMES = payments_util.FineosExtractConstants.PAYMENT_DETAILS.field_names
+PEI_CLAIM_DETAILS_FIELD_NAMES = payments_util.FineosExtractConstants.CLAIM_DETAILS.field_names
+REQUESTED_ABSENCE_FIELD_NAMES = (
+    payments_util.FineosExtractConstants.VBI_REQUESTED_ABSENCE.field_names
+)
 
 
 class FineosData:
@@ -378,15 +304,29 @@ def create_fineos_payment_extract_files(
     date_prefix = date_of_extract.strftime("%Y-%m-%d-%H-%M-%S-")
 
     # create the extract files
-    pei_writer = _create_file(folder_path, date_prefix, PEI_FILE_NAME, PEI_FIELD_NAMES)
+    pei_writer = _create_file(
+        folder_path,
+        date_prefix,
+        payments_util.FineosExtractConstants.VPEI.file_name,
+        PEI_FIELD_NAMES,
+    )
     pei_payment_details_writer = _create_file(
-        folder_path, date_prefix, PEI_PAYMENT_DETAILS_FILE_NAME, PEI_PAYMENT_DETAILS_FIELD_NAMES
+        folder_path,
+        date_prefix,
+        payments_util.FineosExtractConstants.PAYMENT_DETAILS.file_name,
+        PEI_PAYMENT_DETAILS_FIELD_NAMES,
     )
     pei_claim_details_writer = _create_file(
-        folder_path, date_prefix, PEI_CLAIM_DETAILS_FILE_NAME, PEI_CLAIM_DETAILS_FIELD_NAMES
+        folder_path,
+        date_prefix,
+        payments_util.FineosExtractConstants.CLAIM_DETAILS.file_name,
+        PEI_CLAIM_DETAILS_FIELD_NAMES,
     )
     requested_absence_writer = _create_file(
-        folder_path, date_prefix, REQUESTED_ABSENCE_FILE_NAME, REQUESTED_ABSENCE_FIELD_NAMES
+        folder_path,
+        date_prefix,
+        payments_util.FineosExtractConstants.VBI_REQUESTED_ABSENCE.file_name,
+        REQUESTED_ABSENCE_FIELD_NAMES,
     )
 
     # write the respective rows
@@ -553,13 +493,16 @@ def create_fineos_claimant_extract_files(
 
     # create the extract files
     employee_feed_writer = _create_file(
-        folder_path, date_prefix, EMPLOYEE_FEED_FILE_NAME, EMPLOYEE_FEED_FIELD_NAMES
+        folder_path,
+        date_prefix,
+        payments_util.FineosExtractConstants.EMPLOYEE_FEED.file_name,
+        EMPLOYEE_FEED_FIELD_NAMES,
     )
     requested_absence_som_writer = _create_file(
-        folder_path, date_prefix, REQUESTED_ABSENCE_SOM_FILE_NAME, REQUESTED_ABSENCE_SOM_FIELD_NAMES
-    )
-    leaveplan_info_writer = _create_file(
-        folder_path, date_prefix, LEAVE_PLAN_FILE_NAME, LEAVE_PLAN_FIELD_NAMES
+        folder_path,
+        date_prefix,
+        payments_util.FineosExtractConstants.VBI_REQUESTED_ABSENCE_SOM.file_name,
+        REQUESTED_ABSENCE_SOM_FIELD_NAMES,
     )
 
     # write the respective rows
@@ -572,7 +515,6 @@ def create_fineos_claimant_extract_files(
     # close the files
     employee_feed_writer.file.close()
     requested_absence_som_writer.file.close()
-    leaveplan_info_writer.file.close()
 
 
 def generate_claimant_data_files(
