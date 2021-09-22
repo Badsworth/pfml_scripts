@@ -125,7 +125,7 @@ jobs:
           working-directory: e2e
           group: Nightly
           tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
-        if: github.events.inputs.run_nightly == 'true' && always()
+        if: github.event.inputs.run_nightly == 'true' && always()
 
       - name: "Archive screenshots"
         uses: actions/upload-artifact@v2
