@@ -21,6 +21,7 @@ Cypress.env({
  * scenarios were used current data set we need to make sure we fix the employment status back to "Active"
  **/
 
+// eslint-disable-next-line unused-imports/no-unused-vars
 const absenceDescription: AbsenceReasonDescription = {
   relates_to: "Employee",
   reason: "Serious Health Condition - Employee",
