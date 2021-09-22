@@ -486,38 +486,45 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
     employee_tax_id = claim.employee_tax_identifier
     employer_fein = claim.employer_fein
 
-    if employee_tax_id and employer_fein:
-        with app.db_session() as db_session:
-            try:
-                absence_periods = get_absence_periods(
-                    employee_tax_id, employer_fein, fineos_absence_id, db_session
-                )
-            except exception.FINEOSClientError as error:
-                if _is_withdrawn_claim_error(error):
-                    logger.warning(
-                        "get_claim - Claim has been withdrawn. Unable to display claim status.",
-                        extra={"absence_id": fineos_absence_id},
-                    )
-
-                    return ClaimWithdrawn().to_api_response()
-
-                raise error
-
-            if len(absence_periods) == 0:
-                logger.warn(
-                    "No absence periods found for claim", extra={"absence_id": fineos_absence_id}
-                )
-                return response_util.error_response(
-                    status_code=InternalServerError,
-                    message="No absence periods found for claim",
-                    errors=[],
-                    data={},
-                ).to_api_response()
-    else:
-        logger.info(
-            "get_claim info - No employee or employer tied to this claim. Cannot retrieve absence periods from FINEOS.",
+    if not employee_tax_id or not employer_fein:
+        logger.warning(
+            "get_claim failure - No employee or employer tied to this claim. Cannot retrieve absence periods from FINEOS.",
             extra={"absence_case_id": fineos_absence_id, "claim_id": claim.claim_id},
         )
+
+        return response_util.error_response(
+            status_code=InternalServerError,
+            message="No employee or employer tied to this claim. Cannot retrieve absence periods from FINEOS.",
+            errors=[],
+            data={},
+        ).to_api_response()
+
+    with app.db_session() as db_session:
+        try:
+            absence_periods = get_absence_periods(
+                employee_tax_id, employer_fein, fineos_absence_id, db_session
+            )
+        except exception.FINEOSClientError as error:
+            if _is_withdrawn_claim_error(error):
+                logger.warning(
+                    "get_claim - Claim has been withdrawn. Unable to display claim status.",
+                    extra={"absence_id": fineos_absence_id},
+                )
+
+                return ClaimWithdrawn().to_api_response()
+
+            raise error
+
+        if len(absence_periods) == 0:
+            logger.warn(
+                "No absence periods found for claim", extra={"absence_id": fineos_absence_id}
+            )
+            return response_util.error_response(
+                status_code=InternalServerError,
+                message="No absence periods found for claim",
+                errors=[],
+                data={},
+            ).to_api_response()
 
     detailed_claim.absence_periods = absence_periods
 

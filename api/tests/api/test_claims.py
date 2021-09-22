@@ -1724,10 +1724,12 @@ class TestGetClaimEndpoint:
             headers={"Authorization": f"Bearer {auth_token}"},
         )
 
-        assert response.status_code == 200
-        response_body = response.get_json()
-        claim_data = response_body.get("data")
-        assert len(claim_data["absence_periods"]) == 0
+        assert response.status_code == 500
+        tests.api.validate_error_response(
+            response,
+            500,
+            message="No employee or employer tied to this claim. Cannot retrieve absence periods from FINEOS.",
+        )
 
     def test_get_claim_with_no_tax_identifier(
         self, caplog, client, auth_token, user, test_db_session
@@ -1748,10 +1750,16 @@ class TestGetClaimEndpoint:
             headers={"Authorization": f"Bearer {auth_token}"},
         )
 
-        assert response.status_code == 200
-        response_body = response.get_json()
-        claim_data = response_body.get("data")
-        assert len(claim_data["absence_periods"]) == 0
+        assert response.status_code == 500
+        tests.api.validate_error_response(
+            response,
+            500,
+            message="No employee or employer tied to this claim. Cannot retrieve absence periods from FINEOS.",
+        )
+        assert (
+            "No employee or employer tied to this claim. Cannot retrieve absence periods from FINEOS."
+            in caplog.text
+        )
 
     @mock.patch("massgov.pfml.api.claims.get_absence_periods")
     def test_withdrawn_claim_returns_403(
