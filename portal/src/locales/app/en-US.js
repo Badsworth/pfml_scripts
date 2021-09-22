@@ -1937,9 +1937,9 @@ const pages = {
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     leaveStatusMessage_Approved:
-      "<p><strong>This leave was approved.</strong></p><p>View your approval notice below for more details about your benefit amount, payment schedule, and how to appeal if your benefits appear incorrect.</p>",
+      "<p><strong>This leave was approved.</strong></p><p>View your approval notice below for more details about your benefit amount, payment schedule, and how to appeal if your benefits appear incorrect.</p><p>Learn more about the <request-appeal-link>appeal process</request-appeal-link>.</p>",
     leaveStatusMessage_Denied:
-      "<p><strong>This leave was denied.</strong></p><p>View your denial notice below for more details and an explanation of the appeal process.</p><p>If you would like to appeal, you must submit your request within 10 calendar days of the date on your denial notice.</p><p><request-appeal-link>Learn more about the appeal process</request-appeal-link>.</p>",
+      "<p><strong>This leave was denied.</strong></p><p>View your denial notice below for more details and an explanation of the appeal process.</p><p>If you would like to appeal, you must submit your request within 10 calendar days of the date on your denial notice.</p><p>Learn more about the <request-appeal-link>appeal process</request-appeal-link>.</p>",
     leaveStatusMessage_Pending:
       "<p><strong>This leave is being reviewed.</strong></p>",
     leaveStatusMessage_Withdrawn:
