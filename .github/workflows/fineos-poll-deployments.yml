@@ -1,0 +1,13 @@
+name: "Poll Fineos Deployments"
+
+on:
+  workflow_dispatch:
+
+jobs:
+  publish-fineos-deployments:
+    name: "Publish Fineos Deployments"
+    runs-on: ubuntu-latest
+    env:
+      NEW_RELIC_ACCOUNT_ID: 2837112
+    steps:
+      - run: echo "Nothing to see here. This is just a stub branch"
