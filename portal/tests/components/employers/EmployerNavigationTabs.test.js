@@ -1,18 +1,13 @@
 import EmployerNavigationTabs from "../../../src/components/employers/EmployerNavigationTabs";
 import React from "react";
+import { render } from "@testing-library/react";
 import routes from "../../../src/routes";
-import { shallow } from "enzyme";
 
 describe("EmployerNavigationTabs", () => {
-  let wrapper;
-
-  beforeEach(() => {
-    wrapper = shallow(
-      <EmployerNavigationTabs activePath={routes.employers.welcome} />
-    ).dive();
-  });
-
   it("renders the component", () => {
-    expect(wrapper).toMatchSnapshot();
+    const { container } = render(
+      <EmployerNavigationTabs activePath={routes.employers.welcome} />
+    );
+    expect(container.firstChild).toMatchSnapshot();
   });
 });
