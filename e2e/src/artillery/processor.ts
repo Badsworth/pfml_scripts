@@ -1,8 +1,8 @@
 import { EventEmitter } from "events";
 import ArtilleryPFMLInteractor from "./ArtilleryInteractor";
-import Reporter from "./Reporter";
-import { createLogger, format, transports } from "winston";
-import { getDataFromClaim, UsefulClaimData } from "./util";
+import { createLogger, format, Logger, transports } from "winston";
+import { getDataFromClaim } from "./util";
+import { hostname } from "os";
 
 const { combine, printf, json, colorize } = format;
 
@@ -24,23 +24,42 @@ const logger = createLogger({
   level: process.env.E2E_DEBUG === "true" ? "debug" : "info",
   format: process.env.IS_ECS === "true" ? json() : localLogFormat,
   transports: new transports.Console(),
+  defaultMeta: {
+    run_id: process.env.LST_RUN_ID,
+    instance_id: process.env.LST_INSTANCE_ID ?? hostname(),
+    type: "log",
+  },
 });
 
+type ArtilleryContext = {
+  [k: string]: unknown;
+  _uid: number;
+};
 const interactor = new ArtilleryPFMLInteractor();
-const reporter = new Reporter();
-reporter.listen();
 
-let claim: GeneratedClaim;
-let subClaimRes: ApplicationSubmissionResponse;
-let processClaim: UsefulClaimData;
+type ProcessorCB = (
+  context: ArtilleryContext,
+  ee: EventEmitter,
+  logger: Logger
+) => Promise<void>;
 
-function fn(cb: (context: [k: string], ee: EventEmitter) => Promise<void>) {
-  return async function (context: [k: string], ee: EventEmitter, done: DoneCB) {
+function fn(cb: ProcessorCB) {
+  return async function (
+    context: ArtilleryContext,
+    ee: EventEmitter,
+    done: DoneCB
+  ) {
+    const child = logger.child({ uid: context._uid });
     try {
-      await cb(context, ee);
+      ee.emit("request");
+      const startedAt = process.hrtime.bigint();
+      await cb(context, ee, child);
+      const endedAt = process.hrtime.bigint();
+      const deltaMs = Math.round(Number(endedAt - startedAt) / 1000000);
+      ee.emit("response", deltaMs, 200, context._uid);
       done();
     } catch (e) {
-      console.error(e);
+      child.error(e.message);
       done(e);
     }
   };
@@ -50,34 +69,11 @@ type DoneCB = (err?: Error) => void;
 
 logger.info(`DEBUG IS SET TO: ${process.env.E2E_DEBUG}`);
 export const submitAndAdjudicate = fn(
-  async (_context: [k: string], ee: EventEmitter) => {
-    try {
-      claim = await interactor.generateClaim(ee, "LSTBHAP1", logger);
-      const childLoggerClaimInfo = logger.child(getDataFromClaim(claim));
-      subClaimRes = await interactor.submitClaim(
-        claim,
-        ee,
-        childLoggerClaimInfo
-      );
-      const childLoggerSubmission = logger.child({
-        ...getDataFromClaim(claim),
-        ...subClaimRes,
-      });
-      processClaim = await interactor.postProcessClaim(
-        claim,
-        subClaimRes,
-        ee,
-        childLoggerSubmission
-      );
-    } catch (e) {
-      logger.error(e);
-      throw new Error("LST Failure");
-    } finally {
-      logger.info("LST Results (each method)", {
-        generateClaim: !claim ? "Failure" : "Success",
-        submitClaim: !subClaimRes ? "Failure" : "Success",
-        postProcessClaim: !processClaim ? "Failure" : "Success",
-      });
-    }
+  async (_context: ArtilleryContext, ee: EventEmitter, logger: Logger) => {
+    const claim = await interactor.generateClaim(ee, "LSTBHAP1", logger);
+    logger.info("Claim data:", getDataFromClaim(claim));
+    const subClaimRes = await interactor.submitClaim(claim, ee, logger);
+    logger.info("Submission data", subClaimRes);
+    await interactor.postProcessClaim(claim, subClaimRes, ee, logger);
   }
 );

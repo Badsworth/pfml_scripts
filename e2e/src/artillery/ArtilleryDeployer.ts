@@ -5,6 +5,9 @@ import {
 } from "@aws-sdk/client-ecs";
 import { GetParameterCommand, SSMClient } from "@aws-sdk/client-ssm";
 import { parse as parseARN } from "@aws-sdk/util-arn-parser";
+import { cloudwatchInsights } from "../util/urls";
+import { add } from "date-fns";
+import { URL, URLSearchParams } from "url";
 
 type ECSLSTRunnerConfig = {
   region: string;
@@ -17,6 +20,10 @@ type ECSLSTRunnerConfig = {
   registry: string;
   cpu?: string;
   memory?: string;
+  influx_url: string;
+  influx_token: string;
+  influx_organization: string;
+  influx_bucket: string;
 };
 
 /**
@@ -37,22 +44,23 @@ export default class ArtilleryDeployer {
     arn: string,
     overrides?: Partial<ECSLSTRunnerConfig>
   ): Promise<ArtilleryDeployer> {
-    const name = parseARN(arn).resource.replace(/^parameter/, "");
-    const parameterRegion = parseARN(arn).region;
-    const ssm = new SSMClient({ region: parameterRegion });
-    const response = await ssm.send(
-      new GetParameterCommand({
-        Name: name,
-      })
-    );
-    if (!response.Parameter) throw new Error("Parameter not found");
-    if (!response.Parameter.Value) throw new Error("Parameter has no value");
-    const values = JSON.parse(response.Parameter.Value);
+    const values = await getParameter(arn);
+    this.checkConfig(values);
     return new ArtilleryDeployer({
-      region: parameterRegion,
       ...values,
       ...overrides,
     });
+  }
+
+  static checkConfig(config: unknown): asserts config is ECSLSTRunnerConfig {
+    // Yeah, this is kind of a weak type check...
+    if (
+      !config ||
+      !(config as ECSLSTRunnerConfig).region ||
+      !(config as ECSLSTRunnerConfig).influx_url
+    ) {
+      throw new Error(`Invalid configuration`);
+    }
   }
 
   constructor(private config: ECSLSTRunnerConfig) {
@@ -64,13 +72,53 @@ export default class ArtilleryDeployer {
     image: string,
     runId: string,
     environment: Record<string, string>
-  ): Promise<{ cluster: string }> {
+  ): Promise<{ cluster: string; cloudwatch: string; influx: string }> {
     const taskDefinitionArn = await this.createTaskDefinition(image, runId);
-    await this.runTask(taskDefinitionArn, environment);
+    await this.runTask(taskDefinitionArn, {
+      ...environment,
+      INFLUX_URL: this.config.influx_url,
+      INFLUX_TOKEN: this.config.influx_token,
+      INFLUX_ORGANIZATION: this.config.influx_organization,
+      INFLUX_BUCKET: this.config.influx_bucket,
+    });
     const clusterName = parseARN(this.config.cluster).resource.split("/").pop();
+    const start = new Date();
+    const end = add(new Date(), { hours: 1.5 });
     return {
       cluster: `https://console.aws.amazon.com/ecs/home?region=us-east-1#/clusters/${clusterName}/tasks`,
+      cloudwatch: this.buildCloudwatchURL(runId, start, end),
+      influx: this.buildInfluxURL(runId, start, end),
     };
+  }
+
+  private buildCloudwatchURL(runId: string, start: Date, end: Date): string {
+    const query = `fields @timestamp, uid, level, message, @message
+    | filter run_id = "${runId}"
+    | sort @timestamp desc
+    | limit 200`;
+    return cloudwatchInsights(
+      this.config.region,
+      [this.config.logGroup],
+      query,
+      {
+        start,
+        end,
+        timeType: "ABSOLUTE",
+      }
+    );
+  }
+
+  private buildInfluxURL(runId: string, start: Date, end: Date): string {
+    const dashboardUrl = new URL(
+      "https://us-east-1-1.aws.cloud2.influxdata.com/orgs/2d104c868dfad878/dashboards/082e5bc004c3b000"
+    );
+    const params = new URLSearchParams({
+      "vars[runId]": runId,
+      lower: start.toISOString(),
+      upper: end.toISOString(),
+    });
+    dashboardUrl.search = params.toString();
+    return dashboardUrl.toString();
   }
 
   private createTaskDefinition(image: string, runId: string): Promise<string> {
@@ -158,4 +206,19 @@ export default class ArtilleryDeployer {
       });
     });
   }
+}
+
+export async function getParameter(arn: string): Promise<unknown> {
+  const name = parseARN(arn).resource.replace(/^parameter/, "");
+  const parameterRegion = parseARN(arn).region;
+  const ssm = new SSMClient({ region: parameterRegion });
+  const response = await ssm.send(
+    new GetParameterCommand({
+      Name: name,
+      WithDecryption: true,
+    })
+  );
+  if (!response.Parameter) throw new Error("Parameter not found");
+  if (!response.Parameter.Value) throw new Error("Parameter has no value");
+  return { region: parameterRegion, ...JSON.parse(response.Parameter.Value) };
 }
