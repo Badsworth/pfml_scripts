@@ -191,7 +191,6 @@ const LeaveDetails = (props) => {
               onChangeRelationshipInaccurateReason(event.target.value)
             }
             visible={believeRelationshipAccurate === "No"}
-            data-test="relationship-accurate-no"
           >
             <Alert
               state="warning"
@@ -208,7 +207,7 @@ const LeaveDetails = (props) => {
             <div className={inaccurateReasonClasses}>
               <FormLabel
                 className="usa-label"
-                htmlFor="relationshipInaccurateReason"
+                inputId="relationshipInaccurateReason"
                 small
                 errorMsg={errorMsg}
               >
@@ -220,13 +219,13 @@ const LeaveDetails = (props) => {
                 onChange={(event) =>
                   onChangeRelationshipInaccurateReason(event.target.value)
                 }
+                id="relationshipInaccurateReason"
               />
             </div>
           </ConditionalContent>
 
           <ConditionalContent
             visible={believeRelationshipAccurate === "Unknown"}
-            data-test="relationship-accurate-unknown"
           >
             <Alert state="info" className="measure-5 margin-y-3">
               {t(

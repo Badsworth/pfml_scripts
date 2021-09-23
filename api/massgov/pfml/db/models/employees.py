@@ -437,6 +437,10 @@ class EmployerLog(Base):
     action = Column(Text, index=True)
     modified_at = Column(TIMESTAMP(timezone=True), default=utc_timestamp_gen)
     process_id = Column(Integer, index=True)
+    family_exemption = Column(Boolean)
+    medical_exemption = Column(Boolean)
+    exemption_commence_date = Column(Date)
+    exemption_cease_date = Column(Date)
 
 
 class EFT(Base):
@@ -788,7 +792,7 @@ class Payment(Base, TimestampMixin):
 class PaymentDetails(Base, TimestampMixin):
     __tablename__ = "payment_details"
     payment_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
-    payment_id = Column(PostgreSQLUUID, ForeignKey(Payment.payment_id))
+    payment_id = Column(PostgreSQLUUID, ForeignKey(Payment.payment_id), nullable=False)
 
     period_start_date = Column(Date)
     period_end_date = Column(Date)

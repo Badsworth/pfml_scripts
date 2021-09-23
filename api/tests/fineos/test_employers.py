@@ -1,13 +1,19 @@
 import concurrent.futures
+from datetime import date
 from functools import partial
 
 import pytest
 
+import massgov.pfml.api.services.fineos_actions as fineos_actions
 import massgov.pfml.db
 import massgov.pfml.fineos
 import massgov.pfml.fineos.employers as fineos_employers
 from massgov.pfml.db.models.employees import Employer, EmployerLog
-from massgov.pfml.db.models.factories import EmployerFactory, EmployerOnlyDORDataFactory
+from massgov.pfml.db.models.factories import (
+    EmployerFactory,
+    EmployerLogFactory,
+    EmployerOnlyDORDataFactory,
+)
 
 
 # Use a persistent database for all the tests here, as they need to support multiple concurrent
@@ -133,36 +139,66 @@ def test_load_updates_with_service_agreement(module_persistent_db_session):
     fineos_client = massgov.pfml.fineos.MockFINEOSClient()
     employer_num = 5
     update_sa_num = 3
-    action_name = "UPDATE_SA"
+    action_name = "UPDATE"
 
-    EmployerFactory.create_batch(size=employer_num)
-
-    employer_log_entries_before = module_persistent_db_session.query(EmployerLog).all()
-    assert len(employer_log_entries_before) == employer_num
-
-    updated_log_ids = [log.employer_log_id for log in employer_log_entries_before][:update_sa_num]
-
-    # Set up some employers to be UPDATE_SA actions
-    updated_logs_count = (
-        module_persistent_db_session.query(EmployerLog)
-        .filter(EmployerLog.employer_log_id.in_(updated_log_ids))
-        .update({EmployerLog.action: action_name}, synchronize_session="fetch")
+    employers = EmployerFactory.create_batch(
+        size=employer_num, family_exemption=False, medical_exemption=False
     )
-    module_persistent_db_session.commit()
-    assert updated_logs_count == update_sa_num
 
-    employer_log_entries_after = (
-        module_persistent_db_session.query(EmployerLog)
-        .filter(EmployerLog.action == action_name)
-        .all()
-    )
-    assert len(employer_log_entries_after) == update_sa_num
+    for e, employer in enumerate(employers):
+        EmployerLogFactory.create(
+            employer_id=employer.employer_id, action=action_name if e < update_sa_num else "INSERT"
+        )
 
     result = fineos_employers.load_updates(module_persistent_db_session, fineos_client)
 
     assert result.total_employers_count == employer_num
     assert result.loaded_employers_count == employer_num
-    assert result.updated_service_agreements_count == update_sa_num
+    assert result.updated_service_agreements_count == employer_num
+
+    employer_log_entries_after = module_persistent_db_session.query(EmployerLog).all()
+
+    assert len(employer_log_entries_after) == 0
+
+
+def test_load_updates_service_agreement_args(module_persistent_db_session, mocker, create_triggers):
+    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+
+    # Create an employer with no exemptions and verify that
+    # create_service_agreement_for_employer() gets called with the correct
+    # parameters.
+    employer = EmployerFactory.create(family_exemption=False, medical_exemption=False)
+    mocker.patch.object(fineos_actions, "create_service_agreement_for_employer", return_value="1")
+    fineos_employers.load_updates(module_persistent_db_session, fineos_client)
+    fineos_actions.create_service_agreement_for_employer.assert_called_once_with(
+        fineos_client, employer, True, None, None, None
+    )
+
+    # Update the employer to make it exempt from both plans.
+    employer.family_exemption = True
+    employer.medical_exemption = True
+    employer.exemption_commence_date = date(2021, 2, 9)
+    employer.exemption_cease_date = date(2022, 2, 9)
+
+    fineos_employers.load_updates(module_persistent_db_session, fineos_client)
+    assert fineos_actions.create_service_agreement_for_employer.call_count == 2
+    fineos_actions.create_service_agreement_for_employer.assert_called_with(
+        fineos_client, employer, False, False, False, None
+    )
+
+    # Once again make the employer not exempt and verify that
+    # create_service_agreement_for_employers() gets called with the correct
+    # parameters.
+    employer.family_exemption = False
+    employer.medical_exemption = False
+    employer.exemption_commence_date = None
+    employer.exemption_cease_date = None
+
+    fineos_employers.load_updates(module_persistent_db_session, fineos_client)
+    assert fineos_actions.create_service_agreement_for_employer.call_count == 3
+    fineos_actions.create_service_agreement_for_employer.assert_called_with(
+        fineos_client, employer, False, True, True, date(2022, 2, 9)
+    )
 
 
 def test_load_updates_limit(module_persistent_db_session, create_triggers):

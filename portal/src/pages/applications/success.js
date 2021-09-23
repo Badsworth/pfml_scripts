@@ -174,6 +174,38 @@ export const Success = (props) => {
           }}
         />
 
+        <Heading level="2">{t("pages.claimsSuccess.learnMoreHeading")}</Heading>
+
+        <Trans
+          i18nKey="pages.claimsSuccess.learnMore"
+          components={{
+            "benefits-amount-details-link": (
+              <a
+                href={
+                  routes.external.massgov.benefitsGuide_benefitsAmountDetails
+                }
+                target="_blank"
+                rel="noreferrer noopener"
+              />
+            ),
+            "benefits-calculator-link": (
+              <a
+                href={routes.external.massgov.benefitsCalculator}
+                target="_blank"
+                rel="noreferrer noopener"
+              />
+            ),
+            "contact-center-phone-link": (
+              <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+            ),
+            ul: <ul className="usa-list" />,
+            li: <li />,
+          }}
+          tOptions={{
+            context: claimContext,
+          }}
+        />
+
         {claim.isMedicalOrPregnancyLeave && pregnant_or_recent_birth && (
           <div className={secondaryContentContainerClasses}>
             <Heading level="2">

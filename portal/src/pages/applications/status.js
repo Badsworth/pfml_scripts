@@ -138,7 +138,7 @@ export const Status = ({ appLogic, query }) => {
 
     return (
       <SectionWrapper>
-        <Heading className="margin-bottom-1" level="2">
+        <Heading className="margin-bottom-1" level="2" id="view_notices">
           {t("pages.claimsStatus.viewNoticesHeading")}
         </Heading>
         {sectionBody}
@@ -402,6 +402,8 @@ export const LeaveDetails = ({ absenceDetails = {} }) => {
                     "request-appeal-link": (
                       <a
                         href={routes.external.massgov.requestAnAppealForPFML}
+                        rel="noopener noreferrer"
+                        target="_blank"
                       />
                     ),
                   }}

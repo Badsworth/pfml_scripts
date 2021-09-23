@@ -43,14 +43,6 @@ PROCESSED_FOLDER = "processed"
 SKIPPED_FOLDER = "skipped"
 ERRORED_FOLDER = "errored"
 
-REQUESTED_ABSENCES_FILE_NAME = "VBI_REQUESTEDABSENCE_SOM.csv"
-EMPLOYEE_FEED_FILE_NAME = "Employee_feed.csv"
-
-expected_file_names = [
-    REQUESTED_ABSENCES_FILE_NAME,
-    EMPLOYEE_FEED_FILE_NAME,
-]
-
 
 @dataclass
 class ExtractMultiple:
@@ -68,9 +60,11 @@ class ExtractData:
 
     def __init__(self, s3_locations: List[str], date_str: str):
         for s3_location in s3_locations:
-            if s3_location.endswith(REQUESTED_ABSENCES_FILE_NAME):
+            if s3_location.endswith(
+                payments_util.FineosExtractConstants.VBI_REQUESTED_ABSENCE_SOM.file_name
+            ):
                 self.requested_absence_info = ExtractMultiple(s3_location)
-            elif s3_location.endswith(EMPLOYEE_FEED_FILE_NAME):
+            elif s3_location.endswith(payments_util.FineosExtractConstants.EMPLOYEE_FEED.file_name):
                 self.employee_feed = ExtractMultiple(s3_location)
 
         self.date_str = date_str
@@ -365,9 +359,13 @@ class ClaimantExtractStep(Step):
         logger.info("Processing claimant extract files")
 
         payments_util.copy_fineos_data_to_archival_bucket(
-            self.db_session, expected_file_names, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
+            self.db_session,
+            payments_util.CLAIMANT_EXTRACT_FILE_NAMES,
+            ReferenceFileType.FINEOS_CLAIMANT_EXTRACT,
         )
-        data_by_date = payments_util.group_s3_files_by_date(expected_file_names)
+        data_by_date = payments_util.group_s3_files_by_date(
+            payments_util.CLAIMANT_EXTRACT_FILE_NAMES
+        )
         download_directory = tempfile.mkdtemp().__str__()
 
         previously_processed_date = set()
@@ -451,7 +449,12 @@ class ClaimantExtractStep(Step):
             extract_data.employee_feed.file_location, download_directory
         )
 
-        for row in employee_rows:
+        logger.info("Indexing employee feed records")
+        for i, row in enumerate(employee_rows):
+            if i == 0:
+                payments_util.validate_columns_present(
+                    row, payments_util.FineosExtractConstants.EMPLOYEE_FEED
+                )
             # We want to cache all of the employee records for a customer number
             # We will filter this down later.
             index = str(row.get("CUSTOMERNO"))
@@ -476,7 +479,12 @@ class ClaimantExtractStep(Step):
         requested_absence_rows = payments_util.download_and_parse_csv(
             extract_data.requested_absence_info.file_location, download_directory
         )
-        for row in requested_absence_rows:
+        logger.info("Indexing requested absence records")
+        for i, row in enumerate(requested_absence_rows):
+            if i == 0:
+                payments_util.validate_columns_present(
+                    row, payments_util.FineosExtractConstants.VBI_REQUESTED_ABSENCE_SOM
+                )
             # Multiple leaves can be associated with the same absence case number
             index = str(row.get("ABSENCE_CASENUMBER"))
             if index not in requested_absence_indexed_data:

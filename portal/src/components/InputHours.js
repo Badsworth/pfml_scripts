@@ -184,7 +184,7 @@ InputHours.propTypes = {
   /**
    * Hours value represented in minutes. Must be a whole number.
    */
-  value: PropTypes.number,
+  value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 };
 
 export default InputHours;

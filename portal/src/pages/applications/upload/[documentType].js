@@ -195,7 +195,7 @@ export const DocumentUpload = (props) => {
     query.claim_id
   );
 
-  const path = portalFlow.pathWithParams.split("/?")[0];
+  const path = portalFlow.pageRoute;
   const documentType = pathsToDocumentTypes[path];
   const existingDocuments = findDocumentsByTypes(documents, [documentType]);
 

@@ -1,7 +1,7 @@
 #
 # Dockerfile for creating image
 # to run LST in AWS Fargate
-# 
+#
 FROM node:lts-alpine3.14 AS builder
 WORKDIR /e2e
 ENV CYPRESS_INSTALL_BINARY=0

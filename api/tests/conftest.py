@@ -766,6 +766,19 @@ def create_triggers_on_connection(connection):
                                     VALUES (public.gen_random_uuid(), affected_record.employer_id,\
                                         TG_OP, current_timestamp);\
                             END loop;\
+                    ELSEIF (TG_OP = 'UPDATE') THEN\
+                        FOR affected_record IN SELECT * FROM old_table\
+                            LOOP\
+                                INSERT INTO employer_log(employer_log_id, employer_id,\
+                                    action, modified_at, exemption_cease_date,\
+                                    exemption_commence_date, family_exemption, medical_exemption)\
+                                    VALUES (public.gen_random_uuid(), affected_record.employer_id,\
+                                        TG_OP, current_timestamp,\
+                                        affected_record.exemption_cease_date,\
+                                        affected_record.exemption_commence_date,\
+                                        affected_record.family_exemption,\
+                                        affected_record.medical_exemption);\
+                            END loop;\
                     ELSE\
                         FOR affected_record IN SELECT * FROM new_table\
                             LOOP\

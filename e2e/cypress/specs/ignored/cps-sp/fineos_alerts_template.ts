@@ -8,6 +8,9 @@ import {
 } from "../../../actions/fineos.pages";
 import { addDays, formatISO, startOfWeek, subWeeks } from "date-fns";
 
+// Disable linting of unused vars in this file due to the way this template is expected to be used.
+/* eslint-disable unused-imports/no-unused-vars */
+
 Cypress.env({
   E2E_EMPLOYEES_FILE: "./employees/e2e-2021-06-30.json",
   E2E_EMPLOYERS_FILE: "./employers/e2e-2021-06-30.json",
@@ -18,6 +21,7 @@ Cypress.env({
  * scenarios were used current data set we need to make sure we fix the employment status back to "Active"
  **/
 
+// eslint-disable-next-line unused-imports/no-unused-vars
 const absenceDescription: AbsenceReasonDescription = {
   relates_to: "Employee",
   reason: "Serious Health Condition - Employee",

@@ -6,6 +6,7 @@
   ],
   "plugins": ["jest-dom", "testing-library"],
   "rules": {
+    "react/display-name": "off",
     "react/prop-types": "off",
     "no-restricted-imports": [
       "error",

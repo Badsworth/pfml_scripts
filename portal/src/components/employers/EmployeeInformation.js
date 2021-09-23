@@ -37,7 +37,7 @@ const EmployeeInformation = (props) => {
         level="3"
         label={t("components.employersEmployeeInformation.addressLabel")}
       >
-        <span className="residential-address">
+        <span className="residential-address" data-testid="residential-address">
           {line_1}
           <br />
           {line_2}

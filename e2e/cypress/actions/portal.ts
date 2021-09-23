@@ -1036,14 +1036,19 @@ export function assertZeroWithholdings(): void {
     { timeout: 30000 }
   );
 }
-export type DashboardClaimStatus =
+export type ClaimantStatus =
   | "Approved"
   | "Denied"
   | "Closed"
   | "Withdrawn"
+  | "Pending";
+
+export type DashboardClaimStatus =
+  | ClaimantStatus
   | "--"
   | "No action required"
   | "Review by";
+
 export function selectClaimFromEmployerDashboard(
   fineosAbsenceId: string
 ): void {
@@ -1441,8 +1446,7 @@ export function uploadAdditionalDocument(
     addLeaveDocs(docName);
   }
   // Hotfix: Wait for this to complete, plus a margin.
-  cy.wait("@documentUpload")
-    .its('response.statusCode').should('eq', 200)
+  cy.wait("@documentUpload").its("response.statusCode").should("eq", 200);
   // @todo: success banner is not available in all environments yet - reinstate assertion after 9/22 https://nava.slack.com/archives/C023NUQ2Y0K/p1631810839125300?thread_ts=1631806074.115000&cid=C023NUQ2Y0K
   // cy.contains(
   //   /You('ve)? successfully submitted your (certification form|(identification )?documents)/,
@@ -1872,7 +1876,8 @@ export function claimantGoToClaimStatus(fineosAbsenceId: string): void {
 
 type LeaveStatus = {
   leave: NonNullable<APILeaveReason>;
-  status: DashboardClaimStatus;
+  status: ClaimantStatus;
+  leavePeriods?: [string, string];
 };
 
 export function claimantAssertClaimStatus(leaves: LeaveStatus[]): void {
@@ -1883,11 +1888,12 @@ export function claimantAssertClaimStatus(leaves: LeaveStatus[]): void {
     "Pregnancy/Maternity": "",
   } as const;
 
-  for (const { leave, status } of leaves) {
+  for (const { leave, status, leavePeriods } of leaves) {
     cy.contains(leaveReasonHeadings[leave])
       .parent()
       .within(() => {
         cy.contains(status);
+        leavePeriods?.forEach((period) => cy.contains(period));
       });
   }
 }
