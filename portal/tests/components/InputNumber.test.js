@@ -1,90 +1,78 @@
 import InputNumber, { isAllowedValue } from "../../src/components/InputNumber";
-
+import { render, screen } from "@testing-library/react";
 import React from "react";
-import { shallow } from "enzyme";
+import userEvent from "@testing-library/user-event";
 
-function render(customProps = {}, mountComponent = false) {
-  const props = Object.assign(
-    {
-      label: "Field Label",
-      name: "field-name",
-      onChange: jest.fn(),
-    },
-    customProps
-  );
-
-  const component = <InputNumber {...props} />;
-
-  return {
-    props,
-    wrapper: shallow(component),
+function setup(customProps = {}) {
+  const props = {
+    label: "Field Label",
+    name: "field-name",
+    onChange: jest.fn(),
+    ...customProps,
   };
+
+  return render(<InputNumber {...props} />);
 }
 
 describe("InputNumber", () => {
-  it("passes props to InputText", () => {
-    const { wrapper } = render({ label: "Foo", hint: "Bar", value: "123" });
+  it("renders input field", () => {
+    const props = { label: "Foo", hint: "Bar", value: "123" };
+    setup(props);
 
-    expect(wrapper.prop("label")).toBe("Foo");
-    expect(wrapper.prop("hint")).toBe("Bar");
-    expect(wrapper.prop("value")).toBe("123");
+    const input = screen.getByRole("textbox", {
+      name: `${props.label} ${props.hint}`,
+      exact: false,
+    });
+
+    expect(input).toBeInTheDocument();
+    expect(input).toHaveValue(props.value);
   });
 
   it("is always a text input", () => {
-    const { wrapper } = render({
+    setup({
       // This should be overridden with "text":
       type: "number",
     });
 
-    expect(wrapper.prop("type")).toBe("text");
+    expect(screen.getByRole("textbox")).toHaveAttribute("type", "text");
   });
 
   it("defaults inputMode to decimal when valueType is not set", () => {
-    const { wrapper } = render();
+    setup();
 
-    expect(wrapper.prop("inputMode")).toBe("decimal");
+    expect(screen.getByRole("textbox")).toHaveAttribute("inputmode", "decimal");
   });
 
   it("defaults inputMode to numeric when valueType is integer", () => {
-    const { wrapper } = render({ valueType: "integer" });
+    setup({ valueType: "integer" });
 
-    expect(wrapper.prop("valueType")).toBe("integer");
-    expect(wrapper.prop("inputMode")).toBe("numeric");
+    expect(screen.getByRole("textbox")).toHaveAttribute("inputmode", "numeric");
   });
 
   it("overrides the default inputMode prop when set", () => {
-    const { wrapper } = render({ valueType: "integer", inputMode: "decimal" });
+    setup({ valueType: "integer", inputMode: "decimal" });
 
-    expect(wrapper.prop("inputMode")).toBe("decimal");
+    expect(screen.getByRole("textbox")).toHaveAttribute("inputmode", "decimal");
   });
 
-  describe("with an allowed value", () => {
-    const { props, wrapper } = render({ valueType: "integer" });
-    const value = "123";
+  it("calls onChange when value is a number", () => {
+    const onChange = jest.fn();
+    setup({ valueType: "integer", onChange });
 
-    it("calls onChange", () => {
-      wrapper.simulate("change", {
-        target: { value },
-      });
+    const value = "1";
+    userEvent.type(screen.getByRole("textbox"), value);
 
-      expect(props.onChange).toHaveBeenCalledWith(
-        expect.objectContaining({ target: { value } })
-      );
-    });
+    expect(onChange).toHaveBeenCalled();
   });
 
-  describe("with a disallowed value", () => {
-    const { props, wrapper } = render({ valueType: "integer" });
-    const value = "abc";
+  it("does not call onChange when value is not a number", () => {
+    const onChange = jest.fn();
+    setup({ valueType: "integer", onChange });
 
-    it("does not call onChange", () => {
-      wrapper.simulate("change", {
-        stopPropagation: jest.fn(),
-        target: { value },
-      });
+    const value = "a";
+    userEvent.type(screen.getByRole("textbox"), value);
 
-      expect(props.onChange).not.toHaveBeenCalled();
-    });
+    expect(onChange).not.toHaveBeenCalled();
   });
 });
 
