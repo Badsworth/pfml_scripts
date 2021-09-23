@@ -1,8 +1,11 @@
 # low level methods and processes for scripted releases here
 # TODO: this module could be made into a class and instantiated in release_tasks
 from git import Repo
-import os
 from re import match
+from contextlib import contextmanager
+from typing import Generator
+
+import os
 import semver
 import logging
 
@@ -14,6 +17,29 @@ git = repo.git
 
 rc_match = r".+-rc[0-9]+"
 FORMAL_RELEASE_TAG_REGEX = r"(api|portal|foobar)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0-9]+){0,1})$"
+
+
+@contextmanager
+def git_rollback() -> Generator:
+    rollback_branch = current_branch()
+
+    try:
+        yield
+    except Exception as e:
+        logger.warning(f"Ran into a problem: {e}")
+
+        try:
+            cherrypick("--abort")
+            logger.warning("Cleaned up an in-process cherry-pick")
+        except git.exc.GitCommandError as e2:
+            logger.debug(f"No cherry-pick was in progress (or something else went wrong) - {e2}")
+
+        reset_head()
+        checkout(rollback_branch)
+        raise e
+    finally:
+        logger.warning(f"Task is finishing, will roll back to '{rollback_branch}'")
+        checkout(rollback_branch)
 
 
 def fetch_remotes():
