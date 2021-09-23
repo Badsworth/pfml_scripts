@@ -218,9 +218,9 @@ def test_create_finished_state_log_same_flow(initialize_factories_session, test_
         else:
             raise Exception("This should not happen - the test is broken")
 
-    state_log_a.prev_state_log_id is None
-    state_log_b.prev_state_log_id == state_log_a.state_log_id
-    state_log_c.prev_state_log_id == state_log_b.state_log_id
+    assert state_log_a.prev_state_log_id is None
+    assert state_log_b.prev_state_log_id == state_log_a.state_log_id
+    assert state_log_c.prev_state_log_id == state_log_b.state_log_id
 
 
 def test_create_finished_state_log_different_flow(initialize_factories_session, test_db_session):

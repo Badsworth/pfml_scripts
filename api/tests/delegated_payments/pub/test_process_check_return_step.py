@@ -141,7 +141,7 @@ def test_process_single_check_payment_paid(step, payment, payment_state, local_t
         "check_paid_date": "2021-03-22",
         "message": "Payment complete by paid check",
     }
-    step.log_entry.metrics["payment_complete_by_paid_check"] == 1
+    assert step.log_entry.metrics["payment_complete_by_paid_check"] == 1
 
     assert_writeback_state_and_details(
         local_test_db_session, payment, True, FineosWritebackTransactionStatus.POSTED
@@ -154,7 +154,7 @@ def test_process_single_check_payment_previously_paid(step, payment_complete):
     # Previously processed payments won't be processed again (normally would have these set from prior runs)
     assert payment_complete.check.payment_check_status_id is None
     assert payment_complete.check.check_posted_date is None
-    step.log_entry.metrics["payment_already_complete_by_paid_check"] == 1
+    assert step.log_entry.metrics["payment_already_complete_by_paid_check"] == 1
 
 
 @pytest.mark.parametrize("check_status", (PaidStatus.OUTSTANDING, PaidStatus.FUTURE))
@@ -170,7 +170,7 @@ def test_process_single_check_payment_outstanding(
     )
     assert_writeback_state_and_details(local_test_db_session, payment, False)
 
-    step.log_entry.metrics["payment_still_outstanding"] == 1
+    assert step.log_entry.metrics["payment_still_outstanding"] == 1
 
 
 @pytest.mark.parametrize(
@@ -223,7 +223,7 @@ def test_process_single_check_payment_previously_failed(
 
     # Previously errored payment not processed again
     assert len(payment_error_with_bank.state_logs) == 1
-    step.log_entry.metrics["payment_already_failed_by_check"] == 1
+    assert step.log_entry.metrics["payment_already_failed_by_check"] == 1
 
     pub_errors = local_test_db_session.query(PubError).all()
     assert len(pub_errors) == 0
@@ -232,7 +232,7 @@ def test_process_single_check_payment_previously_failed(
 def test_process_single_check_payment_not_found(step, payment, local_test_db_session):
     step.process_single_check_payment(check_payment_factory(PaidStatus.PAID, "999"))
 
-    step.log_entry.metrics["check_number_not_found_count"] == 1
+    assert step.log_entry.metrics["check_number_not_found_count"] == 1
 
     pub_error = local_test_db_session.query(PubError).one_or_none()
     assert pub_error.pub_error_type_id == PubErrorType.CHECK_PAYMENT_ERROR.pub_error_type_id
@@ -248,7 +248,7 @@ def test_process_single_check_payment_in_wrong_state(
 ):
     step.process_single_check_payment(check_payment_factory(PaidStatus.PAID))
 
-    step.log_entry.metrics["payment_unexpected_state_count"] == 1
+    assert step.log_entry.metrics["payment_unexpected_state_count"] == 1
 
     pub_error = local_test_db_session.query(PubError).one_or_none()
     assert pub_error.pub_error_type_id == PubErrorType.CHECK_PAYMENT_ERROR.pub_error_type_id
@@ -264,7 +264,7 @@ def test_process_single_check_payment_without_state(
 ):
     step.process_single_check_payment(check_payment_factory(PaidStatus.PAID))
 
-    step.log_entry.metrics["payment_unexpected_state_count"] == 1
+    assert step.log_entry.metrics["payment_unexpected_state_count"] == 1
 
     pub_error = local_test_db_session.query(PubError).one_or_none()
     assert pub_error.pub_error_type_id == PubErrorType.CHECK_PAYMENT_ERROR.pub_error_type_id
