@@ -2258,7 +2258,7 @@ const pages = {
     instructions_processingApplication:
       "We’ll begin processing this application and your employee should hear from us within 14 calendar days. Once we’ve made a decision, you’ll receive an email with a direct link to details about the decision.",
     instructions_reimbursement:
-      "If your company has a paid disability, family, or medical leave policy for employees, you may qualify for <reimbursements-link>reimbursements for payments made during this leave<reimbursements-link>.",
+      "If your company has a paid disability, family, or medical leave policy for employees, you may qualify for <reimbursements-link>reimbursements for payments made during this leave</reimbursements-link>.",
     title: "Thanks for reviewing the application",
   },
   employersDashboard: {
