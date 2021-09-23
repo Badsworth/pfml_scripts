@@ -117,8 +117,15 @@ describe("Request for More Information (notifications/notices)", () => {
               portal.downloadLegalNotice(submission.fineos_absence_id);
             }
           );
+          portal.uploadAdditionalDocument("Certification", "caring");
+        } else {
+          // Handle document uploads without the claim status page.
+          portal.uploadAdditionalDocumentLegacy(
+            submission.fineos_absence_id,
+            "Certification",
+            "caring"
+          );
         }
-        portal.uploadAdditionalDocument("Certification", "caring");
       });
     }
   );

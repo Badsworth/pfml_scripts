@@ -1446,12 +1446,34 @@ export function uploadAdditionalDocument(
     addLeaveDocs(docName);
   }
   // Hotfix: Wait for this to complete, plus a margin.
-  cy.wait("@documentUpload").its("response.statusCode").should("eq", 200);
+  cy.wait("@documentUpload", { timeout: 30000 })
+    .its("response.statusCode")
+    .should("eq", 200);
   // @todo: success banner is not available in all environments yet - reinstate assertion after 9/22 https://nava.slack.com/archives/C023NUQ2Y0K/p1631810839125300?thread_ts=1631806074.115000&cid=C023NUQ2Y0K
   // cy.contains(
   //   /You('ve)? successfully submitted your (certification form|(identification )?documents)/,
   //   { timeout: 30000 }
   // );
+}
+
+export function uploadAdditionalDocumentLegacy(
+  fineosClaimId: string,
+  type: UploadAdditonalDocumentOptions,
+  docName: string
+): void {
+  cy.contains("article", fineosClaimId).within(() => {
+    cy.contains("Upload additional documents").click();
+  });
+  cy.contains("label", type).click();
+  cy.contains("button", "Save and continue").click();
+  if (type !== "Certification") {
+    addId(docName);
+  } else {
+    addLeaveDocs(docName);
+  }
+  cy.wait("@documentUpload", { timeout: 30000 })
+    .its("response.statusCode")
+    .should("eq", 200);
 }
 
 /**
