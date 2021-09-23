@@ -16,7 +16,15 @@ export const Table = (props) => {
     }
   );
 
-  const table = <table className={tableClasses}>{props.children}</table>;
+  const table = (
+    <table
+      className={tableClasses}
+      aria-describedby={props["aria-describedby"]}
+      aria-labelledby={props["aria-labelledby"]}
+    >
+      {props.children}
+    </table>
+  );
 
   if (props.scrollable) {
     return <div className="usa-table-container--scrollable">{table}</div>;
@@ -26,6 +34,10 @@ export const Table = (props) => {
 };
 
 Table.propTypes = {
+  // TODO this.
+  "aria-describedby": PropTypes.string,
+  // TODO this.
+  "aria-labelledby": PropTypes.string,
   /**
    * `caption`, `thead`, and `tbody` contents
    */

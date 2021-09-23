@@ -16,7 +16,7 @@ const ReviewRow = (props) => {
   );
 
   return (
-    <div className={classes}>
+    <div className={classes} data-testid={props["data-testid"]}>
       <div className="margin-right-2">
         <Heading level={props.level} size="4" className="margin-bottom-1">
           {props.label}
@@ -48,6 +48,10 @@ ReviewRow.propTypes = {
    * The content you want the user to review
    */
   children: PropTypes.node.isRequired,
+  /**
+   * Identifier for querying this row in tests.
+   */
+  "data-testid": PropTypes.string,
   /**
    * HTML `href` attribute for the edit link.
    * If undefined, no edit link will be shown.

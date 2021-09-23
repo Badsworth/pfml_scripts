@@ -34,6 +34,7 @@ exports[`Review renders the page for v1 eforms 1`] = `
     </p>
     <div
       class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+      data-testid="org-name-row"
     >
       <div
         class="margin-right-2"
@@ -48,6 +49,7 @@ exports[`Review renders the page for v1 eforms 1`] = `
     </div>
     <div
       class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+      data-testid="ein-row"
     >
       <div
         class="margin-right-2"
@@ -201,14 +203,19 @@ exports[`Review renders the page for v1 eforms 1`] = `
     >
       <h2
         class="flex-fill margin-right-1 font-heading-md text-bold"
+        id="leave-schedule-label"
       >
         Leave schedule
       </h2>
     </div>
-    <p>
+    <p
+      id="leave-schedule-description"
+    >
       This is your employee’s expected leave schedule.
     </p>
     <table
+      aria-describedby="leave-schedule-description"
+      aria-labelledby="leave-schedule-label"
       class="usa-table usa-table--borderless c-table width-full"
     >
       <thead>
@@ -547,14 +554,14 @@ exports[`Review renders the page for v1 eforms 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice1"
+              id="InputChoice17"
               name="fraud"
               type="radio"
               value="Yes"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice1"
+              for="InputChoice17"
             >
               Yes (explain below)
             </label>
@@ -564,14 +571,14 @@ exports[`Review renders the page for v1 eforms 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice2"
+              id="InputChoice18"
               name="fraud"
               type="radio"
               value="No"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice2"
+              for="InputChoice18"
             >
               No
             </label>
@@ -602,14 +609,14 @@ exports[`Review renders the page for v1 eforms 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice3"
+              id="InputChoice19"
               name="employee_notice"
               type="radio"
               value="Yes"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice3"
+              for="InputChoice19"
             >
               Yes
             </label>
@@ -619,14 +626,14 @@ exports[`Review renders the page for v1 eforms 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice4"
+              id="InputChoice20"
               name="employee_notice"
               type="radio"
               value="No"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice4"
+              for="InputChoice20"
             >
               No (explain below)
             </label>
@@ -671,14 +678,14 @@ exports[`Review renders the page for v1 eforms 1`] = `
             <input
               checked=""
               class="usa-radio__input"
-              id="InputChoice5"
+              id="InputChoice21"
               name="employer_decision"
               type="radio"
               value="Approve"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice5"
+              for="InputChoice21"
             >
               Approve
             </label>
@@ -688,14 +695,14 @@ exports[`Review renders the page for v1 eforms 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice6"
+              id="InputChoice22"
               name="employer_decision"
               type="radio"
               value="Deny"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice6"
+              for="InputChoice22"
             >
               Deny (explain below)
             </label>
@@ -726,14 +733,14 @@ exports[`Review renders the page for v1 eforms 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice7"
+              id="InputChoice23"
               name="should_show_comment_box"
               type="radio"
               value="true"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice7"
+              for="InputChoice23"
             >
               Yes
             </label>
@@ -744,14 +751,14 @@ exports[`Review renders the page for v1 eforms 1`] = `
             <input
               checked=""
               class="usa-radio__input"
-              id="InputChoice8"
+              id="InputChoice24"
               name="should_show_comment_box"
               type="radio"
               value="false"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice8"
+              for="InputChoice24"
             >
               No
             </label>
@@ -803,6 +810,7 @@ exports[`Review renders the page for v2 eforms 1`] = `
     </p>
     <div
       class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+      data-testid="org-name-row"
     >
       <div
         class="margin-right-2"
@@ -817,6 +825,7 @@ exports[`Review renders the page for v2 eforms 1`] = `
     </div>
     <div
       class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+      data-testid="ein-row"
     >
       <div
         class="margin-right-2"
@@ -970,14 +979,19 @@ exports[`Review renders the page for v2 eforms 1`] = `
     >
       <h2
         class="flex-fill margin-right-1 font-heading-md text-bold"
+        id="leave-schedule-label"
       >
         Leave schedule
       </h2>
     </div>
-    <p>
+    <p
+      id="leave-schedule-description"
+    >
       This is your employee’s expected leave schedule.
     </p>
     <table
+      aria-describedby="leave-schedule-description"
+      aria-labelledby="leave-schedule-label"
       class="usa-table usa-table--borderless c-table width-full"
     >
       <thead>
@@ -1522,14 +1536,14 @@ exports[`Review renders the page for v2 eforms 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice17"
+              id="InputChoice33"
               name="fraud"
               type="radio"
               value="Yes"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice17"
+              for="InputChoice33"
             >
               Yes (explain below)
             </label>
@@ -1539,14 +1553,14 @@ exports[`Review renders the page for v2 eforms 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice18"
+              id="InputChoice34"
               name="fraud"
               type="radio"
               value="No"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice18"
+              for="InputChoice34"
             >
               No
             </label>
@@ -1577,14 +1591,14 @@ exports[`Review renders the page for v2 eforms 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice19"
+              id="InputChoice35"
               name="employee_notice"
               type="radio"
               value="Yes"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice19"
+              for="InputChoice35"
             >
               Yes
             </label>
@@ -1594,14 +1608,14 @@ exports[`Review renders the page for v2 eforms 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice20"
+              id="InputChoice36"
               name="employee_notice"
               type="radio"
               value="No"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice20"
+              for="InputChoice36"
             >
               No (explain below)
             </label>
@@ -1646,14 +1660,14 @@ exports[`Review renders the page for v2 eforms 1`] = `
             <input
               checked=""
               class="usa-radio__input"
-              id="InputChoice21"
+              id="InputChoice37"
               name="employer_decision"
               type="radio"
               value="Approve"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice21"
+              for="InputChoice37"
             >
               Approve
             </label>
@@ -1663,14 +1677,14 @@ exports[`Review renders the page for v2 eforms 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice22"
+              id="InputChoice38"
               name="employer_decision"
               type="radio"
               value="Deny"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice22"
+              for="InputChoice38"
             >
               Deny (explain below)
             </label>
@@ -1701,14 +1715,14 @@ exports[`Review renders the page for v2 eforms 1`] = `
           >
             <input
               class="usa-radio__input"
-              id="InputChoice23"
+              id="InputChoice39"
               name="should_show_comment_box"
               type="radio"
               value="true"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice23"
+              for="InputChoice39"
             >
               Yes
             </label>
@@ -1719,14 +1733,14 @@ exports[`Review renders the page for v2 eforms 1`] = `
             <input
               checked=""
               class="usa-radio__input"
-              id="InputChoice24"
+              id="InputChoice40"
               name="should_show_comment_box"
               type="radio"
               value="false"
             />
             <label
               class="usa-radio__label"
-              for="InputChoice24"
+              for="InputChoice40"
             >
               No
             </label>
@@ -1742,4 +1756,20 @@ exports[`Review renders the page for v2 eforms 1`] = `
     </form>
   </div>
 </div>
+`;
+
+exports[`Review within the leave schedule shows dates, frequency, and details for continuous leave 1`] = `
+<tbody>
+  <tr>
+    <th
+      scope="row"
+    >
+      1/1/2021 to 6/1/2021
+    </th>
+    <td>
+      Continuous leave
+    </td>
+    <td />
+  </tr>
+</tbody>
 `;

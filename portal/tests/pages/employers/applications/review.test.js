@@ -1,13 +1,13 @@
 import Document, { DocumentType } from "../../../../src/models/Document";
+import { render, screen, within } from "@testing-library/react";
 import DocumentCollection from "../../../../src/models/DocumentCollection";
 import LeaveReason from "../../../../src/models/LeaveReason";
-import { Review } from "../../../../src/pages/employers/applications/review";
 import { MockEmployerClaimBuilder } from "../../../../tests-old/test-utils";
-import { renderPage } from "../../../test-utils";
-import { render, screen } from "@testing-library/react";
-import { merge } from "lodash";
-import useAppLogic from "../../../../src/hooks/useAppLogic";
+import { Review } from "../../../../src/pages/employers/applications/review";
 import User from "../../../../src/models/User";
+import { renderPage } from "../../../test-utils";
+import { cloneDeep, merge } from "lodash";
+import useAppLogic from "../../../../src/hooks/useAppLogic";
 
 const DOCUMENTS = new DocumentCollection([
   new Document({
@@ -33,6 +33,17 @@ const DOCUMENTS = new DocumentCollection([
   }),
 ]);
 
+/**
+ * Asserts that the ReviewRow displays the correct text content.
+ * @param {HTMLElement} node - the ReviewRow HTML element
+ * @param {string} label
+ * @param {string} description
+ */
+function assertReviewRow(node, label, description) {
+  expect(within(node).queryByText(label)).toBeInTheDocument();
+  expect(within(node).queryByText(description)).toBeInTheDocument();
+}
+
 describe("Review", () => {
   const goTo = jest.fn();
   const baseClaimBuilder = new MockEmployerClaimBuilder()
@@ -42,6 +53,7 @@ describe("Review", () => {
   const claimWithV2Eform = baseClaimBuilder.eformsV2().create();
   const query = { absence_id: "NTN-111-ABS-01" };
 
+  // TODO only use this OR renderV2Page
   const ReviewWithAppLogic = (providedProps) => {
     // default appLogic prop required by components using withUser.
     const defaultAppLogic = useAppLogic();
@@ -87,33 +99,22 @@ describe("Review", () => {
     return renderPage(Review, options, props);
   }
 
-  it.only("redirects if the claim is not reviewable", async () => {
+  it("redirects if the claim is not reviewable", () => {
     const nonReviewableClaim = baseClaimBuilder
       .eformsV2()
       .reviewable(false)
       .create();
 
     render(<ReviewWithAppLogic claim={nonReviewableClaim} />);
-    // renderV2Page({}, { claim: nonReviewableClaim });
 
-    expect(goTo).toHaveBeenCalledTimes(1);
     expect(goTo).toHaveBeenCalledWith("/employers/applications/status", {
       absence_id: "NTN-111-ABS-01",
     });
   });
 
   it("renders the page for v1 eforms", () => {
-    const { container } = renderPage(
-      Review,
-      {
-        addCustomSetup: (appLogic) => {
-          appLogic.employers.claim = claimWithV1Eform;
-        },
-      },
-      {
-        claim: claimWithV1Eform,
-        query,
-      }
+    const { container } = render(
+      <ReviewWithAppLogic claim={claimWithV1Eform} />
     );
 
     expect(
@@ -140,9 +141,62 @@ describe("Review", () => {
     expect(container).toMatchSnapshot();
   });
 
-  describe("displays organization/employer information", () => {
-    const { container } = renderV2Page();
-    const organizationRow = screen.queryByTestId("org-name-row");
-    const einRow = screen.queryByTestId("ein-row");
+  // TODO see if you still need the data-testid changes in ReviewRow.
+
+  describe("within the leave schedule", () => {
+    it("shows dates, frequency, and details for continuous leave", () => {
+      const continuousLeaveClaim = cloneDeep(claimWithV2Eform);
+      delete continuousLeaveClaim.leave_details.reduced_schedule_leave_periods;
+
+      render(<ReviewWithAppLogic claim={continuousLeaveClaim} />);
+
+      const leaveScheduleTable = screen.getByLabelText("Leave schedule");
+      expect(leaveScheduleTable.querySelector("tbody")).toMatchSnapshot();
+    });
+
+    describe("for reduced leave", () => {
+      it("does not show a date range", () => {
+        // TODO fix this.
+        const reducedLeaveClaim = new MockEmployerClaimBuilder()
+          .reducedSchedule()
+          .reviewable()
+          .eformsV2()
+          .create();
+
+        render(<ReviewWithAppLogic claim={reducedLeaveClaim} />);
+
+        const leaveScheduleTable = screen.getByLabelText("Leave schedule");
+        const tableRow = leaveScheduleTable.query("tbody > tr");
+        screen.debug(tableRow);
+      });
+
+      it("shows a notice to contact the call center for details", () => {
+        // TODO this.
+      });
+    });
   });
+
+  describe("within supporting work details", () => {
+    it("shows the claimant-submitted weekly hours work", () => {});
+
+    describe("the amendment form", () => {
+      it("opens upon clicking 'Amend'", () => {});
+
+      it("allows changing the hours worked per week", () => {});
+
+      it("closes upon clicking 'Cancel amendment'", () => {});
+
+      describe("when there is an error", () => {
+        it("automatically opens the amendment form", () => {});
+
+        it("allows closing the amendment form", () => {});
+      });
+    });
+  });
+
+  describe("within 'Previous leave'", () => {});
+
+  describe("within 'Concurrent accrued paid leave'", () => {});
+
+  describe("within 'Employer-sponsored benefits'", () => {});
 });

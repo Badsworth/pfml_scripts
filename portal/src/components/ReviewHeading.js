@@ -11,6 +11,7 @@ const ReviewHeading = (props) => {
     <div className="display-flex flex-align-end margin-top-6 margin-bottom-3">
       <Heading
         className="flex-fill margin-right-1"
+        id={props.id}
         level={props.level}
         size="2"
       >
@@ -44,6 +45,8 @@ ReviewHeading.propTypes = {
    * Localized text for the edit link
    */
   editText: PropTypes.node,
+  // TODO this
+  id: PropTypes.string,
   /**
    * The heading level to use
    */

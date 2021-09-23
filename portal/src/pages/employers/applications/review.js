@@ -394,7 +394,7 @@ export const Review = (props) => {
           level="2"
           label={t("pages.employersClaimsReview.organizationNameLabel")}
           noBorder
-          data-test="org-name-row"
+          data-testid="org-name-row"
         >
           {claim.employer_dba}
         </ReviewRow>
@@ -403,7 +403,7 @@ export const Review = (props) => {
         level="2"
         label={t("pages.employersClaimsReview.employerIdentifierLabel")}
         noBorder
-        data-test="ein-row"
+        data-testid="ein-row"
       >
         {claim.employer_fein}
       </ReviewRow>

@@ -29,10 +29,10 @@ const LeaveSchedule = ({ hasDocuments, claim }) => {
 
   return (
     <React.Fragment>
-      <ReviewHeading level="2">
+      <ReviewHeading level="2" id="leave-schedule-label">
         {t("components.employersLeaveSchedule.header")}
       </ReviewHeading>
-      <p>
+      <p id="leave-schedule-description">
         <Trans
           i18nKey="components.employersLeaveSchedule.caption"
           tOptions={{
@@ -40,7 +40,11 @@ const LeaveSchedule = ({ hasDocuments, claim }) => {
           }}
         />
       </p>
-      <Table className="width-full">
+      <Table
+        className="width-full"
+        aria-describedby="leave-schedule-description"
+        aria-labelledby="leave-schedule-label"
+      >
         <thead>
           <tr>
             <th scope="col">

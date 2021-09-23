@@ -107,7 +107,7 @@ const PreviousLeaves = (props) => {
           </li>
         </ul>
       </Details>
-      <Table className="width-full">
+      <Table className="width-full" data-testid="previous-leaves-table">
         <thead>
           <tr>
             <th scope="col">
