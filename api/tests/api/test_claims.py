@@ -2603,23 +2603,124 @@ class TestGetClaimsEndpoint:
     class TestClaimsWithStatus:
         NUM_CLAIM_PER_STATUS = 2
 
-        @pytest.fixture(autouse=True)
-        def load_test_db(self, employer_user, test_verification, test_db_session):
-            employer = EmployerFactory.create()
-            employee = EmployeeFactory.create()
-            for i in range(1, 9):
-                for _ in range(0, self.NUM_CLAIM_PER_STATUS):
-                    if i == 8:  # absence_status_id => NULL
-                        ClaimFactory.create(
-                            employer=employer, employee=employee, claim_type_id=1,
-                        )
-                        continue
-                    ClaimFactory.create(
+        @pytest.fixture
+        def employer(self):
+            return EmployerFactory.create()
+
+        @pytest.fixture
+        def employee(self):
+            return EmployeeFactory.create()
+
+        @pytest.fixture
+        def review_by_claim(self, employer, employee):
+            # Approved claim with open managed requirements i.e review by
+            claim_review_by = ClaimFactory.create(
+                employer=employer,
+                employee=employee,
+                fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
+                claim_type_id=1,
+            )
+            for _ in range(2):
+                ManagedRequirementFactory.create(
+                    claim=claim_review_by,
+                    managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+                    managed_requirement_status_id=ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+                    follow_up_date=date.today() + timedelta(days=10),
+                )
+            return claim_review_by
+
+        @pytest.fixture
+        def no_action_claim(self, employer, employee):
+            # Approved claim with completed managed requirements
+            claim_no_action = ClaimFactory.create(
+                employer=employer,
+                employee=employee,
+                fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
+                claim_type_id=1,
+            )
+            ManagedRequirementFactory.create(
+                claim=claim_no_action,
+                managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+                managed_requirement_status_id=ManagedRequirementStatus.COMPLETE.managed_requirement_status_id,
+                follow_up_date=date.today() + timedelta(days=10),
+            )
+            return claim_no_action
+
+        @pytest.fixture
+        def expired_requirements_claim(self, employer, employee):
+            # Approved claim with expired managed requirements
+            claim_expired = ClaimFactory.create(
+                employer=employer,
+                employee=employee,
+                fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
+                claim_type_id=1,
+            )
+            ManagedRequirementFactory.create(
+                claim=claim_expired,
+                managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+                managed_requirement_status_id=ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+                follow_up_date=date.today() - timedelta(days=2),
+            )
+            return claim_expired
+
+        @pytest.fixture
+        def no_open_requirement_claims(self, employer, employee):
+            claims = []
+            statuses = [
+                AbsenceStatus.APPROVED,
+                AbsenceStatus.CLOSED,
+                AbsenceStatus.DECLINED,
+                AbsenceStatus.COMPLETED,
+            ]
+            for status in statuses:
+                for _ in range(self.NUM_CLAIM_PER_STATUS):
+                    claim = ClaimFactory.create(
                         employer=employer,
                         employee=employee,
-                        fineos_absence_status_id=i,
+                        fineos_absence_status_id=status.absence_status_id,
                         claim_type_id=1,
                     )
+                    claims.append(claim)
+            return claims
+
+        @pytest.fixture
+        def pending_claims(self, employer, employee):
+            # does not include review by claims
+            claims = []
+            statuses = [
+                AbsenceStatus.INTAKE_IN_PROGRESS,
+                AbsenceStatus.IN_REVIEW,
+                AbsenceStatus.ADJUDICATION,
+            ]
+            for status in statuses:
+                for _ in range(self.NUM_CLAIM_PER_STATUS):
+                    claim = ClaimFactory.create(
+                        employer=employer,
+                        employee=employee,
+                        fineos_absence_status_id=status.absence_status_id,
+                        # fineos_absence_status=status,
+                        claim_type_id=1,
+                    )
+                    claims.append(claim)
+            for _ in range(self.NUM_CLAIM_PER_STATUS):  # for fineos_absence_status = NULL
+                claim = ClaimFactory.create(employer=employer, employee=employee, claim_type_id=1,)
+                claims.append(claim)
+            return claims
+
+        @pytest.fixture(autouse=True)
+        def load_test_db(
+            self,
+            employer,
+            employee,
+            employer_user,
+            test_verification,
+            test_db_session,
+            no_open_requirement_claims,
+            pending_claims,
+            review_by_claim,
+            no_action_claim,
+            expired_requirements_claim,
+        ):
             link = UserLeaveAdministrator(
                 user_id=employer_user.user_id,
                 employer_id=employer.employer_id,
@@ -2632,75 +2733,86 @@ class TestGetClaimsEndpoint:
         def _perform_api_call(self, url, client, employer_auth_token):
             return client.get(url, headers={"Authorization": f"Bearer {employer_auth_token}"},)
 
-        def _perform_assertions(self, response, status_code, expected_count, valid_statuses):
+        def _perform_assertions(self, response, status_code, expected_claims):
+            expected_claims_fineos_absence_id = [
+                claim.fineos_absence_id for claim in expected_claims
+            ]
             assert response.status_code == status_code
             response_body = response.get_json()
             claim_data = response_body.get("data", [])
-            assert len(claim_data) == expected_count
             for claim in response_body.get("data", []):
-                absence_status = claim.get("claim_status", None)
-                assert absence_status in valid_statuses
+                fineos_absence_id = claim.get("fineos_absence_id", None)
+                assert fineos_absence_id in expected_claims_fineos_absence_id
+            assert len(claim_data) == len(expected_claims)
 
-        def test_get_claims_with_status_filter_one_claim(self, client, employer_auth_token):
+        def filter_claims_by_status(self, claims, valid_statuses):
+            valid_statuses_id = [status.absence_status_id for status in valid_statuses]
+            return [
+                claim for claim in claims if claim.fineos_absence_status_id in valid_statuses_id
+            ]
+
+        def test_get_claims_with_status_filter_one_claim(
+            self,
+            client,
+            employer_auth_token,
+            no_open_requirement_claims,
+            no_action_claim,
+            expired_requirements_claim,
+        ):
+            expected_claims = self.filter_claims_by_status(
+                no_open_requirement_claims, [AbsenceStatus.APPROVED]
+            ) + [no_action_claim, expired_requirements_claim]
             resp = self._perform_api_call(
                 "/v1/claims?claim_status=Approved", client, employer_auth_token
             )
-            self._perform_assertions(
-                resp,
-                status_code=200,
-                expected_count=self.NUM_CLAIM_PER_STATUS,
-                valid_statuses=["Approved"],
-            )
+            self._perform_assertions(resp, status_code=200, expected_claims=expected_claims)
 
-        def test_get_claims_with_status_filter_pending(self, client, employer_auth_token):
-            valid_statuses = [
-                "Adjudication",
-                "In Review",
-                "Intake In Progress",
-                None,
-            ]
+        def test_get_claims_with_status_filter_pending(
+            self, client, employer_auth_token, pending_claims, review_by_claim
+        ):
+            expected_claims = pending_claims + [review_by_claim]
             resp = self._perform_api_call(
                 "/v1/claims?claim_status=Pending", client, employer_auth_token
             )
-            self._perform_assertions(
-                resp,
-                status_code=200,
-                expected_count=self.NUM_CLAIM_PER_STATUS * 4,
-                valid_statuses=valid_statuses,
-            )
+            self._perform_assertions(resp, status_code=200, expected_claims=expected_claims)
 
-        def test_get_claims_with_status_filter_multiple_statuses(self, client, employer_auth_token):
-            valid_statuses = ["Approved", "Closed"]
+        def test_get_claims_with_status_filter_multiple_statuses(
+            self,
+            client,
+            employer_auth_token,
+            no_open_requirement_claims,
+            no_action_claim,
+            expired_requirements_claim,
+        ):
+            expected_claims = self.filter_claims_by_status(
+                no_open_requirement_claims, [AbsenceStatus.APPROVED, AbsenceStatus.CLOSED]
+            ) + [no_action_claim, expired_requirements_claim]
             resp = self._perform_api_call(
                 "/v1/claims?claim_status=Approved,Closed", client, employer_auth_token
             )
-            self._perform_assertions(
-                resp,
-                status_code=200,
-                expected_count=self.NUM_CLAIM_PER_STATUS * 2,
-                valid_statuses=valid_statuses,
-            )
+            self._perform_assertions(resp, status_code=200, expected_claims=expected_claims)
 
         def test_get_claims_with_status_filter_multiple_statuses_pending(
-            self, client, employer_auth_token
+            self,
+            client,
+            employer_auth_token,
+            no_open_requirement_claims,
+            pending_claims,
+            review_by_claim,
         ):
             valid_statuses = [
-                "Adjudication",
-                "In Review",
-                "Intake In Progress",
-                None,
-                "Closed",
-                "Completed",
+                AbsenceStatus.CLOSED,
+                AbsenceStatus.COMPLETED,
             ]
+            expected_claims = (
+                self.filter_claims_by_status(no_open_requirement_claims, valid_statuses)
+                + pending_claims
+                + [review_by_claim]
+            )
             resp = self._perform_api_call(
                 "/v1/claims?claim_status=Pending,Closed,Completed", client, employer_auth_token
             )
-            self._perform_assertions(
-                resp,
-                status_code=200,
-                expected_count=self.NUM_CLAIM_PER_STATUS * 6,
-                valid_statuses=valid_statuses,
-            )
+            self._perform_assertions(resp, status_code=200, expected_claims=expected_claims)
 
         def test_get_claims_with_status_filter_unsupported_statuses(
             self, client, employer_auth_token
@@ -2708,7 +2820,7 @@ class TestGetClaimsEndpoint:
             resp = self._perform_api_call(
                 "/v1/claims?claim_status=Unknown", client, employer_auth_token
             )
-            self._perform_assertions(resp, status_code=400, expected_count=0, valid_statuses=[])
+            self._perform_assertions(resp, status_code=400, expected_claims=[])
 
     # Inner class for testing Claims with Managed Requirements
     class TestClaimsWithManagedRequirements:
@@ -2737,6 +2849,10 @@ class TestGetClaimsEndpoint:
 
         @pytest.fixture
         def claim_pending_no_action(self, employer, employee):
+            return ClaimFactory.create(employer=employer, employee=employee, claim_type_id=1,)
+
+        @pytest.fixture
+        def claim_expired_requirements(self, employer, employee):
             return ClaimFactory.create(employer=employer, employee=employee, claim_type_id=1,)
 
         @pytest.fixture
@@ -2771,7 +2887,12 @@ class TestGetClaimsEndpoint:
 
         @pytest.fixture
         def claims_with_managed_requirements(
-            self, claim, claim_pending_no_action, third_claim, completed_claim
+            self,
+            claim,
+            claim_pending_no_action,
+            claim_expired_requirements,
+            third_claim,
+            completed_claim,
         ):
             # claim has both open and completed requirements
             self._add_managed_requirements_to_claim(claim, ManagedRequirementStatus.OPEN)
@@ -2782,6 +2903,13 @@ class TestGetClaimsEndpoint:
                 claim_pending_no_action, ManagedRequirementStatus.COMPLETE
             )
 
+            # claim_expired_requirements
+            ManagedRequirementFactory.create(
+                claim=claim_expired_requirements,
+                managed_requirement_type_id=ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+                managed_requirement_status_id=ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+                follow_up_date=date.today() - timedelta(days=2),
+            )
             # third_claim does not have managed requirements
 
             # completed claim does not have managed requirements and is Completed, should NOT be returned
@@ -2850,7 +2978,7 @@ class TestGetClaimsEndpoint:
             assert resp.status_code == 200
             response_body = resp.get_json()
             claim_data = response_body.get("data")
-            assert len(claim_data) == 2
+            assert len(claim_data) == 3
             for returned_claim in claim_data:
                 assert len(returned_claim["managed_requirements"]) == 0
 
@@ -2869,7 +2997,7 @@ class TestGetClaimsEndpoint:
             assert resp.status_code == 200
             response_body = resp.get_json()
             claim_data = response_body.get("data")
-            assert len(claim_data) == 3
+            assert len(claim_data) == 4
 
     # Inner class for testing Claims Search
     class TestClaimsSearch:
