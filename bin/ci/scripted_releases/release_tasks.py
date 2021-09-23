@@ -14,7 +14,7 @@ def start(args):
     # NB: most_recent_tag() will return incorrect results on main (compared to the correct result on a release branch)
     # ...but it will return a "correct enough" tag for the purposes of just bumping its minor version number.
     git_utils.fetch_remotes()
-    recent_tag = git_utils.most_recent_tag(args.app, "main")
+    recent_tag, tag_sha = git_utils.most_recent_tag(args.app, "main")
 
     v = git_utils.to_semver(recent_tag)  # convert tag to semver object
     version_name = git_utils.from_semver(v.bump_minor(), args.app)
@@ -39,7 +39,7 @@ def update(args):
     git_utils.fetch_remotes()
     original_branch = git_utils.current_branch()  # Save this to check it back out after work's done
 
-    recent_tag = git_utils.most_recent_tag(args.app, args.release_version)
+    recent_tag, tag_sha = git_utils.most_recent_tag(args.app, args.release_version)
     v = git_utils.to_semver(recent_tag)
 
     if not git_utils.branch_exists(args.release_version):
@@ -94,19 +94,21 @@ def finalize(args):
     logger.info(f"Running 'finalize-release'...")
     logger.debug(f"Args: {repr(args)}")
 
-    if not git_utils.is_finalized(args.release_version):
-        git_utils.checkout(args.release_version)
+    with git_utils.git_rollback():
+        if not git_utils.is_finalized(args.release_version):
+            git_utils.checkout(args.release_version)
+            logger.info(f"Checked out '{args.release_version}'.")
 
-        recent_tag = git_utils.most_recent_tag(args.app, args.release_version)
-        v = git_utils.to_semver(recent_tag)
+            latest_rc, rc_commit_hash = git_utils.most_recent_tag(args.app, args.release_version)
+            v = git_utils.to_semver(latest_rc)
+            formal_release_number = git_utils.from_semver(v.finalize_version(), args.app)
 
-        tag_name = git_utils.from_semver(v.finalize_version(), args.app)
-        git_utils.tag_and_push(args.release_version, tag_name)
-        git_utils.checkout(args.source_branch)
-
-    else:
-        logger.error(f"The series: {args.release_version} has already been finalized")
-        return False
+            logger.info(f"Finalizing {args.release_version}")
+            logger.info(f"Commit {rc_commit_hash} ({latest_rc}) will also be tagged {formal_release_number}")
+            git_utils.tag_and_push(args.release_version, formal_release_number)
+        else:
+            logger.error(f"The series: {args.release_version} has already been finalized")
+            return False
 
 
 # ----------------------------------------------------------------------------------------------------
@@ -119,7 +121,7 @@ def hotfix(args):  # production hotfix, args are a branch name and a list of com
     git_utils.fetch_remotes()
     original_branch = git_utils.current_branch()  # Save this to check it back out after work's done
 
-    recent_tag = git_utils.most_recent_tag(args.app, args.release_version)
+    recent_tag, tag_sha = git_utils.most_recent_tag(args.app, args.release_version)
     v = git_utils.to_semver(recent_tag)
 
     if not git_utils.branch_exists(args.release_version):
@@ -184,7 +186,7 @@ def major(args):
         # NB: most_recent_tag() returns incorrect results on main (compared to the correct result on a release branch)
         # ...but it will return a "correct enough" tag for the purposes of just bumping its minor version number.
         git_utils.fetch_remotes()
-        recent_tag = git_utils.most_recent_tag(args.app, "main")
+        recent_tag, tag_sha = git_utils.most_recent_tag(args.app, "main")
 
         v = git_utils.to_semver(recent_tag)  # convert tag to semver object
         version_name = git_utils.from_semver(v.bump_major(), args.app)

@@ -83,7 +83,7 @@ def most_recent_tag(app, release_branch):
     t = git.describe("--tags", "--match", f"{app}/v*", "--abbrev=0", f"origin/{release_branch}")
     sha = git.rev_parse(t)
     logger.info(f"Latest {app} tag on '{release_branch}' is '{t}' with commit SHA '{sha[0:9]}'")
-    return t
+    return t, sha
 
 
 def is_finalized(release_branch) -> bool:
