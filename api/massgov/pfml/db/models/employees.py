@@ -349,7 +349,7 @@ class AbsencePeriod(Base, TimestampMixin):
     leave_request_decision = relationship(LkLeaveRequestDecision)
 
 
-class AuthorizedRepresentative(Base):
+class AuthorizedRepresentative(Base, TimestampMixin):
     __tablename__ = "authorized_representative"
     authorized_representative_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     first_name = Column(Text)
@@ -358,7 +358,7 @@ class AuthorizedRepresentative(Base):
     employees = relationship("AuthorizedRepEmployee", back_populates="authorized_rep")
 
 
-class HealthCareProvider(Base):
+class HealthCareProvider(Base, TimestampMixin):
     __tablename__ = "health_care_provider"
     health_care_provider_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     provider_name = Column(Text)
@@ -415,7 +415,7 @@ class Employer(Base, TimestampMixin):
         return employer_fein
 
 
-class EmployerQuarterlyContribution(Base):
+class EmployerQuarterlyContribution(Base, TimestampMixin):
     __tablename__ = "employer_quarterly_contribution"
     employer_id = Column(
         PostgreSQLUUID, ForeignKey("employer.employer_id"), index=True, primary_key=True
@@ -430,7 +430,7 @@ class EmployerQuarterlyContribution(Base):
     employer = relationship("Employer", back_populates="employer_quarterly_contribution")
 
 
-class EmployerLog(Base):
+class EmployerLog(Base, TimestampMixin):
     __tablename__ = "employer_log"
     employer_log_id = Column(PostgreSQLUUID, primary_key=True)
     employer_id = Column(PostgreSQLUUID, index=True)
@@ -443,7 +443,7 @@ class EmployerLog(Base):
     exemption_cease_date = Column(Date)
 
 
-class EFT(Base):
+class EFT(Base, TimestampMixin):
     __tablename__ = "eft"
     eft_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     routing_nbr = Column(Text, nullable=False)
@@ -490,7 +490,7 @@ class PubEft(Base, TimestampMixin):
     employees = relationship("EmployeePubEftPair", back_populates="pub_eft")
 
 
-class TaxIdentifier(Base):
+class TaxIdentifier(Base, TimestampMixin):
     __tablename__ = "tax_identifier"
     tax_identifier_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     tax_identifier = Column(Text, nullable=False, unique=True)
@@ -506,7 +506,7 @@ class TaxIdentifier(Base):
         return func.right(TaxIdentifier.tax_identifier, 4)
 
 
-class CtrAddressPair(Base):
+class CtrAddressPair(Base, TimestampMixin):
     __tablename__ = "link_ctr_address_pair"
     fineos_address_id = Column(
         PostgreSQLUUID, ForeignKey("address.address_id"), primary_key=True, unique=True
@@ -519,7 +519,7 @@ class CtrAddressPair(Base):
     ctr_address = cast("Optional[Address]", relationship("Address", foreign_keys=ctr_address_id))
 
 
-class ExperianAddressPair(Base):
+class ExperianAddressPair(Base, TimestampMixin):
     __tablename__ = "link_experian_address_pair"
     fineos_address_id = Column(
         PostgreSQLUUID, ForeignKey("address.address_id"), primary_key=True, unique=True
@@ -613,7 +613,7 @@ class Employee(Base, TimestampMixin):
     )
 
 
-class EmployeeLog(Base):
+class EmployeeLog(Base, TimestampMixin):
     __tablename__ = "employee_log"
     employee_log_id = Column(PostgreSQLUUID, primary_key=True)
     employee_id = Column(PostgreSQLUUID, index=True)
@@ -623,7 +623,7 @@ class EmployeeLog(Base):
     employer_id = Column(PostgreSQLUUID, index=True)
 
 
-class EmployeePubEftPair(Base):
+class EmployeePubEftPair(Base, TimestampMixin):
     __tablename__ = "link_employee_pub_eft_pair"
     employee_id = Column(PostgreSQLUUID, ForeignKey("employee.employee_id"), primary_key=True)
     pub_eft_id = Column(PostgreSQLUUID, ForeignKey("pub_eft.pub_eft_id"), primary_key=True)
@@ -813,7 +813,7 @@ class PaymentCheck(Base, TimestampMixin):
     payment_check_status = relationship(LkPaymentCheckStatus)
 
 
-class AuthorizedRepEmployee(Base):
+class AuthorizedRepEmployee(Base, TimestampMixin):
     __tablename__ = "link_authorized_rep_employee"
     authorized_representative_id = Column(
         PostgreSQLUUID,
@@ -826,7 +826,7 @@ class AuthorizedRepEmployee(Base):
     employee = relationship("Employee", back_populates="authorized_reps")
 
 
-class Address(Base):
+class Address(Base, TimestampMixin):
     __tablename__ = "address"
     address_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     address_type_id = Column(Integer, ForeignKey("lk_address_type.address_type_id"))
@@ -852,7 +852,7 @@ class Address(Base):
     )
 
 
-class CtrDocumentIdentifier(Base):
+class CtrDocumentIdentifier(Base, TimestampMixin):
     __tablename__ = "ctr_document_identifier"
     ctr_document_identifier_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     ctr_document_identifier = Column(Text, unique=True, index=True)
@@ -867,7 +867,7 @@ class CtrDocumentIdentifier(Base):
     )
 
 
-class CtrBatchIdentifier(Base):
+class CtrBatchIdentifier(Base, TimestampMixin):
     __tablename__ = "ctr_batch_identifier"
     ctr_batch_identifier_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     ctr_batch_identifier = Column(Text, nullable=False)
@@ -881,7 +881,7 @@ class CtrBatchIdentifier(Base):
     reference_files = relationship("ReferenceFile", back_populates="ctr_batch_identifier")
 
 
-class EmployeeAddress(Base):
+class EmployeeAddress(Base, TimestampMixin):
     __tablename__ = "link_employee_address"
     employee_id = Column(PostgreSQLUUID, ForeignKey("employee.employee_id"), primary_key=True)
     address_id = Column(PostgreSQLUUID, ForeignKey("address.address_id"), primary_key=True)
@@ -890,7 +890,7 @@ class EmployeeAddress(Base):
     address = relationship("Address", back_populates="employees")
 
 
-class EmployerAddress(Base):
+class EmployerAddress(Base, TimestampMixin):
     __tablename__ = "link_employer_address"
     employer_id = Column(
         PostgreSQLUUID, ForeignKey("employer.employer_id"), primary_key=True, unique=True
@@ -903,7 +903,7 @@ class EmployerAddress(Base):
     address = relationship("Address", back_populates="employers")
 
 
-class HealthCareProviderAddress(Base):
+class HealthCareProviderAddress(Base, TimestampMixin):
     __tablename__ = "link_health_care_provider_address"
     health_care_provider_id = Column(
         PostgreSQLUUID,
@@ -1045,7 +1045,7 @@ class ManagedRequirement(Base, TimestampMixin):
     respondent_user = relationship(User)
 
 
-class WagesAndContributions(Base):
+class WagesAndContributions(Base, TimestampMixin):
     __tablename__ = "wages_and_contributions"
     wage_and_contribution_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     account_key = Column(Text, nullable=False)
@@ -1070,7 +1070,7 @@ class WagesAndContributions(Base):
     employer = relationship("Employer", back_populates="wages_and_contributions")
 
 
-class EmployeeOccupation(Base):
+class EmployeeOccupation(Base, TimestampMixin):
     __tablename__ = "employee_occupation"
     employee_occupation_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     employee_id = Column(
@@ -1094,7 +1094,7 @@ class EmployeeOccupation(Base):
     employer = relationship("Employer", back_populates="employer_occupations")
 
 
-class ImportLog(Base):
+class ImportLog(Base, TimestampMixin):
     __tablename__ = "import_log"
     import_log_id = Column(Integer, primary_key=True)
     source = Column(Text, index=True)
@@ -1132,7 +1132,7 @@ class ReferenceFile(Base, TimestampMixin):
     )
 
 
-class PaymentReferenceFile(Base):
+class PaymentReferenceFile(Base, TimestampMixin):
     __tablename__ = "link_payment_reference_file"
     payment_id = Column(PostgreSQLUUID, ForeignKey("payment.payment_id"), primary_key=True)
     reference_file_id = Column(
@@ -1151,7 +1151,7 @@ class PaymentReferenceFile(Base):
     )
 
 
-class EmployeeReferenceFile(Base):
+class EmployeeReferenceFile(Base, TimestampMixin):
     __tablename__ = "link_employee_reference_file"
     employee_id = Column(PostgreSQLUUID, ForeignKey("employee.employee_id"), primary_key=True)
     reference_file_id = Column(
@@ -1173,7 +1173,7 @@ class EmployeeReferenceFile(Base):
         return self
 
 
-class DuaReductionPaymentReferenceFile(Base):
+class DuaReductionPaymentReferenceFile(Base, TimestampMixin):
     __tablename__ = "link_dua_reduction_payment_reference_file"
     dua_reduction_payment_id = Column(
         PostgreSQLUUID,
@@ -1188,7 +1188,7 @@ class DuaReductionPaymentReferenceFile(Base):
     reference_file = relationship("ReferenceFile")
 
 
-class DiaReductionPaymentReferenceFile(Base):
+class DiaReductionPaymentReferenceFile(Base, TimestampMixin):
     __tablename__ = "link_dia_reduction_payment_reference_file"
     dia_reduction_payment_id = Column(
         PostgreSQLUUID,
@@ -1203,7 +1203,7 @@ class DiaReductionPaymentReferenceFile(Base):
     reference_file = relationship("ReferenceFile")
 
 
-class StateLog(Base):
+class StateLog(Base, TimestampMixin):
     __tablename__ = "state_log"
     state_log_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     end_state_id = Column(Integer, ForeignKey("lk_state.state_id"))
@@ -1231,7 +1231,7 @@ class StateLog(Base):
     import_log = cast("Optional[ImportLog]", relationship(ImportLog, foreign_keys=[import_log_id]))
 
 
-class LatestStateLog(Base):
+class LatestStateLog(Base, TimestampMixin):
     __tablename__ = "latest_state_log"
     latest_state_log_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
 
