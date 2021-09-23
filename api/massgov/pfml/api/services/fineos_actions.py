@@ -17,7 +17,7 @@ import mimetypes
 import uuid
 from enum import Enum
 from itertools import chain
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
 import phonenumbers
 
@@ -49,9 +49,13 @@ from massgov.pfml.db.models.employees import (
     TaxIdentifier,
     User,
 )
-from massgov.pfml.fineos.exception import FINEOSClientError, FINEOSNotFound
+from massgov.pfml.fineos.exception import FINEOSClientError, FINEOSForbidden, FINEOSNotFound
 from massgov.pfml.fineos.models import CreateOrUpdateServiceAgreement
-from massgov.pfml.fineos.models.customer_api import AbsenceDetails, ReflexiveQuestionType
+from massgov.pfml.fineos.models.customer_api import (
+    AbsenceDetails,
+    Base64EncodedFileData,
+    ReflexiveQuestionType,
+)
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employee import (
     OtherIncomesEFormBuilder,
@@ -1074,6 +1078,19 @@ def get_documents(
     absence_id = get_fineos_absence_id_from_application(application)
 
     fineos_documents = fineos.get_documents(fineos_web_id, absence_id)
+    appeal_01_documents = fineos.get_documents(fineos_web_id, absence_id + "-AP-01")
+    appeal_02_documents = fineos.get_documents(fineos_web_id, absence_id + "-AP-02")
+
+    logger.info(
+        "retrieved appeal documents",
+        extra={
+            "num_appeal_01_documents": len(appeal_01_documents),
+            "num_appeal_02_documents": len(appeal_02_documents),
+        },
+    )
+
+    fineos_documents += appeal_01_documents + appeal_02_documents
+
     document_responses = list(
         map(
             lambda fd: fineos_document_response_to_document_response(fd, application),
@@ -1139,14 +1156,27 @@ def submit_payment_preference(
 
 
 def download_document(
-    application: Application, fineos_document_id: str, db_session: massgov.pfml.db.Session
-) -> massgov.pfml.fineos.models.customer_api.Base64EncodedFileData:
+    application: Application,
+    fineos_document_id: str,
+    db_session: massgov.pfml.db.Session,
+    document_type: Union[str, None],
+) -> Base64EncodedFileData:
     fineos = massgov.pfml.fineos.create_client()
 
     fineos_web_id = get_or_register_employee_fineos_web_id(fineos, application, db_session)
     absence_id = get_fineos_absence_id_from_application(application)
-
-    return fineos.download_document(fineos_web_id, absence_id, fineos_document_id)
+    if not document_type or document_type != "Appeal Acknowledgment":
+        try:
+            return fineos.download_document(fineos_web_id, absence_id, fineos_document_id)
+        except FINEOSForbidden:
+            logger.info("Document not found in Absence Case - trying next case")
+            pass
+    try:
+        return fineos.download_document(fineos_web_id, absence_id + "-AP-01", fineos_document_id)
+    except FINEOSForbidden:
+        logger.info("Document not found in '-AP-01' case - trying next case")
+        pass
+    return fineos.download_document(fineos_web_id, absence_id + "-AP-02", fineos_document_id)
 
 
 def create_or_update_employer(
