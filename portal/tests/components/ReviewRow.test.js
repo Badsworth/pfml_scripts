@@ -9,7 +9,10 @@ const renderRow = (customProps) => {
     level: "3",
     ...customProps,
   };
-  return render(<ReviewRow {...props} />);
+  const dl = document.createElement("dl");
+  return render(<ReviewRow {...props} />, {
+    container: document.body.appendChild(dl),
+  });
 };
 
 describe("ReviewRow", () => {
@@ -29,20 +32,5 @@ describe("ReviewRow", () => {
     expect(
       document.querySelector(".border-bottom-2px")
     ).not.toBeInTheDocument();
-  });
-
-  it("when editHref is defined it renders an edit link", () => {
-    renderRow({
-      editHref: "/name",
-      editText: "Edit name",
-    });
-    expect(
-      screen.getByRole("link", { name: "Edit name: Leave type" })
-    ).toBeInTheDocument();
-  });
-
-  it("without editHref there is no edit link rendered", () => {
-    renderRow();
-    expect(screen.queryByRole("link")).not.toBeInTheDocument();
   });
 });

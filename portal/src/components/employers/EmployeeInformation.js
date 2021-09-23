@@ -24,39 +24,44 @@ const EmployeeInformation = (props) => {
 
   return (
     <React.Fragment>
-      <ReviewHeading level="2">
+      <ReviewHeading id="employee-information" level="2">
         {t("components.employersEmployeeInformation.header")}
       </ReviewHeading>
-      <ReviewRow
-        level="3"
-        label={t("components.employersEmployeeInformation.employeeNameLabel")}
-      >
-        {first_name} {middle_name} {last_name}
-      </ReviewRow>
-      <ReviewRow
-        level="3"
-        label={t("components.employersEmployeeInformation.addressLabel")}
-      >
-        <span className="residential-address" data-testid="residential-address">
-          {line_1}
-          <br />
-          {line_2}
-          {line_2 && <br />}
-          {city}, {state} {zip}
-        </span>
-      </ReviewRow>
-      <ReviewRow
-        level="3"
-        label={t("components.employersEmployeeInformation.ssnOrItinLabel")}
-      >
-        {tax_identifier}
-      </ReviewRow>
-      <ReviewRow
-        level="3"
-        label={t("components.employersEmployeeInformation.dobLabel")}
-      >
-        {formatDateRange(date_of_birth)}
-      </ReviewRow>
+      <dl aria-labelledby="employee-information">
+        <ReviewRow
+          level="3"
+          label={t("components.employersEmployeeInformation.employeeNameLabel")}
+        >
+          {first_name} {middle_name} {last_name}
+        </ReviewRow>
+        <ReviewRow
+          level="3"
+          label={t("components.employersEmployeeInformation.addressLabel")}
+        >
+          <span
+            className="residential-address"
+            data-testid="residential-address"
+          >
+            {line_1}
+            <br />
+            {line_2}
+            {line_2 && <br />}
+            {city}, {state} {zip}
+          </span>
+        </ReviewRow>
+        <ReviewRow
+          level="3"
+          label={t("components.employersEmployeeInformation.ssnOrItinLabel")}
+        >
+          {tax_identifier}
+        </ReviewRow>
+        <ReviewRow
+          level="3"
+          label={t("components.employersEmployeeInformation.dobLabel")}
+        >
+          {formatDateRange(date_of_birth)}
+        </ReviewRow>
+      </dl>
     </React.Fragment>
   );
 };

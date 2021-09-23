@@ -111,11 +111,10 @@ describe("Review", () => {
   });
 
   it("displays organization/employer information", () => {
-    const orgNameRow = wrapper.find("[data-test='org-name-row']");
-    const einRow = wrapper.find("[data-test='ein-row']");
-
-    expect(orgNameRow).toMatchSnapshot();
-    expect(einRow).toMatchSnapshot();
+    const employerInfoList = wrapper.find(
+      'dl[aria-label="Employer information"]'
+    );
+    expect(employerInfoList).toMatchSnapshot();
   });
 
   it("hides organization name if employer_dba is falsy", () => {
@@ -126,8 +125,13 @@ describe("Review", () => {
       ({ wrapper } = renderComponent("shallow", noEmployerDba));
     });
 
-    const orgNameRow = wrapper.find("[data-test='org-name-row']");
-    const einRow = wrapper.find("[data-test='ein-row']");
+    const employerInfoList = wrapper.find(
+      'dl[aria-label="Employer information"]'
+    );
+    const orgNameRow = wrapper.find('ReviewRow[label="Organization"]');
+    const einRow = employerInfoList.find(
+      'ReviewRow[label="Employer ID number (EIN)"]'
+    );
 
     expect(orgNameRow.exists()).toBe(false);
     expect(einRow.exists()).toBe(true);

@@ -38,57 +38,83 @@ exports[`LeaveDetails renders the component 1`] = `
   >
     <h2
       class="flex-fill margin-right-1 font-heading-md text-bold"
+      id="leave-details"
     >
       Leave details
     </h2>
   </div>
-  <div
-    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  <dl
+    aria-labelledby="leave-details"
   >
     <div
-      class="margin-right-2"
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
     >
-      <h3
-        class="margin-bottom-1 font-heading-xs text-bold"
-      >
-        Leave type
-      </h3>
-      <a
-        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-medical-leave-"
-        rel="noopener"
-        target="_blank"
-      >
-        Medical leave
-      </a>
+      <div>
+        <dt
+          id="descriptionLabel1"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Leave type
+          </h3>
+        </dt>
+        <dd
+          aria-labelledby="descriptionLabel1"
+          class="margin-0"
+        >
+          <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-medical-leave-"
+            rel="noopener"
+            target="_blank"
+          >
+            Medical leave
+          </a>
+        </dd>
+      </div>
     </div>
-  </div>
-  <div
-    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
-  >
     <div
-      class="margin-right-2"
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
     >
-      <h3
-        class="margin-bottom-1 font-heading-xs text-bold"
-      >
-        Application ID
-      </h3>
-      NTN-111-ABS-01
+      <div>
+        <dt
+          id="descriptionLabel2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Application ID
+          </h3>
+        </dt>
+        <dd
+          aria-labelledby="descriptionLabel2"
+          class="margin-0"
+        >
+          NTN-111-ABS-01
+        </dd>
+      </div>
     </div>
-  </div>
-  <div
-    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
-  >
     <div
-      class="margin-right-2"
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
     >
-      <h3
-        class="margin-bottom-1 font-heading-xs text-bold"
-      >
-        Leave duration
-      </h3>
-      1/1/2021 to 7/1/2021
+      <div>
+        <dt
+          id="descriptionLabel3"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Leave duration
+          </h3>
+        </dt>
+        <dd
+          aria-labelledby="descriptionLabel3"
+          class="margin-0"
+        >
+          1/1/2021 to 7/1/2021
+        </dd>
+      </div>
     </div>
-  </div>
+  </dl>
 </div>
 `;

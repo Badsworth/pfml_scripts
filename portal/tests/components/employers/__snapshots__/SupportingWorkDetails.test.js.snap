@@ -14,19 +14,26 @@ exports[`SupportingWorkDetails opens the amendment form when "Amend" is clicked 
   <div
     class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
   >
-    <div
-      class="margin-right-2"
-    >
-      <h3
-        class="margin-bottom-1 font-heading-xs text-bold"
+    <div>
+      <dt
+        id="descriptionLabel2"
       >
-        Weekly hours worked
-      </h3>
-      <p
-        class="margin-top-0"
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Weekly hours worked
+        </h3>
+      </dt>
+      <dd
+        aria-labelledby="descriptionLabel2"
+        class="margin-0"
       >
-        40
-      </p>
+        <p
+          class="margin-top-0"
+        >
+          40
+        </p>
+      </dd>
     </div>
     <button
       class="usa-button position-relative text-no-wrap usa-button--unstyled"
@@ -67,14 +74,14 @@ exports[`SupportingWorkDetails opens the amendment form when "Amend" is clicked 
         >
           <label
             class="usa-label text-bold font-heading-xs measure-5"
-            for="InputText1"
-            id="InputText1_label"
+            for="InputText4"
+            id="InputText4_label"
           >
             On average, how many hours does the employee work each week?
           </label>
           <span
             class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
-            id="InputText1_hint"
+            id="InputText4_hint"
           >
             If their schedule varies, tell us the average number of hours worked over the past 52 weeks.
           </span>
@@ -82,10 +89,10 @@ exports[`SupportingWorkDetails opens the amendment form when "Amend" is clicked 
             class=""
           >
             <input
-              aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+              aria-labelledby="InputText4_label InputText4_hint InputText4_error"
               class="usa-input usa-input--small"
               data-value-type="integer"
-              id="InputText1"
+              id="InputText4"
               inputmode="decimal"
               name="hours_worked_per_week"
               type="text"
@@ -123,19 +130,26 @@ exports[`SupportingWorkDetails renders without the amendment form open 1`] = `
   <div
     class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
   >
-    <div
-      class="margin-right-2"
-    >
-      <h3
-        class="margin-bottom-1 font-heading-xs text-bold"
+    <div>
+      <dt
+        id="descriptionLabel1"
       >
-        Weekly hours worked
-      </h3>
-      <p
-        class="margin-top-0"
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Weekly hours worked
+        </h3>
+      </dt>
+      <dd
+        aria-labelledby="descriptionLabel1"
+        class="margin-0"
       >
-        40
-      </p>
+        <p
+          class="margin-top-0"
+        >
+          40
+        </p>
+      </dd>
     </div>
     <button
       class="usa-button position-relative text-no-wrap usa-button--unstyled"

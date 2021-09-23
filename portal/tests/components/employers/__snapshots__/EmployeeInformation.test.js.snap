@@ -7,80 +7,113 @@ exports[`EmployeeInformation renders the component 1`] = `
   >
     <h2
       class="flex-fill margin-right-1 font-heading-md text-bold"
+      id="employee-information"
     >
       Employee information
     </h2>
   </div>
-  <div
-    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  <dl
+    aria-labelledby="employee-information"
   >
     <div
-      class="margin-right-2"
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
     >
-      <h3
-        class="margin-bottom-1 font-heading-xs text-bold"
-      >
-        Employee name
-      </h3>
-      Jane
-       
-      
-       
-      Doe
+      <div>
+        <dt
+          id="descriptionLabel1"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Employee name
+          </h3>
+        </dt>
+        <dd
+          aria-labelledby="descriptionLabel1"
+          class="margin-0"
+        >
+          Jane
+           
+          
+           
+          Doe
+        </dd>
+      </div>
     </div>
-  </div>
-  <div
-    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
-  >
     <div
-      class="margin-right-2"
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
     >
-      <h3
-        class="margin-bottom-1 font-heading-xs text-bold"
-      >
-        Mailing address
-      </h3>
-      <span
-        class="residential-address"
-        data-testid="residential-address"
-      >
-        1234 My St.
-        <br />
-        Boston
-        , 
-        MA
-         
-        00000
-      </span>
+      <div>
+        <dt
+          id="descriptionLabel2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Mailing address
+          </h3>
+        </dt>
+        <dd
+          aria-labelledby="descriptionLabel2"
+          class="margin-0"
+        >
+          <span
+            class="residential-address"
+            data-testid="residential-address"
+          >
+            1234 My St.
+            <br />
+            Boston
+            , 
+            MA
+             
+            00000
+          </span>
+        </dd>
+      </div>
     </div>
-  </div>
-  <div
-    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
-  >
     <div
-      class="margin-right-2"
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
     >
-      <h3
-        class="margin-bottom-1 font-heading-xs text-bold"
-      >
-        Social Security Number or Individual Taxpayer Identification Number
-      </h3>
-      ***-**-1234
+      <div>
+        <dt
+          id="descriptionLabel3"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Social Security Number or Individual Taxpayer Identification Number
+          </h3>
+        </dt>
+        <dd
+          aria-labelledby="descriptionLabel3"
+          class="margin-0"
+        >
+          ***-**-1234
+        </dd>
+      </div>
     </div>
-  </div>
-  <div
-    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
-  >
     <div
-      class="margin-right-2"
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
     >
-      <h3
-        class="margin-bottom-1 font-heading-xs text-bold"
-      >
-        Date of birth
-      </h3>
-      7/17/****
+      <div>
+        <dt
+          id="descriptionLabel4"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Date of birth
+          </h3>
+        </dt>
+        <dd
+          aria-labelledby="descriptionLabel4"
+          class="margin-0"
+        >
+          7/17/****
+        </dd>
+      </div>
     </div>
-  </div>
+  </dl>
 </div>
 `;
