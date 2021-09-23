@@ -471,9 +471,9 @@ export const Timeline = ({
         <ButtonLink
           className="measure-12"
           href={appLogic.portalFlow.getNextPageRoute(
-            typeOfProof === "adoption"
-              ? "UPLOAD_PROOF_OF_PLACEMENT"
-              : "UPLOAD_PROOF_OF_BIRTH",
+            typeOfProof === "newborn"
+              ? "UPLOAD_PROOF_OF_BIRTH"
+              : "UPLOAD_PROOF_OF_PLACEMENT",
             {},
             { claim_id: applicationId, absence_case_id: absenceCaseId }
           )}

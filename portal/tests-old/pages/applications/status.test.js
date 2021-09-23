@@ -413,6 +413,21 @@ const TERTIARY_CLAIM_DETAIL = new ClaimDetail({
   ],
 });
 
+const BONDING_FOSTER_CLAIM_DETAIL = new ClaimDetail({
+  fineos_absence_id: "fineos-abence-id",
+  absence_periods: [
+    {
+      period_type: "Continuous",
+      absence_period_start_date: "2021-07-01",
+      absence_period_end_date: "2021-07-08",
+      request_decision: "Pending",
+      fineos_leave_request_id: "PL-14432-0000002326",
+      reason: LeaveReason.bonding,
+      reason_qualifier_one: "Foster Care",
+    },
+  ],
+});
+
 const TEST_DOCS = [
   generateNotice("approvalNotice", "2021-08-21"),
   generateNotice("denialNotice", "2021-08-21"),
@@ -474,7 +489,36 @@ describe("Timeline component", () => {
     });
 
     const button = wrapper.find("FollowUpSteps").dive().find("ButtonLink");
-    expect(button.children().text()).toEqual("Upload proof of adoption");
+    expect(button).toMatchInlineSnapshot(`
+<ButtonLink
+  className="measure-12"
+  href="/applications/upload/proof-of-placement?claim_id=123456789&absence_case_id=NTN-12345-ABS-01"
+>
+  Upload proof of adoption
+</ButtonLink>
+`);
+  });
+
+  it("does render Proof of Adoption button if given 'Foster Care' as reason_qualifier and leave_reason as 'Child Bonding'", () => {
+    const { wrapper } = renderWithAppLogic(Timeline, {
+      diveLevels: 0,
+      props: {
+        absencePeriods: BONDING_FOSTER_CLAIM_DETAIL.absence_periods,
+        applicationId: "123456789",
+        absenceCaseId: "NTN-12345-ABS-01",
+        docList: TEST_DOCS,
+      },
+    });
+
+    const button = wrapper.find("FollowUpSteps").dive().find("ButtonLink");
+    expect(button).toMatchInlineSnapshot(`
+<ButtonLink
+  className="measure-12"
+  href="/applications/upload/proof-of-placement?claim_id=123456789&absence_case_id=NTN-12345-ABS-01"
+>
+  Upload proof of placement
+</ButtonLink>
+`);
   });
 
   it("does render Proof of Birth button if given 'Newborn' as reason_qualifier and reason as 'Child Bonding'", () => {
@@ -488,7 +532,14 @@ describe("Timeline component", () => {
       },
     });
     const button = wrapper.find("FollowUpSteps").dive().find("ButtonLink");
-    expect(button.children().text()).toEqual("Upload proof of birth");
+    expect(button).toMatchInlineSnapshot(`
+<ButtonLink
+  className="measure-12"
+  href="/applications/upload/proof-of-birth?claim_id=123456789&absence_case_id=NTN-12345-ABS-01"
+>
+  Upload proof of birth
+</ButtonLink>
+`);
   });
 
   it("does render Timeline if given reason is Pregnancy/Maternity", () => {
@@ -523,7 +574,14 @@ describe("Timeline component", () => {
       docList: TEST_DOCS,
     });
     button = wrapper.find("FollowUpSteps").dive().find("ButtonLink");
-    expect(button.children().text()).toEqual("Upload proof of birth");
+    expect(button).toMatchInlineSnapshot(`
+<ButtonLink
+  className="measure-12"
+  href="/applications/upload/proof-of-birth?claim_id=123456789&absence_case_id=NTN-12345-ABS-01"
+>
+  Upload proof of birth
+</ButtonLink>
+`);
   });
 
   it("does renders ender ApplicationTimeline component given leave_reason is not Pregnancy/Maternity or Child Bonding", () => {
