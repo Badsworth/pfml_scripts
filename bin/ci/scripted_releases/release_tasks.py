@@ -105,7 +105,8 @@ def finalize(args):
         git_utils.checkout(args.source_branch)
 
     else:
-        raise NotImplementedError(f"The series: {args.release_version} has already been finalized")
+        logger.error(f"The series: {args.release_version} has already been finalized")
+        return False
 
 
 # ----------------------------------------------------------------------------------------------------
