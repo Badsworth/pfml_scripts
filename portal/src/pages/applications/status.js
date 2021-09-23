@@ -69,14 +69,18 @@ export const Status = ({ appLogic, query }) => {
     }
   }, [isLoadingClaimDetail, claimDetail]);
 
-  const hasClaimDetailLoadError = appLogic.appErrors.items.some(
-    (error) => error.name === "ClaimDetailLoadError"
-  );
-
-  if (hasClaimDetailLoadError) return null;
+  // If the claim has an error, include the back button w/error
+  if (appLogic.appErrors.items.length) {
+    return (
+      <BackButton
+        label={t("pages.claimsStatus.backButtonLabel")}
+        href={routes.applications.index}
+      />
+    );
+  }
 
   // Check both because claimDetail could be cached from a different status page.
-  if (isLoadingClaimDetail || !claimDetail)
+  if (isLoadingClaimDetail || !claimDetail) {
     return (
       <div className="margin-top-8 text-center">
         <Spinner
@@ -84,6 +88,7 @@ export const Status = ({ appLogic, query }) => {
         />
       </div>
     );
+  }
 
   const absenceDetails = claimDetail.absencePeriodsByReason;
   const hasPendingStatus = claimDetail.absence_periods.some(

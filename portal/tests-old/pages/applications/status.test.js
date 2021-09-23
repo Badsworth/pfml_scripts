@@ -4,6 +4,7 @@ import Status, {
   Timeline,
 } from "../../../src/pages/applications/status";
 import { generateNotice, renderWithAppLogic } from "../../test-utils";
+
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import ClaimDetail from "../../../src/models/ClaimDetail";
@@ -11,7 +12,6 @@ import DocumentCollection from "../../../src/models/DocumentCollection";
 import LeaveReason from "../../../src/models/LeaveReason";
 import { act } from "react-dom/test-utils";
 import { mockRouter } from "next/router";
-
 import routes from "../../../src/routes";
 
 jest.mock("next/router");
@@ -155,14 +155,11 @@ describe("status page", () => {
     );
   });
 
-  it("doesn't render the page if there is a ClaimDetailLoadError", () => {
-    const appErrors = new AppErrorInfoCollection([
-      new AppErrorInfo({ name: "ClaimDetailLoadError" }),
-    ]);
+  it("renders the page with back button if error exists", () => {
+    const appErrors = new AppErrorInfoCollection([new AppErrorInfo()]);
 
     const { wrapper } = setup({ appErrors });
-
-    expect(wrapper.isEmptyRender()).toBe(true);
+    expect(wrapper.find("BackButton").exists()).toBe(true);
   });
 
   it("still renders the page if DocumentsLoadError exists", () => {
