@@ -1,4 +1,5 @@
 from typing import Any
+
 import boto3
 import newrelic.agent
 from pydantic import BaseSettings, Field
