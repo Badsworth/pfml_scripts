@@ -107,7 +107,6 @@ def finalize(args):
             logger.info(f"Commit {rc_commit_hash} ({latest_rc}) will also be tagged {formal_release_number}")
             git_utils.tag_and_push(args.release_version, formal_release_number)
         else:
-            logger.error(f"The series: {args.release_version} has already been finalized")
             return False
 
 
