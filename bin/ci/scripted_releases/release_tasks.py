@@ -87,7 +87,7 @@ def finalize(args):
             formal_release_number = git_utils.from_semver(v.finalize_version(), args.app)
 
             logger.info(f"Finalizing {args.release_version}")
-            logger.info(f"Commit {rc_commit_hash} ({latest_rc}) will also be tagged {formal_release_number}")
+            logger.info(f"Commit {rc_commit_hash[0:9]} ({latest_rc}) will also be tagged {formal_release_number}")
             git_utils.tag_and_push(args.release_version, formal_release_number)
         else:
             return False
