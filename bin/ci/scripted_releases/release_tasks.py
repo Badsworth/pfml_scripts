@@ -6,26 +6,28 @@ logger = logging.getLogger(__name__)
 
 
 def start(args):
-    # increments minor release number
-    logger.info(f"Running 'start-release'...")
-    logger.debug(f"Args: {repr(args)}")
+    with git_utils.rollback():
+        # increments minor release number
+        logger.info(f"Running 'start-release'...")
+        logger.debug(f"Args: {repr(args)}")
 
-    # getting the proper tags/branches for the release.
-    # NB: most_recent_tag() will return incorrect results on main (compared to the correct result on a release branch)
-    # ...but it will return a "correct enough" tag for the purposes of just bumping its minor version number.
-    git_utils.fetch_remotes()
-    recent_tag, tag_sha = git_utils.most_recent_tag(args.app, "main")
+        # getting the proper tags/branches for the release.
+        # NB: most_recent_tag() will return incorrect results on main
+        # (compared to the correct result on a release branch)
+        # ...but it will return a "correct enough" tag for the purposes of just bumping its minor version number.
+        git_utils.fetch_remotes()
+        recent_tag, tag_sha = git_utils.most_recent_tag(args.app, "main")
 
-    v = git_utils.to_semver(recent_tag)  # convert tag to semver object
-    version_name = git_utils.from_semver(v.bump_minor(), args.app)
-    branch_name = "release/" + version_name
+        v = git_utils.to_semver(recent_tag)  # convert tag to semver object
+        version_name = git_utils.from_semver(v.bump_minor(), args.app)
+        branch_name = "release/" + version_name
 
-    # making sure the tag has the proper release candidate flag
-    tag_name = version_name + "-rc1"
-    git_utils.create_branch(branch_name)
+        # making sure the tag has the proper release candidate flag
+        tag_name = version_name + "-rc1"
+        git_utils.create_branch(branch_name)
 
-    # add -rc before tagging and pushing branch
-    git_utils.tag_and_push(branch_name, tag_name)
+        # add -rc before tagging and pushing branch
+        git_utils.tag_and_push(branch_name, tag_name)
 
 
 # ----------------------------------------------------------------------------------------------------
@@ -94,7 +96,7 @@ def finalize(args):
     logger.info(f"Running 'finalize-release'...")
     logger.debug(f"Args: {repr(args)}")
 
-    with git_utils.git_rollback():
+    with git_utils.rollback():
         if not git_utils.is_finalized(args.release_version):
             git_utils.checkout(args.release_version)
             logger.info(f"Checked out '{args.release_version}'.")

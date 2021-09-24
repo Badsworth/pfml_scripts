@@ -21,7 +21,7 @@ FORMAL_RELEASE_TAG_REGEX = r"(api|portal|foobar)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0
 
 
 @contextmanager
-def git_rollback() -> Generator:
+def rollback() -> Generator:
     rollback_branch = current_branch()
 
     try:
