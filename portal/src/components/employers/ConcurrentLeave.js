@@ -26,11 +26,11 @@ const ConcurrentLeave = (props) => {
 
   return (
     <React.Fragment>
-      <Heading level="3">
+      <Heading id="concurrent-leave" level="3">
         {t("components.employersConcurrentLeave.header")}
       </Heading>
       <p>{t("components.employersConcurrentLeave.explanation")}</p>
-      <Table className="width-full">
+      <Table aria-labelledby="concurrent-leave" className="width-full">
         <thead>
           <tr>
             <th scope="col">

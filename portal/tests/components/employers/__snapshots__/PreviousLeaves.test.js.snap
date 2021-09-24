@@ -4,6 +4,7 @@ exports[`PreviousLeaves when there are claimant-reported leaves shows a row for 
 <div>
   <h3
     class="font-heading-sm text-bold"
+    id="previous-leaves"
   >
     Previous leave
   </h3>
@@ -62,6 +63,7 @@ exports[`PreviousLeaves when there are claimant-reported leaves shows a row for 
     </div>
   </details>
   <table
+    aria-labelledby="previous-leaves"
     class="usa-table usa-table--borderless c-table width-full"
   >
     <thead>

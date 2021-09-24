@@ -16,7 +16,11 @@ export const Table = (props) => {
     }
   );
 
-  const table = <table className={tableClasses}>{props.children}</table>;
+  const table = (
+    <table aria-labelledby={props["aria-labelledby"]} className={tableClasses}>
+      {props.children}
+    </table>
+  );
 
   if (props.scrollable) {
     return <div className="usa-table-container--scrollable">{table}</div>;
@@ -26,6 +30,11 @@ export const Table = (props) => {
 };
 
 Table.propTypes = {
+  /**
+   * HTML "aria-labelledby" attribute. Useful for tables that
+   * do not use <caption>.
+   */
+  "aria-labelledby": PropTypes.string,
   /**
    * `caption`, `thead`, and `tbody` contents
    */
