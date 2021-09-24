@@ -32,6 +32,10 @@ on:
         required: false
         default: "false"
 
+defaults:
+  run:
+    working-directory: e2e
+
 env:
   E2E_ENVIRONMENT: ${{ github.event.inputs.target_environment }}
   COMMIT_INFO_MESSAGE: |
@@ -47,6 +51,10 @@ env:
   E2E_SSO_USERNAME: ${{ secrets.E2E_SSO_USERNAME }}
   CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
   GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  # Caching/build performance - Move Cypress, Playwright binary storage to .npm to leverage caching.
+  CYPRESS_CACHE_FOLDER: /home/runner/.npm/.cypress-cache
+  PLAYWRIGHT_BROWSERS_PATH: /home/runner/.npm/.playwright-cache
+  PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 1 # We never actually need puppeteer chromium installed - it's for flood only.
 
 # Prevent this workflow from running more than 1x concurrently in any environment.
 # This prevents us from overloading the environment with requests, which causes false failures.
@@ -66,6 +74,13 @@ jobs:
         containers: [1, 2, 3, 4, 5, 6, 7]
     steps:
       - uses: actions/checkout@v2
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with: { node-version: "14.x" }
+      - name: "Install Node Modules"
+        uses: bahmutov/npm-install@v1
+        with:
+          working-directory: e2e
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -89,6 +104,7 @@ jobs:
           spec: "cypress/specs/stable/**"
           record: true
           parallel: true
+          install: false
           working-directory: e2e
           group: Commit Stable
           tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
@@ -143,6 +159,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Setup Node
+        uses: actions/setup-node@v2
+        with: { node-version: "14.x" }
+      - name: "Install Node Modules"
+        uses: bahmutov/npm-install@v1
+        with:
+          working-directory: e2e
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -169,12 +193,5 @@ jobs:
           ssm_parameter: "/service/pfml-api/common/newrelic-license-key"
           env_variable_name: "E2E_NEWRELIC_INGEST_KEY"
 
-      - name: Setup Node
-        uses: actions/setup-node@v1
-        with: { node-version: 14.x }
-      - name: "Install Dependencies"
-        working-directory: e2e
-        run: npm ci
       - name: Integration Tests
-        working-directory: e2e
         run: npm run test:integration -- --group=stable${{ github.event.inputs.run_unstable == 'true' && ' --group=unstable' || '' }}${{ github.event.inputs.run_nightly == 'true' && ' --group=nightly' || '' }}

@@ -63,4 +63,8 @@ def test_update_import_log_entry(test_db_session):
 }"""
     )
     assert entry.start == datetime.datetime(2020, 11, 20, 21, 0, 1, tzinfo=datetime.timezone.utc)
-    assert entry.end == datetime.datetime(2020, 11, 20, 21, 0, 11, tzinfo=datetime.timezone.utc)
+
+    # import_log.start and import_log.created_at will ask for the current time, so two calls,
+    # each increments 10 seconds via the auto_tick_seconds setting, meaning the third call setting
+    # import_log.end will be 20 seconds more than the first.
+    assert entry.end == datetime.datetime(2020, 11, 20, 21, 0, 21, tzinfo=datetime.timezone.utc)

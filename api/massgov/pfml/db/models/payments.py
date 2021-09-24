@@ -4,13 +4,12 @@ from enum import Enum
 
 from sqlalchemy import JSON, TIMESTAMP, Column, Date, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql.functions import now as sqlnow
 
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import ImportLog, Payment, ReferenceFile
 
 from ..lookup import LookupTable
-from .base import Base, TimestampMixin, utc_timestamp_gen, uuid_gen
+from .base import Base, TimestampMixin, uuid_gen
 from .common import PostgreSQLUUID
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -432,7 +431,7 @@ class MaximumWeeklyBenefitAmount(Base):
         self.maximum_weekly_benefit_amount = Decimal(maximum_weekly_benefit_amount)
 
 
-class FineosWritebackDetails(Base):
+class FineosWritebackDetails(Base, TimestampMixin):
     __tablename__ = "fineos_writeback_details"
     fineos_writeback_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     payment_id = Column(
@@ -445,12 +444,6 @@ class FineosWritebackDetails(Base):
         nullable=False,
     )
     import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
-    created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
     writeback_sent_at = Column(TIMESTAMP(timezone=True), nullable=True,)
 
     payment = relationship(Payment)

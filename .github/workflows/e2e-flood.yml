@@ -17,6 +17,12 @@ defaults:
   run:
     working-directory: e2e
 
+env:
+  # Caching/build performance
+  CYPRESS_CACHE_FOLDER: /home/runner/.npm/.cypress-cache
+  PLAYWRIGHT_BROWSERS_PATH: /home/runner/.npm/.playwright-cache
+  PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 1 # We never actually need puppeteer chromium installed.
+
 # Prevent this workflow from running more than 1x concurrently in any environment.
 # This prevents us from overloading the environment with requests, which causes false failures.
 # Cypress & Flood share the same concurrency key to prevent E2E and Flood running concurrently.
@@ -43,10 +49,12 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: Setup Node
-        uses: actions/setup-node@v1
-        with: { node-version: 14.x }
-      - name: "Install Dependencies"
-        run: npm ci
+        uses: actions/setup-node@v2
+        with: { node-version: "14.x" }
+      - name: "Install Node Modules"
+        uses: bahmutov/npm-install@v1
+        with:
+          working-directory: e2e
       - name: Set variables for manual run
         if: github.event_name == 'workflow_dispatch'
         run: echo "E2E_ENVIRONMENT=${{ github.event.inputs.target_environment }}" >> $GITHUB_ENV

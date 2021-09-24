@@ -60,6 +60,7 @@ from massgov.pfml.fineos.exception import (
     FINEOSFatalUnavailable,
     FINEOSNotFound,
 )
+from massgov.pfml.fineos.models.customer_api import Base64EncodedFileData
 from massgov.pfml.util.logging.applications import get_application_log_attributes
 from massgov.pfml.util.paginate.paginator import (
     ApplicationPaginationAPIContext,
@@ -693,9 +694,12 @@ def document_download(application_id: UUID, document_id: str) -> Response:
             raise NotFound(description=f"Could not find Document with ID {document_id}")
 
         ensure(READ, document)
-
-        document_data: massgov.pfml.fineos.models.customer_api.Base64EncodedFileData = (
-            download_document(existing_application, document_id, db_session)
+        if isinstance(document, DocumentResponse):
+            document_type = document.document_type
+        else:
+            document_type = None
+        document_data: Base64EncodedFileData = (
+            download_document(existing_application, document_id, db_session, document_type)
         )
         file_bytes = base64.b64decode(document_data.base64EncodedFileContents.encode("ascii"))
 

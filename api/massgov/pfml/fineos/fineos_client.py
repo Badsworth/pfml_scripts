@@ -279,10 +279,14 @@ class FINEOSClient(client.AbstractFINEOSClient):
             elif response.status_code in (
                 requests.codes.UNPROCESSABLE_ENTITY,
                 requests.codes.NOT_FOUND,
-                requests.codes.FORBIDDEN,
             ):
-                # Ideally we'd raise exceptions that distinguish between 403/404/422 but we'll leave that for another time.
+                # Ideally we'd raise exceptions that distinguish between 404/422 but we'll leave that for another time.
                 err = exception.FINEOSClientBadResponse(
+                    method_name, requests.codes.ok, response.status_code, message=response.text,
+                )
+                log_fn = logger.warning
+            elif response.status_code == requests.codes.FORBIDDEN:
+                err = exception.FINEOSForbidden(
                     method_name, requests.codes.ok, response.status_code, message=response.text,
                 )
                 log_fn = logger.warning
