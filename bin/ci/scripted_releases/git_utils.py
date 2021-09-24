@@ -22,6 +22,14 @@ FORMAL_RELEASE_TAG_REGEX = r"(api|portal|foobar)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0
 
 @contextmanager
 def rollback(old_head=None) -> Generator:
+    """
+    Does some automatic Git housekeeping to memoize, and return to, the user's current Git branch at script start-time.
+    If the wrapped scripts encounter Git errors, abort any in-progress cherry-picks or merges. These leave dirty state.
+    :param old_head: If given, give the SHA of the most recent RC/hotfix on your `args.release_version`.
+    The exact behavior of this manager's exception handler depends on the Git operations carried out within `yield`.
+    Start/major do not check out release branches, so resets occur against whatever's checked out at script runtime.
+    Update/hotfix/finalize DO check out branches, so resets are against `args.release_version` to discard corrupt state.
+    """
     rollback_branch = current_branch()
 
     try:
