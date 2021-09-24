@@ -37,6 +37,6 @@ describe("ReviewRow", () => {
   it("associates definitions with the appropriate terms", () => {
     renderRow();
     const definition = screen.getByRole("definition", { name: "Leave type" });
-    expect(definition.textContent).toEqual("Medical");
+    expect(definition).toHaveTextContent("Medical");
   });
 });
