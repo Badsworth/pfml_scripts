@@ -36,6 +36,9 @@ def for_altered_release(args):
         elif not match(RELEASE_VERSION_REGEX, args.release_version):
             raise ValueError(BAD_RELEASE_VERSION)
 
+        #  Note: args.source_branch, if given as a commit hash, MIGHT afford the ability
+        #  to merge PARTIAL histories of a branch -- i.e. merge all commits to this point, but no further.
+        #  The guardrails currently prohibit this behavior, so it is not implemented. But it might be implementable.
         if len(args.git_commits) <= 0 and not args.source_branch:
             raise ValueError(NO_SOURCE_DATA)
         elif len(args.git_commits) <= 0 and not git_utils.branch_exists(args.source_branch):
