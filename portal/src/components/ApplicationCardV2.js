@@ -12,9 +12,11 @@ import LeaveReason from "../models/LeaveReason";
 import LegalNoticeList from "./LegalNoticeList";
 import PropTypes from "prop-types";
 import React from "react";
+import Spinner from "./Spinner";
 import ThrottledButton from "./ThrottledButton";
 import findKeyByValue from "../utils/findKeyByValue";
 import getLegalNotices from "../utils/getLegalNotices";
+import hasDocumentsLoadError from "../utils/hasDocumentsLoadError";
 import { useTranslation } from "../locales/i18n";
 import withClaimDocuments from "../hoc/withClaimDocuments";
 
@@ -104,12 +106,32 @@ const LegalNoticeSection = (props) => {
   const { t } = useTranslation();
   const isSubmitted = props.claim.status === "Submitted";
   const legalNotices = getLegalNotices(props.documents);
+  const shouldShowSpinner =
+    props.isLoadingDocuments &&
+    !hasDocumentsLoadError(
+      props.appLogic.appErrors,
+      props.claim.application_id
+    );
 
   /**
    * If application is not submitted,
    * don't display section
    */
-  if (!isSubmitted || !legalNotices.length) return null;
+  if (!isSubmitted) return null;
+
+  // check for spinner before documents length, since length is 0 while loading.
+  if (shouldShowSpinner) {
+    return (
+      <div className="text-center">
+        <Spinner
+          small
+          aria-valuetext={t("components.applicationCardV2.loadingLabel")}
+        />
+      </div>
+    );
+  }
+
+  if (!legalNotices.length) return null;
 
   return (
     <div
@@ -140,6 +162,7 @@ LegalNoticeSection.propTypes = {
   }).isRequired,
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+  isLoadingDocuments: PropTypes.bool.isRequired,
 };
 
 /**
@@ -179,6 +202,7 @@ const InProgressStatusCard = (props) => {
 
 InProgressStatusCard.propTypes = {
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
+  isLoadingDocuments: PropTypes.bool.isRequired,
   /**  The 1-based index of the application card */
   number: PropTypes.number.isRequired,
 };
@@ -294,6 +318,7 @@ ApplicationCardV2.propTypes = {
       goTo: PropTypes.func.isRequired,
     }).isRequired,
   }).isRequired,
+  isLoadingDocuments: PropTypes.bool.isRequired,
 };
 
 export default withClaimDocuments(ApplicationCardV2);

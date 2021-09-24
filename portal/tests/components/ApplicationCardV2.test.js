@@ -1,17 +1,20 @@
 import Document, { DocumentType } from "../../src/models/Document";
 import { act, render, screen } from "@testing-library/react";
+import AppErrorInfo from "../../src/models/AppErrorInfo";
+import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { ApplicationCardV2 } from "../../src/components/ApplicationCardV2";
 import ClaimDetail from "../../src/models/ClaimDetail";
 import { MockBenefitsApplicationBuilder } from "../test-utils";
 import React from "react";
 import User from "../../src/models/User";
+import { merge } from "lodash";
 import useAppLogic from "../../src/hooks/useAppLogic";
 import userEvent from "@testing-library/user-event";
 
 const ApplicationCardV2WithAppLogic = ({
   // eslint-disable-next-line react/prop-types
   addAppLogicMocks = (appLogic) => {},
-  ...props
+  ...otherProps
 }) => {
   const appLogic = useAppLogic();
   appLogic.auth.requireLogin = jest.fn();
@@ -22,6 +25,12 @@ const ApplicationCardV2WithAppLogic = ({
   appLogic.documents.loadAll = jest.fn();
 
   addAppLogicMocks(appLogic);
+
+  const defaultProps = {
+    isLoadingDocuments: false,
+  };
+
+  const props = merge({}, defaultProps, otherProps);
 
   return <ApplicationCardV2 appLogic={appLogic} {...props} />;
 };
@@ -151,6 +160,70 @@ describe("ApplicationCardV2", () => {
     expect(
       screen.getByRole("heading", { name: "Application 2" })
     ).toBeInTheDocument();
+  });
+
+  it("shows a spinner while documents are loading", () => {
+    const claim = new MockBenefitsApplicationBuilder().submitted().create();
+
+    render(
+      <ApplicationCardV2WithAppLogic
+        claim={claim}
+        number={2}
+        documents={[]}
+        isLoadingDocuments
+      />
+    );
+
+    expect(
+      screen.queryByRole("progressbar", {
+        "aria-valuetext": "Loading documents",
+      })
+    ).toBeInTheDocument();
+  });
+
+  it("does not show a spinner if there is a document load error", () => {
+    const claim = new MockBenefitsApplicationBuilder().submitted().create();
+    const appErrors = new AppErrorInfoCollection([
+      new AppErrorInfo({
+        name: "DocumentsLoadError",
+        meta: {
+          application_id: "mock_application_id",
+        },
+      }),
+    ]);
+
+    render(
+      <ApplicationCardV2WithAppLogic
+        addAppLogicMocks={(appLogic) => {
+          appLogic.appErrors = appErrors;
+        }}
+        claim={claim}
+        number={2}
+        documents={[]}
+        isLoadingDocuments
+      />
+    );
+
+    expect(
+      screen.queryByRole("progressbar", {
+        "aria-valuetext": "Loading documents",
+      })
+    ).not.toBeInTheDocument();
+  });
+
+  it("does not show a spinner for completed applications", () => {
+    const claim = new MockBenefitsApplicationBuilder().completed().create();
+
+    render(
+      <ApplicationCardV2WithAppLogic
+        claim={claim}
+        number={2}
+        documents={[]}
+        isLoadingDocuments
+      />
+    );
+
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
   });
 
   it("can display legal notices", () => {
