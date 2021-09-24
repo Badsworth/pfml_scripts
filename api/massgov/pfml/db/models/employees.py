@@ -37,6 +37,7 @@ from sqlalchemy.types import JSON
 from ..lookup import LookupTable
 from .base import Base, TimestampMixin, utc_timestamp_gen, uuid_gen
 from .common import PostgreSQLUUID
+from .industry_codes import LkIndustryCode
 from .verifications import Verification
 
 # (typed_hybrid_property) https://github.com/dropbox/sqlalchemy-stubs/issues/98
@@ -380,6 +381,7 @@ class Employer(Base, TimestampMixin):
     dor_updated_date = Column(TIMESTAMP(timezone=True))
     latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
     fineos_employer_id = Column(Integer, index=True, unique=True)
+    industry_code_id = Column(Integer, ForeignKey("lk_industry_code.industry_code_id"))
 
     claims = cast(Optional[List["Claim"]], relationship("Claim", back_populates="employer"))
     wages_and_contributions: "Query[WagesAndContributions]" = dynamic_loader(
@@ -394,6 +396,8 @@ class Employer(Base, TimestampMixin):
     employer_quarterly_contribution: "Query[EmployerQuarterlyContribution]" = dynamic_loader(
         "EmployerQuarterlyContribution", back_populates="employer"
     )
+
+    lk_industry_code = relationship(LkIndustryCode)
 
     @typed_hybrid_property
     def has_verification_data(self) -> bool:
