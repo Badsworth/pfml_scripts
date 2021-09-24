@@ -37,6 +37,7 @@ def update(args):
     # TODO: vet safety and correctness of hotfix/update tasks when run across multiple computers
     logger.info(f"Running 'update-release'...")
     logger.debug(f"Args: {repr(args)}")
+    logger.warning("Merge conflicts must be resolved manually.")
 
     git_utils.fetch_remotes()
     recent_tag, tag_sha = git_utils.most_recent_tag(args.app, args.release_version)
@@ -98,10 +99,9 @@ def hotfix(args):  # production hotfix, args are a branch name and a list of com
     # TODO: vet safety and correctness of hotfix/update tasks when run across multiple computers
     logger.info(f"Running 'hotfix'...")
     logger.debug(f"Args: {repr(args)}")
+    logger.warning("Merge conflicts must be resolved manually.")
 
     git_utils.fetch_remotes()
-    original_branch = git_utils.current_branch()  # Save this to check it back out after work's done
-
     recent_tag, tag_sha = git_utils.most_recent_tag(args.app, args.release_version)
     v = git_utils.to_semver(recent_tag)
 
@@ -119,10 +119,8 @@ def hotfix(args):  # production hotfix, args are a branch name and a list of com
     logger.info(f"HEAD of '{args.release_version}' on origin is '{old_head[0:9]}'")
     logger.info("Will save this HEAD and revert back to it if anything goes wrong.")
 
-    logger.warn("If there is a merge conflict, it must be resolved manually.")
-    try:
+    with git_utils.rollback(old_head):
         git_utils.checkout(args.release_version)
-
         logger.info(f"Checked out '{args.release_version}'.")
 
         if args.git_commits:
@@ -135,24 +133,6 @@ def hotfix(args):  # production hotfix, args are a branch name and a list of com
         logger.info("Done.")
         git_utils.tag_and_push(args.release_version, f"{args.app}/v{v.bump_patch()}")
 
-    except git.exc.GitCommandError as e:
-        # hard reset to old_head, and discard any tags or commits descended from old_head
-        # also abort any in-process cherry pick; these leave dirty state if not cleaned up
-        logger.warning(f"Ran into a problem: {e}")
-
-        try:
-            git_utils.cherrypick("--abort")
-            logger.warning("Cleaned up an in-process cherry-pick")
-        except git.exc.GitCommandError as e2:
-            logger.debug(f"No cherry-pick was in progress (or something else went wrong) - {e2}")
-
-        logger.warning(f"Resetting '{args.release_version}' back to {old_head}.")
-        git_utils.reset_head(old_head)
-        return False
-    finally:
-        logger.warning(f"Task is finishing, will check out '{original_branch}' locally")
-        git_utils.checkout(original_branch)
-
 
 # ----------------------------------------------------------------------------------------------------
 def major(args):
@@ -163,19 +143,18 @@ def major(args):
     if args.app != 'api':
         raise NotImplementedError("This task is for API releases only")
     else:
-        # getting the proper tags/branches for the release
-        # NB: most_recent_tag() returns incorrect results on main (compared to the correct result on a release branch)
-        # ...but it will return a "correct enough" tag for the purposes of just bumping its minor version number.
-        git_utils.fetch_remotes()
-        recent_tag, tag_sha = git_utils.most_recent_tag(args.app, "main")
+        with git_utils.rollback():
+            # getting the proper tags/branches for the release
+            git_utils.fetch_remotes()
+            recent_tag, tag_sha = git_utils.most_recent_tag(args.app, "main")
 
-        v = git_utils.to_semver(recent_tag)  # convert tag to semver object
-        version_name = git_utils.from_semver(v.bump_major(), args.app)
-        branch_name = "release/" + version_name
+            v = git_utils.to_semver(recent_tag)  # convert tag to semver object
+            version_name = git_utils.from_semver(v.bump_major(), args.app)
+            branch_name = "release/" + version_name
 
-        # making sure the tag has the proper release candidate flag
-        tag_name = version_name + "-rc1"
-        git_utils.create_branch(branch_name)
+            # making sure the tag has the proper release candidate flag
+            tag_name = version_name + "-rc1"
+            git_utils.create_branch(branch_name)
 
-        # add -rc before tagging and pushing branch
-        git_utils.tag_and_push(branch_name, tag_name)
+            # add -rc before tagging and pushing branch
+            git_utils.tag_and_push(branch_name, tag_name)
