@@ -65,7 +65,7 @@ def update(args):
             git_utils.cherrypick("-x", args.git_commits)
         else:
             logger.info(f"Now merging in {args.source_branch}...")
-            git_utils.merge_in_branch(args.source_branch)
+            git_utils.merge(args.source_branch)
 
         logger.info("Done.")
         git_utils.tag_and_push(args.release_version, f"{args.app}/v{v.bump_prerelease()}")
@@ -130,7 +130,7 @@ def hotfix(args):  # production hotfix, args are a branch name and a list of com
             git_utils.cherrypick("-x", args.git_commits)
         else:
             logger.info(f"Now merging in {args.source_branch}...")
-            git_utils.merge_in_branch(args.source_branch)
+            git_utils.merge(args.source_branch)
 
         logger.info("Done.")
         git_utils.tag_and_push(args.release_version, f"{args.app}/v{v.bump_patch()}")

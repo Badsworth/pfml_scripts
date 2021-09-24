@@ -31,9 +31,10 @@ def rollback(old_head=None) -> Generator:
 
         try:
             cherrypick("--abort")
-            logger.warning("Cleaned up an in-process cherry-pick")
+            merge("--abort")
+            logger.warning("Cleaned up in-process cherry-picks and merges")
         except git.exc.GitCommandError as e2:
-            logger.debug(f"No cherry-pick was in progress (or something else went wrong) - {e2}")
+            logger.debug(f"No cherry-pick or merge was in progress (or something else went wrong) - {e2}")
 
         reset_head(old_head if old_head else 'HEAD')
         checkout(rollback_branch)
@@ -64,9 +65,9 @@ def cherrypick(*args):
     gitcmd.cherry_pick(*args)
 
 
-# Merges :param branch_to_merge into the currently checked-out branch.
-def merge_in_branch(branch_to_merge):
-    gitcmd.merge(branch_to_merge)
+# Accepts any valid CLI arg to `git merge`. Used to either merge branches or abort a merge in-progress.
+def merge(*args):
+    gitcmd.merge(*args)
 
 
 def create_branch(branch_name):
