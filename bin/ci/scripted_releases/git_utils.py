@@ -37,7 +37,6 @@ def rollback(old_head=None) -> Generator:
             logger.debug(f"No cherry-pick or merge was in progress (or something else went wrong) - {e2}")
 
         reset_head(old_head if old_head else 'HEAD')
-        checkout(rollback_branch)
         raise e
     finally:
         logger.warning(f"Task is finishing, will roll back to '{rollback_branch}'")
