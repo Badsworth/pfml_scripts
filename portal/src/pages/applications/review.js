@@ -223,6 +223,7 @@ export const Review = (props) => {
 
       {/* EMPLOYEE IDENTITY */}
       <ReviewHeading
+        id="employee-identity"
         editHref={getStepEditHref(ClaimSteps.verifyId)}
         editText={t("pages.claimsReview.editLink")}
         level={reviewHeadingLevel}
@@ -230,80 +231,83 @@ export const Review = (props) => {
         {t("pages.claimsReview.stepHeading", { context: "verifyId" })}
       </ReviewHeading>
 
-      <ReviewRow
-        level={reviewRowLevel}
-        label={t("pages.claimsReview.userNameLabel")}
-      >
-        {[
-          get(claim, "first_name"),
-          get(claim, "middle_name"),
-          get(claim, "last_name"),
-        ].join(" ")}
-      </ReviewRow>
-
-      {gender && (
+      <dl aria-labelledby="employee-identity">
         <ReviewRow
           level={reviewRowLevel}
-          label={t("pages.claimsReview.userGenderLabel")}
+          label={t("pages.claimsReview.userNameLabel")}
         >
-          {t("pages.claimsReview.genderValue", {
-            context: findKeyByValue(Gender, gender),
+          {[
+            get(claim, "first_name"),
+            get(claim, "middle_name"),
+            get(claim, "last_name"),
+          ].join(" ")}
+        </ReviewRow>
+
+        {gender && (
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.userGenderLabel")}
+          >
+            {t("pages.claimsReview.genderValue", {
+              context: findKeyByValue(Gender, gender),
+            })}
+          </ReviewRow>
+        )}
+
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.phoneLabel")}
+        >
+          {t("pages.claimsReview.phoneType", {
+            context: findKeyByValue(PhoneType, get(claim, "phone.phone_type")),
           })}
+          <br />
+          {get(claim, "phone.phone_number")}
         </ReviewRow>
-      )}
 
-      <ReviewRow
-        level={reviewRowLevel}
-        label={t("pages.claimsReview.phoneLabel")}
-      >
-        {t("pages.claimsReview.phoneType", {
-          context: findKeyByValue(PhoneType, get(claim, "phone.phone_type")),
-        })}
-        <br />
-        {get(claim, "phone.phone_number")}
-      </ReviewRow>
-
-      <ReviewRow
-        level={reviewRowLevel}
-        label={t("pages.claimsReview.residentialAddressLabel")}
-      >
-        {formatAddress(get(claim, "residential_address"))}
-      </ReviewRow>
-
-      {claim.has_mailing_address && (
-        <ReviewRow
-          label={t("pages.claimsReview.mailingAddressLabel")}
-          level={reviewRowLevel}
-        >
-          {formatAddress(get(claim, "mailing_address"))}
-        </ReviewRow>
-      )}
-
-      {claim.has_state_id && (
         <ReviewRow
           level={reviewRowLevel}
-          label={t("pages.claimsReview.userStateIdLabel")}
+          label={t("pages.claimsReview.residentialAddressLabel")}
         >
-          {claim.mass_id}
+          {formatAddress(get(claim, "residential_address"))}
         </ReviewRow>
-      )}
 
-      <ReviewRow
-        level={reviewRowLevel}
-        label={t("pages.claimsReview.userTaxIdLabel")}
-      >
-        {get(claim, "tax_identifier")}
-      </ReviewRow>
+        {claim.has_mailing_address && (
+          <ReviewRow
+            label={t("pages.claimsReview.mailingAddressLabel")}
+            level={reviewRowLevel}
+          >
+            {formatAddress(get(claim, "mailing_address"))}
+          </ReviewRow>
+        )}
 
-      <ReviewRow
-        level={reviewRowLevel}
-        label={t("pages.claimsReview.userDateOfBirthLabel")}
-      >
-        {formatDateRange(get(claim, "date_of_birth"))}
-      </ReviewRow>
+        {claim.has_state_id && (
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.userStateIdLabel")}
+          >
+            {claim.mass_id}
+          </ReviewRow>
+        )}
+
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.userTaxIdLabel")}
+        >
+          {get(claim, "tax_identifier")}
+        </ReviewRow>
+
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.userDateOfBirthLabel")}
+        >
+          {formatDateRange(get(claim, "date_of_birth"))}
+        </ReviewRow>
+      </dl>
 
       {/* EMPLOYMENT INFO */}
       <ReviewHeading
+        id="employment-info"
         editHref={getStepEditHref(ClaimSteps.employerInformation)}
         editText={t("pages.claimsReview.editLink")}
         level={reviewHeadingLevel}
@@ -312,90 +316,97 @@ export const Review = (props) => {
           context: "employerInformation",
         })}
       </ReviewHeading>
-      {/* TODO (CP-1281): Show employment status when Portal supports other employment statuses */}
-      {isFeatureEnabled("claimantShowEmploymentStatus") &&
-        get(claim, "employment_status") && (
+
+      <dl aria-labelledby="employment-info">
+        {/* TODO (CP-1281): Show employment status when Portal supports other employment statuses */}
+        {isFeatureEnabled("claimantShowEmploymentStatus") &&
+          get(claim, "employment_status") && (
+            <ReviewRow
+              level={reviewRowLevel}
+              label={t("pages.claimsReview.employmentStatusLabel")}
+            >
+              {t("pages.claimsReview.employmentStatusValue", {
+                context: findKeyByValue(
+                  EmploymentStatus,
+                  get(claim, "employment_status")
+                ),
+              })}
+            </ReviewRow>
+          )}
+
+        {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
           <ReviewRow
             level={reviewRowLevel}
-            label={t("pages.claimsReview.employmentStatusLabel")}
+            label={t("pages.claimsReview.employerFeinLabel")}
           >
-            {t("pages.claimsReview.employmentStatusValue", {
-              context: findKeyByValue(
-                EmploymentStatus,
-                get(claim, "employment_status")
-              ),
+            {get(claim, "employer_fein")}
+          </ReviewRow>
+        )}
+
+        {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.employerNotifiedLabel")}
+          >
+            {t("pages.claimsReview.employerNotifiedValue", {
+              context: (!!get(
+                claim,
+                "leave_details.employer_notified"
+              )).toString(),
+              date: DateTime.fromISO(
+                get(claim, "leave_details.employer_notification_date")
+              ).toLocaleString(),
             })}
           </ReviewRow>
         )}
 
-      {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
         <ReviewRow
           level={reviewRowLevel}
-          label={t("pages.claimsReview.employerFeinLabel")}
+          label={t("pages.claimsReview.workPatternTypeLabel")}
         >
-          {get(claim, "employer_fein")}
-        </ReviewRow>
-      )}
-
-      {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
-        <ReviewRow
-          level={reviewRowLevel}
-          label={t("pages.claimsReview.employerNotifiedLabel")}
-        >
-          {t("pages.claimsReview.employerNotifiedValue", {
-            context: (!!get(
-              claim,
-              "leave_details.employer_notified"
-            )).toString(),
-            date: DateTime.fromISO(
-              get(claim, "leave_details.employer_notification_date")
-            ).toLocaleString(),
+          {t("pages.claimsReview.workPatternTypeValue", {
+            context: findKeyByValue(
+              WorkPatternType,
+              get(claim, "work_pattern.work_pattern_type")
+            ),
           })}
         </ReviewRow>
-      )}
 
-      <ReviewRow
-        level={reviewRowLevel}
-        label={t("pages.claimsReview.workPatternTypeLabel")}
-      >
-        {t("pages.claimsReview.workPatternTypeValue", {
-          context: findKeyByValue(
-            WorkPatternType,
-            get(claim, "work_pattern.work_pattern_type")
-          ),
-        })}
-      </ReviewRow>
+        {workPattern.work_pattern_type === WorkPatternType.fixed &&
+          workPattern.minutesWorkedPerWeek !== null && (
+            <ReviewRow
+              level={reviewRowLevel}
+              label={t("pages.claimsReview.workPatternDaysFixedLabel")}
+              noBorder
+            >
+              <WeeklyTimeTable
+                aria-label={t("pages.claimsReview.workPatternDaysFixedLabel")}
+                days={workPattern.work_pattern_days}
+              />
+            </ReviewRow>
+          )}
 
-      {workPattern.work_pattern_type === WorkPatternType.fixed &&
-        workPattern.minutesWorkedPerWeek !== null && (
+        {workPattern.work_pattern_type === WorkPatternType.variable && (
           <ReviewRow
             level={reviewRowLevel}
-            label={t("pages.claimsReview.workPatternDaysFixedLabel")}
-            noBorder
+            label={t("pages.claimsReview.workPatternDaysVariableLabel")}
           >
-            <WeeklyTimeTable days={workPattern.work_pattern_days} />
+            {!isUndefined(workPattern.minutesWorkedPerWeek) &&
+              t("pages.claimsReview.workPatternVariableTime", {
+                context:
+                  convertMinutesToHours(workPattern.minutesWorkedPerWeek)
+                    .minutes === 0
+                    ? "noMinutes"
+                    : null,
+                ...convertMinutesToHours(workPattern.minutesWorkedPerWeek),
+              })}
           </ReviewRow>
         )}
-
-      {workPattern.work_pattern_type === WorkPatternType.variable && (
-        <ReviewRow
-          level={reviewRowLevel}
-          label={t("pages.claimsReview.workPatternDaysVariableLabel")}
-        >
-          {!isUndefined(workPattern.minutesWorkedPerWeek) &&
-            t("pages.claimsReview.workPatternVariableTime", {
-              context:
-                convertMinutesToHours(workPattern.minutesWorkedPerWeek)
-                  .minutes === 0
-                  ? "noMinutes"
-                  : null,
-              ...convertMinutesToHours(workPattern.minutesWorkedPerWeek),
-            })}
-        </ReviewRow>
-      )}
+      </dl>
 
       {/* LEAVE DETAILS */}
       <ReviewHeading
+        id="leave-details"
         editHref={getStepEditHref(ClaimSteps.leaveDetails)}
         editText={t("pages.claimsReview.editLink")}
         level={reviewHeadingLevel}
@@ -403,192 +414,196 @@ export const Review = (props) => {
         {t("pages.claimsReview.stepHeading", { context: "leaveDetails" })}
       </ReviewHeading>
 
-      <ReviewRow
-        level={reviewRowLevel}
-        label={t("pages.claimsReview.leaveReasonLabel")}
-      >
-        {t("pages.claimsReview.leaveReasonValue", {
-          context: findKeyByValue(
-            LeaveReason,
-            get(claim, "leave_details.reason")
-          ),
-        })}
-      </ReviewRow>
-
-      {claim.isMedicalOrPregnancyLeave && (
+      <dl aria-labelledby="leave-details">
         <ReviewRow
           level={reviewRowLevel}
-          label={t("pages.claimsReview.pregnancyOrRecentBirthLabel")}
+          label={t("pages.claimsReview.leaveReasonLabel")}
         >
-          {t("pages.claimsReview.pregnancyOrRecentBirth", {
-            context: get(claim, "leave_details.pregnant_or_recent_birth")
-              ? "yes"
-              : "no",
+          {t("pages.claimsReview.leaveReasonValue", {
+            context: findKeyByValue(
+              LeaveReason,
+              get(claim, "leave_details.reason")
+            ),
           })}
         </ReviewRow>
-      )}
 
-      {claim.isBondingLeave && (
-        <ReviewRow
-          level={reviewRowLevel}
-          label={t("pages.claimsReview.familyLeaveTypeLabel")}
-        >
-          {t("pages.claimsReview.familyLeaveTypeValue", {
-            context: findKeyByValue(ReasonQualifier, reasonQualifier),
-          })}
-        </ReviewRow>
-      )}
-
-      {claim.isBondingLeave && reasonQualifier === ReasonQualifier.newBorn && (
-        <ReviewRow
-          level={reviewRowLevel}
-          label={t("pages.claimsReview.childBirthDateLabel")}
-        >
-          {formatDateRange(get(claim, "leave_details.child_birth_date"))}
-        </ReviewRow>
-      )}
-
-      {claim.isBondingLeave &&
-        [ReasonQualifier.adoption, ReasonQualifier.fosterCare].includes(
-          reasonQualifier
-        ) && (
+        {claim.isMedicalOrPregnancyLeave && (
           <ReviewRow
             level={reviewRowLevel}
-            label={t("pages.claimsReview.childPlacementDateLabel")}
+            label={t("pages.claimsReview.pregnancyOrRecentBirthLabel")}
           >
-            {formatDateRange(get(claim, "leave_details.child_placement_date"))}
+            {t("pages.claimsReview.pregnancyOrRecentBirth", {
+              context: get(claim, "leave_details.pregnant_or_recent_birth")
+                ? "yes"
+                : "no",
+            })}
           </ReviewRow>
         )}
 
-      {claim.isCaringLeave && (
-        <React.Fragment>
+        {claim.isBondingLeave && (
           <ReviewRow
             level={reviewRowLevel}
-            label={t("pages.claimsReview.familyMemberRelationshipLabel")}
+            label={t("pages.claimsReview.familyLeaveTypeLabel")}
           >
-            {t("pages.claimsReview.familyMemberRelationship", {
-              context: findKeyByValue(
-                RelationshipToCaregiver,
+            {t("pages.claimsReview.familyLeaveTypeValue", {
+              context: findKeyByValue(ReasonQualifier, reasonQualifier),
+            })}
+          </ReviewRow>
+        )}
+
+        {claim.isBondingLeave && reasonQualifier === ReasonQualifier.newBorn && (
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.childBirthDateLabel")}
+          >
+            {formatDateRange(get(claim, "leave_details.child_birth_date"))}
+          </ReviewRow>
+        )}
+
+        {claim.isBondingLeave &&
+          [ReasonQualifier.adoption, ReasonQualifier.fosterCare].includes(
+            reasonQualifier
+          ) && (
+            <ReviewRow
+              level={reviewRowLevel}
+              label={t("pages.claimsReview.childPlacementDateLabel")}
+            >
+              {formatDateRange(
+                get(claim, "leave_details.child_placement_date")
+              )}
+            </ReviewRow>
+          )}
+
+        {claim.isCaringLeave && (
+          <React.Fragment>
+            <ReviewRow
+              level={reviewRowLevel}
+              label={t("pages.claimsReview.familyMemberRelationshipLabel")}
+            >
+              {t("pages.claimsReview.familyMemberRelationship", {
+                context: findKeyByValue(
+                  RelationshipToCaregiver,
+                  get(
+                    claim,
+                    "leave_details.caring_leave_metadata.relationship_to_caregiver"
+                  )
+                ),
+              })}
+            </ReviewRow>
+            <ReviewRow
+              level={reviewRowLevel}
+              label={t("pages.claimsReview.familyMemberNameLabel")}
+            >
+              {[
                 get(
                   claim,
-                  "leave_details.caring_leave_metadata.relationship_to_caregiver"
+                  "leave_details.caring_leave_metadata.family_member_first_name"
+                ),
+                get(
+                  claim,
+                  "leave_details.caring_leave_metadata.family_member_middle_name"
+                ),
+                get(
+                  claim,
+                  "leave_details.caring_leave_metadata.family_member_last_name"
+                ),
+              ].join(" ")}
+            </ReviewRow>
+            <ReviewRow
+              level={reviewRowLevel}
+              label={t("pages.claimsReview.familyMemberDateOfBirthLabel")}
+            >
+              {formatDateRange(
+                get(
+                  claim,
+                  "leave_details.caring_leave_metadata.family_member_date_of_birth"
                 )
-              ),
-            })}
-          </ReviewRow>
+              )}
+            </ReviewRow>
+          </React.Fragment>
+        )}
+
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.leavePeriodLabel", {
+            context: "continuous",
+          })}
+        >
+          {claim.isContinuous
+            ? claim.continuousLeaveDateRange()
+            : t("pages.claimsReview.leavePeriodNotSelected")}
+        </ReviewRow>
+
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.leavePeriodLabel", {
+            context: "reduced",
+          })}
+        >
+          {claim.isReducedSchedule
+            ? claim.reducedLeaveDateRange()
+            : t("pages.claimsReview.leavePeriodNotSelected")}
+        </ReviewRow>
+        {/* Only hide the border when we're rendering a WeeklyTimeTable */}
+        {claim.isReducedSchedule && (
           <ReviewRow
             level={reviewRowLevel}
-            label={t("pages.claimsReview.familyMemberNameLabel")}
+            label={t("pages.claimsReview.reducedLeaveScheduleLabel")}
+            noBorder={workPattern.work_pattern_type === WorkPatternType.fixed}
           >
-            {[
-              get(
-                claim,
-                "leave_details.caring_leave_metadata.family_member_first_name"
-              ),
-              get(
-                claim,
-                "leave_details.caring_leave_metadata.family_member_middle_name"
-              ),
-              get(
-                claim,
-                "leave_details.caring_leave_metadata.family_member_last_name"
-              ),
-            ].join(" ")}
-          </ReviewRow>
-          <ReviewRow
-            level={reviewRowLevel}
-            label={t("pages.claimsReview.familyMemberDateOfBirthLabel")}
-          >
-            {formatDateRange(
-              get(
-                claim,
-                "leave_details.caring_leave_metadata.family_member_date_of_birth"
-              )
+            {workPattern.work_pattern_type === WorkPatternType.fixed && (
+              <WeeklyTimeTable
+                className="margin-bottom-0"
+                days={reducedLeavePeriod.days}
+              />
             )}
+            {workPattern.work_pattern_type === WorkPatternType.variable &&
+              t("pages.claimsReview.reducedLeaveScheduleWeeklyTotal", {
+                context:
+                  convertMinutesToHours(reducedLeavePeriod.totalMinutesOff)
+                    .minutes === 0
+                    ? "noMinutes"
+                    : null,
+                ...convertMinutesToHours(reducedLeavePeriod.totalMinutesOff),
+              })}
           </ReviewRow>
-        </React.Fragment>
-      )}
+        )}
 
-      <ReviewRow
-        level={reviewRowLevel}
-        label={t("pages.claimsReview.leavePeriodLabel", {
-          context: "continuous",
-        })}
-      >
-        {claim.isContinuous
-          ? claim.continuousLeaveDateRange()
-          : t("pages.claimsReview.leavePeriodNotSelected")}
-      </ReviewRow>
-
-      <ReviewRow
-        level={reviewRowLevel}
-        label={t("pages.claimsReview.leavePeriodLabel", {
-          context: "reduced",
-        })}
-      >
-        {claim.isReducedSchedule
-          ? claim.reducedLeaveDateRange()
-          : t("pages.claimsReview.leavePeriodNotSelected")}
-      </ReviewRow>
-      {/* Only hide the border when we're rendering a WeeklyTimeTable */}
-      {claim.isReducedSchedule && (
         <ReviewRow
           level={reviewRowLevel}
-          label={t("pages.claimsReview.reducedLeaveScheduleLabel")}
-          noBorder={workPattern.work_pattern_type === WorkPatternType.fixed}
+          label={t("pages.claimsReview.leavePeriodLabel", {
+            context: "intermittent",
+          })}
         >
-          {workPattern.work_pattern_type === WorkPatternType.fixed && (
-            <WeeklyTimeTable
-              className="margin-bottom-0"
-              days={reducedLeavePeriod.days}
+          {claim.isIntermittent
+            ? claim.intermittentLeaveDateRange()
+            : t("pages.claimsReview.leavePeriodNotSelected")}
+        </ReviewRow>
+
+        {claim.isIntermittent && (
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.intermittentFrequencyDurationLabel")}
+          >
+            <Trans
+              i18nKey="pages.claimsReview.intermittentFrequencyDuration"
+              tOptions={{
+                context: getI18nContextForIntermittentFrequencyDuration(
+                  get(claim, "leave_details.intermittent_leave_periods[0]")
+                ),
+                duration: get(
+                  claim,
+                  "leave_details.intermittent_leave_periods[0].duration"
+                ),
+                frequency: get(
+                  claim,
+                  "leave_details.intermittent_leave_periods[0].frequency"
+                ),
+              }}
             />
-          )}
-          {workPattern.work_pattern_type === WorkPatternType.variable &&
-            t("pages.claimsReview.reducedLeaveScheduleWeeklyTotal", {
-              context:
-                convertMinutesToHours(reducedLeavePeriod.totalMinutesOff)
-                  .minutes === 0
-                  ? "noMinutes"
-                  : null,
-              ...convertMinutesToHours(reducedLeavePeriod.totalMinutesOff),
-            })}
-        </ReviewRow>
-      )}
-
-      <ReviewRow
-        level={reviewRowLevel}
-        label={t("pages.claimsReview.leavePeriodLabel", {
-          context: "intermittent",
-        })}
-      >
-        {claim.isIntermittent
-          ? claim.intermittentLeaveDateRange()
-          : t("pages.claimsReview.leavePeriodNotSelected")}
-      </ReviewRow>
-
-      {claim.isIntermittent && (
-        <ReviewRow
-          level={reviewRowLevel}
-          label={t("pages.claimsReview.intermittentFrequencyDurationLabel")}
-        >
-          <Trans
-            i18nKey="pages.claimsReview.intermittentFrequencyDuration"
-            tOptions={{
-              context: getI18nContextForIntermittentFrequencyDuration(
-                get(claim, "leave_details.intermittent_leave_periods[0]")
-              ),
-              duration: get(
-                claim,
-                "leave_details.intermittent_leave_periods[0].duration"
-              ),
-              frequency: get(
-                claim,
-                "leave_details.intermittent_leave_periods[0].frequency"
-              ),
-            }}
-          />
-        </ReviewRow>
-      )}
+          </ReviewRow>
+        )}
+      </dl>
 
       {/* OTHER LEAVE */}
       {/* Conditionally showing this section since it was added after launch, so some claims may not have this section yet. */}
@@ -599,99 +614,105 @@ export const Review = (props) => {
         get(claim, "has_concurrent_leave") !== null) && (
         <div data-test="other-leave">
           <ReviewHeading
+            id="other-leave"
             editHref={getStepEditHref(ClaimSteps.otherLeave)}
             editText={t("pages.claimsReview.editLink")}
             level={reviewHeadingLevel}
           >
             {t("pages.claimsReview.stepHeading", { context: "otherLeave" })}
           </ReviewHeading>
-          <ReviewRow
-            level={reviewRowLevel}
-            label={t("pages.claimsReview.previousLeaveHasPreviousLeavesLabel")}
-          >
-            {(get(claim, "has_previous_leaves_same_reason") ||
-              get(claim, "has_previous_leaves_other_reason")) === true
-              ? t("pages.claimsReview.otherLeaveChoiceYes")
-              : t("pages.claimsReview.otherLeaveChoiceNo")}
-          </ReviewRow>
-          <PreviousLeaveList
-            entries={get(claim, "previous_leaves_same_reason")}
-            type="sameReason"
-            startIndex={0}
-            reviewRowLevel={reviewRowLevel}
-          />
-          <PreviousLeaveList
-            entries={get(claim, "previous_leaves_other_reason")}
-            type="otherReason"
-            startIndex={get(claim, "previous_leaves_same_reason.length", 0)}
-            reviewRowLevel={reviewRowLevel}
-          />
 
-          <ReviewRow
-            level={reviewRowLevel}
-            label={t(
-              "pages.claimsReview.concurrentLeaveHasConcurrentLeaveLabel"
-            )}
-          >
-            {get(claim, "has_concurrent_leave") === true
-              ? t("pages.claimsReview.otherLeaveChoiceYes")
-              : t("pages.claimsReview.otherLeaveChoiceNo")}
-          </ReviewRow>
-          {get(claim, "concurrent_leave") && (
+          <dl aria-labelledby="other-leave">
             <ReviewRow
               level={reviewRowLevel}
-              label={t("pages.claimsReview.concurrentLeaveLabel")}
+              label={t(
+                "pages.claimsReview.previousLeaveHasPreviousLeavesLabel"
+              )}
             >
-              <p className="text-base-darker margin-top-1">
-                {formatDateRange(
-                  get(claim, "concurrent_leave.leave_start_date"),
-                  get(claim, "concurrent_leave.leave_end_date")
-                )}
-              </p>
-              <ul className="usa-list margin-top-1">
-                <li>
-                  {t("pages.claimsReview.isForCurrentEmployer", {
-                    context: String(
-                      get(claim, "concurrent_leave.is_for_current_employer")
-                    ),
-                  })}
-                </li>
-              </ul>
+              {(get(claim, "has_previous_leaves_same_reason") ||
+                get(claim, "has_previous_leaves_other_reason")) === true
+                ? t("pages.claimsReview.otherLeaveChoiceYes")
+                : t("pages.claimsReview.otherLeaveChoiceNo")}
             </ReviewRow>
-          )}
-
-          <ReviewRow
-            level={reviewRowLevel}
-            label={t("pages.claimsReview.employerBenefitLabel")}
-          >
-            {get(claim, "has_employer_benefits") === true
-              ? t("pages.claimsReview.otherLeaveChoiceYes")
-              : t("pages.claimsReview.otherLeaveChoiceNo")}
-          </ReviewRow>
-
-          {get(claim, "has_employer_benefits") && (
-            <EmployerBenefitList
-              entries={get(claim, "employer_benefits")}
+            <PreviousLeaveList
+              entries={get(claim, "previous_leaves_same_reason")}
+              type="sameReason"
+              startIndex={0}
               reviewRowLevel={reviewRowLevel}
             />
-          )}
-
-          <ReviewRow
-            level={reviewRowLevel}
-            label={t("pages.claimsReview.otherIncomeLabel")}
-          >
-            {get(claim, "has_other_incomes") === true &&
-              t("pages.claimsReview.otherLeaveChoiceYes")}
-            {get(claim, "has_other_incomes") === false &&
-              t("pages.claimsReview.otherLeaveChoiceNo")}
-          </ReviewRow>
-
-          {get(claim, "has_other_incomes") && (
-            <OtherIncomeList
-              entries={get(claim, "other_incomes")}
+            <PreviousLeaveList
+              entries={get(claim, "previous_leaves_other_reason")}
+              type="otherReason"
+              startIndex={get(claim, "previous_leaves_same_reason.length", 0)}
               reviewRowLevel={reviewRowLevel}
             />
-          )}
+
+            <ReviewRow
+              level={reviewRowLevel}
+              label={t(
+                "pages.claimsReview.concurrentLeaveHasConcurrentLeaveLabel"
+              )}
+            >
+              {get(claim, "has_concurrent_leave") === true
+                ? t("pages.claimsReview.otherLeaveChoiceYes")
+                : t("pages.claimsReview.otherLeaveChoiceNo")}
+            </ReviewRow>
+            {get(claim, "concurrent_leave") && (
+              <ReviewRow
+                level={reviewRowLevel}
+                label={t("pages.claimsReview.concurrentLeaveLabel")}
+              >
+                <p className="text-base-darker margin-top-1">
+                  {formatDateRange(
+                    get(claim, "concurrent_leave.leave_start_date"),
+                    get(claim, "concurrent_leave.leave_end_date")
+                  )}
+                </p>
+                <ul className="usa-list margin-top-1">
+                  <li>
+                    {t("pages.claimsReview.isForCurrentEmployer", {
+                      context: String(
+                        get(claim, "concurrent_leave.is_for_current_employer")
+                      ),
+                    })}
+                  </li>
+                </ul>
+              </ReviewRow>
+            )}
+
+            <ReviewRow
+              level={reviewRowLevel}
+              label={t("pages.claimsReview.employerBenefitLabel")}
+            >
+              {get(claim, "has_employer_benefits") === true
+                ? t("pages.claimsReview.otherLeaveChoiceYes")
+                : t("pages.claimsReview.otherLeaveChoiceNo")}
+            </ReviewRow>
+
+            {get(claim, "has_employer_benefits") && (
+              <EmployerBenefitList
+                entries={get(claim, "employer_benefits")}
+                reviewRowLevel={reviewRowLevel}
+              />
+            )}
+
+            <ReviewRow
+              level={reviewRowLevel}
+              label={t("pages.claimsReview.otherIncomeLabel")}
+            >
+              {get(claim, "has_other_incomes") === true &&
+                t("pages.claimsReview.otherLeaveChoiceYes")}
+              {get(claim, "has_other_incomes") === false &&
+                t("pages.claimsReview.otherLeaveChoiceNo")}
+            </ReviewRow>
+
+            {get(claim, "has_other_incomes") && (
+              <OtherIncomeList
+                entries={get(claim, "other_incomes")}
+                reviewRowLevel={reviewRowLevel}
+              />
+            )}
+          </dl>
         </div>
       )}
 
@@ -718,50 +739,52 @@ export const Review = (props) => {
           </Heading>
 
           {/* PAYMENT METHOD */}
-          <ReviewHeading level={reviewHeadingLevel}>
+          <ReviewHeading id="payment-method" level={reviewHeadingLevel}>
             {t("pages.claimsReview.stepHeading", { context: "payment" })}
           </ReviewHeading>
 
-          {payment_method && (
-            <ReviewRow
-              label={t("pages.claimsReview.paymentMethodLabel")}
-              level={reviewRowLevel}
-            >
-              {t("pages.claimsReview.paymentMethodValue", {
-                context: findKeyByValue(
-                  PaymentPreferenceMethod,
-                  payment_method
-                ),
-              })}
-            </ReviewRow>
-          )}
-          {payment_method === PaymentPreferenceMethod.ach && (
-            <React.Fragment>
+          <dl aria-labelledby="payment-method">
+            {payment_method && (
               <ReviewRow
-                label={t("pages.claimsReview.paymentRoutingNumLabel")}
+                label={t("pages.claimsReview.paymentMethodLabel")}
                 level={reviewRowLevel}
               >
-                {get(claim, "payment_preference.routing_number")}
-              </ReviewRow>
-              <ReviewRow
-                label={t("pages.claimsReview.paymentAccountNumLabel")}
-                level={reviewRowLevel}
-              >
-                {get(claim, "payment_preference.account_number")}
-              </ReviewRow>
-              <ReviewRow
-                label={t("pages.claimsReview.achTypeLabel")}
-                level={reviewRowLevel}
-              >
-                {t("pages.claimsReview.achType", {
+                {t("pages.claimsReview.paymentMethodValue", {
                   context: findKeyByValue(
-                    BankAccountType,
-                    get(claim, "payment_preference.bank_account_type")
+                    PaymentPreferenceMethod,
+                    payment_method
                   ),
                 })}
               </ReviewRow>
-            </React.Fragment>
-          )}
+            )}
+            {payment_method === PaymentPreferenceMethod.ach && (
+              <React.Fragment>
+                <ReviewRow
+                  label={t("pages.claimsReview.paymentRoutingNumLabel")}
+                  level={reviewRowLevel}
+                >
+                  {get(claim, "payment_preference.routing_number")}
+                </ReviewRow>
+                <ReviewRow
+                  label={t("pages.claimsReview.paymentAccountNumLabel")}
+                  level={reviewRowLevel}
+                >
+                  {get(claim, "payment_preference.account_number")}
+                </ReviewRow>
+                <ReviewRow
+                  label={t("pages.claimsReview.achTypeLabel")}
+                  level={reviewRowLevel}
+                >
+                  {t("pages.claimsReview.achType", {
+                    context: findKeyByValue(
+                      BankAccountType,
+                      get(claim, "payment_preference.bank_account_type")
+                    ),
+                  })}
+                </ReviewRow>
+              </React.Fragment>
+            )}
+          </dl>
           <Heading level="2" size="1">
             <HeadingPrefix>
               {t("pages.claimsReview.partHeadingPrefix", { number: 3 })}
@@ -790,21 +813,25 @@ export const Review = (props) => {
           {!isLoadingDocuments && !hasLoadingDocumentsError && (
             <React.Fragment>
               <ReviewHeading
+                id="upload-identity-document"
                 editHref={getStepEditHref(ClaimSteps.uploadId)}
                 editText={t("pages.claimsReview.editLink")}
                 level={reviewHeadingLevel}
               >
                 {t("pages.claimsReview.stepHeading", { context: "uploadId" })}
               </ReviewHeading>
-              <ReviewRow
-                label={t("pages.claimsReview.numberOfFilesLabel")}
-                level={reviewRowLevel}
-              >
-                {idDocuments.length}
-              </ReviewRow>
+              <dl aria-labelledby="upload-identity-document">
+                <ReviewRow
+                  label={t("pages.claimsReview.numberOfFilesLabel")}
+                  level={reviewRowLevel}
+                >
+                  {idDocuments.length}
+                </ReviewRow>
+              </dl>
               {!hasFutureChildDate && (
                 <React.Fragment>
                   <ReviewHeading
+                    id="upload-certification-document"
                     editHref={getStepEditHref(ClaimSteps.uploadCertification)}
                     editText={t("pages.claimsReview.editLink")}
                     level={reviewHeadingLevel}
@@ -813,13 +840,15 @@ export const Review = (props) => {
                       context: "uploadCertification",
                     })}
                   </ReviewHeading>
-                  <ReviewRow
-                    data-test="certification-doc-count"
-                    label={t("pages.claimsReview.numberOfFilesLabel")}
-                    level={reviewRowLevel}
-                  >
-                    {certificationDocuments.length}
-                  </ReviewRow>
+                  <dl aria-labelledby="upload-certification-document">
+                    <ReviewRow
+                      data-test="certification-doc-count"
+                      label={t("pages.claimsReview.numberOfFilesLabel")}
+                      level={reviewRowLevel}
+                    >
+                      {certificationDocuments.length}
+                    </ReviewRow>
+                  </dl>
                 </React.Fragment>
               )}
             </React.Fragment>

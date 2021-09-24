@@ -101,159 +101,179 @@ exports[`Review Page Final Review Page when the claim is complete renders Review
   </Lead>
   <ReviewHeading
     editText="Edit"
+    id="employee-identity"
     level="2"
   >
     Your identification
   </ReviewHeading>
-  <ReviewRow
-    label="Name"
-    level="3"
+  <dl
+    aria-labelledby="employee-identity"
   >
-    Jane  Doe
-  </ReviewRow>
-  <ReviewRow
-    label="Gender Identity"
-    level="3"
-  >
-    Woman
-  </ReviewRow>
-  <ReviewRow
-    label="Phone number"
-    level="3"
-  >
-    Mobile
-    <br />
-    123-456-****
-  </ReviewRow>
-  <ReviewRow
-    label="Residential address"
-    level="3"
-  >
-    1234 My St., Boston, MA 00000
-  </ReviewRow>
-  <ReviewRow
-    label="Driver’s License Number"
-    level="3"
-  >
-    *********
-  </ReviewRow>
-  <ReviewRow
-    label="Social Security Number or ITIN"
-    level="3"
-  >
-    ***-**-****
-  </ReviewRow>
-  <ReviewRow
-    label="Date of birth"
-    level="3"
-  >
-    7/17/****
-  </ReviewRow>
+    <ReviewRow
+      label="Name"
+      level="3"
+    >
+      Jane  Doe
+    </ReviewRow>
+    <ReviewRow
+      label="Gender Identity"
+      level="3"
+    >
+      Woman
+    </ReviewRow>
+    <ReviewRow
+      label="Phone number"
+      level="3"
+    >
+      Mobile
+      <br />
+      123-456-****
+    </ReviewRow>
+    <ReviewRow
+      label="Residential address"
+      level="3"
+    >
+      1234 My St., Boston, MA 00000
+    </ReviewRow>
+    <ReviewRow
+      label="Driver’s License Number"
+      level="3"
+    >
+      *********
+    </ReviewRow>
+    <ReviewRow
+      label="Social Security Number or ITIN"
+      level="3"
+    >
+      ***-**-****
+    </ReviewRow>
+    <ReviewRow
+      label="Date of birth"
+      level="3"
+    >
+      7/17/****
+    </ReviewRow>
+  </dl>
   <ReviewHeading
     editText="Edit"
+    id="employment-info"
     level="2"
   >
     Employment information
   </ReviewHeading>
-  <ReviewRow
-    label="Employer’s EIN"
-    level="3"
+  <dl
+    aria-labelledby="employment-info"
   >
-    12-3456789
-  </ReviewRow>
-  <ReviewRow
-    label="Notified employer"
-    level="3"
-  >
-    Notified employer on 1/1/2021
-  </ReviewRow>
-  <ReviewRow
-    label="Work schedule type"
-    level="3"
-  >
-    Each week I work the same number of hours on the same days.
-  </ReviewRow>
+    <ReviewRow
+      label="Employer’s EIN"
+      level="3"
+    >
+      12-3456789
+    </ReviewRow>
+    <ReviewRow
+      label="Notified employer"
+      level="3"
+    >
+      Notified employer on 1/1/2021
+    </ReviewRow>
+    <ReviewRow
+      label="Work schedule type"
+      level="3"
+    >
+      Each week I work the same number of hours on the same days.
+    </ReviewRow>
+  </dl>
   <ReviewHeading
     editText="Edit"
+    id="leave-details"
     level="2"
   >
     Leave details
   </ReviewHeading>
-  <ReviewRow
-    label="Leave type"
-    level="3"
+  <dl
+    aria-labelledby="leave-details"
   >
-    Medical leave
-  </ReviewRow>
-  <ReviewRow
-    label="Medical leave for pregnancy or birth"
-    level="3"
-  >
-    No
-  </ReviewRow>
-  <ReviewRow
-    label="Continuous leave"
-    level="3"
-  >
-    1/1/2021 to 6/1/2021
-  </ReviewRow>
-  <ReviewRow
-    label="Reduced leave"
-    level="3"
-  >
-    No
-  </ReviewRow>
-  <ReviewRow
-    label="Intermittent leave"
-    level="3"
-  >
-    No
-  </ReviewRow>
+    <ReviewRow
+      label="Leave type"
+      level="3"
+    >
+      Medical leave
+    </ReviewRow>
+    <ReviewRow
+      label="Medical leave for pregnancy or birth"
+      level="3"
+    >
+      No
+    </ReviewRow>
+    <ReviewRow
+      label="Continuous leave"
+      level="3"
+    >
+      1/1/2021 to 6/1/2021
+    </ReviewRow>
+    <ReviewRow
+      label="Reduced leave"
+      level="3"
+    >
+      No
+    </ReviewRow>
+    <ReviewRow
+      label="Intermittent leave"
+      level="3"
+    >
+      No
+    </ReviewRow>
+  </dl>
   <div
     data-test="other-leave"
   >
     <ReviewHeading
       editText="Edit"
+      id="other-leave"
       level="2"
     >
       Other leave, benefits, and income
     </ReviewHeading>
-    <ReviewRow
-      label="Previous leave?"
-      level="3"
+    <dl
+      aria-labelledby="other-leave"
     >
-      No
-    </ReviewRow>
-    <PreviousLeaveList
-      entries={Array []}
-      reviewRowLevel="3"
-      startIndex={0}
-      type="sameReason"
-    />
-    <PreviousLeaveList
-      entries={Array []}
-      reviewRowLevel="3"
-      startIndex={0}
-      type="otherReason"
-    />
-    <ReviewRow
-      label="Concurrent leave?"
-      level="3"
-    >
-      No
-    </ReviewRow>
-    <ReviewRow
-      label="Employer-sponsored benefits?"
-      level="3"
-    >
-      No
-    </ReviewRow>
-    <ReviewRow
-      label="Other sources of income?"
-      level="3"
-    >
-      No
-    </ReviewRow>
+      <ReviewRow
+        label="Previous leave?"
+        level="3"
+      >
+        No
+      </ReviewRow>
+      <PreviousLeaveList
+        entries={Array []}
+        reviewRowLevel="3"
+        startIndex={0}
+        type="sameReason"
+      />
+      <PreviousLeaveList
+        entries={Array []}
+        reviewRowLevel="3"
+        startIndex={0}
+        type="otherReason"
+      />
+      <ReviewRow
+        label="Concurrent leave?"
+        level="3"
+      >
+        No
+      </ReviewRow>
+      <ReviewRow
+        label="Employer-sponsored benefits?"
+        level="3"
+      >
+        No
+      </ReviewRow>
+      <ReviewRow
+        label="Other sources of income?"
+        level="3"
+      >
+        No
+      </ReviewRow>
+    </dl>
   </div>
   <Heading
     level="2"
@@ -265,34 +285,39 @@ exports[`Review Page Final Review Page when the claim is complete renders Review
     Review: Your payment information
   </Heading>
   <ReviewHeading
+    id="payment-method"
     level="2"
   >
     Payment information
   </ReviewHeading>
-  <ReviewRow
-    label="Payment method"
-    level="3"
+  <dl
+    aria-labelledby="payment-method"
   >
-    Direct deposit into my bank account
-  </ReviewRow>
-  <ReviewRow
-    label="Routing number"
-    level="3"
-  >
-    1234567890
-  </ReviewRow>
-  <ReviewRow
-    label="Account number"
-    level="3"
-  >
-    091000022
-  </ReviewRow>
-  <ReviewRow
-    label="Account type"
-    level="3"
-  >
-    Checking
-  </ReviewRow>
+    <ReviewRow
+      label="Payment method"
+      level="3"
+    >
+      Direct deposit into my bank account
+    </ReviewRow>
+    <ReviewRow
+      label="Routing number"
+      level="3"
+    >
+      1234567890
+    </ReviewRow>
+    <ReviewRow
+      label="Account number"
+      level="3"
+    >
+      091000022
+    </ReviewRow>
+    <ReviewRow
+      label="Account type"
+      level="3"
+    >
+      Checking
+    </ReviewRow>
+  </dl>
   <Heading
     level="2"
     size="1"
@@ -377,174 +402,194 @@ exports[`Review Page Leave reason When the reason is caring leave renders caring
   <ReviewHeading
     editHref="/applications/name?claim_id=mock_application_id"
     editText="Edit"
+    id="employee-identity"
     level="3"
   >
     Your identification
   </ReviewHeading>
-  <ReviewRow
-    label="Name"
-    level="4"
+  <dl
+    aria-labelledby="employee-identity"
   >
-    Jane  Doe
-  </ReviewRow>
-  <ReviewRow
-    label="Gender Identity"
-    level="4"
-  >
-    Woman
-  </ReviewRow>
-  <ReviewRow
-    label="Phone number"
-    level="4"
-  >
-    Mobile
-    <br />
-    123-456-****
-  </ReviewRow>
-  <ReviewRow
-    label="Residential address"
-    level="4"
-  >
-    1234 My St., Boston, MA 00000
-  </ReviewRow>
-  <ReviewRow
-    label="Driver’s License Number"
-    level="4"
-  >
-    *********
-  </ReviewRow>
-  <ReviewRow
-    label="Social Security Number or ITIN"
-    level="4"
-  >
-    ***-**-****
-  </ReviewRow>
-  <ReviewRow
-    label="Date of birth"
-    level="4"
-  >
-    7/17/****
-  </ReviewRow>
+    <ReviewRow
+      label="Name"
+      level="4"
+    >
+      Jane  Doe
+    </ReviewRow>
+    <ReviewRow
+      label="Gender Identity"
+      level="4"
+    >
+      Woman
+    </ReviewRow>
+    <ReviewRow
+      label="Phone number"
+      level="4"
+    >
+      Mobile
+      <br />
+      123-456-****
+    </ReviewRow>
+    <ReviewRow
+      label="Residential address"
+      level="4"
+    >
+      1234 My St., Boston, MA 00000
+    </ReviewRow>
+    <ReviewRow
+      label="Driver’s License Number"
+      level="4"
+    >
+      *********
+    </ReviewRow>
+    <ReviewRow
+      label="Social Security Number or ITIN"
+      level="4"
+    >
+      ***-**-****
+    </ReviewRow>
+    <ReviewRow
+      label="Date of birth"
+      level="4"
+    >
+      7/17/****
+    </ReviewRow>
+  </dl>
   <ReviewHeading
     editHref="/applications/employment-status?claim_id=mock_application_id"
     editText="Edit"
+    id="employment-info"
     level="3"
   >
     Employment information
   </ReviewHeading>
-  <ReviewRow
-    label="Employer’s EIN"
-    level="4"
+  <dl
+    aria-labelledby="employment-info"
   >
-    12-3456789
-  </ReviewRow>
-  <ReviewRow
-    label="Notified employer"
-    level="4"
-  >
-    Notified employer on 1/1/2021
-  </ReviewRow>
-  <ReviewRow
-    label="Work schedule type"
-    level="4"
-  >
-    Each week I work the same number of hours on the same days.
-  </ReviewRow>
+    <ReviewRow
+      label="Employer’s EIN"
+      level="4"
+    >
+      12-3456789
+    </ReviewRow>
+    <ReviewRow
+      label="Notified employer"
+      level="4"
+    >
+      Notified employer on 1/1/2021
+    </ReviewRow>
+    <ReviewRow
+      label="Work schedule type"
+      level="4"
+    >
+      Each week I work the same number of hours on the same days.
+    </ReviewRow>
+  </dl>
   <ReviewHeading
     editHref="/applications/leave-reason?claim_id=mock_application_id"
     editText="Edit"
+    id="leave-details"
     level="3"
   >
     Leave details
   </ReviewHeading>
-  <ReviewRow
-    label="Leave type"
-    level="4"
+  <dl
+    aria-labelledby="leave-details"
   >
-    Care for a family member
-  </ReviewRow>
-  <ReviewRow
-    label="Family member's relationship"
-    level="4"
-  >
-    Child
-  </ReviewRow>
-  <ReviewRow
-    label="Family member's name"
-    level="4"
-  >
-    Luther James Toggle
-  </ReviewRow>
-  <ReviewRow
-    label="Family member's date of birth"
-    level="4"
-  >
-    10/14/****
-  </ReviewRow>
-  <ReviewRow
-    label="Continuous leave"
-    level="4"
-  >
-    1/1/2021 to 6/1/2021
-  </ReviewRow>
-  <ReviewRow
-    label="Reduced leave"
-    level="4"
-  >
-    No
-  </ReviewRow>
-  <ReviewRow
-    label="Intermittent leave"
-    level="4"
-  >
-    No
-  </ReviewRow>
+    <ReviewRow
+      label="Leave type"
+      level="4"
+    >
+      Care for a family member
+    </ReviewRow>
+    <ReviewRow
+      label="Family member's relationship"
+      level="4"
+    >
+      Child
+    </ReviewRow>
+    <ReviewRow
+      label="Family member's name"
+      level="4"
+    >
+      Luther James Toggle
+    </ReviewRow>
+    <ReviewRow
+      label="Family member's date of birth"
+      level="4"
+    >
+      10/14/****
+    </ReviewRow>
+    <ReviewRow
+      label="Continuous leave"
+      level="4"
+    >
+      1/1/2021 to 6/1/2021
+    </ReviewRow>
+    <ReviewRow
+      label="Reduced leave"
+      level="4"
+    >
+      No
+    </ReviewRow>
+    <ReviewRow
+      label="Intermittent leave"
+      level="4"
+    >
+      No
+    </ReviewRow>
+  </dl>
   <div
     data-test="other-leave"
   >
     <ReviewHeading
       editHref="/applications/previous-leaves-intro?claim_id=mock_application_id"
       editText="Edit"
+      id="other-leave"
       level="3"
     >
       Other leave, benefits, and income
     </ReviewHeading>
-    <ReviewRow
-      label="Previous leave?"
-      level="4"
+    <dl
+      aria-labelledby="other-leave"
     >
-      No
-    </ReviewRow>
-    <PreviousLeaveList
-      entries={Array []}
-      reviewRowLevel="4"
-      startIndex={0}
-      type="sameReason"
-    />
-    <PreviousLeaveList
-      entries={Array []}
-      reviewRowLevel="4"
-      startIndex={0}
-      type="otherReason"
-    />
-    <ReviewRow
-      label="Concurrent leave?"
-      level="4"
-    >
-      No
-    </ReviewRow>
-    <ReviewRow
-      label="Employer-sponsored benefits?"
-      level="4"
-    >
-      No
-    </ReviewRow>
-    <ReviewRow
-      label="Other sources of income?"
-      level="4"
-    >
-      No
-    </ReviewRow>
+      <ReviewRow
+        label="Previous leave?"
+        level="4"
+      >
+        No
+      </ReviewRow>
+      <PreviousLeaveList
+        entries={Array []}
+        reviewRowLevel="4"
+        startIndex={0}
+        type="sameReason"
+      />
+      <PreviousLeaveList
+        entries={Array []}
+        reviewRowLevel="4"
+        startIndex={0}
+        type="otherReason"
+      />
+      <ReviewRow
+        label="Concurrent leave?"
+        level="4"
+      >
+        No
+      </ReviewRow>
+      <ReviewRow
+        label="Employer-sponsored benefits?"
+        level="4"
+      >
+        No
+      </ReviewRow>
+      <ReviewRow
+        label="Other sources of income?"
+        level="4"
+      >
+        No
+      </ReviewRow>
+    </dl>
   </div>
   <div
     className="margin-top-6 margin-bottom-2"
@@ -751,309 +796,330 @@ exports[`Review Page Part 1 Review Page when all data is present renders Review 
   <ReviewHeading
     editHref="/applications/name?claim_id=mock_application_id"
     editText="Edit"
+    id="employee-identity"
     level="3"
   >
     Your identification
   </ReviewHeading>
-  <ReviewRow
-    label="Name"
-    level="4"
+  <dl
+    aria-labelledby="employee-identity"
   >
-    Jane  Doe
-  </ReviewRow>
-  <ReviewRow
-    label="Gender Identity"
-    level="4"
-  >
-    Woman
-  </ReviewRow>
-  <ReviewRow
-    label="Phone number"
-    level="4"
-  >
-    Mobile
-    <br />
-    123-456-****
-  </ReviewRow>
-  <ReviewRow
-    label="Residential address"
-    level="4"
-  >
-    1234 My St., Boston, MA 00000
-  </ReviewRow>
-  <ReviewRow
-    label="Mailing address"
-    level="4"
-  >
-    124 My St., Boston, MA 00000
-  </ReviewRow>
-  <ReviewRow
-    label="Driver’s License Number"
-    level="4"
-  >
-    *********
-  </ReviewRow>
-  <ReviewRow
-    label="Social Security Number or ITIN"
-    level="4"
-  >
-    ***-**-****
-  </ReviewRow>
-  <ReviewRow
-    label="Date of birth"
-    level="4"
-  >
-    7/17/****
-  </ReviewRow>
+    <ReviewRow
+      label="Name"
+      level="4"
+    >
+      Jane  Doe
+    </ReviewRow>
+    <ReviewRow
+      label="Gender Identity"
+      level="4"
+    >
+      Woman
+    </ReviewRow>
+    <ReviewRow
+      label="Phone number"
+      level="4"
+    >
+      Mobile
+      <br />
+      123-456-****
+    </ReviewRow>
+    <ReviewRow
+      label="Residential address"
+      level="4"
+    >
+      1234 My St., Boston, MA 00000
+    </ReviewRow>
+    <ReviewRow
+      label="Mailing address"
+      level="4"
+    >
+      124 My St., Boston, MA 00000
+    </ReviewRow>
+    <ReviewRow
+      label="Driver’s License Number"
+      level="4"
+    >
+      *********
+    </ReviewRow>
+    <ReviewRow
+      label="Social Security Number or ITIN"
+      level="4"
+    >
+      ***-**-****
+    </ReviewRow>
+    <ReviewRow
+      label="Date of birth"
+      level="4"
+    >
+      7/17/****
+    </ReviewRow>
+  </dl>
   <ReviewHeading
     editHref="/applications/employment-status?claim_id=mock_application_id"
     editText="Edit"
+    id="employment-info"
     level="3"
   >
     Employment information
   </ReviewHeading>
-  <ReviewRow
-    label="Employer’s EIN"
-    level="4"
+  <dl
+    aria-labelledby="employment-info"
   >
-    12-3456789
-  </ReviewRow>
-  <ReviewRow
-    label="Notified employer"
-    level="4"
-  >
-    Notified employer on 1/1/2021
-  </ReviewRow>
-  <ReviewRow
-    label="Work schedule type"
-    level="4"
-  >
-    Each week I work the same number of hours on the same days.
-  </ReviewRow>
-  <ReviewRow
-    label="Weekly work hours"
-    level="4"
-    noBorder={true}
-  >
-    <WeeklyTimeTable
-      days={
-        Array [
-          WorkPatternDay {
-            "day_of_week": "Sunday",
-            "minutes": 0,
-          },
-          WorkPatternDay {
-            "day_of_week": "Monday",
-            "minutes": 480,
-          },
-          WorkPatternDay {
-            "day_of_week": "Tuesday",
-            "minutes": 480,
-          },
-          WorkPatternDay {
-            "day_of_week": "Wednesday",
-            "minutes": 480,
-          },
-          WorkPatternDay {
-            "day_of_week": "Thursday",
-            "minutes": 480,
-          },
-          WorkPatternDay {
-            "day_of_week": "Friday",
-            "minutes": 480,
-          },
-          WorkPatternDay {
-            "day_of_week": "Saturday",
-            "minutes": 0,
-          },
-        ]
-      }
-    />
-  </ReviewRow>
+    <ReviewRow
+      label="Employer’s EIN"
+      level="4"
+    >
+      12-3456789
+    </ReviewRow>
+    <ReviewRow
+      label="Notified employer"
+      level="4"
+    >
+      Notified employer on 1/1/2021
+    </ReviewRow>
+    <ReviewRow
+      label="Work schedule type"
+      level="4"
+    >
+      Each week I work the same number of hours on the same days.
+    </ReviewRow>
+    <ReviewRow
+      label="Weekly work hours"
+      level="4"
+      noBorder={true}
+    >
+      <WeeklyTimeTable
+        aria-label="Weekly work hours"
+        days={
+          Array [
+            WorkPatternDay {
+              "day_of_week": "Sunday",
+              "minutes": 0,
+            },
+            WorkPatternDay {
+              "day_of_week": "Monday",
+              "minutes": 480,
+            },
+            WorkPatternDay {
+              "day_of_week": "Tuesday",
+              "minutes": 480,
+            },
+            WorkPatternDay {
+              "day_of_week": "Wednesday",
+              "minutes": 480,
+            },
+            WorkPatternDay {
+              "day_of_week": "Thursday",
+              "minutes": 480,
+            },
+            WorkPatternDay {
+              "day_of_week": "Friday",
+              "minutes": 480,
+            },
+            WorkPatternDay {
+              "day_of_week": "Saturday",
+              "minutes": 0,
+            },
+          ]
+        }
+      />
+    </ReviewRow>
+  </dl>
   <ReviewHeading
     editHref="/applications/leave-reason?claim_id=mock_application_id"
     editText="Edit"
+    id="leave-details"
     level="3"
   >
     Leave details
   </ReviewHeading>
-  <ReviewRow
-    label="Leave type"
-    level="4"
+  <dl
+    aria-labelledby="leave-details"
   >
-    Medical leave
-  </ReviewRow>
-  <ReviewRow
-    label="Medical leave for pregnancy or birth"
-    level="4"
-  >
-    No
-  </ReviewRow>
-  <ReviewRow
-    label="Continuous leave"
-    level="4"
-  >
-    1/1/2021 to 6/1/2021
-  </ReviewRow>
-  <ReviewRow
-    label="Reduced leave"
-    level="4"
-  >
-    No
-  </ReviewRow>
-  <ReviewRow
-    label="Intermittent leave"
-    level="4"
-  >
-    No
-  </ReviewRow>
+    <ReviewRow
+      label="Leave type"
+      level="4"
+    >
+      Medical leave
+    </ReviewRow>
+    <ReviewRow
+      label="Medical leave for pregnancy or birth"
+      level="4"
+    >
+      No
+    </ReviewRow>
+    <ReviewRow
+      label="Continuous leave"
+      level="4"
+    >
+      1/1/2021 to 6/1/2021
+    </ReviewRow>
+    <ReviewRow
+      label="Reduced leave"
+      level="4"
+    >
+      No
+    </ReviewRow>
+    <ReviewRow
+      label="Intermittent leave"
+      level="4"
+    >
+      No
+    </ReviewRow>
+  </dl>
   <div
     data-test="other-leave"
   >
     <ReviewHeading
       editHref="/applications/previous-leaves-intro?claim_id=mock_application_id"
       editText="Edit"
+      id="other-leave"
       level="3"
     >
       Other leave, benefits, and income
     </ReviewHeading>
-    <ReviewRow
-      label="Previous leave?"
-      level="4"
+    <dl
+      aria-labelledby="other-leave"
     >
-      Yes
-    </ReviewRow>
-    <PreviousLeaveList
-      entries={
-        Array [
-          PreviousLeave {
-            "is_for_current_employer": true,
-            "leave_end_date": "2021-05-01",
-            "leave_minutes": 1200,
-            "leave_reason": null,
-            "leave_start_date": "2021-07-01",
-            "previous_leave_id": null,
-            "type": "same_reason",
-            "worked_per_week_minutes": 2400,
-          },
-        ]
-      }
-      reviewRowLevel="4"
-      startIndex={0}
-      type="sameReason"
-    />
-    <PreviousLeaveList
-      entries={
-        Array [
-          PreviousLeave {
-            "is_for_current_employer": null,
-            "leave_end_date": null,
-            "leave_minutes": null,
-            "leave_reason": null,
-            "leave_start_date": null,
-            "previous_leave_id": null,
-            "type": "other_reason",
-            "worked_per_week_minutes": null,
-          },
-        ]
-      }
-      reviewRowLevel="4"
-      startIndex={1}
-      type="otherReason"
-    />
-    <ReviewRow
-      label="Concurrent leave?"
-      level="4"
-    >
-      Yes
-    </ReviewRow>
-    <ReviewRow
-      label="Accrued paid leave"
-      level="4"
-    >
-      <p
-        className="text-base-darker margin-top-1"
+      <ReviewRow
+        label="Previous leave?"
+        level="4"
       >
-        1/1/2021 to 3/1/2021
-      </p>
-      <ul
-        className="usa-list margin-top-1"
+        Yes
+      </ReviewRow>
+      <PreviousLeaveList
+        entries={
+          Array [
+            PreviousLeave {
+              "is_for_current_employer": true,
+              "leave_end_date": "2021-05-01",
+              "leave_minutes": 1200,
+              "leave_reason": null,
+              "leave_start_date": "2021-07-01",
+              "previous_leave_id": null,
+              "type": "same_reason",
+              "worked_per_week_minutes": 2400,
+            },
+          ]
+        }
+        reviewRowLevel="4"
+        startIndex={0}
+        type="sameReason"
+      />
+      <PreviousLeaveList
+        entries={
+          Array [
+            PreviousLeave {
+              "is_for_current_employer": null,
+              "leave_end_date": null,
+              "leave_minutes": null,
+              "leave_reason": null,
+              "leave_start_date": null,
+              "previous_leave_id": null,
+              "type": "other_reason",
+              "worked_per_week_minutes": null,
+            },
+          ]
+        }
+        reviewRowLevel="4"
+        startIndex={1}
+        type="otherReason"
+      />
+      <ReviewRow
+        label="Concurrent leave?"
+        level="4"
       >
-        <li>
-          From this employer
-        </li>
-      </ul>
-    </ReviewRow>
-    <ReviewRow
-      label="Employer-sponsored benefits?"
-      level="4"
-    >
-      Yes
-    </ReviewRow>
-    <EmployerBenefitList
-      entries={
-        Array [
-          EmployerBenefit {
-            "benefit_amount_dollars": 500,
-            "benefit_amount_frequency": "Per Week",
-            "benefit_end_date": "2021-02-01",
-            "benefit_start_date": "2021-01-01",
-            "benefit_type": "Family or medical leave insurance",
-            "employer_benefit_id": 1,
-            "is_full_salary_continuous": false,
-          },
-          EmployerBenefit {
-            "benefit_amount_dollars": 200,
-            "benefit_amount_frequency": "Unknown",
-            "benefit_end_date": "2021-02-01",
-            "benefit_start_date": "2021-01-01",
-            "benefit_type": "Family or medical leave insurance",
-            "employer_benefit_id": 2,
-            "is_full_salary_continuous": false,
-          },
-          EmployerBenefit {
-            "benefit_amount_dollars": 0,
-            "benefit_amount_frequency": "Unknown",
-            "benefit_end_date": "2021-02-01",
-            "benefit_start_date": "2021-01-01",
-            "benefit_type": "Short-term disability insurance",
-            "employer_benefit_id": 3,
-            "is_full_salary_continuous": true,
-          },
-          EmployerBenefit {
-            "benefit_amount_dollars": 0,
-            "benefit_amount_frequency": "Unknown",
-            "benefit_end_date": "2021-02-01",
-            "benefit_start_date": "2021-01-01",
-            "benefit_type": "Permanent disability insurance",
-            "employer_benefit_id": 4,
-            "is_full_salary_continuous": false,
-          },
-        ]
-      }
-      reviewRowLevel="4"
-    />
-    <ReviewRow
-      label="Other sources of income?"
-      level="4"
-    >
-      Yes
-    </ReviewRow>
-    <OtherIncomeList
-      entries={
-        Array [
-          OtherIncome {
-            "income_amount_dollars": 125,
-            "income_amount_frequency": "Per Week",
-            "income_end_date": "2021-01-01",
-            "income_start_date": "2021-01-30",
-            "income_type": "Earnings from another employment/self-employment",
-            "other_income_id": null,
-          },
-        ]
-      }
-      reviewRowLevel="4"
-    />
+        Yes
+      </ReviewRow>
+      <ReviewRow
+        label="Accrued paid leave"
+        level="4"
+      >
+        <p
+          className="text-base-darker margin-top-1"
+        >
+          1/1/2021 to 3/1/2021
+        </p>
+        <ul
+          className="usa-list margin-top-1"
+        >
+          <li>
+            From this employer
+          </li>
+        </ul>
+      </ReviewRow>
+      <ReviewRow
+        label="Employer-sponsored benefits?"
+        level="4"
+      >
+        Yes
+      </ReviewRow>
+      <EmployerBenefitList
+        entries={
+          Array [
+            EmployerBenefit {
+              "benefit_amount_dollars": 500,
+              "benefit_amount_frequency": "Per Week",
+              "benefit_end_date": "2021-02-01",
+              "benefit_start_date": "2021-01-01",
+              "benefit_type": "Family or medical leave insurance",
+              "employer_benefit_id": 1,
+              "is_full_salary_continuous": false,
+            },
+            EmployerBenefit {
+              "benefit_amount_dollars": 200,
+              "benefit_amount_frequency": "Unknown",
+              "benefit_end_date": "2021-02-01",
+              "benefit_start_date": "2021-01-01",
+              "benefit_type": "Family or medical leave insurance",
+              "employer_benefit_id": 2,
+              "is_full_salary_continuous": false,
+            },
+            EmployerBenefit {
+              "benefit_amount_dollars": 0,
+              "benefit_amount_frequency": "Unknown",
+              "benefit_end_date": "2021-02-01",
+              "benefit_start_date": "2021-01-01",
+              "benefit_type": "Short-term disability insurance",
+              "employer_benefit_id": 3,
+              "is_full_salary_continuous": true,
+            },
+            EmployerBenefit {
+              "benefit_amount_dollars": 0,
+              "benefit_amount_frequency": "Unknown",
+              "benefit_end_date": "2021-02-01",
+              "benefit_start_date": "2021-01-01",
+              "benefit_type": "Permanent disability insurance",
+              "employer_benefit_id": 4,
+              "is_full_salary_continuous": false,
+            },
+          ]
+        }
+        reviewRowLevel="4"
+      />
+      <ReviewRow
+        label="Other sources of income?"
+        level="4"
+      >
+        Yes
+      </ReviewRow>
+      <OtherIncomeList
+        entries={
+          Array [
+            OtherIncome {
+              "income_amount_dollars": 125,
+              "income_amount_frequency": "Per Week",
+              "income_end_date": "2021-01-01",
+              "income_start_date": "2021-01-30",
+              "income_type": "Earnings from another employment/self-employment",
+              "other_income_id": null,
+            },
+          ]
+        }
+        reviewRowLevel="4"
+      />
+    </dl>
   </div>
   <div
     className="margin-top-6 margin-bottom-2"
@@ -1275,6 +1341,7 @@ exports[`Review Page Work patterns shows average weekly hours if work pattern ty
 
 exports[`Review Page Work patterns shows work pattern days if work pattern type is fixed 1`] = `
 <WeeklyTimeTable
+  aria-label="Weekly work hours"
   days={
     Array [
       WorkPatternDay {

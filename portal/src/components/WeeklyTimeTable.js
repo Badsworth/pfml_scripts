@@ -10,7 +10,7 @@ export const WeeklyTimeTable = (props) => {
   const { t } = useTranslation();
   const days = props.days;
   return (
-    <Table className={props.className}>
+    <Table aria-label={props["aria-label"]} className={props.className}>
       <thead>
         <tr>
           <th scope="col">{t("components.weeklyTimeTable.dayHeader")}</th>
@@ -38,6 +38,8 @@ export const WeeklyTimeTable = (props) => {
 };
 
 WeeklyTimeTable.propTypes = {
+  /** HTML "aria-label" attribute. */
+  "aria-label": PropTypes.string,
   /** Additional classNames to add */
   className: PropTypes.string,
   /**
