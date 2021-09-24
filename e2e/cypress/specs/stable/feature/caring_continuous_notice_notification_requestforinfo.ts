@@ -5,37 +5,55 @@ import { getClaimantCredentials } from "../../../config";
 import { config } from "../../../actions/common";
 import { format, addDays } from "date-fns";
 import { extractLeavePeriod } from "../../../../src/util/claims";
+import { DehydratedClaim } from "generation/Claim";
 
 describe("Request for More Information (notifications/notices)", () => {
   after(() => {
     portal.deleteDownloadsFolder();
   });
-
-  const submit =
-    it("Given a claim in which a CSR has requested more information", () => {
+  const submission = it("Generates and submits a caring leave claim", () => {
+    cy.task("generateClaim", "CHAP_RFI").then((claim) => {
+      cy.task("submitClaimToAPI", claim).then((res) => {
+        cy.stash("claim", claim);
+        cy.stash("submission", {
+          application_id: res.application_id,
+          fineos_absence_id: res.fineos_absence_id,
+          timestamp_from: Date.now(),
+        });
+      });
+    });
+  });
+  const modification = it("CSR rep can modify leave dates pre-approval", () => {
+    cy.dependsOnPreviousPass([submission]);
+    fineos.before();
+    cy.unstash<DehydratedClaim>("claim").then((claim) => {
+      cy.unstash<Submission>("submission").then((submission) => {
+        const [startDate, endDate] = extractLeavePeriod(claim.claim);
+        const newStartDate = format(
+          addDays(new Date(startDate), 1),
+          "MM/dd/yyyy"
+        );
+        const newEndDate = format(addDays(new Date(endDate), 1), "MM/dd/yyyy");
+        cy.stash("modifiedLeaveDates", [newStartDate, newEndDate]);
+        fineosPages.ClaimPage.visit(submission.fineos_absence_id)
+          .adjudicate((adjudication) => {
+            adjudication.requestInformation((requestInformation) => {
+              requestInformation.editRequestDates(newStartDate, newEndDate);
+            });
+          })
+          .triggerNotice("Preliminary Designation");
+      });
+    });
+  });
+  const requestForInformation =
+    it("CSR rep can trigger a request for additional information", () => {
+      cy.dependsOnPreviousPass([modification]);
       fineos.before();
-      cy.task("generateClaim", "CHAP_RFI").then((claim) => {
-        cy.task("submitClaimToAPI", claim).then((res) => {
-          cy.stash("claim", claim.claim);
-          cy.stash("submission", {
-            application_id: res.application_id,
-            fineos_absence_id: res.fineos_absence_id,
-            timestamp_from: Date.now(),
-          });
-          const [startDate, endDate] = extractLeavePeriod(claim.claim);
-          const newStartDate = format(
-            addDays(new Date(startDate), 1),
-            "MM/dd/yyyy"
-          );
-          const newEndDate = format(
-            addDays(new Date(endDate), 1),
-            "MM/dd/yyyy"
-          );
-          cy.stash("modifiedLeaveDates", [newStartDate, newEndDate]);
-
-          fineosPages.ClaimPage.visit(res.fineos_absence_id)
-            .adjudicate((adjudication) => {
-              adjudication
+      cy.unstash<DehydratedClaim>("claim").then((claim) => {
+        cy.unstash<Submission>("submission").then((submission) => {
+          fineosPages.ClaimPage.visit(submission.fineos_absence_id)
+            .adjudicate((adjudicate) => {
+              adjudicate
                 .evidence((evidence) => {
                   const certificationDocument = findCertificationDoc(
                     claim.documents
@@ -48,14 +66,9 @@ describe("Request for More Information (notifications/notices)", () => {
                     "Please resubmit page 1 of the Caring Certification form to verify the claimant's demographic information.  The page provided is missing information.  Thank you."
                   );
                 })
-                .requestInformation((requestInformation) => {
-                  requestInformation.editRequestDates(newStartDate, newEndDate);
-                });
-            })
-            .adjudicate((adjudicate) => {
-              adjudicate.certificationPeriods((certificationPeriods) =>
-                certificationPeriods.prefill()
-              );
+                .certificationPeriods((certificationPeriods) =>
+                  certificationPeriods.prefill()
+                );
             })
             .tasks((task) => {
               task.assertTaskExists("Caring Certification Review");
@@ -75,12 +88,9 @@ describe("Request for More Information (notifications/notices)", () => {
         });
       });
     });
-
-  const upload = it(
-    "Should allow claimant to upload additional documents and generate a legal notice (Request for Information) that the claimant can view",
-    { retries: 0 },
-    () => {
-      cy.dependsOnPreviousPass([submit]);
+  const upload =
+    it("Should allow claimant to upload additional documents and generate a legal notice (Request for Information) that the claimant can view", () => {
+      cy.dependsOnPreviousPass([modification]);
       portal.before({
         claimantShowStatusPage: config("HAS_CLAIMANT_STATUS_PAGE") === "true",
       });
@@ -127,11 +137,9 @@ describe("Request for More Information (notifications/notices)", () => {
           );
         }
       });
-    }
-  );
-
+    });
   it("CSR rep can view the additional information uploaded by claimant", () => {
-    cy.dependsOnPreviousPass([submit, upload]);
+    cy.dependsOnPreviousPass([upload]);
     fineos.before();
     cy.unstash<Submission>("submission").then((submission) => {
       const page = fineosPages.ClaimPage.visit(submission.fineos_absence_id);
@@ -143,12 +151,11 @@ describe("Request for More Information (notifications/notices)", () => {
       });
     });
   });
-
   it(
     "I should receive a 'Thank you for successfully submitting your ... application' notification (employee)",
     { retries: 0 },
     () => {
-      cy.dependsOnPreviousPass([submit]);
+      cy.dependsOnPreviousPass([submission]);
       cy.unstash<Submission>("submission").then((submission) => {
         email.getEmails(
           {
@@ -165,12 +172,11 @@ describe("Request for More Information (notifications/notices)", () => {
       });
     }
   );
-
   it(
     "Should generate a (Request for Information) notification for the claimant",
     { retries: 0 },
     () => {
-      cy.dependsOnPreviousPass([submit]);
+      cy.dependsOnPreviousPass([requestForInformation]);
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
