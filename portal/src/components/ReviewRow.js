@@ -48,15 +48,15 @@ ReviewRow.propTypes = {
    */
   children: PropTypes.node.isRequired,
   /**
+   * Label describing the content to be reviewed.
+   */
+  label: PropTypes.string.isRequired,
+  /**
    * The heading level to use for the label
    */
   level: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
   /** Exclude the bottom border. Useful if a child already includes a border. */
   noBorder: PropTypes.bool,
-  /**
-   * Label describing the content to be reviewed.
-   */
-  label: PropTypes.string.isRequired,
 };
 
 export default ReviewRow;

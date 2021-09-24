@@ -37,7 +37,7 @@ ReviewHeading.propTypes = {
    */
   children: PropTypes.string.isRequired,
   /**
-   * Target id for HTML heading element. Useful for targetting element for scrolled items.
+   * Target id for HTML heading element. Useful for targeting element for scrolled items.
    */
   id: PropTypes.string,
   /**
