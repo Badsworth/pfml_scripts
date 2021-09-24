@@ -6,11 +6,11 @@ logger = logging.getLogger(__name__)
 
 
 def start(args):
-    with git_utils.rollback():
-        # increments minor release number
-        logger.info(f"Running 'start-release'...")
-        logger.debug(f"Args: {repr(args)}")
+    # increments minor release number
+    logger.info(f"Running 'start-release'...")
+    logger.debug(f"Args: {repr(args)}")
 
+    with git_utils.rollback():
         # getting the proper tags/branches for the release.
         # NB: most_recent_tag() will return incorrect results on main
         # (compared to the correct result on a release branch)
