@@ -5,6 +5,7 @@ from re import match
 from contextlib import contextmanager
 from typing import Generator
 
+import git
 import os
 import semver
 import logging
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 # create an instance of the Repo object
 repo = Repo(os.path.join(os.path.dirname(__file__), "../../.."))
-git = repo.git
+gitcmd = repo.git
 
 rc_match = r".+-rc[0-9]+"
 FORMAL_RELEASE_TAG_REGEX = r"(api|portal|foobar)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0-9]+){0,1})$"
@@ -43,45 +44,45 @@ def git_rollback() -> Generator:
 
 
 def fetch_remotes():
-    git.fetch("--all", "--tags")
+    gitcmd.fetch("--all", "--tags")
 
 
 def checkout(branch_name):
-    git.checkout(branch_name)
+    gitcmd.checkout(branch_name)
 
 
 def reset_head(head="HEAD"):
-    git.reset("--hard", head)
+    gitcmd.reset("--hard", head)
 
 
 def pull_main():
-    git.pull("origin", "main")
+    gitcmd.pull("origin", "main")
 
 
 # Ostensibly for cherry-picking one or more commit hashes, but takes any valid CLI arg to `git cherry-pick`
 def cherrypick(*args):
-    git.cherry_pick(*args)
+    gitcmd.cherry_pick(*args)
 
 
 # Merges :param branch_to_merge into the currently checked-out branch.
 def merge_in_branch(branch_to_merge):
-    git.merge(branch_to_merge)
+    gitcmd.merge(branch_to_merge)
 
 
 def create_branch(branch_name):
     fetch_remotes()
-    git.branch(branch_name)
-    git.push("-u", "origin", branch_name)
+    gitcmd.branch(branch_name)
+    gitcmd.push("-u", "origin", branch_name)
     logger.info(f"Branch '{branch_name}' created from origin/main")
 
 
 def current_branch():
-    return git.rev_parse("--abbrev-ref", "HEAD")
+    return gitcmd.rev_parse("--abbrev-ref", "HEAD")
 
 
 def most_recent_tag(app, release_branch):
-    t = git.describe("--tags", "--match", f"{app}/v*", "--abbrev=0", f"origin/{release_branch}")
-    sha = git.rev_parse(t)
+    t = gitcmd.describe("--tags", "--match", f"{app}/v*", "--abbrev=0", f"origin/{release_branch}")
+    sha = gitcmd.rev_parse(t)
     logger.info(f"Latest {app} tag on '{release_branch}' is '{t}' with commit SHA '{sha[0:9]}'")
     return t, sha
 
@@ -91,7 +92,7 @@ def is_finalized(release_branch) -> bool:
     release_branch_version_series: str = "/".join(release_branch.split("/")[1:])[:-1] + "*"
     logger.debug(f"Scanning for finalization status on '{release_branch_version_series}'")
 
-    version_series_tags: list = git.tag("-l", release_branch_version_series).split("\n")
+    version_series_tags: list = gitcmd.tag("-l", release_branch_version_series).split("\n")
     logger.debug(f"Found these release tags: {version_series_tags}")
 
     formal_release_statuses = list(bool(match(FORMAL_RELEASE_TAG_REGEX, tag)) for tag in version_series_tags)
@@ -106,19 +107,19 @@ def is_finalized(release_branch) -> bool:
 
 
 def head_of_branch(branch_name):
-    return git.rev_parse(f"origin/{branch_name}")
+    return gitcmd.rev_parse(f"origin/{branch_name}")
 
 
 def tag_and_push(branch_name, tag_name):
     fetch_remotes()
-    git.tag(tag_name, branch_name)  # possible without checking out branch
-    git.push("origin", tag_name)
-    git.push("origin", branch_name)
+    gitcmd.tag(tag_name, branch_name)  # possible without checking out branch
+    gitcmd.push("origin", tag_name)
+    gitcmd.push("origin", branch_name)
     logger.info(f"Pushed tag '{tag_name}' and branch '{branch_name}' to GitHub.")
 
 
 def branch_exists(branch_name: str) -> bool:
-    return f"remotes/origin/{branch_name}" in git.branch("-a").split()
+    return f"remotes/origin/{branch_name}" in gitcmd.branch("-a").split()
 
 
 def to_semver(version_str: str) -> semver.VersionInfo:
