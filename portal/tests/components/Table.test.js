@@ -31,6 +31,25 @@ describe("Table", () => {
     );
   });
 
+  it("supports the aria-labelledby attribute", () => {
+    render(
+      <div>
+        <h1 id="my-heading">Previous leaves</h1>
+        <Table aria-labelledby="my-heading" />
+      </div>
+    );
+
+    expect(
+      screen.getByRole("table", { name: "Previous leaves" })
+    ).toBeInTheDocument();
+  });
+
+  it("supports aria-label and aria-labelledby attributes", () => {
+    render(<Table aria-label="label" />);
+
+    expect(screen.getByRole("table", { name: "label" })).toBeInTheDocument();
+  });
+
   it("adds a stacked modifier class when the responsive prop is set", () => {
     render(<Table responsive />);
 
