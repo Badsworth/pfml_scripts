@@ -180,6 +180,7 @@ export class ClaimPage {
     cy.contains(".TreeNodeElement", type).click({
       force: true,
     });
+    waitForAjaxComplete();
     // When we're firing time triggers, there's always the possibility that the trigger has already happened
     // by the time we get here. When this happens, the "Properties" button will be grayed out and unclickable.
     cy.get('input[type="submit"][value="Properties"]').then((el) => {
@@ -188,7 +189,8 @@ export class ClaimPage {
         return;
       }
       cy.wrap(el).click();
-      cy.get('input[type="submit"][value="Continue"]').click({ force: true });
+      waitForAjaxComplete();
+      cy.get('input[type="submit"][value="Continue"]').click();
       cy.contains(".TreeNodeContainer", type, {
         timeout: 20000,
       })
@@ -513,25 +515,34 @@ class RequestInformationPage {
     cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un41_startDate']").type(
       `{selectall}{backspace}${newStartDate}{enter}`
     );
-    cy.wait("@ajaxRender");
-    cy.wait(300);
+    waitForAjaxComplete();
     cy.get(
       "input[id='timeOffAbsencePeriodDetailsWidget_un41_endDate']"
     ).click();
     cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un41_endDate']").type(
       `{selectall}{backspace}${newEndDate}{enter}`
     );
-    cy.wait("@ajaxRender");
-    cy.wait(200);
-    cy.get("input[title='OK']").click();
+    waitForAjaxComplete();
+    cy.get("input[type='button'][title='OK']").click();
+    waitForAjaxComplete();
   }
 
-  editRequestDates(newStartDate: string, newEndDate: string) {
+  editRequestDates(newStartDate: string, newEndDate: string): ClaimPage {
+    waitForAjaxComplete();
+    cy.get(
+      "table[id$='timeOffAbsencePeriodsListviewWidget'][class='ListTable responsive-table']"
+    ).within(() => {
+      cy.get("tr").then(
+        ($el) => expect($el.hasClass("ListRowSelected")).to.be.true
+      );
+    });
     cy.get("input[value='Edit']").click();
     cy.get("#PopupContainer input[value='Yes']").click();
-    cy.wait("@ajaxRender");
-    cy.wait(200);
+    waitForAjaxComplete();
     this.enterNewLeaveDates(newStartDate, newEndDate);
+    waitForAjaxComplete();
+    // completing this process redirects us to the "Manage Request" tab
+    return new ClaimPage();
   }
 
   assertHoursWorkedPerWeek(hours_worked_per_week: number) {
@@ -1184,6 +1195,15 @@ class AvailabilityPage {
     cy.get("#footerButtonsBar").within(() => {
       cy.findByText("Close").click({ force: true });
     });
+  }
+
+  weightDaysCheck(amount_weeks: string) : this {
+    cy.contains("table.ListTable", "Weight")
+    const selector = ".divListviewGrid .ListTable td[id*='ListviewWidgetWeight0']";
+    cy.get(selector).should("contain.text", amount_weeks);
+    cy.screenshot();
+    fineos.clickBottomWidgetButton("Close");
+    return this;
   }
 }
 

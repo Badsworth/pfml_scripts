@@ -45,8 +45,6 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
 )
 from massgov.pfml.delegated_payments.delegated_fineos_payment_extract import CiIndex
 from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
-    FINEOS_CLAIMANT_EXPORT_FILES,
-    FINEOS_PAYMENT_EXTRACT_FILES,
     generate_claimant_data_files,
     generate_payment_extract_files,
 )
@@ -2173,14 +2171,22 @@ def generate_fineos_extract_files(scenario_dataset: List[ScenarioData], round: i
         scenario_dataset, fineos_data_export_path, payments_util.get_now(), round=round
     )
     # Confirm expected claimant files were generated
-    assert_files(fineos_data_export_path, FINEOS_CLAIMANT_EXPORT_FILES, fineos_extract_date_prefix)
+    assert_files(
+        fineos_data_export_path,
+        payments_util.CLAIMANT_EXTRACT_FILE_NAMES,
+        fineos_extract_date_prefix,
+    )
 
     # payment extract
     generate_payment_extract_files(
         scenario_dataset, fineos_data_export_path, payments_util.get_now(), round=round
     )
     # Confirm expected payment files were generated
-    assert_files(fineos_data_export_path, FINEOS_PAYMENT_EXTRACT_FILES, fineos_extract_date_prefix)
+    assert_files(
+        fineos_data_export_path,
+        payments_util.PAYMENT_EXTRACT_FILE_NAMES,
+        fineos_extract_date_prefix,
+    )
 
 
 def generate_rejects_file(test_dataset: TestDataSet, round: int = 1):

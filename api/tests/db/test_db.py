@@ -6,6 +6,7 @@ import urllib.parse
 
 import moto
 import pytest
+from freezegun import freeze_time
 from sqlalchemy.exc import InvalidRequestError
 
 import massgov.pfml.db
@@ -151,8 +152,9 @@ def simulate_rollback(db_session):
         db_session.commit()
 
 
+@freeze_time("2021-09-13")
 def test_db_doesnt_log_sql_params(test_db_session, verbose_test_db_session):
-    ERROR_PARAMETERS = "[parameters: ({'tax_identifier_id': '638309eb-1981-4a13-aa35-8f1eb6f52e75', 'tax_identifier': '1234567890'}, {'tax_identifier_id': 'c28b9a52-cd53-445f-b3eb-a15a05ed287f', 'tax_identifier': '1234567890'})]"
+    ERROR_PARAMETERS = "[parameters: ({'created_at': FakeDatetime(2021, 9, 13, 0, 0, tzinfo=datetime.timezone.utc), 'updated_at': FakeDatetime(2021, 9, 13, 0, 0, tzinfo=datetime.timezone.utc), 'tax_identifier_id': '638309eb-1981-4a13-aa35-8f1eb6f52e75', 'tax_identifier': '1234567890'}, {'created_at': FakeDatetime(2021, 9, 13, 0, 0, tzinfo=datetime.timezone.utc), 'updated_at': FakeDatetime(2021, 9, 13, 0, 0, tzinfo=datetime.timezone.utc), 'tax_identifier_id': 'c28b9a52-cd53-445f-b3eb-a15a05ed287f', 'tax_identifier': '1234567890'})]"
 
     with pytest.raises(InvalidRequestError) as verbose_e:
         simulate_rollback(verbose_test_db_session)

@@ -389,24 +389,26 @@ export const Review = (props) => {
         />
       </Alert>
       <p>{t("pages.employersClaimsReview.instructionsAmendment")}</p>
-      {!!claim.employer_dba && (
+      <dl
+        aria-label={t("pages.employersClaimsReview.employerInformationHeading")}
+      >
+        {claim.employer_dba && (
+          <ReviewRow
+            level="2"
+            noBorder
+            label={t("pages.employersClaimsReview.organizationNameLabel")}
+          >
+            {claim.employer_dba}
+          </ReviewRow>
+        )}
         <ReviewRow
           level="2"
-          label={t("pages.employersClaimsReview.organizationNameLabel")}
           noBorder
-          data-testid="org-name-row"
+          label={t("pages.employersClaimsReview.employerIdentifierLabel")}
         >
-          {claim.employer_dba}
+          {claim.employer_fein}
         </ReviewRow>
-      )}
-      <ReviewRow
-        level="2"
-        label={t("pages.employersClaimsReview.employerIdentifierLabel")}
-        noBorder
-        data-testid="ein-row"
-      >
-        {claim.employer_fein}
-      </ReviewRow>
+      </dl>
       <EmployeeInformation claim={claim} />
       <LeaveDetails
         appErrors={appErrors}

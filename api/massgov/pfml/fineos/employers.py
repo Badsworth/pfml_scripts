@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Dict, Iterable, List, Optional, Tuple
 
 import massgov.pfml.api.services.fineos_actions as fineos_actions
@@ -18,6 +18,7 @@ class LoadEmployersReport:
     total_employers_count: int = 0
     loaded_employers_count: int = 0
     errored_employers_count: int = 0
+    updated_service_agreement_employers: List[str] = field(default_factory=list)
     updated_service_agreements_count: int = 0
     end: Optional[str] = None
     process_duration_in_seconds: float = 0
@@ -103,11 +104,31 @@ def load_updates(
             with fineos_log_tables_util.update_entity_and_remove_log_entry(
                 db_session, employer, commit=True
             ):
-                if "INSERT" in actions or "UPDATE" in actions:
-                    fineos_actions.create_or_update_employer(fineos, employer)
-
-                if "INSERT" not in actions and "UPDATE_SA" in actions:
-                    fineos_actions.create_service_agreement_for_employer(fineos, employer)
+                fineos_actions.create_or_update_employer(fineos, employer)
+                is_create = "INSERT" in actions
+                log_data = None
+                if not is_create:
+                    # Grab the oldest change which should match current data in Fineos SA.
+                    log_data = (
+                        db_session.query(EmployerLog)
+                        .filter(
+                            EmployerLog.action == "UPDATE",
+                            EmployerLog.process_id == process_id,
+                            EmployerLog.employer_id == employer.employer_id,
+                        )
+                        .order_by(EmployerLog.modified_at)
+                        .first()
+                    )
+                fineos_customer_number = fineos_actions.create_service_agreement_for_employer(
+                    fineos,
+                    employer,
+                    is_create,
+                    getattr(log_data, "family_exemption", None),
+                    getattr(log_data, "medical_exemption", None),
+                    getattr(log_data, "exemption_cease_date", None),
+                )
+                if fineos_customer_number:
+                    report.updated_service_agreement_employers.append(fineos_customer_number)
                     report.updated_service_agreements_count += 1
 
             report.loaded_employers_count += 1
@@ -190,7 +211,7 @@ def get_new_or_updated_employers(
         # the basic WHERE clauses, looking at only EmployerLog records that have
         # not been tagged by another process yet
         core_filter = [
-            EmployerLog.action.in_(["INSERT", "UPDATE", "UPDATE_SA"]),
+            EmployerLog.action.in_(["INSERT", "UPDATE"]),
             EmployerLog.process_id.is_(None),
             EmployerLog.employer_id.notin_(
                 employer_ids_that_are_already_tagged_with_different_process_id_query

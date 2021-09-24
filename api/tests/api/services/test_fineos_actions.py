@@ -735,7 +735,9 @@ def test_create_service_agreement_for_employer(test_db_session):
 
     fineos_actions.create_or_update_employer(fineos_client, employer)
 
-    fineos_sa_id = fineos_actions.create_service_agreement_for_employer(fineos_client, employer)
+    fineos_sa_id = fineos_actions.create_service_agreement_for_employer(
+        fineos_client, employer, True
+    )
 
     assert fineos_sa_id is not None
     assert fineos_sa_id == "SA-123"
@@ -743,7 +745,7 @@ def test_create_service_agreement_for_employer(test_db_session):
 
 def test_create_service_agreement_payload():
     service_agreement_inputs = CreateOrUpdateServiceAgreement(
-        absence_management_flag=True, leave_plans="MA PFML - Family, MA PFML - Military Care"
+        leave_plans="MA PFML - Family, MA PFML - Military Care", unlink_leave_plans=True,
     )
     payload = FINEOSClient._create_service_agreement_payload(123, service_agreement_inputs)
 
@@ -761,7 +763,7 @@ def test_create_service_agreement_payload():
     )
 
     service_agreement_inputs = CreateOrUpdateServiceAgreement(
-        absence_management_flag=False, leave_plans=""
+        absence_management_flag=False, unlink_leave_plans=True,
     )
     payload = FINEOSClient._create_service_agreement_payload(123, service_agreement_inputs)
 
@@ -777,6 +779,79 @@ def test_create_service_agreement_payload():
         re.search("<name>UnlinkAllExistingLeavePlans</name>\\s+<value>True</value>", payload)
         is not None
     )
+
+
+def test_service_agreement_exempt_to_not_payload():
+    employer = Employer()
+    employer.employer_fein = "888447598"
+    employer.employer_name = "Test Organization Name"
+    employer.employer_dba = "Test Organization DBA"
+    employer.family_exemption = False
+    employer.medical_exemption = False
+    prev_family_exemption = True
+    prev_medical_exemption = True
+    prev_exemption_cease_date = date(2021, 2, 9)
+
+    service_agreement_inputs = fineos_actions.resolve_service_agreement_inputs(
+        False, employer, prev_family_exemption, prev_medical_exemption, prev_exemption_cease_date,
+    )
+
+    payload = FINEOSClient._create_service_agreement_payload(123, service_agreement_inputs)
+
+    assert payload is not None
+    assert payload.__contains__("<config-name>ServiceAgreementService</config-name>")
+    assert payload.__contains__("<name>CustomerNumber</name>")
+    assert payload.__contains__("<value>123</value>")
+    # Leave plans are unordered sets so the order cannot be guaranteed.
+    assert payload.__contains__("<name>LeavePlans</name>")
+    assert payload.__contains__("<value>MA PFML -")
+    assert payload.count("MA PFML - ") == 3
+    assert payload.__contains__("<name>AbsenceManagement</name>")
+    assert re.search("<name>AbsenceManagement</name>\\s+<value>True</value>", payload) is not None
+    assert payload.__contains__("<name>UnlinkAllExistingLeavePlans</name>")
+    assert (
+        re.search("<name>UnlinkAllExistingLeavePlans</name>\\s+<value>True</value>", payload)
+        is not None
+    )
+    assert payload.__contains__("<name>StartDate</name>")
+    assert re.search("<name>StartDate</name>\\s+<value>2021-02-09</value>", payload) is not None
+
+
+def test_service_agreement_not_exempt_to_exempt_payload():
+    employer = Employer()
+    employer.employer_fein = "888447598"
+    employer.employer_name = "Test Organization Name"
+    employer.employer_dba = "Test Organization DBA"
+    employer.family_exemption = True
+    employer.medical_exemption = True
+    employer.exemption_commence_date = date(2021, 2, 9)
+    prev_family_exemption = False
+    prev_medical_exemption = False
+    prev_exemption_cease_date = None
+
+    service_agreement_inputs = fineos_actions.resolve_service_agreement_inputs(
+        False, employer, prev_family_exemption, prev_medical_exemption, prev_exemption_cease_date,
+    )
+    payload = FINEOSClient._create_service_agreement_payload(123, service_agreement_inputs)
+
+    assert payload is not None
+    assert payload.__contains__("<config-name>ServiceAgreementService</config-name>")
+    assert payload.__contains__("<name>CustomerNumber</name>")
+    assert payload.__contains__("<value>123</value>")
+    # Leave plans are unordered sets so the order cannot be guaranteed.
+    assert payload.__contains__("<name>LeavePlans</name>")
+    assert payload.__contains__("<value>MA PFML -")
+    assert payload.count("MA PFML - ") == 3
+    assert payload.__contains__("<name>AbsenceManagement</name>")
+    assert re.search("<name>AbsenceManagement</name>\\s+<value>True</value>", payload) is not None
+    assert payload.__contains__("<name>UnlinkAllExistingLeavePlans</name>")
+    assert (
+        re.search("<name>UnlinkAllExistingLeavePlans</name>\\s+<value>False</value>", payload)
+        is not None
+    )
+    assert payload.__contains__("<name>EndDate</name>")
+    # The EndDate is set to the day BEFORE the exemption commence date.
+    assert re.search("<name>EndDate</name>\\s+<value>2021-02-08</value>", payload) is not None
 
 
 def test_resolve_leave_plans():

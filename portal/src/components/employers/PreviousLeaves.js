@@ -31,7 +31,7 @@ const PreviousLeaves = (props) => {
 
   return (
     <React.Fragment>
-      <Heading level="3">
+      <Heading id="previous-leaves" level="3">
         {t("components.employersPreviousLeaves.header")}
       </Heading>
       <p>
@@ -107,7 +107,7 @@ const PreviousLeaves = (props) => {
           </li>
         </ul>
       </Details>
-      <Table className="width-full" data-testid="previous-leaves-table">
+      <Table aria-labelledby="previous-leaves" className="width-full">
         <thead>
           <tr>
             <th scope="col">

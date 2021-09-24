@@ -327,6 +327,17 @@ class EmployeeLogFactory(BaseFactory):
     process_id = 1
 
 
+class EmployerLogFactory(BaseFactory):
+    class Meta:
+        model = employee_models.EmployerLog
+
+    employer_log_id = Generators.UuidObj
+    employer_id = Generators.UuidObj
+    action = "INSERT"
+    modified_at = Generators.UtcNow
+    process_id = 1
+
+
 class WagesAndContributionsFactory(BaseFactory):
     class Meta:
         model = employee_models.WagesAndContributions

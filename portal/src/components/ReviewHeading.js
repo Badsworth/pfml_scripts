@@ -37,6 +37,10 @@ ReviewHeading.propTypes = {
    */
   children: PropTypes.string.isRequired,
   /**
+   * Target id for HTML heading element. Useful for targeting element for scrolled items.
+   */
+  id: PropTypes.string,
+  /**
    * HTML `href` attribute for the edit link.
    * If undefined, no edit link will be shown.
    */

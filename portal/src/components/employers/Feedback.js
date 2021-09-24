@@ -58,7 +58,7 @@ const Feedback = ({
         <div className={commentClasses}>
           <FormLabel
             className="usa-label"
-            htmlFor={name}
+            inputId={name}
             small
             errorMsg={errorMsg}
           >
@@ -74,6 +74,7 @@ const Feedback = ({
             name={name}
             onChange={onChange}
             value={value}
+            id={name}
           />
         </div>
       )}

@@ -17,11 +17,7 @@ export const Table = (props) => {
   );
 
   const table = (
-    <table
-      className={tableClasses}
-      aria-describedby={props["aria-describedby"]}
-      aria-labelledby={props["aria-labelledby"]}
-    >
+    <table aria-labelledby={props["aria-labelledby"]} className={tableClasses}>
       {props.children}
     </table>
   );
@@ -37,6 +33,11 @@ Table.propTypes = {
   // TODO this.
   "aria-describedby": PropTypes.string,
   // TODO this.
+  "aria-labelledby": PropTypes.string,
+  /**
+   * HTML "aria-labelledby" attribute. Useful for tables that
+   * do not use <caption>.
+   */
   "aria-labelledby": PropTypes.string,
   /**
    * `caption`, `thead`, and `tbody` contents

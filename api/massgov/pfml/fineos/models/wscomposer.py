@@ -28,9 +28,11 @@ class CreateOrUpdateEmployer(pydantic.BaseModel):
 
 
 class CreateOrUpdateServiceAgreement(pydantic.BaseModel):
-    absence_management_flag: bool
-    leave_plans: str
+    unlink_leave_plans: bool
     start_date: Optional[datetime.date]
+    end_date: Optional[datetime.date]
+    leave_plans: Optional[str]
+    absence_management_flag: Optional[bool]
 
 
 # Classes for UpdateOrCreateParty request. Most attributes

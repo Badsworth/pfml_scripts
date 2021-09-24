@@ -64,77 +64,79 @@ const LeaveDetails = (props) => {
 
   return (
     <React.Fragment>
-      <ReviewHeading level="2">
+      <ReviewHeading id="leave-details" level="2">
         {t("components.employersLeaveDetails.header")}
       </ReviewHeading>
-      <ReviewRow
-        level="3"
-        label={t("components.employersLeaveDetails.leaveTypeLabel")}
-        data-test="leave-type"
-      >
-        {isPregnancy ? (
-          t("components.employersLeaveDetails.leaveReasonValue", {
-            context: findKeyByValue(LeaveReason, reason),
-          })
-        ) : (
-          <a target="_blank" rel="noopener" href={benefitsGuideLink[reason]}>
-            {t("components.employersLeaveDetails.leaveReasonValue", {
-              context: findKeyByValue(LeaveReason, reason),
-            })}
-          </a>
-        )}
-      </ReviewRow>
-      <ReviewRow
-        level="3"
-        label={t("components.employersLeaveDetails.applicationIdLabel")}
-      >
-        {absenceId}
-      </ReviewRow>
-      <ReviewRow
-        level="3"
-        label={t("components.employersLeaveDetails.leaveDurationLabel")}
-      >
-        {isIntermittent
-          ? "—"
-          : formatDateRange(
-              props.claim.leaveStartDate,
-              props.claim.leaveEndDate
-            )}
-      </ReviewRow>
-      {!!documents.length && (
+      <dl aria-labelledby="leave-details">
         <ReviewRow
           level="3"
-          label={t("components.employersLeaveDetails.documentationLabel")}
+          label={t("components.employersLeaveDetails.leaveTypeLabel")}
+          data-test="leave-type"
         >
-          <Trans
-            i18nKey="components.employersLeaveDetails.recordkeepingInstructions"
-            components={{
-              "mass-employer-role-link": (
-                <a
-                  href={routes.external.massgov.employersGuide}
-                  target="_blank"
-                  rel="noopener"
-                />
-              ),
-            }}
-            tOptions={{ context: isCaringLeave ? "caringLeave" : null }}
-          />
-          <ul className="usa-list">
-            {documents.map((document) => (
-              <li key={document.fineos_document_id}>
-                <DownloadableDocument
-                  onDownloadClick={downloadDocument}
-                  absenceId={absenceId}
-                  document={document}
-                  displayDocumentName={t(
-                    "components.employersLeaveDetails.documentName"
-                  )}
-                />
-              </li>
-            ))}
-          </ul>
+          {isPregnancy ? (
+            t("components.employersLeaveDetails.leaveReasonValue", {
+              context: findKeyByValue(LeaveReason, reason),
+            })
+          ) : (
+            <a target="_blank" rel="noopener" href={benefitsGuideLink[reason]}>
+              {t("components.employersLeaveDetails.leaveReasonValue", {
+                context: findKeyByValue(LeaveReason, reason),
+              })}
+            </a>
+          )}
         </ReviewRow>
-      )}
+        <ReviewRow
+          level="3"
+          label={t("components.employersLeaveDetails.applicationIdLabel")}
+        >
+          {absenceId}
+        </ReviewRow>
+        <ReviewRow
+          level="3"
+          label={t("components.employersLeaveDetails.leaveDurationLabel")}
+        >
+          {isIntermittent
+            ? "—"
+            : formatDateRange(
+                props.claim.leaveStartDate,
+                props.claim.leaveEndDate
+              )}
+        </ReviewRow>
+        {!!documents.length && (
+          <ReviewRow
+            level="3"
+            label={t("components.employersLeaveDetails.documentationLabel")}
+          >
+            <Trans
+              i18nKey="components.employersLeaveDetails.recordkeepingInstructions"
+              components={{
+                "mass-employer-role-link": (
+                  <a
+                    href={routes.external.massgov.employersGuide}
+                    target="_blank"
+                    rel="noopener"
+                  />
+                ),
+              }}
+              tOptions={{ context: isCaringLeave ? "caringLeave" : null }}
+            />
+            <ul className="usa-list">
+              {documents.map((document) => (
+                <li key={document.fineos_document_id}>
+                  <DownloadableDocument
+                    onDownloadClick={downloadDocument}
+                    absenceId={absenceId}
+                    document={document}
+                    displayDocumentName={t(
+                      "components.employersLeaveDetails.documentName"
+                    )}
+                  />
+                </li>
+              ))}
+            </ul>
+          </ReviewRow>
+        )}
+      </dl>
       {isCaringLeave && (
         <React.Fragment>
           <InputChoiceGroup
@@ -191,7 +193,6 @@ const LeaveDetails = (props) => {
               onChangeRelationshipInaccurateReason(event.target.value)
             }
             visible={believeRelationshipAccurate === "No"}
-            data-test="relationship-accurate-no"
           >
             <Alert
               state="warning"
@@ -208,7 +209,7 @@ const LeaveDetails = (props) => {
             <div className={inaccurateReasonClasses}>
               <FormLabel
                 className="usa-label"
-                htmlFor="relationshipInaccurateReason"
+                inputId="relationshipInaccurateReason"
                 small
                 errorMsg={errorMsg}
               >
@@ -220,13 +221,13 @@ const LeaveDetails = (props) => {
                 onChange={(event) =>
                   onChangeRelationshipInaccurateReason(event.target.value)
                 }
+                id="relationshipInaccurateReason"
               />
             </div>
           </ConditionalContent>
 
           <ConditionalContent
             visible={believeRelationshipAccurate === "Unknown"}
-            data-test="relationship-accurate-unknown"
           >
             <Alert state="info" className="measure-5 margin-y-3">
               {t(

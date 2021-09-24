@@ -68,19 +68,6 @@ RECEIVED_FOLDER = "received"
 PROCESSED_FOLDER = "processed"
 SKIPPED_FOLDER = "skipped"
 
-# Expected file names
-VBI_REQUESTED_ABSENCE_FILE_NAME = "VBI_REQUESTEDABSENCE.csv"
-PEI_EXPECTED_FILE_NAME = "vpei.csv"
-PAYMENT_DETAILS_EXPECTED_FILE_NAME = "vpeipaymentdetails.csv"
-CLAIM_DETAILS_EXPECTED_FILE_NAME = "vpeiclaimdetails.csv"
-
-expected_file_names = [
-    VBI_REQUESTED_ABSENCE_FILE_NAME,
-    PEI_EXPECTED_FILE_NAME,
-    PAYMENT_DETAILS_EXPECTED_FILE_NAME,
-    CLAIM_DETAILS_EXPECTED_FILE_NAME,
-]
-
 CANCELLATION_PAYMENT_TRANSACTION_TYPE = "PaymentOut Cancellation"
 # There are multiple types of overpayments
 OVERPAYMENT_PAYMENT_TRANSACTION_TYPES = [
@@ -138,13 +125,17 @@ class ExtractData:
 
     def __init__(self, s3_locations: List[str], date_str: str):
         for s3_location in s3_locations:
-            if s3_location.endswith(PEI_EXPECTED_FILE_NAME):
+            if s3_location.endswith(payments_util.FineosExtractConstants.VPEI.file_name):
                 self.pei = Extract(s3_location)
-            elif s3_location.endswith(PAYMENT_DETAILS_EXPECTED_FILE_NAME):
+            elif s3_location.endswith(
+                payments_util.FineosExtractConstants.PAYMENT_DETAILS.file_name
+            ):
                 self.payment_details = ExtractMultiple(s3_location)
-            elif s3_location.endswith(CLAIM_DETAILS_EXPECTED_FILE_NAME):
+            elif s3_location.endswith(payments_util.FineosExtractConstants.CLAIM_DETAILS.file_name):
                 self.claim_details = Extract(s3_location)
-            elif s3_location.endswith(VBI_REQUESTED_ABSENCE_FILE_NAME):
+            elif s3_location.endswith(
+                payments_util.FineosExtractConstants.VBI_REQUESTED_ABSENCE.file_name
+            ):
                 self.requested_absence = Extract(s3_location)
 
         self.date_str = date_str
@@ -675,7 +666,12 @@ class PaymentExtractStep(Step):
         pei_data = self.download_and_parse_data(extract_data.pei.file_location, download_directory)
 
         # This doesn't specifically need to be indexed, but it lets us be consistent
-        for record in pei_data:
+        logger.info("Indexing VPEI records")
+        for i, record in enumerate(pei_data):
+            if i == 0:
+                payments_util.validate_columns_present(
+                    record, payments_util.FineosExtractConstants.VPEI
+                )
             extract_data.pei.indexed_data[CiIndex(record["C"], record["I"])] = record
 
             lower_key_record = payments_util.make_keys_lowercase(record)
@@ -693,7 +689,12 @@ class PaymentExtractStep(Step):
         )
         # payment details needs to be indexed on PECLASSID and PEINDEXID
         # which point to the vpei.C and vpei.I columns
-        for record in payment_details:
+        logger.info("Indexing payment_details records")
+        for i, record in enumerate(payment_details):
+            if i == 0:
+                payments_util.validate_columns_present(
+                    record, payments_util.FineosExtractConstants.PAYMENT_DETAILS
+                )
             index = CiIndex(record["PECLASSID"], record["PEINDEXID"])
             if index not in extract_data.payment_details.indexed_data:
                 extract_data.payment_details.indexed_data[index] = []
@@ -720,7 +721,12 @@ class PaymentExtractStep(Step):
         )
         # claim details needs to be indexed on PECLASSID and PEINDEXID
         # which point to the vpei.C and vpei.I columns
-        for record in claim_details:
+        logger.info("Indexing claim details records")
+        for i, record in enumerate(claim_details):
+            if i == 0:
+                payments_util.validate_columns_present(
+                    record, payments_util.FineosExtractConstants.CLAIM_DETAILS
+                )
             extract_data.claim_details.indexed_data[
                 CiIndex(record["PECLASSID"], record["PEINDEXID"])
             ] = record
@@ -741,7 +747,12 @@ class PaymentExtractStep(Step):
         requested_absences = self.download_and_parse_data(
             extract_data.requested_absence.file_location, download_directory
         )
-        for record in requested_absences:
+        logger.info("Indexing requested absence records")
+        for i, record in enumerate(requested_absences):
+            if i == 0:
+                payments_util.validate_columns_present(
+                    record, payments_util.FineosExtractConstants.VBI_REQUESTED_ABSENCE
+                )
             leave_request_id = str(record.get("LEAVEREQUEST_ID"))
             extract_data.requested_absence.indexed_data[CiIndex(c=leave_request_id, i="")] = record
 
@@ -1689,9 +1700,13 @@ class PaymentExtractStep(Step):
         logger.info("Processing payment extract files")
 
         payments_util.copy_fineos_data_to_archival_bucket(
-            self.db_session, expected_file_names, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
+            self.db_session,
+            payments_util.PAYMENT_EXTRACT_FILE_NAMES,
+            ReferenceFileType.FINEOS_PAYMENT_EXTRACT,
         )
-        data_by_date = payments_util.group_s3_files_by_date(expected_file_names)
+        data_by_date = payments_util.group_s3_files_by_date(
+            payments_util.PAYMENT_EXTRACT_FILE_NAMES
+        )
 
         previously_processed_date = set()
 

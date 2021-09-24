@@ -17,11 +17,8 @@ import ArtilleryDeployer from "../artillery/ArtilleryDeployer";
  */
 
 (async () => {
-  const configARN =
-    "arn:aws:ssm:us-east-1:233259245172:parameter/lst-worker-config";
-
   const deployer = await ArtilleryDeployer.createFromConfigParameter(
-    configARN,
+    "arn:aws:ssm:us-east-1:233259245172:parameter/lst-worker-config",
     {
       // Optional config overrides can be added here in development. Move them into
       // the configuration parameter once you're ready for others to use them.
@@ -60,6 +57,7 @@ import ArtilleryDeployer from "../artillery/ArtilleryDeployer";
     "ENVIRONMENT" as const,
     "PORTAL_PASSWORD" as const,
     "FINEOS_PASSWORD" as const,
+    "EMPLOYER_PORTAL_PASSWORD" as const,
     "TESTMAIL_APIKEY" as const,
     "FINEOS_USERS" as const,
   ];
@@ -77,9 +75,8 @@ import ArtilleryDeployer from "../artillery/ArtilleryDeployer";
 
   const result = await deployer.deploy(remote_tag, run_id, environment);
   console.log(
-    `LST has been triggered...\n\n\tCluster: ${result.cluster}\n\n\n`
+    `LST has been triggered...\n\nCluster:\n------\n${result.cluster}\n\nInflux Dashboard:\n------\n${result.influx}\n\nLogs:\n-----\n${result.cloudwatch}\n\n\n`
   );
-  console.log(`Check AWS Cloudwatch with RUN_ID: ${run_id} for any logs.`);
 })().catch((e) => {
   console.error(e);
   process.exit(1);

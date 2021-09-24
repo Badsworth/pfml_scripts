@@ -16,7 +16,6 @@ import userEvent from "@testing-library/user-event";
 import { v4 as uuidv4 } from "uuid";
 
 const UploadDocumentWithAppLogic = ({
-  // eslint-disable-next-line react/prop-types
   addAppLogicMocks = (appLogic) => {},
   ...props
 }) => {
@@ -25,7 +24,7 @@ const UploadDocumentWithAppLogic = ({
   appLogic.users.requireUserConsentToDataAgreement = jest.fn();
   appLogic.users.requireUserRole = jest.fn();
   appLogic.users.user = new User({ consented_to_data_sharing: true });
-  appLogic.portalFlow.pathWithParams = `/applications/upload/${props.query.documentType}/?application_id=${props.query.claim_id}`;
+  appLogic.portalFlow.pageRoute = `/applications/upload/${props.query.documentType}`;
 
   appLogic.documents.loadAll = jest.fn();
 

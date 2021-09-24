@@ -1,0 +1,60 @@
+name: "Poll Fineos Deployments"
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Every 30 minutes.
+    - cron:  '*/30 * * * *'
+
+jobs:
+  publish-fineos-deployments:
+    name: "Publish Fineos Deployments"
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        environment:
+          [ "test", "stage", "performance", "cps-preview", "training" ]
+    env:
+      NEW_RELIC_ACCOUNT_ID: 2837112
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install New Relic CLI
+        run: curl https://raw.githubusercontent.com/newrelic/newrelic-cli/master/scripts/install.sh | bash
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+      - name: Pull the newrelic API key from parameter store
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/pfml-api/newrelic-api-key"
+          env_variable_name: "NEW_RELIC_API_KEY"
+      - name: Pull the newrelic Insights key from parameter store
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/pfml-api/newrelic-insert-api-key"
+          env_variable_name: "NEW_RELIC_INSIGHTS_INSERT_KEY"
+
+      - run: ./bin/ci/publish-fineos-deployment-events.sh ${{ matrix.environment }}
+        id: publish-deployments
+
+      - name: Trigger E2E Workflow
+        uses: aurelien-baudet/workflow-dispatch@v2
+        if: steps.publish-deployments.outputs.was_deployed == 'true'
+        with:
+          workflow: e2e-cypress.yml
+          token: ${{ secrets.PFML_DEVOPS_TOKEN }}
+          wait-for-completion: false
+          inputs: |
+            {
+              "target_environment": "${{ matrix.environment }}",
+              "cypress_tags": "Deploy-Fineos",
+              "run_unstable": "false",
+              "run_nightly": "false",
+              "title_override": "Fineos Deploy: ${{ steps.publish-deployments.outputs.version }}"
+            }

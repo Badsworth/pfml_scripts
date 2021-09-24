@@ -41,6 +41,8 @@ Array [
             />,
             "request-appeal-link": <a
               href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+              rel="noopener noreferrer"
+              target="_blank"
             />,
           }
         }
@@ -90,6 +92,8 @@ Array [
             />,
             "request-appeal-link": <a
               href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+              rel="noopener noreferrer"
+              target="_blank"
             />,
           }
         }
@@ -139,6 +143,8 @@ Array [
             />,
             "request-appeal-link": <a
               href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+              rel="noopener noreferrer"
+              target="_blank"
             />,
           }
         }
@@ -192,6 +198,8 @@ exports[`leave details page does render page with one section if absenceDetails 
           />,
           "request-appeal-link": <a
             href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+            rel="noopener noreferrer"
+            target="_blank"
           />,
         }
       }
@@ -238,10 +246,12 @@ exports[`status page ViewYourNotices displays only legal notices for the current
     >
       <Heading
         className="margin-bottom-1"
+        id="view_notices"
         level="2"
       >
         <h2
           className="margin-bottom-1 font-heading-md text-bold"
+          id="view_notices"
         >
           View your notices
         </h2>

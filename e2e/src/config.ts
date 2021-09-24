@@ -62,6 +62,8 @@ function getRawEnvironment() {
 
     DOR_IMPORT_URI: process.env.E2E_DOR_IMPORT_URI,
     DOR_ETL_ARN: process.env.E2E_DOR_ETL_ARN,
+
+    HAS_PREGNANCY_DOC_UPDATES: process.env.HAS_PREGNANCY_DOC_UPDATES,
   };
 }
 

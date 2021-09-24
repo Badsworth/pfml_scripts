@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`InputChoiceGroup InputChoiceGroup error messages passes errorMsg to FormLabel when provided 1`] = `
+<span
+  class="usa-error-message measure-5"
+  role="alert"
+>
+  error message
+</span>
+`;
