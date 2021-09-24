@@ -21,7 +21,7 @@ FORMAL_RELEASE_TAG_REGEX = r"(api|portal|foobar)\/v([0-9]+)\.([0-9]+)(\.{0,1}([0
 
 
 @contextmanager
-def rollback() -> Generator:
+def rollback(old_head=None) -> Generator:
     rollback_branch = current_branch()
 
     try:
@@ -35,7 +35,7 @@ def rollback() -> Generator:
         except git.exc.GitCommandError as e2:
             logger.debug(f"No cherry-pick was in progress (or something else went wrong) - {e2}")
 
-        reset_head()
+        reset_head(old_head if old_head else 'HEAD')
         checkout(rollback_branch)
         raise e
     finally:

@@ -39,8 +39,6 @@ def update(args):
     logger.debug(f"Args: {repr(args)}")
 
     git_utils.fetch_remotes()
-    original_branch = git_utils.current_branch()  # Save this to check it back out after work's done
-
     recent_tag, tag_sha = git_utils.most_recent_tag(args.app, args.release_version)
     v = git_utils.to_semver(recent_tag)
 
@@ -58,7 +56,7 @@ def update(args):
     logger.info(f"HEAD of '{args.release_version}' on origin is '{old_head[0:9]}'")
     logger.info("Will save this HEAD and revert back to it if anything goes wrong.")
 
-    try:
+    with git_utils.rollback(old_head):
         git_utils.checkout(args.release_version)
         logger.info(f"Checked out '{args.release_version}'.")
 
@@ -71,24 +69,6 @@ def update(args):
 
         logger.info("Done.")
         git_utils.tag_and_push(args.release_version, f"{args.app}/v{v.bump_prerelease()}")
-
-    except git.exc.GitCommandError as e:
-        # hard reset to old_head, and discard any tags or commits descended from old_head
-        # also abort any in-process cherry pick; these leave dirty state if not cleaned up
-        logger.warning(f"Ran into a problem: {e}")
-
-        try:
-            git_utils.cherrypick("--abort")  # not actually a "commit_hash", but a valid switch for `git cherry-pick`
-            logger.warning("Cleaned up an in-process cherry-pick")
-        except git.exc.GitCommandError as e2:
-            logger.debug(f"No cherry-pick was in progress (or something else went wrong) - {e2}")
-
-        logger.warning(f"Resetting '{args.release_version}' back to {old_head}.")
-        git_utils.reset_head(old_head)
-        return False
-    finally:
-        logger.warning(f"Task is finishing, will check out '{original_branch}' locally")
-        git_utils.checkout(original_branch)
 
 
 # ----------------------------------------------------------------------------------------------------
