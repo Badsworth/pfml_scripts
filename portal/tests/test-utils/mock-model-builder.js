@@ -16,7 +16,6 @@ import BenefitsApplication, {
   WorkPatternDay,
   WorkPatternType,
 } from "../../src/models/BenefitsApplication";
-import Document, { DocumentType } from "../../src/models/Document";
 import EmployerBenefit, {
   EmployerBenefitFrequency,
   EmployerBenefitType,
@@ -29,12 +28,12 @@ import PreviousLeave, {
   PreviousLeaveReason,
   PreviousLeaveType,
 } from "../../src/models/PreviousLeave";
-import { set, uniqueId } from "lodash";
 
 import Address from "../../src/models/Address";
 import ConcurrentLeave from "../../src/models/ConcurrentLeave";
 import EmployerClaim from "../../src/models/EmployerClaim";
 import LeaveReason from "../../src/models/LeaveReason";
+import { set } from "lodash";
 
 export class BaseMockBenefitsApplicationBuilder {
   employed() {
@@ -52,8 +51,8 @@ export class BaseMockBenefitsApplicationBuilder {
   /**
    * @returns {BaseMockBenefitsApplicationBuilder}
    */
-  absenceId() {
-    set(this.claimAttrs, "fineos_absence_id", "NTN-111-ABS-01");
+  absenceId(absenceId = "NTN-111-ABS-01") {
+    set(this.claimAttrs, "fineos_absence_id", absenceId);
     return this;
   }
 
@@ -885,50 +884,3 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
     return new BenefitsApplication(this.claimAttrs);
   }
 }
-
-/**
- * Generates claim of type (e.g., completed)
- * @param {string} type - completed, employed, address, submitted, etc..
- * @param {string} leaveReason - bonding, caring, medical, or pregnancy.
- * @returns {MockBenefitsApplicationBuilder}
- */
-export const generateClaim = (type, leaveReason) => {
-  const claim = new MockBenefitsApplicationBuilder()[type]();
-  if (leaveReason) {
-    const claimLeaveReason = `${leaveReason}LeaveReason`;
-    claim[claimLeaveReason]();
-  }
-
-  return claim.create();
-};
-
-/**
- * Generates notice of type (e.g., denialNotice)
- * @param {string} type - accepts type from model DocumentType
- * @param {string} givenDate - optional param YYYY-MM-DD, if null: generates random
- * @returns {Document} - returns document
- */
-
-export const generateNotice = (type, givenDate) => {
-  // Creates random number up to limit {number} value
-  const createRandomInteger = (limit) => {
-    const randomNumber = Math.floor(Math.random() * limit) + 1;
-    return `0${randomNumber}`.slice(-2);
-  };
-
-  if (!givenDate) {
-    // Four-digit prior year (e.g., 2020)
-    const lastYear = new Date().getFullYear() - 1;
-
-    // Random month/day for notice date
-    const randomMonth = createRandomInteger(12);
-    const randomDay = createRandomInteger(28);
-    givenDate = `${lastYear}-${randomMonth}-${randomDay}`;
-  }
-
-  return new Document({
-    created_at: givenDate,
-    document_type: DocumentType[type],
-    fineos_document_id: uniqueId("notice"),
-  });
-};

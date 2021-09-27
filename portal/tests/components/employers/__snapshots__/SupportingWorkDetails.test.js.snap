@@ -1,0 +1,158 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`SupportingWorkDetails opens the amendment form when "Amend" is clicked 1`] = `
+<div>
+  <div
+    class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+  >
+    <h2
+      class="flex-fill margin-right-1 font-heading-md text-bold"
+    >
+      Supporting work details
+    </h2>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Weekly hours worked
+      </h3>
+      <p
+        class="margin-top-0"
+      >
+        40
+      </p>
+    </div>
+    <button
+      class="usa-button position-relative text-no-wrap usa-button--unstyled"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="usa-icon text-middle margin-right-05 margin-top-neg-05"
+        focusable="false"
+        role="img"
+      >
+        <use
+          xlink:href="/img/sprite.svg#edit"
+        />
+      </svg>
+      Amend
+    </button>
+  </div>
+  <div
+    class="usa-alert usa-alert--info usa-alert--no-icon usa-form c-amendment-form border-y border-y-width-1px border-right border-right-width-1px bg-base-lightest border-base-lighter"
+  >
+    <div
+      class="usa-alert__body"
+    >
+      <div
+        class="usa-alert__text"
+      >
+        <h4
+          class="font-heading-sm text-bold"
+        >
+          Amend weekly hours worked
+        </h4>
+        <p>
+          This amendment will get saved when you submit your review.
+        </p>
+        <div
+          class="usa-form-group"
+        >
+          <label
+            class="usa-label text-bold font-heading-xs measure-5"
+            for="InputText1"
+            id="InputText1_label"
+          >
+            On average, how many hours does the employee work each week?
+          </label>
+          <span
+            class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+            id="InputText1_hint"
+          >
+            If their schedule varies, tell us the average number of hours worked over the past 52 weeks.
+          </span>
+          <div
+            class=""
+          >
+            <input
+              aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+              class="usa-input usa-input--small"
+              data-value-type="integer"
+              id="InputText1"
+              inputmode="decimal"
+              name="hours_worked_per_week"
+              type="text"
+              value="40"
+            />
+          </div>
+        </div>
+      </div>
+      <div
+        class="border-top border-width-1px margin-top-4 margin-bottom-1 border-base-light"
+      >
+        <button
+          class="usa-button position-relative margin-top-3 text-red usa-button--unstyled"
+          type="button"
+        >
+          Cancel amendment
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`SupportingWorkDetails renders without the amendment form open 1`] = `
+<div>
+  <div
+    class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+  >
+    <h2
+      class="flex-fill margin-right-1 font-heading-md text-bold"
+    >
+      Supporting work details
+    </h2>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Weekly hours worked
+      </h3>
+      <p
+        class="margin-top-0"
+      >
+        40
+      </p>
+    </div>
+    <button
+      class="usa-button position-relative text-no-wrap usa-button--unstyled"
+      type="button"
+    >
+      <svg
+        aria-hidden="true"
+        class="usa-icon text-middle margin-right-05 margin-top-neg-05"
+        focusable="false"
+        role="img"
+      >
+        <use
+          xlink:href="/img/sprite.svg#edit"
+        />
+      </svg>
+      Amend
+    </button>
+  </div>
+</div>
+`;

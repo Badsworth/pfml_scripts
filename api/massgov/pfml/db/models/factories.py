@@ -327,6 +327,17 @@ class EmployeeLogFactory(BaseFactory):
     process_id = 1
 
 
+class EmployerLogFactory(BaseFactory):
+    class Meta:
+        model = employee_models.EmployerLog
+
+    employer_log_id = Generators.UuidObj
+    employer_id = Generators.UuidObj
+    action = "INSERT"
+    modified_at = Generators.UtcNow
+    process_id = 1
+
+
 class WagesAndContributionsFactory(BaseFactory):
     class Meta:
         model = employee_models.WagesAndContributions
@@ -444,6 +455,25 @@ class PaymentFactory(BaseFactory):
 
     fineos_employee_first_name = factory.Faker("first_name")
     fineos_employee_last_name = factory.Faker("last_name")
+
+
+class PaymentDetailsFactory(BaseFactory):
+    class Meta:
+        model = employee_models.PaymentDetails
+
+    payment_details_id = Generators.UuidObj
+
+    payment = factory.SubFactory(PaymentFactory)
+    payment_id = factory.LazyAttribute(lambda a: a.payment.payment_id)
+
+    period_start_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 1, 1), date_end=date(2021, 1, 15)
+    )
+    period_end_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 1, 16), date_end=date(2021, 1, 28)
+    )
+
+    amount = Generators.Money
 
 
 class PaymentReferenceFileFactory(BaseFactory):

@@ -13,7 +13,7 @@ export type FeatureFlags = {
   noMaintenance: boolean;
   claimantShowStatusPage: boolean;
   employerShowReviewByStatus: boolean;
-  employerShowDashboardSearch?: boolean;
+  employerShowDashboardSearch: boolean;
 };
 
 export type Credentials = {
@@ -123,7 +123,11 @@ export type OtherTasks =
 /**Tasks avalable in fineos */
 export type FineosTasks = DocumentReviewTasks | ERTasks | OtherTasks;
 
-export type ClaimStatus = "Adjudication" | "Approved" | "Completed";
+export type ClaimStatus =
+  | "Adjudication"
+  | "Approved"
+  | "Completed"
+  | "Declined";
 
 /**
  * @note UTILITY TYPES
@@ -202,3 +206,11 @@ export type ValidClaim = RequireNotNull<
   | "date_of_birth"
   | "leave_details"
 >;
+
+export type Environment =
+  | "test"
+  | "stage"
+  | "training"
+  | "performance"
+  | "uat"
+  | "cps-preview";

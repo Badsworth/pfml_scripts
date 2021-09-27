@@ -4,10 +4,12 @@ import TsconfigPathsPlugin from "tsconfig-paths-webpack-plugin";
 import webpack from "webpack";
 import CopyPlugin from "copy-webpack-plugin";
 import dotenv from "dotenv";
+import path from "path";
+
 module.exports = () => {
   dotenv.config();
-  return {
-    name: "artillery",
+
+  const baseConfig = {
     mode: "development",
     entry: {
       processor: "./src/artillery/processor.ts",
@@ -23,6 +25,7 @@ module.exports = () => {
     },
     externals: {
       "playwright-chromium": "playwright-chromium",
+      "@influxdata/influxdb-client": "@influxdata/influxdb-client"
     },
     resolve: {
       // @see https://medium.com/better-programming/the-right-usage-of-aliases-in-webpack-typescript-4418327f47fa
@@ -42,16 +45,37 @@ module.exports = () => {
         },
       ],
     },
-    plugins: [
-      new webpack.DefinePlugin({
-        "process.env.DOCUMENT_FORMS": JSON.stringify("forms"),
-      }),
-      new CopyPlugin({
-        patterns: [
-          { from: "./src/artillery/package.json", to: "./" },
-          { from: "./src/artillery/spec.yml", to: "./" },
-        ],
-      }),
-    ],
   };
+
+  return [
+    {
+      name: "processor",
+      ...baseConfig,
+      entry: {
+        processor: "./src/artillery/processor.ts",
+      },
+      plugins: [
+        new webpack.DefinePlugin({
+          "process.env.DOCUMENT_FORMS": JSON.stringify("forms"),
+        }),
+        new CopyPlugin({
+          patterns: [
+            { from: "./src/artillery/package.json", to: "./" },
+            { from: "./src/artillery/spec.yml", to: "./" },
+          ],
+        }),
+      ]
+    },
+    {
+      name: "reporter",
+      ...baseConfig,
+      entry: {
+        influxdb: "./src/artillery/plugins/influxdb.ts",
+      },
+      output: {
+        ...baseConfig.output,
+        path: path.resolve(__dirname, "dist", "plugins"),
+      }
+    }
+  ];
 };

@@ -566,6 +566,8 @@ exports[`Checklist renders multiple StepList components with list of Steps 1`] =
                   />,
                   "when-can-i-use-pfml": <a
                     href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+                    rel="noopener noreferrer"
+                    target="_blank"
                   />,
                 }
               }
@@ -967,6 +969,8 @@ Array [
               />,
               "when-can-i-use-pfml": <a
                 href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
+                rel="noopener noreferrer"
+                target="_blank"
               />,
             }
           }
@@ -988,6 +992,8 @@ Array [
               <a
                 href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-"
                 key="1"
+                rel="noopener noreferrer"
+                target="_blank"
               >
                 for any other reason that qualifies for PFML
               </a>

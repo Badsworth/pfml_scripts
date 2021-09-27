@@ -1,0 +1,108 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`RepeatableFieldset renders a RepeatableFieldsetCard for each entry 1`] = `
+<section
+  class="margin-bottom-4"
+>
+  <div
+    class="margin-bottom-3 measure-5 padding-3 border-2px border-base-lighter js-repeated-fieldset-card"
+    data-key="RepeatableFieldsetCard4"
+    data-testid="repeatable-fieldset-card"
+  >
+    <fieldset
+      class="usa-fieldset"
+    >
+      <legend
+        class="usa-legend font-heading-lg text-normal"
+      >
+        Person 1
+      </legend>
+      <p>
+        Anton
+         – 
+        0
+      </p>
+      <div
+        class="border-top border-base-lighter padding-top-2 margin-top-2"
+      >
+        <button
+          class="usa-button position-relative text-error hover:text-error-dark active:text-error-darker usa-button--unstyled"
+          name="remove-entry-button"
+          type="button"
+        >
+          Remove
+        </button>
+      </div>
+    </fieldset>
+  </div>
+  <div
+    class="margin-bottom-3 measure-5 padding-3 border-2px border-base-lighter js-repeated-fieldset-card"
+    data-key="RepeatableFieldsetCard5"
+    data-testid="repeatable-fieldset-card"
+  >
+    <fieldset
+      class="usa-fieldset"
+    >
+      <legend
+        class="usa-legend font-heading-lg text-normal"
+      >
+        Person 2
+      </legend>
+      <p>
+        Bud
+         – 
+        1
+      </p>
+      <div
+        class="border-top border-base-lighter padding-top-2 margin-top-2"
+      >
+        <button
+          class="usa-button position-relative text-error hover:text-error-dark active:text-error-darker usa-button--unstyled"
+          name="remove-entry-button"
+          type="button"
+        >
+          Remove
+        </button>
+      </div>
+    </fieldset>
+  </div>
+  <div
+    class="margin-bottom-3 measure-5 padding-3 border-2px border-base-lighter js-repeated-fieldset-card"
+    data-key="RepeatableFieldsetCard6"
+    data-testid="repeatable-fieldset-card"
+  >
+    <fieldset
+      class="usa-fieldset"
+    >
+      <legend
+        class="usa-legend font-heading-lg text-normal"
+      >
+        Person 3
+      </legend>
+      <p>
+        Cat
+         – 
+        2
+      </p>
+      <div
+        class="border-top border-base-lighter padding-top-2 margin-top-2"
+      >
+        <button
+          class="usa-button position-relative text-error hover:text-error-dark active:text-error-darker usa-button--unstyled"
+          name="remove-entry-button"
+          type="button"
+        >
+          Remove
+        </button>
+      </div>
+    </fieldset>
+  </div>
+  <button
+    class="usa-button position-relative usa-button--outline bg-white"
+    name="add-entry-button"
+    type="button"
+  >
+    Add
+  </button>
+</section>
+`;

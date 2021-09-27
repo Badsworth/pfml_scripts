@@ -10,7 +10,7 @@ import findDocumentsByTypes from "./findDocumentsByTypes";
  */
 const getLegalNotices = (documents) => {
   return findDocumentsByTypes(documents, [
-    DocumentType.appealAcknowledgement,
+    DocumentType.appealAcknowledgment,
     DocumentType.approvalNotice,
     DocumentType.denialNotice,
     DocumentType.requestForInfoNotice,

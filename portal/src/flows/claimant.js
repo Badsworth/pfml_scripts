@@ -17,6 +17,7 @@ import {
 } from "../models/BenefitsApplication";
 
 import { ClaimSteps } from "../models/Step";
+import { UploadType } from "../pages/applications/upload/index";
 import { fields as addressFields } from "../pages/applications/address";
 import { fields as concurrentLeavesDetailsFields } from "../pages/applications/concurrent-leaves-details";
 import { fields as concurrentLeavesFields } from "../pages/applications/concurrent-leaves";
@@ -58,6 +59,10 @@ import { fields as workPatternTypeFields } from "../pages/applications/work-patt
  * @see https://xstate.js.org/docs/guides/guards.html
  */
 export const guards = {
+  // claimants upload additional docs after the claim is completed.
+  // claimants will either be routed to the status page vs. the checklist
+  // if they are uploading an additional doc.
+  isAdditionalDoc: ({ isAdditionalDoc }) => isAdditionalDoc === true,
   isCaringLeave: ({ claim }) => claim.isCaringLeave,
   isMedicalOrPregnancyLeave: ({ claim }) => claim.isMedicalOrPregnancyLeave,
   isBondingLeave: ({ claim }) => claim.isBondingLeave,
@@ -93,6 +98,21 @@ const checklistEvents = {
   PAYMENT: routes.applications.paymentMethod,
   UPLOAD_CERTIFICATION: routes.applications.uploadCertification,
   UPLOAD_ID: routes.applications.uploadId,
+};
+
+/**
+ * Events shared by all upload docs pages
+ */
+const uploadDocEvents = {
+  CONTINUE: [
+    {
+      target: routes.applications.status,
+      cond: "isAdditionalDoc",
+    },
+    {
+      target: routes.applications.checklist,
+    },
+  ],
 };
 
 export default {
@@ -140,6 +160,7 @@ export default {
       meta: {},
       on: {
         CONTINUE: routes.applications.uploadDocsOptions,
+        STATUS: routes.applications.status,
       },
     },
     [routes.applications.checklist]: {
@@ -307,6 +328,43 @@ export default {
           },
         ],
       },
+    },
+    [routes.applications.upload.index]: {
+      on: {
+        [UploadType.mass_id]: routes.applications.upload.stateId,
+        [UploadType.non_mass_id]: routes.applications.upload.otherId,
+        [UploadType.medical_certification]:
+          routes.applications.upload.medicalCertification,
+        [UploadType.proof_of_birth]:
+          routes.applications.upload.bondingProofOfBirth,
+        [UploadType.proof_of_placement]:
+          routes.applications.upload.bondingProofOfPlacement,
+        [UploadType.pregnancy_medical_certification]:
+          routes.applications.upload.pregnancyCertification,
+        [UploadType.caring_leave_certification]:
+          routes.applications.upload.caringCertification,
+      },
+    },
+    [routes.applications.upload.stateId]: {
+      on: uploadDocEvents,
+    },
+    [routes.applications.upload.otherId]: {
+      on: uploadDocEvents,
+    },
+    [routes.applications.upload.medicalCertification]: {
+      on: uploadDocEvents,
+    },
+    [routes.applications.upload.bondingProofOfBirth]: {
+      on: uploadDocEvents,
+    },
+    [routes.applications.upload.bondingProofOfPlacement]: {
+      on: uploadDocEvents,
+    },
+    [routes.applications.upload.pregnancyCertification]: {
+      on: uploadDocEvents,
+    },
+    [routes.applications.upload.caringCertification]: {
+      on: uploadDocEvents,
     },
     [routes.applications.dateOfChild]: {
       meta: {
@@ -681,6 +739,14 @@ export default {
       },
       on: {
         CONTINUE: routes.applications.review,
+      },
+    },
+    [routes.applications.status]: {
+      on: {
+        UPLOAD_PROOF_OF_BIRTH: routes.applications.upload.bondingProofOfBirth,
+        UPLOAD_PROOF_OF_PLACEMENT:
+          routes.applications.upload.bondingProofOfPlacement,
+        UPLOAD_DOC_OPTIONS: routes.applications.upload.index,
       },
     },
   },

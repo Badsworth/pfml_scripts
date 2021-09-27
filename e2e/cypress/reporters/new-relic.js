@@ -33,7 +33,7 @@ module.exports = class NewRelicCypressReporter extends reporters.Spec {
       `Reporting New Relic results with the following runId: ${ciBuildId}`
     );
     this.queue = [];
-    runner.once(Runner.constants.EVENT_TEST_END, (test) => {
+    runner.on(Runner.constants.EVENT_TEST_END, (test) => {
       const suite = getSuite(test);
       const event = {
         runId: ciBuildId,

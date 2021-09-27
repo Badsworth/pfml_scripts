@@ -3,9 +3,6 @@ import pytest
 from massgov.pfml.db.models.employees import Employee, EmployeeLog, Employer, EmployerLog
 from massgov.pfml.db.models.factories import EmployeeFactory, EmployerFactory
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 @pytest.fixture
 def employee(initialize_factories_session):

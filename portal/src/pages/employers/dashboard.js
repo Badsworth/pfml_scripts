@@ -21,7 +21,6 @@ import Title from "../../components/Title";
 import TooltipIcon from "../../components/TooltipIcon";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
-import classnames from "classnames";
 import formatDateRange from "../../utils/formatDateRange";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
@@ -102,7 +101,7 @@ export const Dashboard = (props) => {
           </Alert>
         )}
 
-        <DashboardInfoAlert user={props.user} />
+        <DashboardInfoAlert />
       </div>
 
       <section className="margin-bottom-4" ref={introElementRef}>
@@ -415,42 +414,8 @@ ClaimTableRows.propTypes = {
   user: PropTypes.instanceOf(User).isRequired,
 };
 
-const DashboardInfoAlert = (props) => {
-  const { user } = props;
+const DashboardInfoAlert = () => {
   const { t } = useTranslation();
-
-  const getCommaDelimitedEmployerEINs = () => {
-    const employers = user.verifiedEmployersNotRegisteredInFineos;
-    return employers.map((employer) => employer.employer_fein).join(", ");
-  };
-
-  // Leave admins not registered in Fineos won't be able to access associated claim data from Fineos.
-  // We use this flag to communicate this to the user.
-  if (user.hasVerifiedEmployerNotRegisteredInFineos) {
-    return (
-      <Alert
-        state="info"
-        heading={t("pages.employersDashboard.unavailableClaimsTitle", {
-          employers: getCommaDelimitedEmployerEINs(),
-        })}
-      >
-        <p>
-          <Trans
-            i18nKey="pages.employersDashboard.unavailableClaimsBody"
-            components={{
-              "learn-more-link": (
-                <a
-                  href={routes.external.massgov.employerAccount}
-                  target="_blank"
-                  rel="noopener"
-                />
-              ),
-            }}
-          />
-        </p>
-      </Alert>
-    );
-  }
 
   return (
     <Alert state="info" heading={t("pages.employersDashboard.betaHeader")}>
@@ -470,10 +435,6 @@ const DashboardInfoAlert = (props) => {
       </p>
     </Alert>
   );
-};
-
-DashboardInfoAlert.propTypes = {
-  user: PropTypes.instanceOf(User).isRequired,
 };
 
 const Filters = (props) => {
@@ -601,16 +562,7 @@ const Filters = (props) => {
 
   return (
     <React.Fragment>
-      <div
-        className={classnames({
-          // When search is enabled, we visually display this as if it's
-          // part of the same gray container box
-          "margin-bottom-2": !isFeatureEnabled("employerShowDashboardSearch"),
-          "padding-bottom-3 bg-base-lightest padding-x-3": isFeatureEnabled(
-            "employerShowDashboardSearch"
-          ),
-        })}
-      >
+      <div className="padding-bottom-3 bg-base-lightest padding-x-3">
         <Button
           aria-controls={filtersContainerId}
           aria-expanded={showFilters.toString()}
@@ -786,8 +738,6 @@ const Search = (props) => {
       },
     ]);
   };
-
-  if (!isFeatureEnabled("employerShowDashboardSearch")) return null;
 
   return (
     <div className="bg-base-lightest padding-x-3 padding-top-1px padding-bottom-2">

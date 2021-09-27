@@ -45,7 +45,6 @@ export default {
       control: {
         type: "check",
         options: [
-          "Hours worked per week - invalid_hours_worked_per_week",
           "Hours worked per week - minimum",
           "Hours worked per week - maximum",
           "Employer benefit - benefit end date",
@@ -135,18 +134,6 @@ function getDocuments(documentation, leaveReason) {
 
 function getAppErrorInfoCollection(errorTypes = []) {
   const errors = [];
-  if (
-    errorTypes.includes("Hours worked per week - invalid_hours_worked_per_week")
-  ) {
-    errors.push(
-      new AppErrorInfo({
-        message:
-          "hours_worked_per_week must be greater than 0 and less than 168",
-        type: "invalid_hours_worked_per_week",
-        field: "hours_worked_per_week",
-      })
-    );
-  }
 
   if (errorTypes.includes("Hours worked per week - minimum")) {
     errors.push(

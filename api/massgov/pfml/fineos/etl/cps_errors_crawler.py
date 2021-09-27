@@ -1,3 +1,5 @@
+from typing import Any
+
 import boto3
 import newrelic.agent
 from pydantic import BaseSettings, Field
@@ -67,7 +69,7 @@ def send_rows_to_nr(config, client, file):
     logger.info(f"{count}rows sent to New Relic from {received_file}")
 
 
-def move_file_to_processed(client, file, config: CPSErrorsConfig):
+def move_file_to_processed(client: Any, file: str, config: CPSErrorsConfig) -> None:
     dest_bucket = config.cps_error_reports_processed_s3_path
     source = f"{config.cps_error_reports_received_s3_path}{file}"
     destination = f"{dest_bucket}{file}"

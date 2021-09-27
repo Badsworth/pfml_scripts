@@ -57,9 +57,13 @@ exports[`ConsentToDataSharing shows the correct content for non-employers 1`] = 
             Object {
               "informed-consent-link": <a
                 href="https://www.mass.gov/paidleave-informedconsent"
+                rel="noopener noreferrer"
+                target="_blank"
               />,
               "privacy-policy-link": <a
                 href="https://www.mass.gov/privacypolicy"
+                rel="noopener noreferrer"
+                target="_blank"
               />,
             }
           }
@@ -147,9 +151,13 @@ exports[`ConsentToDataSharing shows the correct contents for employers 1`] = `
             Object {
               "informed-consent-link": <a
                 href="https://www.mass.gov/paidleave-informedconsent"
+                rel="noopener noreferrer"
+                target="_blank"
               />,
               "privacy-policy-link": <a
                 href="https://www.mass.gov/privacypolicy"
+                rel="noopener noreferrer"
+                target="_blank"
               />,
             }
           }

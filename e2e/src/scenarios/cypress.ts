@@ -334,6 +334,7 @@ export const MED_OLB: ScenarioSpecification = {
     ],
   },
 };
+
 export const MED_PRE: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
@@ -349,6 +350,18 @@ export const MED_PRE: ScenarioSpecification = {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
     },
+  },
+};
+
+// @todo: PREGNANCY_AND_MATERNITY_FORM document is unable to be submitted when using reason: "Serious Health Condition - Employee"
+// with the most recent deployment. (https://github.com/EOLWD/pfml/pull/5359) Once change has been deployed to all envs, remove MED_PRE scenario above.
+export const PREBIRTH: ScenarioSpecification = {
+  ...MED_PRE,
+  claim: {
+    ...MED_PRE.claim,
+    label: "PREBIRTH",
+    reason: "Pregnancy/Maternity",
+    pregnant_or_recent_birth: undefined,
   },
 };
 
@@ -449,16 +462,37 @@ export const BHAP1_OLB: ScenarioSpecification = {
   },
 };
 
+const midweek = addDays(mostRecentSunday, 3);
+export const CPS_MID_WK: ScenarioSpecification = {
+  employee: { mass_id: true, wages: "eligible" },
+  claim: {
+    label: "CPS_MID_WK",
+    reason: "Serious Health Condition - Employee",
+    docs: {
+      MASSID: {},
+      HCP: {},
+    },
+    work_pattern_spec: "standard",
+    has_continuous_leave_periods: true,
+    leave_dates: [subWeeks(midweek, 3), addWeeks(midweek, 3)],
+    metadata: { expected_weight: "0.20" },
+  }
+}
+
 // This only being used for CPS Service Pack testing.
 const currentDate = new Date();
+/* eslint-disable unused-imports/no-unused-vars */
+const startDate = addDays(currentDate, 65);
+const endDate = addDays(currentDate, 90);
+/* eslint-enable unused-imports/no-unused-vars */
 export const CPS_SP: ScenarioSpecification = {
   // @todo wages can be adjusted from eligible/ineligible to wage per year
   employee: { mass_id: true, wages: "eligible" },
   claim: {
     label: "CPS_SP",
     // @todo Choose a reason for leave? If Child Bonding need a reason_qualifier.
-    reason: "Serious Health Condition - Employee",
-    // reason: "Care for a Family Member",
+    // reason: "Serious Health Condition - Employee",
+    reason: "Care for a Family Member",
     // reason: "Pregnancy/Maternity",
     // reason: "Child Bonding",
     // @todo Pregnant or birth leave option in Portal.
@@ -468,9 +502,9 @@ export const CPS_SP: ScenarioSpecification = {
     // @todo Documents must be update for each reason. MASSID is used for all.
     docs: {
       MASSID: {},
-      HCP: {},
+      // HCP: {},
       // FOSTERPLACEMENT: {},
-      // CARING: {},
+      CARING: {},
       // PREGNANCY_MATERNITY_FORM: {},
     },
     // @todo Adjust work pattern if needed?
@@ -482,7 +516,7 @@ export const CPS_SP: ScenarioSpecification = {
     // reduced_leave_spec: "0,240,240,240,240,240,0",
     // @todo Choose the period of time for the leave here?
     // @todo If care leave use the start, end.
-    // leave_dates: [start, end],
+    // leave_dates: [startDate, endDate],
     // @todo If you want certain days from today.
     leave_dates: [subDays(currentDate, 10), addDays(currentDate, 10)],
     // @todo this will start most recent Sunday with weeks.

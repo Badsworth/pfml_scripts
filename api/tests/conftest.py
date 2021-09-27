@@ -10,6 +10,7 @@ import logging.config  # noqa: B1
 import os
 import uuid
 from datetime import datetime, timedelta
+from typing import List
 
 import _pytest.monkeypatch
 import boto3
@@ -18,6 +19,7 @@ import pytest
 import sqlalchemy
 from jose import jwt
 from jose.constants import ALGORITHMS
+from pytest import Item
 
 import massgov.pfml.api.app
 import massgov.pfml.api.authentication as authentication
@@ -28,6 +30,15 @@ import massgov.pfml.util.logging
 from massgov.pfml.db.models.factories import UserFactory
 
 logger = massgov.pfml.util.logging.get_logger("massgov.pfml.api.tests.conftest")
+
+
+@pytest.fixture(scope="session")
+def has_external_dependencies():
+    """
+    Use this fixture to automatically mark all tests that are in the downline
+    of fixtures or tests that request this fixture.
+    """
+    pass
 
 
 @pytest.fixture(autouse=True, scope="session")
@@ -272,8 +283,6 @@ def mock_ses(monkeypatch, reset_aws_env_vars):
         "BOUNCE_FORWARDING_EMAIL_ADDRESS_ARN",
         "arn:aws:ses:us-east-1:498823821309:identity/noreplypfml@mass.gov",
     )
-    monkeypatch.setenv("CTR_GAX_BIEVNT_EMAIL_ADDRESS", "test1@example.com")
-    monkeypatch.setenv("CTR_VCC_BIEVNT_EMAIL_ADDRESS", "test2@example.com")
     monkeypatch.setenv("DFML_BUSINESS_OPERATIONS_EMAIL_ADDRESS", "test3@example.com")
 
     with moto.mock_ses():
@@ -362,7 +371,7 @@ def setup_mock_sftp_client(monkeypatch, mock_sftp_client):
 
 
 @pytest.fixture(scope="session")
-def test_db_schema(monkeypatch_session):
+def test_db_schema(has_external_dependencies, monkeypatch_session):
     """
     Create a test schema, if it doesn't already exist, and drop it after the
     test completes.
@@ -472,7 +481,7 @@ def initialize_factories_session(monkeypatch, test_db_session):
 
 
 @pytest.fixture
-def local_test_db_schema(monkeypatch):
+def local_test_db_schema(has_external_dependencies, monkeypatch):
     """
     Create a test schema, if it doesn't already exist, and drop it after the
     test completes.
@@ -546,7 +555,7 @@ def local_initialize_factories_session(monkeypatch, local_test_db_session):
 
 
 @pytest.fixture
-def migrations_test_db_schema(monkeypatch):
+def migrations_test_db_schema(has_external_dependencies, monkeypatch):
     """
     Create a test schema, if it doesn't already exist, and drop it after the
     test completes.
@@ -563,7 +572,7 @@ def migrations_test_db_schema(monkeypatch):
 
 
 @pytest.fixture
-def test_db_via_migrations(migrations_test_db_schema, logging_fix):
+def test_db_via_migrations(has_external_dependencies, migrations_test_db_schema, logging_fix):
     """
     Creates a test schema, runs migrations through Alembic. Schema is dropped
     after the test completes.
@@ -602,7 +611,7 @@ def initialize_factories_session_via_migrations(test_db_session_via_migrations):
 
 
 @pytest.fixture(scope="module")
-def module_persistent_db(monkeypatch_module, request):
+def module_persistent_db(has_external_dependencies, monkeypatch_module, request):
     import massgov.pfml.db as db
     from massgov.pfml.db.models.base import Base
 
@@ -757,6 +766,19 @@ def create_triggers_on_connection(connection):
                                     VALUES (public.gen_random_uuid(), affected_record.employer_id,\
                                         TG_OP, current_timestamp);\
                             END loop;\
+                    ELSEIF (TG_OP = 'UPDATE') THEN\
+                        FOR affected_record IN SELECT * FROM old_table\
+                            LOOP\
+                                INSERT INTO employer_log(employer_log_id, employer_id,\
+                                    action, modified_at, exemption_cease_date,\
+                                    exemption_commence_date, family_exemption, medical_exemption)\
+                                    VALUES (public.gen_random_uuid(), affected_record.employer_id,\
+                                        TG_OP, current_timestamp,\
+                                        affected_record.exemption_cease_date,\
+                                        affected_record.exemption_commence_date,\
+                                        affected_record.family_exemption,\
+                                        affected_record.medical_exemption);\
+                            END loop;\
                     ELSE\
                         FOR affected_record IN SELECT * FROM new_table\
                             LOOP\
@@ -807,6 +829,23 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
                 report.longrepr.reprcrash.message,
             )
         )
+
+
+@pytest.hookimpl(hookwrapper=True, tryfirst=True)
+def pytest_collection_modifyitems(items: List[Item]):
+    """Automatically mark integration tests.
+
+    Automatically marks any test with the has_external_dependencies fixture in its
+    fixture request graph as an integration test.
+
+    Other markers could be established here as well.
+    """
+
+    for item in items:
+        if "has_external_dependencies" in item.fixturenames:
+            item.add_marker(pytest.mark.integration)
+
+    yield
 
 
 # This fixture was necessary at the time of this PR as

@@ -28,8 +28,32 @@
       "jsx": true
     }
   },
+  "overrides": [
+    {
+      "files": "**/*.+(ts|tsx)",
+      "parser": "@typescript-eslint/parser",
+      "plugins": ["@typescript-eslint/eslint-plugin"],
+      "extends": [
+        "plugin:@typescript-eslint/eslint-recommended", // removes redundant warnings between TS & ESLint
+        "plugin:@typescript-eslint/recommended" // rules specific to typescript, e.g., writing interfaces
+      ],
+      "rules": {
+        "@typescript-eslint/array-type": [
+          "error",
+          { "default": "array-simple" }
+        ],
+        "@typescript-eslint/consistent-type-definitions": "error",
+        "@typescript-eslint/explicit-module-boundary-types": "off",
+        "@typescript-eslint/naming-convention": "error",
+        "@typescript-eslint/no-unused-vars": "error",
+        "jsdoc/require-param-type": "off",
+        "jsdoc/require-returns": "off"
+      }
+    }
+  ],
   "rules": {
     "camelcase": "off",
+    "import/no-useless-path-segments": "error",
     "jest/consistent-test-it": ["error", { "fn": "it" }],
     "jest/no-conditional-expect": "off",
     "jest/no-try-expect": "off",
@@ -66,7 +90,7 @@
     "sort-vars": "error",
     "todo-plz/ticket-ref": [
       "error",
-      { "pattern": "(API|CP|EMPLOYER|POL)-[0-9]+", "terms": ["TODO"] }
+      { "pattern": "(API|CP|EMPLOYER|POL|PORTAL)-[0-9]+", "terms": ["TODO"] }
     ]
   },
   "settings": {

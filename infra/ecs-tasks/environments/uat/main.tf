@@ -31,14 +31,16 @@ terraform {
 module "tasks" {
   source = "../../template"
 
-  environment_name         = "uat"
-  st_use_mock_dor_data     = false
-  st_decrypt_dor_data      = false
-  st_file_limit_specified  = true
-  st_employer_update_limit = 1500
-  service_docker_tag       = local.service_docker_tag
-  vpc_id                   = data.aws_vpc.vpc.id
-  app_subnet_ids           = data.aws_subnet_ids.vpc_app.ids
+  environment_name              = "uat"
+  st_use_mock_dor_data          = false
+  st_decrypt_dor_data           = false
+  st_file_limit_specified       = true
+  st_employer_update_limit      = 1500
+  service_docker_tag            = local.service_docker_tag
+  vpc_id                        = data.aws_vpc.vpc.id
+  app_subnet_ids                = data.aws_subnet_ids.vpc_app.ids
+  enforce_execute_sql_read_only = false
+
 
   cognito_user_pool_id                       = "us-east-1_29j6fKBDT"
   fineos_client_customer_api_url             = "https://uat-api.masspfml.fineos.com/customerapi/"
@@ -58,7 +60,7 @@ module "tasks" {
   fineos_data_export_path   = "s3://fin-sompre-data-export/UAT/dataexports"
   fineos_data_import_path   = "s3://fin-sompre-data-import/UAT/peiupdate"
   fineos_error_export_path  = "s3://fin-sompre-data-export/UAT/errorExtracts"
-  fineos_report_export_path = "s3://fin-sompre-data-export/UAT/reportExtracts"
+  fineos_report_export_path = "s3://fin-sompre-data-export/UAT/reportExtract"
 
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-uat/rmv_client_certificate-LWvMFe"

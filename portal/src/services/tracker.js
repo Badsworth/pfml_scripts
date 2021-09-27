@@ -126,6 +126,17 @@ function trackFetchRequest(requestName) {
 }
 
 /**
+ * Call this after a fetch request being tracked with trackFetchRequest has completed,
+ * so subsequent requests made by third-party scripts (e.g Google Analytics) don't get
+ * tracked under the same browser interaction.
+ */
+function markFetchRequestEnd() {
+  if (newrelicReady()) {
+    newrelic.interaction().end();
+  }
+}
+
+/**
  * @private
  */
 function setPageAttributesOnInteraction() {
@@ -140,6 +151,7 @@ function setPageAttributesOnInteraction() {
 
 export default {
   initialize,
+  markFetchRequestEnd,
   noticeError,
   startPageView,
   trackEvent,

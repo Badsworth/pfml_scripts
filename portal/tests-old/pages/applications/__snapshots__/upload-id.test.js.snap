@@ -29,6 +29,8 @@ exports[`UploadId after documents have been loaded when the user doesn't have a 
             />,
             "work-visa-link": <a
               href="https://travel.state.gov/content/travel/en/us-visas/employment/temporary-worker-visas.html"
+              rel="noopener noreferrer"
+              target="_blank"
             />,
           }
         }
@@ -43,10 +45,14 @@ exports[`UploadId after documents have been loaded when the user doesn't have a 
               Object {
                 "identity-proof-link": <a
                   href="https://www.mass.gov/info-details/identity-proof-for-paid-leave"
+                  rel="noopener noreferrer"
+                  target="_blank"
                 />,
                 "li": <li />,
                 "puerto-rican-birth-certificate-link": <a
                   href="https://prfaa.pr.gov/faqs"
+                  rel="noopener noreferrer"
+                  target="_blank"
                 />,
                 "ul": <ul
                   className="usa-list"

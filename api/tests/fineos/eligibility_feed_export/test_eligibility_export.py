@@ -6,9 +6,6 @@ import pytest
 from massgov.pfml.db.models.employees import EmployeeLog
 from massgov.pfml.db.models.factories import WagesAndContributionsFactory
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 @moto.mock_ssm()
 def test_main_requires_non_empty_env_vars(

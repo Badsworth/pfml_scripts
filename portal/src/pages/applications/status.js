@@ -1,6 +1,8 @@
+// @ts-nocheck
 import ClaimDetail, { AbsencePeriod } from "../../models/ClaimDetail";
 import React, { useEffect } from "react";
 import { find, get, has, map } from "lodash";
+
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
@@ -20,14 +22,8 @@ import formatDate from "../../utils/formatDate";
 import getLegalNotices from "../../utils/getLegalNotices";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import { isFeatureEnabled } from "../../services/featureFlags";
-import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-
-const nextStepsRoute = {
-  newborn: "applications.upload.bondingProofOfBirth",
-  adoption: "applications.upload.bondingProofOfPlacement",
-};
 
 export const Status = ({ appLogic, query }) => {
   const { t } = useTranslation();
@@ -41,8 +37,7 @@ export const Status = ({ appLogic, query }) => {
     },
     portalFlow,
   } = appLogic;
-  const { absence_case_id } = query;
-
+  const { absence_case_id, uploaded_document_type } = query;
   useEffect(() => {
     if (!isFeatureEnabled("claimantShowStatusPage")) {
       portalFlow.goTo(routes.applications.index);
@@ -74,14 +69,18 @@ export const Status = ({ appLogic, query }) => {
     }
   }, [isLoadingClaimDetail, claimDetail]);
 
-  const hasClaimDetailLoadError = appLogic.appErrors.items.some(
-    (error) => error.name === "ClaimDetailLoadError"
-  );
-
-  if (hasClaimDetailLoadError) return null;
+  // If the claim has an error, include the back button w/error
+  if (appLogic.appErrors.items.length) {
+    return (
+      <BackButton
+        label={t("pages.claimsStatus.backButtonLabel")}
+        href={routes.applications.index}
+      />
+    );
+  }
 
   // Check both because claimDetail could be cached from a different status page.
-  if (isLoadingClaimDetail || !claimDetail)
+  if (isLoadingClaimDetail || !claimDetail) {
     return (
       <div className="margin-top-8 text-center">
         <Spinner
@@ -89,6 +88,7 @@ export const Status = ({ appLogic, query }) => {
         />
       </div>
     );
+  }
 
   const absenceDetails = claimDetail.absencePeriodsByReason;
   const hasPendingStatus = claimDetail.absence_periods.some(
@@ -109,10 +109,7 @@ export const Status = ({ appLogic, query }) => {
       legalNotices.length === 0;
 
     const SectionWrapper = ({ children }) => (
-      <div
-        className="border-top border-base-lighter padding-y-2"
-        id="view_notices"
-      >
+      <div className="border-top border-base-lighter padding-y-2">
         {children}
       </div>
     );
@@ -157,8 +154,12 @@ export const Status = ({ appLogic, query }) => {
   const getInfoAlertContext = (absenceDetails) => {
     const hasBondingReason = has(absenceDetails, LeaveReason.bonding);
     const hasPregnancyReason = has(absenceDetails, LeaveReason.pregnancy);
-
-    if (hasBondingReason && !hasPregnancyReason) {
+    const hasNewBorn = claimDetail.absence_periods.some(
+      (absenceItem) =>
+        (absenceItem.reason_qualifier_one ||
+          absenceItem.reason_qualifier_two) === "Newborn"
+    );
+    if (hasBondingReason && !hasPregnancyReason && hasNewBorn) {
       return "bonding";
     }
 
@@ -171,9 +172,25 @@ export const Status = ({ appLogic, query }) => {
   const infoAlertContext = getInfoAlertContext(absenceDetails);
   const [firstAbsenceDetail] = Object.keys(absenceDetails);
   const containerClassName = "border-top border-base-lighter padding-top-2";
-
   return (
     <React.Fragment>
+      {uploaded_document_type && (
+        <Alert
+          className="margin-bottom-3"
+          heading={t("pages.claimsStatus.uploadSuccessHeading", {
+            document: t("pages.claimsStatus.uploadSuccessHeadingDocumentName", {
+              context: uploaded_document_type,
+            }),
+          })}
+          name="upload-success-message"
+          state="success"
+        >
+          {t("pages.applications.uploadSuccessMessage", {
+            absence_id: absence_case_id,
+          })}
+        </Alert>
+      )}
+
       {!!infoAlertContext && (
         <Alert
           className="margin-bottom-3"
@@ -243,6 +260,8 @@ export const Status = ({ appLogic, query }) => {
             absenceDetails={absenceDetails}
             applicationId={claimDetail.application_id}
             docList={documentsForApplication}
+            absenceCaseId={claimDetail.fineos_absence_id}
+            appLogic={appLogic}
           />
         )}
         <LeaveDetails absenceDetails={absenceDetails} />
@@ -251,17 +270,16 @@ export const Status = ({ appLogic, query }) => {
         {/* Upload documents section */}
         <div className={containerClassName} id="upload_documents">
           <Heading level="2">
-            {t("pages.claimsStatus.uploadDocumentsHeading")}
-          </Heading>
-          <Heading level="3">
             {t("pages.claimsStatus.infoRequestsHeading")}
           </Heading>
           <p>{t("pages.claimsStatus.infoRequestsBody")}</p>
           <ButtonLink
             className="measure-6 margin-bottom-3"
-            href={routeWithParams("applications.uploadDocsOptions", {
-              claim_id: claimDetail.application_id,
-            })}
+            href={appLogic.portalFlow.getNextPageRoute(
+              "UPLOAD_DOC_OPTIONS",
+              {},
+              { absence_case_id: claimDetail.fineos_absence_id }
+            )}
           >
             {t("pages.claimsStatus.uploadDocumentsButton")}
           </ButtonLink>
@@ -322,10 +340,13 @@ Status.propTypes = {
     }),
     portalFlow: PropTypes.shape({
       goTo: PropTypes.func.isRequired,
+      getNextPageRoute: PropTypes.func.isRequired,
     }).isRequired,
   }).isRequired,
   query: PropTypes.shape({
     absence_case_id: PropTypes.string,
+    claim_id: PropTypes.string,
+    uploaded_document_type: PropTypes.string,
   }).isRequired,
 };
 
@@ -377,12 +398,17 @@ export const LeaveDetails = ({ absenceDetails = {} }) => {
                   tOptions={{ context: request_decision }}
                   components={{
                     "application-link": (
-                      <a href={routes.applications.getReady} />
+                      <a
+                        href={routes.applications.getReady}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      />
                     ),
-                    "notice-link": <a href="#view_notices" />,
                     "request-appeal-link": (
                       <a
                         href={routes.external.massgov.requestAnAppealForPFML}
+                        rel="noopener noreferrer"
+                        target="_blank"
                       />
                     ),
                   }}
@@ -404,6 +430,8 @@ export const Timeline = ({
   applicationId,
   docList,
   absencePeriods,
+  absenceCaseId,
+  appLogic,
 }) => {
   const { t } = useTranslation();
 
@@ -414,33 +442,46 @@ export const Timeline = ({
 
   const bondingAbsencePeriod = find(
     absencePeriods,
-    (absencePeriod) =>
-      absencePeriod.reason === LeaveReason.pregnancy ||
-      absencePeriod.reason === LeaveReason.bonding
+    (absencePeriod) => absencePeriod.reason === LeaveReason.bonding
   );
 
-  // eslint-disable-next-line react/prop-types
   const FollowUpSteps = ({ bondingAbsencePeriod }) => {
-    const typeOfProof = ["Foster Care", "Adoption"].includes(
-      // eslint-disable-next-line react/prop-types
-      bondingAbsencePeriod.reason_qualifier_one
-    )
-      ? "adoption"
-      : "newborn";
+    let typeOfProof;
+    if (bondingAbsencePeriod.reason_qualifier_one === "Adoption") {
+      typeOfProof = "adoption";
+    } else if (bondingAbsencePeriod.reason_qualifier_one === "Foster Care") {
+      typeOfProof = "fosterCare";
+    } else {
+      typeOfProof = "newborn";
+    }
 
     return (
       <React.Fragment>
         <Heading level="2">{t("pages.claimsStatus.whatYouNeedToDo")}</Heading>
         <p>
-          {t("pages.claimsStatus.whatYouNeedToDoText", {
-            context: typeOfProof,
-          })}
+          <Trans
+            i18nKey="pages.claimsStatus.whatYouNeedToDoText"
+            tOptions={{ context: typeOfProof }}
+            components={{
+              "proof-document-link": (
+                <a
+                  href={routes.external.massgov.proofOfBirthOrPlacement}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                />
+              ),
+            }}
+          />
         </p>
         <ButtonLink
           className="measure-12"
-          href={routeWithParams(nextStepsRoute[typeOfProof], {
-            claim_id: applicationId,
-          })}
+          href={appLogic.portalFlow.getNextPageRoute(
+            typeOfProof === "newborn"
+              ? "UPLOAD_PROOF_OF_BIRTH"
+              : "UPLOAD_PROOF_OF_PLACEMENT",
+            {},
+            { claim_id: applicationId, absence_case_id: absenceCaseId }
+          )}
         >
           {t("pages.claimsStatus.whatHappensNextButton", {
             context: typeOfProof,
@@ -474,7 +515,13 @@ export const Timeline = ({
       <Trans
         i18nKey="pages.claimsStatus.timelineTextLearnMore"
         components={{
-          "timeline-link": <a href={routes.external.massgov.timeline} />,
+          "timeline-link": (
+            <a
+              href={routes.external.massgov.timeline}
+              rel="noopener noreferrer"
+              target="_blank"
+            />
+          ),
         }}
       />
     </React.Fragment>
@@ -496,6 +543,15 @@ Timeline.propTypes = {
   absencePeriods: PropTypes.arrayOf(PropTypes.instanceOf(AbsencePeriod))
     .isRequired,
   applicationId: PropTypes.string,
+  bondingAbsencePeriod: PropTypes.shape({
+    reason_qualifier_one: PropTypes.string,
+  }),
   employerFollowUpDate: PropTypes.string,
   docList: PropTypes.array.isRequired,
+  absenceCaseId: PropTypes.string.isRequired,
+  appLogic: PropTypes.shape({
+    portalFlow: PropTypes.shape({
+      getNextPageRoute: PropTypes.func.isRequired,
+    }),
+  }),
 };

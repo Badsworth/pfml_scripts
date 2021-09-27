@@ -8,13 +8,12 @@
     "FINEOS_BASEURL": "https://dt2-claims-webapp.masspfml.fineos.com",
     "FINEOS_USERNAME": "CONTENT",
     "TESTMAIL_NAMESPACE": "gqzap",
-    "EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
-    "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
+    "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
+    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
     "LST_EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
     "LST_EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
-    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
     "HAS_CLAIMANT_STATUS_PAGE": "true",
-    "PORTAL_HAS_LA_STATUS_UPDATES": "true"
+    "HAS_PREGNANCY_DOC_UPDATES": "true"
   },
   "stage": {
     "PORTAL_BASEURL": "https://paidleave-stage.mass.gov",
@@ -27,7 +26,7 @@
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
-    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
+    "HAS_PREGNANCY_DOC_UPDATES": "true"
   },
   "training": {
     "PORTAL_BASEURL": "https://paidleave-training.mass.gov",
@@ -40,7 +39,7 @@
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
-    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
+    "HAS_PREGNANCY_DOC_UPDATES": "false"
   },
   "performance": {
     "PORTAL_BASEURL": "https://paidleave-performance.mass.gov",
@@ -51,11 +50,12 @@
     "COGNITO_POOL": "us-east-1_0jv6SlemT",
     "COGNITO_CLIENTID": "1ps8bs9s5ns4f6qamj6qn6qd3",
     "TESTMAIL_NAMESPACE": "gqzap",
-    "EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
-    "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
+    "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
+    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
     "LST_EMPLOYEES_FILE": "./employees/lst-2021-08-18.employees.json",
     "LST_EMPLOYERS_FILE": "./employers/lst-2021-08-18.json",
-    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
+    "HAS_CLAIMANT_STATUS_PAGE": "true",
+    "HAS_PREGNANCY_DOC_UPDATES": "true"
   },
   "uat": {
     "PORTAL_BASEURL": "https://paidleave-uat.mass.gov",
@@ -66,10 +66,11 @@
     "COGNITO_POOL": "us-east-1_29j6fKBDT",
     "COGNITO_CLIENTID": "1ajh0c38bs21k60bjtttegspvp",
     "TESTMAIL_NAMESPACE": "gqzap",
-    "EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
-    "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
-    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
-    "HAS_FINEOS_SP": "true"
+    "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
+    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
+    "HAS_FINEOS_SP": "true",
+    "HAS_CLAIMANT_STATUS_PAGE": "true",
+    "HAS_PREGNANCY_DOC_UPDATES": "true"
   },
   "cps-preview": {
     "PORTAL_BASEURL": "https://paidleave-cps-preview.eol.mass.gov",
@@ -80,10 +81,10 @@
     "COGNITO_POOL": "us-east-1_1OVYp4aZo",
     "COGNITO_CLIENTID": "59oeobfn0759c8166pjh381joc",
     "TESTMAIL_NAMESPACE": "gqzap",
-    "EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
-    "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
-    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word",
-    "PORTAL_HAS_LA_STATUS_UPDATES": "true"
+    "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
+    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
+    "HAS_CLAIMANT_STATUS_PAGE": "true",
+    "HAS_PREGNANCY_DOC_UPDATES": "true"
   },
   "local": {
     "PORTAL_BASEURL": "http://localhost:3000",
@@ -93,9 +94,8 @@
     "API_BASEURL": "https://paidleave-api-stage.mass.gov/api/v1",
     "FINEOS_BASEURL": "https://idt-claims-webapp.masspfml.fineos.com",
     "FINEOS_USERNAME": "CONTENT",
-    "EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
-    "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
-    "TESTMAIL_NAMESPACE": "gqzap",
-    "EMPLOYER_PORTAL_PASSWORD": "LeaveAd1inPa$$word"
+    "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
+    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
+    "TESTMAIL_NAMESPACE": "gqzap"
   }
 }

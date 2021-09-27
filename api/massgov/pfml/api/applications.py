@@ -60,6 +60,7 @@ from massgov.pfml.fineos.exception import (
     FINEOSFatalUnavailable,
     FINEOSNotFound,
 )
+from massgov.pfml.fineos.models.customer_api import Base64EncodedFileData
 from massgov.pfml.util.logging.applications import get_application_log_attributes
 from massgov.pfml.util.paginate.paginator import (
     ApplicationPaginationAPIContext,
@@ -74,6 +75,7 @@ LEAVE_REASON_TO_DOCUMENT_TYPE_MAPPING = {
     LeaveReason.CHILD_BONDING.leave_reason_description: DocumentType.CHILD_BONDING_EVIDENCE_FORM,
     LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_description: DocumentType.OWN_SERIOUS_HEALTH_CONDITION_FORM,
     LeaveReason.CARE_FOR_A_FAMILY_MEMBER.leave_reason_description: DocumentType.CARE_FOR_A_FAMILY_MEMBER_FORM,
+    LeaveReason.PREGNANCY_MATERNITY.leave_reason_description: DocumentType.PREGNANCY_MATERNITY_FORM,
 }
 
 ID_DOCS = [
@@ -545,13 +547,9 @@ def document_upload(application_id, body, file):
         document_type = document_details.document_type.value
 
         if document_type == IoDocumentTypes.certification_form.value:
-            if existing_application.pregnant_or_recent_birth:
-                document_type = DocumentType.PREGNANCY_MATERNITY_FORM.document_type_description
-            # For non-pregnancy leave reasons
-            else:
-                document_type = LEAVE_REASON_TO_DOCUMENT_TYPE_MAPPING[
-                    existing_application.leave_reason.leave_reason_description
-                ].document_type_description
+            document_type = LEAVE_REASON_TO_DOCUMENT_TYPE_MAPPING[
+                existing_application.leave_reason.leave_reason_description
+            ].document_type_description
 
         if document_type not in ID_DOCS:
             # Check for existing STATE_MANAGED_PAID_LEAVE_CONFIRMATION documents, and reuse the doc type if there are docs
@@ -696,9 +694,12 @@ def document_download(application_id: UUID, document_id: str) -> Response:
             raise NotFound(description=f"Could not find Document with ID {document_id}")
 
         ensure(READ, document)
-
-        document_data: massgov.pfml.fineos.models.customer_api.Base64EncodedFileData = (
-            download_document(existing_application, document_id, db_session)
+        if isinstance(document, DocumentResponse):
+            document_type = document.document_type
+        else:
+            document_type = None
+        document_data: Base64EncodedFileData = (
+            download_document(existing_application, document_id, db_session, document_type)
         )
         file_bytes = base64.b64decode(document_data.base64EncodedFileContents.encode("ascii"))
 

@@ -40,10 +40,7 @@ from massgov.pfml.delegated_payments.delegated_payments_util import (
     is_same_eft,
     move_reference_file,
 )
-from tests.api.payments.conftest import upload_file_to_s3
-
-# most tests in here require real resources
-pytestmark = pytest.mark.integration
+from tests.delegated_payments.conftest import upload_file_to_s3
 
 fake = faker.Faker()
 

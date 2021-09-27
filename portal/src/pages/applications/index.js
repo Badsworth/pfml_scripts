@@ -8,6 +8,7 @@ import Lead from "../../components/Lead";
 import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
+import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
@@ -49,12 +50,23 @@ export const Index = (props) => {
         <div className="desktop:grid-col">
           <Title>{t("pages.applications.title")}</Title>
 
-          {!hasClaims && <p>{t("pages.applications.noClaims")}</p>}
-
           {hasInProgressClaims && (
             <React.Fragment>
               <div className="measure-6">
-                <Lead>{t("pages.applications.claimsReflectPortal")}</Lead>
+                <Lead>
+                  <Trans
+                    i18nKey="pages.applications.claimsApprovalProcess"
+                    components={{
+                      "approval-process-link": (
+                        <a
+                          href={routes.external.massgov.approvalTimeline}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        />
+                      ),
+                    }}
+                  />
+                </Lead>
               </div>
               <Heading level="2">
                 {t("pages.applications.inProgressHeading")}

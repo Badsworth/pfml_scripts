@@ -1,0 +1,141 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`NewApplication initially renders without any option selection 1`] = `
+<div>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+    tabindex="-1"
+  >
+    New application from Jane Doe
+  </h1>
+  <div
+    class="usa-alert usa-alert--warning"
+    tabindex="-1"
+  >
+    <div
+      class="usa-alert__body"
+      role="region"
+    >
+      <div
+        class="usa-alert__text"
+      >
+        <strong>
+          Review and respond by:
+        </strong>
+         10/10/2020 at 11:59 p.m. Eastern time
+      </div>
+    </div>
+  </div>
+  <form
+    class="usa-form"
+    id="employer-verification-form"
+    method="post"
+  >
+    <div
+      class="margin-bottom-2 padding-bottom-2"
+    >
+      <fieldset
+        class="usa-fieldset margin-top-3 usa-form-group"
+      >
+        <legend
+          class="usa-label text-bold usa-legend font-heading-xs measure-5"
+        >
+          <h2
+            class="font-heading-md text-bold"
+          >
+            Are you the right person to respond to this application?
+          </h2>
+        </legend>
+        <div
+          class=""
+        >
+          <div
+            class="usa-radio measure-5 bg-transparent"
+          >
+            <input
+              class="usa-radio__input"
+              id="InputChoice3"
+              name="hasReviewerVerified"
+              type="radio"
+              value="true"
+            />
+            <label
+              class="usa-radio__label"
+              for="InputChoice3"
+            >
+              Yes
+            </label>
+          </div>
+          <div
+            class="usa-radio measure-5 bg-transparent"
+          >
+            <input
+              class="usa-radio__input"
+              id="InputChoice4"
+              name="hasReviewerVerified"
+              type="radio"
+              value="false"
+            />
+            <label
+              class="usa-radio__label"
+              for="InputChoice4"
+            >
+              No
+            </label>
+          </div>
+        </div>
+      </fieldset>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Organization
+      </h3>
+      Work Inc.
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Employer ID number (EIN)
+      </h3>
+      12-3456789
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Employee name
+      </h3>
+      Jane Doe
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Social Security Number or Individual Taxpayer Identification Number
+      </h3>
+      ***-**-1234
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Date of birth
+      </h3>
+      7/17/****
+    </div>
+  </form>
+</div>
+`;

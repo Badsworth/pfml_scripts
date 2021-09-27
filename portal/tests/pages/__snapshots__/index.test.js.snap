@@ -1,0 +1,22 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Index renders landing page content 1`] = `
+<div
+  class="maxw-desktop"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+    tabindex="-1"
+  >
+    Massachusetts workers can now apply for Paid Family and Medical Leave. Learn more about this 
+    <a
+      href="https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts"
+      rel="noopener"
+      target="_blank"
+    >
+      new paid leave program
+    </a>
+    .
+  </h1>
+</div>
+`;

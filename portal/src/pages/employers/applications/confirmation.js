@@ -5,7 +5,7 @@ import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
 import UserFeedback from "../../../components/UserFeedback";
 import formatDateRange from "../../../utils/formatDateRange";
-import routes from "../../../../src/routes";
+import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 

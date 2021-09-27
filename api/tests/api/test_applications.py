@@ -68,9 +68,6 @@ from massgov.pfml.fineos.exception import (
 from massgov.pfml.fineos.factory import FINEOSClientConfig
 from massgov.pfml.util.paginate.paginator import DEFAULT_PAGE_SIZE
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 def sqlalchemy_object_as_dict(obj):
     return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
@@ -4263,9 +4260,7 @@ def test_application_post_submit_to_fineos_medical(client, user, auth_token, tes
     assert captured_absence_case.primaryRelQualifier2 is None
 
 
-def test_application_post_submit_to_fineos_medical_pregnant(
-    client, user, auth_token, test_db_session
-):
+def test_application_post_submit_to_fineos_pregnant_true(client, user, auth_token, test_db_session):
     employer = EmployerFactory.create()
     employee = EmployeeFactory.create()
     application = ApplicationFactory.create(
@@ -4284,9 +4279,9 @@ def test_application_post_submit_to_fineos_medical_pregnant(
     test_db_session.add(leave_period)
 
     # API input:
-    # Reason = Serious Health Condition - Employee
+    # Reason = Pregnancy/Maternity
     # Pregnant or Recent Birth = True
-    application.leave_reason_id = LeaveReason.SERIOUS_HEALTH_CONDITION_EMPLOYEE.leave_reason_id
+    application.leave_reason_id = LeaveReason.PREGNANCY_MATERNITY.leave_reason_id
     application.pregnant_or_recent_birth = True
     test_db_session.commit()
 

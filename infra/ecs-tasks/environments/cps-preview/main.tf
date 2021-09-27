@@ -31,14 +31,15 @@ terraform {
 module "tasks" {
   source = "../../template"
 
-  environment_name         = "cps-preview"
-  st_use_mock_dor_data     = false
-  st_decrypt_dor_data      = false
-  st_file_limit_specified  = true
-  st_employer_update_limit = 1500
-  service_docker_tag       = local.service_docker_tag
-  vpc_id                   = data.aws_vpc.vpc.id
-  app_subnet_ids           = data.aws_subnet_ids.vpc_app.ids
+  environment_name              = "cps-preview"
+  st_use_mock_dor_data          = false
+  st_decrypt_dor_data           = false
+  st_file_limit_specified       = true
+  st_employer_update_limit      = 1500
+  service_docker_tag            = local.service_docker_tag
+  vpc_id                        = data.aws_vpc.vpc.id
+  app_subnet_ids                = data.aws_subnet_ids.vpc_app.ids
+  enforce_execute_sql_read_only = false
 
   cognito_user_pool_id = "us-east-1_1OVYp4aZo"
 
@@ -55,45 +56,28 @@ module "tasks" {
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/DT3/dataexports"
 
   # These can be kept blank.
-  eolwd_moveit_sftp_uri    = ""
-  ctr_moveit_incoming_path = ""
-  ctr_moveit_outgoing_path = ""
-  ctr_moveit_archive_path  = ""
-  pfml_ctr_inbound_path    = "s3://massgov-pfml-cps-preview-agency-transfer/ctr/inbound"
-  pfml_ctr_outbound_path   = "s3://massgov-pfml-cps-preview-agency-transfer/ctr/outbound"
-  pfml_error_reports_path  = "s3://massgov-pfml-cps-preview-agency-transfer/error-reports/outbound"
-  pfml_voucher_output_path = "s3://massgov-pfml-cps-preview-agency-transfer/payments/manual-payment-voucher"
+  eolwd_moveit_sftp_uri   = ""
+  pfml_error_reports_path = "s3://massgov-pfml-cps-preview-agency-transfer/error-reports/outbound"
 
   dfml_project_manager_email_address     = "mass-pfml-payments-test-email@navapbc.com"
   pfml_email_address                     = "PFML_DoNotReply@eol.mass.gov"
   bounce_forwarding_email_address        = "PFML_DoNotReply@eol.mass.gov"
   bounce_forwarding_email_address_arn    = "arn:aws:ses:us-east-1:498823821309:identity/PFML_DoNotReply@eol.mass.gov"
-  ctr_gax_bievnt_email_address           = "mass-pfml-payments-test-email@navapbc.com"
-  ctr_vcc_bievnt_email_address           = "mass-pfml-payments-test-email@navapbc.com"
   dfml_business_operations_email_address = "mass-pfml-payments-test-email@navapbc.com"
-
-  # These can be kept blank.
-  ctr_data_mart_host     = ""
-  ctr_data_mart_username = ""
 
   # TODO: Values from FINEOS.
   fineos_data_export_path   = "s3://fin-somdev-data-export/DT3/dataexports"
   fineos_data_import_path   = "s3://fin-somdev-data-import/DT3/peiupdate"
   fineos_error_export_path  = "s3://fin-somdev-data-export/DT3/errorExtracts"
-  fineos_report_export_path = "s3://fin-somdev-data-export/DT3/reportExtracts"
+  fineos_report_export_path = "s3://fin-somdev-data-export/DT3/reportExtract"
 
   pfml_fineos_inbound_path  = "s3://massgov-pfml-cps-preview-agency-transfer/cps/inbound"
   pfml_fineos_outbound_path = "s3://massgov-pfml-cps-preview-agency-transfer/cps/outbound"
 
-  # TODO: Not sure what these should be configured to by default.
-  fineos_vendor_max_history_date  = "2021-01-11"
-  fineos_payment_max_history_date = "2021-01-21"
-
   payment_audit_report_outbound_folder_path = "s3://massgov-pfml-cps-preview-agency-transfer/audit/outbound"
   payment_audit_report_sent_folder_path     = "s3://massgov-pfml-cps-preview-agency-transfer/audit/sent"
 
-  enable_recurring_payments_schedule = false
-  enable_register_admins_job         = true
+  enable_register_admins_job = true
 
   enable_pub_automation_fineos           = true
   enable_pub_automation_create_pub_files = false

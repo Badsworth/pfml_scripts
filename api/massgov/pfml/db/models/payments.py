@@ -1,15 +1,15 @@
 import datetime
 from decimal import Decimal
+from enum import Enum
 
 from sqlalchemy import JSON, TIMESTAMP, Column, Date, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql.functions import now as sqlnow
 
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import ImportLog, Payment, ReferenceFile
 
 from ..lookup import LookupTable
-from .base import Base, TimestampMixin, utc_timestamp_gen, uuid_gen
+from .base import Base, TimestampMixin, uuid_gen
 from .common import PostgreSQLUUID
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -431,7 +431,7 @@ class MaximumWeeklyBenefitAmount(Base):
         self.maximum_weekly_benefit_amount = Decimal(maximum_weekly_benefit_amount)
 
 
-class FineosWritebackDetails(Base):
+class FineosWritebackDetails(Base, TimestampMixin):
     __tablename__ = "fineos_writeback_details"
     fineos_writeback_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     payment_id = Column(
@@ -444,12 +444,6 @@ class FineosWritebackDetails(Base):
         nullable=False,
     )
     import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
-    created_at = Column(
-        TIMESTAMP(timezone=True),
-        nullable=False,
-        default=utc_timestamp_gen,
-        server_default=sqlnow(),
-    )
     writeback_sent_at = Column(TIMESTAMP(timezone=True), nullable=True,)
 
     payment = relationship(Payment)
@@ -583,9 +577,58 @@ class FineosWritebackTransactionStatus(LookupTable):
     )
 
 
-PAYMENT_AUDIT_REPORT_ACTION_REJECTED = "REJECTED"
-PAYMENT_AUDIT_REPORT_ACTION_SKIPPED = "SKIPPED"
-PAYMENT_AUDIT_REPORT_ACTION_INFORMATIONAL = ""
+class AuditReportAction(str, Enum):
+    REJECTED = "REJECTED"
+    SKIPPED = "SKIPPED"
+    INFORMATIONAL = "INFORMATIONAL"
+    # These below actions are for scenarios where
+    # we want to default to skipped/rejected, but
+    # the details we put in the reject notes are sufficient
+    # and don't require populating an additional column
+    SKIPPED_NO_COLUMN = "SKIPPED_NO_COLUMN"
+    REJECTED_NO_COLUMN = "REJECTED_NO_COLUMN"
+    INFORMATIONAL_NO_COLUMN = "INFORMATIONAL_NO_COLUMN"
+
+    # These below methods help us group the behavior
+    # of these actions by effectively mapping the string
+    # value to the enum
+
+    @staticmethod
+    def should_populate_column(audit_report_action_str: str) -> bool:
+        if audit_report_action_str in [
+            AuditReportAction.SKIPPED_NO_COLUMN,
+            AuditReportAction.REJECTED_NO_COLUMN,
+            AuditReportAction.INFORMATIONAL_NO_COLUMN,
+        ]:
+            return False
+        return True
+
+    @staticmethod
+    def is_rejected(audit_report_action_str: str) -> bool:
+        if audit_report_action_str in [
+            AuditReportAction.REJECTED,
+            AuditReportAction.REJECTED_NO_COLUMN,
+        ]:
+            return True
+        return False
+
+    @staticmethod
+    def is_skipped(audit_report_action_str: str) -> bool:
+        if audit_report_action_str in [
+            AuditReportAction.SKIPPED,
+            AuditReportAction.SKIPPED_NO_COLUMN,
+        ]:
+            return True
+        return False
+
+    @staticmethod
+    def is_informational(audit_report_action_str: str) -> bool:
+        if audit_report_action_str in [
+            AuditReportAction.INFORMATIONAL,
+            audit_report_action_str == AuditReportAction.INFORMATIONAL_NO_COLUMN,
+        ]:
+            return True
+        return False
 
 
 class LkPaymentAuditReportType(Base):
@@ -614,10 +657,11 @@ class PaymentAuditReportType(LookupTable):
     )
 
     MAX_WEEKLY_BENEFITS = LkPaymentAuditReportType(
-        1, "Max Weekly Benefits", PAYMENT_AUDIT_REPORT_ACTION_REJECTED
+        1, "Max Weekly Benefits", AuditReportAction.REJECTED
     )
-    DUA_DIA_REDUCTION = LkPaymentAuditReportType(
-        2, "DUA DIA Reduction", PAYMENT_AUDIT_REPORT_ACTION_SKIPPED
+    DUA_DIA_REDUCTION = LkPaymentAuditReportType(2, "DUA DIA Reduction", AuditReportAction.SKIPPED)
+    LEAVE_PLAN_IN_REVIEW = LkPaymentAuditReportType(
+        3, "Leave Plan In Review", AuditReportAction.SKIPPED_NO_COLUMN
     )
 
 

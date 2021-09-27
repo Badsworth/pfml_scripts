@@ -166,25 +166,10 @@ exports[`Employer dashboard renders a table of claims with links if employer is 
 </thead>
 `;
 
-exports[`Employer dashboard renders an alert about claim availability when some employers aren't registered in FINEOS yet 2`] = `
-Array [
-  "Your account has been verified. It may take up to 15 minutes for our systems to update so that you can log in and review applications. If anyone else on your team needs to review applications, they’ll also need to complete the ",
-  <a
-    href="https://www.mass.gov/how-to/creating-an-employer-account-to-review-paid-family-and-medical-leave-pfml-applications"
-    key="1"
-    rel="noopener"
-    target="_blank"
-  >
-    verification process
-  </a>,
-  ".",
-]
-`;
-
 exports[`Employer dashboard renders filters 1`] = `
 <Fragment>
   <div
-    className="margin-bottom-2"
+    className="padding-bottom-3 bg-base-lightest padding-x-3"
   >
     <Button
       aria-controls="filters"

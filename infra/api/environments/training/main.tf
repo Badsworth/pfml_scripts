@@ -70,7 +70,7 @@ module "api" {
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/TRN/dataexports"
   fineos_aws_iam_role_arn                             = null // TODO if needed
   fineos_aws_iam_role_external_id                     = null // TODO if needed
-  service_now_base_url                                = "https://savilinxstage.servicenowservices.com"
+  service_now_base_url                                = "https://savilinxtrain.servicenowservices.com"
   portal_base_url                                     = "https://paidleave-training.mass.gov"
   enable_application_fraud_check                      = "0"
   release_version                                     = var.release_version

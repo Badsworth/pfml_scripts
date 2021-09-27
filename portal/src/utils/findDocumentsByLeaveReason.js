@@ -1,7 +1,7 @@
 /** @typedef {import('../models/LeaveReason').default} LeaveReason */
 /** @typedef {import('../models/Document').default} Document */
 
-import { DocumentType } from "../../src/models/Document";
+import { DocumentType } from "../models/Document";
 import findDocumentsByTypes from "./findDocumentsByTypes";
 
 /**

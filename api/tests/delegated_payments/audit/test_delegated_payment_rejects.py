@@ -32,6 +32,7 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_rejects import (
     ACCEPTED_OUTCOME,
     ACCEPTED_STATE,
     AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS,
+    AUDIT_SKIPPED_NOTE_TO_WRITEBACK_STATUS,
     NOT_SAMPLED_PAYMENT_NEXT_STATE_BY_CURRENT_STATE,
     NOT_SAMPLED_PAYMENT_OUTCOME_BY_CURRENT_STATE,
     NOT_SAMPLED_STATE_TRANSITIONS,
@@ -374,11 +375,9 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
     )
 
 
-def test_rejected_writeback_status_from_reject_notes(
-    test_db_session, payment_rejects_step, monkeypatch
+def test_convert_reject_notes_to_writeback_status_rejected_scenarios(
+    test_db_session, payment_rejects_step
 ):
-    monkeypatch.setenv("USE_AUDIT_REJECT_TRANSACTION_STATUS", "1")
-
     test_cases = []
 
     for (reject_note, expected_status) in AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS.items():
@@ -420,12 +419,57 @@ def test_rejected_writeback_status_from_reject_notes(
             "expected_status": FineosWritebackTransactionStatus.FAILED_MANUAL_VALIDATION,
         }
     )
+    for test_case in test_cases:
+        payment_1 = PaymentFactory.create()
+
+        writeback_status = payment_rejects_step.convert_reject_notes_to_writeback_status(
+            payment_1, True, test_case["reject_notes"]
+        )
+
+        assert (
+            writeback_status.transaction_status_id
+            == test_case["expected_status"].transaction_status_id
+        )
+
+
+def test_convert_reject_notes_to_writeback_status_skipped_scenarios(
+    test_db_session, payment_rejects_step
+):
+    test_cases = []
+
+    for (reject_note, expected_status) in AUDIT_SKIPPED_NOTE_TO_WRITEBACK_STATUS.items():
+        test_cases.append(
+            {"reject_notes": reject_note, "expected_status": expected_status,}
+        )
+
+    # Close matches
+    test_cases.append(
+        {
+            "reject_notes": "Leave Plan In Review (Skipped)",
+            "expected_status": FineosWritebackTransactionStatus.LEAVE_IN_REVIEW,
+        }
+    )
+
+    test_cases.append(
+        {
+            "reject_notes": "~!~LeAvE PlAn IN review~!~",
+            "expected_status": FineosWritebackTransactionStatus.LEAVE_IN_REVIEW,
+        }
+    )
+
+    # Unknown test cases
+    test_cases.append(
+        {
+            "reject_notes": "Unknown reject status note",
+            "expected_status": FineosWritebackTransactionStatus.PENDING_PAYMENT_AUDIT,
+        }
+    )
 
     for test_case in test_cases:
         payment_1 = PaymentFactory.create()
 
-        writeback_status = payment_rejects_step.get_rejected_payment_writeback_status(
-            payment_1, test_case["reject_notes"]
+        writeback_status = payment_rejects_step.convert_reject_notes_to_writeback_status(
+            payment_1, False, test_case["reject_notes"]
         )
 
         assert (

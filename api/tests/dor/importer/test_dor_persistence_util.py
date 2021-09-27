@@ -20,9 +20,6 @@ from massgov.pfml.db.models.factories import (
     WagesAndContributionsFactory,
 )
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 sample_employee_file = "DORDFML_20200519120622"
 sample_employer_file = "DORDFMLEMP_20200519120622"
 

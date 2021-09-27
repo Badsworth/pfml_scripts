@@ -6,7 +6,9 @@ import {
   IconCopy,
   IconPhone,
 } from "@massds/mayflower-react/dist/Icon";
+
 import Alert from "../../components/Alert";
+import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import Heading from "../../components/Heading";
 import PropTypes from "prop-types";
@@ -15,6 +17,7 @@ import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import UserFeedback from "../../components/UserFeedback";
 import { get } from "lodash";
+import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
@@ -84,6 +87,10 @@ export const Success = (props) => {
 
   return (
     <React.Fragment>
+      <BackButton
+        label={t("pages.claimsStatus.backButtonLabel")}
+        href={routes.applications.index}
+      />
       <Title>{t("pages.claimsSuccess.title")}</Title>
 
       <p className="margin-bottom-5">
@@ -94,7 +101,9 @@ export const Success = (props) => {
       </p>
 
       <div className="measure-6">
-        {!["leaveNotInFuture", "caringLeave"].includes(claimContext) && (
+        {!["leaveNotInFuture", "medicalPregnantFuture", "caringLeave"].includes(
+          claimContext
+        ) && (
           <Alert state="warning" autoWidth>
             <Trans
               i18nKey="pages.claimsSuccess.proofRequired"
@@ -123,7 +132,11 @@ export const Success = (props) => {
                   <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
                 ),
                 "when-can-i-use-pfml": (
-                  <a href={routes.external.massgov.whenCanIUsePFML} />
+                  <a
+                    href={routes.external.massgov.whenCanIUsePFML}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  />
                 ),
                 ul: <ul className="usa-list" />,
                 li: <li />,
@@ -143,6 +156,45 @@ export const Success = (props) => {
         <Trans
           i18nKey="pages.claimsSuccess.adjudicationProcess"
           components={{
+            "contact-center-phone-link": (
+              <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+            ),
+            "track-status-link": (
+              <a
+                href={routeWithParams("applications.status", {
+                  absence_case_id: claim.fineos_absence_id,
+                })}
+              />
+            ),
+            ul: <ul className="usa-list" />,
+            li: <li />,
+          }}
+          tOptions={{
+            context: claimContext,
+          }}
+        />
+
+        <Heading level="2">{t("pages.claimsSuccess.learnMoreHeading")}</Heading>
+
+        <Trans
+          i18nKey="pages.claimsSuccess.learnMore"
+          components={{
+            "benefits-amount-details-link": (
+              <a
+                href={
+                  routes.external.massgov.benefitsGuide_benefitsAmountDetails
+                }
+                target="_blank"
+                rel="noreferrer noopener"
+              />
+            ),
+            "benefits-calculator-link": (
+              <a
+                href={routes.external.massgov.benefitsCalculator}
+                target="_blank"
+                rel="noreferrer noopener"
+              />
+            ),
             "contact-center-phone-link": (
               <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
             ),
@@ -168,7 +220,11 @@ export const Success = (props) => {
                     <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
                   ),
                   "medical-bonding-link": (
-                    <a href={routes.external.massgov.medicalBonding} />
+                    <a
+                      href={routes.external.massgov.medicalBonding}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    />
                   ),
                 }}
               />
@@ -190,7 +246,11 @@ export const Success = (props) => {
                     <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
                   ),
                   "medical-bonding-link": (
-                    <a href={routes.external.massgov.medicalBonding} />
+                    <a
+                      href={routes.external.massgov.medicalBonding}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    />
                   ),
                 }}
               />
@@ -199,10 +259,17 @@ export const Success = (props) => {
         )}
 
         <UserFeedback url={routes.external.massgov.feedbackClaimant} />
-
-        <ButtonLink className="margin-top-4" href={routes.applications.index}>
-          {t("pages.claimsSuccess.exitLink")}
-        </ButtonLink>
+        <div className="border-top-2px border-base-lighter margin-top-4 padding-top-4">
+          <Heading level="2">{t("pages.claimsSuccess.viewStatus")}</Heading>
+          <ButtonLink
+            className="margin-top-4"
+            href={routeWithParams("applications.status", {
+              absence_case_id: claim.fineos_absence_id,
+            })}
+          >
+            {t("pages.claimsSuccess.exitLink")}
+          </ButtonLink>
+        </div>
       </div>
     </React.Fragment>
   );

@@ -48,9 +48,6 @@ from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
 from massgov.pfml.util import datetime
 from tests.delegated_payments.conftest import upload_file_to_s3
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 @pytest.fixture
 def claimant_extract_step(initialize_factories_session, test_db_session, test_db_other_session):
@@ -111,6 +108,28 @@ def emp_updates_path(tmp_path, mock_fineos_s3_bucket):
     other_file = tmp_path / other_file_name
     other_file.write_text(content_line_one)
     upload_file_to_s3(other_file, mock_fineos_s3_bucket, f"DT2/dataexports/{other_file_name}")
+
+
+def create_malformed_fineos_extract(tmp_path, mock_fineos_s3_bucket, bad_fineos_extract):
+    file_prefix = "2020-12-21-19-20-42-"
+
+    bad_content_line_one = "Some,Other,Column,Names"
+    bad_content_line_two = "1,2,3,4"
+    bad_content = "\n".join([bad_content_line_one, bad_content_line_two])
+
+    for claimant_extract_file in payments_util.CLAIMANT_EXTRACT_FILES:
+        if claimant_extract_file == bad_fineos_extract:
+            content = bad_content
+        else:
+            # Make the second line just the field names again so it
+            # gets found (we'll never get to parsing)
+            content_line = ",".join(claimant_extract_file.field_names)
+            content = "\n".join([content_line, content_line])
+
+        file_name = f"{file_prefix}{claimant_extract_file.file_name}"
+        claimant_file = tmp_path / file_name
+        claimant_file.write_text(content)
+        upload_file_to_s3(claimant_file, mock_fineos_s3_bucket, f"DT2/dataexports/{file_name}")
 
 
 def test_run_step_happy_path(
@@ -220,6 +239,29 @@ def test_run_step_happy_path(
 
     employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
     assert employee_log_count_after == employee_log_count_before
+
+
+@pytest.mark.parametrize(
+    "claimant_extract_file",
+    payments_util.CLAIMANT_EXTRACT_FILES,
+    ids=payments_util.CLAIMANT_EXTRACT_FILE_NAMES,
+)
+def test_run_step_malformed_extracts(
+    claimant_extract_file,
+    mock_fineos_s3_bucket,
+    local_claimant_extract_step,
+    set_exporter_env_vars,
+    monkeypatch,
+    tmp_path,
+):
+    monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2020-12-20")
+    create_malformed_fineos_extract(tmp_path, mock_fineos_s3_bucket, claimant_extract_file)
+
+    with pytest.raises(
+        Exception,
+        match=f"FINEOS extract {claimant_extract_file.file_name} is missing required fields",
+    ):
+        local_claimant_extract_step.run()
 
 
 def test_run_step_existing_approved_eft_info(
@@ -428,7 +470,9 @@ def formatted_claim(initialize_factories_session) -> Claim:
 
 
 def make_claimant_data_from_fineos_data(fineos_data):
-    extract_data = claimant_extract.ExtractData(claimant_extract.expected_file_names, "2021-02-21")
+    extract_data = claimant_extract.ExtractData(
+        payments_util.CLAIMANT_EXTRACT_FILE_NAMES, "2021-02-21"
+    )
 
     employee_feeds = [fineos_data.get_employee_feed_record()]
     extract_data.employee_feed.indexed_data = {fineos_data.customer_number: employee_feeds}
@@ -555,7 +599,7 @@ def test_process_extract_unprocessed_folder_files(
     s3 = boto3.client("s3")
 
     def add_s3_files(prefix):
-        for expected_file_name in claimant_extract.expected_file_names:
+        for expected_file_name in payments_util.CLAIMANT_EXTRACT_FILE_NAMES:
             key = f"{prefix}{expected_file_name}"
             s3.put_object(Bucket=mock_fineos_s3_bucket, Key=key, Body="a,b,c")
 
@@ -616,7 +660,7 @@ def test_process_extract_unprocessed_folder_files(
         assert file.startswith("2020-01-02-11-30-00")
 
     expected_file_names = []
-    for date_file in claimant_extract.expected_file_names:
+    for date_file in payments_util.CLAIMANT_EXTRACT_FILE_NAMES:
         for unprocessed_date in ["2020-01-02-11-30-00", "2020-01-04-11-30-00"]:
             expected_file_names.append(
                 f"{payments_util.get_date_group_folder_name(unprocessed_date, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT)}/{unprocessed_date}-{date_file}"
@@ -627,7 +671,7 @@ def test_process_extract_unprocessed_folder_files(
 
     copied_files = payments_util.copy_fineos_data_to_archival_bucket(
         test_db_session,
-        claimant_extract.expected_file_names,
+        payments_util.CLAIMANT_EXTRACT_FILE_NAMES,
         ReferenceFileType.FINEOS_CLAIMANT_EXTRACT,
     )
     assert len(copied_files) == 0

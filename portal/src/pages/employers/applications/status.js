@@ -18,7 +18,7 @@ import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../../utils/findKeyByValue";
 import formatDateRange from "../../../utils/formatDateRange";
 import { get } from "lodash";
-import routes from "../../../../src/routes";
+import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
@@ -46,7 +46,7 @@ export const Status = (props) => {
     DocumentType.denialNotice,
     DocumentType.requestForInfoNotice,
     DocumentType.withdrawalNotice,
-    DocumentType.appealAcknowledgement,
+    DocumentType.appealAcknowledgment,
   ]);
 
   return (

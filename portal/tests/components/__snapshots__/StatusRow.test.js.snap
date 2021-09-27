@@ -1,0 +1,16 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`StatusRow renders the component 1`] = `
+<div
+  class="margin-bottom-2 padding-bottom-2"
+>
+  <h3
+    class="margin-bottom-1 font-heading-xs text-bold"
+  >
+    Test label
+  </h3>
+  <p>
+    Children
+  </p>
+</div>
+`;

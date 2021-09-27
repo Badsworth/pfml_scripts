@@ -14,9 +14,6 @@ from massgov.pfml.db.models.factories import (
     WagesAndContributionsFactory,
 )
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 class QuarterDates(Enum):
     CQ = date(2020, 12, 30)

@@ -8,7 +8,7 @@ import os
 import pathlib
 import shutil
 import tempfile
-from typing import Dict, Iterable, List, Optional
+from typing import Dict, Iterable, List, Optional, Sequence
 from urllib.parse import urlparse
 
 import boto3
@@ -404,7 +404,11 @@ def get_sftp_client(uri: str, ssh_key_password: Optional[str], ssh_key: str) -> 
     t = paramiko.Transport((host, port))
     t.connect(username=user, pkey=pkey)
 
-    return paramiko.SFTPClient.from_transport(t)
+    client = paramiko.SFTPClient.from_transport(t)
+    if not client:
+        raise RuntimeError("STFP client unavailable")
+
+    return client
 
 
 def copy_file_from_s3_to_sftp(source: str, dest: str, sftp: paramiko.SFTPClient) -> None:
@@ -446,7 +450,7 @@ def remove_if_exists(path: str) -> None:
 
 def create_csv_from_list(
     data: Iterable[Dict],
-    fieldnames: Iterable[str],
+    fieldnames: Sequence[str],
     file_name: str,
     folder_path: Optional[str] = None,
 ) -> pathlib.Path:

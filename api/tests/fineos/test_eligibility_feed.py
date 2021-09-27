@@ -27,16 +27,9 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.util.pydantic.types import TaxIdUnformattedStr
 
-# almost every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 class SpecialTestException(Exception):
     """Exception only defined here for ensure mocked exception is bubbled up"""
-
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 
 def test_employee_to_eligibility_feed_record(initialize_factories_session):
@@ -824,6 +817,42 @@ def test_process_employee_updates_for_multiple_wages_for_single_employee_employe
     assert_number_of_data_lines_in_each_file(tmp_path, 1)
 
 
+def test_process_employee_updates_for_multiple_employers_produce_equal_number_of_files(
+    test_db_session, initialize_factories_session, tmp_path, create_triggers
+):
+    # Despite order in which employees inserted into Wage table they are
+    # grouped by employer.
+    # Two employers should produce two files.
+    employer_one = EmployerFactory.create()
+    WagesAndContributionsFactory.create_batch(
+        size=5, employee=EmployeeFactory.create(), employer=employer_one
+    )
+    employer_two = EmployerFactory.create()
+    WagesAndContributionsFactory.create_batch(
+        size=10, employee=EmployeeFactory.create(), employer=employer_two
+    )
+    WagesAndContributionsFactory.create_batch(
+        size=5, employee=EmployeeFactory.create(), employer=employer_one
+    )
+    WagesAndContributionsFactory.create_batch(
+        size=7, employee=EmployeeFactory.create(), employer=employer_two
+    )
+
+    process_results = ef.process_employee_updates(
+        test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
+    )
+
+    assert process_results.start
+    assert process_results.end
+    assert process_results.employers_total_count == 2
+    assert process_results.employers_success_count == 2
+    assert process_results.employers_error_count == 0
+    assert process_results.employers_skipped_count == 0
+    assert process_results.employee_and_employer_pairs_total_count == 4
+
+    assert_number_of_data_lines_in_each_file(tmp_path, 2)
+
+
 def test_process_employee_updates_skips_nonexistent_employer(
     test_db_session, initialize_factories_session, tmp_path, create_triggers
 ):
@@ -947,45 +976,12 @@ def test_process_employee_updates_export_file_number_limit(
 ):
     WagesAndContributionsFactory.create_batch(size=15)
 
-    process_employee_batch_spy = mocker.spy(ef, "process_employee_batch")
-
     process_results = ef.process_employee_updates(
         test_db_session,
         massgov.pfml.fineos.MockFINEOSClient(),
         tmp_path,
-        batch_size=10,
         export_file_number_limit=5,
     )
-
-    process_employee_batch_spy.assert_called_once()
-
-    assert process_results.start
-    assert process_results.end
-    assert process_results.employers_total_count == 5
-    assert process_results.employers_success_count == 5
-    assert process_results.employers_error_count == 0
-    assert process_results.employers_skipped_count == 0
-    assert process_results.employee_and_employer_pairs_total_count == 5
-
-    assert_number_of_data_lines_in_each_file(tmp_path, 1)
-
-
-def test_process_employee_updates_export_file_number_limit_mismatched_batch_size(
-    test_db_session, initialize_factories_session, tmp_path, create_triggers, mocker
-):
-    WagesAndContributionsFactory.create_batch(size=10)
-
-    process_employee_batch_spy = mocker.spy(ef, "process_employee_batch")
-
-    process_results = ef.process_employee_updates(
-        test_db_session,
-        massgov.pfml.fineos.MockFINEOSClient(),
-        tmp_path,
-        batch_size=2,
-        export_file_number_limit=5,
-    )
-
-    assert process_employee_batch_spy.call_count == 3
 
     assert process_results.start
     assert process_results.end
@@ -1007,7 +1003,6 @@ def test_process_employee_updates_export_file_number_limit_fewer_than_limit_exis
         test_db_session,
         massgov.pfml.fineos.MockFINEOSClient(),
         tmp_path,
-        batch_size=10,
         export_file_number_limit=5,
     )
 
@@ -1041,7 +1036,6 @@ def test_process_employee_updates_export_file_number_limit_with_error_continues_
         test_db_session,
         massgov.pfml.fineos.MockFINEOSClient(),
         tmp_path,
-        batch_size=10,
         export_file_number_limit=5,
     )
 

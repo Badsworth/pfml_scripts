@@ -37,7 +37,7 @@ export const Success = (props) => {
               <a
                 href={routes.external.massgov.employerReimbursements}
                 target="_blank"
-                rel="noopener"
+                rel="noreferrer noopener"
               />
             ),
           }}

@@ -116,6 +116,12 @@ export class ClaimPage {
     onTab("Absence Hub");
     return this;
   }
+  alerts(cb: (page: AlertsPage) => unknown): this {
+    onTab("Alerts");
+    cb(new AlertsPage());
+    onTab("Absence Hub");
+    return this;
+  }
   availability(cb: (page: AvailabilityPage) => unknown): this {
     onTab("Availability");
     cb(new AvailabilityPage());
@@ -174,6 +180,7 @@ export class ClaimPage {
     cy.contains(".TreeNodeElement", type).click({
       force: true,
     });
+    waitForAjaxComplete();
     // When we're firing time triggers, there's always the possibility that the trigger has already happened
     // by the time we get here. When this happens, the "Properties" button will be grayed out and unclickable.
     cy.get('input[type="submit"][value="Properties"]').then((el) => {
@@ -182,7 +189,8 @@ export class ClaimPage {
         return;
       }
       cy.wrap(el).click();
-      cy.get('input[type="submit"][value="Continue"]').click({ force: true });
+      waitForAjaxComplete();
+      cy.get('input[type="submit"][value="Continue"]').click();
       cy.contains(".TreeNodeContainer", type, {
         timeout: 20000,
       })
@@ -326,8 +334,8 @@ export class ClaimPage {
         cy.contains(
           "Automatic Notifications and Correspondence have been suppressed."
         );
-        clickBottomWidgetButton("Close");
       });
+      clickBottomWidgetButton("Close");
     } else {
       cy.contains(
         "span[title='Control is protected by a Secured Action.']",
@@ -507,25 +515,34 @@ class RequestInformationPage {
     cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un41_startDate']").type(
       `{selectall}{backspace}${newStartDate}{enter}`
     );
-    cy.wait("@ajaxRender");
-    cy.wait(300);
+    waitForAjaxComplete();
     cy.get(
       "input[id='timeOffAbsencePeriodDetailsWidget_un41_endDate']"
     ).click();
     cy.get("input[id='timeOffAbsencePeriodDetailsWidget_un41_endDate']").type(
       `{selectall}{backspace}${newEndDate}{enter}`
     );
-    cy.wait("@ajaxRender");
-    cy.wait(200);
-    cy.get("input[title='OK']").click();
+    waitForAjaxComplete();
+    cy.get("input[type='button'][title='OK']").click();
+    waitForAjaxComplete();
   }
 
-  editRequestDates(newStartDate: string, newEndDate: string) {
+  editRequestDates(newStartDate: string, newEndDate: string): ClaimPage {
+    waitForAjaxComplete();
+    cy.get(
+      "table[id$='timeOffAbsencePeriodsListviewWidget'][class='ListTable responsive-table']"
+    ).within(() => {
+      cy.get("tr").then(
+        ($el) => expect($el.hasClass("ListRowSelected")).to.be.true
+      );
+    });
     cy.get("input[value='Edit']").click();
     cy.get("#PopupContainer input[value='Yes']").click();
-    cy.wait("@ajaxRender");
-    cy.wait(200);
+    waitForAjaxComplete();
     this.enterNewLeaveDates(newStartDate, newEndDate);
+    waitForAjaxComplete();
+    // completing this process redirects us to the "Manage Request" tab
+    return new ClaimPage();
   }
 
   assertHoursWorkedPerWeek(hours_worked_per_week: number) {
@@ -588,7 +605,7 @@ class TasksPage {
     // Search for the task type
     cy.findByLabelText(`Find Work Types Named`).type(`${name}{enter}`);
     // Create task
-    cy.findByTitle(name, { exact: false }).click({ force: true });
+    cy.findByTitle(name).click({ force: true });
     clickBottomWidgetButton("Next");
     return this;
   }
@@ -714,10 +731,11 @@ export class DocumentsPage {
         .next()
         .should("not.contain.html", 'title="Document Search."');
     }
-    clickBottomWidgetButton("OK");
-    cy.get(
-      'table[id^="DocumentsForCaseListviewWidget_"][id$="_DocumentsViewControl"]'
-    ).should("contain.text", newDocType);
+    clickBottomWidgetButton(shouldBeAvailable ? "OK" : "Close");
+    if (shouldBeAvailable)
+      cy.get(
+        'table[id^="DocumentsForCaseListviewWidget_"][id$="_DocumentsViewControl"]'
+      ).should("contain.text", newDocType);
   }
   /**
    * Goes through the document upload process and returns back to the documents page
@@ -1131,6 +1149,27 @@ export class DocumentsPage {
   }
 }
 
+/**
+ * This class represents the alerts page/tab within the broader Claim page/view in Fineos.
+ */
+export class AlertsPage {
+  assertAlertMessage(hasMessage: boolean, alertMessage: string): this {
+    if (hasMessage) {
+      cy.get(`#alertsHeader`).should((alerts) => {
+        expect(
+          alerts,
+          `Expected to find the following "${alertMessage}".`
+        ).to.have.descendants(`:contains("${alertMessage}")`);
+      });
+    } else {
+      cy.get(
+        `table[id^="ValidationsListViewWidget_"][id$="_ValidationList"]`
+      ).should("not.be.visible");
+    }
+    return this;
+  }
+}
+
 class AvailabilityPage {
   reevaluateAvailability(decision: string, reason: string) {
     waitForAjaxComplete();
@@ -1156,6 +1195,15 @@ class AvailabilityPage {
     cy.get("#footerButtonsBar").within(() => {
       cy.findByText("Close").click({ force: true });
     });
+  }
+
+  weightDaysCheck(amount_weeks: string) : this {
+    cy.contains("table.ListTable", "Weight")
+    const selector = ".divListviewGrid .ListTable td[id*='ListviewWidgetWeight0']";
+    cy.get(selector).should("contain.text", amount_weeks);
+    cy.screenshot();
+    fineos.clickBottomWidgetButton("Close");
+    return this;
   }
 }
 
@@ -1567,15 +1615,15 @@ class BenefitsExtensionPage {
 export class ClaimantPage {
   static visit(ssn: string): ClaimantPage {
     ssn = ssn.replace(/-/g, "");
-    cy.get('a[aria-label="Parties"]').click();
+    cy.get('a[aria-label="Parties"]').click({ force: true });
     waitForAjaxComplete();
-    cy.contains("td", "Identification Number")
-      .next()
-      .within(() => cy.get("input").type(ssn));
-    cy.get('input[type="submit"][value="Search"]').click();
+    cy.findByLabelText("Identification Number")
+      .click({ force: true })
+      .type(ssn, { delay: 10 });
+    cy.get('input[type="submit"][value="Search"]').click({ force: true });
     waitForAjaxComplete();
     fineos.clickBottomWidgetButton("OK");
-    waitForAjaxComplete();
+
     return new ClaimantPage();
   }
   /**
@@ -1786,7 +1834,7 @@ export class ClaimantPage {
    */
   startCreateNotification<T>(cb: (step: OccupationDetails) => T): T {
     // Start the process
-    cy.contains("span", "Create Notification").click();
+    cy.contains("span", "Create Notification").click({ force: true });
     // "Notification details" step, we are not changing anything here, so we just skip it.
     this.clickNext();
     return cb(new OccupationDetails());
@@ -1823,14 +1871,15 @@ abstract class CreateNotificationStep {
       })
       .select(option);
     // Wait for ajax
-    wait();
+    waitForAjaxComplete();
   }
 }
 
 class OccupationDetails extends CreateNotificationStep {
   enterHoursWorkedPerWeek(hoursWorkedPerWeek: number) {
     cy.findByLabelText("Hours worked per week").type(
-      `{selectall}{backspace}${hoursWorkedPerWeek}`
+      `{selectall}{backspace}${hoursWorkedPerWeek}`,
+      { force: true }
     );
   }
   /**
@@ -1841,6 +1890,16 @@ class OccupationDetails extends CreateNotificationStep {
   nextStep<T>(cb: (step: NotificationOptions) => T): T {
     this.clickNext();
     return cb(new NotificationOptions());
+  }
+
+  employmentStatus(status: string) {
+    cy.findByLabelText("Employment status").select(`${status}`);
+  }
+
+  enterDateJobEnded(dateJobEnded: string) {
+    cy.findByLabelText("Date job ended").type(
+      `${dateToMMddyyyy(dateJobEnded)}{enter}`
+    );
   }
 }
 
@@ -1853,7 +1912,8 @@ type TypeOfRequestOptions =
   | "Out of work for another reason";
 class NotificationOptions extends CreateNotificationStep {
   chooseTypeOfRequest(type: TypeOfRequestOptions): this {
-    cy.contains("div", type).prev().find("input").click();
+    cy.contains("div", type).prev().find("input").click({ force: true });
+    waitForAjaxComplete();
     cy.findByText("Request a Leave").should("be.visible");
     return this;
   }

@@ -487,6 +487,8 @@ const errors = {
         "Leave start dates for caring leave must be after June 30, 2021.",
       disallow_hybrid_intermittent_leave:
         "You cannot request intermittent leave in the same application as your continuous or reduced schedule leave. Create a separate application for your intermittent leave dates.",
+      disallow_overlapping_leave_period_with_previous_leave:
+        "Your previous leave dates cannot overlap with the PFML leave dates you are applying for. Check that you’ve entered the correct start and end dates for your leave details and previous leave.",
       disallow_overlapping_leave_periods:
         "Your reduced leave schedule cannot overlap with your continuous or intermittent leave. Check whether you’ve entered the correct start and end dates for each leave period.",
       disallow_submit_over_60_days_before_start_date:
@@ -575,6 +577,10 @@ const errors = {
     "Sorry, we were unable to retrieve what you were looking for. Check that the link you are visiting is correct. If this continues to happen, please log out and try again.",
   caughtError_UserNotReceivedError:
     "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak)",
+  claimStatus: {
+    fineos_claim_withdrawn:
+      "Application <strong>{{absenceId}}</strong> has been withdrawn and is no longer being processed.  If you believe this application has been withdrawn in error, check if any additional applications in your account cover the same leave period.  If you have additional questions, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
+  },
   documents: {
     file: {
       required: "Upload at least one file to continue.",
@@ -615,9 +621,6 @@ const errors = {
       required: "Enter your 9-digit Employer Identification Number.",
     },
     hours_worked_per_week: {
-      // TODO (EMPLOYER-723) remove this
-      invalid_hours_worked_per_week:
-        "Average weekly hours must be 168 or fewer.",
       maximum: "Average weekly hours must be 168 or fewer.",
       minimum: "Enter the average weekly hours.",
     },
@@ -789,7 +792,11 @@ const shared = {
   displayTime_noMinutes: "{{hours}}h",
   docsRequired: {
     newborn:
-      "Once your child is born, submit proof of birth so that we can make a decision.",
+      "Once your child is born, submit proof of birth so that we can review your application. Learn more about <proof-document-link>proof of birth documents</proof-document-link> we accept.",
+  },
+  documentCategory: {
+    certification: "certification form",
+    identification: "identification documents",
   },
   documentsLoadError:
     "An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
@@ -844,10 +851,12 @@ const shared = {
   leaveReasonCare: "Care for a family member",
   leaveReasonCareHeader: "Leave to care for a family member",
   leaveReasonMedical: "Medical leave",
+  leaveReasonMedicalIllness: "Leave for an illness or injury",
   leaveReasonMedicalSchedule: "Medical leave schedule",
   leaveReasonPregnancy: "Medical leave for pregnancy or birth",
   leaveReasonPregnancyHeader: "Medical leave for pregnancy",
   leaveReasonServiceMemberFamily: "Military family",
+  loadingDocumentsLabel: "Loading documents",
   maxEmployerCommentLengthError:
     "Please shorten your comment. We cannot accept comments that are longer than 9999 characters.",
   maximumReducedLeaveMinutes:
@@ -882,6 +891,8 @@ const shared = {
   siteDescription:
     "Apply for this Commonwealth-offered benefit here, or log in to review your applications.",
   submitApplicationButton: "I understand and agree",
+  trackStatus:
+    "<track-status-link>Track the status of your application here</track-status-link>.",
   usernameLabel: "Email address",
   verificationCodeLabel: "6-digit code",
 };
@@ -896,14 +907,14 @@ const pages = {
     seoDescription: "$t(shared.siteDescription)",
   },
   applications: {
-    claimsReflectPortal:
-      "Your applications only reflect what you entered using this website. Any changes you made through the Contact Center will not be shown here.",
+    claimsApprovalProcess:
+      "Learn more about the <approval-process-link>application review and approval process</approval-process-link>.",
     createApplicationHeading: "Create a new application",
     getReadyLink: "Start a new application",
     inProgressHeading: "In-progress applications",
     noClaims: "You don’t have any applications yet.",
     submittedHeading: "Submitted applications",
-    title: "Applications",
+    title: "Your applications",
     uploadSuccessHeading: "You successfully submitted your documents",
     uploadSuccessMessage:
       "Our Contact Center staff will review your documents for {{absence_id}}.",
@@ -1500,7 +1511,7 @@ const pages = {
     choiceHintCheck:
       "You will receive your checks at the address you listed as your mailing address.",
     partTwoNextSteps:
-      "<p>Once you submit Part 2, your payment information will be viewable by our Contact Center staff. To make edits to Part 2, you’ll need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p><p>Next, you’ll work on Part 3, and submit your application.</p>",
+      "<p>Once you submit Part 2, your payment information will be viewable by our Contact Center staff. To make edits to Part 2, you’ll need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. To learn more about benefit payments, <benefits-guide-link>see our benefits guide</benefits-guide-link>.</p><p>Next, you’ll work on Part 3, and submit your application.</p>",
     routingNumberHint:
       "This is the 9-digit number found on the lower left corner of a check or deposit slip.",
     routingNumberLabel: "Routing number",
@@ -1902,15 +1913,15 @@ const pages = {
     backButtonLabel: "Back to your applications",
     employerEIN: "Employer Identification Number (EIN)",
     infoAlertBody_bonding:
-      "You can take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if you need <about-bonding-leave-link>medical leave after giving birth.</about-bonding-leave-link>",
+      "You may be able to take 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if you need <about-bonding-leave-link>medical leave after giving birth</about-bonding-leave-link>. You should not submit a second application.",
     infoAlertBody_pregnancy:
-      "You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. <about-bonding-leave-link>Family leave to bond with your child</about-bonding-leave-link> can be easily added to your claim by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
+      "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. <about-bonding-leave-link>Family leave to bond with your child</about-bonding-leave-link> can be easily added to your claim by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. You should not submit a second application.",
     infoAlertHeading_bonding:
-      "If you gave birth, you may be eligible for paid medical leave",
+      "If you gave birth, you may also be eligible for paid medical leave",
     infoAlertHeading_pregnancy:
       "You may also be eligible for paid family leave",
     infoRequestsBody:
-      "If you have a request for more information, use this to upload the requested documentation.",
+      "If you have a request for more information, use this button to upload the requested documentation.",
     infoRequestsHeading: "Respond to requests for information",
     leavePeriodLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
     leavePeriodLabel_intermittent: "$t(shared.claimDurationTypeIntermittent)",
@@ -1927,9 +1938,9 @@ const pages = {
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     leaveStatusMessage_Approved:
-      "<p><strong>This leave was approved.</strong></p><p><notice-link>View your approval notice</notice-link> for more details about your benefit amount, payment schedule, and how to appeal if your benefits appear incorrect.</p>",
+      "<p><strong>This leave was approved.</strong></p><p>View your approval notice below for more details about your benefit amount, payment schedule, and how to appeal if your benefits appear incorrect.</p><p>Learn more about the <request-appeal-link>appeal process</request-appeal-link>.</p>",
     leaveStatusMessage_Denied:
-      "<p><strong>This leave was denied.</strong></p><p><notice-link>View your denial notice</notice-link> for more details and an explanation of the appeal process.</p><p>If you would like to appeal, you must submit your request within 10 calendar days of the date on your denial notice.</p><p>Learn more about <request-appeal-link>the appeal process</request-appeal-link>.</p>",
+      "<p><strong>This leave was denied.</strong></p><p>View your denial notice below for more details and an explanation of the appeal process.</p><p>If you would like to appeal, you must submit your request within 10 calendar days of the date on your denial notice.</p><p>Learn more about the <request-appeal-link>appeal process</request-appeal-link>.</p>",
     leaveStatusMessage_Pending:
       "<p><strong>This leave is being reviewed.</strong></p>",
     leaveStatusMessage_Withdrawn:
@@ -1939,8 +1950,8 @@ const pages = {
     loadingClaimDetailLabel: "Loading claim details",
     loadingLegalNoticesLabel: "Loading legal notices",
     makeChangesBody:
-      "<p>If you need to make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Some changes to your application, such as changing your start and end dates, may mean your application needs to be reviewed by your employer again.</p>",
-    makeChangesHeading: "Make changes to your application",
+      "<p>To make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. If you request a change to your start and end dates, we may need to review your application again.</p>",
+    makeChangesHeading: "Make changes",
     manageApplicationHeading: "Manage your application",
     reportOtherBenefitsBody:
       "<p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report changes to:</p><ul><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for disability benefit after you submitted your application, report this change.</li></ul>",
@@ -1958,35 +1969,56 @@ const pages = {
       "<p>Learn more about the <timeline-link>application approval process.</timeline-link></p>",
     uploadDocumentsButton: "Upload additional documents",
     uploadDocumentsHeading: "Upload Documents",
+    uploadSuccessHeading: "You've successfully submitted your {{document}}",
+    "uploadSuccessHeadingDocumentName_family-member-medical-certification":
+      "$t(shared.documentCategory.certification)",
+    "uploadSuccessHeadingDocumentName_medical-certification":
+      "$t(shared.documentCategory.certification)",
+    "uploadSuccessHeadingDocumentName_other-id":
+      "$t(shared.documentCategory.identification)",
+    "uploadSuccessHeadingDocumentName_pregnancy-medical-certification":
+      "$t(shared.documentCategory.certification)",
+    "uploadSuccessHeadingDocumentName_proof-of-birth":
+      "proof of birth documents",
+    "uploadSuccessHeadingDocumentName_proof-of-placement":
+      "proof of placement documents",
+    "uploadSuccessHeadingDocumentName_state-id":
+      "$t(shared.documentCategory.identification)",
     viewNoticesHeading: "View your notices",
     whatHappensNext: "What happens next",
-    whatHappensNextButton_adoption: "Upload proof of placement",
+    whatHappensNextButton_adoption: "Upload proof of adoption",
+    whatHappensNextButton_fosterCare: "Upload proof of placement",
     whatHappensNextButton_newborn: "Upload proof of birth",
     whatYouNeedToDo: "What you need to do",
     whatYouNeedToDoText_adoption:
-      "After your child arrives in your home, submit proof of placement so that the department can make a decision.",
+      "Once your child is adopted, submit a certificate of proof, including the date of the adoption, so that we can review your application. Learn more about the <proof-document-link>proof of adoption documents</proof-document-link> we accept.",
+    whatYouNeedToDoText_fosterCare:
+      "Once your child is placed, submit a certificate of proof, including the date of the placement, so that we can review your application. Learn more about the <proof-document-link>proof of placement documents</proof-document-link> we accept.",
     whatYouNeedToDoText_newborn: "$t(shared.docsRequired.newborn)",
   },
   claimsSuccess: {
     adjudicationProcess:
-      "<ul> <li>Your employer has 10 business days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.</li><li>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</li></ul>",
+      "<ul> <li>Your employer has 10 business days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.</li><li>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</li><li>$t(shared.trackStatus)</li></ul>",
     adjudicationProcessHeading: "What happens next",
     adjudicationProcess_bondingAdoptFosterFuture:
-      "<ul><li>Your employer has 10 days to provide feedback on your application.</li> <li>Once you’ve provided proof of placement, we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> <li>If you need to change your leave dates because your child arrived in your home earlier or later than expected, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li></ul>",
+      "<ul><li>Your employer has 10 days to provide feedback on your application.</li> <li>Once you’ve provided proof of placement, we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> <li>If you need to change your leave dates because your child arrived in your home earlier or later than expected, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li><li>$t(shared.trackStatus)</li></ul>",
     adjudicationProcess_bondingNewbornFuture:
-      "<ul><li>Your employer has 10 days to provide feedback on your application.</li> <li>Once you’ve provided proof of birth, we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> <li>If you need to change your leave dates because your child was born earlier or later than expected, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li></ul>",
+      "<ul><li>Your employer has 10 days to provide feedback on your application.</li> <li>Once you’ve provided proof of birth, we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> <li>If you need to change your leave dates because your child was born earlier or later than expected, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li><li>$t(shared.trackStatus)</li></ul>",
     adjudicationProcess_caringLeave:
-      "<ul><li>Your employer has 10 business days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.</li><li>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</li><li>If you need to end your leave early, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</li></ul>",
+      "<ul><li>Your employer has 10 business days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.</li><li>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</li><li>If you need to end your leave early, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</li><li>$t(shared.trackStatus)</li></ul>",
     adjudicationProcess_medicalPregnantFuture:
-      "<ul><li>Your employer has 10 days to provide feedback on your application.</li> <li>When your leave begins, call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> to tell us. Then we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li></ul>",
+      "<ul><li>Your employer has 10 days to provide feedback on your application.</li><li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li><li>$t(shared.trackStatus)</li></ul>",
     claimantApplicationId:
       "Your application ID is <strong>{{absence_id}}</strong>",
-    exitLink: "Return to applications",
+    exitLink: "View your application",
     familyLeaveToBond:
-      "You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. Family leave to bond with your child can be <medical-bonding-link>easily added to your claim</medical-bonding-link> by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
+      "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. <medical-bonding-link>Family leave to bond with your child</medical-bonding-link> can be easily added to your application by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> after your medical leave is approved. You should not submit a second application.",
     familyLeaveToBondHeading: "You may also be eligible for paid family leave",
+    learnMore:
+      "Review <benefits-amount-details-link>our benefits guide</benefits-amount-details-link> to find out more about how benefits are determined. For a rough estimate of how much you might receive, <benefits-calculator-link>use this calculator</benefits-calculator-link>. The maximum total amount that a person can receive in PFML benefits is $850 per week, even if you have been approved for leave benefits from multiple employers.",
+    learnMoreHeading: "Learn more about paid leave benefits",
     medicalLeaveAfterBirth:
-      "You can take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if you need <medical-bonding-link>medical leave after giving birth</medical-bonding-link>.",
+      "You may be able to take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if you need <medical-bonding-link>medical leave after giving birth</medical-bonding-link>.",
     medicalLeaveAfterBirthHeading:
       "If you gave birth, you may also be eligible for paid medical leave",
     proofRequired_bondingAdoptFosterFuture:
@@ -1999,6 +2031,7 @@ const pages = {
     reportReductionsMessage:
       "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if any of these are true:</p><ul><li>You have already taken leave to care for a family member since July 1, 2021</li><li>You have already taken leave since January 1, 2021 for <when-can-i-use-pfml>any other reason that qualifies for PFML</when-can-i-use-pfml></li><li>You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)</li><li>You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)</li></ul>",
     title: "You submitted your application",
+    viewStatus: "View status and details for your application",
   },
   claimsUploadCertification: {
     addAnotherFileButton: "Choose another file",
@@ -2034,6 +2067,38 @@ const pages = {
     sectionLabel: "What kind of document are you uploading?",
     stateIdLabel: "Massachusetts driver’s license or ID",
     title: "Additional documentation",
+  },
+  claimsUploadDocumentType: {
+    addAnotherFileButton: "$t(shared.fileUpload_addAnotherFileButton)",
+    addFirstFileButton: "$t(shared.fileUpload_addFirstFileButton)",
+    documentsLoadError: "$t(shared.documentsLoadError)",
+    fileHeadingPrefix: "$t(shared.fileUpload_fileHeadingPrefix)",
+    idAccordionContent:
+      "<p><strong>If you don’t have any of those, you can provide one of the following plus proof of your Social Security Number or Individual Tax Identification Number:</strong></p><ul><li>Valid, unexpired U.S. State or Territory License or ID, both front and back</li><li>Certified copy of a birth certificate filed with a State Office of Vital Statistics or equivalent agency in the individual’s state of birth. (You can only use a <puerto-rican-birth-certificate-link>Puerto Rican birth certificate</puerto-rican-birth-certificate-link> if it was issued on or after July 1, 2010.)</li><li>Certificate of Citizenship (Form N$t(chars.nbhyphen)560, or Form N$t(chars.nbhyphen)561)</li><li>Certificate of Naturalization (Form N$t(chars.nbhyphen)550 or N$t(chars.nbhyphen)570)</li></ul><p><strong>You can provide proof of your Social Security Number using one of the following documents displaying your complete Social Security Number:</strong></p><ul><li>Social Security card</li><li>W$t(chars.nbhyphen)2 Form</li><li>SSA$t(chars.nbhyphen)1099 Form</li><li>Non$t(chars.nbhyphen)SSA$t(chars.nbhyphen)1099 Form</li><li>Pay stub with your name on it</li></ul><p><identity-proof-link>Learn more about verifying your identity with different documents.</identity-proof-link></p>",
+    idAccordionHeading: "If you don’t have any of those documents:",
+    leadListNewborn: [
+      "Your child’s birth certificate.",
+      "A note from your child’s health care provider stating your child’s date of birth.",
+      "A note from the health care provider of the person who gave birth stating your child’s date of birth.",
+    ],
+    lead_bonding_adopt_foster:
+      "You need to upload a statement from your adoption or foster agency or from the Massachusetts Department of Children and Families to confirm the placement and the date of the placement.",
+    lead_bonding_newborn:
+      "You need to upload one of the following documents to confirm your child’s date of birth:",
+    lead_care:
+      "You need to upload a completed <caregiver-certification-form-link>$t(shared.certificationFormCare)</caregiver-certification-form-link> to prove that you need to take leave to care for a family member with a serious medical condition.",
+    lead_medical:
+      "You need to upload a completed <healthcare-provider-form-link>$t(shared.certificationFormMedical)</healthcare-provider-form-link> to prove that you need to take medical leave.",
+    otherIdentityDocs:
+      "<p><strong>You can upload a copy of one of the following documents:</strong></p><ul><li>U.S. State or Territory Real ID, both front and back</li><li>U.S. passport or passport card</li><li>Permanent Resident Card issued by DHS or INS</li><li>Employment Authorization Document (EAD) issued by DHS</li><li>Foreign passport <strong>and</strong> a <work-visa-link>work visa</work-visa-link></li></ul>",
+    sectionLabel_bonding: "Upload your documentation",
+    sectionLabel_certification: "Upload your certification form",
+    sectionLabel_massId:
+      "Upload the front and back of your Massachusetts driver’s license or ID card",
+    sectionLabel_otherId:
+      "Upload an identification document issued by state or federal government",
+    title_certification: "Upload certification",
+    title_id: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsUploadId: {
     accordionContent:
@@ -2194,7 +2259,7 @@ const pages = {
     instructions_processingApplication:
       "We’ll begin processing this application and your employee should hear from us within 14 calendar days. Once we’ve made a decision, you’ll receive an email with a direct link to details about the decision.",
     instructions_reimbursement:
-      "If your company has a paid disability, family, or medical leave policy for employees, you may qualify for <reimbursements-link>reimbursements for payments made during this leave<reimbursements-link>.",
+      "If your company has a paid disability, family, or medical leave policy for employees, you may qualify for <reimbursements-link>reimbursements for payments made during this leave</reimbursements-link>.",
     title: "Thanks for reviewing the application",
   },
   employersDashboard: {
@@ -2249,10 +2314,6 @@ const pages = {
     tableColHeading_fineos_absence_id: "Application ID",
     tableColHeading_status: "Status",
     title: "Dashboard",
-    unavailableClaimsBody:
-      "Your account has been verified. It may take up to 15 minutes for our systems to update so that you can log in and review applications. If anyone else on your team needs to review applications, they’ll also need to complete the <learn-more-link>verification process</learn-more-link>.",
-    unavailableClaimsTitle:
-      "Your applications are not accessible right now for: {{employers}}",
     verificationBody:
       "Every employer must verify paid leave contributions when creating an account. You need to <your-organizations-link>complete this process</your-organizations-link> to review applications from your team. If you have an EIN that isn't verified you won't see any applications related to that EIN.",
     verificationInstructions:
@@ -2289,7 +2350,7 @@ const pages = {
     continueButton: "Continue",
     employerIdNumberLabel: "<strong>Employer ID number (EIN):</strong> {{ein}}",
     instructions:
-      "Your account has been verified. It may take up to 15 minutes for our systems to update so that you can log in and review applications. If anyone else on your team needs to review applications, they’ll also need to complete the <learn-more-link>verification process</learn-more-link>.",
+      "Your account has been verified. If anyone else on your team needs to review applications, they’ll also need to complete the <learn-more-link>verification process</learn-more-link>.",
     title: "Thanks for verifying your paid leave contributions",
   },
   employersOrganizationsVerifyContributions: {
@@ -2346,7 +2407,7 @@ const pages = {
       "<p>If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.</p><p>Once you tell your employer, you have the right to apply and your job is protected. Make a note of when you notified your employer. You will need to provide this date in your leave application.</p>",
     stepOneHeading: "1. Tell your employer that you need to take paid leave",
     stepThree:
-      "<p>Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be <medical-bonding-link>easily added to your claim</medical-bonding-link> by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p><p>You need to create multiple leave applications if you are:</p><ul><li>Taking leave from multiple employers.</li><li>Taking time off in uneven blocks of time (intermittent leave), <strong>and</strong> taking time off completely or on a reduced schedule. You’ll need a separate application for the intermittent leave.</li></ul><p>PFML benefits are subject to reporting for tax purposes and may be subject to taxation. Withholding is not currently supported through the PFML program. Learn more about the <tax-liability-link>possible tax implications</tax-liability-link> of your paid leave benefits.</p>",
+      "<p>Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.</p><p>If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be <medical-bonding-link>easily added to your claim</medical-bonding-link> by calling our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p><p>You need to create multiple leave applications if you are:</p><ul><li>Taking leave from multiple employers.</li><li>Taking time off in uneven blocks of time (intermittent leave), <strong>and</strong> taking time off completely or on a reduced schedule. You’ll need a separate application for the intermittent leave.</li></ul><p>PFML benefits are subject to reporting for tax purposes and may be subject to taxation. Withholding is not currently supported through the PFML program. Learn more about the <tax-liability-link>possible tax implications</tax-liability-link> of your paid leave benefits.</p><p>The maximum benefit a person can receive per week is $850. Learn more about <benefits-amount-details-link>how benefits are calculated.</benefits-amount-details-link></p>",
     stepThreeHeading: "3. Apply",
     stepTwoBondingLeaveBody:
       "<p>For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.</p><p>You can apply before your child is born or arrives in your home. You will need to provide proof of birth or placement for your application to be approved.</p>",
@@ -2468,17 +2529,17 @@ const components = {
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
     leaveReasonValue_bonding: "$t(shared.leaveReasonBondingHeader)",
     leaveReasonValue_care: "$t(shared.leaveReasonCareHeader)",
-    leaveReasonValue_medical: "$t(shared.leaveReasonMedical)",
+    leaveReasonValue_medical: "$t(shared.leaveReasonMedicalIllness)",
     leaveReasonValue_pregnancy: "$t(shared.leaveReasonPregnancyHeader)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
-    manageApplicationDocuments: "Manage your application documents",
+    loadingLabel: "$t(shared.loadingDocumentsLabel)",
     noticeOnClickDetails:
       "When you click the notice link, the file will download to your device.",
-    uploadDocuments: "Upload documents",
-    viewNotices: "View notices",
+    otherActions: "Other actions",
+    respondToRequest: "Respond to a request for information",
+    viewNotices: "View your notices",
     viewStatusUpdatesAndDetails: "View status updates and details",
-    viewYourNotices: "View your notices",
   },
   authNav: {
     logOutButton: "Log out",
@@ -2510,7 +2571,7 @@ const components = {
   downloadableDocument: {
     createdAtDate: "Posted {{date}}",
     noticeName: "Other notice $t(shared.pdfNoticeSuffix)", // it should fallback to this if we receive an unexpected or undefined enum
-    noticeName_appealAcknowledgement:
+    noticeName_appealAcknowledgment:
       "Appeal Acknowledgment $t(shared.pdfNoticeSuffix)",
     noticeName_approvalNotice: "Approval notice $t(shared.pdfNoticeSuffix)",
     noticeName_denialNotice: "Denial notice $t(shared.pdfNoticeSuffix)",
@@ -2940,6 +3001,9 @@ const components = {
   },
   withBenefitsApplications: {
     loadingLabel: "Loading applications",
+  },
+  withClaimDocuments: {
+    loadingLabel: "$t(shared.loadingDocumentsLabel)",
   },
   withClaims: {
     loadingLabel: "Loading claims",

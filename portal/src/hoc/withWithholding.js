@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
 import User from "../models/User";
-import routes from "../../src/routes";
+import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 
 /**

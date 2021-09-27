@@ -1650,7 +1650,6 @@ def test_create_leave_admin_request_payload():
     assert payload.__contains__("<ns0:enabled>true</ns0:enabled>")
 
 
-@pytest.mark.integration
 def test_register_leave_admin_with_fineos(employer_user, test_db_session):
     employer = EmployerFactory.create()
     register_leave_admin_with_fineos(
@@ -1674,7 +1673,6 @@ def test_register_leave_admin_with_fineos(employer_user, test_db_session):
     assert created_leave_admin.employer_id == employer.employer_id
 
 
-@pytest.mark.integration
 def test_register_previously_registered_leave_admin_with_fineos(
     employer_user, test_db_session, caplog
 ):
@@ -1748,7 +1746,6 @@ def test_get_leave_details(period_decisions):
     assert leave_details.reduced_schedule_leave_periods[0].end_date == date(2021, 1, 29)
 
 
-@pytest.mark.integration
 def test_get_claim_plan(mock_fineos_period_decisions, initialize_factories_session):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
@@ -1759,7 +1756,6 @@ def test_get_claim_plan(mock_fineos_period_decisions, initialize_factories_sessi
     assert leave_details.status == "Known"
 
 
-@pytest.mark.integration
 def test_get_claim_no_plan(mock_fineos_period_decisions_no_plan, initialize_factories_session):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
@@ -1770,7 +1766,6 @@ def test_get_claim_no_plan(mock_fineos_period_decisions_no_plan, initialize_fact
     assert leave_details.status == "Known"
 
 
-@pytest.mark.integration
 def test_get_claim_eform_type_contains_neither_version(
     mock_fineos_period_decisions, initialize_factories_session
 ):
@@ -1783,7 +1778,6 @@ def test_get_claim_eform_type_contains_neither_version(
     assert leave_details.uses_second_eform_version is True
 
 
-@pytest.mark.integration
 def test_get_claim_other_income_eform_type_contains_both_versions(
     mock_fineos_other_income_eform_both_versions, initialize_factories_session
 ):
@@ -1799,7 +1793,6 @@ def test_get_claim_other_income_eform_type_contains_both_versions(
         )
 
 
-@pytest.mark.integration
 def test_get_claim_other_leaves_v2_eform(
     mock_fineos_other_leaves_v2_eform, initialize_factories_session
 ):
@@ -1883,7 +1876,6 @@ def test_get_claim_other_leaves_v2_eform(
     )
 
 
-@pytest.mark.integration
 def test_get_claim_other_leaves_v2_accrued_leave_different_employer_eform(
     mock_fineos_other_leaves_v2_accrued_leave_different_employer_eform, initialize_factories_session
 ):
@@ -1912,7 +1904,6 @@ def test_get_claim_other_leaves_v2_accrued_leave_different_employer_eform(
     assert leave_details.concurrent_leave is None
 
 
-@pytest.mark.integration
 def test_get_claim_other_income(mock_fineos_other_income_v1_eform, initialize_factories_session):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
@@ -1949,7 +1940,6 @@ def test_get_claim_other_income(mock_fineos_other_income_v1_eform, initialize_fa
     assert leave_details.uses_second_eform_version is False
 
 
-@pytest.mark.integration
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
 def test_get_claim_with_open_managed_requirement(
     mock_get_req,
@@ -1971,7 +1961,6 @@ def test_get_claim_with_open_managed_requirement(
     assert leave_details.is_reviewable
 
 
-@pytest.mark.integration
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
 def test_get_claim_with_closed_managed_requirement(
     mock_get_req,
@@ -1996,7 +1985,6 @@ def test_get_claim_with_closed_managed_requirement(
     assert not leave_details.is_reviewable
 
 
-@pytest.mark.integration
 @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
 def test_get_claim_with_open_expired_managed_requirement(
     mock_get_req,

@@ -9,9 +9,6 @@ from massgov.pfml.db.models.factories import EmployerFactory
 from massgov.pfml.servicenow.models import OutboundMessage
 from massgov.pfml.servicenow.transforms.notifications import TransformNotificationRequest
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 @pytest.fixture
 def leave_admin_notification_request():

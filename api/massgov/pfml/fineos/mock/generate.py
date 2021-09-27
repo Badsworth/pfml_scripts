@@ -135,7 +135,7 @@ def generate_employee_file(employee_count, employees_file, db_session):
         employee_generate_id += 1
 
 
-def generate_single_employee(employee_generate_id: int, employee_row: Employee):
+def generate_single_employee(employee_generate_id: int, employee_row: Employee) -> dict:
     """
       Generate a single employee.
 

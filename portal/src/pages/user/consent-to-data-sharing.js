@@ -75,12 +75,20 @@ export const ConsentToDataSharing = (props) => {
                 // Anchor tag content will be added by Trans component from locale file
                 // eslint-disable-next-line jsx-a11y/anchor-has-content
                 "informed-consent-link": (
-                  <a href={routes.external.massgov.informedConsent} />
+                  <a
+                    href={routes.external.massgov.informedConsent}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  />
                 ),
                 // Anchor tag content will be added by Trans component from locale file
                 // eslint-disable-next-line jsx-a11y/anchor-has-content
                 "privacy-policy-link": (
-                  <a href={routes.external.massgov.privacyPolicy} />
+                  <a
+                    href={routes.external.massgov.privacyPolicy}
+                    rel="noopener noreferrer"
+                    target="_blank"
+                  />
                 ),
               }}
             />

@@ -82,7 +82,6 @@ def main_with_return():
                 fineos_client,
                 output_directory_path,
                 output_transport_params,
-                batch_size=config.update_batch_size,
                 export_file_number_limit=config.export_file_number_limit,
             )
     elif config.mode is eligibility_feed.EligibilityFeedExportMode.LIST:

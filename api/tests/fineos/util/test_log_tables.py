@@ -11,9 +11,6 @@ from massgov.pfml.db.models.factories import (
     WagesAndContributionsFactory,
 )
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 @contextmanager
 def assert_log_before_after(test_db_session, log_class, before_counts=(1, 0), after_counts=(1, 0)):
