@@ -58,7 +58,7 @@ services:
       - COGNITO_USER_POOL_ID=us-east-1_HpL4XslLg
       - COGNITO_USER_POOL_CLIENT_ID=10rjcp71r8bnk4459c67bn18t8
       - DASHBOARD_PASSWORD=secret123
-      - LOGGING_LEVEL=massgov.pfml.fineos.fineos_client=DEBUG
+      - LOGGING_LEVEL=massgov.pfml.fineos.fineos_client=DEBUG,massgov.pfml.servicenow.client=DEBUG
       - ENABLE_EMPLOYEE_ENDPOINTS=1
       - FOLDER_PATH=dor_mock
       - FINEOS_FOLDER_PATH=fineos_mock
