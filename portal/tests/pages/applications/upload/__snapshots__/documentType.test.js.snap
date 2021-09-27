@@ -477,6 +477,19 @@ exports[`ComponentWithUser renders the appropriate certification upload content 
   >
     You need to upload one of the following documents to confirm your child’s date of birth:
   </p>
+  <ul
+    class="usa-list"
+  >
+    <li>
+      Your child’s birth certificate.
+    </li>
+    <li>
+      A note from your child’s health care provider stating your child’s date of birth.
+    </li>
+    <li>
+      A note from the health care provider of the person who gave birth stating your child’s date of birth.
+    </li>
+  </ul>
   <div
     class="usa-summary-box margin-bottom-2"
     role="complementary"
@@ -621,19 +634,6 @@ exports[`ComponentWithUser renders the appropriate certification upload content 
   >
     You need to upload a statement from your adoption or foster agency or from the Massachusetts Department of Children and Families to confirm the placement and the date of the placement.
   </p>
-  <ul
-    class="usa-list"
-  >
-    <li>
-      Your child’s birth certificate.
-    </li>
-    <li>
-      A note from your child’s health care provider stating your child’s date of birth.
-    </li>
-    <li>
-      A note from the health care provider of the person who gave birth stating your child’s date of birth.
-    </li>
-  </ul>
   <div
     class="usa-summary-box margin-bottom-2"
     role="complementary"

@@ -856,6 +856,7 @@ const shared = {
   leaveReasonPregnancy: "Medical leave for pregnancy or birth",
   leaveReasonPregnancyHeader: "Medical leave for pregnancy",
   leaveReasonServiceMemberFamily: "Military family",
+  loadingDocumentsLabel: "Loading documents",
   maxEmployerCommentLengthError:
     "Please shorten your comment. We cannot accept comments that are longer than 9999 characters.",
   maximumReducedLeaveMinutes:
@@ -2532,6 +2533,7 @@ const components = {
     leaveReasonValue_pregnancy: "$t(shared.leaveReasonPregnancyHeader)",
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
+    loadingLabel: "$t(shared.loadingDocumentsLabel)",
     noticeOnClickDetails:
       "When you click the notice link, the file will download to your device.",
     otherActions: "Other actions",
@@ -3001,7 +3003,7 @@ const components = {
     loadingLabel: "Loading applications",
   },
   withClaimDocuments: {
-    loadingLabel: "Loading documents",
+    loadingLabel: "$t(shared.loadingDocumentsLabel)",
   },
   withClaims: {
     loadingLabel: "Loading claims",
