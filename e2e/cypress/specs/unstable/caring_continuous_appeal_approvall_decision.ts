@@ -5,6 +5,9 @@ import { Submission } from "../../../src/types";
 import { config } from "../../actions/common";
 
 describe("Submit a claim through Portal: Verify it creates an absence case in Fineos", () => {
+  after(() => {
+    portal.deleteDownloadsFolder();
+  });
   const fineosSubmission =
     it("As a claimant, I should be able to submit a claim application through the portal", () => {
       portal.before();
@@ -30,7 +33,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
     });
 
   const employerApproval =
-    it("Leave admin will submit ER denial for employee", () => {
+    it("Leave admin will submit ER approval for employee", () => {
       cy.dependsOnPreviousPass([fineosSubmission]);
       portal.before();
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
@@ -44,16 +47,27 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
       });
     });
 
-  it("CSR will deny claim", { baseUrl: getFineosBaseUrl() }, () => {
+  it("CSR will approve a claim", { baseUrl: getFineosBaseUrl() }, () => {
     cy.dependsOnPreviousPass([fineosSubmission]);
     fineos.before();
-    cy.visit("/");
-    cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
-      fineosPages.ClaimPage.visit(fineos_absence_id)
-        .deny("Covered family relationship not established")
-        .triggerNotice("Leave Request Declined")
+    cy.unstash<DehydratedClaim>("claim").then((claim) => {
+      cy.unstash<Submission>("submission").then((submission) => {
+        const claimPage = fineosPages.ClaimPage.visit(
+          submission.fineos_absence_id
+        );
+        claimPage.adjudicate((adjudicate) => {
+          adjudicate.evidence((evidence) => {
+            claim.documents.forEach((document) => {
+              evidence.receive(document.document_type);
+            });
+          });
+          adjudicate.certificationPeriods((cert) => cert.prefill());
+          adjudicate.acceptLeavePlan();
+        });
+          claimPage.approve()
+          claimPage.triggerNotice("SOM Generate Legal Notice")
+      });
     });
-    cy.screenshot("Fineos Absence Case");
   });
 
   it(
@@ -111,7 +125,6 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
           );
           cy.contains(submission.fineos_absence_id);
           cy.get(`a[href*="${config("PORTAL_BASEURL")}/applications"]`);
-          cy.screenshot("Claimant Email");
         });
       });
     }
@@ -122,13 +135,10 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
     () => {
       portal.before();
       cy.dependsOnPreviousPass([fineosSubmission]);
-      cy.unstash<DehydratedClaim>("claim").then((claim) => {
-        cy.unstash<Submission>("submission").then((submission) => {
-          assertValidClaim(claim.claim);
-          portal.loginLeaveAdmin(claim.claim.employer_fein);
-          portal.selectClaimFromEmployerDashboard(submission.fineos_absence_id);
+      cy.unstash<Submission>("submission").then((submission) => {
+        cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
           const subjectEmployer = email.getNotificationSubject(
-            `${claim.claim.first_name} ${claim.claim.last_name}`,
+            `${claim.first_name} ${claim.last_name}`,
             "appeal (employer)",
             submission.fineos_absence_id
           );
@@ -145,10 +155,10 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
             )
             .then(() => {
               cy.contains(submission.fineos_absence_id);
+              // @todo removed for the time being waiting on the the long term solution.
               // cy.get(
               //   `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
               // );
-              cy.screenshot("Leave Admin Email");
             });
         });
       });
@@ -167,9 +177,8 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
       if (config("HAS_CLAIMANT_STATUS_PAGE") === "true") {
         portal.claimantGoToClaimStatus(submission.fineos_absence_id);
         portal.claimantAssertClaimStatus([
-          {leave: "Care for a Family Member", status: "Denied"},
+          {leave: "Care for a Family Member", status: "Approved"},
         ]);
-        cy.screenshot("Claimant Portal Claim Status");
       } else {
         cy.task("waitForClaimDocuments",
           {
