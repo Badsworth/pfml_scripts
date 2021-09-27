@@ -1148,6 +1148,8 @@
 <h2 id="disable-site-wide">Disable site wide</h2>
 <p>Any time <code>enabled: 0</code> is set for maintenance, the maintenance status is disabled for the entire site. Disabling maintenance is very similar to enabling maintenance. Set <code>enabled: 0</code> in the relevant feature flag file for the environment in a new branch. Once the PR is merged into main, the maintenance status will be disabled on that environment within 20 minutes.</p>
 <h2 id="testing">Testing</h2>
+<p>To manually change the maintenance schedule without making a change to the YAML file in the repo, you can edit the file directly in the S3 bucket: <code>massgov-pfml-{ environment }-feature-gate</code>. There will be up to a 20 minute delay before your change is recognized by the API. </p>
+<p>This will cause the repo file and the S3 file to be out of sync, so you should revert your changes to the S3 file after you're done testing.</p>
 <p>If you are testing the configuration locally, just note that you need to restart the local development server in order for new environment variables to kick in.</p>
 <h2 id="bypassing-maintenance-pages">Bypassing maintenance pages</h2>
 <p>It can be helpful to bypass a maintenance page to test the page itself. To do so, you can enable the <code>noMaintenance</code> <a href="../feature-flags/">feature flag</a> in the browser.</p>
