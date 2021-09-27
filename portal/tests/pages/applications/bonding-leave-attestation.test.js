@@ -4,8 +4,6 @@ import BondingLeaveAttestation from "../../../src/pages/applications/bonding-lea
 import { mockRouter } from "next/router";
 import { screen } from "@testing-library/react";
 
-jest.mock("../../../src/hooks/useLoggedInRedirect");
-
 describe("BondingLeaveAttestation", () => {
   mockRouter.pathname = "/applications/bonding-leave-attestation";
   it("renders the page", () => {

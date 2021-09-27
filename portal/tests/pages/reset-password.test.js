@@ -1,10 +1,7 @@
+import { mockAuth, renderPage } from "../test-utils";
 import { screen, waitFor } from "@testing-library/react";
 import ResetPassword from "../../src/pages/reset-password";
-import { renderPage } from "../test-utils";
 import userEvent from "@testing-library/user-event";
-
-jest.mock("../../src/hooks/useAppLogic");
-jest.mock("../../src/hooks/useLoggedInRedirect");
 
 describe("ResetPassword", () => {
   let props;
@@ -14,6 +11,10 @@ describe("ResetPassword", () => {
   const renderResetPassword = (options, props) => {
     return renderPage(ResetPassword, options, props);
   };
+
+  beforeEach(() => {
+    mockAuth(false);
+  });
 
   it("renders form", () => {
     const { container } = renderResetPassword();

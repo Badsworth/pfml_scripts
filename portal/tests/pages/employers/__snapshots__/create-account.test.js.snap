@@ -1,0 +1,188 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CreateAccount renders the empty page 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+    tabindex="-1"
+  >
+    Create an employer account
+  </h1>
+  <div
+    class="usa-alert usa-alert--info c-alert--neutral margin-bottom-3"
+    tabindex="-1"
+  >
+    <div
+      class="usa-alert__body"
+      role="region"
+    >
+      <div
+        class="usa-alert__text"
+      >
+        Workers who wish to apply for paid leave should follow 
+        <a
+          href="/"
+        >
+          these instructions
+        </a>
+        .
+      </div>
+    </div>
+  </div>
+  <p
+    class="usa-intro"
+  >
+    Welcome! Please take a few minutes to create an account for your company so you can manage leave for your team. Massachusetts workers can now apply for paid family and medical leave.
+  </p>
+  <p
+    class="usa-intro"
+  >
+    If you manage leave for multiple companies, please create an account for one using the form below. You’ll be able to add more companies to your account in the portal.
+  </p>
+  <details
+    class="c-details"
+  >
+    <summary
+      class="margin-bottom-2 text-primary text-underline font-ui-xs"
+    >
+      What you can do with this account
+    </summary>
+    <div
+      class="margin-bottom-2"
+    >
+      <ul
+        class="usa-list"
+      >
+        <li>
+          Review paid leave applications from your employees
+        </li>
+        <li>
+          Get updates about the program by email
+        </li>
+        <li>
+          Download documents and decision letters
+        </li>
+      </ul>
+    </div>
+  </details>
+  <div
+    class="usa-form-group"
+  >
+    <label
+      class="usa-label text-bold font-heading-xs measure-5"
+      for="InputText1"
+      id="InputText1_label"
+    >
+      Email address
+    </label>
+    <span
+      class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+      id="InputText1_hint"
+    >
+      Use a secure work address. An email address can only be associated with one account.
+    </span>
+    <input
+      aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+      class="usa-input maxw-mobile-lg"
+      id="InputText1"
+      name="email_address"
+      type="email"
+      value=""
+    />
+  </div>
+  <div
+    class="usa-form-group"
+  >
+    <label
+      class="usa-label text-bold font-heading-xs measure-5"
+      for="InputPassword2"
+      id="InputPassword2_label"
+    >
+      Password
+    </label>
+    <span
+      class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+      id="InputPassword2_hint"
+    >
+      Your password must be at least 12 characters long and include at least 1 number, 1 symbol, and both uppercase and lowercase letters.
+    </span>
+    <input
+      aria-labelledby="InputPassword2_label InputPassword2_hint InputPassword2_error"
+      autocomplete="new-password"
+      class="usa-input maxw-mobile-lg"
+      id="InputPassword2"
+      name="password"
+      type="password"
+      value=""
+    />
+  </div>
+  <div
+    class="usa-checkbox measure-5 bg-transparent"
+  >
+    <input
+      aria-controls="InputPassword2"
+      class="usa-checkbox__input"
+      id="InputChoice4"
+      name="InputPassword2-toggle"
+      type="checkbox"
+      value="password"
+    />
+    <label
+      class="usa-checkbox__label"
+      for="InputChoice4"
+    >
+      Show password
+    </label>
+  </div>
+  <div
+    class="usa-form-group"
+  >
+    <label
+      class="usa-label text-bold font-heading-xs measure-5"
+      for="InputText5"
+      id="InputText5_label"
+    >
+      Employer ID number (EIN)
+    </label>
+    <span
+      class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+      id="InputText5_hint"
+    >
+      Your Employer Identification Number is a 
+      <a
+        href="https://www.mass.gov/info-details/finding-your-employers-federal-employer-identification-number-fein"
+        rel="noopener"
+        target="_blank"
+      >
+        9-digit number
+      </a>
+       assigned by the Internal Revenue Service. It is listed on tax returns and your payroll department should have this information.
+    </span>
+    <div
+      class=""
+    >
+      <input
+        aria-labelledby="InputText5_label InputText5_hint InputText5_error"
+        class="usa-input maxw-mobile-lg"
+        id="InputText5"
+        inputmode="numeric"
+        name="user_leave_administrator.employer_fein"
+        type="text"
+        value=""
+      />
+    </div>
+  </div>
+  <p>
+    We’ll send you a 6-digit code to verify your email address.
+  </p>
+  <button
+    class="usa-button position-relative"
+    type="submit"
+  >
+    Create account
+  </button>
+</form>
+`;
