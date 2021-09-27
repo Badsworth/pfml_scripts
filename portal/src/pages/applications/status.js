@@ -94,6 +94,9 @@ export const Status = ({ appLogic, query }) => {
   const hasPendingStatus = claimDetail.absence_periods.some(
     (absenceItem) => absenceItem.request_decision === "Pending"
   );
+  const hasApprovedStatus = claimDetail.absence_periods.some(
+    (absenceItem) => absenceItem.request_decision === "Approved"
+  );
   const documentsForApplication = allClaimDocuments.filterByApplication(
     claimDetail.application_id
   );
@@ -191,7 +194,7 @@ export const Status = ({ appLogic, query }) => {
         </Alert>
       )}
 
-      {!!infoAlertContext && (
+      {!!infoAlertContext && (hasPendingStatus || hasApprovedStatus) && (
         <Alert
           className="margin-bottom-3"
           data-test="info-alert"

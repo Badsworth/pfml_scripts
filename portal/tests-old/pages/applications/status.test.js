@@ -246,13 +246,13 @@ describe("status page", () => {
   });
 
   describe("info alert", () => {
-    it("displays if claimant has bonding but not pregnancy claims", () => {
+    it("displays if claimant has bonding-newborn but not pregnancy claims", () => {
       const claimWithoutPregnancy = new ClaimDetail({
         ...CLAIM_DETAIL,
         absence_periods: [
           { reason: LeaveReason.bonding },
+          { request_decision: "Pending" },
           { reason_qualifier_one: "Newborn" },
-          { reason_qualifier_two: "Newborn" },
         ],
       });
 
@@ -269,7 +269,7 @@ describe("status page", () => {
         ...CLAIM_DETAIL,
         absence_periods: [
           { reason: LeaveReason.pregnancy },
-          { reason: LeaveReason.care },
+          { request_decision: "Approved" },
         ],
       });
 
@@ -291,6 +291,34 @@ describe("status page", () => {
       });
 
       const { wrapper } = setup({ claimDetail: claimsWithBondingAndPregnancy });
+
+      expect(wrapper.find({ "data-test": "info-alert" }).exists()).toBe(false);
+    });
+
+    it("does not display if claimant has Denied claims", () => {
+      const claimsWithPregnancy = new ClaimDetail({
+        ...CLAIM_DETAIL,
+        absence_periods: [
+          { reason: LeaveReason.pregnancy, request_decision: "Denied" },
+        ],
+      });
+
+      const { wrapper } = setup({ claimDetail: claimsWithPregnancy });
+
+      expect(wrapper.find({ "data-test": "info-alert" }).exists()).toBe(false);
+    });
+
+    it("does not display if claimant has Withdrawn claims", () => {
+      const claimsWithoutPregnancy = new ClaimDetail({
+        ...CLAIM_DETAIL,
+        absence_periods: [
+          { reason: LeaveReason.bonding },
+          { request_decision: "Withdrawn" },
+          { reason_qualifier_one: "Newborn" },
+        ],
+      });
+
+      const { wrapper } = setup({ claimDetail: claimsWithoutPregnancy });
 
       expect(wrapper.find({ "data-test": "info-alert" }).exists()).toBe(false);
     });
