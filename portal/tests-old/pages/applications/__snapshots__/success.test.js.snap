@@ -908,7 +908,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
           height={30}
           width={30}
         />
-        If you gave birth, you may also be eligible for paid medical leave
+        If you are giving birth, you may also be eligible for paid medical leave
       </Heading>
       <p>
         <Trans
@@ -1043,7 +1043,7 @@ Array [
 
 exports[`Success renders content tailored to Family (Bonding Future Newborn) 6`] = `
 Array [
-  "You may be able to take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at ",
+  "You may be able to take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy or for your recovery from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at ",
   <a
     href="tel:(833) 344-7365"
     key="1"
@@ -1201,7 +1201,7 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
           height={30}
           width={30}
         />
-        If you gave birth, you may also be eligible for paid medical leave
+        If you are giving birth, you may also be eligible for paid medical leave
       </Heading>
       <p>
         <Trans
@@ -1372,7 +1372,7 @@ Array [
 
 exports[`Success renders content tailored to Family (Bonding Newborn) 6`] = `
 Array [
-  "You may be able to take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at ",
+  "You may be able to take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy or for your recovery from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at ",
   <a
     href="tel:(833) 344-7365"
     key="1"
