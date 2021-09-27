@@ -336,6 +336,10 @@ class EmployerLogFactory(BaseFactory):
     action = "INSERT"
     modified_at = Generators.UtcNow
     process_id = 1
+    family_exemption = None
+    medical_exemption = None
+    exemption_commence_date = None
+    exemption_cease_date = None
 
 
 class WagesAndContributionsFactory(BaseFactory):

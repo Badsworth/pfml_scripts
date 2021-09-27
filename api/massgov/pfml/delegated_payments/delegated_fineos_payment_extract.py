@@ -15,7 +15,6 @@ from sqlalchemy.exc import SQLAlchemyError
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
-import massgov.pfml.fineos.util.log_tables as fineos_log_tables_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
@@ -1238,15 +1237,7 @@ class PaymentExtractStep(Step):
     ) -> Payment:
         employee, claim = self.get_employee_and_claim(payment_data)
 
-        # If the employee is set, we need to wrap the DB queries
-        # to avoid adding additional employee log entries
-        if employee:
-            with fineos_log_tables_util.update_entity_and_remove_log_entry(
-                self.db_session, employee, commit=False
-            ):
-                payment = self.add_records_to_db(payment_data, employee, claim, reference_file)
-        else:
-            payment = self.add_records_to_db(payment_data, None, claim, reference_file)
+        payment = self.add_records_to_db(payment_data, employee, claim, reference_file)
 
         return payment
 

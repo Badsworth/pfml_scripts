@@ -193,7 +193,6 @@ def test_e2e_pub_payments(
     monkeypatch,
     set_exporter_env_vars,
     caplog,
-    local_create_triggers,
 ):
     test_db_session = local_test_db_session
     test_db_other_session = local_test_db_other_session
@@ -1865,7 +1864,6 @@ def test_e2e_pub_payments_delayed_scenarios(
     monkeypatch,
     set_exporter_env_vars,
     caplog,
-    local_create_triggers,
 ):
     # ========================================================================
     # Configuration / Setup
