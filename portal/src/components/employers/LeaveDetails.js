@@ -1,11 +1,11 @@
 import Alert from "../Alert";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
-import ConditionalContent from "../../components/ConditionalContent";
+import ConditionalContent from "../ConditionalContent";
 import Document from "../../models/Document";
 import DownloadableDocument from "../DownloadableDocument";
 import EmployerClaim from "../../models/EmployerClaim";
-import FormLabel from "../../components/FormLabel";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
+import FormLabel from "../FormLabel";
+import InputChoiceGroup from "../InputChoiceGroup";
 import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
 import React from "react";
@@ -191,7 +191,6 @@ const LeaveDetails = (props) => {
               onChangeRelationshipInaccurateReason(event.target.value)
             }
             visible={believeRelationshipAccurate === "No"}
-            data-test="relationship-accurate-no"
           >
             <Alert
               state="warning"
@@ -208,7 +207,7 @@ const LeaveDetails = (props) => {
             <div className={inaccurateReasonClasses}>
               <FormLabel
                 className="usa-label"
-                htmlFor="relationshipInaccurateReason"
+                inputId="relationshipInaccurateReason"
                 small
                 errorMsg={errorMsg}
               >
@@ -220,13 +219,13 @@ const LeaveDetails = (props) => {
                 onChange={(event) =>
                   onChangeRelationshipInaccurateReason(event.target.value)
                 }
+                id="relationshipInaccurateReason"
               />
             </div>
           </ConditionalContent>
 
           <ConditionalContent
             visible={believeRelationshipAccurate === "Unknown"}
-            data-test="relationship-accurate-unknown"
           >
             <Alert state="info" className="measure-5 margin-y-3">
               {t(

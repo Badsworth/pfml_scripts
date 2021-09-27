@@ -101,7 +101,7 @@ locals {
       command   = ["execute-sql"]
       task_role = aws_iam_role.task_execute_sql_task_role.arn
       env = [
-        local.db_access,
+        var.enforce_execute_sql_read_only ? local.db_read_only_access : local.db_access,
         { name : "S3_EXPORT_BUCKET", value : "massgov-pfml-${var.environment_name}-execute-sql-export" }
       ]
     },

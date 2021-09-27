@@ -1,5 +1,5 @@
 import { ClaimEmployee, ClaimEmployer } from "../../src/models/Claim";
-import { mockFetch, mockLoggedInAuthSession } from "../test-utils";
+import { mockAuth, mockFetch } from "../test-utils";
 import ClaimCollection from "../../src/models/ClaimCollection";
 import ClaimDetail from "../../src/models/ClaimDetail";
 import ClaimsApi from "../../src/api/ClaimsApi";
@@ -9,7 +9,7 @@ jest.mock("../../src/services/tracker");
 
 describe("ClaimsApi", () => {
   beforeAll(() => {
-    mockLoggedInAuthSession();
+    mockAuth();
   });
 
   describe("getClaims", () => {

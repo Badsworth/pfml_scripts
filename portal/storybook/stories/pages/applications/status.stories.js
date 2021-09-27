@@ -23,7 +23,13 @@ const LEAVE_SCENARIO_MAP = {
       reason_qualifier_one: ReasonQualifier.newBorn,
     },
   ],
-  "Bonding-adoption/foster": [
+  "Bonding-adoption": [
+    {
+      reason: LeaveReason.bonding,
+      reason_qualifier_one: ReasonQualifier.adoption,
+    },
+  ],
+  "Bonding-foster": [
     {
       reason: LeaveReason.bonding,
       reason_qualifier_one: ReasonQualifier.fosterCare,
@@ -47,10 +53,15 @@ const LEAVE_SCENARIO_MAP = {
 function createClaimDetail({ leaveScenario, requestDecision }) {
   const initialPartials = LEAVE_SCENARIO_MAP[leaveScenario] || [];
   // ensure that we see all request decisions.
-  const allPartials = initialPartials.map((initialPartial) => ({
-    ...initialPartial,
-    request_decision: requestDecision,
-  }));
+  const allPartials = initialPartials.map((initialPartial) => {
+    const isPregnancyWithBonding =
+      initialPartials.length === 2 &&
+      initialPartial.reason === "Pregnancy/Maternity";
+    return {
+      ...initialPartial,
+      request_decision: isPregnancyWithBonding ? "Approved" : requestDecision,
+    };
+  });
 
   const absence_periods = allPartials.map((partial) =>
     createAbsencePeriod(partial)

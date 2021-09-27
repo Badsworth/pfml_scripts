@@ -277,3 +277,9 @@ variable "st_employer_update_limit" {
   description = "Employer Upload Update Limit"
   type        = number
 }
+
+variable "enforce_execute_sql_read_only" {
+  description = "Determines whether write access or read-only access is granted against an API RDS DB. Read-only access is enforced on production and breakfix for the execute-sql task."
+  type        = bool
+  default     = true
+}

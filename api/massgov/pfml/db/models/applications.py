@@ -196,7 +196,7 @@ class LkPhoneType(Base):
         self.phone_type_description = phone_type_description
 
 
-class Phone(Base):
+class Phone(Base, TimestampMixin):
     __tablename__ = "phone"
     application = relationship("Application", back_populates="phone")
     fineos_phone_id = Column(Integer)
@@ -206,7 +206,7 @@ class Phone(Base):
     phone_type_instance = relationship(LkPhoneType)
 
 
-class ConcurrentLeave(Base):
+class ConcurrentLeave(Base, TimestampMixin):
     __tablename__ = "concurrent_leave"
     concurrent_leave_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     application_id = Column(
@@ -218,7 +218,7 @@ class ConcurrentLeave(Base):
     application = relationship("Application")
 
 
-class PreviousLeave(Base):
+class PreviousLeave(Base, TimestampMixin):
     # Caution: records of this model get recreated frequently as part of the PATCH /applications/:id endpoint.
     # Only the Application model should hold foreign keys to these records to avoid referenced objects being unexpectedly deleted.
     __tablename__ = "previous_leave"
@@ -371,7 +371,7 @@ class Application(Base):
     concurrent_leave = relationship("ConcurrentLeave", back_populates="application", uselist=False,)
 
 
-class CaringLeaveMetadata(Base):
+class CaringLeaveMetadata(Base, TimestampMixin):
     __tablename__ = "caring_leave_metadata"
     caring_leave_metadata_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     family_member_first_name = Column(Text)
@@ -386,7 +386,7 @@ class CaringLeaveMetadata(Base):
     application = relationship("Application", back_populates="caring_leave_metadata", uselist=False)
 
 
-class ApplicationPaymentPreference(Base):
+class ApplicationPaymentPreference(Base, TimestampMixin):
     __tablename__ = "application_payment_preference"
     payment_pref_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     payment_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
@@ -401,7 +401,7 @@ class ApplicationPaymentPreference(Base):
     bank_account_type = relationship(LkBankAccountType)
 
 
-class ContinuousLeavePeriod(Base):
+class ContinuousLeavePeriod(Base, TimestampMixin):
     __tablename__ = "continuous_leave_period"
     leave_period_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     application_id = Column(PostgreSQLUUID, ForeignKey("application.application_id"), index=True)
@@ -420,7 +420,7 @@ class ContinuousLeavePeriod(Base):
     application = relationship(Application, back_populates="continuous_leave_periods")
 
 
-class IntermittentLeavePeriod(Base):
+class IntermittentLeavePeriod(Base, TimestampMixin):
     __tablename__ = "intermittent_leave_period"
     leave_period_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     application_id = Column(PostgreSQLUUID, ForeignKey("application.application_id"), index=True)
@@ -435,7 +435,7 @@ class IntermittentLeavePeriod(Base):
     application = relationship(Application, back_populates="intermittent_leave_periods")
 
 
-class ReducedScheduleLeavePeriod(Base):
+class ReducedScheduleLeavePeriod(Base, TimestampMixin):
     __tablename__ = "reduced_schedule_leave_period"
     leave_period_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     application_id = Column(PostgreSQLUUID, ForeignKey("application.application_id"), index=True)
@@ -453,7 +453,7 @@ class ReducedScheduleLeavePeriod(Base):
     application = relationship(Application, back_populates="reduced_schedule_leave_periods")
 
 
-class EmployerBenefit(Base):
+class EmployerBenefit(Base, TimestampMixin):
     # Caution: records of this model get recreated frequently as part of the PATCH /applications/:id endpoint.
     # Only the Application model should hold foreign keys to these records to avoid referenced objects being unexpectedly deleted.
     __tablename__ = "employer_benefit"
@@ -477,7 +477,7 @@ class EmployerBenefit(Base):
     benefit_amount_frequency = relationship(LkAmountFrequency)
 
 
-class OtherIncome(Base):
+class OtherIncome(Base, TimestampMixin):
     # Caution: records of this model get recreated frequently as part of the PATCH /applications/:id endpoint.
     # Only the Application model should hold foreign keys to these records to avoid referenced objects being unexpectedly deleted.
     __tablename__ = "other_income"
@@ -498,7 +498,7 @@ class OtherIncome(Base):
     income_amount_frequency = relationship(LkAmountFrequency)
 
 
-class WorkPattern(Base):
+class WorkPattern(Base, TimestampMixin):
     __tablename__ = "work_pattern"
     work_pattern_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     work_pattern_type_id = Column(Integer, ForeignKey("lk_work_pattern_type.work_pattern_type_id"))
@@ -513,7 +513,7 @@ class WorkPattern(Base):
     )
 
 
-class WorkPatternDay(Base):
+class WorkPatternDay(Base, TimestampMixin):
     __tablename__ = "work_pattern_day"
     work_pattern_id = Column(
         PostgreSQLUUID, ForeignKey("work_pattern.work_pattern_id"), primary_key=True
@@ -677,7 +677,7 @@ class OtherIncomeType(LookupTable):
     OTHER_EMPLOYER = LkOtherIncomeType(7, "Earnings from another employment/self-employment")
 
 
-class FINEOSWebIdExt(Base):
+class FINEOSWebIdExt(Base, TimestampMixin):
     __tablename__ = "link_fineos_web_id_ext"
     employee_tax_identifier = Column(Text, primary_key=True)
     employer_fein = Column(Text, primary_key=True)
@@ -801,7 +801,7 @@ class RMVCheck(Base, TimestampMixin):
     rmv_customer_key = Column(Text, nullable=True)
 
 
-class StateMetric(Base):
+class StateMetric(Base, TimestampMixin):
     __tablename__ = "state_metric"
     effective_date = Column(Date, primary_key=True, nullable=False)
     unemployment_minimum_earnings = Column(Numeric, nullable=False)

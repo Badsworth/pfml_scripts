@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 import { Spinner } from "../components/Spinner";
 import User from "../models/User";
 import assert from "assert";
-import routes from "../../src/routes";
+import routes from "../routes";
 import { useTranslation } from "react-i18next";
 import withUser from "./withUser";
 
@@ -39,34 +39,38 @@ const withEmployerClaim = (Component) => {
 
     useEffect(() => {
       if (claim) {
-        if (user.getVerifiableEmployerById(claim.employer_id)) {
-          maybeRedirectToVerifyPage();
-        } else if (user.getUnverifiableEmployerById(claim.employer_id)) {
-          maybeRedirectToCannotVerifyPage();
+        const verifiableEmployer = user.getVerifiableEmployerById(
+          claim.employer_id
+        );
+
+        if (verifiableEmployer) {
+          redirectToVerifyPage(verifiableEmployer);
+          return;
+        }
+
+        const unverifiableEmployer = user.getUnverifiableEmployerById(
+          claim.employer_id
+        );
+        if (unverifiableEmployer) {
+          redirectToCannotVerifyPage(unverifiableEmployer);
         }
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [appLogic.portalFlow, claim, user]);
 
-    const maybeRedirectToVerifyPage = () => {
+    const redirectToVerifyPage = (employer) => {
       // the current employer can and should be verified; the page is blocked.
-      const employer = user.getVerifiableEmployerById(claim.employer_id);
-      if (employer.employer_id) {
-        appLogic.portalFlow.goTo(routes.employers.verifyContributions, {
-          employer_id: employer.employer_id,
-          next: appLogic.portalFlow.pathWithParams,
-        });
-      }
+      appLogic.portalFlow.goTo(routes.employers.verifyContributions, {
+        employer_id: employer.employer_id,
+        next: appLogic.portalFlow.pathWithParams,
+      });
     };
 
-    const maybeRedirectToCannotVerifyPage = () => {
+    const redirectToCannotVerifyPage = (employer) => {
       // the current employer cannot be verified; the page is blocked.
-      const employer = user.getUnverifiableEmployerById(claim.employer_id);
-      if (employer.employer_id) {
-        appLogic.portalFlow.goTo(routes.employers.cannotVerify, {
-          employer_id: employer.employer_id,
-        });
-      }
+      appLogic.portalFlow.goTo(routes.employers.cannotVerify, {
+        employer_id: employer.employer_id,
+      });
     };
 
     if (!claim && appLogic.appErrors.isEmpty) {

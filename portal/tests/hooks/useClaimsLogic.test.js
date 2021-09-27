@@ -1,5 +1,5 @@
 import { act, renderHook } from "@testing-library/react-hooks";
-import { mockFetch, mockLoggedInAuthSession } from "../test-utils";
+import { mockAuth, mockFetch } from "../test-utils";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import ClaimDetail from "../../src/models/ClaimDetail";
@@ -31,7 +31,7 @@ describe("useClaimsLogic", () => {
   }
 
   beforeAll(() => {
-    mockLoggedInAuthSession();
+    mockAuth();
   });
 
   it("sets initial claims data to empty collection", () => {

@@ -1,0 +1,21 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EmployerNavigationTabs renders the component 1`] = `
+<nav
+  class="border-bottom border-base-lighter margin-bottom-5 display-flex width-full"
+>
+  <a
+    aria-current="page"
+    class="display-inline-block padding-y-2 margin-bottom-neg-1px text-no-underline width-card border-primary border-bottom-05 text-bold text-primary"
+    href="/employers/welcome"
+  >
+    Welcome
+  </a>
+  <a
+    class="display-inline-block padding-y-2 margin-bottom-neg-1px text-no-underline width-card text-base-dark hover:text-primary hover:text-underline"
+    href="/employers/dashboard"
+  >
+    Dashboard
+  </a>
+</nav>
+`;

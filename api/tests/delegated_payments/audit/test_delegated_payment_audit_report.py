@@ -21,6 +21,7 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_report import
     PaymentAuditReportStep,
 )
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
+    AUDIT_REPORT_NOTES_OVERRIDE,
     PaymentAuditData,
     bool_to_str,
     get_leave_type,
@@ -82,6 +83,13 @@ def test_get_payment_audit_report_details(test_db_session, initialize_factories_
         None,
         test_db_session,
     )
+    stage_payment_audit_report_details(
+        payment,
+        PaymentAuditReportType.LEAVE_PLAN_IN_REVIEW,
+        "Leave Plan In Review Test Message",  # Not used
+        None,
+        test_db_session,
+    )
 
     audit_report_time = payments_util.get_now()
 
@@ -96,12 +104,12 @@ def test_get_payment_audit_report_details(test_db_session, initialize_factories_
     assert not audit_report_details.skipped_by_program_integrity
     assert (
         audit_report_details.rejected_notes
-        == f"{PaymentAuditReportType.MAX_WEEKLY_BENEFITS.payment_audit_report_type_description} (Rejected), {PaymentAuditReportType.DUA_DIA_REDUCTION.payment_audit_report_type_description} (Skipped)"
+        == f"{AUDIT_REPORT_NOTES_OVERRIDE[PaymentAuditReportType.MAX_WEEKLY_BENEFITS.payment_audit_report_type_id]} (Rejected), {PaymentAuditReportType.DUA_DIA_REDUCTION.payment_audit_report_type_description} (Skipped), {PaymentAuditReportType.LEAVE_PLAN_IN_REVIEW.payment_audit_report_type_description} (Skipped)"
     )
 
-    # test that theaudit report time was set
+    # test that the audit report time was set
     audit_report_details = test_db_session.query(PaymentAuditReportDetails).all()
-    assert len(audit_report_details) == 2
+    assert len(audit_report_details) == 3
     for audit_report_detail in audit_report_details:
         assert audit_report_detail.added_to_audit_report_at == audit_report_time
 

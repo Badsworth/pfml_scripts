@@ -11,6 +11,7 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 export const BondingLeaveAttestation = (props) => {
   const { t } = useTranslation();
   const { appLogic, query } = props;
+
   return (
     <React.Fragment>
       <BackButton />

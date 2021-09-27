@@ -13,7 +13,7 @@ locals {
     }
     "service_now_api" = {
       alarm_name        = "High ServiceNow API error rate"
-      where_span_filter = "name LIKE 'External/savilinx.servicenowservices.com/requests/'"
+      where_span_filter = "name LIKE 'External/savilinx%.servicenowservices.com/requests/'"
     }
     "rmv_api" = {
       alarm_name        = "High RMV API error rate"

@@ -32,8 +32,11 @@ export default class ArtilleryPFMLInteractor {
     }
     return this.employeePool;
   }
-  registerClaimant(ee: EventEmitter): Promise<Credentials> {
-    return timed(ee, "registerClaimant", async () => {
+  registerClaimant(
+    ee: EventEmitter,
+    logger: winston.Logger
+  ): Promise<Credentials> {
+    return timed(ee, logger, "registerClaimant", async () => {
       const credentials = generateCredentials();
       await this.authManager.registerClaimant(
         credentials.username,
@@ -47,19 +50,17 @@ export default class ArtilleryPFMLInteractor {
     scenario: string,
     logger: winston.Logger
   ): Promise<GeneratedClaim> {
-    return timed(ee, "generateClaim", async () => {
+    return timed(ee, logger, "generateClaim", async () => {
       const pool = await this.employees();
       if (!(scenario in scenarios)) {
         throw new Error("Invalid or missing scenario");
       }
       const scenarioObj = scenarios[scenario as keyof typeof scenarios];
-      logger.info("Generating Claim now ...");
       const claim = ClaimGenerator.generate(
         pool,
         scenarioObj.employee,
         scenarioObj.claim
       );
-      logger.info("Claim Generation Success", getDataFromClaim(claim));
       logger.debug("Fully generated claim", claim.claim);
       return claim;
     });
@@ -68,31 +69,22 @@ export default class ArtilleryPFMLInteractor {
   submitClaim(
     claim: GeneratedClaim,
     ee: EventEmitter,
-    childLoggerClaimInfo: winston.Logger,
+    logger: winston.Logger,
     creds?: Credentials
   ): Promise<ApplicationSubmissionResponse> {
-    return timed(ee, "submitClaim", async () => {
+    return timed(ee, logger, "submitClaim", async () => {
       const claimantCredentials = creds ?? getClaimantCredentials();
       const leaveAdminCredentials = getLeaveAdminCredentials(
         claim.claim.employer_fein as string
       );
       const submitter = getArtillerySubmitter();
-      childLoggerClaimInfo.info(
-        "Attempt to submit claim for the following employee..."
+      const submission = await submitter.lstSubmit(
+        claim,
+        claimantCredentials,
+        leaveAdminCredentials,
+        logger
       );
-      try {
-        const submission = await submitter.lstSubmit(
-          claim,
-          claimantCredentials,
-          leaveAdminCredentials,
-          childLoggerClaimInfo
-        );
-        childLoggerClaimInfo.info("Claim Submitted Succesffully", submission);
-        return submission;
-      } catch (e) {
-        childLoggerClaimInfo.error(e);
-        throw new Error("Claim Submission Error!");
-      }
+      return submission;
     });
   }
 
@@ -100,26 +92,18 @@ export default class ArtilleryPFMLInteractor {
     claim: GeneratedClaim,
     submission: ApplicationSubmissionResponse,
     ee: EventEmitter,
-    childLoggerSubmission: winston.Logger
+    logger: winston.Logger
   ): Promise<UsefulClaimData> {
-    return timed(ee, "postProcessClaim", async () => {
-      childLoggerSubmission.info(
-        "Post Processing Claim in Fineos ...",
-        submission
-      );
+    return timed(ee, logger, "postProcessClaim", async () => {
       await Fineos.withBrowser(
         async (page) =>
           await approveClaim(
             page,
             claim,
             submission?.fineos_absence_id,
-            childLoggerSubmission
+            logger
           ),
         { debug: false }
-      );
-      childLoggerSubmission.info(
-        "Claim has been processed w/o errors:",
-        submission
       );
       return getDataFromClaim(claim);
     });
@@ -128,18 +112,28 @@ export default class ArtilleryPFMLInteractor {
 
 async function timed<T>(
   ee: EventEmitter,
+  logger: winston.Logger,
   name: string,
   cb: () => Promise<T>
 ): Promise<T> {
+  logger.info(`Starting ${name}`);
   const startedAt = process.hrtime();
   ee.emit("counter", `${name}.count.started`, 1);
-  const res = await cb();
-  const endedAt = process.hrtime(startedAt);
-  const delta = endedAt[0] * 1e9 + endedAt[1];
-  // Convert to milliseconds.
-  ee.emit("histogram", `${name}.time`, delta / 1e6);
-  ee.emit("counter", `${name}.count.completed`, 1);
-  return res;
+  try {
+    const res = await cb();
+    ee.emit("counter", `${name}.count.completed`, 1);
+    logger.info(`Completed ${name}`);
+    return res;
+  } catch (e) {
+    ee.emit("counter", `${name}.count.error`, 1);
+    logger.info(`Completed ${name} with error.`);
+    throw e;
+  } finally {
+    const endedAt = process.hrtime(startedAt);
+    const delta = endedAt[0] * 1e9 + endedAt[1];
+    // Convert to milliseconds.
+    ee.emit("histogram", `${name}.time`, delta / 1e6);
+  }
 }
 
 /**

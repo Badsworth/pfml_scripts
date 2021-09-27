@@ -1,0 +1,94 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LeaveDetails renders the alert info when user indicates the relationship status is unknown  1`] = `
+<div
+  class="usa-alert__body"
+  role="region"
+>
+  <div
+    class="usa-alert__text"
+  >
+    If you have not confirmed the accuracy of the family relationship the employee has attested to, please note that the Department of Family and Medical leave will adjudicate the claim based on the attestation the employee made when submitting their application.
+  </div>
+</div>
+`;
+
+exports[`LeaveDetails renders the comment box and the alert when user indicates the relationship is inaccurate  1`] = `
+<div
+  class="usa-alert__body"
+  role="region"
+>
+  <h2
+    class="usa-alert__heading font-heading-sm text-bold"
+  >
+    The employee will be denied paid leave.
+  </h2>
+  <div
+    class="usa-alert__text"
+  >
+    We take allegations about false relationships seriously. Choosing No may trigger a denial of the employee's application for paid leave. The employee has the right to appeal if their application is denied.
+  </div>
+</div>
+`;
+
+exports[`LeaveDetails renders the component 1`] = `
+<div>
+  <div
+    class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+  >
+    <h2
+      class="flex-fill margin-right-1 font-heading-md text-bold"
+    >
+      Leave details
+    </h2>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Leave type
+      </h3>
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-medical-leave-"
+        rel="noopener"
+        target="_blank"
+      >
+        Medical leave
+      </a>
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Application ID
+      </h3>
+      NTN-111-ABS-01
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Leave duration
+      </h3>
+      1/1/2021 to 7/1/2021
+    </div>
+  </div>
+</div>
+`;

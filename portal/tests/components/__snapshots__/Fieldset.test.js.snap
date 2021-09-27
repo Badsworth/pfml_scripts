@@ -3,11 +3,9 @@
 exports[`Fieldset renders Fieldset component with children 1`] = `
 <div>
   <fieldset
-    class="usa-fieldset"
+    class="usa-fieldset margin-top-3"
   >
-    <span>
-      child
-    </span>
+    child
   </fieldset>
 </div>
 `;

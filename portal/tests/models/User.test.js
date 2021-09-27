@@ -151,53 +151,6 @@ describe("User", () => {
       expect(userWithoutEmployer.hasVerifiableEmployer).toBe(false);
     });
   });
-
-  describe("#hasVerifiedEmployerNotRegisteredInFineos", () => {
-    it("returns true if there is an employer not registered in FINEOS and verified", () => {
-      const user = new User({
-        user_leave_administrators: [
-          VERIFIED_REGISTERED_WITH_DATA,
-          VERIFIED_PENDING_WITHOUT_DATA,
-        ],
-      });
-
-      expect(user.hasVerifiedEmployerNotRegisteredInFineos).toEqual(true);
-    });
-
-    it("returns false if there is an employer not registered in FINEOS and not verified", () => {
-      const user = new User({
-        user_leave_administrators: [UNVERIFIED_PENDING_WITH_DATA],
-      });
-
-      expect(user.hasVerifiedEmployerNotRegisteredInFineos).toEqual(false);
-    });
-
-    it("returns false if an employer is registered in FINEOS and verified", () => {
-      const user = new User({
-        user_leave_administrators: [VERIFIED_REGISTERED_WITH_DATA],
-      });
-
-      expect(user.hasVerifiedEmployerNotRegisteredInFineos).toEqual(false);
-    });
-
-    it("returns false if `has_fineos_registration` is null", () => {
-      const user = new User({
-        user_leave_administrators: [
-          new UserLeaveAdministrator({
-            employer_dba: "Dunder Mifflin",
-            employer_fein: "11-111111",
-            employer_id: "123",
-            has_fineos_registration: null,
-            has_verification_data: true,
-            verified: true,
-          }),
-        ],
-      });
-
-      expect(user.hasVerifiedEmployerNotRegisteredInFineos).toEqual(false);
-    });
-  });
-
   describe("#getVerifiableEmployerById", () => {
     it("returns verifiable employer", () => {
       const user = new User({
@@ -282,52 +235,6 @@ describe("User", () => {
           VERIFIED_PENDING_WITHOUT_DATA.employer_id
         )
       ).toEqual(false);
-    });
-  });
-
-  describe("#verifiedEmployersNotRegisteredInFineos", () => {
-    it("returns a single employer", () => {
-      const user = new User({
-        user_leave_administrators: [
-          VERIFIED_PENDING_WITHOUT_DATA,
-          VERIFIED_REGISTERED_WITH_DATA,
-        ],
-      });
-
-      expect(user.verifiedEmployersNotRegisteredInFineos).toEqual([
-        VERIFIED_PENDING_WITHOUT_DATA,
-      ]);
-    });
-
-    it("returns multiple employers", () => {
-      const VERIFIED_PENDING_WITH_DATA = new UserLeaveAdministrator({
-        employer_dba: "Company X",
-        employer_fein: "99-999999",
-        employer_id: "007",
-        has_fineos_registration: false,
-        has_verification_data: true,
-        verified: true,
-      });
-      const user = new User({
-        user_leave_administrators: [
-          VERIFIED_PENDING_WITHOUT_DATA,
-          VERIFIED_PENDING_WITH_DATA,
-          VERIFIED_REGISTERED_WITH_DATA,
-        ],
-      });
-
-      expect(user.verifiedEmployersNotRegisteredInFineos).toEqual([
-        VERIFIED_PENDING_WITHOUT_DATA,
-        VERIFIED_PENDING_WITH_DATA,
-      ]);
-    });
-
-    it("returns an empty array if there are no employers", () => {
-      const user = new User({
-        user_leave_administrators: [VERIFIED_REGISTERED_WITH_DATA],
-      });
-
-      expect(user.verifiedEmployersNotRegisteredInFineos).toEqual([]);
     });
   });
 

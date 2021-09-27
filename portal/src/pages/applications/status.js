@@ -2,6 +2,7 @@
 import ClaimDetail, { AbsencePeriod } from "../../models/ClaimDetail";
 import React, { useEffect } from "react";
 import { find, get, has, map } from "lodash";
+
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
@@ -68,14 +69,18 @@ export const Status = ({ appLogic, query }) => {
     }
   }, [isLoadingClaimDetail, claimDetail]);
 
-  const hasClaimDetailLoadError = appLogic.appErrors.items.some(
-    (error) => error.name === "ClaimDetailLoadError"
-  );
-
-  if (hasClaimDetailLoadError) return null;
+  // If the claim has an error, include the back button w/error
+  if (appLogic.appErrors.items.length) {
+    return (
+      <BackButton
+        label={t("pages.claimsStatus.backButtonLabel")}
+        href={routes.applications.index}
+      />
+    );
+  }
 
   // Check both because claimDetail could be cached from a different status page.
-  if (isLoadingClaimDetail || !claimDetail)
+  if (isLoadingClaimDetail || !claimDetail) {
     return (
       <div className="margin-top-8 text-center">
         <Spinner
@@ -83,10 +88,14 @@ export const Status = ({ appLogic, query }) => {
         />
       </div>
     );
+  }
 
   const absenceDetails = claimDetail.absencePeriodsByReason;
   const hasPendingStatus = claimDetail.absence_periods.some(
     (absenceItem) => absenceItem.request_decision === "Pending"
+  );
+  const hasApprovedStatus = claimDetail.absence_periods.some(
+    (absenceItem) => absenceItem.request_decision === "Approved"
   );
   const documentsForApplication = allClaimDocuments.filterByApplication(
     claimDetail.application_id
@@ -137,7 +146,7 @@ export const Status = ({ appLogic, query }) => {
 
     return (
       <SectionWrapper>
-        <Heading className="margin-bottom-1" level="2">
+        <Heading className="margin-bottom-1" level="2" id="view_notices">
           {t("pages.claimsStatus.viewNoticesHeading")}
         </Heading>
         {sectionBody}
@@ -185,7 +194,7 @@ export const Status = ({ appLogic, query }) => {
         </Alert>
       )}
 
-      {!!infoAlertContext && (
+      {!!infoAlertContext && (hasPendingStatus || hasApprovedStatus) && (
         <Alert
           className="margin-bottom-3"
           data-test="info-alert"
@@ -264,9 +273,6 @@ export const Status = ({ appLogic, query }) => {
         {/* Upload documents section */}
         <div className={containerClassName} id="upload_documents">
           <Heading level="2">
-            {t("pages.claimsStatus.uploadDocumentsHeading")}
-          </Heading>
-          <Heading level="3">
             {t("pages.claimsStatus.infoRequestsHeading")}
           </Heading>
           <p>{t("pages.claimsStatus.infoRequestsBody")}</p>
@@ -395,11 +401,17 @@ export const LeaveDetails = ({ absenceDetails = {} }) => {
                   tOptions={{ context: request_decision }}
                   components={{
                     "application-link": (
-                      <a href={routes.applications.getReady} />
+                      <a
+                        href={routes.applications.getReady}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      />
                     ),
                     "request-appeal-link": (
                       <a
                         href={routes.external.massgov.requestAnAppealForPFML}
+                        rel="noopener noreferrer"
+                        target="_blank"
                       />
                     ),
                   }}
@@ -433,19 +445,18 @@ export const Timeline = ({
 
   const bondingAbsencePeriod = find(
     absencePeriods,
-    (absencePeriod) =>
-      absencePeriod.reason === LeaveReason.pregnancy ||
-      absencePeriod.reason === LeaveReason.bonding
+    (absencePeriod) => absencePeriod.reason === LeaveReason.bonding
   );
 
-  // eslint-disable-next-line react/prop-types
   const FollowUpSteps = ({ bondingAbsencePeriod }) => {
-    const typeOfProof = ["Foster Care", "Adoption"].includes(
-      // eslint-disable-next-line react/prop-types
-      bondingAbsencePeriod.reason_qualifier_one
-    )
-      ? "adoption"
-      : "newborn";
+    let typeOfProof;
+    if (bondingAbsencePeriod.reason_qualifier_one === "Adoption") {
+      typeOfProof = "adoption";
+    } else if (bondingAbsencePeriod.reason_qualifier_one === "Foster Care") {
+      typeOfProof = "fosterCare";
+    } else {
+      typeOfProof = "newborn";
+    }
 
     return (
       <React.Fragment>
@@ -456,7 +467,11 @@ export const Timeline = ({
             tOptions={{ context: typeOfProof }}
             components={{
               "proof-document-link": (
-                <a href={routes.external.massgov.proofOfBirthOrPlacement} />
+                <a
+                  href={routes.external.massgov.proofOfBirthOrPlacement}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                />
               ),
             }}
           />
@@ -464,9 +479,9 @@ export const Timeline = ({
         <ButtonLink
           className="measure-12"
           href={appLogic.portalFlow.getNextPageRoute(
-            typeOfProof === "adoption"
-              ? "UPLOAD_PROOF_OF_PLACEMENT"
-              : "UPLOAD_PROOF_OF_BIRTH",
+            typeOfProof === "newborn"
+              ? "UPLOAD_PROOF_OF_BIRTH"
+              : "UPLOAD_PROOF_OF_PLACEMENT",
             {},
             { claim_id: applicationId, absence_case_id: absenceCaseId }
           )}
@@ -503,7 +518,13 @@ export const Timeline = ({
       <Trans
         i18nKey="pages.claimsStatus.timelineTextLearnMore"
         components={{
-          "timeline-link": <a href={routes.external.massgov.timeline} />,
+          "timeline-link": (
+            <a
+              href={routes.external.massgov.timeline}
+              rel="noopener noreferrer"
+              target="_blank"
+            />
+          ),
         }}
       />
     </React.Fragment>
@@ -525,6 +546,9 @@ Timeline.propTypes = {
   absencePeriods: PropTypes.arrayOf(PropTypes.instanceOf(AbsencePeriod))
     .isRequired,
   applicationId: PropTypes.string,
+  bondingAbsencePeriod: PropTypes.shape({
+    reason_qualifier_one: PropTypes.string,
+  }),
   employerFollowUpDate: PropTypes.string,
   docList: PropTypes.array.isRequired,
   absenceCaseId: PropTypes.string.isRequired,

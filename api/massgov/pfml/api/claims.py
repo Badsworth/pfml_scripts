@@ -6,7 +6,7 @@ import connexion
 import flask
 from sqlalchemy.orm.session import Session
 from sqlalchemy_utils import escape_like
-from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
+from werkzeug.exceptions import BadRequest, Forbidden, InternalServerError, NotFound, Unauthorized
 
 import massgov.pfml.api.app as app
 import massgov.pfml.api.util.response as response_util
@@ -65,7 +65,6 @@ from massgov.pfml.util.logging.managed_requirements import (
 )
 from massgov.pfml.util.paginate.paginator import PaginationAPIContext
 from massgov.pfml.util.sqlalchemy import get_or_404
-from massgov.pfml.util.strings import sanitize_fein
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 # HRD Employer FEIN. See https://lwd.atlassian.net/browse/EMPLOYER-1317
@@ -449,7 +448,6 @@ def user_has_access_to_claim(claim: Claim) -> bool:
 
 
 def get_claim(fineos_absence_id: str) -> flask.Response:
-    current_user = app.current_user()
     is_employer = can(READ, "EMPLOYER_API")
     claim = get_claim_from_db(fineos_absence_id)
 
@@ -478,36 +476,60 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
 
     # Expectation this endpoint is for the claimant dashboard only as it uses
     # the FINEOS customer API.
-    if not (is_employer and current_user and current_user.employers):
-        with app.db_session() as db_session:
-            if (claim.employee and claim.employee.tax_identifier) and (
-                claim.employer and claim.employer.employer_fein
-            ):
-                employee_tax_identifier = claim.employee.tax_identifier.tax_identifier
-                employer_fein = claim.employer.employer_fein
-                try:
-                    detailed_claim.absence_periods = get_absence_periods(
-                        employee_tax_identifier, employer_fein, fineos_absence_id, db_session
-                    )
-                except exception.FINEOSClientError as error:
-                    if _is_withdrawn_claim_error(error):
-                        logger.warning(
-                            "get_claim - Claim has been withdrawn. Unable to display claim status.",
-                            extra={"absence_id": fineos_absence_id},
-                        )
+    if is_employer:
+        return response_util.success_response(
+            message="Successfully retrieved claim", data=detailed_claim.dict(), status_code=200,
+        ).to_api_response()
 
-                        return ClaimWithdrawn().to_api_response()
+    absence_periods = []
 
-                    raise error
-            else:
-                logger.info(
-                    "get_claim info - No employee or employer tied to this claim. Cannot retrieve absence periods from FINEOS.",
-                    extra={"absence_case_id": fineos_absence_id, "claim_id": claim.claim_id},
+    employee_tax_id = claim.employee_tax_identifier
+    employer_fein = claim.employer_fein
+
+    if not employee_tax_id or not employer_fein:
+        logger.warning(
+            "get_claim failure - No employee or employer tied to this claim. Cannot retrieve absence periods from FINEOS.",
+            extra={"absence_case_id": fineos_absence_id, "claim_id": claim.claim_id},
+        )
+
+        return response_util.error_response(
+            status_code=InternalServerError,
+            message="No employee or employer tied to this claim. Cannot retrieve absence periods from FINEOS.",
+            errors=[],
+            data={},
+        ).to_api_response()
+
+    with app.db_session() as db_session:
+        try:
+            absence_periods = get_absence_periods(
+                employee_tax_id, employer_fein, fineos_absence_id, db_session
+            )
+        except exception.FINEOSClientError as error:
+            if _is_withdrawn_claim_error(error):
+                logger.warning(
+                    "get_claim - Claim has been withdrawn. Unable to display claim status.",
+                    extra={"absence_id": fineos_absence_id},
                 )
-                detailed_claim.absence_periods = []
 
-            if claim.application:  # type: ignore
-                detailed_claim.application_id = claim.application.application_id  # type: ignore
+                return ClaimWithdrawn().to_api_response()
+
+            raise error
+
+        if len(absence_periods) == 0:
+            logger.warn(
+                "No absence periods found for claim", extra={"absence_id": fineos_absence_id}
+            )
+            return response_util.error_response(
+                status_code=InternalServerError,
+                message="No absence periods found for claim",
+                errors=[],
+                data={},
+            ).to_api_response()
+
+    detailed_claim.absence_periods = absence_periods
+
+    if claim.application:  # type: ignore
+        detailed_claim.application_id = claim.application.application_id  # type: ignore
 
     return response_util.success_response(
         message="Successfully retrieved claim", data=detailed_claim.dict(), status_code=200,
@@ -561,20 +583,26 @@ def get_claims() -> flask.Response:
             # The logic here is similar to that in user_has_access_to_claim (except it is applied to multiple claims)
             # so if something changes there it probably needs to be changed here
             if is_employer and current_user and current_user.employers:
-                if employer_id:
-                    employers_list = (
-                        db_session.query(Employer).filter(Employer.employer_id == employer_id).all()
-                    )
-                else:
-                    employers_list = list(current_user.employers)
-
-                employer_ids_list = [
-                    e.employer_id
-                    for e in employers_list
-                    if sanitize_fein(e.employer_fein or "") not in CLAIMS_DASHBOARD_BLOCKED_FEINS
-                    and current_user.verified_employer(e)
+                filters = [
+                    Employer.employer_fein.notin_(CLAIMS_DASHBOARD_BLOCKED_FEINS),
+                    UserLeaveAdministrator.verification_id.isnot(None),
+                    User.user_id == current_user.user_id,
                 ]
+                if employer_id:
+                    filters.append(Employer.employer_id == employer_id)
 
+                employer_ids_list = (
+                    db_session.query(Employer.employer_id)
+                    .join(
+                        UserLeaveAdministrator,
+                        Employer.employer_id == UserLeaveAdministrator.employer_id,
+                    )
+                    .join(User, User.user_id == UserLeaveAdministrator.user_id)
+                    .filter(*filters)
+                    .all()
+                )
+
+                # Get list of employers with non-blocked feins with left join for verified
                 query.add_employer_ids_filter(employer_ids_list)
             else:
                 query.add_user_owns_claim_filter(current_user)

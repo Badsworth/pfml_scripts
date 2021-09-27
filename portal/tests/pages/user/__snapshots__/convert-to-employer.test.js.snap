@@ -1,0 +1,83 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ConvertToEmployer renders form when user has no claims 1`] = `
+<div>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+    tabindex="-1"
+  >
+    Convert to employer account
+  </h1>
+  <div
+    class="usa-alert usa-alert--warning margin-bottom-3"
+    tabindex="-1"
+  >
+    <div
+      class="usa-alert__body"
+      role="region"
+    >
+      <h2
+        class="usa-alert__heading font-heading-md text-bold"
+      >
+        This action is irreversible!
+      </h2>
+      <div
+        class="usa-alert__text"
+      >
+        <p>
+          Converting your account from "employee" to "employer" is irreversible and will not be possible if any claims have been created, are in-progress, or are completed.
+        </p>
+      </div>
+    </div>
+  </div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <div
+      class="usa-form-group"
+    >
+      <label
+        class="usa-label text-bold font-heading-xs measure-5"
+        for="InputText1"
+        id="InputText1_label"
+      >
+        Employer ID number (EIN)
+      </label>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+        id="InputText1_hint"
+      >
+        Your Employer Identification Number is a 
+        <a
+          href="https://www.mass.gov/info-details/finding-your-employers-federal-employer-identification-number-fein"
+          rel="noopener"
+          target="_blank"
+        >
+          9-digit number
+        </a>
+         assigned by the Internal Revenue Service. It is listed on tax returns and your payroll department should have this information.
+      </span>
+      <div
+        class=""
+      >
+        <input
+          aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+          class="usa-input maxw-mobile-lg"
+          id="InputText1"
+          inputmode="numeric"
+          name="employer_fein"
+          type="text"
+          value=""
+        />
+      </div>
+    </div>
+    <button
+      class="usa-button position-relative"
+      type="submit"
+    >
+      Convert account
+    </button>
+  </form>
+</div>
+`;

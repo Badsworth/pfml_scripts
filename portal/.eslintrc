@@ -53,6 +53,7 @@
   ],
   "rules": {
     "camelcase": "off",
+    "import/no-useless-path-segments": "error",
     "jest/consistent-test-it": ["error", { "fn": "it" }],
     "jest/no-conditional-expect": "off",
     "jest/no-try-expect": "off",
@@ -89,7 +90,7 @@
     "sort-vars": "error",
     "todo-plz/ticket-ref": [
       "error",
-      { "pattern": "(API|CP|EMPLOYER|POL)-[0-9]+", "terms": ["TODO"] }
+      { "pattern": "(API|CP|EMPLOYER|POL|PORTAL)-[0-9]+", "terms": ["TODO"] }
     ]
   },
   "settings": {

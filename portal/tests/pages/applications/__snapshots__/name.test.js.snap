@@ -12,82 +12,80 @@ exports[`Name renders the page 1`] = `
     Your identification
   </h1>
   <fieldset
-    class="usa-fieldset"
+    class="usa-fieldset margin-top-3"
   >
-    <span>
-      <legend
-        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
-      >
-        What’s your name?
-      </legend>
-      <span
-        class="display-block line-height-sans-5 measure-5 usa-intro"
-      >
-        Fill out your name as it appears on official documents like your driver’s license or W‑2.
-      </span>
-      <div
-        class="usa-form-group"
-      >
-        <label
-          class="usa-label text-bold font-heading-xs measure-5"
-          for="InputText1"
-          id="InputText1_label"
-        >
-          First name
-        </label>
-        <input
-          aria-labelledby="InputText1_label InputText1_hint"
-          class="usa-input maxw-mobile-lg"
-          id="InputText1"
-          name="first_name"
-          type="text"
-          value=""
-        />
-      </div>
-      <div
-        class="usa-form-group"
-      >
-        <label
-          class="usa-label text-bold font-heading-xs measure-5"
-          for="InputText2"
-          id="InputText2_label"
-        >
-          Middle name
-          <span
-            class="usa-hint text-base-dark text-normal"
-          >
-             (optional)
-          </span>
-        </label>
-        <input
-          aria-labelledby="InputText2_label InputText2_hint"
-          class="usa-input maxw-mobile-lg"
-          id="InputText2"
-          name="middle_name"
-          type="text"
-          value=""
-        />
-      </div>
-      <div
-        class="usa-form-group"
-      >
-        <label
-          class="usa-label text-bold font-heading-xs measure-5"
-          for="InputText3"
-          id="InputText3_label"
-        >
-          Last name
-        </label>
-        <input
-          aria-labelledby="InputText3_label InputText3_hint"
-          class="usa-input maxw-mobile-lg"
-          id="InputText3"
-          name="last_name"
-          type="text"
-          value=""
-        />
-      </div>
+    <legend
+      class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+    >
+      What’s your name?
+    </legend>
+    <span
+      class="display-block line-height-sans-5 measure-5 usa-intro"
+    >
+      Fill out your name as it appears on official documents like your driver’s license or W‑2.
     </span>
+    <div
+      class="usa-form-group"
+    >
+      <label
+        class="usa-label text-bold font-heading-xs measure-5"
+        for="InputText1"
+        id="InputText1_label"
+      >
+        First name
+      </label>
+      <input
+        aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+        class="usa-input maxw-mobile-lg"
+        id="InputText1"
+        name="first_name"
+        type="text"
+        value=""
+      />
+    </div>
+    <div
+      class="usa-form-group"
+    >
+      <label
+        class="usa-label text-bold font-heading-xs measure-5"
+        for="InputText2"
+        id="InputText2_label"
+      >
+        Middle name
+        <span
+          class="usa-hint text-base-dark text-normal"
+        >
+           (optional)
+        </span>
+      </label>
+      <input
+        aria-labelledby="InputText2_label InputText2_hint InputText2_error"
+        class="usa-input maxw-mobile-lg"
+        id="InputText2"
+        name="middle_name"
+        type="text"
+        value=""
+      />
+    </div>
+    <div
+      class="usa-form-group"
+    >
+      <label
+        class="usa-label text-bold font-heading-xs measure-5"
+        for="InputText3"
+        id="InputText3_label"
+      >
+        Last name
+      </label>
+      <input
+        aria-labelledby="InputText3_label InputText3_hint InputText3_error"
+        class="usa-input maxw-mobile-lg"
+        id="InputText3"
+        name="last_name"
+        type="text"
+        value=""
+      />
+    </div>
   </fieldset>
   <button
     class="usa-button position-relative margin-top-4"

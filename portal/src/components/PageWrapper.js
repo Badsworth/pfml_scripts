@@ -10,7 +10,7 @@ import Header from "./Header";
 import { Helmet } from "react-helmet";
 import PropTypes from "prop-types";
 import React from "react";
-import Spinner from "../components/Spinner";
+import Spinner from "./Spinner";
 import dynamic from "next/dynamic";
 import { get } from "lodash";
 import { isFeatureEnabled } from "../services/featureFlags";
@@ -89,7 +89,7 @@ const PageWrapper = (props) => {
     );
   } else if (showMaintenancePageBody && !isFeatureEnabled("noMaintenance")) {
     pageBody = (
-      <section id="page" data-test="maintenance page">
+      <section id="page">
         <MaintenanceTakeover
           maintenanceStartTime={maintenanceStartTime}
           maintenanceEndTime={maintenanceEndTime}
@@ -107,7 +107,7 @@ const PageWrapper = (props) => {
         <meta name="description" content={t("pages.app.seoDescription")} />
       </Helmet>
       <div className="l-container">
-        <div>
+        <div data-testid="Header">
           {/* Wrap header children in a div because its parent is a flex container */}
           <Header
             user={appLogic.users.user}

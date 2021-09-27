@@ -4,6 +4,7 @@
   "main": "processor.js",
   "dependencies": {
     "playwright-chromium": "^1.12.2",
+    "@influxdata/influxdb-client": "^1.18.0",
     "artillery": "^1.7.6"
   },
   "scripts": {

@@ -206,3 +206,11 @@ export type ValidClaim = RequireNotNull<
   | "date_of_birth"
   | "leave_details"
 >;
+
+export type Environment =
+  | "test"
+  | "stage"
+  | "training"
+  | "performance"
+  | "uat"
+  | "cps-preview";

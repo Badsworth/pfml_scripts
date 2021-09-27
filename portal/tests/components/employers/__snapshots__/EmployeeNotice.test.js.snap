@@ -3,61 +3,59 @@
 exports[`EmployeeNotice renders the component 1`] = `
 <div>
   <fieldset
-    class="usa-fieldset usa-form-group"
+    class="usa-fieldset margin-top-3 usa-form-group"
   >
-    <span>
-      <legend
-        class="usa-label text-bold usa-legend font-heading-xs measure-5"
-      >
-        <div
-          class="display-flex flex-align-end margin-top-6 margin-bottom-3"
-        >
-          <h2
-            class="flex-fill margin-right-1 font-heading-md text-bold"
-          >
-            Did the employee give you at least 30 days notice about their leave?
-          </h2>
-        </div>
-      </legend>
+    <legend
+      class="usa-label text-bold usa-legend font-heading-xs measure-5"
+    >
       <div
-        class=""
+        class="display-flex flex-align-end margin-top-6 margin-bottom-3"
       >
-        <div
-          class="usa-radio measure-5 bg-transparent"
+        <h2
+          class="flex-fill margin-right-1 font-heading-md text-bold"
         >
-          <input
-            class="usa-radio__input"
-            id="InputChoice1"
-            name="employee_notice"
-            type="radio"
-            value="Yes"
-          />
-          <label
-            class="usa-radio__label"
-            for="InputChoice1"
-          >
-            Yes
-          </label>
-        </div>
-        <div
-          class="usa-radio measure-5 bg-transparent"
-        >
-          <input
-            class="usa-radio__input"
-            id="InputChoice2"
-            name="employee_notice"
-            type="radio"
-            value="No"
-          />
-          <label
-            class="usa-radio__label"
-            for="InputChoice2"
-          >
-            No (explain below)
-          </label>
-        </div>
+          Did the employee give you at least 30 days notice about their leave?
+        </h2>
       </div>
-    </span>
+    </legend>
+    <div
+      class=""
+    >
+      <div
+        class="usa-radio measure-5 bg-transparent"
+      >
+        <input
+          class="usa-radio__input"
+          id="InputChoice1"
+          name="employee_notice"
+          type="radio"
+          value="Yes"
+        />
+        <label
+          class="usa-radio__label"
+          for="InputChoice1"
+        >
+          Yes
+        </label>
+      </div>
+      <div
+        class="usa-radio measure-5 bg-transparent"
+      >
+        <input
+          class="usa-radio__input"
+          id="InputChoice2"
+          name="employee_notice"
+          type="radio"
+          value="No"
+        />
+        <label
+          class="usa-radio__label"
+          for="InputChoice2"
+        >
+          No (explain below)
+        </label>
+      </div>
+    </div>
   </fieldset>
 </div>
 `;

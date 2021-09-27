@@ -8,6 +8,7 @@
  * should be uploaded and what text should be displayed.
  */
 import Document, { DocumentType } from "../../../models/Document";
+
 import Accordion from "../../../components/Accordion";
 import AccordionItem from "../../../components/AccordionItem";
 import Alert from "../../../components/Alert";
@@ -61,9 +62,9 @@ const CertificationUpload = ({ path }) => {
     [uploadRoutes.medicalCertification]: "medical",
     [uploadRoutes.pregnancyCertification]: "medical",
   }[path];
-  const isBondingAdoption = path === uploadRoutes.bondingProofOfPlacement;
+  const isBondingNewborn = path === uploadRoutes.bondingProofOfBirth;
   const isBonding =
-    isBondingAdoption || path === uploadRoutes.bondingProofOfBirth;
+    isBondingNewborn || path === uploadRoutes.bondingProofOfPlacement;
 
   const { t } = useTranslation();
 
@@ -96,7 +97,7 @@ const CertificationUpload = ({ path }) => {
           tOptions={{ context }}
         />
       </Lead>
-      <ConditionalContent visible={isBondingAdoption}>
+      <ConditionalContent visible={isBondingNewborn}>
         <ul className="usa-list">
           {t("pages.claimsUploadDocumentType.leadListNewborn", {
             returnObjects: true,
@@ -133,7 +134,13 @@ const IdentificationUpload = ({ path }) => {
             components={{
               ul: <ul className="usa-list" />,
               li: <li />,
-              "work-visa-link": <a href={routes.external.workVisa} />,
+              "work-visa-link": (
+                <a
+                  href={routes.external.workVisa}
+                  rel="noopener noreferrer"
+                  target="_blank"
+                />
+              ),
             }}
           />
 
@@ -147,10 +154,18 @@ const IdentificationUpload = ({ path }) => {
                   ul: <ul className="usa-list" />,
                   li: <li />,
                   "identity-proof-link": (
-                    <a href={routes.external.massgov.identityProof} />
+                    <a
+                      href={routes.external.massgov.identityProof}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    />
                   ),
                   "puerto-rican-birth-certificate-link": (
-                    <a href={routes.external.puertoRicanBirthCertificate} />
+                    <a
+                      href={routes.external.puertoRicanBirthCertificate}
+                      rel="noopener noreferrer"
+                      target="_blank"
+                    />
                   ),
                 }}
               />
@@ -180,7 +195,7 @@ export const DocumentUpload = (props) => {
     query.claim_id
   );
 
-  const path = portalFlow.pathWithParams.split("/?")[0];
+  const path = portalFlow.pageRoute;
   const documentType = pathsToDocumentTypes[path];
   const existingDocuments = findDocumentsByTypes(documents, [documentType]);
 

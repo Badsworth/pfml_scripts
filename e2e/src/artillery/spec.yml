@@ -1,5 +1,12 @@
 config:
   processor: ./processor.js
+  plugins:
+    influxdb:
+      scope: "{{ $processEnvironment.PWD }}/dist/plugins/"
+      url: "{{ $processEnvironment.INFLUX_URL }}"
+      token: "{{ $processEnvironment.INFLUX_TOKEN }}"
+      organization: "{{ $processEnvironment.INFLUX_ORGANIZATION }}"
+      bucket: "{{ $processEnvironment.INFLUX_BUCKET }}"
   includeFiles:
     - .env
     - ./employees
@@ -33,11 +40,16 @@ config:
           name: Cool Down
     test:
       phases:
-        - duration: 1
+        - duration: 240
           arrivalRate: 1
+          maxVusers: 2
           name: Development
 
 scenarios:
+  #  - name: "Test test"
+  #    flow:
+  #      - get:
+  #          url: "https://paidleave-test.mass.gov"
   - name: BHAP1 End to End
     flow:
       # Artillery has no capability to pass arguments to a function, so we have a 1-1 relationship

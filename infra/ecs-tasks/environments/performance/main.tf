@@ -32,14 +32,16 @@ terraform {
 module "tasks" {
   source = "../../template"
 
-  environment_name         = "performance"
-  st_use_mock_dor_data     = false
-  st_decrypt_dor_data      = false
-  st_file_limit_specified  = true
-  st_employer_update_limit = 1500
-  service_docker_tag       = local.service_docker_tag
-  vpc_id                   = data.aws_vpc.vpc.id
-  app_subnet_ids           = data.aws_subnet_ids.vpc_app.ids
+  environment_name              = "performance"
+  st_use_mock_dor_data          = false
+  st_decrypt_dor_data           = false
+  st_file_limit_specified       = true
+  st_employer_update_limit      = 1500
+  service_docker_tag            = local.service_docker_tag
+  vpc_id                        = data.aws_vpc.vpc.id
+  app_subnet_ids                = data.aws_subnet_ids.vpc_app.ids
+  enforce_execute_sql_read_only = false
+
 
   cognito_user_pool_id                       = "us-east-1_0jv6SlemT"
   fineos_client_customer_api_url             = "https://perf-api.masspfml.fineos.com/customerapi/"
@@ -69,7 +71,7 @@ module "tasks" {
   fineos_data_export_path   = "s3://fin-somdev-data-export/PERF/dataexports"
   fineos_data_import_path   = "s3://fin-somdev-data-import/PERF/peiupdate"
   fineos_error_export_path  = "s3://fin-somdev-data-export/PERF/errorExtracts"
-  fineos_report_export_path = "s3://fin-somdev-data-export/PERF/reportExtracts"
+  fineos_report_export_path = "s3://fin-somdev-data-export/PERF/reportExtract"
   pfml_fineos_inbound_path  = "s3://massgov-pfml-performance-agency-transfer/cps/inbound"
   pfml_fineos_outbound_path = "s3://massgov-pfml-performance-agency-transfer/cps/outbound"
 

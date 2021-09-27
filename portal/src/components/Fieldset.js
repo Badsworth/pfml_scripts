@@ -7,12 +7,10 @@ import classnames from "classnames";
  * child margins are rendered
  */
 const Fieldset = (props) => {
-  const classNames = classnames("usa-fieldset", props.className);
-  return (
-    <fieldset className={classNames}>
-      <span>{props.children}</span>
-    </fieldset>
-  );
+  // Add a top margin because the Legend's margin gets collapsed:
+  // https://github.com/uswds/uswds/issues/4153
+  const classNames = classnames("usa-fieldset margin-top-3", props.className);
+  return <fieldset className={classNames}>{props.children}</fieldset>;
 };
 
 Fieldset.propTypes = {

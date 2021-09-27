@@ -59,6 +59,9 @@ function getRawEnvironment() {
     NEWRELIC_INGEST_KEY: process.env.E2E_NEWRELIC_INGEST_KEY,
 
     HAS_CLAIMANT_STATUS_PAGE: process.env.HAS_CLAIMANT_STATUS_PAGE,
+
+    DOR_IMPORT_URI: process.env.E2E_DOR_IMPORT_URI,
+    DOR_ETL_ARN: process.env.E2E_DOR_ETL_ARN,
   };
 }
 

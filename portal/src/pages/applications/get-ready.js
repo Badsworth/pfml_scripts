@@ -167,6 +167,15 @@ export const GetReady = (props) => {
                 rel="noopener"
               />
             ),
+            "benefits-amount-details-link": (
+              <a
+                href={
+                  routes.external.massgov.benefitsGuide_benefitsAmountDetails
+                }
+                target="_blank"
+                rel="noopener"
+              />
+            ),
           }}
         />
         <ButtonLink

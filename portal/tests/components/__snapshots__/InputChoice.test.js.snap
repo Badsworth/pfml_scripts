@@ -1,0 +1,121 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`InputChoice InputChoice \`types\` sets input type to radio when \`type\` is \`radio\` 1`] = `
+<input
+  class="usa-radio__input"
+  id="InputChoice11"
+  name="bar"
+  type="radio"
+  value="foobar"
+/>
+`;
+
+exports[`InputChoice InputChoice \`types\` sets the correct default input type 1`] = `
+<input
+  class="usa-checkbox__input"
+  id="InputChoice10"
+  name="bar"
+  type="checkbox"
+  value="foobar"
+/>
+`;
+
+exports[`InputChoice InputChoice attributes creates \`id\` attribute if \`id\` is not provided 1`] = `
+<input
+  class="usa-checkbox__input"
+  id="InputChoice1"
+  name="bar"
+  type="checkbox"
+  value="foobar"
+/>
+`;
+
+exports[`InputChoice InputChoice attributes sets \`aria-controls\` attribute when provided 1`] = `
+<input
+  aria-controls="foobar-aria"
+  class="usa-checkbox__input"
+  id="InputChoice2"
+  name="bar"
+  type="checkbox"
+  value="foobar"
+/>
+`;
+
+exports[`InputChoice InputChoice attributes sets the \`disabled\` attribute when provided 1`] = `
+<input
+  class="usa-checkbox__input"
+  disabled=""
+  id="InputChoice5"
+  name="bar"
+  type="checkbox"
+  value="foobar"
+/>
+`;
+
+exports[`InputChoice InputChoice attributes sets the \`name\` attribute when provided 1`] = `
+<input
+  class="usa-checkbox__input"
+  id="InputChoice3"
+  name="bar"
+  type="checkbox"
+  value="foobar"
+/>
+`;
+
+exports[`InputChoice InputChoice children renders the hint when provided 1`] = `
+<span
+  class="usa-hint text-base-dark"
+>
+  <br />
+  Foobar Hint
+</span>
+`;
+
+exports[`InputChoice InputChoice children renders the label element 1`] = `
+<label
+  class="usa-checkbox__label"
+  for="InputChoice8"
+>
+  foo
+</label>
+`;
+
+exports[`InputChoice InputChoice class names sets the correct default input class name 1`] = `
+<input
+  class="usa-checkbox__input"
+  id="InputChoice7"
+  name="bar"
+  type="checkbox"
+  value="foobar"
+/>
+`;
+
+exports[`InputChoice InputChoice class names sets the parent container's className when provided 1`] = `
+<div
+  class="usa-checkbox measure-5 bg-transparent foo"
+>
+  <input
+    class="usa-checkbox__input"
+    id="InputChoice6"
+    name="bar"
+    type="checkbox"
+    value="foobar"
+  />
+  <label
+    class="usa-checkbox__label"
+    for="InputChoice6"
+  >
+    foo
+  </label>
+</div>
+`;
+
+exports[`InputChoice InputChoice onChange calls \`onChange\` on click, when \`onChange\` is provided 1`] = `
+<input
+  class="usa-checkbox__input"
+  id="InputChoice12"
+  name="bar"
+  type="checkbox"
+  value="foobar"
+/>
+`;

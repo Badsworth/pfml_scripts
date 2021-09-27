@@ -1,4 +1,4 @@
-import Heading from "../components/Heading";
+import Heading from "./Heading";
 import PropTypes from "prop-types";
 import React from "react";
 import { Trans } from "react-i18next";

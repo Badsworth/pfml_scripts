@@ -4,17 +4,19 @@ import routeWithParams, {
 } from "../utils/routeWithParams";
 
 import BenefitsApplication from "../models/BenefitsApplication";
-import ButtonLink from "../components/ButtonLink";
+import ButtonLink from "./ButtonLink";
 import Document from "../models/Document";
-import Heading from "../components/Heading";
-import Icon from "../components/Icon";
+import Heading from "./Heading";
+import Icon from "./Icon";
 import LeaveReason from "../models/LeaveReason";
-import LegalNoticeList from "../components/LegalNoticeList";
+import LegalNoticeList from "./LegalNoticeList";
 import PropTypes from "prop-types";
 import React from "react";
-import ThrottledButton from "../components/ThrottledButton";
+import Spinner from "./Spinner";
+import ThrottledButton from "./ThrottledButton";
 import findKeyByValue from "../utils/findKeyByValue";
 import getLegalNotices from "../utils/getLegalNotices";
+import hasDocumentsLoadError from "../utils/hasDocumentsLoadError";
 import { useTranslation } from "../locales/i18n";
 import withClaimDocuments from "../hoc/withClaimDocuments";
 
@@ -22,7 +24,11 @@ import withClaimDocuments from "../hoc/withClaimDocuments";
  * Main header for the top of status cards
  */
 const HeaderSection = ({ title }) => (
-  <Heading className="margin-bottom-1 padding-2 padding-top-3" level="2">
+  <Heading
+    className="margin-bottom-1 padding-2 padding-top-3"
+    level="3"
+    size="2"
+  >
     {title}
   </Heading>
 );
@@ -100,12 +106,32 @@ const LegalNoticeSection = (props) => {
   const { t } = useTranslation();
   const isSubmitted = props.claim.status === "Submitted";
   const legalNotices = getLegalNotices(props.documents);
+  const shouldShowSpinner =
+    props.isLoadingDocuments &&
+    !hasDocumentsLoadError(
+      props.appLogic.appErrors,
+      props.claim.application_id
+    );
 
   /**
    * If application is not submitted,
    * don't display section
    */
-  if (!isSubmitted || !legalNotices.length) return null;
+  if (!isSubmitted) return null;
+
+  // check for spinner before documents length, since length is 0 while loading.
+  if (shouldShowSpinner) {
+    return (
+      <div className="text-center">
+        <Spinner
+          small
+          aria-valuetext={t("components.applicationCardV2.loadingLabel")}
+        />
+      </div>
+    );
+  }
+
+  if (!legalNotices.length) return null;
 
   return (
     <div
@@ -136,6 +162,7 @@ LegalNoticeSection.propTypes = {
   }).isRequired,
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
   documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+  isLoadingDocuments: PropTypes.bool.isRequired,
 };
 
 /**
@@ -175,6 +202,7 @@ const InProgressStatusCard = (props) => {
 
 InProgressStatusCard.propTypes = {
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
+  isLoadingDocuments: PropTypes.bool.isRequired,
   /**  The 1-based index of the application card */
   number: PropTypes.number.isRequired,
 };
@@ -290,6 +318,7 @@ ApplicationCardV2.propTypes = {
       goTo: PropTypes.func.isRequired,
     }).isRequired,
   }).isRequired,
+  isLoadingDocuments: PropTypes.bool.isRequired,
 };
 
 export default withClaimDocuments(ApplicationCardV2);

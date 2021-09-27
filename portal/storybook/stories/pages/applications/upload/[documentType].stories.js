@@ -47,7 +47,7 @@ const appLogic = {
 };
 
 export const Default = ({ documentType, ...args }) => {
-  appLogic.portalFlow.pathWithParams = `applications/upload/${documentType}/?application_id=mock-claim-id`;
+  appLogic.portalFlow.pageRoute = `/applications/upload/${documentType}`;
 
   return (
     <DocumentUpload

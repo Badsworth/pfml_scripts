@@ -1,5 +1,5 @@
-import Alert from "../components/Alert";
-import Button from "../components/Button";
+import Alert from "./Alert";
+import Button from "./Button";
 import PropTypes from "prop-types";
 import React from "react";
 import tracker from "../services/tracker";

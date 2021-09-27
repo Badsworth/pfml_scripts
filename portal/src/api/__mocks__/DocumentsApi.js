@@ -1,4 +1,4 @@
-import Document from "../../../src/models/Document";
+import Document from "../../models/Document";
 import DocumentCollection from "../../models/DocumentCollection";
 import { uniqueId } from "xstate/lib/utils";
 

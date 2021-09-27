@@ -99,3 +99,7 @@ class FINEOSNotFound(FINEOSClientBadResponse):
 
     def __str__(self) -> str:
         return self.message
+
+
+class FINEOSForbidden(FINEOSClientBadResponse):
+    """The FINEOS API returned an authorization error"""

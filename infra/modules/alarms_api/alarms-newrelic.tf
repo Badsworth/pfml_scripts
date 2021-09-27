@@ -405,6 +405,34 @@ resource "newrelic_nrql_alert_condition" "notifications_endpoint_infinite_email_
   }
 }
 
+resource "newrelic_nrql_alert_condition" "notifications_error_rate" {
+  # WARN: count errors for POST /notifications queries is > 3 errors for any 15 minute period
+  # CRIT: count errors for POST /notifications queries is >  5 errors for any 15-minute period
+  policy_id                    = newrelic_alert_policy.low_priority_api_alerts.id
+  name                         = "POST Notifications error rate too high (${upper(var.environment_name)})"
+  aggregation_window           = 900 # 15 minutes
+  value_function               = "single_value"
+  violation_time_limit_seconds = 86400 # 24 hours
+
+  nrql {
+    query             = "SELECT count(*) FROM Transaction WHERE request.uri LIKE '/v1/notifications' AND response.status != '201' AND request.method = 'POST' AND appName = 'PFML-API-${upper(var.environment_name)}'"
+    evaluation_offset = 1
+  }
+
+  warning {
+    threshold_occurrences = "ALL"
+    threshold_duration    = 900 # 15 minutes
+    operator              = "above"
+    threshold             = 3 # units: count
+  }
+
+  critical {
+    threshold_occurrences = "ALL"
+    threshold_duration    = 900 # 15 minutes
+    operator              = "above"
+    threshold             = 5 # units: count
+  }
+}
 # ----------------------------------------------------------------------------------------------------------------------
 # Alarms relating to problems in the PUB delegated payments pipeline
 

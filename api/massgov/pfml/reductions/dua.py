@@ -504,7 +504,7 @@ def _get_new_dua_payments_to_dfml_report_csv_path(
     )
     return create_csv_from_list(
         reduction_payments_info,
-        Constants.DFML_REPORT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP.keys(),
+        list(Constants.DFML_REPORT_CSV_COLUMN_TO_TABLE_DATA_FIELD_MAP.keys()),
         file_name,
     )
 

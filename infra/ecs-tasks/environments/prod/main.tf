@@ -32,14 +32,15 @@ terraform {
 module "tasks" {
   source = "../../template"
 
-  environment_name         = "prod"
-  st_use_mock_dor_data     = false
-  st_decrypt_dor_data      = true
-  st_file_limit_specified  = true
-  st_employer_update_limit = 1500
-  service_docker_tag       = local.service_docker_tag
-  vpc_id                   = data.aws_vpc.vpc.id
-  app_subnet_ids           = data.aws_subnet_ids.vpc_app.ids
+  environment_name              = "prod"
+  st_use_mock_dor_data          = false
+  st_decrypt_dor_data           = true
+  st_file_limit_specified       = true
+  st_employer_update_limit      = 1500
+  service_docker_tag            = local.service_docker_tag
+  vpc_id                        = data.aws_vpc.vpc.id
+  app_subnet_ids                = data.aws_subnet_ids.vpc_app.ids
+  enforce_execute_sql_read_only = true
 
   cognito_user_pool_id                       = "us-east-1_UwxnhD1cG"
   fineos_client_customer_api_url             = "https://prd-api.masspfml.fineos.com/customerapi/"
@@ -69,7 +70,7 @@ module "tasks" {
   fineos_data_export_path   = "s3://fin-somprod-data-export/PRD/dataexports"
   fineos_data_import_path   = "s3://fin-somprod-data-import/PRD/peiupdate"
   fineos_error_export_path  = "s3://fin-somprod-data-export/PRD/errorExtracts"
-  fineos_report_export_path = "s3://fin-somprod-data-export/PRD/reportExtracts"
+  fineos_report_export_path = "s3://fin-somprod-data-export/PRD/reportExtract"
   pfml_fineos_inbound_path  = "s3://massgov-pfml-prod-agency-transfer/cps/inbound"
   pfml_fineos_outbound_path = "s3://massgov-pfml-prod-agency-transfer/cps/outbound"
 

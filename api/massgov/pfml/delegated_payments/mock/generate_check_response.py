@@ -214,7 +214,7 @@ class PubCheckResponseGenerator:
 
         create_csv_from_list(
             data=response_csv_data,
-            fieldnames=asdict(fieldnames).values(),
+            fieldnames=list(asdict(fieldnames).values()),
             file_name=file_name,
             folder_path=self.folder_path,
         )

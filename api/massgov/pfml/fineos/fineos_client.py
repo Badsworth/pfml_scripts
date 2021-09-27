@@ -279,10 +279,14 @@ class FINEOSClient(client.AbstractFINEOSClient):
             elif response.status_code in (
                 requests.codes.UNPROCESSABLE_ENTITY,
                 requests.codes.NOT_FOUND,
-                requests.codes.FORBIDDEN,
             ):
-                # Ideally we'd raise exceptions that distinguish between 403/404/422 but we'll leave that for another time.
+                # Ideally we'd raise exceptions that distinguish between 404/422 but we'll leave that for another time.
                 err = exception.FINEOSClientBadResponse(
+                    method_name, requests.codes.ok, response.status_code, message=response.text,
+                )
+                log_fn = logger.warning
+            elif response.status_code == requests.codes.FORBIDDEN:
+                err = exception.FINEOSForbidden(
                     method_name, requests.codes.ok, response.status_code, message=response.text,
                 )
                 log_fn = logger.warning
@@ -1364,24 +1368,40 @@ class FINEOSClient(client.AbstractFINEOSClient):
         fineos_employer_id_data = models.AdditionalData(
             name="CustomerNumber", value=str(fineos_employer_id)
         )
-        absence_management_data = models.AdditionalData(
-            name="AbsenceManagement", value=str(service_agreement_inputs.absence_management_flag)
-        )
-        leave_plans_data = models.AdditionalData(
-            name="LeavePlans", value=service_agreement_inputs.leave_plans
-        )
         unlink_leave_plans_data = models.AdditionalData(
-            name="UnlinkAllExistingLeavePlans", value=str(True)
+            name="UnlinkAllExistingLeavePlans",
+            value=str(service_agreement_inputs.unlink_leave_plans),
         )
 
         additional_data_set = models.AdditionalDataSet()
         additional_data_set.additional_data.append(fineos_employer_id_data)
-        if service_agreement_inputs.absence_management_flag:
-            additional_data_set.additional_data.append(leave_plans_data)
-        else:
-            additional_data_set.additional_data.append(absence_management_data)
-
         additional_data_set.additional_data.append(unlink_leave_plans_data)
+
+        if service_agreement_inputs.absence_management_flag is not None:
+            additional_data_set.additional_data.append(
+                models.AdditionalData(
+                    name="AbsenceManagement",
+                    value=str(service_agreement_inputs.absence_management_flag),
+                )
+            )
+        if service_agreement_inputs.leave_plans is not None:
+            leave_plans_data = models.AdditionalData(
+                name="LeavePlans", value=service_agreement_inputs.leave_plans
+            )
+            additional_data_set.additional_data.append(leave_plans_data)
+
+        if service_agreement_inputs.start_date:
+            additional_data_set.additional_data.append(
+                models.AdditionalData(
+                    name="StartDate", value=service_agreement_inputs.start_date.isoformat()
+                )
+            )
+        if service_agreement_inputs.end_date:
+            additional_data_set.additional_data.append(
+                models.AdditionalData(
+                    name="EndDate", value=service_agreement_inputs.end_date.isoformat()
+                )
+            )
 
         service_data = models.ServiceAgreementData()
         service_data.additional_data_set = additional_data_set

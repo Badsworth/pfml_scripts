@@ -4,23 +4,21 @@ import InputHours from "src/components/InputHours";
 export default {
   title: "Components/Forms/InputHours",
   component: InputHours,
+  args: {
+    name: "hours",
+    minutesIncrement: 15,
+  },
 };
 
 export const ControlledField = (args) => {
-  const [value, setFieldValue] = useState();
+  const [value, setFieldValue] = useState(null);
   const handleChange = (evt) => {
     setFieldValue(evt.target.value);
   };
 
   return (
     <form className="usa-form">
-      <InputHours
-        name="hours"
-        onChange={handleChange}
-        value={value}
-        minutesIncrement={15}
-        {...args}
-      />
+      <InputHours {...args} onChange={handleChange} value={value} />
     </form>
   );
 };

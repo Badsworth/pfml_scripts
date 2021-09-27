@@ -71,6 +71,11 @@ export function before(flags?: Partial<FeatureFlags>): void {
     /\/api\/v1\/(employers\/claims|applications)\/.*\/documents\/\d+/
   ).as("documentDownload");
 
+  cy.intercept({
+    url: /\/api\/v1\/applications\/.*\/documents/,
+    method: "POST",
+  }).as("documentUpload");
+
   cy.intercept(/\/api\/v1\/claims\?page_offset=\d+$/).as(
     "dashboardDefaultQuery"
   );
@@ -703,7 +708,7 @@ export function goToDashboardFromApplicationsPage(): void {
 }
 
 export function goToDashboardFromSuccessPage(): void {
-  cy.contains("Return to applications").click();
+  cy.get('a[href="/applications/"]').click();
 }
 
 export function confirmClaimSubmissionSucces(): void {
@@ -1031,14 +1036,19 @@ export function assertZeroWithholdings(): void {
     { timeout: 30000 }
   );
 }
-export type DashboardClaimStatus =
+export type ClaimantStatus =
   | "Approved"
   | "Denied"
   | "Closed"
   | "Withdrawn"
+  | "Pending";
+
+export type DashboardClaimStatus =
+  | ClaimantStatus
   | "--"
   | "No action required"
   | "Review by";
+
 export function selectClaimFromEmployerDashboard(
   fineosAbsenceId: string
 ): void {
@@ -1424,6 +1434,29 @@ type UploadAdditonalDocumentOptions =
   | "Certification";
 
 export function uploadAdditionalDocument(
+  type: UploadAdditonalDocumentOptions,
+  docName: string
+): void {
+  cy.contains("Upload additional documents").click();
+  cy.contains("label", type).click();
+  cy.contains("button", "Save and continue").click();
+  if (type !== "Certification") {
+    addId(docName);
+  } else {
+    addLeaveDocs(docName);
+  }
+  // Hotfix: Wait for this to complete, plus a margin.
+  cy.wait("@documentUpload", { timeout: 30000 })
+    .its("response.statusCode")
+    .should("eq", 200);
+  // @todo: success banner is not available in all environments yet - reinstate assertion after 9/22 https://nava.slack.com/archives/C023NUQ2Y0K/p1631810839125300?thread_ts=1631806074.115000&cid=C023NUQ2Y0K
+  // cy.contains(
+  //   /You('ve)? successfully submitted your (certification form|(identification )?documents)/,
+  //   { timeout: 30000 }
+  // );
+}
+
+export function uploadAdditionalDocumentLegacy(
   fineosClaimId: string,
   type: UploadAdditonalDocumentOptions,
   docName: string
@@ -1438,7 +1471,9 @@ export function uploadAdditionalDocument(
   } else {
     addLeaveDocs(docName);
   }
-  cy.contains("You successfully submitted your documents", { timeout: 30000 });
+  cy.wait("@documentUpload", { timeout: 30000 })
+    .its("response.statusCode")
+    .should("eq", 200);
 }
 
 /**
@@ -1734,11 +1769,11 @@ export function assertLeaveType(leaveType: "Active duty"): void {
     .next()
     .should("contain.text", leaveType);
 }
-
+export type FilterOptionsFlags = {
+  [key in DashboardClaimStatus]?: true | false;
+};
 type FilterOptions = {
-  status?: {
-    [key in DashboardClaimStatus]?: true;
-  };
+  status?: FilterOptionsFlags;
 };
 /**Filter claims by given parameters
  * @example
@@ -1760,14 +1795,19 @@ export function filterLADashboardBy(filters: FilterOptions): void {
   const { status } = filters;
   if (status) {
     cy.get("#filters fieldset").within(() => {
-      for (const key of Object.keys(status))
-        cy.findByLabelText(key).click({ force: true });
+      for (const [k, v] of Object.entries(status)) {
+        if (v) cy.findByLabelText(k).click({ force: true });
+      }
     });
+    for (const [_key, checkFilter] of Object.entries(status)) {
+      if (checkFilter) {
+        cy.findByText("Apply filters").should("not.be.disabled").click();
+        cy.get('span[role="progressbar"]').should("be.visible");
+        cy.wait("@dashboardClaimQueries");
+        cy.contains("table", "Employer ID number").should("be.visible");
+      }
+    }
   }
-  cy.findByText("Apply filters").should("not.be.disabled").click();
-  cy.get('span[role="progressbar"]').should("be.visible");
-  cy.wait("@dashboardClaimQueries");
-  cy.contains("table", "Employer ID number").should("be.visible");
 }
 /**Looks if dashboard is empty */
 function checkDashboardIsEmpty() {
@@ -1858,7 +1898,8 @@ export function claimantGoToClaimStatus(fineosAbsenceId: string): void {
 
 type LeaveStatus = {
   leave: NonNullable<APILeaveReason>;
-  status: DashboardClaimStatus;
+  status: ClaimantStatus;
+  leavePeriods?: [string, string];
 };
 
 export function claimantAssertClaimStatus(leaves: LeaveStatus[]): void {
@@ -1869,11 +1910,12 @@ export function claimantAssertClaimStatus(leaves: LeaveStatus[]): void {
     "Pregnancy/Maternity": "",
   } as const;
 
-  for (const { leave, status } of leaves) {
+  for (const { leave, status, leavePeriods } of leaves) {
     cy.contains(leaveReasonHeadings[leave])
       .parent()
       .within(() => {
         cy.contains(status);
+        leavePeriods?.forEach((period) => cy.contains(period));
       });
   }
 }

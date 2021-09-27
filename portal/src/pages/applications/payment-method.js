@@ -17,6 +17,7 @@ import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
+import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
@@ -166,6 +167,13 @@ export const PaymentMethod = (props) => {
             components={{
               "contact-center-phone-link": (
                 <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+              ),
+              "benefits-guide-link": (
+                <a
+                  href={routes.external.massgov.benefitsGuide}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                />
               ),
             }}
           />

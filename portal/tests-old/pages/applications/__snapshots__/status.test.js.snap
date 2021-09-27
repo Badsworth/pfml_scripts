@@ -36,9 +36,13 @@ Array [
           Object {
             "application-link": <a
               href="/applications/get-ready"
+              rel="noopener noreferrer"
+              target="_blank"
             />,
             "request-appeal-link": <a
               href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+              rel="noopener noreferrer"
+              target="_blank"
             />,
           }
         }
@@ -83,9 +87,13 @@ Array [
           Object {
             "application-link": <a
               href="/applications/get-ready"
+              rel="noopener noreferrer"
+              target="_blank"
             />,
             "request-appeal-link": <a
               href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+              rel="noopener noreferrer"
+              target="_blank"
             />,
           }
         }
@@ -130,9 +138,13 @@ Array [
           Object {
             "application-link": <a
               href="/applications/get-ready"
+              rel="noopener noreferrer"
+              target="_blank"
             />,
             "request-appeal-link": <a
               href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+              rel="noopener noreferrer"
+              target="_blank"
             />,
           }
         }
@@ -181,9 +193,13 @@ exports[`leave details page does render page with one section if absenceDetails 
         Object {
           "application-link": <a
             href="/applications/get-ready"
+            rel="noopener noreferrer"
+            target="_blank"
           />,
           "request-appeal-link": <a
             href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+            rel="noopener noreferrer"
+            target="_blank"
           />,
         }
       }
@@ -230,10 +246,12 @@ exports[`status page ViewYourNotices displays only legal notices for the current
     >
       <Heading
         className="margin-bottom-1"
+        id="view_notices"
         level="2"
       >
         <h2
           className="margin-bottom-1 font-heading-md text-bold"
+          id="view_notices"
         >
           View your notices
         </h2>
@@ -1089,11 +1107,6 @@ exports[`status page includes a button to upload additional documents 1`] = `
       <Heading
         level="2"
       >
-        Upload Documents
-      </Heading>
-      <Heading
-        level="3"
-      >
         Respond to requests for information
       </Heading>
       <p>
@@ -1153,7 +1166,7 @@ exports[`status page includes a button to upload additional documents 1`] = `
 </Fragment>
 `;
 
-exports[`status page info alert displays if claimant has bonding but not pregnancy claims 1`] = `
+exports[`status page info alert displays if claimant has bonding-newborn but not pregnancy claims 1`] = `
 <div
   className="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
   tabIndex="-1"
@@ -1167,7 +1180,7 @@ exports[`status page info alert displays if claimant has bonding but not pregnan
       level="2"
       size="4"
     >
-      If you gave birth, you may be eligible for paid medical leave
+      If you are giving birth, you may also be eligible for paid medical leave
     </Heading>
     <div
       className="usa-alert__text"
@@ -1197,9 +1210,9 @@ exports[`status page info alert displays if claimant has bonding but not pregnan
 </div>
 `;
 
-exports[`status page info alert displays if claimant has bonding but not pregnancy claims 2`] = `
+exports[`status page info alert displays if claimant has bonding-newborn but not pregnancy claims 2`] = `
 Array [
-  "You can take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at ",
+  "You may be able to take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy or for your recovery from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at ",
   <a
     href="tel:(833) 344-7365"
     key="1"
@@ -1213,8 +1226,9 @@ Array [
     rel="noreferrer noopener"
     target="_blank"
   >
-    medical leave after giving birth.
+    medical leave after giving birth
   </a>,
+  ". You should not submit a second application.",
 ]
 `;
 
@@ -1264,7 +1278,7 @@ exports[`status page info alert displays if claimant has pregnancy but not bondi
 
 exports[`status page info alert displays if claimant has pregnancy but not bonding claims 2`] = `
 Array [
-  "You can take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. ",
+  "You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. ",
   <a
     href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
     key="1"
@@ -1280,7 +1294,7 @@ Array [
   >
     (833) 344‑7365
   </a>,
-  ".",
+  ". You should not submit a second application.",
 ]
 `;
 
@@ -1968,11 +1982,6 @@ exports[`status page renders the page 1`] = `
     >
       <Heading
         level="2"
-      >
-        Upload Documents
-      </Heading>
-      <Heading
-        level="3"
       >
         Respond to requests for information
       </Heading>

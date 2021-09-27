@@ -177,7 +177,6 @@ class FineosPeiWritebackStep(Step):
                     raise Exception(
                         f"Can not find writeback details for payment {payment.payment_id} with state {cast(LkState, state_log.end_state).state_description} and outcome {state_log.outcome}"
                     )
-
                 metric_name = transaction_status.transaction_status_description.lower().replace(
                     " ", "_"
                 )
