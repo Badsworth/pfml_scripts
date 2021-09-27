@@ -42,7 +42,7 @@ export const getNotificationSubject = function (
     "employer response": `Action required: Respond to ${employeeName}'s paid leave application`,
     "denial (employer)": `${employeeName}'s paid leave application was Denied`,
     "approval (employer)": `${employeeName}'s paid leave application was Approved`,
-    "appeal (employer)": `A copy of an application update notice from the Department of Family and Medical Leave`,
+    "appeal (employer)": `An application update notice from the Department of Family and Medical Leave`,
     "denial (claimant)": "Your paid leave application was Denied",
     "approval (claimant)": "Your paid leave application was Approved",
     "appeal (claimant)": `Application update notice from the Department of Family and Medical Leave`,
