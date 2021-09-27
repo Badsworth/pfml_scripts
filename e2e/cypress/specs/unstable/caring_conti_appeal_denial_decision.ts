@@ -145,9 +145,9 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
             )
             .then(() => {
               cy.contains(submission.fineos_absence_id);
-              cy.get(
-                `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
-              );
+              // cy.get(
+              //   `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
+              // );
               cy.screenshot("Leave Admin Email");
             });
         });
@@ -155,35 +155,35 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
     }
   );
 
-  // it("Check the Claimant Portal for the legal notice (Appeal Acknowledgment).",
-  //   { retries: 0 },
-  //   () => {
-  //   cy.dependsOnPreviousPass([fineosSubmission]);
-  //   portal.before({
-  //     claimantShowStatusPage: config("HAS_CLAIMANT_STATUS_PAGE") === "true",
-  //   });
-  //   portal.loginClaimant();
-  //   cy.unstash<Submission>("submission").then((submission) => {
-  //     if (config("HAS_CLAIMANT_STATUS_PAGE") === "true") {
-  //       portal.claimantGoToClaimStatus(submission.fineos_absence_id);
-  //       portal.claimantAssertClaimStatus([
-  //         {leave: "Care for a Family Member", status: "Denied"},
-  //       ]);
-  //       cy.screenshot("Claimant Portal Claim Status");
-  //     } else {
-  //       cy.task("waitForClaimDocuments",
-  //         {
-  //           credentials: getClaimantCredentials(),
-  //           application_id: submission.application_id,
-  //           document_type: "Appeal Acknowledgment",
-  //         },
-  //         { timeout: 30000 }
-  //       );
-  //       cy.contains("article", submission.fineos_absence_id).within(() => {
-  //         cy.findByText("Appeal Acknowledgment (PDF)").should("be.visible").click();
-  //       });
-  //       portal.downloadLegalNotice(submission.fineos_absence_id);
-  //     }
-  //   });
-  // });
+  it("Check the Claimant Portal for the legal notice (Appeal Acknowledgment).",
+    { retries: 0 },
+    () => {
+    cy.dependsOnPreviousPass([fineosSubmission]);
+    portal.before({
+      claimantShowStatusPage: config("HAS_CLAIMANT_STATUS_PAGE") === "true",
+    });
+    portal.loginClaimant();
+    cy.unstash<Submission>("submission").then((submission) => {
+      if (config("HAS_CLAIMANT_STATUS_PAGE") === "true") {
+        portal.claimantGoToClaimStatus(submission.fineos_absence_id);
+        portal.claimantAssertClaimStatus([
+          {leave: "Care for a Family Member", status: "Denied"},
+        ]);
+        cy.screenshot("Claimant Portal Claim Status");
+      } else {
+        cy.task("waitForClaimDocuments",
+          {
+            credentials: getClaimantCredentials(),
+            application_id: submission.application_id,
+            document_type: "Appeal Acknowledgment",
+          },
+          { timeout: 30000 }
+        );
+        cy.contains("article", submission.fineos_absence_id).within(() => {
+          cy.findByText("Appeal Acknowledgment (PDF)").should("be.visible").click();
+        });
+        portal.downloadLegalNotice(submission.fineos_absence_id);
+      }
+    });
+  });
 });
