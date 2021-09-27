@@ -82,7 +82,7 @@ class AuditScenarioName(Enum):
     ADDRESS_IS_NOT_VERIFIED = "ADDRESS_IS_NOT_VERIFIED"
 
     AUDIT_REPORT_DETAIL_REJECTED = "AUDIT_REPORT_DETAIL_REJECTED"
-    AUDIT_REPORT_DETAIL_SKIPPED = "AUDIT_REPORT_DETAIL_SKIPPED"
+    AUDIT_REPORT_DETAIL_INFORMATIONAL = "AUDIT_REPORT_DETAIL_INFORMATIONAL"
     AUDIT_REPORT_DETAIL_MIXED = "AUDIT_REPORT_DETAIL_MIXED"
 
 
@@ -100,7 +100,7 @@ class AuditScenarioDescriptor:
     is_address_verified: bool = True
 
     audit_report_detail_rejected: bool = False
-    audit_report_detail_skipped: bool = False
+    audit_report_detail_informational: bool = False
 
 
 @dataclass
@@ -227,14 +227,17 @@ AUDIT_SCENARIO_DESCRIPTORS[
     scenario_name=AuditScenarioName.AUDIT_REPORT_DETAIL_REJECTED, audit_report_detail_rejected=True
 )
 
-AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.AUDIT_REPORT_DETAIL_SKIPPED] = AuditScenarioDescriptor(
-    scenario_name=AuditScenarioName.AUDIT_REPORT_DETAIL_SKIPPED, audit_report_detail_skipped=True
+AUDIT_SCENARIO_DESCRIPTORS[
+    AuditScenarioName.AUDIT_REPORT_DETAIL_INFORMATIONAL
+] = AuditScenarioDescriptor(
+    scenario_name=AuditScenarioName.AUDIT_REPORT_DETAIL_INFORMATIONAL,
+    audit_report_detail_informational=True,
 )
 
 AUDIT_SCENARIO_DESCRIPTORS[AuditScenarioName.AUDIT_REPORT_DETAIL_MIXED] = AuditScenarioDescriptor(
     scenario_name=AuditScenarioName.AUDIT_REPORT_DETAIL_MIXED,
     audit_report_detail_rejected=True,
-    audit_report_detail_skipped=True,
+    audit_report_detail_informational=True,
 )
 
 DEFAULT_AUDIT_SCENARIO_DATA_SET = [
@@ -449,7 +452,7 @@ def generate_scenario_data(
             payment, PaymentAuditReportType.MAX_WEEKLY_BENEFITS, "Test Message", None, db_session
         )
 
-    if scenario_descriptor.audit_report_detail_skipped:
+    if scenario_descriptor.audit_report_detail_informational:
         stage_payment_audit_report_details(
             payment, PaymentAuditReportType.DUA_DIA_REDUCTION, "Test Message", None, db_session
         )

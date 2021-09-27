@@ -282,6 +282,8 @@ def get_payment_audit_report_details(
         elif AuditReportAction.is_skipped(audit_report_action):
             skipped = True
             program_integrity_notes.append(f"{notes_to_add} (Skipped)")
+        elif AuditReportAction.is_informational(audit_report_action):
+            program_integrity_notes.append(f"{notes_to_add}")
 
         # Mark the details row as processed
         staged_audit_report_detail.added_to_audit_report_at = added_to_audit_report_at

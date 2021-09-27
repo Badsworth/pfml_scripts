@@ -9,6 +9,9 @@ from massgov.pfml.db.models.payments import PaymentAuditReportType
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
     stage_payment_audit_report_details,
 )
+from massgov.pfml.delegated_payments.postprocessing.dua_dia_reductions_processor import (
+    DuaDiaReductionsProcessor,
+)
 from massgov.pfml.delegated_payments.postprocessing.in_review_processor import InReviewProcessor
 from massgov.pfml.delegated_payments.postprocessing.maximum_weekly_benefits_processor import (
     MaximumWeeklyBenefitsStepProcessor,
@@ -49,10 +52,6 @@ class PaymentPostProcessingStep(Step):
             # Run processing on payments
             self._process_payments(payment_containers)
 
-            # Run validations that process payments
-            # by group them under a single employee
-            self._process_payments_across_employee(payment_containers)
-
             # After all validations are run, move states of the payments
             self._handle_state_transition(payment_containers)
             self.db_session.commit()
@@ -76,11 +75,20 @@ class PaymentPostProcessingStep(Step):
         return payment_containers
 
     def _process_payments(self, payment_containers: List[PaymentContainer]) -> None:
+        self._process_payments_individually(payment_containers)
+        self._process_payments_across_employee(payment_containers)
+
+    def _process_payments_individually(self, payment_containers: List[PaymentContainer]) -> None:
+        """Post process payments individually"""
+        dua_dia_processor = DuaDiaReductionsProcessor(self)
         in_review_processor = InReviewProcessor(self)
-        for container in payment_containers:
-            in_review_processor.process(container)
+
+        for payment_container in payment_containers:
+            dua_dia_processor.process(payment_container.payment)
+            in_review_processor.process(payment_container)
 
     def _process_payments_across_employee(self, payment_containers: List[PaymentContainer]) -> None:
+        """Post process payments grouped by employee"""
         # First group the payments by their employee
         employee_to_containers: Dict[uuid.UUID, List[PaymentContainer]] = {}
 

@@ -104,7 +104,7 @@ def test_get_payment_audit_report_details(test_db_session, initialize_factories_
     assert not audit_report_details.skipped_by_program_integrity
     assert (
         audit_report_details.rejected_notes
-        == f"{AUDIT_REPORT_NOTES_OVERRIDE[PaymentAuditReportType.MAX_WEEKLY_BENEFITS.payment_audit_report_type_id]} (Rejected), {PaymentAuditReportType.DUA_DIA_REDUCTION.payment_audit_report_type_description} (Skipped), {PaymentAuditReportType.LEAVE_PLAN_IN_REVIEW.payment_audit_report_type_description} (Skipped)"
+        == f"{AUDIT_REPORT_NOTES_OVERRIDE[PaymentAuditReportType.MAX_WEEKLY_BENEFITS.payment_audit_report_type_id]} (Rejected), {PaymentAuditReportType.DUA_DIA_REDUCTION.payment_audit_report_type_description}, {PaymentAuditReportType.LEAVE_PLAN_IN_REVIEW.payment_audit_report_type_description} (Skipped)"
     )
 
     # test that the audit report time was set
@@ -458,7 +458,7 @@ def validate_payment_audit_csv_row_by_payment_audit_data(
         assert row[PAYMENT_AUDIT_CSV_HEADERS.max_weekly_benefits_details]
         assert row[PAYMENT_AUDIT_CSV_HEADERS.max_weekly_benefits_details] != ""
 
-    if scenario_descriptor.audit_report_detail_skipped:
+    if scenario_descriptor.audit_report_detail_informational:
         assert row[PAYMENT_AUDIT_CSV_HEADERS.dua_dia_reduction_details]
         assert row[PAYMENT_AUDIT_CSV_HEADERS.dua_dia_reduction_details] != ""
 
@@ -466,16 +466,11 @@ def validate_payment_audit_csv_row_by_payment_audit_data(
         "Y" if scenario_descriptor.audit_report_detail_rejected else ""
     ), error_msg
 
-    assert row[PAYMENT_AUDIT_CSV_HEADERS.skipped_by_program_integrity] == (
-        "Y"
-        if not scenario_descriptor.audit_report_detail_rejected
-        and scenario_descriptor.audit_report_detail_skipped
-        else ""
-    ), error_msg
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.skipped_by_program_integrity] == "", error_msg
 
     if (
         scenario_descriptor.audit_report_detail_rejected
-        or scenario_descriptor.audit_report_detail_skipped
+        or scenario_descriptor.audit_report_detail_informational
     ):
         assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_notes]
         assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_notes] != ""
