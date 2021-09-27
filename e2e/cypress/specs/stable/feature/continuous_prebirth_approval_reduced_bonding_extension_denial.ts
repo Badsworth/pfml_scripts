@@ -7,10 +7,7 @@ import { config } from "../../../actions/common";
 describe("Submit medical pre-birth application via the web portal", () => {
   const submission =
     it("Submits a Medical/Pregnancy claim through the API", () => {
-      cy.task(
-        "generateClaim",
-        config("HAS_PREGNANCY_DOC_UPDATES") === "true" ? "PREBIRTH" : "MED_PRE"
-      ).then((claim) => {
+      cy.task("generateClaim", "PREBIRTH").then((claim) => {
         cy.task("submitClaimToAPI", claim).then((submission) => {
           cy.stash("claim", claim);
           cy.stash("submission", {
