@@ -2,7 +2,6 @@ import { fineos, fineosPages, portal } from "../../actions";
 import { Submission } from "../../../src/types";
 import { extractLeavePeriod } from "../../../src/util/claims";
 import { addDays, format } from "date-fns";
-import { config } from "../../actions/common";
 
 describe("Post-approval (notifications/notices)", () => {
   const approval =
@@ -80,24 +79,22 @@ describe("Post-approval (notifications/notices)", () => {
     });
 
   it("Displays proper statuses in the claimant portal", () => {
-    if (config("HAS_CLAIMANT_STATUS_PAGE") === "true") {
-      cy.dependsOnPreviousPass([denyModification]);
-      portal.before({
-        claimantShowStatusPage: true,
-      });
-      cy.visit("/");
-      portal.loginClaimant();
-      cy.unstash<Submission>("submission").then((submission) => {
-        // Wait for the legal document to arrive.
-        portal.claimantGoToClaimStatus(submission.fineos_absence_id);
-        portal.claimantAssertClaimStatus([
-          { leave: "Care for a Family Member", status: "Denied" },
-        ]);
-        cy.findByText("Denial notice (PDF)")
-          .should("be.visible")
-          .click({ force: true });
-        portal.downloadLegalNotice(submission.fineos_absence_id);
-      });
-    }
+    cy.dependsOnPreviousPass([denyModification]);
+    portal.before({
+      claimantShowStatusPage: true,
+    });
+    cy.visit("/");
+    portal.loginClaimant();
+    cy.unstash<Submission>("submission").then((submission) => {
+      // Wait for the legal document to arrive.
+      portal.claimantGoToClaimStatus(submission.fineos_absence_id);
+      portal.claimantAssertClaimStatus([
+        { leave: "Care for a Family Member", status: "Denied" },
+      ]);
+      cy.findByText("Denial notice (PDF)")
+        .should("be.visible")
+        .click({ force: true });
+      portal.downloadLegalNotice(submission.fineos_absence_id);
+    });
   });
 });

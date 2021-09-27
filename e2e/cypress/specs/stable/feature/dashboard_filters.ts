@@ -17,7 +17,7 @@ describe("Employer dashboard", () => {
   });
   it("LA should be able to view, filter, sort claims and search by name", () => {
     cy.dependsOnPreviousPass([submit]);
-    const checkStatus = config("HAS_CLAIMANT_STATUS_PAGE") === "true";
+    const checkStatus = true;
     const isStage = config("ENVIRONMENT") === "stage";
     portal.before({ employerShowReviewByStatus: checkStatus });
     cy.visit("/");

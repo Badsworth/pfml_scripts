@@ -2,7 +2,6 @@ import { fineos, portal, email, fineosPages } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { findCertificationDoc } from "../../../../src/util/documents";
 import { getClaimantCredentials } from "../../../config";
-import { config } from "../../../actions/common";
 import { format, addDays } from "date-fns";
 import { extractLeavePeriod } from "../../../../src/util/claims";
 import { DehydratedClaim } from "generation/Claim";
@@ -91,9 +90,7 @@ describe("Request for More Information (notifications/notices)", () => {
   const upload =
     it("Should allow claimant to upload additional documents and generate a legal notice (Request for Information) that the claimant can view", () => {
       cy.dependsOnPreviousPass([modification]);
-      portal.before({
-        claimantShowStatusPage: config("HAS_CLAIMANT_STATUS_PAGE") === "true",
-      });
+      portal.before();
       cy.unstash<Submission>("submission").then((submission) => {
         portal.loginClaimant();
         cy.log("Waiting for documents");
@@ -107,35 +104,26 @@ describe("Request for More Information (notifications/notices)", () => {
           { timeout: 60000 }
         );
         cy.log("Finished waiting for documents");
-        if (config("HAS_CLAIMANT_STATUS_PAGE") === "true") {
-          cy.unstash<[string, string]>("modifiedLeaveDates").then(
-            ([start, end]) => {
-              portal.claimantGoToClaimStatus(submission.fineos_absence_id);
-              portal.claimantAssertClaimStatus([
-                {
-                  leave: "Care for a Family Member",
-                  status: "Pending",
-                  leavePeriods: [
-                    format(new Date(start), "MMMM d, yyyy"),
-                    format(new Date(end), "MMMM d, yyyy"),
-                  ],
-                },
-              ]);
-              cy.findByText("Request for more information (PDF)")
-                .should("be.visible")
-                .click({ force: true });
-              portal.downloadLegalNotice(submission.fineos_absence_id);
-            }
-          );
-          portal.uploadAdditionalDocument("Certification", "caring");
-        } else {
-          // Handle document uploads without the claim status page.
-          portal.uploadAdditionalDocumentLegacy(
-            submission.fineos_absence_id,
-            "Certification",
-            "caring"
-          );
-        }
+        cy.unstash<[string, string]>("modifiedLeaveDates").then(
+          ([start, end]) => {
+            portal.claimantGoToClaimStatus(submission.fineos_absence_id);
+            portal.claimantAssertClaimStatus([
+              {
+                leave: "Care for a Family Member",
+                status: "Pending",
+                leavePeriods: [
+                  format(new Date(start), "MMMM d, yyyy"),
+                  format(new Date(end), "MMMM d, yyyy"),
+                ],
+              },
+            ]);
+            cy.findByText("Request for more information (PDF)")
+              .should("be.visible")
+              .click({ force: true });
+            portal.downloadLegalNotice(submission.fineos_absence_id);
+          }
+        );
+        portal.uploadAdditionalDocument("Certification", "caring");
       });
     });
   it("CSR rep can view the additional information uploaded by claimant", () => {

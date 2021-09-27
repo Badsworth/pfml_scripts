@@ -10,9 +10,7 @@ import { assertValidClaim } from "../../../../src/util/typeUtils";
 
 describe("Approval (notifications/notices)", () => {
   after(() => {
-    // @todo: remove conditional statement once claimant status is deployed to all envs
-    config("HAS_CLAIMANT_STATUS_PAGE") !== "true" &&
-      portal.deleteDownloadsFolder();
+    portal.deleteDownloadsFolder();
   });
 
   const submit = it("Given a fully approved claim", () => {
@@ -69,36 +67,27 @@ describe("Approval (notifications/notices)", () => {
     { retries: 0 },
     () => {
       cy.dependsOnPreviousPass([submit]);
-      portal.before({
-        claimantShowStatusPage: config("HAS_CLAIMANT_STATUS_PAGE") === "true",
-      });
+      portal.before();
       portal.loginClaimant();
       cy.unstash<Submission>("submission").then((submission) => {
         // Wait for the legal document to arrive.
-        if (config("HAS_CLAIMANT_STATUS_PAGE") === "true") {
-          portal.claimantGoToClaimStatus(submission.fineos_absence_id);
-          portal.claimantAssertClaimStatus([
-            { leave: "Child Bonding", status: "Approved" },
-          ]);
-          // @todo: uncomment lines below once, doc download is supported
-          // cy.findByText("Approval notice (PDF)").should("be.visible").click();
-          // portal.downloadLegalNotice(submission.fineos_absence_id);
-        } else {
-          // @todo: remove once claimant status is deployed to all envs
-          cy.task(
-            "waitForClaimDocuments",
-            {
-              credentials: getClaimantCredentials(),
-              application_id: submission.application_id,
-              document_type: "Approval Notice",
-            },
-            { timeout: 30000 }
-          );
-          cy.contains("article", submission.fineos_absence_id).within(() => {
-            cy.findByText("Approval notice (PDF)").should("be.visible").click();
-          });
-          portal.downloadLegalNotice(submission.fineos_absence_id);
-        }
+        cy.task(
+          "waitForClaimDocuments",
+          {
+            credentials: getClaimantCredentials(),
+            application_id: submission.application_id,
+            document_type: "Approval Notice",
+          },
+          { timeout: 30000 }
+        );
+        portal.claimantGoToClaimStatus(submission.fineos_absence_id);
+        portal.claimantAssertClaimStatus([
+          { leave: "Child Bonding", status: "Approved" },
+        ]);
+        cy.findByText("Approval notice (PDF)")
+          .should("be.visible")
+          .click({ force: true });
+        portal.downloadLegalNotice(submission.fineos_absence_id);
       });
     }
   );
