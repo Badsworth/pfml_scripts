@@ -105,6 +105,7 @@ merged_user_roles AS (
         lur.role_id
     FROM
         link_user_role lur
+    INNER JOIN duplicated_users_to_remove duu ON duu.user_id = lur.user_id
     WHERE
         lur.user_id IN (
             SELECT

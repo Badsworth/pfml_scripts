@@ -91,23 +91,22 @@ def test_remove_and_merge_duplicates(
     )
 
     assert len(duplicated_users) == 4
+    assert duplicated_users[0].count == 11
+    assert duplicated_users[1].count == 11
+    assert duplicated_users[2].count == 11
+    assert duplicated_users[3].count == 11
 
     test_db_session.execute(sql_file)
 
-    duplicated_users: List[UserEmailCount] = (
+    duplicated_users_remaining: List[UserEmailCount] = (
         test_db_session.query(User.email_address, count(User.user_id).label("count"))
         .group_by(User.email_address)
         .having(func.count(User.user_id) > 1)
         .all()
     )
 
-    assert len(duplicated_users) == 4
-
-    assert duplicated_users[0].count == 1
-    assert duplicated_users[1].count == 1
-    assert duplicated_users[2].count == 1
-    assert duplicated_users[4].count == 1
+    assert len(duplicated_users_remaining) == 0
 
     all_users = test_db_session.query(User).count()
-    assert all_users == 44
+    assert all_users == 4
 
