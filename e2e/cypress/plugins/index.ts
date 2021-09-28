@@ -44,6 +44,7 @@ import pRetry from "p-retry";
 import { chooseRolePreset } from "../../src/util/fineosRoleSwitching";
 import { FineosSecurityGroups } from "../../src/submission/fineos.pages";
 import { Fineos } from "../../src/submission/fineos.pages";
+import { beforeRunCollectMetadata } from "../reporters/new-relic-collect-metadata";
 
 export default function (
   on: Cypress.PluginEvents,
@@ -217,6 +218,9 @@ export default function (
   // Add dynamic options for the New Relic reporter.
   let reporterOptions = cypressConfig.reporterOptions ?? {};
   if (cypressConfig.reporter?.match(/new\-relic/)) {
+    // Add metadata collection for the New Relic runner.
+    on("before:run", beforeRunCollectMetadata);
+
     // Add dynamic reporter options based on config values.
     reporterOptions = {
       accountId: config("NEWRELIC_ACCOUNTID"),

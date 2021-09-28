@@ -55,6 +55,7 @@ env:
   CYPRESS_CACHE_FOLDER: /home/runner/.npm/.cypress-cache
   PLAYWRIGHT_BROWSERS_PATH: /home/runner/.npm/.playwright-cache
   PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 1 # We never actually need puppeteer chromium installed - it's for flood only.
+  TEST_RUN_ID: ${{ github.repository }}-${{ github.run_id }}-${{ github.run_attempt}}
 
 # Prevent this workflow from running more than 1x concurrently in any environment.
 # This prevents us from overloading the environment with requests, which causes false failures.
@@ -106,6 +107,7 @@ jobs:
           parallel: true
           install: false
           working-directory: e2e
+          ci-build-id: ${{ env.TEST_RUN_ID }}
           group: Commit Stable
           tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
           config: reporter=cypress/reporters/new-relic.js
@@ -118,6 +120,7 @@ jobs:
           record: true
           parallel: true
           working-directory: e2e
+          ci-build-id: ${{ env.TEST_RUN_ID }}
           group: Unstable
           install: false # Skip install on second run.
           tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
