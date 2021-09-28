@@ -103,6 +103,9 @@ class UserFactory(BaseFactory):
     sub_id = factory.Faker("uuid4")
     email_address = factory.Faker("email")
 
+    created_at = Generators.UtcNow
+    updated_at = Generators.UtcNow
+
     @factory.post_generation
     def roles(self, create, extracted, **kwargs):
         if not create:
@@ -424,6 +427,22 @@ class ManagedRequirementFactory(BaseFactory):
     managed_requirement_type_id = (
         employee_models.ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id
     )
+
+
+class UserLeaveAdministratorFactory(BaseFactory):
+    class Meta:
+        model = employee_models.UserLeaveAdministrator
+
+    user_leave_administrator_id = Generators.UuidObj
+    user_id = factory.LazyAttribute(lambda w: w.user.user_id)
+    employer_id = factory.LazyAttribute(lambda w: w.employer.employer_id)
+    fineos_web_id = None
+    verification_id = factory.LazyAttribute(
+        lambda w: w.verification.verification_id if w.verification else None
+    )
+    user = factory.SubFactory(UserFactory)
+    employer = factory.SubFactory(EmployerFactory)
+    verification = None
 
 
 class PaymentFactory(BaseFactory):

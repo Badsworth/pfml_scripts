@@ -27,7 +27,7 @@ duplicated_users AS (
                 duplicate_user_emails
         )
 ),
-latest_updated_users AS (
+oldest_created_users AS (
     SELECT
         u.created_at,
         u.updated_at,
@@ -52,13 +52,13 @@ duplicated_users_to_remove AS (
     FROM
         duplicate_user_emails u_dup
         INNER JOIN "user" u ON u.email_address = u_dup.email_address
-        INNER JOIN latest_updated_users luu ON luu.email_address = u.email_address
+        INNER JOIN oldest_created_users luu ON luu.email_address = u.email_address
     WHERE
         u.user_id NOT IN (
             SELECT
                 user_id
             FROM
-                latest_updated_users
+                oldest_created_users
         )
 ),
 merged_documents AS (
@@ -140,4 +140,4 @@ SELECT
     du.user_id,
     du.email_address
 FROM
-    deleted_users du
+    deleted_users du;

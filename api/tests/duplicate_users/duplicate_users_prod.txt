@@ -1,0 +1,67 @@
+email_address: james+prod@navapbc.com
+created_at: 2021-01-21 00:41:41.054892+00:00
+updated_at: 2021-01-21 00:41:41.054892+00:00
+user_id: 16bc1539-0e2e-4c12-8911-e62a6da9b3d7
+sub_id: 80bcc402-36fc-4a58-b5a0-a1cc45dab82e
+consented_to_data_sharing: False
+application_count: 1
+document_count: 0
+user_leave_administrator_count: 0
+managed_requirement_count: 0
+
+email_address: james+prod@navapbc.com
+created_at: 2021-02-12 22:42:24.056465+00:00
+updated_at: 2021-02-12 22:42:43.690465+00:00
+user_id: 7e5d9dfb-32b2-4e2a-bb70-de014961f594
+sub_id: 870c4469-155d-4411-981e-d54c911352c9
+consented_to_data_sharing: False
+application_count: 1
+document_count: 0
+user_leave_administrator_count: 0
+managed_requirement_count: 0
+
+----
+email_address: nicolebudzius@navapbc.com
+created_at: 2021-06-30 13:32:01.470994+00:00
+updated_at: 2021-06-30 13:32:55.333886+00:00
+user_id: 1041dd08-adf1-4389-8683-214ba86e757b
+sub_id: 0a1f9f46-cc8f-47c3-8f79-e0c007dbbbc7
+consented_to_data_sharing: True
+application_count: 0
+document_count: 0
+user_leave_administrator_count: 0
+managed_requirement_count: 0
+
+email_address: nicolebudzius@navapbc.com
+created_at: 2021-01-21 00:41:41.054892+00:00
+updated_at: 2021-01-21 00:41:41.054892+00:00
+user_id: f16b76d5-5620-43f4-bbe5-b57baf1abd0f
+sub_id: f0761883-00f5-409b-847b-db636235ebaf
+consented_to_data_sharing: False
+application_count: 6
+document_count: 0
+user_leave_administrator_count: 0
+managed_requirement_count: 0
+
+----
+email_address: adiaz@eliotchs.org
+created_at: 2021-05-11 18:00:07.428546+00:00
+updated_at: 2021-05-11 18:00:37.024340+00:00
+user_id: 11aed47f-194b-475b-a791-933afb1c6e08
+sub_id: 265f7418-aa7c-4625-8943-ac9fa7352ce5
+consented_to_data_sharing: False
+application_count: 1
+document_count: 0
+user_leave_administrator_count: 0
+managed_requirement_count: 0
+
+email_address: adiaz@eliotchs.org
+created_at: 2021-01-21 00:41:41.054892+00:00
+updated_at: 2021-01-21 00:41:41.054892+00:00
+user_id: 66967aee-9359-470d-94e0-29bb4b343f98
+sub_id: b58d5b8a-e4cc-4e6f-b337-60504e4d55bb
+consented_to_data_sharing: False
+application_count: 1
+document_count: 0
+user_leave_administrator_count: 0
+managed_requirement_count: 0
