@@ -200,6 +200,39 @@ export function downloadLegalNotice(claim_id: string): void {
   });
 }
 
+/**
+ * Downloads Legal Notice based on type this can be used for a subcase (e.g. Appeals)
+ *
+ * Also does basic assertion on contents of legal notice doc
+ */
+export function downloadLegalNoticeSubcase(claim_id: string, sub_case: string): void {
+  const downloadsFolder = Cypress.config("downloadsFolder");
+  cy.wait("@documentDownload", { timeout: 30000 });
+  cy.task("getNoticeFileName", downloadsFolder).then((filename) => {
+    expect(
+      filename.length,
+      "downloads folder should contain only one file"
+    ).to.equal(1);
+    expect(
+      path.extname(filename[0]),
+      "Expect file extension to be a PDF"
+    ).to.equal(".pdf");
+    cy.task("getParsedPDF", path.join(downloadsFolder, filename[0])).then(
+      (pdf) => {
+        const application_id_from_notice = email.getTextBetween(
+          pdf.text,
+          "Application ID:",
+          "\n"
+        );
+        expect(
+          application_id_from_notice,
+          `The claim_id within the legal notice should be: ${application_id_from_notice}`
+        ).to.equal(claim_id + sub_case);
+      }
+    );
+  });
+}
+
 export function loginClaimant(credentials = getClaimantCredentials()): void {
   login(credentials);
 }
