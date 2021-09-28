@@ -27,15 +27,14 @@ from sqlalchemy import (
     and_,
     select,
 )
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_method
-from sqlalchemy.orm import Query, aliased, deferred, dynamic_loader, relationship, validates
+from sqlalchemy.orm import Query, aliased, dynamic_loader, relationship, validates
 from sqlalchemy.schema import Sequence
 from sqlalchemy.sql.expression import func
 from sqlalchemy.types import JSON
 
 from ..lookup import LookupTable
-from .base import Base, TimestampMixin, utc_timestamp_gen, uuid_gen
+from .base import Base, TimestampMixin, deprecated_column, utc_timestamp_gen, uuid_gen
 from .common import PostgreSQLUUID
 from .industry_codes import LkIndustryCode
 from .verifications import Verification
@@ -567,11 +566,9 @@ class Employee(Base, TimestampMixin):
     ctr_address_pair_id = Column(
         PostgreSQLUUID, ForeignKey("link_ctr_address_pair.fineos_address_id"), index=True
     )
-    experian_address_pair_id = deferred(
+    experian_address_pair_id = deprecated_column(
         Column(
-            cast(UUID, PostgreSQLUUID).evaluates_none(),
-            ForeignKey("link_experian_address_pair.fineos_address_id"),
-            index=True,
+            PostgreSQLUUID, ForeignKey("link_experian_address_pair.fineos_address_id"), index=True
         )
     )
 
