@@ -23,8 +23,8 @@ import massgov.pfml.util.logging as logging
 import massgov.pfml.util.newrelic.events
 from massgov.pfml import db
 from massgov.pfml.db.models.employees import (
-    EmployeeLog,
-    EmployerLog,
+    EmployeePushToFineosQueue,
+    EmployerPushToFineosQueue,
     ImportLog,
     WagesAndContributions,
 )
@@ -652,7 +652,9 @@ def import_employers(db_session, employers, report, import_log_entry_id):
     # Enqueue newly created employers for push to FINEOS
     employer_insert_logs_to_create = list(
         map(
-            lambda employer: EmployerLog(employer_id=employer.employer_id, action="INSERT"),
+            lambda employer: EmployerPushToFineosQueue(
+                employer_id=employer.employer_id, action="INSERT"
+            ),
             employer_models_to_create,
         )
     )
@@ -744,7 +746,7 @@ def import_employers(db_session, employers, report, import_log_entry_id):
         )
         # Enqueue updated employer for push to FINEOS
         db_session.add(
-            EmployerLog(
+            EmployerPushToFineosQueue(
                 employer_id=existing_employer_model.employer_id,
                 action="UPDATE",
                 family_exemption=existing_employer_model.family_exemption,
@@ -883,7 +885,7 @@ def import_employees(
         employee_models_to_create.append(new_employee)
         # Enqueue newly created employee for push to FINEOS
         employee_insert_logs_to_create.append(
-            EmployeeLog(employee_id=new_employee.employee_id, action="INSERT")
+            EmployeePushToFineosQueue(employee_id=new_employee.employee_id, action="INSERT")
         )
 
         employee_ssns_staged_for_creation_in_current_loop.add(ssn)
@@ -950,7 +952,9 @@ def import_employees(
 
             # Enqueue updated employee for push to FINEOS
             db_session.add(
-                EmployeeLog(employee_id=existing_employee_model.employee_id, action="UPDATE")
+                EmployeePushToFineosQueue(
+                    employee_id=existing_employee_model.employee_id, action="UPDATE"
+                )
             )
 
         else:
@@ -1020,7 +1024,7 @@ def log_employees_with_new_employers(
         )
     )
 
-    employee_new_employer_logs_to_create = []
+    push_to_fineos_queue_items_to_create = []
     already_logged_employee_id_employer_id_tuples = set()
 
     for employee_wage_info in employee_wage_info_for_existing_employees:
@@ -1041,24 +1045,28 @@ def log_employees_with_new_employers(
 
         employer_id_set = employee_id_to_employer_id_set.get(employee_id, None)
         if employer_id_set is None or employer_id not in employer_id_set:
-            employee_log = EmployeeLog(
+            push_to_fineos_queue_item = EmployeePushToFineosQueue(
                 employee_id=employee_id, employer_id=employer_id, action="UPDATE_NEW_EMPLOYER",
             )
-            employee_new_employer_logs_to_create.append(employee_log)
+            push_to_fineos_queue_items_to_create.append(push_to_fineos_queue_item)
             already_logged_employee_id_employer_id_tuples.add((employee_id, employer_id))
 
-    employee_logs_count = len(employee_new_employer_logs_to_create)
-    if employee_logs_count > 0:
-        logger.info("Logging employees as updated for new employer: %i", employee_logs_count)
+    push_to_fineos_queue_items_count = len(push_to_fineos_queue_items_to_create)
+    if push_to_fineos_queue_items_count > 0:
+        logger.info(
+            "Logging employees as updated for new employer: %i", push_to_fineos_queue_items_count,
+        )
         bulk_save(
             db_session,
-            employee_new_employer_logs_to_create,
+            push_to_fineos_queue_items_to_create,
             "Employee Logs (New Employer Update)",
             commit=True,
         )
 
-    report.logged_employees_for_new_employer += employee_logs_count
-    logger.info("Done - Check and log employees with new employers: %i", employee_logs_count)
+    report.logged_employees_for_new_employer += push_to_fineos_queue_items_count
+    logger.info(
+        "Done - Check and log employees with new employers: %i", push_to_fineos_queue_items_count,
+    )
 
 
 def import_wage_data(

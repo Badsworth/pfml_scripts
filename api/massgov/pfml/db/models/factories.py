@@ -315,9 +315,9 @@ class EmployerQuarterlyContributionFactory(BaseFactory):
     pfm_account_id = factory.Faker("random_int")
 
 
-class EmployeeLogFactory(BaseFactory):
+class EmployeePushToFineosQueueFactory(BaseFactory):
     class Meta:
-        model = employee_models.EmployeeLog
+        model = employee_models.EmployeePushToFineosQueue
 
     employee_log_id = Generators.UuidObj
     employee_id = Generators.UuidObj
@@ -327,9 +327,9 @@ class EmployeeLogFactory(BaseFactory):
     process_id = 1
 
 
-class EmployerLogFactory(BaseFactory):
+class EmployerPushToFineosQueueFactoryFactory(BaseFactory):
     class Meta:
-        model = employee_models.EmployerLog
+        model = employee_models.EmployerPushToFineosQueue
 
     employer_log_id = Generators.UuidObj
     employer_id = Generators.UuidObj

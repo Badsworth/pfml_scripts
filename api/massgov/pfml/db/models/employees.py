@@ -433,7 +433,7 @@ class EmployerQuarterlyContribution(Base, TimestampMixin):
     employer = relationship("Employer", back_populates="employer_quarterly_contribution")
 
 
-class EmployerLog(Base, TimestampMixin):
+class EmployerPushToFineosQueue(Base, TimestampMixin):
     __tablename__ = "employer_log"
     employer_log_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     employer_id = Column(PostgreSQLUUID, index=True)
@@ -614,7 +614,7 @@ class Employee(Base, TimestampMixin):
     )
 
 
-class EmployeeLog(Base, TimestampMixin):
+class EmployeePushToFineosQueue(Base, TimestampMixin):
     __tablename__ = "employee_log"
     employee_log_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     employee_id = Column(PostgreSQLUUID, index=True)
