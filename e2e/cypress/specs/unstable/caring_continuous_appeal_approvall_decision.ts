@@ -48,7 +48,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
     });
 
   it("CSR will approve a claim", { baseUrl: getFineosBaseUrl() }, () => {
-    cy.dependsOnPreviousPass([fineosSubmission]);
+    cy.dependsOnPreviousPass([fineosSubmission, employerApproval]);
     fineos.before();
     cy.unstash<DehydratedClaim>("claim").then((claim) => {
       cy.unstash<Submission>("submission").then((submission) => {
@@ -74,7 +74,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
     "CSR will process the appeal for schedule hearing",
     { baseUrl: getFineosBaseUrl() },
     () => {
-      cy.dependsOnPreviousPass([fineosSubmission]);
+      cy.dependsOnPreviousPass([fineosSubmission, employerApproval]);
       fineos.before();
       cy.visit("/");
       cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
@@ -105,7 +105,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
     "Check the Claimant email for the appeal notification.",
     { retries: 0 },
     () => {{
-      cy.dependsOnPreviousPass([fineosSubmission]);
+      cy.dependsOnPreviousPass([fineosSubmission, employerApproval]);
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
           const subjectClaimant = email.getNotificationSubject(
@@ -134,7 +134,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
     { retries: 0 },
     () => {
       portal.before();
-      cy.dependsOnPreviousPass([fineosSubmission]);
+      cy.dependsOnPreviousPass([fineosSubmission, employerApproval]);
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
           const subjectEmployer = email.getNotificationSubject(
@@ -168,7 +168,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
   it("Check the Claimant Portal for the legal notice (Appeal Acknowledgment).",
     { retries: 0 },
     () => {
-    cy.dependsOnPreviousPass([fineosSubmission]);
+    cy.dependsOnPreviousPass([fineosSubmission, employerApproval]);
     portal.before({
       claimantShowStatusPage: config("HAS_CLAIMANT_STATUS_PAGE") === "true",
     });
