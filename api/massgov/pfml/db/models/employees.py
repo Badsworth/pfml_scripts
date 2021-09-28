@@ -1479,6 +1479,7 @@ class AbsenceReasonQualifierTwo(LookupTable):
     ACCIDENT_INJURY = LkAbsenceReasonQualifierTwo(1, "Accident / Injury")
     MEDICAL_RELATED = LkAbsenceReasonQualifierTwo(2, "Medical Related")
     NON_MEDICAL = LkAbsenceReasonQualifierTwo(3, "Non Medical")
+    SICKNESS = LkAbsenceReasonQualifierTwo(4, "Sickness")
 
 
 class GeoState(LookupTable):

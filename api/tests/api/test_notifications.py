@@ -24,7 +24,6 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.db.models.factories import (
     ClaimFactory,
-    EmployeeFactory,
     EmployeeWithFineosNumberFactory,
     EmployerFactory,
 )
@@ -138,6 +137,29 @@ fineos_absence_detail_body_2 = {
     ],
 }
 
+fineos_absence_detail_body_with_missing_fields = {
+    "absenceId": "NTN-20133-ABS-01",
+    "creationDate": "1999-12-31T23:59:59Z",
+    "lastUpdatedDate": "1999-12-31T23:59:59Z",
+    "status": "Adjudication",
+    "notifiedBy": "Miranda Kool",
+    "notificationDate": "2021-01-06",
+    "absencePeriods": [
+        {
+            "id": "PL-14449-0000028064",
+            "reason": "Medical Donation - Employee",
+            "reasonQualifier1": "",
+            "reasonQualifier2": "",
+            "startDate": "2021-02-02",
+            "endDate": "2021-03-03",
+            "expectedReturnToWorkDate": "2021-04-04",
+            "status": "Known",
+            "requestStatus": "Denied",
+            "absenceType": "Episodic",
+        }
+    ],
+}
+
 
 @pytest.fixture()
 def fineos_absence_details():
@@ -149,9 +171,19 @@ def updated_fineos_absence_details():
     return AbsenceDetails.parse_obj(fineos_absence_detail_body_2)
 
 
+@pytest.fixture()
+def fineos_absence_details_with_missing_fields():
+    return AbsenceDetails.parse_obj(fineos_absence_detail_body_with_missing_fields)
+
+
 @pytest.fixture
 def employer():
     return EmployerFactory.create(employer_fein="716779225", fineos_employer_id=1005)
+
+
+@pytest.fixture
+def claim_with_employer(employer):
+    return ClaimFactory.create(employer_id=employer.employer_id)
 
 
 def test_notifications_post_leave_admin(client, test_db_session, fineos_user_token, employer):
@@ -371,33 +403,27 @@ def test_notification_post_unauthorized(client, test_db_session, auth_token, emp
     assert len(notifications) == 0
 
 
-@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence")
 def test_update_absence_period(
-    mock_get_req, fineos_absence_details, test_db_session, fineos_user_token, employer
+    test_db_session, fineos_absence_details, fineos_user_token, claim_with_employer, mocker,
 ):
-    mock_get_req.return_value = fineos_absence_details
-
-    employee = EmployeeFactory.create()
-    claim = ClaimFactory.create(
-        employee_id=employee.employee_id,
-        employer_id=employer.employer_id,
-        fineos_absence_id="NTN-111-ABS-01",
-    )
+    claim = claim_with_employer
 
     fineos_user_id = "USER_WITH_EXISTING_WORK_PATTERN"
     fineos_web_id_ext = FINEOSWebIdExt()
-    fineos_web_id_ext.employee_tax_identifier = employee.tax_identifier_id
-    fineos_web_id_ext.employer_fein = employer.employer_fein
+    fineos_web_id_ext.employee_tax_identifier = claim.employee.tax_identifier_id
+    fineos_web_id_ext.employer_fein = claim.employer.employer_fein
     fineos_web_id_ext.fineos_web_id = fineos_user_id
     test_db_session.add(fineos_web_id_ext)
     test_db_session.commit()
 
     fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+    mocker.patch.object(fineos_client, "get_absence", return_value=fineos_absence_details)
+
     update_absence_period(
-        "NTN-304363-ABS-01",
+        claim.fineos_absence_id,
         claim,
-        employee.tax_identifier_id,
-        employer.employer_fein,
+        claim.employee.tax_identifier_id,
+        claim.employer.employer_fein,
         fineos_client,
         test_db_session,
         {},
@@ -416,19 +442,110 @@ def test_update_absence_period(
     assert len(absence_periods) == 1
 
 
+def test_update_absence_period_error_on_populate(
+    test_db_session, fineos_absence_details, fineos_user_token, claim_with_employer, mocker,
+):
+    claim = claim_with_employer
+
+    fineos_user_id = "USER_WITH_EXISTING_WORK_PATTERN"
+    fineos_web_id_ext = FINEOSWebIdExt()
+    fineos_web_id_ext.employee_tax_identifier = claim.employee.tax_identifier_id
+    fineos_web_id_ext.employer_fein = claim.employer.employer_fein
+    fineos_web_id_ext.fineos_web_id = fineos_user_id
+    test_db_session.add(fineos_web_id_ext)
+    test_db_session.commit()
+
+    fineos_client = massgov.pfml.fineos.MockFINEOSClient()
+    mocker.patch.object(fineos_client, "get_absence", return_value=fineos_absence_details)
+
+    mocker.patch(
+        "massgov.pfml.api.notifications.populate_absence_period_table",
+        side_effect=Exception("test exception"),
+    )
+
+    with pytest.raises(Exception, match="test exception"):
+        update_absence_period(
+            claim.fineos_absence_id,
+            claim,
+            claim.employee.tax_identifier_id,
+            claim.employer.employer_fein,
+            fineos_client,
+            test_db_session,
+            {},
+        )
+
+    absence_periods: List[AbsencePeriod] = (
+        test_db_session.query(AbsencePeriod)
+        .filter(
+            AbsencePeriod.claim_id == claim.claim_id,
+            AbsencePeriod.fineos_absence_period_class_id == 14449,
+            AbsencePeriod.fineos_absence_period_index_id == 28064,
+        )
+        .all()
+    )
+
+    assert len(absence_periods) == 0
+
+
+def test_populate_absence_period_table_missing_and_empty_fields(
+    test_db_session,
+    initialize_factories_session,
+    fineos_absence_details_with_missing_fields,
+    claim_with_employer,
+):
+
+    absence_periods = fineos_absence_details_with_missing_fields.absencePeriods
+    claim = claim_with_employer
+    log_attributes = {}
+
+    populate_absence_period_table(absence_periods, claim, test_db_session, log_attributes)
+
+    absence_periods = (
+        test_db_session.query(AbsencePeriod)
+        .filter(
+            AbsencePeriod.claim_id == claim.claim_id,
+            AbsencePeriod.fineos_absence_period_class_id == 14449,
+            AbsencePeriod.fineos_absence_period_index_id == 28064,
+        )
+        .all()
+    )
+
+    assert len(absence_periods) == 1
+    absence_period = absence_periods[0]
+
+    assert str(absence_period.absence_period_start_date) == "2021-02-02"
+    assert str(absence_period.absence_period_end_date) == "2021-03-03"
+    assert absence_period.claim_id == claim.claim_id
+    assert absence_period.fineos_absence_period_class_id == 14449
+    assert absence_period.fineos_absence_period_index_id == 28064
+    assert absence_period.absence_reason_qualifier_one_id is None
+    assert absence_period.absence_reason_qualifier_two_id is None
+    assert (
+        absence_period.absence_period_type_id == AbsencePeriodType.EPISODIC.absence_period_type_id
+    )
+    assert (
+        absence_period.absence_reason_id
+        == AbsenceReason.MEDICAL_DONATION_EMPLOYEE.absence_reason_id
+    )
+    assert (
+        absence_period.leave_request_decision_id
+        == LeaveRequestDecision.DENIED.leave_request_decision_id
+    )
+
+
 def test_populate_absence_period_table(
+    test_db_session,
     initialize_factories_session,
     fineos_absence_details,
     updated_fineos_absence_details,
-    employer,
-    test_db_session,
+    claim_with_employer,
 ):
     absence_periods = fineos_absence_details.absencePeriods
-    claim = ClaimFactory.create(
-        employer_id=employer.employer_id, fineos_absence_id="NTN-111-ABS-02",
-    )
+    claim = claim_with_employer
+    log_attributes = {}
 
-    populate_absence_period_table(absence_periods, claim, test_db_session, {})
+    populate_absence_period_table(absence_periods, claim, test_db_session, log_attributes)
+
     absence_periods = (
         test_db_session.query(AbsencePeriod)
         .filter(
