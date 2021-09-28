@@ -1,0 +1,388 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Checklist renders multiple steps 1`] = `
+<div>
+  <div
+    class="measure-6"
+  >
+    <a
+      class="usa-button margin-bottom-5 usa-button--unstyled"
+      href="/applications"
+    >
+      <svg
+        class="margin-right-05"
+        height="12"
+        viewBox="0 0 448 512"
+        width="12"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"
+          fill="currentColor"
+        />
+      </svg>
+      Back to applications
+    </a>
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2 usa-sr-only"
+      tabindex="-1"
+    >
+      Checklist: Create a new application
+    </h1>
+    <div
+      class="margin-bottom-8"
+    >
+      <h2
+        class="font-heading-lg text-bold"
+      >
+        <span
+          class="display-block font-heading-2xs margin-bottom-2 text-base-dark text-bold"
+        >
+          Part 1
+        </span>
+        Tell us about yourself and your leave
+      </h2>
+      <p>
+        Your progress is automatically saved as you complete the application. You can edit any information you enter in Part 1 until step 5 is completed.
+      </p>
+      <div
+        class="display-flex border-bottom border-base-light padding-y-3"
+      >
+        <div
+          aria-label="Step 1"
+          class="radius-pill text-center height-5 width-5 margin-top-2px font-sans-md text-base-lightest line-height-sans-6 bg-secondary"
+        >
+          1
+        </div>
+        <div
+          class="flex-fill margin-left-2 grid-row margin-top-1"
+        >
+          <div
+            class="tablet:grid-col-8"
+          >
+            <h3
+              class="font-heading-sm text-bold"
+            >
+              Verify your identification
+            </h3>
+            <div
+              class="usa-prose"
+            >
+              <p>
+                You can use a variety of documents to verify your identity, but it’s easiest if you have a Massachusetts driver’s license or Massachusetts Identification Card.
+              </p>
+              <p>
+                You will need to provide:
+              </p>
+              <ul
+                class="usa-list"
+              >
+                <li>
+                  Your name as it appears on your ID.
+                </li>
+                <li>
+                  Your driver’s license number or Mass ID number, if you have one.
+                </li>
+                <li>
+                  Your Social Security Number or Individual Taxpayer Identification Number.
+                </li>
+              </ul>
+            </div>
+          </div>
+          <div
+            class="margin-top-2 tablet:margin-top-0 tablet:text-right tablet:grid-col-4"
+          >
+            <a
+              aria-label="Start: Verify your identification"
+              class="usa-button width-auto"
+              href="/applications/name?claim_id=mock_application_id"
+            >
+              Start
+            </a>
+          </div>
+        </div>
+      </div>
+      <div
+        class="display-flex border-bottom border-base-light padding-y-3"
+      >
+        <div
+          aria-label="Step 2"
+          class="radius-pill text-center height-5 width-5 margin-top-2px font-sans-md border-2px line-height-sans-5 border-base text-base"
+        >
+          2
+        </div>
+        <div
+          class="flex-fill margin-left-2 grid-row margin-top-1"
+        >
+          <div
+            class="tablet:grid-col-8"
+          >
+            <h3
+              class="text-base font-heading-sm text-bold"
+            >
+              Enter employment information
+            </h3>
+          </div>
+          <div
+            class="margin-top-2 tablet:margin-top-0 tablet:text-right tablet:grid-col-4"
+          >
+            <button
+              aria-label="Start: Enter employment information"
+              class="usa-button position-relative width-auto"
+              disabled=""
+              type="button"
+            >
+              Start
+            </button>
+          </div>
+        </div>
+      </div>
+      <div
+        class="display-flex border-bottom border-base-light padding-y-3"
+      >
+        <div
+          aria-label="Step 3"
+          class="radius-pill text-center height-5 width-5 margin-top-2px font-sans-md border-2px line-height-sans-5 border-base text-base"
+        >
+          3
+        </div>
+        <div
+          class="flex-fill margin-left-2 grid-row margin-top-1"
+        >
+          <div
+            class="tablet:grid-col-8"
+          >
+            <h3
+              class="text-base font-heading-sm text-bold"
+            >
+              Enter leave details
+            </h3>
+          </div>
+          <div
+            class="margin-top-2 tablet:margin-top-0 tablet:text-right tablet:grid-col-4"
+          >
+            <button
+              aria-label="Start: Enter leave details"
+              class="usa-button position-relative width-auto"
+              disabled=""
+              type="button"
+            >
+              Start
+            </button>
+          </div>
+        </div>
+      </div>
+      <div
+        class="display-flex border-bottom border-base-light padding-y-3"
+      >
+        <div
+          aria-label="Step 4"
+          class="radius-pill text-center height-5 width-5 margin-top-2px font-sans-md border-2px line-height-sans-5 border-base text-base"
+        >
+          4
+        </div>
+        <div
+          class="flex-fill margin-left-2 grid-row margin-top-1"
+        >
+          <div
+            class="tablet:grid-col-8"
+          >
+            <h3
+              class="text-base font-heading-sm text-bold"
+            >
+              Report other leave, benefits, and income
+            </h3>
+          </div>
+          <div
+            class="margin-top-2 tablet:margin-top-0 tablet:text-right tablet:grid-col-4"
+          >
+            <button
+              aria-label="Start: Report other leave, benefits, and income"
+              class="usa-button position-relative width-auto"
+              disabled=""
+              type="button"
+            >
+              Start
+            </button>
+          </div>
+        </div>
+      </div>
+      <div
+        class="display-flex border-bottom border-base-light padding-y-3"
+      >
+        <div
+          aria-label="Step 5"
+          class="radius-pill text-center height-5 width-5 margin-top-2px font-sans-md border-2px line-height-sans-5 border-base text-base"
+        >
+          5
+        </div>
+        <div
+          class="flex-fill margin-left-2 grid-row margin-top-1"
+        >
+          <div
+            class="tablet:grid-col-8"
+          >
+            <h3
+              class="text-base font-heading-sm text-bold"
+            >
+              Review and confirm
+            </h3>
+          </div>
+          <div
+            class="margin-top-2 tablet:margin-top-0 tablet:text-right tablet:grid-col-4"
+          >
+            <button
+              aria-label="Start: Review and confirm"
+              class="usa-button position-relative width-auto"
+              disabled=""
+              type="button"
+            >
+              Start
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="margin-bottom-8"
+    >
+      <h2
+        class="font-heading-lg text-bold"
+      >
+        <span
+          class="display-block font-heading-2xs margin-bottom-2 text-base-dark text-bold"
+        >
+          Part 2
+        </span>
+        Enter your payment information
+      </h2>
+      <div
+        class="display-flex border-bottom border-base-light padding-y-3"
+      >
+        <div
+          aria-label="Step 6"
+          class="radius-pill text-center height-5 width-5 margin-top-2px font-sans-md border-2px line-height-sans-5 border-base text-base"
+        >
+          6
+        </div>
+        <div
+          class="flex-fill margin-left-2 grid-row margin-top-1"
+        >
+          <div
+            class="tablet:grid-col-8"
+          >
+            <h3
+              class="text-base font-heading-sm text-bold"
+            >
+              Add payment information
+            </h3>
+          </div>
+          <div
+            class="margin-top-2 tablet:margin-top-0 tablet:text-right tablet:grid-col-4"
+          >
+            <button
+              aria-label="Start: Add payment information"
+              class="usa-button position-relative width-auto"
+              disabled=""
+              type="button"
+            >
+              Start
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div
+      class="margin-bottom-8"
+    >
+      <h2
+        class="font-heading-lg text-bold"
+      >
+        <span
+          class="display-block font-heading-2xs margin-bottom-2 text-base-dark text-bold"
+        >
+          Part 3
+        </span>
+        Upload your documents
+      </h2>
+      <div
+        class="display-flex border-bottom border-base-light padding-y-3"
+      >
+        <div
+          aria-label="Step 7"
+          class="radius-pill text-center height-5 width-5 margin-top-2px font-sans-md border-2px line-height-sans-5 border-base text-base"
+        >
+          7
+        </div>
+        <div
+          class="flex-fill margin-left-2 grid-row margin-top-1"
+        >
+          <div
+            class="tablet:grid-col-8"
+          >
+            <h3
+              class="text-base font-heading-sm text-bold"
+            >
+              Upload identification document
+            </h3>
+          </div>
+          <div
+            class="margin-top-2 tablet:margin-top-0 tablet:text-right tablet:grid-col-4"
+          >
+            <button
+              aria-label="Start: Upload identification document"
+              class="usa-button position-relative width-auto"
+              disabled=""
+              type="button"
+            >
+              Start
+            </button>
+          </div>
+        </div>
+      </div>
+      <div
+        class="display-flex border-bottom border-base-light padding-y-3"
+      >
+        <div
+          aria-label="Step 8"
+          class="radius-pill text-center height-5 width-5 margin-top-2px font-sans-md border-2px line-height-sans-5 border-base text-base"
+        >
+          8
+        </div>
+        <div
+          class="flex-fill margin-left-2 grid-row margin-top-1"
+        >
+          <div
+            class="tablet:grid-col-8"
+          >
+            <h3
+              class="text-base font-heading-sm text-bold"
+            >
+              Upload leave certification documents
+            </h3>
+          </div>
+          <div
+            class="margin-top-2 tablet:margin-top-0 tablet:text-right tablet:grid-col-4"
+          >
+            <button
+              aria-label="Start: Upload leave certification documents"
+              class="usa-button position-relative width-auto"
+              disabled=""
+              type="button"
+            >
+              Start
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <button
+      class="usa-button margin-bottom-8 disabled"
+      disabled=""
+      type="button"
+    >
+      Review and submit application
+    </button>
+  </div>
+</div>
+`;

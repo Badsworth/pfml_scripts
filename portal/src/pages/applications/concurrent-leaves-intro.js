@@ -17,7 +17,7 @@ export const ConcurrentLeavesIntro = (props) => {
   const endDate = formatDate(claim.leaveEndDate).full();
 
   const handleSave = () => {
-    appLogic.portalFlow.goToNextPage({ claim }, query);
+    return appLogic.portalFlow.goToNextPage({ claim }, query);
   };
 
   return (

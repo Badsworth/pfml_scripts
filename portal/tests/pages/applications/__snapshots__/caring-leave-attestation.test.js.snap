@@ -1,0 +1,44 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CaringLeaveAttestation renders the page 1`] = `
+<div>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+    tabindex="-1"
+  >
+    Confirm that you are an eligible caregiver
+  </h1>
+  This paid leave applies to caregivers with an 
+  <a
+    href="https://www.mass.gov/family-caring-leave-relationships"
+    rel="noopener"
+    target="_blank"
+  >
+    eligible family relationship
+  </a>
+  .
+  <div
+    class="usa-alert usa-alert--info usa-alert--no-icon measure-6"
+    tabindex="-1"
+  >
+    <div
+      class="usa-alert__body"
+      role="region"
+    >
+      <div
+        class="usa-alert__text"
+      >
+        <p>
+          I agree that I have an eligible relationship with my child who is experiencing a serious health condition and needs my care.
+        </p>
+        <a
+          class="usa-button text-no-underline text-white"
+          href="/applications/upload-docs-options?claim_id=mock_application_id"
+        >
+          I understand and agree
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+`;
