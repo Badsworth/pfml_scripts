@@ -21,7 +21,7 @@ locals {
     }
     "fineos_api" = {
       alarm_name        = "High FINEOS API error rate"
-      where_span_filter = "name LIKE 'External/%-api.masspfml.fineos.com/requests/'"
+      where_span_filter = "name LIKE 'External/%-api.masspfml.fineos.com/requests/' AND http.url NOT LIKE '%cases/%-AP-%/documents'"
     }
     "fineos_claim_submission" = {
       alarm_name        = "High FINEOS Claim Submission error rate"
