@@ -132,16 +132,6 @@ locals {
       ]
     },
 
-    "register-leave-admins-with-fineos" = {
-      command   = ["register-leave-admins-with-fineos"]
-      task_role = aws_iam_role.register_admins_task_role.arn,
-      cpu       = 4096,
-      memory    = 18432,
-      env = [
-        local.db_access,
-        local.fineos_api_access
-      ]
-    }
 
     "load-employers-to-fineos" = {
       command = ["load-employers-to-fineos"]

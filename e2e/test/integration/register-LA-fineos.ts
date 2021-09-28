@@ -1,10 +1,4 @@
 import { describe, beforeAll, test, expect } from "@jest/globals";
-import {
-  ECSClient,
-  RunTaskCommand,
-  waitUntilTasksStopped,
-  NetworkConfiguration as ECSNetworkConfiguration,
-} from "@aws-sdk/client-ecs";
 import config from "../../src/config";
 import {
   getAuthManager,
@@ -25,11 +19,6 @@ import {
 } from "../../src/_api";
 import { ClaimGenerator } from "../../src/generation/Claim";
 import { ScenarioSpecification } from "../../src/generation/Scenario";
-import {
-  CloudWatchEventsClient,
-  ListTargetsByRuleCommand,
-  NetworkConfiguration as CloudwatchEventsNetworkConfiguration,
-} from "@aws-sdk/client-cloudwatch-events";
 import { Credentials } from "../../src/types";
 import { Employer } from "../../src/generation/Employer";
 
@@ -38,27 +27,6 @@ let leave_admin_creds_1: Credentials;
 let leave_admin_creds_2: Credentials;
 let employer: Employer;
 
-// starting ecs and cloudwatch instances
-const ecs = new ECSClient({});
-const cloudwatch = new CloudWatchEventsClient({});
-
-// convert format for ECS call
-function convertNetworkConfiguration(
-  cloudwatchConfiguration?: CloudwatchEventsNetworkConfiguration
-): ECSNetworkConfiguration | undefined {
-  if (cloudwatchConfiguration && cloudwatchConfiguration.awsvpcConfiguration) {
-    return {
-      awsvpcConfiguration: {
-        subnets: cloudwatchConfiguration.awsvpcConfiguration.Subnets,
-        securityGroups:
-          cloudwatchConfiguration.awsvpcConfiguration.SecurityGroups,
-        assignPublicIp:
-          cloudwatchConfiguration.awsvpcConfiguration.AssignPublicIp,
-      },
-    };
-  }
-  return;
-}
 
 /**
  * @group nightly
@@ -106,55 +74,6 @@ describe("Series of test that verifies LAs are properly registered in Fineos", (
     }
   }, 60000);
 
-  test("Run and wait for ECS task to complete", async () => {
-    const targets = await cloudwatch.send(
-      new ListTargetsByRuleCommand({
-        Rule: `register-leave-admins-with-fineos_${config(
-          "ENVIRONMENT"
-        )}_schedule`,
-      })
-    );
-    const target = targets.Targets?.[0];
-
-    if (!target || !target.EcsParameters) {
-      throw new Error("Unable to determine target for rule");
-    }
-    console.log("ECS task to register LAs in Fineos has started ...");
-
-    const ECS_result = await ecs.send(
-      new RunTaskCommand({
-        cluster: target.Arn,
-        group: target.EcsParameters.Group,
-        taskDefinition: target.EcsParameters.TaskDefinitionArn,
-        networkConfiguration: convertNetworkConfiguration(
-          target.EcsParameters.NetworkConfiguration
-        ),
-        launchType: target.EcsParameters.LaunchType,
-        count: target.EcsParameters.TaskCount,
-        platformVersion: target.EcsParameters.PlatformVersion,
-        startedBy: "integration-testing",
-      })
-    );
-
-    if (!ECS_result.tasks) {
-      throw new Error("No task found from ECS run!");
-    }
-    const result = await waitUntilTasksStopped(
-      { client: ecs, maxWaitTime: 600 },
-      {
-        cluster: target.Arn,
-        tasks: [ECS_result.tasks[0].taskArn] as string[],
-      }
-    );
-
-    if (result.state === "FAILURE") {
-      throw new Error(`Task failed with error: ${result.reason}`);
-    }
-
-    console.log(
-      "ECS task to register LAs in Fineos has completed successfully!"
-    );
-  }, 120000);
 
   test("Check LA user object for has_fineos_registration property", async () => {
     const session_1 = await authenticator.authenticate(
