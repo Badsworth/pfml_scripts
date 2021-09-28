@@ -258,7 +258,7 @@ export const Status = ({ appLogic, query }) => {
           <Timeline
             absencePeriods={claimDetail.absence_periods}
             employerFollowUpDate={
-              claimDetail.managed_requirements[0]?.follow_up_date
+              claimDetail.openManagedRequirement?.follow_up_date
             }
             absenceDetails={absenceDetails}
             applicationId={claimDetail.application_id}
@@ -360,6 +360,7 @@ export const StatusTagMap = {
   Denied: "error",
   Pending: "pending",
   Withdrawn: "inactive",
+  Cancelled: "inactive",
 };
 
 export const LeaveDetails = ({ absenceDetails = {} }) => {
@@ -530,7 +531,10 @@ export const Timeline = ({
     </React.Fragment>
   );
   return (
-    <div className="border-bottom border-base-lighter padding-bottom-2 margin-bottom-2">
+    <div
+      data-testid="timeline"
+      className="border-bottom border-base-lighter padding-bottom-2 margin-bottom-2"
+    >
       {!bondingAbsencePeriod ||
       // eslint-disable-next-line react/prop-types
       !shouldRenderCertificationButton(bondingAbsencePeriod.reason, docList) ? (

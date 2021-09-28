@@ -1,7 +1,7 @@
 import { ClaimEmployee, ClaimEmployer, ManagedRequirement } from "./Claim";
+import { find, groupBy } from "lodash";
 
 import BaseModel from "./BaseModel";
-import { groupBy } from "lodash";
 
 class ClaimDetail extends BaseModel {
   constructor(attrs) {
@@ -88,6 +88,15 @@ class ClaimDetail extends BaseModel {
    */
   get absencePeriodsByReason() {
     return groupBy(this.absence_periods, "reason");
+  }
+
+  /**
+   * Get open managed requirement for claim. There should only ever be 1 open managed requirement
+   * at a time
+   * @returns {ManagedRequirement}
+   */
+  get openManagedRequirement() {
+    return find(this.managed_requirements, { status: "Open" });
   }
 }
 
