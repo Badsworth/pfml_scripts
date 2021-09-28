@@ -1,0 +1,243 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Employer welcome renders page 1`] = `
+<div>
+  <div
+    class="grid-row"
+  >
+    <nav
+      class="border-bottom border-base-lighter margin-bottom-5 display-flex width-full"
+    >
+      <a
+        class="display-inline-block padding-y-2 margin-bottom-neg-1px text-no-underline width-card text-base-dark hover:text-primary hover:text-underline"
+        href="/employers/welcome"
+      >
+        Welcome
+      </a>
+      <a
+        class="display-inline-block padding-y-2 margin-bottom-neg-1px text-no-underline width-card text-base-dark hover:text-primary hover:text-underline"
+        href="/employers/dashboard"
+      >
+        Dashboard
+      </a>
+    </nav>
+  </div>
+  <div
+    class="grid-row"
+  >
+    <div
+      class="desktop:grid-col-8"
+    >
+      <h1
+        class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+        tabindex="-1"
+      >
+        Welcome
+      </h1>
+      <div
+        class="usa-alert usa-alert--info"
+        tabindex="-1"
+      >
+        <div
+          class="usa-alert__body"
+          role="region"
+        >
+          <div
+            class="usa-alert__text"
+          >
+            <p>
+              The Department of Family and Medical Leave has updated the Review page. Employees can now report other leaves and benefits in their paid leave application. If your employee reported other leaves or benefits, you can review the information provided, and add any that they missed.
+            </p>
+          </div>
+        </div>
+      </div>
+      <p>
+        Thanks for joining the paid leave program. Massachusetts workers can now apply for paid family and medical leave.
+      </p>
+      <h2
+        class="font-heading-md text-bold"
+      >
+        <svg
+          aria-hidden="true"
+          class="usa-icon--size-4 margin-right-2 text-secondary text-middle"
+          fill="currentColor"
+          focusable="false"
+          role="img"
+        >
+          <use
+            xlink:href="/img/sprite.svg#list"
+          />
+        </svg>
+        View all applications
+        <strong
+          class="usa-tag radius-md margin-left-1"
+        >
+          New
+        </strong>
+      </h2>
+      <p>
+        When you log into your account you can now use the 
+        <a
+          href="/employers/dashboard"
+        >
+          dashboard
+        </a>
+         to see all the applications submitted by employees from your organization.
+      </p>
+      <h2
+        class="font-heading-md text-bold"
+      >
+        <svg
+          aria-hidden="true"
+          class="margin-right-2 text-secondary text-middle"
+          fill="currentColor"
+          height="32"
+          viewBox="0 0 32 24"
+          width="32"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M16 12.95L.02 0h31.961zM0 20.08V3.42l8.767 7.1zM32 3.42v16.66l-8.767-9.56zM21.157 12.2L16 16.38l-5.157-4.18L.029 24h31.942z"
+          />
+        </svg>
+        Check your email regularly
+      </h2>
+      <p>
+        When an employee applies for leave, you’ll receive email updates about their application status and any steps you need to take. We’ll include everyone who has an employer account with your company in case you’re out of the office.
+      </p>
+      <h2
+        class="font-heading-md text-bold"
+      >
+        <svg
+          aria-hidden="true"
+          class="margin-right-2 text-secondary text-middle"
+          fill="currentColor"
+          height="32"
+          viewBox="0 0 40 40"
+          width="32"
+        >
+          <path
+            d="M40 20c0 11.045-8.96 20-20.01 20-1.8 0-3.54-.26-5.2-.705l1.11-3.157c1.31.332 2.68.529 4.09.529 9.2 0 16.68-7.477 16.68-16.667 0-9.19-7.48-16.667-16.68-16.667-3.72 0-7.15 1.24-9.93 3.316l3.42 3.414L1.79 12.32 4.05.632 7.68 4.27C11.08 1.607 15.34 0 19.99 0 31.04 0 40 8.955 40 20zM21.67 10v10H30v3.333H18.33V10zM5.78 28.667c.56.91 1.2 1.761 1.91 2.546l-2.34 2.389a20.092 20.092 0 01-2.56-3.43zm2.04 7.181l2.36-2.405a16.69 16.69 0 002.59 1.555l-1.11 3.165a19.847 19.847 0 01-3.84-2.315zM4.33 25.662l-2.99 1.51a19.43 19.43 0 01-1.09-4.101l3.33-.264c.16.983.42 1.936.75 2.855zM0 19.748l3.36-.268c.04-1.172.21-2.31.48-3.412H.38c-.24 1.19-.36 2.422-.38 3.68z"
+          />
+        </svg>
+        Respond to applications within 10 business days
+      </h2>
+      <p>
+        When an application is submitted, you have 10 business days to open the direct link from your email and review it online. You can comment on the application, approve or deny it, and report fraud if needed. Reviewing takes about 10 minutes. If we don’t hear from anyone at your company before the deadline, we’ll process the application solely based on the information the employee provided.
+      </p>
+      <h2
+        class="font-heading-md text-bold"
+      >
+        <svg
+          class="margin-right-2 text-secondary text-middle"
+          fill="currentColor"
+          height="32"
+          viewBox="0 0 35 36"
+          width="32"
+          xmlns="http://www.w3.org/2000/svg"
+        >
+          <path
+            d="M34.185 13.21h-3.152V8.43c0-.02-.004-.03-.004-.04a.83.83 0 00-.01-.11c-.007-.03-.014-.06-.025-.08l-.018-.07a4.33 4.33 0 01-.046-.08c-.008-.02-.014-.03-.024-.05-.029-.04-.06-.08-.097-.12L23.254.23c-.002 0-.006-.01-.007-.01-.034-.03-.068-.06-.108-.09L23.076.1a.229.229 0 00-.068-.04c-.027-.01-.054-.02-.08-.02-.021-.01-.041-.02-.062-.02A.713.713 0 0022.72 0H5.716a.765.765 0 00-.755.77v12.44H1.806c-.45 0-.816.38-.814.83v11.75c0 .46.37.82.822.82h3.145v8.62c0 .42.339.77.754.77h24.564c.417 0 .756-.35.756-.77v-8.62h3.152c.45 0 .815-.36.815-.82V14.04c0-.45-.365-.83-.815-.83zM6.47 1.53h15.494v6.9c0 .42.339.76.756.76h6.802v4.02H6.47zm23.052 32.93H6.47v-7.85h23.052zM13.433 18.4c0 .54-.114 1.02-.336 1.41-.221.38-.509.69-.861.91a3.18 3.18 0 01-1.046.44c-.448.08-1.063.12-1.879.12h-.697v2.97H5.925v-8.67h3.302c1.098 0 1.807.05 2.166.14a2.64 2.64 0 011.456.9c.388.47.584 1.06.584 1.78zm8.693 1.32c0 1.85-.711 2.9-1.305 3.46-.81.74-2.001 1.12-3.538 1.12-.695 0-1.373-.04-1.92-.12l-.356-.05v-8.37l.342-.06c.61-.11 1.451-.17 2.277-.17 1.409 0 2.383.29 3.151.93.885.72 1.349 1.85 1.349 3.26zm7.54-.78v2h-3.318v3.31h-2.575v-8.67h6.296v2.21H26.35v1.15zM23.477 2.62l4.976 5.04h-4.976zm-5.68 15.1c-.123 0-.224.01-.311.01v4.35H17.657c.611 0 1.088-.18 1.412-.53.356-.39.537-.99.537-1.77.004-.71-.169-1.24-.508-1.59-.308-.31-.744-.47-1.301-.47zm-7.612.04c-.124-.02-.43-.05-1.166-.05h-.403v1.44h.518c.845 0 1.127-.07 1.209-.1a.681.681 0 00.341-.24.66.66 0 00.121-.39c0-.19-.057-.33-.162-.44a.81.81 0 00-.458-.22z"
+          />
+        </svg>
+        View forms and notices online
+      </h2>
+      <p>
+        You’ll get an email about our application decision with a direct link to download the letter your employee received. For medical leave, you can download the 
+        <a
+          href="https://www.mass.gov/medical-leave-form"
+          rel="noopener"
+          target="_blank"
+        >
+          Certification of Your Serious Health Condition form
+        </a>
+         during the review process. For leave to care for a family member you can download the 
+        <a
+          href="https://www.mass.gov/family-caring-form"
+          rel="noopener"
+          target="_blank"
+        >
+          Certification to Care for a Family Member
+        </a>
+         during the review process. 
+      </p>
+    </div>
+    <div
+      class="grid-col-fill"
+    />
+    <aside
+      class="desktop:grid-col-3 margin-top-7 desktop:margin-top-1"
+    >
+      <h2
+        class="font-heading-md text-bold"
+      >
+        Settings
+      </h2>
+      <ul
+        class="usa-list desktop:font-body-2xs desktop:padding-top-05"
+      >
+        <li>
+          <a
+            href="/employers/organizations"
+          >
+            Your organizations
+          </a>
+        </li>
+      </ul>
+      <h2
+        class="font-heading-md text-bold"
+      >
+        Learn more
+      </h2>
+      <ul
+        class="usa-list desktop:font-body-2xs desktop:padding-top-05"
+      >
+        <li>
+          <a
+            href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
+            rel="noopener"
+            target="_blank"
+          >
+            Your role as a Massachusetts employer
+          </a>
+        </li>
+        <li>
+          <a
+            href="https://www.mass.gov/forms/request-reimbursement-for-your-employees-paid-leave-benefits"
+            rel="noopener"
+            target="_blank"
+          >
+            Employer reimbursements
+          </a>
+        </li>
+      </ul>
+    </aside>
+  </div>
+</div>
+`;
+
+exports[`Employer welcome shows Verification alert when user has a verifiable employer 1`] = `
+<div
+  class="usa-alert__body"
+  role="region"
+>
+  <h2
+    class="usa-alert__heading font-heading-md text-bold"
+  >
+    Verify your account to continue
+  </h2>
+  <div
+    class="usa-alert__text"
+  >
+    <p>
+      We require every employer to verify paid leave contributions when creating an account. You need to 
+      <a
+        href="/employers/organizations"
+      >
+        complete this process
+      </a>
+       to review applications from your team.
+    </p>
+  </div>
+</div>
+`;
