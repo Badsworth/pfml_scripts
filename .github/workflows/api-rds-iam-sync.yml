@@ -64,6 +64,7 @@ jobs:
         run: terraform plan --target module.api.aws_iam_policy.db_user_pfml_api --out plan.tfplan
         working-directory: ${{ env.working-directory }}${{ github.event.inputs.environment || env.default-environment }}
 
+
       # This step ensures that the database is stable before attempting to sync the RDS IAM state.
       # Notably, during the restore process, the old database is renamed and there may not yet be
       # a replacement, so terraform may attempt to delete and recreate it:
@@ -116,3 +117,51 @@ jobs:
         working-directory: ./api
         env:
           TF_CLI_ARGS: ''
+
+  get-tf-state:
+    name: Get terraform state
+    needs: [sync]
+    if: always() && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    outputs:
+      sync-state: ${{ steps.sync-state.outputs.sync-state }}
+    steps:
+        # https://github.com/technote-space/workflow-conclusion-action
+        # this action takes the "conclusion" status from jobs and compiles them together into an env variable with a rolled up status
+      - uses: technote-space/workflow-conclusion-action@v2
+
+      - name: Set sync-state value
+        id: sync-state
+        run: echo "::set-output name=sync-state::${{ env.WORKFLOW_CONCLUSION }}"
+
+  alert-if-failed:
+    runs-on: ubuntu-latest
+    needs: [get-tf-state]
+    if: needs.get-tf-state.outputs.sync-state == 'failure' || 
+        needs.get-tf-state.outputs.sync-state == 'timed_out'
+    steps:
+    - name: send low priority page
+      uses: fjogeleit/http-request-action@master
+      with:
+        url: 'https://events.pagerduty.com/v2/enqueue'
+        method: 'POST'
+        contentType: 'application/json'
+        data: "{
+          \"routing_key\": \"????\", 
+          \"event_action\": \"trigger\",
+          \"dedup_key\":\"????\",
+          \"payload\": {
+            \"summary\": \"Weekly Training API Reset\",
+            \"severity\": \"low\",
+            \"source\": \"Bandit and Safety Scan\",
+            \"custom_details\": {
+              \"description\": \"Weekly Training API Reset Failed.\"
+              }
+            },
+            \"links\": [
+              {
+              \"href\":\"https://github.com/EOLWD/pfml/actions/runs/${{ github.run_id }}\",
+              \"text\": \"GitHub Actions run\"
+              }
+            ]
+          }"
