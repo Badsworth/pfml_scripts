@@ -169,17 +169,9 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
     { retries: 0 },
     () => {
     cy.dependsOnPreviousPass([fineosSubmission, employerApproval]);
-    portal.before({
-      claimantShowStatusPage: config("HAS_CLAIMANT_STATUS_PAGE") === "true",
-    });
+    portal.before();
     portal.loginClaimant();
     cy.unstash<Submission>("submission").then((submission) => {
-      if (config("HAS_CLAIMANT_STATUS_PAGE") === "true") {
-        portal.claimantGoToClaimStatus(submission.fineos_absence_id);
-        portal.claimantAssertClaimStatus([
-          {leave: "Care for a Family Member", status: "Approved"},
-        ]);
-      } else {
         cy.task("waitForClaimDocuments",
           {
             credentials: getClaimantCredentials(),
@@ -192,7 +184,6 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
           cy.findByText("Appeal Acknowledgment (PDF)").should("be.visible").click();
         });
         portal.downloadLegalNotice(submission.fineos_absence_id);
-      }
     });
   });
 });
