@@ -183,6 +183,8 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
         cy.contains("article", submission.fineos_absence_id).within(() => {
           cy.findByText("Appeal Acknowledgment (PDF)").should("be.visible").click();
         });
+        // Hard-coded the `-AP-02` should make this more dynamic by stashing the Appeal subcase.
+        // This can changed depending if its approved or denied claim.
         portal.downloadLegalNoticeSubcase(submission.fineos_absence_id, '-AP-02');
     });
   });
