@@ -20,6 +20,8 @@ locals {
       status_code_filter = "http.statusCode >= 400 AND http.statusCode < 500"
     }
   }
+
+  minimum_request_count = 10
 }
 
 # For each error group, create a rate-based alert.
@@ -40,7 +42,7 @@ resource "newrelic_nrql_alert_condition" "endpoint_error_rates" {
     query             = <<-NRQL
       SELECT percentage(
         COUNT(*), WHERE ${each.value.status_code_filter}
-      ) FROM Span
+      ) * clamp_max(floor(count(*) / ${local.minimum_request_count}), 1) FROM Span
       WHERE ${var.where_span_filter}
       AND appName = 'PFML-API-${upper(var.environment_name)}'
     NRQL
