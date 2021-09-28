@@ -21,7 +21,12 @@ locals {
     }
   }
 
-  minimum_request_count = 10
+  # This threshold is in the context of the 1 minute windows New Relic
+  # applies to the TIMESERIES on the alarm query.
+  #
+  # Errors occurring during periods with fewer than this many requests in total
+  # (under `where_span_filter`) will be ignored.
+  minimum_total_requests_in_one_minute_threshold = 10
 }
 
 # For each error group, create a rate-based alert.
@@ -42,7 +47,7 @@ resource "newrelic_nrql_alert_condition" "endpoint_error_rates" {
     query             = <<-NRQL
       SELECT percentage(
         COUNT(*), WHERE ${each.value.status_code_filter}
-      ) * clamp_max(floor(count(*) / ${local.minimum_request_count}), 1) FROM Span
+      ) * clamp_max(floor(count(*) / ${local.minimum_total_requests_in_one_minute_threshold}), 1) FROM Span
       WHERE ${var.where_span_filter}
       AND appName = 'PFML-API-${upper(var.environment_name)}'
     NRQL
