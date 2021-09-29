@@ -47,20 +47,23 @@ const SupportingWorkDetails = (props) => {
 
   return (
     <React.Fragment>
-      <ReviewHeading level="2">
+      <ReviewHeading id="supporting-work-details" level="2">
         {t("components.employersSupportingWorkDetails.header")}
       </ReviewHeading>
-      <ReviewRow
-        level="3"
-        label={t(
-          "components.employersSupportingWorkDetails.weeklyHoursWorkedLabel"
-        )}
-        action={
-          <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
-        }
-      >
-        <p className="margin-top-0">{props.initialHoursWorkedPerWeek}</p>
-      </ReviewRow>
+      <div className="display-flex flex-justify border-bottom-2px border-base-lighter">
+        <dl aria-labelledby="supporting-work-details" className="margin-0">
+          <ReviewRow
+            level="3"
+            label={t(
+              "components.employersSupportingWorkDetails.weeklyHoursWorkedLabel"
+            )}
+            noBorder
+          >
+            <p className="margin-top-0">{props.initialHoursWorkedPerWeek}</p>
+          </ReviewRow>
+        </dl>
+        <AmendButton onClick={() => setIsAmendmentFormDisplayed(true)} />
+      </div>
       <ConditionalContent
         getField={props.getField}
         clearField={props.clearField}

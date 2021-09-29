@@ -7,34 +7,42 @@ exports[`SupportingWorkDetails opens the amendment form when "Amend" is clicked 
   >
     <h2
       class="flex-fill margin-right-1 font-heading-md text-bold"
+      id="supporting-work-details"
     >
       Supporting work details
     </h2>
   </div>
   <div
-    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    class="display-flex flex-justify border-bottom-2px border-base-lighter"
   >
-    <div>
-      <dt
-        id="descriptionLabel2"
+    <dl
+      aria-labelledby="supporting-work-details"
+      class="margin-0"
+    >
+      <div
+        class="margin-bottom-2 padding-bottom-2"
       >
-        <h3
-          class="margin-bottom-1 font-heading-xs text-bold"
+        <dt
+          id="descriptionLabel2"
         >
-          Weekly hours worked
-        </h3>
-      </dt>
-      <dd
-        aria-labelledby="descriptionLabel2"
-        class="margin-0"
-      >
-        <p
-          class="margin-top-0"
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Weekly hours worked
+          </h3>
+        </dt>
+        <dd
+          aria-labelledby="descriptionLabel2"
+          class="margin-0"
         >
-          40
-        </p>
-      </dd>
-    </div>
+          <p
+            class="margin-top-0"
+          >
+            40
+          </p>
+        </dd>
+      </div>
+    </dl>
     <button
       class="usa-button position-relative text-no-wrap usa-button--unstyled"
       type="button"
@@ -123,34 +131,42 @@ exports[`SupportingWorkDetails renders without the amendment form open 1`] = `
   >
     <h2
       class="flex-fill margin-right-1 font-heading-md text-bold"
+      id="supporting-work-details"
     >
       Supporting work details
     </h2>
   </div>
   <div
-    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    class="display-flex flex-justify border-bottom-2px border-base-lighter"
   >
-    <div>
-      <dt
-        id="descriptionLabel1"
+    <dl
+      aria-labelledby="supporting-work-details"
+      class="margin-0"
+    >
+      <div
+        class="margin-bottom-2 padding-bottom-2"
       >
-        <h3
-          class="margin-bottom-1 font-heading-xs text-bold"
+        <dt
+          id="descriptionLabel1"
         >
-          Weekly hours worked
-        </h3>
-      </dt>
-      <dd
-        aria-labelledby="descriptionLabel1"
-        class="margin-0"
-      >
-        <p
-          class="margin-top-0"
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Weekly hours worked
+          </h3>
+        </dt>
+        <dd
+          aria-labelledby="descriptionLabel1"
+          class="margin-0"
         >
-          40
-        </p>
-      </dd>
-    </div>
+          <p
+            class="margin-top-0"
+          >
+            40
+          </p>
+        </dd>
+      </div>
+    </dl>
     <button
       class="usa-button position-relative text-no-wrap usa-button--unstyled"
       type="button"
