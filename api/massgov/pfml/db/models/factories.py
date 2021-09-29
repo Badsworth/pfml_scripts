@@ -10,6 +10,7 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 import factory  # this is from the factory_boy package
+import faker
 import pytz
 from sqlalchemy.orm import scoped_session
 
@@ -21,6 +22,8 @@ import massgov.pfml.db.models.verifications as verification_models
 import massgov.pfml.util.datetime as datetime_util
 
 db_session = None
+
+fake = faker.Faker()
 
 
 def get_db_session():
@@ -56,7 +59,7 @@ Session = scoped_session(lambda: get_db_session(), scopefunc=lambda: get_db_sess
 
 class Generators:
     AccountKey = factory.Sequence(lambda n: "%011d" % n)
-    Tin = factory.LazyFunction(lambda: factory.Faker("ssn").generate().replace("-", ""))
+    Tin = factory.LazyFunction(lambda: fake.ssn().replace("-", ""))
     Fein = Tin
     Money = factory.LazyFunction(lambda: Decimal(round(random.uniform(0, 50000), 2)))
     Now = factory.LazyFunction(datetime.now)
