@@ -1,0 +1,128 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Gender renders the page 1`] = `
+<div>
+  <form
+    class="usa-form"
+    data-cy="gender-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Your identification
+    </h1>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        What is your gender identity?
+      </legend>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-intro"
+      >
+        This data helps us understand who is accessing our program to ensure it is built for everyone.
+      </span>
+      <div
+        class="margin-top-3"
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice1"
+            name="gender"
+            type="radio"
+            value="Prefer not to answer"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice1"
+          >
+            Prefer not to answer
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice2"
+            name="gender"
+            type="radio"
+            value="Man"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice2"
+          >
+            Man
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            checked=""
+            class="usa-radio__input"
+            id="InputChoice3"
+            name="gender"
+            type="radio"
+            value="Woman"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice3"
+          >
+            Woman
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice4"
+            name="gender"
+            type="radio"
+            value="Non-binary"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice4"
+          >
+            Non-binary
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice5"
+            name="gender"
+            type="radio"
+            value="Gender not listed"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice5"
+          >
+            Gender not listed
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;

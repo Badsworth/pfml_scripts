@@ -1,0 +1,285 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`GetReady renders get ready content 1`] = `
+<div>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+    tabindex="-1"
+  >
+    Get ready to apply
+  </h1>
+  <div
+    class="usa-alert usa-alert--info c-alert--neutral margin-bottom-3"
+    tabindex="-1"
+  >
+    <div
+      class="usa-alert__body"
+      role="region"
+    >
+      <h2
+        class="usa-alert__heading font-heading-md text-bold"
+      >
+        Only some people can apply online for now
+      </h2>
+      <div
+        class="usa-alert__text"
+      >
+        <h3
+          class="margin-top-3 font-heading-sm text-bold"
+        >
+          <svg
+            class="margin-right-1 text-secondary text-middle margin-top-neg-05"
+            fill="currentColor"
+            height="20"
+            viewBox="0 0 36 30"
+            width="20"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M33 0H3v19.5h30zm-3 16.5H6V3h24zm3 4.5H3l-3 9h36zm-18.342 7.5l.699-1.5h5.286l.699 1.5z"
+            />
+          </svg>
+          Apply online
+        </h3>
+        <p>
+          If you are currently employed in Massachusetts but not self-employed, you can apply online or by phone for the following types of paid leave:
+        </p>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            Medical leave due to your own illness, injury, or pregnancy
+          </li>
+          <li>
+            Family leave to bond with your child after birth, adoption, or foster placement — whether you are applying before or after the child arrives
+          </li>
+          <li>
+            Family leave to care for a family member with a serious medical condition
+          </li>
+        </ul>
+        <h3
+          class="font-heading-sm text-bold"
+        >
+          <svg
+            class="margin-right-1 text-secondary text-middle margin-top-neg-05"
+            fill="currentColor"
+            height="20"
+            viewBox="0 0 33 37"
+            width="20"
+            xmlns="http://www.w3.org/2000/svg"
+          >
+            <path
+              d="M20.841 35.51C9.798 40.57-7.343 7.19 3.451 1.56L6.609 0l5.235 10.23-3.121 1.54c-3.281 1.77 3.553 15.14 6.909 13.51.136-.06 3.083-1.51 3.094-1.52l5.278 10.2c-.012.01-2.982 1.47-3.163 1.55zm.399-29.23a9.49 9.49 0 016.376 11.81l-2.69-.8a6.681 6.681 0 00-.528-5.09 6.65 6.65 0 00-3.962-3.22zM19.838 11a4.542 4.542 0 012.71 2.21c.6 1.11.694 2.35.36 3.48l-4.373-1.31zm2.003-6.74c2.84.85 5.359 2.78 6.881 5.6 1.52 2.82 1.757 5.99.912 8.83l2.758.83a14.45 14.45 0 00-1.141-11.03 14.41 14.41 0 00-8.587-6.99z"
+            />
+          </svg>
+          Apply by phone
+        </h3>
+        <p>
+          Apply by calling the Department of Family and Medical Leave Contact Center at 
+          <a
+            href="tel:(833) 344-7365"
+          >
+            (833) 344‑7365
+          </a>
+           if 
+          <strong>
+            any
+          </strong>
+           of the following are true:
+        </p>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            You are self-employed or unemployed and you are applying for paid leave
+          </li>
+          <li>
+            You need paid family leave to care for a family member who serves in the armed forces
+          </li>
+          <li>
+            You need paid family leave to manage family affairs when a family member is on active duty in the armed forces
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+  <div
+    class="measure-6"
+  >
+    <h2
+      class="font-heading-md text-bold"
+    >
+      <svg
+        aria-hidden="true"
+        class="usa-icon margin-right-1 text-secondary text-middle margin-top-neg-05"
+        focusable="false"
+        role="img"
+      >
+        <use
+          xlink:href="/img/sprite.svg#comment"
+        />
+      </svg>
+      1. Tell your employer that you need to take paid leave
+    </h2>
+    <p>
+      If you can, tell your employer at least 30 days before your leave begins. If you need to take leave right away, tell your employer as soon as possible.
+    </p>
+    <p>
+      Once you tell your employer, you have the right to apply and your job is protected. Make a note of when you notified your employer. You will need to provide this date in your leave application.
+    </p>
+    <h2
+      class="font-heading-md text-bold"
+    >
+      <svg
+        aria-hidden="true"
+        class="usa-icon margin-right-1 text-secondary text-middle margin-top-neg-05"
+        focusable="false"
+        role="img"
+      >
+        <use
+          xlink:href="/img/sprite.svg#upload_file"
+        />
+      </svg>
+      2. Get documentation that supports your leave request
+    </h2>
+    <p>
+      If you’re not sure what kind of leave to apply for, 
+      <a
+        href="https://www.mass.gov/which-paid-leave"
+        rel="noopener"
+        target="_blank"
+      >
+        learn more about Paid Family and Medical Leave
+      </a>
+      .
+    </p>
+    <h3
+      class="font-heading-sm text-bold"
+    >
+      Medical leave for your own serious health condition
+    </h3>
+    <p>
+      Your health care provider must complete the 
+      <a
+        href="https://www.mass.gov/medical-leave-form"
+        rel="noopener"
+        target="_blank"
+      >
+        Certification of Your Serious Health Condition
+      </a>
+      .
+    </p>
+    <h3
+      class="font-heading-sm text-bold"
+    >
+      Family leave
+    </h3>
+    <h4
+      class="font-heading-xs text-bold"
+    >
+      To bond with a child
+    </h4>
+    <p>
+      For family leave to bond with your child after birth, foster placement, or adoption you need a document that confirms your child’s date of birth or placement.
+    </p>
+    <p>
+      You can apply before your child is born or arrives in your home. You will need to provide proof of birth or placement for your application to be approved.
+    </p>
+    <h4
+      class="font-heading-xs text-bold"
+    >
+      To care for a family member with a serious health condition
+    </h4>
+    <p>
+      The health care provider of the person you're caring for must complete the 
+      <a
+        href="https://www.mass.gov/family-caring-form"
+        rel="noopener"
+        target="_blank"
+      >
+        Certification of Your Family Member’s Serious Health Condition
+      </a>
+      .
+    </p>
+    <h2
+      class="font-heading-md text-bold"
+    >
+      <svg
+        aria-hidden="true"
+        class="usa-icon margin-right-1 text-secondary text-middle margin-top-neg-05"
+        focusable="false"
+        role="img"
+      >
+        <use
+          xlink:href="/img/sprite.svg#edit"
+        />
+      </svg>
+      3. Apply
+    </h2>
+    <p>
+      Applying takes around 15 minutes. Your information will save as you go, so you can finish your application later if you need to.
+    </p>
+    <p>
+      If you give birth and plan to take both pregnancy-related medical leave and family leave to bond with your newborn, you should apply for medical leave first. Family leave to bond with your child can be 
+      <a
+        href="https://www.mass.gov/pfml-medical-bonding"
+        rel="noopener"
+        target="_blank"
+      >
+        easily added to your claim
+      </a>
+       by calling our Contact Center at 
+      <a
+        href="tel:(833) 344-7365"
+      >
+        (833) 344‑7365
+      </a>
+      .
+    </p>
+    <p>
+      You need to create multiple leave applications if you are:
+    </p>
+    <ul
+      class="usa-list"
+    >
+      <li>
+        Taking leave from multiple employers.
+      </li>
+      <li>
+        Taking time off in uneven blocks of time (intermittent leave), 
+        <strong>
+          and
+        </strong>
+         taking time off completely or on a reduced schedule. You’ll need a separate application for the intermittent leave.
+      </li>
+    </ul>
+    <p>
+      PFML benefits are subject to reporting for tax purposes and may be subject to taxation. Withholding is not currently supported through the PFML program. Learn more about the 
+      <a
+        href="https://www.mass.gov/pfml-tax-liability"
+        rel="noopener"
+        target="_blank"
+      >
+        possible tax implications
+      </a>
+       of your paid leave benefits.
+    </p>
+    <p>
+      The maximum benefit a person can receive per week is $850. Learn more about 
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#benefit-amount-details-"
+        rel="noopener"
+        target="_blank"
+      >
+        how benefits are calculated.
+      </a>
+    </p>
+    <a
+      class="usa-button margin-top-3 margin-bottom-8"
+      href="/applications/start"
+    >
+      Create an application
+    </a>
+  </div>
+</div>
+`;
