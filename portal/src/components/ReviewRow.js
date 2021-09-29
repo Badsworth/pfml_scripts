@@ -9,26 +9,20 @@ import useUniqueId from "../hooks/useUniqueId";
  */
 const ReviewRow = (props) => {
   const id = useUniqueId("descriptionLabel");
-  const classes = classnames(
-    "margin-bottom-2 padding-bottom-2 display-flex flex-justify",
-    {
-      "border-bottom-2px border-base-lighter": !props.noBorder,
-    }
-  );
+  const classes = classnames("margin-bottom-2 padding-bottom-2", {
+    "border-bottom-2px border-base-lighter": !props.noBorder,
+  });
 
   return (
     <div className={classes}>
-      <div>
-        <dt id={id}>
-          <Heading level={props.level} size="4" className="margin-bottom-1">
-            {props.label}
-          </Heading>
-        </dt>
-        <dd className="margin-0" aria-labelledby={id}>
-          {props.children}
-        </dd>
-      </div>
-      {props.action}
+      <dt id={id}>
+        <Heading level={props.level} size="4" className="margin-bottom-1">
+          {props.label}
+        </Heading>
+      </dt>
+      <dd className="margin-0" aria-labelledby={id}>
+        {props.children}
+      </dd>
     </div>
   );
 };
@@ -38,11 +32,6 @@ ReviewRow.defaultProps = {
 };
 
 ReviewRow.propTypes = {
-  /**
-   * Renders an element (e.g. a button or link) which the user can interact with.
-   * If undefined, no element will be shown.
-   */
-  action: PropTypes.node,
   /**
    * The content you want the user to review
    */

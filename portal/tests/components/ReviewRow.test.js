@@ -33,4 +33,10 @@ describe("ReviewRow", () => {
       document.querySelector(".border-bottom-2px")
     ).not.toBeInTheDocument();
   });
+
+  it("associates definitions with the appropriate terms", () => {
+    renderRow();
+    const definition = screen.getByRole("definition", { name: "Leave type" });
+    expect(definition).toHaveTextContent("Medical");
+  });
 });

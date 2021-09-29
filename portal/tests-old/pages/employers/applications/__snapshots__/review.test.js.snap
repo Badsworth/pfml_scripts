@@ -10,31 +10,29 @@ exports[`Review displays organization/employer information 1`] = `
     noBorder={true}
   >
     <div
-      className="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+      className="margin-bottom-2 padding-bottom-2"
     >
-      <div>
-        <dt
-          id="descriptionLabel73"
+      <dt
+        id="descriptionLabel73"
+      >
+        <Heading
+          className="margin-bottom-1"
+          level="2"
+          size="4"
         >
-          <Heading
-            className="margin-bottom-1"
-            level="2"
-            size="4"
+          <h2
+            className="margin-bottom-1 font-heading-xs text-bold"
           >
-            <h2
-              className="margin-bottom-1 font-heading-xs text-bold"
-            >
-              Organization
-            </h2>
-          </Heading>
-        </dt>
-        <dd
-          aria-labelledby="descriptionLabel73"
-          className="margin-0"
-        >
-          Work Inc.
-        </dd>
-      </div>
+            Organization
+          </h2>
+        </Heading>
+      </dt>
+      <dd
+        aria-labelledby="descriptionLabel73"
+        className="margin-0"
+      >
+        Work Inc.
+      </dd>
     </div>
   </ReviewRow>
   <ReviewRow
@@ -43,31 +41,29 @@ exports[`Review displays organization/employer information 1`] = `
     noBorder={true}
   >
     <div
-      className="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+      className="margin-bottom-2 padding-bottom-2"
     >
-      <div>
-        <dt
-          id="descriptionLabel74"
+      <dt
+        id="descriptionLabel74"
+      >
+        <Heading
+          className="margin-bottom-1"
+          level="2"
+          size="4"
         >
-          <Heading
-            className="margin-bottom-1"
-            level="2"
-            size="4"
+          <h2
+            className="margin-bottom-1 font-heading-xs text-bold"
           >
-            <h2
-              className="margin-bottom-1 font-heading-xs text-bold"
-            >
-              Employer ID number (EIN)
-            </h2>
-          </Heading>
-        </dt>
-        <dd
-          aria-labelledby="descriptionLabel74"
-          className="margin-0"
-        >
-          12-3456789
-        </dd>
-      </div>
+            Employer ID number (EIN)
+          </h2>
+        </Heading>
+      </dt>
+      <dd
+        aria-labelledby="descriptionLabel74"
+        className="margin-0"
+      >
+        12-3456789
+      </dd>
     </div>
   </ReviewRow>
 </dl>

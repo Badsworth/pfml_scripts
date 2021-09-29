@@ -47,73 +47,67 @@ exports[`LeaveDetails renders the component 1`] = `
     aria-labelledby="leave-details"
   >
     <div
-      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      class="margin-bottom-2 padding-bottom-2 border-bottom-2px border-base-lighter"
     >
-      <div>
-        <dt
-          id="descriptionLabel1"
+      <dt
+        id="descriptionLabel1"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
         >
-          <h3
-            class="margin-bottom-1 font-heading-xs text-bold"
-          >
-            Leave type
-          </h3>
-        </dt>
-        <dd
-          aria-labelledby="descriptionLabel1"
-          class="margin-0"
+          Leave type
+        </h3>
+      </dt>
+      <dd
+        aria-labelledby="descriptionLabel1"
+        class="margin-0"
+      >
+        <a
+          href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-medical-leave-"
+          rel="noopener"
+          target="_blank"
         >
-          <a
-            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-medical-leave-"
-            rel="noopener"
-            target="_blank"
-          >
-            Medical leave
-          </a>
-        </dd>
-      </div>
+          Medical leave
+        </a>
+      </dd>
     </div>
     <div
-      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      class="margin-bottom-2 padding-bottom-2 border-bottom-2px border-base-lighter"
     >
-      <div>
-        <dt
-          id="descriptionLabel2"
+      <dt
+        id="descriptionLabel2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
         >
-          <h3
-            class="margin-bottom-1 font-heading-xs text-bold"
-          >
-            Application ID
-          </h3>
-        </dt>
-        <dd
-          aria-labelledby="descriptionLabel2"
-          class="margin-0"
-        >
-          NTN-111-ABS-01
-        </dd>
-      </div>
+          Application ID
+        </h3>
+      </dt>
+      <dd
+        aria-labelledby="descriptionLabel2"
+        class="margin-0"
+      >
+        NTN-111-ABS-01
+      </dd>
     </div>
     <div
-      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      class="margin-bottom-2 padding-bottom-2 border-bottom-2px border-base-lighter"
     >
-      <div>
-        <dt
-          id="descriptionLabel3"
+      <dt
+        id="descriptionLabel3"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
         >
-          <h3
-            class="margin-bottom-1 font-heading-xs text-bold"
-          >
-            Leave duration
-          </h3>
-        </dt>
-        <dd
-          aria-labelledby="descriptionLabel3"
-          class="margin-0"
-        >
-          1/1/2021 to 7/1/2021
-        </dd>
-      </div>
+          Leave duration
+        </h3>
+      </dt>
+      <dd
+        aria-labelledby="descriptionLabel3"
+        class="margin-0"
+      >
+        1/1/2021 to 7/1/2021
+      </dd>
     </div>
   </dl>
 </div>
