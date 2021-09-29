@@ -409,6 +409,56 @@ def get_previous_leave_issues(leave: PreviousLeave, leave_path: str) -> List[Val
     return issues
 
 
+def get_previous_leave_and_leave_period_issues(
+    application: Application,
+) -> List[ValidationErrorDetail]:
+    issues = []
+    # Prevent overlapping leave periods and previous leaves
+    all_leave_periods: Iterable[
+        Union[ContinuousLeavePeriod, IntermittentLeavePeriod, ReducedScheduleLeavePeriod]
+    ] = list(
+        chain(
+            application.continuous_leave_periods,
+            application.intermittent_leave_periods,
+            application.reduced_schedule_leave_periods,
+        )
+    )
+    leave_period_ranges = [
+        (leave_period.start_date, leave_period.end_date)
+        for leave_period in all_leave_periods
+        # Only store complete ranges
+        if leave_period.start_date and leave_period.end_date
+    ]
+
+    all_previous_leaves: Iterable[PreviousLeave] = list(
+        chain(application.previous_leaves_same_reason, application.previous_leaves_other_reason,)
+    )
+    previous_leave_ranges = [
+        (leave.leave_start_date, leave.leave_end_date)
+        for leave in all_previous_leaves
+        # Only store complete ranges
+        if leave.leave_start_date and leave.leave_end_date
+    ]
+
+    for (leave_period_start, leave_period_end) in leave_period_ranges:
+        for (previous_leave_start, previous_leave_end) in previous_leave_ranges:
+            if (
+                # leave period start is in the previous leave range
+                previous_leave_start <= leave_period_start <= previous_leave_end
+                # previous leave start is in the leave period range
+                or leave_period_start <= previous_leave_start <= leave_period_end
+            ):
+                issues.append(
+                    ValidationErrorDetail(
+                        message=f"Previous leaves cannot overlap with leave periods. Received leave period {leave_period_start.isoformat()} – {leave_period_end.isoformat()} and previous leave {previous_leave_start.isoformat()} – {previous_leave_end.isoformat()}.",
+                        rule=IssueRule.disallow_overlapping_leave_period_with_previous_leave,
+                        type=IssueType.conflicting,
+                    )
+                )
+
+    return issues
+
+
 def get_leave_related_issues(application: Application) -> List[ValidationErrorDetail]:
 
     is_medical_leave_app = application.leave_reason_id in (
@@ -532,6 +582,7 @@ def get_conditional_issues(application: Application) -> List[ValidationErrorDeta
 
     issues += get_previous_leaves_other_reason_issues(application)
     issues += get_previous_leaves_same_reason_issues(application)
+    issues += get_previous_leave_and_leave_period_issues(application)
 
     issues += get_concurrent_leave_issues(application)
 
