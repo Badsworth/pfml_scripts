@@ -1,0 +1,206 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FamilyMemberRelationship renders the page 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Leave details
+    </h1>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        What is your relationship with the family member you are caring for?
+      </legend>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-intro"
+      >
+        <p>
+          Learn more about 
+          <a
+            href="https://www.mass.gov/family-caring-leave-relationships"
+            rel="noopener"
+            target="_blank"
+          >
+            which relationships are covered
+          </a>
+          .
+        </p>
+        <details
+          class="c-details"
+        >
+          <summary
+            class="margin-bottom-2 text-primary text-underline font-ui-xs"
+          >
+            What if I don’t see my relationship with the family member I’m caring for on this list?
+          </summary>
+          <div
+            class="margin-bottom-2"
+          >
+            <p>
+              You can apply to care for someone who served in 
+              <a
+                href="https://www.dol.gov/agencies/whd/fact-sheets/28C-fmla-eldercare"
+                rel="noopener"
+                target="_blank"
+              >
+                loco parentis
+              </a>
+               (acted as a parent) for you. In that case, choose “I am caring for my parent.”
+            </p>
+            <p>
+              If you served in loco parentis for the family member you’re caring for, choose “I am caring for my child.”
+            </p>
+            <p>
+              If none of the options listed below describe your relationship with the person you're caring for, you are not eligible to take paid family leave. If you’d still like to submit an application or if you have questions about whether your relationship qualifies, call the Contact Center at 
+              <a
+                href="tel:(833) 344-7365"
+              >
+                (833) 344‑7365
+              </a>
+              .
+            </p>
+          </div>
+        </details>
+      </span>
+      <div
+        class="margin-top-3"
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice1"
+            name="leave_details.caring_leave_metadata.relationship_to_caregiver"
+            type="radio"
+            value="Child"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice1"
+          >
+            I am caring for my child.
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice2"
+            name="leave_details.caring_leave_metadata.relationship_to_caregiver"
+            type="radio"
+            value="Spouse"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice2"
+          >
+            I am caring for my spouse or domestic partner.
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice3"
+            name="leave_details.caring_leave_metadata.relationship_to_caregiver"
+            type="radio"
+            value="Parent"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice3"
+          >
+            I am caring for my parent.
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice4"
+            name="leave_details.caring_leave_metadata.relationship_to_caregiver"
+            type="radio"
+            value="Inlaw"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice4"
+          >
+            I am caring for a parent of my spouse or domestic partner.
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice5"
+            name="leave_details.caring_leave_metadata.relationship_to_caregiver"
+            type="radio"
+            value="Sibling - Brother/Sister"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice5"
+          >
+            I am caring for my sibling.
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice6"
+            name="leave_details.caring_leave_metadata.relationship_to_caregiver"
+            type="radio"
+            value="Grandchild"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice6"
+          >
+            I am caring for my grandchild.
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice7"
+            name="leave_details.caring_leave_metadata.relationship_to_caregiver"
+            type="radio"
+            value="Grandparent"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice7"
+          >
+            I am caring for my grandparent.
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;

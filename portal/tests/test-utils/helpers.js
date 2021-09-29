@@ -4,7 +4,7 @@ import { MockBenefitsApplicationBuilder } from ".";
 /**
  * Helper used by test to add benefits applications mocks
  * @param {Function} appLogicHook
- * @param {Array} claims
+ * @param {Array<BenefitsApplication>} claims
  * @param {Function} cb
  */
 export const setupBenefitsApplications = (appLogicHook, claims, cb) => {
