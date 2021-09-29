@@ -1381,9 +1381,10 @@ function reportOtherLeavesAndBenefits(claim: ApplicationRequestBody): void {
 
   cy.contains(
     "form",
-    "Will you use any employer-sponsored benefits from this employer during your paid leave from PFML?"
+    /(Will you use any employer\-sponsored benefits from this employer during your paid leave from PFML\?|Will you use any employer\-sponsored benefits from this employer during your paid leave from PFML\?)/
   ).within(() => {
-    cy.findByLabelText(claim.employer_benefits ? "Yes" : "No").click({
+    const labelSelector = (content: string) => content.startsWith(claim.employer_benefits ? "Yes" : "No");
+    cy.findByLabelText(labelSelector).click({
       force: true,
     });
     cy.contains("Save and continue").click();
