@@ -147,14 +147,13 @@ describe("Post-approval (notifications/notices)", () => {
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<DehydratedClaim>("claim").then((claim) => {
           const subjectClaimant = getNotificationSubject(
-            `${claim.claim.first_name} ${claim.claim.last_name}`,
             "extension of benefits"
           );
           email
             .getEmails(
               {
                 address: "gqzap.notifications@inbox.testmail.app",
-                subject: subjectClaimant,
+                subjectWildcard: subjectClaimant,
                 messageWildcard: submission.fineos_absence_id,
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
@@ -163,6 +162,9 @@ describe("Post-approval (notifications/notices)", () => {
             )
             .then(() => {
               cy.contains(submission.fineos_absence_id);
+              email.assertValidSubject(
+                `${claim.claim.first_name} ${claim.claim.last_name}`
+              );
             });
         });
       });

@@ -108,7 +108,6 @@ describe("Report of intermittent leave hours notification", () => {
         cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
           const employerNotificationSubject = email.getNotificationSubject(
-            `${claim.first_name} ${claim.last_name}`,
             "review leave hours",
             submission.fineos_absence_id
           );
@@ -117,7 +116,7 @@ describe("Report of intermittent leave hours notification", () => {
             .getEmails(
               {
                 address: "gqzap.notifications@inbox.testmail.app",
-                subject: employerNotificationSubject,
+                subjectWildcard: employerNotificationSubject,
                 messageWildcard: submission.fineos_absence_id,
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
@@ -130,6 +129,9 @@ describe("Report of intermittent leave hours notification", () => {
               cy.contains(dob);
               cy.contains(employeeFullName);
               cy.contains(submission.fineos_absence_id);
+              email.assertValidSubject(
+                `${claim.first_name} ${claim.last_name}`
+              );
             });
         });
       });

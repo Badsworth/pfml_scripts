@@ -129,7 +129,7 @@ describe("Approval (notifications/notices)", () => {
             .getEmails(
               {
                 address: "gqzap.notifications@inbox.testmail.app",
-                subject: `Action required: Respond to ${claim.first_name} ${claim.last_name}'s paid leave application`,
+                subjectWildcard: `Action required: Respond to *'s paid leave application`,
                 messageWildcard: submission.fineos_absence_id,
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
@@ -139,6 +139,9 @@ describe("Approval (notifications/notices)", () => {
             .then(() => {
               cy.get(
                 `a[href*="/employers/applications/new-application/?absence_id=${submission.fineos_absence_id}"]`
+              );
+              email.assertValidSubject(
+                `${claim.first_name} ${claim.last_name}`
               );
             });
         });
@@ -157,9 +160,7 @@ describe("Approval (notifications/notices)", () => {
           assertValidClaim(claim);
           portal.loginLeaveAdmin(claim.employer_fein);
           portal.selectClaimFromEmployerDashboard(submission.fineos_absence_id);
-          const employeeFullName = `${claim.first_name} ${claim.last_name}`;
           const subjectEmployer = email.getNotificationSubject(
-            `${claim.first_name} ${claim.last_name}`,
             "approval (employer)",
             submission.fineos_absence_id
           );
@@ -168,7 +169,7 @@ describe("Approval (notifications/notices)", () => {
             .getEmails(
               {
                 address: "gqzap.notifications@inbox.testmail.app",
-                subject: subjectEmployer,
+                subjectWildcard: subjectEmployer,
                 messageWildcard: submission.fineos_absence_id,
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
@@ -181,10 +182,13 @@ describe("Approval (notifications/notices)", () => {
                 claim.date_of_birth?.replace(/-/g, "/").slice(5) + "/****";
               cy.log("DOB", dob);
               cy.contains(dob);
-              cy.contains(employeeFullName);
+              cy.contains(`${claim.first_name} ${claim.last_name}`);
               cy.contains(submission.fineos_absence_id);
               cy.get(
                 `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
+              );
+              email.assertValidSubject(
+                `${claim.first_name} ${claim.last_name}`
               );
             });
         });
@@ -198,27 +202,24 @@ describe("Approval (notifications/notices)", () => {
     () => {
       cy.dependsOnPreviousPass([submit]);
       cy.unstash<Submission>("submission").then((submission) => {
-        cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-          const subjectClaimant = email.getNotificationSubject(
-            `${claim.first_name} ${claim.last_name}`,
-            "approval (claimant)",
-            submission.fineos_absence_id
-          );
-          // Check email for Claimant/Employee
-          email.getEmails(
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subject: subjectClaimant,
-              messageWildcard: submission.fineos_absence_id,
-              timestamp_from: submission.timestamp_from,
-              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-            },
-            // Reduced timeout, since we have multiple tests that run prior to this.
-            30000
-          );
-          cy.contains(submission.fineos_absence_id);
-          cy.get(`a[href*="${config("PORTAL_BASEURL")}/applications"]`);
-        });
+        const subjectClaimant = email.getNotificationSubject(
+          "approval (claimant)",
+          submission.fineos_absence_id
+        );
+        // Check email for Claimant/Employee
+        email.getEmails(
+          {
+            address: "gqzap.notifications@inbox.testmail.app",
+            subject: subjectClaimant,
+            messageWildcard: submission.fineos_absence_id,
+            timestamp_from: submission.timestamp_from,
+            debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+          },
+          // Reduced timeout, since we have multiple tests that run prior to this.
+          30000
+        );
+        cy.contains(submission.fineos_absence_id);
+        cy.get(`a[href*="${config("PORTAL_BASEURL")}/applications"]`);
       });
     }
   );
