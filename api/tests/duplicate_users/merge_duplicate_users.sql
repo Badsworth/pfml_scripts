@@ -68,7 +68,7 @@ merged_documents AS (
         user_id = duu.user_id_to_keep
     FROM
         "document" doc
-        INNER JOIN duplicated_users_to_remove duu ON duu.user_id = doc.user_id RETURNING doc.*
+        INNER JOIN duplicated_users_to_remove duu ON duu.user_id = doc.user_id
 ),
 merged_applications AS (
     UPDATE
@@ -77,16 +77,16 @@ merged_applications AS (
         user_id = duu.user_id_to_keep
     FROM
         application a
-        INNER JOIN duplicated_users_to_remove duu ON duu.user_id = a.user_id RETURNING a.*
+        INNER JOIN duplicated_users_to_remove duu ON duu.user_id = a.user_id
 ),
 merged_user_leave_administrators AS (
     UPDATE
         link_user_leave_administrator
     SET
-        user_id = duu.user_id_to_keep
+        user_id = duu.user_id_to_keep::uuid
     FROM
         link_user_leave_administrator lula
-        INNER JOIN duplicated_users_to_remove duu ON duu.user_id = lula.user_id RETURNING lula.*
+        INNER JOIN duplicated_users_to_remove duu ON duu.user_id = lula.user_id
 ),
 merged_requirements AS (
     UPDATE
@@ -95,7 +95,7 @@ merged_requirements AS (
         respondent_user_id = duu.user_id_to_keep
     FROM
         managed_requirement mr
-        INNER JOIN duplicated_users_to_remove duu ON duu.user_id = mr.respondent_user_id RETURNING mr.*
+        INNER JOIN duplicated_users_to_remove duu ON duu.user_id = mr.respondent_user_id 
 ),
 merged_user_roles AS (
     INSERT INTO
@@ -123,7 +123,7 @@ deleted_user_roles AS (
                 duu.user_id
             FROM
                 duplicated_users_to_remove duu
-        ) RETURNING lur.*
+        ) 
 ),
 deleted_users AS (
     DELETE FROM
@@ -134,10 +134,9 @@ deleted_users AS (
                 duu.user_id
             FROM
                 duplicated_users_to_remove duu
-        ) RETURNING uu.*
+        ) 
 )
 SELECT
-    du.user_id,
-    du.email_address
+    *
 FROM
-    deleted_users du;
+    oldest_created_users;

@@ -1,7 +1,9 @@
-from datetime import datetime
+from datetime import datetime, tzinfo
 import os
-from typing import Dict, List, Type
+from typing import Dict, List, Type, cast
+from uuid import UUID
 import pytest
+import pytz
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.elements import and_
 from sqlalchemy.sql.expression import select, text
@@ -37,9 +39,10 @@ def generate_duplicate_users(initialize_factories_session, test_db_session):
         "test4@email.com",
     ]
 
-    created_at = datetime.utcnow()
+    created_at = datetime(2021, 9, 1, 1, 1, 1, tzinfo=pytz.UTC)
     for email in emails_to_duplicate:
         # Add data to a single user
+
         user_1_a = UserFactory.create(email_address=email, roles=[Role.USER], created_at=created_at)
 
         for _ in range(22):
@@ -101,7 +104,7 @@ def test_remove_and_merge_duplicates(
         test_db_session.query(
             User.email_address,
             count(User.user_id).label("count"),
-            min(User.created_at).label("oldest_created_at"),
+            func.min(User.created_at).label("oldest_created_at"),
         )
         .group_by(User.email_address)
         .having(func.count(User.user_id) > 1)
@@ -121,18 +124,20 @@ def test_remove_and_merge_duplicates(
     )
 
     assert len(duplicated_users) == 44
-
     oldest_duplicated_users: List[User] = (
-        test_db_session.query(User).filter(User.email_address.in_(duplicated_emails)).all()
+        test_db_session.query(User)
+        .filter(
+            User.email_address.in_(duplicated_emails),
+            User.created_at == datetime(2021, 9, 1, 1, 1, 1, tzinfo=pytz.UTC),
+        )
+        .all()
     )
 
-    # Get the user we are keeping
-    oldest_created_dup_users: Dict[str, User] = dict()
-    for dup_user in duplicated_users:
-        if not dup_user.email_address in oldest_created_dup_users:
-            oldest_created_dup_users[dup_user.email_address] = dup_user
-        elif dup_user.created_at < oldest_created_dup_users[dup_user.email_address].created_at:
-            oldest_created_dup_users[dup_user.email_address] = dup_user
+    assert len(oldest_duplicated_users) == 4
+    assert oldest_duplicated_users[0].email_address == "test@email.com"
+    assert oldest_duplicated_users[1].email_address == "test2@email.com"
+    assert oldest_duplicated_users[2].email_address == "test3@email.com"
+    assert oldest_duplicated_users[3].email_address == "test4@email.com"
 
     # Get the data from other users
     dup_user_leave_administrators: Dict[str, List[UserLeaveAdministrator]] = dict()
@@ -147,10 +152,8 @@ def test_remove_and_merge_duplicates(
     main_user_managed_reqs: Dict[str, List[ManagedRequirement]] = dict()
     main_user_roles: Dict[str, List[UserRole]] = dict()
 
-    for email_address in duplicated_emails:
-        oldest_dup_user = oldest_created_dup_users[email_address]
-        assert oldest_dup_user is not None
-
+    for oldest_dup_user in oldest_duplicated_users:
+        email_address = oldest_dup_user.email_address
         leave_administrators = (
             test_db_session.query(UserLeaveAdministrator)
             .join(
@@ -298,7 +301,40 @@ def test_remove_and_merge_duplicates(
         main_user_managed_reqs[email_address] = managed_reqs_main
         main_user_roles[email_address] = roles_main
 
+    leave_admin_count_init = test_db_session.query(UserLeaveAdministrator).count()
+    assert leave_admin_count_init == 128
+
+    applications_count_init = test_db_session.query(Application).count()
+    assert applications_count_init == 328
+
+    documents_count_init = test_db_session.query(Document).count()
+    assert documents_count_init == 1488
+
+    managed_reqs_count_init = test_db_session.query(ManagedRequirement).count()
+    assert managed_reqs_count_init == 328
+
+    roles_count_init = test_db_session.query(UserRole).count()
+    assert roles_count_init == 124
+
+    # ACT
     test_db_session.execute(sql_file)
+
+    # ASSERT
+
+    leave_admin_count_end = test_db_session.query(UserLeaveAdministrator).count()
+    assert leave_admin_count_end == 128
+
+    applications_count_end = test_db_session.query(Application).count()
+    assert applications_count_end == 328
+
+    documents_count_end = test_db_session.query(Document).count()
+    assert documents_count_end == 1488
+
+    managed_reqs_count_end = test_db_session.query(ManagedRequirement).count()
+    assert managed_reqs_count_end == 328
+
+    roles_count_end = test_db_session.query(UserRole).count()
+    assert roles_count_end == 12
 
     duplicated_users_remaining: List[UserEmailCount] = (
         test_db_session.query(User.email_address, count(User.user_id).label("count"))
@@ -313,15 +349,19 @@ def test_remove_and_merge_duplicates(
     assert len(all_users_final) == 4
 
     for user in all_users_final:
-        assert oldest_created_dup_users[user.email_address] is not None
-        assert oldest_created_dup_users[user.email_address].user_id == user.user_id
+        found_user = next(
+            old_user
+            for old_user in oldest_duplicated_users
+            if old_user.email_address == user.email_address
+        )
+
+        assert found_user is not None
+        assert found_user.user_id == user.user_id
 
         leave_administrators = (
             test_db_session.query(UserLeaveAdministrator)
-            .join(
-                User,
-                and_(User.user_id == user.user_id, User.user_id == UserLeaveAdministrator.user_id),
-            )
+            .join(User, User.user_id == UserLeaveAdministrator.user_id,)
+            .filter(User.email_address == email_address,)
             .all()
         )
 
