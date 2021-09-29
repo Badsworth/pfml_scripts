@@ -110,13 +110,13 @@ describe("IntermittentFrequency", () => {
       {
         duration_basis: DurationBasis.days,
       },
-      "At least one day",
+      "How many days of work will you miss per absence?",
     ],
     [
       {
         duration_basis: DurationBasis.hours,
       },
-      "Less than one full work day",
+      "How many hours of work will you miss per absence?",
     ],
   ])(
     "displays duration label corresponding to selected duration basis",
