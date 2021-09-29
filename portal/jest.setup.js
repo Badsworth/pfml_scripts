@@ -32,6 +32,8 @@ process.env.session = { secondsOfInactivityUntilLogout: 10 };
  */
 global.fetch = jest.fn();
 global.scrollTo = jest.fn();
+// https://github.com/jsdom/jsdom/issues/1695
+Element.prototype.scrollIntoView = jest.fn();
 
 // URL.createObjectURL() hasn't been implemented in the jest DOM yet but will be
 // eventually. When it is (and this error triggers) we should remove this mock.
