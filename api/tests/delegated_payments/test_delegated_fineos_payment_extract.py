@@ -17,7 +17,6 @@ from massgov.pfml.db.models.employees import (
     ClaimType,
     Employee,
     EmployeeAddress,
-    EmployeeLog,
     Flow,
     GeoState,
     LkState,
@@ -399,13 +398,9 @@ def test_process_extract_data(
     local_payment_extract_step,
     local_test_db_session,
     monkeypatch,
-    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     setup_process_tests(mock_s3_bucket, local_test_db_session)
-
-    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 3
 
     local_payment_extract_step.run()
 
@@ -525,9 +520,6 @@ def test_process_extract_data(
     import_log_report = json.loads(payment.fineos_extract_import_log.report)
     assert import_log_report["standard_valid_payment_count"] == 3
 
-    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_after == employee_log_count_before
-
 
 @pytest.mark.parametrize(
     "payment_extract_file",
@@ -560,7 +552,6 @@ def test_process_extract_data_prior_payment_exists_is_being_processed(
     local_payment_extract_step,
     local_test_db_session,
     monkeypatch,
-    local_create_triggers,
     caplog,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
@@ -570,9 +561,6 @@ def test_process_extract_data_prior_payment_exists_is_being_processed(
         add_payment=True,
         additional_payment_state=State.DELEGATED_PAYMENT_COMPLETE,
     )
-
-    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 3
 
     local_payment_extract_step.run()
 
@@ -617,9 +605,6 @@ def test_process_extract_data_prior_payment_exists_is_being_processed(
             new_payment, local_test_db_session, is_invalid=True
         )
 
-    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_after == employee_log_count_before
-
 
 def test_process_extract_data_one_bad_record(
     mock_s3_bucket,
@@ -627,7 +612,6 @@ def test_process_extract_data_one_bad_record(
     local_payment_extract_step,
     local_test_db_session,
     monkeypatch,
-    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     # This test will properly process record 1 & 3, but record 2 will
@@ -639,9 +623,6 @@ def test_process_extract_data_one_bad_record(
         add_eft=True,
         add_second_employee=False,
     )
-
-    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 2
 
     local_payment_extract_step.run()
 
@@ -684,9 +665,6 @@ def test_process_extract_data_one_bad_record(
             assert state_log.outcome == EXPECTED_OUTCOME
             assert payment.claim_id
 
-    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_after == employee_log_count_before
-
 
 def test_process_extract_data_rollback(
     mock_s3_bucket,
@@ -694,12 +672,8 @@ def test_process_extract_data_rollback(
     local_payment_extract_step,
     local_test_db_session,
     monkeypatch,
-    local_create_triggers,
 ):
     setup_process_tests(mock_s3_bucket, local_test_db_session)
-
-    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 3
 
     # Override the method that moves files at the end to throw
     # an error so that everything will rollback
@@ -734,9 +708,6 @@ def test_process_extract_data_rollback(
         == ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id
     )
 
-    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_after == employee_log_count_before
-
 
 def test_process_extract_unprocessed_folder_files(
     mock_fineos_s3_bucket,
@@ -744,7 +715,6 @@ def test_process_extract_unprocessed_folder_files(
     local_payment_extract_step,
     local_test_db_session,
     monkeypatch,
-    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
 
@@ -816,9 +786,6 @@ def test_process_extract_unprocessed_folder_files(
     )
     assert len(copied_files) == 0
 
-    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_after == 0
-
 
 def test_process_extract_data_no_existing_address_eft(
     mock_s3_bucket,
@@ -826,15 +793,11 @@ def test_process_extract_data_no_existing_address_eft(
     local_payment_extract_step,
     local_test_db_session,
     monkeypatch,
-    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     setup_process_tests(
         mock_s3_bucket, local_test_db_session, add_address=False, add_eft=False,
     )
-
-    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 3
 
     local_payment_extract_step.run()
 
@@ -925,9 +888,6 @@ def test_process_extract_data_no_existing_address_eft(
             assert "Initiated DELEGATED_EFT flow for employee" in state_log.outcome["message"]
             assert state_log.end_state_id == State.DELEGATED_EFT_SEND_PRENOTE.state_id
 
-    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_after == employee_log_count_before
-
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data_existing_payment(
@@ -936,7 +896,6 @@ def test_process_extract_data_existing_payment(
     local_payment_extract_step,
     local_test_db_session,
     monkeypatch,
-    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     setup_process_tests(
@@ -945,9 +904,6 @@ def test_process_extract_data_existing_payment(
         add_payment=True,
         additional_payment_state=State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE,
     )
-
-    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 3
 
     local_payment_extract_step.run()
 
@@ -978,9 +934,6 @@ def test_process_extract_data_existing_payment(
     payment_count_after = local_test_db_session.query(Payment).count()
     assert payment_count_after == 6  # 3 payments each with an old record and a new one
 
-    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_after == employee_log_count_before
-
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data_minimal_viable_payment(
@@ -990,7 +943,6 @@ def test_process_extract_data_minimal_viable_payment(
     local_test_db_session,
     tmp_path,
     monkeypatch,
-    local_create_triggers,
 ):
     # This test creates a file with absolutely no data besides the bare
     # minimum to be viable to create a payment, this is done in order
@@ -998,8 +950,6 @@ def test_process_extract_data_minimal_viable_payment(
     # edge cases are accounted for and handled appropriately. This shouldn't
     # ever be a real scenario, but might encompass small pieces of something real
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
-    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 0
 
     # C & I value are the bare minimum to have a payment
     fineos_data = FineosPaymentData(False, c_value="1000", i_value="1")
@@ -1025,9 +975,6 @@ def test_process_extract_data_minimal_viable_payment(
     # Payment is not added to the PEI writeback flow because we don't know the type of payment
     validate_pei_writeback_state_for_payment(payment, local_test_db_session, is_invalid=True)
 
-    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_after == employee_log_count_before
-
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data_minimal_viable_standard_payment(
@@ -1037,12 +984,9 @@ def test_process_extract_data_minimal_viable_standard_payment(
     local_test_db_session,
     tmp_path,
     monkeypatch,
-    local_create_triggers,
 ):
     # Same as the above test, but we setup enough to make a "standard" payment
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
-    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 0
 
     # C & I value are the bare minimum to have a payment
     fineos_data = FineosPaymentData(
@@ -1070,9 +1014,6 @@ def test_process_extract_data_minimal_viable_standard_payment(
     # Payment is also added to the PEI writeback error flow
     validate_pei_writeback_state_for_payment(payment, local_test_db_session, is_invalid=True)
 
-    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_after == employee_log_count_before
-
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time
 def test_process_extract_data_leave_request_decision_validation(
@@ -1083,11 +1024,8 @@ def test_process_extract_data_leave_request_decision_validation(
     local_initialize_factories_session,
     tmp_path,
     monkeypatch,
-    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
-    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 0
 
     medical_claim_type_record = FineosPaymentData(claim_type="Employee")
     approved_record = FineosPaymentData(leave_request_decision="Approved")
@@ -1213,7 +1151,6 @@ def test_process_extract_not_id_proofed(
     tmp_path,
     local_initialize_factories_session,
     monkeypatch,
-    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     datasets = []
@@ -1263,7 +1200,6 @@ def test_process_extract_no_fineos_name(
     tmp_path,
     local_initialize_factories_session,
     monkeypatch,
-    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     datasets = []
@@ -1315,7 +1251,6 @@ def test_process_extract_is_adhoc(
     local_initialize_factories_session,
     tmp_path,
     monkeypatch,
-    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     fineos_adhoc_data = FineosPaymentData(amalgamationc="Adhoc")
@@ -1369,7 +1304,6 @@ def test_process_extract_multiple_payment_details(
     tmp_path,
     local_initialize_factories_session,
     monkeypatch,
-    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     # Create a standard payment, but give it a few payment periods
@@ -1434,7 +1368,6 @@ def test_process_extract_additional_payment_types(
     tmp_path,
     local_initialize_factories_session,
     monkeypatch,
-    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     datasets = []
@@ -1599,7 +1532,6 @@ def test_process_extract_additional_payment_types_can_be_missing_other_files(
     tmp_path,
     local_initialize_factories_session,
     monkeypatch,
-    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_PAYMENT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
     # This tests that the behavior of non-standard payment types are handled properly
@@ -1724,7 +1656,6 @@ def test_process_extract_additional_payment_types_can_be_missing_all_additional_
     tmp_path,
     local_initialize_factories_session,
     monkeypatch,
-    local_create_triggers,
 ):
     # This tests that non-standard payments can be missing a claim
     # and will still be successful as long as the employee exists
@@ -1914,7 +1845,6 @@ def test_process_extract_additional_payment_types_still_require_employee(
     tmp_path,
     local_initialize_factories_session,
     monkeypatch,
-    local_create_triggers,
 ):
     # This tests that non-standard payments can be missing a claim
     # and will still be successful as long as the employee exists

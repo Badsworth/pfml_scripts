@@ -2,6 +2,7 @@ import csv
 import os
 from datetime import date
 from pathlib import Path
+from typing import List
 
 import boto3
 import pytest
@@ -17,6 +18,7 @@ from massgov.pfml.db.models.employees import (
     Gender,
     TaxIdentifier,
     Title,
+    WagesAndContributions,
 )
 from massgov.pfml.db.models.factories import (
     AddressFactory,
@@ -35,7 +37,10 @@ class SpecialTestException(Exception):
 def test_employee_to_eligibility_feed_record(initialize_factories_session):
     employee = EmployeeFactory.create()
     employer = EmployerFactory.create()
-    WagesAndContributionsFactory.create_batch(size=5, employee=employee, employer=employer)
+
+    wages = WagesAndContributionsFactory.create_batch(size=5, employee=employee, employer=employer)
+    for wage in wages:
+        EmployeeLogFactory.create(employer_id=wage.employer_id, employee_id=wage.employee_id)
 
     eligibility_feed_record = ef.employee_to_eligibility_feed_record(employee, employer)
 
@@ -56,9 +61,11 @@ def test_employee_to_eligibility_feed_record(initialize_factories_session):
 
 
 def test_employee_to_eligibility_feed_record_with_itin(initialize_factories_session):
-    wages_and_contributions = WagesAndContributionsFactory.create()
-    employee = wages_and_contributions.employee
-    employer = wages_and_contributions.employer
+    wages = WagesAndContributionsFactory.create()
+    EmployeeLogFactory(employer_id=wages.employer_id, employee_id=wages.employee_id)
+
+    employee = wages.employee
+    employer = wages.employer
     employee.tax_identifier = TaxIdentifier(
         tax_identifier=TaxIdUnformattedStr.validate_type("999887777")
     )
@@ -414,8 +421,8 @@ def test_write_employees_to_csv(tmp_path, test_db_session, initialize_factories_
         next(f)
         # then start reading CSV
         reader = csv.DictReader(f)
-        for (actual, expected) in zip(reader, expected_rows):
-            for (actual, expected) in zip(actual.items(), expected.items()):
+        for (_actual, _expected) in zip(reader, expected_rows):
+            for (actual, expected) in zip(_actual.items(), _expected.items()):
                 assert actual == expected
 
 
@@ -471,15 +478,15 @@ def call_process_all_employers(monkeypatch, output_path):
     monkeypatch.setenv("FINEOS_AWS_IAM_ROLE_EXTERNAL_ID", "bar")
 
     return ef.process_all_employers(
-        make_test_db, make_fineos_client, make_s3_session, ef.EligibilityFeedExportConfig()
+        make_test_db, make_fineos_client, make_s3_session, ef.EligibilityFeedExportConfig(),
     )
 
 
 def test_process_all_employers_simple(
     local_test_db_session, local_initialize_factories_session, tmp_path, monkeypatch
 ):
-    WagesAndContributionsFactory.create()
-
+    wage = WagesAndContributionsFactory.create()
+    EmployeeLogFactory.create(employee_id=wage.employee_id, employer_id=wage.employer_id)
     batch_output_dir = tmp_path / "absence-eligibility" / "upload"
     batch_output_dir.mkdir(parents=True)
 
@@ -513,7 +520,8 @@ def test_process_all_employers_no_records(
 def test_process_all_employers_with_skip(
     local_test_db_session, local_initialize_factories_session, tmp_path, monkeypatch
 ):
-    WagesAndContributionsFactory.create()
+    wage = WagesAndContributionsFactory.create()
+    EmployeeLogFactory(employer_id=wage.employer_id, employee_id=wage.employee_id)
 
     def mock(fineos, employer):
         return None
@@ -534,7 +542,8 @@ def test_process_all_employers_with_skip(
 def test_process_all_employers_with_error(
     local_test_db_session, local_initialize_factories_session, tmp_path, monkeypatch
 ):
-    WagesAndContributionsFactory.create()
+    wage = WagesAndContributionsFactory.create()
+    EmployeeLogFactory(employer_id=wage.employer_id, employee_id=wage.employee_id)
 
     def mock(fineos, employer):
         raise Exception
@@ -556,7 +565,9 @@ def test_process_all_employers_for_single_employee_different_employers(
     local_test_db_session, local_initialize_factories_session, tmp_path, monkeypatch
 ):
     # wages_for_single_employee_different_employers
-    WagesAndContributionsFactory.create_batch(size=5, employee=EmployeeFactory.create())
+    wages = WagesAndContributionsFactory.create_batch(size=5, employee=EmployeeFactory.create())
+    for wage in wages:
+        EmployeeLogFactory(employer_id=wage.employer_id, employee_id=wage.employee_id)
 
     batch_output_dir = tmp_path / "absence-eligibility" / "upload"
     batch_output_dir.mkdir(parents=True)
@@ -578,7 +589,9 @@ def test_process_all_employers_for_single_employer_different_employees(
     local_test_db_session, local_initialize_factories_session, tmp_path, monkeypatch
 ):
     # wages_for_single_employer_different_employees
-    WagesAndContributionsFactory.create_batch(size=5, employer=EmployerFactory.create())
+    wages = WagesAndContributionsFactory.create_batch(size=5, employer=EmployerFactory.create())
+    for wage in wages:
+        EmployeeLogFactory(employer_id=wage.employer_id, employee_id=wage.employee_id)
 
     batch_output_dir = tmp_path / "absence-eligibility" / "upload"
     batch_output_dir.mkdir(parents=True)
@@ -600,9 +613,11 @@ def test_process_all_employers_for_multiple_wages_for_single_employee_employer_p
     local_test_db_session, local_initialize_factories_session, tmp_path, monkeypatch
 ):
     # multiple_wages_for_single_employee_employer_pair
-    WagesAndContributionsFactory.create_batch(
+    wages = WagesAndContributionsFactory.create_batch(
         size=5, employee=EmployeeFactory.create(), employer=EmployerFactory.create()
     )
+    for wage in wages:
+        EmployeeLogFactory(employer_id=wage.employer_id, employee_id=wage.employee_id)
 
     batch_output_dir = tmp_path / "absence-eligibility" / "upload"
     batch_output_dir.mkdir(parents=True)
@@ -625,15 +640,20 @@ def test_process_all_employers_skips_nonexistent_employer(
 ):
     # Set fineos_employer_id to None for 'missing' employer to skip employer.
     missing_employer_fein = "999999999"
-    WagesAndContributionsFactory.create_batch(
-        size=1,
-        employer=EmployerFactory.create(
-            employer_fein=missing_employer_fein, fineos_employer_id=None
-        ),
-    )
+    wages = [
+        wage
+        for wage in WagesAndContributionsFactory.create_batch(
+            size=1,
+            employer=EmployerFactory.create(
+                employer_fein=missing_employer_fein, fineos_employer_id=None
+            ),
+        )
+    ]
     # wages_for_single_employer_different_employees
     employer = EmployerFactory.create()
-    WagesAndContributionsFactory.create_batch(size=5, employer=employer)
+    wages = wages + WagesAndContributionsFactory.create_batch(size=5, employer=employer)
+    for wage in wages:
+        EmployeeLogFactory(employer_id=wage.employer_id, employee_id=wage.employee_id)
 
     batch_output_dir = tmp_path / "absence-eligibility" / "upload"
     batch_output_dir.mkdir(parents=True)
@@ -692,8 +712,10 @@ def test_get_most_recent_employer_to_employee_info_for_single_employee_different
 
 
 def test_process_list_of_employers_simple(test_db_session, initialize_factories_session, tmp_path):
-    wages_and_contributions = WagesAndContributionsFactory.create()
-    employers_to_process = [wages_and_contributions.employer.employer_id]
+    wage = WagesAndContributionsFactory.create()
+    EmployeeLogFactory.create(employer_id=wage.employer_id, employee_id=wage.employee_id)
+
+    employers_to_process = [wage.employer.employer_id]
 
     process_results = ef.process_a_list_of_employers(
         employers_to_process, test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
@@ -713,14 +735,12 @@ def test_process_list_of_employers_simple(test_db_session, initialize_factories_
 def test_process_list_of_employers_filter_correct_employers(
     test_db_session, initialize_factories_session, tmp_path
 ):
-    wages_and_contributions_one = WagesAndContributionsFactory.create()
-    employers_to_process = [wages_and_contributions_one.employer.employer_id]
-
-    wages_and_contributions_two = WagesAndContributionsFactory.create()
-    employers_to_process.append(wages_and_contributions_two.employer.employer_id)
-
-    WagesAndContributionsFactory.create()
-    WagesAndContributionsFactory.create()
+    employers_to_process = []
+    for i in range(5):
+        wage = WagesAndContributionsFactory.create()
+        EmployeeLogFactory.create(employer_id=wage.employer_id, employee_id=wage.employee_id)
+        if i < 2:
+            employers_to_process.append(wage.employer_id)
 
     process_results = ef.process_a_list_of_employers(
         employers_to_process, test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
@@ -737,10 +757,11 @@ def test_process_list_of_employers_filter_correct_employers(
     assert_number_of_data_lines_in_each_file(tmp_path, 1)
 
 
-def test_process_employee_updates_simple(
-    test_db_session, initialize_factories_session, tmp_path, create_triggers
-):
-    WagesAndContributionsFactory.create()
+def test_process_employee_updates_simple(test_db_session, initialize_factories_session, tmp_path):
+    wage = WagesAndContributionsFactory.create()
+    EmployeeLogFactory.create(
+        employee_id=wage.employee_id, employer_id=wage.employer_id,
+    )
 
     process_results = ef.process_employee_updates(
         test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
@@ -758,10 +779,15 @@ def test_process_employee_updates_simple(
 
 
 def test_process_employee_updates_for_single_employee_different_employers(
-    test_db_session, initialize_factories_session, tmp_path, create_triggers
+    test_db_session, initialize_factories_session, tmp_path
 ):
     # wages_for_single_employee_different_employers
-    WagesAndContributionsFactory.create_batch(size=5, employee=EmployeeFactory.create())
+    employee = EmployeeFactory.create()
+    wages = WagesAndContributionsFactory.create_batch(size=5, employee=employee)
+    most_recent_wages = sorted(wages, key=lambda w: w.filing_period, reverse=True)[0]
+    EmployeeLogFactory.create(
+        employer_id=most_recent_wages.employer_id, employee_id=employee.employee_id,
+    )
 
     process_results = ef.process_employee_updates(
         test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
@@ -774,10 +800,13 @@ def test_process_employee_updates_for_single_employee_different_employers(
 
 
 def test_process_employee_updates_for_single_employer_different_employees(
-    test_db_session, initialize_factories_session, tmp_path, create_triggers
+    test_db_session, initialize_factories_session, tmp_path
 ):
     # wages_for_single_employer_different_employees
-    WagesAndContributionsFactory.create_batch(size=5, employer=EmployerFactory.create())
+    employer = EmployerFactory.create()
+    wages = WagesAndContributionsFactory.create_batch(size=5, employer=employer)
+    for wage in wages:
+        EmployeeLogFactory.create(employer_id=employer.employer_id, employee_id=wage.employee_id)
 
     process_results = ef.process_employee_updates(
         test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
@@ -795,12 +824,16 @@ def test_process_employee_updates_for_single_employer_different_employees(
 
 
 def test_process_employee_updates_for_multiple_wages_for_single_employee_employer_pair(
-    test_db_session, initialize_factories_session, tmp_path, create_triggers
+    test_db_session, initialize_factories_session, tmp_path
 ):
     # multiple_wages_for_single_employee_employer_pair
-    WagesAndContributionsFactory.create_batch(
+    wages = WagesAndContributionsFactory.create_batch(
         size=5, employee=EmployeeFactory.create(), employer=EmployerFactory.create()
     )
+    for wage in wages:
+        EmployeeLogFactory.create(
+            employee_id=wage.employee_id, employer_id=wage.employer_id,
+        )
 
     process_results = ef.process_employee_updates(
         test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
@@ -818,25 +851,38 @@ def test_process_employee_updates_for_multiple_wages_for_single_employee_employe
 
 
 def test_process_employee_updates_for_multiple_employers_produce_equal_number_of_files(
-    test_db_session, initialize_factories_session, tmp_path, create_triggers
+    test_db_session, initialize_factories_session, tmp_path
 ):
     # Despite order in which employees inserted into Wage table they are
     # grouped by employer.
     # Two employers should produce two files.
     employer_one = EmployerFactory.create()
-    WagesAndContributionsFactory.create_batch(
-        size=5, employee=EmployeeFactory.create(), employer=employer_one
+    wages: List[WagesAndContributions] = []
+    wages.extend(
+        WagesAndContributionsFactory.create_batch(
+            size=5, employee=EmployeeFactory.create(), employer=employer_one
+        )
     )
     employer_two = EmployerFactory.create()
-    WagesAndContributionsFactory.create_batch(
-        size=10, employee=EmployeeFactory.create(), employer=employer_two
+    wages.extend(
+        WagesAndContributionsFactory.create_batch(
+            size=10, employee=EmployeeFactory.create(), employer=employer_two
+        )
     )
-    WagesAndContributionsFactory.create_batch(
-        size=5, employee=EmployeeFactory.create(), employer=employer_one
+    wages.extend(
+        WagesAndContributionsFactory.create_batch(
+            size=5, employee=EmployeeFactory.create(), employer=employer_one
+        )
     )
-    WagesAndContributionsFactory.create_batch(
-        size=7, employee=EmployeeFactory.create(), employer=employer_two
+    wages.extend(
+        WagesAndContributionsFactory.create_batch(
+            size=7, employee=EmployeeFactory.create(), employer=employer_two
+        )
     )
+    for wage in wages:
+        EmployeeLogFactory.create(
+            employee_id=wage.employee_id, employer_id=wage.employer_id, action="INSERT"
+        )
 
     process_results = ef.process_employee_updates(
         test_db_session, massgov.pfml.fineos.MockFINEOSClient(), tmp_path
@@ -854,19 +900,28 @@ def test_process_employee_updates_for_multiple_employers_produce_equal_number_of
 
 
 def test_process_employee_updates_skips_nonexistent_employer(
-    test_db_session, initialize_factories_session, tmp_path, create_triggers
+    test_db_session, initialize_factories_session, tmp_path
 ):
     # Set fineos_employer_id to None for 'missing' employer to skip employer.
     missing_employer_fein = "999999999"
-    WagesAndContributionsFactory.create_batch(
+    wages_employer_missing_fein = WagesAndContributionsFactory.create_batch(
         size=1,
         employer=EmployerFactory.create(
             employer_fein=missing_employer_fein, fineos_employer_id=None
         ),
     )
+    for wage in wages_employer_missing_fein:
+        EmployeeLogFactory.create(
+            employee_id=wage.employee_id, employer_id=wage.employer_id,
+        )
+
     # wages_for_single_employer_different_employees
     employer = EmployerFactory.create()
-    WagesAndContributionsFactory.create_batch(size=5, employer=employer)
+    wages = WagesAndContributionsFactory.create_batch(size=5, employer=employer)
+    for wage in wages:
+        EmployeeLogFactory.create(
+            employee_id=wage.employee_id, employer_id=wage.employer_id,
+        )
 
     fineos_client = massgov.pfml.fineos.MockFINEOSClient()
     process_results = ef.process_employee_updates(test_db_session, fineos_client, tmp_path)
@@ -884,9 +939,12 @@ def test_process_employee_updates_skips_nonexistent_employer(
 
 
 def test_process_employee_updates_with_error(
-    test_db_session, initialize_factories_session, tmp_path, create_triggers, monkeypatch
+    test_db_session, initialize_factories_session, tmp_path, monkeypatch
 ):
-    WagesAndContributionsFactory.create()
+    wages = WagesAndContributionsFactory.create()
+    EmployeeLogFactory.create(
+        employee_id=wages.employee_id, employer_id=wages.employer_id,
+    )
 
     def mock(fineos, employer):
         raise Exception
@@ -907,9 +965,13 @@ def test_process_employee_updates_with_error(
 
 
 def test_process_employee_updates_with_error_continues_processing_other_employers(
-    test_db_session, initialize_factories_session, tmp_path, create_triggers, monkeypatch
+    test_db_session, initialize_factories_session, tmp_path, monkeypatch
 ):
     wages = WagesAndContributionsFactory.create_batch(size=2)
+    for wage in wages:
+        EmployeeLogFactory.create(
+            employee_id=wage.employee_id, employer_id=wage.employer_id,
+        )
 
     def mock(fineos, employer):
         # error for the first employer
@@ -942,10 +1004,13 @@ def test_process_employee_updates_with_error_continues_processing_other_employer
 
 
 def test_process_employee_updates_with_recovery(
-    test_db_session, initialize_factories_session, tmp_path, create_triggers, monkeypatch
+    test_db_session, initialize_factories_session, tmp_path, monkeypatch
 ):
-    WagesAndContributionsFactory.create_batch(size=2, employer=EmployerFactory.create())
-
+    wages = WagesAndContributionsFactory.create_batch(size=2, employer=EmployerFactory.create())
+    for wage in wages:
+        EmployeeLogFactory.create(
+            employee_id=wage.employee_id, employer_id=wage.employer_id,
+        )
     employees = test_db_session.query(Employee).all()
 
     # Simulate one recovery record
@@ -972,9 +1037,13 @@ def test_process_employee_updates_with_recovery(
 
 
 def test_process_employee_updates_export_file_number_limit(
-    test_db_session, initialize_factories_session, tmp_path, create_triggers, mocker
+    test_db_session, initialize_factories_session, tmp_path, mocker
 ):
-    WagesAndContributionsFactory.create_batch(size=15)
+    wages = WagesAndContributionsFactory.create_batch(size=15)
+    for wage in wages:
+        EmployeeLogFactory.create(
+            employee_id=wage.employee_id, employer_id=wage.employer_id,
+        )
 
     process_results = ef.process_employee_updates(
         test_db_session,
@@ -995,10 +1064,13 @@ def test_process_employee_updates_export_file_number_limit(
 
 
 def test_process_employee_updates_export_file_number_limit_fewer_than_limit_exist(
-    test_db_session, initialize_factories_session, tmp_path, create_triggers
+    test_db_session, initialize_factories_session, tmp_path
 ):
-    WagesAndContributionsFactory.create_batch(size=2)
-
+    wages = WagesAndContributionsFactory.create_batch(size=2)
+    for wage in wages:
+        EmployeeLogFactory.create(
+            employee_id=wage.employee_id, employer_id=wage.employer_id,
+        )
     process_results = ef.process_employee_updates(
         test_db_session,
         massgov.pfml.fineos.MockFINEOSClient(),
@@ -1018,9 +1090,13 @@ def test_process_employee_updates_export_file_number_limit_fewer_than_limit_exis
 
 
 def test_process_employee_updates_export_file_number_limit_with_error_continues_processing_other_employers(
-    test_db_session, initialize_factories_session, tmp_path, create_triggers, monkeypatch
+    test_db_session, initialize_factories_session, tmp_path, monkeypatch
 ):
     wages = WagesAndContributionsFactory.create_batch(size=5)
+    for wage in wages:
+        EmployeeLogFactory.create(
+            employee_id=wage.employee_id, employer_id=wage.employer_id,
+        )
 
     def mock(fineos, employer):
         # error for the first employer

@@ -35,6 +35,10 @@ class PostProcessingMetrics(str, enum.Enum):
 
     PAYMENT_SKIPPED_FOR_CAP_ADHOC_COUNT = "payment_excluded_for_cap_adhoc_count"
 
+    # DUA / DIA reductions
+    PAYMENT_DUA_REDUCTION_OVERLAP = "payment_dua_reduction_overlap"
+    PAYMENT_DIA_REDUCTION_OVERLAP = "payment_dia_reduction_overlap"
+
     PAYMENT_DETAIL_MISSING_COUNT = "payment_detail_missing_count"
 
     # Metrics specific to the in review processor

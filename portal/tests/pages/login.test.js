@@ -1,10 +1,7 @@
+import { mockAuth, renderPage } from "../test-utils";
 import { screen, waitFor } from "@testing-library/react";
 import Login from "../../src/pages/login";
-import { renderPage } from "../test-utils";
 import userEvent from "@testing-library/user-event";
-
-jest.mock("../../src/hooks/useAppLogic");
-jest.mock("../../src/hooks/useLoggedInRedirect");
 
 describe("Login", () => {
   const options = { isLoggedIn: false };
@@ -16,6 +13,10 @@ describe("Login", () => {
   const renderLogin = (options, properties) => {
     return renderPage(Login, options, properties);
   };
+
+  beforeEach(() => {
+    mockAuth(false);
+  });
 
   it("renders the page", () => {
     const { container } = renderLogin(options, props);

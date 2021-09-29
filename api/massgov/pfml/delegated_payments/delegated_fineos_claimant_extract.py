@@ -9,7 +9,6 @@ from sqlalchemy.exc import SQLAlchemyError
 
 import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
-import massgov.pfml.fineos.util.log_tables as fineos_log_tables_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.api.util import state_log_util
@@ -704,35 +703,32 @@ class ClaimantExtractStep(Step):
             )
             return None
 
-        with fineos_log_tables_util.update_entity_and_remove_log_entry(
-            self.db_session, employee_pfml_entry, commit=False
-        ):
-            # Use employee feed entry to update PFML DB
-            if claimant_data.date_of_birth is not None:
-                employee_pfml_entry.date_of_birth = payments_util.datetime_str_to_date(
-                    claimant_data.date_of_birth
-                )
+        # Use employee feed entry to update PFML DB
+        if claimant_data.date_of_birth is not None:
+            employee_pfml_entry.date_of_birth = payments_util.datetime_str_to_date(
+                claimant_data.date_of_birth
+            )
 
-            if claimant_data.fineos_customer_number is not None:
-                employee_pfml_entry.fineos_customer_number = claimant_data.fineos_customer_number
+        if claimant_data.fineos_customer_number is not None:
+            employee_pfml_entry.fineos_customer_number = claimant_data.fineos_customer_number
 
-            if claimant_data.employee_first_name is not None:
-                employee_pfml_entry.fineos_employee_first_name = claimant_data.employee_first_name
-                employee_pfml_entry.fineos_employee_middle_name = claimant_data.employee_middle_name
+        if claimant_data.employee_first_name is not None:
+            employee_pfml_entry.fineos_employee_first_name = claimant_data.employee_first_name
+            employee_pfml_entry.fineos_employee_middle_name = claimant_data.employee_middle_name
 
-            if claimant_data.employee_last_name is not None:
-                employee_pfml_entry.fineos_employee_last_name = claimant_data.employee_last_name
+        if claimant_data.employee_last_name is not None:
+            employee_pfml_entry.fineos_employee_last_name = claimant_data.employee_last_name
 
-            self.update_eft_info(claimant_data, employee_pfml_entry)
+        self.update_eft_info(claimant_data, employee_pfml_entry)
 
-            # Associate claim with employee in case it is a new claim.
-            claim.employee_id = employee_pfml_entry.employee_id
-            # NOTE: fix to address test issues with query cache using a claim with the employee_id not set in other steps
-            # This will make the employee object available in memory for the same transaction
-            # TODO settle on approach after further investigation
-            claim.employee = employee_pfml_entry
+        # Associate claim with employee in case it is a new claim.
+        claim.employee_id = employee_pfml_entry.employee_id
+        # NOTE: fix to address test issues with query cache using a claim with the employee_id not set in other steps
+        # This will make the employee object available in memory for the same transaction
+        # TODO settle on approach after further investigation
+        claim.employee = employee_pfml_entry
 
-            self.db_session.add(employee_pfml_entry)
+        self.db_session.add(employee_pfml_entry)
 
         return employee_pfml_entry
 

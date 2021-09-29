@@ -58,12 +58,8 @@ function getRawEnvironment() {
     NEWRELIC_ACCOUNTID: process.env.E2E_NEWRELIC_ACCOUNTID,
     NEWRELIC_INGEST_KEY: process.env.E2E_NEWRELIC_INGEST_KEY,
 
-    HAS_CLAIMANT_STATUS_PAGE: process.env.HAS_CLAIMANT_STATUS_PAGE,
-
     DOR_IMPORT_URI: process.env.E2E_DOR_IMPORT_URI,
     DOR_ETL_ARN: process.env.E2E_DOR_ETL_ARN,
-
-    HAS_PREGNANCY_DOC_UPDATES: process.env.HAS_PREGNANCY_DOC_UPDATES,
   };
 }
 
@@ -88,7 +84,6 @@ const file: Partial<Configuration> =
 // The default layer is a set of default values which will be used if nothing is set.
 const defaults: Partial<Configuration> = {
   NEWRELIC_ACCOUNTID: "2837112",
-  HAS_CLAIMANT_STATUS_PAGE: "false",
 };
 export const merged = {
   ...defaults,

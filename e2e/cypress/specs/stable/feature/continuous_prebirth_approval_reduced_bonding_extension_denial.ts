@@ -2,15 +2,11 @@ import { fineos, fineosPages, portal } from "../../../actions";
 import { getFineosBaseUrl } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { addMonths, addDays, format } from "date-fns";
-import { config } from "../../../actions/common";
 
 describe("Submit medical pre-birth application via the web portal", () => {
   const submission =
     it("Submits a Medical/Pregnancy claim through the API", () => {
-      cy.task(
-        "generateClaim",
-        config("HAS_PREGNANCY_DOC_UPDATES") === "true" ? "PREBIRTH" : "MED_PRE"
-      ).then((claim) => {
+      cy.task("generateClaim", "PREBIRTH").then((claim) => {
         cy.task("submitClaimToAPI", claim).then((submission) => {
           cy.stash("claim", claim);
           cy.stash("submission", {
@@ -84,19 +80,14 @@ describe("Submit medical pre-birth application via the web portal", () => {
   );
   it("Will display the appropriate statuses for both leaves", () => {
     cy.dependsOnPreviousPass([submission]);
-    portal.before({
-      claimantShowStatusPage: config("HAS_CLAIMANT_STATUS_PAGE") === "true",
-    });
+    portal.before();
     portal.loginClaimant();
     cy.unstash<Submission>("submission").then((submission) => {
-      // @todo: remove if statement after release into all envs
-      if (config("HAS_CLAIMANT_STATUS_PAGE") === "true") {
-        portal.claimantGoToClaimStatus(submission.fineos_absence_id);
-        portal.claimantAssertClaimStatus([
-          { leave: "Serious Health Condition - Employee", status: "Approved" },
-          { leave: "Child Bonding", status: "Denied" },
-        ]);
-      }
+      portal.claimantGoToClaimStatus(submission.fineos_absence_id);
+      portal.claimantAssertClaimStatus([
+        { leave: "Serious Health Condition - Employee", status: "Approved" },
+        { leave: "Child Bonding", status: "Denied" },
+      ]);
     });
   });
 });

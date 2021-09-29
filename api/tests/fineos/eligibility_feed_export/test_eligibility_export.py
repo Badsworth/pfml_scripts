@@ -4,7 +4,7 @@ import pydantic
 import pytest
 
 from massgov.pfml.db.models.employees import EmployeeLog
-from massgov.pfml.db.models.factories import WagesAndContributionsFactory
+from massgov.pfml.db.models.factories import EmployeeLogFactory, WagesAndContributionsFactory
 
 
 @moto.mock_ssm()
@@ -111,13 +111,16 @@ def test_main_success_non_fineos_location_updates(
     logging_fix,
     reset_aws_env_vars,
     tmp_path,
-    local_create_triggers,
 ):
     import massgov.pfml.fineos.eligibility_feed_export.eligibility_export as main
 
     monkeypatch.setattr(main, "make_db_session", lambda: local_test_db_session)
 
-    WagesAndContributionsFactory.create_batch(size=10)
+    wages = WagesAndContributionsFactory.create_batch(size=10)
+    for wage in wages:
+        EmployeeLogFactory.create(
+            employee_id=wage.employee_id, employer_id=wage.employer_id, action="INSERT"
+        )
 
     batch_output_dir = tmp_path / "absence-eligibility" / "upload"
     batch_output_dir.mkdir(parents=True)
@@ -155,13 +158,16 @@ def test_main_success_non_fineos_location_updates_with_limit(
     logging_fix,
     reset_aws_env_vars,
     tmp_path,
-    local_create_triggers,
 ):
     import massgov.pfml.fineos.eligibility_feed_export.eligibility_export as main
 
     monkeypatch.setattr(main, "make_db_session", lambda: local_test_db_session)
 
-    WagesAndContributionsFactory.create_batch(size=10)
+    wages = WagesAndContributionsFactory.create_batch(size=10)
+    for wage in wages:
+        EmployeeLogFactory.create(
+            employee_id=wage.employee_id, employer_id=wage.employer_id, action="INSERT"
+        )
 
     batch_output_dir = tmp_path / "absence-eligibility" / "upload"
     batch_output_dir.mkdir(parents=True)

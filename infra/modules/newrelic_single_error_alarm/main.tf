@@ -17,13 +17,14 @@ locals {
 
 resource "newrelic_nrql_alert_condition" "alert" {
   name           = var.name
+  description    = var.description
   type           = "static"
   value_function = "single_value"
   enabled        = var.enabled
   policy_id      = var.policy_id
   runbook_url    = var.runbook_url
 
-  # Fill empty windows with the last value by default 
+  # Fill empty windows with the last value by default
   # so any alarm violations will stay open up until
   # the violation time limit.
   #

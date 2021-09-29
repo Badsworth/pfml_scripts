@@ -1166,7 +1166,7 @@ exports[`status page includes a button to upload additional documents 1`] = `
 </Fragment>
 `;
 
-exports[`status page info alert displays if claimant has bonding but not pregnancy claims 1`] = `
+exports[`status page info alert displays if claimant has bonding-newborn but not pregnancy claims 1`] = `
 <div
   className="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
   tabIndex="-1"
@@ -1180,7 +1180,7 @@ exports[`status page info alert displays if claimant has bonding but not pregnan
       level="2"
       size="4"
     >
-      If you gave birth, you may also be eligible for paid medical leave
+      If you are giving birth, you may also be eligible for paid medical leave
     </Heading>
     <div
       className="usa-alert__text"
@@ -1210,9 +1210,9 @@ exports[`status page info alert displays if claimant has bonding but not pregnan
 </div>
 `;
 
-exports[`status page info alert displays if claimant has bonding but not pregnancy claims 2`] = `
+exports[`status page info alert displays if claimant has bonding-newborn but not pregnancy claims 2`] = `
 Array [
-  "You may be able to take 20 weeks of paid medical leave if you’re unable to work during your pregnancy and to recover from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at ",
+  "You may be able to take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy or for your recovery from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at ",
   <a
     href="tel:(833) 344-7365"
     key="1"

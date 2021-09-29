@@ -249,7 +249,7 @@ lint-security: ## Run security linting
 
 lint-spectral: ## Run OpenAPI Spec linting
 	docker run --rm --tty --cap-drop=ALL --network=none --read-only --volume=$(PWD):/tmp:ro \
-           stoplight/spectral lint /tmp/$(OPEN_API_PATH) --ruleset /tmp/.spectral.yaml
+           stoplight/spectral:5.9 lint /tmp/$(OPEN_API_PATH) --ruleset /tmp/.spectral.yaml
 
 login: start ## Start shell in running container
 	docker exec -it $(APP_NAME) bash

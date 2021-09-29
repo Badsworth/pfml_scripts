@@ -17,7 +17,6 @@ from massgov.pfml.db.models.employees import (
     Claim,
     ClaimType,
     Employee,
-    EmployeeLog,
     ImportLog,
     PrenoteState,
     ReferenceFileType,
@@ -138,7 +137,6 @@ def test_run_step_happy_path(
     emp_updates_path,
     set_exporter_env_vars,
     monkeypatch,
-    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2020-12-20")
 
@@ -152,9 +150,6 @@ def test_run_step_happy_path(
     assert employee.fineos_employee_last_name == "Balistreri-original"
 
     employer = EmployerFactory(fineos_employer_id=96)
-
-    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 1
 
     local_claimant_extract_step.run()
 
@@ -237,9 +232,6 @@ def test_run_step_happy_path(
     assert import_log_report["evidence_not_id_proofed_count"] == 3
     assert import_log_report["valid_claim_count"] == 1
 
-    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_after == employee_log_count_before
-
 
 @pytest.mark.parametrize(
     "claimant_extract_file",
@@ -270,7 +262,6 @@ def test_run_step_existing_approved_eft_info(
     emp_updates_path,
     set_exporter_env_vars,
     monkeypatch,
-    local_create_triggers,
 ):
     # Very similar to the happy path test, but EFT info has already been
     # previously approved and we do not need to start the prenoting process
@@ -290,9 +281,6 @@ def test_run_step_existing_approved_eft_info(
     )
 
     EmployerFactory(fineos_employer_id=96)
-
-    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 1
 
     local_claimant_extract_step.run()
 
@@ -334,7 +322,6 @@ def test_run_step_existing_rejected_eft_info(
     emp_updates_path,
     set_exporter_env_vars,
     monkeypatch,
-    local_create_triggers,
 ):
     # Very similar to the happy path test, but EFT info has already been
     # previously rejected and thus it goes into an error state instead
@@ -355,9 +342,6 @@ def test_run_step_existing_rejected_eft_info(
     )
 
     EmployerFactory(fineos_employer_id=96)
-
-    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 1
 
     local_claimant_extract_step.run()
 
@@ -405,12 +389,8 @@ def test_run_step_no_employee(
     emp_updates_path,
     set_exporter_env_vars,
     monkeypatch,
-    local_create_triggers,
 ):
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2020-12-20")
-
-    employee_log_count_before = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 0
 
     local_claimant_extract_step.run()
 
@@ -429,9 +409,6 @@ def test_run_step_no_employee(
         {"reason": "MissingInDB", "details": "tax_identifier: 881778956"},
         {"reason": "MissingInDB", "details": "employer customer number: 96"},
     ]
-
-    employee_log_count_after = local_test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_after == employee_log_count_before
 
 
 def format_claimant_data() -> FineosClaimantData:
@@ -592,7 +569,6 @@ def test_process_extract_unprocessed_folder_files(
     test_db_session,
     tmp_path,
     monkeypatch,
-    create_triggers,
 ):
     monkeypatch.setenv("FINEOS_CLAIMANT_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
 
@@ -636,9 +612,6 @@ def test_process_extract_unprocessed_folder_files(
         reference_file_type_id=ReferenceFileType.FINEOS_CLAIMANT_EXTRACT.reference_file_type_id,
     )
 
-    employee_log_count_before = test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_before == 0
-
     # confirm all unprocessed files were downloaded
     claimant_extract_step.run()
 
@@ -675,9 +648,6 @@ def test_process_extract_unprocessed_folder_files(
         ReferenceFileType.FINEOS_CLAIMANT_EXTRACT,
     )
     assert len(copied_files) == 0
-
-    employee_log_count_after = test_db_session.query(EmployeeLog).count()
-    assert employee_log_count_after == employee_log_count_before
 
 
 def test_update_eft_info_happy_path(claimant_extract_step, test_db_session):

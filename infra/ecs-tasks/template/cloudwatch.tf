@@ -38,25 +38,6 @@ resource "aws_lambda_permission" "ecs_permission_tasks_logging" {
 # ----------------------------------------------------------------------------------------------
 # Scheduled tasks
 
-# - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# Run register-leave-admins-with-fineos every 15 minutes.
-module "register_leave_admins_with_fineos_scheduler" {
-  source     = "../../modules/ecs_task_scheduler"
-  is_enabled = var.enable_register_admins_job
-
-  task_name           = "register-leave-admins-with-fineos"
-  schedule_expression = "rate(15 minutes)"
-  environment_name    = var.environment_name
-
-  cluster_arn        = data.aws_ecs_cluster.cluster.arn
-  app_subnet_ids     = var.app_subnet_ids
-  security_group_ids = [aws_security_group.tasks.id]
-
-  ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["register-leave-admins-with-fineos"].arn
-  ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["register-leave-admins-with-fineos"].family
-  ecs_task_executor_role     = aws_iam_role.task_executor.arn
-  ecs_task_role              = aws_iam_role.register_admins_task_role.arn
-}
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 # Run fineos-bucket-tool daily at 3am EST (4am EDT) (8am UTC)

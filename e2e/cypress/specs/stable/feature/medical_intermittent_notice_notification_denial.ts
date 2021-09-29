@@ -1,13 +1,11 @@
 import { fineos, portal, email, fineosPages } from "../../../actions";
 import { Submission } from "../../../../src/types";
-import { config } from "../../../actions/common";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { getClaimantCredentials } from "../../../config";
 
 describe("Denial Notification and Notice", () => {
   after(() => {
-    config("HAS_CLAIMANT_STATUS_PAGE") !== "true" &&
-      portal.deleteDownloadsFolder();
+    portal.deleteDownloadsFolder();
   });
 
   const submit = it("Given a fully denied claim", () => {
@@ -39,40 +37,31 @@ describe("Denial Notification and Notice", () => {
     { retries: 0 },
     () => {
       cy.dependsOnPreviousPass([submit]);
-      portal.before({
-        claimantShowStatusPage: config("HAS_CLAIMANT_STATUS_PAGE") === "true",
-      });
+      portal.before();
       cy.unstash<Submission>("submission").then((submission) => {
         portal.loginClaimant();
-        cy.visit("/applications");
-        if (config("HAS_CLAIMANT_STATUS_PAGE") === "true") {
-          portal.claimantGoToClaimStatus(submission.fineos_absence_id);
-          portal.claimantAssertClaimStatus([
-            {
-              leave: "Serious Health Condition - Employee",
-              status: "Denied",
-            },
-          ]);
-          // @todo: uncomment line below once, doc download is supported
-          // cy.findByText("Denial notice (PDF)").should("be.visible").click();
-          // @todo: when application status page uses claim data, assert the documents there
-        } else {
-          cy.log("Waiting for documents");
-          cy.task(
-            "waitForClaimDocuments",
-            {
-              credentials: getClaimantCredentials(),
-              application_id: submission.application_id,
-              document_type: "Denial Notice",
-            },
-            { timeout: 45000 }
-          );
-          cy.log("Finished waiting for documents");
-          cy.contains("article", submission.fineos_absence_id).within(() => {
-            cy.findByText("Denial notice (PDF)").should("be.visible").click();
-          });
-          portal.downloadLegalNotice(submission.fineos_absence_id);
-        }
+        cy.log("Waiting for documents");
+        cy.task(
+          "waitForClaimDocuments",
+          {
+            credentials: getClaimantCredentials(),
+            application_id: submission.application_id,
+            document_type: "Denial Notice",
+          },
+          { timeout: 45000 }
+        );
+        cy.log("Finished waiting for documents");
+        portal.claimantGoToClaimStatus(submission.fineos_absence_id);
+        portal.claimantAssertClaimStatus([
+          {
+            leave: "Serious Health Condition - Employee",
+            status: "Denied",
+          },
+        ]);
+        cy.findByText("Denial notice (PDF)")
+          .should("be.visible")
+          .click({ force: true });
+        portal.downloadLegalNotice(submission.fineos_absence_id);
       });
     }
   );

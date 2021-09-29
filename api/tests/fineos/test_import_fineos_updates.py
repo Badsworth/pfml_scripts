@@ -5,7 +5,6 @@ import pytest
 import massgov.pfml.fineos.import_fineos_updates as fineos_updates
 from massgov.pfml.db.models.employees import (
     Employee,
-    EmployeeLog,
     EmployeeOccupation,
     Gender,
     MaritalStatus,
@@ -118,9 +117,7 @@ def emp_updates_path_name_fields_not_present(tmp_path):
     return test_folder
 
 
-def test_fineos_updates_happy_path(
-    test_db_session, initialize_factories_session, emp_updates_path, create_triggers
-):
+def test_fineos_updates_happy_path(test_db_session, initialize_factories_session, emp_updates_path):
     employee_one = EmployeeFactory(
         employee_id="4376896b-596c-4c86-a653-1915cf997a84", gender_id=Gender.WOMAN.gender_id
     )
@@ -130,8 +127,6 @@ def test_fineos_updates_happy_path(
         fineos_employer_id=10,
         employer_name="Test Company",
     )
-
-    employee_log_rows_before = test_db_session.query(EmployeeLog).all()
 
     report = fineos_updates.process_fineos_updates(test_db_session, emp_updates_path)
 
@@ -196,10 +191,6 @@ def test_fineos_updates_happy_path(
     assert report.errored_employee_occupation_count == 0
     assert report.total_employees_received_count == 2
 
-    # Confirm EmployeeLog did not pickup an additional entry from the process
-    employee_log_rows_after = test_db_session.query(EmployeeLog).all()
-    assert len(employee_log_rows_after) == len(employee_log_rows_before)
-
 
 def test_fineos_updates_no_employer(
     test_db_session, initialize_factories_session, emp_updates_path
@@ -236,7 +227,7 @@ def test_fineos_updates_no_employer(
 
 
 def test_fineos_updates_missing_employee_found_by_ssn(
-    test_db_session, initialize_factories_session, emp_updates_path, create_triggers
+    test_db_session, initialize_factories_session, emp_updates_path
 ):
     employee_one = EmployeeFactory(employee_id="4376896b-596c-4c86-a653-1915cf997a84")
     tax_identifier = TaxIdentifierFactory(tax_identifier="987654321")
@@ -249,8 +240,6 @@ def test_fineos_updates_missing_employee_found_by_ssn(
         fineos_employer_id=10,
         employer_name="Test Company",
     )
-
-    employee_log_rows_before = test_db_session.query(EmployeeLog).all()
 
     report = fineos_updates.process_fineos_updates(test_db_session, emp_updates_path)
 
@@ -283,22 +272,14 @@ def test_fineos_updates_missing_employee_found_by_ssn(
     assert report.errored_employee_occupation_count == 1
     assert report.total_employees_received_count == 2
 
-    # Confirm EmployeeLog did not pickup an additional entry from the process
-    employee_log_rows_after = test_db_session.query(EmployeeLog).all()
-    assert len(employee_log_rows_after) == len(employee_log_rows_before)
 
-
-def test_fineos_add_employee(
-    test_db_session, initialize_factories_session, emp_updates_path, create_triggers
-):
+def test_fineos_add_employee(test_db_session, initialize_factories_session, emp_updates_path):
     employee = EmployeeFactory(employee_id="4376896b-596c-4c86-a653-1915cf997a84")
     employer = EmployerFactory(
         employer_id="4376896b-596c-4c86-a653-1915cf997a85",
         fineos_employer_id=10,
         employer_name="Test Company",
     )
-
-    employee_log_rows_before = test_db_session.query(EmployeeLog).all()
 
     report = fineos_updates.process_fineos_updates(test_db_session, emp_updates_path)
 
@@ -352,13 +333,9 @@ def test_fineos_add_employee(
     assert report.errored_employee_occupation_count == 0
     assert report.total_employees_received_count == 2
 
-    # Confirm EmployeeLog did not pickup an additional entry from the process
-    employee_log_rows_after = test_db_session.query(EmployeeLog).all()
-    assert len(employee_log_rows_after) == len(employee_log_rows_before)
-
 
 def test_fineos_updates_missing_org_customer_no(
-    test_db_session, initialize_factories_session, emp_updates_path_no_org_no, create_triggers
+    test_db_session, initialize_factories_session, emp_updates_path_no_org_no
 ):
     employee = EmployeeFactory(employee_id="4376896b-596c-4c86-a653-1915cf997a84")
     employer = EmployerFactory(
@@ -366,8 +343,6 @@ def test_fineos_updates_missing_org_customer_no(
         fineos_employer_id=10,
         employer_name="Test Company",
     )
-
-    employee_log_rows_before = test_db_session.query(EmployeeLog).all()
 
     report = fineos_updates.process_fineos_updates(test_db_session, emp_updates_path_no_org_no)
 
@@ -396,16 +371,9 @@ def test_fineos_updates_missing_org_customer_no(
     assert report.errored_employee_occupation_count == 0
     assert report.total_employees_received_count == 2
 
-    # Confirm EmployeeLog did not pickup an additional entry from the process
-    employee_log_rows_after = test_db_session.query(EmployeeLog).all()
-    assert len(employee_log_rows_after) == len(employee_log_rows_before)
-
 
 def test_fineos_updates_incorrect_org_customer_no(
-    test_db_session,
-    initialize_factories_session,
-    emp_updates_path_incorrect_org_no,
-    create_triggers,
+    test_db_session, initialize_factories_session, emp_updates_path_incorrect_org_no,
 ):
     employee = EmployeeFactory(employee_id="4376896b-596c-4c86-a653-1915cf997a84")
     employer = EmployerFactory(
@@ -413,8 +381,6 @@ def test_fineos_updates_incorrect_org_customer_no(
         fineos_employer_id=10,
         employer_name="Test Company",
     )
-
-    employee_log_rows_before = test_db_session.query(EmployeeLog).all()
 
     report = fineos_updates.process_fineos_updates(
         test_db_session, emp_updates_path_incorrect_org_no
@@ -445,13 +411,9 @@ def test_fineos_updates_incorrect_org_customer_no(
     assert report.errored_employee_occupation_count == 1
     assert report.total_employees_received_count == 1
 
-    # Confirm EmployeeLog did not pickup an additional entry from the process
-    employee_log_rows_after = test_db_session.query(EmployeeLog).all()
-    assert len(employee_log_rows_after) == len(employee_log_rows_before)
-
 
 def test_fineos_updates_no_ssn_present(
-    test_db_session, initialize_factories_session, emp_updates_path_no_ssn_present, create_triggers,
+    test_db_session, initialize_factories_session, emp_updates_path_no_ssn_present,
 ):
     report = fineos_updates.process_fineos_updates(test_db_session, emp_updates_path_no_ssn_present)
 
@@ -464,18 +426,13 @@ def test_fineos_updates_no_ssn_present(
 
 
 def test_fineos_updates_name_fields_have_no_value(
-    test_db_session,
-    initialize_factories_session,
-    emp_updates_path_name_fields_have_no_value,
-    create_triggers,
+    test_db_session, initialize_factories_session, emp_updates_path_name_fields_have_no_value,
 ):
     EmployerFactory(
         employer_id="4376896b-596c-4c86-a653-1915cf997a85",
         fineos_employer_id=10,
         employer_name="Test Company",
     )
-
-    employee_log_rows_before = test_db_session.query(EmployeeLog).all()
 
     report = fineos_updates.process_fineos_updates(
         test_db_session, emp_updates_path_name_fields_have_no_value
@@ -499,24 +456,15 @@ def test_fineos_updates_name_fields_have_no_value(
     assert employee.first_name == ""
     assert employee.last_name == ""
 
-    # Confirm EmployeeLog did not pickup an additional entry from the process
-    employee_log_rows_after = test_db_session.query(EmployeeLog).all()
-    assert len(employee_log_rows_after) == len(employee_log_rows_before)
-
 
 def test_fineos_updates_name_fields_not_present(
-    test_db_session,
-    initialize_factories_session,
-    emp_updates_path_name_fields_not_present,
-    create_triggers,
+    test_db_session, initialize_factories_session, emp_updates_path_name_fields_not_present,
 ):
     EmployerFactory(
         employer_id="4376896b-596c-4c86-a653-1915cf997a85",
         fineos_employer_id=10,
         employer_name="Test Company",
     )
-
-    employee_log_rows_before = test_db_session.query(EmployeeLog).all()
 
     report = fineos_updates.process_fineos_updates(
         test_db_session, emp_updates_path_name_fields_not_present
@@ -539,7 +487,3 @@ def test_fineos_updates_name_fields_not_present(
 
     assert employee.first_name == ""
     assert employee.last_name == ""
-
-    # Confirm EmployeeLog did not pickup an additional entry from the process
-    employee_log_rows_after = test_db_session.query(EmployeeLog).all()
-    assert len(employee_log_rows_after) == len(employee_log_rows_before)

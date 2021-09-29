@@ -1,6 +1,6 @@
-import { mockAuth, renderPage } from "../test-utils";
+import { mockAuth, renderPage } from "../../test-utils";
 import { screen, waitFor } from "@testing-library/react";
-import CreateAccount from "../../src/pages/create-account";
+import CreateAccount from "../../../src/pages/employers/create-account";
 import userEvent from "@testing-library/user-event";
 
 describe("CreateAccount", () => {
@@ -16,22 +16,27 @@ describe("CreateAccount", () => {
   it("calls createAccount when the form is submitted", async () => {
     const email = "email@test.com";
     const password = "TestP@ssw0rd!";
-    const createAccount = jest.fn();
+    const ein = "12-3456789";
+    const createEmployerAccount = jest.fn();
     const options = {
       isLoggedIn: false,
       addCustomSetup: (appLogicHook) => {
-        appLogicHook.auth.createAccount = createAccount;
+        appLogicHook.auth.createEmployerAccount = createEmployerAccount;
       },
     };
+
     renderPage(CreateAccount, options);
+
     userEvent.type(
-      screen.getByRole("textbox", { name: "Email address" }),
+      screen.getByRole("textbox", { name: /Email address/i }),
       email
     );
-    userEvent.type(screen.getByLabelText("Password"), password);
+    userEvent.type(screen.getByLabelText(/Password Your password/i), password);
+    userEvent.type(screen.getByLabelText(/Employer ID number/i), ein);
     userEvent.click(screen.getByRole("button", { name: "Create account" }));
+
     await waitFor(() => {
-      expect(createAccount).toHaveBeenCalledWith(email, password);
+      expect(createEmployerAccount).toHaveBeenCalledWith(email, password, ein);
     });
   });
 });

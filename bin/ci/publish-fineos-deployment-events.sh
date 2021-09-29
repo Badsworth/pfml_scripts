@@ -34,8 +34,8 @@ fi
 environment=$1
 
 # Collect information about the last stored deployment for this environment in New Relic.
-last_stored=$(newrelic nrql query --query "SELECT latest(version) AS version, latest(timestamp) AS timestamp FROM CustomDeploymentMarker WHERE environment = '$environment' AND component = 'fineos' AND version IS NOT NULL SINCE 1 day ago")
-last_stored_version=$(echo $last_stored | jq -r ".[0].version")
+last_stored=$(newrelic nrql query --query "SELECT latest(version) AS version, latest(timestamp) AS timestamp FROM CustomDeploymentMarker WHERE environment = '$environment' AND component = 'fineos' AND version IS NOT NULL SINCE 6 months ago")
+last_stored_version=$(echo $last_stored | jq -r -e ".[0].version")
 
 # Collect information about the last version we saw in a synthetic.
 last_synthetic=$(newrelic nrql query --query "SELECT latest(custom.fineos_version) AS version, latest(timestamp) AS timestamp FROM SyntheticCheck WHERE custom.environment = '$environment' AND custom.fineos_version IS NOT NULL SINCE 1 day ago")

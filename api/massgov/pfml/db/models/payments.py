@@ -659,7 +659,9 @@ class PaymentAuditReportType(LookupTable):
     MAX_WEEKLY_BENEFITS = LkPaymentAuditReportType(
         1, "Max Weekly Benefits", AuditReportAction.REJECTED
     )
-    DUA_DIA_REDUCTION = LkPaymentAuditReportType(2, "DUA DIA Reduction", AuditReportAction.SKIPPED)
+    DUA_DIA_REDUCTION = LkPaymentAuditReportType(
+        2, "DUA DIA Reduction", AuditReportAction.INFORMATIONAL
+    )
     LEAVE_PLAN_IN_REVIEW = LkPaymentAuditReportType(
         3, "Leave Plan In Review", AuditReportAction.SKIPPED_NO_COLUMN
     )

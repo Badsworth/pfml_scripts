@@ -22,7 +22,12 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 import massgov.pfml.util.newrelic.events
 from massgov.pfml import db
-from massgov.pfml.db.models.employees import EmployeeLog, ImportLog, WagesAndContributions
+from massgov.pfml.db.models.employees import (
+    EmployeeLog,
+    EmployerLog,
+    ImportLog,
+    WagesAndContributions,
+)
 from massgov.pfml.dor.importer.dor_file_formats import (
     EMPLOYEE_FILE_ROW_LENGTH,
     EMPLOYEE_FORMAT,
@@ -644,6 +649,15 @@ def import_employers(db_session, employers, report, import_log_entry_id):
 
     report.created_employers_count += len(employer_models_to_create)
 
+    # Enqueue newly created employers for push to FINEOS
+    employer_insert_logs_to_create = list(
+        map(
+            lambda employer: EmployerLog(employer_id=employer.employer_id, action="INSERT"),
+            employer_models_to_create,
+        )
+    )
+    bulk_save(db_session, employer_insert_logs_to_create, "Employer Insert Logs")
+
     # 3 - Create employer addresses
     addresses_models_to_create = list(
         map(
@@ -678,11 +692,9 @@ def import_employers(db_session, employers, report, import_log_entry_id):
     )
 
     bulk_save(
-        db_session,
-        employer_address_relationship_models_to_create,
-        "Employer Address Mapping",
-        commit=True,
+        db_session, employer_address_relationship_models_to_create, "Employer Address Mapping",
     )
+    db_session.commit()
 
     logger.info(
         "Done - Creating new employer address mapping: %i",
@@ -729,6 +741,17 @@ def import_employers(db_session, employers, report, import_log_entry_id):
 
         existing_employer_model = dor_persistence_util.get_employer_by_fein(
             db_session, employer_info["fein"]
+        )
+        # Enqueue updated employer for push to FINEOS
+        db_session.add(
+            EmployerLog(
+                employer_id=existing_employer_model.employer_id,
+                action="UPDATE",
+                family_exemption=existing_employer_model.family_exemption,
+                medical_exemption=existing_employer_model.medical_exemption,
+                exemption_commence_date=existing_employer_model.exemption_commence_date,
+                exemption_cease_date=existing_employer_model.exemption_cease_date,
+            )
         )
         dor_persistence_util.update_employer(
             db_session, existing_employer_model, employer_info, import_log_entry_id
@@ -844,6 +867,8 @@ def import_employees(
     # 3 - Create new employees
     employee_models_to_create = []
     employee_ssns_staged_for_creation_in_current_loop = set()
+    employee_insert_logs_to_create = []
+
     for employee_info in not_found_employee_info_list:
         ssn = employee_info["employee_ssn"]
 
@@ -852,18 +877,26 @@ def import_employees(
             continue
 
         new_employee_id = ssn_to_new_employee_id[ssn]
-        employee_models_to_create.append(
-            dor_persistence_util.dict_to_employee(
-                employee_info, import_log_entry_id, new_employee_id, ssn_to_new_tax_id[ssn],
-            )
+        new_employee = dor_persistence_util.dict_to_employee(
+            employee_info, import_log_entry_id, new_employee_id, ssn_to_new_tax_id[ssn],
+        )
+        employee_models_to_create.append(new_employee)
+        # Enqueue newly created employee for push to FINEOS
+        employee_insert_logs_to_create.append(
+            EmployeeLog(employee_id=new_employee.employee_id, action="INSERT")
         )
 
         employee_ssns_staged_for_creation_in_current_loop.add(ssn)
         employee_ssns_to_id_created_in_current_import_run[ssn] = new_employee_id
 
+    # Store log entries for new employees
+    bulk_save(db_session, employee_insert_logs_to_create, "Employee Insert Logs")
+
     logger.info("Creating new employees: %i", len(employee_models_to_create))
 
-    bulk_save(db_session, employee_models_to_create, "Employees", commit=True)
+    bulk_save(db_session, employee_models_to_create, "Employees")
+
+    db_session.commit()
 
     report.created_employees_count += len(employee_models_to_create)
 
@@ -914,6 +947,12 @@ def import_employees(
         if is_updated:
             updated_employees_count += 1
             report.updated_employees_count += 1
+
+            # Enqueue updated employee for push to FINEOS
+            db_session.add(
+                EmployeeLog(employee_id=existing_employee_model.employee_id, action="UPDATE")
+            )
+
         else:
             unmodified_employees_count += 1
             report.unmodified_employees_count += 1
@@ -982,7 +1021,6 @@ def log_employees_with_new_employers(
     )
 
     employee_new_employer_logs_to_create = []
-    modified_at = datetime.now()
     already_logged_employee_id_employer_id_tuples = set()
 
     for employee_wage_info in employee_wage_info_for_existing_employees:
@@ -1004,12 +1042,7 @@ def log_employees_with_new_employers(
         employer_id_set = employee_id_to_employer_id_set.get(employee_id, None)
         if employer_id_set is None or employer_id not in employer_id_set:
             employee_log = EmployeeLog(
-                employee_log_id=uuid.uuid4(),
-                employee_id=employee_id,
-                employer_id=employer_id,
-                action="UPDATE_NEW_EMPLOYER",
-                modified_at=modified_at,
-                process_id=None,
+                employee_id=employee_id, employer_id=employer_id, action="UPDATE_NEW_EMPLOYER",
             )
             employee_new_employer_logs_to_create.append(employee_log)
             already_logged_employee_id_employer_id_tuples.add((employee_id, employer_id))

@@ -1,12 +1,13 @@
+import { mockAuth, renderPage } from "../test-utils";
 import { screen, waitFor } from "@testing-library/react";
 import ForgotPassword from "../../src/pages/forgot-password";
-import { renderPage } from "../test-utils";
 import userEvent from "@testing-library/user-event";
 
-jest.mock("../../src/hooks/useAppLogic");
-jest.mock("../../src/hooks/useLoggedInRedirect");
-
 describe("ForgotPassword", () => {
+  beforeEach(() => {
+    mockAuth(false);
+  });
+
   it("renders form", () => {
     const { container } = renderPage(ForgotPassword, { isLoggedIn: false });
     expect(container.firstChild).toMatchSnapshot();

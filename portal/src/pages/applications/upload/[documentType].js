@@ -62,9 +62,9 @@ const CertificationUpload = ({ path }) => {
     [uploadRoutes.medicalCertification]: "medical",
     [uploadRoutes.pregnancyCertification]: "medical",
   }[path];
-  const isBondingAdoption = path === uploadRoutes.bondingProofOfPlacement;
+  const isBondingNewborn = path === uploadRoutes.bondingProofOfBirth;
   const isBonding =
-    isBondingAdoption || path === uploadRoutes.bondingProofOfBirth;
+    isBondingNewborn || path === uploadRoutes.bondingProofOfPlacement;
 
   const { t } = useTranslation();
 
@@ -97,7 +97,7 @@ const CertificationUpload = ({ path }) => {
           tOptions={{ context }}
         />
       </Lead>
-      <ConditionalContent visible={isBondingAdoption}>
+      <ConditionalContent visible={isBondingNewborn}>
         <ul className="usa-list">
           {t("pages.claimsUploadDocumentType.leadListNewborn", {
             returnObjects: true,
