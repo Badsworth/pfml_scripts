@@ -147,13 +147,13 @@ jobs:
         method: 'POST'
         contentType: 'application/json'
         data: "{
-          \"routing_key\": \"????\", 
+          \"routing_key\": \"6b02445c7be347beab083af7544913eb\", 
           \"event_action\": \"trigger\",
-          \"dedup_key\":\"????\",
+          \"dedup_key\":\"Weekly Training API Reset\",
           \"payload\": {
             \"summary\": \"Weekly Training API Reset\",
             \"severity\": \"low\",
-            \"source\": \"Bandit and Safety Scan\",
+            \"source\": \"Weekly Training API Reset\",
             \"custom_details\": {
               \"description\": \"Weekly Training API Reset Failed.\"
               }
