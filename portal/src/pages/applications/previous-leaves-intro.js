@@ -1,6 +1,6 @@
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Heading from "../../components/Heading";
-import Hint from "../../components/Hint";
+import IconHeading from "../../components/IconHeading";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -26,16 +26,29 @@ export const PreviousLeavesIntro = (props) => {
       <Heading level="2" size="1">
         {t("pages.claimsPreviousLeavesIntro.sectionLabel")}
       </Heading>
-      <Hint>
-        <Trans
-          i18nKey="pages.claimsPreviousLeavesIntro.intro"
-          values={{ startDate }}
-          components={{
-            ul: <ul className="usa-list" />,
-            li: <li />,
-          }}
-        />
-      </Hint>
+      <IconHeading name="check">
+        {t("pages.claimsPreviousLeavesIntro.introHeader")}
+      </IconHeading>
+      <Trans
+        i18nKey="pages.claimsPreviousLeavesIntro.intro"
+        values={{ startDate }}
+        components={{
+          ul: <ul className="usa-list margin-left-2" />,
+          li: <li />,
+        }}
+      />
+      <br />
+      <IconHeading name="close">
+        {t("pages.claimsPreviousLeavesIntro.introDontNeedHeader")}
+      </IconHeading>
+      <Trans
+        i18nKey="pages.claimsPreviousLeavesIntro.introDontNeed"
+        values={{ startDate }}
+        components={{
+          ul: <ul className="usa-list margin-left-2" />,
+          li: <li />,
+        }}
+      />
     </QuestionPage>
   );
 };

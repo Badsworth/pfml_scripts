@@ -1,0 +1,34 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`IconHeading renders IconHeading component 1`] = `
+<h2
+  class="display-flex flex-row flex-align-center font-heading-sm text-bold"
+>
+  <svg
+    aria-hidden="true"
+    class="usa-icon--size-3 margin-right-2px text-red"
+    fill="currentColor"
+    focusable="false"
+    role="img"
+  >
+    <use
+      xlink:href="/img/sprite.svg#close"
+    />
+  </svg>
+  Foobar
+</h2>
+`;
+
+exports[`IconHeading renders IconHeading component 2`] = `
+<svg
+  aria-hidden="true"
+  class="usa-icon--size-3 margin-right-2px text-red"
+  fill="currentColor"
+  focusable="false"
+  role="img"
+>
+  <use
+    xlink:href="/img/sprite.svg#close"
+  />
+</svg>
+`;
