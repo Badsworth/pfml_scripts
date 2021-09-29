@@ -1,0 +1,184 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`OtherIncomes conditionally renders an info alert when user selects No 1`] = `
+<div
+  class="usa-alert__body"
+  role="alert"
+>
+  <div
+    class="usa-alert__text"
+  >
+    If you receive any other income after you apply, you’ll need to call the Contact Center to let us know.
+  </div>
+</div>
+`;
+
+exports[`OtherIncomes renders the page 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+    tabindex="-1"
+  >
+    Other leave, benefits, and income
+  </h1>
+  <fieldset
+    class="usa-fieldset margin-top-3 usa-form-group"
+  >
+    <legend
+      class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+    >
+      Will you receive income from any other sources during your leave dates for paid leave?
+    </legend>
+    <span
+      class="display-block line-height-sans-5 measure-5 usa-intro"
+    >
+      <div
+        class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-4"
+        tabindex="-1"
+      >
+        <div
+          class="usa-alert__body"
+          role="region"
+        >
+          <h2
+            class="usa-alert__heading font-heading-md text-bold"
+          >
+            Your leave dates for paid leave
+          </h2>
+          <div
+            class="usa-alert__text"
+          >
+            1/1/2021 to 6/1/2021
+          </div>
+        </div>
+      </div>
+      <h3
+        class="font-heading-sm text-bold"
+      >
+        <svg
+          aria-hidden="true"
+          class="usa-icon--size-3 text-secondary text-middle margin-right-05 margin-top-neg-05"
+          fill="currentColor"
+          focusable="false"
+          role="img"
+        >
+          <use
+            xlink:href="/img/sprite.svg#check_circle"
+          />
+        </svg>
+        The employer-sponsored benefits you must report are:
+      </h3>
+      <ul
+        class="usa-list margin-top-0 margin-left-4 margin-bottom-4"
+      >
+        <li>
+          Workers Compensation
+        </li>
+        <li>
+          Unemployment Insurance
+        </li>
+        <li>
+          Social Security Disability Insurance
+        </li>
+        <li>
+          Disability benefits under a governmental retirement plan such as STRS or PERS
+        </li>
+        <li>
+          Jones Act benefits
+        </li>
+        <li>
+          Railroad Retirement benefits
+        </li>
+        <li>
+          Earnings or benefits from another employer, or through self-employment
+        </li>
+      </ul>
+      <h3
+        class="font-heading-sm text-bold"
+      >
+        <svg
+          aria-hidden="true"
+          class="usa-icon--size-3 text-error text-middle margin-right-05 margin-top-neg-05"
+          fill="currentColor"
+          focusable="false"
+          role="img"
+        >
+          <use
+            xlink:href="/img/sprite.svg#cancel"
+          />
+        </svg>
+        You don’t need to report:
+      </h3>
+      <ul
+        class="usa-list margin-top-0 margin-left-4"
+      >
+        <li>
+          Other income that you've applied for but are not yet receiving
+        </li>
+        <li>
+          Income from past PFML benefits
+        </li>
+      </ul>
+    </span>
+    <div
+      class="margin-top-3"
+    >
+      <div
+        class="usa-radio measure-5 bg-transparent"
+      >
+        <input
+          class="usa-radio__input"
+          id="InputChoice1"
+          name="has_other_incomes"
+          type="radio"
+          value="true"
+        />
+        <label
+          class="usa-radio__label"
+          for="InputChoice1"
+        >
+          Yes
+          <span
+            class="usa-hint text-base-dark"
+          >
+            <br />
+            I will recieve other income from other sources during my paid leave
+          </span>
+        </label>
+      </div>
+      <div
+        class="usa-radio measure-5 bg-transparent"
+      >
+        <input
+          class="usa-radio__input"
+          id="InputChoice2"
+          name="has_other_incomes"
+          type="radio"
+          value="false"
+        />
+        <label
+          class="usa-radio__label"
+          for="InputChoice2"
+        >
+          No
+          <span
+            class="usa-hint text-base-dark"
+          >
+            <br />
+            I won't receive other income from the above sources during my paid leave,  I've applied but it hasn't been approved, or I don’t know the income amount yet
+          </span>
+        </label>
+      </div>
+    </div>
+  </fieldset>
+  <button
+    class="usa-button position-relative margin-top-4"
+    type="submit"
+  >
+    Save and continue
+  </button>
+</form>
+`;

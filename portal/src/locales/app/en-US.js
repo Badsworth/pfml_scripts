@@ -1153,14 +1153,24 @@ const pages = {
   },
   claimsEmployerBenefits: {
     choiceNo: "$t(shared.choiceNo)",
+    choiceNoAlert:
+      "If you receive any other employer sponsored-benefits after you apply, you’ll need to call the Contact Center to let us know.",
+    choiceNoHint:
+      "I won’t receive employer-sponsored benefits, I've applied but it hasn't been approved, or I don’t know the benefit amount yet",
     choiceYes: "$t(shared.choiceYes)",
-    hintBody:
-      "<p>This does not include PFML benefits. You only have to report benefits from the employer with this EIN: {{employer_fein}}. This is the same Employer Identification Number you entered earlier in your application.</p><p>If you won’t use these benefits from this employer, select No.</p>",
-    hintHeader: "The employer-sponsored benefits you must report are:",
-    hintList: [
+    choiceYesHint:
+      "I will recieve employer sponsored benefits during my paid leave",
+    doNotReportHintHeading: "You don’t need to report:",
+    doNotReportHintList: [
+      "Benefits from any other employers",
+      "Any benefit from your employer that will be based on your PFML benefit amount. One example is a “top up” to make up the difference between your regular wages and your PFML benefits.",
+    ],
+    doReportHintHeading: "The employer-sponsored benefits you must report are:",
+    doReportHintList: [
       "Temporary disability insurance, for either short-term or long-term disability",
       "Permanent disability insurance",
       "Family or medical leave benefits, such as a parental leave program",
+      "You only have to report benefits from the employer with this EIN: {{employer_fein}}. This is the same Employer Identification Number you entered earlier in your application.",
     ],
     sectionLabel:
       "Will you use any employer-sponsored benefits from this employer during your paid leave from PFML?",
@@ -1444,15 +1454,20 @@ const pages = {
   },
   claimsOtherIncomes: {
     choiceNo: "$t(shared.choiceNo)",
+    choiceNoAlert:
+      "If you receive any other income after you apply, you’ll need to call the Contact Center to let us know.",
     choiceNoHint:
-      "I won't receive other income, or I've applied but it hasn't been approved.",
+      "I won't receive other income from the above sources during my paid leave,  I've applied but it hasn't been approved, or I don’t know the income amount yet",
     choiceYes: "$t(shared.choiceYes)",
-    hintAppliedButNotApprovedDetailsBody:
-      "You only need to report sources of income that you know you will receive. If you have applied but you haven’t been approved yet, you don’t need to report that.<br/><br/>If you won’t receive income from any other sources on this list, select No.<br/><br/>If you are approved later, you will need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
-    hintAppliedButNotApprovedDetailsLabel:
-      "What if I’ve applied for other income but I haven’t been approved yet?",
-    hintHeader: "Other sources of income you must report are:",
-    hintList: [
+    choiceYesHint:
+      "I will recieve other income from other sources during my paid leave",
+    doNotReportHintHeading: "You don't need to report:",
+    doNotReportHintList: [
+      "Other income that you've applied for but are not yet receiving",
+      "Income from past PFML benefits",
+    ],
+    doReportHintHeading: "You must report these sources of income:",
+    doReportHintList: [
       "Workers Compensation",
       "Unemployment Insurance",
       "Social Security Disability Insurance",
