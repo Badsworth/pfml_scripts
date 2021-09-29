@@ -2386,3 +2386,119 @@ def test_previous_leave_worked_per_week_minutes_must_be_less_than_10080():
             field="previous_leaves_same_reason[0].worked_per_week_minutes",
         )
     ] == issues
+
+
+def test_previous_leaves_cannot_overlap_leave_periods():
+    application = ApplicationFactory.build()
+
+    # Previous leaves for the same reason; continuous leave; previous leave overlapping with the tail of the leave period
+    leave_periods = [
+        ContinuousLeavePeriodFactory.build(
+            application_id=application.application_id,
+            start_date=date(2021, 1, 1),
+            end_date=date(2021, 2, 28),
+        )
+    ]
+    previous_leaves = [
+        PreviousLeaveSameReasonFactory.build(
+            application_id=application.application_id,
+            leave_start_date=date(2021, 2, 28),
+            leave_end_date=date(2021, 3, 12),
+        )
+    ]
+    application.has_continuous_leave_periods = True
+    application.continuous_leave_periods = leave_periods
+    application.previous_leaves_same_reason = previous_leaves
+    issues = get_conditional_issues(application)
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.conflicting,
+            rule=IssueRule.disallow_overlapping_leave_period_with_previous_leave,
+            message="Previous leaves cannot overlap with leave periods. Received leave period 2021-01-01 – 2021-02-28 and previous leave 2021-02-28 – 2021-03-12.",
+        ),
+    ] == issues
+
+    # Previous leaves for the same reason; reduced leave; previous leave overlapping with the beginning of the leave period
+    leave_periods = [
+        ReducedScheduleLeavePeriodFactory.build(
+            application_id=application.application_id,
+            start_date=date(2021, 1, 5),
+            end_date=date(2021, 2, 28),
+        )
+    ]
+    previous_leaves = [
+        PreviousLeaveSameReasonFactory.build(
+            application_id=application.application_id,
+            leave_start_date=date(2021, 1, 1),
+            leave_end_date=date(2021, 1, 5),
+        )
+    ]
+    application.has_continuous_leave_periods = False
+    application.continuous_leave_periods = []
+    application.has_reduced_schedule_leave_periods = True
+    application.reduced_schedule_leave_periods = leave_periods
+    application.previous_leaves_same_reason = previous_leaves
+    issues = get_conditional_issues(application)
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.conflicting,
+            rule=IssueRule.disallow_overlapping_leave_period_with_previous_leave,
+            message="Previous leaves cannot overlap with leave periods. Received leave period 2021-01-05 – 2021-02-28 and previous leave 2021-01-01 – 2021-01-05.",
+        ),
+    ] == issues
+
+    # Previous leaves for another reason; reduced leave; previous leave contained within the leave period
+    leave_periods = [
+        ReducedScheduleLeavePeriodFactory.build(
+            application_id=application.application_id,
+            start_date=date(2021, 1, 5),
+            end_date=date(2021, 2, 28),
+        )
+    ]
+    previous_leaves = [
+        PreviousLeaveOtherReasonFactory.build(
+            application_id=application.application_id,
+            leave_start_date=date(2021, 1, 7),
+            leave_end_date=date(2021, 1, 24),
+        )
+    ]
+    application.reduced_schedule_leave_periods = leave_periods
+    application.previous_leaves_same_reason = []
+    application.previous_leaves_other_reason = previous_leaves
+    issues = get_conditional_issues(application)
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.conflicting,
+            rule=IssueRule.disallow_overlapping_leave_period_with_previous_leave,
+            message="Previous leaves cannot overlap with leave periods. Received leave period 2021-01-05 – 2021-02-28 and previous leave 2021-01-07 – 2021-01-24.",
+        ),
+    ] == issues
+
+    # Previous leaves for another reason; intermittent leave; previous leave contain the entire leave period
+    leave_periods = [
+        IntermittentLeavePeriodFactory.build(
+            application_id=application.application_id,
+            start_date=date(2021, 1, 5),
+            end_date=date(2021, 2, 28),
+        )
+    ]
+    previous_leaves = [
+        PreviousLeaveOtherReasonFactory.build(
+            application_id=application.application_id,
+            leave_start_date=date(2021, 1, 3),
+            leave_end_date=date(2021, 3, 1),
+        )
+    ]
+    application.has_reduced_schedule_leave_periods = False
+    application.has_intermittent_leave_periods = True
+    application.reduced_schedule_leave_periods = []
+    application.intermittent_leave_periods = leave_periods
+    application.previous_leaves_other_reason = previous_leaves
+    issues = get_conditional_issues(application)
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.conflicting,
+            rule=IssueRule.disallow_overlapping_leave_period_with_previous_leave,
+            message="Previous leaves cannot overlap with leave periods. Received leave period 2021-01-05 – 2021-02-28 and previous leave 2021-01-03 – 2021-03-01.",
+        ),
+    ] == issues
