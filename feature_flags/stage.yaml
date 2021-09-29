@@ -1,7 +1,7 @@
 maintenance:
     start: 
     end:
-    enabled: 1
+    enabled: 0
     options:
         pages_routes:
             - /*
