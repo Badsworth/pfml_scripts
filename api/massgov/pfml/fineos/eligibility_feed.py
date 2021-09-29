@@ -568,7 +568,7 @@ def process_employees_for_employer(
 
         # we successfully processed the employees, remove the log rows that
         # triggered their inclusion in this run
-        delete_processed_batch(db_session, employee_ids, process_id)
+        delete_processed_batch(db_session, employer_id, employee_ids, process_id)
         db_session.commit()
     except Exception:
         logger.exception(
@@ -589,13 +589,20 @@ def update_batch_to_processing(
 
 
 def delete_processed_batch(
-    db_session: db.Session, employee_ids: Iterable[EmployeeId], process_id: int
+    db_session: db.Session,
+    employer_id: EmployerId,
+    employee_ids: Iterable[EmployeeId],
+    process_id: int,
 ) -> int:
     return (
         db_session.query(EmployeePushToFineosQueue)
         .filter(
-            EmployeePushToFineosQueue.employee_id.in_(employee_ids),
             EmployeePushToFineosQueue.process_id == process_id,
+            EmployeePushToFineosQueue.employee_id.in_(employee_ids),
+            or_(
+                EmployeePushToFineosQueue.employer_id.is_(None),
+                EmployeePushToFineosQueue.employer_id == employer_id,
+            ),
         )
         .delete(synchronize_session=False)
     )

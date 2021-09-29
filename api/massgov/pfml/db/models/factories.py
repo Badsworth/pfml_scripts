@@ -323,8 +323,8 @@ class EmployeePushToFineosQueueFactory(BaseFactory):
         model = employee_models.EmployeePushToFineosQueue
 
     employee_log_id = Generators.UuidObj
-    employee_id = Generators.UuidObj
-    employer_id = Generators.UuidObj
+    employee_id = None
+    employer_id = None
     action = "UPDATE_NEW_EMPLOYER"
     modified_at = Generators.UtcNow
     process_id = 1
@@ -335,7 +335,7 @@ class EmployerPushToFineosQueueFactoryFactory(BaseFactory):
         model = employee_models.EmployerPushToFineosQueue
 
     employer_log_id = Generators.UuidObj
-    employer_id = Generators.UuidObj
+    employer_id = None
     action = "INSERT"
     modified_at = Generators.UtcNow
     process_id = 1
