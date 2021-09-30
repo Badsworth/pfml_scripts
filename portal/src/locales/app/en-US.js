@@ -1987,9 +1987,11 @@ const pages = {
     timelineTextFollowUpEmployer:
       "<p>Your employer has until <strong>{{employerFollowUpDate}}</strong> to respond to your application.</p>",
     timelineTextFollowUpGenericDFML:
-      "<p>We have <strong>14 calendar days</strong> after receiving your completed application to make a decision to approve, deny or request more information.</p><p>The process may take longer if we request more information to complete your application or if you request changes to your application.</p>",
+      "<p>We have <strong>14 calendar days</strong> after receiving your completed application to make a decision to approve, deny or request more information.</p>",
     timelineTextFollowUpGenericEmployer:
       "<p>Your employer has <strong>10 business days</strong> to respond to your application.</p>",
+    timelineTextFollowUpMayTakeLonger:
+      "<p>The process may take longer if we request more information to complete your application or if you request changes to your application.</p>",
     timelineTextLearnMore:
       "<p>Learn more about the <timeline-link>application approval process.</timeline-link></p>",
     uploadDocumentsButton: "Upload additional documents",
