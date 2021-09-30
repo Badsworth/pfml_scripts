@@ -1,8 +1,8 @@
 maintenance:
-    start: "2021-09-29T20:59:00-04:00"
-    # This window will be manually removed
-    # end: "2021-09-29T05:00:00-04:00"
-    enabled: 1
+    start:
+    end:
+    enabled: 0
     options:
         pages_routes:
             - /*
+            
