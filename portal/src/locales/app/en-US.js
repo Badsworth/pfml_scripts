@@ -1565,6 +1565,9 @@ const pages = {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     detailsLabel: "What counts as a qualifying reason?",
+    hintDoHeader:
+      "You must report paid or unpaid leave for these qualifying reasons that aren't the reason you are applying for paid leave now:",
+    hintDontHeader: "You don't need to report:",
     hintHeader:
       "Answer yes if you took paid or unpaid leave for a qualifying reason that is not the reason you are applying for paid leave now. The following are qualifying reasons:",
     hintList: [
@@ -1575,8 +1578,14 @@ const pages = {
       "You needed to care for a family member who serves in the armed forces.",
       "You needed to care for a family member with a serious health condition and your leave began on or after July 1, 2021.",
     ],
+    hintTextNo:
+      "I haven’t taken previous leave for a qualifying reason, or my other leave was through Massachusetts’ PFML program",
+    hintTextYes:
+      "I have taken previous leave for one or more qualifying reasons",
+    leaveTakenThroughPFML:
+      "Leave that was taken through Massachusetts' PFML program",
     sectionLabel:
-      "Did you take leave between January 1, 2021 and {{leaveStartDate}} for a different qualifying reason?",
+      "Did you take any previous leave between January 1, 2021 and {{leaveStartDate}} for a different qualifying reason?",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsPreviousLeavesOtherReasonDetails: {

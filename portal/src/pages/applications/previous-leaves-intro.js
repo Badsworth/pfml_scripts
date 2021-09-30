@@ -26,7 +26,7 @@ export const PreviousLeavesIntro = (props) => {
       <Heading level="2" size="1">
         {t("pages.claimsPreviousLeavesIntro.sectionLabel")}
       </Heading>
-      <IconHeading name="check">
+      <IconHeading name="check_circle">
         {t("pages.claimsPreviousLeavesIntro.introHeader")}
       </IconHeading>
       <Trans
@@ -38,7 +38,7 @@ export const PreviousLeavesIntro = (props) => {
         }}
       />
       <br />
-      <IconHeading name="close">
+      <IconHeading name="cancel">
         {t("pages.claimsPreviousLeavesIntro.introDontNeedHeader")}
       </IconHeading>
       <Trans

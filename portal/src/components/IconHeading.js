@@ -10,8 +10,8 @@ const IconHeading = ({ children, name }) => {
    * and color settings
    */
   const { color, flexAlign } = {
-    check: { color: "text-green", flexAlign: "flex-align-start" },
-    close: { color: "text-red", flexAlign: "flex-align-center" },
+    check_circle: { color: "text-green", flexAlign: "flex-align-start" },
+    cancel: { color: "text-red", flexAlign: "flex-align-center" },
   }[name];
 
   return (
@@ -21,12 +21,12 @@ const IconHeading = ({ children, name }) => {
       size="3"
     >
       <Icon
-        className={classnames("margin-right-2px", color)}
+        className={classnames("margin-right-2px", "flex-auto", color)}
         name={name}
         fill="currentColor"
         size={3}
       />
-      {children}
+      <span className="flex-1">{children}</span>
     </Heading>
   );
 };

@@ -1,5 +1,7 @@
 import { get, pick } from "lodash";
+
 import BenefitsApplication from "../../models/BenefitsApplication";
+import IconHeading from "../../components/IconHeading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
@@ -53,11 +55,13 @@ export const PreviousLeavesOtherReason = (props) => {
         choices={[
           {
             checked: formState.has_previous_leaves_other_reason === true,
+            hint: t("pages.claimsPreviousLeavesOtherReason.hintTextYes"),
             label: t("pages.claimsPreviousLeavesOtherReason.choiceYes"),
             value: "true",
           },
           {
             checked: formState.has_previous_leaves_other_reason === false,
+            hint: t("pages.claimsPreviousLeavesOtherReason.hintTextNo"),
             label: t("pages.claimsPreviousLeavesOtherReason.choiceNo"),
             value: "false",
           },
@@ -67,11 +71,23 @@ export const PreviousLeavesOtherReason = (props) => {
         })}
         hint={
           <React.Fragment>
-            <p>{t("pages.claimsPreviousLeavesOtherReason.hintHeader")}</p>
-            <ul className="usa-list">
+            <IconHeading name="check_circle">
+              {t("pages.claimsPreviousLeavesOtherReason.hintDoHeader")}
+            </IconHeading>
+            <ul className="usa-list margin-left-2">
               {hintList.map((listItem, index) => (
                 <li key={index}>{listItem}</li>
               ))}
+            </ul>
+            <IconHeading name="cancel">
+              {t("pages.claimsPreviousLeavesOtherReason.hintDontHeader")}
+            </IconHeading>
+            <ul className="usa-list margin-left-2">
+              <li>
+                {t(
+                  "pages.claimsPreviousLeavesOtherReason.leaveTakenThroughPFML"
+                )}
+              </li>
             </ul>
           </React.Fragment>
         }

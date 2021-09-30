@@ -12,7 +12,7 @@ exports[`PreviousLeavesIntro renders the page 1`] = `
     Tell us about your previous leave.
   </Heading>
   <IconHeading
-    name="check"
+    name="check_circle"
   >
     You'll need to report previous leave you may have taken between January 1, 2021 and :
   </IconHeading>
@@ -34,7 +34,7 @@ exports[`PreviousLeavesIntro renders the page 1`] = `
   />
   <br />
   <IconHeading
-    name="close"
+    name="cancel"
   >
     You don't need to report:
   </IconHeading>

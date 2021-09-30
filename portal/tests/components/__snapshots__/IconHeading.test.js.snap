@@ -6,29 +6,33 @@ exports[`IconHeading renders IconHeading component 1`] = `
 >
   <svg
     aria-hidden="true"
-    class="usa-icon--size-3 margin-right-2px text-red"
+    class="usa-icon--size-3 margin-right-2px flex-auto text-red"
     fill="currentColor"
     focusable="false"
     role="img"
   >
     <use
-      xlink:href="/img/sprite.svg#close"
+      xlink:href="/img/sprite.svg#cancel"
     />
   </svg>
-  Foobar
+  <span
+    class="flex-1"
+  >
+    Foobar
+  </span>
 </h2>
 `;
 
 exports[`IconHeading renders IconHeading component 2`] = `
 <svg
   aria-hidden="true"
-  class="usa-icon--size-3 margin-right-2px text-red"
+  class="usa-icon--size-3 margin-right-2px flex-auto text-red"
   fill="currentColor"
   focusable="false"
   role="img"
 >
   <use
-    xlink:href="/img/sprite.svg#close"
+    xlink:href="/img/sprite.svg#cancel"
   />
 </svg>
 `;
