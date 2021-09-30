@@ -5,7 +5,11 @@ import useLoggedInRedirect from "../../src/hooks/useLoggedInRedirect";
 jest.mock("@aws-amplify/auth");
 
 function mockAuthenticatedUser() {
-  Auth.currentUserInfo.mockResolvedValueOnce({ id: "us-east-1:XXXXXX" });
+  Auth.currentUserInfo.mockResolvedValueOnce({
+    attributes: {
+      email: "test@example.com",
+    },
+  });
 }
 
 function mockUnauthenticatedUser() {
