@@ -1,0 +1,40 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Success renders the page 1`] = `
+<div>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+    tabindex="-1"
+  >
+    Thanks for verifying your paid leave contributions
+  </h1>
+  <p>
+    <strong>
+      Organization:
+    </strong>
+     Company Name
+    <br />
+    <strong>
+      Employer ID number (EIN):
+    </strong>
+     12-3456789
+  </p>
+  <p>
+    Your account has been verified. If anyone else on your team needs to review applications, they’ll also need to complete the 
+    <a
+      href="https://www.mass.gov/how-to/creating-an-employer-account-to-review-paid-family-and-medical-leave-pfml-applications"
+      rel="noopener"
+      target="_blank"
+    >
+      verification process
+    </a>
+    .
+  </p>
+  <button
+    class="usa-button position-relative"
+    type="button"
+  >
+    Continue
+  </button>
+</div>
+`;
