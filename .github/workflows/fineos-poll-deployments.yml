@@ -19,8 +19,6 @@ jobs:
       NEW_RELIC_ACCOUNT_ID: 2837112
     steps:
       - uses: actions/checkout@v2
-      - name: Install New Relic CLI
-        run: curl https://raw.githubusercontent.com/newrelic/newrelic-cli/master/scripts/install.sh | bash
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -29,16 +27,9 @@ jobs:
           aws-region: us-east-1
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
-      - name: Pull the newrelic API key from parameter store
-        uses: "marvinpinto/action-inject-ssm-secrets@latest"
-        with:
-          ssm_parameter: "/admin/pfml-api/newrelic-api-key"
-          env_variable_name: "NEW_RELIC_API_KEY"
-      - name: Pull the newrelic Insights key from parameter store
-        uses: "marvinpinto/action-inject-ssm-secrets@latest"
-        with:
-          ssm_parameter: "/admin/pfml-api/newrelic-insert-api-key"
-          env_variable_name: "NEW_RELIC_INSIGHTS_INSERT_KEY"
+
+      - name: Setup & Configure New Relic CLI
+        uses: ./.github/actions/setup-nr-cli
 
       - run: ./bin/ci/publish-fineos-deployment-events.sh ${{ matrix.environment }}
         id: publish-deployments
