@@ -57,11 +57,13 @@ export const PreviousLeavesSameReason = (props) => {
             checked: formState.has_previous_leaves_same_reason === true,
             label: t("pages.claimsPreviousLeavesSameReason.choiceYes"),
             value: "true",
+            hint: t("pages.claimsPreviousLeavesSameReason.hintYes"),
           },
           {
             checked: formState.has_previous_leaves_same_reason === false,
             label: t("pages.claimsPreviousLeavesSameReason.choiceNo"),
             value: "false",
+            hint: t("pages.claimsPreviousLeavesSameReason.hintNo"),
           },
         ]}
         hint={

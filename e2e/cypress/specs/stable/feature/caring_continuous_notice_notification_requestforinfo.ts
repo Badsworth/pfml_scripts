@@ -166,28 +166,24 @@ describe("Request for More Information (notifications/notices)", () => {
     () => {
       cy.dependsOnPreviousPass([requestForInformation]);
       cy.unstash<Submission>("submission").then((submission) => {
-        cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-          const employeeFullName = `${claim.first_name} ${claim.last_name}`;
-          const subjectClaimant = email.getNotificationSubject(
-            employeeFullName,
-            "request for additional info",
-            submission.fineos_absence_id
-          );
-          cy.log(subjectClaimant);
-          email.getEmails(
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subject: subjectClaimant,
-              messageWildcard: submission.fineos_absence_id,
-              timestamp_from: submission.timestamp_from,
-              debugInfo: {
-                "Fineos Claim ID": submission.fineos_absence_id,
-              },
+        const subjectClaimant = email.getNotificationSubject(
+          "request for additional info",
+          submission.fineos_absence_id
+        );
+        cy.log(subjectClaimant);
+        email.getEmails(
+          {
+            address: "gqzap.notifications@inbox.testmail.app",
+            subjectWildcard: subjectClaimant,
+            messageWildcard: submission.fineos_absence_id,
+            timestamp_from: submission.timestamp_from,
+            debugInfo: {
+              "Fineos Claim ID": submission.fineos_absence_id,
             },
-            40000
-          );
-          cy.contains(submission.fineos_absence_id);
-        });
+          },
+          40000
+        );
+        cy.contains(submission.fineos_absence_id);
       });
     }
   );

@@ -47,7 +47,7 @@ describe("PreviousLeavesSameReason", () => {
     expect(
       wrapper.find("InputChoiceGroup").prop("label")
     ).toMatchInlineSnapshot(
-      `"Did you take any other leave between July 1, 2021 and the first day of the leave you are applying for, for the same reason as you are applying?"`
+      `"Did you take any previous leave between July 1, 2021 and the first day of the leave you are applying for, for the same reason as you are applying?"`
     );
   });
 

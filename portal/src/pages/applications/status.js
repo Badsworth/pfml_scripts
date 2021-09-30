@@ -24,6 +24,7 @@ import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
+import withUser from "../../hoc/withUser";
 
 export const Status = ({ appLogic, query }) => {
   const { t } = useTranslation();
@@ -258,7 +259,7 @@ export const Status = ({ appLogic, query }) => {
           <Timeline
             absencePeriods={claimDetail.absence_periods}
             employerFollowUpDate={
-              claimDetail.managed_requirements[0]?.follow_up_date
+              claimDetail.openManagedRequirement?.follow_up_date
             }
             absenceDetails={absenceDetails}
             applicationId={claimDetail.application_id}
@@ -353,13 +354,14 @@ Status.propTypes = {
   }).isRequired,
 };
 
-export default Status;
+export default withUser(Status);
 
 export const StatusTagMap = {
   Approved: "success",
   Denied: "error",
   Pending: "pending",
   Withdrawn: "inactive",
+  Cancelled: "inactive",
 };
 
 export const LeaveDetails = ({ absenceDetails = {} }) => {
@@ -498,13 +500,6 @@ export const Timeline = ({
     <React.Fragment>
       <Heading level="2">{t("pages.claimsStatus.timelineHeading")}</Heading>
       <Trans
-        i18nKey="pages.claimsStatus.timelineDescription"
-        components={{
-          ul: <ul className="usa-list" />,
-          li: <li />,
-        }}
-      />
-      <Trans
         i18nKey={
           employerFollowUpDate
             ? "pages.claimsStatus.timelineTextFollowUpEmployer"
@@ -515,6 +510,14 @@ export const Timeline = ({
         }}
       />
       <Trans i18nKey="pages.claimsStatus.timelineTextFollowUpGenericDFML" />
+      <Trans
+        i18nKey="pages.claimsStatus.timelineDescription"
+        components={{
+          ul: <ul className="usa-list" />,
+          li: <li />,
+        }}
+      />
+      <Trans i18nKey="pages.claimsStatus.timelineTextFollowUpMayTakeLonger" />
       <Trans
         i18nKey="pages.claimsStatus.timelineTextLearnMore"
         components={{
@@ -530,7 +533,10 @@ export const Timeline = ({
     </React.Fragment>
   );
   return (
-    <div className="border-bottom border-base-lighter padding-bottom-2 margin-bottom-2">
+    <div
+      data-testid="timeline"
+      className="border-bottom border-base-lighter padding-bottom-2 margin-bottom-2"
+    >
       {!bondingAbsencePeriod ||
       // eslint-disable-next-line react/prop-types
       !shouldRenderCertificationButton(bondingAbsencePeriod.reason, docList) ? (

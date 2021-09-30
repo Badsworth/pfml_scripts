@@ -3,8 +3,11 @@ import moto
 import pydantic
 import pytest
 
-from massgov.pfml.db.models.employees import EmployeeLog
-from massgov.pfml.db.models.factories import EmployeeLogFactory, WagesAndContributionsFactory
+from massgov.pfml.db.models.employees import EmployeePushToFineosQueue
+from massgov.pfml.db.models.factories import (
+    EmployeePushToFineosQueueFactory,
+    WagesAndContributionsFactory,
+)
 
 
 @moto.mock_ssm()
@@ -118,7 +121,7 @@ def test_main_success_non_fineos_location_updates(
 
     wages = WagesAndContributionsFactory.create_batch(size=10)
     for wage in wages:
-        EmployeeLogFactory.create(
+        EmployeePushToFineosQueueFactory.create(
             employee_id=wage.employee_id, employer_id=wage.employer_id, action="INSERT"
         )
 
@@ -135,11 +138,11 @@ def test_main_success_non_fineos_location_updates(
     monkeypatch.setenv("ELIGIBILITY_FEED_MODE", "updates")
     monkeypatch.delenv("ELIGIBILITY_FEED_EXPORT_FILE_NUMBER_LIMIT", raising=False)
 
-    assert local_test_db_session.query(EmployeeLog).count() == 10
+    assert local_test_db_session.query(EmployeePushToFineosQueue).count() == 10
 
     response = main.main_with_return()
 
-    assert local_test_db_session.query(EmployeeLog).count() == 0
+    assert local_test_db_session.query(EmployeePushToFineosQueue).count() == 0
 
     assert response["start"]
     assert response["end"]
@@ -165,7 +168,7 @@ def test_main_success_non_fineos_location_updates_with_limit(
 
     wages = WagesAndContributionsFactory.create_batch(size=10)
     for wage in wages:
-        EmployeeLogFactory.create(
+        EmployeePushToFineosQueueFactory.create(
             employee_id=wage.employee_id, employer_id=wage.employer_id, action="INSERT"
         )
 
@@ -182,11 +185,11 @@ def test_main_success_non_fineos_location_updates_with_limit(
     monkeypatch.setenv("ELIGIBILITY_FEED_MODE", "updates")
     monkeypatch.setenv("ELIGIBILITY_FEED_EXPORT_FILE_NUMBER_LIMIT", "5")
 
-    assert local_test_db_session.query(EmployeeLog).count() == 10
+    assert local_test_db_session.query(EmployeePushToFineosQueue).count() == 10
 
     response = main.main_with_return()
 
-    assert local_test_db_session.query(EmployeeLog).count() == 5
+    assert local_test_db_session.query(EmployeePushToFineosQueue).count() == 5
 
     assert response["start"]
     assert response["end"]

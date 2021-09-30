@@ -24,9 +24,9 @@ from massgov.pfml.db.models.employees import (
     AddressType,
     Country,
     Employee,
-    EmployeeLog,
+    EmployeePushToFineosQueue,
     Employer,
-    EmployerLog,
+    EmployerPushToFineosQueue,
     EmployerQuarterlyContribution,
     GeoState,
     WagesAndContributions,
@@ -125,14 +125,18 @@ def test_employer_import(test_db_session, dor_employer_lookups):
     assert report.unmodified_employers_count == 0
 
     # Verify Logs are correct
-    employer_insert_logs: List[EmployerLog] = (
-        test_db_session.query(EmployerLog).filter(EmployerLog.action == "INSERT").all()
+    employer_insert_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "INSERT")
+        .all()
     )
     assert len(employer_insert_logs) == 1
     assert employer_insert_logs[0].employer_id == employer_id
     # ------
-    employer_update_logs: List[EmployerLog] = (
-        test_db_session.query(EmployerLog).filter(EmployerLog.action == "UPDATE").all()
+    employer_update_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "UPDATE")
+        .all()
     )
     assert len(employer_update_logs) == 0
 
@@ -156,15 +160,19 @@ def test_employer_update(test_db_session, dor_employer_lookups):
     assert report.updated_employers_count == 0
 
     # Verify Logs are correct (1)
-    employer_insert_logs1: List[EmployerLog] = (
-        test_db_session.query(EmployerLog).filter(EmployerLog.action == "INSERT").all()
+    employer_insert_logs1: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "INSERT")
+        .all()
     )
     employer_insert_logs_ids1 = [x.employer_log_id for x in employer_insert_logs1]
     assert len(employer_insert_logs1) == 1
     assert employer_insert_logs1[0].employer_id == employer_id
     # ------
-    employer_update_logs1: List[EmployerLog] = (
-        test_db_session.query(EmployerLog).filter(EmployerLog.action == "UPDATE").all()
+    employer_update_logs1: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "UPDATE")
+        .all()
     )
     assert len(employer_update_logs1) == 0
     # ------------
@@ -190,18 +198,20 @@ def test_employer_update(test_db_session, dor_employer_lookups):
     assert existing_employer.latest_import_log_id == report_log_entry.import_log_id
 
     # Verify Logs are correct (2)
-    employer_insert_logs2: List[EmployerLog] = (
-        test_db_session.query(EmployerLog)
+    employer_insert_logs2: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
         .filter(
-            EmployerLog.action == "INSERT",
-            not_(EmployerLog.employer_log_id.in_(employer_insert_logs_ids1)),
+            EmployerPushToFineosQueue.action == "INSERT",
+            not_(EmployerPushToFineosQueue.employer_log_id.in_(employer_insert_logs_ids1)),
         )
         .all()
     )
     assert len(employer_insert_logs2) == 0
     # ------
-    employer_update_logs2: List[EmployerLog] = (
-        test_db_session.query(EmployerLog).filter(EmployerLog.action == "UPDATE").all()
+    employer_update_logs2: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "UPDATE")
+        .all()
     )
     assert len(employer_update_logs2) == 0
     # ------------
@@ -237,18 +247,20 @@ def test_employer_update(test_db_session, dor_employer_lookups):
     assert report3.updated_employers_count == 1
 
     # Verify Logs are correct (3)
-    employer_insert_logs3: List[EmployerLog] = (
-        test_db_session.query(EmployerLog)
+    employer_insert_logs3: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
         .filter(
-            EmployerLog.action == "INSERT",
-            not_(EmployerLog.employer_log_id.in_(employer_insert_logs_ids1)),
+            EmployerPushToFineosQueue.action == "INSERT",
+            not_(EmployerPushToFineosQueue.employer_log_id.in_(employer_insert_logs_ids1)),
         )
         .all()
     )
     assert len(employer_insert_logs3) == 0
     # ------
-    employer_update_logs3: List[EmployerLog] = (
-        test_db_session.query(EmployerLog).filter(EmployerLog.action == "UPDATE").all()
+    employer_update_logs3: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "UPDATE")
+        .all()
     )
     assert len(employer_update_logs3) == 1
     assert employer_update_logs3[0].employer_id == persisted_employer.employer_id
@@ -296,15 +308,19 @@ def test_employer_create_and_update_in_same_run(test_db_session):
     )
 
     # Verify Logs are correct
-    employer_insert_logs: List[EmployerLog] = (
-        test_db_session.query(EmployerLog).filter(EmployerLog.action == "INSERT").all()
+    employer_insert_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "INSERT")
+        .all()
     )
     assert len(employer_insert_logs) == 1
     assert employer_insert_logs[0].employer_id == persisted_employer.employer_id
 
     # ------
-    employer_update_logs: List[EmployerLog] = (
-        test_db_session.query(EmployerLog).filter(EmployerLog.action == "UPDATE").all()
+    employer_update_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "UPDATE")
+        .all()
     )
     assert len(employer_update_logs) == 1
     assert employer_update_logs[0].employer_id == persisted_employer.employer_id
@@ -361,8 +377,10 @@ def test_employer_address(test_db_session):
 
     # Verify Logs are correct
 
-    employer_insert_logs: List[EmployerLog] = (
-        test_db_session.query(EmployerLog).filter(EmployerLog.action == "INSERT").all()
+    employer_insert_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "INSERT")
+        .all()
     )
     assert len(employer_insert_logs) == 2
 
@@ -377,8 +395,10 @@ def test_employer_address(test_db_session):
     assert found_employer_2
 
     # ------
-    employer_update_logs: List[EmployerLog] = (
-        test_db_session.query(EmployerLog).filter(EmployerLog.action == "UPDATE").all()
+    employer_update_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "UPDATE")
+        .all()
     )
     assert len(employer_update_logs) == 0
     # ------------
@@ -411,13 +431,17 @@ def test_employer_invalid_fein(test_db_session):
     assert before_employer_count == after_employer_count
 
     # Verify Logs are correct
-    employer_insert_logs: List[EmployerLog] = (
-        test_db_session.query(EmployerLog).filter(EmployerLog.action == "INSERT").all()
+    employer_insert_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "INSERT")
+        .all()
     )
     assert len(employer_insert_logs) == 0
     # ------
-    employer_update_logs: List[EmployerLog] = (
-        test_db_session.query(EmployerLog).filter(EmployerLog.action == "UPDATE").all()
+    employer_update_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "UPDATE")
+        .all()
     )
     assert len(employer_update_logs) == 0
     # ------------
@@ -444,8 +468,10 @@ def test_log_employees_with_new_employers(test_db_session):
     assert len(created_employers) == 2
 
     # Verify Employer Logs are correct (1)
-    employer_insert_logs1: List[EmployerLog] = (
-        test_db_session.query(EmployerLog).filter(EmployerLog.action == "INSERT").all()
+    employer_insert_logs1: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "INSERT")
+        .all()
     )
     assert len(employer_insert_logs1) == 2
 
@@ -460,8 +486,10 @@ def test_log_employees_with_new_employers(test_db_session):
     assert found_employer_2
 
     # ------
-    employer_update_logs1: List[EmployerLog] = (
-        test_db_session.query(EmployerLog).filter(EmployerLog.action == "UPDATE").all()
+    employer_update_logs1: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "UPDATE")
+        .all()
     )
     assert len(employer_update_logs1) == 0
     # ------------
@@ -491,8 +519,10 @@ def test_log_employees_with_new_employers(test_db_session):
     assert len(created_wages) == 2
 
     # Verify Employee Logs are correct (1)
-    employee_insert_logs1: List[EmployeeLog] = (
-        test_db_session.query(EmployeeLog).filter(EmployeeLog.action == "INSERT").all()
+    employee_insert_logs1: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "INSERT")
+        .all()
     )
     employee_insert_log_ids1 = [x.employee_log_id for x in employee_insert_logs1]
 
@@ -508,13 +538,17 @@ def test_log_employees_with_new_employers(test_db_session):
     )
     assert found_employee_2
     # ------
-    employee_update_logs1: List[EmployeeLog] = (
-        test_db_session.query(EmployeeLog).filter(EmployeeLog.action == "UPDATE").all()
+    employee_update_logs1: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE")
+        .all()
     )
     assert len(employee_update_logs1) == 0
     # ------
-    employee_employer_logs1: List[EmployeeLog] = (
-        test_db_session.query(EmployeeLog).filter(EmployeeLog.action == "UPDATE_NEW_EMPLOYER").all()
+    employee_employer_logs1: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE_NEW_EMPLOYER")
+        .all()
     )
     assert len(employee_employer_logs1) == 0
     # ------------
@@ -547,24 +581,28 @@ def test_log_employees_with_new_employers(test_db_session):
     )[0]
 
     # Verify Employee Logs are correct (2)
-    employee_insert_logs2: List[EmployeeLog] = (
-        test_db_session.query(EmployeeLog)
+    employee_insert_logs2: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
         .filter(
-            EmployeeLog.action == "INSERT",
-            not_(EmployeeLog.employee_log_id.in_(employee_insert_log_ids1)),
+            EmployeePushToFineosQueue.action == "INSERT",
+            not_(EmployeePushToFineosQueue.employee_log_id.in_(employee_insert_log_ids1)),
         )
         .all()
     )
     assert len(employee_insert_logs2) == 1
     assert employee_insert_logs2[0].employee_id == created_employee.employee_id
     # ------
-    employee_update_logs2: List[EmployeeLog] = (
-        test_db_session.query(EmployeeLog).filter(EmployeeLog.action == "UPDATE").all()
+    employee_update_logs2: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE")
+        .all()
     )
     assert len(employee_update_logs2) == 0
     # ------
-    employee_employer_logs2: List[EmployeeLog] = (
-        test_db_session.query(EmployeeLog).filter(EmployeeLog.action == "UPDATE_NEW_EMPLOYER").all()
+    employee_employer_logs2: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE_NEW_EMPLOYER")
+        .all()
     )
     assert len(employee_employer_logs2) == 1
     assert employee_employer_logs2[0].employer_id == found_employer_1.employer_id
@@ -598,14 +636,18 @@ def test_employee_wage_data_create(test_db_session, dor_employer_lookups):
     employer_id = persisted_employer.employer_id
 
     # Verify Employer Logs are correct
-    employer_insert_logs: List[EmployerLog] = (
-        test_db_session.query(EmployerLog).filter(EmployerLog.action == "INSERT").all()
+    employer_insert_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "INSERT")
+        .all()
     )
     assert len(employer_insert_logs) == 1
     assert employer_insert_logs[0].employer_id == employer_id
     # ------
-    employer_update_logs: List[EmployerLog] = (
-        test_db_session.query(EmployerLog).filter(EmployerLog.action == "UPDATE").all()
+    employer_update_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "UPDATE")
+        .all()
     )
     assert len(employer_update_logs) == 0
     # ------------
@@ -646,19 +688,25 @@ def test_employee_wage_data_create(test_db_session, dor_employer_lookups):
     assert report.updated_wages_and_contributions_count == 0
 
     # Verify Employee Logs are correct
-    employee_insert_logs: List[EmployeeLog] = (
-        test_db_session.query(EmployeeLog).filter(EmployeeLog.action == "INSERT").all()
+    employee_insert_logs: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "INSERT")
+        .all()
     )
     assert len(employee_insert_logs) == 1
     assert employee_insert_logs[0].employee_id == employee_id
     # ------
-    employee_update_logs: List[EmployeeLog] = (
-        test_db_session.query(EmployeeLog).filter(EmployeeLog.action == "UPDATE").all()
+    employee_update_logs: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE")
+        .all()
     )
     assert len(employee_update_logs) == 0
     # ------
-    employee_employer_logs: List[EmployeeLog] = (
-        test_db_session.query(EmployeeLog).filter(EmployeeLog.action == "UPDATE_NEW_EMPLOYER").all()
+    employee_employer_logs: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE_NEW_EMPLOYER")
+        .all()
     )
     assert len(employee_employer_logs) == 0
     # ------------
@@ -681,14 +729,18 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     employer_id = persisted_employer.employer_id
 
     # Verify Employer Logs are correct
-    employer_insert_logs: List[EmployerLog] = (
-        test_db_session.query(EmployerLog).filter(EmployerLog.action == "INSERT").all()
+    employer_insert_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "INSERT")
+        .all()
     )
     assert len(employer_insert_logs) == 1
     assert employer_insert_logs[0].employer_id == employer_id
     # ------
-    employer_update_logs: List[EmployerLog] = (
-        test_db_session.query(EmployerLog).filter(EmployerLog.action == "UPDATE").all()
+    employer_update_logs: List[EmployerPushToFineosQueue] = (
+        test_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.action == "UPDATE")
+        .all()
     )
     assert len(employer_update_logs) == 0
     # ------------
@@ -713,20 +765,26 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     assert report.updated_wages_and_contributions_count == 0
 
     # Verify Employee Logs are correct (1)
-    employee_insert_logs1: List[EmployeeLog] = (
-        test_db_session.query(EmployeeLog).filter(EmployeeLog.action == "INSERT").all()
+    employee_insert_logs1: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "INSERT")
+        .all()
     )
     employee_insert_log_ids1 = [x.employee_log_id for x in employee_insert_logs1]
     assert len(employee_insert_logs1) == 1
     assert employee_insert_logs1[0].employee_id == employee_id
     # ------
-    employee_update_logs1: List[EmployeeLog] = (
-        test_db_session.query(EmployeeLog).filter(EmployeeLog.action == "UPDATE").all()
+    employee_update_logs1: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE")
+        .all()
     )
     assert len(employee_update_logs1) == 0
     # ------
-    employee_employer_logs1: List[EmployeeLog] = (
-        test_db_session.query(EmployeeLog).filter(EmployeeLog.action == "UPDATE_NEW_EMPLOYER").all()
+    employee_employer_logs1: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE_NEW_EMPLOYER")
+        .all()
     )
     assert len(employee_employer_logs1) == 0
     # ------------
@@ -757,23 +815,27 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     assert report2.unmodified_wages_and_contributions_count == 1
 
     # Verify Employee Logs are correct (2)
-    employee_insert_logs2: List[EmployeeLog] = (
-        test_db_session.query(EmployeeLog)
+    employee_insert_logs2: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
         .filter(
-            EmployeeLog.action == "INSERT",
-            not_(EmployeeLog.employee_log_id.in_(employee_insert_log_ids1)),
+            EmployeePushToFineosQueue.action == "INSERT",
+            not_(EmployeePushToFineosQueue.employee_log_id.in_(employee_insert_log_ids1)),
         )
         .all()
     )
     assert len(employee_insert_logs2) == 0
     # ------
-    employee_update_logs2: List[EmployeeLog] = (
-        test_db_session.query(EmployeeLog).filter(EmployeeLog.action == "UPDATE").all()
+    employee_update_logs2: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE")
+        .all()
     )
     assert len(employee_update_logs2) == 0
     # ------
-    employee_employer_logs2: List[EmployeeLog] = (
-        test_db_session.query(EmployeeLog).filter(EmployeeLog.action == "UPDATE_NEW_EMPLOYER").all()
+    employee_employer_logs2: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE_NEW_EMPLOYER")
+        .all()
     )
     assert len(employee_employer_logs2) == 0
     # ------------
@@ -817,24 +879,28 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     assert report3.unmodified_wages_and_contributions_count == 0
 
     # Verify Employee Logs are correct (3)
-    employee_insert_logs3: List[EmployeeLog] = (
-        test_db_session.query(EmployeeLog)
+    employee_insert_logs3: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
         .filter(
-            EmployeeLog.action == "INSERT",
-            not_(EmployeeLog.employee_log_id.in_(employee_insert_log_ids1)),
+            EmployeePushToFineosQueue.action == "INSERT",
+            not_(EmployeePushToFineosQueue.employee_log_id.in_(employee_insert_log_ids1)),
         )
         .all()
     )
     assert len(employee_insert_logs3) == 0
     # ------
-    employee_update_logs3: List[EmployeeLog] = (
-        test_db_session.query(EmployeeLog).filter(EmployeeLog.action == "UPDATE").all()
+    employee_update_logs3: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE")
+        .all()
     )
     assert len(employee_update_logs3) == 1
     assert employee_update_logs3[0].employee_id == employee_id
     # ------
-    employee_employer_logs3: List[EmployeeLog] = (
-        test_db_session.query(EmployeeLog).filter(EmployeeLog.action == "UPDATE_NEW_EMPLOYER").all()
+    employee_employer_logs3: List[EmployeePushToFineosQueue] = (
+        test_db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.action == "UPDATE_NEW_EMPLOYER")
+        .all()
     )
     assert len(employee_employer_logs3) == 0
     # ------------

@@ -2,11 +2,11 @@ import datetime
 from decimal import Decimal
 from enum import Enum
 
-from sqlalchemy import JSON, TIMESTAMP, Column, Date, ForeignKey, Integer, Numeric, Text
+from sqlalchemy import JSON, TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.orm import relationship
 
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.employees import ImportLog, Payment, ReferenceFile
+from massgov.pfml.db.models.employees import Claim, Employee, ImportLog, Payment, ReferenceFile
 
 from ..lookup import LookupTable
 from .base import Base, TimestampMixin, uuid_gen
@@ -685,6 +685,118 @@ class PaymentAuditReportDetails(Base, TimestampMixin):
     payment = relationship(Payment)
     audit_report_type = relationship(LkPaymentAuditReportType)
     import_log = relationship(ImportLog)
+
+
+class Pfml1099MMARSPayment(Base, TimestampMixin):
+    __tablename__ = "pfml_1099_mmars_payment"
+    pfml_1099_mmars_payment_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    pfml_1099_batch_id = Column(
+        PostgreSQLUUID, ForeignKey("pfml_1099_batch.pfml_1099_batch_id"), index=True, nullable=False
+    )
+    mmars_payment_id = Column(Integer, nullable=False)
+    employee_id = Column(
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=False
+    )
+    payment_amount = Column(Numeric, nullable=False)
+    payment_date = Column(Date, nullable=False)
+
+    employee = relationship(Employee)
+
+
+class Pfml1099Payment(Base, TimestampMixin):
+    __tablename__ = "pfml_1099_payment"
+    pfml_1099_payment_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    pfml_1099_batch_id = Column(
+        PostgreSQLUUID, ForeignKey("pfml_1099_batch.pfml_1099_batch_id"), index=True, nullable=False
+    )
+    payment_id = Column(
+        PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True, nullable=False
+    )
+    claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=False)
+    employee_id = Column(
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=False
+    )
+    payment_amount = Column(Numeric, nullable=False)
+    payment_date = Column(Date, nullable=False)
+
+    payment = relationship(Payment)
+    claim = relationship(Claim)
+    employee = relationship(Employee)
+
+
+class Pfml1099Batch(Base, TimestampMixin):
+    __tablename__ = "pfml_1099_batch"
+    pfml_1099_batch_id = Column(PostgreSQLUUID, primary_key=True, nullable=False)
+    tax_year = Column(Integer, nullable=False)
+    batch_run_date = Column(Date, nullable=False)
+    correction_ind = Column(Boolean, nullable=False)
+
+
+class Pfml1099Withholding(Base, TimestampMixin):
+    __tablename__ = "pfml_1099_withholding"
+    pfml_1099_withholding_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    pfml_1099_batch_id = Column(
+        PostgreSQLUUID, ForeignKey("pfml_1099_batch.pfml_1099_batch_id"), index=True, nullable=False
+    )
+    payment_id = Column(
+        PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True, nullable=False
+    )
+    claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=False)
+    employee_id = Column(
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=False
+    )
+    withholding_amount = Column(Numeric, nullable=False)
+    withholding_date = Column(Date, nullable=False)
+
+    payment = relationship(Payment)
+    claim = relationship(Claim)
+    employee = relationship(Employee)
+
+
+class Pfml1099Refund(Base, TimestampMixin):
+    __tablename__ = "pfml_1099_refund"
+    pfml_1099_refund_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    pfml_1099_batch_id = Column(
+        PostgreSQLUUID, ForeignKey("pfml_1099_batch.pfml_1099_batch_id"), index=True, nullable=False
+    )
+    payment_id = Column(
+        PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True, nullable=False
+    )
+    employee_id = Column(
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=False
+    )
+    refund_amount = Column(Numeric, nullable=False)
+    refund_date = Column(Date, nullable=False)
+
+    payment = relationship(Payment)
+    employee = relationship(Employee)
+
+
+class Pfml1099(Base, TimestampMixin):
+    __tablename__ = "pfml_1099"
+    pfml_1099_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    pfml_1099_batch_id = Column(
+        PostgreSQLUUID, ForeignKey("pfml_1099_batch.pfml_1099_batch_id"), index=True, nullable=False
+    )
+    tax_year = Column(Integer, nullable=False)
+    employee_id = Column(
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=False
+    )
+    tax_identifier_id = Column(PostgreSQLUUID, nullable=False)
+    first_name = Column(Text, nullable=False)
+    last_name = Column(Text, nullable=False)
+    address_line_1 = Column(Text, nullable=False)
+    address_line_2 = Column(Text, nullable=False)
+    city = Column(Text, nullable=False)
+    state = Column(Text, nullable=False)
+    zip = Column(Text, nullable=False)
+    gross_payments = Column(Numeric(asdecimal=True), nullable=False)
+    state_tax_withholdings = Column(Numeric(asdecimal=True), nullable=False)
+    federal_tax_withholdings = Column(Numeric(asdecimal=True), nullable=False)
+    overpayment_repayments = Column(Numeric(asdecimal=True), nullable=False)
+    correction_ind = Column(Boolean, nullable=False)
+
+    employee = relationship(Employee)
 
 
 def sync_lookup_tables(db_session):

@@ -33,9 +33,9 @@ describe("Create a new continuous leave, bonding claim in FINEOS", () => {
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
           cy.log(employeeFullName);
           const subject = email.getNotificationSubject(
-            employeeFullName,
             "application started",
-            submission.fineos_absence_id
+            submission.fineos_absence_id,
+            employeeFullName
           );
           email
             .getEmails(

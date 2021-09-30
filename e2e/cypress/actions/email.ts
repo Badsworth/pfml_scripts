@@ -10,7 +10,7 @@ import { Email, GetEmailsOpts } from "../../src/submission/TestMailClient";
 export function getEmails(
   opts: GetEmailsOpts,
   timeout = 30000
-): Cypress.Chainable<JQuery<Document>> {
+): Cypress.Chainable<Document> {
   return cy
     .task<Email[]>(
       "getEmails",
@@ -22,20 +22,23 @@ export function getEmails(
     )
     .then(([email]) => {
       if (!email) cy.log("No email found");
-
       cy.reload();
-      // check with Armando about this line
-      // cy.document().invoke("write", email.html);
-      // if no email is found write empty string to the document
-      // this will cause failures for assertions in the emails
-      return cy.document().invoke("write", email.html);
+      cy.document().invoke("write", email.html);
+      // Appending the subject to the email as a hidden HTML element for assertions
+      // No longer needed if EDM-198 is verified
+      const subject = document.createElement("span");
+      subject.innerText = email.subject;
+      subject.id = "emailSubject";
+      subject.hidden = true;
+      cy.get("body").then((el) => el.append(subject));
+      return cy.document();
     });
 }
 
 export const getNotificationSubject = function (
-  employeeName: string,
   notificationType: SubjectOptions,
-  caseNumber?: string
+  caseNumber?: string,
+  employeeName = "*"
 ): string {
   const notificationSubjects: { [key: string]: string } = {
     "application started": `${employeeName} started a paid leave application with the Commonwealth of Massachusetts`,
@@ -132,4 +135,13 @@ export const getTextBetween = function (
     dataString = match[1].trim();
   }
   return dataString;
+};
+
+export const assertValidSubject = (searchText: string): void => {
+  cy.get("span[id='emailSubject']").then((el) =>
+    expect(
+      el.text(),
+      "Subject line should contain claimant name (known issue EDM-198)"
+    ).to.include(searchText)
+  );
 };

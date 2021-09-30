@@ -1,0 +1,84 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ComponentWithUser timeline is displayed if there is a pending absence period 1`] = `
+<div
+  class="border-bottom border-base-lighter padding-bottom-2 margin-bottom-2"
+  data-testid="timeline"
+>
+  <h2
+    class="font-heading-md text-bold"
+  >
+    Timeline
+  </h2>
+  <p>
+    Your employer has 
+    <strong>
+      10 business days
+    </strong>
+     to respond to your application.
+  </p>
+  <p>
+    We have 
+    <strong>
+      14 calendar days
+    </strong>
+     after receiving your completed application to make a decision to approve, deny or request more information.
+  </p>
+  <p>
+    Your application is complete when:
+  </p>
+  <ul
+    class="usa-list"
+  >
+    <li>
+      You have submitted all required documents
+    </li>
+    <li>
+      Your employer has responded or their deadline passes
+    </li>
+  </ul>
+  <p>
+    The process may take longer if we request more information to complete your application or if you request changes to your application.
+  </p>
+  <p>
+    Learn more about the 
+    <a
+      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-application-approval-timeline"
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      application approval process.
+    </a>
+  </p>
+</div>
+`;
+
+exports[`ComponentWithUser timeline when there is a pending bonding absence period and claimant has not uploaded certification documents shows follow up steps 1`] = `
+<div
+  class="border-bottom border-base-lighter padding-bottom-2 margin-bottom-2"
+  data-testid="timeline"
+>
+  <h2
+    class="font-heading-md text-bold"
+  >
+    What you need to do
+  </h2>
+  <p>
+    Once your child is born, submit proof of birth so that we can review your application. Learn more about 
+    <a
+      href="https://www.mass.gov/info-details/documents-needed-to-complete-your-paid-family-and-medical-leave-pfml-application#for-family-leave-applications-"
+      rel="noopener noreferrer"
+      target="_blank"
+    >
+      proof of birth documents
+    </a>
+     we accept.
+  </p>
+  <a
+    class="usa-button measure-12"
+    href="/applications/upload/proof-of-birth?claim_id=mock-application-id&absence_case_id=mock-absence-case-id"
+  >
+    Upload proof of birth
+  </a>
+</div>
+`;

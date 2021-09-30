@@ -10,7 +10,7 @@ const useLoggedInRedirect = (portalFlow, redirectTo = routes.index) => {
   useEffect(() => {
     Auth.currentUserInfo()
       .then((userInfo) => {
-        if (userInfo) {
+        if (userInfo?.attributes) {
           portalFlow.goTo(redirectTo, {}, { redirect: true });
         }
       })

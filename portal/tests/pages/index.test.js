@@ -26,6 +26,7 @@ describe("Index", () => {
   it("when user is logged in, redirects to applications", async () => {
     const goTo = jest.fn();
     Auth.currentUserInfo.mockResolvedValue({
+      id: "us-east-1:XXXXXX",
       attributes: {
         email: "test@email.com",
       },

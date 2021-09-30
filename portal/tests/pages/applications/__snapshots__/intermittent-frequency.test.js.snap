@@ -1,0 +1,211 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`IntermittentFrequency renders the page 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Leave details
+    </h1>
+    <div
+      class="usa-alert usa-alert--info c-alert--neutral"
+      tabindex="-1"
+    >
+      <div
+        class="usa-alert__body"
+        role="region"
+      >
+        <div
+          class="usa-alert__text"
+        >
+          You will need a completed 
+          <a
+            href="https://www.mass.gov/medical-leave-form"
+            rel="noopener"
+            target="_blank"
+          >
+            Certification of Your Serious Health Condition
+          </a>
+           for this section.
+        </div>
+      </div>
+    </div>
+    <h2
+      class="font-heading-lg text-bold"
+    >
+      Tell us the estimated frequency and duration of your intermittent leave.
+    </h2>
+    <p
+      class="usa-intro"
+    >
+      Your answers must match the intermittent leave section in the Certification of Your Serious Health Condition.
+    </p>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-xs measure-5"
+      >
+        How often might you need to be absent from work (frequency interval)?
+      </legend>
+      <div
+        class=""
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice1"
+            name="leave_details.intermittent_leave_periods[0].frequency_interval_basis"
+            type="radio"
+            value="Weeks"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice1"
+          >
+            Once or more per week
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice2"
+            name="leave_details.intermittent_leave_periods[0].frequency_interval_basis"
+            type="radio"
+            value="Months"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice2"
+          >
+            Once or more per month
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            checked=""
+            class="usa-radio__input"
+            id="irregularOver6Months"
+            name="leave_details.intermittent_leave_periods[0].frequency_interval_basis"
+            type="radio"
+            value="Months"
+          />
+          <label
+            class="usa-radio__label"
+            for="irregularOver6Months"
+          >
+            Irregular over the next 6 months
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <div
+      class="usa-form-group"
+    >
+      <label
+        class="usa-label text-bold font-heading-xs measure-5"
+        for="InputText4"
+        id="InputText4_label"
+      >
+        Estimate how many absences over the next 6 months.
+      </label>
+      <input
+        aria-labelledby="InputText4_label InputText4_hint InputText4_error"
+        class="usa-input usa-input--small"
+        data-value-type="integer"
+        id="InputText4"
+        inputmode="numeric"
+        name="leave_details.intermittent_leave_periods[0].frequency"
+        type="text"
+        value="6"
+      />
+    </div>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-xs measure-5"
+      >
+        How long will an absence typically last?
+      </legend>
+      <div
+        class=""
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice5"
+            name="leave_details.intermittent_leave_periods[0].duration_basis"
+            type="radio"
+            value="Days"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice5"
+          >
+            At least one day
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            checked=""
+            class="usa-radio__input"
+            id="InputChoice6"
+            name="leave_details.intermittent_leave_periods[0].duration_basis"
+            type="radio"
+            value="Hours"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice6"
+          >
+            Less than one full work day
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <div
+      class="usa-form-group"
+    >
+      <label
+        class="usa-label text-bold font-heading-xs measure-5"
+        for="InputText7"
+        id="InputText7_label"
+      >
+        How many hours of work will you miss per absence?
+      </label>
+      <input
+        aria-labelledby="InputText7_label InputText7_hint InputText7_error"
+        class="usa-input usa-input--small"
+        data-value-type="integer"
+        id="InputText7"
+        inputmode="numeric"
+        name="leave_details.intermittent_leave_periods[0].duration"
+        type="text"
+        value="3"
+      />
+    </div>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;

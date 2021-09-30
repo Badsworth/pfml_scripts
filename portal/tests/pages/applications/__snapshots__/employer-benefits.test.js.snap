@@ -1,0 +1,175 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EmployerBenefits conditionally renders an info alert when user selects No 1`] = `
+<div
+  class="usa-alert__body"
+  role="alert"
+>
+  <div
+    class="usa-alert__text"
+  >
+    If you receive any other employer sponsored-benefits after you apply, you’ll need to call the Contact Center to let us know.
+  </div>
+</div>
+`;
+
+exports[`EmployerBenefits renders the page 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+    tabindex="-1"
+  >
+    Other leave, benefits, and income
+  </h1>
+  <fieldset
+    class="usa-fieldset margin-top-3 usa-form-group"
+  >
+    <legend
+      class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+    >
+      Will you use any employer-sponsored benefits from this employer during your paid leave from PFML?
+    </legend>
+    <span
+      class="display-block line-height-sans-5 measure-5 usa-intro"
+    >
+      <div
+        class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-4"
+        tabindex="-1"
+      >
+        <div
+          class="usa-alert__body"
+          role="region"
+        >
+          <h2
+            class="usa-alert__heading font-heading-md text-bold"
+          >
+            Your leave dates for paid leave
+          </h2>
+          <div
+            class="usa-alert__text"
+          >
+            1/1/2021 to 6/1/2021
+          </div>
+        </div>
+      </div>
+      <h3
+        class="font-heading-sm text-bold"
+      >
+        <svg
+          aria-hidden="true"
+          class="usa-icon--size-3 text-secondary text-middle margin-right-05 margin-top-neg-05"
+          fill="currentColor"
+          focusable="false"
+          role="img"
+        >
+          <use
+            xlink:href="/img/sprite.svg#check_circle"
+          />
+        </svg>
+        The employer-sponsored benefits you must report are:
+      </h3>
+      <ul
+        class="usa-list margin-top-0 margin-left-4 margin-bottom-4"
+      >
+        <li>
+          Temporary disability insurance, for either short-term or long-term disability
+        </li>
+        <li>
+          Permanent disability insurance
+        </li>
+        <li>
+          Family or medical leave benefits, such as a parental leave program
+        </li>
+        <li>
+          You only have to report benefits from the employer with this EIN: . This is the same Employer Identification Number you entered earlier in your application.
+        </li>
+      </ul>
+      <h3
+        class="font-heading-sm text-bold"
+      >
+        <svg
+          aria-hidden="true"
+          class="usa-icon--size-3 text-error text-middle margin-right-05 margin-top-neg-05"
+          fill="currentColor"
+          focusable="false"
+          role="img"
+        >
+          <use
+            xlink:href="/img/sprite.svg#cancel"
+          />
+        </svg>
+        You don’t need to report:
+      </h3>
+      <ul
+        class="usa-list margin-top-0 margin-left-4"
+      >
+        <li>
+          Benefits from any other employers
+        </li>
+        <li>
+          Any benefit from your employer that will be based on your PFML benefit amount. One example is a “top up” to make up the difference between your regular wages and your PFML benefits.
+        </li>
+      </ul>
+    </span>
+    <div
+      class="margin-top-3"
+    >
+      <div
+        class="usa-radio measure-5 bg-transparent"
+      >
+        <input
+          class="usa-radio__input"
+          id="InputChoice1"
+          name="has_employer_benefits"
+          type="radio"
+          value="true"
+        />
+        <label
+          class="usa-radio__label"
+          for="InputChoice1"
+        >
+          Yes
+          <span
+            class="usa-hint text-base-dark"
+          >
+            <br />
+            I will recieve employer sponsored benefits during my paid leave
+          </span>
+        </label>
+      </div>
+      <div
+        class="usa-radio measure-5 bg-transparent"
+      >
+        <input
+          class="usa-radio__input"
+          id="InputChoice2"
+          name="has_employer_benefits"
+          type="radio"
+          value="false"
+        />
+        <label
+          class="usa-radio__label"
+          for="InputChoice2"
+        >
+          No
+          <span
+            class="usa-hint text-base-dark"
+          >
+            <br />
+            I won’t receive employer-sponsored benefits, I've applied but it hasn't been approved, or I don’t know the benefit amount yet
+          </span>
+        </label>
+      </div>
+    </div>
+  </fieldset>
+  <button
+    class="usa-button position-relative margin-top-4"
+    type="submit"
+  >
+    Save and continue
+  </button>
+</form>
+`;

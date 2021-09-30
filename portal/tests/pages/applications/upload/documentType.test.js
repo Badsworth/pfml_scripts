@@ -187,7 +187,10 @@ describe(UploadDocument, () => {
       await act(async () => await userEvent.click(submitButton));
 
       expect(appLogic.documents.attach).not.toHaveBeenCalled();
-      expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalled();
+      expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledWith(
+        { isAdditionalDoc: true },
+        { claim_id: "mock-claim-id", absence_case_id: "mock-absence-case-id" }
+      );
     });
   });
 

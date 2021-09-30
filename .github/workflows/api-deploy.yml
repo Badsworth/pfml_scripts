@@ -507,6 +507,7 @@ jobs:
     needs: [update-the-deploy-branch, api-release, deploy-info]
 
     steps:
+      - uses: actions/checkout@v2
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -516,14 +517,11 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
-      - name: Pull the newrelic API key from parameter store
-        uses: "marvinpinto/action-inject-ssm-secrets@latest"
-        with:
-          ssm_parameter: "/admin/pfml-api/newrelic-api-key"
-          env_variable_name: "newrelic_api_key"
+      - name: Setup & Configure New Relic CLI
+        uses: ./.github/actions/setup-nr-cli
 
       - name: Create a deployment marker
-        uses: newrelic/deployment-marker-action@v1
+        run: newrelic apm deployment create --applicationId "${{ env[needs.deploy-info.outputs.api-env] }}" --revision "${{ env.version || needs.update-the-deploy-branch.outputs.commit_hash }}"
         env:
           prod: "868501894"
           performance: "980622863"
@@ -533,11 +531,10 @@ jobs:
           training: "980608199"
           breakfix: "1298450359"
           cps-preview: "1386420590"
-        with:
-          apiKey: ${{ env.NEWRELIC_API_KEY }}
-          accountId: "2837112"
-          applicationId: ${{ env[needs.deploy-info.outputs.api-env] }}
-          revision: ${{ env.version || needs.update-the-deploy-branch.outputs.commit_hash }}
+      - name: Create a custom deployment record
+        run: |
+          newrelic events post --event "{ \"eventType\": \"CustomDeploymentMarker\", \"component\": \"api\", \"environment\":\"${{ needs.deploy-info.outputs.api-env }}\", \"version\": \"${{ env.version || needs.update-the-deploy-branch.outputs.commit_hash }}\" }"
+
 
   api-gateway-release:
     name: API Gateway Release

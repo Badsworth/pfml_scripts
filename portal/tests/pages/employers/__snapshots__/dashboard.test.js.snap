@@ -1,0 +1,549 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Employer dashboard renders a table of claims with links if employer is registered in FINEOS 1`] = `
+<table
+  class="usa-table usa-table--borderless c-table width-full usa-table--stacked-header"
+>
+  <thead>
+    <tr>
+      <th
+        scope="col"
+      >
+        Employee name
+      </th>
+      <th
+        scope="col"
+      >
+        Application ID
+      </th>
+      <th
+        scope="col"
+      >
+        Organization
+      </th>
+      <th
+        scope="col"
+      >
+        Employer ID number
+      </th>
+      <th
+        scope="col"
+      >
+        Application start date
+      </th>
+      <th
+        scope="col"
+      >
+        Status
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th
+        data-label="Employee name"
+        data-test="employee_name"
+        scope="row"
+      >
+        <a
+          href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
+        >
+          Jane Doe
+        </a>
+      </th>
+      <td
+        data-label="Application ID"
+      >
+        <a
+          href="/employers/applications/new-application?absence_id=NTN-111-ABS-01"
+        >
+          NTN-111-ABS-01
+        </a>
+      </td>
+      <td
+        data-label="Organization"
+      >
+        Work Inc
+      </td>
+      <td
+        data-label="Employer ID number"
+      >
+        12-3456789
+      </td>
+      <td
+        data-label="Application start date"
+      >
+        1/15/2021
+      </td>
+      <td
+        data-label="Status"
+      >
+        <span
+          class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-success-dark bg-success-lighter padding-x-205"
+        >
+          Approved
+        </span>
+      </td>
+    </tr>
+  </tbody>
+</table>
+`;
+
+exports[`Employer dashboard renders the banner if there are any unverified employers 1`] = `
+<div
+  class="usa-alert__body"
+  role="region"
+>
+  <h2
+    class="usa-alert__heading font-heading-md text-bold"
+  >
+    Verify your account
+  </h2>
+  <div
+    class="usa-alert__text"
+  >
+    <p>
+      Every employer must verify paid leave contributions when creating an account. You need to 
+      <a
+        href="/employers/organizations"
+      >
+        complete this process
+      </a>
+       to review applications from your team. If you have an EIN that isn't verified you won't see any applications related to that EIN.
+    </p>
+  </div>
+</div>
+`;
+
+exports[`Employer dashboard renders the page with expected content and pagination components 1`] = `
+<div>
+  <nav
+    class="border-bottom border-base-lighter margin-bottom-5 display-flex width-full"
+  >
+    <a
+      class="display-inline-block padding-y-2 margin-bottom-neg-1px text-no-underline width-card text-base-dark hover:text-primary hover:text-underline"
+      href="/employers/welcome"
+    >
+      Welcome
+    </a>
+    <a
+      aria-current="page"
+      class="display-inline-block padding-y-2 margin-bottom-neg-1px text-no-underline width-card border-primary border-bottom-05 text-bold text-primary"
+      href="/employers/dashboard"
+    >
+      Dashboard
+    </a>
+  </nav>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+    tabindex="-1"
+  >
+    Dashboard
+  </h1>
+  <div
+    class="measure-6"
+  >
+    <div
+      class="usa-alert usa-alert--info"
+      tabindex="-1"
+    >
+      <div
+        class="usa-alert__body"
+        role="region"
+      >
+        <h2
+          class="usa-alert__heading font-heading-md text-bold"
+        >
+          We're making it easier to manage paid leave applications
+        </h2>
+        <div
+          class="usa-alert__text"
+        >
+          <p>
+            You can now see all the applications you need to review using our new dashboard. Over the next few months, we'll be adding more features to the dashboard so you can easily find and manage paid leave applications. You can 
+            <a
+              href="https://www.mass.gov/paidleave-employer-feedback"
+              rel="noopener"
+              target="_blank"
+            >
+              use our feedback form
+            </a>
+             to tell us what you think of our new features.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <section
+    class="margin-bottom-4"
+  >
+    <p
+      class="margin-y-2"
+    >
+      Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.
+    </p>
+    <details
+      class="c-details"
+    >
+      <summary
+        class="margin-bottom-2 text-primary text-underline font-ui-xs"
+      >
+        Status descriptions
+      </summary>
+      <div
+        class="margin-bottom-2"
+      >
+        <ul
+          class="usa-list"
+        >
+          <li>
+            <strong>
+              “--” or no status:
+            </strong>
+             This leave request may require action from you; otherwise, it is awaiting a decision from DFML.
+          </li>
+          <li>
+            <strong>
+              Approved:
+            </strong>
+             DFML has approved this leave request.
+          </li>
+          <li>
+            <strong>
+              Closed:
+            </strong>
+             The leave has passed or no action can be taken.
+          </li>
+          <li>
+            <strong>
+              Denied:
+            </strong>
+             DFML has denied this leave request.
+          </li>
+        </ul>
+      </div>
+    </details>
+  </section>
+  <div
+    class="bg-base-lightest padding-x-3 padding-top-1px padding-bottom-2"
+  >
+    <form
+      class="usa-form grid-row"
+    >
+      <div
+        class="grid-col-fill tablet:grid-col-auto"
+      >
+        <div
+          class="usa-form-group"
+        >
+          <label
+            class="usa-label text-bold font-heading-xs measure-5"
+            for="InputText1"
+            id="InputText1_label"
+          >
+            Search for employee name or application ID
+          </label>
+          <input
+            aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+            class="usa-input maxw-mobile-lg"
+            id="InputText1"
+            name="search"
+            type="text"
+            value=""
+          />
+        </div>
+      </div>
+      <div
+        class="grid-col-auto flex-align-self-end"
+      >
+        <button
+          class="usa-button position-relative width-auto"
+          type="submit"
+        >
+          Search
+        </button>
+      </div>
+    </form>
+  </div>
+  <div
+    class="padding-bottom-3 bg-base-lightest padding-x-3"
+  >
+    <button
+      aria-controls="filters"
+      aria-expanded="false"
+      class="usa-button position-relative usa-button--outline bg-white"
+      type="button"
+    >
+      Show filters
+    </button>
+  </div>
+  <form
+    class="bg-primary-lighter padding-x-3 padding-top-1px padding-bottom-3 usa-form maxw-none"
+    hidden=""
+    id="filters"
+  >
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-xs measure-5"
+      >
+        Status
+      </legend>
+      <div
+        class=""
+      >
+        <div
+          class="usa-checkbox measure-5 bg-transparent"
+        >
+          <input
+            class="usa-checkbox__input"
+            id="InputChoice2"
+            name="claim_status"
+            type="checkbox"
+            value="Approved"
+          />
+          <label
+            class="usa-checkbox__label"
+            for="InputChoice2"
+          >
+            Approved
+          </label>
+        </div>
+        <div
+          class="usa-checkbox measure-5 bg-transparent"
+        >
+          <input
+            class="usa-checkbox__input"
+            id="InputChoice3"
+            name="claim_status"
+            type="checkbox"
+            value="Closed"
+          />
+          <label
+            class="usa-checkbox__label"
+            for="InputChoice3"
+          >
+            Closed
+          </label>
+        </div>
+        <div
+          class="usa-checkbox measure-5 bg-transparent"
+        >
+          <input
+            class="usa-checkbox__input"
+            id="InputChoice4"
+            name="claim_status"
+            type="checkbox"
+            value="Declined"
+          />
+          <label
+            class="usa-checkbox__label"
+            for="InputChoice4"
+          >
+            Denied
+          </label>
+        </div>
+        <div
+          class="usa-checkbox measure-5 bg-transparent"
+        >
+          <input
+            class="usa-checkbox__input"
+            id="InputChoice5"
+            name="claim_status"
+            type="checkbox"
+            value="Pending"
+          />
+          <label
+            class="usa-checkbox__label"
+            for="InputChoice5"
+          >
+            --
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative"
+      disabled=""
+      type="submit"
+    >
+      Apply filters
+    </button>
+  </form>
+  <div
+    class="margin-y-2 grid-row grid-gap flex-align-center"
+  >
+    <div
+      class="grid-col grid-col-12 margin-bottom-2 mobile-lg:grid-col-fill mobile-lg:margin-bottom-0"
+    >
+      <p
+        class="line-height-sans-2"
+      >
+        Viewing 1 to 25 of 75 results
+      </p>
+    </div>
+    <div
+      class="grid-col grid-col-auto"
+    >
+      <div
+        class="usa-form-group display-flex margin-0 flex-align-center"
+      >
+        <label
+          class="usa-label text-bold margin-right-1 font-heading-xs measure-5"
+          for="Dropdown12"
+          id="Dropdown12_label"
+        >
+          Sort
+        </label>
+        <div
+          class=""
+          data-default-value="created_at,descending"
+        >
+          <select
+            aria-labelledby="Dropdown12_label Dropdown12_hint Dropdown12_error"
+            class="usa-select maxw-mobile-lg margin-0"
+            id="Dropdown12"
+            name="orderAndDirection"
+          >
+            <option
+              value="created_at,descending"
+            >
+              Newest applications
+            </option>
+            <option
+              value="created_at,ascending"
+            >
+              Oldest applications
+            </option>
+            <option
+              value="employee,ascending"
+            >
+              Last name – A to Z
+            </option>
+            <option
+              value="employee,descending"
+            >
+              Last name – Z to A
+            </option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div
+    class="usa-table-container--scrollable"
+  >
+    <table
+      class="usa-table usa-table--borderless c-table width-full usa-table--stacked-header"
+    >
+      <thead>
+        <tr>
+          <th
+            scope="col"
+          >
+            Employee name
+          </th>
+          <th
+            scope="col"
+          >
+            Application ID
+          </th>
+          <th
+            scope="col"
+          >
+            Employer ID number
+          </th>
+          <th
+            scope="col"
+          >
+            Application start date
+          </th>
+          <th
+            scope="col"
+          >
+            Status
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          data-test="verification-instructions-row"
+        >
+          <td
+            colspan="5"
+          >
+            You have not verified any organizations. 
+            <a
+              href="/employers/organizations"
+            >
+              Complete this process
+            </a>
+             to review applications.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <div
+    aria-label="Pagination Navigation"
+    class="ma__pagination js-pagination"
+    role="navigation"
+  >
+    <nav
+      class="ma__pagination__container"
+    >
+      <a
+        aria-disabled="true"
+        aria-label="Go to Previous page"
+        class="ma__pagination__prev  disabled"
+        href="#"
+        role="button"
+        tabindex="-1"
+      >
+        Previous
+      </a>
+      <a
+        aria-label="Go to Page 1"
+        class="ma__pagination__page is-active"
+        data-page="1"
+        href="#"
+        role="button"
+        tabindex="0"
+      >
+        1
+      </a>
+      <a
+        aria-label="Go to Page 2"
+        class="ma__pagination__page"
+        data-page="2"
+        href="#"
+        role="button"
+        tabindex="0"
+      >
+        2
+      </a>
+      <a
+        aria-label="Go to Page 3"
+        class="ma__pagination__page"
+        data-page="3"
+        href="#"
+        role="button"
+        tabindex="0"
+      >
+        3
+      </a>
+      <a
+        aria-disabled="false"
+        aria-label="Go to Next page"
+        class="ma__pagination__next false"
+        href="#"
+        role="button"
+        tabindex="0"
+      >
+        Next
+      </a>
+    </nav>
+  </div>
+</div>
+`;

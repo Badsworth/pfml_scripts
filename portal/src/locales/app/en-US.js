@@ -758,7 +758,7 @@ const shared = {
     limitMessage: "You can only add up to {{limit}} leaves",
     removeButton: "Remove this previous leave",
     sectionHint:
-      "Enter details about each period of leave taken between {{previousLeaveStartDate}} and {{leaveStartDate}}. A leave period begins on the day you first went on leave and ends on the last day of leave. If you were on leave intermittently, your leave period begins on the first day you went on leave and ends on the very last day.",
+      "Enter details about each period of leave taken between {{previousLeaveStartDate}} and {{leaveStartDate}}. A leave period begins on the day you first went on leave and ends on the last day of leave. If you were on leave intermittently, your leave period begins on the first day you went on leave and ends on the very last day.<br/><br/>You don't need to tell us about previous leave you’ve taken through Massachusetts’ PFML program.",
     sectionLabel: "Tell us about your previous leave",
     workedPerWeekMinutesDetails:
       "If your weekly schedule was not consistent, enter the average number of hours you would have worked per week. For example, if your leave was across two different weeks, and your normal work schedule was 40 hours in one week and 20 hours in the next, you should enter 30 hours.",
@@ -1153,14 +1153,24 @@ const pages = {
   },
   claimsEmployerBenefits: {
     choiceNo: "$t(shared.choiceNo)",
+    choiceNoAlert:
+      "If you receive any other employer sponsored-benefits after you apply, you’ll need to call the Contact Center to let us know.",
+    choiceNoHint:
+      "I won’t receive employer-sponsored benefits, I've applied but it hasn't been approved, or I don’t know the benefit amount yet",
     choiceYes: "$t(shared.choiceYes)",
-    hintBody:
-      "<p>This does not include PFML benefits. You only have to report benefits from the employer with this EIN: {{employer_fein}}. This is the same Employer Identification Number you entered earlier in your application.</p><p>If you won’t use these benefits from this employer, select No.</p>",
-    hintHeader: "The employer-sponsored benefits you must report are:",
-    hintList: [
+    choiceYesHint:
+      "I will recieve employer sponsored benefits during my paid leave",
+    doNotReportHintHeading: "You don’t need to report:",
+    doNotReportHintList: [
+      "Benefits from any other employers",
+      "Any benefit from your employer that will be based on your PFML benefit amount. One example is a “top up” to make up the difference between your regular wages and your PFML benefits.",
+    ],
+    doReportHintHeading: "The employer-sponsored benefits you must report are:",
+    doReportHintList: [
       "Temporary disability insurance, for either short-term or long-term disability",
       "Permanent disability insurance",
       "Family or medical leave benefits, such as a parental leave program",
+      "You only have to report benefits from the employer with this EIN: {{employer_fein}}. This is the same Employer Identification Number you entered earlier in your application.",
     ],
     sectionLabel:
       "Will you use any employer-sponsored benefits from this employer during your paid leave from PFML?",
@@ -1444,15 +1454,20 @@ const pages = {
   },
   claimsOtherIncomes: {
     choiceNo: "$t(shared.choiceNo)",
+    choiceNoAlert:
+      "If you receive any other income after you apply, you’ll need to call the Contact Center to let us know.",
     choiceNoHint:
-      "I won't receive other income, or I've applied but it hasn't been approved.",
+      "I won't receive other income from the above sources during my paid leave,  I've applied but it hasn't been approved, or I don’t know the income amount yet",
     choiceYes: "$t(shared.choiceYes)",
-    hintAppliedButNotApprovedDetailsBody:
-      "You only need to report sources of income that you know you will receive. If you have applied but you haven’t been approved yet, you don’t need to report that.<br/><br/>If you won’t receive income from any other sources on this list, select No.<br/><br/>If you are approved later, you will need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
-    hintAppliedButNotApprovedDetailsLabel:
-      "What if I’ve applied for other income but I haven’t been approved yet?",
-    hintHeader: "Other sources of income you must report are:",
-    hintList: [
+    choiceYesHint:
+      "I will recieve other income from other sources during my paid leave",
+    doNotReportHintHeading: "You don't need to report:",
+    doNotReportHintList: [
+      "Other income that you've applied for but are not yet receiving",
+      "Income from past PFML benefits",
+    ],
+    doReportHintHeading: "You must report these sources of income:",
+    doReportHintList: [
       "Workers Compensation",
       "Unemployment Insurance",
       "Social Security Disability Insurance",
@@ -1537,7 +1552,12 @@ const pages = {
   },
   claimsPreviousLeavesIntro: {
     intro:
-      "<p>In this section, we need to know about some other leave you may have taken between January 1, 2021 and {{startDate}}:</p><ul><li>Any previous leave for the same reason that you are applying for paid leave now</li><li>Any previous leave for a different reason that also qualifies under PFML</li></ul>",
+      "<ul><li>Any previous leave for the same reason that you are applying for paid leave now</li><li>Any previous leave for a different qualifying reasons</li></ul>",
+    introDontNeed:
+      "<ul><li>Leave that was taken through Massachusetts' PFML program</li><li>Leave that was taking before January 1, 2021 and {{startDate}}</li><li>Family leave to care for a family member taken before July 1, 2021</li></ul>",
+    introDontNeedHeader: "You don't need to report:",
+    introHeader:
+      "You'll need to report previous leave you may have taken between January 1, 2021 and {{startDate}}:",
     sectionLabel: "Tell us about your previous leave.",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
@@ -1545,6 +1565,9 @@ const pages = {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
     detailsLabel: "What counts as a qualifying reason?",
+    hintDoHeader:
+      "You must report paid or unpaid leave for these qualifying reasons that aren't the reason you are applying for paid leave now:",
+    hintDontHeader: "You don't need to report:",
     hintHeader:
       "Answer yes if you took paid or unpaid leave for a qualifying reason that is not the reason you are applying for paid leave now. The following are qualifying reasons:",
     hintList: [
@@ -1555,8 +1578,14 @@ const pages = {
       "You needed to care for a family member who serves in the armed forces.",
       "You needed to care for a family member with a serious health condition and your leave began on or after July 1, 2021.",
     ],
+    hintTextNo:
+      "I haven’t taken previous leave for a qualifying reason, or my other leave was through Massachusetts’ PFML program",
+    hintTextYes:
+      "I have taken previous leave for one or more qualifying reasons",
+    leaveTakenThroughPFML:
+      "Leave that was taken through Massachusetts' PFML program",
     sectionLabel:
-      "Did you take leave between January 1, 2021 and {{leaveStartDate}} for a different qualifying reason?",
+      "Did you take any previous leave between January 1, 2021 and {{leaveStartDate}} for a different qualifying reason?",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsPreviousLeavesOtherReasonDetails: {
@@ -1605,12 +1634,15 @@ const pages = {
   claimsPreviousLeavesSameReason: {
     choiceNo: "$t(shared.choiceNo)",
     choiceYes: "$t(shared.choiceYes)",
+    hintNo:
+      "I have not taken previous leave for the same reason, or my other leave was through Massachusetts’ PFML program",
+    hintYes: "I have taken previous leave for the same reason",
     sectionHint:
       "Select No if your current paid leave from PFML began on July 1, 2021.",
     sectionLabel:
-      "Did you take any other leave between {{previousLeaveStartDate}} and {{leaveStartDate}} for the same reason as you are applying for paid leave now?",
+      "Did you take any previous leave between {{previousLeaveStartDate}} and {{leaveStartDate}} for the same reason as you are applying for paid leave now?",
     sectionLabel_caring:
-      "Did you take any other leave between {{previousLeaveStartDate}} and the first day of the leave you are applying for, for the same reason as you are applying?",
+      "Did you take any previous leave between {{previousLeaveStartDate}} and the first day of the leave you are applying for, for the same reason as you are applying?",
     title: "$t(shared.claimsOtherLeaveTitle)",
   },
   claimsPreviousLeavesSameReasonDetails: {
@@ -1939,6 +1971,8 @@ const pages = {
       "$t(shared.leaveReasonServiceMemberFamily)",
     leaveStatusMessage_Approved:
       "<p><strong>This leave was approved.</strong></p><p>View your approval notice below for more details about your benefit amount, payment schedule, and how to appeal if your benefits appear incorrect.</p><p>Learn more about the <request-appeal-link>appeal process</request-appeal-link>.</p>",
+    leaveStatusMessage_Cancelled:
+      "<p><strong>This leave was cancelled.</strong></p><p>This application will no longer be processed. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
     leaveStatusMessage_Denied:
       "<p><strong>This leave was denied.</strong></p><p>View your denial notice below for more details and an explanation of the appeal process.</p><p>If you would like to appeal, you must submit your request within 10 calendar days of the date on your denial notice.</p><p>Learn more about the <request-appeal-link>appeal process</request-appeal-link>.</p>",
     leaveStatusMessage_Pending:
@@ -1962,9 +1996,11 @@ const pages = {
     timelineTextFollowUpEmployer:
       "<p>Your employer has until <strong>{{employerFollowUpDate}}</strong> to respond to your application.</p>",
     timelineTextFollowUpGenericDFML:
-      "<p>We have <strong>14 calendar days</strong> after receiving your completed application to make a decision to approve, deny or request more information.</p><p>The process may take longer if we request more information to complete your application or if you request changes to your application.</p>",
+      "<p>We have <strong>14 calendar days</strong> after receiving your completed application to make a decision to approve, deny or request more information.</p>",
     timelineTextFollowUpGenericEmployer:
       "<p>Your employer has <strong>10 business days</strong> to respond to your application.</p>",
+    timelineTextFollowUpMayTakeLonger:
+      "<p>The process may take longer if we request more information to complete your application or if you request changes to your application.</p>",
     timelineTextLearnMore:
       "<p>Learn more about the <timeline-link>application approval process.</timeline-link></p>",
     uploadDocumentsButton: "Upload additional documents",

@@ -1,0 +1,99 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FamilyMemberName renders the page 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Leave details
+    </h1>
+    <fieldset
+      class="usa-fieldset margin-top-3"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        What is your family member's name?
+      </legend>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-intro"
+      >
+        Fill out their name as it appears on official documents like their driver’s license or W‑2.
+      </span>
+      <div
+        class="usa-form-group"
+      >
+        <label
+          class="usa-label text-bold font-heading-xs measure-5"
+          for="InputText1"
+          id="InputText1_label"
+        >
+          First name
+        </label>
+        <input
+          aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+          class="usa-input maxw-mobile-lg"
+          id="InputText1"
+          name="leave_details.caring_leave_metadata.family_member_first_name"
+          type="text"
+          value="Aquib"
+        />
+      </div>
+      <div
+        class="usa-form-group"
+      >
+        <label
+          class="usa-label text-bold font-heading-xs measure-5"
+          for="InputText2"
+          id="InputText2_label"
+        >
+          Middle name
+          <span
+            class="usa-hint text-base-dark text-normal"
+          >
+             (optional)
+          </span>
+        </label>
+        <input
+          aria-labelledby="InputText2_label InputText2_hint InputText2_error"
+          class="usa-input maxw-mobile-lg"
+          id="InputText2"
+          name="leave_details.caring_leave_metadata.family_member_middle_name"
+          type="text"
+          value="Cricketer"
+        />
+      </div>
+      <div
+        class="usa-form-group"
+      >
+        <label
+          class="usa-label text-bold font-heading-xs measure-5"
+          for="InputText3"
+          id="InputText3_label"
+        >
+          Last name
+        </label>
+        <input
+          aria-labelledby="InputText3_label InputText3_hint InputText3_error"
+          class="usa-input maxw-mobile-lg"
+          id="InputText3"
+          name="leave_details.caring_leave_metadata.family_member_last_name"
+          type="text"
+          value="Khan"
+        />
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;

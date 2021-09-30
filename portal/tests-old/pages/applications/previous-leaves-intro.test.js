@@ -3,6 +3,7 @@ import {
   renderWithAppLogic,
   simulateEvents,
 } from "../../test-utils";
+
 import PreviousLeavesIntro from "../../../src/pages/applications/previous-leaves-intro";
 
 jest.mock("../../../src/hooks/useAppLogic");
@@ -29,7 +30,6 @@ describe("PreviousLeavesIntro", () => {
     );
 
     expect(wrapper).toMatchSnapshot();
-    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
   });
 
   it("calls goToNextPage when user submits form", async () => {

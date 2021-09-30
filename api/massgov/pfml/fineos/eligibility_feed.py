@@ -39,8 +39,8 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import (
     Employee,
-    EmployeeLog,
     EmployeeOccupation,
+    EmployeePushToFineosQueue,
     Employer,
     WagesAndContributions,
 )
@@ -286,7 +286,7 @@ def query_employees_for_employer(query: "Query[_T]", employer: Employer) -> "Que
     )
 
 
-class EmployerEmployeeLogPairQueryResult(db.RowProxy):
+class EmployeePushToFineosQueryEmployerResult(db.RowProxy):
     employer_id: EmployerId
     employee_id: EmployeeId
 
@@ -297,9 +297,9 @@ class EmployerEmployeePairQueryResult(db.RowProxy):
     maxdate: date
 
 
-def get_most_recent_employer_and_employee_log_employers_to_employee_info(
+def get_employeer_employee_pairs_with_most_recent_wages_and_contributions(
     db_session: db.Session, employee_ids: Iterable[EmployeeId]
-) -> Dict[EmployerId, List[EmployeeId]]:
+) -> List[EmployerEmployeePairQueryResult]:
     employer_employee_pairs: List[EmployerEmployeePairQueryResult] = (
         db_session.query(
             WagesAndContributions.employer_id,
@@ -315,36 +315,61 @@ def get_most_recent_employer_and_employee_log_employers_to_employee_info(
     )
     if len(employer_employee_pairs) == 0:
         logger.info(
-            f"No wages and contributions found for remaining {len(list(employee_ids))} EmployeeLog entries."
+            f"No wages and contributions found for remaining {len(list(employee_ids))} EmployeePushToFineosQueue entries."
         )
-        return {}
+        return []
     # since the query is ordered first by maxdate, the first employer-employee
     # pair will be the most recent one
     most_recent_employer_employee_pairs = filter_to_first_employer_employee_pair(
         employer_employee_pairs
     )
+    return most_recent_employer_employee_pairs
 
-    employee_log_employers: List[EmployerEmployeeLogPairQueryResult] = (
-        db_session.query(EmployeeLog.employee_id, EmployeeLog.employer_id)
-        .filter(EmployeeLog.employer_id.isnot(None), EmployeeLog.employee_id.in_(employee_ids))
-        .group_by(EmployeeLog.employer_id, EmployeeLog.employee_id)
+
+def get_employer_employee_pairs_for_employees_in_push_to_fineos_queue(
+    db_session: db.Session, employee_ids: Iterable[EmployeeId]
+) -> List[EmployeePushToFineosQueryEmployerResult]:
+    queue_items: List[EmployeePushToFineosQueryEmployerResult] = (
+        db_session.query(
+            EmployeePushToFineosQueue.employee_id, EmployeePushToFineosQueue.employer_id
+        )
+        .filter(
+            EmployeePushToFineosQueue.employer_id.isnot(None),
+            EmployeePushToFineosQueue.employee_id.in_(employee_ids),
+        )
+        .group_by(EmployeePushToFineosQueue.employer_id, EmployeePushToFineosQueue.employee_id)
         .all()
+    )
+    return queue_items
+
+
+def get_employer_to_employee_map_from_queue_and_most_recent_wages(
+    db_session: db.Session, employee_ids: Iterable[EmployeeId]
+) -> Dict[EmployerId, List[EmployeeId]]:
+
+    employer_employee_pairs_with_most_recent_wages_and_contributions = get_employeer_employee_pairs_with_most_recent_wages_and_contributions(
+        db_session, employee_ids
+    )
+
+    employer_employee_pairs_in_push_to_fineos_queue = get_employer_employee_pairs_for_employees_in_push_to_fineos_queue(
+        db_session, employee_ids
     )
 
     # Organize pairs into the structure we want
     employer_id_to_employee_ids: Dict[EmployerId, List[EmployeeId]] = {}
-    for employer_employee_pair in most_recent_employer_employee_pairs:
+
+    for employer_employee_pair in employer_employee_pairs_with_most_recent_wages_and_contributions:
         employer_id_to_employee_ids.setdefault(employer_employee_pair.employer_id, []).append(
             employer_employee_pair.employee_id
         )
 
-    for employee_log_employer in employee_log_employers:
-        if employee_log_employer.employee_id not in employer_id_to_employee_ids.setdefault(
-            employee_log_employer.employer_id, []
+    for employer_employee_pair_two in employer_employee_pairs_in_push_to_fineos_queue:
+        if employer_employee_pair_two.employee_id not in employer_id_to_employee_ids.setdefault(
+            employer_employee_pair_two.employer_id, []
         ):
-            employer_id_to_employee_ids.setdefault(employee_log_employer.employer_id, []).append(
-                employee_log_employer.employee_id
-            )
+            employer_id_to_employee_ids.setdefault(
+                employer_employee_pair_two.employer_id, []
+            ).append(employer_employee_pair_two.employee_id)
 
     return employer_id_to_employee_ids
 
@@ -409,17 +434,20 @@ def process_employee_updates(
     # updates similar to what has been done for all employers process.
     # When doing so we should use the same sequence of process identifiers
     # so that at recovery the process knows what incomplete rows to pick from
-    # EmployeeLog.
+    # EmployeePushToFineosQueue.
     process_id = 1
 
     # Mark all pending updates we see for processing
     updated_employee_ids_query = (
-        db_session.query(EmployeeLog.employee_id)
+        db_session.query(EmployeePushToFineosQueue.employee_id)
         .filter(
-            EmployeeLog.action.in_(["INSERT", "UPDATE", "UPDATE_NEW_EMPLOYER"]),
-            or_(EmployeeLog.process_id.is_(None), EmployeeLog.process_id == process_id),
+            EmployeePushToFineosQueue.action.in_(["INSERT", "UPDATE", "UPDATE_NEW_EMPLOYER"]),
+            or_(
+                EmployeePushToFineosQueue.process_id.is_(None),
+                EmployeePushToFineosQueue.process_id == process_id,
+            ),
         )
-        .distinct(EmployeeLog.employee_id)
+        .distinct(EmployeePushToFineosQueue.employee_id)
     )
 
     update_batch_to_processing(db_session, updated_employee_ids_query, process_id)
@@ -429,9 +457,9 @@ def process_employee_updates(
     updated_employee_ids_for_process_query = cast(
         "Query[EmployeeId]",
         (
-            db_session.query(EmployeeLog.employee_id)
-            .filter(EmployeeLog.process_id == process_id)
-            .group_by(EmployeeLog.employee_id)
+            db_session.query(EmployeePushToFineosQueue.employee_id)
+            .filter(EmployeePushToFineosQueue.process_id == process_id)
+            .group_by(EmployeePushToFineosQueue.employee_id)
         ),
     )
 
@@ -441,7 +469,7 @@ def process_employee_updates(
         return report
 
     # Finally get the employers for each of the employee id's
-    employer_id_to_employee_ids = get_most_recent_employer_and_employee_log_employers_to_employee_info(
+    employer_id_to_employee_ids = get_employer_to_employee_map_from_queue_and_most_recent_wages(
         db_session, updated_employee_ids_for_process_query
     )
 
@@ -540,7 +568,7 @@ def process_employees_for_employer(
 
         # we successfully processed the employees, remove the log rows that
         # triggered their inclusion in this run
-        delete_processed_batch(db_session, employee_ids, process_id)
+        delete_processed_batch(db_session, employer_id, employee_ids, process_id)
         db_session.commit()
     except Exception:
         logger.exception(
@@ -554,18 +582,28 @@ def update_batch_to_processing(
     db_session: db.Session, employee_ids: Iterable[EmployeeId], process_id: int
 ) -> int:
     return (
-        db_session.query(EmployeeLog)
-        .filter(EmployeeLog.employee_id.in_(employee_ids))
-        .update({EmployeeLog.process_id: process_id}, synchronize_session=False)
+        db_session.query(EmployeePushToFineosQueue)
+        .filter(EmployeePushToFineosQueue.employee_id.in_(employee_ids))
+        .update({EmployeePushToFineosQueue.process_id: process_id}, synchronize_session=False)
     )
 
 
 def delete_processed_batch(
-    db_session: db.Session, employee_ids: Iterable[EmployeeId], process_id: int
+    db_session: db.Session,
+    employer_id: EmployerId,
+    employee_ids: Iterable[EmployeeId],
+    process_id: int,
 ) -> int:
     return (
-        db_session.query(EmployeeLog)
-        .filter(EmployeeLog.employee_id.in_(employee_ids), EmployeeLog.process_id == process_id)
+        db_session.query(EmployeePushToFineosQueue)
+        .filter(
+            EmployeePushToFineosQueue.process_id == process_id,
+            EmployeePushToFineosQueue.employee_id.in_(employee_ids),
+            or_(
+                EmployeePushToFineosQueue.employer_id.is_(None),
+                EmployeePushToFineosQueue.employer_id == employer_id,
+            ),
+        )
         .delete(synchronize_session=False)
     )
 

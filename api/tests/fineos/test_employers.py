@@ -8,11 +8,11 @@ import massgov.pfml.api.services.fineos_actions as fineos_actions
 import massgov.pfml.db
 import massgov.pfml.fineos
 import massgov.pfml.fineos.employers as fineos_employers
-from massgov.pfml.db.models.employees import Employer, EmployerLog
+from massgov.pfml.db.models.employees import Employer, EmployerPushToFineosQueue
 from massgov.pfml.db.models.factories import (
     EmployerFactory,
-    EmployerLogFactory,
     EmployerOnlyDORDataFactory,
+    EmployerPushToFineosQueueFactoryFactory,
 )
 
 
@@ -22,7 +22,7 @@ from massgov.pfml.db.models.factories import (
 @pytest.fixture(scope="function", autouse=True)
 def clear_tables(module_persistent_db, module_persistent_db_session):
     module_persistent_db_session.query(Employer).delete()
-    module_persistent_db_session.query(EmployerLog).delete()
+    module_persistent_db_session.query(EmployerPushToFineosQueue).delete()
     module_persistent_db_session.commit()
 
 
@@ -111,16 +111,16 @@ def test_load_updates_simple(module_persistent_db_session):
     fineos_client = massgov.pfml.fineos.MockFINEOSClient()
 
     employer = EmployerOnlyDORDataFactory.create()
-    EmployerLogFactory.create(employer_id=employer.employer_id)
+    EmployerPushToFineosQueueFactoryFactory.create(employer_id=employer.employer_id)
 
     assert employer.fineos_employer_id is None
 
-    employer_log_entries_before = (
-        module_persistent_db_session.query(EmployerLog)
-        .filter(EmployerLog.employer_id == employer.employer_id)
+    queue_items_before = (
+        module_persistent_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.employer_id == employer.employer_id)
         .all()
     )
-    assert len(employer_log_entries_before) == 1
+    assert len(queue_items_before) == 1
 
     result = fineos_employers.load_updates(module_persistent_db_session, fineos_client)
 
@@ -129,12 +129,12 @@ def test_load_updates_simple(module_persistent_db_session):
     assert result.errored_employers_count == 0
     assert result.updated_service_agreements_count == 1
 
-    employer_log_entries_after = (
-        module_persistent_db_session.query(EmployerLog)
-        .filter(EmployerLog.employer_id == employer.employer_id)
+    queue_items_after = (
+        module_persistent_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.employer_id == employer.employer_id)
         .all()
     )
-    assert len(employer_log_entries_after) == 0
+    assert len(queue_items_after) == 0
 
     module_persistent_db_session.refresh(employer)
 
@@ -148,7 +148,9 @@ def test_load_updates_service_agreement_args(module_persistent_db_session, mocke
     # create_service_agreement_for_employer() gets called with the correct
     # parameters.
     employer = EmployerFactory.create(family_exemption=False, medical_exemption=False)
-    EmployerLogFactory.create(employer_id=employer.employer_id, action="INSERT", process_id=None)
+    EmployerPushToFineosQueueFactoryFactory.create(
+        employer_id=employer.employer_id, action="INSERT", process_id=None
+    )
 
     mocker.patch.object(fineos_actions, "create_service_agreement_for_employer", return_value="1")
     results_1 = fineos_employers.load_updates(module_persistent_db_session, fineos_client)
@@ -159,7 +161,7 @@ def test_load_updates_service_agreement_args(module_persistent_db_session, mocke
     assert results_1.updated_service_agreements_count == 1
 
     # Update the employer to make it exempt from both plans.
-    EmployerLogFactory.create(
+    EmployerPushToFineosQueueFactoryFactory.create(
         employer_id=employer.employer_id,
         action="UPDATE",
         process_id=None,
@@ -183,7 +185,7 @@ def test_load_updates_service_agreement_args(module_persistent_db_session, mocke
     # Once again make the employer not exempt and verify that
     # create_service_agreement_for_employers() gets called with the correct
     # parameters.
-    EmployerLogFactory.create(
+    EmployerPushToFineosQueueFactoryFactory.create(
         employer_id=employer.employer_id,
         action="UPDATE",
         process_id=None,
@@ -204,7 +206,7 @@ def test_load_updates_service_agreement_args(module_persistent_db_session, mocke
         fineos_client, employer, False, True, True, date(2022, 2, 9)
     )
 
-    employer_log_entries_after = module_persistent_db_session.query(EmployerLog).all()
+    employer_log_entries_after = module_persistent_db_session.query(EmployerPushToFineosQueue).all()
 
     assert len(employer_log_entries_after) == 0
 
@@ -216,11 +218,13 @@ def test_load_updates_limit(module_persistent_db_session):
 
     employers = EmployerOnlyDORDataFactory.create_batch(size=employer_num)
     for employer in employers:
-        EmployerLogFactory.create(employer_id=employer.employer_id)
+        EmployerPushToFineosQueueFactoryFactory.create(employer_id=employer.employer_id)
 
-    employer_log_entries_before = module_persistent_db_session.query(EmployerLog).all()
+    employer_queue_items_before = module_persistent_db_session.query(
+        EmployerPushToFineosQueue
+    ).all()
 
-    assert len(employer_log_entries_before) == employer_num
+    assert len(employer_queue_items_before) == employer_num
 
     result = fineos_employers.load_updates(
         module_persistent_db_session, fineos_client, employer_update_limit=test_limit_size
@@ -240,19 +244,19 @@ def test_load_updates_limit(module_persistent_db_session):
         sum([not bool(fineos_id) for fineos_id in employer_ids]) == employer_num - test_limit_size
     )
 
-    employer_log_entries_after = module_persistent_db_session.query(EmployerLog).all()
+    employer_queue_items_after = module_persistent_db_session.query(EmployerPushToFineosQueue).all()
 
-    assert len(employer_log_entries_after) == employer_num - test_limit_size
+    assert len(employer_queue_items_after) == employer_num - test_limit_size
 
-    # delete lingering employerlogs
-    module_persistent_db_session.query(EmployerLog).delete()
+    # delete lingering EmployerPushToFineosQueue items
+    module_persistent_db_session.query(EmployerPushToFineosQueue).delete()
     module_persistent_db_session.commit()
 
 
 def test_load_updates_simple_no_updates_to_api_employer_model(module_persistent_db_session, mocker):
     # employer.fineos_employer_id is the only thing we save on the API model in
     # this process, so if the Employer already has one set and the same value is
-    # returned by fineos_client, this should still result in no log entries left
+    # returned by fineos_client, this should still result in no queue items entries left
     # over at the end
     fineos_employer_id = 555
 
@@ -262,14 +266,14 @@ def test_load_updates_simple_no_updates_to_api_employer_model(module_persistent_
     )
 
     employer = EmployerOnlyDORDataFactory.create(fineos_employer_id=fineos_employer_id)
-    EmployerLogFactory.create(employer_id=employer.employer_id)
+    EmployerPushToFineosQueueFactoryFactory.create(employer_id=employer.employer_id)
 
-    employer_log_entries_before = (
-        module_persistent_db_session.query(EmployerLog)
-        .filter(EmployerLog.employer_id == employer.employer_id)
+    employer_queue_items_before = (
+        module_persistent_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.employer_id == employer.employer_id)
         .all()
     )
-    assert len(employer_log_entries_before) == 1
+    assert len(employer_queue_items_before) == 1
 
     result = fineos_employers.load_updates(module_persistent_db_session, fineos_client)
 
@@ -278,12 +282,12 @@ def test_load_updates_simple_no_updates_to_api_employer_model(module_persistent_
     assert result.errored_employers_count == 0
     assert result.updated_service_agreements_count == 1
 
-    employer_log_entries_after = (
-        module_persistent_db_session.query(EmployerLog)
-        .filter(EmployerLog.employer_id == employer.employer_id)
+    employer_queue_items_after = (
+        module_persistent_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.employer_id == employer.employer_id)
         .all()
     )
-    assert len(employer_log_entries_after) == 0
+    assert len(employer_queue_items_after) == 0
 
     module_persistent_db_session.refresh(employer)
 
@@ -294,8 +298,12 @@ def test_load_updates_multiple_log_entries_only_run_once(module_persistent_db_se
     fineos_client = massgov.pfml.fineos.MockFINEOSClient()
 
     employer = EmployerOnlyDORDataFactory.create()
-    EmployerLogFactory.create(employer_id=employer.employer_id, action="INSERT")
-    EmployerLogFactory.create(employer_id=employer.employer_id, action="UPDATE")
+    EmployerPushToFineosQueueFactoryFactory.create(
+        employer_id=employer.employer_id, action="INSERT"
+    )
+    EmployerPushToFineosQueueFactoryFactory.create(
+        employer_id=employer.employer_id, action="UPDATE"
+    )
 
     assert employer.fineos_employer_id is None
 
@@ -303,13 +311,13 @@ def test_load_updates_multiple_log_entries_only_run_once(module_persistent_db_se
     employer.account_key = "foo"
     module_persistent_db_session.commit()
 
-    # and ensure it was recorded in the log table
-    employer_log_entries_before = (
-        module_persistent_db_session.query(EmployerLog)
-        .filter(EmployerLog.employer_id == employer.employer_id)
+    # and ensure it was recorded in the employer push to fineos queue table
+    employer_queue_items_before = (
+        module_persistent_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.employer_id == employer.employer_id)
         .all()
     )
-    assert len(employer_log_entries_before) == 2
+    assert len(employer_queue_items_before) == 2
 
     # then test
     result = fineos_employers.load_updates(module_persistent_db_session, fineos_client)
@@ -319,12 +327,12 @@ def test_load_updates_multiple_log_entries_only_run_once(module_persistent_db_se
     assert result.errored_employers_count == 0
     assert result.updated_service_agreements_count == 1
 
-    employer_log_entries_after = (
-        module_persistent_db_session.query(EmployerLog)
-        .filter(EmployerLog.employer_id == employer.employer_id)
+    employer_queue_items_after = (
+        module_persistent_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.employer_id == employer.employer_id)
         .all()
     )
-    assert len(employer_log_entries_after) == 0
+    assert len(employer_queue_items_after) == 0
 
     module_persistent_db_session.refresh(employer)
 
@@ -336,10 +344,12 @@ def test_load_updates_multiple(module_persistent_db_session):
 
     employers = EmployerOnlyDORDataFactory.create_batch(size=10)
     for employer in employers:
-        EmployerLogFactory.create(employer_id=employer.employer_id)
+        EmployerPushToFineosQueueFactoryFactory.create(employer_id=employer.employer_id)
 
-    employer_log_entries_before = module_persistent_db_session.query(EmployerLog).all()
-    assert len(employer_log_entries_before) == 10
+    employer_queue_items_before = module_persistent_db_session.query(
+        EmployerPushToFineosQueue
+    ).all()
+    assert len(employer_queue_items_before) == 10
 
     result = fineos_employers.load_updates(module_persistent_db_session, fineos_client)
 
@@ -352,8 +362,8 @@ def test_load_updates_multiple(module_persistent_db_session):
         module_persistent_db_session.refresh(employer)
         assert employer.fineos_employer_id is not None
 
-    employer_log_entries_after = module_persistent_db_session.query(EmployerLog).all()
-    assert len(employer_log_entries_after) == 0
+    employer_queue_items_after = module_persistent_db_session.query(EmployerPushToFineosQueue).all()
+    assert len(employer_queue_items_after) == 0
 
 
 class SpecialTestException(Exception):
@@ -366,16 +376,16 @@ def test_load_updates_does_not_get_stuck_in_loop_with_failing_employer(
     fineos_client = massgov.pfml.fineos.MockFINEOSClient()
 
     employer = EmployerOnlyDORDataFactory.create()
-    EmployerLogFactory.create(employer_id=employer.employer_id)
+    EmployerPushToFineosQueueFactoryFactory.create(employer_id=employer.employer_id)
 
     assert employer.fineos_employer_id is None
 
-    employer_log_entries_before = (
-        module_persistent_db_session.query(EmployerLog)
-        .filter(EmployerLog.employer_id == employer.employer_id)
+    employer_queue_items_before = (
+        module_persistent_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.employer_id == employer.employer_id)
         .all()
     )
-    assert len(employer_log_entries_before) == 1
+    assert len(employer_queue_items_before) == 1
 
     # have the call to FINEOS fail
     def mock(*args, **kwargs):
@@ -390,12 +400,12 @@ def test_load_updates_does_not_get_stuck_in_loop_with_failing_employer(
     assert result.errored_employers_count == 1
     assert result.updated_service_agreements_count == 0
 
-    employer_log_entries_after = (
-        module_persistent_db_session.query(EmployerLog)
-        .filter(EmployerLog.employer_id == employer.employer_id)
+    employer_queue_items_after = (
+        module_persistent_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.employer_id == employer.employer_id)
         .all()
     )
-    assert len(employer_log_entries_after) == 1
+    assert len(employer_queue_items_after) == 1
 
     module_persistent_db_session.refresh(employer)
 
@@ -406,24 +416,24 @@ def test_load_updates_picks_up_left_behind_work(module_persistent_db_session):
     fineos_client = massgov.pfml.fineos.MockFINEOSClient()
 
     employer = EmployerOnlyDORDataFactory.create()
-    EmployerLogFactory.create(employer_id=employer.employer_id)
+    EmployerPushToFineosQueueFactoryFactory.create(employer_id=employer.employer_id)
 
     assert employer.fineos_employer_id is None
 
-    employer_log_entries = (
-        module_persistent_db_session.query(EmployerLog)
-        .filter(EmployerLog.employer_id == employer.employer_id)
+    employer_queue_items = (
+        module_persistent_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.employer_id == employer.employer_id)
         .all()
     )
-    assert len(employer_log_entries) == 1
+    assert len(employer_queue_items) == 1
 
     process_id = 1
 
     # update the log row to indicate it had already been attempted processing by
     # this process id, simulating a failed run in the past
-    module_persistent_db_session.query(EmployerLog).filter(
-        EmployerLog.employer_id == employer.employer_id
-    ).update({EmployerLog.process_id: process_id})
+    module_persistent_db_session.query(EmployerPushToFineosQueue).filter(
+        EmployerPushToFineosQueue.employer_id == employer.employer_id
+    ).update({EmployerPushToFineosQueue.process_id: process_id})
 
     result = fineos_employers.load_updates(module_persistent_db_session, fineos_client, process_id)
 
@@ -432,12 +442,12 @@ def test_load_updates_picks_up_left_behind_work(module_persistent_db_session):
     assert result.errored_employers_count == 0
     assert result.updated_service_agreements_count == 1
 
-    employer_log_entries_after = (
-        module_persistent_db_session.query(EmployerLog)
-        .filter(EmployerLog.employer_id == employer.employer_id)
+    employer_queue_items_after = (
+        module_persistent_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.employer_id == employer.employer_id)
         .all()
     )
-    assert len(employer_log_entries_after) == 0
+    assert len(employer_queue_items_after) == 0
 
     module_persistent_db_session.refresh(employer)
 
@@ -448,24 +458,24 @@ def test_load_updates_does_not_pick_up_work_from_other_process(module_persistent
     fineos_client = massgov.pfml.fineos.MockFINEOSClient()
 
     employer = EmployerOnlyDORDataFactory.create()
-    EmployerLogFactory.create(employer_id=employer.employer_id)
+    EmployerPushToFineosQueueFactoryFactory.create(employer_id=employer.employer_id)
 
     assert employer.fineos_employer_id is None
 
-    employer_log_entries = (
-        module_persistent_db_session.query(EmployerLog)
-        .filter(EmployerLog.employer_id == employer.employer_id)
+    employer_queue_items = (
+        module_persistent_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.employer_id == employer.employer_id)
         .all()
     )
-    assert len(employer_log_entries) == 1
+    assert len(employer_queue_items) == 1
 
     process_id = 1
 
     # update the log row to indicate it had already been attempted processing by
     # this process id, simulating a failed run in the past
-    module_persistent_db_session.query(EmployerLog).filter(
-        EmployerLog.employer_id == employer.employer_id
-    ).update({EmployerLog.process_id: process_id})
+    module_persistent_db_session.query(EmployerPushToFineosQueue).filter(
+        EmployerPushToFineosQueue.employer_id == employer.employer_id
+    ).update({EmployerPushToFineosQueue.process_id: process_id})
     module_persistent_db_session.commit()
 
     other_session = massgov.pfml.db.init()
@@ -476,12 +486,12 @@ def test_load_updates_does_not_pick_up_work_from_other_process(module_persistent
     assert result.errored_employers_count == 0
     assert result.updated_service_agreements_count == 0
 
-    employer_log_entries_after = (
-        module_persistent_db_session.query(EmployerLog)
-        .filter(EmployerLog.employer_id == employer.employer_id)
+    employer_queue_items_after = (
+        module_persistent_db_session.query(EmployerPushToFineosQueue)
+        .filter(EmployerPushToFineosQueue.employer_id == employer.employer_id)
         .all()
     )
-    assert len(employer_log_entries_after) == 1
+    assert len(employer_queue_items_after) == 1
 
     module_persistent_db_session.refresh(employer)
 
@@ -491,7 +501,9 @@ def test_load_updates_does_not_pick_up_work_from_other_process(module_persistent
 def test_get_new_or_updated_employers(module_persistent_db_session, mocker):
     employers = EmployerOnlyDORDataFactory.create_batch(size=10)
     for employer in employers:
-        EmployerLogFactory.create(employer_id=employer.employer_id, process_id=None)
+        EmployerPushToFineosQueueFactoryFactory.create(
+            employer_id=employer.employer_id, process_id=None
+        )
 
     skip_locked_query_spy = mocker.spy(fineos_employers.db, "skip_locked_query")
 
@@ -503,22 +515,21 @@ def test_get_new_or_updated_employers(module_persistent_db_session, mocker):
         assert employer in employers
         assert "INSERT" in actions
 
-        # for each of them, their log entry should be updated to this process
-        employer_log_entries = (
-            module_persistent_db_session.query(EmployerLog.process_id)
-            .filter(EmployerLog.employer_id == employer.employer_id)
+        employer_queue_items = (
+            module_persistent_db_session.query(EmployerPushToFineosQueue.process_id)
+            .filter(EmployerPushToFineosQueue.employer_id == employer.employer_id)
             .all()
         )
 
-        assert len(employer_log_entries) == 1
-        assert employer_log_entries[0].process_id == 1
+        assert len(employer_queue_items) == 1
+        assert employer_queue_items[0].process_id == 1
 
         # check the batching behavior, if we are in the range of the first batch
         # of 5, the other 5 should not be marked by this process
         if i < 5:
             assert (
-                module_persistent_db_session.query(EmployerLog.process_id)
-                .filter(EmployerLog.process_id.is_(None))
+                module_persistent_db_session.query(EmployerPushToFineosQueue.process_id)
+                .filter(EmployerPushToFineosQueue.process_id.is_(None))
                 .count()
             ) == 5
 
@@ -540,9 +551,9 @@ def test_get_new_or_updated_employers(module_persistent_db_session, mocker):
     # ...we should grab them all
     assert len(list(employers_to_process)) == 10
 
-    # and all the log entries are still there, since we didn't delete them
-    employer_log_entries_after = module_persistent_db_session.query(EmployerLog).all()
-    assert len(employer_log_entries_after) == 10
+    # and all the queue items are still there, since we didn't delete them
+    employer_queue_items_after = module_persistent_db_session.query(EmployerPushToFineosQueue).all()
+    assert len(employer_queue_items_after) == 10
 
 
 def make_test_db():
@@ -605,10 +616,14 @@ def spawn_multiple_load_updates(worker_funcs):
 def test_load_updates_partial_failure_multiple_processes(module_persistent_db_session):
     employers = EmployerOnlyDORDataFactory.create_batch(size=10)
     for employer in employers:
-        EmployerLogFactory.create(employer_id=employer.employer_id, process_id=None)
+        EmployerPushToFineosQueueFactoryFactory.create(
+            employer_id=employer.employer_id, process_id=None
+        )
 
-    employer_log_entries_before = module_persistent_db_session.query(EmployerLog).all()
-    assert len(employer_log_entries_before) == 10
+    employer_queue_items_before = module_persistent_db_session.query(
+        EmployerPushToFineosQueue
+    ).all()
+    assert len(employer_queue_items_before) == 10
 
     module_persistent_db_session.commit()
 
@@ -633,7 +648,7 @@ def test_load_updates_partial_failure_multiple_processes(module_persistent_db_se
     failed_employer_ids = set(
         map(
             lambda el: el.employer_id,
-            module_persistent_db_session.query(EmployerLog.employer_id).all(),
+            module_persistent_db_session.query(EmployerPushToFineosQueue.employer_id).all(),
         )
     )
     assert len(failed_employer_ids) == 5
@@ -650,10 +665,14 @@ def test_load_updates_partial_failure_multiple_processes(module_persistent_db_se
 def test_load_updates_multiple_processes(module_persistent_db_session):
     employers = EmployerOnlyDORDataFactory.create_batch(size=10)
     for employer in employers:
-        EmployerLogFactory.create(employer_id=employer.employer_id, process_id=None)
+        EmployerPushToFineosQueueFactoryFactory.create(
+            employer_id=employer.employer_id, process_id=None
+        )
 
-    employer_log_entries_before = module_persistent_db_session.query(EmployerLog).all()
-    assert len(employer_log_entries_before) == 10
+    employer_queue_items_before = module_persistent_db_session.query(
+        EmployerPushToFineosQueue
+    ).all()
+    assert len(employer_queue_items_before) == 10
 
     module_persistent_db_session.commit()
 
@@ -675,8 +694,8 @@ def test_load_updates_multiple_processes(module_persistent_db_session):
     assert errored_employers_count == 0
     assert updated_service_agreements_count == 10
 
-    employer_log_entries_after = module_persistent_db_session.query(EmployerLog).all()
-    assert len(employer_log_entries_after) == 0
+    employer_queue_items_after = module_persistent_db_session.query(EmployerPushToFineosQueue).all()
+    assert len(employer_queue_items_after) == 0
 
     for employer in employers:
         module_persistent_db_session.refresh(employer)
@@ -690,10 +709,14 @@ def test_load_updates_multiple_processes_limits(module_persistent_db_session):
     num_expected_success = employee_limit * process_number
     employers = EmployerOnlyDORDataFactory.create_batch(size=batch_size)
     for employer in employers:
-        EmployerLogFactory.create(employer_id=employer.employer_id, process_id=None)
+        EmployerPushToFineosQueueFactoryFactory.create(
+            employer_id=employer.employer_id, process_id=None
+        )
 
-    employer_log_entries_before = module_persistent_db_session.query(EmployerLog).all()
-    assert len(employer_log_entries_before) == batch_size
+    employer_queue_items_before = module_persistent_db_session.query(
+        EmployerPushToFineosQueue
+    ).all()
+    assert len(employer_queue_items_before) == batch_size
 
     module_persistent_db_session.commit()
 
@@ -718,8 +741,8 @@ def test_load_updates_multiple_processes_limits(module_persistent_db_session):
     assert errored_employers_count == 0
     assert updated_service_agreements_count == num_expected_success
 
-    employer_log_entries_after = module_persistent_db_session.query(EmployerLog).all()
-    assert len(employer_log_entries_after) == batch_size - num_expected_success
+    employer_queue_items_after = module_persistent_db_session.query(EmployerPushToFineosQueue).all()
+    assert len(employer_queue_items_after) == batch_size - num_expected_success
 
     [module_persistent_db_session.refresh(employer) for employer in employers]
 
@@ -731,6 +754,6 @@ def test_load_updates_multiple_processes_limits(module_persistent_db_session):
         == batch_size - num_expected_success
     )
 
-    # delete lingering employerlogs
-    module_persistent_db_session.query(EmployerLog).delete()
+    # delete lingering EmployerPushToFineosQueue items
+    module_persistent_db_session.query(EmployerPushToFineosQueue).delete()
     module_persistent_db_session.commit()

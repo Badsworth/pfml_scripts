@@ -221,12 +221,20 @@ describe("PreviousLeavesSameReasonDetails", () => {
       expect(inputHoursHint.find("Trans").dive()).toMatchSnapshot();
 
       expect(wrapper.find("Hint")).toMatchInlineSnapshot(`
-        <Hint
-          className="margin-bottom-3"
-        >
-          Enter details about each period of leave taken between January 1, 2021 and January 1, 2021. A leave period begins on the day you first went on leave and ends on the last day of leave. If you were on leave intermittently, your leave period begins on the first day you went on leave and ends on the very last day.
-        </Hint>
-      `);
+<Hint
+  className="margin-bottom-3"
+>
+  <Trans
+    components={
+      Object {
+        "leaveStartDate": "January 1, 2021",
+        "previousLeaveStartDate": "January 1, 2021",
+      }
+    }
+    i18nKey="pages.claimsPreviousLeavesOtherReasonDetails.sectionHint"
+  />
+</Hint>
+`);
     });
 
     it("changes hint date when leave reason is caring leave", () => {
@@ -234,12 +242,20 @@ describe("PreviousLeavesSameReasonDetails", () => {
       const { wrapper } = setup(claimWithPreviousLeaves_care);
 
       expect(wrapper.find("Hint")).toMatchInlineSnapshot(`
-        <Hint
-          className="margin-bottom-3"
-        >
-          Enter details about each period of leave taken between July 1, 2021 and January 1, 2021. A leave period begins on the day you first went on leave and ends on the last day of leave. If you were on leave intermittently, your leave period begins on the first day you went on leave and ends on the very last day.
-        </Hint>
-      `);
+<Hint
+  className="margin-bottom-3"
+>
+  <Trans
+    components={
+      Object {
+        "leaveStartDate": "January 1, 2021",
+        "previousLeaveStartDate": "July 1, 2021",
+      }
+    }
+    i18nKey="pages.claimsPreviousLeavesOtherReasonDetails.sectionHint"
+  />
+</Hint>
+`);
     });
 
     it("adds an empty previous leave when the user clicks Add Previous Leave", async () => {

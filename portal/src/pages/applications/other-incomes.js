@@ -1,11 +1,13 @@
+import Alert from "../../components/Alert";
 import BenefitsApplication from "../../models/BenefitsApplication";
-import Details from "../../components/Details";
+import ConditionalContent from "../../components/ConditionalContent";
+import Heading from "../../components/Heading";
+import Icon from "../../components/Icon";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import { Trans } from "react-i18next";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -35,9 +37,15 @@ export const OtherIncomes = (props) => {
     formState,
     updateFields,
   });
-  const hintList = t("pages.claimsOtherIncomes.hintList", {
+  const doReportHintList = t("pages.claimsOtherIncomes.doReportHintList", {
     returnObjects: true,
   });
+  const doNotReportHintList = t(
+    "pages.claimsOtherIncomes.doNotReportHintList",
+    {
+      returnObjects: true,
+    }
+  );
 
   return (
     <QuestionPage
@@ -50,13 +58,14 @@ export const OtherIncomes = (props) => {
           {
             checked: formState.has_other_incomes === true,
             label: t("pages.claimsOtherIncomes.choiceYes"),
+            hint: t("pages.claimsOtherIncomes.choiceYesHint"),
             value: "true",
           },
           {
             checked: formState.has_other_incomes === false,
             label: t("pages.claimsOtherIncomes.choiceNo"),
-            value: "false",
             hint: t("pages.claimsOtherIncomes.choiceNoHint"),
+            value: "false",
           },
         ]}
         label={t("pages.claimsOtherIncomes.sectionLabel")}
@@ -67,29 +76,42 @@ export const OtherIncomes = (props) => {
               startDate={claim.leaveStartDate}
               endDate={claim.leaveEndDate}
             />
-            <p>{t("pages.claimsOtherIncomes.hintHeader")}</p>
-            <ul className="usa-list">
-              {hintList.map((listItem, index) => (
+            <Heading level="3">
+              <Icon
+                name="check_circle"
+                size={3}
+                className="text-secondary text-middle margin-right-05 margin-top-neg-05"
+                fill="currentColor"
+              />
+              {t("pages.claimsEmployerBenefits.doReportHintHeading")}
+            </Heading>
+            <ul className="usa-list margin-top-0 margin-left-4 margin-bottom-4">
+              {doReportHintList.map((listItem, index) => (
                 <li key={index}>{listItem}</li>
               ))}
             </ul>
-            <Details
-              label={t(
-                "pages.claimsOtherIncomes.hintAppliedButNotApprovedDetailsLabel"
-              )}
-            >
-              <Trans
-                i18nKey="pages.claimsOtherIncomes.hintAppliedButNotApprovedDetailsBody"
-                components={{
-                  "contact-center-phone-link": (
-                    <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-                  ),
-                }}
+            <Heading level="3">
+              <Icon
+                name="cancel"
+                size={3}
+                className="text-error text-middle margin-right-05 margin-top-neg-05"
+                fill="currentColor"
               />
-            </Details>
+              {t("pages.claimsEmployerBenefits.doNotReportHintHeading")}
+            </Heading>
+            <ul className="usa-list margin-top-0 margin-left-4">
+              {doNotReportHintList.map((listItem, index) => (
+                <li key={index}>{listItem}</li>
+              ))}
+            </ul>
           </React.Fragment>
         }
       />
+      <ConditionalContent visible={formState.has_other_incomes === false}>
+        <Alert state="info" role="alert" slim>
+          {t("pages.claimsOtherIncomes.choiceNoAlert")}
+        </Alert>
+      </ConditionalContent>
     </QuestionPage>
   );
 };

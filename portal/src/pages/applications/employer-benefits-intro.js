@@ -13,7 +13,7 @@ export const EmployerBenefitsIntro = (props) => {
   const { appLogic, claim, query } = props;
 
   const handleSave = () => {
-    appLogic.portalFlow.goToNextPage({ claim }, query);
+    return appLogic.portalFlow.goToNextPage({ claim }, query);
   };
 
   return (

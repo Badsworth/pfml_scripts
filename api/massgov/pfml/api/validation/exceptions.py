@@ -46,9 +46,9 @@ class IssueRule(str, Enum):
     disallow_12mo_intermittent_leave_period = "disallow_12mo_intermittent_leave_period"
     # Range between reduced leave period start date and end date can’t be 12 months or longer
     disallow_12mo_reduced_leave_period = "disallow_12mo_reduced_leave_period"
-    # If a claimant is awaiting approval for other incomes they can't also submit other incomes
-    disallow_has_other_incomes_when_awaiting_approval = (
-        "disallow_has_other_incomes_when_awaiting_approval"
+    # Leave periods and previous leaves cannot overlap
+    disallow_overlapping_leave_period_with_previous_leave = (
+        "disallow_overlapping_leave_period_with_previous_leave"
     )
     # Employer must be notified when employment status is Employed
     require_employer_notified = "require_employer_notified"

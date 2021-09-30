@@ -4,7 +4,7 @@ from typing import Dict, Iterable, List, Optional, Tuple
 import massgov.pfml.api.services.fineos_actions as fineos_actions
 import massgov.pfml.db as db
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.employees import Employer, EmployerLog
+from massgov.pfml.db.models.employees import Employer, EmployerPushToFineosQueue
 from massgov.pfml.fineos import AbstractFINEOSClient
 from massgov.pfml.util.datetime import utcnow
 
@@ -107,13 +107,13 @@ def load_updates(
             if not is_create:
                 # Grab the oldest change which should match current data in Fineos SA.
                 log_data = (
-                    db_session.query(EmployerLog)
+                    db_session.query(EmployerPushToFineosQueue)
                     .filter(
-                        EmployerLog.action == "UPDATE",
-                        EmployerLog.process_id == process_id,
-                        EmployerLog.employer_id == employer.employer_id,
+                        EmployerPushToFineosQueue.action == "UPDATE",
+                        EmployerPushToFineosQueue.process_id == process_id,
+                        EmployerPushToFineosQueue.employer_id == employer.employer_id,
                     )
-                    .order_by(EmployerLog.modified_at)
+                    .order_by(EmployerPushToFineosQueue.modified_at)
                     .first()
                 )
             fineos_customer_number = fineos_actions.create_service_agreement_for_employer(
@@ -132,9 +132,9 @@ def load_updates(
 
             # Delete the entries for this Employer that triggered this
             # particular update process...
-            db_session.query(EmployerLog).filter(
-                EmployerLog.process_id == process_id,
-                EmployerLog.employer_id == employer.employer_id,
+            db_session.query(EmployerPushToFineosQueue).filter(
+                EmployerPushToFineosQueue.process_id == process_id,
+                EmployerPushToFineosQueue.employer_id == employer.employer_id,
             ).delete(synchronize_session=False)
 
             # finalize the deletes before moving on
@@ -172,7 +172,7 @@ def load_updates(
 def get_new_or_updated_employers(
     db_session: db.Session, batch_size: int, process_id: int, pickup_existing_at_start: bool = True
 ) -> Iterable[Tuple[Employer, List[str]]]:
-    """Yields Employers with entries in EmployerLog that have not been marked as being processed by another process_id, until none are left.
+    """Yields Employers with entries in EmployerPushToFineosQueue  that have not been marked as being processed by another process_id, until none are left.
 
     This claims `batch_size` number of Employers for the given `process_id` at a
     time. Yielding one Employer from that batch until empty, then grabbing
@@ -181,7 +181,7 @@ def get_new_or_updated_employers(
     The yielded Employer will have its DB row locked FOR UPDATES, so the caller
     should commit/rollback its transaction when it is done with the Employer.
 
-    This function does not delete the claimed rows from the EmployerLog table as
+    This function does not delete the claimed rows from the EmployerPushToFineosQueue  table as
     it iterates through. The caller is responsible for deleting the related
     Employer rows for its `process_id` after it is done processing them.
     """
@@ -196,21 +196,28 @@ def get_new_or_updated_employers(
     # Employer should be safe, but should be more robust to allow any existing
     # processes to successfully finish their handling of the Employer.
     employer_ids_that_are_already_tagged_with_different_process_id_query = db_session.query(
-        EmployerLog.employer_id
-    ).filter(EmployerLog.process_id.isnot(None), EmployerLog.process_id != process_id)
+        EmployerPushToFineosQueue.employer_id
+    ).filter(
+        EmployerPushToFineosQueue.process_id.isnot(None),
+        EmployerPushToFineosQueue.process_id != process_id,
+    )
 
     while True:
-        db_session.execute(f"LOCK TABLE {EmployerLog.__table__} IN ACCESS EXCLUSIVE MODE;")
+        db_session.execute(
+            f"LOCK TABLE {EmployerPushToFineosQueue.__table__} IN ACCESS EXCLUSIVE MODE;"
+        )
 
         # build up query for this batch of Employer records
-        updated_employer_ids_for_process_query = db_session.query(EmployerLog.employer_id)
+        updated_employer_ids_for_process_query = db_session.query(
+            EmployerPushToFineosQueue.employer_id
+        )
 
-        # the basic WHERE clauses, looking at only EmployerLog records that have
+        # the basic WHERE clauses, looking at only EmployerPushToFineosQueue  records that have
         # not been tagged by another process yet
         core_filter = [
-            EmployerLog.action.in_(["INSERT", "UPDATE"]),
-            EmployerLog.process_id.is_(None),
-            EmployerLog.employer_id.notin_(
+            EmployerPushToFineosQueue.action.in_(["INSERT", "UPDATE"]),
+            EmployerPushToFineosQueue.process_id.is_(None),
+            EmployerPushToFineosQueue.employer_id.notin_(
                 employer_ids_that_are_already_tagged_with_different_process_id_query
             ),
         ]
@@ -218,7 +225,7 @@ def get_new_or_updated_employers(
         # apply the filters and aggregation
         updated_employer_ids_for_process_query = (
             updated_employer_ids_for_process_query.filter(*core_filter)
-            .group_by(EmployerLog.employer_id)
+            .group_by(EmployerPushToFineosQueue.employer_id)
             .limit(batch_size)
         )
 
@@ -234,16 +241,16 @@ def get_new_or_updated_employers(
         # expected
         if pickup_existing:
             existing_employer_ids_for_this_process_id = (
-                db_session.query(EmployerLog.employer_id)
-                .filter(EmployerLog.process_id == process_id)
+                db_session.query(EmployerPushToFineosQueue.employer_id)
+                .filter(EmployerPushToFineosQueue.process_id == process_id)
                 .all()
             )
             updated_employer_ids.extend(existing_employer_ids_for_this_process_id)
 
         # build dictionary of employer_id: actions
         employer_logs = (
-            db_session.query(EmployerLog)
-            .filter(EmployerLog.employer_id.in_(updated_employer_ids))
+            db_session.query(EmployerPushToFineosQueue)
+            .filter(EmployerPushToFineosQueue.employer_id.in_(updated_employer_ids))
             .all()
         )
         employer_actions_map: Dict[str, List[str]] = {}
@@ -263,9 +270,9 @@ def get_new_or_updated_employers(
 
         # if there are more records, tag them with this process_id and release
         # the lock
-        db_session.query(EmployerLog).filter(
-            EmployerLog.employer_id.in_(updated_employer_ids)
-        ).update({EmployerLog.process_id: process_id}, synchronize_session=False)
+        db_session.query(EmployerPushToFineosQueue).filter(
+            EmployerPushToFineosQueue.employer_id.in_(updated_employer_ids)
+        ).update({EmployerPushToFineosQueue.process_id: process_id}, synchronize_session=False)
 
         db_session.commit()
 

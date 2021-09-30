@@ -15,7 +15,7 @@ class CustomReporter {
       // Those have results per `it` or `test` block.
       file.testResults.forEach((res) => {
         const event = {
-          runId: process.env.GITHUB_RUN_ID,
+          runId: process.env.TEST_RUN_ID,
           environment: process.env.E2E_ENVIRONMENT,
           eventType: "IntegrationTestResult",
           file: file.testFilePath.split("e2e/")[1],

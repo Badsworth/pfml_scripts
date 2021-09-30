@@ -5,10 +5,24 @@ import useLoggedInRedirect from "../../src/hooks/useLoggedInRedirect";
 jest.mock("@aws-amplify/auth");
 
 function mockAuthenticatedUser() {
-  Auth.currentUserInfo.mockResolvedValueOnce({});
+  Auth.currentUserInfo.mockResolvedValueOnce({
+    attributes: {
+      email: "test@example.com",
+    },
+  });
 }
 
 function mockUnauthenticatedUser() {
+  Auth.currentUserInfo.mockResolvedValueOnce(null);
+}
+
+// Cognito will sometimes return an empty object
+// when user is not authenticated
+function mockUnauthenticatedUserVariation() {
+  Auth.currentUserInfo.mockResolvedValueOnce({});
+}
+
+function mockAmplifyError() {
   Auth.currentUserInfo.mockRejectedValueOnce();
 }
 
@@ -59,6 +73,25 @@ describe("useLoggedInRedirect", () => {
 
   it("does not redirect unauthenticated users", async () => {
     mockUnauthenticatedUser();
+    const portalFlow = mockPortalFlow();
+
+    renderHook(() => {
+      useLoggedInRedirect(portalFlow);
+    });
+    await waitForUseEffectToComplete();
+
+    mockUnauthenticatedUserVariation();
+
+    renderHook(() => {
+      useLoggedInRedirect(portalFlow);
+    });
+    await waitForUseEffectToComplete();
+
+    expect(portalFlow.goTo).not.toHaveBeenCalled();
+  });
+
+  it("does not redirect when amplify calls fail", async () => {
+    mockAmplifyError();
     const portalFlow = mockPortalFlow();
 
     renderHook(() => {

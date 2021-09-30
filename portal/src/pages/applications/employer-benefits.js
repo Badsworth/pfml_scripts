@@ -1,10 +1,13 @@
+import Alert from "../../components/Alert";
 import BenefitsApplication from "../../models/BenefitsApplication";
+import ConditionalContent from "../../components/ConditionalContent";
+import Heading from "../../components/Heading";
+import Icon from "../../components/Icon";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import { Trans } from "react-i18next";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -38,9 +41,16 @@ export const EmployerBenefits = (props) => {
     formState,
     updateFields,
   });
-  const hintList = t("pages.claimsEmployerBenefits.hintList", {
+  const doReportHintList = t("pages.claimsEmployerBenefits.doReportHintList", {
     returnObjects: true,
+    employer_fein,
   });
+  const doNotReportHintList = t(
+    "pages.claimsEmployerBenefits.doNotReportHintList",
+    {
+      returnObjects: true,
+    }
+  );
 
   return (
     <QuestionPage
@@ -53,11 +63,13 @@ export const EmployerBenefits = (props) => {
           {
             checked: formState.has_employer_benefits === true,
             label: t("pages.claimsEmployerBenefits.choiceYes"),
+            hint: t("pages.claimsEmployerBenefits.choiceYesHint"),
             value: "true",
           },
           {
             checked: formState.has_employer_benefits === false,
             label: t("pages.claimsEmployerBenefits.choiceNo"),
+            hint: t("pages.claimsEmployerBenefits.choiceNoHint"),
             value: "false",
           },
         ]}
@@ -69,19 +81,42 @@ export const EmployerBenefits = (props) => {
               startDate={claim.leaveStartDate}
               endDate={claim.leaveEndDate}
             />
-            <p>{t("pages.claimsEmployerBenefits.hintHeader")}</p>
-            <ul className="usa-list">
-              {hintList.map((listItem, index) => (
+            <Heading level="3">
+              <Icon
+                name="check_circle"
+                size={3}
+                className="text-secondary text-middle margin-right-05 margin-top-neg-05"
+                fill="currentColor"
+              />
+              {t("pages.claimsEmployerBenefits.doReportHintHeading")}
+            </Heading>
+            <ul className="usa-list margin-top-0 margin-left-4 margin-bottom-4">
+              {doReportHintList.map((listItem, index) => (
                 <li key={index}>{listItem}</li>
               ))}
             </ul>
-            <Trans
-              i18nKey="pages.claimsEmployerBenefits.hintBody"
-              tOptions={{ employer_fein }}
-            />
+            <Heading level="3">
+              <Icon
+                name="cancel"
+                size={3}
+                className="text-error text-middle margin-right-05 margin-top-neg-05"
+                fill="currentColor"
+              />
+              {t("pages.claimsEmployerBenefits.doNotReportHintHeading")}
+            </Heading>
+            <ul className="usa-list margin-top-0 margin-left-4">
+              {doNotReportHintList.map((listItem, index) => (
+                <li key={index}>{listItem}</li>
+              ))}
+            </ul>
           </React.Fragment>
         }
       />
+      <ConditionalContent visible={formState.has_employer_benefits === false}>
+        <Alert state="info" role="alert" slim>
+          {t("pages.claimsEmployerBenefits.choiceNoAlert")}
+        </Alert>
+      </ConditionalContent>
     </QuestionPage>
   );
 };

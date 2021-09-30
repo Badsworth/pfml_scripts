@@ -34,7 +34,10 @@ export const ConcurrentLeavesDetails = (props) => {
   });
 
   const handleSave = () => {
-    appLogic.benefitsApplications.update(claim.application_id, formState);
+    return appLogic.benefitsApplications.update(
+      claim.application_id,
+      formState
+    );
   };
 
   return (

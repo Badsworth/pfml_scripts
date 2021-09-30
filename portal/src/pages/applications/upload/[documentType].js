@@ -215,7 +215,7 @@ export const DocumentUpload = (props) => {
       // Allow user to skip this page if they've previously uploaded documents
       portalFlow.goToNextPage(
         { isAdditionalDoc },
-        { claim_id: query.claim_id }
+        { claim_id: query.claim_id, absence_case_id: query.absence_case_id }
       );
       return;
     }

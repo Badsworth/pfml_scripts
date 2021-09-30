@@ -99,7 +99,6 @@ describe("Denial Notification and Notice", () => {
         cy.unstash<Submission>("submission").then((submission) => {
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
           const subject = email.getNotificationSubject(
-            employeeFullName,
             "application started",
             submission.fineos_absence_id
           );
@@ -107,7 +106,7 @@ describe("Denial Notification and Notice", () => {
             .getEmails(
               {
                 address: "gqzap.notifications@inbox.testmail.app",
-                subject: subject,
+                subjectWildcard: subject,
                 timestamp_from: submission.timestamp_from,
                 messageWildcard: submission.fineos_absence_id,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
@@ -122,6 +121,9 @@ describe("Denial Notification and Notice", () => {
               cy.contains(employeeFullName);
               cy.contains(dob);
               cy.contains(submission.fineos_absence_id);
+              email.assertValidSubject(
+                `${claim.first_name} ${claim.last_name}`
+              );
             });
         });
       });
@@ -137,7 +139,6 @@ describe("Denial Notification and Notice", () => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
           const subjectEmployer = email.getNotificationSubject(
-            employeeFullName,
             "denial (employer)",
             submission.application_id
           );
@@ -146,7 +147,7 @@ describe("Denial Notification and Notice", () => {
             .getEmails(
               {
                 address: "gqzap.notifications@inbox.testmail.app",
-                subject: subjectEmployer,
+                subjectWildcard: subjectEmployer,
                 messageWildcard: submission.fineos_absence_id,
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
@@ -164,6 +165,9 @@ describe("Denial Notification and Notice", () => {
               cy.get(
                 `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
               );
+              email.assertValidSubject(
+                `${claim.first_name} ${claim.last_name}`
+              );
             });
         });
       });
@@ -176,30 +180,26 @@ describe("Denial Notification and Notice", () => {
     () => {
       cy.dependsOnPreviousPass([submit]);
       cy.unstash<Submission>("submission").then((submission) => {
-        cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-          const subjectClaimant = email.getNotificationSubject(
-            `${claim.first_name} ${claim.last_name}`,
-            "denial (claimant)",
-            submission.application_id
-          );
-          // Check email for Claimant/Employee
-          email
-            .getEmails(
-              {
-                address: "gqzap.notifications@inbox.testmail.app",
-                subject: subjectClaimant,
-                messageWildcard: submission.fineos_absence_id,
-                timestamp_from: submission.timestamp_from,
-                debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-              },
-              // Reduced timeout, since we have multiple tests that run prior to this.
-              30000
-            )
-            .then(() => {
-              cy.wait(100);
-              cy.contains(submission.fineos_absence_id);
-            });
-        });
+        const subjectClaimant = email.getNotificationSubject(
+          "denial (claimant)",
+          submission.application_id
+        );
+        // Check email for Claimant/Employee
+        email
+          .getEmails(
+            {
+              address: "gqzap.notifications@inbox.testmail.app",
+              subjectWildcard: subjectClaimant,
+              messageWildcard: submission.fineos_absence_id,
+              timestamp_from: submission.timestamp_from,
+              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+            },
+            // Reduced timeout, since we have multiple tests that run prior to this.
+            30000
+          )
+          .then(() => {
+            cy.contains(submission.fineos_absence_id);
+          });
       });
     }
   );

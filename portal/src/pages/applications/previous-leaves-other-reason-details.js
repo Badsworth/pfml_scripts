@@ -102,10 +102,13 @@ export const PreviousLeavesOtherReasonDetails = (props) => {
         {t("pages.claimsPreviousLeavesOtherReasonDetails.sectionLabel")}
       </Heading>
       <Hint className="margin-bottom-3">
-        {t("pages.claimsPreviousLeavesOtherReasonDetails.sectionHint", {
-          previousLeaveStartDate,
-          leaveStartDate,
-        })}
+        <Trans
+          i18nKey="pages.claimsPreviousLeavesOtherReasonDetails.sectionHint"
+          components={{
+            previousLeaveStartDate,
+            leaveStartDate,
+          }}
+        />
       </Hint>
 
       <RepeatableFieldset

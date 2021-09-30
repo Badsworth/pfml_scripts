@@ -14,7 +14,15 @@ exports[`PreviousLeavesOtherReasonDetails when the user has no previous leaves r
   <Hint
     className="margin-bottom-3"
   >
-    Enter details about each period of leave taken between January 1, 2021 and January 1, 2021. A leave period begins on the day you first went on leave and ends on the last day of leave. If you were on leave intermittently, your leave period begins on the first day you went on leave and ends on the very last day.
+    <Trans
+      components={
+        Object {
+          "leaveStartDate": "January 1, 2021",
+          "previousLeaveStartDate": "January 1, 2021",
+        }
+      }
+      i18nKey="pages.claimsPreviousLeavesOtherReasonDetails.sectionHint"
+    />
   </Hint>
   <RepeatableFieldset
     addButtonLabel="Add another previous leave"
@@ -57,7 +65,15 @@ exports[`PreviousLeavesOtherReasonDetails when user's claim has previous leaves 
   <Hint
     className="margin-bottom-3"
   >
-    Enter details about each period of leave taken between January 1, 2021 and January 1, 2021. A leave period begins on the day you first went on leave and ends on the last day of leave. If you were on leave intermittently, your leave period begins on the first day you went on leave and ends on the very last day.
+    <Trans
+      components={
+        Object {
+          "leaveStartDate": "January 1, 2021",
+          "previousLeaveStartDate": "January 1, 2021",
+        }
+      }
+      i18nKey="pages.claimsPreviousLeavesOtherReasonDetails.sectionHint"
+    />
   </Hint>
   <RepeatableFieldset
     addButtonLabel="Add another previous leave"

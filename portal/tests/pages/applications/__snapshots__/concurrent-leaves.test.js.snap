@@ -1,0 +1,316 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ConcurrentLeaves renders the page 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Other leave, benefits, and income
+    </h1>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?
+      </legend>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-intro"
+      >
+        <div
+          class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-4"
+          tabindex="-1"
+        >
+          <div
+            class="usa-alert__body"
+            role="region"
+          >
+            <h2
+              class="usa-alert__heading font-heading-md text-bold"
+            >
+              Your leave dates for paid leave
+            </h2>
+            <div
+              class="usa-alert__text"
+            >
+              1/1/2021 to 6/1/2021
+            </div>
+          </div>
+        </div>
+        <h2
+          class="margin-top-4 font-heading-md text-bold"
+        >
+          What kinds of accrued paid leave to report
+        </h2>
+        <p>
+          This includes any paid vacation time, sick time, and personal time. It should be reported if it’s taken during your leave period, whether it’s during the 7-day waiting period or after. Reminder: you can use accrued paid leave during the 7-day waiting period with no impact to your PFML benefit.
+        </p>
+        <h2
+          class="font-heading-md text-bold"
+        >
+          When you need to report it
+        </h2>
+        <p>
+          If your PFML leave includes taking time off work completely for a period of time (continuous leave), you need to report any accrued paid leave you plan to take during that continuous leave. Select Yes to report this leave.
+        </p>
+        <p>
+          If your PFML leave includes working fewer hours than normal (a reduced leave schedule) or taking time off work in uneven or unpredictable blocks of time (intermittent leave), you need to report leave if ONE of the following two statements is true:
+        </p>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            You are planning to use this accrued paid leave on days when you are also taking PFML leave.
+          </li>
+          <li>
+            You are planning to use this accrued paid leave for a PFML qualifying reason, even if it’s not the same reason you are applying for now.
+          </li>
+        </ul>
+        <details
+          class="c-details"
+        >
+          <summary
+            class="margin-bottom-2 text-primary text-underline font-ui-xs"
+          >
+            What are the qualifying reasons?
+          </summary>
+          <div
+            class="margin-bottom-2"
+          >
+            <ul
+              class="usa-list"
+            >
+              <li>
+                You had a serious health condition, including illness, injury, or pregnancy.
+              </li>
+              <li>
+                If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care.
+              </li>
+              <li>
+                You bonded with your child after birth or placement.
+              </li>
+              <li>
+                You needed to manage family affairs while a family member is on active duty in the armed forces.
+              </li>
+              <li>
+                You needed to care for a family member who serves in the armed forces.
+              </li>
+              <li>
+                You needed to care for a family member with a serious health condition.
+              </li>
+            </ul>
+          </div>
+        </details>
+      </span>
+      <div
+        class="margin-top-3"
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            checked=""
+            class="usa-radio__input"
+            id="InputChoice1"
+            name="has_concurrent_leave"
+            type="radio"
+            value="true"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice1"
+          >
+            Yes
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice2"
+            name="has_concurrent_leave"
+            type="radio"
+            value="false"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice2"
+          >
+            No
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;
+
+exports[`ConcurrentLeaves renders the page when the claim does not contain concurrent leave data 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Other leave, benefits, and income
+    </h1>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?
+      </legend>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-intro"
+      >
+        <div
+          class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-4"
+          tabindex="-1"
+        >
+          <div
+            class="usa-alert__body"
+            role="region"
+          >
+            <h2
+              class="usa-alert__heading font-heading-md text-bold"
+            >
+              Your leave dates for paid leave
+            </h2>
+            <div
+              class="usa-alert__text"
+            >
+              1/1/2021 to 6/1/2021
+            </div>
+          </div>
+        </div>
+        <h2
+          class="margin-top-4 font-heading-md text-bold"
+        >
+          What kinds of accrued paid leave to report
+        </h2>
+        <p>
+          This includes any paid vacation time, sick time, and personal time. It should be reported if it’s taken during your leave period, whether it’s during the 7-day waiting period or after. Reminder: you can use accrued paid leave during the 7-day waiting period with no impact to your PFML benefit.
+        </p>
+        <h2
+          class="font-heading-md text-bold"
+        >
+          When you need to report it
+        </h2>
+        <p>
+          If your PFML leave includes taking time off work completely for a period of time (continuous leave), you need to report any accrued paid leave you plan to take during that continuous leave. Select Yes to report this leave.
+        </p>
+        <p>
+          If your PFML leave includes working fewer hours than normal (a reduced leave schedule) or taking time off work in uneven or unpredictable blocks of time (intermittent leave), you need to report leave if ONE of the following two statements is true:
+        </p>
+        <ul
+          class="usa-list"
+        >
+          <li>
+            You are planning to use this accrued paid leave on days when you are also taking PFML leave.
+          </li>
+          <li>
+            You are planning to use this accrued paid leave for a PFML qualifying reason, even if it’s not the same reason you are applying for now.
+          </li>
+        </ul>
+        <details
+          class="c-details"
+        >
+          <summary
+            class="margin-bottom-2 text-primary text-underline font-ui-xs"
+          >
+            What are the qualifying reasons?
+          </summary>
+          <div
+            class="margin-bottom-2"
+          >
+            <ul
+              class="usa-list"
+            >
+              <li>
+                You had a serious health condition, including illness, injury, or pregnancy.
+              </li>
+              <li>
+                If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care.
+              </li>
+              <li>
+                You bonded with your child after birth or placement.
+              </li>
+              <li>
+                You needed to manage family affairs while a family member is on active duty in the armed forces.
+              </li>
+              <li>
+                You needed to care for a family member who serves in the armed forces.
+              </li>
+              <li>
+                You needed to care for a family member with a serious health condition.
+              </li>
+            </ul>
+          </div>
+        </details>
+      </span>
+      <div
+        class="margin-top-3"
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice9"
+            name="has_concurrent_leave"
+            type="radio"
+            value="true"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice9"
+          >
+            Yes
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice10"
+            name="has_concurrent_leave"
+            type="radio"
+            value="false"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice10"
+          >
+            No
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;

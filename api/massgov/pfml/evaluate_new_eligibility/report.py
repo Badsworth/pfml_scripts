@@ -137,7 +137,13 @@ def generate_report(cli_args, db_session, output_csv, diff_reason_csv):
             EmployeeOccupation.employment_status,
         )
         .select_from(Claim)
-        .join(Employer, EmployeeOccupation, isouter=True)
+        .join(Employer, isouter=True)
+        .join(
+            EmployeeOccupation,
+            (EmployeeOccupation.employee_id == Claim.employee_id)
+            & (EmployeeOccupation.employer_id == Claim.employer_id),
+            isouter=True,
+        )
         .filter(
             tuple_(Claim.employee_id, Claim.employer_id, Claim.absence_period_start_date,).in_(
                 list(log_eligibility_dict.keys())

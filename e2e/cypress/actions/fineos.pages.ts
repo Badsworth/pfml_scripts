@@ -1197,9 +1197,10 @@ class AvailabilityPage {
     });
   }
 
-  weightDaysCheck(amount_weeks: string) : this {
-    cy.contains("table.ListTable", "Weight")
-    const selector = ".divListviewGrid .ListTable td[id*='ListviewWidgetWeight0']";
+  weightDaysCheck(amount_weeks: string): this {
+    cy.contains("table.ListTable", "Weight");
+    const selector =
+      ".divListviewGrid .ListTable td[id*='ListviewWidgetWeight0']";
     cy.get(selector).should("contain.text", amount_weeks);
     cy.screenshot();
     fineos.clickBottomWidgetButton("Close");
