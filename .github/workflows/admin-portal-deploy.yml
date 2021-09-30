@@ -187,16 +187,16 @@ jobs:
           node-version: ${{ env.nodeVersion }}
 
       - name: Install
-        run: npm ci --prefix admin-portal
+        run: npm ci --prefix admin
 
       - name: Build
-        run: npm run build:${{ needs.deploy-info.outputs.admin-portal-env }} --prefix admin-portal
+        run: npm run build:${{ needs.deploy-info.outputs.admin-portal-env }} --prefix admin
 
       - name: Sync S3 Bucket
         env:
           BUCKET_NAME: massgov-pfml-${{ needs.deploy-info.outputs.admin-portal-env }}-admin-portal-site-builds
           RELEASE_HASH: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-          NEXT_OUTPUT_DIR: ./admin-portal/out
+          NEXT_OUTPUT_DIR: ./admin/out
         run: |
           aws s3 sync $NEXT_OUTPUT_DIR s3://$BUCKET_NAME/$RELEASE_HASH/ --exclude "*.html" --cache-control max-age=31536000,public &&
           aws s3 sync $NEXT_OUTPUT_DIR s3://$BUCKET_NAME/$RELEASE_HASH/ --exclude "*" --include "*.html" --cache-control s-maxage=86400,max-age=0,must-revalidate
@@ -242,54 +242,6 @@ jobs:
         id: terraform_apply
         run: terraform apply plan.tfplan
         working-directory: ${{ env.terraformBaseDir }}${{ needs.deploy-info.outputs.admin-portal-env }}
-
-  invalidate-cloudfront:
-    name: Invalidate Cloudfront Cache
-    runs-on: ubuntu-latest
-    needs: [update-the-deploy-branch, deploy, release, deploy-info]
-    env:
-      TF_CLI_ARGS: '-lock-timeout=120s'
-
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
-          role-duration-seconds: 3600
-          role-to-assume: ci-run-deploys
-
-      - name: Terraform Init
-        id: terraform_init
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraformVersion }}
-          tf_actions_subcommand: init
-          tf_actions_comment: false
-          tf_actions_working_dir: ${{ env.terraformBaseDir }}${{ needs.deploy-info.outputs.admin-portal-env }}
-
-      - name: Terraform Output
-        id: terraform
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env.terraformVersion }}
-          tf_actions_subcommand: output
-          tf_actions_working_dir: ${{ env.terraformBaseDir }}${{ needs.deploy-info.outputs.admin-portal-env }}
-        env:
-          TF_CLI_ARGS: ''
-
-      - name: Invalidate old Cloudfront cache
-        env:
-          TF_OUTPUT: ${{ steps.terraform.outputs.tf_actions_output }}
-        run: |
-          sudo apt-get install jq
-          DISTRIBUTION_ID=$(echo $TF_OUTPUT | jq -r '.cloudfront_distribution_id.value')
-          aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
 
   postdeploy-info:
     name: Finalize deployment state
