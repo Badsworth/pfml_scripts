@@ -66,7 +66,7 @@ class DuaDiaReductionsProcessor(AbstractStepProcessor):
             logger.info(
                 "Payment %s has overlapping DUA or DIA reductions, creating audit report details",
                 make_payment_log(payment),
-                extra=get_traceable_payment_details,
+                extra=get_traceable_payment_details(payment),
             )
 
     def check_dua(self, payment: Payment) -> None:
