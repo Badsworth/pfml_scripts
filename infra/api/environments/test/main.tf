@@ -70,6 +70,9 @@ module "api" {
     "https://paidleave-api-test.mass.gov",
     "https://67385ye4yb.execute-api.us-east-1.amazonaws.com",
 
+    # Allow requests from the Admin Portal
+    "https://paidleave-admin-test.mass.gov",
+
     # Since we may temporarily point the Portal stage environment to API test
     # as well, allow requests to come from that origin.
     # Example: https://lwd.atlassian.net/browse/CP-1063
