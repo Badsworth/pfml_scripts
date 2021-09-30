@@ -1,0 +1,149 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LeaveReason instructs the user to review their previous leaves when user changes their leave reason after reporting previous leaves for the same reason 1`] = `
+<div
+  class="usa-alert__body"
+  role="region"
+>
+  <h2
+    class="usa-alert__heading font-heading-md text-bold"
+  >
+    Review your previous leave
+  </h2>
+  <div
+    class="usa-alert__text"
+  >
+    Earlier you reported taking previous leave for the same reason you are applying now, but you are about to change that reason.
+    <br />
+    <br />
+    Save and continue to change your leave reason, then review the previous leave you reported to make sure the reason you took that leave is still accurate.
+  </div>
+</div>
+`;
+
+exports[`LeaveReason renders the page without the military leave option 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Leave details
+    </h1>
+    <div
+      class="usa-alert usa-alert--info c-alert--neutral"
+      tabindex="-1"
+    >
+      <div
+        class="usa-alert__body"
+        role="region"
+      >
+        <div
+          class="usa-alert__text"
+        >
+          <p>
+            To apply for the following paid benefits:
+          </p>
+          <ul
+            class="usa-list"
+          >
+            <li>
+              Paid family leave to care for a family member who serves in the armed forces
+            </li>
+            <li>
+              Paid family leave to manage family affairs when a family member is on active duty in the armed forces
+            </li>
+          </ul>
+          <p>
+            Call the Department of Family and Medical Leave Contact Center at 
+            <a
+              href="tel:(833) 344-7365"
+            >
+              (833) 344‑7365
+            </a>
+            .
+          </p>
+        </div>
+      </div>
+    </div>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        Why do you need to take leave?
+      </legend>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-intro"
+      >
+        You can only request one leave at a time.
+      </span>
+      <div
+        class="margin-top-3"
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice1"
+            name="leave_details.reason"
+            type="radio"
+            value="Serious Health Condition - Employee"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice1"
+          >
+            I can’t work due to my illness, injury, or pregnancy.
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice2"
+            name="leave_details.reason"
+            type="radio"
+            value="Child Bonding"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice2"
+          >
+            I need to bond with my child after birth, adoption, or foster placement.
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice3"
+            name="leave_details.reason"
+            type="radio"
+            value="Care for a Family Member"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice3"
+          >
+            I need to care for my family member.
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;
