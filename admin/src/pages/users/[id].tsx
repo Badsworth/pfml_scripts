@@ -17,6 +17,11 @@ type AccountInfoRow = {
 
 export default function AccountInfo() {
   const router = useRouter();
+  /* 
+    @todo: FIX
+    This `user` variable is undefined during prerendering 
+    which causes an error during the build/export/deploy process
+  */
   const user = tempUsers[Number(router.query.id)];
 
   const rows: AccountInfoRow[] = [
