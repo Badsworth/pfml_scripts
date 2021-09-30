@@ -24,6 +24,7 @@ import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
+import withUser from "../../hoc/withUser";
 
 export const Status = ({ appLogic, query }) => {
   const { t } = useTranslation();
@@ -353,7 +354,7 @@ Status.propTypes = {
   }).isRequired,
 };
 
-export default Status;
+export default withUser(Status);
 
 export const StatusTagMap = {
   Approved: "success",

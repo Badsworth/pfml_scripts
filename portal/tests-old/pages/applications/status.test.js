@@ -1,5 +1,5 @@
 import Document, { DocumentType } from "../../../src/models/Document";
-import Status, { LeaveDetails } from "../../../src/pages/applications/status";
+import { LeaveDetails, Status } from "../../../src/pages/applications/status";
 
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";

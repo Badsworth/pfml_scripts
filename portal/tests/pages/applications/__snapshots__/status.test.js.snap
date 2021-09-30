@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Status timeline is displayed if there is a pending absence period 1`] = `
+exports[`ComponentWithUser timeline is displayed if there is a pending absence period 1`] = `
 <div
   class="border-bottom border-base-lighter padding-bottom-2 margin-bottom-2"
   data-testid="timeline"
@@ -53,7 +53,7 @@ exports[`Status timeline is displayed if there is a pending absence period 1`] =
 </div>
 `;
 
-exports[`Status timeline when there is a pending bonding absence period and claimant has not uploaded certification documents shows follow up steps 1`] = `
+exports[`ComponentWithUser timeline when there is a pending bonding absence period and claimant has not uploaded certification documents shows follow up steps 1`] = `
 <div
   class="border-bottom border-base-lighter padding-bottom-2 margin-bottom-2"
   data-testid="timeline"
