@@ -34,7 +34,7 @@ from sqlalchemy.sql.expression import func
 from sqlalchemy.types import JSON
 
 from ..lookup import LookupTable
-from .base import Base, TimestampMixin, deprecated_column, utc_timestamp_gen, uuid_gen
+from .base import Base, TimestampMixin, utc_timestamp_gen, uuid_gen
 from .common import PostgreSQLUUID
 from .industry_codes import LkIndustryCode
 from .verifications import Verification
@@ -565,11 +565,6 @@ class Employee(Base, TimestampMixin):
     ctr_vendor_customer_code = Column(Text)
     ctr_address_pair_id = Column(
         PostgreSQLUUID, ForeignKey("link_ctr_address_pair.fineos_address_id"), index=True
-    )
-    experian_address_pair_id = deprecated_column(
-        Column(
-            PostgreSQLUUID, ForeignKey("link_experian_address_pair.fineos_address_id"), index=True
-        )
     )
 
     fineos_employee_first_name = Column(Text)
