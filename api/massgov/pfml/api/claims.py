@@ -58,6 +58,7 @@ from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
 from massgov.pfml.util.logging.claims import (
     get_claim_log_attributes,
     get_claim_review_log_attributes,
+    log_get_claim_metrics,
 )
 from massgov.pfml.util.logging.employers import get_employer_log_attributes
 from massgov.pfml.util.logging.managed_requirements import (
@@ -530,6 +531,8 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
 
     if claim.application:  # type: ignore
         detailed_claim.application_id = claim.application.application_id  # type: ignore
+
+    log_get_claim_metrics(detailed_claim)
 
     return response_util.success_response(
         message="Successfully retrieved claim", data=detailed_claim.dict(), status_code=200,
