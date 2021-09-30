@@ -1,4 +1,4 @@
-import { describe, beforeAll, test, expect } from "@jest/globals";
+import { describe, beforeAll, test, expect, jest } from "@jest/globals";
 import config from "../../src/config";
 import {
   getAuthManager,
@@ -26,7 +26,6 @@ let authenticator: AuthenticationManager;
 let leave_admin_creds_1: Credentials;
 let leave_admin_creds_2: Credentials;
 let employer: Employer;
-
 
 /**
  * @group nightly
@@ -73,7 +72,6 @@ describe("Series of test that verifies LAs are properly registered in Fineos", (
       throw new Error(`Unable to register/verify Leave Admins: ${e}`);
     }
   }, 60000);
-
 
   test("Check LA user object for has_fineos_registration property", async () => {
     const session_1 = await authenticator.authenticate(

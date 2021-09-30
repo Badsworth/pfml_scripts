@@ -1,6 +1,6 @@
 import { fineos, fineosPages, portal } from "../../../actions";
 import { Submission } from "../../../../src/types";
-import {waitForAjaxComplete} from "../../../actions/fineos";
+import { waitForAjaxComplete } from "../../../actions/fineos";
 
 /**
  * This is a test for the weight days in Fineos. The needs for this test is new claimant with no work pattern,
@@ -43,21 +43,19 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
     fineos.before();
     cy.unstash<DehydratedClaim>("claim").then((claim) => {
       cy.unstash<Submission>("submission").then((submission) => {
-      const claimPage = fineosPages.ClaimPage.visit(
-        submission.fineos_absence_id
-      );
-      claimPage.adjudicate((adjudicate) => {
-        adjudicate.availability((page) => {
-          cy.get(`tr.ListRowSelected`).should("be.visible");
-          cy.findByTitle(
-            "Manage time for the selected Leave Plan"
-          ).click();
-          waitForAjaxComplete();
-          page.weightDaysCheck(
-            claim.metadata?.expected_weight as string + " Weeks"
-          )
+        const claimPage = fineosPages.ClaimPage.visit(
+          submission.fineos_absence_id
+        );
+        claimPage.adjudicate((adjudicate) => {
+          adjudicate.availability((page) => {
+            cy.get(`tr.ListRowSelected`).should("be.visible");
+            cy.findByTitle("Manage time for the selected Leave Plan").click();
+            waitForAjaxComplete();
+            page.weightDaysCheck(
+              (claim.metadata?.expected_weight as string) + " Weeks"
+            );
+          });
         });
-      });
       });
     });
   });

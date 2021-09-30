@@ -476,8 +476,8 @@ export const CPS_MID_WK: ScenarioSpecification = {
     has_continuous_leave_periods: true,
     leave_dates: [subWeeks(midweek, 3), addWeeks(midweek, 3)],
     metadata: { expected_weight: "0.20" },
-  }
-}
+  },
+};
 
 // This only being used for CPS Service Pack testing.
 const currentDate = new Date();
