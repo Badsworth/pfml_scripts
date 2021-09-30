@@ -245,7 +245,6 @@ jobs:
 
   postdeploy-info:
     name: Finalize deployment state
-    needs: [invalidate-cloudfront]
     if: always()
     runs-on: ubuntu-latest
     outputs:
