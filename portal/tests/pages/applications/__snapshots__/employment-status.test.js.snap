@@ -1,0 +1,183 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is disabled renders the page without the employment status field 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Employment information
+    </h1>
+    <div
+      class="usa-alert usa-alert--info c-alert--neutral"
+      tabindex="-1"
+    >
+      <div
+        class="usa-alert__body"
+        role="region"
+      >
+        <div
+          class="usa-alert__text"
+        >
+          <p>
+            If you’re self-employed or unemployed, apply by calling the Department of Family and Medical Leave Contact Center at 
+            <a
+              href="tel:(833) 344-7365"
+            >
+              (833) 344‑7365
+            </a>
+            .
+          </p>
+          <p>
+            You can apply online if you’re currently employed in Massachusetts.
+          </p>
+        </div>
+      </div>
+    </div>
+    <div
+      class="usa-form-group"
+    >
+      <label
+        class="usa-label text-bold font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+        for="InputText1"
+        id="InputText1_label"
+      >
+        What is your employer’s Employer Identification Number (EIN)?
+      </label>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-intro"
+        id="InputText1_hint"
+      >
+        This number is 9 digits. You can find this number on all notices your employer sent about Paid Family and Medical Leave. You can also find it on your W‑2 or 1099‑MISC. Ask your employer if you need help getting this information.
+      </span>
+      <div
+        class=""
+      >
+        <input
+          aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+          class="usa-input maxw-mobile-lg"
+          id="InputText1"
+          inputmode="numeric"
+          name="employer_fein"
+          type="text"
+          value=""
+        />
+      </div>
+    </div>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;
+
+exports[`EmploymentStatusPage when claimantShowEmploymentStatus feature flag is enabled renders the page with the employment status field 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Employment information
+    </h1>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        What is your employment status?
+      </legend>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-intro"
+      >
+        <details
+          class="c-details"
+        >
+          <summary
+            class="margin-bottom-2 text-primary text-underline font-ui-xs"
+          >
+            What if I’ve been furloughed?
+          </summary>
+          <div
+            class="margin-bottom-2"
+          >
+            If your hours have been cut or significantly reduced but you have not been laid off, select "I’m employed in Massachusetts"
+          </div>
+        </details>
+      </span>
+      <div
+        class="margin-top-3"
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice13"
+            name="employment_status"
+            type="radio"
+            value="Employed"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice13"
+          >
+            I’m employed in Massachusetts
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice14"
+            name="employment_status"
+            type="radio"
+            value="Unemployed"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice14"
+          >
+            I’m unemployed
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice15"
+            name="employment_status"
+            type="radio"
+            value="Self-Employed"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice15"
+          >
+            I’m self-employed
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;
