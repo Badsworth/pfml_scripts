@@ -24,6 +24,7 @@ from massgov.pfml.fineos.models.group_client_api import (
     Base64EncodedFileData,
     GroupClientDocument,
     ManagedRequirementDetails,
+    PeriodDecisions,
 )
 from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformConcurrentLeaveFromOtherLeaveEform,
@@ -185,17 +186,18 @@ def get_claim_as_leave_admin(
     absence_id: str,
     employer: Employer,
     fineos_client: Optional[massgov.pfml.fineos.AbstractFINEOSClient] = None,
-) -> Tuple[Optional[ClaimReviewResponse], List[ManagedRequirementDetails]]:
+) -> Tuple[Optional[ClaimReviewResponse], List[ManagedRequirementDetails], PeriodDecisions]:
     """
     Given an absence ID, gets a full claim for the claim review page by calling multiple endpoints from FINEOS
     """
     if not fineos_client:
         fineos_client = massgov.pfml.fineos.create_client()
 
-    absence_periods = fineos_client.get_absence_period_decisions(fineos_user_id, absence_id).dict()
-    set_empty_dates_to_none(absence_periods, ["startDate", "endDate"])
+    absence_periods = fineos_client.get_absence_period_decisions(fineos_user_id, absence_id)
+    absence_periods_dict = absence_periods.dict()
+    set_empty_dates_to_none(absence_periods_dict, ["startDate", "endDate"])
 
-    if not absence_periods.get("decisions", []):
+    if not absence_periods_dict.get("decisions", []):
         logger.error(
             "Did not receive leave period decisions for absence periods",
             extra={
@@ -204,10 +206,10 @@ def get_claim_as_leave_admin(
                 "employer_id": employer.employer_id,
             },
         )
-        return None, []
+        return None, [], PeriodDecisions()
 
-    customer_id = absence_periods["decisions"][0]["employee"]["id"]
-    status = absence_periods["decisions"][0]["period"]["status"] or "Unknown"
+    customer_id = absence_periods_dict["decisions"][0]["employee"]["id"]
+    status = absence_periods_dict["decisions"][0]["period"]["status"] or "Unknown"
     customer_info = fineos_client.get_customer_info(fineos_user_id, customer_id).dict()
     customer_occupations = fineos_client.get_customer_occupations(
         fineos_user_id, customer_id
@@ -306,7 +308,7 @@ def get_claim_as_leave_admin(
     # Default to version two eforms unless this is a legacy case containing version one eforms
     uses_second_eform_version = not contains_version_one_eforms
 
-    leave_details = get_leave_details(absence_periods)
+    leave_details = get_leave_details(absence_periods_dict)
 
     logger.info("Count of info request employer benefits:", extra={"count": len(employer_benefits)})
 
@@ -335,6 +337,7 @@ def get_claim_as_leave_admin(
             uses_second_eform_version=uses_second_eform_version,
         ),
         managed_reqs,
+        absence_periods,
     )
 
 
