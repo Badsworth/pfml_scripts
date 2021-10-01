@@ -116,7 +116,7 @@ describe("Report of intermittent leave hours notification", () => {
             .getEmails(
               {
                 address: "gqzap.notifications@inbox.testmail.app",
-                subject: employerNotificationSubject,
+                subjectWildcard: employerNotificationSubject,
                 messageWildcard: submission.fineos_absence_id,
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
