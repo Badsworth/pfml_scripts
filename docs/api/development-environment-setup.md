@@ -1,13 +1,19 @@
 # Development Environment Setup
 
-- [Setup Methods](#setup-methods)
-  - [(Preferred) Docker + GNU Make](#preferred-docker--gnu-make)
-  - [Native Developer Setup](#native-developer-setup)
-- [Environment Configuration](#environment-configuration)
-- [Development Workflow](#development-workflow)
-- [Makefile utilities](#makefile-utilities)
-- [Managing Python dependencies](#managing-python-dependencies)
-  - [poetry.lock conflicts](#poetrylock-conflicts)
+- [Development Environment Setup](#development-environment-setup)
+  - [Setup Methods](#setup-methods)
+    - [(Preferred) Docker + GNU Make](#preferred-docker--gnu-make)
+    - [Native Developer Setup](#native-developer-setup)
+      - [You will need to create a directory that the app can access and copy the `jwks.json` file to that location.</code>:](#you-will-need-to-create-a-directory-that-the-app-can-access-and-copy-the-jwksjson-file-to-that-locationcode)
+      - [You can check that the data base is running by looking at the currently running docker container](#you-can-check-that-the-data-base-is-running-by-looking-at-the-currently-running-docker-container)
+      - [Example Output:](#example-output)
+      - [Use the `CONTAINER ID` to check the logs:](#use-the-container-id-to-check-the-logs)
+      - [Example Output:](#example-output-1)
+  - [Environment Configuration](#environment-configuration)
+  - [Development Workflow](#development-workflow)
+  - [Makefile utilities](#makefile-utilities)
+  - [Managing Python dependencies](#managing-python-dependencies)
+    - [poetry.lock conflicts](#poetrylock-conflicts)
 
 ## Setup Methods
 
@@ -108,6 +114,137 @@ You should now be able to run developer tooling natively, like linting.
 To run the application you'll need some environment variables set. You can largely copy-paste the env vars
 in `docker-compose.yml` to your native environment. `DB_HOST` should be changed to `localhost`. You can then start up
 just the PostgreSQL database via Docker with `make start-db` and then the API server with `make run-native`.
+
+<details><summary>Create local directories and dependencies</summary>
+
+#### You will need to create a directory that the app can access and copy the `jwks.json` file to that location.</code>:
+
+```sh
+$ make jwks.json && \
+  mkdir -p ~/.eolwd/pfml/app/ && \
+  cp jwks.json ~/.eolwd/pfml/app/
+```
+</details>
+
+<details><summary>Start the database in a background process</summary>
+
+```sh
+$ RUN_CMD_OPT=NATIVE \
+  ENABLE_FULL_ERROR_LOGS=1 \
+  PYTHONPATH=${HOME}/.eolwd/pfml/app/app/ \
+  ENVIRONMENT=local \
+  DB_HOST=localhost \
+  DB_NAME=pfml \
+  DB_ADMIN_USERNAME=pfml \
+  DB_ADMIN_PASSWORD=secret123 \
+  DB_USERNAME=pfml \
+  DB_PASSWORD=secret123 \
+  DB_NESSUS_PASSWORD=nessussecret123 \
+      make start-db
+```
+</details>
+
+<details><summary>Verify that the database is running</summary>
+
+#### You can check that the data base is running by looking at the currently running docker container
+
+```sh
+$ docker ps
+```
+
+#### Example Output:
+
+```sh
+CONTAINER ID   IMAGE                  COMMAND                  CREATED          STATUS         PORTS                                       NAMES
+5bdbb23d5b6d   postgres:12.4-alpine   "docker-entrypoint.s…"   12 seconds ago   Up 5 seconds   0.0.0.0:5432->5432/tcp, :::5432->5432/tcp   mass-pfml-db
+```
+
+#### Use the `CONTAINER ID` to check the logs:
+
+```sh
+$ docker logs -f 5bdbb23d5b6d
+```
+
+#### Example Output:
+
+```text
+PostgreSQL Database directory appears to contain a database; Skipping initialization
+
+2021-10-01 01:08:42.570 UTC [1] LOG:  starting PostgreSQL 12.4 on x86_64-pc-linux-musl, compiled by gcc (Alpine 9.3.0) 9.3.0, 64-bit
+2021-10-01 01:08:42.572 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
+2021-10-01 01:08:42.572 UTC [1] LOG:  listening on IPv6 address "::", port 5432
+2021-10-01 01:08:42.573 UTC [1] LOG:  listening on Unix socket "/var/run/postgresql/.s.PGSQL.5432"
+2021-10-01 01:08:42.668 UTC [21] LOG:  database system was shut down at 2021-10-01 00:11:39 UTC
+2021-10-01 01:08:42.680 UTC [1] LOG:  database system is ready to accept connections
+```
+
+</details>
+
+<details><summary>Run the database migrations</summary>
+
+```sh
+$ RUN_CMD_OPT=NATIVE \
+  ENABLE_FULL_ERROR_LOGS=1 \
+  PYTHONPATH=${HOME}/.eolwd/pfml/app/app/ \
+  ENVIRONMENT=local \
+  DB_HOST=localhost \
+  DB_NAME=pfml \
+  DB_ADMIN_USERNAME=pfml \
+  DB_ADMIN_PASSWORD=secret123 \
+  DB_USERNAME=pfml \
+  DB_PASSWORD=secret123 \
+  DB_NESSUS_PASSWORD=nessussecret123 \
+      make db-upgrade
+```
+</details>
+
+<details><summary>Run the application</summary>
+
+```sh
+$ RUN_CMD_OPT=NATIVE \
+  ENABLE_FULL_ERROR_LOGS=1 \
+  PYTHONPATH=${HOME}/.eolwd/pfml/app/ \
+  ENVIRONMENT=local \
+  DB_HOST=localhost \
+  DB_NAME=pfml \
+  DB_ADMIN_USERNAME=pfml \
+  DB_ADMIN_PASSWORD=secret123 \
+  DB_USERNAME=pfml \
+  DB_PASSWORD=secret123 \
+  DB_NESSUS_PASSWORD=nessussecret123 \
+  CORS_ORIGINS=http://localhost:3000 \
+  COGNITO_USER_POOL_KEYS_URL=file:///${HOME}/.eolwd/pfml/app/jwks.json \
+  COGNITO_USER_POOL_ID=us-east-1_HpL4XslLg \
+  COGNITO_USER_POOL_CLIENT_ID=10rjcp71r8bnk4459c67bn18t8 \
+  DASHBOARD_PASSWORD=secret123 \
+  LOGGING_LEVEL=massgov.pfml.fineos.fineos_client=DEBUG,massgov.pfml.servicenow.client=DEBUG \
+  ENABLE_EMPLOYEE_ENDPOINTS=1 \
+  FOLDER_PATH=dor_mock \
+  FINEOS_FOLDER_PATH=fineos_mock \
+  RMV_API_BEHAVIOR=fully_mocked \
+  RMV_CHECK_MOCK_SUCCESS=1 \
+  ENABLE_MOCK_SERVICE_NOW_CLIENT=1 \
+  PORTAL_BASE_URL=https://paidleave.mass.gov \
+  ENABLE_APPLICATION_FRAUD_CHECK=0 \
+  AGENCY_REDUCTIONS_EMAIL_ADDRESS=EOL-DL-DFML-Agency-Reductions@mass.gov \
+  DFML_PROJECT_MANAGER_EMAIL_ADDRESS= \
+  PFML_EMAIL_ADDRESS=PFML_DoNotReply@eol.mass.gov \
+  BOUNCE_FORWARDING_EMAIL_ADDRESS=PFML_DoNotReply@eol.mass.gov \
+      make run-native
+```
+
+Your REST client should now be able to access the API using `http://localhost:1550/`
+
+</details>
+
+<details><summary>Stop the application and database</summary>
+
+`Ctrl+C` to stop the API server and then run `docker-compose stop` to terminate the database.
+
+```sh
+$ docker-compose stop mass-pfml-db
+```
+</details>
 
 ## Environment Configuration
 
