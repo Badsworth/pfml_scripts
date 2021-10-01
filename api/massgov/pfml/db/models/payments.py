@@ -844,6 +844,9 @@ class PaymentAuditReportType(LookupTable):
     LEAVE_PLAN_IN_REVIEW = LkPaymentAuditReportType(
         3, "Leave Plan In Review", AuditReportAction.SKIPPED_NO_COLUMN
     )
+    DOR_FINEOS_NAME_MISMATCH = LkPaymentAuditReportType(
+        4, "DOR FINEOS Name Mismatch", AuditReportAction.INFORMATIONAL
+    )
 
 
 class PaymentAuditReportDetails(Base, TimestampMixin):

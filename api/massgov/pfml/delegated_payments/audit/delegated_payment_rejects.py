@@ -150,6 +150,8 @@ class PaymentRejectsStep(Step):
                     ),
                     first_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.first_name),
                     last_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.last_name),
+                    dor_first_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.dor_first_name),
+                    dor_last_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.dor_last_name),
                     address_line_1=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.address_line_1),
                     address_line_2=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.address_line_2),
                     city=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.city),
@@ -199,6 +201,9 @@ class PaymentRejectsStep(Step):
                     ),
                     dua_dia_reduction_details=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.dua_dia_reduction_details
+                    ),
+                    dor_fineos_name_mismatch_details=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.dor_fineos_name_mismatch_details
                     ),
                     rejected_by_program_integrity=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity
