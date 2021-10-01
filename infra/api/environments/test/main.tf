@@ -82,7 +82,9 @@ module "api" {
     # can test certain features without deploying to the test environment. This is not
     # really that secure since anyone can spin up a local server on port 3000 and hit our
     # API, but we're not heavily using the test environment right now so it's fine.
-    "http://localhost:3000"
+    "http://localhost:3000",
+    # Local server on port 3001 for the Admin Portal
+    "http://localhost:3001"
   ]
 
   cognito_user_pool_arn                               = "arn:aws:cognito-idp:us-east-1:498823821309:userpool/us-east-1_HhQSLYSIe"
@@ -106,6 +108,7 @@ module "api" {
   fineos_aws_iam_role_external_id                     = "12345"
   service_now_base_url                                = "https://savilinxtest.servicenowservices.com"
   portal_base_url                                     = "https://paidleave-test.mass.gov"
+  admin_portal_base_url                               = "https://paidleave-admin-test.mass.gov"
   enable_application_fraud_check                      = "0"
   release_version                                     = var.release_version
 }

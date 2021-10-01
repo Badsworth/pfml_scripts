@@ -62,6 +62,7 @@ services:
       - ENABLE_EMPLOYEE_ENDPOINTS=1
       - FOLDER_PATH=dor_mock
       - FINEOS_FOLDER_PATH=fineos_mock
+      - ADMIN_PORTAL_BASE_URL=http://localhost:3001
       # Enable this variable after initial full load
       # - ELIGIBILITY_FEED_MODE=updates
       # Enable this variable to configure calls to the RMV API
