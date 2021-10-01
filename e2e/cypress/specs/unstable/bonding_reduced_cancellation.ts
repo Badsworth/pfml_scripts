@@ -1,9 +1,9 @@
-import { fineos, portal, fineosPages } from "../../../actions";
-import { Submission } from "../../../../src/types";
+import { fineos, portal, fineosPages } from "../../actions";
+import { Submission } from "../../../src/types";
 import {
   findCertificationDoc,
   getDocumentReviewTaskName,
-} from "../../../../src/util/documents";
+} from "../../../src/util/documents";
 
 describe("Approval (notifications/notices)", () => {
   after(() => {

@@ -51,7 +51,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
             cy.get(`tr.ListRowSelected`).should("be.visible");
             cy.findByTitle("Manage time for the selected Leave Plan").click();
             waitForAjaxComplete();
-            page.weightDaysCheck(
+            page.assertDailyWeight(
               (claim.metadata?.expected_weight as string) + " Weeks"
             );
           });
