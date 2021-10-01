@@ -620,6 +620,8 @@ const errors = {
         "Enter a valid Employer Identification Number (EIN). Check that you entered your EIN correctly.",
       required: "Enter your 9-digit Employer Identification Number.",
     },
+    fineos_claim_withdrawn:
+      "Application has been withdrawn and is no longer being processed.",
     hours_worked_per_week: {
       maximum: "Average weekly hours must be 168 or fewer.",
       minimum: "Enter the average weekly hours.",
