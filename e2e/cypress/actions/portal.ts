@@ -799,7 +799,7 @@ export function visitActionRequiredERFormPage(fineosAbsenceId: string): void {
   cy.contains("Are you the right person to respond to this application?", {
     timeout: 20000,
   });
-  cy.contains("Yes").click();
+  cy.contains("label", "Yes").click();
   cy.contains("Agree and submit").click();
 }
 
