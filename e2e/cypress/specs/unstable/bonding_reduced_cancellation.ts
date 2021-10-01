@@ -72,4 +72,15 @@ describe("Approval (notifications/notices)", () => {
         });
     });
   });
+
+  it("Displays claimant status of cancelled within the claimant portal", () => {
+    portal.before();
+    cy.unstash<Submission>("submission").then((submission) => {
+      portal.loginClaimant();
+      portal.claimantGoToClaimStatus(submission.fineos_absence_id);
+      portal.claimantAssertClaimStatus([
+        { leave: "Child Bonding", status: "Cancelled" },
+      ]);
+    });
+  });
 });

@@ -1041,7 +1041,8 @@ export type ClaimantStatus =
   | "Denied"
   | "Closed"
   | "Withdrawn"
-  | "Pending";
+  | "Pending"
+  | "Cancelled";
 
 export type DashboardClaimStatus =
   | ClaimantStatus
