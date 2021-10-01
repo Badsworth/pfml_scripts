@@ -2203,13 +2203,6 @@ const pages = {
       "Use a secure work address. An email address can only be associated with one account.",
     usernameLabel: "$t(shared.usernameLabel)",
   },
-  employersAuthFinishAccountSetup: {
-    createAccountFooterLink: "Create a new account",
-    lead: "Please verify your email address. If an account exists for the email you provide, you’ll receive a 6-digit verification code. After that, you’ll be prompted to create a new password.",
-    submitButton: "Submit",
-    title: "Finish setting up your account",
-    usernameLabel: "$t(shared.usernameLabel)",
-  },
   employersCannotVerify: {
     body: "We can't verify this account because this organization hasn't submitted contributions through MassTaxConnect. Call the Department of Revenue at <dor-phone-link>$t(shared.departmentOfRevenuePhoneNumber)</dor-phone-link> to make arrangements to submit contributions. Once you do that, you'll be able to review leave applications on the next business day. Learn more about <learn-more-link>verifying your account</learn-more-link> on Mass.gov.",
     companyNameLabel: "<strong>Organization:</strong> {{employerDba}}",

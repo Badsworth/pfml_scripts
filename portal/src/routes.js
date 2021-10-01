@@ -94,7 +94,6 @@ const routes = {
     confirmation: "/employers/applications/confirmation",
     createAccount: "/employers/create-account",
     dashboard: "/employers/dashboard",
-    finishAccountSetup: "/employers/finish-account-setup",
     newApplication: "/employers/applications/new-application",
     organizations: "/employers/organizations",
     review: "/employers/applications/review",
