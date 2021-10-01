@@ -1,9 +1,8 @@
-import { fineos, fineosPages } from "../../actions";
-import { Submission } from "../../../src/types";
-import { extractLeavePeriod } from "../../../src/util/claims";
+import { fineos, fineosPages } from "../../../actions";
+import { Submission } from "../../../../src/types";
+import { extractLeavePeriod } from "../../../../src/util/claims";
 import { addDays, format, subDays } from "date-fns";
-import { waitForAjaxComplete } from "../../actions/fineos";
-
+import { waitForAjaxComplete } from "../../../actions/fineos";
 describe("Approval (notifications/notices)", () => {
   const submission = it("Will submit a medical leave claim", () => {
     cy.task("generateClaim", "MED_LSDCR").then((claim) => {

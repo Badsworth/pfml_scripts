@@ -1,6 +1,6 @@
-import { fineos, portal, email, fineosPages } from "../../actions";
-import { Submission } from "../../../src/types";
-import { waitForAjaxComplete } from "../../actions/fineos";
+import { fineos, portal, email, fineosPages } from "../../../actions";
+import { Submission } from "../../../../src/types";
+import { waitForAjaxComplete } from "../../../actions/fineos";
 import { addDays, formatISO, startOfWeek, subDays } from "date-fns";
 
 describe("Report of intermittent leave hours notification", () => {
@@ -116,7 +116,7 @@ describe("Report of intermittent leave hours notification", () => {
             .getEmails(
               {
                 address: "gqzap.notifications@inbox.testmail.app",
-                subjectWildcard: employerNotificationSubject,
+                subject: employerNotificationSubject,
                 messageWildcard: submission.fineos_absence_id,
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },

@@ -1,8 +1,7 @@
-import { fineos, portal } from "../../actions";
-import { assertValidClaim } from "../../../src/util/typeUtils";
-import { ClaimantPage, ClaimPage } from "../../actions/fineos.pages";
-import { Submission } from "../../../src/types";
-
+import { fineos, portal } from "../../../actions";
+import { assertValidClaim } from "../../../../src/util/typeUtils";
+import { ClaimantPage, ClaimPage } from "../../../actions/fineos.pages";
+import { Submission } from "../../../../src/types";
 describe("Create a new continuous leave, military caregiver claim in FINEOS", () => {
   const claimSubmission = it("Should be able to create a claim", () => {
     fineos.before();

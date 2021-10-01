@@ -1,8 +1,7 @@
-import { fineos, fineosPages, portal } from "../../actions";
-import { Submission } from "../../../src/types";
-import { extractLeavePeriod } from "../../../src/util/claims";
+import { fineos, fineosPages, portal } from "../../../actions";
+import { Submission } from "../../../../src/types";
+import { extractLeavePeriod } from "../../../../src/util/claims";
 import { addDays, format } from "date-fns";
-
 describe("Post-approval (notifications/notices)", () => {
   const approval =
     it("Submit a Care for a Family member claim for approval", () => {
