@@ -18,6 +18,7 @@ const flagsConfig = {
     claimantShowMilitaryLeaveTypes: false,
 
     // When this flag is enabled, the claim status page for claimants will show
+    // TODO do not submit; get clarification on terraform variable change.
     claimantShowStatusPage: true,
 
     // When this flag is enabled, the "Previous leaves" section on Review page is visible
