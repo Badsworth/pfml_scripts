@@ -4,8 +4,9 @@ import botocore
 
 import massgov.pfml.util.logging
 from massgov.pfml import db
+from massgov.pfml.cognito.exceptions import CognitoUserExistsValidationError
 from massgov.pfml.db.models.employees import Employer, Role, User, UserLeaveAdministrator, UserRole
-from massgov.pfml.util.aws.cognito import CognitoUserExistsValidationError, create_cognito_account
+from massgov.pfml.util.aws.cognito import create_cognito_account
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
