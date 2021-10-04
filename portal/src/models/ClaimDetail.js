@@ -1,5 +1,5 @@
 import { ClaimEmployee, ClaimEmployer, ManagedRequirement } from "./Claim";
-import { groupBy, orderBy } from "lodash";
+import { find, groupBy } from "lodash";
 
 import BaseModel from "./BaseModel";
 
@@ -91,15 +91,12 @@ class ClaimDetail extends BaseModel {
   }
 
   /**
-   * Get managed requirements for claim by desc date
+   * Get open managed requirement for claim. There should only ever be 1 open managed requirement
+   * at a time
    * @returns {ManagedRequirement}
    */
-  get managedRequirementByFollowUpDate() {
-    return orderBy(
-      this.managed_requirements,
-      [(managedRequirement) => managedRequirement.follow_up_date],
-      ["desc"]
-    );
+  get openManagedRequirement() {
+    return find(this.managed_requirements, { status: "Open" });
   }
 }
 
