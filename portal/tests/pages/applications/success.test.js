@@ -1,13 +1,23 @@
-import {
-  MockBenefitsApplicationBuilder,
-  renderWithAppLogic,
-} from "../../test-utils";
+import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
+import { cleanup, screen } from "@testing-library/react";
 import { DateTime } from "luxon";
 import Success from "../../../src/pages/applications/success";
+import { setupBenefitsApplications } from "../../test-utils/helpers";
+
+const setup = ({ claim }) => {
+  return renderPage(
+    Success,
+    {
+      addCustomSetup: (appLogic) => {
+        setupBenefitsApplications(appLogic, [claim]);
+      },
+    },
+    { query: { claim_id: "mock_application_id" } }
+  );
+};
 
 describe("Success", () => {
   const futureDate = DateTime.local().plus({ months: 1 }).toISODate();
-
   /**
    * Output a snapshot for each of these claim variations
    */
@@ -61,64 +71,33 @@ describe("Success", () => {
 
   Object.keys(variations).forEach((variation) => {
     it(`renders content tailored to ${variation}`, () => {
-      const claim = variations[variation];
-      const { wrapper } = renderWithAppLogic(Success, {
-        claimAttrs: claim,
-      });
+      const { container } = setup({ claim: variations[variation] });
 
-      expect(wrapper).toMatchSnapshot();
-
-      const transElements = wrapper.find("Trans");
-      transElements.forEach((el) => expect(el.dive()).toMatchSnapshot());
+      expect(container).toMatchSnapshot();
     });
   });
 
-  it(`renders reportReductionsMessage when there are no other leaves`, () => {
-    const claim = new MockBenefitsApplicationBuilder()
-      .continuous({ start_date: "2020-01-01" })
-      .medicalLeaveReason()
-      .absenceId()
-      .create();
-
-    const { wrapper } = renderWithAppLogic(Success, {
-      claimAttrs: claim,
-    });
-
+  it(`only renders reportReductionsMessage when there are no other leaves`, () => {
+    setup({ claim: variations["Medical (Not pregnant)"] });
     expect(
-      wrapper
-        .find(`Trans[i18nKey="pages.claimsSuccess.reportReductionsMessage"]`)
-        .dive()
-    ).toMatchSnapshot();
+      screen.getByRole("heading", {
+        name: "We may need more information from you",
+      })
+    ).toBeInTheDocument();
 
-    expect(
-      wrapper
-        .find(`Trans[i18nKey="pages.claimsSuccess.reportReductionsProcess"]`)
-        .exists()
-    ).toEqual(false);
-  });
-
-  it(`does not render reportReductionsMessage when there are other leaves`, () => {
-    const claim = new MockBenefitsApplicationBuilder()
+    const claimWithOtherLeave = new MockBenefitsApplicationBuilder()
       .continuous({ start_date: "2020-01-01" })
       .medicalLeaveReason()
       .noOtherLeave() // sets null values to false which make hasReductionsData true
       .absenceId()
       .create();
 
-    const { wrapper } = renderWithAppLogic(Success, {
-      claimAttrs: claim,
-    });
-
+    cleanup();
+    setup({ claim: claimWithOtherLeave });
     expect(
-      wrapper
-        .find(`Trans[i18nKey="pages.claimsSuccess.reportReductionsMessage"]`)
-        .exists()
-    ).toEqual(false);
-
-    expect(
-      wrapper
-        .find(`Trans[i18nKey="pages.claimsSuccess.reportReductionsProcess"]`)
-        .exists()
-    ).toEqual(false);
+      screen.queryByRole("heading", {
+        name: "We may need more information from you",
+      })
+    ).not.toBeInTheDocument();
   });
 });
