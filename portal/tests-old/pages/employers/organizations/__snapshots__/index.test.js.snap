@@ -1,0 +1,124 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Index renders the page 1`] = `
+<Fragment>
+  <BackButton
+    href="/employers/dashboard"
+    label="Back to Dashboard"
+  />
+  <Title>
+    Your organizations
+  </Title>
+  <Alert
+    heading="Verify your account"
+    state="warning"
+  >
+    <p>
+      <Trans
+        components={
+          Object {
+            "your-organizations-link": <React.Fragment />,
+          }
+        }
+        i18nKey="pages.employersOrganizations.verificationBody"
+      />
+    </p>
+  </Alert>
+  <p
+    data-test="future-availability-message"
+  >
+    You can manage leave for these organizations. In the future, you’ll be able to invite other members of your team to review applications.
+  </p>
+  <Table
+    className="width-full"
+    responsive={true}
+  >
+    <thead>
+      <tr>
+        <th
+          scope="col"
+        >
+          Organization
+        </th>
+        <th
+          scope="col"
+        >
+          Employer ID number (EIN)
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <LeaveAdministratorRow
+        key="dda903f-f093f-ff900"
+        leaveAdmin={
+          UserLeaveAdministrator {
+            "employer_dba": "Book Bindings 'R Us",
+            "employer_fein": "00-3451823",
+            "employer_id": "dda903f-f093f-ff900",
+            "has_fineos_registration": true,
+            "has_verification_data": true,
+            "verified": false,
+          }
+        }
+      />
+      <LeaveAdministratorRow
+        key="dda930f-93jfk-iej08"
+        leaveAdmin={
+          UserLeaveAdministrator {
+            "employer_dba": "Knitting Castle",
+            "employer_fein": "11-3453443",
+            "employer_id": "dda930f-93jfk-iej08",
+            "has_fineos_registration": true,
+            "has_verification_data": true,
+            "verified": true,
+          }
+        }
+      />
+      <LeaveAdministratorRow
+        key="io19fj9-00jjf-uiw3r"
+        leaveAdmin={
+          UserLeaveAdministrator {
+            "employer_dba": "Tomato Touchdown",
+            "employer_fein": "22-3457192",
+            "employer_id": "io19fj9-00jjf-uiw3r",
+            "has_fineos_registration": true,
+            "has_verification_data": false,
+            "verified": false,
+          }
+        }
+      />
+    </tbody>
+  </Table>
+  <ButtonLink
+    href="/employers/organizations/add-organization"
+  >
+    Add organization
+  </ButtonLink>
+</Fragment>
+`;
+
+exports[`Index when "account_converted" query parameter is enabled shows a success message telling the user they are now a leave admin 1`] = `
+Array [
+  <Alert
+    heading="Success"
+    state="success"
+  >
+    Your account type is now converted.
+  </Alert>,
+  <Alert
+    heading="Verify your account"
+    state="warning"
+  >
+    <p>
+      <Trans
+        components={
+          Object {
+            "your-organizations-link": <React.Fragment />,
+          }
+        }
+        i18nKey="pages.employersOrganizations.verificationBody"
+      />
+    </p>
+  </Alert>,
+]
+`;

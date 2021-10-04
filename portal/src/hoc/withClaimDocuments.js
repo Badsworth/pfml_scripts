@@ -22,6 +22,7 @@ const withClaimDocuments = (Component) => {
     const application_id = claim ? claim.application_id : query.claim_id;
 
     const shouldLoad = !hasLoadedClaimDocuments(application_id);
+
     assert(documents);
     // Since we are within a withUser higher order component, user should always be set
     assert(users.user);

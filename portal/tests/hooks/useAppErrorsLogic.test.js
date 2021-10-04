@@ -11,7 +11,6 @@ import {
 import { act, renderHook } from "@testing-library/react-hooks";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import { render } from "@testing-library/react";
 import tracker from "../../src/services/tracker";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import usePortalFlow from "../../src/hooks/usePortalFlow";
@@ -118,7 +117,7 @@ const validationErrorIssues = [
   ],
 ];
 
-const setup = () => {
+const render = () => {
   return renderHook(() => {
     const portalFlow = usePortalFlow();
     return useAppErrorsLogic({ portalFlow });
@@ -127,7 +126,7 @@ const setup = () => {
 
 describe("useAppErrorsLogic", () => {
   it("returns methods for setting errors", () => {
-    const { result } = setup();
+    const { result } = render();
     expect(result.current.setAppErrors).toBeInstanceOf(Function);
     expect(result.current.appErrors.items).toHaveLength(0);
   });
@@ -136,7 +135,7 @@ describe("useAppErrorsLogic", () => {
     "Returns expected internationalized message when %p error is thrown",
     (error, message, applicationId) => {
       jest.spyOn(console, "error").mockImplementation(jest.fn());
-      const { result } = setup();
+      const { result } = render();
       act(() => {
         result.current.catchError(error);
       });
@@ -152,7 +151,7 @@ describe("useAppErrorsLogic", () => {
 
   it.each(errorTracking)("Tracks %p error in New Relic", (error, errorName) => {
     jest.spyOn(console, "error").mockImplementation(jest.fn());
-    const { result } = setup();
+    const { result } = render();
 
     act(() => {
       result.current.catchError(error);
@@ -167,7 +166,7 @@ describe("useAppErrorsLogic", () => {
 
   it("sets app error with error info and tracks the error", () => {
     jest.spyOn(console, "error").mockImplementation(jest.fn());
-    const { result } = setup();
+    const { result } = render();
     act(() => {
       result.current.catchError(new Error());
     });
@@ -193,6 +192,38 @@ describe("useAppErrorsLogic", () => {
     });
   });
 
+  it("for ClaimWithdrawnError, it displays an html error message and Options includes an absenceId", () => {
+    jest.spyOn(console, "error").mockImplementation(jest.fn());
+    const { result } = render();
+
+    act(() => {
+      result.current.catchError(
+        new ClaimWithdrawnError("mock-absence-id", {
+          type: "fineos_claim_withdrawn",
+        })
+      );
+    });
+
+    expect(result.current.appErrors.items).toHaveLength(1);
+    expect(result.current.appErrors.items[0].message).toMatchInlineSnapshot(`
+          <Trans
+            components={
+              Object {
+                "contact-center-phone-link": <a
+                  href="tel:(833) 344-7365"
+                />,
+              }
+            }
+            i18nKey="errors.claimStatus.fineos_claim_withdrawn"
+            tOptions={
+              Object {
+                "absenceId": "mock-absence-id",
+              }
+            }
+          />
+        `);
+  });
+
   it("When ValidationError is thrown, it sets field, rule, and type properties of AppErrorInfo", () => {
     const issues = [
       {
@@ -202,7 +233,7 @@ describe("useAppErrorsLogic", () => {
         rule: "/d{9}",
       },
     ];
-    const { result } = setup();
+    const { result } = render();
 
     act(() => {
       result.current.catchError(new ValidationError(issues, "applications"));
@@ -222,7 +253,7 @@ describe("useAppErrorsLogic", () => {
   it.each(validationErrorIssues)(
     "When ValidationError is thrown, it sets AppErrorInfo.message based on the content of issue",
     (issues, message, i18nPrefix) => {
-      const { result } = setup();
+      const { result } = render();
 
       act(() => {
         result.current.catchError(new ValidationError(issues, i18nPrefix));
@@ -243,7 +274,7 @@ describe("useAppErrorsLogic", () => {
         rule: "min_leave_periods",
       },
     ];
-    const { result } = setup();
+    const { result } = render();
 
     act(() => {
       result.current.catchError(new ValidationError(issues, "applications"));
@@ -269,7 +300,7 @@ describe("useAppErrorsLogic", () => {
         message: "First name is required",
       },
     ];
-    const { result } = setup();
+    const { result } = render();
 
     act(() => {
       result.current.catchError(new ValidationError(issues, "applications"));
@@ -400,7 +431,7 @@ describe("useAppErrorsLogic", () => {
 
   it("when multiple errors are caught, we can log and track them properly", () => {
     jest.spyOn(console, "error").mockImplementation(jest.fn());
-    const { result } = setup();
+    const { result } = render();
     act(() => {
       result.current.catchError(new Error("error 1"));
       result.current.catchError(new Error("error 2"));
@@ -412,115 +443,123 @@ describe("useAppErrorsLogic", () => {
     expect(console.error).toHaveBeenCalledTimes(2);
   });
 
-  it.each([
-    {
-      message: "User is not authorized for access",
-      type: "unauthorized_leave_admin",
-    },
-    {
-      message: "Claim contains both V1 and V2 eforms.",
-      type: "contains_v1_and_v2_eforms",
-    },
-    {
-      field: "ein",
-      type: "employer_verification_data_required",
-    },
-  ])(
-    "returns HTML message when Employer validation error type is $type",
-    ({ type, ...issue }) => {
-      const i18nPrefix = "employers";
-      const { result } = setup();
-
-      act(() => {
-        result.current.catchError(
-          new ValidationError([{ type, ...issue }], i18nPrefix)
-        );
-      });
-
-      const Message = result.current.appErrors.items[0].message;
-
-      expect(render(Message).container).toMatchSnapshot();
-    }
-  );
-
-  it("returns HTML message when Application validation error type is fineos_case_creation_issues", () => {
-    const i18nPrefix = "applications";
-    const { result } = setup();
+  it("returns Trans component when error type is fineos_case_creation_issues", () => {
+    const issues = [
+      {
+        message: "register_employee did not find a match",
+        type: "fineos_case_creation_issues",
+      },
+    ];
+    const { result } = render();
 
     act(() => {
-      result.current.catchError(
-        new ValidationError(
-          [
-            {
-              message: "register_employee did not find a match",
-              type: "fineos_case_creation_issues",
-            },
-          ],
-          i18nPrefix
-        )
-      );
+      result.current.catchError(new ValidationError(issues, "applications"));
     });
 
-    const Message = result.current.appErrors.items[0].message;
-
-    expect(render(Message).container).toMatchSnapshot();
+    expect(result.current.appErrors.items[0].message).toMatchInlineSnapshot(`
+          <Trans
+            components={
+              Object {
+                "mass-gov-form-link": <a
+                  href="https://www.mass.gov/forms/apply-for-paid-leave-if-you-received-an-error"
+                  rel="noreferrer noopener"
+                  target="_blank"
+                />,
+              }
+            }
+            i18nKey="errors.applications.fineos_case_creation_issues"
+          />
+        `);
   });
 
-  it("returns HTML message when Employer ClaimWithdrawnError is thrown", () => {
-    const { result } = setup();
+  it("returns Trans component when error type is unauthorized_leave_admin", () => {
+    const issues = [
+      {
+        message: "User is not authorized for access",
+        type: "unauthorized_leave_admin",
+      },
+    ];
+    const { result } = render();
 
     act(() => {
-      result.current.catchError(
-        new ClaimWithdrawnError("mock-absence-id", {
-          type: "fineos_claim_withdrawn",
-        })
-      );
+      result.current.catchError(new ValidationError(issues, "employers"));
     });
 
-    const Message = result.current.appErrors.items[0].message;
-
-    expect(result.current.appErrors.items).toHaveLength(1);
-    expect(render(Message).container).toMatchSnapshot();
+    expect(result.current.appErrors.items[0].message).toMatchInlineSnapshot(`
+          <Trans
+            components={
+              Object {
+                "add-org-link": <a
+                  href="/employers/organizations/add-organization"
+                />,
+              }
+            }
+            i18nKey="errors.employers.unauthorized_leave_admin"
+          />
+        `);
   });
 
-  it("only returns HTML message when an i18n content string exists", () => {
-    const { result } = setup();
-
-    const errorWithHTMLMessage = new ValidationError(
-      [{ type: "contains_v1_and_v2_eforms" }],
-      "employers"
-    );
-    const errorWithNoMatchingI18nMessage = new ValidationError(
-      [
-        {
-          message:
-            "New error Portal doesn't yet support, but with a similar type.",
-          type: "contains_v1_and_v2_eforms",
-        },
-      ],
-      "foo" // this results in an i18n prefix that doesn't exist
-    );
+  it("returns Trans component when error type is contains_v1_and_v2_eforms", () => {
+    const issues = [
+      {
+        message: "Claim contains both V1 and V2 eforms.",
+        type: "contains_v1_and_v2_eforms",
+      },
+    ];
+    const { result } = render();
 
     act(() => {
-      result.current.catchError(errorWithHTMLMessage);
+      result.current.catchError(new ValidationError(issues, "employers"));
     });
 
-    // Safeguard that our test is actually testing against a `type` that sometimes
-    // results in an HTML message.
-    expect(result.current.appErrors.items[0].message).toBeInstanceOf(Object);
+    expect(result.current.appErrors.items[0].message).toMatchInlineSnapshot(`
+          <Trans
+            components={
+              Object {
+                "contact-center-phone-link": <a
+                  href="tel:(833) 344-7365"
+                />,
+                "h3": <h3 />,
+                "li": <li />,
+                "ul": <ul />,
+              }
+            }
+            i18nKey="errors.employers.contains_v1_and_v2_eforms"
+          />
+        `);
+  });
+
+  it("returns Trans component when error type is employer_verification_data_required", () => {
+    const issues = [
+      {
+        field: "ein",
+        type: "employer_verification_data_required",
+      },
+    ];
+    const { result } = render();
 
     act(() => {
-      result.current.clearErrors();
-      result.current.catchError(errorWithNoMatchingI18nMessage);
+      result.current.catchError(new ValidationError(issues, "employers"));
     });
 
-    expect(result.current.appErrors.items[0].message).toBe(
-      "New error Portal doesn't yet support, but with a similar type."
-    );
+    expect(result.current.appErrors.items[0].message).toMatchInlineSnapshot(`
+          <Trans
+            components={
+              Object {
+                "file-a-return-link": <a
+                  href="https://www.mass.gov/pfml-zero-balance-employer"
+                  rel="noreferrer noopener"
+                  target="_blank"
+                />,
+              }
+            }
+            i18nKey="errors.employers.ein.employer_verification_data_required"
+          />
+        `);
   });
 
   it("when clearErrors is called, prior errors are removed", () => {
-    const { result } = setup();
+    const { result } = render();
     act(() => {
       result.current.setAppErrors(
         new AppErrorInfoCollection([new AppErrorInfo()])
@@ -535,7 +574,7 @@ describe("useAppErrorsLogic", () => {
   });
 
   it("when clearRequiredFieldErrors is called, removes required field errors", () => {
-    const { result } = setup();
+    const { result } = render();
 
     act(() => {
       result.current.setAppErrors(

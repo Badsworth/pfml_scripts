@@ -11,7 +11,6 @@ export async function approveClaim(
   logger?: winston.Logger
 ): Promise<void> {
   // Visit the claim
-  logger?.debug("Searching for Claim ...");
   const claimPage = await Claim.visit(page, fineos_absence_id);
   // Start adjudication
   logger?.debug("Starting Adjudication Process in Fineos", {

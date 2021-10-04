@@ -69,6 +69,9 @@ AddOrganization.propTypes = {
     employers: PropTypes.shape({
       addEmployer: PropTypes.func.isRequired,
     }).isRequired,
+    portalFlow: PropTypes.shape({
+      goTo: PropTypes.func.isRequired,
+    }).isRequired,
   }).isRequired,
 };
 

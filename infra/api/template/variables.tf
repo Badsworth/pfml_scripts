@@ -288,9 +288,3 @@ variable "new_plan_proofs_active_at" {
   type        = string
   default     = "2021-06-21 00:00:00+00:00"
 }
-
-variable "use_claim_status_url" {
-  description = "Whether or not to direct claimants to the claim status page. Can enable this when Claim Status is launched."
-  type        = bool
-  default     = false
-}

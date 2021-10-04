@@ -63,8 +63,6 @@ def _create_payment_container(
         period_end_date=end_date,
         is_adhoc_payment=is_adhoc_payment,
         payment_transaction_type_id=payment_transaction_type.payment_transaction_type_id,
-        fineos_employee_first_name=employee.first_name,
-        fineos_employee_last_name=employee.last_name,
     )
 
     if not skip_pay_periods:

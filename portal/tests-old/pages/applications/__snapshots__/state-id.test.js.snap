@@ -1,0 +1,50 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`StateId initially renders the page with the ID text field hidden 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Your identification"
+>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "Yes",
+          "value": "true",
+        },
+        Object {
+          "checked": false,
+          "label": "No",
+          "value": "false",
+        },
+      ]
+    }
+    label="Do you have a Massachusetts driver’s license or ID card?"
+    name="has_state_id"
+    onChange={[Function]}
+    type="radio"
+    value=""
+  />
+  <ConditionalContent
+    clearField={[Function]}
+    fieldNamesClearedWhenHidden={
+      Array [
+        "mass_id",
+      ]
+    }
+    getField={[Function]}
+    updateFields={[Function]}
+    visible={false}
+  >
+    <InputText
+      hint="This may be a 9 digit number or begin with an S or SA followed by numbers for a total of 9 characters."
+      label="Enter your license or ID number"
+      name="mass_id"
+      onChange={[Function]}
+      pii={true}
+      value=""
+    />
+  </ConditionalContent>
+</QuestionPage>
+`;

@@ -171,7 +171,10 @@ export const Review = (props) => {
   return (
     <div className="measure-6">
       {showNewFieldError && (
-        <Alert className="margin-bottom-3">
+        <Alert
+          className="margin-bottom-3"
+          data-test="missing-required-fields-alert"
+        >
           <Trans
             i18nKey="pages.claimsReview.missingRequiredFieldError"
             components={{
@@ -594,7 +597,7 @@ export const Review = (props) => {
         get(claim, "has_previous_leaves_same_reason") !== null ||
         get(claim, "has_previous_leaves_other_reason") !== null ||
         get(claim, "has_concurrent_leave") !== null) && (
-        <div>
+        <div data-test="other-leave">
           <ReviewHeading
             editHref={getStepEditHref(ClaimSteps.otherLeave)}
             editText={t("pages.claimsReview.editLink")}
@@ -811,6 +814,7 @@ export const Review = (props) => {
                     })}
                   </ReviewHeading>
                   <ReviewRow
+                    data-test="certification-doc-count"
                     label={t("pages.claimsReview.numberOfFilesLabel")}
                     level={reviewRowLevel}
                   >

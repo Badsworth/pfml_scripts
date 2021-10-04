@@ -1,5 +1,6 @@
 import User, { UserLeaveAdministrator } from "../../../../src/models/User";
 import { screen, waitFor } from "@testing-library/react";
+import AppErrorInfoCollection from "../../../../src/models/AppErrorInfoCollection";
 import { VerifyContributions } from "../../../../src/pages/employers/organizations/verify-contributions";
 import Withholding from "../../../../src/models/Withholding";
 import { renderPage } from "../../../test-utils";
@@ -16,6 +17,7 @@ const setup = (props = {}) => {
     VerifyContributions,
     {
       addCustomSetup: (appLogic) => {
+        appLogic.appErrors = new AppErrorInfoCollection();
         appLogic.users.user = new User({
           consented_to_data_sharing: true,
           user_leave_administrators: [

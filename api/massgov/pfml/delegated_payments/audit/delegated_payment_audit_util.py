@@ -148,8 +148,6 @@ def build_audit_report_row(
         else None,
         first_name=payment.fineos_employee_first_name,
         last_name=payment.fineos_employee_last_name,
-        dor_first_name=employee.first_name,
-        dor_last_name=employee.last_name,
         address_line_1=address.address_line_one if address else None,
         address_line_2=address.address_line_two if address else None,
         city=address.city if address else None,
@@ -182,7 +180,6 @@ def build_audit_report_row(
         previously_skipped_payment_count=str(payment_audit_data.previously_skipped_payment_count),
         max_weekly_benefits_details=audit_report_details.max_weekly_benefits_details,
         dua_dia_reduction_details=audit_report_details.dua_dia_reduction_details,
-        dor_fineos_name_mismatch_details=audit_report_details.dor_fineos_name_mismatch_details,
         rejected_by_program_integrity=bool_to_str[
             audit_report_details.rejected_by_program_integrity
         ],

@@ -57,6 +57,7 @@ export const Status = (props) => {
       </Title>
       <Lead>
         <Trans
+          data-test="lead-text"
           i18nKey="pages.employersClaimsStatus.lead"
           tOptions={{
             context: findKeyByValue(AbsenceCaseStatus, claim.status)
@@ -78,13 +79,22 @@ export const Status = (props) => {
       <Heading level="2">
         {t("pages.employersClaimsStatus.leaveDetailsLabel")}
       </Heading>
-      <StatusRow label={t("pages.employersClaimsStatus.applicationIdLabel")}>
+      <StatusRow
+        data-test="id"
+        label={t("pages.employersClaimsStatus.applicationIdLabel")}
+      >
         {absenceId}
       </StatusRow>
-      <StatusRow label={t("pages.employersClaimsStatus.statusLabel")}>
+      <StatusRow
+        data-test="status"
+        label={t("pages.employersClaimsStatus.statusLabel")}
+      >
         <AbsenceCaseStatusTag status={claim.status} />
       </StatusRow>
-      <StatusRow label={t("pages.employersClaimsStatus.leaveReasonLabel")}>
+      <StatusRow
+        data-test="reason"
+        label={t("pages.employersClaimsStatus.leaveReasonLabel")}
+      >
         {t("pages.employersClaimsStatus.leaveReasonValue", {
           context: findKeyByValue(
             LeaveReason,
@@ -94,12 +104,16 @@ export const Status = (props) => {
       </StatusRow>
       {/* TODO (EMPLOYER-448): Show leave duration and the intermittent leave period dates when API returns them to Portal */}
       {!isIntermittent && (
-        <StatusRow label={t("pages.employersClaimsStatus.leaveDurationLabel")}>
+        <StatusRow
+          data-test="duration"
+          label={t("pages.employersClaimsStatus.leaveDurationLabel")}
+        >
           {formatDateRange(claim.leaveStartDate, claim.leaveEndDate)}
         </StatusRow>
       )}
       {isContinuous && (
         <StatusRow
+          data-test="duration-continuous"
           label={t("pages.employersClaimsStatus.leaveDurationLabel_continuous")}
         >
           {claim.continuousLeaveDateRange()}
@@ -107,6 +121,7 @@ export const Status = (props) => {
       )}
       {isReducedSchedule && (
         <StatusRow
+          data-test="duration-reduced"
           label={t("pages.employersClaimsStatus.leaveDurationLabel_reduced")}
         >
           {claim.reducedLeaveDateRange()}
@@ -117,10 +132,7 @@ export const Status = (props) => {
           <Heading level="2">
             {t("pages.employersClaimsStatus.noticesLabel")}
           </Heading>
-          <ul
-            className="usa-list usa-list--unstyled margin-top-2"
-            data-testid="documents"
-          >
+          <ul className="usa-list usa-list--unstyled margin-top-2">
             {legalNotices.map((document) => (
               <li key={document.fineos_document_id} className="margin-bottom-2">
                 <DownloadableDocument

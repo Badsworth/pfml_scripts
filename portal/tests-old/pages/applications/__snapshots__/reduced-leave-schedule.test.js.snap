@@ -1,0 +1,124 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ReducedLeaveSchedule when work pattern is a fixed schedule renders 1 lead with expected content when leave reason is Bonding 1`] = `"Enter 0 for days you won’t work a reduced schedule."`;
+
+exports[`ReducedLeaveSchedule when work pattern is a fixed schedule renders 2 leads with expected content when leave reason is Caring 1`] = `"Enter 0 for days you won’t work a reduced schedule."`;
+
+exports[`ReducedLeaveSchedule when work pattern is a fixed schedule renders 2 leads with expected content when leave reason is Caring 2`] = `"The total number of hours you enter must match the reduced leave schedule section in the Certification of Your Family Member’s Serious Health Condition."`;
+
+exports[`ReducedLeaveSchedule when work pattern is a fixed schedule renders 2 leads with expected content when leave reason is Medical 1`] = `"Enter 0 for days you won’t work a reduced schedule."`;
+
+exports[`ReducedLeaveSchedule when work pattern is a fixed schedule renders 2 leads with expected content when leave reason is Medical 2`] = `"The total number of hours you enter must match the reduced leave schedule section in the Certification of Your Serious Health Condition."`;
+
+exports[`ReducedLeaveSchedule when work pattern is a fixed schedule renders section label with expected content 1`] = `
+<Heading
+  level="2"
+  size="1"
+>
+  How many hours will you take off while you are on a reduced leave schedule?
+</Heading>
+`;
+
+exports[`ReducedLeaveSchedule when work pattern is a fixed schedule renders the page with an input for each day 1`] = `
+Array [
+  <InputHours
+    hoursLabel="Hours"
+    key="input-hours-0"
+    label="Sunday time off"
+    minutesIncrement={15}
+    minutesLabel="Minutes"
+    name="leave_details.reduced_schedule_leave_periods[0].sunday_off_minutes"
+    onChange={[Function]}
+    smallLabel={true}
+    value={null}
+  />,
+  <InputHours
+    hoursLabel="Hours"
+    key="input-hours-1"
+    label="Monday time off"
+    minutesIncrement={15}
+    minutesLabel="Minutes"
+    name="leave_details.reduced_schedule_leave_periods[0].monday_off_minutes"
+    onChange={[Function]}
+    smallLabel={true}
+    value={390}
+  />,
+  <InputHours
+    hoursLabel="Hours"
+    key="input-hours-2"
+    label="Tuesday time off"
+    minutesIncrement={15}
+    minutesLabel="Minutes"
+    name="leave_details.reduced_schedule_leave_periods[0].tuesday_off_minutes"
+    onChange={[Function]}
+    smallLabel={true}
+    value={null}
+  />,
+  <InputHours
+    hoursLabel="Hours"
+    key="input-hours-3"
+    label="Wednesday time off"
+    minutesIncrement={15}
+    minutesLabel="Minutes"
+    name="leave_details.reduced_schedule_leave_periods[0].wednesday_off_minutes"
+    onChange={[Function]}
+    smallLabel={true}
+    value={null}
+  />,
+  <InputHours
+    hoursLabel="Hours"
+    key="input-hours-4"
+    label="Thursday time off"
+    minutesIncrement={15}
+    minutesLabel="Minutes"
+    name="leave_details.reduced_schedule_leave_periods[0].thursday_off_minutes"
+    onChange={[Function]}
+    smallLabel={true}
+    value={null}
+  />,
+  <InputHours
+    hoursLabel="Hours"
+    key="input-hours-5"
+    label="Friday time off"
+    minutesIncrement={15}
+    minutesLabel="Minutes"
+    name="leave_details.reduced_schedule_leave_periods[0].friday_off_minutes"
+    onChange={[Function]}
+    smallLabel={true}
+    value={480}
+  />,
+  <InputHours
+    hoursLabel="Hours"
+    key="input-hours-6"
+    label="Saturday time off"
+    minutesIncrement={15}
+    minutesLabel="Minutes"
+    name="leave_details.reduced_schedule_leave_periods[0].saturday_off_minutes"
+    onChange={[Function]}
+    smallLabel={true}
+    value={null}
+  />,
+]
+`;
+
+exports[`ReducedLeaveSchedule when work pattern is a variable schedule renders a single field for gathering the schedule 1`] = `
+<InputHours
+  hoursLabel="Hours"
+  label="Hours off per week"
+  minutesIncrement={15}
+  minutesLabel="Minutes"
+  name="totalMinutesOff"
+  onChange={[Function]}
+  smallLabel={true}
+  value={870}
+/>
+`;
+
+exports[`ReducedLeaveSchedule when work pattern is a variable schedule renders section label with expected content 1`] = `
+<Heading
+  level="2"
+  size="1"
+>
+  How many hours will you take off while you are on a reduced leave schedule?
+</Heading>
+`;

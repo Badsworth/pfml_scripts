@@ -58,8 +58,6 @@ const routes = {
     ssn: "/applications/ssn",
     start: "/applications/start",
     stateId: "/applications/state-id",
-    // Note that this route is used by the back-end when generating notification emails for
-    // the claimant (see notifications.py). Changes here will need to be coordinated with the back-end.
     status: "/applications/status",
     success: "/applications/success",
     // For routes that don't have a page to point to yet, we can route them
@@ -96,6 +94,7 @@ const routes = {
     confirmation: "/employers/applications/confirmation",
     createAccount: "/employers/create-account",
     dashboard: "/employers/dashboard",
+    finishAccountSetup: "/employers/finish-account-setup",
     newApplication: "/employers/applications/new-application",
     organizations: "/employers/organizations",
     review: "/employers/applications/review",

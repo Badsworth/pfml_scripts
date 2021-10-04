@@ -9,9 +9,6 @@ from massgov.pfml.db.models.payments import PaymentAuditReportType
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
     stage_payment_audit_report_details,
 )
-from massgov.pfml.delegated_payments.postprocessing.dor_fineos_employee_name_mismatch_processor import (
-    DORFineosEmployeeNameMismatchProcessor,
-)
 from massgov.pfml.delegated_payments.postprocessing.dua_dia_reductions_processor import (
     DuaDiaReductionsProcessor,
 )
@@ -85,12 +82,10 @@ class PaymentPostProcessingStep(Step):
         """Post process payments individually"""
         dua_dia_processor = DuaDiaReductionsProcessor(self)
         in_review_processor = InReviewProcessor(self)
-        name_mismatch_processor = DORFineosEmployeeNameMismatchProcessor(self)
 
         for payment_container in payment_containers:
             dua_dia_processor.process(payment_container.payment)
             in_review_processor.process(payment_container)
-            name_mismatch_processor.process(payment_container.payment)
 
     def _process_payments_across_employee(self, payment_containers: List[PaymentContainer]) -> None:
         """Post process payments grouped by employee"""

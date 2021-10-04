@@ -246,7 +246,7 @@ export function createClaimFromArgs(args) {
       break;
   }
 
-  if (args.Payment === "Deposit") {
+  if (args.Payment === "deposit") {
     claim = claim.directDeposit();
   } else {
     claim = claim.check();

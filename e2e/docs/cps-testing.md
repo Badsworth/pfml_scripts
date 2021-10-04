@@ -14,25 +14,6 @@ In the claim you can adjust to test for just regular FINEOS intake process or ch
 **portal_api_template** - This will submit a claim through the Portal and check the claim in Fineos for the NTN #. We have the ability in the template to "Approve" the claim.
 To determined what the claim or leave period that Portal will take you must go [here](/src/scenarios/cypress). A `CPS_SP` scenario will be available to make changes needed for the test. Read the @todo and uncomment or comment code.
 
-**fineos_alert_template** - This template is checking for alerts in the Alerts tab within Fineos. Each scenario has different prerequisite (e.g. how many days and employment status). These employments' status we don't use for E2E Test Suite
-because they can effect the end results. The employment status that are included in this template is Self-Employed, Terminated, and Retirement. We use old dataset or specific dataset for the release for this template we are using.
-
-**secure_action** - The secure action includes 5 different tests to be used. We have them specifically working with the UAT extra account `SRV_SSO_Account2` only, but we could test in DT2 if needed.
-
-The following tests name and description:
-
-- **secure_action_add_case** - This test is checking to see if role/department are allowed to Add Case within the Claimant (Employee) page. Depending on the role the user will visibly see `Add Case` or not.
-- **secure_action_bulk_payee** - This will check to see if the role/department is allowed to check the bulk payee under the Payment Preference tab. It will go into the Claimant (Employee) page and click the Payment Preference tab and edit the payment preference.
-  If the user has access to bulk payee it will allow the user to check the box. Prerequisite for this test is having a Payment preference already there. So the Claimant will have approved claim already against them.
-- **secure_action_document_type_changes** - This test will check if the user is allowed to change or update the document type. The document was already uploaded by Portal/API in this case and edit to upload a new document under that document type.
-- **secure_action_modify_delete_historical_absence_case** - This test is checking to create/modify/delete a historical absence case for each role.
-- **secure_action_correspondence** - We are checking in this test to see if the user allowed to suppress correspondence. If the user is allowed to suppress the correspondence the user will be able to click the `Suppress Notifications` in the dropdown.
-Then we are checking to see if the following message is showing `Automatic Notifications and Correspondence have been suppressed` in the alert box.
-
-
-**continuous_medical_midwk_work_patterns_weight_days.ts** - This is a test that came out a regression between two release. When a claimant submitting a claim through the Portal the hours and minutes get transfer to weight in Fineos.
-This test is to check a mid-week (Wednesday) start date for the claim and to see if the Weight is similar to all other Weight days.
-
 `stable/unstable`
 
 We have a mixture of pieces of things we tested from previous CPS releases that were added to the stable/unstable cypress test.

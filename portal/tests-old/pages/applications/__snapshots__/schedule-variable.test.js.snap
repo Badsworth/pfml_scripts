@@ -1,0 +1,54 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ScheduleVariable renders the form 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Employment information"
+>
+  <Heading
+    level="2"
+    size="1"
+  >
+    How many hours do you work on average each week?
+  </Heading>
+  <Lead>
+    <Trans
+      components={
+        Object {
+          "calculate-hours-link": <a
+            href="https://www.mass.gov/pfml-calculate-hours"
+            rel="noopener"
+            target="_blank"
+          />,
+        }
+      }
+      i18nKey="pages.claimsScheduleVariable.lead"
+    />
+  </Lead>
+  <InputHours
+    hoursLabel="Hours"
+    label="Average weekly hours"
+    minutesIncrement={15}
+    minutesLabel="Minutes"
+    name="work_pattern.work_pattern_days[0].minutes"
+    onChange={[Function]}
+    smallLabel={true}
+    value={null}
+  />
+</QuestionPage>
+`;
+
+exports[`ScheduleVariable renders the form 2`] = `
+Array [
+  "We’ll confirm your hours with your employer after you submit your application. Learn more about ",
+  <a
+    href="https://www.mass.gov/pfml-calculate-hours"
+    key="1"
+    rel="noopener"
+    target="_blank"
+  >
+    how we use this number
+  </a>,
+  " and how to figure out your average.",
+]
+`;

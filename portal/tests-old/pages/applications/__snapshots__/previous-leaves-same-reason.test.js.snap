@@ -1,0 +1,33 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PreviousLeavesSameReason renders the page 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Other leave, benefits, and income"
+>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "hint": "I have taken previous leave for the same reason",
+          "label": "Yes",
+          "value": "true",
+        },
+        Object {
+          "checked": false,
+          "hint": "I have not taken previous leave for the same reason, or my other leave was through Massachusetts’ PFML program",
+          "label": "No",
+          "value": "false",
+        },
+      ]
+    }
+    hint={false}
+    label="Did you take any previous leave between January 1, 2021 and January 1, 2021 for the same reason as you are applying for paid leave now?"
+    name="has_previous_leaves_same_reason"
+    onChange={[Function]}
+    type="radio"
+    value=""
+  />
+</QuestionPage>
+`;
