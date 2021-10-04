@@ -10,12 +10,12 @@ exports[`FinishAccountSetup renders the page 1`] = `
       class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
       tabindex="-1"
     >
-      pages.employersAuthFinishAccountSetup.title
+      Finish setting up your account
     </h1>
     <p
       class="usa-intro"
     >
-      pages.employersAuthFinishAccountSetup.lead
+      Please verify your email address. If an account exists for the email you provide, you’ll receive a 6-digit verification code. After that, you’ll be prompted to create a new password.
     </p>
     <div
       class="usa-form-group"
@@ -25,7 +25,7 @@ exports[`FinishAccountSetup renders the page 1`] = `
         for="InputText1"
         id="InputText1_label"
       >
-        pages.employersAuthFinishAccountSetup.usernameLabel
+        Email address
       </label>
       <input
         aria-labelledby="InputText1_label InputText1_hint InputText1_error"
@@ -40,7 +40,7 @@ exports[`FinishAccountSetup renders the page 1`] = `
       class="usa-button position-relative"
       type="submit"
     >
-      pages.employersAuthFinishAccountSetup.submitButton
+      Submit
     </button>
     <div
       class="margin-top-2 text-bold"
@@ -48,7 +48,7 @@ exports[`FinishAccountSetup renders the page 1`] = `
       <a
         href="/employers/create-account"
       >
-        pages.employersAuthFinishAccountSetup.createAccountFooterLink
+        Create a new account
       </a>
     </div>
   </form>
