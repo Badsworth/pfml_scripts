@@ -416,7 +416,20 @@ class PaymentData:
         # Cancellations
         if self.event_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE:
             return PaymentTransactionType.CANCELLATION
+        #FICA 
+        if (
+            self.tin == "FICASOCIALSECURITYPAYEE001" 
+            or self.tin == "FICAMEDICAREPAYEE001"
+        ):
+            logger.info("BM -FICA  %s", self.tin)
+            return PaymentTransactionType.STATE_TAX_WITHHOLDING
 
+        #FIT 
+        if (
+            self.tin == "MANDATORYFITPAYEE001" 
+        ):
+            logger.info("BM -FICA  %s" ,self.tin)
+            return PaymentTransactionType.FEDERAL_TAX_WITHHOLDING
         # The bulk of the payments we process will be standard payments
         if (
             self.event_type == PAYMENT_OUT_TRANSACTION_TYPE
@@ -817,17 +830,29 @@ class PaymentExtractStep(Step):
         # Get the TIN, employee and claim associated with the payment to be made
         employee, claim = None, None
         try:
+            logger.info("BM: Entered into get_employee_and_claim")
             # If the payment transaction type is for the employer
             # We know we aren't going to find an employee, so don't look
-            if (
-                payment_data.payment_transaction_type.payment_transaction_type_id
-                != PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+            # if (
+            #     payment_data.payment_transaction_type.payment_transaction_type_id
+            #     != PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
+            #     or
+            #     payment_data.payment_transaction_type.payment_transaction_type_id
+            #     != PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+            #     or
+            #     payment_data.payment_transaction_type.payment_transaction_type_id
+            #     != PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
+            # ):
+            if(
+               payment_data.payment_transaction_type.payment_transaction_type_id not in [6,12,13] 
             ):
+                logger.info("BM :PaymentTransactionType %s",payment_data.payment_transaction_type.payment_transaction_type_id)
                 tax_identifier = (
                     self.db_session.query(TaxIdentifier)
                     .filter_by(tax_identifier=payment_data.tin)
                     .one_or_none()
                 )
+                logger.info("BM :tax_identifier %s",tax_identifier)
                 if not tax_identifier:
                     self.increment(self.Metrics.TAX_IDENTIFIER_MISSING_IN_DB_COUNT)
                     payment_data.validation_container.add_validation_issue(
@@ -835,19 +860,20 @@ class PaymentExtractStep(Step):
                         f"tax_identifier: {payment_data.tin}",
                     )
                 else:
+                    logger.info("BM :query employee")
                     employee = (
                         self.db_session.query(Employee)
                         .filter_by(tax_identifier=tax_identifier)
                         .one_or_none()
                     )
-
+                    logger.info("BM :query employee %s", employee.tax_identifier)
                     if not employee:
                         self.increment(self.Metrics.EMPLOYEE_MISSING_IN_DB_COUNT)
                         payment_data.validation_container.add_validation_issue(
                             payments_util.ValidationReason.MISSING_IN_DB,
                             f"employee: {payment_data.tin}",
                         )
-
+            logger.info("BM :find claim %s", payment_data.absence_case_number)
             claim = (
                 self.db_session.query(Claim)
                 .filter_by(fineos_absence_id=payment_data.absence_case_number)

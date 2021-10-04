@@ -2411,7 +2411,11 @@ class PaymentTransactionType(LookupTable):
     OVERPAYMENT_ADJUSTMENT = LkPaymentTransactionType(9, "Overpayment Adjustment")
     OVERPAYMENT_RECOVERY_REVERSE = LkPaymentTransactionType(10, "Overpayment Recovery Reverse")
     OVERPAYMENT_RECOVERY_CANCELLATION = LkPaymentTransactionType(
-        11, "Overpayment Recovery Cancellation"
+        11, "Overpayment Recovery Cancellation")
+    FEDERAL_TAX_WITHHOLDING = LkPaymentTransactionType(
+        12, "Mandatory FIT")
+    STATE_TAX_WITHHOLDING = LkPaymentTransactionType(
+        13, "FICA Social Security"
     )
 
 
