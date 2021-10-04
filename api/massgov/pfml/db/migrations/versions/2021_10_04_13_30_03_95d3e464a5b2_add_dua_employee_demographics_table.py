@@ -1,7 +1,7 @@
 """Add DUA Employee Demographics table
 
 Revision ID: 95d3e464a5b2
-Revises: e60606ee01ba
+Revises: 2895730a681e
 Create Date: 2021-10-04 13:30:03.888961
 
 """
@@ -11,7 +11,7 @@ from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
 revision = "95d3e464a5b2"
-down_revision = "e60606ee01ba"
+down_revision = "2895730a681e"
 branch_labels = None
 depends_on = None
 
