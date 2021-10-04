@@ -620,6 +620,8 @@ const errors = {
         "Enter a valid Employer Identification Number (EIN). Check that you entered your EIN correctly.",
       required: "Enter your 9-digit Employer Identification Number.",
     },
+    fineos_claim_withdrawn:
+      "Application has been withdrawn and is no longer being processed.",
     hours_worked_per_week: {
       maximum: "Average weekly hours must be 168 or fewer.",
       minimum: "Enter the average weekly hours.",
@@ -1554,7 +1556,7 @@ const pages = {
     intro:
       "<ul><li>Any previous leave for the same reason that you are applying for paid leave now</li><li>Any previous leave for a different qualifying reasons</li></ul>",
     introDontNeed:
-      "<ul><li>Leave that was taken through Massachusetts' PFML program</li><li>Leave that was taking before January 1, 2021 and {{startDate}}</li><li>Family leave to care for a family member taken before July 1, 2021</li></ul>",
+      "<ul><li>Leave that was taken through Massachusetts' PFML program</li><li>Leave that was taking between January 1, 2021 and {{startDate}}</li><li>Family leave to care for a family member taken before July 1, 2021</li></ul>",
     introDontNeedHeader: "You don't need to report:",
     introHeader:
       "You'll need to report previous leave you may have taken between January 1, 2021 and {{startDate}}:",
