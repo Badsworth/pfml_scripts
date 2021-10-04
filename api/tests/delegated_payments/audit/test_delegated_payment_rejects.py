@@ -128,6 +128,7 @@ def test_parse_payment_rejects_file_missing_columns(
         assert row.skipped_by_program_integrity is None
         assert row.max_weekly_benefits_details is None
         assert row.dua_dia_reduction_details is None
+        assert row.dor_fineos_name_mismatch_details is None
 
 
 def test_rejects_column_validation(test_db_session, payment_rejects_step):

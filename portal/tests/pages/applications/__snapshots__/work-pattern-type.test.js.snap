@@ -1,0 +1,82 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`WorkPatternType renders the page with expected content 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Employment information
+    </h1>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        How would you describe your work schedule?
+      </legend>
+      <div
+        class="margin-top-3"
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice1"
+            name="work_pattern.work_pattern_type"
+            type="radio"
+            value="Fixed"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice1"
+          >
+            Each week I work the same number of hours on the same days.
+            <span
+              class="usa-hint text-base-dark"
+            >
+              <br />
+              For example, every Monday I work 6 hours, and every Tuesday I work 7 hours.
+            </span>
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice2"
+            name="work_pattern.work_pattern_type"
+            type="radio"
+            value="Variable"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice2"
+          >
+            My schedule is not consistent from week to week.
+            <span
+              class="usa-hint text-base-dark"
+            >
+              <br />
+              For example, I work 40 hours every week but the days differ, or my schedule changes from week to week.
+            </span>
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;

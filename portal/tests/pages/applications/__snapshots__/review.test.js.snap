@@ -1,0 +1,2176 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Review Page EmployerBenefitList doesn't render missing data when amount fields are missing 1`] = `
+<div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h4
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Benefit 1
+      </h4>
+      <p
+        class="text-base-darker margin-top-1"
+      >
+        8/12/2021 to 12/30/2021
+      </p>
+      <ul
+        class="usa-list margin-top-1"
+      >
+        <li>
+          Permanent disability insurance
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Review Page EmployerBenefitList renders all data fields when all data are present 1`] = `
+<div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h4
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Benefit 1
+      </h4>
+      <p
+        class="text-base-darker margin-top-1"
+      >
+        8/12/2021 to 12/30/2021
+      </p>
+      <ul
+        class="usa-list margin-top-1"
+      >
+        <li>
+          Accrued paid leave
+        </li>
+        <li>
+          $250.00 per month
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h4
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Benefit 2
+      </h4>
+      <p
+        class="text-base-darker margin-top-1"
+      >
+        8/12/2021 to 12/30/2021
+      </p>
+      <ul
+        class="usa-list margin-top-1"
+      >
+        <li>
+          Temporary disability insurance
+        </li>
+        <li>
+          $250.00 per month
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h4
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Benefit 3
+      </h4>
+      <p
+        class="text-base-darker margin-top-1"
+      >
+        8/12/2021 to 12/30/2021
+      </p>
+      <ul
+        class="usa-list margin-top-1"
+      >
+        <li>
+          Permanent disability insurance
+        </li>
+        <li>
+          Full wage replacement
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h4
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Benefit 4
+      </h4>
+      <p
+        class="text-base-darker margin-top-1"
+      >
+        8/12/2021 to 12/30/2021
+      </p>
+      <ul
+        class="usa-list margin-top-1"
+      >
+        <li>
+          Family or medical leave insurance
+        </li>
+        <li>
+          Full wage replacement
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Review Page OtherIncomeList doesn't render missing data when amount fields are missing 1`] = `
+<div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h4
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Income 1
+      </h4>
+      <p
+        class="text-base-darker margin-top-1"
+      >
+        8/12/2021 to 12/30/2021
+      </p>
+      <ul
+        class="usa-list margin-top-1"
+      >
+        <li>
+          Earnings or benefits from another employer, or through self-employment
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Review Page OtherIncomeList renders all data fields when all data are present 1`] = `
+<div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h4
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Income 1
+      </h4>
+      <p
+        class="text-base-darker margin-top-1"
+      >
+        8/12/2021 to 12/30/2021
+      </p>
+      <ul
+        class="usa-list margin-top-1"
+      >
+        <li>
+          Workers Compensation
+        </li>
+        <li>
+          $250.00 per month
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h4
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Income 2
+      </h4>
+      <p
+        class="text-base-darker margin-top-1"
+      >
+        8/12/2021 to 12/30/2021
+      </p>
+      <ul
+        class="usa-list margin-top-1"
+      >
+        <li>
+          Unemployment Insurance
+        </li>
+        <li>
+          $250.00 per month
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h4
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Income 3
+      </h4>
+      <p
+        class="text-base-darker margin-top-1"
+      >
+        8/12/2021 to 12/30/2021
+      </p>
+      <ul
+        class="usa-list margin-top-1"
+      >
+        <li>
+          Social Security Disability Insurance
+        </li>
+        <li>
+          $250.00 per month
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h4
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Income 4
+      </h4>
+      <p
+        class="text-base-darker margin-top-1"
+      >
+        8/12/2021 to 12/30/2021
+      </p>
+      <ul
+        class="usa-list margin-top-1"
+      >
+        <li>
+          Disability benefits under a governmental retirement plan
+        </li>
+        <li>
+          $250.00 per month
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h4
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Income 5
+      </h4>
+      <p
+        class="text-base-darker margin-top-1"
+      >
+        8/12/2021 to 12/30/2021
+      </p>
+      <ul
+        class="usa-list margin-top-1"
+      >
+        <li>
+          Jones Act benefits
+        </li>
+        <li>
+          $250.00 per month
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h4
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Income 6
+      </h4>
+      <p
+        class="text-base-darker margin-top-1"
+      >
+        8/12/2021 to 12/30/2021
+      </p>
+      <ul
+        class="usa-list margin-top-1"
+      >
+        <li>
+          Railroad Retirement benefits
+        </li>
+        <li>
+          $250.00 per month
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h4
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Income 7
+      </h4>
+      <p
+        class="text-base-darker margin-top-1"
+      >
+        8/12/2021 to 12/30/2021
+      </p>
+      <ul
+        class="usa-list margin-top-1"
+      >
+        <li>
+          Earnings or benefits from another employer, or through self-employment
+        </li>
+        <li>
+          $250.00 per month
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Review Page OtherLeaveEntry doesn't render missing data when amount is missing 1`] = `
+<div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h4
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Benefit 1
+      </h4>
+      <p
+        class="text-base-darker margin-top-1"
+      >
+        07-22-2020 - 09-22-2020
+      </p>
+      <ul
+        class="usa-list margin-top-1"
+      >
+        <li>
+          Medical or family leave
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Review Page OtherLeaveEntry renders all data fields when all data are present 1`] = `
+<div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h4
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Benefit 1
+      </h4>
+      <p
+        class="text-base-darker margin-top-1"
+      >
+        07-22-2020 - 09-22-2020
+      </p>
+      <ul
+        class="usa-list margin-top-1"
+      >
+        <li>
+          Medical or family leave
+        </li>
+        <li>
+          $250 per month
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Review Page PreviousLeaveList renders other reason list 1`] = `
+<div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h4
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Previous leave 2
+      </h4>
+      <p
+        class="text-base-darker margin-top-1"
+      >
+        7/1/2021 to 5/1/2021
+      </p>
+      <ul
+        class="usa-list margin-top-1"
+      >
+        <li>
+          Leave for a different qualifying reason
+        </li>
+        <li>
+          From this employer
+        </li>
+        <li>
+          Leave was for caring for a family member
+        </li>
+        <li>
+          Hours worked at time of leave: 
+          40h
+        </li>
+        <li>
+          Total hours of leave taken: 
+          20h
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h4
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Previous leave 3
+      </h4>
+      <p
+        class="text-base-darker margin-top-1"
+      >
+        7/1/2021 to 5/1/2021
+      </p>
+      <ul
+        class="usa-list margin-top-1"
+      >
+        <li>
+          Leave for a different qualifying reason
+        </li>
+        <li>
+          From a different employer
+        </li>
+        <li>
+          Leave was for bonding with a child after birth or placement
+        </li>
+        <li>
+          Hours worked at time of leave: 
+          40h
+        </li>
+        <li>
+          Total hours of leave taken: 
+          20h
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Review Page PreviousLeaveList renders same reason list 1`] = `
+<div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h4
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Previous leave 2
+      </h4>
+      <p
+        class="text-base-darker margin-top-1"
+      >
+        7/1/2021 to 5/1/2021
+      </p>
+      <ul
+        class="usa-list margin-top-1"
+      >
+        <li>
+          Leave for the same qualifying reason
+        </li>
+        <li>
+          From this employer
+        </li>
+        <li>
+          Hours worked at time of leave: 
+          40h
+        </li>
+        <li>
+          Total hours of leave taken: 
+          20h
+        </li>
+      </ul>
+    </div>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+  >
+    <div
+      class="margin-right-2"
+    >
+      <h4
+        class="margin-bottom-1 font-heading-xs text-bold"
+      >
+        Previous leave 3
+      </h4>
+      <p
+        class="text-base-darker margin-top-1"
+      >
+        7/1/2021 to 5/1/2021
+      </p>
+      <ul
+        class="usa-list margin-top-1"
+      >
+        <li>
+          Leave for the same qualifying reason
+        </li>
+        <li>
+          From a different employer
+        </li>
+        <li>
+          Hours worked at time of leave: 
+          40h
+        </li>
+        <li>
+          Total hours of leave taken: 
+          20h
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Review Page Work patterns displays correct work pattern details when pattern type is Fixed 1`] = `
+<table
+  class="usa-table usa-table--borderless c-table"
+>
+  <thead>
+    <tr>
+      <th
+        scope="col"
+      >
+        Day
+      </th>
+      <th
+        scope="col"
+      >
+        Hours
+      </th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <th
+        scope="row"
+      >
+        Sunday
+      </th>
+      <td>
+        0h
+      </td>
+    </tr>
+    <tr>
+      <th
+        scope="row"
+      >
+        Monday
+      </th>
+      <td>
+        8h
+      </td>
+    </tr>
+    <tr>
+      <th
+        scope="row"
+      >
+        Tuesday
+      </th>
+      <td>
+        8h
+      </td>
+    </tr>
+    <tr>
+      <th
+        scope="row"
+      >
+        Wednesday
+      </th>
+      <td>
+        8h
+      </td>
+    </tr>
+    <tr>
+      <th
+        scope="row"
+      >
+        Thursday
+      </th>
+      <td>
+        8h
+      </td>
+    </tr>
+    <tr>
+      <th
+        scope="row"
+      >
+        Friday
+      </th>
+      <td>
+        8h
+      </td>
+    </tr>
+    <tr>
+      <th
+        scope="row"
+      >
+        Saturday
+      </th>
+      <td>
+        0h
+      </td>
+    </tr>
+  </tbody>
+</table>
+`;
+
+exports[`Review Page renders Review page with Part 1 content and edit links when application hasn't been submitted yet 1`] = `
+<div>
+  <div
+    class="measure-6"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2 usa-sr-only"
+      tabindex="-1"
+    >
+      Check your answers before submitting your application.
+    </h1>
+    <h2
+      class="margin-top-0 font-heading-lg text-bold"
+    >
+      <span
+        class="display-block font-heading-2xs margin-bottom-2 text-base-dark text-bold"
+      >
+        Part 1
+      </span>
+      Review and confirm: Tell us about yourself and your leave
+    </h2>
+    <div
+      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+    >
+      <h3
+        class="flex-fill margin-right-1 font-heading-md text-bold"
+      >
+        Your identification
+      </h3>
+      <a
+        aria-label="Edit: Your identification"
+        class="usa-link margin-0"
+        href="/applications/name?claim_id=mock_application_id"
+      >
+        Edit
+      </a>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h4
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Name
+        </h4>
+        Jane  Doe
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h4
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Gender Identity
+        </h4>
+        Woman
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h4
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Phone number
+        </h4>
+        Mobile
+        <br />
+        123-456-****
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h4
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Residential address
+        </h4>
+        1234 My St., Boston, MA 00000
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h4
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Mailing address
+        </h4>
+        124 My St., Boston, MA 00000
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h4
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Driver’s License Number
+        </h4>
+        *********
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h4
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Social Security Number or ITIN
+        </h4>
+        ***-**-****
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h4
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Date of birth
+        </h4>
+        7/17/****
+      </div>
+    </div>
+    <div
+      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+    >
+      <h3
+        class="flex-fill margin-right-1 font-heading-md text-bold"
+      >
+        Employment information
+      </h3>
+      <a
+        aria-label="Edit: Employment information"
+        class="usa-link margin-0"
+        href="/applications/employment-status?claim_id=mock_application_id"
+      >
+        Edit
+      </a>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h4
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Employer’s EIN
+        </h4>
+        12-3456789
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h4
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Notified employer
+        </h4>
+        Notified employer on 1/1/2021
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h4
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Work schedule type
+        </h4>
+        Each week I work the same number of hours on the same days.
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h4
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Weekly work hours
+        </h4>
+        <table
+          class="usa-table usa-table--borderless c-table"
+        >
+          <thead>
+            <tr>
+              <th
+                scope="col"
+              >
+                Day
+              </th>
+              <th
+                scope="col"
+              >
+                Hours
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th
+                scope="row"
+              >
+                Sunday
+              </th>
+              <td>
+                0h
+              </td>
+            </tr>
+            <tr>
+              <th
+                scope="row"
+              >
+                Monday
+              </th>
+              <td>
+                8h
+              </td>
+            </tr>
+            <tr>
+              <th
+                scope="row"
+              >
+                Tuesday
+              </th>
+              <td>
+                8h
+              </td>
+            </tr>
+            <tr>
+              <th
+                scope="row"
+              >
+                Wednesday
+              </th>
+              <td>
+                8h
+              </td>
+            </tr>
+            <tr>
+              <th
+                scope="row"
+              >
+                Thursday
+              </th>
+              <td>
+                8h
+              </td>
+            </tr>
+            <tr>
+              <th
+                scope="row"
+              >
+                Friday
+              </th>
+              <td>
+                8h
+              </td>
+            </tr>
+            <tr>
+              <th
+                scope="row"
+              >
+                Saturday
+              </th>
+              <td>
+                0h
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+    <div
+      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+    >
+      <h3
+        class="flex-fill margin-right-1 font-heading-md text-bold"
+      >
+        Leave details
+      </h3>
+      <a
+        aria-label="Edit: Leave details"
+        class="usa-link margin-0"
+        href="/applications/leave-reason?claim_id=mock_application_id"
+      >
+        Edit
+      </a>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h4
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Leave type
+        </h4>
+        Medical leave
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h4
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Medical leave for pregnancy or birth
+        </h4>
+        No
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h4
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Continuous leave
+        </h4>
+        1/1/2021 to 6/1/2021
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h4
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Reduced leave
+        </h4>
+        No
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h4
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Intermittent leave
+        </h4>
+        No
+      </div>
+    </div>
+    <div>
+      <div
+        class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+      >
+        <h3
+          class="flex-fill margin-right-1 font-heading-md text-bold"
+        >
+          Other leave, benefits, and income
+        </h3>
+        <a
+          aria-label="Edit: Other leave, benefits, and income"
+          class="usa-link margin-0"
+          href="/applications/previous-leaves-intro?claim_id=mock_application_id"
+        >
+          Edit
+        </a>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h4
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Previous leave?
+          </h4>
+          Yes
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h4
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Previous leave 1
+          </h4>
+          <p
+            class="text-base-darker margin-top-1"
+          >
+            7/1/2021 to 5/1/2021
+          </p>
+          <ul
+            class="usa-list margin-top-1"
+          >
+            <li>
+              Leave for the same qualifying reason
+            </li>
+            <li>
+              From this employer
+            </li>
+            <li>
+              Hours worked at time of leave: 
+              40h
+            </li>
+            <li>
+              Total hours of leave taken: 
+              20h
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h4
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Previous leave 2
+          </h4>
+          <p
+            class="text-base-darker margin-top-1"
+          >
+            7/1/2021 to 5/1/2021
+          </p>
+          <ul
+            class="usa-list margin-top-1"
+          >
+            <li>
+              Leave for a different qualifying reason
+            </li>
+            <li>
+              From this employer
+            </li>
+            <li>
+              Leave was for caring for a family member
+            </li>
+            <li>
+              Hours worked at time of leave: 
+              40h
+            </li>
+            <li>
+              Total hours of leave taken: 
+              20h
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h4
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Concurrent leave?
+          </h4>
+          Yes
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h4
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Accrued paid leave
+          </h4>
+          <p
+            class="text-base-darker margin-top-1"
+          >
+            1/1/2021 to 3/1/2021
+          </p>
+          <ul
+            class="usa-list margin-top-1"
+          >
+            <li>
+              From this employer
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h4
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Employer-sponsored benefits?
+          </h4>
+          Yes
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h4
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Benefit 1
+          </h4>
+          <p
+            class="text-base-darker margin-top-1"
+          >
+            1/1/2021 to 2/1/2021
+          </p>
+          <ul
+            class="usa-list margin-top-1"
+          >
+            <li>
+              Family or medical leave insurance
+            </li>
+            <li>
+              $500.00 per week
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h4
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Benefit 2
+          </h4>
+          <p
+            class="text-base-darker margin-top-1"
+          >
+            1/1/2021 to 2/1/2021
+          </p>
+          <ul
+            class="usa-list margin-top-1"
+          >
+            <li>
+              Family or medical leave insurance
+            </li>
+            
+          </ul>
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h4
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Benefit 3
+          </h4>
+          <p
+            class="text-base-darker margin-top-1"
+          >
+            1/1/2021 to 2/1/2021
+          </p>
+          <ul
+            class="usa-list margin-top-1"
+          >
+            <li>
+              Temporary disability insurance
+            </li>
+            <li>
+              Full wage replacement
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h4
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Benefit 4
+          </h4>
+          <p
+            class="text-base-darker margin-top-1"
+          >
+            1/1/2021 to 2/1/2021
+          </p>
+          <ul
+            class="usa-list margin-top-1"
+          >
+            <li>
+              Permanent disability insurance
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h4
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Other sources of income?
+          </h4>
+          Yes
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h4
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Income 1
+          </h4>
+          <p
+            class="text-base-darker margin-top-1"
+          >
+            1/30/2021 to 1/1/2021
+          </p>
+          <ul
+            class="usa-list margin-top-1"
+          >
+            <li>
+              Earnings or benefits from another employer, or through self-employment
+            </li>
+            <li>
+              $125.00 per week
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+    <div
+      class="margin-top-6 margin-bottom-2"
+    >
+      <p>
+        Once you review and submit Part 1, your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you’ll need to call our Contact Center at 
+        <a
+          href="tel:(833) 344-7365"
+        >
+          (833) 344‑7365
+        </a>
+        .
+      </p>
+      <p>
+        We’ll also notify your employer that you’ve started an application for paid family and medical leave.
+      </p>
+      <p>
+        Next, you’ll be able to work on Parts 2 and 3, and submit your application.
+      </p>
+    </div>
+    <button
+      class="usa-button position-relative margin-top-3"
+      type="button"
+    >
+      Submit Part 1
+    </button>
+  </div>
+</div>
+`;
+
+exports[`Review Page renders Review page with all sections and only edit links for Part 3 sections when Part 1 has already been submitted 1`] = `
+<div>
+  <div
+    class="measure-6"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2 usa-sr-only"
+      tabindex="-1"
+    >
+      Check your answers before submitting your application.
+    </h1>
+    <h2
+      class="margin-top-0 font-heading-lg text-bold"
+    >
+      <span
+        class="display-block font-heading-2xs margin-bottom-2 text-base-dark text-bold"
+      >
+        Part 1
+      </span>
+      Review: Tell us about yourself and your leave
+    </h2>
+    <p
+      class="usa-intro"
+    >
+      If you need to make edits to Part 1, you’ll need to call our Contact Center at 
+      <a
+        href="tel:(833) 344-7365"
+      >
+        (833) 344‑7365
+      </a>
+      . Your application ID is 
+      <strong>
+        NTN-111-ABS-01
+      </strong>
+    </p>
+    <div
+      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+    >
+      <h2
+        class="flex-fill margin-right-1 font-heading-md text-bold"
+      >
+        Your identification
+      </h2>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Name
+        </h3>
+        Jane  Doe
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Gender Identity
+        </h3>
+        Woman
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Phone number
+        </h3>
+        Mobile
+        <br />
+        123-456-****
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Residential address
+        </h3>
+        1234 My St., Boston, MA 00000
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Driver’s License Number
+        </h3>
+        *********
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Social Security Number or ITIN
+        </h3>
+        ***-**-****
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Date of birth
+        </h3>
+        7/17/****
+      </div>
+    </div>
+    <div
+      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+    >
+      <h2
+        class="flex-fill margin-right-1 font-heading-md text-bold"
+      >
+        Employment information
+      </h2>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Employer’s EIN
+        </h3>
+        12-3456789
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Notified employer
+        </h3>
+        Notified employer on 1/1/2021
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Work schedule type
+        </h3>
+        Each week I work the same number of hours on the same days.
+      </div>
+    </div>
+    <div
+      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+    >
+      <h2
+        class="flex-fill margin-right-1 font-heading-md text-bold"
+      >
+        Leave details
+      </h2>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Leave type
+        </h3>
+        Medical leave
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Medical leave for pregnancy or birth
+        </h3>
+        No
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Continuous leave
+        </h3>
+        1/1/2021 to 6/1/2021
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Reduced leave
+        </h3>
+        No
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Intermittent leave
+        </h3>
+        No
+      </div>
+    </div>
+    <div>
+      <div
+        class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+      >
+        <h2
+          class="flex-fill margin-right-1 font-heading-md text-bold"
+        >
+          Other leave, benefits, and income
+        </h2>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Previous leave?
+          </h3>
+          No
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Concurrent leave?
+          </h3>
+          No
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Employer-sponsored benefits?
+          </h3>
+          No
+        </div>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Other sources of income?
+          </h3>
+          No
+        </div>
+      </div>
+    </div>
+    <h2
+      class="font-heading-lg text-bold"
+    >
+      <span
+        class="display-block font-heading-2xs margin-bottom-2 text-base-dark text-bold"
+      >
+        Part 2
+      </span>
+      Review: Your payment information
+    </h2>
+    <div
+      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+    >
+      <h2
+        class="flex-fill margin-right-1 font-heading-md text-bold"
+      >
+        Payment information
+      </h2>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Payment method
+        </h3>
+        Direct deposit into my bank account
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Routing number
+        </h3>
+        1234567890
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Account number
+        </h3>
+        091000022
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Account type
+        </h3>
+        Checking
+      </div>
+    </div>
+    <h2
+      class="font-heading-lg text-bold"
+    >
+      <span
+        class="display-block font-heading-2xs margin-bottom-2 text-base-dark text-bold"
+      >
+        Part 3
+      </span>
+      Review: Upload document
+    </h2>
+    <div
+      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+    >
+      <h2
+        class="flex-fill margin-right-1 font-heading-md text-bold"
+      >
+        Upload identity document
+      </h2>
+      <a
+        aria-label="Edit: Upload identity document"
+        class="usa-link margin-0"
+        href="/applications/upload-id?claim_id=mock_application_id"
+      >
+        Edit
+      </a>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Number of files uploaded
+        </h3>
+        0
+      </div>
+    </div>
+    <div
+      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+    >
+      <h2
+        class="flex-fill margin-right-1 font-heading-md text-bold"
+      >
+        Upload certification document
+      </h2>
+      <a
+        aria-label="Edit: Upload certification document"
+        class="usa-link margin-0"
+        href="/applications/upload-certification?claim_id=mock_application_id"
+      >
+        Edit
+      </a>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Number of files uploaded
+        </h3>
+        0
+      </div>
+    </div>
+    <p>
+      Once you review and submit your application, we will send a copy of your application to your employer. In addition to details about your leave and employment information, your employer will see the last 4 digits of your Social Security Number or ITIN and your mailing address. They will also get a copy of the certification documents.
+    </p>
+    <button
+      class="usa-button position-relative margin-top-3"
+      type="button"
+    >
+      Submit application
+    </button>
+  </div>
+</div>
+`;
+
+exports[`Review Page renders WeeklyTimeTable for the reduced leave period when work pattern is Fixed 1`] = `
+<div
+  class="margin-right-2"
+>
+  <h4
+    class="margin-bottom-1 font-heading-xs text-bold"
+  >
+    Hours off per week
+  </h4>
+  <table
+    class="usa-table usa-table--borderless c-table margin-bottom-0"
+  >
+    <thead>
+      <tr>
+        <th
+          scope="col"
+        >
+          Day
+        </th>
+        <th
+          scope="col"
+        >
+          Hours
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th
+          scope="row"
+        >
+          Sunday
+        </th>
+        <td>
+          0h
+        </td>
+      </tr>
+      <tr>
+        <th
+          scope="row"
+        >
+          Monday
+        </th>
+        <td>
+          6h 30m
+        </td>
+      </tr>
+      <tr>
+        <th
+          scope="row"
+        >
+          Tuesday
+        </th>
+        <td>
+          0h
+        </td>
+      </tr>
+      <tr>
+        <th
+          scope="row"
+        >
+          Wednesday
+        </th>
+        <td>
+          0h
+        </td>
+      </tr>
+      <tr>
+        <th
+          scope="row"
+        >
+          Thursday
+        </th>
+        <td>
+          0h
+        </td>
+      </tr>
+      <tr>
+        <th
+          scope="row"
+        >
+          Friday
+        </th>
+        <td>
+          8h
+        </td>
+      </tr>
+      <tr>
+        <th
+          scope="row"
+        >
+          Saturday
+        </th>
+        <td>
+          0h
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+`;
+
+exports[`Review Page renders a Alert when there are required field errors 1`] = `
+<div
+  class="usa-alert__body"
+  role="region"
+>
+  <div
+    class="usa-alert__text"
+  >
+    We’ve added some new questions since you last updated your application. Return to the 
+    <a
+      href="/applications/checklist?claim_id=mock_application_id"
+    >
+      checklist
+    </a>
+     to make sure you’ve completed every step.
+  </div>
+</div>
+`;
+
+exports[`Review Page renders the leave frequency and duration in plain language 1`] = `
+<div
+  class="margin-right-2"
+>
+  <h4
+    class="margin-bottom-1 font-heading-xs text-bold"
+  >
+    Frequency of intermittent leave
+  </h4>
+  Estimated 2 absences per month, each lasting 3 days.
+</div>
+`;
+
+exports[`Review Page renders the leave frequency and duration in plain language 2`] = `
+<div
+  class="margin-right-2"
+>
+  <h4
+    class="margin-bottom-1 font-heading-xs text-bold"
+  >
+    Frequency of intermittent leave
+  </h4>
+  Estimated 2 absences per week, each lasting 3 days.
+</div>
+`;
+
+exports[`Review Page renders the leave frequency and duration in plain language 3`] = `
+<div
+  class="margin-right-2"
+>
+  <h4
+    class="margin-bottom-1 font-heading-xs text-bold"
+  >
+    Frequency of intermittent leave
+  </h4>
+  Estimated 2 absences per month, each lasting 3 days.
+</div>
+`;
+
+exports[`Review Page renders the leave frequency and duration in plain language 4`] = `
+<div
+  class="margin-right-2"
+>
+  <h4
+    class="margin-bottom-1 font-heading-xs text-bold"
+  >
+    Frequency of intermittent leave
+  </h4>
+  Estimated 2 absences per month, each lasting 3 hours.
+</div>
+`;
+
+exports[`Review Page renders the leave frequency and duration in plain language 5`] = `
+<div
+  class="margin-right-2"
+>
+  <h4
+    class="margin-bottom-1 font-heading-xs text-bold"
+  >
+    Frequency of intermittent leave
+  </h4>
+  Estimated 2 absences per week, each lasting 3 hours.
+</div>
+`;
+
+exports[`Review Page renders the leave frequency and duration in plain language 6`] = `
+<div
+  class="margin-right-2"
+>
+  <h4
+    class="margin-bottom-1 font-heading-xs text-bold"
+  >
+    Frequency of intermittent leave
+  </h4>
+  Estimated 2 absences per month, each lasting 3 hours.
+</div>
+`;
+
+exports[`Review Page renders the number of uploaded documents, filtering by document type and leave reason 1`] = `
+<div
+  class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+>
+  <div
+    class="margin-right-2"
+  >
+    <h3
+      class="margin-bottom-1 font-heading-xs text-bold"
+    >
+      Number of files uploaded
+    </h3>
+    1
+  </div>
+</div>
+`;
+
+exports[`Review Page renders the number of uploaded documents, filtering by document type and leave reason 2`] = `
+<div
+  class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+>
+  <div
+    class="margin-right-2"
+  >
+    <h3
+      class="margin-bottom-1 font-heading-xs text-bold"
+    >
+      Number of files uploaded
+    </h3>
+    2
+  </div>
+</div>
+`;
+
+exports[`Review Page renders total time for the reduced leave period when work pattern is Variable 1`] = `
+<div
+  class="margin-right-2"
+>
+  <h4
+    class="margin-bottom-1 font-heading-xs text-bold"
+  >
+    Hours off per week
+  </h4>
+  14h 30m
+</div>
+`;

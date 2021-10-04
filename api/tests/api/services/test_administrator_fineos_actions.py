@@ -1661,7 +1661,7 @@ def test_get_claim_plan(mock_fineos_period_decisions, initialize_factories_sessi
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details, _ = get_claim_as_leave_admin(
+    leave_details, _, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
     )
     assert leave_details.status == "Known"
@@ -1671,7 +1671,7 @@ def test_get_claim_no_plan(mock_fineos_period_decisions_no_plan, initialize_fact
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details, _ = get_claim_as_leave_admin(
+    leave_details, _, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions_no_plan
     )
     assert leave_details.status == "Known"
@@ -1683,7 +1683,7 @@ def test_get_claim_eform_type_contains_neither_version(
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details, _ = get_claim_as_leave_admin(
+    leave_details, _, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions,
     )
     assert leave_details.uses_second_eform_version is True
@@ -1710,7 +1710,7 @@ def test_get_claim_other_leaves_v2_eform(
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details, _ = get_claim_as_leave_admin(
+    leave_details, _, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_leaves_v2_eform,
     )
 
@@ -1793,7 +1793,7 @@ def test_get_claim_other_leaves_v2_accrued_leave_different_employer_eform(
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details, _ = get_claim_as_leave_admin(
+    leave_details, _, _ = get_claim_as_leave_admin(
         fineos_user_id,
         absence_id,
         employer,
@@ -1819,7 +1819,7 @@ def test_get_claim_other_income(mock_fineos_other_income_v1_eform, initialize_fa
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details, _ = get_claim_as_leave_admin(
+    leave_details, _, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_income_v1_eform,
     )
     assert leave_details.date_of_birth == "****-12-25"
@@ -1864,7 +1864,7 @@ def test_get_claim_with_open_managed_requirement(
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details, managed_requirements = get_claim_as_leave_admin(
+    leave_details, managed_requirements, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
     )
     assert leave_details.status == "Known"
@@ -1888,7 +1888,7 @@ def test_get_claim_with_closed_managed_requirement(
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details, managed_requirements = get_claim_as_leave_admin(
+    leave_details, managed_requirements, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
     )
     assert leave_details.status == "Known"
@@ -1912,7 +1912,7 @@ def test_get_claim_with_open_expired_managed_requirement(
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details, managed_requirements = get_claim_as_leave_admin(
+    leave_details, managed_requirements, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
     )
     assert leave_details.status == "Known"

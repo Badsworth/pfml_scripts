@@ -1,0 +1,110 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PhoneNumber renders the page 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Your identification
+    </h1>
+    <h2
+      class="font-heading-lg text-bold"
+    >
+      What’s your phone number?
+    </h2>
+    <p
+      class="usa-intro"
+    >
+      If we need to contact you, we will reach out by phone or mail. We will also use this number for any previous applications you have submitted.
+    </p>
+    <div
+      class="usa-form-group"
+    >
+      <label
+        class="usa-label text-bold font-heading-xs measure-5"
+        for="InputText1"
+        id="InputText1_label"
+      >
+        Phone number
+      </label>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+        id="InputText1_hint"
+      >
+        Don’t have a personal phone number? Enter a number where we might be able to reach you (for example, a work phone number, or a friend’s phone number).
+      </span>
+      <div
+        class=""
+      >
+        <input
+          aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+          class="usa-input maxw-mobile-lg"
+          id="InputText1"
+          inputmode="numeric"
+          name="phone.phone_number"
+          type="tel"
+          value=""
+        />
+      </div>
+    </div>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-xs measure-5"
+      >
+        Number type
+      </legend>
+      <div
+        class=""
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice2"
+            name="phone.phone_type"
+            type="radio"
+            value="Phone"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice2"
+          >
+            Landline
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice3"
+            name="phone.phone_type"
+            type="radio"
+            value="Cell"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice3"
+          >
+            Mobile
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;

@@ -1,0 +1,153 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Index renders the page 1`] = `
+<div>
+  <a
+    class="usa-button margin-bottom-5 usa-button--unstyled"
+    href="/applications"
+  >
+    <svg
+      class="margin-right-05"
+      height="12"
+      viewBox="0 0 448 512"
+      width="12"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"
+        fill="currentColor"
+      />
+    </svg>
+    Back to Dashboard
+  </a>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+    tabindex="-1"
+  >
+    Your organizations
+  </h1>
+  <p
+    data-test="future-availability-message"
+  >
+    You can manage leave for these organizations. In the future, you’ll be able to invite other members of your team to review applications.
+  </p>
+  <table
+    class="usa-table usa-table--borderless c-table width-full usa-table--stacked-header"
+  >
+    <thead>
+      <tr>
+        <th
+          scope="col"
+        >
+          Organization
+        </th>
+        <th
+          scope="col"
+        >
+          Employer ID number (EIN)
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td>
+          None reported
+        </td>
+        <td />
+      </tr>
+    </tbody>
+  </table>
+  <a
+    class="usa-button"
+    href="/employers/organizations/add-organization"
+  >
+    Add organization
+  </a>
+</div>
+`;
+
+exports[`Index shows a success message telling the user they are now a leave admin 1`] = `
+<div
+  class="usa-alert__body"
+  role="region"
+>
+  <h2
+    class="usa-alert__heading font-heading-md text-bold"
+  >
+    Success
+  </h2>
+  <div
+    class="usa-alert__text"
+  >
+    Your account type is now converted.
+  </div>
+</div>
+`;
+
+exports[`Index shows an Alert telling the user to start verification if there are unverified employers 1`] = `
+<div
+  class="usa-alert__body"
+  role="region"
+>
+  <h2
+    class="usa-alert__heading font-heading-md text-bold"
+  >
+    Verify your account
+  </h2>
+  <div
+    class="usa-alert__text"
+  >
+    <p>
+      Every employer must verify paid leave contributions when creating an account. You need to 
+      complete this process
+       to review applications from your team. If you have an EIN that isn't verified you won't see any applications related to that EIN.
+    </p>
+  </div>
+</div>
+`;
+
+exports[`Index shows the 'Verification blocked' tag and link for unverifiable administrators 1`] = `
+<th
+  data-label="Organization"
+  scope="row"
+>
+  <a
+    class="margin-right-3"
+    href="/employers/organizations/cannot-verify?employer_id=io19fj9-00jjf-uiw3r"
+  >
+    Tomato Touchdown
+  </a>
+  <a
+    href="/employers/organizations/cannot-verify?employer_id=io19fj9-00jjf-uiw3r"
+  >
+    <span
+      class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-error-darker bg-error-lighter padding-x-205"
+    >
+      Verification blocked
+    </span>
+  </a>
+</th>
+`;
+
+exports[`Index shows the 'Verification required' tag and link for verifiable administrators 1`] = `
+<th
+  data-label="Organization"
+  scope="row"
+>
+  <a
+    class="margin-right-3"
+    href="/employers/organizations/verify-contributions?employer_id=dda903f-f093f-ff900&next=%2Femployers%2Forganizations"
+  >
+    Book Bindings 'R Us
+  </a>
+  <a
+    href="/employers/organizations/verify-contributions?employer_id=dda903f-f093f-ff900&next=%2Femployers%2Forganizations"
+  >
+    <span
+      class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-base-darkest bg-warning-lighter padding-x-205"
+    >
+      Verification required
+    </span>
+  </a>
+</th>
+`;

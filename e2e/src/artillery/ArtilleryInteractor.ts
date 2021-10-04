@@ -95,6 +95,7 @@ export default class ArtilleryPFMLInteractor {
     logger: winston.Logger
   ): Promise<UsefulClaimData> {
     return timed(ee, logger, "postProcessClaim", async () => {
+      logger.debug("Entering Fineos withBrowser");
       await Fineos.withBrowser(
         async (page) =>
           await approveClaim(

@@ -32,6 +32,7 @@ class PaymentAuditError(Exception):
 
 class PaymentAuditReportStep(Step):
     class Metrics(str, enum.Enum):
+        AUDIT_PATH = "audit_path"
         PAYMENT_COUNT = "payment_count"
         PAYMENT_SAMPLED_FOR_AUDIT_COUNT = "payment_sampled_for_audit_count"
         SAMPLED_PAYMENT_COUNT = "sampled_payment_count"
@@ -203,6 +204,7 @@ class PaymentAuditReportStep(Step):
             logger.info(
                 "Done writing Payment Audit Report file to archive folder: %s", archive_folder_path
             )
+            self.set_metrics({self.Metrics.AUDIT_PATH: archive_folder_path})
 
             # Copy the report to the outgoing folder for program integrity
             outgoing_file_name = f"{payments_util.Constants.FILE_NAME_PAYMENT_AUDIT_REPORT}.csv"

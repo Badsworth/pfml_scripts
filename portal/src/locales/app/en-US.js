@@ -620,6 +620,8 @@ const errors = {
         "Enter a valid Employer Identification Number (EIN). Check that you entered your EIN correctly.",
       required: "Enter your 9-digit Employer Identification Number.",
     },
+    fineos_claim_withdrawn:
+      "Application has been withdrawn and is no longer being processed.",
     hours_worked_per_week: {
       maximum: "Average weekly hours must be 168 or fewer.",
       minimum: "Enter the average weekly hours.",
@@ -2201,13 +2203,6 @@ const pages = {
     title: "Create an employer account",
     usernameHint:
       "Use a secure work address. An email address can only be associated with one account.",
-    usernameLabel: "$t(shared.usernameLabel)",
-  },
-  employersAuthFinishAccountSetup: {
-    createAccountFooterLink: "Create a new account",
-    lead: "Please verify your email address. If an account exists for the email you provide, you’ll receive a 6-digit verification code. After that, you’ll be prompted to create a new password.",
-    submitButton: "Submit",
-    title: "Finish setting up your account",
     usernameLabel: "$t(shared.usernameLabel)",
   },
   employersCannotVerify: {
