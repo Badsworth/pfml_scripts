@@ -606,7 +606,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
    *
    * @returns {MockClaimBuilder}
    */
-  previousLeavesOtherReason(attrs) {
+  previousLeavesOtherReason(attrs = [{}]) {
     set(this.claimAttrs, "has_previous_leaves_other_reason", true);
     set(
       this.claimAttrs,

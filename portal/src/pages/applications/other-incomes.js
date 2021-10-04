@@ -83,7 +83,7 @@ export const OtherIncomes = (props) => {
                 className="text-secondary text-middle margin-right-05 margin-top-neg-05"
                 fill="currentColor"
               />
-              {t("pages.claimsOtherIncomes.doReportHintHeading")}
+              {t("pages.claimsEmployerBenefits.doReportHintHeading")}
             </Heading>
             <ul className="usa-list margin-top-0 margin-left-4 margin-bottom-4">
               {doReportHintList.map((listItem, index) => (
@@ -97,7 +97,7 @@ export const OtherIncomes = (props) => {
                 className="text-error text-middle margin-right-05 margin-top-neg-05"
                 fill="currentColor"
               />
-              {t("pages.claimsOtherIncomes.doNotReportHintHeading")}
+              {t("pages.claimsEmployerBenefits.doNotReportHintHeading")}
             </Heading>
             <ul className="usa-list margin-top-0 margin-left-4">
               {doNotReportHintList.map((listItem, index) => (

@@ -1,0 +1,58 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PreviousLeavesIntro renders the page 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Other leave, benefits, and income"
+>
+  <Heading
+    level="2"
+    size="1"
+  >
+    Tell us about your previous leave.
+  </Heading>
+  <IconHeading
+    name="check_circle"
+  >
+    You'll need to report previous leave you may have taken between January 1, 2021 and :
+  </IconHeading>
+  <Trans
+    components={
+      Object {
+        "li": <li />,
+        "ul": <ul
+          className="usa-list margin-left-2"
+        />,
+      }
+    }
+    i18nKey="pages.claimsPreviousLeavesIntro.intro"
+    values={
+      Object {
+        "startDate": "January 1, 2021",
+      }
+    }
+  />
+  <br />
+  <IconHeading
+    name="cancel"
+  >
+    You don't need to report:
+  </IconHeading>
+  <Trans
+    components={
+      Object {
+        "li": <li />,
+        "ul": <ul
+          className="usa-list margin-left-2"
+        />,
+      }
+    }
+    i18nKey="pages.claimsPreviousLeavesIntro.introDontNeed"
+    values={
+      Object {
+        "startDate": "January 1, 2021",
+      }
+    }
+  />
+</QuestionPage>
+`;

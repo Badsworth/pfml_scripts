@@ -1,0 +1,73 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Start renders descriptions with mass gov link 1`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    We use this application to determine the leave time and benefit amount you will receive.
+  </p>,
+  <p
+    key="p-1"
+  >
+    We need true answers to every question so that we can manage the program the way the law requires. You can read more about the 
+    <a
+      href="https://www.mass.gov/info-details/massachusetts-department-of-family-and-medical-leave-informed-consent-agreement"
+      key="1"
+      rel="noopener"
+      target="_blank"
+    >
+      requirement to answer truthfully
+    </a>
+    .
+  </p>,
+  <p
+    key="p-2"
+  >
+    Please confirm that you will answer as truthfully as you can.
+  </p>,
+]
+`;
+
+exports[`Start renders the page 1`] = `
+<Fragment>
+  <BackButton />
+  <form
+    className="usa-form"
+    method="post"
+    onSubmit={[Function]}
+  >
+    <Title>
+      Start your application
+    </Title>
+    <Trans
+      components={
+        Object {
+          "mass-consent-agreement-link": <a
+            href="https://www.mass.gov/info-details/massachusetts-department-of-family-and-medical-leave-informed-consent-agreement"
+            rel="noopener"
+            target="_blank"
+          />,
+        }
+      }
+      i18nKey="pages.claimsStart.explanation"
+    />
+    <Alert
+      className="measure-6"
+      noIcon={true}
+      state="info"
+    >
+      <p>
+        I understand that I need to give true answers to all questions in order to receive and keep my paid leave benefits and job protections. I understand false answers may forfeit my rights to paid leave and may result in other penalties.
+      </p>
+      <Button
+        loading={false}
+        name="new-claim"
+        type="submit"
+      >
+        I understand and agree
+      </Button>
+    </Alert>
+  </form>
+</Fragment>
+`;

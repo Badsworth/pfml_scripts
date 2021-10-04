@@ -69,7 +69,7 @@ exports[`OtherIncomes renders the page 1`] = `
             xlink:href="/img/sprite.svg#check_circle"
           />
         </svg>
-        You must report these sources of income:
+        The employer-sponsored benefits you must report are:
       </h3>
       <ul
         class="usa-list margin-top-0 margin-left-4 margin-bottom-4"
@@ -110,7 +110,7 @@ exports[`OtherIncomes renders the page 1`] = `
             xlink:href="/img/sprite.svg#cancel"
           />
         </svg>
-        You don't need to report:
+        You don’t need to report:
       </h3>
       <ul
         class="usa-list margin-top-0 margin-left-4"

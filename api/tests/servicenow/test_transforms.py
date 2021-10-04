@@ -7,14 +7,11 @@ from massgov.pfml.api.models.notifications.requests import (
 )
 from massgov.pfml.db.models.factories import EmployerFactory
 from massgov.pfml.servicenow.models import OutboundMessage
-from massgov.pfml.servicenow.transforms.notifications import (
-    TransformNotificationRequest,
-    format_link,
-)
+from massgov.pfml.servicenow.transforms.notifications import TransformNotificationRequest
 
 
 @pytest.fixture
-def notification_request():
+def leave_admin_notification_request():
     return NotificationRequest(
         absence_case_id="NTN-110-ABS-01",
         fein="00-0000000",
@@ -35,54 +32,89 @@ def notification_request():
 
 
 @pytest.fixture
-def leave_admin_notification_request(notification_request):
-    notification_request.recipient_type = "Leave Administrator"
-    return notification_request
-
-
-@pytest.fixture
-def leave_admin_notification_request_empty_doctype(leave_admin_notification_request):
-    leave_admin_notification_request.document_type = ""
-    return leave_admin_notification_request
-
-
-@pytest.fixture
-def leave_admin_notification_request_no_doctype(leave_admin_notification_request):
-    leave_admin_notification_request.document_type = None
-    return leave_admin_notification_request
-
-
-@pytest.fixture
-def leave_admin_notification_request_employer_confirmation(leave_admin_notification_request):
-    leave_admin_notification_request.trigger = "Employer Confirmation of Leave Data"
-    return leave_admin_notification_request
-
-
-@pytest.fixture
-def claimant_notification_request(notification_request):
-    notification_request.recipient_type = "Claimant"
-    notification_request.recipients = [
-        RecipientDetails(email_address="j.a.doe@gmail.com", first_name="Jane", last_name="Doe")
-    ]
-
-    return notification_request
-
-
-@pytest.fixture
-def multiple_recipients_notification_request(notification_request):
-    notification_request.recipients = [
-        RecipientDetails(
-            contact_id="11",
-            email_address="ihavethreenames@gmail.com",
-            full_name="Ihave Three Names",
+def leave_admin_notification_request_empty_doctype():
+    return NotificationRequest(
+        absence_case_id="NTN-110-ABS-01",
+        fein="00-0000000",
+        organization_name="Wayne Enterprises",
+        claimant_info=ClaimantInfo(
+            customer_id="1234", date_of_birth="1970-01-01", first_name="John", last_name="Smith"
         ),
-        RecipientDetails(
-            contact_id="12", email_address="ihaveonename@gmail.com", full_name="Ihaveonename"
-        ),
-    ]
-    notification_request.source = "Call Center"
+        document_type="",
+        recipient_type="Leave Administrator",
+        recipients=[
+            RecipientDetails(
+                contact_id="11", email_address="j.a.doe@gmail.com", full_name="Jane Doe"
+            )
+        ],
+        source="Self-Service",
+        trigger="claim.approved",
+    )
 
-    return notification_request
+
+@pytest.fixture
+def leave_admin_notification_request_no_doctype():
+    return NotificationRequest(
+        absence_case_id="NTN-110-ABS-01",
+        fein="00-0000000",
+        organization_name="Wayne Enterprises",
+        claimant_info=ClaimantInfo(
+            customer_id="1234", date_of_birth="1970-01-01", first_name="John", last_name="Smith"
+        ),
+        recipient_type="Leave Administrator",
+        recipients=[
+            RecipientDetails(
+                contact_id="11", email_address="j.a.doe@gmail.com", full_name="Jane Doe"
+            )
+        ],
+        source="Self-Service",
+        trigger="claim.approved",
+    )
+
+
+@pytest.fixture
+def claimant_notification_request():
+    return NotificationRequest(
+        absence_case_id="NTN-110-ABS-01",
+        fein="00-0000000",
+        organization_name="Wayne Enterprises",
+        claimant_info=ClaimantInfo(
+            customer_id="1234", date_of_birth="1970-01-01", first_name="John", last_name="Smith"
+        ),
+        document_type="Legal Notice",
+        recipient_type="Claimant",
+        recipients=[
+            RecipientDetails(email_address="j.a.doe@gmail.com", first_name="Jane", last_name="Doe")
+        ],
+        source="Self-Service",
+        trigger="claim.approved",
+    )
+
+
+@pytest.fixture
+def multiple_recipients_notification_request():
+    return NotificationRequest(
+        absence_case_id="NTN-110-ABS-01",
+        fein="00-0000000",
+        organization_name="Wayne Enterprises",
+        claimant_info=ClaimantInfo(
+            customer_id="1234", date_of_birth="1970-01-01", first_name="John", last_name="Smith"
+        ),
+        document_type="Legal Notice",
+        recipient_type="Leave Administrator",
+        recipients=[
+            RecipientDetails(
+                contact_id="11",
+                email_address="ihavethreenames@gmail.com",
+                full_name="Ihave Three Names",
+            ),
+            RecipientDetails(
+                contact_id="12", email_address="ihaveonename@gmail.com", full_name="Ihaveonename"
+            ),
+        ],
+        source="Call Center",
+        trigger="claim.approved",
+    )
 
 
 @pytest.fixture
@@ -216,36 +248,3 @@ class TestTransformNotificationRequest:
             == '{"first_name": "John", "last_name": "Smith", "dob": "01/01/****", "id": "1234"}'
         )
         assert result.u_employer_customer_number == 10
-
-
-class TestFormatLink:
-    def test_with_employer(self, leave_admin_notification_request):
-        link = format_link(leave_admin_notification_request)
-        expected = (
-            "https://paidleave.mass.gov/employers/applications/status/?absence_id=NTN-110-ABS-01"
-        )
-
-        assert link == expected
-
-    def test_with_employer_confirmation(
-        self, leave_admin_notification_request_employer_confirmation
-    ):
-        link = format_link(leave_admin_notification_request_employer_confirmation)
-        expected = "https://paidleave.mass.gov/employers/applications/new-application/?absence_id=NTN-110-ABS-01"
-
-        assert link == expected
-
-    def test_with_claimant(self, claimant_notification_request):
-        link = format_link(claimant_notification_request)
-
-        assert link == "https://paidleave.mass.gov/applications"
-
-    def test_with_claimant_and_claim_status_enabled(
-        self, monkeypatch, claimant_notification_request
-    ):
-        monkeypatch.setenv("USE_CLAIM_STATUS_URL", "true")
-
-        link = format_link(claimant_notification_request)
-        expected = "https://paidleave.mass.gov/applications/status/?absence_case_id=NTN-110-ABS-01#view-notices"
-
-        assert link == expected

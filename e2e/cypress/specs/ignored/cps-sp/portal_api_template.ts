@@ -24,7 +24,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
             timestamp_from: Date.now(),
           });
         });
-        portal.submitClaimPartsTwoThree(application, paymentPreference);
+        portal.submitPartsTwoThreeNoLeaveCert(paymentPreference);
       });
     });
 

@@ -62,25 +62,13 @@ def format_link(notification_request: NotificationRequest) -> str:
         logger.error("PORTAL_BASE_URL is not set")
         return ""
 
-    absence_id = notification_request.absence_case_id
-
     if is_leave_administrator(notification_request):
         if notification_request.trigger == LEAVE_ADMIN_INFO_REQUEST_TYPE:
-            return (
-                f"{PORTAL_BASE_URL}/employers/applications/new-application/?absence_id={absence_id}"
-            )
+            return f"{PORTAL_BASE_URL}/employers/applications/new-application/?absence_id={notification_request.absence_case_id}"
 
-        return f"{PORTAL_BASE_URL}/employers/applications/status/?absence_id={absence_id}"
-
-    if _should_use_claim_status_url():
-        return f"{PORTAL_BASE_URL}/applications/status/?absence_case_id={absence_id}#view-notices"
+        return f"{PORTAL_BASE_URL}/employers/applications/status/?absence_id={notification_request.absence_case_id}"
 
     return f"{PORTAL_BASE_URL}/applications"
-
-
-def _should_use_claim_status_url():
-    # bool env var is imported as string
-    return os.environ.get("USE_CLAIM_STATUS_URL") == "true"
 
 
 def format_document_type(notification_request: NotificationRequest) -> str:

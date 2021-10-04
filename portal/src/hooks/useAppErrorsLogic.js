@@ -25,7 +25,7 @@ import { useTranslation } from "../locales/i18n";
  * @returns {{ appErrors: AppErrorInfoCollection, setAppErrors: Function, catchError: catchErrorFunction, clearErrors: clearErrorsFunction }}
  */
 const useAppErrorsLogic = ({ portalFlow }) => {
-  const { i18n, t } = useTranslation();
+  const { t } = useTranslation();
 
   /**
    * @callback addErrorFunction
@@ -101,14 +101,13 @@ const useAppErrorsLogic = ({ portalFlow }) => {
    * @param {string} issue.rule
    * @param {string} issue.type
    * @param {string} i18nPrefix - prefix used in the i18n key
-   * @param {Object} [tOptions] - additional key/value pairs used in the i18n message interpolation
    * @returns {string | Trans} Internationalized error message or Trans component
    * @example getMessageFromIssue(issue, "applications");
    */
   const getMessageFromIssue = (
     { field, message, rule, type },
     i18nPrefix,
-    tOptions
+    context = null
   ) => {
     let issueMessageKey;
 
@@ -128,7 +127,7 @@ const useAppErrorsLogic = ({ portalFlow }) => {
     const htmlErrorMessage = maybeGetHtmlErrorMessage(
       type,
       issueMessageKey,
-      tOptions
+      context
     );
     if (htmlErrorMessage) return htmlErrorMessage;
 
@@ -160,12 +159,10 @@ const useAppErrorsLogic = ({ portalFlow }) => {
    * Create the custom HTML error message, if the given error type requires HTML formatting/links
    * @param {string} type
    * @param {string} issueMessageKey
-   * @param {Object} [tOptions] - additional key/value pairs used in the i18n message interpolation
+   * @param {Object} context - additional context used in the i18n message interpolation
    * @returns {Trans} React node for the message, if the given error type should have an HTML message
    */
-  const maybeGetHtmlErrorMessage = (type, issueMessageKey, tOptions) => {
-    if (!issueMessageKey || !i18n.exists(issueMessageKey)) return;
-
+  const maybeGetHtmlErrorMessage = (type, issueMessageKey, context) => {
     // TODO (CP-1532): Remove once links in error messages are fully supported
     if (type === "fineos_case_creation_issues") {
       return (
@@ -253,7 +250,7 @@ const useAppErrorsLogic = ({ portalFlow }) => {
       return (
         <Trans
           i18nKey={issueMessageKey}
-          tOptions={tOptions}
+          tOptions={context}
           components={{
             "contact-center-phone-link": (
               <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />

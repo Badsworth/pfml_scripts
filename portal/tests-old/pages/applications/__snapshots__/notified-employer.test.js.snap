@@ -1,0 +1,64 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`NotifiedEmployer renders the page 1`] = `
+<QuestionPage
+  onSave={[Function]}
+  title="Employment information"
+>
+  <InputChoiceGroup
+    choices={
+      Array [
+        Object {
+          "checked": false,
+          "label": "Yes",
+          "value": "true",
+        },
+        Object {
+          "checked": false,
+          "label": "No",
+          "value": "false",
+        },
+      ]
+    }
+    label="Have you told your employer that you are taking leave?"
+    name="leave_details.employer_notified"
+    onChange={[Function]}
+    type="radio"
+    value=""
+  />
+  <ConditionalContent
+    clearField={[Function]}
+    fieldNamesClearedWhenHidden={
+      Array [
+        "leave_details.employer_notification_date",
+      ]
+    }
+    getField={[Function]}
+    updateFields={[Function]}
+    visible={false}
+  >
+    <InputDate
+      dayLabel="Day"
+      example="MM / DD / YYYY"
+      hint="This can be an approximate date."
+      label="When did you tell them?"
+      monthLabel="Month"
+      name="leave_details.employer_notification_date"
+      onChange={[Function]}
+      value=""
+      yearLabel="Year"
+    />
+  </ConditionalContent>
+  <ConditionalContent
+    visible={false}
+  >
+    <Alert
+      autoWidth={true}
+      role="alert"
+      state="warning"
+    >
+      You can continue to enter information about your leave. Before you can submit your application, you must tell your employer that you’re taking leave. Notify your employer at least 30 days before the start of your leave if possible.
+    </Alert>
+  </ConditionalContent>
+</QuestionPage>
+`;

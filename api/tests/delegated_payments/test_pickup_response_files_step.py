@@ -111,12 +111,6 @@ def pub_ach_files(setup_paths):
 
 
 @pytest.fixture
-def pub_ach_raw_files(setup_paths):
-    moveit_inbound_path = payments_config.get_s3_config().pub_moveit_inbound_path
-    return generate_files(payments_util.Constants.FILE_NAME_RAW_PUB_ACH_FILE, moveit_inbound_path)
-
-
-@pytest.fixture
 def random_files_in_dfml_response_path(setup_paths):
     dfml_response_inbound_path = payments_config.get_s3_config().dfml_response_inbound_path
     # Add a few file names similar, but not a match to the files expected in this directory
@@ -154,13 +148,7 @@ def ok_files_in_moveit_response_path(setup_paths):
 
 
 @freeze_time("2021-01-01 12:00:00")
-def test_run_step(
-    pickup_response_file_step,
-    payment_reject_files,
-    pub_check_files,
-    pub_ach_files,
-    pub_ach_raw_files,
-):
+def test_run_step(pickup_response_file_step, payment_reject_files, pub_check_files, pub_ach_files):
     s3_config = payments_config.get_s3_config()
     # Construct the expected output directories
     payment_audit_received_path = os.path.join(
@@ -174,9 +162,7 @@ def test_run_step(
     )
 
     # Verify all input directories contain the expected files
-    verify_files(
-        s3_config.pub_moveit_inbound_path, pub_check_files + pub_ach_files + pub_ach_raw_files
-    )
+    verify_files(s3_config.pub_moveit_inbound_path, pub_check_files + pub_ach_files)
     verify_files(s3_config.dfml_response_inbound_path, payment_reject_files)
     # Verify the output directories are empty
     verify_files(payment_audit_received_path, [])
@@ -188,7 +174,7 @@ def test_run_step(
     # Verify the output directories have the expected files
     verify_files(payment_audit_received_path, payment_reject_files, True)
     verify_files(pub_check_received_path, pub_check_files, True)
-    verify_files(pub_ach_received_path, pub_ach_files + pub_ach_raw_files, True)
+    verify_files(pub_ach_received_path, pub_ach_files, True)
 
     # Verify the input directories are now empty
     verify_files(s3_config.pub_moveit_inbound_path, [])
@@ -199,13 +185,11 @@ def test_run_step(
         {
             "files_moved_count": len(payment_reject_files)
             + len(pub_check_files)
-            + len(pub_ach_files)
-            + len(pub_ach_raw_files),
+            + len(pub_ach_files),
             "unknown_files_count": 0,
             "Payment-Audit-Report_file_moved_count": len(payment_reject_files),
             "EOLWD-DFML-POSITIVE-PAY_file_moved_count": len(pub_check_files),
             "EOLWD-DFML-NACHA_file_moved_count": len(pub_ach_files),
-            "ACD9T136-DFML_file_moved_count": len(pub_ach_raw_files),
         },
     )
 
@@ -216,7 +200,6 @@ def test_run_step_miscellaneous_files_present(
     payment_reject_files,
     pub_check_files,
     pub_ach_files,
-    pub_ach_raw_files,
     random_files_in_dfml_response_path,
     random_files_in_moveit_response_path,
     ok_files_in_moveit_response_path,
@@ -238,7 +221,6 @@ def test_run_step_miscellaneous_files_present(
         s3_config.pub_moveit_inbound_path,
         pub_check_files
         + pub_ach_files
-        + pub_ach_raw_files
         + random_files_in_moveit_response_path
         + ok_files_in_moveit_response_path,
     )
@@ -256,7 +238,7 @@ def test_run_step_miscellaneous_files_present(
     # Verify the output directories have the expected files
     verify_files(payment_audit_received_path, payment_reject_files, True)
     verify_files(pub_check_received_path, pub_check_files, True)
-    verify_files(pub_ach_received_path, pub_ach_files + pub_ach_raw_files, True)
+    verify_files(pub_ach_received_path, pub_ach_files, True)
 
     # Verify the input directories contain just the random files
     verify_files(
@@ -270,14 +252,12 @@ def test_run_step_miscellaneous_files_present(
         {
             "files_moved_count": len(payment_reject_files)
             + len(pub_check_files)
-            + len(pub_ach_files)
-            + len(pub_ach_raw_files),
+            + len(pub_ach_files),
             "unknown_files_count": len(random_files_in_moveit_response_path)
             + len(random_files_in_dfml_response_path),
             "Payment-Audit-Report_file_moved_count": len(payment_reject_files),
             "EOLWD-DFML-POSITIVE-PAY_file_moved_count": len(pub_check_files),
             "EOLWD-DFML-NACHA_file_moved_count": len(pub_ach_files),
-            "ACD9T136-DFML_file_moved_count": len(pub_ach_raw_files),
         },
     )
 

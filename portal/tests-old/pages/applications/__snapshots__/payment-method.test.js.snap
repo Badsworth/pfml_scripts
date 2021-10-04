@@ -1,0 +1,183 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PaymentMethod renders the page 1`] = `
+<Fragment>
+  <BackButton />
+  <form
+    className="usa-form"
+    method="post"
+    onSubmit={[Function]}
+  >
+    <Title
+      small={true}
+    >
+      Payment method
+    </Title>
+    <InputChoiceGroup
+      choices={
+        Array [
+          Object {
+            "checked": false,
+            "hint": "It can take us additional time to set up direct deposit with your bank. Your first payment might be a check sent to the address you listed as your mailing address.",
+            "label": "Direct deposit into my bank account",
+            "value": "Elec Funds Transfer",
+          },
+          Object {
+            "checked": false,
+            "hint": "You will receive your checks at the address you listed as your mailing address.",
+            "label": "Paper check",
+            "value": "Check",
+          },
+        ]
+      }
+      hint={
+        <React.Fragment>
+          <p>
+            Your choice will be applied to any previous applications you have submitted.
+          </p>
+          <Details
+            label="When will I get paid?"
+          >
+            <div
+              className="margin-bottom-5"
+            >
+              <Trans
+                i18nKey="pages.claimsPaymentMethod.whenWillIGetPaidDetails"
+              />
+            </div>
+          </Details>
+        </React.Fragment>
+      }
+      label="How do you want to get your weekly benefit?"
+      name="payment_preference.payment_method"
+      onChange={[Function]}
+      type="radio"
+      value=""
+    />
+    <ConditionalContent
+      clearField={[Function]}
+      fieldNamesClearedWhenHidden={
+        Array [
+          "payment_preference.account_number",
+          "payment_preference.bank_account_type",
+          "payment_preference.routing_number",
+        ]
+      }
+      getField={[Function]}
+      updateFields={[Function]}
+      visible={false}
+    >
+      <Fieldset>
+        <FormLabel
+          component="legend"
+        >
+          Enter your bank account information
+        </FormLabel>
+        <Lead>
+          We need this information so you can receive your weekly benefit through Direct Deposit. Contact your bank if you are having trouble finding this information.
+        </Lead>
+        <InputText
+          hint="This is the 9-digit number found on the lower left corner of a check or deposit slip."
+          inputMode="numeric"
+          label="Routing number"
+          name="payment_preference.routing_number"
+          onChange={[Function]}
+          pii={true}
+          smallLabel={true}
+          value=""
+          width="medium"
+        />
+        <InputText
+          inputMode="numeric"
+          label="Account number"
+          name="payment_preference.account_number"
+          onChange={[Function]}
+          pii={true}
+          smallLabel={true}
+          value=""
+        />
+        <InputChoiceGroup
+          choices={
+            Array [
+              Object {
+                "checked": false,
+                "label": "Checking",
+                "value": "Checking",
+              },
+              Object {
+                "checked": false,
+                "label": "Savings",
+                "value": "Savings",
+              },
+            ]
+          }
+          label="Account type"
+          name="payment_preference.bank_account_type"
+          onChange={[Function]}
+          smallLabel={true}
+          type="radio"
+          value=""
+        />
+      </Fieldset>
+    </ConditionalContent>
+    <div
+      className="margin-top-6 margin-bottom-2"
+    >
+      <Trans
+        components={
+          Object {
+            "benefits-guide-link": <a
+              href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide"
+              rel="noreferrer noopener"
+              target="_blank"
+            />,
+            "contact-center-phone-link": <a
+              href="tel:(833) 344-7365"
+            />,
+          }
+        }
+        i18nKey="pages.claimsPaymentMethod.partTwoNextSteps"
+      />
+    </div>
+    <Button
+      className="margin-top-4"
+      loading={false}
+      onClick={[Function]}
+      type="submit"
+    >
+      Submit Part 2
+    </Button>
+  </form>
+</Fragment>
+`;
+
+exports[`PaymentMethod renders the page 2`] = `
+Array [
+  <p
+    key="p-0"
+  >
+    Once you submit Part 2, your payment information will be viewable by our Contact Center staff. To make edits to Part 2, you’ll need to call the Contact Center at 
+    <a
+      href="tel:(833) 344-7365"
+      key="1"
+    >
+      (833) 344‑7365
+    </a>
+    . To learn more about benefit payments, 
+    <a
+      href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide"
+      key="3"
+      rel="noreferrer noopener"
+      target="_blank"
+    >
+      see our benefits guide
+    </a>
+    .
+  </p>,
+  <p
+    key="p-1"
+  >
+    Next, you’ll work on Part 3, and submit your application.
+  </p>,
+]
+`;

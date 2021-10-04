@@ -1,0 +1,56 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FinishAccountSetup renders the page 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+      tabindex="-1"
+    >
+      Finish setting up your account
+    </h1>
+    <p
+      class="usa-intro"
+    >
+      Please verify your email address. If an account exists for the email you provide, you’ll receive a 6-digit verification code. After that, you’ll be prompted to create a new password.
+    </p>
+    <div
+      class="usa-form-group"
+    >
+      <label
+        class="usa-label text-bold font-heading-xs measure-5"
+        for="InputText1"
+        id="InputText1_label"
+      >
+        Email address
+      </label>
+      <input
+        aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+        class="usa-input maxw-mobile-lg"
+        id="InputText1"
+        name="username"
+        type="email"
+        value=""
+      />
+    </div>
+    <button
+      class="usa-button position-relative"
+      type="submit"
+    >
+      Submit
+    </button>
+    <div
+      class="margin-top-2 text-bold"
+    >
+      <a
+        href="/employers/create-account"
+      >
+        Create a new account
+      </a>
+    </div>
+  </form>
+</div>
+`;

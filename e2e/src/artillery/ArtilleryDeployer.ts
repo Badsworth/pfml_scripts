@@ -110,7 +110,7 @@ export default class ArtilleryDeployer {
 
   private buildInfluxURL(runId: string, start: Date, end: Date): string {
     const dashboardUrl = new URL(
-      "https://us-east-1-1.aws.cloud2.influxdata.com/orgs/2d104c868dfad878/dashboards/083748d6e50d4000"
+      "https://us-east-1-1.aws.cloud2.influxdata.com/orgs/2d104c868dfad878/dashboards/082e5bc004c3b000"
     );
     const params = new URLSearchParams({
       "vars[runId]": runId,

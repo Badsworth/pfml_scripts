@@ -14,9 +14,6 @@ class PaymentAuditCSV(AbstractRecord):
     fineos_customer_number: Optional[str]
     first_name: Optional[str]
     last_name: Optional[str]
-    dor_first_name: Optional[str]
-    dor_last_name: Optional[str]
-    dor_fineos_name_mismatch_details: Optional[str]
     address_line_1: Optional[str]
     address_line_2: Optional[str]
     city: Optional[str]
@@ -55,7 +52,6 @@ class PaymentAuditDetails:
 
     max_weekly_benefits_details: Optional[str] = None
     dua_dia_reduction_details: Optional[str] = None
-    dor_fineos_name_mismatch_details: Optional[str] = None
     rejected_by_program_integrity: bool = False
     skipped_by_program_integrity: bool = False
     rejected_notes: Optional[str] = None
@@ -67,9 +63,6 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     fineos_customer_number="Customer Number",
     first_name="First Name",
     last_name="Last Name",
-    dor_first_name="DOR First Name",
-    dor_last_name="DOR Last Name",
-    dor_fineos_name_mismatch_details=PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH.payment_audit_report_type_description,
     address_line_1="Address Line 1",
     address_line_2="Address Line 2",
     city="City",

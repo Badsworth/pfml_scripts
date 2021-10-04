@@ -110,6 +110,7 @@ def test_processor_mixed(dua_dia_reductions_processor, local_test_db_session):
         .one_or_none()
     )
     message = audit_report.details["message"]
+    print(message)
     assert message == "\n".join(
         [
             "DUA Reductions:",
