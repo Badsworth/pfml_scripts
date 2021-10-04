@@ -1068,6 +1068,7 @@ class WagesAndContributions(Base, TimestampMixin):
 
 class EmployeeOccupation(Base, TimestampMixin):
     __tablename__ = "employee_occupation"
+
     employee_occupation_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     employee_id = Column(
         PostgreSQLUUID, ForeignKey("employee.employee_id"), nullable=False, index=True
@@ -1085,6 +1086,8 @@ class EmployeeOccupation(Base, TimestampMixin):
     manager_id = Column(Text)
     worksite_id = Column(Text)
     occupation_qualifier = Column(Text)
+
+    Index("ix_employee_occupation_employee_id_employer_id", employee_id, employer_id, unique=True)
 
     employee = relationship("Employee", back_populates="employee_occupations")
     employer = relationship("Employer", back_populates="employer_occupations")
