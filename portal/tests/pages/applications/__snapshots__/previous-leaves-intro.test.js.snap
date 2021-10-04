@@ -1,0 +1,92 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PreviousLeavesIntro renders the page 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Other leave, benefits, and income
+    </h1>
+    <h2
+      class="font-heading-lg text-bold"
+    >
+      Tell us about your previous leave.
+    </h2>
+    <h2
+      class="display-flex flex-row flex-align-start font-heading-sm text-bold"
+    >
+      <svg
+        aria-hidden="true"
+        class="usa-icon--size-3 margin-right-2px flex-auto text-green"
+        fill="currentColor"
+        focusable="false"
+        role="img"
+      >
+        <use
+          xlink:href="/img/sprite.svg#check_circle"
+        />
+      </svg>
+      <span
+        class="flex-1"
+      >
+        You'll need to report previous leave you may have taken between January 1, 2021 and :
+      </span>
+    </h2>
+    <ul
+      class="usa-list margin-left-2"
+    >
+      <li>
+        Any previous leave for the same reason that you are applying for paid leave now
+      </li>
+      <li>
+        Any previous leave for a different qualifying reasons
+      </li>
+    </ul>
+    <br />
+    <h2
+      class="display-flex flex-row flex-align-center font-heading-sm text-bold"
+    >
+      <svg
+        aria-hidden="true"
+        class="usa-icon--size-3 margin-right-2px flex-auto text-red"
+        fill="currentColor"
+        focusable="false"
+        role="img"
+      >
+        <use
+          xlink:href="/img/sprite.svg#cancel"
+        />
+      </svg>
+      <span
+        class="flex-1"
+      >
+        You don't need to report:
+      </span>
+    </h2>
+    <ul
+      class="usa-list margin-left-2"
+    >
+      <li>
+        Leave that was taken through Massachusetts' PFML program
+      </li>
+      <li>
+        Leave that was taking before January 1, 2021 and January 1, 2021
+      </li>
+      <li>
+        Family leave to care for a family member taken before July 1, 2021
+      </li>
+    </ul>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;

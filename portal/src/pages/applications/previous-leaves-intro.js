@@ -15,7 +15,7 @@ export const PreviousLeavesIntro = (props) => {
   const startDate = formatDate(claim.leaveStartDate).full();
 
   const handleSave = () => {
-    appLogic.portalFlow.goToNextPage({ claim }, query);
+    return appLogic.portalFlow.goToNextPage({ claim }, query);
   };
 
   return (
