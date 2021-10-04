@@ -19,5 +19,7 @@ jobs:
         shell: bash
       - name: actionlint checker
         # We are disabling the shellcheck (-shellcheck=) from running for the moment.
-        run: ${{ steps.get_actionlint.outputs.executable }} -color -shellcheck=
+        # Ignore usages of run_attempt for the moment - this is new and an issue has been raised:
+        # https://github.com/rhysd/actionlint/issues/57
+        run: ${{ steps.get_actionlint.outputs.executable }} -color --ignore='property "run_attempt" is not defined' -shellcheck=
         shell: bash
