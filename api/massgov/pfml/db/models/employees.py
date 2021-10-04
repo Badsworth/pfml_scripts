@@ -1302,6 +1302,25 @@ class DiaReductionPayment(Base, TimestampMixin):
     )
 
 
+class DuaEmployeeDemographics(Base, TimestampMixin):
+    __tablename__ = "dua_employee_demographics"
+    dua_employee_demographics_id = Column(PostgreSQLUUID, primary_key=True,)
+
+    fineos_customer_number = Column(Text, nullable=False)
+    date_of_birth = Column(Date)
+    gender_code = Column(Text)
+    occupation_code = Column(Text)
+    occupation_description = Column(Text)
+    employer_fein = Column(Text)
+    employer_reporting_unit_number = Column(Text)
+
+    # Each row should be unique. This enables us to load only new rows from a CSV and ensures that
+    # we don't include demographics twice as two different rows. Almost all fields are nullable so we
+    # have to coalesce those null values to empty strings. We've manually adjusted the migration
+    # that adds this unique constraint to coalesce those nullable fields.
+    # See: 2021_10_04_13_30_03_95d3e464a5b2_add_dua_employee_demographics_table.py
+
+
 class PubError(Base, TimestampMixin):
     __tablename__ = "pub_error"
     pub_error_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
