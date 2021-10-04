@@ -2395,6 +2395,39 @@ class State(LookupTable):
         190, "Consolidated DIA report for DFML error", Flow.DFML_DIA_REDUCTION_REPORT.flow_id
     )
 
+    # Tax Withholding States
+    STATE_WITHHOLDING_READY_FOR_PROCESSING = LkState(
+        191, "State Withholding ready for processing", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    STATE_WITHHOLDING_PENDING_AUDIT = LkState(
+        192, "State Withholding awaiting Audit Report", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    STATE_WITHHOLDING_ERROR = LkState(
+        193, "State Withholding Rejected", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    STATE_WITHHOLDING_SEND_FUNDS = LkState(
+        194, "State Withholding send funds to DOR", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_READY_FOR_PROCESSING = LkState(
+        195, "Federal Withholding ready for processing", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_PENDING_AUDIT = LkState(
+        196, "Federal Withholding awaiting Audit Report", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_ERROR = LkState(
+        197, "Federal Withholding Rejected", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_SEND_FUNDS = LkState(
+        198, "Federal Withholding send funds to IRS", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
 
 class PaymentTransactionType(LookupTable):
     model = LkPaymentTransactionType

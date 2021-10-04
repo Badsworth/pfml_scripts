@@ -122,7 +122,7 @@ jobs:
           working-directory: e2e
           ci-build-id: ${{ env.TEST_RUN_ID }}
           group: Unstable
-          install: false # Skip install on second run.
+          install: false
           tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
           config: trashAssetsBeforeRuns=false,reporter=cypress/reporters/new-relic.js
         # Always run this step if requested, even if stable tests fail.
@@ -133,18 +133,21 @@ jobs:
         # the step level instead, allowing continue-on-error to do its job.
         timeout-minutes: 15
 
-      # Run Cypress tests.
-      - name: Cypress Tests (Nightly)
-        uses: cypress-io/github-action@v2
-        timeout-minutes: 15
-        with:
-          spec: "cypress/specs/nightly/**"
-          record: true
-          parallel: true
-          working-directory: e2e
-          group: Nightly
-          tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
-        if: github.event.inputs.run_nightly == 'true' && always()
+#      # Run Nightly Cypress tests (commented out until we have some).
+#      - name: Cypress Tests (Nightly)
+#        uses: cypress-io/github-action@v2
+#        timeout-minutes: 15
+#        with:
+#          spec: "cypress/specs/nightly/**"
+#          record: true
+#          parallel: true
+#          working-directory: e2e
+#          group: Nightly
+#          ci-build-id: ${{ env.TEST_RUN_ID }}
+#          install: false
+#          tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
+#          config: trashAssetsBeforeRuns=false,reporter=cypress/reporters/new-relic.js
+#        if: github.event.inputs.run_nightly == 'true' && always()
 
       - name: "Archive screenshots"
         uses: actions/upload-artifact@v2
