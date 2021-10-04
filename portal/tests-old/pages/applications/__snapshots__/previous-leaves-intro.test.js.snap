@@ -14,7 +14,14 @@ exports[`PreviousLeavesIntro renders the page 1`] = `
   <IconHeading
     name="check_circle"
   >
-    You'll need to report previous leave you may have taken between January 1, 2021 and :
+    <Trans
+      i18nKey="pages.claimsPreviousLeavesIntro.introHeader"
+      values={
+        Object {
+          "startDate": "January 1, 2021",
+        }
+      }
+    />
   </IconHeading>
   <Trans
     components={
