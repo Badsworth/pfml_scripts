@@ -9,9 +9,8 @@ For first-time setup, see [docs/infra/first-time-setup.md](../docs/infra/1-first
 
 ## Directory Structure
 
-This directory contains three standalone modules:
+This directory contains two standalone modules:
 
-- `constants` provide shared values for other terraform modules.
 - `pfml-aws` is account-level infrastructure that must be manually deployed by an infra-admin.
 - `monitoring` is monitoring infrastructure that is automatically deployed when changed in the main branch.
 
@@ -22,7 +21,7 @@ This directory contains three standalone modules:
 └── monitoring          🏡 configuration for pagerduty schedules, on-call policies, and New Relic/Cloudwatch alerts.
 ```
 
-Additionally, we have several components that are duplicated within each environment:
+Additionally, we have several components that are duplicated within each environment and are deployed by the API and Portal deploy jobs:
 
 ```
 └── api                 🏡 infrastructure for a PFML api environment
