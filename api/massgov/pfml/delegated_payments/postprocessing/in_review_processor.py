@@ -20,7 +20,7 @@ class InReviewProcessor(AbstractStepProcessor):
         if payment_container.payment.leave_request_decision == "In Review":
             logger.info(
                 "Payment %s has an in review leave plan",
-                make_payment_log,
+                make_payment_log(payment_container.payment),
                 extra=payment_container.get_traceable_details(),
             )
             self.increment(self.Metrics.PAYMENT_LEAVE_PLAN_IN_REVIEW_COUNT)
