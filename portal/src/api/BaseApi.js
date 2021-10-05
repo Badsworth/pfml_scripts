@@ -31,7 +31,7 @@ export default class BaseApi {
     // if one isn't defined by the subclass. This is ideal since otherwise
     // an engineer may not notice this is required until a validation error
     // is returned in a response.
-    // eslint-disable-next-line no-unused-vars
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
     const i18nPrefix = this.i18nPrefix;
   }
 
