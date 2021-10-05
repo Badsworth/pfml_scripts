@@ -73,8 +73,8 @@ jobs:
       - uses: actions/checkout@v2
       - name: Check Fineos Online
         run: |
-          fineos_url=$(cat config.json | jq -re ".${{ env.E2E_ENVIRONMENT }}.FINEOS_BASEURL")
-          status_code=$(curl -s -o /dev/null -w "%{http_code}" $(cat config.json | jq -r ".${{ env.E2E_ENVIRONMENT }}.FINEOS_BASEURL"))
+          fineos_url=$(cat config.json | jq -re '.["${{ env.E2E_ENVIRONMENT }}"].FINEOS_BASEURL')
+          status_code=$(curl -s -o /dev/null -w "%{http_code}" "$fineos_url")
           echo "Received ${status_code} from ${fineos_url}"
           test "$status_code" -lt 500
   cypress:
