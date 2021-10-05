@@ -41,7 +41,7 @@ jobs:
       - uses: actions/checkout@v2
         with:
           # ref: deploy/api/${{ github.event.inputs.environment || env.default-environment }}
-          ref: deploy/api/main
+          ref: main
 
 
       - name: Configure AWS Credentials
