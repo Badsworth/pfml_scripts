@@ -42,60 +42,56 @@ oldest_created_users AS (
 ),
 duplicated_users_to_remove AS (
     SELECT
-        luu.user_id AS user_id_to_keep,
-        u.email_address,
         u.user_id,
+        u.email_address,
         u.created_at,
         u.updated_at,
         u.sub_id,
-        u.consented_to_data_sharing
+        u.consented_to_data_sharing,
+        luu.user_id AS user_id_to_keep
     FROM
         duplicate_user_emails u_dup
-        INNER JOIN "user" u ON u.email_address = u_dup.email_address
-        INNER JOIN oldest_created_users luu ON luu.email_address = u.email_address
-    WHERE
-        u.user_id NOT IN (
-            SELECT
-                user_id
-            FROM
-                oldest_created_users
-        )
+        INNER JOIN oldest_created_users luu ON luu.email_address = u_dup.email_address
+        INNER JOIN "user" u ON u.email_address = u_dup.email_address AND u.user_id != luu.user_id
 ),
 merged_documents AS (
     UPDATE
-        "document"
+        "document" doc
     SET
         user_id = duu.user_id_to_keep
     FROM
-        "document" doc
-        INNER JOIN duplicated_users_to_remove duu ON duu.user_id = doc.user_id
+        duplicated_users_to_remove duu
+    where duu.user_id = doc.user_id
 ),
 merged_applications AS (
     UPDATE
-        application
+        application a
     SET
         user_id = duu.user_id_to_keep
     FROM
-        application a
-        INNER JOIN duplicated_users_to_remove duu ON duu.user_id = a.user_id
+        duplicated_users_to_remove duu
+    WHERE duu.user_id = a.user_id
+    returning *
 ),
 merged_user_leave_administrators AS (
     UPDATE
-        link_user_leave_administrator
-    SET
-        user_id = duu.user_id_to_keep::uuid
-    FROM
         link_user_leave_administrator lula
-        INNER JOIN duplicated_users_to_remove duu ON duu.user_id = lula.user_id
-),
+    SET
+        user_id = duu.user_id_to_keep
+    FROM
+        duplicated_users_to_remove duu
+    WHERE duu.user_id = lula.user_id
+    returning *
+), 
 merged_requirements AS (
     UPDATE
-        managed_requirement
+        managed_requirement mr
     SET
         respondent_user_id = duu.user_id_to_keep
     FROM
-        managed_requirement mr
-        INNER JOIN duplicated_users_to_remove duu ON duu.user_id = mr.respondent_user_id 
+        duplicated_users_to_remove duu
+    WHERE duu.user_id = mr.respondent_user_id 
+    returning *
 ),
 merged_user_roles AS (
     INSERT INTO
@@ -112,7 +108,8 @@ merged_user_roles AS (
                 duu.user_id
             FROM
                 duplicated_users_to_remove duu
-        ) ON CONFLICT (user_id, role_id) DO NOTHING
+        ) ON CONFLICT (user_id, role_id) DO nothing
+    returning *
 ),
 deleted_user_roles AS (
     DELETE FROM
@@ -124,6 +121,7 @@ deleted_user_roles AS (
             FROM
                 duplicated_users_to_remove duu
         ) 
+    returning *
 ),
 deleted_users AS (
     DELETE FROM
@@ -135,8 +133,9 @@ deleted_users AS (
             FROM
                 duplicated_users_to_remove duu
         ) 
+    returning *
 )
 SELECT
     *
 FROM
-    oldest_created_users;
+    deleted_users;
