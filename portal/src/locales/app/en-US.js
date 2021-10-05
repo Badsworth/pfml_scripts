@@ -47,8 +47,9 @@ const errors = {
     },
     employer_benefits: {
       benefit_amount_dollars: {
-        required:
-          "Enter the amount you will receive, or remove how often you will receive that amount.",
+        minimum:
+          "The benefit amount you will receive must be greater than 0. If you don’t know how much you will receive, go back and answer “No” to the previous question.",
+        required: "Enter the amount you will receive.",
       },
       benefit_amount_frequency: {
         required: "Enter how often you will receive this amount.",
@@ -319,8 +320,9 @@ const errors = {
     },
     other_incomes: {
       income_amount_dollars: {
-        required:
-          "Enter the amount you will receive, or remove how often you will receive that amount.",
+        minimum:
+          "The income amount you will receive must be greater than 0. If you don’t know how much you will receive, go back and answer “No” to the previous question.",
+        required: "Enter the amount you will receive.",
       },
       income_amount_frequency: {
         required: "Enter how often you will receive this amount.",
