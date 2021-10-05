@@ -27,7 +27,7 @@ const ButtonLink = (props) => {
       <button
         type="button"
         className={classes}
-        aria-label={props.ariaLabel}
+        aria-label={props["aria-label"]}
         disabled
       >
         {props.children}
@@ -39,7 +39,7 @@ const ButtonLink = (props) => {
     <Link href={props.href}>
       <a
         className={classes}
-        aria-label={props.ariaLabel}
+        aria-label={props["aria-label"]}
         onClick={props.onClick}
       >
         {props.children}
@@ -61,7 +61,7 @@ ButtonLink.propTypes = {
    * Button's aria-label text.
    * TODO (EMPLOYER-1718) - Use hyphen-casing for ARIA attributes
    */
-  ariaLabel: PropTypes.string,
+  "aria-label": PropTypes.string,
   /**
    * Additional classes to apply to the HTML element. Useful for adding
    * utility classes to control spacing.

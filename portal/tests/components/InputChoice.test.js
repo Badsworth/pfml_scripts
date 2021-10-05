@@ -21,7 +21,7 @@ describe("InputChoice", () => {
     });
 
     it("sets `aria-controls` attribute when provided", () => {
-      render(<InputChoice {...defaultProps} ariaControls="foobar-aria" />);
+      render(<InputChoice {...defaultProps} aria-controls="foobar-aria" />);
       const input = screen.getByRole("checkbox");
 
       expect(input).toHaveAttribute("aria-controls");
