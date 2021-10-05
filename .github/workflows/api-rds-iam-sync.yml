@@ -60,6 +60,9 @@ jobs:
         run: terraform init
         working-directory: ${{ env.working-directory }}${{ github.event.inputs.environment || env.default-environment }}
 
+      - name: Force fail
+        run: exit 1 
+
       - name: Terraform Plan with RDS IAM target
         run: terraform plan --target module.api.aws_iam_policy.db_user_pfml_api --out plan.tfplan
         working-directory: ${{ env.working-directory }}${{ github.event.inputs.environment || env.default-environment }}
