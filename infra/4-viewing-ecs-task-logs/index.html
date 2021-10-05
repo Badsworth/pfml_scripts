@@ -14,7 +14,7 @@
     
     
       
-        <title>Testing Github Actions permissions - PFML</title>
+        <title>Viewing ECS Task logs - PFML</title>
       
     
     
@@ -61,7 +61,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#testing-github-actions-permissions" class="md-skip">
+        <a href="#viewing-ecs-task-logs" class="md-skip">
           Skip to content
         </a>
       
@@ -93,7 +93,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Testing Github Actions permissions
+              Viewing ECS Task logs
             
           </span>
         </div>
@@ -584,8 +584,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../adding-ses-email-address/" class="md-nav__link">
-        Adding a new SES email address
+      <a href="../1-first-time-setup/" class="md-nav__link">
+        First-time Setup
       </a>
     </li>
   
@@ -598,8 +598,22 @@
   
   
     <li class="md-nav__item">
-      <a href="../making-changes-to-alerts/" class="md-nav__link">
-        Making Changes to Alerts
+      <a href="../2-testing-infra-changes/" class="md-nav__link">
+        Testing Infrastructure changes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../3-creating-ecs-tasks/" class="md-nav__link">
+        Creating ECS Tasks
       </a>
     </li>
   
@@ -621,10 +635,163 @@
         
       
       
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Viewing ECS Task logs
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <a href="./" class="md-nav__link md-nav__link--active">
-        Testing Github Actions permissions
+        Viewing ECS Task logs
       </a>
       
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#streaming-logs-to-your-terminal" class="md-nav__link">
+    Streaming logs to your terminal
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#searching-logs-in-new-relic" class="md-nav__link">
+    Searching logs in New Relic
+  </a>
+  
+    <nav class="md-nav" aria-label="Searching logs in New Relic">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#viewing-start-failure-reasons" class="md-nav__link">
+    Viewing start failure reasons
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../5-making-changes-to-alerts/" class="md-nav__link">
+        Making Changes to Alerts
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../6-github-action-workflows/" class="md-nav__link">
+        Github Action Workflows
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../7-environment-management/" class="md-nav__link">
+        Environment Management
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_10_8" type="checkbox" id="__nav_10_8" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_10_8">
+          Extras
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Extras" data-md-level="2">
+        <label class="md-nav__title" for="__nav_10_8">
+          <span class="md-nav__icon md-icon"></span>
+          Extras
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../extras/adding-ses-email-address/" class="md-nav__link">
+        Adding a new SES email address
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../extras/testing-github-action-permissions/" class="md-nav__link">
+        Testing Github Actions permissions
+      </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
     </li>
   
 
@@ -947,6 +1114,41 @@
     
   
   
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#streaming-logs-to-your-terminal" class="md-nav__link">
+    Streaming logs to your terminal
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#searching-logs-in-new-relic" class="md-nav__link">
+    Searching logs in New Relic
+  </a>
+  
+    <nav class="md-nav" aria-label="Searching logs in New Relic">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#viewing-start-failure-reasons" class="md-nav__link">
+    Viewing start failure reasons
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
 </nav>
                   </div>
                 </div>
@@ -957,41 +1159,50 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/EOLWD/PFML/edit/master/docs/infra/testing-github-action-permissions.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/EOLWD/PFML/edit/master/docs/infra/4-viewing-ecs-task-logs.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
-                <h1 id="testing-github-actions-permissions">Testing Github Actions permissions</h1>
-<p>Since Github Actions has different permissions than developers and admins, it's useful to test terraform configs using our CI/CD role so we know
-that they can be run on Github Actions with the right read/write permissions. This is recommended if you're adding a new service into our ecosystem.</p>
-<ol>
-<li>Ensure you have the AWS CLI:</li>
-</ol>
-<div class="highlight"><pre><span></span><code>pip install awscli
+                <h1 id="viewing-ecs-task-logs">Viewing ECS Task logs</h1>
+<p>The logs for all background ECS tasks are sent to Cloudwatch Logs and New Relic. There are two distinct methods that people use:</p>
+<h2 id="streaming-logs-to-your-terminal">Streaming logs to your terminal</h2>
+<p>Lots of folks use <a href="https://github.com/TylerBrock/saw">saw</a> and pipe it through a developer utility for pretty-printing logs:</p>
+<div class="highlight"><pre><span></span><code>saw watch --raw service/pfml-api-test/ecs-tasks <span class="p">|</span> python3 api/massgov/pfml/util/logging/decodelog.py
 </code></pre></div>
-<ol>
-<li>Generate a session:</li>
-</ol>
-<div class="highlight"><pre><span></span><code>aws sts assume-role --role-arn arn:aws:iam::498823821309:role/ci-run-deploys --role-session-name &lt;any-session-name&gt;
+<p>You can also use the AWS CLI v2, which has built in support for tailing Cloudwatch logs:</p>
+<div class="highlight"><pre><span></span><code>aws logs tail service/pfml-api-test/ecs-tasks --follow
 </code></pre></div>
-<ol>
-<li>Copy the access key, secret, and session token into your ~/.aws/credentials under a new profile so it looks like this:</li>
-</ol>
-<div class="highlight"><pre><span></span><code>[ci-run-deploys]
-aws_access_key_id = 123
-aws_secret_access_key = 456
-aws_session_token = 789
+<p>Common log groups that may be useful:</p>
+<table>
+<thead>
+<tr>
+<th>Log Group Pattern</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>service/pfml-api-ENV</td>
+<td>Application logs from the PFML API ECS tasks</td>
+</tr>
+<tr>
+<td>service/pfml-api-ENV/ecs-tasks</td>
+<td>Application logs from all background job ECS tasks</td>
+</tr>
+<tr>
+<td>service/pfml-api-ENV/ecs-tasks/events</td>
+<td>State change events from all ECS tasks</td>
+</tr>
+</tbody>
+</table>
+<h2 id="searching-logs-in-new-relic">Searching logs in New Relic</h2>
+<p>Alternatively, you can use the New Relic Logs UI to search and filter for logs. See <a href="https://docs.newrelic.com/docs/logs/log-management/ui-data/query-syntax-logs/">New Relic's documentation</a> for more information on the query syntax for log data. There is a saved view for <a href="https://one.newrelic.com/launcher/logger.log-launcher?platform[accountId]=2837112&amp;platform[$isFallbackTimeRange]=true&amp;platform[timeRange][duration]=1800000&amp;launcher=eyJxdWVyeSI6ImF3cy5sb2dHcm91cDpcInNlcnZpY2UvcGZtbC1hcGktdGVzdC9lY3MtdGFza3NcIiAtbGV2ZWxuYW1lOkFVRElUIiwiZXZlbnRUeXBlcyI6WyJMb2ciXSwiYWN0aXZlVmlldyI6IlZpZXcgQWxsIExvZ3MiLCJpc0VudGl0bGVkIjp0cnVlLCJhdHRycyI6WyJhd3MubG9nU3RyZWFtIiwibGV2ZWxuYW1lIiwidGltZXN0YW1wIiwibmFtZSIsImZ1bmNOYW1lIiwiYXdzLmxvZ0dyb3VwIiwibWVzc2FnZSJdLCJiZWdpbiI6bnVsbCwiZW5kIjpudWxsfQ==&amp;pane=eyJuZXJkbGV0SWQiOiJsb2dnZXIuaG9tZSIsIiRzZGtWZXJzaW9uIjozfQ==&amp;state=40e1ffea-4230-c73f-5e18-4f1427542446">ECS task logs in TEST</a>, and you can further filter based on the task name:</p>
+<div class="highlight"><pre><span></span><code>aws.logStream:*my-new-task-name*
 </code></pre></div>
-<ol>
-<li>Use the profile:</li>
-</ol>
-<div class="highlight"><pre><span></span><code>export AWS_PROFILE=ci-run-deploys
-</code></pre></div>
-<ol>
-<li>Run terraform as usual.</li>
-</ol>
-<p>Alternatives to steps 3-4 are using <a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-envvars.html">environment variables</a> or using the AWS CLI (<a href="https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-files.html">aws configure</a>).</p>
+<h5 id="viewing-start-failure-reasons">Viewing start failure reasons</h5>
+<p>If your task does not start successfully, there will be no logs. Instead, there will be a Slack notification in #mass-pfml-pd-warnings with a description of your error.</p>
+<p>These failure messages will also be available for up to an hour in <a href="https://console.aws.amazon.com/ecs/home?region=us-east-1#">the ECS AWS console</a>, and more indefinitely in the state change logs stored under <code>service/pfml-api-ENV/ecs-tasks/events</code>. Use one of the methods above to view logs in this log group.</p>
                 
               
               
@@ -1011,7 +1222,7 @@ aws_session_token = 789
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="../making-changes-to-alerts/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Making Changes to Alerts" rel="prev">
+        <a href="../3-creating-ecs-tasks/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Creating ECS Tasks" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -1020,20 +1231,20 @@ aws_session_token = 789
               <span class="md-footer__direction">
                 Previous
               </span>
-              Making Changes to Alerts
+              Creating ECS Tasks
             </div>
           </div>
         </a>
       
       
         
-        <a href="../../portal/browser-support/" class="md-footer__link md-footer__link--next" aria-label="Next: Browser support" rel="next">
+        <a href="../5-making-changes-to-alerts/" class="md-footer__link md-footer__link--next" aria-label="Next: Making Changes to Alerts" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              Browser support
+              Making Changes to Alerts
             </div>
           </div>
           <div class="md-footer__button md-icon">

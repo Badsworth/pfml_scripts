@@ -582,8 +582,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../infra/adding-ses-email-address/" class="md-nav__link">
-        Adding a new SES email address
+      <a href="../../infra/1-first-time-setup/" class="md-nav__link">
+        First-time Setup
       </a>
     </li>
   
@@ -596,7 +596,49 @@
   
   
     <li class="md-nav__item">
-      <a href="../../infra/making-changes-to-alerts/" class="md-nav__link">
+      <a href="../../infra/2-testing-infra-changes/" class="md-nav__link">
+        Testing Infrastructure changes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/3-creating-ecs-tasks/" class="md-nav__link">
+        Creating ECS Tasks
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/4-viewing-ecs-task-logs/" class="md-nav__link">
+        Viewing ECS Task logs
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/5-making-changes-to-alerts/" class="md-nav__link">
         Making Changes to Alerts
       </a>
     </li>
@@ -610,9 +652,84 @@
   
   
     <li class="md-nav__item">
-      <a href="../../infra/testing-github-action-permissions/" class="md-nav__link">
+      <a href="../../infra/6-github-action-workflows/" class="md-nav__link">
+        Github Action Workflows
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/7-environment-management/" class="md-nav__link">
+        Environment Management
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_10_8" type="checkbox" id="__nav_10_8" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_10_8">
+          Extras
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Extras" data-md-level="2">
+        <label class="md-nav__title" for="__nav_10_8">
+          <span class="md-nav__icon md-icon"></span>
+          Extras
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/extras/adding-ses-email-address/" class="md-nav__link">
+        Adding a new SES email address
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../infra/extras/testing-github-action-permissions/" class="md-nav__link">
         Testing Github Actions permissions
       </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
     </li>
   
 
@@ -1062,7 +1179,8 @@
                 
                 
                 <h1 id="feature-flags">Feature flags</h1>
-<p><a href="https://lwd.atlassian.net/wiki/x/4oAPD">Original tech spec for feature flags is available on Confluence</a></p>
+<p><a href="https://lwd.atlassian.net/wiki/x/4oAPD">Original tech spec for feature flags is available on Confluence</a>. </p>
+<p>Note that a separate system is currently maintained for maintenance pages; see <a href="../maintenance-pages/">Maintenance Pages</a> and <a href="https://github.com/EOLWD/pfml/tree/main/feature_flags/">Feature Gate Flags</a>.</p>
 <h2 id="defining-feature-flags">Defining feature flags</h2>
 <p>Feature flags are defined in <a href="https://github.com/EOLWD/pfml/tree/main/portal/config/featureFlags.js"><code>portal/config/featureFlags.js</code></a>. These flags are then set as environment variables in <code>portal/next.config.js</code> at initial build time (so they don't live reload when running locally). <strong>If you define a new feature flag during local development, you will need to restart the dev server in order for the flag to become available</strong>.</p>
 <p>Feature flags should be named so that the absence of a default value is interpreted as <code>false</code> – this way if someone forgets to define a feature flag, it doesn’t unintentionally enable the feature for everyone.</p>

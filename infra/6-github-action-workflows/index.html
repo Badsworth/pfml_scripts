@@ -14,7 +14,7 @@
     
     
       
-        <title>Making Changes to Alerts - PFML</title>
+        <title>Github Action Workflows - PFML</title>
       
     
     
@@ -61,7 +61,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#making-changes-to-alerts" class="md-skip">
+        <a href="#github-action-workflows" class="md-skip">
           Skip to content
         </a>
       
@@ -93,7 +93,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Making Changes to Alerts
+              Github Action Workflows
             
           </span>
         </div>
@@ -584,8 +584,64 @@
   
   
     <li class="md-nav__item">
-      <a href="../adding-ses-email-address/" class="md-nav__link">
-        Adding a new SES email address
+      <a href="../1-first-time-setup/" class="md-nav__link">
+        First-time Setup
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../2-testing-infra-changes/" class="md-nav__link">
+        Testing Infrastructure changes
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../3-creating-ecs-tasks/" class="md-nav__link">
+        Creating ECS Tasks
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../4-viewing-ecs-task-logs/" class="md-nav__link">
+        Viewing ECS Task logs
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../5-making-changes-to-alerts/" class="md-nav__link">
+        Making Changes to Alerts
       </a>
     </li>
   
@@ -608,12 +664,12 @@
       
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
-          Making Changes to Alerts
+          Github Action Workflows
           <span class="md-nav__icon md-icon"></span>
         </label>
       
       <a href="./" class="md-nav__link md-nav__link--active">
-        Making Changes to Alerts
+        Github Action Workflows
       </a>
       
         
@@ -631,29 +687,8 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#alarm-modules" class="md-nav__link">
-    Alarm Modules
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#testing-monitoring-changes-in-test" class="md-nav__link">
-    Testing Monitoring Changes in TEST
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#resources" class="md-nav__link">
-    Resources
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#getting-access" class="md-nav__link">
-    Getting Access
+  <a href="#testing-workflows" class="md-nav__link">
+    Testing workflows
   </a>
   
 </li>
@@ -673,9 +708,70 @@
   
   
     <li class="md-nav__item">
-      <a href="../testing-github-action-permissions/" class="md-nav__link">
+      <a href="../7-environment-management/" class="md-nav__link">
+        Environment Management
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_10_8" type="checkbox" id="__nav_10_8" >
+      
+      
+      
+      
+        <label class="md-nav__link" for="__nav_10_8">
+          Extras
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <nav class="md-nav" aria-label="Extras" data-md-level="2">
+        <label class="md-nav__title" for="__nav_10_8">
+          <span class="md-nav__icon md-icon"></span>
+          Extras
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../extras/adding-ses-email-address/" class="md-nav__link">
+        Adding a new SES email address
+      </a>
+    </li>
+  
+
+            
+          
+            
+              
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../extras/testing-github-action-permissions/" class="md-nav__link">
         Testing Github Actions permissions
       </a>
+    </li>
+  
+
+            
+          
+        </ul>
+      </nav>
     </li>
   
 
@@ -1005,29 +1101,8 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#alarm-modules" class="md-nav__link">
-    Alarm Modules
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#testing-monitoring-changes-in-test" class="md-nav__link">
-    Testing Monitoring Changes in TEST
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#resources" class="md-nav__link">
-    Resources
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#getting-access" class="md-nav__link">
-    Getting Access
+  <a href="#testing-workflows" class="md-nav__link">
+    Testing workflows
   </a>
   
 </li>
@@ -1044,47 +1119,26 @@
             <article class="md-content__inner md-typeset">
               
                 
-                  <a href="https://github.com/EOLWD/PFML/edit/master/docs/infra/making-changes-to-alerts.md" title="Edit this page" class="md-content__button md-icon">
+                  <a href="https://github.com/EOLWD/PFML/edit/master/docs/infra/6-github-action-workflows.md" title="Edit this page" class="md-content__button md-icon">
                     <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"/></svg>
                   </a>
                 
                 
-                <h1 id="making-changes-to-alerts">Making Changes to Alerts</h1>
-<p>Application monitors and alerts are managed via Terraform in the <code>infra/monitoring</code> folder. This folder accounts for monitoring across all environments and is automatically deployed when changes are merged into the main branch.</p>
-<h2 id="alarm-modules">Alarm Modules</h2>
-<p>The core code for building Cloudwatch and New Relic alerts are stored in re-usable modules under the following directories:</p>
+                <h1 id="github-action-workflows">Github Action Workflows</h1>
+<p>Github Action workflows are defined in <a href="https://github.com/EOLWD/pfml/tree/main/.github/workflows">.github/workflows</a>. Github has <a href="https://docs.github.com/en/actions/learn-github-actions">helpful tutorials</a> for learning syntax and usage.</p>
+<h2 id="testing-workflows">Testing workflows</h2>
+<p>When creating or updating Github Action workflows, it is often difficult to test them due to how workflows are built and triggered. For this reason, it is recommended that every workflow includes an <code>on: workflow_dispatch</code> trigger, which will allow anyone with write access to the repository the ability to run the workflow manually in the UI once it's in the main branch.</p>
+<p>If you are editing an existing workflow with a <code>workflow_dispatch</code> trigger, you can run the workflow at any time using your feature branch in the UI:</p>
 <ul>
-<li><a href="https://github.com/EOLWD/pfml/tree/main/infra/modules/alarms_api">infra/modules/alarms_api</a></li>
-<li><a href="https://github.com/EOLWD/pfml/tree/main/infra/modules/alarms_portal">infra/modules/alarms_portal</a></li>
+<li><a href="https://github.com/EOLWD/pfml/actions">Github Actions</a></li>
+<li>Select the workflow from the sidebar </li>
+<li>Select your branch and fill in any inputs</li>
+<li>Select 'Run Workflow'.</li>
 </ul>
-<h2 id="testing-monitoring-changes-in-test">Testing Monitoring Changes in TEST</h2>
-<p>It's often desirable to test changes to monitoring in the TEST environment during feature development. Since monitoring changes for all environments are combined into a single configuration, terraform actions must specifically target certain resources.</p>
-<p>Almost all alarms are built through the <a href="https://github.com/EOLWD/pfml/tree/main/infra/modules/alarms_api">infra/modules/alarms_api</a> and <a href="https://github.com/EOLWD/pfml/tree/main/infra/modules/alarms_portal">infra/modules/alarms_portal</a> modules, which are used within <a href="https://github.com/EOLWD/pfml/tree/main/infra/monitoring/alarms.tf">infra/monitoring/alarms.tf</a>:</p>
-<div class="highlight"><pre><span></span><code><span class="kr">module</span> <span class="nv">&quot;alarms_api&quot;</span> <span class="p">{</span>
-  <span class="na">for_each</span> <span class="o">=</span> <span class="nf">toset</span><span class="p">(</span><span class="nv">local.environments</span><span class="p">)</span>
-  <span class="na">source</span>   <span class="o">=</span> <span class="s2">&quot;../modules/alarms_api&quot;</span>
-
-  <span class="p">...</span>
-<span class="p">}</span>
+<p>If you are creating a new workflow or editing one that does not allow this trigger in the main branch, the easiest way to test the workflow is to add an <code>on: push</code> trigger. This will cause the workflow to run on every push to the feature branch. You can then push "dummy" commits to force it to run.</p>
+<div class="highlight"><pre><span></span><code>git commit --allow-empty
 </code></pre></div>
-<p>To update the set of alarms for a single environment, go into the <code>infra/monitoring</code> root module and target the alarms module with a particular key:</p>
-<div class="highlight"><pre><span></span><code>$ terraform apply --target module.alarms_api<span class="o">[</span><span class="se">\&quot;</span>test<span class="se">\&quot;</span><span class="o">]</span> --target module.alarms_portal<span class="o">[</span><span class="se">\&quot;</span>test<span class="se">\&quot;</span><span class="o">]</span>
-
-<span class="c1"># or</span>
-
-$ terraform apply -target <span class="s1">&#39;module.alarms_api[&quot;test&quot;]&#39;</span> -target <span class="s1">&#39;module.alarms_portal[&quot;test&quot;]&#39;</span>
-</code></pre></div>
-<p>The terraform plan should indicate that <em>only</em> test alarms will be updated.</p>
-<h2 id="resources">Resources</h2>
-<p>Here is a list of external documentation resources that could prove useful while making changes:</p>
-<ul>
-<li><a href="https://lwd.atlassian.net/wiki/spaces/~127922489/pages/1406468351/Building+New+Relic+Alarms">Building New Relic Alarms - Kevin Yeh - Confluence</a></li>
-<li><a href="https://docs.newrelic.com/docs/alerts-applied-intelligence/new-relic-alerts/get-started/streaming-alerts-key-terms-concepts/">Streaming alerts: key terms and concepts | New Relic Documentation</a></li>
-<li><a href="https://docs.newrelic.com/docs/alerts-applied-intelligence/new-relic-alerts/alert-conditions/create-nrql-alert-conditions/">Create NRQL alert conditions | New Relic Documenation</a></li>
-<li><a href="https://registry.terraform.io/providers/newrelic/newrelic/latest/docs">Docs overview | newrelic/newrelic | Terraform Registry</a></li>
-</ul>
-<h2 id="getting-access">Getting Access</h2>
-<p>The documentation here assumes the reader has access to AWS and has Terraform configured locally. Additionally, it is useful to have access to New Relic to view and test queries. View the <a href="https://lwd.atlassian.net/wiki/spaces/DD/pages/142049579/Tools+Access">Tools Access</a> documentation for instructions on how to get access, then see the <a href="https://github.com/EOLWD/pfml/tree/main/infra/README.md">Infrastructure README</a> for setup instructions.</p>
+<p>If you are testing in this way, please provide testing documentation and results in the body of your pull request for historical purposes, and so reviewers can follow along.</p>
                 
               
               
@@ -1104,7 +1158,7 @@ $ terraform apply -target <span class="s1">&#39;module.alarms_api[&quot;test&quo
     <nav class="md-footer__inner md-grid" aria-label="Footer">
       
         
-        <a href="../adding-ses-email-address/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Adding a new SES email address" rel="prev">
+        <a href="../5-making-changes-to-alerts/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Making Changes to Alerts" rel="prev">
           <div class="md-footer__button md-icon">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
           </div>
@@ -1113,20 +1167,20 @@ $ terraform apply -target <span class="s1">&#39;module.alarms_api[&quot;test&quo
               <span class="md-footer__direction">
                 Previous
               </span>
-              Adding a new SES email address
+              Making Changes to Alerts
             </div>
           </div>
         </a>
       
       
         
-        <a href="../testing-github-action-permissions/" class="md-footer__link md-footer__link--next" aria-label="Next: Testing Github Actions permissions" rel="next">
+        <a href="../7-environment-management/" class="md-footer__link md-footer__link--next" aria-label="Next: Environment Management" rel="next">
           <div class="md-footer__title">
             <div class="md-ellipsis">
               <span class="md-footer__direction">
                 Next
               </span>
-              Testing Github Actions permissions
+              Environment Management
             </div>
           </div>
           <div class="md-footer__button md-icon">
