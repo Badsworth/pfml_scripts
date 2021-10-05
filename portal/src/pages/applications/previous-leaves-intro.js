@@ -26,8 +26,12 @@ export const PreviousLeavesIntro = (props) => {
       <Heading level="2" size="1">
         {t("pages.claimsPreviousLeavesIntro.sectionLabel")}
       </Heading>
+
       <IconHeading name="check_circle">
-        {t("pages.claimsPreviousLeavesIntro.introHeader")}
+        <Trans
+          i18nKey="pages.claimsPreviousLeavesIntro.introHeader"
+          values={{ startDate }}
+        />
       </IconHeading>
       <Trans
         i18nKey="pages.claimsPreviousLeavesIntro.intro"

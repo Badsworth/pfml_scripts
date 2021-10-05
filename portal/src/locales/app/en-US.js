@@ -1558,7 +1558,7 @@ const pages = {
     intro:
       "<ul><li>Any previous leave for the same reason that you are applying for paid leave now</li><li>Any previous leave for a different qualifying reasons</li></ul>",
     introDontNeed:
-      "<ul><li>Leave that was taken through Massachusetts' PFML program</li><li>Leave that was taking before January 1, 2021 and {{startDate}}</li><li>Family leave to care for a family member taken before July 1, 2021</li></ul>",
+      "<ul><li>Leave that was taken through Massachusetts' PFML program</li><li>Leave that was taking between January 1, 2021 and {{startDate}}</li><li>Family leave to care for a family member taken before July 1, 2021</li></ul>",
     introDontNeedHeader: "You don't need to report:",
     introHeader:
       "You'll need to report previous leave you may have taken between January 1, 2021 and {{startDate}}:",

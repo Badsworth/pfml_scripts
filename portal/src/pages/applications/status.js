@@ -259,7 +259,7 @@ export const Status = ({ appLogic, query }) => {
           <Timeline
             absencePeriods={claimDetail.absence_periods}
             employerFollowUpDate={
-              claimDetail.openManagedRequirement?.follow_up_date
+              claimDetail.managedRequirementByFollowUpDate[0]?.follow_up_date
             }
             absenceDetails={absenceDetails}
             applicationId={claimDetail.application_id}
