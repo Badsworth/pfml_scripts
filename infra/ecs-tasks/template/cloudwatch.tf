@@ -1,3 +1,12 @@
+# This file sets up the centralized cloudwatch log group for ECS tasks.
+#
+# All logs for background ECS tasks are sent to the same log group and forwarded to New Relic through the lambda forwarder.
+#
+# Additionally, recurring task schedules are configured here using the ecs_task_scheduler module.
+#
+# ## NOTE: If you are adding a new scheduled event here, please add monitoring by including it
+#          in the list in infra/modules/alarms_api/alarms-aws.tf.
+
 data "aws_ecs_cluster" "cluster" { cluster_name = var.environment_name }
 
 # Cloudwatch log group to for streaming ECS application logs.

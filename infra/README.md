@@ -16,8 +16,6 @@ This directory contains three standalone modules:
 - `monitoring` is monitoring infrastructure that is automatically deployed when changed in the main branch.
 
 ```
-└── constants           🏡 infrastructure data shared across all applications and all environments, e.g. a common block of aws tags
-
 └── pfml-aws            🏡 infrastructure for AWS and VPCs, shared across envs e.g. machine IAM users,
                            docker registries, and network load balancers for each VPC.
 
@@ -50,6 +48,7 @@ Additionally, we have several components that are duplicated within each environ
 Several re-usable modules have also been created for use by the terraform folders above:
 
 ```
+└── constants                🏡 values shared across all applications and environments, e.g. a common block of aws tags
 └── modules                  🏡 reusable modules.
     └──  ecs_task_scheduler  ⛱ Creates a scheduled ECS task job.
     └──  s3_ecs_trigger      ⛱ Creates an ECS task triggered by S3 events

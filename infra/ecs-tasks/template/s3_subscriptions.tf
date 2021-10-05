@@ -1,5 +1,13 @@
 # NOTE: There can only be one S3 bucket notification resource per bucket.
 #
+# This file sets up triggers to run ECS tasks based off of S3 events. However,
+# this is not natively possible, so this actually happens in two steps:
+#
+# 1. A lambda is created using the s3_ecs_trigger module
+# 2. S3 Bucket notifications are set up to trigger the lambda based off specified events
+#
+# The lambda will run the specified ECS task when triggered.
+#
 
 module "trigger_sharepoint_pub" {
   source = "../../modules/s3_ecs_trigger"
