@@ -51,6 +51,7 @@ describe("Claim date change", () => {
   });
 
   const dateChange = it("CSR rep can update the leave dates", () => {
+    cy.dependsOnPreviousPass([submit]);
     cy.unstash<DehydratedClaim>("claim").then((_claim) => {
       cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
         cy.unstash<[string, string]>("changedLeaveDates").then(

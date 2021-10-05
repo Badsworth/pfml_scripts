@@ -22,8 +22,8 @@ const Alert = React.forwardRef(
     );
 
     return (
-      <div className={classes} ref={ref} tabIndex="-1">
-        <div className="usa-alert__body" role={role}>
+      <div className={classes} ref={ref} tabIndex="-1" role={role}>
+        <div className="usa-alert__body">
           {props.heading && (
             <Heading
               level={headingLevel}

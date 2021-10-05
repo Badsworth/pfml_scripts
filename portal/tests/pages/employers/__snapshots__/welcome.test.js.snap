@@ -36,11 +36,11 @@ exports[`Employer welcome renders page 1`] = `
       </h1>
       <div
         class="usa-alert usa-alert--info"
+        role="region"
         tabindex="-1"
       >
         <div
           class="usa-alert__body"
-          role="region"
         >
           <div
             class="usa-alert__text"
@@ -219,7 +219,6 @@ exports[`Employer welcome renders page 1`] = `
 exports[`Employer welcome shows Verification alert when user has a verifiable employer 1`] = `
 <div
   class="usa-alert__body"
-  role="region"
 >
   <h2
     class="usa-alert__heading font-heading-md text-bold"

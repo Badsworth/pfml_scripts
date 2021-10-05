@@ -2,13 +2,18 @@
 
 exports[`EmployerBenefits conditionally renders an info alert when user selects No 1`] = `
 <div
-  class="usa-alert__body"
+  class="usa-alert usa-alert--info usa-alert--slim"
   role="alert"
+  tabindex="-1"
 >
   <div
-    class="usa-alert__text"
+    class="usa-alert__body"
   >
-    If you receive any other employer sponsored-benefits after you apply, you’ll need to call the Contact Center to let us know.
+    <div
+      class="usa-alert__text"
+    >
+      If you receive any other employer sponsored-benefits after you apply, you’ll need to call the Contact Center to let us know.
+    </div>
   </div>
 </div>
 `;
@@ -37,11 +42,11 @@ exports[`EmployerBenefits renders the page 1`] = `
     >
       <div
         class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-4"
+        role="region"
         tabindex="-1"
       >
         <div
           class="usa-alert__body"
-          role="region"
         >
           <h2
             class="usa-alert__heading font-heading-md text-bold"

@@ -27,11 +27,6 @@ export default {
         VIEW_CLAIM: routes.employers.newApplication,
       },
     },
-    [routes.employers.finishAccountSetup]: {
-      on: {
-        SEND_CODE: routes.auth.resetPassword,
-      },
-    },
     [routes.employers.organizations]: {
       on: {
         BACK: routes.employers.dashboard,

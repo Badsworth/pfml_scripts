@@ -65,7 +65,7 @@ module.exports = class NewRelicCypressReporter extends reporters.Spec {
   async send(event) {
     const { accountId, apiKey } = this;
     debug("Pushing custom event to New Relic", event);
-    
+
     try {
       const res = await fetch(
         `https://insights-collector.newrelic.com/v1/accounts/${accountId}/events`,

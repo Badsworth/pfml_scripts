@@ -59,7 +59,7 @@ export const UploadDocsOptions = (props) => {
         issueType: appErrorInfo.type,
       });
 
-      return;
+      return Promise.resolve();
     }
 
     const showStateId =

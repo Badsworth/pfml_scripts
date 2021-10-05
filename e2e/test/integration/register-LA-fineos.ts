@@ -1,4 +1,4 @@
-import { describe, beforeAll, test, expect } from "@jest/globals";
+import { describe, beforeAll, test, expect, jest } from "@jest/globals";
 import config from "../../src/config";
 import {
   getAuthManager,
@@ -10,7 +10,7 @@ import {
   generateCredentials,
   getClaimantCredentials,
 } from "../../src/util/credentials";
-import { endOfQuarter, formatISO, subQuarters, getQuarter } from "date-fns";
+import { endOfQuarter, formatISO, subQuarters } from "date-fns";
 import AuthenticationManager from "../../src/submission/AuthenticationManager";
 import {
   getUsersCurrent,
@@ -26,7 +26,6 @@ let authenticator: AuthenticationManager;
 let leave_admin_creds_1: Credentials;
 let leave_admin_creds_2: Credentials;
 let employer: Employer;
-
 
 /**
  * @group nightly
@@ -44,10 +43,12 @@ describe("Series of test that verifies LAs are properly registered in Fineos", (
 
   test("Register Leave Admins (** verify only one LA **)", async () => {
     const fein = employer.fein;
-    const withholding_amount = employer.withholdings[getQuarter(new Date())];
+    const withholding_amount =
+      employer.withholdings[employer.withholdings.length - 1];
     const quarter = formatISO(endOfQuarter(subQuarters(new Date(), 2)), {
       representation: "date",
     });
+
     try {
       await authenticator.registerLeaveAdmin(
         leave_admin_creds_1.username,
@@ -73,7 +74,6 @@ describe("Series of test that verifies LAs are properly registered in Fineos", (
       throw new Error(`Unable to register/verify Leave Admins: ${e}`);
     }
   }, 60000);
-
 
   test("Check LA user object for has_fineos_registration property", async () => {
     const session_1 = await authenticator.authenticate(

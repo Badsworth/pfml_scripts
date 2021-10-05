@@ -607,6 +607,9 @@ def generate_claimant_data_files(
             leave_request_end=leave_request_end,
             notification_number=notification_number,
             employer_customer_num=fineos_employer_id,
+            fineos_employee_first_name=employee.fineos_employee_first_name,
+            fineos_employee_middle_name=employee.fineos_employee_first_name,
+            fineos_employee_last_name=employee.fineos_employee_last_name,
         )
 
         fineos_claimant_dataset.append(fineos_claimant_data)

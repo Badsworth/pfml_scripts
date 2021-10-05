@@ -45,15 +45,13 @@ export const getWithholdingMock = jest.fn().mockResolvedValue(() => {
 
 export const downloadDocumentMock = jest.fn(() => new Blob());
 
-export const submitClaimReviewMock = jest
-  .fn()
-  .mockResolvedValue((absenceId, patchData) => {
-    return {
-      claim: null,
-      status: 200,
-      success: true,
-    };
-  });
+export const submitClaimReviewMock = jest.fn().mockResolvedValue(() => {
+  return {
+    claim: null,
+    status: 200,
+    success: true,
+  };
+});
 
 export const submitWithholdingMock = jest.fn().mockResolvedValue(() => {
   return {

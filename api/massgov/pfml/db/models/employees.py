@@ -34,7 +34,7 @@ from sqlalchemy.sql.expression import func
 from sqlalchemy.types import JSON
 
 from ..lookup import LookupTable
-from .base import Base, TimestampMixin, deprecated_column, utc_timestamp_gen, uuid_gen
+from .base import Base, TimestampMixin, utc_timestamp_gen, uuid_gen
 from .common import PostgreSQLUUID
 from .industry_codes import LkIndustryCode
 from .verifications import Verification
@@ -566,11 +566,6 @@ class Employee(Base, TimestampMixin):
     ctr_address_pair_id = Column(
         PostgreSQLUUID, ForeignKey("link_ctr_address_pair.fineos_address_id"), index=True
     )
-    experian_address_pair_id = deprecated_column(
-        Column(
-            PostgreSQLUUID, ForeignKey("link_experian_address_pair.fineos_address_id"), index=True
-        )
-    )
 
     fineos_employee_first_name = Column(Text)
     fineos_employee_middle_name = Column(Text)
@@ -1073,6 +1068,7 @@ class WagesAndContributions(Base, TimestampMixin):
 
 class EmployeeOccupation(Base, TimestampMixin):
     __tablename__ = "employee_occupation"
+
     employee_occupation_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     employee_id = Column(
         PostgreSQLUUID, ForeignKey("employee.employee_id"), nullable=False, index=True
@@ -1090,6 +1086,8 @@ class EmployeeOccupation(Base, TimestampMixin):
     manager_id = Column(Text)
     worksite_id = Column(Text)
     occupation_qualifier = Column(Text)
+
+    Index("ix_employee_occupation_employee_id_employer_id", employee_id, employer_id, unique=True)
 
     employee = relationship("Employee", back_populates="employee_occupations")
     employer = relationship("Employer", back_populates="employer_occupations")
@@ -1302,6 +1300,25 @@ class DiaReductionPayment(Base, TimestampMixin):
         board_no,
         unique=False,
     )
+
+
+class DuaEmployeeDemographics(Base, TimestampMixin):
+    __tablename__ = "dua_employee_demographics"
+    dua_employee_demographics_id = Column(PostgreSQLUUID, primary_key=True,)
+
+    fineos_customer_number = Column(Text, nullable=False)
+    date_of_birth = Column(Date)
+    gender_code = Column(Text)
+    occupation_code = Column(Text)
+    occupation_description = Column(Text)
+    employer_fein = Column(Text)
+    employer_reporting_unit_number = Column(Text)
+
+    # Each row should be unique. This enables us to load only new rows from a CSV and ensures that
+    # we don't include demographics twice as two different rows. Almost all fields are nullable so we
+    # have to coalesce those null values to empty strings. We've manually adjusted the migration
+    # that adds this unique constraint to coalesce those nullable fields.
+    # See: 2021_10_04_13_30_03_95d3e464a5b2_add_dua_employee_demographics_table.py
 
 
 class PubError(Base, TimestampMixin):
@@ -2398,6 +2415,39 @@ class State(LookupTable):
 
     DIA_CONSOLIDATED_REPORT_ERROR = LkState(
         190, "Consolidated DIA report for DFML error", Flow.DFML_DIA_REDUCTION_REPORT.flow_id
+    )
+
+    # Tax Withholding States
+    STATE_WITHHOLDING_READY_FOR_PROCESSING = LkState(
+        191, "State Withholding ready for processing", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    STATE_WITHHOLDING_PENDING_AUDIT = LkState(
+        192, "State Withholding awaiting Audit Report", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    STATE_WITHHOLDING_ERROR = LkState(
+        193, "State Withholding Rejected", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    STATE_WITHHOLDING_SEND_FUNDS = LkState(
+        194, "State Withholding send funds to DOR", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_READY_FOR_PROCESSING = LkState(
+        195, "Federal Withholding ready for processing", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_PENDING_AUDIT = LkState(
+        196, "Federal Withholding awaiting Audit Report", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_ERROR = LkState(
+        197, "Federal Withholding Rejected", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_SEND_FUNDS = LkState(
+        198, "Federal Withholding send funds to IRS", Flow.DELEGATED_PAYMENT.flow_id
     )
 
 

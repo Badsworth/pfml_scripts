@@ -1,0 +1,48 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AddOrganization renders the page 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+    tabindex="-1"
+  >
+    Add an organization
+  </h1>
+  <p>
+    If you manage leave for multiple organizations, you can add them to your account. You’ll need to verify recent paid leave contributions from MassTaxConnect in the following step.
+  </p>
+  <div
+    class="usa-form-group"
+  >
+    <label
+      class="usa-label text-bold font-heading-xs measure-5"
+      for="InputText1"
+      id="InputText1_label"
+    >
+      Employer ID number (EIN)
+    </label>
+    <div
+      class=""
+    >
+      <input
+        aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+        class="usa-input maxw-mobile-lg"
+        id="InputText1"
+        inputmode="numeric"
+        name="ein"
+        type="text"
+        value=""
+      />
+    </div>
+  </div>
+  <button
+    class="usa-button position-relative margin-top-4"
+    type="submit"
+  >
+    Continue
+  </button>
+</form>
+`;

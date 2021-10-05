@@ -326,6 +326,7 @@ class ClaimantExtractStep(Step):
     skip_prenoting: bool = False
 
     class Metrics(str, enum.Enum):
+        EXTRACT_PATH = "extract_path"
         CLAIM_NOT_FOUND_COUNT = "claim_not_found_count"
         CLAIM_PROCESSED_COUNT = "claim_processed_count"
         EFT_FOUND_COUNT = "eft_found_count"
@@ -969,6 +970,7 @@ class ClaimantExtractStep(Step):
         )
 
         logger.info("Successfully moved claimant files to processed folder.")
+        self.set_metrics({self.Metrics.EXTRACT_PATH: extract_data.reference_file.file_location})
 
     # TODO move to payments_util
     def move_files_from_received_to_skipped(self, extract_data: ExtractData) -> None:
@@ -1068,3 +1070,4 @@ class ClaimantExtractStep(Step):
         )
 
         logger.info("Successfully moved claimant files to error folder.")
+        self.set_metrics({self.Metrics.EXTRACT_PATH: extract_data.reference_file.file_location})

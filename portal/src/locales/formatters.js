@@ -55,10 +55,10 @@ function formatEmployerFein(value) {
  *   480 -> 8h
  *   475 -> 7h 55m
  * @param {string} value - the string to be formatted
- * @param {string} locale - language code
+ * @param {string} _locale - language code
  * @returns {string} formatted value
  */
-function formatHoursMinutesDuration(value, locale) {
+function formatHoursMinutesDuration(value, _locale) {
   // Add any internationalizations here. For example:
   // if (locale === 'en-US') {
   //   return `${value} minutes`

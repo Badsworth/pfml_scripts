@@ -79,6 +79,8 @@ REQUIRED_FIELDS_FOR_DISBURSED_PAYMENT = [
 
 class FineosPeiWritebackStep(Step):
     class Metrics(str, enum.Enum):
+        FINEOS_WRITEBACK_PATH = "fineos_writeback_path"
+        ARCHIVED_WRITEBACK_PATH = "archived_writeback_path"
         ERRORED_WRITEBACK_RECORD_DURING_FILE_CREATION_COUNT = (
             "errored_writeback_record_during_file_creation_count"
         )
@@ -372,6 +374,12 @@ class FineosPeiWritebackStep(Step):
             )
             raise e
 
+        self.set_metrics(
+            {
+                self.Metrics.ARCHIVED_WRITEBACK_PATH: reference_file.file_location,
+                self.Metrics.FINEOS_WRITEBACK_PATH: fineos_pei_writeback_filepath,
+            }
+        )
         logger.info("Successfully uploaded writeback files to FINEOS S3")
 
     def _create_db_records_for_payments(

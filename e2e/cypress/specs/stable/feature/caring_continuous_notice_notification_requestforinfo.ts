@@ -181,7 +181,7 @@ describe("Request for More Information (notifications/notices)", () => {
               "Fineos Claim ID": submission.fineos_absence_id,
             },
           },
-          40000
+          60000
         );
         cy.contains(submission.fineos_absence_id);
       });

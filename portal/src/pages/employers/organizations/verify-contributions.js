@@ -147,9 +147,6 @@ VerifyContributions.propTypes = {
     employers: PropTypes.shape({
       submitWithholding: PropTypes.func.isRequired,
     }),
-    portalFlow: PropTypes.shape({
-      goTo: PropTypes.func.isRequired,
-    }).isRequired,
     users: PropTypes.shape({
       user: PropTypes.instanceOf(User),
     }).isRequired,
