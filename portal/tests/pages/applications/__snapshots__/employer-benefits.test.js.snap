@@ -12,7 +12,7 @@ exports[`EmployerBenefits conditionally renders an info alert when user selects 
     <div
       class="usa-alert__text"
     >
-      If you receive any other employer sponsored-benefits after you apply, you’ll need to call the Contact Center to let us know.
+      If you receive any other employer-sponsored benefits after you apply, you’ll need to call the Contact Center to let us know.
     </div>
   </div>
 </div>
@@ -141,7 +141,7 @@ exports[`EmployerBenefits renders the page 1`] = `
             class="usa-hint text-base-dark"
           >
             <br />
-            I will recieve employer sponsored benefits during my paid leave
+            I will recieve employer-sponsored benefits during my paid leave
           </span>
         </label>
       </div>

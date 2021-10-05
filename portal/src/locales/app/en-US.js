@@ -1160,12 +1160,12 @@ const pages = {
   claimsEmployerBenefits: {
     choiceNo: "$t(shared.choiceNo)",
     choiceNoAlert:
-      "If you receive any other employer sponsored-benefits after you apply, you’ll need to call the Contact Center to let us know.",
+      "If you receive any other employer-sponsored benefits after you apply, you’ll need to call the Contact Center to let us know.",
     choiceNoHint:
       "I won’t receive employer-sponsored benefits, I've applied but it hasn't been approved, or I don’t know the benefit amount yet",
     choiceYes: "$t(shared.choiceYes)",
     choiceYesHint:
-      "I will recieve employer sponsored benefits during my paid leave",
+      "I will recieve employer-sponsored benefits during my paid leave",
     doNotReportHintHeading: "You don’t need to report:",
     doNotReportHintList: [
       "Benefits from any other employers",
