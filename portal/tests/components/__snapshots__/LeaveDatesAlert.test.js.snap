@@ -3,11 +3,11 @@
 exports[`LeaveDatesAlert renders Alert with given dates 1`] = `
 <div
   class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-4"
+  role="region"
   tabindex="-1"
 >
   <div
     class="usa-alert__body"
-    role="region"
   >
     <h2
       class="usa-alert__heading font-heading-md text-bold"

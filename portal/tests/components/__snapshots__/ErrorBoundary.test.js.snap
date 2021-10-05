@@ -2,21 +2,26 @@
 
 exports[`ErrorBoundary when an error is thrown by a descendant component renders an Alert 1`] = `
 <div
-  class="usa-alert__body"
+  class="usa-alert usa-alert--error"
   role="region"
+  tabindex="-1"
 >
   <div
-    class="usa-alert__text"
+    class="usa-alert__body"
   >
-    <p>
-      Sorry, we encountered an unexpected error. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365
-    </p>
-    <button
-      class="usa-button position-relative"
-      type="button"
+    <div
+      class="usa-alert__text"
     >
-      Reload this page
-    </button>
+      <p>
+        Sorry, we encountered an unexpected error. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365
+      </p>
+      <button
+        class="usa-button position-relative"
+        type="button"
+      >
+        Reload this page
+      </button>
+    </div>
   </div>
 </div>
 `;

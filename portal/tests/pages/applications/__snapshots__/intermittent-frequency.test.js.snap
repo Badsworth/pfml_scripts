@@ -14,11 +14,11 @@ exports[`IntermittentFrequency renders the page 1`] = `
     </h1>
     <div
       class="usa-alert usa-alert--info c-alert--neutral"
+      role="region"
       tabindex="-1"
     >
       <div
         class="usa-alert__body"
-        role="region"
       >
         <div
           class="usa-alert__text"

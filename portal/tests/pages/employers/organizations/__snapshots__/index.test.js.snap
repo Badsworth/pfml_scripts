@@ -68,40 +68,50 @@ exports[`Index renders the page 1`] = `
 
 exports[`Index shows a success message telling the user they are now a leave admin 1`] = `
 <div
-  class="usa-alert__body"
+  class="usa-alert usa-alert--success"
   role="region"
+  tabindex="-1"
 >
-  <h2
-    class="usa-alert__heading font-heading-md text-bold"
-  >
-    Success
-  </h2>
   <div
-    class="usa-alert__text"
+    class="usa-alert__body"
   >
-    Your account type is now converted.
+    <h2
+      class="usa-alert__heading font-heading-md text-bold"
+    >
+      Success
+    </h2>
+    <div
+      class="usa-alert__text"
+    >
+      Your account type is now converted.
+    </div>
   </div>
 </div>
 `;
 
 exports[`Index shows an Alert telling the user to start verification if there are unverified employers 1`] = `
 <div
-  class="usa-alert__body"
+  class="usa-alert usa-alert--warning"
   role="region"
+  tabindex="-1"
 >
-  <h2
-    class="usa-alert__heading font-heading-md text-bold"
-  >
-    Verify your account
-  </h2>
   <div
-    class="usa-alert__text"
+    class="usa-alert__body"
   >
-    <p>
-      Every employer must verify paid leave contributions when creating an account. You need to 
-      complete this process
-       to review applications from your team. If you have an EIN that isn't verified you won't see any applications related to that EIN.
-    </p>
+    <h2
+      class="usa-alert__heading font-heading-md text-bold"
+    >
+      Verify your account
+    </h2>
+    <div
+      class="usa-alert__text"
+    >
+      <p>
+        Every employer must verify paid leave contributions when creating an account. You need to 
+        complete this process
+         to review applications from your team. If you have an EIN that isn't verified you won't see any applications related to that EIN.
+      </p>
+    </div>
   </div>
 </div>
 `;

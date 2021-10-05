@@ -3,7 +3,6 @@
 exports[`LeaveReason instructs the user to review their previous leaves when user changes their leave reason after reporting previous leaves for the same reason 1`] = `
 <div
   class="usa-alert__body"
-  role="region"
 >
   <h2
     class="usa-alert__heading font-heading-md text-bold"
@@ -35,11 +34,11 @@ exports[`LeaveReason renders the page without the military leave option 1`] = `
     </h1>
     <div
       class="usa-alert usa-alert--info c-alert--neutral"
+      role="region"
       tabindex="-1"
     >
       <div
         class="usa-alert__body"
-        role="region"
       >
         <div
           class="usa-alert__text"

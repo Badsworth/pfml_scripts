@@ -433,11 +433,11 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
   >
     <div
       class="usa-alert usa-alert--warning c-alert--auto-width"
+      role="region"
       tabindex="-1"
     >
       <div
         class="usa-alert__body"
-        role="region"
       >
         <div
           class="usa-alert__text"
@@ -601,11 +601,11 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
   >
     <div
       class="usa-alert usa-alert--warning c-alert--auto-width"
+      role="region"
       tabindex="-1"
     >
       <div
         class="usa-alert__body"
-        role="region"
       >
         <div
           class="usa-alert__text"

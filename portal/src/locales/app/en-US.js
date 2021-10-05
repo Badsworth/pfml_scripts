@@ -541,8 +541,8 @@ const errors = {
       mismatchException:
         "Invalid verification code. Make sure the code matches the code emailed to you.",
       pattern:
-        "Enter the 6 digit code sent to your email and ensure it does not include any punctuation.",
-      required: "Enter the 6 digit code sent to your email",
+        "Enter the 6-digit code sent to your email and ensure it does not include any punctuation.",
+      required: "Enter the 6-digit code sent to your email",
     },
     expiredVerificationCode:
       "Invalid verification code. Please request a new code.",
@@ -968,9 +968,11 @@ const pages = {
     backToLoginLink: "$t(shared.backToLoginLink)",
     codeLabel: "$t(shared.verificationCodeLabel)",
     codeResent:
-      "We sent a new 6 digit verification code to your email address. Enter the new code to reset your password.",
-    codeResentHeading: "New verification code sent",
-    lead: "If an account exists for the email you provide, we emailed a 6-digit verification code to it. Enter the code below to confirm your email and reset your password.",
+      "We sent a 6-digit code to your email address. If you don’t see that email, check your spam folder. If you didn’t get an email with a code, you may need to <verify-link>verify your email address</verify-link> before you can reset your$t(chars.nbsp)password.",
+    codeResentHeading: "Check your email",
+    codeResent_email:
+      "We sent a 6-digit code to {{emailAddress}}. If you don’t see that email, check your spam folder. If you didn’t get an email with a code, you may need to <verify-link>verify your email address</verify-link> before you can reset your$t(chars.nbsp)password.",
+    lead: "If you received a 6-digit code to create a new password, enter it below to confirm your email and reset your password.",
     lead_email:
       "If an account exists for {{emailAddress}}, we emailed a 6 digit verification code to it. Enter the code below to confirm your email and reset your password.",
     passwordHint: "$t(shared.passwordHint)",
