@@ -49,17 +49,31 @@ const flagsConfig = {
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
   // environment config files.
-  "cps-preview": {},
+  "cps-preview": {
+    claimantShowStatusPage: true,
+  },
   development: {
+    claimantShowStatusPage: true,
     example: true,
     pfmlTerriyay: true,
   },
-  test: {},
-  stage: {},
-  training: {},
-  performance: {},
-  uat: {},
+  test: {
+    claimantShowStatusPage: true,
+  },
+  stage: {
+    claimantShowStatusPage: true,
+  },
+  training: {
+    claimantShowStatusPage: true,
+  },
+  performance: {
+    claimantShowStatusPage: true,
+  },
+  uat: {
+    claimantShowStatusPage: true,
+  },
   prod: {
+    claimantShowStatusPage: true,
     pfmlTerriyay: true,
   },
 };
