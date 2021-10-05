@@ -1,17 +1,19 @@
-from datetime import datetime, tzinfo
 import os
-from typing import Dict, List, Type, cast
+from datetime import datetime, tzinfo
+from typing import Dict, List, Set, Type, cast
 from uuid import UUID
+
 import pytest
 import pytz
+from sqlalchemy.dialects import postgresql
+from sqlalchemy.orm import mapper
 from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.elements import and_
 from sqlalchemy.sql.expression import select, text
 from sqlalchemy.sql.functions import count, func
-from sqlalchemy.dialects import postgresql
+
 from massgov.pfml import db
 from massgov.pfml.db.models.applications import Application, Document
-
 from massgov.pfml.db.models.employees import (
     ManagedRequirement,
     Role,
@@ -139,18 +141,12 @@ def test_remove_and_merge_duplicates(
     assert oldest_duplicated_users[2].email_address == "test3@email.com"
     assert oldest_duplicated_users[3].email_address == "test4@email.com"
 
-    # Get the data from other users
-    dup_user_leave_administrators: Dict[str, List[UserLeaveAdministrator]] = dict()
-    dup_user_applications: Dict[str, List[Application]] = dict()
-    dup_user_documents: Dict[str, List[Document]] = dict()
-    dup_user_managed_reqs: Dict[str, List[ManagedRequirement]] = dict()
-    dup_user_roles: Dict[str, List[UserRole]] = dict()
-
-    main_user_leave_administrators: Dict[str, List[UserLeaveAdministrator]] = dict()
-    main_user_applications: Dict[str, List[Application]] = dict()
-    main_user_documents: Dict[str, List[Document]] = dict()
-    main_user_managed_reqs: Dict[str, List[ManagedRequirement]] = dict()
-    main_user_roles: Dict[str, List[UserRole]] = dict()
+    # Keep track of expected UUIDS from merge
+    expected_leave_administrator_ids: Dict[str, Set[UUID]] = dict()
+    expected_application_ids: Dict[str, Set[UUID]] = dict()
+    expected_document_ids: Dict[str, Set[UUID]] = dict()
+    expected_managed_req_ids: Dict[str, Set[UUID]] = dict()
+    expected_user_role_ids: Dict[str, Set[str]] = dict()
 
     for oldest_dup_user in oldest_duplicated_users:
         email_address = oldest_dup_user.email_address
@@ -183,6 +179,8 @@ def test_remove_and_merge_duplicates(
 
         assert len(leave_administrators_main) == 22
 
+        # ----
+
         applications = (
             test_db_session.query(Application)
             .join(
@@ -209,6 +207,8 @@ def test_remove_and_merge_duplicates(
 
         assert len(applications_main) == 22
 
+        # ----
+
         documents = (
             test_db_session.query(Document)
             .join(
@@ -234,6 +234,8 @@ def test_remove_and_merge_duplicates(
         )
 
         assert len(documents_main) == 132
+
+        # ----
 
         managed_reqs = (
             test_db_session.query(ManagedRequirement)
@@ -264,6 +266,8 @@ def test_remove_and_merge_duplicates(
 
         assert len(managed_reqs_main) == 22
 
+        # ----
+
         roles = (
             test_db_session.query(UserRole)
             .join(
@@ -290,16 +294,35 @@ def test_remove_and_merge_duplicates(
 
         assert len(roles_main) == 1
 
-        dup_user_leave_administrators[email_address] = leave_administrators
-        dup_user_applications[email_address] = applications
-        dup_user_documents[email_address] = documents
-        dup_user_managed_reqs[email_address] = managed_reqs
-        dup_user_roles[email_address] = roles
-        main_user_leave_administrators[email_address] = leave_administrators_main
-        main_user_applications[email_address] = applications_main
-        main_user_documents[email_address] = documents_main
-        main_user_managed_reqs[email_address] = managed_reqs_main
-        main_user_roles[email_address] = roles_main
+        # ----
+
+        if not email_address in expected_leave_administrator_ids:
+            expected_leave_administrator_ids[email_address] = set()
+        if not email_address in expected_application_ids:
+            expected_application_ids[email_address] = set()
+        if not email_address in expected_document_ids:
+            expected_document_ids[email_address] = set()
+        if not email_address in expected_managed_req_ids:
+            expected_managed_req_ids[email_address] = set()
+        if not email_address in expected_user_role_ids:
+            expected_user_role_ids[email_address] = set()
+
+        for x in leave_administrators:
+            expected_leave_administrator_ids[email_address].add(x.user_leave_administrator_id)
+        for x in leave_administrators_main:
+            expected_leave_administrator_ids[email_address].add(x.user_leave_administrator_id)
+
+        for x in applications + applications_main:
+            expected_application_ids[email_address].add(x.application_id)
+
+        for x in documents + documents_main:
+            expected_document_ids[email_address].add(x.document_id)
+
+        for x in managed_reqs + managed_reqs_main:
+            expected_managed_req_ids[email_address].add(x.managed_requirement_id)
+
+        for x in roles + roles_main:
+            expected_user_role_ids[email_address].add(x.role_id)
 
     leave_admin_count_init = test_db_session.query(UserLeaveAdministrator).count()
     assert leave_admin_count_init == 128
@@ -316,13 +339,18 @@ def test_remove_and_merge_duplicates(
     roles_count_init = test_db_session.query(UserRole).count()
     assert roles_count_init == 124
 
-    # ACT
+    # MERGE DATA AND REMOVE DUPLICATES
     test_db_session.execute(sql_file)
 
-    # ASSERT
-
+    # Make sure all records are preserved
     leave_admin_count_end = test_db_session.query(UserLeaveAdministrator).count()
     assert leave_admin_count_end == 128
+
+    leave_administrators_distinct = (
+        test_db_session.query(UserLeaveAdministrator).distinct(UserLeaveAdministrator.user_id).all()
+    )
+    print(leave_administrators_distinct[0].user_id)
+    assert len(leave_administrators_distinct) == 4
 
     applications_count_end = test_db_session.query(Application).count()
     assert applications_count_end == 328
@@ -348,6 +376,7 @@ def test_remove_and_merge_duplicates(
     all_users_final = test_db_session.query(User).all()
     assert len(all_users_final) == 4
 
+    # Make sure all records got moved over to the correct user
     for user in all_users_final:
         found_user = next(
             old_user
@@ -358,44 +387,127 @@ def test_remove_and_merge_duplicates(
         assert found_user is not None
         assert found_user.user_id == user.user_id
 
+        # ----
         leave_administrators = (
             test_db_session.query(UserLeaveAdministrator)
-            .join(User, User.user_id == UserLeaveAdministrator.user_id,)
-            .filter(User.email_address == email_address,)
+            .filter(UserLeaveAdministrator.user_id == user.user_id)
             .all()
         )
+        assert len(leave_administrators) == 32
+        assert len(leave_administrators) == len(
+            expected_leave_administrator_ids[found_user.email_address]
+        )
+        actual_leave_administrator_ids_set = set(
+            x.user_leave_administrator_id for x in leave_administrators
+        )
 
-        assert len(leave_administrators) == 128
+        found_missing_leave_administrators = [
+            x
+            for x in expected_leave_administrator_ids[found_user.email_address]
+            if x not in actual_leave_administrator_ids_set
+        ]
+        assert len(found_missing_leave_administrators) == 0
+
+        found_extra_leave_administrators = [
+            x
+            for x in leave_administrators
+            if x.user_leave_administrator_id
+            not in expected_leave_administrator_ids[found_user.email_address]
+        ]
+        assert len(found_extra_leave_administrators) == 0
+
+        # ----
 
         applications = (
-            test_db_session.query(Application)
-            .join(User, and_(User.user_id == user.user_id, User.user_id == Application.user_id))
-            .all()
+            test_db_session.query(Application).filter(Application.user_id == user.user_id).all()
         )
+        assert len(applications) == 82
 
-        documents = (
-            test_db_session.query(Document)
-            .join(User, and_(User.user_id == user.user_id, User.user_id == Document.user_id))
-            .all()
-        )
+        assert len(applications) == len(expected_application_ids[found_user.email_address])
+
+        actual_application_ids_set = set(x.application_id for x in applications)
+
+        found_missing_applications = [
+            x
+            for x in expected_application_ids[found_user.email_address]
+            if x not in actual_application_ids_set
+        ]
+        assert len(found_missing_applications) == 0
+
+        found_extra_applications = [
+            x
+            for x in applications
+            if x.application_id not in expected_application_ids[found_user.email_address]
+        ]
+        assert len(found_extra_applications) == 0
+
+        # ----
+
+        documents = test_db_session.query(Document).filter(Document.user_id == user.user_id).all()
+        assert len(documents) == 372
+
+        assert len(documents) == len(expected_document_ids[found_user.email_address])
+
+        actual_document_ids_set = set(x.document_id for x in documents)
+
+        found_missing_documents = [
+            x
+            for x in expected_document_ids[found_user.email_address]
+            if x not in actual_document_ids_set
+        ]
+        assert len(found_missing_documents) == 0
+
+        found_extra_documents = [
+            x
+            for x in documents
+            if x.document_id not in expected_document_ids[found_user.email_address]
+        ]
+        assert len(found_extra_documents) == 0
+
+        # ----
 
         managed_reqs = (
             test_db_session.query(ManagedRequirement)
-            .join(
-                User,
-                and_(
-                    User.user_id == user.user_id,
-                    User.user_id == ManagedRequirement.respondent_user_id,
-                ),
-            )
+            .join(User, ManagedRequirement.respondent_user_id == user.user_id)
             .all()
         )
+        assert len(managed_reqs) == 82
 
-        roles = (
-            test_db_session.query(UserRole)
-            .join(User, and_(User.user_id == user.user_id, User.user_id == UserRole.user_id))
-            .all()
-        )
+        assert len(managed_reqs) == len(expected_managed_req_ids[found_user.email_address])
 
+        actual_managed_req_ids_set = set(x.managed_requirement_id for x in managed_reqs)
+
+        found_missing_managed_reqs = [
+            x
+            for x in expected_managed_req_ids[found_user.email_address]
+            if x not in actual_managed_req_ids_set
+        ]
+        assert len(found_missing_managed_reqs) == 0
+
+        found_extra_managed_reqs = [
+            x
+            for x in managed_reqs
+            if x.managed_requirement_id not in expected_managed_req_ids[found_user.email_address]
+        ]
+        assert len(found_extra_managed_reqs) == 0
+
+        # ----
+
+        roles = test_db_session.query(UserRole).join(User, UserRole.user_id == user.user_id).all()
         assert len(roles) == 3
 
+        assert len(roles) == len(expected_user_role_ids[found_user.email_address])
+
+        actual_user_role_ids_set = set(x.role_id for x in roles)
+
+        found_missing_user_roles = [
+            x
+            for x in expected_user_role_ids[found_user.email_address]
+            if x not in actual_user_role_ids_set
+        ]
+        assert len(found_missing_user_roles) == 0
+
+        found_extra_roles = [
+            x for x in roles if x.role_id not in expected_user_role_ids[found_user.email_address]
+        ]
+        assert len(found_extra_roles) == 0
