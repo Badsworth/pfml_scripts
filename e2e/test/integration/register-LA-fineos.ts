@@ -10,7 +10,7 @@ import {
   generateCredentials,
   getClaimantCredentials,
 } from "../../src/util/credentials";
-import { endOfQuarter, formatISO, subQuarters, getQuarter } from "date-fns";
+import { endOfQuarter, formatISO, subQuarters } from "date-fns";
 import AuthenticationManager from "../../src/submission/AuthenticationManager";
 import {
   getUsersCurrent,
@@ -43,10 +43,12 @@ describe("Series of test that verifies LAs are properly registered in Fineos", (
 
   test("Register Leave Admins (** verify only one LA **)", async () => {
     const fein = employer.fein;
-    const withholding_amount = employer.withholdings[getQuarter(new Date())];
+    const withholding_amount =
+      employer.withholdings[employer.withholdings.length - 1];
     const quarter = formatISO(endOfQuarter(subQuarters(new Date(), 2)), {
       representation: "date",
     });
+
     try {
       await authenticator.registerLeaveAdmin(
         leave_admin_creds_1.username,
