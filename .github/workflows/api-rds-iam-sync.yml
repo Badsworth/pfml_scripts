@@ -40,7 +40,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: deploy/api/${{ github.event.inputs.environment || env.default-environment }}
+          # ref: deploy/api/${{ github.event.inputs.environment || env.default-environment }}
+          ref: deploy/api/main
+
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
