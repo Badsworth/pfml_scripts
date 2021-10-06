@@ -160,7 +160,7 @@ jobs:
           \"dedup_key\":\"Weekly Training API Reset\",
           \"payload\": {
             \"summary\": \"Weekly Training API Reset\",
-            \"severity\": \"low\",
+            \"severity\": \"warning\",
             \"source\": \"Weekly Training API Reset\",
             \"custom_details\": {
               \"description\": \"Weekly Training API Reset Failed.\"
