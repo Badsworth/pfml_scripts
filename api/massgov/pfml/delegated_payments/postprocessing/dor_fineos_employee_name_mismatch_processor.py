@@ -78,7 +78,10 @@ class DORFineosEmployeeNameMismatchProcessor(AbstractStepProcessor):
         if len(dor_name_for_compare) < 2 or len(fineos_name_for_compare) < 2:
             return True
 
-        if dor_name_for_compare in fineos_name_for_compare or fineos_name_for_compare in dor_name:
+        if (
+            dor_name_for_compare in fineos_name_for_compare
+            or fineos_name_for_compare in dor_name_for_compare
+        ):
             return False
 
         return True
