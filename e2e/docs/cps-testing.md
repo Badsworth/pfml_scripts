@@ -7,7 +7,7 @@ In each of the folders under `specs` we have following test that will test follo
 `ingored/cps-sp`
 
 **fineos_intake_template** - This template will take you through the FINEOS intake process and create a claim from there.
-In the claim you can adjust to test for just regular FINEOS intake process or check for CPS-906 testing.
+In the claim you can adjust to test for just regular FINEOS intake process or check for CPS-906 testing. Each ticket should have a @TODO comment in the file.
 
 **finoes_tasks_docs_tabs_template** - This template includes CPS-906 testing. It will submit a claim through the API and check for different things in the Tasks/Documents tabs.
 
@@ -88,4 +88,4 @@ What tickets from CPS-906 were included:
 | CPS-906-V (CPS-2454)   | fineos_intake_template.ts                          | Bonding                | Any                  | Check the Plan Evidence decision is pending                                              |
 | CPS-906-W (CPS-2405)   | fineos_tasks_docs_tabs_template.ts                 | Any                    | Any                  | Checking the inbound form for forms                                                      |
 | CPS-906-X (CPS-2408)   | fineos_tasks_docs_tabs_template.ts                 | Any                    | Any                  | Check for multiple ID Proof in the document directory                                    |
-| CPS-906-AA (CPS-2579)  |                                                    | Any                    | Any                  | Check the Work Pattern is populated alert for the Work Absence Detail in the Intake form |
+| CPS-906-AA (CPS-2579)  | fineos_intake_template.ts                          | Any                    | Any                  | Check the Work Pattern is populated alert for the Work Absence Detail in the Intake form |
