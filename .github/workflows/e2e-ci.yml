@@ -103,6 +103,7 @@ jobs:
       E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
       E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
       E2E_FINEOS_USERS: ${{ secrets.E2E_FINEOS_USERS }}
+      E2E_ENVIRONMENT: performance
       PUPPETEER_SKIP_CHROMIUM_DOWNLOAD:
     if: needs.changed-files.outputs.has-flood-changes == 'true'
     steps:
@@ -115,9 +116,9 @@ jobs:
         with:
           working-directory: e2e
       - name: "Generate Base data"
-        run: E2E_ENVIRONMENT=performance npm run cli -- flood base
+        run: npm run cli -- flood base
       - name: "Generate Leave Admin data"
-        run: E2E_ENVIRONMENT=performance npm run cli -- flood leaveAdmin
+        run: npm run cli -- flood leaveAdmin
       - name: "Run PortalClaimSubmit scenario"
         run: node_modules/.bin/element run src/flood/scenarios/PortalClaimSubmit.perf.ts
       - name: "Run LeaveAdminSelfReg scenario"
