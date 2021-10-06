@@ -27,6 +27,8 @@ let leave_admin_creds_1: Credentials;
 let leave_admin_creds_2: Credentials;
 let employer: Employer;
 
+jest.retryTimes(3);
+
 /**
  * @group nightly
  */
@@ -135,7 +137,6 @@ describe("Series of test that verifies LAs are properly registered in Fineos", (
   }, 60000);
 
   test("Submit Claim and confirm the right LA can access the review page", async () => {
-    jest.retryTimes(3);
     const employeePool = await getEmployeePool();
     const submitter = getPortalSubmitter();
     const RLAF_test: ScenarioSpecification = {
@@ -162,7 +163,6 @@ describe("Series of test that verifies LAs are properly registered in Fineos", (
       RLAF_test.employee,
       RLAF_test.claim
     );
-
     const res = await submitter.submit(claim, getClaimantCredentials());
     console.log("API submission completed successfully");
 
