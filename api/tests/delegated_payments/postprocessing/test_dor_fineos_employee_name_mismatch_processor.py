@@ -53,6 +53,18 @@ def test_processor_mixed(
     dor_fineos_employee_name_mismatch_processor.process(payment)
     assert _get_audit_report_details(payment, local_test_db_session) is None
 
+    payment = create_payment_with_name("Javier", "Valdez Jr.", "Javier", "Valdez")
+    dor_fineos_employee_name_mismatch_processor.process(payment)
+    assert _get_audit_report_details(payment, local_test_db_session) is None
+
+    payment = create_payment_with_name("Javier M", "Valdez", "Javier", "Valdez")
+    dor_fineos_employee_name_mismatch_processor.process(payment)
+    assert _get_audit_report_details(payment, local_test_db_session) is None
+
+    payment = create_payment_with_name("Javier", "Valdez", "Javier M", "Valdez")
+    dor_fineos_employee_name_mismatch_processor.process(payment)
+    assert _get_audit_report_details(payment, local_test_db_session) is None
+
     payment = create_payment_with_name("Javier", "Valdez-Garcia", "Javier", "Valdez Garcia")
     dor_fineos_employee_name_mismatch_processor.process(payment)
     assert _get_audit_report_details(payment, local_test_db_session) is None
