@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck: https://lwd.atlassian.net/browse/PORTAL-427
 import ClaimDetail, { AbsencePeriod } from "../../models/ClaimDetail";
 import React, { useEffect } from "react";
 import { find, get, has, map } from "lodash";

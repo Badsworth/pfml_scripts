@@ -38,14 +38,35 @@
         "plugin:@typescript-eslint/recommended" // rules specific to typescript, e.g., writing interfaces
       ],
       "rules": {
+        "@typescript-eslint/ban-ts-comment": [
+          "error",
+          {
+            // Allow disabling type checking on a file as long as there's an
+            // accompanying description for why it's disabled:
+            "ts-nocheck": "allow-with-description"
+          }
+        ],
+        // conflicts with @typescript-eslint/no-use-before-define:
+        "no-use-before-define": "off",
+        // suppress noisy errors that didn't exist prior to TS migration:
+        "@typescript-eslint/no-use-before-define": "off",
         "@typescript-eslint/array-type": [
           "error",
           { "default": "array-simple" }
         ],
         "@typescript-eslint/consistent-type-definitions": "error",
         "@typescript-eslint/explicit-module-boundary-types": "off",
-        "@typescript-eslint/naming-convention": "error",
-        "@typescript-eslint/no-unused-vars": "error",
+        "@typescript-eslint/naming-convention": [
+          "error",
+          {
+            "selector": "typeLike",
+            "format": ["PascalCase"]
+          }
+        ],
+        "@typescript-eslint/no-unused-vars": [
+          "error",
+          { "argsIgnorePattern": "^_" }
+        ],
         "jsdoc/require-param-type": "off",
         "jsdoc/require-returns": "off"
       }

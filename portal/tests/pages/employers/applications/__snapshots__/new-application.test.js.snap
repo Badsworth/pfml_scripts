@@ -10,11 +10,11 @@ exports[`NewApplication initially renders without any option selection 1`] = `
   </h1>
   <div
     class="usa-alert usa-alert--warning"
+    role="region"
     tabindex="-1"
   >
     <div
       class="usa-alert__body"
-      role="region"
     >
       <div
         class="usa-alert__text"

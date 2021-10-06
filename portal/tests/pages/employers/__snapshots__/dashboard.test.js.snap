@@ -91,26 +91,31 @@ exports[`Employer dashboard renders a table of claims with links if employer is 
 
 exports[`Employer dashboard renders the banner if there are any unverified employers 1`] = `
 <div
-  class="usa-alert__body"
+  class="usa-alert usa-alert--warning"
   role="region"
+  tabindex="-1"
 >
-  <h2
-    class="usa-alert__heading font-heading-md text-bold"
-  >
-    Verify your account
-  </h2>
   <div
-    class="usa-alert__text"
+    class="usa-alert__body"
   >
-    <p>
-      Every employer must verify paid leave contributions when creating an account. You need to 
-      <a
-        href="/employers/organizations"
-      >
-        complete this process
-      </a>
-       to review applications from your team. If you have an EIN that isn't verified you won't see any applications related to that EIN.
-    </p>
+    <h2
+      class="usa-alert__heading font-heading-md text-bold"
+    >
+      Verify your account
+    </h2>
+    <div
+      class="usa-alert__text"
+    >
+      <p>
+        Every employer must verify paid leave contributions when creating an account. You need to 
+        <a
+          href="/employers/organizations"
+        >
+          complete this process
+        </a>
+         to review applications from your team. If you have an EIN that isn't verified you won't see any applications related to that EIN.
+      </p>
+    </div>
   </div>
 </div>
 `;
@@ -145,11 +150,11 @@ exports[`Employer dashboard renders the page with expected content and paginatio
   >
     <div
       class="usa-alert usa-alert--info"
+      role="region"
       tabindex="-1"
     >
       <div
         class="usa-alert__body"
-        role="region"
       >
         <h2
           class="usa-alert__heading font-heading-md text-bold"

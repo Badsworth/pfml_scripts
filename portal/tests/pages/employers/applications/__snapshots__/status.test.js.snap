@@ -1,0 +1,290 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Status renders the page for a claim without documents or a status 1`] = `
+<div>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+    tabindex="-1"
+  >
+    Application status for Jane Doe
+  </h1>
+  <p
+    class="usa-intro"
+  >
+    No action is required of you.
+    <br />
+    <br />
+    When the application progresses you'll receive an email with a direct link for more details.
+  </p>
+  <h2
+    class="font-heading-md text-bold"
+  >
+    Leave details
+  </h2>
+  <div
+    class="margin-bottom-2 padding-bottom-2"
+  >
+    <h3
+      class="margin-bottom-1 font-heading-xs text-bold"
+    >
+      Application ID
+    </h3>
+    NTN-111-ABS-01
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2"
+  >
+    <h3
+      class="margin-bottom-1 font-heading-xs text-bold"
+    >
+      Status
+    </h3>
+    --
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2"
+  >
+    <h3
+      class="margin-bottom-1 font-heading-xs text-bold"
+    >
+      Leave type
+    </h3>
+    Medical leave
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2"
+  >
+    <h3
+      class="margin-bottom-1 font-heading-xs text-bold"
+    >
+      Leave duration
+    </h3>
+    1/1/2021 to 7/1/2021
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2"
+  >
+    <h3
+      class="margin-bottom-1 font-heading-xs text-bold"
+    >
+      Continuous leave
+    </h3>
+    1/1/2021 to 6/1/2021
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2"
+  >
+    <h3
+      class="margin-bottom-1 font-heading-xs text-bold"
+    >
+      Reduced leave schedule
+    </h3>
+    2/1/2021 to 7/1/2021
+  </div>
+</div>
+`;
+
+exports[`Status renders the page for a completed claim 1`] = `
+<div>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+    tabindex="-1"
+  >
+    Application status for Jane Doe
+  </h1>
+  <p
+    class="usa-intro"
+  >
+    A decision has been made for this application. No action is required of you, but you can download a copy of the decision notice for details. Your employee has the right to appeal this decision under Massachusetts regulations (
+    <a
+      href="https://www.mass.gov/regulations/458-CMR-200-family-and-medical-leave"
+      rel="noopener"
+      target="_blank"
+    >
+      458 CMR 2.14
+    </a>
+    ).
+  </p>
+  <h2
+    class="font-heading-md text-bold"
+  >
+    Leave details
+  </h2>
+  <div
+    class="margin-bottom-2 padding-bottom-2"
+  >
+    <h3
+      class="margin-bottom-1 font-heading-xs text-bold"
+    >
+      Application ID
+    </h3>
+    NTN-111-ABS-01
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2"
+  >
+    <h3
+      class="margin-bottom-1 font-heading-xs text-bold"
+    >
+      Status
+    </h3>
+    <span
+      class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-success-dark bg-success-lighter padding-x-205"
+    >
+      Approved
+    </span>
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2"
+  >
+    <h3
+      class="margin-bottom-1 font-heading-xs text-bold"
+    >
+      Leave type
+    </h3>
+    Medical leave
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2"
+  >
+    <h3
+      class="margin-bottom-1 font-heading-xs text-bold"
+    >
+      Leave duration
+    </h3>
+    1/1/2021 to 7/1/2021
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2"
+  >
+    <h3
+      class="margin-bottom-1 font-heading-xs text-bold"
+    >
+      Continuous leave
+    </h3>
+    1/1/2021 to 6/1/2021
+  </div>
+  <div
+    class="margin-bottom-2 padding-bottom-2"
+  >
+    <h3
+      class="margin-bottom-1 font-heading-xs text-bold"
+    >
+      Reduced leave schedule
+    </h3>
+    2/1/2021 to 7/1/2021
+  </div>
+  <div
+    class="border-top-2px border-base-lighter padding-top-2"
+  >
+    <h2
+      class="font-heading-md text-bold"
+    >
+      Notices
+    </h2>
+    <ul
+      class="usa-list usa-list--unstyled margin-top-2"
+      data-testid="documents"
+    >
+      <li
+        class="margin-bottom-2"
+      >
+        <button
+          class="usa-button position-relative text-bold usa-button--unstyled"
+          type="button"
+        >
+          Approval notice (PDF)
+        </button>
+        <div
+          class="text-base-dark"
+        >
+          Posted 1/2/2021
+        </div>
+      </li>
+    </ul>
+  </div>
+</div>
+`;
+
+exports[`Status shows only legal documents 1`] = `
+<ul
+  class="usa-list usa-list--unstyled margin-top-2"
+  data-testid="documents"
+>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Appeal Acknowledgment (PDF)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/1/2021
+    </div>
+  </li>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Approval notice (PDF)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/2/2021
+    </div>
+  </li>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Denial notice (PDF)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/11/2021
+    </div>
+  </li>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Request for more information (PDF)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/14/2021
+    </div>
+  </li>
+  <li
+    class="margin-bottom-2"
+  >
+    <button
+      class="usa-button position-relative text-bold usa-button--unstyled"
+      type="button"
+    >
+      Pending Application Withdrawn (PDF)
+    </button>
+    <div
+      class="text-base-dark"
+    >
+      Posted 1/15/2021
+    </div>
+  </li>
+</ul>
+`;

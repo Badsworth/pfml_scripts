@@ -1,0 +1,1353 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`OtherIncomesDetails when the user's claim has no other incomes renders the page 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Other leave, benefits, and income
+    </h1>
+    <h2
+      class="font-heading-lg text-bold"
+    >
+      Tell us about your other sources of income during your leave dates for paid leave from PFML.
+    </h2>
+    <div
+      class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-4"
+      role="region"
+      tabindex="-1"
+    >
+      <div
+        class="usa-alert__body"
+      >
+        <h3
+          class="usa-alert__heading font-heading-md text-bold"
+        >
+          Your leave dates for paid leave
+        </h3>
+        <div
+          class="usa-alert__text"
+        >
+          1/1/2021 to 6/1/2021
+        </div>
+      </div>
+    </div>
+    <section
+      class="margin-bottom-4"
+    >
+      <div
+        class="margin-bottom-3 measure-5 padding-3 border-2px border-base-lighter js-repeated-fieldset-card"
+        data-key="RepeatableFieldsetCard2"
+        data-testid="repeatable-fieldset-card"
+      >
+        <fieldset
+          class="usa-fieldset"
+        >
+          <legend
+            class="usa-legend font-heading-lg text-normal"
+          >
+            Income 1
+          </legend>
+          <fieldset
+            class="usa-fieldset margin-top-3 usa-form-group"
+          >
+            <legend
+              class="usa-label text-bold usa-legend font-heading-xs measure-5"
+            >
+              What kind of income is it?
+            </legend>
+            <div
+              class=""
+            >
+              <div
+                class="usa-radio measure-5 bg-transparent"
+              >
+                <input
+                  class="usa-radio__input"
+                  id="InputChoice3"
+                  name="other_incomes[0].income_type"
+                  type="radio"
+                  value="Workers Compensation"
+                />
+                <label
+                  class="usa-radio__label"
+                  for="InputChoice3"
+                >
+                  Workers Compensation
+                </label>
+              </div>
+              <div
+                class="usa-radio measure-5 bg-transparent"
+              >
+                <input
+                  class="usa-radio__input"
+                  id="InputChoice4"
+                  name="other_incomes[0].income_type"
+                  type="radio"
+                  value="Unemployment Insurance"
+                />
+                <label
+                  class="usa-radio__label"
+                  for="InputChoice4"
+                >
+                  Unemployment Insurance
+                </label>
+              </div>
+              <div
+                class="usa-radio measure-5 bg-transparent"
+              >
+                <input
+                  class="usa-radio__input"
+                  id="InputChoice5"
+                  name="other_incomes[0].income_type"
+                  type="radio"
+                  value="SSDI"
+                />
+                <label
+                  class="usa-radio__label"
+                  for="InputChoice5"
+                >
+                  Social Security Disability Insurance
+                </label>
+              </div>
+              <div
+                class="usa-radio measure-5 bg-transparent"
+              >
+                <input
+                  class="usa-radio__input"
+                  id="InputChoice6"
+                  name="other_incomes[0].income_type"
+                  type="radio"
+                  value="Disability benefits under Gov't retirement plan"
+                />
+                <label
+                  class="usa-radio__label"
+                  for="InputChoice6"
+                >
+                  Disability benefits under a governmental retirement plan
+                </label>
+              </div>
+              <div
+                class="usa-radio measure-5 bg-transparent"
+              >
+                <input
+                  class="usa-radio__input"
+                  id="InputChoice7"
+                  name="other_incomes[0].income_type"
+                  type="radio"
+                  value="Jones Act benefits"
+                />
+                <label
+                  class="usa-radio__label"
+                  for="InputChoice7"
+                >
+                  Jones Act benefits
+                </label>
+              </div>
+              <div
+                class="usa-radio measure-5 bg-transparent"
+              >
+                <input
+                  class="usa-radio__input"
+                  id="InputChoice8"
+                  name="other_incomes[0].income_type"
+                  type="radio"
+                  value="Railroad Retirement benefits"
+                />
+                <label
+                  class="usa-radio__label"
+                  for="InputChoice8"
+                >
+                  Railroad Retirement benefits
+                </label>
+              </div>
+              <div
+                class="usa-radio measure-5 bg-transparent"
+              >
+                <input
+                  class="usa-radio__input"
+                  id="InputChoice9"
+                  name="other_incomes[0].income_type"
+                  type="radio"
+                  value="Earnings from another employment/self-employment"
+                />
+                <label
+                  class="usa-radio__label"
+                  for="InputChoice9"
+                >
+                  Earnings or benefits from another employer, or through self-employment
+                </label>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset
+            class="usa-fieldset margin-top-3 usa-form-group"
+          >
+            <legend
+              class="usa-label text-bold usa-legend font-heading-xs measure-5"
+            >
+              What is the first day of your leave that this income will pay you for?
+            </legend>
+            <span
+              class="display-block line-height-sans-5 usa-hint text-base-dark measure-5"
+            >
+              MM / DD / YYYY
+            </span>
+            <div
+              class="usa-memorable-date"
+            >
+              <div
+                class="usa-form-group usa-form-group--month"
+              >
+                <label
+                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                  for="InputText10"
+                  id="InputText10_label"
+                >
+                  Month
+                </label>
+                <input
+                  aria-labelledby="InputText10_label InputText10_hint InputText10_error"
+                  class="usa-input usa-input--inline maxw-mobile-lg"
+                  id="InputText10"
+                  inputmode="numeric"
+                  maxlength="2"
+                  name="other_incomes[0].income_start_date_month"
+                  type="text"
+                  value=""
+                />
+              </div>
+              <div
+                class="usa-form-group usa-form-group--day"
+              >
+                <label
+                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                  for="InputText11"
+                  id="InputText11_label"
+                >
+                  Day
+                </label>
+                <input
+                  aria-labelledby="InputText11_label InputText11_hint InputText11_error"
+                  class="usa-input usa-input--inline maxw-mobile-lg"
+                  id="InputText11"
+                  inputmode="numeric"
+                  maxlength="2"
+                  name="other_incomes[0].income_start_date_day"
+                  type="text"
+                  value=""
+                />
+              </div>
+              <div
+                class="usa-form-group usa-form-group--year"
+              >
+                <label
+                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                  for="InputText12"
+                  id="InputText12_label"
+                >
+                  Year
+                </label>
+                <input
+                  aria-labelledby="InputText12_label InputText12_hint InputText12_error"
+                  class="usa-input usa-input--inline maxw-mobile-lg"
+                  id="InputText12"
+                  inputmode="numeric"
+                  maxlength="4"
+                  name="other_incomes[0].income_start_date_year"
+                  type="text"
+                  value=""
+                />
+              </div>
+            </div>
+          </fieldset>
+          <fieldset
+            class="usa-fieldset margin-top-3 usa-form-group"
+          >
+            <legend
+              class="usa-label text-bold usa-legend font-heading-xs measure-5"
+            >
+              What is the last day of your leave that this income will pay you for?
+            </legend>
+            <span
+              class="display-block line-height-sans-5 usa-hint text-base-dark measure-5"
+            >
+              MM / DD / YYYY
+            </span>
+            <div
+              class="usa-memorable-date"
+            >
+              <div
+                class="usa-form-group usa-form-group--month"
+              >
+                <label
+                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                  for="InputText13"
+                  id="InputText13_label"
+                >
+                  Month
+                </label>
+                <input
+                  aria-labelledby="InputText13_label InputText13_hint InputText13_error"
+                  class="usa-input usa-input--inline maxw-mobile-lg"
+                  id="InputText13"
+                  inputmode="numeric"
+                  maxlength="2"
+                  name="other_incomes[0].income_end_date_month"
+                  type="text"
+                  value=""
+                />
+              </div>
+              <div
+                class="usa-form-group usa-form-group--day"
+              >
+                <label
+                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                  for="InputText14"
+                  id="InputText14_label"
+                >
+                  Day
+                </label>
+                <input
+                  aria-labelledby="InputText14_label InputText14_hint InputText14_error"
+                  class="usa-input usa-input--inline maxw-mobile-lg"
+                  id="InputText14"
+                  inputmode="numeric"
+                  maxlength="2"
+                  name="other_incomes[0].income_end_date_day"
+                  type="text"
+                  value=""
+                />
+              </div>
+              <div
+                class="usa-form-group usa-form-group--year"
+              >
+                <label
+                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                  for="InputText15"
+                  id="InputText15_label"
+                >
+                  Year
+                </label>
+                <input
+                  aria-labelledby="InputText15_label InputText15_hint InputText15_error"
+                  class="usa-input usa-input--inline maxw-mobile-lg"
+                  id="InputText15"
+                  inputmode="numeric"
+                  maxlength="4"
+                  name="other_incomes[0].income_end_date_year"
+                  type="text"
+                  value=""
+                />
+              </div>
+            </div>
+          </fieldset>
+          <fieldset
+            class="usa-fieldset margin-top-3"
+          >
+            <legend
+              class="usa-label text-bold usa-legend font-heading-xs measure-5"
+            >
+              How much will you receive?
+            </legend>
+            <div
+              class="usa-form-group margin-top-05"
+            >
+              <label
+                class="usa-label text-normal margin-top-0 font-heading-xs measure-5"
+                for="InputText16"
+                id="InputText16_label"
+              >
+                Amount
+              </label>
+              <div
+                class="usa-input-group"
+              >
+                <div
+                  aria-hidden="true"
+                  class="usa-input-prefix"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="usa-icon"
+                    focusable="false"
+                    role="img"
+                  >
+                    <use
+                      xlink:href="/img/sprite.svg#attach_money"
+                    />
+                  </svg>
+                </div>
+                <input
+                  aria-labelledby="InputText16_label InputText16_hint InputText16_error"
+                  class="usa-input usa-input--medium padding-left-0"
+                  data-value-type="float"
+                  id="InputText16"
+                  inputmode="decimal"
+                  name="other_incomes[0].income_amount_dollars"
+                  type="text"
+                  value=""
+                />
+              </div>
+            </div>
+            <div
+              class="usa-form-group margin-top-1"
+            >
+              <label
+                class="usa-label text-normal margin-top-0 font-heading-xs measure-5"
+                for="Dropdown17"
+                id="Dropdown17_label"
+              >
+                Frequency
+              </label>
+              <div
+                class=""
+                data-default-value=""
+              >
+                <select
+                  aria-labelledby="Dropdown17_label Dropdown17_hint Dropdown17_error"
+                  class="usa-select maxw-mobile-lg"
+                  id="Dropdown17"
+                  name="other_incomes[0].income_amount_frequency"
+                >
+                  <option
+                    value=""
+                  />
+                  <option
+                    value="Per Day"
+                  >
+                    Daily
+                  </option>
+                  <option
+                    value="Per Week"
+                  >
+                    Weekly
+                  </option>
+                  <option
+                    value="Per Month"
+                  >
+                    Monthly
+                  </option>
+                  <option
+                    value="In Total"
+                  >
+                    All at once
+                  </option>
+                </select>
+              </div>
+            </div>
+          </fieldset>
+        </fieldset>
+      </div>
+      <button
+        class="usa-button position-relative usa-button--outline bg-white"
+        name="add-entry-button"
+        type="button"
+      >
+        Add another income
+      </button>
+    </section>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;
+
+exports[`OtherIncomesDetails when the user's claim has other incomes renders the page 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Other leave, benefits, and income
+    </h1>
+    <h2
+      class="font-heading-lg text-bold"
+    >
+      Tell us about your other sources of income during your leave dates for paid leave from PFML.
+    </h2>
+    <div
+      class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-4"
+      role="region"
+      tabindex="-1"
+    >
+      <div
+        class="usa-alert__body"
+      >
+        <h3
+          class="usa-alert__heading font-heading-md text-bold"
+        >
+          Your leave dates for paid leave
+        </h3>
+        <div
+          class="usa-alert__text"
+        >
+          1/1/2021 to 6/1/2021
+        </div>
+      </div>
+    </div>
+    <section
+      class="margin-bottom-4"
+    >
+      <div
+        class="margin-bottom-3 measure-5 padding-3 border-2px border-base-lighter js-repeated-fieldset-card"
+        data-key="RepeatableFieldsetCard1757"
+        data-testid="repeatable-fieldset-card"
+      >
+        <fieldset
+          class="usa-fieldset"
+        >
+          <legend
+            class="usa-legend font-heading-lg text-normal"
+          >
+            Income 1
+          </legend>
+          <fieldset
+            class="usa-fieldset margin-top-3 usa-form-group"
+          >
+            <legend
+              class="usa-label text-bold usa-legend font-heading-xs measure-5"
+            >
+              What kind of income is it?
+            </legend>
+            <div
+              class=""
+            >
+              <div
+                class="usa-radio measure-5 bg-transparent"
+              >
+                <input
+                  class="usa-radio__input"
+                  id="InputChoice1758"
+                  name="other_incomes[0].income_type"
+                  type="radio"
+                  value="Workers Compensation"
+                />
+                <label
+                  class="usa-radio__label"
+                  for="InputChoice1758"
+                >
+                  Workers Compensation
+                </label>
+              </div>
+              <div
+                class="usa-radio measure-5 bg-transparent"
+              >
+                <input
+                  checked=""
+                  class="usa-radio__input"
+                  id="InputChoice1759"
+                  name="other_incomes[0].income_type"
+                  type="radio"
+                  value="Unemployment Insurance"
+                />
+                <label
+                  class="usa-radio__label"
+                  for="InputChoice1759"
+                >
+                  Unemployment Insurance
+                </label>
+              </div>
+              <div
+                class="usa-radio measure-5 bg-transparent"
+              >
+                <input
+                  class="usa-radio__input"
+                  id="InputChoice1760"
+                  name="other_incomes[0].income_type"
+                  type="radio"
+                  value="SSDI"
+                />
+                <label
+                  class="usa-radio__label"
+                  for="InputChoice1760"
+                >
+                  Social Security Disability Insurance
+                </label>
+              </div>
+              <div
+                class="usa-radio measure-5 bg-transparent"
+              >
+                <input
+                  class="usa-radio__input"
+                  id="InputChoice1761"
+                  name="other_incomes[0].income_type"
+                  type="radio"
+                  value="Disability benefits under Gov't retirement plan"
+                />
+                <label
+                  class="usa-radio__label"
+                  for="InputChoice1761"
+                >
+                  Disability benefits under a governmental retirement plan
+                </label>
+              </div>
+              <div
+                class="usa-radio measure-5 bg-transparent"
+              >
+                <input
+                  class="usa-radio__input"
+                  id="InputChoice1762"
+                  name="other_incomes[0].income_type"
+                  type="radio"
+                  value="Jones Act benefits"
+                />
+                <label
+                  class="usa-radio__label"
+                  for="InputChoice1762"
+                >
+                  Jones Act benefits
+                </label>
+              </div>
+              <div
+                class="usa-radio measure-5 bg-transparent"
+              >
+                <input
+                  class="usa-radio__input"
+                  id="InputChoice1763"
+                  name="other_incomes[0].income_type"
+                  type="radio"
+                  value="Railroad Retirement benefits"
+                />
+                <label
+                  class="usa-radio__label"
+                  for="InputChoice1763"
+                >
+                  Railroad Retirement benefits
+                </label>
+              </div>
+              <div
+                class="usa-radio measure-5 bg-transparent"
+              >
+                <input
+                  class="usa-radio__input"
+                  id="InputChoice1764"
+                  name="other_incomes[0].income_type"
+                  type="radio"
+                  value="Earnings from another employment/self-employment"
+                />
+                <label
+                  class="usa-radio__label"
+                  for="InputChoice1764"
+                >
+                  Earnings or benefits from another employer, or through self-employment
+                </label>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset
+            class="usa-fieldset margin-top-3 usa-form-group"
+          >
+            <legend
+              class="usa-label text-bold usa-legend font-heading-xs measure-5"
+            >
+              What is the first day of your leave that this income will pay you for?
+            </legend>
+            <span
+              class="display-block line-height-sans-5 usa-hint text-base-dark measure-5"
+            >
+              MM / DD / YYYY
+            </span>
+            <div
+              class="usa-memorable-date"
+            >
+              <div
+                class="usa-form-group usa-form-group--month"
+              >
+                <label
+                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                  for="InputText1765"
+                  id="InputText1765_label"
+                >
+                  Month
+                </label>
+                <input
+                  aria-labelledby="InputText1765_label InputText1765_hint InputText1765_error"
+                  class="usa-input usa-input--inline maxw-mobile-lg"
+                  id="InputText1765"
+                  inputmode="numeric"
+                  maxlength="2"
+                  name="other_incomes[0].income_start_date_month"
+                  type="text"
+                  value="01"
+                />
+              </div>
+              <div
+                class="usa-form-group usa-form-group--day"
+              >
+                <label
+                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                  for="InputText1766"
+                  id="InputText1766_label"
+                >
+                  Day
+                </label>
+                <input
+                  aria-labelledby="InputText1766_label InputText1766_hint InputText1766_error"
+                  class="usa-input usa-input--inline maxw-mobile-lg"
+                  id="InputText1766"
+                  inputmode="numeric"
+                  maxlength="2"
+                  name="other_incomes[0].income_start_date_day"
+                  type="text"
+                  value="01"
+                />
+              </div>
+              <div
+                class="usa-form-group usa-form-group--year"
+              >
+                <label
+                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                  for="InputText1767"
+                  id="InputText1767_label"
+                >
+                  Year
+                </label>
+                <input
+                  aria-labelledby="InputText1767_label InputText1767_hint InputText1767_error"
+                  class="usa-input usa-input--inline maxw-mobile-lg"
+                  id="InputText1767"
+                  inputmode="numeric"
+                  maxlength="4"
+                  name="other_incomes[0].income_start_date_year"
+                  type="text"
+                  value="2021"
+                />
+              </div>
+            </div>
+          </fieldset>
+          <fieldset
+            class="usa-fieldset margin-top-3 usa-form-group"
+          >
+            <legend
+              class="usa-label text-bold usa-legend font-heading-xs measure-5"
+            >
+              What is the last day of your leave that this income will pay you for?
+            </legend>
+            <span
+              class="display-block line-height-sans-5 usa-hint text-base-dark measure-5"
+            >
+              MM / DD / YYYY
+            </span>
+            <div
+              class="usa-memorable-date"
+            >
+              <div
+                class="usa-form-group usa-form-group--month"
+              >
+                <label
+                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                  for="InputText1768"
+                  id="InputText1768_label"
+                >
+                  Month
+                </label>
+                <input
+                  aria-labelledby="InputText1768_label InputText1768_hint InputText1768_error"
+                  class="usa-input usa-input--inline maxw-mobile-lg"
+                  id="InputText1768"
+                  inputmode="numeric"
+                  maxlength="2"
+                  name="other_incomes[0].income_end_date_month"
+                  type="text"
+                  value="02"
+                />
+              </div>
+              <div
+                class="usa-form-group usa-form-group--day"
+              >
+                <label
+                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                  for="InputText1769"
+                  id="InputText1769_label"
+                >
+                  Day
+                </label>
+                <input
+                  aria-labelledby="InputText1769_label InputText1769_hint InputText1769_error"
+                  class="usa-input usa-input--inline maxw-mobile-lg"
+                  id="InputText1769"
+                  inputmode="numeric"
+                  maxlength="2"
+                  name="other_incomes[0].income_end_date_day"
+                  type="text"
+                  value="01"
+                />
+              </div>
+              <div
+                class="usa-form-group usa-form-group--year"
+              >
+                <label
+                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                  for="InputText1770"
+                  id="InputText1770_label"
+                >
+                  Year
+                </label>
+                <input
+                  aria-labelledby="InputText1770_label InputText1770_hint InputText1770_error"
+                  class="usa-input usa-input--inline maxw-mobile-lg"
+                  id="InputText1770"
+                  inputmode="numeric"
+                  maxlength="4"
+                  name="other_incomes[0].income_end_date_year"
+                  type="text"
+                  value="2021"
+                />
+              </div>
+            </div>
+          </fieldset>
+          <fieldset
+            class="usa-fieldset margin-top-3"
+          >
+            <legend
+              class="usa-label text-bold usa-legend font-heading-xs measure-5"
+            >
+              How much will you receive?
+            </legend>
+            <div
+              class="usa-form-group margin-top-05"
+            >
+              <label
+                class="usa-label text-normal margin-top-0 font-heading-xs measure-5"
+                for="InputText1771"
+                id="InputText1771_label"
+              >
+                Amount
+              </label>
+              <div
+                class="usa-input-group"
+              >
+                <div
+                  aria-hidden="true"
+                  class="usa-input-prefix"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="usa-icon"
+                    focusable="false"
+                    role="img"
+                  >
+                    <use
+                      xlink:href="/img/sprite.svg#attach_money"
+                    />
+                  </svg>
+                </div>
+                <input
+                  aria-labelledby="InputText1771_label InputText1771_hint InputText1771_error"
+                  class="usa-input usa-input--medium padding-left-0"
+                  data-value-type="float"
+                  id="InputText1771"
+                  inputmode="decimal"
+                  name="other_incomes[0].income_amount_dollars"
+                  type="text"
+                  value="500"
+                />
+              </div>
+            </div>
+            <div
+              class="usa-form-group margin-top-1"
+            >
+              <label
+                class="usa-label text-normal margin-top-0 font-heading-xs measure-5"
+                for="Dropdown1772"
+                id="Dropdown1772_label"
+              >
+                Frequency
+              </label>
+              <div
+                class=""
+                data-default-value="Per Week"
+              >
+                <select
+                  aria-labelledby="Dropdown1772_label Dropdown1772_hint Dropdown1772_error"
+                  class="usa-select maxw-mobile-lg"
+                  id="Dropdown1772"
+                  name="other_incomes[0].income_amount_frequency"
+                >
+                  <option
+                    value=""
+                  />
+                  <option
+                    value="Per Day"
+                  >
+                    Daily
+                  </option>
+                  <option
+                    value="Per Week"
+                  >
+                    Weekly
+                  </option>
+                  <option
+                    value="Per Month"
+                  >
+                    Monthly
+                  </option>
+                  <option
+                    value="In Total"
+                  >
+                    All at once
+                  </option>
+                </select>
+              </div>
+            </div>
+          </fieldset>
+          <div
+            class="border-top border-base-lighter padding-top-2 margin-top-2"
+          >
+            <button
+              class="usa-button position-relative text-error hover:text-error-dark active:text-error-darker usa-button--unstyled"
+              name="remove-entry-button"
+              type="button"
+            >
+              Remove income
+            </button>
+          </div>
+        </fieldset>
+      </div>
+      <div
+        class="margin-bottom-3 measure-5 padding-3 border-2px border-base-lighter js-repeated-fieldset-card"
+        data-key="RepeatableFieldsetCard1773"
+        data-testid="repeatable-fieldset-card"
+      >
+        <fieldset
+          class="usa-fieldset"
+        >
+          <legend
+            class="usa-legend font-heading-lg text-normal"
+          >
+            Income 2
+          </legend>
+          <fieldset
+            class="usa-fieldset margin-top-3 usa-form-group"
+          >
+            <legend
+              class="usa-label text-bold usa-legend font-heading-xs measure-5"
+            >
+              What kind of income is it?
+            </legend>
+            <div
+              class=""
+            >
+              <div
+                class="usa-radio measure-5 bg-transparent"
+              >
+                <input
+                  class="usa-radio__input"
+                  id="InputChoice1774"
+                  name="other_incomes[1].income_type"
+                  type="radio"
+                  value="Workers Compensation"
+                />
+                <label
+                  class="usa-radio__label"
+                  for="InputChoice1774"
+                >
+                  Workers Compensation
+                </label>
+              </div>
+              <div
+                class="usa-radio measure-5 bg-transparent"
+              >
+                <input
+                  class="usa-radio__input"
+                  id="InputChoice1775"
+                  name="other_incomes[1].income_type"
+                  type="radio"
+                  value="Unemployment Insurance"
+                />
+                <label
+                  class="usa-radio__label"
+                  for="InputChoice1775"
+                >
+                  Unemployment Insurance
+                </label>
+              </div>
+              <div
+                class="usa-radio measure-5 bg-transparent"
+              >
+                <input
+                  class="usa-radio__input"
+                  id="InputChoice1776"
+                  name="other_incomes[1].income_type"
+                  type="radio"
+                  value="SSDI"
+                />
+                <label
+                  class="usa-radio__label"
+                  for="InputChoice1776"
+                >
+                  Social Security Disability Insurance
+                </label>
+              </div>
+              <div
+                class="usa-radio measure-5 bg-transparent"
+              >
+                <input
+                  class="usa-radio__input"
+                  id="InputChoice1777"
+                  name="other_incomes[1].income_type"
+                  type="radio"
+                  value="Disability benefits under Gov't retirement plan"
+                />
+                <label
+                  class="usa-radio__label"
+                  for="InputChoice1777"
+                >
+                  Disability benefits under a governmental retirement plan
+                </label>
+              </div>
+              <div
+                class="usa-radio measure-5 bg-transparent"
+              >
+                <input
+                  checked=""
+                  class="usa-radio__input"
+                  id="InputChoice1778"
+                  name="other_incomes[1].income_type"
+                  type="radio"
+                  value="Jones Act benefits"
+                />
+                <label
+                  class="usa-radio__label"
+                  for="InputChoice1778"
+                >
+                  Jones Act benefits
+                </label>
+              </div>
+              <div
+                class="usa-radio measure-5 bg-transparent"
+              >
+                <input
+                  class="usa-radio__input"
+                  id="InputChoice1779"
+                  name="other_incomes[1].income_type"
+                  type="radio"
+                  value="Railroad Retirement benefits"
+                />
+                <label
+                  class="usa-radio__label"
+                  for="InputChoice1779"
+                >
+                  Railroad Retirement benefits
+                </label>
+              </div>
+              <div
+                class="usa-radio measure-5 bg-transparent"
+              >
+                <input
+                  class="usa-radio__input"
+                  id="InputChoice1780"
+                  name="other_incomes[1].income_type"
+                  type="radio"
+                  value="Earnings from another employment/self-employment"
+                />
+                <label
+                  class="usa-radio__label"
+                  for="InputChoice1780"
+                >
+                  Earnings or benefits from another employer, or through self-employment
+                </label>
+              </div>
+            </div>
+          </fieldset>
+          <fieldset
+            class="usa-fieldset margin-top-3 usa-form-group"
+          >
+            <legend
+              class="usa-label text-bold usa-legend font-heading-xs measure-5"
+            >
+              What is the first day of your leave that this income will pay you for?
+            </legend>
+            <span
+              class="display-block line-height-sans-5 usa-hint text-base-dark measure-5"
+            >
+              MM / DD / YYYY
+            </span>
+            <div
+              class="usa-memorable-date"
+            >
+              <div
+                class="usa-form-group usa-form-group--month"
+              >
+                <label
+                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                  for="InputText1781"
+                  id="InputText1781_label"
+                >
+                  Month
+                </label>
+                <input
+                  aria-labelledby="InputText1781_label InputText1781_hint InputText1781_error"
+                  class="usa-input usa-input--inline maxw-mobile-lg"
+                  id="InputText1781"
+                  inputmode="numeric"
+                  maxlength="2"
+                  name="other_incomes[1].income_start_date_month"
+                  type="text"
+                  value="01"
+                />
+              </div>
+              <div
+                class="usa-form-group usa-form-group--day"
+              >
+                <label
+                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                  for="InputText1782"
+                  id="InputText1782_label"
+                >
+                  Day
+                </label>
+                <input
+                  aria-labelledby="InputText1782_label InputText1782_hint InputText1782_error"
+                  class="usa-input usa-input--inline maxw-mobile-lg"
+                  id="InputText1782"
+                  inputmode="numeric"
+                  maxlength="2"
+                  name="other_incomes[1].income_start_date_day"
+                  type="text"
+                  value="05"
+                />
+              </div>
+              <div
+                class="usa-form-group usa-form-group--year"
+              >
+                <label
+                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                  for="InputText1783"
+                  id="InputText1783_label"
+                >
+                  Year
+                </label>
+                <input
+                  aria-labelledby="InputText1783_label InputText1783_hint InputText1783_error"
+                  class="usa-input usa-input--inline maxw-mobile-lg"
+                  id="InputText1783"
+                  inputmode="numeric"
+                  maxlength="4"
+                  name="other_incomes[1].income_start_date_year"
+                  type="text"
+                  value="2021"
+                />
+              </div>
+            </div>
+          </fieldset>
+          <fieldset
+            class="usa-fieldset margin-top-3 usa-form-group"
+          >
+            <legend
+              class="usa-label text-bold usa-legend font-heading-xs measure-5"
+            >
+              What is the last day of your leave that this income will pay you for?
+            </legend>
+            <span
+              class="display-block line-height-sans-5 usa-hint text-base-dark measure-5"
+            >
+              MM / DD / YYYY
+            </span>
+            <div
+              class="usa-memorable-date"
+            >
+              <div
+                class="usa-form-group usa-form-group--month"
+              >
+                <label
+                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                  for="InputText1784"
+                  id="InputText1784_label"
+                >
+                  Month
+                </label>
+                <input
+                  aria-labelledby="InputText1784_label InputText1784_hint InputText1784_error"
+                  class="usa-input usa-input--inline maxw-mobile-lg"
+                  id="InputText1784"
+                  inputmode="numeric"
+                  maxlength="2"
+                  name="other_incomes[1].income_end_date_month"
+                  type="text"
+                  value="02"
+                />
+              </div>
+              <div
+                class="usa-form-group usa-form-group--day"
+              >
+                <label
+                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                  for="InputText1785"
+                  id="InputText1785_label"
+                >
+                  Day
+                </label>
+                <input
+                  aria-labelledby="InputText1785_label InputText1785_hint InputText1785_error"
+                  class="usa-input usa-input--inline maxw-mobile-lg"
+                  id="InputText1785"
+                  inputmode="numeric"
+                  maxlength="2"
+                  name="other_incomes[1].income_end_date_day"
+                  type="text"
+                  value="05"
+                />
+              </div>
+              <div
+                class="usa-form-group usa-form-group--year"
+              >
+                <label
+                  class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                  for="InputText1786"
+                  id="InputText1786_label"
+                >
+                  Year
+                </label>
+                <input
+                  aria-labelledby="InputText1786_label InputText1786_hint InputText1786_error"
+                  class="usa-input usa-input--inline maxw-mobile-lg"
+                  id="InputText1786"
+                  inputmode="numeric"
+                  maxlength="4"
+                  name="other_incomes[1].income_end_date_year"
+                  type="text"
+                  value="2021"
+                />
+              </div>
+            </div>
+          </fieldset>
+          <fieldset
+            class="usa-fieldset margin-top-3"
+          >
+            <legend
+              class="usa-label text-bold usa-legend font-heading-xs measure-5"
+            >
+              How much will you receive?
+            </legend>
+            <div
+              class="usa-form-group margin-top-05"
+            >
+              <label
+                class="usa-label text-normal margin-top-0 font-heading-xs measure-5"
+                for="InputText1787"
+                id="InputText1787_label"
+              >
+                Amount
+              </label>
+              <div
+                class="usa-input-group"
+              >
+                <div
+                  aria-hidden="true"
+                  class="usa-input-prefix"
+                >
+                  <svg
+                    aria-hidden="true"
+                    class="usa-icon"
+                    focusable="false"
+                    role="img"
+                  >
+                    <use
+                      xlink:href="/img/sprite.svg#attach_money"
+                    />
+                  </svg>
+                </div>
+                <input
+                  aria-labelledby="InputText1787_label InputText1787_hint InputText1787_error"
+                  class="usa-input usa-input--medium padding-left-0"
+                  data-value-type="float"
+                  id="InputText1787"
+                  inputmode="decimal"
+                  name="other_incomes[1].income_amount_dollars"
+                  type="text"
+                  value="700"
+                />
+              </div>
+            </div>
+            <div
+              class="usa-form-group margin-top-1"
+            >
+              <label
+                class="usa-label text-normal margin-top-0 font-heading-xs measure-5"
+                for="Dropdown1788"
+                id="Dropdown1788_label"
+              >
+                Frequency
+              </label>
+              <div
+                class=""
+                data-default-value="Per Month"
+              >
+                <select
+                  aria-labelledby="Dropdown1788_label Dropdown1788_hint Dropdown1788_error"
+                  class="usa-select maxw-mobile-lg"
+                  id="Dropdown1788"
+                  name="other_incomes[1].income_amount_frequency"
+                >
+                  <option
+                    value=""
+                  />
+                  <option
+                    value="Per Day"
+                  >
+                    Daily
+                  </option>
+                  <option
+                    value="Per Week"
+                  >
+                    Weekly
+                  </option>
+                  <option
+                    value="Per Month"
+                  >
+                    Monthly
+                  </option>
+                  <option
+                    value="In Total"
+                  >
+                    All at once
+                  </option>
+                </select>
+              </div>
+            </div>
+          </fieldset>
+          <div
+            class="border-top border-base-lighter padding-top-2 margin-top-2"
+          >
+            <button
+              class="usa-button position-relative text-error hover:text-error-dark active:text-error-darker usa-button--unstyled"
+              name="remove-entry-button"
+              type="button"
+            >
+              Remove income
+            </button>
+          </div>
+        </fieldset>
+      </div>
+      <button
+        class="usa-button position-relative usa-button--outline bg-white"
+        name="add-entry-button"
+        type="button"
+      >
+        Add another income
+      </button>
+    </section>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;

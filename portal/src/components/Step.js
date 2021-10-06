@@ -58,7 +58,7 @@ const Step = (props) => {
     <ButtonLink
       href={props.stepHref}
       className="width-auto"
-      ariaLabel={`${props.startText}: ${props.title}`}
+      aria-label={`${props.startText}: ${props.title}`}
     >
       {props.startText}
     </ButtonLink>
@@ -68,7 +68,7 @@ const Step = (props) => {
     <ButtonLink
       href={props.stepHref}
       className="width-auto"
-      ariaLabel={`${props.resumeScreenReaderText}: ${props.title}`}
+      aria-label={`${props.resumeScreenReaderText}: ${props.title}`}
     >
       {props.resumeText}
     </ButtonLink>

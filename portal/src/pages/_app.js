@@ -97,7 +97,7 @@ export const App = ({ Component, pageProps }) => {
      * @param {boolean} options.shallow - Primarily used in our route events to determine if scroll/active
      *  focus should change. Learn more: https://nextjs.org/docs/routing/shallow-routing
      */
-    const handleRouteChangeStart = (url = "", { shallow } = {}) => {
+    const handleRouteChangeStart = (url, { shallow } = {}) => {
       if (!shallow) {
         appLogic.clearErrors();
         setUI((ui) => {

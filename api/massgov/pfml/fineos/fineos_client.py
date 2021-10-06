@@ -983,7 +983,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         try:
             response = self._customer_api(
                 "GET",
-                f"customer/cases/{absence_id}/documents",
+                f"customer/cases/{absence_id}/documents?includeChildCases=True",
                 user_id,
                 "get_documents",
                 header_content_type=header_content_type,

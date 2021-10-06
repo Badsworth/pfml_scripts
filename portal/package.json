@@ -29,8 +29,6 @@
     "generate-claims-page-stories": "node ./bin/generate-claims-page-stories.js",
     "start": "next start",
     "test": "NODE_ENV=test jest --ci --coverage",
-    "test:new": "NODE_ENV=test jest --ci --coverage --testPathPattern=.*/tests/",
-    "test:old": "NODE_ENV=test jest --ci --coverage --testPathPattern=.*/tests-old/",
     "test:ci": "npm test --  --coverage-reporters=lcov --coverage-reporters=text",
     "test:debug": "NODE_ENV=test jest",
     "ts:check": "tsc --noEmit",
@@ -76,14 +74,11 @@
     "@testing-library/user-event": "^13.2.1",
     "@types/lodash": "^4.14.172",
     "@types/luxon": "^1.27.0",
-    "@typescript-eslint/eslint-plugin": "^4.31.0",
-    "@typescript-eslint/parser": "^4.31.0",
+    "@typescript-eslint/eslint-plugin": "^4.33.0",
+    "@typescript-eslint/parser": "^4.33.0",
     "@xstate/test": "^0.4.2",
     "babel-eslint": "^10.1.0",
     "babel-loader": "^8.2.2",
-    "enzyme": "^3.11.0",
-    "enzyme-adapter-react-16": "^1.15.6",
-    "enzyme-to-json": "^3.6.2",
     "eslint": "^7.29.0",
     "eslint-config-nava": "^10.0.0",
     "eslint-config-prettier": "^8.3.0",
@@ -109,6 +104,6 @@
     "readdirp": "^3.6.0",
     "sass": "^1.32.0",
     "sass-loader": "^10.1.1",
-    "typescript": "^4.4.2"
+    "typescript": "^4.4.3"
   }
 }

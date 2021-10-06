@@ -51,6 +51,14 @@
 #
 # Error: ClientException: Duplicate secret names found: DB_NESSUS_PASSWORD. Each secret name must be unique.
 #
+# If your environment variable must be configurable for each environment, add a variable in `variables.tf` and
+# reference it using `var.my_variable_name`. This value can be passed in by each environment's main.tf file:
+#
+# module "tasks" {
+#   ...
+#   my_variable_name = "something"
+# }
+#
 # Resource Limits
 # ===============
 #
@@ -325,7 +333,7 @@ resource "aws_ecs_task_definition" "ecs_tasks" {
       # silently cause env vars to go missing which would definitely confuse someone for a day or two.
       #
       environment = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if contains(keys(val), "value")]
-      secrets     = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if !contains(keys(val), "value")]
+      secrets     = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if ! contains(keys(val), "value")]
     }
   ])
 }

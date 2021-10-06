@@ -26,11 +26,11 @@ exports[`BondingLeaveAttestation renders the page 1`] = `
   </ul>
   <div
     class="usa-alert usa-alert--info usa-alert--no-icon measure-6"
+    role="region"
     tabindex="-1"
   >
     <div
       class="usa-alert__body"
-      role="region"
     >
       <div
         class="usa-alert__text"

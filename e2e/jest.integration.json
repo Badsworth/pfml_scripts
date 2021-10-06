@@ -2,6 +2,5 @@
   "testMatch": ["**/test/integration/*.[jt]s?(x)"],
   "testEnvironment": "node",
   "testRunner": "jest-circus/runner",
-  "runner": "groups",
-  "reporters": ["default", "<rootDir>/test/reporter.js"]
+  "runner": "groups"
 }

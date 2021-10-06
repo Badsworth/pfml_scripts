@@ -398,6 +398,9 @@ def update_absence_period(
         raise
 
 
+# TODO:
+# PORTAL-760
+# use helpers functions in massgov/pfml/db/queries/absence_periods.py
 def populate_absence_period_table(
     absence_periods: List[massgov.pfml.fineos.models.customer_api.AbsencePeriod],
     claim: Claim,

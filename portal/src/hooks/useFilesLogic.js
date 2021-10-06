@@ -27,7 +27,7 @@ const disallowedReasons = {
  * @returns {Promise<File>}
  */
 function optimizeFileSize(file, maximumFileSize) {
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     if (
       file.size <= maximumFileSize ||
       !["image/png", "image/jpeg"].includes(file.type)

@@ -7,7 +7,7 @@ import { uniqueId } from "xstate/lib/utils";
 // import { getDocumentsMock } from "./src/api/DocumentsApi";
 // expect(getDocumentsMock).toHaveBeenCalled();
 export const attachDocumentMock = jest.fn(
-  (application_id, files = [], document_type) => {
+  (application_id, files, document_type) => {
     return Promise.resolve({
       success: true,
       status: 200,

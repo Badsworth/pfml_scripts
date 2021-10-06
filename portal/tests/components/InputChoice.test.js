@@ -21,7 +21,7 @@ describe("InputChoice", () => {
     });
 
     it("sets `aria-controls` attribute when provided", () => {
-      render(<InputChoice {...defaultProps} ariaControls="foobar-aria" />);
+      render(<InputChoice {...defaultProps} aria-controls="foobar-aria" />);
       const input = screen.getByRole("checkbox");
 
       expect(input).toHaveAttribute("aria-controls");
@@ -41,14 +41,14 @@ describe("InputChoice", () => {
       const input = screen.getByRole("checkbox");
 
       expect(input).toMatchInlineSnapshot(`
-        <input
-          class="usa-checkbox__input"
-          id="InputChoice4"
-          name="bar"
-          type="checkbox"
-          value="foobar"
-        />
-      `);
+<input
+  class="usa-checkbox__input"
+  id="InputChoice4"
+  name="bar"
+  type="checkbox"
+  value="foobar"
+/>
+`);
     });
 
     it("sets the `disabled` attribute when provided", () => {

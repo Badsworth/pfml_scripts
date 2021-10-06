@@ -212,7 +212,7 @@ const PaginatedClaimsTable = (props) => {
    * @type {string[]}
    */
   const tableColumnKeys = Object.entries(tableColumnVisibility)
-    .filter(([columnKey, isVisible]) => isVisible)
+    .filter(([_columnKey, isVisible]) => isVisible)
     .map(([columnKey]) => columnKey);
 
   /**

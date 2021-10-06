@@ -51,9 +51,9 @@ describe("Alert", () => {
 
   it("renders role='region' by default", () => {
     renderComponent();
-    const alertBody = screen.getByRole("region");
-    expect(alertBody).toBeInTheDocument();
-    expect(alertBody).toHaveClass("usa-alert__body");
+    const alert = screen.getByRole("region");
+    expect(alert).toBeInTheDocument();
+    expect(alert).toHaveClass("usa-alert");
   });
 
   it("adds the role to the alert body element", () => {

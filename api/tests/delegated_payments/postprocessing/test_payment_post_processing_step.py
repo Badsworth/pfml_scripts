@@ -92,9 +92,37 @@ def test_run_step_payment_over_cap(
     assert "maximum_weekly_benefits" in payment_log.details
 
 
-def test_dua_dia_reductions_post_processing(
-    payment_post_processing_step, local_test_db_session, monkeypatch
-):
+def test_name_mismatch_post_processing(payment_post_processing_step, local_test_db_session):
+    employee = EmployeeFactory.create(first_name="Jane", last_name="Smith")
+    payment_container = _create_payment_container(
+        employee, Decimal("600.00"), local_test_db_session, start_date=date(2020, 12, 16)
+    )
+    payment_container.payment.fineos_employee_first_name = "Sam"
+    payment_container.payment.fineos_employee_last_name = "Jones"
+
+    payment_post_processing_step.run()
+
+    payment = payment_container.payment
+    # Check that it is staged for audit
+    payment_flow_log = state_log_util.get_latest_state_log_in_flow(
+        payment, Flow.DELEGATED_PAYMENT, local_test_db_session
+    )
+    assert (
+        payment_flow_log.end_state_id
+        == State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
+    )
+
+    audit_report_details = (
+        local_test_db_session.query(PaymentAuditReportDetails)
+        .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
+        .one_or_none()
+    )
+    assert audit_report_details.details["message"] == "\n".join(
+        ["DOR Name: Jane Smith", "FINEOS Name: Sam Jones",]
+    )
+
+
+def test_dua_dia_reductions_post_processing(payment_post_processing_step, local_test_db_session):
     fineos_customer_number = "1"
 
     employee = EmployeeFactory.create(fineos_customer_number=fineos_customer_number)
