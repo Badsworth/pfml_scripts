@@ -117,8 +117,7 @@ export function postProcess(
  */
 export function watchFailures(
   results: AnyIterable<SubmissionResult>,
-  consecErrorLmt = 3,
-  testing = false // flag to improve the testability
+  consecErrorLmt = 3
 ): AsyncGenerator<SubmissionResult> {
   let consecutiveErrors = 0;
   return (async function* _() {
@@ -136,11 +135,10 @@ export function watchFailures(
           result.claim,
           `Delaying next submission for ${
             delayMs / 1000
-          } due to consecutive errors received.`
+          } seconds due to ${consecutiveErrors} consecutive errors received.`
         );
       }
-      await delay(testing ? 50 : delayMs);
-
+      await delay(delayMs);
       yield result;
     }
   })();

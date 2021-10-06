@@ -35,6 +35,8 @@ jobs:
   test:
     name: "Unit Tests"
     runs-on: ubuntu-latest
+    env:
+      E2E_ENVIRONMENT: test
     steps:
       - uses: actions/checkout@v2
       - name: Setup Node

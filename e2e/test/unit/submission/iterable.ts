@@ -5,6 +5,7 @@ import {
   logSubmissions,
   watchFailures,
 } from "../../../src/submission/iterable";
+jest.mock("delay");
 
 const successResult = {
   claim: { id: "123", scenario: "BHAP1" },
@@ -21,6 +22,13 @@ describe("logSubmissions", () => {
   let error: jest.SpyInstance;
   let log: jest.SpyInstance;
   let debug: jest.SpyInstance;
+
+  beforeAll(() => {
+    jest.useFakeTimers();
+  });
+  afterAll(() => {
+    jest.useRealTimers();
+  });
   beforeEach(() => {
     error = jest
       .spyOn(console, "error")
@@ -44,6 +52,11 @@ describe("logSubmissions", () => {
 });
 
 describe("watchFailures", () => {
+  beforeEach(() => {
+    // surpress logs
+    jest.spyOn(console, "debug").mockImplementation(() => null);
+  });
+
   it("Should not error when there is a success in between 3 failures", async () => {
     const results = [errorResult, errorResult, successResult, errorResult];
     await expect(consume(watchFailures(results))).resolves.toBe(undefined);
@@ -56,16 +69,12 @@ describe("watchFailures", () => {
 
   it("Should not error when 3 consecutive failures are encountered if otherwise specified", async () => {
     const results = [errorResult, errorResult, errorResult, errorResult];
-    await expect(consume(watchFailures(results, 5, true))).resolves.toBe(
-      undefined
-    );
+    await expect(consume(watchFailures(results, 5))).resolves.toBe(undefined);
   });
 
   it("Should error when 'n' consecutive failures are encountered", async () => {
     const results = [errorResult, errorResult, errorResult, errorResult];
-    await expect(
-      consume(watchFailures(results, 4, true))
-    ).rejects.toThrowError();
+    await expect(consume(watchFailures(results, 4))).rejects.toThrowError();
   });
 
   it("Should reset consecutive errors to 3 if there is one successful submission after 6 errors", async () => {
@@ -85,13 +94,8 @@ describe("watchFailures", () => {
       errorResult, // 9
     ];
 
-    await expect(
-      consume(watchFailures(results, 9, true))
-    ).rejects.toThrowError();
-
-    await expect(consume(watchFailures(results, 10, true))).resolves.toBe(
-      undefined
-    );
+    await expect(consume(watchFailures(results, 9))).rejects.toThrowError();
+    await expect(consume(watchFailures(results, 10))).resolves.toBe(undefined);
   });
 
   // proves that if consecutive errors are greater than 6 (highly unstable claim submission), we won't continue with full speed claim submission until we see more stability
@@ -115,11 +119,7 @@ describe("watchFailures", () => {
       errorResult, // 6
       errorResult, // 7
     ];
-    await expect(
-      consume(watchFailures(results, 7, true))
-    ).rejects.toThrowError();
-    await expect(consume(watchFailures(results, 10, true))).resolves.toBe(
-      undefined
-    );
+    await expect(consume(watchFailures(results, 7))).rejects.toThrowError();
+    await expect(consume(watchFailures(results, 10))).resolves.toBe(undefined);
   });
 });
