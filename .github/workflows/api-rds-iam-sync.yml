@@ -40,9 +40,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          # ref: deploy/api/${{ github.event.inputs.environment || env.default-environment }}
-          ref: main
-
+          ref: deploy/api/${{ github.event.inputs.environment || env.default-environment }}
 
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
@@ -60,10 +58,6 @@ jobs:
 
       - name: Terraform Init
         run: terraform init
-        working-directory: ${{ env.working-directory }}${{ github.event.inputs.environment || env.default-environment }}
-
-      - name: Force fail
-        run: exit 1
         working-directory: ${{ env.working-directory }}${{ github.event.inputs.environment || env.default-environment }}
 
       - name: Terraform Plan with RDS IAM target
@@ -127,8 +121,7 @@ jobs:
   get-tf-state:
     name: Get terraform state
     needs: [sync]
-    # if: always() && github.ref == 'refs/heads/main'
-    if: always()
+    if: always() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
       sync-state: ${{ steps.sync-state.outputs.sync-state }}
@@ -144,8 +137,7 @@ jobs:
   alert-if-failed:
     name: Send PageDuty Alert
     needs: [get-tf-state]
-    # if: needs.get-tf-state.outputs.sync-state == 'failure' || needs.get-tf-state.outputs.sync-state == 'timed_out'
-    if: always() && needs.get-tf-state.outputs.sync-state == 'failure'
+    if: always() && needs.get-tf-state.outputs.sync-state == 'failure' || needs.get-tf-state.outputs.sync-state == 'timed_out'
     runs-on: ubuntu-latest
     steps:
     - name: send low priority page
