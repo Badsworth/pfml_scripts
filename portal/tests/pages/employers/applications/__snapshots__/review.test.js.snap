@@ -1,0 +1,993 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Review displays organization/employer information 1`] = `
+<h2
+  class="margin-bottom-1 font-heading-xs text-bold"
+>
+  Organization
+</h2>
+`;
+
+exports[`Review displays organization/employer information 2`] = `
+<h2
+  class="margin-bottom-1 font-heading-xs text-bold"
+>
+  Employer ID number (EIN)
+</h2>
+`;
+
+exports[`Review renders default view onload with v2 of claim 1`] = `
+<div>
+  <div
+    class="maxw-desktop-lg"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+      tabindex="-1"
+    >
+      Review application from Jane Doe
+    </h1>
+    <div
+      class="usa-alert usa-alert--warning usa-alert--no-icon"
+      role="region"
+      tabindex="-1"
+    >
+      <div
+        class="usa-alert__body"
+      >
+        <div
+          class="usa-alert__text"
+        >
+          <strong>
+            Review and respond by:
+          </strong>
+           10/10/2020 at 11:59 p.m. Eastern time
+        </div>
+      </div>
+    </div>
+    <p>
+      Please review the details of this application carefully. If anything is incorrect or incomplete, you can add an amendment or include specific comments at the end. Changes are not saved until you submit your review.
+    </p>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h2
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Organization
+        </h2>
+        Work Inc.
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h2
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Employer ID number (EIN)
+        </h2>
+        12-3456789
+      </div>
+    </div>
+    <div
+      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+    >
+      <h2
+        class="flex-fill margin-right-1 font-heading-md text-bold"
+      >
+        Employee information
+      </h2>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Employee name
+        </h3>
+        Jane
+         
+        
+         
+        Doe
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Mailing address
+        </h3>
+        <span
+          class="residential-address"
+          data-testid="residential-address"
+        >
+          1234 My St.
+          <br />
+          Boston
+          , 
+          MA
+           
+          00000
+        </span>
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Social Security Number or Individual Taxpayer Identification Number
+        </h3>
+        ***-**-1234
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Date of birth
+        </h3>
+        7/17/****
+      </div>
+    </div>
+    <div
+      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+    >
+      <h2
+        class="flex-fill margin-right-1 font-heading-md text-bold"
+      >
+        Leave details
+      </h2>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Leave type
+        </h3>
+        <a
+          href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-medical-leave-"
+          rel="noopener"
+          target="_blank"
+        >
+          Medical leave
+        </a>
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Application ID
+        </h3>
+        NTN-111-ABS-01
+      </div>
+    </div>
+    <div
+      class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+    >
+      <div
+        class="margin-right-2"
+      >
+        <h3
+          class="margin-bottom-1 font-heading-xs text-bold"
+        >
+          Leave duration
+        </h3>
+        1/1/2021 to 7/1/2021
+      </div>
+    </div>
+    <div
+      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+    >
+      <h2
+        class="flex-fill margin-right-1 font-heading-md text-bold"
+      >
+        Leave schedule
+      </h2>
+    </div>
+    <p>
+      This is your employee’s expected leave schedule.
+    </p>
+    <table
+      class="usa-table usa-table--borderless c-table width-full"
+    >
+      <thead>
+        <tr>
+          <th
+            scope="col"
+          >
+            Date range
+          </th>
+          <th
+            scope="col"
+          >
+            Leave frequency
+          </th>
+          <th
+            scope="col"
+          >
+            Details
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th
+            scope="row"
+          >
+            1/1/2021 to 6/1/2021
+          </th>
+          <td>
+            Continuous leave
+          </td>
+          <td />
+        </tr>
+        <tr>
+          <th
+            scope="row"
+          />
+          <td>
+            Reduced leave schedule
+          </td>
+          <td>
+            Contact us at 
+            <a
+              href="tel:(833) 344-7365"
+            >
+              (833) 344‑7365
+            </a>
+             for details about the leave schedule.
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <form
+      id="employer-review-form"
+      method="post"
+    >
+      <div
+        class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+      >
+        <h2
+          class="flex-fill margin-right-1 font-heading-md text-bold"
+        >
+          Supporting work details
+        </h2>
+      </div>
+      <div
+        class="margin-bottom-2 padding-bottom-2 display-flex flex-justify border-bottom-2px border-base-lighter"
+      >
+        <div
+          class="margin-right-2"
+        >
+          <h3
+            class="margin-bottom-1 font-heading-xs text-bold"
+          >
+            Weekly hours worked
+          </h3>
+          <p
+            class="margin-top-0"
+          >
+            30
+          </p>
+        </div>
+        <button
+          class="usa-button position-relative text-no-wrap usa-button--unstyled"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="usa-icon text-middle margin-right-05 margin-top-neg-05"
+            focusable="false"
+            role="img"
+          >
+            <use
+              xlink:href="/img/sprite.svg#edit"
+            />
+          </svg>
+          Amend
+        </button>
+      </div>
+      <div
+        class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+      >
+        <h2
+          class="flex-fill margin-right-1 font-heading-md text-bold"
+        >
+          Other leaves and benefits
+        </h2>
+      </div>
+      <p>
+        Please review the leaves and benefits listed in the tables below. If everything looks correct, then there’s no action needed. If something looks incorrect or incomplete, you can:
+      </p>
+      <ul
+        class="usa-list"
+      >
+        <li>
+          Amend reported leaves and benefits.
+        </li>
+        <li>
+          Add a leave or benefit that your employee used or will use.
+        </li>
+      </ul>
+      <p>
+        If you need to remove a leave or benefit, use the comment box at the end of this page.
+      </p>
+      <div
+        class="usa-summary-box"
+        role="complementary"
+      >
+        <div
+          class="usa-summary-box__body"
+        >
+          <h3
+            class="usa-summary-box__heading font-heading-xs text-bold"
+          >
+            Employees are asked to report:
+          </h3>
+          <div
+            class="usa-summary-box__text"
+          >
+            <ul
+              class="usa-list"
+            >
+              <li>
+                Previous leave for a qualifying reason that they took before their paid leave from PFML
+              </li>
+              <li>
+                Accrued paid leave they plan to use during their paid leave from PFML
+              </li>
+              <li>
+                Employer-sponsored benefits they plan to use during their paid leave from PFML
+              </li>
+            </ul>
+          </div>
+        </div>
+      </div>
+      <h3
+        class="font-heading-sm text-bold"
+      >
+        Previous leave
+      </h3>
+      <p>
+        Your employee has listed leave they have taken for a qualified reason. Only leave since January 1, 2021 is included. This includes both paid leave, such as paid vacation or sick days, and unpaid leave, such as FMLA leave. When possible, verify that a previous leave was for a reason that qualifies for paid leave under PFML.
+      </p>
+      <details
+        class="c-details"
+      >
+        <summary
+          class="margin-bottom-2 text-primary text-underline font-ui-xs"
+        >
+          What counts as a qualifying reason?
+        </summary>
+        <div
+          class="margin-bottom-2"
+        >
+          <p>
+            An employee or contractor can take paid or unpaid leave to:
+          </p>
+          <ul
+            class="usa-list"
+          >
+            <li>
+              Manage a 
+              <a
+                href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-"
+                rel="noopener"
+                target="_blank"
+              >
+                serious health condition
+              </a>
+              , including illness, injury, or pregnancy
+            </li>
+            <li>
+              Bond with a child after birth or placement
+            </li>
+            <li>
+              Manage family affairs when a family member is on active duty in the armed forces
+            </li>
+            <li>
+              Care for a family member who serves in the armed forces
+            </li>
+            <li>
+              Care for a family member with a 
+              <a
+                href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-"
+                rel="noopener"
+                target="_blank"
+              >
+                serious health condition
+              </a>
+               since July 1, 2021
+            </li>
+          </ul>
+        </div>
+      </details>
+      <table
+        class="usa-table usa-table--borderless c-table width-full"
+      >
+        <thead>
+          <tr>
+            <th
+              scope="col"
+            >
+              Date range
+            </th>
+            <th
+              scope="col"
+            >
+              Leave type
+            </th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              None reported
+            </td>
+            <td />
+            <td />
+          </tr>
+          <tr>
+            <td
+              class="padding-y-2 padding-left-0"
+            >
+              <button
+                class="usa-button position-relative usa-button--outline bg-white"
+                name="add-entry-button"
+                type="button"
+              >
+                Add a previous leave
+              </button>
+            </td>
+            <td />
+            <td />
+          </tr>
+        </tbody>
+      </table>
+      <h3
+        class="font-heading-sm text-bold"
+      >
+        Concurrent accrued paid leave
+      </h3>
+      <p>
+        Your employee has told us about the following accrued paid leave they plan to use concurrent with their paid leave from PFML. This includes paid vacation time, sick time, personal time, and other paid time off. It does not include a family or medical leave policy or a disability program. There’s a 7-day unpaid waiting period, and employees are allowed to use accrued paid leave to overlap that period.
+      </p>
+      <table
+        class="usa-table usa-table--borderless c-table width-full"
+      >
+        <thead>
+          <tr>
+            <th
+              scope="col"
+            >
+              Date range
+            </th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>
+              None reported
+            </td>
+            <td />
+          </tr>
+          <tr>
+            <td
+              class="padding-y-2 padding-left-0"
+            >
+              <button
+                class="usa-button position-relative usa-button--outline bg-white"
+                name="add-entry-button"
+                type="button"
+              >
+                Add an accrued paid leave
+              </button>
+            </td>
+            <td />
+          </tr>
+        </tbody>
+      </table>
+      <h3
+        class="font-heading-sm text-bold"
+      >
+        Employer-sponsored benefits
+      </h3>
+      <p>
+        Your employee is planning to use these benefits during their paid leave under PFML. Employer sponsored benefits include temporary disability insurance, permanent disability insurance, and family or medical leave benefits such as a parental leave program. For paid time off (PTO) and other accrued paid leave your employee will use, review “Concurrent accrued paid leave” above. 
+        <a
+          href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefit-reductions"
+          rel="noopener"
+          target="_blank"
+        >
+          Learn more about how these affect payments.
+        </a>
+      </p>
+      <table
+        class="usa-table usa-table--borderless c-table width-full"
+      >
+        <thead>
+          <tr>
+            <th
+              scope="col"
+            >
+              Date range
+            </th>
+            <th
+              scope="col"
+            >
+              Benefit type
+            </th>
+            <th
+              scope="col"
+            >
+              Details
+            </th>
+            <th />
+          </tr>
+        </thead>
+        <tbody>
+          <tr
+            data-testid="benefit-details-row"
+          >
+            <th
+              scope="row"
+            >
+              1/1/2021 to 2/1/2021
+            </th>
+            <td>
+              Family or medical leave insurance
+            </td>
+            <td>
+              $500.00 per week
+            </td>
+            <td>
+              <button
+                class="usa-button position-relative text-no-wrap usa-button--unstyled"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="usa-icon text-middle margin-right-05 margin-top-neg-05"
+                  focusable="false"
+                  role="img"
+                >
+                  <use
+                    xlink:href="/img/sprite.svg#edit"
+                  />
+                </svg>
+                Amend
+              </button>
+            </td>
+          </tr>
+          <tr
+            data-testid="benefit-details-row"
+          >
+            <th
+              scope="row"
+            >
+              1/1/2021 to 2/1/2021
+            </th>
+            <td>
+              Family or medical leave insurance
+            </td>
+            <td>
+              $200.00 (frequency unknown)
+            </td>
+            <td>
+              <button
+                class="usa-button position-relative text-no-wrap usa-button--unstyled"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="usa-icon text-middle margin-right-05 margin-top-neg-05"
+                  focusable="false"
+                  role="img"
+                >
+                  <use
+                    xlink:href="/img/sprite.svg#edit"
+                  />
+                </svg>
+                Amend
+              </button>
+            </td>
+          </tr>
+          <tr
+            data-testid="benefit-details-row"
+          >
+            <th
+              scope="row"
+            >
+              1/1/2021 to 2/1/2021
+            </th>
+            <td>
+              Short-term disability insurance
+            </td>
+            <td>
+              Full salary continuous
+            </td>
+            <td>
+              <button
+                class="usa-button position-relative text-no-wrap usa-button--unstyled"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="usa-icon text-middle margin-right-05 margin-top-neg-05"
+                  focusable="false"
+                  role="img"
+                >
+                  <use
+                    xlink:href="/img/sprite.svg#edit"
+                  />
+                </svg>
+                Amend
+              </button>
+            </td>
+          </tr>
+          <tr
+            data-testid="benefit-details-row"
+          >
+            <th
+              scope="row"
+            >
+              1/1/2021 to 2/1/2021
+            </th>
+            <td>
+              Permanent disability insurance
+            </td>
+            <td>
+              No amount reported
+            </td>
+            <td>
+              <button
+                class="usa-button position-relative text-no-wrap usa-button--unstyled"
+                type="button"
+              >
+                <svg
+                  aria-hidden="true"
+                  class="usa-icon text-middle margin-right-05 margin-top-neg-05"
+                  focusable="false"
+                  role="img"
+                >
+                  <use
+                    xlink:href="/img/sprite.svg#edit"
+                  />
+                </svg>
+                Amend
+              </button>
+            </td>
+          </tr>
+          <tr>
+            <td
+              class="padding-y-2 padding-left-0"
+            >
+              <button
+                class="usa-button position-relative usa-button--outline bg-white"
+                name="add-entry-button"
+                type="button"
+              >
+                Add an employer-sponsored benefit
+              </button>
+            </td>
+            <td />
+            <td />
+            <td />
+          </tr>
+        </tbody>
+      </table>
+      <fieldset
+        class="usa-fieldset margin-top-3 usa-form-group"
+      >
+        <legend
+          class="usa-label text-bold usa-legend font-heading-xs measure-5"
+        >
+          <div
+            class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+          >
+            <h2
+              class="flex-fill margin-right-1 font-heading-md text-bold"
+            >
+              Do you have any reason to suspect this is fraud?
+            </h2>
+          </div>
+        </legend>
+        <span
+          class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+        >
+          <details
+            class="c-details"
+          >
+            <summary
+              class="margin-bottom-2 text-primary text-underline font-ui-xs"
+            >
+              What counts as paid leave fraud?
+            </summary>
+            <div
+              class="margin-bottom-2"
+            >
+              <ul
+                class="usa-list"
+              >
+                <li>
+                  Using someone’s personal information to fraudulently collect benefits
+                </li>
+                <li>
+                  Providing forged or falsified documents
+                </li>
+                <li>
+                  Withholding information or providing false information to the Department of Family and Medical Leave
+                </li>
+              </ul>
+            </div>
+          </details>
+        </span>
+        <div
+          class=""
+        >
+          <div
+            class="usa-radio measure-5 bg-transparent"
+          >
+            <input
+              class="usa-radio__input"
+              id="InputChoice33"
+              name="fraud"
+              type="radio"
+              value="Yes"
+            />
+            <label
+              class="usa-radio__label"
+              for="InputChoice33"
+            >
+              Yes (explain below)
+            </label>
+          </div>
+          <div
+            class="usa-radio measure-5 bg-transparent"
+          >
+            <input
+              class="usa-radio__input"
+              id="InputChoice34"
+              name="fraud"
+              type="radio"
+              value="No"
+            />
+            <label
+              class="usa-radio__label"
+              for="InputChoice34"
+            >
+              No
+            </label>
+          </div>
+        </div>
+      </fieldset>
+      <fieldset
+        class="usa-fieldset margin-top-3 usa-form-group"
+      >
+        <legend
+          class="usa-label text-bold usa-legend font-heading-xs measure-5"
+        >
+          <div
+            class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+          >
+            <h2
+              class="flex-fill margin-right-1 font-heading-md text-bold"
+            >
+              Did the employee give you at least 30 days notice about their leave?
+            </h2>
+          </div>
+        </legend>
+        <div
+          class=""
+        >
+          <div
+            class="usa-radio measure-5 bg-transparent"
+          >
+            <input
+              class="usa-radio__input"
+              id="InputChoice35"
+              name="employee_notice"
+              type="radio"
+              value="Yes"
+            />
+            <label
+              class="usa-radio__label"
+              for="InputChoice35"
+            >
+              Yes
+            </label>
+          </div>
+          <div
+            class="usa-radio measure-5 bg-transparent"
+          >
+            <input
+              class="usa-radio__input"
+              id="InputChoice36"
+              name="employee_notice"
+              type="radio"
+              value="No"
+            />
+            <label
+              class="usa-radio__label"
+              for="InputChoice36"
+            >
+              No (explain below)
+            </label>
+          </div>
+        </div>
+      </fieldset>
+      <fieldset
+        class="usa-fieldset margin-top-3 usa-form-group"
+      >
+        <legend
+          class="usa-label text-bold usa-legend font-heading-xs measure-5"
+        >
+          <div
+            class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+          >
+            <h2
+              class="flex-fill margin-right-1 font-heading-md text-bold"
+            >
+              Have you approved or denied this leave request?
+            </h2>
+          </div>
+        </legend>
+        <span
+          class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+        >
+          Answer based on your company policies and our 
+          <a
+            href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
+            rel="noreferrer noopener"
+            target="_blank"
+          >
+            guidelines for employers
+          </a>
+          . Your recommendation is helpful to the Department in making its determination.
+        </span>
+        <div
+          class=""
+        >
+          <div
+            class="usa-radio measure-5 bg-transparent"
+          >
+            <input
+              checked=""
+              class="usa-radio__input"
+              id="InputChoice37"
+              name="employer_decision"
+              type="radio"
+              value="Approve"
+            />
+            <label
+              class="usa-radio__label"
+              for="InputChoice37"
+            >
+              Approve
+            </label>
+          </div>
+          <div
+            class="usa-radio measure-5 bg-transparent"
+          >
+            <input
+              class="usa-radio__input"
+              id="InputChoice38"
+              name="employer_decision"
+              type="radio"
+              value="Deny"
+            />
+            <label
+              class="usa-radio__label"
+              for="InputChoice38"
+            >
+              Deny (explain below)
+            </label>
+          </div>
+        </div>
+      </fieldset>
+      <fieldset
+        class="usa-fieldset margin-top-3 usa-form-group"
+      >
+        <legend
+          class="usa-label text-bold usa-legend font-heading-xs measure-5"
+        >
+          <div
+            class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+          >
+            <h2
+              class="flex-fill margin-right-1 font-heading-md text-bold"
+            >
+              Do you have any additional comments or concerns?
+            </h2>
+          </div>
+        </legend>
+        <div
+          class=""
+        >
+          <div
+            class="usa-radio measure-5 bg-transparent"
+          >
+            <input
+              class="usa-radio__input"
+              id="InputChoice39"
+              name="should_show_comment_box"
+              type="radio"
+              value="true"
+            />
+            <label
+              class="usa-radio__label"
+              for="InputChoice39"
+            >
+              Yes
+            </label>
+          </div>
+          <div
+            class="usa-radio measure-5 bg-transparent"
+          >
+            <input
+              checked=""
+              class="usa-radio__input"
+              id="InputChoice40"
+              name="should_show_comment_box"
+              type="radio"
+              value="false"
+            />
+            <label
+              class="usa-radio__label"
+              for="InputChoice40"
+            >
+              No
+            </label>
+          </div>
+        </div>
+      </fieldset>
+      <button
+        class="usa-button position-relative margin-top-4"
+        type="submit"
+      >
+        Submit
+      </button>
+    </form>
+  </div>
+</div>
+`;

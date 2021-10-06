@@ -18,7 +18,6 @@ function InputChoice({ type = "checkbox", ...props }) {
     `usa-${type} measure-5 bg-transparent`,
     props.className
   );
-
   return (
     <div className={fieldClassName}>
       <input

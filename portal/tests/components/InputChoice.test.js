@@ -41,14 +41,14 @@ describe("InputChoice", () => {
       const input = screen.getByRole("checkbox");
 
       expect(input).toMatchInlineSnapshot(`
-        <input
-          class="usa-checkbox__input"
-          id="InputChoice4"
-          name="bar"
-          type="checkbox"
-          value="foobar"
-        />
-      `);
+<input
+  class="usa-checkbox__input"
+  id="InputChoice4"
+  name="bar"
+  type="checkbox"
+  value="foobar"
+/>
+`);
     });
 
     it("sets the `disabled` attribute when provided", () => {
