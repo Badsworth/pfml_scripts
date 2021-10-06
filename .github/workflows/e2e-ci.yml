@@ -103,6 +103,7 @@ jobs:
       E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
       E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
       E2E_FINEOS_USERS: ${{ secrets.E2E_FINEOS_USERS }}
+      PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: 0
     if: needs.changed-files.outputs.has-flood-changes == 'true'
     steps:
       - uses: actions/checkout@v2
