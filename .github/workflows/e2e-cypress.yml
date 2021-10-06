@@ -216,4 +216,4 @@ jobs:
           env_variable_name: "E2E_NEWRELIC_INGEST_KEY"
 
       - name: Integration Tests
-        run: npm run test:integration -- --group=stable${{ github.event.inputs.run_unstable == 'true' && ' --group=unstable' || '' }}${{ github.event.inputs.run_nightly == 'true' && ' --group=nightly' || '' }}
+        run: npm run test:integration:ci -- --group=stable${{ github.event.inputs.run_unstable == 'true' && ' --group=unstable' || '' }}${{ github.event.inputs.run_nightly == 'true' && ' --group=nightly' || '' }}
