@@ -100,7 +100,7 @@ jobs:
        
           echo "::set-output name=commit_hash::$commit_hash"
           
-      - name: Commit and push new code to archival branch # TBD do we need to replace the user here?
+      - name: Commit and push new code to archival branch
         if: "!contains(env.deployment_env, 'test')"
         run: |
           git config user.name "PFMLDevOps"
@@ -115,7 +115,7 @@ jobs:
     name: Gather deploy info
     needs: update-the-deploy-branch
     runs-on: ubuntu-latest
-    outputs: # TBD steps values here?
+    outputs:
       admin-portal-env: ${{ steps.admin-portal-env.outputs.admin-portal-env }}
       deployed-url: ${{ steps.deployed-url.outputs.deployed-url }}
     steps:
@@ -129,9 +129,9 @@ jobs:
         # steps cannot refer to an output from a previous step in the same job, so admin-portal-env has to be calculated again
         run: |
           if [[ "${{ env.deployment_env || 'test' }}" == 'prod' ]]; then
-            echo "::set-output name=deployed-url::https://paidleave-admin.mass.gov/api/docs/"
+            echo "::set-output name=deployed-url::https://paidleave-admin.mass.gov/"
           else
-            echo "::set-output name=deployed-url::https://paidleave-admin-${{ env.deployment_env || 'test' }}.mass.gov/api/docs/"
+            echo "::set-output name=deployed-url::https://paidleave-admin-${{ env.deployment_env || 'test' }}.mass.gov/"
           fi
 
   start-comms-github:
