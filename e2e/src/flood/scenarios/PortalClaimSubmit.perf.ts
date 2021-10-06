@@ -1,11 +1,20 @@
-import { StepFunction, TestData, Browser, step, By, ENV } from "@flood/element";
-import * as Cfg from "../config";
-import * as Util from "../helpers";
-import config from "../../config";
+import {
+  StepFunction,
+  TestData,
+  Browser,
+  step,
+  By,
+  ENV,
+  Until,
+} from "@flood/element";
 import {
   generateCredentials,
   getLeaveAdminCredentials,
 } from "../../util/credentials";
+import * as Cfg from "../config";
+import * as Util from "../helpers";
+import config from "../../config";
+
 import TestMailVerificationFetcher from "../../submission/TestMailVerificationFetcher";
 import { fetchJSON, fetchFormData } from "../fetch";
 import pRetry from "p-retry";
@@ -83,10 +92,10 @@ export const steps: Cfg.StoredStep[] = [
       await (
         await Util.waitForElement(browser, By.visibleText("Log out"))
       ).click();
+      await browser.waitForNavigation();
       const fein = data.claim.employer_fein;
       if (!fein) throw new Error("No FEIN was found on this claim");
       const { username, password } = getLeaveAdminCredentials(fein);
-      // Log in on Portal as Leave Admin
       authToken = await login(browser, username, password);
     },
   },
@@ -263,9 +272,10 @@ async function setFeatureFlags(browser: Browser): Promise<void> {
     name: "_ff",
     value: JSON.stringify({
       pfmlTerriyay: true,
-      employerShowDashboardSort: true,
+      noMaintenance: true,
       employerShowDashboardSearch: true,
       employerShowReviewByStatus: true,
+      claimantShowStatusPage: true,
     }),
     url: config("PORTAL_BASEURL"),
   });
@@ -409,6 +419,10 @@ async function completeApplication(browser: Browser): Promise<void> {
       `Unable to complete application: ${JSON.stringify(res, null, 2)}`
     );
   }
+  console.log("Checking Claimant Status Page ...");
+  // @Note: Can be removed once LST has been run for this feature
+  await checkStatusPage(browser, res.data.fineos_absence_id);
+
   fineosId = res.data.fineos_absence_id;
   console.info("Completed application", {
     application_id: res.data.application_id,
@@ -572,4 +586,46 @@ async function filterClaims(browser: Browser, status: DashboardClaimStatus) {
   await browser
     .findElement(Util.byButtonText(status))
     .then((button) => button.click());
+}
+
+async function checkStatusPage(
+  browser: Browser,
+  fineosID: string
+): Promise<void> {
+  await browser.visit(
+    `${config(
+      "PORTAL_BASEURL"
+    )}/applications/status/?absence_case_id=${fineosID}`
+  );
+  await browser.wait(
+    await Until.urlContains(`status/?absence_case_id=${fineosID}`)
+  );
+  await Util.waitForElement(browser, By.visibleText("Pending")).then(
+    async (el) => {
+      assert.strictEqual(await el.text(), "Pending");
+    }
+  );
+  await (
+    await Util.waitForElement(
+      browser,
+      By.linkText("Upload additional documents")
+    )
+  ).click();
+  await browser.wait(Until.elementLocated(By.id("InputChoice2")));
+  await (
+    await Util.waitForElement(
+      browser,
+      By.visibleText("Different identification documentation")
+    )
+  ).click();
+  await (
+    await Util.waitForElement(browser, Util.byButtonText("Save and continue"))
+  ).click();
+  await Util.waitForElement(
+    browser,
+    By.visibleText(
+      "Upload an identification document issued by state or federal government"
+    )
+  );
+  console.log("Claim Status Page Check Complete");
 }

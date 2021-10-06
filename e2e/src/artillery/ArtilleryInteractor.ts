@@ -9,9 +9,9 @@ import faker from "faker";
 import { approveClaim } from "../submission/PostSubmit";
 import { Fineos } from "../submission/fineos.pages";
 import config from "../../src/config";
-import getArtillerySubmitter from "./ArtilleryClaimSubmitter";
 import winston from "winston";
-import { getDataFromClaim, UsefulClaimData } from "./util";
+import getArtillerySubmitter from "./ArtilleryClaimSubmitter";
+import { getDataFromClaim, UsefulClaimData, checkClaimStatus } from "./util";
 
 /**
  * This is the interaction layer.
@@ -82,6 +82,13 @@ export default class ArtilleryPFMLInteractor {
         claim,
         claimantCredentials,
         leaveAdminCredentials,
+        logger
+      );
+      logger.info("Starting to Check claimant Status Page");
+      // @Note: Can be removed once LST has been run for this feature
+      await checkClaimStatus(
+        submission.fineos_absence_id,
+        claimantCredentials,
         logger
       );
       return submission;
