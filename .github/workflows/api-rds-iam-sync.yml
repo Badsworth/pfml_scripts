@@ -144,7 +144,8 @@ jobs:
   alert-if-failed:
     runs-on: ubuntu-latest
     needs: [get-tf-state]
-    if: needs.get-tf-state.outputs.sync-state == 'failure' || needs.get-tf-state.outputs.sync-state == 'timed_out'
+    # if: needs.get-tf-state.outputs.sync-state == 'failure' || needs.get-tf-state.outputs.sync-state == 'timed_out'
+    if: needs.get-tf-state.outputs.sync-state == 'failure'
     steps:
     - name: send low priority page
       uses: fjogeleit/http-request-action@master
