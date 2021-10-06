@@ -145,7 +145,7 @@ jobs:
     name: Send PageDuty Alert
     needs: [get-tf-state]
     # if: needs.get-tf-state.outputs.sync-state == 'failure' || needs.get-tf-state.outputs.sync-state == 'timed_out'
-    if: needs.get-tf-state.outputs.sync-state == 'failure'
+    if: always() && needs.get-tf-state.outputs.sync-state == 'failure'
     runs-on: ubuntu-latest
     steps:
     - name: send low priority page
