@@ -1,6 +1,6 @@
 # This file was originally generated from the following command:
 #
-#   bin/bootstrap-env.sh $ENV_NAME portal
+#   bin/bootstrap-env/bootstrap-env.sh $ENV_NAME admin-portal
 #
 # If adding new variables, it's recommended to update the bootstrap
 # templates so there's less manual work in creating new envs.
