@@ -4,14 +4,10 @@
  */
 
 import "@testing-library/jest-dom";
-import Adapter from "enzyme-adapter-react-16";
-import Enzyme from "enzyme";
 import { format } from "util";
 // Setup I18n globally for tests, so English strings are displayed in rendered components
 import { initializeI18n } from "./src/locales/i18n";
 initializeI18n();
-
-Enzyme.configure({ adapter: new Adapter() });
 
 jest.mock("@aws-amplify/auth");
 

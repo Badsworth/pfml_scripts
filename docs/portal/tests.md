@@ -24,9 +24,6 @@ describe("sum", () => {
 
 A test file should be placed in the appropriate `tests` directory (e.g. `portal/tests`) rather than alongside the file it tests. These test files should have the same name as the file they're testing, and have `.test.js` as the extension. For example, `pages/index.js` and `tests/pages/index.test.js`.
 
-**A Migration Note (Sept 2021)**
-We are migrating from enzyme to React Test Library. Our enzyme tests live in tests-old/ while we work on migrating. If you're writing new tests, please write them in tests/. Our lint rules enforse that nothing in tests/ can rely on enzyme or anything in tests-old.
-
 
 ## Unit tests
 
