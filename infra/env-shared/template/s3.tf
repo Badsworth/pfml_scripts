@@ -1,3 +1,7 @@
+data "aws_s3_bucket" "agency_transfer" {
+  bucket = "massgov-pfml-${var.environment_name}-agency-transfer"
+}
+
 resource "aws_s3_bucket" "pfml_reports" {
   bucket = "massgov-pfml-${var.environment_name}-reports"
   acl    = "private"

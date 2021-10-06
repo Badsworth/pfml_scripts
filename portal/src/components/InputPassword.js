@@ -26,7 +26,7 @@ const InputPassword = (props) => {
         name={`${inputId}-toggle`}
         value={showPassword ? "text" : "password"}
         onChange={() => setShowPassword(!showPassword)}
-        ariaControls={inputId}
+        aria-controls={inputId}
       />
     </React.Fragment>
   );

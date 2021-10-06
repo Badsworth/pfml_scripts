@@ -555,7 +555,7 @@ export const HIST_CASE: ScenarioSpecification = {
     label: "HIST_CASE",
     shortClaim: true,
     has_continuous_leave_periods: true,
-    reason: "Serious Health Condition - Employee",
+    reason: "Care for a Family Member",
     docs: {},
   },
 };

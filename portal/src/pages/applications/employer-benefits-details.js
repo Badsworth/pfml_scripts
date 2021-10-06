@@ -232,11 +232,7 @@ export const EmployerBenefitCard = (props) => {
         visible={get(entry, "is_full_salary_continuous") === false}
       >
         <Fieldset>
-          <FormLabel
-            component="legend"
-            small
-            optionalText={t("components.form.optional")}
-          >
+          <FormLabel component="legend" small>
             {t("pages.claimsEmployerBenefitsDetails.amountLegend")}
           </FormLabel>
           <InputCurrency

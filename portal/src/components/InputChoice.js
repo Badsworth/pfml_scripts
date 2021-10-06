@@ -30,7 +30,7 @@ function InputChoice({ type = "checkbox", ...props }) {
         onChange={props.onChange}
         type={type}
         value={props.value}
-        aria-controls={props.ariaControls}
+        aria-controls={props["aria-controls"]}
       />
       <label className={`usa-${type}__label`} htmlFor={id}>
         {props.label}
@@ -50,9 +50,8 @@ InputChoice.propTypes = {
   /**
    * HTML `aria-controls` attribute. Used to indicate that the input affects
    * another element.
-   * TODO (EMPLOYER-1718) - Use hyphen-casing for ARIA attributes
    */
-  ariaControls: PropTypes.string,
+  "aria-controls": PropTypes.string,
   /**
    * Sets the input's `checked` state. Use this in combination with `onChange`
    * for a controlled component.

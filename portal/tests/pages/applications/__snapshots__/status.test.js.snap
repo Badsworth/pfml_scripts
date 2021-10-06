@@ -1,6 +1,395 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ComponentWithUser timeline is displayed if there is a pending absence period 1`] = `
+exports[`Status LeaveDetails renders page separated by keys if object of absenceDetails has more keys 1`] = `
+<div>
+  <div
+    class="border-base-lighter margin-bottom-2"
+  >
+    <h2
+      class="font-heading-md text-bold"
+    >
+      Leave to bond with a child schedule
+    </h2>
+    <div
+      class="margin-top-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-sm text-bold"
+      >
+        Reduced leave
+      </h3>
+      <p>
+        From June 1, 2021 to June 8, 2021
+      </p>
+      <span
+        class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-success-dark bg-success-lighter padding-x-1"
+      >
+        Approved
+      </span>
+      <p>
+        <strong>
+          This leave was approved.
+        </strong>
+      </p>
+      <p>
+        View your approval notice below for more details about your benefit amount, payment schedule, and how to appeal if your benefits appear incorrect.
+      </p>
+      <p>
+        Learn more about the 
+        <a
+          href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          appeal process
+        </a>
+        .
+      </p>
+    </div>
+  </div>
+  <div
+    class="border-base-lighter margin-bottom-2"
+  >
+    <h2
+      class="font-heading-md text-bold"
+    >
+      Medical leave schedule
+    </h2>
+    <div
+      class="margin-top-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-sm text-bold"
+      >
+        Reduced leave
+      </h3>
+      <p>
+        From August 1, 2021 to August 8, 2021
+      </p>
+      <span
+        class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap bg-primary-lighter text-primary padding-x-1"
+      >
+        Pending
+      </span>
+      <p>
+        <strong>
+          This leave is being reviewed.
+        </strong>
+      </p>
+    </div>
+  </div>
+  <div
+    class="border-base-lighter margin-bottom-2"
+  >
+    <h2
+      class="font-heading-md text-bold"
+    >
+      Medical leave schedule
+    </h2>
+    <div
+      class="margin-top-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-sm text-bold"
+      >
+        Continuous leave
+      </h3>
+      <p>
+        From August 1, 2021 to August 8, 2021
+      </p>
+      <span
+        class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-base-darker bg-base-lightest padding-x-1"
+      >
+        Withdrawn
+      </span>
+      <p>
+        <strong>
+          This leave was withdrawn.
+        </strong>
+      </p>
+      <p>
+        You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.
+      </p>
+      <p>
+        <a
+          href="/applications/get-ready"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Start another application
+        </a>
+      </p>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Status LeaveDetails renders page with one section if absenceDetails has only one key 1`] = `
+<div>
+  <div
+    class="border-base-lighter margin-bottom-2"
+  >
+    <h2
+      class="font-heading-md text-bold"
+    >
+      Medical leave schedule
+    </h2>
+    <div
+      class="margin-top-2"
+    >
+      <h3
+        class="margin-bottom-1 font-heading-sm text-bold"
+      >
+        Continuous leave
+      </h3>
+      <p>
+        From August 1, 2021 to August 8, 2021
+      </p>
+      <span
+        class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-base-darker bg-base-lightest padding-x-1"
+      >
+        Withdrawn
+      </span>
+      <p>
+        <strong>
+          This leave was withdrawn.
+        </strong>
+      </p>
+      <p>
+        You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.
+      </p>
+      <p>
+        <a
+          href="/applications/get-ready"
+          rel="noopener noreferrer"
+          target="_blank"
+        >
+          Start another application
+        </a>
+      </p>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Status info alert displays if claimant has bonding-newborn but not pregnancy claims 1`] = `
+<div
+  class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
+  role="region"
+  tabindex="-1"
+>
+  <div
+    class="usa-alert__body"
+  >
+    <h2
+      class="usa-alert__heading font-heading-xs text-bold"
+    >
+      If you are giving birth, you may also be eligible for paid medical leave
+    </h2>
+    <div
+      class="usa-alert__text"
+    >
+      You may be able to take up to 20 weeks of paid medical leave if you’re unable to work during your pregnancy or for your recovery from childbirth. Your health care provider determines how much medical leave you will need. Call the Contact Center at 
+      <a
+        href="tel:(833) 344-7365"
+      >
+        (833) 344‑7365
+      </a>
+       if you need 
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
+        rel="noreferrer noopener"
+        target="_blank"
+      >
+        medical leave after giving birth
+      </a>
+      . You should not submit a second application.
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Status info alert displays if claimant has pregnancy but not bonding claims 1`] = `
+<div
+  class="usa-alert usa-alert--info usa-alert--no-icon margin-bottom-3"
+  role="region"
+  tabindex="-1"
+>
+  <div
+    class="usa-alert__body"
+  >
+    <h2
+      class="usa-alert__heading font-heading-xs text-bold"
+    >
+      You may also be eligible for paid family leave
+    </h2>
+    <div
+      class="usa-alert__text"
+    >
+      You may be able to take up to 12 weeks of paid family leave to bond with your child after your medical leave ends. 
+      <a
+        href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#about-family-leave-to-bond-with-a-child-"
+        rel="noreferrer noopener"
+        target="_blank"
+      >
+        Family leave to bond with your child
+      </a>
+       can be easily added to your claim by calling our Contact Center at 
+      <a
+        href="tel:(833) 344-7365"
+      >
+        (833) 344‑7365
+      </a>
+      . You should not submit a second application.
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Status renders the page with claim detail 1`] = `
+<div>
+  <a
+    class="usa-button margin-bottom-5 usa-button--unstyled"
+    href="/applications"
+  >
+    <svg
+      class="margin-right-05"
+      height="12"
+      viewBox="0 0 448 512"
+      width="12"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"
+        fill="currentColor"
+      />
+    </svg>
+    Back to your applications
+  </a>
+  <div
+    class="measure-6"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3 text-normal"
+      tabindex="-1"
+    >
+      Application details
+    </h1>
+    <h2
+      class="font-heading-lg text-bold"
+    >
+      pages.claimsStatus.leaveReasonValueHeader
+    </h2>
+    <div
+      class="display-flex border-base-lighter margin-bottom-3 bg-base-lightest padding-2"
+    >
+      <div
+        class="padding-right-10"
+      >
+        <h2
+          class="font-heading-xs text-normal"
+        >
+          Application ID
+        </h2>
+        <p
+          class="text-bold"
+        >
+          mock-absence-case-id
+        </p>
+      </div>
+      <div>
+        <h2
+          class="font-heading-xs text-normal"
+        >
+          Employer Identification Number (EIN)
+        </h2>
+        <p
+          class="text-bold"
+        >
+          12-1234567
+        </p>
+      </div>
+    </div>
+    <div
+      class="border-top border-base-lighter padding-y-2"
+    >
+      <span
+        aria-valuetext="Loading legal notices"
+        class="c-spinner"
+        role="progressbar"
+      />
+    </div>
+    <div
+      class="border-top border-base-lighter padding-top-2"
+      id="upload_documents"
+    >
+      <h2
+        class="font-heading-md text-bold"
+      >
+        Respond to requests for information
+      </h2>
+      <p>
+        If you have a request for more information, use this button to upload the requested documentation.
+      </p>
+      <a
+        class="usa-button measure-6 margin-bottom-3"
+        href="/applications/upload?absence_case_id=mock-absence-case-id"
+      >
+        Upload additional documents
+      </a>
+    </div>
+    <div
+      class="border-top border-base-lighter padding-top-2"
+    >
+      <h2
+        class="font-heading-md text-bold"
+      >
+        Manage your application
+      </h2>
+      <h3
+        class="font-heading-sm text-bold"
+      >
+        Make changes
+      </h3>
+      <p>
+        To make changes to your application, call the Contact Center at 
+        <a
+          href="tel:(833) 344‑7365"
+        >
+          (833) 344‑7365
+        </a>
+        . If you request a change to your start and end dates, we may need to review your application again.
+      </p>
+      <h3
+        class="font-heading-sm text-bold"
+      >
+        Report other benefits or income
+      </h3>
+      <p>
+        If your plans for other benefits or income during your paid leave have changed, call the Contact Center at 
+        <a
+          href="tel:(833) 344‑7365"
+        >
+          (833) 344‑7365
+        </a>
+        . Report changes to:
+      </p>
+      <ul
+        class="usa-list"
+      >
+        <li>
+          Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.
+        </li>
+        <li>
+          Income from other sources during your leave. For example, if you got approved for a disability benefit or a worker’s compensation claim after you submitted your application, report this change.
+        </li>
+      </ul>
+    </div>
+  </div>
+</div>
+`;
+
+exports[`Status timeline is displayed if there is a pending absence period 1`] = `
 <div
   class="border-bottom border-base-lighter padding-bottom-2 margin-bottom-2"
   data-testid="timeline"
@@ -53,7 +442,7 @@ exports[`ComponentWithUser timeline is displayed if there is a pending absence p
 </div>
 `;
 
-exports[`ComponentWithUser timeline when there is a pending bonding absence period and claimant has not uploaded certification documents shows follow up steps 1`] = `
+exports[`Status timeline when there is a pending bonding absence period and claimant has not uploaded certification documents shows follow up steps 1`] = `
 <div
   class="border-bottom border-base-lighter padding-bottom-2 margin-bottom-2"
   data-testid="timeline"

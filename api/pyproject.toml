@@ -129,6 +129,7 @@ delegated-payment-audit-rejects-generate = "massgov.pfml.delegated_payments.audi
 delegated-payment-check-response-generate = "massgov.pfml.delegated_payments.mock.generate_check_response:generate_check_response_files"
 report-sequential-employment = "massgov.pfml.report.sequential_employment:main"
 update-gender-data-from-rmv = "massgov.pfml.rmv.update_gender_data:main"
+pub-payments-process-1099-documents = "massgov.pfml.delegated_payments.task.process_1099_documents:main"
 
 [tool.black]
 line-length = 100

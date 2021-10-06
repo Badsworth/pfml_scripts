@@ -47,8 +47,9 @@ const errors = {
     },
     employer_benefits: {
       benefit_amount_dollars: {
-        required:
-          "Enter the amount you will receive, or remove how often you will receive that amount.",
+        minimum:
+          "The benefit amount you will receive must be greater than 0. If you don’t know how much you will receive, go back and answer “No” to the previous question.",
+        required: "Enter the amount you will receive.",
       },
       benefit_amount_frequency: {
         required: "Enter how often you will receive this amount.",
@@ -319,8 +320,9 @@ const errors = {
     },
     other_incomes: {
       income_amount_dollars: {
-        required:
-          "Enter the amount you will receive, or remove how often you will receive that amount.",
+        minimum:
+          "The income amount you will receive must be greater than 0. If you don’t know how much you will receive, go back and answer “No” to the previous question.",
+        required: "Enter the amount you will receive.",
       },
       income_amount_frequency: {
         required: "Enter how often you will receive this amount.",
@@ -1158,12 +1160,12 @@ const pages = {
   claimsEmployerBenefits: {
     choiceNo: "$t(shared.choiceNo)",
     choiceNoAlert:
-      "If you receive any other employer sponsored-benefits after you apply, you’ll need to call the Contact Center to let us know.",
+      "If you receive any other employer-sponsored benefits after you apply, you’ll need to call the Contact Center to let us know.",
     choiceNoHint:
       "I won’t receive employer-sponsored benefits, I've applied but it hasn't been approved, or I don’t know the benefit amount yet",
     choiceYes: "$t(shared.choiceYes)",
     choiceYesHint:
-      "I will recieve employer sponsored benefits during my paid leave",
+      "I will recieve employer-sponsored benefits during my paid leave",
     doNotReportHintHeading: "You don’t need to report:",
     doNotReportHintList: [
       "Benefits from any other employers",
@@ -1558,7 +1560,7 @@ const pages = {
     intro:
       "<ul><li>Any previous leave for the same reason that you are applying for paid leave now</li><li>Any previous leave for a different qualifying reasons</li></ul>",
     introDontNeed:
-      "<ul><li>Leave that was taken through Massachusetts' PFML program</li><li>Leave that was taking before January 1, 2021 and {{startDate}}</li><li>Family leave to care for a family member taken before July 1, 2021</li></ul>",
+      "<ul><li>Leave that was taken through Massachusetts' PFML program</li><li>Leave that was taking between January 1, 2021 and {{startDate}}</li><li>Family leave to care for a family member taken before July 1, 2021</li></ul>",
     introDontNeedHeader: "You don't need to report:",
     introHeader:
       "You'll need to report previous leave you may have taken between January 1, 2021 and {{startDate}}:",

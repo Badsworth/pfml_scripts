@@ -18,6 +18,7 @@ class ReportName(str, Enum):
     PUB_ERROR_REPORT = "pub-error-report"
     PAYMENT_RECONCILIATION_SUMMARY_REPORT = "payment-reconciliation-summary-report"
     PAYMENT_REJECT_REPORT = "payment-reject-report"
+    PROCCESS_1099_DOCUMENT_REPORTS = "irs-1099-document-report"
 
 
 # Reports grouped by processing tasks
@@ -38,6 +39,8 @@ CREATE_PUB_FILES_REPORTS: List[ReportName] = [
     ReportName.PAYMENT_RECONCILIATION_SUMMARY_REPORT,
 ]
 PROCESS_PUB_RESPONSES_REPORTS: List[ReportName] = [ReportName.PUB_ERROR_REPORT]
+
+PROCESS_1099_DOCUMENT_REPORTS: List[ReportName] = [ReportName.PROCCESS_1099_DOCUMENT_REPORTS]
 
 
 @dataclass
@@ -107,6 +110,10 @@ REPORTS: List[Report] = [
     Report(
         sql_command=_get_report_sql_command_from_file(ReportName.PAYMENT_REJECT_REPORT),
         report_name=ReportName.PAYMENT_REJECT_REPORT,
+    ),
+    Report(
+        sql_command=_get_report_sql_command_from_file(ReportName.PROCCESS_1099_DOCUMENT_REPORTS),
+        report_name=ReportName.PROCCESS_1099_DOCUMENT_REPORTS,
     ),
 ]
 

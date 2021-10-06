@@ -106,11 +106,16 @@ describe("Submit a claim through Fineos intake process, verify the Absence Case"
                             .reduced_schedule_leave_periods[0]
                         );
                     return datesOfAbsence.nextStep((workAbsenceDetails) =>
+                      // @TODO CPS-906-AA (CPS-2579)
                       workAbsenceDetails
+                        // @TODO selectWorkPatternType changed from Fixed to Unknown
                         .selectWorkPatternType("Fixed")
+                        // @TODO comment out applyStandardWorkWeek() and return wrapUp.finishNotificationCreation() and below that line.
                         .applyStandardWorkWeek()
                         .nextStep((wrapUp) => {
                           wrapUp.clickNext();
+                          // @TODO Uncomment the fineos.assertErrorMessage to check for error message
+                          // fineos.assertErrorMessage("Work Pattern must be populated. Total hours per week in the Work Pattern must equal the Hours Worked Per Week field. Populate the Work Pattern and click Apply to Calendar before proceeding.")
                           // Bubble up Leave Case id number to outside scope
                           return wrapUp.finishNotificationCreation();
                         })

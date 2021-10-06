@@ -354,11 +354,6 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
               class="usa-label text-bold usa-legend font-heading-xs measure-5"
             >
               How much will you receive?
-              <span
-                class="usa-hint text-base-dark text-normal"
-              >
-                 (optional)
-              </span>
             </legend>
             <div
               class="usa-form-group margin-top-05"
@@ -822,11 +817,6 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               class="usa-label text-bold usa-legend font-heading-xs measure-5"
             >
               How much will you receive?
-              <span
-                class="usa-hint text-base-dark text-normal"
-              >
-                 (optional)
-              </span>
             </legend>
             <div
               class="usa-form-group margin-top-05"
@@ -1243,11 +1233,6 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
               class="usa-label text-bold usa-legend font-heading-xs measure-5"
             >
               How much will you receive?
-              <span
-                class="usa-hint text-base-dark text-normal"
-              >
-                 (optional)
-              </span>
             </legend>
             <div
               class="usa-form-group margin-top-05"
