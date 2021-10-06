@@ -395,6 +395,9 @@ class Employer(Base, TimestampMixin):
     employer_quarterly_contribution: "Query[EmployerQuarterlyContribution]" = dynamic_loader(
         "EmployerQuarterlyContribution", back_populates="employer"
     )
+    organization_units: "Query[OrganizationUnit]" = dynamic_loader(
+        "OrganizationUnit", back_populates="employer"
+    )
 
     lk_industry_code = relationship(LkIndustryCode)
 
@@ -416,6 +419,34 @@ class Employer(Base, TimestampMixin):
         if error:
             raise ValueError(f"Invalid FEIN: {employer_fein}. Expected a 9-digit integer value")
         return employer_fein
+
+
+class OrganizationUnit(Base, TimestampMixin):
+    __tablename__ = "organization_unit"
+    organization_unit_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    fineos_id = Column(Text, nullable=True, unique=True)
+    name = Column(Text, unique=True, nullable=False)
+    employer_id = Column(PostgreSQLUUID, ForeignKey("employer.employer_id"), index=True)
+
+    employer = relationship("Employer", back_populates="organization_units")
+    dua_reporting_units: "Query[DuaReportingUnit]" = dynamic_loader(
+        "DuaReportingUnit", back_populates="organization_unit"
+    )
+
+
+class DuaReportingUnit(Base, TimestampMixin):
+    __tablename__ = "dua_reporting_unit"
+    dua_reporting_unit_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    dua_id = Column(Text, unique=True, nullable=False)  # The Reporting Unit Number from DUA
+    dba = Column(Text, nullable=True)
+    organization_unit_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("organization_unit.organization_unit_id"),
+        nullable=True,
+        index=True,
+    )
+
+    organization_unit = relationship("OrganizationUnit", back_populates="dua_reporting_units")
 
 
 class EmployerQuarterlyContribution(Base, TimestampMixin):
