@@ -102,6 +102,8 @@ export const Status = ({ appLogic, query }) => {
     claimDetail.application_id
   );
 
+  const containerClassName = "border-top border-base-lighter padding-y-4";
+
   const ViewYourNotices = () => {
     const legalNotices = getLegalNotices(documentsForApplication);
 
@@ -113,9 +115,7 @@ export const Status = ({ appLogic, query }) => {
       legalNotices.length === 0;
 
     const SectionWrapper = ({ children }) => (
-      <div className="border-top border-base-lighter padding-y-2">
-        {children}
-      </div>
+      <div className={containerClassName}>{children}</div>
     );
 
     SectionWrapper.propTypes = {
@@ -175,7 +175,7 @@ export const Status = ({ appLogic, query }) => {
   };
   const infoAlertContext = getInfoAlertContext(absenceDetails);
   const [firstAbsenceDetail] = Object.keys(absenceDetails);
-  const containerClassName = "border-top border-base-lighter padding-top-2";
+
   return (
     <React.Fragment>
       {uploaded_document_type && (
@@ -230,18 +230,18 @@ export const Status = ({ appLogic, query }) => {
         href={routes.applications.index}
       />
       <div className="measure-6">
-        <Title weight="normal" small>
+        <Title weight="normal" small marginBottom="3">
           {t("pages.claimsStatus.applicationDetails")}
         </Title>
 
         {/* Heading section */}
 
-        <Heading level="2" size="1">
+        <Heading level="2" size="1" className="margin-bottom-3">
           {t("pages.claimsStatus.leaveReasonValueHeader", {
             context: findKeyByValue(LeaveReason, firstAbsenceDetail),
           })}
         </Heading>
-        <div className="display-flex border-base-lighter margin-bottom-3 bg-base-lightest padding-2">
+        <div className="display-flex border-base-lighter margin-bottom-4 bg-base-lightest padding-2">
           <div className="padding-right-10">
             <Heading weight="normal" level="2" size="4">
               {t("pages.claimsStatus.applicationID")}
@@ -278,7 +278,7 @@ export const Status = ({ appLogic, query }) => {
           </Heading>
           <p>{t("pages.claimsStatus.infoRequestsBody")}</p>
           <ButtonLink
-            className="measure-6 margin-bottom-3"
+            className="measure-6 margin-top-3"
             href={appLogic.portalFlow.getNextPageRoute(
               "UPLOAD_DOC_OPTIONS",
               {},
@@ -294,7 +294,7 @@ export const Status = ({ appLogic, query }) => {
           <Heading level="2">
             {t("pages.claimsStatus.manageApplicationHeading")}
           </Heading>
-          <Heading level="3">
+          <Heading level="3" className="margin-top-4">
             {t("pages.claimsStatus.makeChangesHeading")}
           </Heading>
           <Trans
@@ -307,7 +307,7 @@ export const Status = ({ appLogic, query }) => {
               ),
             }}
           />
-          <Heading level="3">
+          <Heading level="3" className="margin-top-4">
             {t("pages.claimsStatus.reportOtherBenefitsHeading")}
           </Heading>
           <Trans
@@ -367,7 +367,10 @@ export const StatusTagMap = {
 export const LeaveDetails = ({ absenceDetails = {} }) => {
   const { t } = useTranslation();
   return map(absenceDetails, (absenceItem, absenceItemName) => (
-    <div key={absenceItemName} className="border-base-lighter margin-bottom-2">
+    <div
+      key={absenceItemName}
+      className="border-base-lighter margin-bottom-4 padding-top-4 border-top"
+    >
       <Heading level="2">
         {t("pages.claimsStatus.leaveReasonValue", {
           context: findKeyByValue(LeaveReason, absenceItemName),
@@ -375,26 +378,32 @@ export const LeaveDetails = ({ absenceDetails = {} }) => {
       </Heading>
       {absenceItem.length
         ? absenceItem.map(
-            ({
-              period_type,
-              absence_period_start_date,
-              absence_period_end_date,
-              request_decision,
-              fineos_leave_request_id,
-            }) => (
-              <div key={fineos_leave_request_id} className="margin-top-2">
+            (
+              {
+                period_type,
+                absence_period_start_date,
+                absence_period_end_date,
+                request_decision,
+                fineos_leave_request_id,
+              },
+              ind
+            ) => (
+              <div
+                key={fineos_leave_request_id}
+                className={`margin-top-${ind > 0 ? "5" : "4"}`}
+              >
                 <Heading className="margin-bottom-1" level="3">
                   {t("pages.claimsStatus.leavePeriodLabel", {
                     context: period_type.split(" ")[0].toLowerCase(),
                   })}
                 </Heading>
-                <p>
+                <p className="margin-top-0 margin-bottom-1">
                   {`From ${formatDate(
                     absence_period_start_date
                   ).full()} to ${formatDate(absence_period_end_date).full()}`}
                 </p>
                 <Tag
-                  paddingSm
+                  className="padding-x-1 margin-top-0 margin-bottom-05"
                   label={request_decision}
                   state={StatusTagMap[request_decision]}
                 />
@@ -409,6 +418,7 @@ export const LeaveDetails = ({ absenceDetails = {} }) => {
                         target="_blank"
                       />
                     ),
+                    p: <p className="margin-top-1"></p>,
                     "request-appeal-link": (
                       <a
                         href={routes.external.massgov.requestAnAppealForPFML}
@@ -416,6 +426,7 @@ export const LeaveDetails = ({ absenceDetails = {} }) => {
                         target="_blank"
                       />
                     ),
+                    "request-decision-info": <p className="margin-0"></p>,
                   }}
                 />
               </div>
@@ -533,10 +544,7 @@ export const Timeline = ({
     </React.Fragment>
   );
   return (
-    <div
-      data-testid="timeline"
-      className="border-bottom border-base-lighter padding-bottom-2 margin-bottom-2"
-    >
+    <div data-testid="timeline" className="border-base-lighter margin-bottom-4">
       {!bondingAbsencePeriod ||
       // eslint-disable-next-line react/prop-types
       !shouldRenderCertificationButton(bondingAbsencePeriod.reason, docList) ? (

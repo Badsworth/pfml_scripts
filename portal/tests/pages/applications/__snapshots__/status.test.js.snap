@@ -3,7 +3,7 @@
 exports[`Status LeaveDetails renders page separated by keys if object of absenceDetails has more keys 1`] = `
 <div>
   <div
-    class="border-base-lighter margin-bottom-2"
+    class="border-base-lighter margin-bottom-4 padding-top-4 border-top"
   >
     <h2
       class="font-heading-md text-bold"
@@ -11,30 +11,38 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
       Leave to bond with a child schedule
     </h2>
     <div
-      class="margin-top-2"
+      class="margin-top-4"
     >
       <h3
         class="margin-bottom-1 font-heading-sm text-bold"
       >
         Reduced leave
       </h3>
-      <p>
+      <p
+        class="margin-top-0 margin-bottom-1"
+      >
         From June 1, 2021 to June 8, 2021
       </p>
       <span
-        class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-success-dark bg-success-lighter padding-x-1"
+        class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-success-dark bg-success-lighter padding-x-1 margin-top-0 margin-bottom-05"
       >
         Approved
       </span>
-      <p>
+      <p
+        class="margin-0"
+      >
         <strong>
           This leave was approved.
         </strong>
       </p>
-      <p>
+      <p
+        class="margin-top-1"
+      >
         View your approval notice below for more details about your benefit amount, payment schedule, and how to appeal if your benefits appear incorrect.
       </p>
-      <p>
+      <p
+        class="margin-top-1"
+      >
         Learn more about the 
         <a
           href="https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim"
@@ -48,7 +56,7 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
     </div>
   </div>
   <div
-    class="border-base-lighter margin-bottom-2"
+    class="border-base-lighter margin-bottom-4 padding-top-4 border-top"
   >
     <h2
       class="font-heading-md text-bold"
@@ -56,22 +64,26 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
       Medical leave schedule
     </h2>
     <div
-      class="margin-top-2"
+      class="margin-top-4"
     >
       <h3
         class="margin-bottom-1 font-heading-sm text-bold"
       >
         Reduced leave
       </h3>
-      <p>
+      <p
+        class="margin-top-0 margin-bottom-1"
+      >
         From August 1, 2021 to August 8, 2021
       </p>
       <span
-        class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap bg-primary-lighter text-primary padding-x-1"
+        class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap bg-primary-lighter text-primary padding-x-1 margin-top-0 margin-bottom-05"
       >
         Pending
       </span>
-      <p>
+      <p
+        class="margin-0"
+      >
         <strong>
           This leave is being reviewed.
         </strong>
@@ -79,7 +91,7 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
     </div>
   </div>
   <div
-    class="border-base-lighter margin-bottom-2"
+    class="border-base-lighter margin-bottom-4 padding-top-4 border-top"
   >
     <h2
       class="font-heading-md text-bold"
@@ -87,30 +99,38 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
       Medical leave schedule
     </h2>
     <div
-      class="margin-top-2"
+      class="margin-top-4"
     >
       <h3
         class="margin-bottom-1 font-heading-sm text-bold"
       >
         Continuous leave
       </h3>
-      <p>
+      <p
+        class="margin-top-0 margin-bottom-1"
+      >
         From August 1, 2021 to August 8, 2021
       </p>
       <span
-        class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-base-darker bg-base-lightest padding-x-1"
+        class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-base-darker bg-base-lightest padding-x-1 margin-top-0 margin-bottom-05"
       >
         Withdrawn
       </span>
-      <p>
+      <p
+        class="margin-0"
+      >
         <strong>
           This leave was withdrawn.
         </strong>
       </p>
-      <p>
+      <p
+        class="margin-top-1"
+      >
         You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.
       </p>
-      <p>
+      <p
+        class="margin-top-1"
+      >
         <a
           href="/applications/get-ready"
           rel="noopener noreferrer"
@@ -127,7 +147,7 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
 exports[`Status LeaveDetails renders page with one section if absenceDetails has only one key 1`] = `
 <div>
   <div
-    class="border-base-lighter margin-bottom-2"
+    class="border-base-lighter margin-bottom-4 padding-top-4 border-top"
   >
     <h2
       class="font-heading-md text-bold"
@@ -135,30 +155,38 @@ exports[`Status LeaveDetails renders page with one section if absenceDetails has
       Medical leave schedule
     </h2>
     <div
-      class="margin-top-2"
+      class="margin-top-4"
     >
       <h3
         class="margin-bottom-1 font-heading-sm text-bold"
       >
         Continuous leave
       </h3>
-      <p>
+      <p
+        class="margin-top-0 margin-bottom-1"
+      >
         From August 1, 2021 to August 8, 2021
       </p>
       <span
-        class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-base-darker bg-base-lightest padding-x-1"
+        class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-base-darker bg-base-lightest padding-x-1 margin-top-0 margin-bottom-05"
       >
         Withdrawn
       </span>
-      <p>
+      <p
+        class="margin-0"
+      >
         <strong>
           This leave was withdrawn.
         </strong>
       </p>
-      <p>
+      <p
+        class="margin-top-1"
+      >
         You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.
       </p>
-      <p>
+      <p
+        class="margin-top-1"
+      >
         <a
           href="/applications/get-ready"
           rel="noopener noreferrer"
@@ -270,18 +298,18 @@ exports[`Status renders the page with claim detail 1`] = `
     class="measure-6"
   >
     <h1
-      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3 text-normal"
+      class="js-title margin-top-0 margin-bottom-3 font-heading-sm line-height-sans-3 text-normal"
       tabindex="-1"
     >
       Application details
     </h1>
     <h2
-      class="font-heading-lg text-bold"
+      class="margin-bottom-3 font-heading-lg text-bold"
     >
       pages.claimsStatus.leaveReasonValueHeader
     </h2>
     <div
-      class="display-flex border-base-lighter margin-bottom-3 bg-base-lightest padding-2"
+      class="display-flex border-base-lighter margin-bottom-4 bg-base-lightest padding-2"
     >
       <div
         class="padding-right-10"
@@ -311,7 +339,7 @@ exports[`Status renders the page with claim detail 1`] = `
       </div>
     </div>
     <div
-      class="border-top border-base-lighter padding-y-2"
+      class="border-top border-base-lighter padding-y-4"
     >
       <span
         aria-valuetext="Loading legal notices"
@@ -320,7 +348,7 @@ exports[`Status renders the page with claim detail 1`] = `
       />
     </div>
     <div
-      class="border-top border-base-lighter padding-top-2"
+      class="border-top border-base-lighter padding-y-4"
       id="upload_documents"
     >
       <h2
@@ -332,14 +360,14 @@ exports[`Status renders the page with claim detail 1`] = `
         If you have a request for more information, use this button to upload the requested documentation.
       </p>
       <a
-        class="usa-button measure-6 margin-bottom-3"
+        class="usa-button measure-6 margin-top-3"
         href="/applications/upload?absence_case_id=mock-absence-case-id"
       >
         Upload additional documents
       </a>
     </div>
     <div
-      class="border-top border-base-lighter padding-top-2"
+      class="border-top border-base-lighter padding-y-4"
     >
       <h2
         class="font-heading-md text-bold"
@@ -347,7 +375,7 @@ exports[`Status renders the page with claim detail 1`] = `
         Manage your application
       </h2>
       <h3
-        class="font-heading-sm text-bold"
+        class="margin-top-4 font-heading-sm text-bold"
       >
         Make changes
       </h3>
@@ -361,7 +389,7 @@ exports[`Status renders the page with claim detail 1`] = `
         . If you request a change to your start and end dates, we may need to review your application again.
       </p>
       <h3
-        class="font-heading-sm text-bold"
+        class="margin-top-4 font-heading-sm text-bold"
       >
         Report other benefits or income
       </h3>
@@ -391,7 +419,7 @@ exports[`Status renders the page with claim detail 1`] = `
 
 exports[`Status timeline is displayed if there is a pending absence period 1`] = `
 <div
-  class="border-bottom border-base-lighter padding-bottom-2 margin-bottom-2"
+  class="border-base-lighter margin-bottom-4"
   data-testid="timeline"
 >
   <h2
@@ -444,7 +472,7 @@ exports[`Status timeline is displayed if there is a pending absence period 1`] =
 
 exports[`Status timeline when there is a pending bonding absence period and claimant has not uploaded certification documents shows follow up steps 1`] = `
 <div
-  class="border-bottom border-base-lighter padding-bottom-2 margin-bottom-2"
+  class="border-base-lighter margin-bottom-4"
   data-testid="timeline"
 >
   <h2

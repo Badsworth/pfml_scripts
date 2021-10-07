@@ -411,7 +411,7 @@ describe("Status", () => {
     expect(screen.getByRole("link", { name: "Upload additional documents" }))
       .toMatchInlineSnapshot(`
       <a
-        class="usa-button measure-6 margin-bottom-3"
+        class="usa-button measure-6 margin-top-3"
         href="/applications/upload?absence_case_id=mock-absence-case-id"
       >
         Upload additional documents

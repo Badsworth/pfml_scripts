@@ -1976,15 +1976,15 @@ const pages = {
     leaveReasonValue_serviceMemberFamily:
       "$t(shared.leaveReasonServiceMemberFamily)",
     leaveStatusMessage_Approved:
-      "<p><strong>This leave was approved.</strong></p><p>View your approval notice below for more details about your benefit amount, payment schedule, and how to appeal if your benefits appear incorrect.</p><p>Learn more about the <request-appeal-link>appeal process</request-appeal-link>.</p>",
+      "<request-decision-info><strong>This leave was approved.</strong></request-decision-info><p>View your approval notice below for more details about your benefit amount, payment schedule, and how to appeal if your benefits appear incorrect.</p><p>Learn more about the <request-appeal-link>appeal process</request-appeal-link>.</p>",
     leaveStatusMessage_Cancelled:
-      "<p><strong>This leave was cancelled.</strong></p><p>This application will no longer be processed. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
+      "<request-decision-info><strong>This leave was cancelled.</strong></request-decision-info><p>This application will no longer be processed. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
     leaveStatusMessage_Denied:
-      "<p><strong>This leave was denied.</strong></p><p>View your denial notice below for more details and an explanation of the appeal process.</p><p>If you would like to appeal, you must submit your request within 10 calendar days of the date on your denial notice.</p><p>Learn more about the <request-appeal-link>appeal process</request-appeal-link>.</p>",
+      "<request-decision-info><strong>This leave was denied.</strong></request-decision-info><p>View your denial notice below for more details and an explanation of the appeal process.</p><p>If you would like to appeal, you must submit your request within 10 calendar days of the date on your denial notice.</p><p>Learn more about the <request-appeal-link>appeal process</request-appeal-link>.</p>",
     leaveStatusMessage_Pending:
-      "<p><strong>This leave is being reviewed.</strong></p>",
+      "<request-decision-info><strong>This leave is being reviewed.</strong></request-decision-info>",
     leaveStatusMessage_Withdrawn:
-      "<p><strong>This leave was withdrawn.</strong></p><p>You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
+      "<request-decision-info><strong>This leave was withdrawn.</strong></request-decision-info><p>You have withdrawn your application from the review process. If you want to apply for paid leave again, you can begin another application.</p><p><application-link>Start another application</application-link></p>",
     legalNoticesFallback:
       "Once we’ve made a decision, you can download the decision notice here. You’ll also get an email notification.",
     loadingClaimDetailLabel: "Loading claim details",
