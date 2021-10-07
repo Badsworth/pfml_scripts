@@ -90,6 +90,7 @@ data "template_file" "container_definitions" {
     fineos_client_oauth2_client_id             = var.fineos_client_oauth2_client_id
     service_now_base_url                       = var.service_now_base_url
     portal_base_url                            = var.portal_base_url
+    admin_portal_base_url                      = var.admin_portal_base_url
     enable_application_fraud_check             = var.enable_application_fraud_check
     release_version                            = var.release_version
     new_plan_proofs_active_at                  = var.new_plan_proofs_active_at
