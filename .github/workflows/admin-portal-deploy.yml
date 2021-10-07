@@ -129,9 +129,9 @@ jobs:
         # steps cannot refer to an output from a previous step in the same job, so admin-portal-env has to be calculated again
         run: |
           if [[ "${{ env.deployment_env || 'test' }}" == 'prod' ]]; then
-            echo "::set-output name=deployed-url::https://paidleave-admin.mass.gov/"
+            echo "::set-output name=deployed-url::https://paidleave-admin.eol.mass.gov/"
           else
-            echo "::set-output name=deployed-url::https://paidleave-admin-${{ env.deployment_env || 'test' }}.mass.gov/"
+            echo "::set-output name=deployed-url::https://paidleave-admin-${{ env.deployment_env || 'test' }}.eol.mass.gov/"
           fi
 
   start-comms-github:
@@ -243,8 +243,79 @@ jobs:
         run: terraform apply plan.tfplan
         working-directory: ${{ env.terraformBaseDir }}${{ needs.deploy-info.outputs.admin-portal-env }}
 
+  update-newrelic:
+    name: Update New Relic
+    runs-on: ubuntu-latest
+    needs: [update-the-deploy-branch, deploy-info, release]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Setup & Configure New Relic CLI
+        uses: ./.github/actions/setup-nr-cli
+
+      - name: Create a custom deployment record
+        run: |
+          newrelic events post --event "{ \"eventType\": \"CustomDeploymentMarker\", \"component\": \"admin-portal\", \"environment\":\"${{ needs.deploy-info.outputs.admin-portal-env }}\", \"version\": \"${{ env.version || needs.update-the-deploy-branch.outputs.commit_hash }}\" }"
+
+  invalidate-cloudfront:
+    name: Invalidate Cloudfront Cache
+    runs-on: ubuntu-latest
+    needs: [update-the-deploy-branch, deploy, release, deploy-info]
+    env:
+      TF_CLI_ARGS: '-lock-timeout=120s'
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-duration-seconds: 3600
+          role-to-assume: ci-run-deploys
+
+      - name: Terraform Init
+        id: terraform_init
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: ${{ env.terraformVersion }}
+          tf_actions_subcommand: init
+          tf_actions_comment: false
+          tf_actions_working_dir: ${{ env.terraformBaseDir }}${{ needs.deploy-info.outputs.admin-portal-env }}
+
+      - name: Terraform Output
+        id: terraform
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: ${{ env.terraformVersion }}
+          tf_actions_subcommand: output
+          tf_actions_working_dir: ${{ env.terraformBaseDir }}${{ needs.deploy-info.outputs.admin-portal-env }}
+        env:
+          TF_CLI_ARGS: ''
+
+      - name: Invalidate old Cloudfront cache
+        env:
+          TF_OUTPUT: ${{ steps.terraform.outputs.tf_actions_output }}
+        run: |
+          sudo apt-get install jq
+          DISTRIBUTION_ID=$(echo $TF_OUTPUT | jq -r '.cloudfront_distribution_id.value')
+          aws cloudfront create-invalidation --distribution-id $DISTRIBUTION_ID --paths "/*"
+
   postdeploy-info:
     name: Finalize deployment state
+    needs: [invalidate-cloudfront]
     if: always()
     runs-on: ubuntu-latest
     outputs:
