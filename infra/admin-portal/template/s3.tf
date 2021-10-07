@@ -1,8 +1,8 @@
 #
-# S3 resources for hosting the Portal website
+# S3 resources for hosting the Admin Portal website
 #
 
-resource "aws_s3_bucket" "portal_web" {
+resource "aws_s3_bucket" "admin_portal_web" {
   bucket = "massgov-${local.app_name}-${var.environment_name}-admin-portal-site-builds"
   website {
     index_document = "index.html"
@@ -17,11 +17,11 @@ resource "aws_s3_bucket" "portal_web" {
   })
 }
 
-data "aws_iam_policy_document" "portal_web" {
+data "aws_iam_policy_document" "admin_portal_web" {
   statement {
     sid       = "PublicReadForGetBucketObjects"
     actions   = ["s3:GetObject"]
-    resources = ["${aws_s3_bucket.portal_web.arn}/*"]
+    resources = ["${aws_s3_bucket.admin_portal_web.arn}/*"]
 
     principals {
       type        = "AWS"
@@ -30,7 +30,7 @@ data "aws_iam_policy_document" "portal_web" {
   }
 }
 
-resource "aws_s3_bucket_policy" "portal_web_policy" {
-  bucket = aws_s3_bucket.portal_web.id
-  policy = data.aws_iam_policy_document.portal_web.json
+resource "aws_s3_bucket_policy" "admin_portal_web_policy" {
+  bucket = aws_s3_bucket.admin_portal_web.id
+  policy = data.aws_iam_policy_document.admin_portal_web.json
 }

@@ -1,6 +1,6 @@
 # This file was originally generated from the following command:
 #
-#   bin/bootstrap-env.sh test portal
+#   bin/bootstrap-env.sh test admin-portal
 #
 # If adding new variables, it's recommended to update the bootstrap
 # templates so there's less manual work in creating new envs.
