@@ -254,6 +254,12 @@ variable "portal_base_url" {
   default     = ""
 }
 
+variable "admin_portal_base_url" {
+  description = "Admin Portal base URL to use when creating links"
+  type        = string
+  default     = ""
+}
+
 variable "enable_application_fraud_check" {
   description = "Enable the fraud check for application submission"
   type        = string
