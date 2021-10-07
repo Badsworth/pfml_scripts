@@ -1,5 +1,6 @@
 import os
 from dataclasses import dataclass
+from re import Pattern
 from typing import List, Optional
 
 import paramiko
@@ -28,6 +29,7 @@ class SftpS3TransferConfig:
     ssh_key_password: Optional[str]
     # String representation of the private key.
     ssh_key: str
+    regex_filter: Optional[Pattern] = None
 
 
 def copy_to_sftp_and_archive_s3_files(
@@ -194,6 +196,20 @@ def _copy_file_from_s3_to_sftp_with_retry(source, dest, sftp):
         raise
 
 
+def filter_filenames(source_filenames: List[str], filename_regex: Pattern) -> List[str]:
+    original_filenames = source_filenames
+    source_filenames = [filename for filename in source_filenames if filename_regex.match(filename)]
+    logger.info(
+        "Filtered files retrieved from source SFTP directory",
+        extra={
+            "original_filenames": ", ".join(original_filenames),
+            "filtered_filenames": ", ".join(source_filenames),
+        },
+    )
+
+    return source_filenames
+
+
 def copy_from_sftp_to_s3_and_archive_files(
     config: SftpS3TransferConfig, db_session: db.Session
 ) -> List[ReferenceFile]:
@@ -202,6 +218,10 @@ def copy_from_sftp_to_s3_and_archive_files(
     )
 
     source_filenames = sftp_client.listdir(config.source_dir)
+
+    if config.regex_filter is not None:
+        source_filenames = filter_filenames(source_filenames, config.regex_filter)
+
     if len(source_filenames) == 0:
         logger.info("Did not find any files in source SFTP directory: %s", config.source_dir)
         return []
