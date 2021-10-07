@@ -1,6 +1,6 @@
 import React from "react";
 import { PlatformStateContext, AutoSizer } from "nr1";
-import StatusTimelineWidget from "./status-timeline-widget";
+import StatusTimelineWidget from "./gridWidget";
 
 export default class StatusTimelineWidgetRoot extends React.Component {
   render() {

@@ -1,8 +1,8 @@
 import React from "react";
 import { NrqlQuery, Spinner } from "nr1";
 import { generateErrorsAndConfig, buildOrderedData } from "./utils";
-import EmptyState from "../shared/emptyState";
-import ErrorState from "../shared/errorState";
+import EmptyState from "./emptyState";
+import ErrorState from "./errorState";
 import ModalCharts from "./modalCharts";
 
 // if the width is below this figure particular features will be disable
@@ -90,7 +90,6 @@ export default class GridWidget extends React.Component {
     }
 
     let finalQuery = `${query} ${timeseriesValue} `;
-    let finalQuery = query;
 
     // // eslint-disable-next-line
     console.log(`Query: ${finalQuery}`);
