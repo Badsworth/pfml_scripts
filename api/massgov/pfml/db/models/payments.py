@@ -981,11 +981,6 @@ class Pfml1099(Base, TimestampMixin):
     employee = relationship(Employee)
 
 
-def sync_lookup_tables(db_session):
-    FineosWritebackTransactionStatus.sync_to_database(db_session)
-    PaymentAuditReportType.sync_to_database(db_session)
-
-
 def sync_maximum_weekly_benefit_amount(db_session):
     maximum_weekly_benefit_amounts = [
         MaximumWeeklyBenefitAmount(datetime.date(2020, 10, 1), "850.00"),

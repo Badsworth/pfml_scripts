@@ -47,9 +47,3 @@ class Verification(Base, TimestampMixin):
     )
     verification_type = relationship("LkVerificationType")
     verification_metadata = Column(JSONB)
-
-
-def sync_lookup_tables(db_session):
-    """Synchronize lookup tables to the database."""
-    VerificationType.sync_to_database(db_session)
-    db_session.commit()

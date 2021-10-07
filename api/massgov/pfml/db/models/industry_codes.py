@@ -625,9 +625,3 @@ class IndustryCode(LookupTable):
     NATIONAL_SECURITY_AND_INTERNATIONAL_AFFAIRS = LkIndustryCode(
         254, "National Security and International Affairs", 9281
     )
-
-
-def sync_lookup_tables(db_session):
-    """Synchronize lookup tables to the database."""
-    IndustryCode.sync_to_database(db_session)
-    db_session.commit()

@@ -890,24 +890,3 @@ class PreviousLeaveQualifyingReason(LookupTable):
     MILITARY_EXIGENCY_FAMILY = LkPreviousLeaveQualifyingReason(
         6, "Managing family affairs while a family member is on active duty in the armed forces"
     )
-
-
-def sync_lookup_tables(db_session):
-    """Synchronize lookup tables to the database."""
-    LeaveReason.sync_to_database(db_session)
-    LeaveReasonQualifier.sync_to_database(db_session)
-    RelationshipToCaregiver.sync_to_database(db_session)
-    RelationshipQualifier.sync_to_database(db_session)
-    NotificationMethod.sync_to_database(db_session)
-    FrequencyOrDuration.sync_to_database(db_session)
-    EmploymentStatus.sync_to_database(db_session)
-    AmountFrequency.sync_to_database(db_session)
-    EmployerBenefitType.sync_to_database(db_session)
-    OtherIncomeType.sync_to_database(db_session)
-    DocumentType.sync_to_database(db_session)
-    ContentType.sync_to_database(db_session)
-    DayOfWeek.sync_to_database(db_session)
-    WorkPatternType.sync_to_database(db_session)
-    PhoneType.sync_to_database(db_session)
-    PreviousLeaveQualifyingReason.sync_to_database(db_session)
-    db_session.commit()
