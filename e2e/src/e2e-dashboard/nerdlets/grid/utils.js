@@ -229,6 +229,6 @@ export const buildOrderedData = (data, nrqlQuery, thresholds) => {
     });
     heatmapData.push(dataArr);
   });
-
+  console.log(data, orderedHeatMapData, xLabels);
   return { orderedData: orderedHeatMapData, xLabels };
 };

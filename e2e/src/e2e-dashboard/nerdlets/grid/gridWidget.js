@@ -89,19 +89,18 @@ export default class GridWidget extends React.Component {
       );
     }
 
-    let finalQuery = `${query} ${timeseriesValue} `;
-
-    // // eslint-disable-next-line
-    console.log(`Query: ${finalQuery}`);
+    // let finalQuery = `${query} ${timeseriesValue} `;
+    let finalQuery = query;
 
     if (
       !query.toLowerCase().includes("since") &&
       !query.toLowerCase().includes("until")
     ) {
       // switched off for testing
-      finalQuery += ` ${sinceClause} ${untilValue}`;
-      finalQuery += ` SINCE 1 day ago`;
+      // finalQuery += ` ${sinceClause} ${untilValue}`;
+      finalQuery += ` SINCE today`;
     }
+    console.log(`Query: ${finalQuery}`);
 
     let chartOnClick;
 
@@ -171,6 +170,7 @@ export default class GridWidget extends React.Component {
                   maxHeight: height,
                 }}
               >
+                <pre>{JSON.stringify(orderedData, null, 2)}</pre>
                 <table
                   style={{
                     width: "100%",
