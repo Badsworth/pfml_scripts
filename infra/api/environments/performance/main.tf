@@ -80,6 +80,7 @@ module "api" {
   fineos_aws_iam_role_external_id                     = "12345"
   service_now_base_url                                = "https://savilinxperf.servicenowservices.com"
   portal_base_url                                     = "https://paidleave-performance.mass.gov"
+  admin_portal_base_url                               = "https://paidleave-admin-performance.eol.mass.gov"
   enable_application_fraud_check                      = "0"
   release_version                                     = var.release_version
 }

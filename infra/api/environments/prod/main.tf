@@ -77,6 +77,7 @@ module "api" {
   fineos_client_oauth2_client_id             = "5qcd2h1qlv4gpiqgugn2mrttkg"
   service_now_base_url                       = "https://savilinx.servicenowservices.com"
   portal_base_url                            = "https://paidleave.mass.gov"
+  admin_portal_base_url                      = "https://paidleave-admin.eol.mass.gov"
   enable_application_fraud_check             = "1"
   fineos_aws_iam_role_arn                    = "arn:aws:iam::133945341851:role/somprod-IAMRoles-CustomerAccountAccessRole-83KBPT56FTQP"
   fineos_aws_iam_role_external_id            = "8jFBtjr4UA@"
