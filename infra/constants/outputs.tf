@@ -104,14 +104,14 @@ output "domains" {
 
 output "admin_domains" {
   value = {
-    "test"        = "paidleave-admin-test.mass.gov",
-    "stage"       = "paidleave-admin-stage.mass.gov",
-    "performance" = "paidleave-admin-performance.mass.gov",
-    "training"    = "paidleave-admin-training.mass.gov",
+    "test"        = "paidleave-admin-test.eol.mass.gov",
+    "stage"       = "paidleave-admin-stage.eol.mass.gov",
+    "performance" = "paidleave-admin-performance.eol.mass.gov",
+    "training"    = "paidleave-admin-training.eol.mass.gov",
     "breakfix"    = "paidleave-admin-breakfix.eol.mass.gov",
     "cps-preview" = "paidleave-admin-cps-preview.eol.mass.gov",
-    "uat"         = "paidleave-admin-uat.mass.gov",
-    "prod"        = "paidleave-admin.mass.gov"
+    "uat"         = "paidleave-admin-uat.eol.mass.gov",
+    "prod"        = "paidleave-admin.eol.mass.gov"
   }
 }
 

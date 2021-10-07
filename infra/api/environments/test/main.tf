@@ -71,7 +71,7 @@ module "api" {
     "https://67385ye4yb.execute-api.us-east-1.amazonaws.com",
 
     # Allow requests from the Admin Portal
-    "https://paidleave-admin-test.mass.gov",
+    "https://paidleave-admin-test.eol.mass.gov",
 
     # Since we may temporarily point the Portal stage environment to API test
     # as well, allow requests to come from that origin.
@@ -108,7 +108,7 @@ module "api" {
   fineos_aws_iam_role_external_id                     = "12345"
   service_now_base_url                                = "https://savilinxtest.servicenowservices.com"
   portal_base_url                                     = "https://paidleave-test.mass.gov"
-  admin_portal_base_url                               = "https://paidleave-admin-test.mass.gov"
+  admin_portal_base_url                               = "https://paidleave-admin-test.eol.mass.gov"
   enable_application_fraud_check                      = "0"
   release_version                                     = var.release_version
 }
