@@ -129,9 +129,6 @@ describe("Report of intermittent leave hours notification", () => {
               cy.contains(dob);
               cy.contains(employeeFullName);
               cy.contains(submission.fineos_absence_id);
-              email.assertValidSubject(
-                `${claim.first_name} ${claim.last_name}`
-              );
             });
         });
       });

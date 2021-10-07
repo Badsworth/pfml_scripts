@@ -170,7 +170,6 @@ describe("Request for More Information (notifications/notices)", () => {
           "request for additional info",
           submission.fineos_absence_id
         );
-        cy.log(subjectClaimant);
         email.getEmails(
           {
             address: "gqzap.notifications@inbox.testmail.app",

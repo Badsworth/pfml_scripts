@@ -124,27 +124,22 @@ describe("Approval (notifications/notices)", () => {
     () => {
       cy.dependsOnPreviousPass([submit]);
       cy.unstash<Submission>("submission").then((submission) => {
-        cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-          email
-            .getEmails(
-              {
-                address: "gqzap.notifications@inbox.testmail.app",
-                subjectWildcard: `Action required: Respond to *'s paid leave application`,
-                messageWildcard: submission.fineos_absence_id,
-                timestamp_from: submission.timestamp_from,
-                debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-              },
-              30000
-            )
-            .then(() => {
-              cy.get(
-                `a[href*="/employers/applications/new-application/?absence_id=${submission.fineos_absence_id}"]`
-              );
-              email.assertValidSubject(
-                `${claim.first_name} ${claim.last_name}`
-              );
-            });
-        });
+        email
+          .getEmails(
+            {
+              address: "gqzap.notifications@inbox.testmail.app",
+              subjectWildcard: `Action required: Respond to *'s paid leave application`,
+              messageWildcard: submission.fineos_absence_id,
+              timestamp_from: submission.timestamp_from,
+              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+            },
+            30000
+          )
+          .then(() => {
+            cy.get(
+              `a[href*="/employers/applications/new-application/?absence_id=${submission.fineos_absence_id}"]`
+            );
+          });
       });
     }
   );
@@ -186,9 +181,6 @@ describe("Approval (notifications/notices)", () => {
               cy.contains(submission.fineos_absence_id);
               cy.get(
                 `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
-              );
-              email.assertValidSubject(
-                `${claim.first_name} ${claim.last_name}`
               );
             });
         });
