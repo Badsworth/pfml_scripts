@@ -57,6 +57,9 @@ global.newrelic = {
 const initialProcessEnv = Object.assign({}, process.env);
 
 beforeEach(() => {
+  // Require each test to run an assertion. This is often useful in catching
+  // async test logic bugs
+  expect.hasAssertions();
   // Reset our environment variables before each test run
   process.env = { ...initialProcessEnv };
   jest.spyOn(console, "error").mockImplementation((msg, ...args) => {

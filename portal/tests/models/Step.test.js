@@ -331,8 +331,6 @@ Array [
     });
 
     it("sets #pages property for each Step", () => {
-      expect.assertions();
-
       const steps = Step.createClaimStepsFromMachine(
         claimantConfig,
         { claim: new MockBenefitsApplicationBuilder().create() },

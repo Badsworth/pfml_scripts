@@ -70,8 +70,6 @@ describe("users API", () => {
       });
 
       it("resolves with the user in the response", async () => {
-        expect.assertions();
-
         const response = await usersApi.createUser({
           email_address: "mock-user@example.com",
           password: "password123!",
@@ -98,8 +96,6 @@ describe("users API", () => {
       });
 
       it("resolves with the user in the response", async () => {
-        expect.assertions();
-
         const response = await usersApi.getCurrentUser();
 
         expect(response.user).toBeInstanceOf(User);

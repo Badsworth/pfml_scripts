@@ -93,8 +93,6 @@ describe("useClaimsLogic", () => {
     });
 
     it("loads page with order and filter params", async () => {
-      expect.assertions();
-
       const { appLogic } = setup();
 
       await act(async () => {
@@ -140,7 +138,6 @@ describe("useClaimsLogic", () => {
     });
 
     it("only makes api request if the page number, ordering, or filters have changed", async () => {
-      expect.assertions();
       const { appLogic } = setup();
 
       await act(async () => {
@@ -275,7 +272,6 @@ describe("useClaimsLogic", () => {
     });
 
     it("only makes api request if the absence case ID has changed", async () => {
-      expect.assertions();
       const { appLogic } = setup();
 
       await act(async () => {
