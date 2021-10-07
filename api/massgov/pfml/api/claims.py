@@ -462,6 +462,14 @@ def user_has_access_to_claim(claim: Claim) -> bool:
 
 def get_claim(fineos_absence_id: str) -> flask.Response:
     is_employer = can(READ, "EMPLOYER_API")
+    if is_employer:
+        return response_util.error_response(
+            status_code=Forbidden,
+            message="Employers are not allowed to access claimant claim info",
+            errors=[],
+            data={},
+        ).to_api_response()
+
     claim = get_claim_from_db(fineos_absence_id)
 
     if claim is None:
@@ -485,17 +493,6 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
             data={},
         ).to_api_response()
 
-    detailed_claim = DetailedClaimResponse.from_orm(claim)
-
-    # Expectation this endpoint is for the claimant dashboard only as it uses
-    # the FINEOS customer API.
-    if is_employer:
-        return response_util.success_response(
-            message="Successfully retrieved claim", data=detailed_claim.dict(), status_code=200,
-        ).to_api_response()
-
-    absence_periods = []
-
     employee_tax_id = claim.employee_tax_identifier
     employer_fein = claim.employer_fein
 
@@ -511,6 +508,8 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
             errors=[],
             data={},
         ).to_api_response()
+
+    absence_periods = []
 
     with app.db_session() as db_session:
         try:
@@ -539,6 +538,7 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
                 data={},
             ).to_api_response()
 
+    detailed_claim = DetailedClaimResponse.from_orm(claim)
     detailed_claim.absence_periods = absence_periods
 
     if claim.application:  # type: ignore
