@@ -140,7 +140,7 @@ jobs:
   alert-if-failed:
     name: Send PageDuty Alert
     needs: [get-tf-state]
-    if: always() && needs.sync.outputs.expected-failure != 'true'' || needs.get-tf-state.outputs.sync-state == 'timed_out'
+    if: always() && needs.sync.outputs.expected-failure != 'true' || needs.get-tf-state.outputs.sync-state == 'timed_out'
     runs-on: ubuntu-latest
     steps:
     - name: send low priority page
