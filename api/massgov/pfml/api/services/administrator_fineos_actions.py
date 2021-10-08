@@ -7,7 +7,7 @@ import massgov.pfml.db
 import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
 from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
-from massgov.pfml.api.exceptions import ObjectNotFound
+from massgov.pfml.api.exceptions import ClaimWithdrawn, ObjectNotFound
 from massgov.pfml.api.models.claims.common import (
     Address,
     IntermittentLeavePeriod,
@@ -186,7 +186,7 @@ def get_claim_as_leave_admin(
     absence_id: str,
     employer: Employer,
     fineos_client: Optional[massgov.pfml.fineos.AbstractFINEOSClient] = None,
-) -> Tuple[Optional[ClaimReviewResponse], List[ManagedRequirementDetails], PeriodDecisions]:
+) -> Tuple[ClaimReviewResponse, List[ManagedRequirementDetails], PeriodDecisions]:
     """
     Given an absence ID, gets a full claim for the claim review page by calling multiple endpoints from FINEOS
     """
@@ -206,7 +206,7 @@ def get_claim_as_leave_admin(
                 "employer_id": employer.employer_id,
             },
         )
-        return None, [], PeriodDecisions()
+        raise ClaimWithdrawn()
 
     customer_id = absence_periods_dict["decisions"][0]["employee"]["id"]
     status = absence_periods_dict["decisions"][0]["period"]["status"] or "Unknown"

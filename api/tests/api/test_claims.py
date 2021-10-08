@@ -859,6 +859,12 @@ class TestGetClaimReview:
         return PeriodDecisions.parse_obj(absence_details_data)
 
     @pytest.fixture
+    def mock_absence_details_no_decisions(self, absence_details_data):
+        empty_decisions = absence_details_data.copy()
+        empty_decisions["decisions"] = []
+        return PeriodDecisions.parse_obj(empty_decisions)
+
+    @pytest.fixture
     def mock_absence_details_update(self, absence_details_data):
         absence_details = absence_details_data.copy()
         decisions = []
@@ -918,6 +924,26 @@ class TestGetClaimReview:
         assert len(db_periods) == 0
 
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")
+    def test_employer_get_claim_review_raises_withdrawn_claim_when_no_decisions(
+        self,
+        mock_get_absence,
+        test_db_session,
+        client,
+        employer_auth_token,
+        mock_absence_details_no_decisions,
+        claim,
+    ):
+        self._assert_no_absence_period_data_for_claim(test_db_session, claim)
+        mock_get_absence.return_value = mock_absence_details_no_decisions
+        response = client.get(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 403
+        self._assert_no_absence_period_data_for_claim(test_db_session, claim)
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")
     def test_employer_get_claim_review_creates_absence_period(
         self,
         mock_get_absence,
@@ -937,6 +963,17 @@ class TestGetClaimReview:
         assert response.status_code == 200
         for decision in mock_absence_details_create.decisions:
             self._assert_absence_period_data(test_db_session, claim, decision.period)
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")
+    def test_employer_get_claim_review_withdrawn_claim_no_absence_period_decisions(
+        self, mock_get_absence, client, employer_auth_token, claim,
+    ):
+        mock_get_absence.return_value = PeriodDecisions()
+        response = client.get(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+        assert response.status_code == 403
 
     @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")
     def test_employer_get_claim_review_updates_absence_period(

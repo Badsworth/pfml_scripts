@@ -14,7 +14,7 @@ import massgov.pfml.api.validation.claim_rules as claim_rules
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.authorization.flask import READ, can, requires
-from massgov.pfml.api.exceptions import ObjectNotFound
+from massgov.pfml.api.exceptions import ClaimWithdrawn, ObjectNotFound
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
 from massgov.pfml.api.models.claims.responses import ClaimResponse, DetailedClaimResponse
 from massgov.pfml.api.services.administrator_fineos_actions import (
@@ -90,20 +90,6 @@ class VerificationRequired(Forbidden):
             message=self.description,
             errors=[],
             data={"employer_id": employer_id, "has_verification_data": has_verification_data},
-        ).to_api_response()
-
-
-class ClaimWithdrawn(Forbidden):
-    def to_api_response(self):
-        issue = ValidationErrorDetail(
-            message="Claim has been withdrawn.", type=IssueType.fineos_claim_withdrawn,
-        )
-
-        return response_util.error_response(
-            status_code=Forbidden,
-            message="Claim has been withdrawn. Unable to display claim status.",
-            errors=[issue],
-            data=None,
         ).to_api_response()
 
 
@@ -305,17 +291,8 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
                 ],
                 data={},
             ).to_api_response()
-
-        if claim_review_response is None:
-            logger.error(
-                "employer_get_claim_review failure - could not get claim for absence id",
-                extra={**log_attributes},
-            )
-            raise NotFound(
-                description="Could not fetch Claim from FINEOS with given absence ID {}".format(
-                    fineos_absence_id
-                )
-            )
+        except ClaimWithdrawn as error:
+            return error.to_api_response()
 
         claim_from_db = (
             db_session.query(Claim)
