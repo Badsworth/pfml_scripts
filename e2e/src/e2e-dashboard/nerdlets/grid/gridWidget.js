@@ -132,6 +132,30 @@ export default class GridWidget extends React.Component {
           accountId={accountId}
         />
         <NrqlQuery
+          // Get latest test runs for a given env
+          query={
+            "SELECT uniques(runId) from CypressTestResult WHERE environment='test' SINCE today"
+          }
+          accountId={parseInt(accountId)}
+          pollInterval={NrqlQuery.AUTO_POLL_INTERVAL}
+        >
+          {({ data, loading, error }) => {
+            if (loading) return <Spinner />;
+            if (error)
+              return (
+                <ErrorState
+                  error={error.message || ""}
+                  query={
+                    "SELECT uniques(runId) from CypressTestResult WHERE environment='test' SINCE 1 day ago"
+                  }
+                  reducedFeatureWidth={reducedFeatureWidth}
+                />
+              );
+            console.log(data[0]?.data);
+            return <pre>{JSON.stringify(data, null, 2)}</pre>;
+          }}
+        </NrqlQuery>
+        <NrqlQuery
           query={finalQuery}
           accountId={parseInt(accountId)}
           pollInterval={NrqlQuery.AUTO_POLL_INTERVAL}
