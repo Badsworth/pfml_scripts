@@ -122,26 +122,28 @@ jobs:
         env:
           TF_CLI_ARGS: ''
 
-  get-tf-state:
-    name: Get terraform state
-    needs: [sync]
-    if: always()
-    runs-on: ubuntu-latest
-    outputs:
-      sync-state: ${{ steps.sync-state.outputs.sync-state }}
-    steps:
-        # https://github.com/technote-space/workflow-conclusion-action
-        # this action takes the "conclusion" status from jobs and compiles them together into an env variable with a rolled up status
-      - uses: technote-space/workflow-conclusion-action@v2
+  # get-tf-state:
+  #   name: Get terraform state
+  #   needs: [sync]
+  #   if: always()
+  #   runs-on: ubuntu-latest
+  #   outputs:
+  #     sync-state: ${{ steps.sync-state.outputs.sync-state }}
+  #   steps:
+  #       # https://github.com/technote-space/workflow-conclusion-action
+  #       # this action takes the "conclusion" status from jobs and compiles them together into an env variable with a rolled up status
+  #     - uses: technote-space/workflow-conclusion-action@v2
 
-      - name: Set sync-state value
-        id: sync-state
-        run: echo "::set-output name=sync-state::${{ env.WORKFLOW_CONCLUSION }}"
+  #     - name: Set sync-state value
+  #       id: sync-state
+  #       run: echo "::set-output name=sync-state::${{ env.WORKFLOW_CONCLUSION }}"
 
   alert-if-failed:
     name: Send PageDuty Alert
-    needs: [get-tf-state]
-    if: always() && (needs.get-tf-state.outputs.sync-state == 'failure' && needs.sync.outputs.expected-failure != 'true') || needs.get-tf-state.outputs.sync-state == 'timed_out'
+    # needs: [get-tf-state]
+    needs: [sync]
+    # if: always() && (needs.get-tf-state.outputs.sync-state == 'failure' && needs.sync.outputs.expected-failure != 'true') || needs.get-tf-state.outputs.sync-state == 'timed_out'
+    if: always() && (needs.sync.result == 'failure' && needs.sync.outputs.expected-failure != 'true') || needs.sync.result == 'timed_out'
     runs-on: ubuntu-latest
     steps:
     - name: send low priority page
