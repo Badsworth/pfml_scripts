@@ -165,7 +165,7 @@ def test_employer_update(test_db_session, dor_employer_lookups):
         .filter(EmployerPushToFineosQueue.action == "INSERT")
         .all()
     )
-    employer_insert_logs_ids1 = [x.employer_log_id for x in employer_insert_logs1]
+    employer_insert_logs_ids1 = [x.employer_push_to_fineos_queue_id for x in employer_insert_logs1]
     assert len(employer_insert_logs1) == 1
     assert employer_insert_logs1[0].employer_id == employer_id
     # ------
@@ -202,7 +202,11 @@ def test_employer_update(test_db_session, dor_employer_lookups):
         test_db_session.query(EmployerPushToFineosQueue)
         .filter(
             EmployerPushToFineosQueue.action == "INSERT",
-            not_(EmployerPushToFineosQueue.employer_log_id.in_(employer_insert_logs_ids1)),
+            not_(
+                EmployerPushToFineosQueue.employer_push_to_fineos_queue_id.in_(
+                    employer_insert_logs_ids1
+                )
+            ),
         )
         .all()
     )
@@ -251,7 +255,11 @@ def test_employer_update(test_db_session, dor_employer_lookups):
         test_db_session.query(EmployerPushToFineosQueue)
         .filter(
             EmployerPushToFineosQueue.action == "INSERT",
-            not_(EmployerPushToFineosQueue.employer_log_id.in_(employer_insert_logs_ids1)),
+            not_(
+                EmployerPushToFineosQueue.employer_push_to_fineos_queue_id.in_(
+                    employer_insert_logs_ids1
+                )
+            ),
         )
         .all()
     )
@@ -524,7 +532,7 @@ def test_log_employees_with_new_employers(test_db_session):
         .filter(EmployeePushToFineosQueue.action == "INSERT")
         .all()
     )
-    employee_insert_log_ids1 = [x.employee_log_id for x in employee_insert_logs1]
+    employee_insert_log_ids1 = [x.employee_push_to_fineos_queue_id for x in employee_insert_logs1]
 
     assert len(employee_insert_logs1) == 2
 
@@ -585,7 +593,11 @@ def test_log_employees_with_new_employers(test_db_session):
         test_db_session.query(EmployeePushToFineosQueue)
         .filter(
             EmployeePushToFineosQueue.action == "INSERT",
-            not_(EmployeePushToFineosQueue.employee_log_id.in_(employee_insert_log_ids1)),
+            not_(
+                EmployeePushToFineosQueue.employee_push_to_fineos_queue_id.in_(
+                    employee_insert_log_ids1
+                )
+            ),
         )
         .all()
     )
@@ -770,7 +782,7 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
         .filter(EmployeePushToFineosQueue.action == "INSERT")
         .all()
     )
-    employee_insert_log_ids1 = [x.employee_log_id for x in employee_insert_logs1]
+    employee_insert_log_ids1 = [x.employee_push_to_fineos_queue_id for x in employee_insert_logs1]
     assert len(employee_insert_logs1) == 1
     assert employee_insert_logs1[0].employee_id == employee_id
     # ------
@@ -819,7 +831,11 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
         test_db_session.query(EmployeePushToFineosQueue)
         .filter(
             EmployeePushToFineosQueue.action == "INSERT",
-            not_(EmployeePushToFineosQueue.employee_log_id.in_(employee_insert_log_ids1)),
+            not_(
+                EmployeePushToFineosQueue.employee_push_to_fineos_queue_id.in_(
+                    employee_insert_log_ids1
+                )
+            ),
         )
         .all()
     )
@@ -883,7 +899,11 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
         test_db_session.query(EmployeePushToFineosQueue)
         .filter(
             EmployeePushToFineosQueue.action == "INSERT",
-            not_(EmployeePushToFineosQueue.employee_log_id.in_(employee_insert_log_ids1)),
+            not_(
+                EmployeePushToFineosQueue.employee_push_to_fineos_queue_id.in_(
+                    employee_insert_log_ids1
+                )
+            ),
         )
         .all()
     )
