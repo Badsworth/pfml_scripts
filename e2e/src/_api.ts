@@ -870,7 +870,8 @@ export interface DocumentUploadRequest {
     | "Child bonding evidence form"
     | "Care for a family member form"
     | "Military exigency form"
-    | "Certification Form";
+    | "Certification Form"
+    | "Appeal Notice - Claim Decision Changed";
   name?: string;
   description?: string;
   mark_evidence_received?: boolean;
