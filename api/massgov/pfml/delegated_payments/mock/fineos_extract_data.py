@@ -103,6 +103,7 @@ class FineosClaimantData(FineosData):
         self.leave_request_evidence = self.get_value("leave_request_evidence", "Satisfied")
         self.leave_request_start = self.get_value("leave_request_start", "2021-01-01 12:00:00")
         self.leave_request_end = self.get_value("leave_request_end", "2021-04-01 12:00:00")
+        self.leave_request_id = self.get_value("leave_request_id", str(fake.unique.random_int()))
         self.employer_customer_num = self.get_value(
             "employer_customer_num", str(fake.unique.random_int())
         )
@@ -112,6 +113,10 @@ class FineosClaimantData(FineosData):
         self.fineos_employee_middle_name = self.get_value("fineos_employee_middle_name", "")
         self.fineos_employee_last_name = self.get_value(
             "fineos_employee_last_name", fake.last_name()
+        )
+        self.absence_period_class_id = self.get_value("absence_period_c_value", "1440")
+        self.absence_period_index_id = self.get_value(
+            "absence_period_i_value", str(fake.unique.random_int())
         )
 
     def get_employee_feed_record(self):
@@ -152,6 +157,9 @@ class FineosClaimantData(FineosData):
             requested_absence_record["ABSENCEPERIOD_END"] = self.leave_request_end
             requested_absence_record["EMPLOYEE_CUSTOMERNO"] = self.customer_number
             requested_absence_record["EMPLOYER_CUSTOMERNO"] = self.employer_customer_num
+            requested_absence_record["ABSENCEPERIOD_CLASSID"] = self.absence_period_class_id
+            requested_absence_record["ABSENCEPERIOD_INDEXID"] = self.absence_period_index_id
+            requested_absence_record["LEAVEREQUEST_ID"] = self.leave_request_id
 
         return requested_absence_record
 
@@ -276,7 +284,7 @@ class FineosPaymentData(FineosData):
 
 
 @dataclass
-class FineosPaymentsExportCsvWriter:
+class FineosExportCsvWriter:
     file_name: str
     file_path: str
     file: io.TextIOWrapper
@@ -285,14 +293,14 @@ class FineosPaymentsExportCsvWriter:
 
 def _create_file(
     folder_path: str, filename_prefix: str, file_name: str, column_names: List[str]
-) -> FineosPaymentsExportCsvWriter:
+) -> FineosExportCsvWriter:
     csv_file_path = os.path.join(folder_path, f"{filename_prefix}{file_name}")
     logger.info("writing CSV file %s", csv_file_path)
     csv_file = file_util.write_file(csv_file_path)
     csv_writer = csv.DictWriter(csv_file, fieldnames=column_names)
     csv_writer.writeheader()
 
-    return FineosPaymentsExportCsvWriter(
+    return FineosExportCsvWriter(
         file_name=file_name, file_path=csv_file_path, file=csv_file, csv_writer=csv_writer
     )
 
@@ -579,6 +587,7 @@ def generate_claimant_data_files(
         leave_request_evidence = "Satisfied" if scenario_descriptor.is_id_proofed else "Rejected"
         leave_request_start = "2021-01-01 12:00:00"
         leave_request_end = "2021-04-01 12:00:00"
+        leave_request_id = str(fake.unique.random_int())
         notification_number = f"NTN-{absence_case_number}"
         fineos_employer_id = employer.fineos_employer_id
         leave_type = scenario_descriptor.claim_type
@@ -605,6 +614,7 @@ def generate_claimant_data_files(
             leave_request_evidence=leave_request_evidence,
             leave_request_start=leave_request_start,
             leave_request_end=leave_request_end,
+            leave_request_id=leave_request_id,
             notification_number=notification_number,
             employer_customer_num=fineos_employer_id,
             fineos_employee_first_name=employee.fineos_employee_first_name,

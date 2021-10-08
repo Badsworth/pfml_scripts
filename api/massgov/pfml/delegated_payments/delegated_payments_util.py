@@ -142,6 +142,8 @@ class FineosExtractConstants:
     VBI_REQUESTED_ABSENCE_SOM = FineosExtract(
         file_name="VBI_REQUESTEDABSENCE_SOM.csv",
         field_names=[
+            "ABSENCEPERIOD_CLASSID",
+            "ABSENCEPERIOD_INDEXID",
             "ABSENCEREASON_COVERAGE",
             "ABSENCE_CASENUMBER",
             "NOTIFICATION_CASENUMBER",
@@ -151,6 +153,7 @@ class FineosExtractConstants:
             "LEAVEREQUEST_EVIDENCERESULTTYPE",
             "EMPLOYEE_CUSTOMERNO",
             "EMPLOYER_CUSTOMERNO",
+            "LEAVEREQUEST_ID",
         ],
     )
 

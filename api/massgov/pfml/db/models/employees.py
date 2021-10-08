@@ -321,7 +321,7 @@ class AbsencePeriod(Base, TimestampMixin):
     absence_period_start_date = Column(Date)
     absence_period_end_date = Column(Date)
     absence_period_type_id = Column(
-        Integer, ForeignKey("lk_absence_period_type.absence_period_type_id"), nullable=False
+        Integer, ForeignKey("lk_absence_period_type.absence_period_type_id")
     )
     absence_reason_qualifier_one_id = Column(
         Integer, ForeignKey("lk_absence_reason_qualifier_one.absence_reason_qualifier_one_id")
@@ -329,15 +329,13 @@ class AbsencePeriod(Base, TimestampMixin):
     absence_reason_qualifier_two_id = Column(
         Integer, ForeignKey("lk_absence_reason_qualifier_two.absence_reason_qualifier_two_id")
     )
-    absence_reason_id = Column(
-        Integer, ForeignKey("lk_absence_reason.absence_reason_id"), nullable=False
-    )
+    absence_reason_id = Column(Integer, ForeignKey("lk_absence_reason.absence_reason_id"))
     claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=False)
     fineos_absence_period_class_id = Column(Integer, nullable=False, index=True)
     fineos_absence_period_index_id = Column(Integer, nullable=False, index=True)
     fineos_leave_request_id = Column(Integer)
     leave_request_decision_id = Column(
-        Integer, ForeignKey("lk_leave_request_decision.leave_request_decision_id"), nullable=False
+        Integer, ForeignKey("lk_leave_request_decision.leave_request_decision_id")
     )
     is_id_proofed = Column(Boolean)
 
