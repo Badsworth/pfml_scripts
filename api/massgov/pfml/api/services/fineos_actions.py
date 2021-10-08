@@ -19,6 +19,7 @@ from enum import Enum
 from itertools import chain
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
+import newrelic.agent
 import phonenumbers
 
 import massgov.pfml.db
@@ -76,6 +77,10 @@ RELATIONSHIP_REFLEXIVE_FIELD_MAPPING = {
     RelationshipToCaregiver.SPOUSE.relationship_to_caregiver_description: "FamilyMemberDetailsQuestionGroup.familyMemberDetailsQuestions",
     RelationshipToCaregiver.SIBLING.relationship_to_caregiver_description: "FamilyMemberSiblingDetailsQuestionGroup.familyMemberDetailsQuestions",
 }
+
+
+class MarkDocumentsReceivedError(FINEOSClientError):
+    """At least one FINEOSClientError occurred when marking multiple documents as received."""
 
 
 class LeaveNotificationReason(str, Enum):
@@ -334,8 +339,9 @@ def mark_documents_as_received(
                 extra={**document_log_attrs(document)},
                 exc_info=ex,
             )
+            newrelic.agent.notice_error(attributes={**document_log_attrs(document)},)
     if exception_count > 0:
-        raise RuntimeError
+        raise MarkDocumentsReceivedError("Unable to mark some documents as received")
 
 
 def mark_single_document_as_received(
