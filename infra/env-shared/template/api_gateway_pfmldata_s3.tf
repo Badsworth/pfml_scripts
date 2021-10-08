@@ -102,18 +102,18 @@ resource "aws_api_gateway_method_response" "pfmldata_get_object_response_403" {
 
 
 resource "aws_api_gateway_integration" "pfmldata_get_object_s3_integration" {
-  rest_api_id             = aws_api_gateway_rest_api.pfml.id
-  resource_id             = aws_api_gateway_resource.pfmldata_bucket_key.id
-  http_method             = aws_api_gateway_method.pfmldata_get_object_method.http_method
+  rest_api_id = aws_api_gateway_rest_api.pfml.id
+  resource_id = aws_api_gateway_resource.pfmldata_bucket_key.id
+  http_method = aws_api_gateway_method.pfmldata_get_object_method.http_method
 
   integration_http_method = "GET"
   type                    = "AWS"
 
-  uri                     = "arn:aws:apigateway:us-east-1:s3:path/{bucket}/{key}" 
-  credentials             = aws_iam_role.pfmldata_executor_role.arn
+  uri         = "arn:aws:apigateway:us-east-1:s3:path/{bucket}/{key}"
+  credentials = aws_iam_role.pfmldata_executor_role.arn
   request_parameters = {
-    "integration.request.path.bucket": "method.request.path.bucket"
-    "integration.request.path.key": "method.request.path.key"
+    "integration.request.path.bucket" : "method.request.path.bucket"
+    "integration.request.path.key" : "method.request.path.key"
   }
 }
 

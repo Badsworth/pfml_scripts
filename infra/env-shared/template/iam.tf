@@ -79,20 +79,36 @@ resource "aws_cloudwatch_log_resource_policy" "ecs-tasks-events-log-publishing-p
 }
 
 # Allow pfmldata endpoint under API gateway to use S3 operations at specified resource locations. 
-
 data "aws_iam_policy_document" "pfmldata_executor_policy_document" {
+  dynamic "statement" {
+    for_each = local.pfmldata_bucket_resources
+    content {
+      actions = [
+        "s3:ListBucket"
+      ]
+
+      resources = [statement.value.bucket_arn]
+      condition {
+        test     = "StringEquals"
+        variable = "s3:prefix"
+        values = [
+          for r in statement.value.resource_prefixes : r
+        ]
+      }
+      effect = "Allow"
+    }
+  }
   statement {
+    sid = "AllowS3ReadWriteDeleteOnBucket"
     actions = [
-      "s3:PutObject",
-      "s3:ListBucket",
-      "s3:GetObject",
+      "s3:Put*",
+      "s3:List*",
+      "s3:Get*",
       "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
     ]
 
-    resources = [
-      "${data.aws_s3_bucket.agency_transfer.arn}/reductions/dia/*",
-      "${data.aws_s3_bucket.agency_transfer.arn}/reductions/dua/*",
-    ]
+    resources = local.pfmldata_bucket_resource_prefixes
   }
 }
 
