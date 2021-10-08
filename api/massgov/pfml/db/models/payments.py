@@ -1,6 +1,7 @@
 import datetime
 from decimal import Decimal
 from enum import Enum
+from typing import Optional, cast
 
 from sqlalchemy import JSON, TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.orm import relationship
@@ -979,6 +980,17 @@ class Pfml1099(Base, TimestampMixin):
     correction_ind = Column(Boolean, nullable=False)
 
     employee = relationship(Employee)
+
+
+class LinkSplitPayment(Base, TimestampMixin):
+    __tablename__ = "link_split_payment"
+    payment_id = Column(PostgreSQLUUID, ForeignKey("payment.payment_id"), primary_key=True)
+    related_payment_id = Column(PostgreSQLUUID, ForeignKey("payment.payment_id"), primary_key=True)
+
+    payment = relationship(Payment, foreign_keys=[payment_id])
+    related_payment = cast(
+        "Optional[Payment]", relationship(Payment, foreign_keys=[related_payment_id])
+    )
 
 
 def sync_lookup_tables(db_session):
