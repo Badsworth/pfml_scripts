@@ -6,7 +6,6 @@ import {
 } from "../../../src/models/BenefitsApplication";
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
 import { screen, waitFor } from "@testing-library/react";
-
 import ScheduleVariable from "../../../src/pages/applications/schedule-variable";
 import { setupBenefitsApplications } from "../../test-utils/helpers";
 import userEvent from "@testing-library/user-event";

@@ -104,7 +104,7 @@ export const submitPaymentPreferenceMock = jest.fn(
     })
 );
 
-const claimsApi = jest.fn().mockImplementation(({ user }) => ({
+const claimsApi = jest.fn().mockImplementation(() => ({
   completeClaim: completeClaimMock,
   createClaim: createClaimMock,
   getClaim: getClaimMock,

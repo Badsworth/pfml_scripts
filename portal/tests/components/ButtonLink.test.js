@@ -86,7 +86,7 @@ describe("ButtonLink", () => {
 
   it("can render a button with an aria-label", () => {
     render(
-      <ButtonLink ariaLabel="example label" href="http://www.example.com">
+      <ButtonLink aria-label="example label" href="http://www.example.com">
         Click Me
       </ButtonLink>
     );

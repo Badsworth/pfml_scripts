@@ -91,11 +91,11 @@ exports[`LeavePeriodReducedSchedule renders a variation of the page when claiman
     </h1>
     <div
       class="usa-alert usa-alert--info c-alert--neutral"
+      role="region"
       tabindex="-1"
     >
       <div
         class="usa-alert__body"
-        role="region"
       >
         <div
           class="usa-alert__text"
@@ -196,11 +196,11 @@ exports[`LeavePeriodReducedSchedule renders a variation of the page when claiman
     </h1>
     <div
       class="usa-alert usa-alert--info c-alert--neutral"
+      role="region"
       tabindex="-1"
     >
       <div
         class="usa-alert__body"
-        role="region"
       >
         <div
           class="usa-alert__text"
@@ -301,11 +301,11 @@ exports[`LeavePeriodReducedSchedule renders a variation of the page when claiman
     </h1>
     <div
       class="usa-alert usa-alert--info c-alert--neutral"
+      role="region"
       tabindex="-1"
     >
       <div
         class="usa-alert__body"
-        role="region"
       >
         <div
           class="usa-alert__text"

@@ -77,3 +77,32 @@ resource "aws_cloudwatch_log_resource_policy" "ecs-tasks-events-log-publishing-p
   policy_document = data.aws_iam_policy_document.ecs-tasks-events-log-policy.json
   policy_name     = "ecs-tasks-events-log-publishing-policy"
 }
+
+# Allow pfmldata endpoint under API gateway to use S3 operations at specified resource locations. 
+
+data "aws_iam_policy_document" "pfmldata_executor_policy_document" {
+  statement {
+    actions = [
+      "s3:PutObject",
+      "s3:ListBucket",
+      "s3:GetObject",
+      "s3:DeleteObject",
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/reductions/dia/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reductions/dua/*",
+    ]
+  }
+}
+
+resource "aws_iam_role" "pfmldata_executor_role" {
+  name               = "massgov-pfml-${var.environment_name}-data-api-gateway-executor"
+  assume_role_policy = data.aws_iam_policy_document.api_gateway_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy" "pfmldata_executor_policy" {
+  name   = "massgov-pfml-${var.environment_name}-data-executor-role-policy"
+  role   = aws_iam_role.pfmldata_executor_role.id
+  policy = data.aws_iam_policy_document.pfmldata_executor_policy_document.json
+}

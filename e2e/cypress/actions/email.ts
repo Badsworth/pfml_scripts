@@ -136,12 +136,3 @@ export const getTextBetween = function (
   }
   return dataString;
 };
-
-export const assertValidSubject = (searchText: string): void => {
-  cy.get("span[id='emailSubject']").then((el) =>
-    expect(
-      el.text(),
-      "Subject line should contain claimant name (known issue EDM-198)"
-    ).to.include(searchText)
-  );
-};

@@ -2,6 +2,7 @@ import csv
 import io
 import os
 import pathlib
+import re
 from datetime import date, timedelta
 from decimal import Decimal
 from typing import Any, Dict, List, Optional, Tuple
@@ -380,6 +381,7 @@ def download_payment_list_from_moveit(db_session: db.Session, log_entry: batch_l
         sftp_uri=moveit_config.moveit_sftp_uri,
         ssh_key_password=moveit_config.moveit_ssh_key_password,
         ssh_key=moveit_config.moveit_ssh_key,
+        regex_filter=re.compile(r"DUA_DFML_\d+.csv"),
     )
 
     copied_reference_files = copy_from_sftp_to_s3_and_archive_files(transfer_config, db_session)

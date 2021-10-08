@@ -3,6 +3,7 @@ import os
 import tempfile
 import uuid
 from dataclasses import dataclass, field
+from datetime import date
 from typing import Any, Callable, Dict, List, Optional, cast
 
 from sqlalchemy.exc import SQLAlchemyError
@@ -13,6 +14,7 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.api.util import state_log_util
 from massgov.pfml.db.models.employees import (
+    AbsencePeriod,
     AbsenceStatus,
     BankAccountType,
     Claim,
@@ -80,6 +82,31 @@ class ExtractData:
         logger.debug("Intialized extract data: %s", self.reference_file.file_location)
 
 
+class AbsencePeriodContainer:
+    class_id: int
+    index_id: int
+    leave_request_id: Optional[int]
+    is_id_proofed: Optional[bool]
+    start_date: Optional[date]
+    end_date: Optional[date]
+
+    def __init__(
+        self,
+        start_date: Optional[str],
+        end_date: Optional[str],
+        class_id: str,
+        index_id: str,
+        is_id_proofed: Optional[bool],
+        leave_request_id: Optional[str],
+    ):
+        self.start_date = payments_util.datetime_str_to_date(start_date)
+        self.end_date = payments_util.datetime_str_to_date(end_date)
+        self.class_id = int(class_id)
+        self.index_id = int(index_id)
+        self.is_id_proofed = is_id_proofed
+        self.leave_request_id = int(leave_request_id) if leave_request_id else None
+
+
 class ClaimantData:
     """
     A class for containing any and all claim/claimant data. Handles validation
@@ -91,7 +118,7 @@ class ClaimantData:
     count_incrementer: Optional[Callable[[str], None]]
 
     absence_case_id: str
-    is_id_proofed: bool = False
+    is_claim_id_proofed: bool = False
 
     fineos_notification_id: Optional[str] = None
     claim_type_raw: Optional[str] = None
@@ -113,6 +140,8 @@ class ClaimantData:
     account_type: Optional[str] = None
     should_do_eft_operations: bool = False
 
+    absence_period_data: List[AbsencePeriodContainer]
+
     def __init__(
         self,
         extract_data: ExtractData,
@@ -120,6 +149,7 @@ class ClaimantData:
         requested_absences: List[Dict[str, str]],
         count_incrementer: Optional[Callable[[str], None]] = None,
     ):
+        self.absence_period_data = []
         self.absence_case_id = absence_case_id
         self.validation_container = payments_util.ValidationContainer(self.absence_case_id)
 
@@ -132,10 +162,59 @@ class ClaimantData:
         for requested_absence in requested_absences:
             # If any of the requested absence records are ID proofed, then
             # we consider the entire claim valid
+            is_absence_period_id_proofed: Optional[bool]
             evidence_result_type = requested_absence.get("LEAVEREQUEST_EVIDENCERESULTTYPE")
             if evidence_result_type == "Satisfied":
-                self.is_id_proofed = True
-                break
+                self.is_claim_id_proofed = True
+                is_absence_period_id_proofed = True
+            elif evidence_result_type is not None and evidence_result_type.strip() == "":
+                is_absence_period_id_proofed = None
+            else:
+                is_absence_period_id_proofed = False
+
+            start_date = payments_util.validate_csv_input(
+                "ABSENCEPERIOD_START", requested_absence, self.validation_container, True
+            )
+            end_date = payments_util.validate_csv_input(
+                "ABSENCEPERIOD_END", requested_absence, self.validation_container, True
+            )
+            class_id = payments_util.validate_csv_input(
+                "ABSENCEPERIOD_CLASSID", requested_absence, self.validation_container, True
+            )
+            index_id = payments_util.validate_csv_input(
+                "ABSENCEPERIOD_INDEXID", requested_absence, self.validation_container, True
+            )
+            fineos_leave_request_id = payments_util.validate_csv_input(
+                "LEAVEREQUEST_ID", requested_absence, self.validation_container, True
+            )
+
+            if class_id is None or index_id is None:
+                log_attributes = {
+                    "absence_period_class_id": requested_absence.get("ABSENCEPERIOD_CLASSID"),
+                    "absence_period_index_id": requested_absence.get("ABSENCEPERIOD_INDEXID"),
+                }
+                logger.warning(
+                    "Unable to extract class_id and/or index_id from requested_absence.",
+                    extra=log_attributes,
+                )
+
+                if self.count_incrementer:
+                    self.count_incrementer(
+                        ClaimantExtractStep.Metrics.ABSENCE_PERIOD_CLASS_ID_OR_INDEX_ID_NOT_FOUND_COUNT
+                    )
+
+                continue
+
+            absence_period = AbsencePeriodContainer(
+                start_date=start_date,
+                end_date=end_date,
+                class_id=class_id,
+                index_id=index_id,
+                is_id_proofed=is_absence_period_id_proofed,
+                leave_request_id=fineos_leave_request_id,
+            )
+
+            self.absence_period_data.append(absence_period)
 
         # Ideally, we would be able to distinguish and separate out the
         # various leave requests that make up a claim, but we don't
@@ -326,6 +405,7 @@ class ClaimantExtractStep(Step):
     skip_prenoting: bool = False
 
     class Metrics(str, enum.Enum):
+        EXTRACT_PATH = "extract_path"
         CLAIM_NOT_FOUND_COUNT = "claim_not_found_count"
         CLAIM_PROCESSED_COUNT = "claim_processed_count"
         EFT_FOUND_COUNT = "eft_found_count"
@@ -348,6 +428,9 @@ class ClaimantExtractStep(Step):
         NO_DEFAULT_PAYMENT_PREFERENCE_COUNT = "no_default_payment_preference_count"
         EMPLOYER_NOT_FOUND_COUNT = "employer_not_found_count"
         EMPLOYER_FOUND_COUNT = "employer_found_count"
+        ABSENCE_PERIOD_CLASS_ID_OR_INDEX_ID_NOT_FOUND_COUNT = (
+            "absence_period_class_id_or_index_id_not_found_count"
+        )
 
     def run_step(self) -> None:
         self.skip_prenoting = os.environ.get("SKIP_PRENOTING", "0") == "1"
@@ -550,6 +633,13 @@ class ClaimantExtractStep(Step):
                 if claim is not None:
                     employee_pfml_entry = self.update_employee_info(claimant_data, claim)
                     self.attach_employer_to_claim(claimant_data, claim)
+
+                    # Add / update entry on absence period table
+                    for absence_period_info in claimant_data.absence_period_data:
+                        self.create_or_update_absence_period(
+                            absence_period_info, claim, claimant_data
+                        )
+
             except Exception as e:
                 logger.exception(
                     "Unexpected error %s while processing claimant: %s",
@@ -631,7 +721,7 @@ class ClaimantExtractStep(Step):
                 claimant_data.absence_end_date
             )
 
-        if not claimant_data.is_id_proofed:
+        if not claimant_data.is_claim_id_proofed:
             logger.info(
                 "Absence_case_id %s is not id proofed yet",
                 claimant_data.absence_case_id,
@@ -644,7 +734,7 @@ class ClaimantExtractStep(Step):
                 "Claim has not been ID proofed, LEAVEREQUEST_EVIDENCERESULTTYPE is not Satisfied",
             )
 
-        claim_pfml.is_id_proofed = claimant_data.is_id_proofed
+        claim_pfml.is_id_proofed = claimant_data.is_claim_id_proofed
 
         # Return claim, we want to create this even if the employee
         # has issues or there were some validation issues
@@ -652,6 +742,65 @@ class ClaimantExtractStep(Step):
         self.increment(self.Metrics.CLAIM_PROCESSED_COUNT)
 
         return claim_pfml
+
+    def create_or_update_absence_period(
+        self, absence_period_info: AbsencePeriodContainer, claim: Claim, claimant_data: ClaimantData
+    ) -> Optional[AbsencePeriod]:
+
+        log_attributes = claimant_data.get_traceable_details()
+
+        # Add / update entry on absence period table
+        logger.info("Updating Absence Period Table", extra=log_attributes)
+
+        # check if absence period is present
+        db_absence_period = (
+            self.db_session.query(AbsencePeriod)
+            .filter(
+                AbsencePeriod.fineos_absence_period_class_id == absence_period_info.class_id,
+                AbsencePeriod.fineos_absence_period_index_id == absence_period_info.index_id,
+            )
+            .one_or_none()
+        )
+
+        if db_absence_period and db_absence_period.claim_id != claim.claim_id:
+            logger.error(
+                "Found absence period with claim_id different from claim associated with the absence period received.",
+                extra={
+                    **log_attributes,
+                    "claim.claim_id": claim.claim_id,
+                    "db_absence_period.claim_id": db_absence_period.claim_id,
+                    "absence_period_class_id": absence_period_info.class_id,
+                    "absence_period_index_id": absence_period_info.index_id,
+                },
+            )
+
+            claimant_data.validation_container.add_validation_issue(
+                payments_util.ValidationReason.CLAIMANT_MISMATCH,
+                "Claim.claim_id does not match db_absence_period.claim_id",
+            )
+
+            return None
+
+        if db_absence_period is None:
+            db_absence_period = AbsencePeriod()
+            db_absence_period.claim_id = claim.claim_id
+            db_absence_period.fineos_absence_period_class_id = absence_period_info.class_id
+            db_absence_period.fineos_absence_period_index_id = absence_period_info.index_id
+            self.db_session.add(db_absence_period)
+
+        if absence_period_info.is_id_proofed is not None:
+            db_absence_period.is_id_proofed = absence_period_info.is_id_proofed
+
+        if absence_period_info.start_date is not None:
+            db_absence_period.absence_period_start_date = absence_period_info.start_date
+
+        if absence_period_info.end_date is not None:
+            db_absence_period.absence_period_end_date = absence_period_info.end_date
+
+        if absence_period_info.leave_request_id is not None:
+            db_absence_period.fineos_leave_request_id = absence_period_info.leave_request_id
+
+        return db_absence_period
 
     def update_employee_info(self, claimant_data: ClaimantData, claim: Claim) -> Optional[Employee]:
         """Returns the employee if found and updates its info"""
@@ -969,6 +1118,7 @@ class ClaimantExtractStep(Step):
         )
 
         logger.info("Successfully moved claimant files to processed folder.")
+        self.set_metrics({self.Metrics.EXTRACT_PATH: extract_data.reference_file.file_location})
 
     # TODO move to payments_util
     def move_files_from_received_to_skipped(self, extract_data: ExtractData) -> None:
@@ -1068,3 +1218,4 @@ class ClaimantExtractStep(Step):
         )
 
         logger.info("Successfully moved claimant files to error folder.")
+        self.set_metrics({self.Metrics.EXTRACT_PATH: extract_data.reference_file.file_location})

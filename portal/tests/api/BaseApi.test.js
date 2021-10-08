@@ -51,7 +51,6 @@ describe("BaseApi", () => {
   });
 
   it("includes an Authorization header with the user's JWT", async () => {
-    expect.assertions();
     await testsApi.request("GET", "users");
 
     expect(fetch).toHaveBeenCalledWith(
@@ -65,7 +64,6 @@ describe("BaseApi", () => {
   });
 
   it("excludes Authorization header when excludeAuthHeader option is true", async () => {
-    expect.assertions();
     await testsApi.request("GET", "users", {}, {}, { excludeAuthHeader: true });
 
     expect(fetch).toHaveBeenCalledWith(
@@ -79,7 +77,6 @@ describe("BaseApi", () => {
   });
 
   it("sends a GET request to the API", async () => {
-    expect.assertions();
     const method = "GET";
 
     await testsApi.request(method, "users");
@@ -93,7 +90,6 @@ describe("BaseApi", () => {
   });
 
   it("sends a GET request with params to the API", async () => {
-    expect.assertions();
     const method = "GET";
 
     await testsApi.request(method, "users", {
@@ -112,8 +108,6 @@ describe("BaseApi", () => {
   });
 
   it("tracks the fetch request", async () => {
-    expect.assertions();
-
     await testsApi.request("GET", "users");
 
     expect(tracker.trackFetchRequest).toHaveBeenCalledWith(
@@ -123,7 +117,6 @@ describe("BaseApi", () => {
   });
 
   it("sends a POST request to the API", async () => {
-    expect.assertions();
     const method = "POST";
     const body = { first_name: "Anton" };
 
@@ -142,7 +135,6 @@ describe("BaseApi", () => {
   });
 
   it("sends a PATCH request to the API", async () => {
-    expect.assertions();
     const method = "PATCH";
     const body = { first_name: "Anton" };
 
@@ -161,7 +153,6 @@ describe("BaseApi", () => {
   });
 
   it("sends a PUT request to the API", async () => {
-    expect.assertions();
     const method = "PUT";
     const body = { first_name: "Anton" };
 
@@ -180,7 +171,6 @@ describe("BaseApi", () => {
   });
 
   it("sends a DELETE request to the API", async () => {
-    expect.assertions();
     const method = "DELETE";
 
     await testsApi.request(method, "users");
@@ -203,7 +193,6 @@ describe("BaseApi", () => {
   });
 
   it("transforms the method to uppercase", async () => {
-    expect.assertions();
     const method = "get";
 
     await testsApi.request(method, "users");
@@ -217,7 +206,6 @@ describe("BaseApi", () => {
   });
 
   it("removes the leading slash from the path", async () => {
-    expect.assertions();
     const method = "GET";
     const path = "/users";
 
@@ -231,7 +219,6 @@ describe("BaseApi", () => {
 
   describe("when the body is FormData", () => {
     it("sends the FormData in the request body", async () => {
-      expect.assertions();
       const method = "PUT";
       const body = new FormData();
       body.append("first_name", "Anton");
@@ -247,7 +234,6 @@ describe("BaseApi", () => {
 
   describe("when the method is invalid", () => {
     it("throws an error", async () => {
-      expect.assertions();
       const method = "WRONG";
 
       await expect(
@@ -260,7 +246,6 @@ describe("BaseApi", () => {
 
   describe("when additionalHeaders are passed", () => {
     it("adds headers", async () => {
-      expect.assertions();
       const method = "PUT";
       const body = null;
       const headers = { "X-Header": "X-Header-Value" };
@@ -280,7 +265,6 @@ describe("BaseApi", () => {
   describe("when options are passed", () => {
     describe("when multipartForm is true", () => {
       it("doesn't set the Content-Type header", async () => {
-        expect.assertions();
         const method = "PUT";
         const body = null;
         const headers = {};
@@ -303,8 +287,6 @@ describe("BaseApi", () => {
 
   describe("when the request succeeds with a status in the 2xx range", () => {
     it("resolves with the body, and warnings properties", async () => {
-      expect.assertions();
-
       global.fetch = jest.fn().mockResolvedValue({
         json: jest.fn().mockResolvedValue({
           data: { mock_response: true },
@@ -330,8 +312,6 @@ describe("BaseApi", () => {
     });
 
     it("converts API warning array field paths to square bracket", async () => {
-      expect.assertions();
-
       global.fetch = jest.fn().mockResolvedValue({
         json: jest.fn().mockResolvedValue({
           data: { mock_response: true },
@@ -401,8 +381,6 @@ describe("BaseApi", () => {
     errorCodes.forEach(([code, CustomError]) => {
       describe(`due to a ${code} status`, () => {
         it(`throws ${CustomError.name}`, async () => {
-          expect.assertions();
-
           global.fetch = jest.fn().mockResolvedValue({
             ok: false,
             status: code,
@@ -424,8 +402,6 @@ describe("BaseApi", () => {
     });
 
     it("throws ValidationError when the errors field in the response has entries", async () => {
-      expect.assertions();
-
       global.fetch = jest.fn().mockResolvedValue({
         ok: false,
         status: 400,
@@ -450,8 +426,6 @@ describe("BaseApi", () => {
     });
 
     it("converts API error array field paths to square brackets", async () => {
-      expect.assertions();
-
       global.fetch = jest.fn().mockResolvedValue({
         ok: false,
         status: 400,
@@ -475,8 +449,6 @@ describe("BaseApi", () => {
     });
 
     it("throws an exception based on the status code when the errors field in the response is empty", async () => {
-      expect.assertions();
-
       global.fetch = jest.fn().mockResolvedValue({
         ok: false,
         status: 400,
@@ -489,8 +461,6 @@ describe("BaseApi", () => {
     });
 
     it("doesn't prevent subsequent requests", async () => {
-      expect.assertions();
-
       global.fetch = jest.fn().mockRejectedValue(TypeError("Network failure"));
 
       await expect(testsApi.request("GET", "users")).rejects.toThrow(

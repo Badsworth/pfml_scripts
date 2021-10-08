@@ -371,7 +371,7 @@ const useAppErrorsLogic = ({ portalFlow }) => {
 
     // ValidationError can be expected, so to avoid adding noise to the
     // "Errors" section in New Relic, we track these as custom events instead
-    error.issues.forEach(({ field, rule, type, ...ignored }) => {
+    error.issues.forEach(({ field, rule, type, ..._ignored }) => {
       tracker.trackEvent(error.name, {
         // Do not log the error message, since it's not guaranteed that it won't include PII.
         // For example, issues thrown from OpenAPI validation logic sometimes includes the field value.

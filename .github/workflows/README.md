@@ -24,3 +24,7 @@ These have the name pattern `<component>-deploy.yml`.
 These workflows take action on other GitHub workflows.
 
 These have the name pattern `<component>-monitor.yml`.
+
+## Testing Github Action Workflows
+
+See [Github Action Workflows](../../docs/infra/6-github-action-workflows.md).

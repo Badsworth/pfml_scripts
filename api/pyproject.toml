@@ -103,6 +103,7 @@ db-migrate-down = "massgov.pfml.db.migrations.run:down"
 db-migrate-down-all = "massgov.pfml.db.migrations.run:downall"
 db-admin-create-db-users = "massgov.pfml.db.admin:create_users"
 db-create-fineos-user = "massgov.pfml.db.create_api_user:create_fineos_user"
+dua-backfill-employee-gender = "massgov.pfml.dua.gender_backfill:main"
 execute-sql = "massgov.pfml.db.execute_sql:execute_sql"
 dor-generate = "massgov.pfml.dor.mock.generate:main"
 dor-import = "massgov.pfml.dor.importer.import_dor:handler"
@@ -129,6 +130,7 @@ delegated-payment-audit-rejects-generate = "massgov.pfml.delegated_payments.audi
 delegated-payment-check-response-generate = "massgov.pfml.delegated_payments.mock.generate_check_response:generate_check_response_files"
 report-sequential-employment = "massgov.pfml.report.sequential_employment:main"
 update-gender-data-from-rmv = "massgov.pfml.rmv.update_gender_data:main"
+pub-payments-process-1099-documents = "massgov.pfml.delegated_payments.task.process_1099_documents:main"
 
 [tool.black]
 line-length = 100

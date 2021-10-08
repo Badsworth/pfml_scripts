@@ -29,11 +29,11 @@ describe("ErrorsSummary", () => {
       expect(container.firstChild).toMatchInlineSnapshot(`
         <div
           class="usa-alert usa-alert--error margin-bottom-3"
+          role="alert"
           tabindex="-1"
         >
           <div
             class="usa-alert__body"
-            role="alert"
           >
             <h2
               class="usa-alert__heading font-heading-md text-bold"
@@ -49,7 +49,7 @@ describe("ErrorsSummary", () => {
             </div>
           </div>
         </div>
-        `);
+      `);
     });
 
     it("renders a Trans component", () => {
@@ -147,7 +147,7 @@ describe("ErrorsSummary", () => {
 
       renderComponent({ errors });
       const alert = screen.getByRole("alert");
-      expect(alert.parentElement).toHaveFocus();
+      expect(alert).toHaveFocus();
     });
 
     it("scrolls to the top of the window", () => {

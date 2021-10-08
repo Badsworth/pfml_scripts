@@ -103,6 +103,7 @@ def get_row(row: Dict[str, str], key: Optional[str]) -> Optional[str]:
 
 class PaymentRejectsStep(Step):
     class Metrics(str, enum.Enum):
+        ARCHIVE_PATH = "archive_path"
         ACCEPTED_PAYMENT_COUNT = "accepted_payment_count"
         PARSED_ROWS_COUNT = "parsed_rows_count"
         PAYMENT_STATE_LOG_MISSING_COUNT = "payment_state_log_missing_count"
@@ -503,6 +504,7 @@ class PaymentRejectsStep(Step):
         )
         file_util.rename_file(payment_rejects_file_path, processed_file_path)
         logger.info("Payment Rejects file in processed folder: %s", processed_file_path)
+        self.set_metrics({self.Metrics.ARCHIVE_PATH: processed_file_path})
 
         # create reference file
         reference_file = ReferenceFile(

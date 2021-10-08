@@ -2,17 +2,15 @@
 // e.g.
 // import { removeEmployerBenefit } from "./src/api/OtherLeavesApi";
 // expect(removeEmployerBenefit).toHaveBeenCalled();
-export const removeEmployerBenefit = jest.fn(
-  (applicationId, employerBenefitId) => {
-    return Promise.resolve();
-  }
-);
-
-export const removeOtherIncome = jest.fn((applicationId, otherIncomeId) => {
+export const removeEmployerBenefit = jest.fn(() => {
   return Promise.resolve();
 });
 
-export const removePreviousLeave = jest.fn((applicationId, previousLeaveId) => {
+export const removeOtherIncome = jest.fn(() => {
+  return Promise.resolve();
+});
+
+export const removePreviousLeave = jest.fn(() => {
   return Promise.resolve();
 });
 

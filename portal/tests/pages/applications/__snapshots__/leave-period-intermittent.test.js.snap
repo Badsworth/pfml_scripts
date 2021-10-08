@@ -109,11 +109,11 @@ exports[`LeavePeriodIntermittent renders a variation of the page when claimant i
     </h1>
     <div
       class="usa-alert usa-alert--info c-alert--neutral"
+      role="region"
       tabindex="-1"
     >
       <div
         class="usa-alert__body"
-        role="region"
       >
         <div
           class="usa-alert__text"
@@ -214,11 +214,11 @@ exports[`LeavePeriodIntermittent renders a variation of the page when claimant i
     </h1>
     <div
       class="usa-alert usa-alert--info c-alert--neutral"
+      role="region"
       tabindex="-1"
     >
       <div
         class="usa-alert__body"
-        role="region"
       >
         <div
           class="usa-alert__text"
@@ -319,11 +319,11 @@ exports[`LeavePeriodIntermittent renders a variation of the page when claimant i
     </h1>
     <div
       class="usa-alert usa-alert--info c-alert--neutral"
+      role="region"
       tabindex="-1"
     >
       <div
         class="usa-alert__body"
-        role="region"
       >
         <div
           class="usa-alert__text"

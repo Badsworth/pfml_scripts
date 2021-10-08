@@ -1,0 +1,139 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PaymentMethod renders the page 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Payment method
+    </h1>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        How do you want to get your weekly benefit?
+      </legend>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-intro"
+      >
+        <p>
+          Your choice will be applied to any previous applications you have submitted.
+        </p>
+        <details
+          class="c-details"
+        >
+          <summary
+            class="margin-bottom-2 text-primary text-underline font-ui-xs"
+          >
+            When will I get paid?
+          </summary>
+          <div
+            class="margin-bottom-2"
+          >
+            <div
+              class="margin-bottom-5"
+            >
+              <p>
+                Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started.
+              </p>
+              <p>
+                If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts.
+              </p>
+              <p>
+                After that, you will receive your payments every week.
+              </p>
+            </div>
+          </div>
+        </details>
+      </span>
+      <div
+        class="margin-top-3"
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice1"
+            name="payment_preference.payment_method"
+            type="radio"
+            value="Elec Funds Transfer"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice1"
+          >
+            Direct deposit into my bank account
+            <span
+              class="usa-hint text-base-dark"
+            >
+              <br />
+              It can take us additional time to set up direct deposit with your bank. Your first payment might be a check sent to the address you listed as your mailing address.
+            </span>
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice2"
+            name="payment_preference.payment_method"
+            type="radio"
+            value="Check"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice2"
+          >
+            Paper check
+            <span
+              class="usa-hint text-base-dark"
+            >
+              <br />
+              You will receive your checks at the address you listed as your mailing address.
+            </span>
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <div
+      class="margin-top-6 margin-bottom-2"
+    >
+      <p>
+        Once you submit Part 2, your payment information will be viewable by our Contact Center staff. To make edits to Part 2, you’ll need to call the Contact Center at 
+        <a
+          href="tel:(833) 344-7365"
+        >
+          (833) 344‑7365
+        </a>
+        . To learn more about benefit payments, 
+        <a
+          href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide"
+          rel="noreferrer noopener"
+          target="_blank"
+        >
+          see our benefits guide
+        </a>
+        .
+      </p>
+      <p>
+        Next, you’ll work on Part 3, and submit your application.
+      </p>
+    </div>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Submit Part 2
+    </button>
+  </form>
+</div>
+`;

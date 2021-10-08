@@ -211,7 +211,7 @@ export default class PortalSubmitter {
 
   protected async createApplication(options?: RequestOptions): Promise<string> {
     const response = await postApplications(options);
-    if (response.data.data && response.data.data.application_id) {
+    if (response?.data?.data && response?.data?.data.application_id) {
       return response.data.data.application_id;
     }
     throw new Error("Unable to create new application");

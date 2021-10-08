@@ -179,11 +179,7 @@ export const OtherIncomeCard = (props) => {
         smallLabel
       />
       <Fieldset>
-        <FormLabel
-          component="legend"
-          small
-          optionalText={t("components.form.optional")}
-        >
+        <FormLabel component="legend" small>
           {t("pages.claimsOtherIncomesDetails.amountLegend")}
         </FormLabel>
         <InputCurrency

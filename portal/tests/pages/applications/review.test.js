@@ -395,7 +395,6 @@ describe("Review Page", () => {
   });
 
   it("renders the leave frequency and duration in plain language", () => {
-    expect.assertions();
     // Generate all possible combinations of Duration/Frequency for an Intermittent Leave Period:
     const durations = Object.values(DurationBasis);
     const frequencyIntervals = Object.values(FrequencyIntervalBasis);

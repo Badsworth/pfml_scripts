@@ -74,7 +74,7 @@ module.exports = {
     config.resolve.alias = Object.assign(config.resolve.alias, {
       src: path.resolve(__dirname, "../src"),
       storybook: path.resolve(__dirname),
-      tests: path.resolve(__dirname, "../tests-old"),
+      tests: path.resolve(__dirname, "../tests"),
     });
 
     return config;

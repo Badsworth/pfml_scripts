@@ -43,6 +43,7 @@ class ProcessCheckReturnFileStep(process_files_in_path_step.ProcessFilesInPathSt
     """Process a check payment return file received from the bank."""
 
     class Metrics(str, enum.Enum):
+        INPUT_PATH = "input_path"
         CHECK_NUMBER_NOT_FOUND_COUNT = "check_number_not_found_count"
         CHECK_PAYMENT_COUNT = "check_payment_count"
         PAYMENT_COMPLETE_BY_PAID_CHECK = "payment_complete_by_paid_check"

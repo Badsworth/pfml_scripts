@@ -2034,7 +2034,6 @@ exports[`Review Page renders WeeklyTimeTable for the reduced leave period when w
 exports[`Review Page renders a Alert when there are required field errors 1`] = `
 <div
   class="usa-alert__body"
-  role="region"
 >
   <div
     class="usa-alert__text"

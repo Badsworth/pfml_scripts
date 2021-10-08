@@ -1,4 +1,4 @@
-// @ts-nocheck
+// @ts-nocheck: https://lwd.atlassian.net/browse/PORTAL-427
 import routeWithParams, {
   createRouteWithQuery,
 } from "../utils/routeWithParams";
@@ -19,6 +19,20 @@ import getLegalNotices from "../utils/getLegalNotices";
 import hasDocumentsLoadError from "../utils/hasDocumentsLoadError";
 import { useTranslation } from "../locales/i18n";
 import withClaimDocuments from "../hoc/withClaimDocuments";
+
+/**
+ * Assists with page navigation, displays errors on the
+ * current page rather than redirecting and showing the
+ * error on a new page.
+ */
+const navigateToPage = async (claim, appLogic, href) => {
+  const { fineos_absence_id } = claim;
+  const claimDetail = await appLogic.claims.loadClaimDetail(fineos_absence_id);
+  const isValidClaim = claimDetail?.fineos_absence_id === fineos_absence_id;
+
+  // navigate to page if claim loads w/o errors
+  if (isValidClaim) appLogic.portalFlow.goTo(href);
+};
 
 /**
  * Main header for the top of status cards
@@ -55,9 +69,13 @@ TitleAndDetailSectionItem.propTypes = {
 /**
  * Section to view notices and upload documents
  */
-const ManageDocumentSection = ({ claim }) => {
+const ManageDocumentSection = ({ appLogic, claim }) => {
   const { t } = useTranslation();
   const { fineos_absence_id: absence_case_id } = claim;
+
+  const onClickHandler = async (href) => {
+    await navigateToPage(claim, appLogic, href);
+  };
 
   const viewNoticesLink = createRouteWithQuery(
     "/applications/status/",
@@ -76,26 +94,35 @@ const ManageDocumentSection = ({ claim }) => {
       <Heading className="padding-y-3" level="4">
         {t("components.applicationCardV2.otherActions")}
       </Heading>
-      <ButtonLink
+      <ThrottledButton
         className="display-block margin-bottom-3"
-        href={viewNoticesLink}
+        onClick={() => onClickHandler(viewNoticesLink)}
         variation="unstyled"
       >
         {t("components.applicationCardV2.viewNotices")}
-      </ButtonLink>
+      </ThrottledButton>
 
-      <ButtonLink
+      <ThrottledButton
         className="display-block margin-bottom-2"
-        href={uploadDocumentsLink}
+        onClick={() => onClickHandler(uploadDocumentsLink)}
         variation="unstyled"
       >
         {t("components.applicationCardV2.respondToRequest")}
-      </ButtonLink>
+      </ThrottledButton>
     </div>
   );
 };
 
 ManageDocumentSection.propTypes = {
+  appLogic: PropTypes.shape({
+    claims: PropTypes.shape({
+      isLoadingClaimDetail: PropTypes.bool,
+      loadClaimDetail: PropTypes.func.isRequired,
+    }).isRequired,
+    portalFlow: PropTypes.shape({
+      goTo: PropTypes.func.isRequired,
+    }).isRequired,
+  }).isRequired,
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
@@ -226,17 +253,12 @@ const CompletedStatusCard = ({ appLogic, claim }) => {
     />
   );
 
-  const onClickHandler = async () => {
-    const absenceId = claim.fineos_absence_id;
-    const claimDetail = await appLogic.claims.loadClaimDetail(absenceId);
+  const statusPage = routeWithParams("applications.status", {
+    absence_case_id: claim.fineos_absence_id,
+  });
 
-    if (claimDetail?.fineos_absence_id === absenceId) {
-      const href = routeWithParams("applications.status", {
-        absence_case_id: claim.fineos_absence_id,
-      });
-      // Redirect to claim status page if we were able to load the claim
-      appLogic.portalFlow.goTo(href);
-    }
+  const onClickHandler = async () => {
+    await navigateToPage(claim, appLogic, statusPage);
   };
 
   return (
@@ -260,7 +282,7 @@ const CompletedStatusCard = ({ appLogic, claim }) => {
           {iconComponent}
         </ThrottledButton>
       </div>
-      <ManageDocumentSection claim={claim} />
+      <ManageDocumentSection appLogic={appLogic} claim={claim} />
     </React.Fragment>
   );
 };

@@ -172,17 +172,6 @@ class TestVerificationEnforcement:
         assert response.status_code == 403
         assert response.get_json()["message"] == "User is not Verified"
 
-    def test_get_claim_user_cannot_access_without_verification(
-        self, client, employer_auth_token, setup_claim
-    ):
-        response = client.get(
-            f"/v1/claims/{setup_claim.fineos_absence_id}",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
-        )
-
-        assert response.status_code == 403
-        assert response.get_json()["message"] == "User does not have access to claim."
-
 
 class TestNotAuthorizedForAccess:
     # This class groups the tests that ensure that users get 403s when
@@ -1832,21 +1821,21 @@ class TestGetClaimEndpoint:
     def application(self, user, claim):
         return ApplicationFactory.create(user=user, claim=claim)
 
-    def test_get_claim_claim_does_not_exist(self, caplog, client, employer_auth_token):
+    def test_get_claim_claim_does_not_exist(self, caplog, client, auth_token):
         response = client.get(
-            "/v1/claims/NTN-100-ABS-01", headers={"Authorization": f"Bearer {employer_auth_token}"},
+            "/v1/claims/NTN-100-ABS-01", headers={"Authorization": f"Bearer {auth_token}"},
         )
 
         assert response.status_code == 404
         tests.api.validate_error_response(response, 404, message="Claim not in PFML database.")
         assert "Claim not in PFML database." in caplog.text
 
-    def test_get_claim_user_has_no_access(self, caplog, client, employer_auth_token):
+    def test_get_claim_user_has_no_access(self, caplog, client, auth_token):
         claim = ClaimFactory.create()
 
         response = client.get(
             f"/v1/claims/{claim.fineos_absence_id}",
-            headers={"Authorization": f"Bearer {employer_auth_token}"},
+            headers={"Authorization": f"Bearer {auth_token}"},
         )
 
         assert response.status_code == 403
@@ -1855,7 +1844,7 @@ class TestGetClaimEndpoint:
         )
         assert "User does not have access to claim." in caplog.text
 
-    def test_get_claim_user_has_access_as_leave_admin(
+    def test_get_claim_as_employer_returns_403(
         self, client, employer_auth_token, employer_user, test_db_session, test_verification,
     ):
         employer = EmployerFactory.create()
@@ -1878,10 +1867,10 @@ class TestGetClaimEndpoint:
             headers={"Authorization": f"Bearer {employer_auth_token}"},
         )
 
-        assert response.status_code == 200
-        response_body = response.get_json()
-        claim_data = response_body.get("data")
-        assert_detailed_claim_response_equal_to_claim_query(claim_data, claim)
+        assert response.status_code == 403
+
+        message = response.get_json().get("message")
+        assert message == "Employers are not allowed to access claimant claim info"
 
     def test_get_claim_user_has_access_as_claimant(
         self, caplog, client, auth_token, user, test_db_session

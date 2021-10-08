@@ -176,7 +176,7 @@ describe("ClaimDetail", () => {
   });
 
   describe("#openManagedRequirement", () => {
-    it("returns managed requirement with 'Open' status", () => {
+    it("returns managed requirement sorted by follow up date", () => {
       const requirement = {
         category: "test category",
         created_at: "2021-05-30",
@@ -189,20 +189,17 @@ describe("ClaimDetail", () => {
       const requirement_2 = {
         ...requirement,
         category: "Requirement 2",
+        follow_up_date: "2021-07-28",
         status: "Open",
       };
 
       const managed_requirements = [requirement, requirement_2];
       const claimDetail = new ClaimDetail({ managed_requirements });
 
-      expect(claimDetail.openManagedRequirement).toEqual({
-        category: "Requirement 2",
-        created_at: "2021-05-30",
-        follow_up_date: "2021-06-30",
-        responded_at: "2021-07-30",
-        status: "Open",
-        type: "test type",
-      });
+      expect(claimDetail.managedRequirementByFollowUpDate).toEqual([
+        requirement_2,
+        requirement,
+      ]);
     });
   });
 });

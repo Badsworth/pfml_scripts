@@ -43,7 +43,7 @@ describe("EmployerBenefits", () => {
 
     userEvent.click(
       screen.getByRole("radio", {
-        name: "Yes I will recieve employer sponsored benefits during my paid leave",
+        name: "Yes I will recieve employer-sponsored benefits during my paid leave",
       })
     );
     userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
@@ -107,7 +107,7 @@ describe("EmployerBenefits", () => {
     // conditional alert should not render if the choice is "Yes"
     userEvent.click(
       screen.getByRole("radio", {
-        name: "Yes I will recieve employer sponsored benefits during my paid leave",
+        name: "Yes I will recieve employer-sponsored benefits during my paid leave",
       })
     );
     expect(screen.queryByRole("alert")).not.toBeInTheDocument();

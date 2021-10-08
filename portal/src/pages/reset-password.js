@@ -7,6 +7,7 @@ import InputText from "../components/InputText";
 import Lead from "../components/Lead";
 import PropTypes from "prop-types";
 import Title from "../components/Title";
+import { Trans } from "react-i18next";
 import { get } from "lodash";
 import routes from "../routes";
 import useFormState from "../hooks/useFormState";
@@ -63,9 +64,18 @@ export const ResetPassword = (props) => {
           heading={t("pages.authResetPassword.codeResentHeading")}
           name="code-resent-message"
           role="alert"
-          state="success"
+          state="warning"
         >
-          {t("pages.authResetPassword.codeResent")}
+          <Trans
+            i18nKey="pages.authResetPassword.codeResent"
+            tOptions={{
+              emailAddress: cachedEmail,
+              context: cachedEmail ? "email" : null,
+            }}
+            components={{
+              "verify-link": <a href={routes.auth.verifyAccount} />,
+            }}
+          />
         </Alert>
       )}
 

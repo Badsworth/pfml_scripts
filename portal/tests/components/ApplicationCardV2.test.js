@@ -1,5 +1,6 @@
 import Document, { DocumentType } from "../../src/models/Document";
 import { act, render, screen } from "@testing-library/react";
+
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { ApplicationCardV2 } from "../../src/components/ApplicationCardV2";
@@ -49,8 +50,10 @@ describe("ApplicationCardV2", () => {
     const claim = new MockBenefitsApplicationBuilder().completed().create();
     render(<ApplicationCardV2WithAppLogic claim={claim} />);
 
-    const button = screen.getByRole("button");
-    expect(button).toHaveTextContent("View status updates and details");
+    const button = screen.getByRole("button", {
+      name: /View status updates and details/,
+    });
+    expect(button).toBeInTheDocument();
   });
 
   it("with a completed application when the user clicks the view status button disables the button", async () => {
@@ -69,7 +72,9 @@ describe("ApplicationCardV2", () => {
       />
     );
 
-    const button = screen.getByRole("button");
+    const button = screen.getByRole("button", {
+      name: /View status updates and details/,
+    });
     expect(button).toBeEnabled();
     await act(async () => {
       await userEvent.click(button);
@@ -92,14 +97,16 @@ describe("ApplicationCardV2", () => {
       />
     );
 
-    const button = screen.getByRole("button");
+    const button = screen.getByRole("button", {
+      name: /View status updates and details/,
+    });
     await act(async () => {
       await userEvent.click(button);
     });
     expect(appLogic.claims.loadClaimDetail).toHaveBeenCalled();
   });
 
-  it("with a completed application when the claim has loaded successfully redirects the user to the claim status page", async () => {
+  it("with a completed application when the claim has loaded successfully, buttons redirect the user to the correct claim status link", async () => {
     let appLogic;
     const claim = new MockBenefitsApplicationBuilder().completed().create();
     render(
@@ -119,16 +126,29 @@ describe("ApplicationCardV2", () => {
       />
     );
 
-    const button = screen.getByRole("button");
-    await act(async () => {
-      await userEvent.click(button);
-    });
-    expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-      `/applications/status?absence_case_id=${claim.fineos_absence_id}`
+    const expectButtonToRedirect = async (name, hash = "") => {
+      const button = screen.getByRole("button", { name });
+      await act(async () => {
+        await userEvent.click(button);
+      });
+
+      expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
+        `/applications/status${hash ? "/" : ""}?absence_case_id=${
+          claim.fineos_absence_id
+        }${hash}`
+      );
+      jest.clearAllMocks();
+    };
+
+    await expectButtonToRedirect(/View status updates and details/);
+    await expectButtonToRedirect(/View your notices/, "#view_notices");
+    await expectButtonToRedirect(
+      /Respond to a request for information/,
+      "#upload_documents"
     );
   });
 
-  it("with a completed application when the claim has failed to be loaded renders a view status button", async () => {
+  it("with a completed application when the claim has failed the navigation buttons do not go to the next page", async () => {
     let appLogic;
     const claim = new MockBenefitsApplicationBuilder().completed().create();
     render(
@@ -147,11 +167,19 @@ describe("ApplicationCardV2", () => {
       />
     );
 
-    const button = screen.getByRole("button");
-    await act(async () => {
-      await userEvent.click(button);
-    });
-    expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
+    const expectButtonNotToRedirect = async (name) => {
+      const button = screen.getByRole("button", { name });
+      await act(async () => {
+        await userEvent.click(button);
+      });
+
+      expect(appLogic.portalFlow.goTo).not.toHaveBeenCalled();
+      jest.clearAllMocks();
+    };
+
+    await expectButtonNotToRedirect(/View status updates and details/);
+    await expectButtonNotToRedirect(/View your notices/);
+    await expectButtonNotToRedirect(/Respond to a request for information/);
   });
 
   it("in progress claims don't show EIN in the title section", () => {
@@ -246,7 +274,7 @@ describe("ApplicationCardV2", () => {
       />
     );
     expect(
-      screen.getByRole("link", { name: /View your notices/ })
+      screen.getByRole("button", { name: /View your notices/ })
     ).toBeInTheDocument();
   });
 
@@ -270,7 +298,7 @@ describe("ApplicationCardV2", () => {
       />
     );
     expect(
-      screen.queryByRole("link", { name: /View your notices/ })
+      screen.queryByRole("button", { name: /View your notices/ })
     ).not.toBeInTheDocument();
   });
 });

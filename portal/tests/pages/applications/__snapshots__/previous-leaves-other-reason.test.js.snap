@@ -1,0 +1,155 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PreviousLeavesOtherReason renders the page 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Other leave, benefits, and income
+    </h1>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        Did you take any previous leave between January 1, 2021 and January 1, 2021 for a different qualifying reason?
+      </legend>
+      <span
+        class="display-block line-height-sans-5 measure-5 usa-intro"
+      >
+        <h2
+          class="display-flex flex-row flex-align-start font-heading-sm text-bold"
+        >
+          <svg
+            aria-hidden="true"
+            class="usa-icon--size-3 margin-right-2px flex-auto text-green"
+            fill="currentColor"
+            focusable="false"
+            role="img"
+          >
+            <use
+              xlink:href="/img/sprite.svg#check_circle"
+            />
+          </svg>
+          <span
+            class="flex-1"
+          >
+            You must report paid or unpaid leave for these qualifying reasons that aren't the reason you are applying for paid leave now:
+          </span>
+        </h2>
+        <ul
+          class="usa-list margin-left-2"
+        >
+          <li>
+            You had a serious health condition, including illness, injury, or pregnancy.
+          </li>
+          <li>
+            If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care.
+          </li>
+          <li>
+            You bonded with your child after birth or placement.
+          </li>
+          <li>
+            You needed to manage family affairs while a family member is on active duty in the armed forces.
+          </li>
+          <li>
+            You needed to care for a family member who serves in the armed forces.
+          </li>
+          <li>
+            You needed to care for a family member with a serious health condition and your leave began on or after July 1, 2021.
+          </li>
+        </ul>
+        <h2
+          class="display-flex flex-row flex-align-center font-heading-sm text-bold"
+        >
+          <svg
+            aria-hidden="true"
+            class="usa-icon--size-3 margin-right-2px flex-auto text-red"
+            fill="currentColor"
+            focusable="false"
+            role="img"
+          >
+            <use
+              xlink:href="/img/sprite.svg#cancel"
+            />
+          </svg>
+          <span
+            class="flex-1"
+          >
+            You don't need to report:
+          </span>
+        </h2>
+        <ul
+          class="usa-list margin-left-2"
+        >
+          <li>
+            Leave that was taken through Massachusetts' PFML program
+          </li>
+        </ul>
+      </span>
+      <div
+        class="margin-top-3"
+      >
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice1"
+            name="has_previous_leaves_other_reason"
+            type="radio"
+            value="true"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice1"
+          >
+            Yes
+            <span
+              class="usa-hint text-base-dark"
+            >
+              <br />
+              I have taken previous leave for one or more qualifying reasons
+            </span>
+          </label>
+        </div>
+        <div
+          class="usa-radio measure-5 bg-transparent"
+        >
+          <input
+            class="usa-radio__input"
+            id="InputChoice2"
+            name="has_previous_leaves_other_reason"
+            type="radio"
+            value="false"
+          />
+          <label
+            class="usa-radio__label"
+            for="InputChoice2"
+          >
+            No
+            <span
+              class="usa-hint text-base-dark"
+            >
+              <br />
+              I haven’t taken previous leave for a qualifying reason, or my other leave was through Massachusetts’ PFML program
+            </span>
+          </label>
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;

@@ -1,7 +1,6 @@
 import datetime
 import os
 import random
-import string
 import tempfile
 from datetime import date, timedelta
 from decimal import Decimal
@@ -49,16 +48,16 @@ DUA_PAYMENT_LIST_ENCODERS: csv_util.Encoders = {
 }
 
 
-def _random_csv_filename() -> str:
+def _dua_csv_filename() -> str:
     # Random filename. Types of characters and length of filename are not meaningful.
-    return "".join(random.choices(string.ascii_lowercase, k=16)) + ".csv"
+    return f"DUA_DFML_{random.randint(20210000000000, 22000000000000)}.csv"
 
 
 def _create_dua_payment_list_reference_file(
     dir: str, file_location: Optional[str] = None
 ) -> ReferenceFile:
     if file_location is None:
-        file_location = os.path.join(dir, _random_csv_filename())
+        file_location = os.path.join(dir, _dua_csv_filename())
 
     return ReferenceFileFactory(
         file_location=file_location,
@@ -67,7 +66,7 @@ def _create_dua_payment_list_reference_file(
 
 
 def _create_other_reference_file(dir: str) -> ReferenceFile:
-    file_location = os.path.join(dir, _random_csv_filename())
+    file_location = os.path.join(dir, _dua_csv_filename())
 
     other_file_types_expected_in_same_s3_directory = [
         ReferenceFileType.DUA_CLAIMANT_LIST.reference_file_type_id,
@@ -381,7 +380,7 @@ def test_load_new_dua_payments_success(
         row_count = random.randint(1, 5)
         total_row_count = total_row_count + row_count
         _get_loaded_reference_file_in_s3(
-            mock_s3_bucket, _random_csv_filename(), source_directory_path, row_count
+            mock_s3_bucket, _dua_csv_filename(), source_directory_path, row_count
         )
 
     # Expect no rows in the database before.
@@ -444,7 +443,7 @@ def test_load_new_dua_payments_error(
 
         _get_loaded_reference_file_in_s3(
             mock_s3_bucket,
-            _random_csv_filename(),
+            _dua_csv_filename(),
             source_directory_path,
             row_count,
             force_file_error=True,
@@ -484,7 +483,7 @@ def test_load_dua_payment_from_reference_file_success(
     dua_reduction_payment_unique_index, test_db_session, mock_s3_bucket
 ):
     # Create the ReferenceFile.
-    filename = _random_csv_filename()
+    filename = _dua_csv_filename()
     source_directory_path = "path/to/source"
     row_count = random.randint(1, 5)
     ref_file = _get_loaded_reference_file_in_s3(
@@ -539,7 +538,7 @@ def test_load_dua_payment_from_reference_file_existing_dest_filepath_error(
     dua_reduction_payment_unique_index, test_db_session, mock_s3_bucket
 ):
     # Create the ReferenceFile.
-    filename = _random_csv_filename()
+    filename = _dua_csv_filename()
     source_directory_path = "path/to/source"
     row_count = random.randint(1, 5)
     ref_file = _get_loaded_reference_file_in_s3(
@@ -597,7 +596,7 @@ def test_copy_to_sftp_and_archive_s3_files(
     filenames = []
     file_count = random.randint(1, 8)
     for _i in range(file_count):
-        filename = _random_csv_filename()
+        filename = _dua_csv_filename()
         row_count = random.randint(1, 5)
         ref_file = _get_loaded_reference_file_in_s3(
             mock_s3_bucket, filename, source_directory_path, row_count
@@ -816,13 +815,18 @@ def test_download_payment_list_from_moveit(
 
     moveit_filenames = []
     for _i in range(moveit_file_count):
-        filename = _random_csv_filename()
+        filename = _dua_csv_filename()
         filepath = os.path.join(moveit_pickup_path, filename)
         mock_sftp_client._add_file(filepath, "")
         moveit_filenames.append(filename)
 
+    # Add an unrelated file to the same directory
+    claimant_demographics_filename = "DUA_DFML_CLM_DEM_20210827120544765.csv"
+    claimant_demographics_path = os.path.join(moveit_pickup_path, claimant_demographics_filename)
+    mock_sftp_client._add_file(claimant_demographics_path, "")
+
     # Confirm that the SFTP and S3 directories contain the expected number of files before testing.
-    assert len(mock_sftp_client.listdir(moveit_pickup_path)) == moveit_file_count
+    assert len(mock_sftp_client.listdir(moveit_pickup_path)) == moveit_file_count + 1
     assert len(mock_sftp_client.listdir(moveit_archive_path)) == 0
     assert len(file_util.list_files(full_s3_dest_path)) == 0
 
@@ -832,11 +836,24 @@ def test_download_payment_list_from_moveit(
     # Expect to have moved all files from the source to the archive directory of MoveIt.
     files_in_moveit_archive_dir = mock_sftp_client.listdir(moveit_archive_path)
     assert len(files_in_moveit_archive_dir) == moveit_file_count
-    assert len(mock_sftp_client.listdir(moveit_pickup_path)) == 0
 
     # Expect to have saved files to S3.
     files_in_s3 = file_util.list_files(full_s3_dest_path)
     assert len(files_in_s3) == moveit_file_count
+
+    # Expect the unrelated file has not moved
+    files_in_moveit_pickup_dir = mock_sftp_client.listdir(moveit_pickup_path)
+    assert len(files_in_moveit_pickup_dir) == 1
+
+    assert claimant_demographics_filename not in files_in_moveit_archive_dir
+    assert claimant_demographics_filename not in files_in_s3
+    claimant_demographics_file_loc = os.path.join(full_s3_dest_path, claimant_demographics_filename)
+
+    assert (
+        test_db_session.query(ReferenceFile)
+        .filter(ReferenceFile.file_location == claimant_demographics_file_loc)
+        .one_or_none()
+    ) is None
 
     assert (
         test_db_session.query(sqlalchemy.func.count(ReferenceFile.reference_file_id))

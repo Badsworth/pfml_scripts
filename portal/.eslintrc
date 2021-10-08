@@ -38,16 +38,93 @@
         "plugin:@typescript-eslint/recommended" // rules specific to typescript, e.g., writing interfaces
       ],
       "rules": {
+        "@typescript-eslint/ban-ts-comment": [
+          "error",
+          {
+            // Allow disabling type checking on a file as long as there's an
+            // accompanying description for why it's disabled:
+            "ts-nocheck": "allow-with-description"
+          }
+        ],
+        // conflicts with @typescript-eslint/no-use-before-define:
+        "no-use-before-define": "off",
+        // suppress noisy errors that didn't exist prior to TS migration:
+        "@typescript-eslint/no-use-before-define": "off",
         "@typescript-eslint/array-type": [
           "error",
           { "default": "array-simple" }
         ],
         "@typescript-eslint/consistent-type-definitions": "error",
         "@typescript-eslint/explicit-module-boundary-types": "off",
-        "@typescript-eslint/naming-convention": "error",
-        "@typescript-eslint/no-unused-vars": "error",
+        "@typescript-eslint/naming-convention": [
+          "error",
+          {
+            "selector": "typeLike",
+            "format": ["PascalCase"]
+          }
+        ],
+        "@typescript-eslint/no-unused-vars": [
+          "error",
+          { "argsIgnorePattern": "^_" }
+        ],
         "jsdoc/require-param-type": "off",
         "jsdoc/require-returns": "off"
+      }
+    },
+    {
+      "files": ["src/components/*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "next/router",
+                "message": "Components should not be responsibile for routing."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["*/pages*"],
+                "message": "Components should not depend on application code. Consider exposing events that clients handle."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["src/models/*"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "next/router",
+                "message": "Models should not have any dependencies. Consider moving routing logic to the app or page level, or check for accidental dependencies."
+              },
+              {
+                "name": "js-cookie",
+                "message": "Models should not have any dependencies. Consider moving routing logic to the app or page level, or check for accidental dependencies."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["*/components*"],
+                "message": "Models should not have any dependencies. Reconsider the software architecture, or check for accidental dependencies."
+              },
+              {
+                "group": ["*/pages*"],
+                "message": "Models should not have any dependencies. Reconsider the software architecture, or check for accidental dependencies."
+              },
+              {
+                "group": ["*/hooks*"],
+                "message": "Models should not have any dependencies. Reconsider the software architecture, or check for accidental dependencies."
+              }
+            ]
+          }
+        ]
       }
     }
   ],

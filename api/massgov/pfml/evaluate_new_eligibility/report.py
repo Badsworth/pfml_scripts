@@ -82,7 +82,7 @@ def pull_data_from_cloudwatch(number_of_days):
         )
     )
 
-    start_date_query = "fields leave_start_date,employment_status, application_submitted_date,  request_id | filter message = 'Received financial eligibility request' | limit 10000"
+    start_date_query = "fields leave_start_date,employment_status, application_submitted_date,  request_id | filter message = 'Received financial eligibility request' | filter ispresent(leave_start_date) | limit 10000"
 
     all_leave_start_dates = list(
         itertools.chain(
@@ -125,6 +125,7 @@ def generate_report(cli_args, db_session, output_csv, diff_reason_csv):
     log_eligibility_dict = {
         (log["employee_id"], log["employer_id"], log["leave_start_date"]): log
         for log in merged_results
+        if {"employee_id", "employer_id", "leave_start_date"}.issubset(log.keys())
     }
     application_submitted_date = date.today()
     all_claims = (

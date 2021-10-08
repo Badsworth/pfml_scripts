@@ -1011,7 +1011,7 @@ describe("useAuthLogic", () => {
       expect(appErrors.items).toHaveLength(3);
       expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
         Array [
-          "Enter the 6 digit code sent to your email",
+          "Enter the 6-digit code sent to your email",
           "Enter your email address",
           "Enter your password",
         ]
@@ -1269,7 +1269,7 @@ describe("useAuthLogic", () => {
       expect(appErrors.items).toHaveLength(2);
       expect(appErrors.items.map((e) => e.message)).toMatchInlineSnapshot(`
         Array [
-          "Enter the 6 digit code sent to your email",
+          "Enter the 6-digit code sent to your email",
           "Enter your email address",
         ]
       `);
@@ -1302,7 +1302,7 @@ describe("useAuthLogic", () => {
         });
         expect(appErrors.items).toHaveLength(1);
         expect(appErrors.items[0].message).toEqual(
-          "Enter the 6 digit code sent to your email and ensure it does not include any punctuation."
+          "Enter the 6-digit code sent to your email and ensure it does not include any punctuation."
         );
 
         expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
