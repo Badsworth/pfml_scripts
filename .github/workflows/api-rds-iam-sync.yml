@@ -36,7 +36,8 @@ jobs:
     
     env:
       TF_CLI_ARGS: '-lock-timeout=120s'
-
+    outputs:
+      expected-failure: ${{ steps.database-status.outputs.expected-failure }}
     steps:
       - uses: actions/checkout@v2
         with:
@@ -80,12 +81,14 @@ jobs:
       #
       - name: Ensure database is stable
         working-directory: ${{ env.working-directory }}${{ github.event.inputs.environment || env.default-environment }}
+        id: database-status
         env:
           TF_CLI_ARGS: ''
         run: |
           db_deletion=$(terraform show plan.tfplan | { grep -E 'module\.api\.aws_db_instance\.default.*(recreate|delete)' || true; })
           if ! [[ -z "$db_deletion" ]]; then
             echo "Database is planned for deletion or recreation; restoration is likely happening. Please try again later."
+            echo "::set-output name=expected-failure::true"
             exit 1
           fi
 
@@ -116,3 +119,35 @@ jobs:
         working-directory: ./api
         env:
           TF_CLI_ARGS: ''
+
+  alert-if-failed:
+    name: Send PageDuty Alert
+    needs: [sync]
+    if: always() && (needs.sync.result == 'failure' && needs.sync.outputs.expected-failure != 'true') || needs.sync.result == 'timed_out'
+    runs-on: ubuntu-latest
+    steps:
+    - name: send low priority page
+      uses: fjogeleit/http-request-action@master
+      with:
+        url: 'https://events.pagerduty.com/v2/enqueue'
+        method: 'POST'
+        contentType: 'application/json'
+        data: "{
+          \"routing_key\": \"6b02445c7be347beab083af7544913eb\", 
+          \"event_action\": \"trigger\",
+          \"dedup_key\":\"${{ github.event.inputs.environment || env.default-environment }} RDS API Sync\",
+          \"payload\": {
+            \"summary\": \"[${{ github.event.inputs.environment || env.default-environment }}] RDS API Sync failed\",
+            \"severity\": \"warning\",
+            \"source\": \"${{ github.event.inputs.environment || env.default-environment }} RDS API Sync\",
+            \"custom_details\": {
+              \"description\": \"${{ github.event.inputs.environment || env.default-environment }} RDS API Sync Failed.\"
+              }
+            },
+            \"links\": [
+              {
+              \"href\":\"https://github.com/EOLWD/pfml/actions/runs/${{ github.run_id }}\",
+              \"text\": \"GitHub Actions run\"
+              }
+            ]
+          }"
