@@ -65,7 +65,6 @@ jobs:
         run: terraform plan --target module.api.aws_iam_policy.db_user_pfml_api --out plan.tfplan
         working-directory: ${{ env.working-directory }}${{ github.event.inputs.environment || env.default-environment }}
 
-
       # This step ensures that the database is stable before attempting to sync the RDS IAM state.
       # Notably, during the restore process, the old database is renamed and there may not yet be
       # a replacement, so terraform may attempt to delete and recreate it:
@@ -136,13 +135,13 @@ jobs:
         data: "{
           \"routing_key\": \"6b02445c7be347beab083af7544913eb\", 
           \"event_action\": \"trigger\",
-          \"dedup_key\":\"Weekly Training API Reset\",
+          \"dedup_key\":\"${{ github.event.inputs.environment || env.default-environment }} RDS API Sync\",
           \"payload\": {
             \"summary\": \"[${{ github.event.inputs.environment || env.default-environment }}] RDS API Sync failed\",
             \"severity\": \"warning\",
-            \"source\": \"Weekly Training API Reset\",
+            \"source\": \"${{ github.event.inputs.environment || env.default-environment }} RDS API Sync\",
             \"custom_details\": {
-              \"description\": \"Weekly Training API Reset Failed.\"
+              \"description\": \"${{ github.event.inputs.environment || env.default-environment }} RDS API Sync Failed.\"
               }
             },
             \"links\": [
