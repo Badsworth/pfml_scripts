@@ -2,7 +2,7 @@ config:
   processor: ./processor.js
   plugins:
     influxdb:
-      scope: "{{ $processEnvironment.PWD }}/dist/plugins/"
+      scope: "{{ $processEnvironment.ARTILLERY_ROOT }}/dist/plugins/"
       url: "{{ $processEnvironment.INFLUX_URL }}"
       token: "{{ $processEnvironment.INFLUX_TOKEN }}"
       organization: "{{ $processEnvironment.INFLUX_ORGANIZATION }}"
@@ -16,42 +16,40 @@ config:
       phases:
         - duration: 300 # Run minutes 0-5
           arrivalRate: .25 # When starting our load test, we send one user per instance every 4 seconds until we reach maxVusers
-          maxVusers: 2
+          maxVusers: 1
           name: Warm Up
         - duration: 300 # Run minutes 5-10
-          maxVusers: 3
+          maxVusers: 4
           arrivalRate: 1
-          name: Steady State
-        - duration: 900 # Run minutes 10-25
-          maxVusers: 7
+          name: Steady State (Portal Claims Normal Traffic)
+        - duration: 600 # Run minutes 10-20
+          maxVusers: 8
           arrivalRate: 1
           name: Spike One
-        - duration: 900 # Run minutes 25-40
-          maxVusers: 9
+        - duration: 600 # Run minutes 25-35
+          maxVusers: 12
           arrivalRate: 1
           name: Spike Two
-        - duration: 600 # Run minutes 40-50
-          maxVusers: 3
+        - duration: 600 # Run minutes 35-45
+          maxVusers: 18
           arrivalRate: 1
-          name: Steady State
-        - duration: 300 # Run minutes 50-60
+          name: Spike Three
+        - duration: 600 # Run minutes 45-55
           maxVusers: 2
           arrivalRate: 1
+          name: Steady State (#2)
+        - duration: 300 # Run minutes 55-65
+          maxVusers: 2
+          arrivalRate: .5
           name: Cool Down
     test:
       phases:
         - duration: 240
           arrivalRate: 1
-          maxVusers: 2
+          maxVusers: 1
           name: Development
 
 scenarios:
-  #  - name: "Test test"
-  #    flow:
-  #      - get:
-  #          url: "https://paidleave-test.mass.gov"
-  - name: BHAP1 End to End
+  - name: Claim Submission
     flow:
-      # Artillery has no capability to pass arguments to a function, so we have a 1-1 relationship
-      # between processor functions and E2E scenarios. That probably doesn't matter though.
-      - function: submitAndAdjudicate
+      - function: submitAndStore

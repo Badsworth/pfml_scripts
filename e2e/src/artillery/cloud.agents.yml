@@ -1,0 +1,38 @@
+config:
+  processor: ./processor.js
+  plugins:
+    influxdb:
+      scope: "{{ $processEnvironment.ARTILLERY_ROOT }}/dist/plugins/"
+      url: "{{ $processEnvironment.INFLUX_URL }}"
+      token: "{{ $processEnvironment.INFLUX_TOKEN }}"
+      organization: "{{ $processEnvironment.INFLUX_ORGANIZATION }}"
+      bucket: "{{ $processEnvironment.INFLUX_BUCKET }}"
+  includeFiles:
+    - .env
+    - ./employees
+    - ./forms
+  environments:
+    performance:
+      phases:
+        # Agent traffic assumes that we have 180 real agents processing ~6 claims an hour. Our agents process 3 claims
+        # a minute, or 180/hr. (180 agents * 6 claims per hour) = (6 agents * 180 claims per hour)
+
+        # 5 Minute delay to start with. This allows claims to be queued before agents start work.
+        - duration: 300
+          arrivalRate: 0
+
+        # Ramp straight up to the max agents we'll have at once and hold steady till the test is over.
+        - duration: 3300
+          arrivalRate: 1
+          maxVusers: 6
+    test:
+      phases:
+        - duration: 240
+          arrivalRate: 1
+          maxVusers: 1
+          name: Development
+
+scenarios:
+  - name: Adjudication
+    flow:
+      - function: adjudicateStored
