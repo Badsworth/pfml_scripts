@@ -1,9 +1,14 @@
-from typing import Dict, Optional, Tuple
+from typing import Dict, Optional, Tuple, Union
 from uuid import UUID
 
 from sqlalchemy.orm.session import Session
 
 import massgov
+from massgov.pfml.api.validation.exceptions import (
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.db.models.employees import (
     AbsencePeriod,
     AbsencePeriodType,
@@ -12,6 +17,7 @@ from massgov.pfml.db.models.employees import (
     AbsenceReasonQualifierTwo,
     LeaveRequestDecision,
 )
+from massgov.pfml.fineos.models.customer_api import AbsencePeriod as FineosAbsencePeriod
 from massgov.pfml.fineos.models.group_client_api import Period
 from massgov.pfml.fineos.models.group_client_api.spec import LeaveRequest
 
@@ -20,6 +26,12 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 
 def split_fineos_absence_period_id(id: str) -> Tuple[int, int]:
     period_ids = id.split("-")
+    if len(period_ids) < 3:
+        message = "Invalid fineos absence period unique identifier (id/periodReference)"
+        validation_error = ValidationErrorDetail(
+            message=message, type=IssueType.fineos_client, field="id/periodReference"
+        )
+        raise ValidationException(errors=[validation_error], message=message, data={})
     return int(period_ids[1]), int(period_ids[2])
 
 
@@ -66,11 +78,19 @@ def parse_fineos_period_leave_request(
 
 
 def upsert_absence_period_from_fineos_period(
-    db_session: Session, claim_id: UUID, fineos_period: Period, log_attributes: Dict
+    db_session: Session,
+    claim_id: UUID,
+    fineos_period: Union[Period, FineosAbsencePeriod],
+    log_attributes: Dict,
 ) -> None:
     """
     Update or Insert Fineos Period from the Group Client API
+    or Fineos Absence Period from the Customer Client API
     """
+    # convert from Customer Client API model to Group Client API model
+    if isinstance(fineos_period, FineosAbsencePeriod):
+        fineos_period = convert_fineos_absence_period_to_period(fineos_period)
+
     if fineos_period.leaveRequest is None:
         logger.error(
             "Failed to extract leave request from fineos period.", extra=log_attributes,
@@ -99,3 +119,22 @@ def upsert_absence_period_from_fineos_period(
     )
     db_session.add(db_absence_period)
     return
+
+
+def convert_fineos_absence_period_to_period(fineos_absence_period: FineosAbsencePeriod,) -> Period:
+    """
+    convert from Customer Client API model to Group Client API model
+    """
+    leave_request = LeaveRequest(
+        qualifier1=fineos_absence_period.reasonQualifier1,
+        qualifier2=fineos_absence_period.reasonQualifier2,
+        reasonName=fineos_absence_period.reason,
+        decisionStatus=fineos_absence_period.requestStatus,
+    )
+    return Period(
+        periodReference=fineos_absence_period.id,
+        startDate=fineos_absence_period.startDate,
+        endDate=fineos_absence_period.endDate,
+        type=fineos_absence_period.absenceType,
+        leaveRequest=leave_request,
+    )
