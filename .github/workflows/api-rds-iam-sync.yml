@@ -129,7 +129,7 @@ jobs:
   get-tf-state:
     name: Get terraform state
     needs: [sync]
-    if: always() && github.ref == 'refs/heads/main'
+    if: always()
     runs-on: ubuntu-latest
     outputs:
       sync-state: ${{ steps.sync-state.outputs.sync-state }}
