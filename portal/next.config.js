@@ -40,7 +40,7 @@ const config = {
     webpackConfig.entry = async () => {
       const entries = await originalEntry();
       const mainEntryFilename = "main.js";
-      const polyfillsPath = "./src/polyfills.js";
+      const polyfillsPath = "./src/polyfills.ts";
 
       if (
         entries[mainEntryFilename] &&
