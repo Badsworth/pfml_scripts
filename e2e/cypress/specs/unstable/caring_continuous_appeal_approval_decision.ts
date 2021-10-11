@@ -105,30 +105,32 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
   it(
     "Check the Claimant email for the appeal notification.",
     { retries: 0 },
-    () => {{
-      cy.dependsOnPreviousPass([fineosSubmission, employerApproval]);
-      cy.unstash<Submission>("submission").then((submission) => {
-        cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-          const subjectClaimant = email.getNotificationSubject(
-            "appeal (claimant)",
-            submission.fineos_absence_id,
-            `${claim.first_name} ${claim.last_name}`
-          );
-          email.getEmails(
-            {
-              address: "gqzap.notifications@inbox.testmail.app",
-              subject: subjectClaimant,
-              messageWildcard: submission.fineos_absence_id,
-              timestamp_from: submission.timestamp_from,
-              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-            },
-            30000
-          );
-          cy.contains(submission.fineos_absence_id);
+    () => {
+      {
+        cy.dependsOnPreviousPass([fineosSubmission, employerApproval]);
+        cy.unstash<Submission>("submission").then((submission) => {
+          cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
+            const subjectClaimant = email.getNotificationSubject(
+              "appeal (claimant)",
+              submission.fineos_absence_id,
+              `${claim.first_name} ${claim.last_name}`
+            );
+            email.getEmails(
+              {
+                address: "gqzap.notifications@inbox.testmail.app",
+                subject: subjectClaimant,
+                messageWildcard: submission.fineos_absence_id,
+                timestamp_from: submission.timestamp_from,
+                debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+              },
+              30000
+            );
+            cy.contains(submission.fineos_absence_id);
+          });
         });
-      });
+      }
     }
-  });
+  );
   it(
     "Check the Leave Admin email for the appeal notification.",
     { retries: 0 },

@@ -46,6 +46,7 @@ describe("Employer dashboard", () => {
       portal.sortClaims("old");
       portal.sortClaims("new");
       portal.sortClaims("status");
+      // Test search by claim ID
       cy.get("table tbody")
         .should(($table) => {
           expect($table.children().length).to.be.gt(0);
@@ -54,6 +55,17 @@ describe("Employer dashboard", () => {
         .first()
         .then(($td) => {
           portal.searchClaims($td.text());
+          portal.clearSearch();
+        });
+      cy.get("table tbody")
+        .should(($table) => {
+          expect($table.children().length).to.be.gt(0);
+        })
+        .find('th[data-label="Employee name"]')
+        .first()
+        .then(($th) => {
+          portal.searchClaims($th.text(), false);
+          portal.clearSearch();
         });
     });
   });

@@ -1984,16 +1984,32 @@ export const skipLoadingClaimantApplications = (): void => {
 /**
  * Search claims in LA dashboard by id or employee name.
  * Expects to only find a single match.
- * @param idOrName
+ * @param idOrName - claim ID or name of the employee
+ * @param expectSingleMatch - searching by name can yield more than 1 match, default `true`
  */
-export function searchClaims(idOrName: string): void {
+export function searchClaims(idOrName: string, expectSingleMatch = true): void {
   cy.findByLabelText("Search for employee name or application ID").type(
     `${idOrName}{enter}`
   );
   cy.get('span[role="progressbar"]').should("be.visible");
   cy.wait("@dashboardClaimQueries");
+  cy.get("table tbody tr")
+    .should(expectSingleMatch ? "have.lengthOf" : "have.length.gte", 1)
+    .each((el) => {
+      expect(el).to.contain.text(idOrName);
+    });
+}
+
+/**
+ * Reset LA dashboard search input to empty state to show all of available claims.
+ */
+export function clearSearch(): void {
+  cy.findByLabelText("Search for employee name or application ID").type(
+    `{selectAll}{backspace}{enter}`
+  );
+  cy.get('span[role="progressbar"]').should("be.visible");
+  cy.wait("@dashboardClaimQueries");
   cy.get("table tbody").should(($table) => {
-    expect($table.children()).to.have.length(1);
-    expect($table.children()).to.contain.text(idOrName);
+    expect($table.children().length).to.be.gt(1);
   });
 }
