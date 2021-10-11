@@ -1,3 +1,24 @@
+/**
+ * @description
+ * @file
+ * So far I've mostly used this as a tool to explore how exactly NR works with queries and
+ * what's the shape of the data coming back from different queries.
+ *
+ * Execution plan for building out "Environment stability" dashboard:
+ * 1. Get the list of all recent runs which ran against the 'main' branch of the repo.
+ *    So far it just means getting the morning & deployment runs.
+ * 2. Get a summary of pass rate per-file for each of those runs, kind of what we have right now.
+ * 3. Display it in a grid view.
+ * 4. Allow users to use PlatformState & queries to manipulate the results.
+ *
+ * Overall, we have all the freedom in the world to do whatever we want here,
+ * but it's a bit disorienting. I.e. we could just pull raw events and do all of the data
+ * manipulations on the client, it's potentially slow given enough data, but we rarely go
+ * past a few thousand of reported events per day per environment. At the same time, we
+ * could do multiple queries in a row to let NewRelic do the heavy-lifting on the data
+ * manipulation side.
+ */
+
 import React from "react";
 import { NrqlQuery, Spinner } from "nr1";
 import { generateErrorsAndConfig, buildOrderedData } from "./utils";
@@ -26,7 +47,8 @@ export default class GridWidget extends React.Component {
   componentDidUpdate() {
     this.handleTime(this.props.timeRange);
   }
-
+  // This is supposed to handle changes of PlatformStateContext, like the default timeRange
+  // it's currently not used in the main body of code.
   handleTime = async (incomingTimeRange) => {
     const currentTimeRange = this.state.timeRange;
     const currentTimeRangeStr = JSON.stringify(currentTimeRange);
@@ -98,6 +120,7 @@ export default class GridWidget extends React.Component {
     ) {
       // switched off for testing
       // finalQuery += ` ${sinceClause} ${untilValue}`;
+      // We are using this instead of platform state time range.
       finalQuery += ` SINCE today`;
     }
     console.log(`Query: ${finalQuery}`);
