@@ -188,9 +188,9 @@ export function createRequestUrl(method, basePath, subPath, body) {
  */
 export async function getAuthorizationHeader() {
   try {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'accessToken' does not exist on type 'Cog... Remove this comment to see the full error message
-    const { accessToken } = await Auth.currentSession();
-    return { Authorization: `Bearer ${accessToken.jwtToken}` };
+    const session = await Auth.currentSession();
+    const jwtToken = session.getAccessToken().getJwtToken();
+    return { Authorization: `Bearer ${jwtToken}` };
   } catch (error) {
     // Amplify returns a string for the error...
     const message = typeof error === "string" ? error : error.message;

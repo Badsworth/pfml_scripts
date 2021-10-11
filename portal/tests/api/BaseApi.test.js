@@ -13,9 +13,9 @@ import {
 } from "../../src/errors";
 import { Auth } from "@aws-amplify/auth";
 import BaseApi from "../../src/api/BaseApi";
+import { mockAuth } from "../test-utils";
 import tracker from "../../src/services/tracker";
 
-jest.mock("@aws-amplify/auth");
 jest.mock("../../src/services/tracker");
 
 describe("BaseApi", () => {
@@ -34,11 +34,7 @@ describe("BaseApi", () => {
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQnVkIn0.YDRecdsqG_plEwM0H8rK7t2z0R3XRNESJB5ZXk-FRN8";
 
   beforeEach(() => {
-    jest.spyOn(Auth, "currentSession").mockImplementation(() =>
-      Promise.resolve({
-        accessToken: { jwtToken: accessTokenJwt },
-      })
-    );
+    mockAuth(true, accessTokenJwt);
 
     global.fetch = jest.fn().mockResolvedValue({
       json: jest.fn().mockResolvedValue({ data: [], errors: [], warnings: [] }),

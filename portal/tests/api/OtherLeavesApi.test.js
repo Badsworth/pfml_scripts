@@ -1,8 +1,7 @@
-import { Auth } from "@aws-amplify/auth";
 import { NotFoundError } from "../../src/errors";
 import OtherLeavesApi from "../../src/api/OtherLeavesApi";
+import { mockAuth } from "../test-utils";
 
-jest.mock("@aws-amplify/auth");
 jest.mock("../../src/services/tracker");
 
 const mockFetch = ({
@@ -27,11 +26,7 @@ describe("OtherLeavesApi", () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    jest.spyOn(Auth, "currentSession").mockImplementation(() =>
-      Promise.resolve({
-        accessToken: { jwtToken: accessTokenJwt },
-      })
-    );
+    mockAuth(true, accessTokenJwt);
     otherLeavesApi = new OtherLeavesApi();
   });
 
