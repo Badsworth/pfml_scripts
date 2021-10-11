@@ -15,7 +15,7 @@
     "lint:js": "eslint src/ cypress/ test/",
     "lint:format": "prettier src/ cypress/ test/ --write --loglevel silent",
     "test:unit": "jest --config=jest.unit.json",
-    "test:integration": "jest --config=jest.integration.json",
+    "test:integration": "jest --config=jest.integration.json --testPathIgnorePatterns=./test/integration/dor_upload.[jt]s",
     "test:integration:ci": "jest --config=jest.integration.json --reporters=default --reporters=./test/reporter.js",
     "cli": "ts-node src/cli.ts",
     "pilot3:gen": "ts-node src/cli.ts simulation generate -f ./src/simulation/scenarios/pilot3.ts -d ./data/pilot3",

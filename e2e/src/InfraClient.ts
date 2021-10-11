@@ -15,6 +15,12 @@ import pRetry from "p-retry";
 import chalk from "chalk";
 import { Environment } from "types";
 
+type SfnEventName =
+  | " dor_import "
+  | "load_employers_to_fineos"
+  | "fineos_eligibility_feed_export"
+  | "success";
+
 export default class InfraClient {
   private s3Client: S3Client;
   private sfnClient: SFNClient;
@@ -59,7 +65,11 @@ export default class InfraClient {
     await Promise.all(uploads);
   }
 
-  async runDorEtl(): Promise<boolean | void> {
+  // "exitEvent" determines at which step we want to stop monitoring etl progress
+  // i.e if we want to register leave admins, we only need to monitor progress up until "fineos_eligibilty_feed_export" begins
+  async runDorEtl(
+    exitEvent: SfnEventName = "fineos_eligibility_feed_export"
+  ): Promise<boolean | void> {
     const formattedEtlArn = config("DOR_ETL_ARN").replace(
       "TARGET_ENV",
       this.env
@@ -93,17 +103,36 @@ export default class InfraClient {
         );
         if (!logs.events) return;
         const getStartedEventName = (event: HistoryEvent) => {
-          if (event.type === "TaskStateEntered") {
+          if (
+            event.type === "TaskStateEntered" ||
+            event.type === "SucceedStateEntered"
+          ) {
             return event.stateEnteredEventDetails?.name;
           }
         };
         for (const event of logs.events) {
-          if (getStartedEventName(event) === "fineos_eligibility_feed_export") {
-            console.log(
-              chalk.green(
-                `${this.env.toUpperCase()} load_employers_to_fineos successful!`
-              )
+          const eventName = getStartedEventName(event);
+          if (eventName === "failure_notification") {
+            throw new Error(
+              `StepFunction has failed: ${JSON.stringify(
+                // These properties are always defined for the "failure_notification" event
+                JSON.parse(event.stateEnteredEventDetails?.input as string)
+                  .task_failure_details,
+                null,
+                2
+              )}`
             );
+          }
+          if (eventName === exitEvent) {
+            if (eventName === "fineos_eligibility_feed_export") {
+              console.log(
+                chalk.green(
+                  `${this.env.toUpperCase()} load_employers_to_fineos successful!`
+                )
+              );
+            } else {
+              console.log(`${exitEvent} event started`);
+            }
             return true;
           }
         }
@@ -113,8 +142,8 @@ export default class InfraClient {
           "Unable to verify completion of 'load_employers_to_fineos'"
         );
       },
-      // Maximum of 13 minutes waiting for task to complete
-      { retries: 40, maxTimeout: 100, minTimeout: 0 }
+      // Maximum of 20 minutes waiting for task to complete
+      { retries: 60, maxTimeout: 100, minTimeout: 0 }
     );
   }
 }

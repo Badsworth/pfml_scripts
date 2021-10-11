@@ -407,3 +407,20 @@ export class RolesPage extends FineosPage {
     await this.page.click(`input[title="Select to update the User"]`);
   }
 }
+
+export class ClaimantPage extends FineosPage {
+  constructor(page: Page) {
+    super(page);
+  }
+  async visit(ssn: string): Promise<ClaimantPage> {
+    ssn = ssn.replace(/-/g, "");
+    await this.page.click('a[aria-label="Parties"]');
+    await this.page.focus("label:text-is('Identification Number')");
+    await this.page.type("label:text-is('Identification Number')", ssn);
+    await this.page.click('input[type="submit"][value="Search"]', {
+      force: true,
+    });
+    await this.page.click("#footerButtonsBar input[value='OK']");
+    return new ClaimantPage(this.page);
+  }
+}
