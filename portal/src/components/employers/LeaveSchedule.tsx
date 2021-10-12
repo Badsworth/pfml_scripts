@@ -81,8 +81,8 @@ const LeaveSchedule = ({ hasDocuments, claim }) => {
           {isReducedSchedule && (
             <tr>
               <th scope="row">
-                {/* TODO (EMPLOYER-655): Update reduced leave details */}
-                {/* {formatDateRange(
+                {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
+                {formatDateRange(
                   get(
                     claim,
                     "leave_details.reduced_schedule_leave_periods[0].start_date"
@@ -91,7 +91,7 @@ const LeaveSchedule = ({ hasDocuments, claim }) => {
                     claim,
                     "leave_details.reduced_schedule_leave_periods[0].end_date"
                   )
-                )} */}
+                )}
               </th>
               <td>
                 {t(
@@ -99,8 +99,6 @@ const LeaveSchedule = ({ hasDocuments, claim }) => {
                 )}
               </td>
               <td>
-                {/* TODO (CP-1074): Update hours/day */}
-                {/* TODO (EMPLOYER-655): Update reduced leave details */}
                 <Trans
                   i18nKey="components.employersLeaveSchedule.lead"
                   components={{
@@ -112,12 +110,6 @@ const LeaveSchedule = ({ hasDocuments, claim }) => {
                     context: hasDocuments ? "hasDocs" : "noDocs",
                   }}
                 />
-                {/* {t(
-                  "components.employersLeaveSchedule.reducedHoursPerWeek",
-                  {
-                    numOfHours: 10,
-                  }
-                )} */}
               </td>
             </tr>
           )}

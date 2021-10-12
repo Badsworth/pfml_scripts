@@ -262,7 +262,9 @@ exports[`Review renders default view onload with v2 of claim 1`] = `
         <tr>
           <th
             scope="row"
-          />
+          >
+            2/1/2021 to 7/1/2021
+          </th>
           <td>
             Reduced leave schedule
           </td>
