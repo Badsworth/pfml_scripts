@@ -11,6 +11,7 @@ import { DocumentType } from "../../models/Document";
 import Heading from "../../components/Heading";
 import LeaveReason from "../../models/LeaveReason";
 import LegalNoticeList from "../../components/LegalNoticeList";
+import PageNotFound from "../404";
 import PropTypes from "prop-types";
 import Spinner from "../../components/Spinner";
 import Tag from "../../components/Tag";
@@ -69,6 +70,13 @@ export const Status = ({ appLogic, query }) => {
       if (anchorId) anchorId.scrollIntoView();
     }
   }, [isLoadingClaimDetail, claimDetail]);
+
+  /**
+   * If there is no absence_case_id query parameter,
+   * then return the PFML 404 page.
+   */
+  const isAbsenceCaseId = Boolean(query.absence_case_id?.length);
+  if (!isAbsenceCaseId) return <PageNotFound />;
 
   // If the claim has an error, include the back button w/error
   if (appLogic.appErrors.items.length) {

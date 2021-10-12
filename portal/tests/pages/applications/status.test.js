@@ -1,6 +1,7 @@
 import Document, { DocumentType } from "../../../src/models/Document";
 import Status, { LeaveDetails } from "../../../src/pages/applications/status";
 import { cleanup, render, screen } from "@testing-library/react";
+
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import ClaimDetail from "../../../src/models/ClaimDetail";
@@ -74,6 +75,7 @@ const defaultClaimDetail = {
   fineos_absence_id: "mock-absence-case-id",
   employer: { employer_fein: "12-1234567" },
 };
+
 const props = {
   query: { absence_case_id: defaultClaimDetail.fineos_absence_id },
 };
@@ -103,6 +105,21 @@ describe("Status", () => {
     );
 
     expect(goToSpy).toHaveBeenCalledWith(routes.applications.index);
+  });
+
+  it("redirects to 404 if there's no absence case ID", () => {
+    renderPage(
+      Status,
+      {
+        addCustomSetup: setupHelper(),
+      },
+      { query: {} }
+    );
+
+    const pageNotFoundHeading = screen.getByRole("heading", {
+      name: /Page not found/,
+    });
+    expect(pageNotFoundHeading).toBeInTheDocument();
   });
 
   it("renders the page with back button if error exists", () => {
