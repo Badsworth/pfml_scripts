@@ -23,4 +23,4 @@ scenarios:
     flow:
       # This flow is similar to what runs in the cloud, but it happens all in one place.
       # Nothing is queued to SQS - it just happens sequentially.
-      - submitAndAdjudicate
+      - function: submitAndAdjudicate
