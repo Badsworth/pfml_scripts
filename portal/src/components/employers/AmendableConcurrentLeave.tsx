@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
@@ -27,7 +27,7 @@ const AmendableConcurrentLeave = ({
   const [amendment, setAmendment] = useState(concurrentLeave);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
     useState(isAddedByLeaveAdmin);
-  const containerRef = React.createRef();
+  const containerRef = useRef<HTMLTableRowElement>();
   useAutoFocusEffect({ containerRef, isAmendmentFormDisplayed });
 
   const getFormattedValue = (field, value) => {
@@ -100,11 +100,9 @@ const AmendableConcurrentLeave = ({
     <React.Fragment>
       {!isAddedByLeaveAdmin && <ConcurrentLeaveDetailsRow />}
       <ConditionalContent visible={isAmendmentFormDisplayed}>
-        {/* @ts-expect-error ts-migrate(2322) FIXME: Type 'RefObject<unknown>' is not assignable to typ... Remove this comment to see the full error message */}
         <tr ref={containerRef}>
           <td
-            // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number'.
-            colSpan="3"
+            colSpan={3}
             className="padding-top-2 padding-bottom-2 padding-left-0"
           >
             <AmendmentForm

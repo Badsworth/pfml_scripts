@@ -1,8 +1,16 @@
 import Details from "./Details";
 import Heading from "./Heading";
-import PropTypes from "prop-types";
 import React from "react";
 import { useTranslation } from "../locales/i18n";
+
+interface TipListContent {
+  listHeading: string;
+  listItems: string[];
+}
+
+interface ListProps {
+  list: TipListContent;
+}
 
 /**
  * A pre-populated Details component with information about uploading files. This component is
@@ -10,10 +18,12 @@ import { useTranslation } from "../locales/i18n";
  */
 function FileUploadDetails() {
   const { t } = useTranslation();
-  const tipsArray = t("components.fileUploadDetails.tips", {
-    returnObjects: true,
-  });
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'map' does not exist on type 'string'.
+  const tipsArray = t<string, TipListContent[]>(
+    "components.fileUploadDetails.tips",
+    {
+      returnObjects: true,
+    }
+  );
   const renderedTips = tipsArray.map((list, index) => (
     <List key={index} list={list} />
   ));
@@ -26,7 +36,7 @@ function FileUploadDetails() {
 }
 
 // Renders a list of text strings with a heading above the list
-function List(props) {
+function List(props: ListProps) {
   const list = props.list;
 
   return (
@@ -42,12 +52,5 @@ function List(props) {
     </React.Fragment>
   );
 }
-
-List.propTypes = {
-  list: PropTypes.shape({
-    listHeading: PropTypes.string.isRequired,
-    listItems: PropTypes.arrayOf(PropTypes.string.isRequired).isRequired,
-  }).isRequired,
-};
 
 export default FileUploadDetails;

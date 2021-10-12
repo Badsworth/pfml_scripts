@@ -82,7 +82,6 @@ export const Status = (props) => {
         {absenceId}
       </StatusRow>
       <StatusRow label={t("pages.employersClaimsStatus.statusLabel")}>
-        {/* @ts-expect-error ts-migrate(2786) FIXME: 'AbsenceCaseStatusTag' cannot be used as a JSX com... Remove this comment to see the full error message */}
         <AbsenceCaseStatusTag status={claim.status} />
       </StatusRow>
       <StatusRow label={t("pages.employersClaimsStatus.leaveReasonLabel")}>

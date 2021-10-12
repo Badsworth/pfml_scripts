@@ -129,8 +129,7 @@ export const App = ({ Component, pageProps }) => {
       // component, which includes the markup to support this.
       if (!shallow) {
         const pageHeading = document.querySelector(".js-title");
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'focus' does not exist on type 'Element'.
-        if (pageHeading) pageHeading.focus();
+        if (pageHeading instanceof HTMLElement) pageHeading.focus();
       }
     };
 

@@ -5,7 +5,7 @@ import useBenefitsApplicationsLogic from "./useBenefitsApplicationsLogic";
 import useClaimsLogic from "./useClaimsLogic";
 import useDocumentsLogic from "./useDocumentsLogic";
 import useEmployersLogic from "./useEmployersLogic";
-import useFlagsLogic from "./useFeatureFlagsLogic";
+import useFeatureFlagsLogic from "./useFeatureFlagsLogic";
 import useOtherLeavesLogic from "./useOtherLeavesLogic";
 import usePortalFlow from "./usePortalFlow";
 import useUsersLogic from "./useUsersLogic";
@@ -42,8 +42,6 @@ const useAppLogic = () => {
 
   const documents = useDocumentsLogic({
     appErrorsLogic,
-    // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ appErrorsLogic: { setAppErrors... Remove this comment to see the full error message
-    portalFlow,
   });
 
   const employers = useEmployersLogic({
@@ -54,8 +52,7 @@ const useAppLogic = () => {
   });
 
   const otherLeaves = useOtherLeavesLogic({ appErrorsLogic });
-  // @ts-expect-error ts-migrate(2554) FIXME: Expected 0 arguments, but got 1.
-  const featureFlags = useFlagsLogic({ appErrorsLogic });
+  const featureFlags = useFeatureFlagsLogic();
 
   return {
     // `_appErrorsLogic` should not be used except for testing

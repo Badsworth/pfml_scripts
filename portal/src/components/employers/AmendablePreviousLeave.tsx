@@ -2,7 +2,7 @@ import PreviousLeave, {
   PreviousLeaveReason,
   PreviousLeaveType,
 } from "../../models/PreviousLeave";
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
@@ -34,7 +34,7 @@ const AmendablePreviousLeave = ({
   const [amendment, setAmendment] = useState(previousLeave);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
     useState(isAddedByLeaveAdmin);
-  const containerRef = React.createRef();
+  const containerRef = useRef<HTMLTableRowElement>();
   useAutoFocusEffect({ containerRef, isAmendmentFormDisplayed });
 
   const getFieldPath = (field) =>
@@ -124,11 +124,9 @@ const AmendablePreviousLeave = ({
     <React.Fragment>
       {!isAddedByLeaveAdmin && <LeaveDetailsRow />}
       <ConditionalContent visible={isAmendmentFormDisplayed}>
-        {/* @ts-expect-error ts-migrate(2322) FIXME: Type 'RefObject<unknown>' is not assignable to typ... Remove this comment to see the full error message */}
         <tr ref={containerRef}>
           <td
-            // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number'.
-            colSpan="2"
+            colSpan={2}
             className="padding-top-2 padding-bottom-2 padding-left-0"
           >
             <AmendmentForm

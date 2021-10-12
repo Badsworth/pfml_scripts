@@ -27,9 +27,12 @@ export const PreviousLeavesOtherReason = (props) => {
 
   const leaveStartDate = formatDate(claim.leaveStartDate).full();
 
-  const hintList = t("pages.claimsPreviousLeavesOtherReason.hintList", {
-    returnObjects: true,
-  });
+  const hintList = t<string, string[]>(
+    "pages.claimsPreviousLeavesOtherReason.hintList",
+    {
+      returnObjects: true,
+    }
+  );
 
   const handleSave = async () => {
     const patchData = { ...formState };
@@ -76,7 +79,6 @@ export const PreviousLeavesOtherReason = (props) => {
               {t("pages.claimsPreviousLeavesOtherReason.hintDoHeader")}
             </IconHeading>
             <ul className="usa-list margin-left-2">
-              {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'map' does not exist on type 'string'. */}
               {hintList.map((listItem, index) => (
                 <li key={index}>{listItem}</li>
               ))}

@@ -13,7 +13,7 @@ import { useTranslation } from "../locales/i18n";
  */
 function ErrorsSummary(props) {
   const { errors } = props;
-  const alertRef = useRef();
+  const alertRef = useRef<HTMLElement>();
   const { t } = useTranslation();
 
   /**
@@ -23,7 +23,6 @@ function ErrorsSummary(props) {
     if (!errors.isEmpty) {
       window.scrollTo(0, 0);
       // Move focus to the alert so screen readers immediately announce that there are errors
-      // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
       alertRef.current.focus();
     }
   }, [errors]);

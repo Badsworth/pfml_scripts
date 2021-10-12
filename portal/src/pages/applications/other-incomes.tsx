@@ -38,10 +38,13 @@ export const OtherIncomes = (props) => {
     formState,
     updateFields,
   });
-  const doReportHintList = t("pages.claimsOtherIncomes.doReportHintList", {
-    returnObjects: true,
-  });
-  const doNotReportHintList = t(
+  const doReportHintList = t<string, string[]>(
+    "pages.claimsOtherIncomes.doReportHintList",
+    {
+      returnObjects: true,
+    }
+  );
+  const doNotReportHintList = t<string, string[]>(
     "pages.claimsOtherIncomes.doNotReportHintList",
     {
       returnObjects: true,
@@ -87,7 +90,6 @@ export const OtherIncomes = (props) => {
               {t("pages.claimsOtherIncomes.doReportHintHeading")}
             </Heading>
             <ul className="usa-list margin-top-0 margin-left-4 margin-bottom-4">
-              {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'map' does not exist on type 'string'. */}
               {doReportHintList.map((listItem, index) => (
                 <li key={index}>{listItem}</li>
               ))}
@@ -102,7 +104,6 @@ export const OtherIncomes = (props) => {
               {t("pages.claimsOtherIncomes.doNotReportHintHeading")}
             </Heading>
             <ul className="usa-list margin-top-0 margin-left-4">
-              {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'map' does not exist on type 'string'. */}
               {doNotReportHintList.map((listItem, index) => (
                 <li key={index}>{listItem}</li>
               ))}

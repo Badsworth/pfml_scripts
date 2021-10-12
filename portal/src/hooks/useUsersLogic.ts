@@ -1,5 +1,6 @@
 import routes, { isApplicationsRoute, isEmployersRoute } from "../routes";
 import { useMemo, useState } from "react";
+import User from "../models/User";
 import { UserNotReceivedError } from "../errors";
 import UsersApi from "../api/UsersApi";
 
@@ -13,7 +14,7 @@ import UsersApi from "../api/UsersApi";
  */
 const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
   const usersApi = useMemo(() => new UsersApi(), []);
-  const [user, setUser] = useState();
+  const [user, setUser] = useState<User>();
 
   /**
    * Update user through a PATCH request to /users
@@ -26,8 +27,6 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
 
     try {
       const { user } = await usersApi.updateUser(user_id, patchData);
-
-      // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'User' is not assignable to param... Remove this comment to see the full error message
       setUser(user);
 
       const context = claim ? { claim, user } : { user };
@@ -57,7 +56,6 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
         throw new UserNotReceivedError("User not received in loadUser");
       }
 
-      // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'User' is not assignable to param... Remove this comment to see the full error message
       setUser(user);
     } catch (error) {
       appErrorsLogic.catchError(error);
@@ -71,7 +69,7 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
   const requireUserConsentToDataAgreement = () => {
     if (!user) throw new Error("User not loaded");
     if (
-      // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
+      // @ts-expect-error FIXME: Property 'consented_to_data_sharing' does not exist on type 'User'
       !user.consented_to_data_sharing &&
       !portalFlow.pathname.includes(routes.user.consentToDataSharing)
     ) {
@@ -90,13 +88,11 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
 
     // Portal currently does not support hybrid account (both Employer AND Claimant account)
     // If user has Employer role, they cannot access Claimant Portal regardless of multiple roles
-    // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
     if (!user.hasEmployerRole && isEmployersRoute(pathname)) {
       portalFlow.goTo(routes.applications.index, {}, { redirect: true });
       return;
     }
 
-    // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
     if (user.hasEmployerRole && isApplicationsRoute(pathname)) {
       portalFlow.goTo(routes.employers.welcome, {}, { redirect: true });
     }
@@ -112,8 +108,6 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
 
     try {
       const { user } = await usersApi.convertUser(user_id, postData);
-
-      // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'User' is not assignable to param... Remove this comment to see the full error message
       setUser(user);
 
       portalFlow.goTo(routes.employers.organizations, {

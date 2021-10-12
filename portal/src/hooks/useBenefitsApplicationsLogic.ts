@@ -1,10 +1,10 @@
 import { NotFoundError, ValidationError } from "../errors";
-import { useMemo, useState } from "react";
 import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
 import BenefitsApplicationsApi from "../api/BenefitsApplicationsApi";
 import getRelevantIssues from "../utils/getRelevantIssues";
 import routes from "../routes";
 import useCollectionState from "./useCollectionState";
+import { useState } from "react";
 
 const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   // State representing the collection of applications for the current user.
@@ -24,11 +24,7 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   // if loadAll hasn't been called yet
   const [hasLoadedAll, setHasLoadedAll] = useState(false);
 
-  const applicationsApi = useMemo(
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 0 arguments, but got 1.
-    () => new BenefitsApplicationsApi({ user }),
-    [user]
-  );
+  const applicationsApi = new BenefitsApplicationsApi();
 
   // Cache the validation warnings associated with each claim. Primarily
   // used for controlling the status of Checklist steps.

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import Button from "./Button";
 import PropTypes from "prop-types";
 import RepeatableFieldsetCard from "./RepeatableFieldsetCard";
@@ -12,7 +12,7 @@ import usePreviousValue from "../hooks/usePreviousValue";
  */
 const RepeatableFieldset = (props) => {
   const { entries } = props;
-  const containerRef = React.createRef();
+  const containerRef = useRef<HTMLElement>();
   const entriesAndIds = useEntryIds(entries);
   const previousEntriesLength = usePreviousValue(entriesAndIds.length);
   const limitReached = props.limit ? entries.length >= props.limit : false;
@@ -21,7 +21,6 @@ const RepeatableFieldset = (props) => {
     // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
     if (entriesAndIds.length > previousEntriesLength) {
       // When a new entry is added to the list, focus and scroll it into view.
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'querySelector' does not exist on type 'u... Remove this comment to see the full error message
       const lastEntry = containerRef.current.querySelector(
         ".js-repeated-fieldset-card:last-of-type"
       );
@@ -29,7 +28,7 @@ const RepeatableFieldset = (props) => {
         "[tabIndex]:first-child, label"
       );
 
-      if (focusableElement) focusableElement.focus();
+      if (focusableElement instanceof HTMLElement) focusableElement.focus();
     }
   }, [containerRef, entriesAndIds.length, previousEntriesLength]);
 
@@ -46,7 +45,6 @@ const RepeatableFieldset = (props) => {
   );
 
   return (
-    // @ts-expect-error ts-migrate(2322) FIXME: Type 'RefObject<unknown>' is not assignable to typ... Remove this comment to see the full error message
     <section className="margin-bottom-4" ref={containerRef}>
       {entriesAndIds.map(([entry, id], index) => (
         <RepeatableFieldsetCard

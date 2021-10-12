@@ -46,11 +46,13 @@ export const ConsentToDataSharing = (props) => {
         >
           <p>{t("pages.userConsentToDataSharing.applicationUsageIntro")}</p>
           <ul className="usa-list">
-            {t("pages.userConsentToDataSharing.applicationUsageList", {
-              returnObjects: true,
-              context: roleContext,
-              // @ts-expect-error ts-migrate(2339) FIXME: Property 'map' does not exist on type 'string'.
-            }).map((listItemContent, index) => (
+            {t<string, string[]>(
+              "pages.userConsentToDataSharing.applicationUsageList",
+              {
+                returnObjects: true,
+                context: roleContext,
+              }
+            ).map((listItemContent, index) => (
               <li key={index}>{listItemContent}</li>
             ))}
           </ul>

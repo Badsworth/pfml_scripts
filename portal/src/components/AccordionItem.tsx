@@ -17,10 +17,9 @@ function AccordionItem(props) {
   return (
     <React.Fragment>
       <h2 className="usa-accordion__heading">
-        {/* @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'boolean |... Remove this comment to see the full error message */}
         <button
           className="usa-accordion__button"
-          aria-expanded={isExpanded.toString()}
+          aria-expanded={isExpanded}
           aria-controls={id}
           onClick={handleClick}
           type="button"

@@ -375,7 +375,6 @@ const ClaimTableRows = (props) => {
         return employerFein;
       case "status":
         return (
-          // @ts-expect-error ts-migrate(2786) FIXME: 'AbsenceCaseStatusTag' cannot be used as a JSX com... Remove this comment to see the full error message
           <AbsenceCaseStatusTag
             status={get(claim, "claim_status")}
             managedRequirements={get(claim, "managed_requirements")}

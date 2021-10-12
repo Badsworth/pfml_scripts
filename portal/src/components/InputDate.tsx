@@ -93,9 +93,9 @@ function InputDate(props) {
   // We need refs in order to access the individual field values
   // and return the formatted date string back to our parent
   const inputTextRefs = {
-    month: useRef(),
-    day: useRef(),
-    year: useRef(),
+    month: useRef<HTMLInputElement>(),
+    day: useRef<HTMLInputElement>(),
+    year: useRef<HTMLInputElement>(),
   };
 
   const formGroupClasses = classnames("usa-form-group", {
@@ -111,11 +111,8 @@ function InputDate(props) {
    */
   const handleBlur = (evt) => {
     const isoDate = formatFieldsAsISO8601({
-      // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
       month: inputTextRefs.month.current.value,
-      // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
       day: inputTextRefs.day.current.value,
-      // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
       year: inputTextRefs.year.current.value,
     });
 
@@ -132,11 +129,8 @@ function InputDate(props) {
   const handleChange = (evt) => {
     const date = formatFieldsAsISO8601(
       {
-        // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
         month: inputTextRefs.month.current.value,
-        // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
         day: inputTextRefs.day.current.value,
-        // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
         year: inputTextRefs.year.current.value,
       },
       // We skip adding leading zeros onChange so that we don't prevent

@@ -45,7 +45,7 @@ const AbsenceCaseStatusTag = ({ status, managedRequirements }) => {
     }
 
     // TODO (EMPLOYER-1542): Remove this once Review By feature is always enabled
-    return "--";
+    return <React.Fragment>--</React.Fragment>;
   }
 
   // TODO (EMPLOYER-1542): Remove condition
@@ -67,7 +67,7 @@ const AbsenceCaseStatusTag = ({ status, managedRequirements }) => {
     />
   ) : (
     // TODO (EMPLOYER-1542): Replace with `inactive` tag on line 52
-    "--"
+    <React.Fragment>--</React.Fragment>
   );
 };
 

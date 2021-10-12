@@ -21,8 +21,8 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
     new ClaimCollection()
   );
   const [claimDetail, setClaimDetail] = useState();
-  const [isLoadingClaims, setIsLoadingClaims] = useState();
-  const [isLoadingClaimDetail, setIsLoadingClaimDetail] = useState();
+  const [isLoadingClaims, setIsLoadingClaims] = useState<boolean>();
+  const [isLoadingClaimDetail, setIsLoadingClaimDetail] = useState<boolean>();
 
   // Pagination info associated with the current collection of claims
   const [paginationMeta, setPaginationMeta] = useState(new PaginationMeta());
@@ -68,7 +68,6 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
       return;
     }
 
-    // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'boolean' is not assignable to pa... Remove this comment to see the full error message
     setIsLoadingClaims(true);
     appErrorsLogic.clearErrors();
 
@@ -83,7 +82,6 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
       setActiveFilters(filters);
       setActiveOrder(order);
       setPaginationMeta(paginationMeta);
-      // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'boolean' is not assignable to pa... Remove this comment to see the full error message
       setIsLoadingClaims(false);
     } catch (error) {
       appErrorsLogic.catchError(error);
@@ -106,7 +104,6 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
       return claimDetail;
     }
 
-    // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'boolean' is not assignable to pa... Remove this comment to see the full error message
     setIsLoadingClaimDetail(true);
     appErrorsLogic.clearErrors();
 
@@ -131,7 +128,6 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
         appErrorsLogic.catchError(new ClaimDetailLoadError(absenceId));
       }
     } finally {
-      // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'boolean' is not assignable to pa... Remove this comment to see the full error message
       setIsLoadingClaimDetail(false);
     }
 

@@ -143,10 +143,12 @@ export const UploadCertification = (props) => {
         }
       >
         <ul className="usa-list">
-          {t("pages.claimsUploadCertification.leadListNewborn", {
-            returnObjects: true,
-            // @ts-expect-error ts-migrate(2339) FIXME: Property 'map' does not exist on type 'string'.
-          }).map((listItem, index) => (
+          {t<string, string[]>(
+            "pages.claimsUploadCertification.leadListNewborn",
+            {
+              returnObjects: true,
+            }
+          ).map((listItem, index) => (
             <li key={index}>{listItem}</li>
           ))}
         </ul>
