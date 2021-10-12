@@ -1822,6 +1822,8 @@ export type FilterOptionsFlags = {
 };
 type FilterOptions = {
   status?: FilterOptionsFlags;
+  // employerId | employerName | option index
+  organization?: string | number;
 };
 /**Filter claims by given parameters
  * @example
@@ -1840,22 +1842,32 @@ export function filterLADashboardBy(filters: FilterOptions): void {
         cy.findByText("Show filters", { exact: false }).click();
     });
   cy.findByText("Hide filters").should("be.visible");
-  const { status } = filters;
-  if (status) {
+  const { status, organization } = filters;
+  if (status)
     cy.get("#filters fieldset").within(() => {
       for (const [k, v] of Object.entries(status)) {
         if (v) cy.findByLabelText(k).click({ force: true });
       }
     });
-    for (const [_key, checkFilter] of Object.entries(status)) {
-      if (checkFilter) {
-        cy.findByText("Apply filters").should("not.be.disabled").click();
-        cy.get('span[role="progressbar"]').should("be.visible");
-        cy.wait("@dashboardClaimQueries");
-        cy.contains("table", "Employer ID number").should("be.visible");
-      }
+
+  if (organization) {
+    if (typeof organization === "string") {
+      cy.get(`select[name="employer_id"] > option`).select(organization);
+    } else {
+      cy.get(`select[name="employer_id"] > option`)
+        .eq(organization)
+        .then((element) =>
+          cy
+            .get(`select[name="employer_id"]`)
+            .select(element.val() as string, { force: true })
+        );
     }
   }
+
+  cy.findByText("Apply filters").should("not.be.disabled").click();
+  cy.get('span[role="progressbar"]').should("be.visible");
+  cy.wait("@dashboardClaimQueries");
+  cy.contains("table", "Employer ID number").should("be.visible");
 }
 /**Looks if dashboard is empty */
 function checkDashboardIsEmpty() {

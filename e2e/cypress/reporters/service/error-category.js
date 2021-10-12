@@ -182,7 +182,6 @@ class RuleBuilder {
   }
 }
 
-
 module.exports = {
   ErrorCategory,
   RuleBuilder,
