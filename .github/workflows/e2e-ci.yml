@@ -147,7 +147,9 @@ jobs:
     steps:
       - uses: actions/checkout@v2
       - name: "Build the Docker Image ..."
-        run: docker build --pull --rm -f e2e/Dockerfile
+        run: docker build --pull --rm -f ./Dockerfile ../e2e
+      - name: "Build the Docker Image ... (command #2)"
+        run: docker build .
 
   trigger-cypress:
     name: End-to-End Tests
