@@ -2,6 +2,14 @@
  * @file Wrapper methods around our monitoring service. Methods in here should
  * handle a scenario where the monitoring service is blocked by things like an ad blocker.
  */
+import type NewRelicBrowser from "new-relic-browser";
+
+declare global {
+  interface Window {
+    NREUM?: Record<string, unknown>;
+    newrelic?: typeof NewRelicBrowser;
+  }
+}
 
 /**
  * Module level global variable keeping track of custom attributes that should be added to all events within a single page,
@@ -20,9 +28,7 @@ function initialize() {
   if (typeof window === "undefined") return;
 
   // NREUM = New Relic
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'NREUM' does not exist on type 'Window & ... Remove this comment to see the full error message
   window.NREUM = window.NREUM || {};
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'NREUM' does not exist on type 'Window & ... Remove this comment to see the full error message
   window.NREUM.loader_config = {
     agentID: `${process.env.newRelicAppId}`,
     applicationID: `${process.env.newRelicAppId}`,
@@ -30,7 +36,6 @@ function initialize() {
     trustKey: "1606654",
     licenseKey: "NRJS-9852fe81d192bbc09c5",
   };
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'NREUM' does not exist on type 'Window & ... Remove this comment to see the full error message
   window.NREUM.info = {
     applicationID: `${process.env.newRelicAppId}`,
     beacon: "bam.nr-data.net",
@@ -47,8 +52,7 @@ function initialize() {
  * @returns {boolean}
  */
 function newrelicReady() {
-  // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'newrelic'.
-  return typeof newrelic !== "undefined";
+  return typeof window?.newrelic !== "undefined";
 }
 
 /**
@@ -59,8 +63,7 @@ function newrelicReady() {
  */
 function noticeError(error, customAttributes) {
   if (newrelicReady()) {
-    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'newrelic'.
-    newrelic.noticeError(error, {
+    window.newrelic.noticeError(error, {
       ...moduleGlobal.customPageAttributes,
       ...customAttributes,
       environment: process.env.buildEnv,
@@ -80,15 +83,12 @@ function noticeError(error, customAttributes) {
 function startPageView(routeName, customPageAttributes) {
   if (newrelicReady()) {
     // First end previous interaction if that's still in progress
-    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'newrelic'.
-    newrelic.interaction().end();
+    window.newrelic.interaction().end();
 
     moduleGlobal.customPageAttributes = customPageAttributes || {};
-    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'newrelic'.
-    newrelic.interaction();
+    window.newrelic.interaction();
     setPageAttributesOnInteraction();
-    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'newrelic'.
-    newrelic.setCurrentRouteName(routeName);
+    window.newrelic.setCurrentRouteName(routeName);
   }
 }
 
@@ -100,8 +100,7 @@ function startPageView(routeName, customPageAttributes) {
  */
 function trackEvent(name, customAttributes) {
   if (newrelicReady()) {
-    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'newrelic'.
-    newrelic.addPageAction(name, {
+    window.newrelic.addPageAction(name, {
       ...moduleGlobal.customPageAttributes,
       ...customAttributes,
       environment: process.env.buildEnv,
@@ -121,21 +120,18 @@ function trackEvent(name, customAttributes) {
 function trackFetchRequest(requestName) {
   if (newrelicReady()) {
     // First end previous interaction if that's still in progress
-    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'newrelic'.
-    newrelic.interaction().end();
+    window.newrelic.interaction().end();
 
     const trackedName = requestName.replace("https://", "");
-    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'newrelic'.
-    newrelic.interaction().setName(`fetch: ${trackedName}`);
-    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'newrelic'.
-    newrelic.interaction().setAttribute("environment", process.env.buildEnv);
-    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'newrelic'.
-    newrelic
+    window.newrelic.interaction().setName(`fetch: ${trackedName}`);
+    window.newrelic
+      .interaction()
+      .setAttribute("environment", process.env.buildEnv);
+    window.newrelic
       .interaction()
       .setAttribute("portalReleaseVersion", process.env.releaseVersion);
     setPageAttributesOnInteraction();
-    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'newrelic'.
-    newrelic.interaction().save();
+    window.newrelic.interaction().save();
   }
 }
 
@@ -146,8 +142,7 @@ function trackFetchRequest(requestName) {
  */
 function markFetchRequestEnd() {
   if (newrelicReady()) {
-    // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'newrelic'.
-    newrelic.interaction().end();
+    window.newrelic.interaction().end();
   }
 }
 
@@ -159,8 +154,7 @@ function setPageAttributesOnInteraction() {
     for (const [name, value] of Object.entries(
       moduleGlobal.customPageAttributes
     )) {
-      // @ts-expect-error ts-migrate(2304) FIXME: Cannot find name 'newrelic'.
-      newrelic.interaction().setAttribute(name, value);
+      window.newrelic.interaction().setAttribute(name, value);
     }
   }
 }
