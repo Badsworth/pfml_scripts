@@ -116,26 +116,26 @@ export const submitAndAdjudicate = wrap(
 /**
  * Exported handler for submitting (only), followed by pushing the data to SQS.
  */
-export const submitAndStore = wrap(
-  async (context: ArtilleryContext, ee: EventEmitter, logger: Logger) => {
-    const body = await timeRequest(context, ee, async () => {
-      const claim = await interactor.generateClaim(ee, "LSTBHAP1", logger);
-      logger = logger.child({ claim_id: claim.id });
-      logger.info("Claim data:", getDataFromClaim(claim));
-      const submission = await interactor.submitClaim(claim, ee, logger);
-      return { claim, submission };
-    });
+// export const submitAndStore = wrap(
+//   async (context: ArtilleryContext, ee: EventEmitter, logger: Logger) => {
+//     const body = await timeRequest(context, ee, async () => {
+//       const claim = await interactor.generateClaim(ee, "LSTBHAP1", logger);
+//       logger = logger.child({ claim_id: claim.id });
+//       logger.info("Claim data:", getDataFromClaim(claim));
+//       const submission = await interactor.submitClaim(claim, ee, logger);
+//       return { claim, submission };
+//     });
 
-    // Store the claim and response for later processing. We do this outside the request/response
-    // timing so it does not count toward our metrics.
-    await sqs.send(
-      new SendMessageCommand({
-        QueueUrl: process.env.CLAIMS_SQS_QUEUE,
-        MessageBody: JSON.stringify(body),
-      })
-    );
-  }
-);
+//     // Store the claim and response for later processing. We do this outside the request/response
+//     // timing so it does not count toward our metrics.
+//     await sqs.send(
+//       new SendMessageCommand({
+//         QueueUrl: process.env.CLAIMS_SQS_QUEUE,
+//         MessageBody: JSON.stringify(body),
+//       })
+//     );
+//   }
+// );
 
 /**
  * Exported handler for fetching data from SQS, then doing adjudication.

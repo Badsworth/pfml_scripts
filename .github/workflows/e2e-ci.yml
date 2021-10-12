@@ -62,6 +62,11 @@ jobs:
         uses: tj-actions/changed-files@v8.1
         with:
           files: "e2e/src/flood/**"
+      - name: "Check if Artillery files have been changed"
+        id: artillery-changed-files
+        uses: tj-actions/changed-files@v8.1
+        with:
+          files: "e2e/src/artillery/**"
       - name: "Check if Cypress files have been changed"
         id: cypress-changed-files
         uses: tj-actions/changed-files@v8.1
