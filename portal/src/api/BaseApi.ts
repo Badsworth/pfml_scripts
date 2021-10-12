@@ -25,29 +25,15 @@ import tracker from "../services/tracker";
 /**
  * Class that implements the base interaction with API resources
  */
-export default class BaseApi {
-  constructor() {
-    // Reading the prefix here should result in an error being thrown
-    // if one isn't defined by the subclass. This is ideal since otherwise
-    // an engineer may not notice this is required until a validation error
-    // is returned in a response.
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars, no-unused-vars
-    const i18nPrefix = this.i18nPrefix;
-  }
-
+export default abstract class BaseApi {
   /**
    * Root path of API resource without leading slash.
    */
-  get basePath() {
-    throw new Error("basePath must be implemented by the subclass.");
-  }
-
+  abstract get basePath(): string;
   /**
    * Prefix used in ValidationError message strings.
    */
-  get i18nPrefix() {
-    throw new Error("i18nPrefix must be implemented by the subclass.");
-  }
+  abstract get i18nPrefix(): string;
 
   /**
    * Send an authenticated API request.

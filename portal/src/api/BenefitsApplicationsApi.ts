@@ -16,12 +16,10 @@ import routes from "../routes";
  */
 
 export default class BenefitsApplicationsApi extends BaseApi {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'basePath' in type 'BenefitsApplicationsA... Remove this comment to see the full error message
   get basePath() {
     return routes.api.applications;
   }
 
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'i18nPrefix' in type 'BenefitsApplication... Remove this comment to see the full error message
   get i18nPrefix() {
     return "applications";
   }

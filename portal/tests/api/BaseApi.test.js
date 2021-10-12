@@ -346,16 +346,6 @@ describe("BaseApi", () => {
     });
   });
 
-  it("throws an error if i18nPrefix isn't defined on the subclass", () => {
-    class MyApi extends BaseApi {
-      get basePath() {
-        return "/api";
-      }
-    }
-
-    expect(() => new MyApi()).toThrow();
-  });
-
   describe("when the fetch request fails", () => {
     beforeEach(() => {
       // We expect console.error to be called in this scenario

@@ -22,12 +22,10 @@ import routes from "../routes";
  */
 
 export default class EmployersApi extends BaseApi {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'basePath' in type 'EmployersApi' is not ... Remove this comment to see the full error message
   get basePath() {
     return routes.api.employers;
   }
 
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'i18nPrefix' in type 'EmployersApi' is no... Remove this comment to see the full error message
   get i18nPrefix() {
     return "employers";
   }

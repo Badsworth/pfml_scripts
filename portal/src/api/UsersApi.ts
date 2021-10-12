@@ -10,12 +10,10 @@ import routes from "../routes";
  */
 
 export default class UsersApi extends BaseApi {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'basePath' in type 'UsersApi' is not assi... Remove this comment to see the full error message
   get basePath() {
     return routes.api.users;
   }
 
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'i18nPrefix' in type 'UsersApi' is not as... Remove this comment to see the full error message
   get i18nPrefix() {
     return "users";
   }

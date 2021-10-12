@@ -6,12 +6,10 @@ import PaginationMeta from "../models/PaginationMeta";
 import routes from "../routes";
 
 export default class ClaimsApi extends BaseApi {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'basePath' in type 'ClaimsApi' is not ass... Remove this comment to see the full error message
   get basePath() {
     return routes.api.claims;
   }
 
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'i18nPrefix' in type 'ClaimsApi' is not a... Remove this comment to see the full error message
   get i18nPrefix() {
     return "claims";
   }
