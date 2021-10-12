@@ -176,6 +176,8 @@ jobs:
         uses: bahmutov/npm-install@v1
         with:
           working-directory: e2e
+      - name: "Run Artillery Bundle"
+        run: npm run artillery:bundle
       - name: "Run Submit and Adjudicate Scenario"
         run: node_modules/.bin/artillery run -e test -q dist/development.yml
 
