@@ -10,7 +10,7 @@ ENV PLAYWRIGHT_SKIP_BROWSER_GC=1
 COPY ./package*.json ./
 RUN npm ci
 COPY ./ ./
-RUN npm run artillery:bundle
+RUN npm run artillery:bundle1234
 
 FROM zenika/alpine-chrome:with-node
 ENV ARTILLERY_ROOT=/usr/src/app

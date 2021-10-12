@@ -67,7 +67,11 @@ jobs:
         id: artillery-changed-files
         uses: tj-actions/changed-files@v8.1
         with:
-          files: "e2e/src/artillery/**"
+          files: |
+            e2e/src/artillery/**
+            e2e/package.json
+            e2e/Dockerfile
+
       - name: "Check if Cypress files have been changed"
         id: cypress-changed-files
         uses: tj-actions/changed-files@v8.1
