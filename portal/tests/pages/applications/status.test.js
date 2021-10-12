@@ -7,7 +7,6 @@ import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import ClaimDetail from "../../../src/models/ClaimDetail";
 import DocumentCollection from "../../../src/models/DocumentCollection";
 import LeaveReason from "../../../src/models/LeaveReason";
-import { ManagedRequirement } from "../../../src/models/Claim";
 import React from "react";
 import { ReasonQualifier } from "../../../src/models/BenefitsApplication";
 import { mockRouter } from "next/router";
@@ -580,14 +579,14 @@ describe("Status", () => {
             addCustomSetup: setupHelper({
               ...claimDetailAttrs,
               managed_requirements: [
-                new ManagedRequirement({
+                {
                   follow_up_date: null,
                   status: "Open",
-                }),
-                new ManagedRequirement({
+                },
+                {
                   follow_up_date: "2022-01-01",
                   status: "Completed",
-                }),
+                },
               ],
             }),
           },
@@ -613,18 +612,18 @@ describe("Status", () => {
             addCustomSetup: setupHelper({
               ...claimDetailAttrs,
               managed_requirements: [
-                new ManagedRequirement({
+                {
                   follow_up_date: "2021-01-01",
                   status: "Completed",
-                }),
-                new ManagedRequirement({
+                },
+                {
                   follow_up_date: "2021-01-01",
                   status: "Suppressed",
-                }),
-                new ManagedRequirement({
+                },
+                {
                   follow_up_date: "2022-12-01",
                   status: "Open",
-                }),
+                },
               ],
             }),
           },
@@ -672,14 +671,14 @@ describe("Status", () => {
               {
                 ...claimDetailAttrs,
                 managed_requirements: [
-                  new ManagedRequirement({
+                  {
                     follow_up_date: null,
                     status: "Open",
-                  }),
-                  new ManagedRequirement({
+                  },
+                  {
                     follow_up_date: "2022-01-01",
                     status: "Completed",
-                  }),
+                  },
                 ],
               },
               documents
@@ -708,18 +707,18 @@ describe("Status", () => {
               {
                 ...claimDetailAttrs,
                 managed_requirements: [
-                  new ManagedRequirement({
+                  {
                     follow_up_date: "2021-01-01",
                     status: "Completed",
-                  }),
-                  new ManagedRequirement({
+                  },
+                  {
                     follow_up_date: "2021-01-01",
                     status: "Suppressed",
-                  }),
-                  new ManagedRequirement({
+                  },
+                  {
                     follow_up_date: "2022-12-01",
                     status: "Open",
-                  }),
+                  },
                 ],
               },
               documents

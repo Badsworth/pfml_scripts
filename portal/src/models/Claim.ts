@@ -1,77 +1,42 @@
 /* eslint sort-keys: ["error", "asc"] */
 import { compact, get } from "lodash";
 
-import BaseModel from "./BaseModel";
-
 /**
  * A record from the API's Claims table. Could be utilized by Leave Admin and Claimants.
  */
-class Claim extends BaseModel {
-  constructor(attrs) {
-    super(attrs);
+class Claim {
+  absence_period_end_date: string | null = null;
+  absence_period_start_date: string | null = null;
+  claim_status: AbsenceCaseStatusType;
+  claim_type_description: string | null = null;
+  created_at: string | null = null;
+  employee: ClaimEmployee;
+  employer: ClaimEmployer;
+  fineos_absence_id: string | null = null;
+  fineos_notification_id: string | null = null;
+  managed_requirements: ManagedRequirement[];
 
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'employee' does not exist on type 'Claim'... Remove this comment to see the full error message
-    if (this.employee) {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'employee' does not exist on type 'Claim'... Remove this comment to see the full error message
-      this.employee = new ClaimEmployee(this.employee);
+  constructor(attrs: Claim) {
+    Object.assign(this, attrs);
+    if (attrs.employee) {
+      this.employee = new ClaimEmployee(attrs.employee);
     }
-
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'employer' does not exist on type 'Claim'... Remove this comment to see the full error message
-    if (this.employer) {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'employer' does not exist on type 'Claim'... Remove this comment to see the full error message
-      this.employer = new ClaimEmployer(this.employer);
-    }
-  }
-
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'Claim' is not assigna... Remove this comment to see the full error message
-  get defaults() {
-    return {
-      absence_period_end_date: null,
-      absence_period_start_date: null,
-      /**
-       * @type {AbsenceCaseStatus}
-       */
-      claim_status: null,
-      claim_type_description: null,
-      created_at: null,
-      /**
-       * @type {ClaimEmployee}
-       */
-      employee: null,
-      /**
-       * @type {ClaimEmployer}
-       */
-      employer: null,
-      fineos_absence_id: null,
-      fineos_notification_id: null,
-      /**
-       * @type {ManagedRequirement}
-       */
-      managed_requirements: null,
-    };
   }
 }
 
 /**
  * Employee (claimant) record associated to the Claim
  */
-export class ClaimEmployee extends BaseModel {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'ClaimEmployee' is not... Remove this comment to see the full error message
-  get defaults() {
-    return {
-      email_address: null,
-      first_name: null,
-      last_name: null,
-      middle_name: null,
-      other_name: null,
-      phone_number: null,
-      tax_identifier_last4: null,
-    };
+export class ClaimEmployee {
+  first_name: string | null = null;
+  last_name: string | null = null;
+  middle_name: string | null = null;
+  other_name: string | null = null;
+
+  constructor(attrs: Partial<ClaimEmployee>) {
+    Object.assign(this, attrs);
   }
 
-  /**
-   * @returns {string} Full name, accounting for any false values
-   */
   get fullName() {
     return compact([
       get(this, "first_name"),
@@ -84,32 +49,22 @@ export class ClaimEmployee extends BaseModel {
 /**
  * Employer record associated to the Claim
  */
-export class ClaimEmployer extends BaseModel {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'ClaimEmployer' is not... Remove this comment to see the full error message
-  get defaults() {
-    return {
-      employer_dba: null,
-      employer_fein: null,
-      employer_id: null,
-    };
-  }
+export interface ClaimEmployer {
+  employer_dba: string | null;
+  employer_fein: string | null;
+  employer_id: string | null;
 }
 
 /**
  * Managed requirements associated to the Claim
  */
-export class ManagedRequirement extends BaseModel {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'ManagedRequirement' i... Remove this comment to see the full error message
-  get defaults() {
-    return {
-      category: null,
-      created_at: null,
-      follow_up_date: null,
-      responded_at: null,
-      status: null,
-      type: null,
-    };
-  }
+export interface ManagedRequirement {
+  category: string | null;
+  created_at: string | null;
+  follow_up_date: string | null;
+  responded_at: string | null;
+  status: "Open" | "Complete" | "Suppressed" | null;
+  type: string | null;
 }
 
 /**
@@ -124,5 +79,8 @@ export const AbsenceCaseStatus = {
   completed: "Completed",
   declined: "Declined",
 } as const;
+
+type AbsenceCaseStatusType =
+  typeof AbsenceCaseStatus[keyof typeof AbsenceCaseStatus];
 
 export default Claim;

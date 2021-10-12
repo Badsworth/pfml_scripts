@@ -1,4 +1,4 @@
-import { ClaimEmployee, ClaimEmployer, ManagedRequirement } from "./Claim";
+import { ClaimEmployee, ManagedRequirement } from "./Claim";
 import { groupBy, orderBy } from "lodash";
 
 import BaseModel from "./BaseModel";
@@ -13,25 +13,11 @@ class ClaimDetail extends BaseModel {
       this.employee = new ClaimEmployee(this.employee);
     }
 
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'employer' does not exist on type 'ClaimD... Remove this comment to see the full error message
-    if (this.employer) {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'employer' does not exist on type 'ClaimD... Remove this comment to see the full error message
-      this.employer = new ClaimEmployer(this.employer);
-    }
-
     // @ts-expect-error ts-migrate(2339) FIXME: Property 'absence_periods' does not exist on type ... Remove this comment to see the full error message
     if (this.absence_periods) {
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'absence_periods' does not exist on type ... Remove this comment to see the full error message
       this.absence_periods = this.absence_periods.map(
         (absence_period) => new AbsencePeriod(absence_period)
-      );
-    }
-
-    // @ts-expect-error ts-migrate(2551) FIXME: Property 'managed_requirements' does not exist on ... Remove this comment to see the full error message
-    if (this.managed_requirements) {
-      // @ts-expect-error ts-migrate(2551) FIXME: Property 'managed_requirements' does not exist on ... Remove this comment to see the full error message
-      this.managed_requirements = this.managed_requirements.map(
-        (managed_requirement) => new ManagedRequirement(managed_requirement)
       );
     }
 
@@ -76,15 +62,11 @@ class ClaimDetail extends BaseModel {
        * @type {ClaimEmployee}
        */
       employee: null,
-      /**
-       * @type {ClaimEmployer}
-       */
+
       employer: null,
       fineos_absence_id: null,
       fineos_notification_id: null,
-      /**
-       * @type {ManagedRequirement}
-       */
+
       managed_requirements: [],
       outstanding_evidence: {
         /**
@@ -110,9 +92,8 @@ class ClaimDetail extends BaseModel {
 
   /**
    * Get managed requirements for claim by desc date
-   * @returns {ManagedRequirement}
    */
-  get managedRequirementByFollowUpDate() {
+  get managedRequirementByFollowUpDate(): ManagedRequirement[] {
     return orderBy(
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'managed_requirements' does not exist on type ... Remove this comment to see the full error message
       this.managed_requirements,

@@ -1,4 +1,4 @@
-import Claim, { ClaimEmployee, ClaimEmployer } from "../../src/models/Claim";
+import Claim, { ClaimEmployee } from "../../src/models/Claim";
 
 describe("Claim", () => {
   it("instantiates employee and employer models", () => {
@@ -15,11 +15,11 @@ describe("Claim", () => {
     // instances are fine
     claim = new Claim({
       employee: new ClaimEmployee({ first_name: "Bud" }),
-      employer: new ClaimEmployer({ employer_fein: "12-3456789" }),
+      employer: { employer_fein: "12-3456789" },
     });
     expect(claim.employee).toBeInstanceOf(ClaimEmployee);
     expect(claim.employee.first_name).toBe("Bud");
-    expect(claim.employer).toBeInstanceOf(ClaimEmployer);
+    expect(claim.employer).toEqual({ employer_fein: "12-3456789" });
     expect(claim.employer.employer_fein).toBe("12-3456789");
 
     // objects get turned into instance
@@ -29,7 +29,7 @@ describe("Claim", () => {
     });
     expect(claim.employee).toBeInstanceOf(ClaimEmployee);
     expect(claim.employee.first_name).toBe("Baxter");
-    expect(claim.employer).toBeInstanceOf(ClaimEmployer);
+    expect(claim.employer).toEqual({ employer_fein: "00-3456789" });
     expect(claim.employer.employer_fein).toBe("00-3456789");
   });
 });
