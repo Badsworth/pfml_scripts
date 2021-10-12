@@ -1281,7 +1281,6 @@
 </code></pre></div>
 <h3 id="environments">Environments</h3>
 <p>Each environment requires its own New Relic Browser "app" in order for us to differentiate between data coming in from the different environments. Create these through the New Relic site. Each New Relic app has its own <code>applicationId</code>, which will need set as part of the JS snippet included in our HTML.</p>
-<p><a href="https://lwd.atlassian.net/browse/cp-417">CP-417</a> is tracking the work to create New Relic apps for each environment.</p>
 <h3 id="enabling-new-relic-browser">Enabling New Relic Browser</h3>
 <p>If you have a browser extension installed to block trackers, you may need to safelist the New Relic snippet to allow it to make requests. If it's not being blocked, then it should Just Work. You can verify this by viewing the Network tab in DevTools, and observe payloads occasionally being sent to <code>bam.nr-data.net</code></p>
 <h2 id="related">Related</h2>
