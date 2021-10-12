@@ -74,6 +74,7 @@ jobs:
     name: "Check Flood Bundling"
     runs-on: ubuntu-latest
     env:
+      E2E_ENVIRONMENT: performance
       E2E_FLOOD_API_TOKEN: ${{ secrets.E2E_FLOOD_API_TOKEN }}
       E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
       E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
@@ -89,7 +90,7 @@ jobs:
         with:
           working-directory: e2e
       - name: "Build Flood Bundle"
-        run: E2E_ENVIRONMENT=performance npm run cli -- flood base --bundle
+        run: npm run cli -- flood base --bundle
       - name: "Attempt Flood Compilation"
         run: node_modules/.bin/element compile data/flood/latest/index.ts
       - name: "Check compiled script is runnable"
