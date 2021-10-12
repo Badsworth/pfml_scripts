@@ -18,7 +18,6 @@ describe("useAppLogic", () => {
       documents,
       employers,
       featureFlags,
-      otherLeaves,
       portalFlow,
       rest,
       setAppErrors,
@@ -37,7 +36,6 @@ describe("useAppLogic", () => {
         employers,
         featureFlags,
         clearRequiredFieldErrors,
-        otherLeaves,
         portalFlow,
         setAppErrors,
         users,
@@ -72,9 +70,6 @@ describe("useAppLogic", () => {
     expect(employers.loadWithholding).toBeInstanceOf(Function);
     expect(employers.submitClaimReview).toBeInstanceOf(Function);
     expect(employers.submitWithholding).toBeInstanceOf(Function);
-    expect(otherLeaves.removeEmployerBenefit).toBeInstanceOf(Function);
-    expect(otherLeaves.removeOtherIncome).toBeInstanceOf(Function);
-    expect(otherLeaves.removePreviousLeave).toBeInstanceOf(Function);
     expect(users.user).toBeUndefined();
     expect(users).toEqual(expect.anything());
     expect(featureFlags).toBeInstanceOf(Object);

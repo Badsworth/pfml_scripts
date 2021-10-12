@@ -49,10 +49,7 @@ from massgov.pfml.db.models.applications import (
     ContentType,
     Document,
     DocumentType,
-    EmployerBenefit,
     LeaveReason,
-    OtherIncome,
-    PreviousLeave,
 )
 from massgov.pfml.fineos.exception import (
     FINEOSClientBadResponse,
@@ -710,67 +707,6 @@ def document_download(application_id: UUID, document_id: str) -> Response:
             content_type=content_type,
             headers={"Content-Disposition": f"attachment; filename={document_data.fileName}"},
         )
-
-
-def employer_benefit_delete(application_id: UUID, employer_benefit_id: UUID) -> Response:
-    with app.db_session() as db_session:
-        existing_application = get_or_404(db_session, Application, application_id)
-
-        ensure(EDIT, existing_application)
-
-        existing_employer_benefit = get_or_404(db_session, EmployerBenefit, employer_benefit_id)
-        if existing_employer_benefit.application_id != existing_application.application_id:
-            raise NotFound(
-                description=f"Could not find EmployerBenefit with ID {employer_benefit_id}"
-            )
-
-        applications_service.remove_employer_benefit(db_session, existing_employer_benefit)
-        db_session.expire(existing_application, ["employer_benefits"])
-
-    return response_util.success_response(
-        message="EmployerBenefit removed.",
-        data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-    ).to_api_response()
-
-
-def other_income_delete(application_id: UUID, other_income_id: UUID) -> Response:
-    with app.db_session() as db_session:
-        existing_application = get_or_404(db_session, Application, application_id)
-
-        ensure(EDIT, existing_application)
-
-        existing_other_income = get_or_404(db_session, OtherIncome, other_income_id)
-        if existing_other_income.application_id != existing_application.application_id:
-            raise NotFound(description=f"Could not find OtherIncome with ID {other_income_id}")
-
-        applications_service.remove_other_income(db_session, existing_other_income)
-        db_session.expire(existing_application, ["other_incomes"])
-
-    return response_util.success_response(
-        message="OtherIncome removed.",
-        data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-    ).to_api_response()
-
-
-def previous_leave_delete(application_id: UUID, previous_leave_id: UUID) -> Response:
-    with app.db_session() as db_session:
-        existing_application = get_or_404(db_session, Application, application_id)
-
-        ensure(EDIT, existing_application)
-
-        existing_previous_leave = get_or_404(db_session, PreviousLeave, previous_leave_id)
-        if existing_previous_leave.application_id != existing_application.application_id:
-            raise NotFound(description=f"Could not find PreviousLeave with ID {previous_leave_id}")
-
-        applications_service.remove_previous_leave(db_session, existing_previous_leave)
-        db_session.expire(
-            existing_application, ["previous_leaves_other_reason", "previous_leaves_same_reason"],
-        )
-
-    return response_util.success_response(
-        message="PreviousLeave removed.",
-        data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
-    ).to_api_response()
 
 
 def payment_preference_submit(application_id: UUID) -> Response:

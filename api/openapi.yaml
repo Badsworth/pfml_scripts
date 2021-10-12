@@ -2,7 +2,7 @@ openapi: 3.0.3
 info:
   title: Paid Leave API
   description: An API for managing leave within Massachusetts Paid Family and Medical Leave.
-  version: "2021-07-14"
+  version: "2021-10-07"
 
 servers:
   - url: /v1
@@ -862,93 +862,6 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-
-  /applications/{application_id}/employer_benefits/{employer_benefit_id}:
-    delete:
-      summary: Remove an existing EmployerBenefit record from an application.
-      operationId: massgov.pfml.api.applications.employer_benefit_delete
-      tags:
-        - Applications
-      parameters:
-        - name: application_id
-          in: path
-          schema:
-            type: string
-            format: uuid
-            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
-          description: ID of Application to update
-          required: true
-        - name: employer_benefit_id
-          in: path
-          schema:
-            type: string
-            format: uuid
-            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
-          description: ID of EmployerBenefit to remove
-          required: true
-      responses:
-        "200":
-          $ref: "#/components/responses/ApplicationResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
-  /applications/{application_id}/other_incomes/{other_income_id}:
-    delete:
-      summary: Remove an existing OtherIncome record from an application.
-      operationId: massgov.pfml.api.applications.other_income_delete
-      tags:
-        - Applications
-      parameters:
-        - name: application_id
-          in: path
-          schema:
-            type: string
-            format: uuid
-            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
-          description: ID of Application to update
-          required: true
-        - name: other_income_id
-          in: path
-          schema:
-            type: string
-            format: uuid
-            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
-          description: ID of OtherIncome to remove
-          required: true
-      responses:
-        "200":
-          $ref: "#/components/responses/ApplicationResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
-
-  /applications/{application_id}/previous_leaves/{previous_leave_id}:
-    delete:
-      summary: Remove an existing PreviousLeave record from an application.
-      operationId: massgov.pfml.api.applications.previous_leave_delete
-      tags:
-        - Applications
-      parameters:
-        - name: application_id
-          in: path
-          schema:
-            type: string
-            format: uuid
-            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
-          description: ID of Application to update
-          required: true
-        - name: previous_leave_id
-          in: path
-          schema:
-            type: string
-            format: uuid
-            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
-          description: ID of PreviousLeave to remove
-          required: true
-      responses:
-        "200":
-          $ref: "#/components/responses/ApplicationResponse"
-        "404":
-          $ref: "#/components/responses/NotFound"
 
   /financial-eligibility:
     post:
