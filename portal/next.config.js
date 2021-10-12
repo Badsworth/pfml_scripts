@@ -29,8 +29,9 @@ const config = {
     // Mayflowers requires us to expose its includePaths so its imports work
     includePaths: mayflowerAssets.includePaths,
   },
-  // TODO (PORTAL-811)
-  webpack5: false,
+  images: {
+    disableStaticImages: true,
+  },
   trailingSlash: true,
   webpack: function (webpackConfig) {
     // Include our polyfills before all other code
