@@ -161,7 +161,6 @@ jobs:
     needs: changed-files
     env:
       E2E_ENVIRONMENT: performance
-      E2E_DEBUG: true
       E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
       E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
       E2E_EMPLOYER_PORTAL_PASSWORD: ${{ secrets.E2E_EMPLOYER_PORTAL_PASSWORD }}
