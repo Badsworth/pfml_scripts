@@ -164,6 +164,7 @@ jobs:
       E2E_DEBUG: true
       E2E_FINEOS_PASSWORD: ${{ secrets.E2E_FINEOS_PASSWORD }}
       E2E_PORTAL_PASSWORD: ${{ secrets.E2E_PORTAL_PASSWORD }}
+      E2E_EMPLOYER_PORTAL_PASSWORD: ${{ secrets.E2E_EMPLOYER_PORTAL_PASSWORD }}
       E2E_TESTMAIL_APIKEY: ${{ secrets.E2E_TESTMAIL_APIKEY }}
       E2E_FINEOS_USERS: ${{ secrets.E2E_FINEOS_USERS }}
     if: needs.changed-files.outputs.has-artillery-changes == 'true'
