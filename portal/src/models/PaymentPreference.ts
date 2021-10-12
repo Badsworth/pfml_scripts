@@ -21,7 +21,7 @@ class PaymentPreference extends BaseModel {
 export const BankAccountType = {
   checking: "Checking",
   savings: "Savings",
-};
+} as const;
 
 /**
  * Enums for the Application's `payment_preference.payment_method` field
@@ -30,6 +30,6 @@ export const BankAccountType = {
 export const PaymentPreferenceMethod = {
   ach: "Elec Funds Transfer",
   check: "Check",
-};
+} as const;
 
 export default PaymentPreference;

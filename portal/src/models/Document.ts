@@ -44,6 +44,6 @@ export const DocumentType = {
   medicalCertification: "State managed Paid Leave Confirmation",
   requestForInfoNotice: "Request for more Information",
   withdrawalNotice: "Pending Application Withdrawn",
-};
+} as const;
 
 export default Document;

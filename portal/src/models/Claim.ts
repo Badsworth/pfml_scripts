@@ -123,6 +123,6 @@ export const AbsenceCaseStatus = {
   closed: "Closed",
   completed: "Completed",
   declined: "Declined",
-};
+} as const;
 
 export default Claim;

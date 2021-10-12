@@ -97,7 +97,8 @@ export const LeaveReason = (props) => {
   );
 
   const getChoices = () => {
-    const choices = [choiceMedical, choiceBonding, choiceCaringLeave];
+    const choices = [];
+    choices.push(choiceMedical, choiceBonding, choiceCaringLeave);
 
     showMilitaryLeaveTypes &&
       choices.push(choiceActiveDutyFamily, choiceServiceMemberFamily);

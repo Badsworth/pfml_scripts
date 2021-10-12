@@ -37,7 +37,7 @@ export const PreviousLeaveReason = {
   // Unknown may be displayed to Leave Admins, but isn't
   // an option we display to Claimants
   unknown: "Unknown",
-};
+} as const;
 
 /**
  * Possible values for Application's "previous_leaves[].type" field.
@@ -46,6 +46,6 @@ export const PreviousLeaveReason = {
 export const PreviousLeaveType = {
   otherReason: "other_reason",
   sameReason: "same_reason",
-};
+} as const;
 
 export default PreviousLeave;

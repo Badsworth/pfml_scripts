@@ -16,7 +16,7 @@ export const ClaimSteps = {
   payment: "PAYMENT",
   uploadCertification: "UPLOAD_CERTIFICATION",
   uploadId: "UPLOAD_ID",
-};
+} as const;
 
 const fieldHasValue = (fieldPath, context) => {
   const value = get(context, fieldPath);

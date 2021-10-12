@@ -34,7 +34,7 @@ export const EmployerBenefitType = {
   // an option we display to Claimants
   unknown: "Unknown",
   /* eslint-enable sort-keys */
-};
+} as const;
 
 /**
  * Enums for the Employer Benefit `benefit_amount_frequency` field
@@ -50,6 +50,6 @@ export const EmployerBenefitFrequency = {
   // Unknown may be displayed to Leave Admins, but isn't
   // an option we display to Claimants
   unknown: "Unknown",
-};
+} as const;
 
 export default EmployerBenefit;

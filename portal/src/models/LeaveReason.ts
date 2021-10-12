@@ -13,6 +13,6 @@ const LeaveReason = {
   pregnancy: "Pregnancy/Maternity",
   // TODO (CP-534): Confirm this enum value once integrated with the API
   serviceMemberFamily: "Military Caregiver",
-};
+} as const;
 
 export default LeaveReason;

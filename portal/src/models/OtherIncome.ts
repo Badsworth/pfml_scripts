@@ -35,7 +35,7 @@ export const OtherIncomeType = {
   // an option we display to Claimants
   unknown: "Unknown",
   /* eslint-enable sort-keys */
-};
+} as const;
 
 /**
  * Enums for the OtherIncome `income_amount_frequency` field
@@ -48,6 +48,6 @@ export const OtherIncomeFrequency = {
   weekly: "Per Week",
   monthly: "Per Month",
   inTotal: "In Total",
-};
+} as const;
 
 export default OtherIncome;

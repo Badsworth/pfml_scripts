@@ -2,7 +2,7 @@
 /**
  * @file Benefits application model and enum values
  */
-import { compact, get, isNil, merge, sum, sumBy, zip, zipObject } from "lodash";
+import { compact, get, isNil, merge, sum, sumBy, zip } from "lodash";
 
 import BaseBenefitsApplication from "./BaseBenefitsApplication";
 import BaseModel from "./BaseModel";
@@ -124,7 +124,7 @@ export const BenefitsApplicationStatus = {
   started: "Started",
   // Stored in the claims processing system (Step 3)
   submitted: "Submitted",
-};
+} as const;
 
 /**
  * Enums for the Application's `employment_status` field
@@ -134,7 +134,7 @@ export const EmploymentStatus = {
   employed: "Employed",
   selfEmployed: "Self-Employed",
   unemployed: "Unemployed",
-};
+} as const;
 
 /**
  * Enums for the Application's `leave_details.reason_qualifier` field
@@ -144,7 +144,7 @@ export const ReasonQualifier = {
   adoption: "Adoption",
   fosterCare: "Foster Care",
   newBorn: "Newborn",
-};
+} as const;
 
 export class ContinuousLeavePeriod extends BaseModel {
   // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'ContinuousLeavePeriod... Remove this comment to see the full error message
@@ -284,7 +284,7 @@ export const FrequencyIntervalBasis = {
   // days: "Days",
   months: "Months",
   weeks: "Weeks",
-};
+} as const;
 
 /**
  * Enums for the Application's `intermittent_leave_periods[].duration_basis` field
@@ -296,7 +296,8 @@ export const DurationBasis = {
   // Minutes is also a valid enum in the API, however the Portal
   // doesn't offer this as an option to the user
   // minutes: "Minutes",
-};
+} as const;
+
 export class ReducedScheduleLeavePeriod extends BaseModel {
   // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'ReducedScheduleLeaveP... Remove this comment to see the full error message
   get defaults() {
@@ -393,7 +394,7 @@ export class ReducedScheduleLeavePeriod extends BaseModel {
 export const PhoneType = {
   cell: "Cell",
   phone: "Phone",
-};
+} as const;
 
 /* Enums for claimant gender options
  * @enum {string}
@@ -404,7 +405,7 @@ export const Gender = {
   nonbinary: "Non-binary",
   preferNotToAnswer: "Prefer not to answer",
   woman: "Woman",
-};
+} as const;
 
 /* Enums for caring leave's relationship to caregiver
  * @enum {string}
@@ -420,7 +421,7 @@ export const RelationshipToCaregiver = {
   serviceMember: "Service Member",
   sibling: "Sibling - Brother/Sister",
   spouse: "Spouse",
-};
+} as const;
 
 /**
  * Enums for the Application's `work_pattern.work_pattern_type` field
@@ -430,7 +431,7 @@ export const WorkPatternType = {
   fixed: "Fixed",
   rotating: "Rotating",
   variable: "Variable",
-};
+} as const;
 
 /**
  * Ordered days of the week
@@ -451,9 +452,15 @@ export const OrderedDaysOfWeek = [
  * @example DayOfWeek.sunday
  * @enum {string}
  */
-export const DayOfWeek = zipObject(
-  OrderedDaysOfWeek.map((day) => day.toLowerCase()),
-  OrderedDaysOfWeek
-);
+/* eslint-disable sort-keys */
+export const DayOfWeek = {
+  sunday: "Sunday",
+  monday: "Monday",
+  tuesday: "Tuesday",
+  wednesday: "Wednesday",
+  thursday: "Thursday",
+  friday: "Friday",
+  saturday: "Saturday",
+} as const;
 
 export default BenefitsApplication;

@@ -131,7 +131,7 @@ export class UserRole extends BaseModel {
 export const RoleDescription = {
   claimant: "Claimant",
   employer: "Employer",
-};
+} as const;
 
 export class UserLeaveAdministrator extends BaseModel {
   // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'UserLeaveAdministrato... Remove this comment to see the full error message
