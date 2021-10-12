@@ -179,7 +179,7 @@ jobs:
       - name: "Run Artillery Bundle"
         run: npm run artillery:bundle
       - name: "Run Submit and Adjudicate Scenario"
-        run: node_modules/.bin/artillery run -e test -q dist/development.yml
+        run: node_modules/.bin/artillery run -e test dist/development.yml
 
   trigger-cypress:
     name: End-to-End Tests
