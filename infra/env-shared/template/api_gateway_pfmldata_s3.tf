@@ -134,3 +134,70 @@ resource "aws_api_gateway_integration_response" "pfmldata_get_object_s3_integrat
   status_code       = aws_api_gateway_method_response.pfmldata_get_object_response_403.status_code
   selection_pattern = aws_api_gateway_method_response.pfmldata_get_object_response_403.status_code
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
+# PUT /{bucket}/{key} endpoint to proxy S3 CopyObject
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_api_gateway_method" "pfmldata_copy_object_method" {
+  rest_api_id      = aws_api_gateway_rest_api.pfml.id
+  resource_id      = aws_api_gateway_resource.pfmldata_bucket_key.id
+  http_method      = "PUT"
+  authorization    = "NONE"
+  api_key_required = true
+
+  request_parameters = {
+    "method.request.path.bucket"     = true
+    "method.request.path.key"        = true
+    "method.request.querystring.src" = true
+  }
+}
+
+resource "aws_api_gateway_method_response" "pfmldata_copy_object_response_200" {
+  rest_api_id = aws_api_gateway_rest_api.pfml.id
+  resource_id = aws_api_gateway_resource.pfmldata_bucket_key.id
+  http_method = aws_api_gateway_method.pfmldata_copy_object_method.http_method
+  status_code = "200"
+}
+
+resource "aws_api_gateway_method_response" "pfmldata_copy_object_response_403" {
+  rest_api_id = aws_api_gateway_rest_api.pfml.id
+  resource_id = aws_api_gateway_resource.pfmldata_bucket_key.id
+  http_method = aws_api_gateway_method.pfmldata_copy_object_method.http_method
+  status_code = "403"
+}
+
+resource "aws_api_gateway_integration" "pfmldata_copy_object_s3_integration" {
+  rest_api_id = aws_api_gateway_rest_api.pfml.id
+  resource_id = aws_api_gateway_resource.pfmldata_bucket_key.id
+  http_method = aws_api_gateway_method.pfmldata_copy_object_method.http_method
+
+  integration_http_method = "PUT"
+  type                    = "AWS"
+
+  uri         = "arn:aws:apigateway:us-east-1:s3:path/{bucket}/{key}"
+  credentials = aws_iam_role.pfmldata_executor_role.arn
+  request_parameters = {
+    "integration.request.path.bucket" : "method.request.path.bucket"
+    "integration.request.path.key" : "method.request.path.key"
+    "integration.request.header.x-amz-copy-source" : "method.request.querystring.src"
+  }
+}
+
+resource "aws_api_gateway_integration_response" "pfmldata_copy_object_s3_integration_response_200" {
+  depends_on        = [aws_api_gateway_integration.pfmldata_copy_object_s3_integration]
+  rest_api_id       = aws_api_gateway_rest_api.pfml.id
+  resource_id       = aws_api_gateway_resource.pfmldata_bucket_key.id
+  http_method       = aws_api_gateway_method.pfmldata_copy_object_method.http_method
+  status_code       = aws_api_gateway_method_response.pfmldata_copy_object_response_200.status_code
+  selection_pattern = aws_api_gateway_method_response.pfmldata_copy_object_response_200.status_code
+}
+
+resource "aws_api_gateway_integration_response" "pfmldata_copy_object_s3_integration_response_403" {
+  depends_on        = [aws_api_gateway_integration.pfmldata_copy_object_s3_integration]
+  rest_api_id       = aws_api_gateway_rest_api.pfml.id
+  resource_id       = aws_api_gateway_resource.pfmldata_bucket_key.id
+  http_method       = aws_api_gateway_method.pfmldata_copy_object_method.http_method
+  status_code       = aws_api_gateway_method_response.pfmldata_copy_object_response_403.status_code
+  selection_pattern = aws_api_gateway_method_response.pfmldata_copy_object_response_403.status_code
+}
