@@ -1,6 +1,7 @@
 import { get, groupBy, isEmpty, map } from "lodash";
-import BaseModel from "./BaseModel";
 import getRelevantIssues from "../utils/getRelevantIssues";
+
+type Context = Record<string, unknown>;
 
 /**
  * Unique identifiers for steps in the portal application. The values
@@ -18,14 +19,12 @@ export const ClaimSteps = {
   uploadId: "UPLOAD_ID",
 } as const;
 
-const fieldHasValue = (fieldPath, context) => {
+const fieldHasValue = (fieldPath: string, context: Context) => {
   const value = get(context, fieldPath);
 
   if (typeof value === "boolean") return true;
 
   if (typeof value === "number") return true;
-
-  if (value instanceof BaseModel) return !value.isDefault();
 
   return !isEmpty(value);
 };
@@ -36,67 +35,68 @@ const fieldHasValue = (fieldPath, context) => {
  * state of user data
  * @returns {Step}
  */
-export default class Step extends BaseModel {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'Step' is not assignab... Remove this comment to see the full error message
-  get defaults() {
-    return {
-      /**
-       * @type {string}
-       */
-      name: null,
-      /**
-       * @type {Function}
-       * Optional method for evaluating whether a step is not applicable,
-       * based on the Step's `context`. This is useful if a Step
-       * may be skipped for certain types of applications
-       */
-      notApplicableCond: null,
-      /**
-       * @type {number}
-       * If this belongs within a StepGroup, what StepGroup number is it associated with (e.g Part 2)
-       */
-      group: null,
-      /**
-       * @type {Array<{ route: string, meta: { step: string, fields: string[], applicableRules: string[] }}>}
-       * object representing all pages in this step keyed by the page route
-       * @see ../flows
-       */
-      pages: null,
-      /**
-       * @type {Step[]}
-       * Array of steps that must be completed before this step
-       */
-      dependsOn: [],
-      /**
-       * @type {Function}
-       * Optional method for evaluating whether a step is complete,
-       * based on the Step's `context`. This is useful if a Step
-       * has no form fields associated with it.
-       */
-      completeCond: null,
-      /**
-       * @type {boolean}
-       * Allow/Disallow entry into this step to edit answers to its questions
-       */
-      editable: true,
-      /**
-       * @type {object}
-       * Context used for evaluating a step's status
-       */
-      context: null,
-      /**
-       * @type {object[]}
-       * Array of validation warnings from the API, used for determining
-       * the completion status of Steps that include fields. You can exclude
-       * this if a Step doesn't include a field, or if it has its own
-       * completeCond set.
-       */
-      warnings: null,
-    };
+export default class Step {
+  name: string;
+  /**
+   * Optional method for evaluating whether a step is not applicable,
+   * based on the Step's `context`. This is useful if a Step
+   * may be skipped for certain types of applications
+   */
+  notApplicableCond?: (context: Context) => boolean;
+  /**
+   * What StepGroup number is it associated with (e.g Part 2)
+   */
+  group: number;
+  /**
+   * object representing all pages in this step keyed by the page route
+   * @see ../flows
+   */
+  pages: Array<{
+    route: string;
+    meta: { step: string; fields: string[]; applicableRules: string[] };
+  }>;
+
+  /**
+   * Array of steps that must be completed before this step
+   */
+  dependsOn?: Step[] = [];
+  /**
+   * Optional method for evaluating whether a step is complete,
+   * based on the Step's `context`. This is useful if a Step
+   * has no form fields associated with it.
+   */
+  completeCond?: (context: Context) => boolean;
+  /**
+   * Allow/Disallow entry into this step to edit answers to its questions
+   */
+  editable? = true;
+  /**
+   * Context used for evaluating a step's status
+   */
+  context?: Context;
+  /**
+   * Array of validation warnings from the API, used for determining
+   * the completion status of Steps that include fields. You can exclude
+   * this if a Step doesn't include a field, or if it has its own
+   * completeCond set.
+   */
+  warnings?: Array<Record<string, unknown>>;
+
+  constructor(
+    attrs: Omit<
+      Step,
+      | "fields"
+      | "isComplete"
+      | "isDisabled"
+      | "isInProgress"
+      | "isNotApplicable"
+      | "status"
+    >
+  ) {
+    Object.assign(this, attrs);
   }
 
   get fields() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'pages' does not exist on type 'Step'.
     return this.pages.flatMap((page) => page.meta.fields);
   }
 
@@ -121,14 +121,11 @@ export default class Step extends BaseModel {
   }
 
   get isComplete() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'completeCond' does not exist on type 'St... Remove this comment to see the full error message
     if (this.completeCond) return this.completeCond(this.context);
 
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'warnings' does not exist on type 'Step'.
     const issues = getRelevantIssues([], this.warnings || [], this.pages);
 
     if (process.env.NODE_ENV === "development" && issues.length) {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'name' does not exist on type 'Step'.
       // eslint-disable-next-line no-console
       console.log(`${this.name} has warnings`, issues);
     }
@@ -137,22 +134,18 @@ export default class Step extends BaseModel {
   }
 
   get isInProgress() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'context' does not exist on type 'Step'.
     return this.fields.some((field) => fieldHasValue(field, this.context));
   }
 
   get isNotApplicable() {
-    // @ts-expect-error ts-migrate(2551) FIXME: Property 'notApplicableCond' does not exist on typ... Remove this comment to see the full error message
     if (this.notApplicableCond) return this.notApplicableCond(this.context);
 
     return false;
   }
 
   get isDisabled() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dependsOn' does not exist on type 'Step'... Remove this comment to see the full error message
     if (!this.dependsOn.length) return false;
 
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'dependsOn' does not exist on type 'Step'... Remove this comment to see the full error message
     return this.dependsOn.some((dependedOnStep) => !dependedOnStep.isComplete);
   }
 
@@ -228,7 +221,7 @@ export default class Step extends BaseModel {
 
     const reviewAndConfirm = new Step({
       name: ClaimSteps.reviewAndConfirm,
-      completeCond: (context) => context.claim.isSubmitted,
+      completeCond: (context) => get(context.claim, "isSubmitted"),
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'isSubmitted' does not exist on type '{}'... Remove this comment to see the full error message
       editable: !claim.isSubmitted,
       group: 1,
@@ -239,7 +232,8 @@ export default class Step extends BaseModel {
 
     const payment = new Step({
       name: ClaimSteps.payment,
-      completeCond: (context) => context.claim.has_submitted_payment_preference,
+      completeCond: (context) =>
+        get(context.claim, "has_submitted_payment_preference"),
       // @ts-expect-error ts-migrate(2339) FIXME: Property 'has_submitted_payment_preference' does n... Remove this comment to see the full error message
       editable: !claim.has_submitted_payment_preference,
       group: 2,
@@ -256,7 +250,11 @@ export default class Step extends BaseModel {
     });
 
     const uploadId = new Step({
-      completeCond: (context) => !!context.idDocuments.length,
+      completeCond: (context) => {
+        return (
+          Array.isArray(context.idDocuments) && !!context.idDocuments.length
+        );
+      },
       name: ClaimSteps.uploadId,
       group: 3,
       pages: pagesByStep[ClaimSteps.uploadId],
@@ -272,7 +270,12 @@ export default class Step extends BaseModel {
     });
 
     const uploadCertification = new Step({
-      completeCond: (context) => !!context.certificationDocuments.length,
+      completeCond: (context) => {
+        return (
+          Array.isArray(context.certificationDocuments) &&
+          !!context.certificationDocuments.length
+        );
+      },
       name: ClaimSteps.uploadCertification,
       notApplicableCond: (context) =>
         get(context.claim, "leave_details.has_future_child_date") === true,

@@ -81,10 +81,7 @@ export const Checklist = (props) => {
    */
   const stepGroups = [1, 2, 3].map(
     (number) =>
-      new StepGroup({
-        number,
-        steps: filter(allSteps, { group: number }),
-      })
+      new StepGroup({ number, steps: filter(allSteps, { group: number }) })
   );
 
   const sharedStepListProps = {
@@ -103,7 +100,6 @@ export const Checklist = (props) => {
    * @returns {number}
    */
   function getStepNumber(step) {
-    // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ name: any; }' is not assignabl... Remove this comment to see the full error message
     const index = findIndex(allSteps, { name: step.name });
     return index + 1;
   }
@@ -368,26 +364,22 @@ export const Checklist = (props) => {
 
       {stepGroups.map((stepGroup) => (
         <StepList
-          // @ts-expect-error ts-migrate(2339) FIXME: Property 'number' does not exist on type 'StepGrou... Remove this comment to see the full error message
           key={stepGroup.number}
           description={stepListDescription(stepGroup)}
           title={
             <React.Fragment>
               <HeadingPrefix>
                 {t("pages.claimsChecklist.stepListTitlePrefix", {
-                  // @ts-expect-error ts-migrate(2339) FIXME: Property 'number' does not exist on type 'StepGrou... Remove this comment to see the full error message
                   number: stepGroup.number,
                 })}
               </HeadingPrefix>
               {t("pages.claimsChecklist.stepListTitle", {
-                // @ts-expect-error ts-migrate(2339) FIXME: Property 'number' does not exist on type 'StepGrou... Remove this comment to see the full error message
                 context: String(stepGroup.number),
               })}
             </React.Fragment>
           }
           {...sharedStepListProps}
         >
-          {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'number' does not exist on type 'StepGrou... Remove this comment to see the full error message */}
           {stepGroup.number === 3 && hasLoadingDocumentsError ? (
             // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; noIc... Remove this comment to see the full error message
             <Alert className="margin-bottom-3" noIcon>
@@ -400,11 +392,9 @@ export const Checklist = (props) => {
                 }}
               />
             </Alert>
-          ) : // @ts-expect-error ts-migrate(2339) FIXME: Property 'number' does not exist on type 'StepGrou... Remove this comment to see the full error message
-          stepGroup.number === 3 && isLoadingDocuments ? (
+          ) : stepGroup.number === 3 && isLoadingDocuments ? (
             <Spinner aria-valuetext={t("components.spinner.label")} />
           ) : (
-            // @ts-expect-error ts-migrate(2339) FIXME: Property 'steps' does not exist on type 'StepGroup... Remove this comment to see the full error message
             renderSteps(stepGroup.steps)
           )}
         </StepList>

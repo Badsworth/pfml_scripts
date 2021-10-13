@@ -33,10 +33,7 @@ describe("StepGroup", () => {
         }),
       ];
 
-      const group = new StepGroup({
-        number: 2,
-        steps,
-      });
+      const group = new StepGroup({ number: 2, steps });
 
       expect(group.isEnabled).toBe(true);
     });
@@ -72,10 +69,7 @@ describe("StepGroup", () => {
         }),
       ];
 
-      const group = new StepGroup({
-        number: 2,
-        steps,
-      });
+      const group = new StepGroup({ number: 2, steps });
 
       expect(group.isEnabled).toBe(false);
     });

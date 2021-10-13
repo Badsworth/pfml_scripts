@@ -118,13 +118,10 @@ export const Review = (props) => {
   const usePartOneReview = !claim.isSubmitted;
 
   const getStepEditHref = (name) => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'name' does not exist on type 'Step'.
     const step = steps.find((s) => s.name === name);
 
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'editable' does not exist on type 'Step'.
     if (step && step.editable) {
       return appLogic.portalFlow.getNextPageRoute(
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'name' does not exist on type 'Step'.
         step.name,
         { claim },
         {
