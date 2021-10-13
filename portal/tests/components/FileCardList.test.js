@@ -10,13 +10,9 @@ import { makeFile } from "../test-utils";
 import userEvent from "@testing-library/user-event";
 
 const makeFileObjectHelper = (attrs = {}) => {
-  const file = new TempFile({ id: attrs.id });
-  const name = attrs.name || `${file.id}.pdf`;
-  const type = attrs.type || "application/pdf";
-
-  file.file = makeFile({ name, type });
-
-  return file;
+  const fileAttrs = attrs.id ? { id: attrs.id } : {};
+  fileAttrs.file = makeFile(attrs);
+  return new TempFile(fileAttrs);
 };
 
 const onChange = jest.fn();
@@ -51,7 +47,9 @@ describe("FileCardList", () => {
 
   it("with previously selected files, renders them and user can remove", () => {
     renderComponent({
-      tempFiles: new TempFileCollection([makeFileObjectHelper()]),
+      tempFiles: new TempFileCollection([
+        makeFileObjectHelper({ name: "TempFile1.pdf" }),
+      ]),
     });
     const [documentFileCards, fileCards] = screen.getAllByRole("list");
     expect(documentFileCards).toBeEmptyDOMElement();

@@ -311,7 +311,7 @@ export class ConfigPage extends FineosPage {
   ): Promise<void> {
     await this.page.click(`text="Company Structure"`);
     await util.clickTab(this.page, "Users");
-    await (await util.labelled(this.page, "User ID")).fill(userId);
+    await this.page.fill("#UserSearchWidgetOrganizationStructure_un18_userID", userId);
     await this.page.click(`input[title="Search for User"]`);
     await this.page.click(`input[title="Select to edit the user"]`);
     // Lookup the user ID, then navigate to the edit roles page.
@@ -405,5 +405,22 @@ export class RolesPage extends FineosPage {
   }
   async applyRolesToUser(): Promise<void> {
     await this.page.click(`input[title="Select to update the User"]`);
+  }
+}
+
+export class ClaimantPage extends FineosPage {
+  constructor(page: Page) {
+    super(page);
+  }
+  async visit(ssn: string): Promise<ClaimantPage> {
+    ssn = ssn.replace(/-/g, "");
+    await this.page.click('a[aria-label="Parties"]');
+    await this.page.focus("label:text-is('Identification Number')");
+    await this.page.type("label:text-is('Identification Number')", ssn);
+    await this.page.click('input[type="submit"][value="Search"]', {
+      force: true,
+    });
+    await this.page.click("#footerButtonsBar input[value='OK']");
+    return new ClaimantPage(this.page);
   }
 }

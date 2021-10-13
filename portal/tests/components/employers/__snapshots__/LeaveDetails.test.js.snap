@@ -2,31 +2,41 @@
 
 exports[`LeaveDetails renders the alert info when user indicates the relationship status is unknown  1`] = `
 <div
-  class="usa-alert__body"
+  class="usa-alert usa-alert--info measure-5 margin-y-3"
   role="region"
+  tabindex="-1"
 >
   <div
-    class="usa-alert__text"
+    class="usa-alert__body"
   >
-    If you have not confirmed the accuracy of the family relationship the employee has attested to, please note that the Department of Family and Medical leave will adjudicate the claim based on the attestation the employee made when submitting their application.
+    <div
+      class="usa-alert__text"
+    >
+      If you have not confirmed the accuracy of the family relationship the employee has attested to, please note that the Department of Family and Medical leave will adjudicate the claim based on the attestation the employee made when submitting their application.
+    </div>
   </div>
 </div>
 `;
 
 exports[`LeaveDetails renders the comment box and the alert when user indicates the relationship is inaccurate  1`] = `
 <div
-  class="usa-alert__body"
+  class="usa-alert usa-alert--warning measure-5 margin-y-3"
   role="region"
+  tabindex="-1"
 >
-  <h2
-    class="usa-alert__heading font-heading-sm text-bold"
-  >
-    The employee will be denied paid leave.
-  </h2>
   <div
-    class="usa-alert__text"
+    class="usa-alert__body"
   >
-    We take allegations about false relationships seriously. Choosing No may trigger a denial of the employee's application for paid leave. The employee has the right to appeal if their application is denied.
+    <h2
+      class="usa-alert__heading font-heading-sm text-bold"
+    >
+      The employee will be denied paid leave.
+    </h2>
+    <div
+      class="usa-alert__text"
+    >
+      We take allegations about false relationships seriously. Choosing No may trigger a denial of the employee's application for paid leave. The employee has the right to appeal if their application is denied.
+    </div>
   </div>
 </div>
 `;

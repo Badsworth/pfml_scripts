@@ -47,6 +47,11 @@ describe("Leave Admin Self-Registration", () => {
             secondary.withholdings[secondary.withholdings.length - 1];
           portal.addOrganization(secondary.fein, secondaryWithholding);
         });
+        // Test that we can filter claims by organization.
+        // This is currently the only place where we can test it.
+        cy.findByText("Back to Dashboard").click();
+        // Select the second option, as we only care we can filter at all.
+        portal.filterLADashboardBy({ organization: 1 });
       });
     });
   });

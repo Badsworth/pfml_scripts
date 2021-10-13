@@ -1,6 +1,9 @@
 import argparse
 from . import release_tasks
 
+def is_interactive_mode(raw_args: list) -> bool:
+    return '-i' in raw_args or '--interactive' in raw_args
+
 
 def configure_start_release_args(subparsers: argparse._SubParsersAction) -> argparse.ArgumentParser:
     start_handler = subparsers.add_parser(
@@ -21,15 +24,25 @@ def configure_update_release_args(raw_args: list, subparsers: argparse._SubParse
 
     update_handler.add_argument(
         "-r", metavar="release_version", dest="release_version", type=str, default='',
-        required=('-i' not in raw_args and '--interactive' not in raw_args),
+        required=(not is_interactive_mode(raw_args)),
         help="The full name of an API or Portal release branch, "
              "e.g.: '-r release/api/v1.2.0' or '-r release/portal/v4.0'."
     )
 
-    update_handler.add_argument(
+    # Update-release can accept EITHER the name of a branch OR an arbitrary number of git commits.
+    # It's technically possible to handle both at once...but doing it this way simplifies the logic,
+    # and allows a user to hold the under-the-hood Git operations in their head more easily.
+    release_details = update_handler.add_mutually_exclusive_group()
+    release_details.add_argument(
         "-c", metavar="git_commits", dest="git_commits", action="append", default=[],
-        required=('-i' not in raw_args and '--interactive' not in raw_args),
-        help="The commit hash of a Git commit that you want to add to this RC. Can be specified multiple times."
+        help="The commit hash of a Git commit that you want to add to this RC. Can be specified multiple times. "
+             "Not compatible with '--with-branch'."
+    )
+
+    release_details.add_argument(
+        "--with-branch", type=str, metavar='BRANCH_NAME', dest='source_branch',
+        help="The name of a branch (typically main) that you wish to merge into this release branch. "
+             "Not compatible with '-c'."
     )
 
     update_handler.set_defaults(func=release_tasks.update)
@@ -47,7 +60,7 @@ def configure_finalize_release_args(raw_args: list, subparsers: argparse._SubPar
 
     finalize_handler.add_argument(
         "-r", metavar="release_version", dest="release_version",
-        required=('-i' not in raw_args and '--interactive' not in raw_args),
+        required=(not is_interactive_mode(raw_args)),
         help="The full name of an API or Portal release branch, "
              "e.g.: '-r release/api/v1.2.0' or '-r release/portal/v4.0'."
     )
@@ -68,15 +81,24 @@ def configure_hotfix_args(raw_args: list, subparsers: argparse._SubParsersAction
 
     hotfix_handler.add_argument(
         "-r", metavar="release_version", dest="release_version", type=str, default='',
-        required=('-i' not in raw_args and '--interactive' not in raw_args),
+        required=(not is_interactive_mode(raw_args)),
         help="The full name of a finalized API or Portal release branch, "
              "e.g.: '-r release/api/v1.2.0' or '-r release/portal/v4.0'."
     )
 
-    hotfix_handler.add_argument(
+    hotfix_details = hotfix_handler.add_mutually_exclusive_group(required=(not is_interactive_mode(raw_args)))
+    hotfix_details.add_argument(
         "-c", metavar="git_commits", dest="git_commits", action="append", default=[],
-        required=('-i' not in raw_args and '--interactive' not in raw_args),
-        help="The commit hash of a Git commit that you want to add to this hotfix. Can be specified multiple times."
+        required=False,
+        help="The commit hash of a Git commit that you want to add to this hotfix. Can be specified multiple times. "
+             "Not compatible with '--with-branch'."
+    )
+
+    hotfix_details.add_argument(
+        "--with-branch", type=str, metavar='BRANCH_NAME', dest='source_branch',
+        required=False,
+        help="The name of a branch (typically main) whose changes you wish to add into this hotfix."
+             "Not compatible with '-c'."
     )
 
     hotfix_handler.set_defaults(func=release_tasks.hotfix)

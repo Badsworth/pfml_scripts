@@ -45,8 +45,10 @@ export const getNotificationSubject = function (
     "employer response": `Action required: Respond to ${employeeName}'s paid leave application`,
     "denial (employer)": `${employeeName}'s paid leave application was Denied`,
     "approval (employer)": `${employeeName}'s paid leave application was Approved`,
+    "appeal (employer)": `An application update notice from the Department of Family and Medical Leave`,
     "denial (claimant)": "Your paid leave application was Denied",
     "approval (claimant)": "Your paid leave application was Approved",
+    "appeal (claimant)": `Application update notice from the Department of Family and Medical Leave`,
     "request for additional info": `Action required: Provide additional information for your paid leave application ${caseNumber}`,
     "review leave hours": `${employeeName} reported their intermittent leave hours`,
     "extension of benefits": `${employeeName} requested to extend their paid leave application with the Commonwealth of MA`,
@@ -135,13 +137,4 @@ export const getTextBetween = function (
     dataString = match[1].trim();
   }
   return dataString;
-};
-
-export const assertValidSubject = (searchText: string): void => {
-  cy.get("span[id='emailSubject']").then((el) =>
-    expect(
-      el.text(),
-      "Subject line should contain claimant name (known issue EDM-198)"
-    ).to.include(searchText)
-  );
 };

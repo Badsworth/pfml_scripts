@@ -8,23 +8,6 @@
   "rules": {
     "react/display-name": "off",
     "react/prop-types": "off",
-    "no-restricted-imports": [
-      "error",
-      {
-        "paths": [
-          {
-            "name": "enzyme",
-            "message": "Use of Enzyme in tests folder is deprecated"
-          }
-        ],
-        "patterns": [
-          {
-            "group": ["*tests-old*"],
-            "message": "New tests cannot rely on old-tests"
-          }
-        ]
-      }
-    ],
     // allow container.firstChild for snapshot tests
     "testing-library/no-node-access": "off",
     "testing-library/prefer-user-event": [

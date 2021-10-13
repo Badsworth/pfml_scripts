@@ -40,10 +40,6 @@ import {
   getFixtureDocumentName,
   assertClaimStatus,
 } from "./fineos";
-
-import { DocumentUploadRequest } from "../../src/api";
-import { fineos } from ".";
-import { LeaveReason } from "../../src/generation/Claim";
 import {
   addDays,
   differenceInBusinessDays,
@@ -52,6 +48,9 @@ import {
   startOfWeek,
   subDays,
 } from "date-fns";
+import { DocumentUploadRequest } from "../../src/api";
+import { fineos } from ".";
+import { LeaveReason } from "../../src/generation/Claim";
 
 type StatusCategory =
   | "Applicability"
@@ -108,6 +107,16 @@ export class ClaimPage {
     onTab("Tasks");
     cb(new TasksPage());
     onTab("Absence Hub");
+    return this;
+  }
+  appealDocuments(cb: (page: DocumentsPage) => unknown): this {
+    onTab("Documents");
+    cb(new DocumentsPage());
+    return this;
+  }
+  appealTasks(cb: (page: TasksPage) => unknown): this {
+    onTab("Tasks");
+    cb(new TasksPage());
     return this;
   }
   documents(cb: (page: DocumentsPage) => unknown): this {
@@ -174,6 +183,8 @@ export class ClaimPage {
       | "Review Approval Notice"
       | "Leave Cancellation Request"
       | "Preliminary Designation"
+      | "SOM Generate Appeals Notice"
+      | "Send Decision Notice"
   ): this {
     onTab("Task");
     onTab("Processes");
@@ -244,6 +255,20 @@ export class ClaimPage {
     return this;
   }
 
+  addAppeal(): this {
+    // This button turns out to be unclickable without force, because selecting
+    // it seems to scroll it out of view. Force works around that.
+    cy.get('a[title="Add Sub Case"]').click({
+      force: true,
+    });
+    waitForAjaxComplete();
+    cy.get('a[title="Create Appeal"]').click({
+      force: true,
+    });
+    waitForAjaxComplete();
+    return this;
+  }
+
   withdraw(): this {
     cy.get('a[title="Withdraw the Pending Leave Request"').click({
       force: true,
@@ -263,7 +288,6 @@ export class ClaimPage {
     onTab("Absence Hub");
     return this;
   }
-
   recordCancellation(): this {
     const recordCancelledTime = () => {
       cy.contains("td", "Known").click();
@@ -568,17 +592,68 @@ class OutstandingRequirementsPage {
     ).click();
     cy.get("#footerButtonsBar input[value='OK']").click();
   }
-  complete(receipt = "Received", reason = "Complete Employer Confirmation") {
-    cy.wait("@ajaxRender");
-    cy.wait(200);
-    cy.get("input[value='Complete']").click();
-    cy.get("#CompletionReasonWidget_PopupWidgetWrapper").within(() => {
-      cy.findByLabelText("Completion Reason").select(receipt);
-      cy.findByLabelText("Completion Notes").type(
-        `{selectall}{backspace}${reason}`
-      );
-      cy.findByText("Ok").click({ force: true });
-    });
+  complete(receipt: string, reason: string, hasAccess: boolean): this {
+    if (hasAccess) {
+      cy.wait("@ajaxRender");
+      cy.wait(200);
+      cy.get("input[value='Complete']").click();
+      cy.get("#CompletionReasonWidget_PopupWidgetWrapper").within(() => {
+        cy.findByLabelText("Completion Reason").select(receipt);
+        cy.findByLabelText("Completion Notes").type(
+          `{selectall}{backspace}${reason}`
+        );
+        cy.findByText("Ok").click({force: true});
+      });
+    } else {
+      cy.wait("@ajaxRender");
+      cy.wait(200);
+      cy.get("input[value='Complete']").should('be.disabled');
+    }
+    return this;
+  }
+  suppress(reason: string, notes: string, hasAccess: boolean): this {
+    if (hasAccess) {
+      cy.wait("@ajaxRender");
+      cy.wait(200);
+      cy.get("input[value='Suppress']").click();
+      cy.get("#SuppressionReasonWidget_PopupWidgetWrapper").within(() => {
+        cy.findByLabelText("Suppression Reason").select(reason);
+        cy.findByLabelText("Suppression Notes").type(
+          `{selectall}{backspace}${notes}`
+        );
+        cy.findByText("Ok").click({force: true});
+      });
+    } else {
+      cy.wait("@ajaxRender");
+      cy.wait(200);
+      cy.get("input[value='Suppress']").should('be.disabled');
+    }
+    return this;
+  }
+  removeOR(hasAccess: boolean): this {
+    if (hasAccess) {
+      cy.wait("@ajaxRender");
+      cy.wait(200);
+      cy.get("input[value='Remove']").click();
+      cy.get("#PopupContainer input[type='submit'][value='Yes']").click();
+    } else {
+      cy.wait("@ajaxRender");
+      cy.wait(200);
+      cy.get("input[value='Remove']").should('be.disabled');
+    }
+    return this;
+  }
+  reopen(hasAccess: boolean): this {
+    if (hasAccess) {
+      cy.wait("@ajaxRender");
+      cy.wait(200);
+      cy.get("input[value='Reopen']").click();
+    } else {
+      cy.wait("@ajaxRender");
+      cy.wait(200);
+      cy.get("input[value='Reopen']").should('be.disabled');
+    }
+    return this;
   }
 }
 
@@ -679,6 +754,31 @@ class TasksPage {
     );
     cy.wait(150);
     cy.get("#footerButtonsBar input[value='OK']").click();
+    return this;
+  }
+
+  closeAppealReview(): this {
+    cy.findByText("Appeal", { selector: "a" }).click();
+    waitForAjaxComplete();
+    cy.contains("td", "Review Appeal").click();
+    waitForAjaxComplete();
+    cy.get('input[title="Close selected task"]').click();
+    waitForAjaxComplete();
+    fineos.clickBottomWidgetButton("OK");
+    waitForAjaxComplete();
+    return this;
+  }
+
+  closeConductHearing(): this {
+    cy.findByText("Appeal", { selector: "a" }).click();
+    waitForAjaxComplete();
+    cy.contains("td", "Conduct Hearing").click();
+    waitForAjaxComplete();
+    cy.contains("td", "Closed - Claim Decision Changed").click();
+    waitForAjaxComplete();
+    fineos.clickBottomWidgetButton("OK");
+    waitForAjaxComplete();
+    assertClaimStatus("Closed - Claim Decision Changed");
     return this;
   }
 
@@ -1197,7 +1297,7 @@ class AvailabilityPage {
     });
   }
 
-  weightDaysCheck(amount_weeks: string): this {
+  assertDailyWeight(amount_weeks: string): this {
     cy.contains("table.ListTable", "Weight");
     const selector =
       ".divListviewGrid .ListTable td[id*='ListviewWidgetWeight0']";

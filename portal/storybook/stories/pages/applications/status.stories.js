@@ -6,7 +6,7 @@ import LeaveReason from "src/models/LeaveReason";
 import React from "react";
 import { ReasonQualifier } from "src/models/BenefitsApplication";
 import faker from "faker";
-import { generateNotice } from "tests/test-utils";
+import { generateNotice } from "storybook/utils/generateNotice";
 
 /**
  * Maps each of the leave scenario options to a list of partial absence periods.

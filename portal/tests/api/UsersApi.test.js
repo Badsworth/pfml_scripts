@@ -1,8 +1,7 @@
-import { Auth } from "@aws-amplify/auth";
 import User from "../../src/models/User";
 import UsersApi from "../../src/api/UsersApi";
+import { mockAuth } from "../test-utils";
 
-jest.mock("@aws-amplify/auth");
 jest.mock("../../src/services/tracker");
 
 const mockFetch = ({
@@ -51,11 +50,7 @@ describe("users API", () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    jest.spyOn(Auth, "currentSession").mockImplementation(() =>
-      Promise.resolve({
-        accessToken: { jwtToken: accessTokenJwt },
-      })
-    );
+    mockAuth(true, accessTokenJwt);
     usersApi = new UsersApi();
   });
 
@@ -70,8 +65,6 @@ describe("users API", () => {
       });
 
       it("resolves with the user in the response", async () => {
-        expect.assertions();
-
         const response = await usersApi.createUser({
           email_address: "mock-user@example.com",
           password: "password123!",
@@ -98,8 +91,6 @@ describe("users API", () => {
       });
 
       it("resolves with the user in the response", async () => {
-        expect.assertions();
-
         const response = await usersApi.getCurrentUser();
 
         expect(response.user).toBeInstanceOf(User);

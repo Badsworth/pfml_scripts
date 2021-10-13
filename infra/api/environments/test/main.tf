@@ -111,4 +111,5 @@ module "api" {
   admin_portal_base_url                               = "https://paidleave-admin-test.eol.mass.gov"
   enable_application_fraud_check                      = "0"
   release_version                                     = var.release_version
+  use_claim_status_url                                = true
 }

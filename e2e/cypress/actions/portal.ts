@@ -200,6 +200,42 @@ export function downloadLegalNotice(claim_id: string): void {
   });
 }
 
+/**
+ * Downloads Legal Notice based on type this can be used for a subcase (e.g. Appeals)
+ *
+ * Also does basic assertion on contents of legal notice doc
+ */
+export function downloadLegalNoticeSubcase(
+  claim_id: string,
+  sub_case: string
+): void {
+  const downloadsFolder = Cypress.config("downloadsFolder");
+  cy.wait("@documentDownload", { timeout: 30000 });
+  cy.task("getNoticeFileName", downloadsFolder).then((filename) => {
+    expect(
+      filename.length,
+      "downloads folder should contain only one file"
+    ).to.equal(1);
+    expect(
+      path.extname(filename[0]),
+      "Expect file extension to be a PDF"
+    ).to.equal(".pdf");
+    cy.task("getParsedPDF", path.join(downloadsFolder, filename[0])).then(
+      (pdf) => {
+        const application_id_from_notice = email.getTextBetween(
+          pdf.text,
+          "Application ID:",
+          "\n"
+        );
+        expect(
+          application_id_from_notice,
+          `The claim_id within the legal notice should be: ${application_id_from_notice}`
+        ).to.equal(claim_id + sub_case);
+      }
+    );
+  });
+}
+
 export function loginClaimant(credentials = getClaimantCredentials()): void {
   login(credentials);
 }
@@ -799,7 +835,7 @@ export function visitActionRequiredERFormPage(fineosAbsenceId: string): void {
   cy.contains("Are you the right person to respond to this application?", {
     timeout: 20000,
   });
-  cy.contains("Yes").click();
+  cy.contains("label", "Yes").click();
   cy.contains("Agree and submit").click();
 }
 
@@ -1041,7 +1077,8 @@ export type ClaimantStatus =
   | "Denied"
   | "Closed"
   | "Withdrawn"
-  | "Pending";
+  | "Pending"
+  | "Cancelled";
 
 export type DashboardClaimStatus =
   | ClaimantStatus
@@ -1785,6 +1822,8 @@ export type FilterOptionsFlags = {
 };
 type FilterOptions = {
   status?: FilterOptionsFlags;
+  // employerId | employerName | option index
+  organization?: string | number;
 };
 /**Filter claims by given parameters
  * @example
@@ -1803,22 +1842,32 @@ export function filterLADashboardBy(filters: FilterOptions): void {
         cy.findByText("Show filters", { exact: false }).click();
     });
   cy.findByText("Hide filters").should("be.visible");
-  const { status } = filters;
-  if (status) {
+  const { status, organization } = filters;
+  if (status)
     cy.get("#filters fieldset").within(() => {
       for (const [k, v] of Object.entries(status)) {
         if (v) cy.findByLabelText(k).click({ force: true });
       }
     });
-    for (const [_key, checkFilter] of Object.entries(status)) {
-      if (checkFilter) {
-        cy.findByText("Apply filters").should("not.be.disabled").click();
-        cy.get('span[role="progressbar"]').should("be.visible");
-        cy.wait("@dashboardClaimQueries");
-        cy.contains("table", "Employer ID number").should("be.visible");
-      }
+
+  if (organization) {
+    if (typeof organization === "string") {
+      cy.get(`select[name="employer_id"] > option`).select(organization);
+    } else {
+      cy.get(`select[name="employer_id"] > option`)
+        .eq(organization)
+        .then((element) =>
+          cy
+            .get(`select[name="employer_id"]`)
+            .select(element.val() as string, { force: true })
+        );
     }
   }
+
+  cy.findByText("Apply filters").should("not.be.disabled").click();
+  cy.get('span[role="progressbar"]').should("be.visible");
+  cy.wait("@dashboardClaimQueries");
+  cy.contains("table", "Employer ID number").should("be.visible");
 }
 /**Looks if dashboard is empty */
 function checkDashboardIsEmpty() {
@@ -1947,16 +1996,32 @@ export const skipLoadingClaimantApplications = (): void => {
 /**
  * Search claims in LA dashboard by id or employee name.
  * Expects to only find a single match.
- * @param idOrName
+ * @param idOrName - claim ID or name of the employee
+ * @param expectSingleMatch - searching by name can yield more than 1 match, default `true`
  */
-export function searchClaims(idOrName: string): void {
+export function searchClaims(idOrName: string, expectSingleMatch = true): void {
   cy.findByLabelText("Search for employee name or application ID").type(
     `${idOrName}{enter}`
   );
   cy.get('span[role="progressbar"]').should("be.visible");
   cy.wait("@dashboardClaimQueries");
+  cy.get("table tbody tr")
+    .should(expectSingleMatch ? "have.lengthOf" : "have.length.gte", 1)
+    .each((el) => {
+      expect(el).to.contain.text(idOrName);
+    });
+}
+
+/**
+ * Reset LA dashboard search input to empty state to show all of available claims.
+ */
+export function clearSearch(): void {
+  cy.findByLabelText("Search for employee name or application ID").type(
+    `{selectAll}{backspace}{enter}`
+  );
+  cy.get('span[role="progressbar"]').should("be.visible");
+  cy.wait("@dashboardClaimQueries");
   cy.get("table tbody").should(($table) => {
-    expect($table.children()).to.have.length(1);
-    expect($table.children()).to.contain.text(idOrName);
+    expect($table.children().length).to.be.gt(1);
   });
 }

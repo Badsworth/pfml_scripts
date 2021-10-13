@@ -35,6 +35,9 @@ class TransactionFileCreatorStep(Step):
     ach_file: Optional[NachaFile] = None
 
     class Metrics(str, enum.Enum):
+        NACHA_ARCHIVE_PATH = "nacha_archive_path"
+        CHECK_ARCHIVE_PATH = "check_archive_path"
+        CHECK_POSITIVE_PAY_ARCHIVE_PATH = "check_positive_pay_archive_path"
         ACH_PAYMENT_COUNT = "ach_payment_count"
         ACH_PRENOTE_COUNT = "ach_prenote_count"
         CHECK_PAYMENT_COUNT = "check_payment_count"
@@ -195,6 +198,7 @@ class TransactionFileCreatorStep(Step):
             ref_file = pub_check.send_check_file(
                 self.check_file, check_archive_path, dfml_sharepoint_outgoing_path
             )
+            self.set_metrics({self.Metrics.CHECK_ARCHIVE_PATH: ref_file.file_location})
             self.increment(self.Metrics.TRANSACTION_FILES_SENT_COUNT)
             self.db_session.add(ref_file)
 
@@ -204,6 +208,7 @@ class TransactionFileCreatorStep(Step):
             ref_file = pub_check.send_positive_pay_file(
                 self.positive_pay_file, check_archive_path, moveit_outgoing_path
             )
+            self.set_metrics({self.Metrics.CHECK_POSITIVE_PAY_ARCHIVE_PATH: ref_file.file_location})
             self.increment(self.Metrics.TRANSACTION_FILES_SENT_COUNT)
             self.db_session.add(ref_file)
 
@@ -211,6 +216,7 @@ class TransactionFileCreatorStep(Step):
             logger.info("No ACH file to send to PUB")
         else:
             ref_file = send_nacha_file(self.ach_file, ach_archive_path, moveit_outgoing_path)
+            self.set_metrics({self.Metrics.NACHA_ARCHIVE_PATH: ref_file.file_location})
             self.increment(self.Metrics.TRANSACTION_FILES_SENT_COUNT)
             self.db_session.add(ref_file)
 

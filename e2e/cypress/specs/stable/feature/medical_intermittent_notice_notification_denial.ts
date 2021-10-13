@@ -121,9 +121,6 @@ describe("Denial Notification and Notice", () => {
               cy.contains(employeeFullName);
               cy.contains(dob);
               cy.contains(submission.fineos_absence_id);
-              email.assertValidSubject(
-                `${claim.first_name} ${claim.last_name}`
-              );
             });
         });
       });
@@ -164,9 +161,6 @@ describe("Denial Notification and Notice", () => {
               cy.contains(submission.fineos_absence_id);
               cy.get(
                 `a[href*="/employers/applications/status/?absence_id=${submission.fineos_absence_id}"]`
-              );
-              email.assertValidSubject(
-                `${claim.first_name} ${claim.last_name}`
               );
             });
         });

@@ -39,7 +39,6 @@ describe("EmployeeNotice", () => {
   });
 
   it("does not select any option by default", () => {
-    expect.assertions();
     renderComponent();
     const choices = screen.getAllByRole("radio");
 
@@ -50,7 +49,6 @@ describe("EmployeeNotice", () => {
   });
 
   it("unselects and disables options if fraud is reported", () => {
-    expect.assertions();
     renderComponent({ fraudInput: "Yes" });
     const choices = screen.getAllByRole("radio");
 

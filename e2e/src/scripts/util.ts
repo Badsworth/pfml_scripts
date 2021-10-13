@@ -1,6 +1,9 @@
+import {
+  SubmissionResult,
+  ClaimStateTrackerInterface,
+} from "./../submission/ClaimStateTracker";
 import { consume, pipeline } from "streaming-iterables";
 import { GeneratedClaim, DehydratedClaim } from "../generation/Claim";
-import ClaimStateTracker from "../submission/ClaimStateTracker";
 import { ApplicationResponse } from "../api";
 import {
   logSubmissions,
@@ -16,14 +19,13 @@ import {
   closeDocumentsErOpen,
 } from "../submission/PostSubmit";
 import { Fineos } from "../submission/fineos.pages";
-
+import { tap, filter } from "streaming-iterables";
 export type PostSubmitCallback = (
   claim: GeneratedClaim,
   response: ApplicationResponse
 ) =>
   | Promise<void>
   | ((claim: DehydratedClaim, response: ApplicationResponse) => Promise<void>);
-
 /**
  * Submit a batch of claims to the system.
  *
@@ -37,19 +39,39 @@ export type PostSubmitCallback = (
  */
 export async function submit(
   claims: AsyncIterable<GeneratedClaim>,
-  tracker: ClaimStateTracker,
+  tracker: ClaimStateTrackerInterface,
   concurrency = 1,
   maxConsecErrors: number,
   postSubmit?: PostSubmitCallback
 ): Promise<void> {
+  /**
+   * An iterator callback to filter out claims that have already been submitted.
+   */
+  const trackerFilter = filter(
+    async (claim: GeneratedClaim): Promise<boolean> => {
+      return !(await tracker.has(claim.id));
+    }
+  );
+
+  /**
+   * An iterator callback to mark claims as submitted as they are processed.
+   */
+  const trackerTrack = tap(async (result: SubmissionResult): Promise<void> => {
+    tracker.set({
+      claim_id: result.claim.id,
+      fineos_absence_id: result.result?.fineos_absence_id,
+      error: result.error?.message,
+    });
+  });
+
   // Use async iterables to consume all of the claims. Order of the processing steps in this pipeline matters!
   // Filtering must happen before submit, and tracking should happen before the failure watcher.
   await pipeline(
     () => claims,
-    tracker.filter, // Filter out claims that have already been submitted.
+    trackerFilter, // Filter out claims that have already been submitted.
     submitAll(getPortalSubmitter(), concurrency), // Execute submission.
     postProcess(postSubmit ?? (() => Promise.resolve()), concurrency), // Run post-processing steps (this is optional).
-    tracker.track, // Track claims that have been submitted.
+    trackerTrack, // Track claims that have been submitted.
     logSubmissions, // Log submission results to console.
     (submission) => watchFailures(submission, maxConsecErrors), // Exit after 3 failures.
     consume

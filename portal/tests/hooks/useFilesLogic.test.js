@@ -38,7 +38,7 @@ describe("useFilesLogic", () => {
       expect(catchError).not.toHaveBeenCalled();
       expect(files.items).toEqual([
         { id: "TempFile1", file: makeFile({ name: "file1" }) },
-        { id: "TempFile3", file: makeFile({ name: "file2" }) },
+        { id: "TempFile2", file: makeFile({ name: "file2" }) },
       ]);
     });
 

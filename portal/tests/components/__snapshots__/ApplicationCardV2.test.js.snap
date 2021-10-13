@@ -68,18 +68,18 @@ exports[`ApplicationCardV2 with a completed application renders the component 1`
       >
         Other actions
       </h4>
-      <a
-        class="usa-button display-block margin-bottom-3 usa-button--unstyled"
-        href="/applications/status/?absence_case_id=NTN-111-ABS-01#view_notices"
+      <button
+        class="usa-button position-relative display-block margin-bottom-3 usa-button--unstyled"
+        type="button"
       >
         View your notices
-      </a>
-      <a
-        class="usa-button display-block margin-bottom-2 usa-button--unstyled"
-        href="/applications/status/?absence_case_id=NTN-111-ABS-01#upload_documents"
+      </button>
+      <button
+        class="usa-button position-relative display-block margin-bottom-2 usa-button--unstyled"
+        type="button"
       >
         Respond to a request for information
-      </a>
+      </button>
     </div>
   </article>
 </div>

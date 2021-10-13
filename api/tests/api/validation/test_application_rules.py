@@ -1715,24 +1715,30 @@ def test_has_employer_benefits_true_no_benefit():
     ] == issues
 
 
+def test_has_employer_benefits_true_zero_benefit():
+    application = ApplicationFactory.build()
+    application.has_employer_benefits = True
+
+    benefits = [
+        EmployerBenefitFactory.build(
+            application_id=application.application_id, benefit_amount_dollars=0
+        )
+    ]
+    application.employer_benefits = benefits
+    issues = get_conditional_issues(application)
+
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.minimum,
+            message="benefit_amount_dollars must be greater than zero",
+            field="employer_benefits[0].benefit_amount_dollars",
+        )
+    ] == issues
+
+
 def test_employer_benefit_no_issues():
     application = ApplicationFactory.build()
     benefits = [EmployerBenefitFactory.build(application_id=application.application_id)]
-    application.employer_benefits = benefits
-
-    issues = get_conditional_issues(application)
-    assert [] == issues
-
-
-def test_employer_benefit_amount_fields_are_optional():
-    application = ApplicationFactory.build()
-    benefits = [
-        EmployerBenefitFactory.build(
-            application_id=application.application_id,
-            benefit_amount_dollars=None,
-            benefit_amount_frequency_id=None,
-        )
-    ]
     application.employer_benefits = benefits
 
     issues = get_conditional_issues(application)
@@ -1758,44 +1764,14 @@ def test_employer_benefit_missing_fields():
             message="employer_benefits[0].is_full_salary_continuous is required",
             field="employer_benefits[0].is_full_salary_continuous",
         ),
-    ] == issues
-
-
-def test_employer_benefit_amount_dollars_required():
-    application = ApplicationFactory.build()
-    benefits = [
-        EmployerBenefitFactory.build(
-            application_id=application.application_id, benefit_amount_dollars=None,
-        )
-    ]
-    application.employer_benefits = benefits
-
-    issues = get_conditional_issues(application)
-    assert [
         ValidationErrorDetail(
             type=IssueType.required,
-            rule=IssueRule.conditional,
-            message="employer_benefits[0].benefit_amount_dollars is required if employer_benefits[0].benefit_amount_frequency is set",
+            message="employer_benefits[0].benefit_amount_dollars is required",
             field="employer_benefits[0].benefit_amount_dollars",
         ),
-    ] == issues
-
-
-def test_employer_benefit_amount_frequency_required():
-    application = ApplicationFactory.build()
-    benefits = [
-        EmployerBenefitFactory.build(
-            application_id=application.application_id, benefit_amount_frequency_id=None,
-        )
-    ]
-    application.employer_benefits = benefits
-
-    issues = get_conditional_issues(application)
-    assert [
         ValidationErrorDetail(
             type=IssueType.required,
-            rule=IssueRule.conditional,
-            message="employer_benefits[0].benefit_amount_frequency is required if employer_benefits[0].benefit_amount_dollars is set",
+            message="employer_benefits[0].benefit_amount_frequency is required",
             field="employer_benefits[0].benefit_amount_frequency",
         ),
     ] == issues
@@ -1966,24 +1942,30 @@ def test_has_other_incomes_true_no_income():
     ] == issues
 
 
-def test_other_income_no_issues():
+def test_has_other_incomes_true_zero_income():
     application = ApplicationFactory.build()
-    incomes = [OtherIncomeFactory.build(application_id=application.application_id,)]
+    application.has_other_incomes = True
+
+    incomes = [
+        OtherIncomeFactory.build(
+            application_id=application.application_id, income_amount_dollars=0,
+        )
+    ]
     application.other_incomes = incomes
 
     issues = get_conditional_issues(application)
-    assert [] == issues
-
-
-def test_other_income_amount_fields_are_optional():
-    application = ApplicationFactory.build()
-    incomes = [
-        OtherIncomeFactory.build(
-            application_id=application.application_id,
-            income_amount_dollars=None,
-            income_amount_frequency_id=None,
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.minimum,
+            message="income_amount_dollars must be greater than zero",
+            field="other_incomes[0].income_amount_dollars",
         )
-    ]
+    ] == issues
+
+
+def test_other_income_no_issues():
+    application = ApplicationFactory.build()
+    incomes = [OtherIncomeFactory.build(application_id=application.application_id,)]
     application.other_incomes = incomes
 
     issues = get_conditional_issues(application)
@@ -2009,44 +1991,14 @@ def test_other_income_missing_fields():
             message="other_incomes[0].income_type is required",
             field="other_incomes[0].income_type",
         ),
-    ] == issues
-
-
-def test_other_income_amount_dollars_required():
-    application = ApplicationFactory.build()
-    incomes = [
-        OtherIncomeFactory.build(
-            application_id=application.application_id, income_amount_dollars=None,
-        )
-    ]
-    application.other_incomes = incomes
-
-    issues = get_conditional_issues(application)
-    assert [
         ValidationErrorDetail(
             type=IssueType.required,
-            rule=IssueRule.conditional,
-            message="other_incomes[0].income_amount_dollars is required if other_incomes[0].income_amount_frequency is set",
+            message="other_incomes[0].income_amount_dollars is required",
             field="other_incomes[0].income_amount_dollars",
         ),
-    ] == issues
-
-
-def test_other_income_amount_frequency_required():
-    application = ApplicationFactory.build()
-    incomes = [
-        OtherIncomeFactory.build(
-            application_id=application.application_id, income_amount_frequency_id=None,
-        )
-    ]
-    application.other_incomes = incomes
-
-    issues = get_conditional_issues(application)
-    assert [
         ValidationErrorDetail(
             type=IssueType.required,
-            rule=IssueRule.conditional,
-            message="other_incomes[0].income_amount_frequency is required if other_incomes[0].income_amount_dollars is set",
+            message="other_incomes[0].income_amount_frequency is required",
             field="other_incomes[0].income_amount_frequency",
         ),
     ] == issues

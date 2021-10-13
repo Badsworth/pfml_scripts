@@ -13,9 +13,12 @@ describe("Tag", () => {
     }
   );
 
-  it("applies small padding when paddingSm is set", () => {
-    const { container } = render(<Tag state="pending" label="Foo" paddingSm />);
+  it("does not have default padding when alternative className padding-x is given", () => {
+    const { container } = render(
+      <Tag state="pending" label="Foo" className="padding-x-1" />
+    );
 
+    expect(container.firstChild).not.toHaveClass("padding-x-205");
     expect(container.firstChild).toHaveClass("padding-x-1");
   });
 });

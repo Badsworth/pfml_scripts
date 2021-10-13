@@ -71,6 +71,7 @@ class Constants:
     FILE_NAME_PUB_EZ_CHECK = "EOLWD-DFML-EZ-CHECK"
     FILE_NAME_PUB_POSITIVE_PAY = "EOLWD-DFML-POSITIVE-PAY"
     FILE_NAME_PAYMENT_AUDIT_REPORT = "Payment-Audit-Report"
+    FILE_NAME_RAW_PUB_ACH_FILE = "ACD9T136-DFML"
 
     NACHA_FILE_FORMAT = f"%Y-%m-%d-%H-%M-%S-{FILE_NAME_PUB_NACHA}"
 
@@ -141,6 +142,8 @@ class FineosExtractConstants:
     VBI_REQUESTED_ABSENCE_SOM = FineosExtract(
         file_name="VBI_REQUESTEDABSENCE_SOM.csv",
         field_names=[
+            "ABSENCEPERIOD_CLASSID",
+            "ABSENCEPERIOD_INDEXID",
             "ABSENCEREASON_COVERAGE",
             "ABSENCE_CASENUMBER",
             "NOTIFICATION_CASENUMBER",
@@ -150,6 +153,7 @@ class FineosExtractConstants:
             "LEAVEREQUEST_EVIDENCERESULTTYPE",
             "EMPLOYEE_CUSTOMERNO",
             "EMPLOYER_CUSTOMERNO",
+            "LEAVEREQUEST_ID",
         ],
     )
 

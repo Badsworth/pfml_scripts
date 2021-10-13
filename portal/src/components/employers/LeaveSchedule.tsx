@@ -1,0 +1,134 @@
+import EmployerClaim from "../../models/EmployerClaim";
+import IntermittentLeaveSchedule from "./IntermittentLeaveSchedule";
+import PropTypes from "prop-types";
+import React from "react";
+import ReviewHeading from "../ReviewHeading";
+import Table from "../Table";
+import { Trans } from "react-i18next";
+import formatDateRange from "../../utils/formatDateRange";
+import { get } from "lodash";
+import { useTranslation } from "../../locales/i18n";
+
+/**
+ * Display leave periods by leave type
+ * in the Leave Admin claim review page.
+ */
+const LeaveSchedule = ({ hasDocuments, claim }) => {
+  const { t } = useTranslation();
+  const {
+    isContinuous,
+    isIntermittent,
+    isReducedSchedule,
+    leave_details: { intermittent_leave_periods },
+  } = claim;
+
+  const buildContext = () => {
+    if (isIntermittent && hasDocuments) return "intermittentWithDocuments";
+    if (!isIntermittent && hasDocuments) return "documents";
+  };
+
+  return (
+    <React.Fragment>
+      <ReviewHeading level="2">
+        {t("components.employersLeaveSchedule.header")}
+      </ReviewHeading>
+      <p>
+        <Trans
+          i18nKey="components.employersLeaveSchedule.caption"
+          tOptions={{
+            context: buildContext() || "",
+          }}
+        />
+      </p>
+      <Table className="width-full">
+        <thead>
+          <tr>
+            <th scope="col">
+              {t("components.employersLeaveSchedule.dateRangeLabel")}
+            </th>
+            <th scope="col">
+              {t("components.employersLeaveSchedule.leaveFrequencyLabel")}
+            </th>
+            <th scope="col">
+              {t("components.employersLeaveSchedule.detailsLabel")}
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          {isContinuous && (
+            <tr>
+              <th scope="row">
+                {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
+                {formatDateRange(
+                  get(
+                    claim,
+                    "leave_details.continuous_leave_periods[0].start_date"
+                  ),
+                  get(
+                    claim,
+                    "leave_details.continuous_leave_periods[0].end_date"
+                  )
+                )}
+              </th>
+              <td>
+                {t(
+                  "components.employersLeaveSchedule.claimDurationType_continuous"
+                )}
+              </td>
+              <td></td>
+            </tr>
+          )}
+          {isReducedSchedule && (
+            <tr>
+              <th scope="row">
+                {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
+                {formatDateRange(
+                  get(
+                    claim,
+                    "leave_details.reduced_schedule_leave_periods[0].start_date"
+                  ),
+                  get(
+                    claim,
+                    "leave_details.reduced_schedule_leave_periods[0].end_date"
+                  )
+                )}
+              </th>
+              <td>
+                {t(
+                  "components.employersLeaveSchedule.claimDurationType_reducedSchedule"
+                )}
+              </td>
+              <td>
+                <Trans
+                  i18nKey="components.employersLeaveSchedule.lead"
+                  components={{
+                    "contact-center-phone-link": (
+                      <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                    ),
+                  }}
+                  tOptions={{
+                    context: hasDocuments ? "hasDocs" : "noDocs",
+                  }}
+                />
+              </td>
+            </tr>
+          )}
+          {isIntermittent && (
+            <IntermittentLeaveSchedule
+              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ intermittentLeavePeriods: any; hasDocument... Remove this comment to see the full error message
+              intermittentLeavePeriods={intermittent_leave_periods}
+              hasDocuments={hasDocuments}
+            />
+          )}
+        </tbody>
+      </Table>
+    </React.Fragment>
+  );
+};
+
+LeaveSchedule.propTypes = {
+  claim: PropTypes.instanceOf(EmployerClaim).isRequired,
+  hasDocuments: PropTypes.bool,
+};
+
+export default LeaveSchedule;

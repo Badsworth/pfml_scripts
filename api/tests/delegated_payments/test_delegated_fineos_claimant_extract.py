@@ -75,7 +75,7 @@ def emp_updates_path(tmp_path, mock_fineos_s3_bucket):
     requested_absence_file_name = "2020-12-21-19-20-42-VBI_REQUESTEDABSENCE_SOM.csv"
     content_line_one = '"NOTIFICATION_CASENUMBER","ABSENCE_CASENUMBER","ABSENCE_CASETYPENAME","ABSENCE_CASESTATUS","ABSENCE_CASEOWNER","ABSENCE_CASECREATIONDATE","ABSENCE_CASELASTUPDATEDATE","ABSENCE_INTAKESOURCE","ABSENCE_NOTIFIEDBY","EMPLOYEE_CUSTOMERNO","EMPLOYEE_MANAGER_CUSTOMERNO","EMPLOYEE_ADDTL_MNGR_CUSTOMERNO","EMPLOYER_CUSTOMERNO","EMPLOYER_NAME","EMPLOYMENT_CLASSID","EMPLOYMENT_INDEXID","LEAVEREQUEST_ID","LEAVEREQUEST_NOTIFICATIONDATE","LEAVEREQUEST_LASTUPDATEDATE","LEAVEREQUEST_ORIGINALREQUEST","LEAVEREQUEST_EVIDENCERESULTTYPE","LEAVEREQUEST_DECISION","LEAVEREQUEST_DIAGNOSIS","ABSENCEREASON_CLASSID","ABSENCEREASON_INDEXID","ABSENCEREASON_NAME","ABSENCEREASON_QUALIFIER1","ABSENCEREASON_QUALIFIER2","ABSENCEREASON_COVERAGE","PRIMARY_RELATIONSHIP_NAME","PRIMARY_RELATIONSHIP_QUAL1","PRIMARY_RELATIONSHIP_QUAL2","PRIMARY_RELATIONSHIP_COVER","SECONDARY_RELATIONSHIP_NAME","SECONDARY_RELATIONSHIP_QUAL1","SECONDARY_RELATIONSHIP_QUAL2","SECONDARY_RELATIONSHIP_COVER","ABSENCEPERIOD_CLASSID","ABSENCEPERIOD_INDEXID","ABSENCEPERIOD_TYPE","ABSENCEPERIOD_STATUS","ABSENCEPERIOD_START","ABSENCEPERIOD_END","EPISODE_FREQUENCY_COUNT","EPISODE_FREQUENCY_PERIOD","EPISODIC_FREQUENCY_PERIOD_UNIT","EPISODE_DURATION","EPISODIC_DURATION_UNIT"'
     content_line_two = '"NTN-2922","NTN-2922-ABS-01","Absence Case","Adjudication","SaviLinx","2020-11-02 09:52:11","2020-11-02 09:53:10","Phone","Employee","339","","2825","96","Wayne Enterprises","14453","8524","2198","2020-11-02 00:00:00","2020-11-02 09:53:30","1","Pending","Pending","","14412","7","Child Bonding","Adoption","","Family","","","","Please Select","","","","Please Select","14449","6236","Time off period","Please Select","2021-01-15 00:00:00","2021-01-18 00:00:00","","","Please Select","","Please Select"'
-    content_line_two_case_two = '"NTN-2922","NTN-2922-ABS-02","Absence Case","Adjudication","SaviLinx","2020-11-02 09:52:11","2020-11-02 09:53:10","Phone","Employee","339","","2825","96","Wayne Enterprises","14453","8524","2198","2020-11-02 00:00:00","2020-11-02 09:53:30","1","Pending","Pending","","14412","7","Child Bonding","Adoption","","Family","","","","Please Select","","","","Please Select","14449","6236","Time off period","Please Select","2021-01-15 00:00:00","2021-01-18 00:00:00","","","Please Select","","Please Select"'
+    content_line_two_case_two = '"NTN-2922","NTN-2922-ABS-02","Absence Case","Adjudication","SaviLinx","2020-11-02 09:52:11","2020-11-02 09:53:10","Phone","Employee","339","","2825","96","Wayne Enterprises","14453","8524","2198","2020-11-02 00:00:00","2020-11-02 09:53:30","1","Pending","Pending","","14412","7","Child Bonding","Adoption","","Family","","","","Please Select","","","","Please Select","14449","6237","Time off period","Please Select","2021-01-15 00:00:00","2021-01-18 00:00:00","","","Please Select","","Please Select"'
     content_line_three = '"NTN-2923","NTN-2923-ABS-01","Absence Case","Adjudication","SaviLinx","2020-11-02 09:57:26","2020-11-02 10:03:18","Phone","Employee","3277","","2825","96","Wayne Enterprises","14453","8525","2199","2020-11-01 00:00:00","2020-11-02 10:03:18","1","Pending","Pending","","14412","7","Child Bonding","Adoption","","Family","","","","Please Select","","","","Please Select","14449","6238","Time off period","Please Select","2021-02-19 00:00:00","2021-02-19 00:00:00","","","Please Select","","Please Select"'
     content_line_four = '"NTN-1308","NTN-1308-ABS-01","Absence Case","Adjudication","SaviLinx","2020-10-22 21:09:24","2020-10-22 21:09:33","Self-Service","Employee","339","","2825","96","Wayne Enterprises","14453","7310","997","2020-10-22 21:09:24","2020-10-22 21:09:33","1","Satisfied","Pending","","14412","19","Serious Health Condition - Employee","Not Work Related","Sickness","Employee","","","","Please Select","","","","Please Select","14449","4230","Time off period","Known","2021-05-13 00:00:00","2021-07-22 00:00:00","","","Please Select","","Please Select"'
     content = f"{content_line_one}\n{content_line_two}\n{content_line_two_case_two}\n{content_line_three}\n{content_line_four}"
@@ -455,6 +455,30 @@ def make_claimant_data_from_fineos_data(fineos_data):
     extract_data.employee_feed.indexed_data = {fineos_data.customer_number: employee_feeds}
 
     requested_absences = [fineos_data.get_requested_absence_record()]
+
+    extract_data.requested_absence_info.indexed_data = {
+        fineos_data.absence_case_number: requested_absences
+    }
+
+    return claimant_extract.ClaimantData(
+        extract_data, fineos_data.absence_case_number, requested_absences
+    )
+
+
+def make_claimant_data_with_incorrect_request_absence(fineos_data):
+    # This method guarantees the request absence fields ABSENCEPERIOD_CLASSID, ABSENCEPERIOD_INDEXID are set to Unknown
+    extract_data = claimant_extract.ExtractData(
+        payments_util.CLAIMANT_EXTRACT_FILE_NAMES, "2021-02-21"
+    )
+
+    employee_feeds = [fineos_data.get_employee_feed_record()]
+    extract_data.employee_feed.indexed_data = {fineos_data.customer_number: employee_feeds}
+
+    requested_absence = fineos_data.get_requested_absence_record()
+    requested_absence["ABSENCEPERIOD_CLASSID"] = "Unknown"
+    requested_absence["ABSENCEPERIOD_INDEXID"] = "Unknown"
+
+    requested_absences = [requested_absence]
     extract_data.requested_absence_info.indexed_data = {
         fineos_data.absence_case_number: requested_absences
     }
@@ -508,7 +532,7 @@ def test_create_or_update_claim_invalid_values(claimant_extract_step, test_db_se
     claimant_data = make_claimant_data_from_fineos_data(fineos_data)
 
     # The number of required fields we pull out of the requested absence file
-    assert len(claimant_data.validation_container.validation_issues) == 7
+    assert len(set(claimant_data.validation_container.validation_issues)) == 10
 
     # The claim will be created, but with just an absence case number
     claim = claimant_extract_step.create_or_update_claim(claimant_data)
@@ -520,6 +544,261 @@ def test_create_or_update_claim_invalid_values(claimant_extract_step, test_db_se
     assert claim.absence_period_start_date is None
     assert claim.absence_period_end_date is None
     assert not claim.is_id_proofed
+
+
+def test_create_or_update_absence_period_happy_path(claimant_extract_step, test_db_session):
+    # Create claimant data, and make sure there aren't any initial validation issues
+    formatted_claimant_data = FineosClaimantData(
+        absence_case_number="ABS_001",
+        leave_request_start="2021-02-14",
+        leave_request_end="2021-02-28",
+        leave_request_id=5,
+        leave_request_evidence="Satisfied",
+        absence_period_c_value=1448,
+        absence_period_i_value=1,
+    )
+    claimant_data = make_claimant_data_from_fineos_data(formatted_claimant_data)
+    assert len(claimant_data.validation_container.validation_issues) == 0
+
+    absence_period_data = claimant_data.absence_period_data
+    assert len(absence_period_data) == 1
+
+    absence_period_info = absence_period_data[0]
+
+    claim = claimant_extract_step.create_or_update_claim(claimant_data)
+    absence_period = claimant_extract_step.create_or_update_absence_period(
+        absence_period_info, claim, claimant_data
+    )
+
+    assert claim is not None
+    assert absence_period is not None
+
+    assert absence_period.claim_id == claim.claim_id
+    assert absence_period.fineos_absence_period_class_id == 1448
+    assert absence_period.fineos_absence_period_index_id == 1
+    assert absence_period.is_id_proofed is True
+    assert absence_period.absence_period_start_date == datetime.date(2021, 2, 14)
+    assert absence_period.absence_period_end_date == datetime.date(2021, 2, 28)
+    assert absence_period.fineos_leave_request_id == 5
+
+    # Create new claimant data to update existing absence_period. We make sure the claim and claimant_data's
+    # absence_period_c_value and absence_period_i_value remain unchanged.
+    new_formatted_claimant_data = FineosClaimantData(
+        absence_case_number="ABS_001",
+        leave_request_start="2021-03-07",
+        leave_request_end="2021-12-11",
+        leave_request_id=2,
+        leave_request_evidence="UnSatisfied",
+        absence_period_c_value=1448,
+        absence_period_i_value=1,
+    )
+
+    new_claimant_data = make_claimant_data_from_fineos_data(new_formatted_claimant_data)
+    assert len(new_claimant_data.validation_container.validation_issues) == 0
+
+    new_absence_period_data = new_claimant_data.absence_period_data
+
+    print(new_absence_period_data)
+
+    assert len(new_absence_period_data) == 1
+
+    new_absence_period_info = new_absence_period_data[0]
+    absence_period = claimant_extract_step.create_or_update_absence_period(
+        new_absence_period_info, claim, new_claimant_data
+    )
+
+    assert absence_period is not None
+
+    assert absence_period.claim_id == claim.claim_id
+    assert absence_period.fineos_absence_period_class_id == 1448
+    assert absence_period.fineos_absence_period_index_id == 1
+    assert absence_period.is_id_proofed is False
+    assert absence_period.absence_period_start_date == datetime.date(2021, 3, 7)
+    assert absence_period.absence_period_end_date == datetime.date(2021, 12, 11)
+    assert absence_period.fineos_leave_request_id == 2
+
+
+def test_create_or_update_absence_period_invalid_values(claimant_extract_step, test_db_session):
+    # Create claimant data with just an absence case number
+    fineos_data = FineosClaimantData(
+        generate_defaults=False,
+        absence_case_number="NTN-001-ABS-01",
+        absence_period_c_value=1010,
+        absence_period_i_value=201,
+    )
+    claimant_data = make_claimant_data_from_fineos_data(fineos_data)
+
+    # The number of required fields we pull out of the requested absence file
+    assert len(set(claimant_data.validation_container.validation_issues)) == 8
+
+    # The claim will be created, but with just an absence case number
+    absence_period_data = claimant_data.absence_period_data
+    assert len(absence_period_data) == 1
+
+    absence_period_info = absence_period_data[0]
+
+    claim = claimant_extract_step.create_or_update_claim(claimant_data)
+    absence_period = claimant_extract_step.create_or_update_absence_period(
+        absence_period_info, claim, claimant_data
+    )
+
+    assert claim is not None
+    assert absence_period is not None
+
+    assert absence_period.claim_id == claim.claim_id
+    assert absence_period.fineos_absence_period_class_id == 1010
+    assert absence_period.fineos_absence_period_index_id == 201
+    assert absence_period.is_id_proofed is None
+    assert absence_period.absence_period_start_date is None
+    assert absence_period.absence_period_end_date is None
+    assert absence_period.fineos_leave_request_id is None
+
+
+def test_update_absence_period_with_mismatching_claim_id(claimant_extract_step, test_db_session):
+    # We test if an absence period with matching absence_period.(class_id, index_id) has a mis-match on
+    # absence_period.claim_id and claim.claim_id
+
+    # Create claimant data with just an absence case number
+    formatted_claimant_data_1 = FineosClaimantData(
+        absence_case_number="NTN-001-ABS-01", absence_period_c_value=1448, absence_period_i_value=1,
+    )
+
+    claimant_data_1 = make_claimant_data_from_fineos_data(formatted_claimant_data_1)
+    assert len(claimant_data_1.validation_container.validation_issues) == 0
+
+    # The claim will be created, but with just an absence case number
+    absence_period_data = claimant_data_1.absence_period_data
+    assert len(absence_period_data) == 1
+
+    absence_period_info_1 = absence_period_data[0]
+
+    claim_1 = claimant_extract_step.create_or_update_claim(claimant_data_1)
+    absence_period_1 = claimant_extract_step.create_or_update_absence_period(
+        absence_period_info_1, claim_1, claimant_data_1
+    )
+
+    assert claim_1 is not None
+    assert absence_period_1 is not None
+
+    formatted_claimant_data_2 = FineosClaimantData(
+        absence_case_number="NTN-001-ABS-02", absence_period_c_value=1448, absence_period_i_value=1,
+    )
+
+    claimant_data_2 = make_claimant_data_from_fineos_data(formatted_claimant_data_2)
+    assert len(claimant_data_2.validation_container.validation_issues) == 0
+
+    # The claim will be created, but with just an absence case number
+    absence_period_data = claimant_data_2.absence_period_data
+    assert len(absence_period_data) == 1
+
+    absence_period_info_2 = absence_period_data[0]
+
+    claim_2 = claimant_extract_step.create_or_update_claim(claimant_data_2)
+    absence_period_2 = claimant_extract_step.create_or_update_absence_period(
+        absence_period_info_2, claim_2, claimant_data_2
+    )
+
+    assert claim_2 is not None
+    assert absence_period_2 is None
+    assert len(claimant_data_2.validation_container.validation_issues) == 1
+
+    validation_issue = claimant_data_2.validation_container.validation_issues[0]
+
+    assert validation_issue.reason == ValidationReason.CLAIMANT_MISMATCH
+
+
+def test_create_or_update_absence_period_with_incomplete_request_absence_data(
+    claimant_extract_step, test_db_session
+):
+    # Create claimant data, with request absence fields ABSENCEPERIOD_CLASSID, ABSENCEPERIOD_INDEXID as Unknown
+    formatted_claimant_data = FineosClaimantData(
+        leave_request_start="2021-02-14",
+        leave_request_end="2021-02-28",
+        leave_request_id=5,
+        leave_request_evidence="UnSatisfied",
+    )
+    claimant_data = make_claimant_data_with_incorrect_request_absence(formatted_claimant_data)
+    assert len(claimant_data.validation_container.validation_issues) == 2
+
+    assert claimant_data.validation_container.validation_issues == [
+        ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEPERIOD_CLASSID"),
+        ValidationIssue(ValidationReason.MISSING_FIELD, "ABSENCEPERIOD_INDEXID"),
+    ]
+
+    absence_period_data = claimant_data.absence_period_data
+    assert len(absence_period_data) == 0
+
+
+def test_create_or_update_absence_period_with_duplicated_rows_but_different_id_proofing(
+    claimant_extract_step, test_db_session
+):
+    # Create two exact claimant data, except leave_request_evidence as Satisfied for one and empty string for other
+    formatted_claimant_data_1 = FineosClaimantData(
+        absence_case_number="ABS_001",
+        leave_request_start="2021-02-14",
+        leave_request_end="2021-02-28",
+        leave_request_id=5,
+        leave_request_evidence=" ",
+        absence_period_c_value=1448,
+        absence_period_i_value=1,
+    )
+
+    claimant_data_1 = make_claimant_data_from_fineos_data(formatted_claimant_data_1)
+    assert len(claimant_data_1.validation_container.validation_issues) == 0
+
+    absence_period_data = claimant_data_1.absence_period_data
+    assert len(absence_period_data) == 1
+
+    absence_period_info = absence_period_data[0]
+
+    claim = claimant_extract_step.create_or_update_claim(claimant_data_1)
+    absence_period = claimant_extract_step.create_or_update_absence_period(
+        absence_period_info, claim, claimant_data_1
+    )
+
+    assert claim is not None
+    assert absence_period is not None
+
+    assert absence_period.claim_id == claim.claim_id
+    assert absence_period.fineos_absence_period_class_id == 1448
+    assert absence_period.fineos_absence_period_index_id == 1
+    assert absence_period.is_id_proofed is None
+    assert absence_period.absence_period_start_date == datetime.date(2021, 2, 14)
+    assert absence_period.absence_period_end_date == datetime.date(2021, 2, 28)
+    assert absence_period.fineos_leave_request_id == 5
+
+    formatted_claimant_data_2 = FineosClaimantData(
+        absence_case_number="ABS_001",
+        leave_request_start="2021-02-14",
+        leave_request_end="2021-02-28",
+        leave_request_id=5,
+        leave_request_evidence="Satisfied",
+        absence_period_c_value=1448,
+        absence_period_i_value=1,
+    )
+    claimant_data_2 = make_claimant_data_from_fineos_data(formatted_claimant_data_2)
+    assert len(claimant_data_2.validation_container.validation_issues) == 0
+
+    absence_period_data = claimant_data_2.absence_period_data
+    assert len(absence_period_data) == 1
+
+    absence_period_info = absence_period_data[0]
+
+    claim = claimant_extract_step.create_or_update_claim(claimant_data_2)
+    absence_period = claimant_extract_step.create_or_update_absence_period(
+        absence_period_info, claim, claimant_data_2
+    )
+
+    assert claim is not None
+    assert absence_period is not None
+
+    assert absence_period.claim_id == claim.claim_id
+    assert absence_period.fineos_absence_period_class_id == 1448
+    assert absence_period.fineos_absence_period_index_id == 1
+    assert absence_period.is_id_proofed is True
+    assert absence_period.absence_period_start_date == datetime.date(2021, 2, 14)
+    assert absence_period.absence_period_end_date == datetime.date(2021, 2, 28)
+    assert absence_period.fineos_leave_request_id == 5
 
 
 def add_employee_feed(extract_data: claimant_extract.ExtractData):
@@ -848,6 +1127,10 @@ def test_run_step_validation_issues(
     validation_issues = state_log.outcome["validation_container"]["validation_issues"]
     assert validation_issues == [
         {"reason": "MissingField", "details": "ABSENCEPERIOD_END"},
+        {
+            "reason": "MissingField",
+            "details": "ABSENCEPERIOD_END",
+        },  # ABSENCEPERIOD_END is processed twice
         {"reason": "MissingField", "details": "DATEOFBIRTH"},
         {"reason": "MissingField", "details": "FIRSTNAMES"},
         {"reason": "MissingField", "details": "LASTNAME"},
@@ -894,12 +1177,24 @@ def test_run_step_minimal_viable_claim(
         state_log.end_state_id == State.DELEGATED_CLAIM_ADD_TO_CLAIM_EXTRACT_ERROR_REPORT.state_id
     )
     validation_issues = state_log.outcome["validation_container"]["validation_issues"]
+
     assert validation_issues == [
+        {"reason": "MissingField", "details": "ABSENCEPERIOD_START"},
+        {"reason": "MissingField", "details": "ABSENCEPERIOD_END"},
+        {"reason": "MissingField", "details": "ABSENCEPERIOD_CLASSID"},
+        {"reason": "MissingField", "details": "ABSENCEPERIOD_INDEXID"},
+        {"reason": "MissingField", "details": "LEAVEREQUEST_ID"},
         {"reason": "MissingField", "details": "NOTIFICATION_CASENUMBER"},
         {"reason": "MissingField", "details": "ABSENCEREASON_COVERAGE"},
         {"reason": "MissingField", "details": "ABSENCE_CASESTATUS"},
-        {"reason": "MissingField", "details": "ABSENCEPERIOD_START"},
-        {"reason": "MissingField", "details": "ABSENCEPERIOD_END"},
+        {
+            "reason": "MissingField",
+            "details": "ABSENCEPERIOD_START",
+        },  # ABSENCEPERIOD_START is processed twice
+        {
+            "reason": "MissingField",
+            "details": "ABSENCEPERIOD_END",
+        },  # ABSENCEPERIOD_END is processed twice
         {"reason": "MissingField", "details": "EMPLOYEE_CUSTOMERNO"},
         {"reason": "MissingField", "details": "EMPLOYER_CUSTOMERNO"},
         {

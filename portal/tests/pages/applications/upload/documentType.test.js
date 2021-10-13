@@ -307,13 +307,18 @@ describe(UploadDocument, () => {
     const alert = await screen.findByRole("alert");
     expect(alert).toMatchInlineSnapshot(`
       <div
-        class="usa-alert__body"
+        class="usa-alert usa-alert--error usa-alert--no-icon margin-bottom-3"
         role="alert"
+        tabindex="-1"
       >
         <div
-          class="usa-alert__text"
+          class="usa-alert__body"
         >
-          An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at (833) 344‑7365.
+          <div
+            class="usa-alert__text"
+          >
+            An error was encountered while checking your application for documents. If this continues to happen, call the Paid Family Leave Contact Center at (833) 344‑7365.
+          </div>
         </div>
       </div>
     `);

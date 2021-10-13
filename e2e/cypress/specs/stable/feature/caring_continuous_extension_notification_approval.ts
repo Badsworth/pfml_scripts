@@ -94,7 +94,7 @@ describe("Post-approval (notifications/notices)", () => {
             adjudication.acceptLeavePlan();
           });
           claimPage.outstandingRequirements((outstandingRequirements) => {
-            outstandingRequirements.complete();
+            outstandingRequirements.complete("Received", "Complete Employer Confirmation", true);
           });
           claimPage.approve();
         });
@@ -145,28 +145,21 @@ describe("Post-approval (notifications/notices)", () => {
     () => {
       cy.dependsOnPreviousPass([extension]);
       cy.unstash<Submission>("submission").then((submission) => {
-        cy.unstash<DehydratedClaim>("claim").then((claim) => {
-          const subjectClaimant = getNotificationSubject(
-            "extension of benefits"
-          );
-          email
-            .getEmails(
-              {
-                address: "gqzap.notifications@inbox.testmail.app",
-                subjectWildcard: subjectClaimant,
-                messageWildcard: submission.fineos_absence_id,
-                timestamp_from: submission.timestamp_from,
-                debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-              },
-              60000
-            )
-            .then(() => {
-              cy.contains(submission.fineos_absence_id);
-              email.assertValidSubject(
-                `${claim.claim.first_name} ${claim.claim.last_name}`
-              );
-            });
-        });
+        const subjectClaimant = getNotificationSubject("extension of benefits");
+        email
+          .getEmails(
+            {
+              address: "gqzap.notifications@inbox.testmail.app",
+              subjectWildcard: subjectClaimant,
+              messageWildcard: submission.fineos_absence_id,
+              timestamp_from: submission.timestamp_from,
+              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+            },
+            60000
+          )
+          .then(() => {
+            cy.contains(submission.fineos_absence_id);
+          });
       });
     }
   );

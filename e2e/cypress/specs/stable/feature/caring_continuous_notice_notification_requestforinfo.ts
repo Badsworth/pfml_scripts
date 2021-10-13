@@ -170,7 +170,6 @@ describe("Request for More Information (notifications/notices)", () => {
           "request for additional info",
           submission.fineos_absence_id
         );
-        cy.log(subjectClaimant);
         email.getEmails(
           {
             address: "gqzap.notifications@inbox.testmail.app",
@@ -181,7 +180,7 @@ describe("Request for More Information (notifications/notices)", () => {
               "Fineos Claim ID": submission.fineos_absence_id,
             },
           },
-          40000
+          60000
         );
         cy.contains(submission.fineos_absence_id);
       });

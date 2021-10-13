@@ -10,11 +10,11 @@ exports[`GetReady renders get ready content 1`] = `
   </h1>
   <div
     class="usa-alert usa-alert--info c-alert--neutral margin-bottom-3"
+    role="region"
     tabindex="-1"
   >
     <div
       class="usa-alert__body"
-      role="region"
     >
       <h2
         class="usa-alert__heading font-heading-md text-bold"

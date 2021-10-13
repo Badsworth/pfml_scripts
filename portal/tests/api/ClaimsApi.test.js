@@ -1,7 +1,7 @@
-import { ClaimEmployee, ClaimEmployer } from "../../src/models/Claim";
 import { mockAuth, mockFetch } from "../test-utils";
 import ClaimCollection from "../../src/models/ClaimCollection";
 import ClaimDetail from "../../src/models/ClaimDetail";
+import { ClaimEmployee } from "../../src/models/Claim";
 import ClaimsApi from "../../src/api/ClaimsApi";
 import PaginationMeta from "../../src/models/PaginationMeta";
 
@@ -164,7 +164,10 @@ describe("ClaimsApi", () => {
 
       expect(claims.getItem("abs-1").employee).toBeInstanceOf(ClaimEmployee);
       expect(claims.getItem("abs-1").employee.first_name).toBe("Bud");
-      expect(claims.getItem("abs-1").employer).toBeInstanceOf(ClaimEmployer);
+      expect(claims.getItem("abs-1").employer).toEqual({
+        employer_dba: "Acme Co",
+        employer_fein: "12-3456789",
+      });
       expect(claims.getItem("abs-1").employer.employer_fein).toBe("12-3456789");
 
       expect(claims.getItem("abs-2").employee).toBeNull();

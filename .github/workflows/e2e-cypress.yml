@@ -63,8 +63,23 @@ env:
 concurrency: E2E-${{ github.event.inputs.target_environment }}
 
 jobs:
+  # Health check job. Ensures Fineos is online before proceeding with testing. This saves resources
+  # when we know we're going to get a high failure rate.
+  health-check:
+    name: Check for Healthy Services
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v2
+      - name: Check Fineos Online
+        run: |
+          fineos_url=$(cat config.json | jq -re '.["${{ env.E2E_ENVIRONMENT }}"].FINEOS_BASEURL')
+          status_code=$(curl -s -o /dev/null -w "%{http_code}" "$fineos_url")
+          echo "Received ${status_code} from ${fineos_url}"
+          test "$status_code" -lt 500
   cypress:
     name: Run Cypress Tests
+    needs: [health-check]
     runs-on: ubuntu-latest
     # At the job level, we extend timeout from 6 minutes to 30. We'll set tighter timeouts for steps below to prevent
     # hung tests from spinning endlessly.
@@ -122,7 +137,7 @@ jobs:
           working-directory: e2e
           ci-build-id: ${{ env.TEST_RUN_ID }}
           group: Unstable
-          install: false # Skip install on second run.
+          install: false
           tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
           config: trashAssetsBeforeRuns=false,reporter=cypress/reporters/new-relic.js
         # Always run this step if requested, even if stable tests fail.
@@ -133,18 +148,21 @@ jobs:
         # the step level instead, allowing continue-on-error to do its job.
         timeout-minutes: 15
 
-      # Run Cypress tests.
-      - name: Cypress Tests (Nightly)
-        uses: cypress-io/github-action@v2
-        timeout-minutes: 15
-        with:
-          spec: "cypress/specs/nightly/**"
-          record: true
-          parallel: true
-          working-directory: e2e
-          group: Nightly
-          tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
-        if: github.event.inputs.run_nightly == 'true' && always()
+#      # Run Nightly Cypress tests (commented out until we have some).
+#      - name: Cypress Tests (Nightly)
+#        uses: cypress-io/github-action@v2
+#        timeout-minutes: 15
+#        with:
+#          spec: "cypress/specs/nightly/**"
+#          record: true
+#          parallel: true
+#          working-directory: e2e
+#          group: Nightly
+#          ci-build-id: ${{ env.TEST_RUN_ID }}
+#          install: false
+#          tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
+#          config: trashAssetsBeforeRuns=false,reporter=cypress/reporters/new-relic.js
+#        if: github.event.inputs.run_nightly == 'true' && always()
 
       - name: "Archive screenshots"
         uses: actions/upload-artifact@v2
@@ -159,6 +177,7 @@ jobs:
   # Run Integration Tests.
   run_integration_test:
     name: Integration Tests
+    needs: [health-check]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
@@ -197,4 +216,4 @@ jobs:
           env_variable_name: "E2E_NEWRELIC_INGEST_KEY"
 
       - name: Integration Tests
-        run: npm run test:integration -- --group=stable${{ github.event.inputs.run_unstable == 'true' && ' --group=unstable' || '' }}${{ github.event.inputs.run_nightly == 'true' && ' --group=nightly' || '' }}
+        run: npm run test:integration:ci -- --group=stable${{ github.event.inputs.run_unstable == 'true' && ' --group=unstable' || '' }}${{ github.event.inputs.run_nightly == 'true' && ' --group=nightly' || '' }}

@@ -103,6 +103,7 @@ def get_row(row: Dict[str, str], key: Optional[str]) -> Optional[str]:
 
 class PaymentRejectsStep(Step):
     class Metrics(str, enum.Enum):
+        ARCHIVE_PATH = "archive_path"
         ACCEPTED_PAYMENT_COUNT = "accepted_payment_count"
         PARSED_ROWS_COUNT = "parsed_rows_count"
         PAYMENT_STATE_LOG_MISSING_COUNT = "payment_state_log_missing_count"
@@ -150,6 +151,8 @@ class PaymentRejectsStep(Step):
                     ),
                     first_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.first_name),
                     last_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.last_name),
+                    dor_first_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.dor_first_name),
+                    dor_last_name=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.dor_last_name),
                     address_line_1=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.address_line_1),
                     address_line_2=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.address_line_2),
                     city=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.city),
@@ -199,6 +202,9 @@ class PaymentRejectsStep(Step):
                     ),
                     dua_dia_reduction_details=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.dua_dia_reduction_details
+                    ),
+                    dor_fineos_name_mismatch_details=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.dor_fineos_name_mismatch_details
                     ),
                     rejected_by_program_integrity=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity
@@ -498,6 +504,7 @@ class PaymentRejectsStep(Step):
         )
         file_util.rename_file(payment_rejects_file_path, processed_file_path)
         logger.info("Payment Rejects file in processed folder: %s", processed_file_path)
+        self.set_metrics({self.Metrics.ARCHIVE_PATH: processed_file_path})
 
         # create reference file
         reference_file = ReferenceFile(

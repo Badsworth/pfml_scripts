@@ -39,6 +39,9 @@ class PostProcessingMetrics(str, enum.Enum):
     PAYMENT_DUA_REDUCTION_OVERLAP = "payment_dua_reduction_overlap"
     PAYMENT_DIA_REDUCTION_OVERLAP = "payment_dia_reduction_overlap"
 
+    # DOR <> FINEOS name mismatch
+    PAYMENT_DOR_FINEOS_NAME_MISMATCH = "payment_dor_fineos_name_mismatch"
+
     PAYMENT_DETAIL_MISSING_COUNT = "payment_detail_missing_count"
 
     # Metrics specific to the in review processor

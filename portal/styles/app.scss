@@ -21,7 +21,7 @@
 // U.S. Web Design System global and component styles
 // !! Important !! This should come AFTER the Mayflower styles, otherwise
 // spacing styles we rely on are overridden
-@import "~uswds/dist/scss/uswds";
+@import "node_modules/uswds/dist/scss/uswds";
 
 // Include default USWDS h1-h6 style (size, weight, spacing) rulesets
 @include usa-headings-styles;

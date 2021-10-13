@@ -86,4 +86,5 @@ module "api" {
 
   release_version           = var.release_version
   new_plan_proofs_active_at = "2021-06-26 00:00:00+00:00"
+  use_claim_status_url      = true
 }

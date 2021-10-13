@@ -3,11 +3,11 @@
 exports[`Alert renders the children as the alert body text 1`] = `
 <div
   class="usa-alert usa-alert--error"
+  role="region"
   tabindex="-1"
 >
   <div
     class="usa-alert__body"
-    role="region"
   >
     <div
       class="usa-alert__text"

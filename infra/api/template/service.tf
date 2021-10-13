@@ -94,5 +94,6 @@ data "template_file" "container_definitions" {
     enable_application_fraud_check             = var.enable_application_fraud_check
     release_version                            = var.release_version
     new_plan_proofs_active_at                  = var.new_plan_proofs_active_at
+    use_claim_status_url                       = var.use_claim_status_url
   }
 }

@@ -51,6 +51,14 @@
 #
 # Error: ClientException: Duplicate secret names found: DB_NESSUS_PASSWORD. Each secret name must be unique.
 #
+# If your environment variable must be configurable for each environment, add a variable in `variables.tf` and
+# reference it using `var.my_variable_name`. This value can be passed in by each environment's main.tf file:
+#
+# module "tasks" {
+#   ...
+#   my_variable_name = "something"
+# }
+#
 # Resource Limits
 # ===============
 #

@@ -571,6 +571,7 @@ class PaymentData:
 
 class PaymentExtractStep(Step):
     class Metrics(str, enum.Enum):
+        EXTRACT_PATH = "extract_path"
         ACTIVE_PAYMENT_ERROR_COUNT = "active_payment_error_count"
         ALREADY_ACTIVE_PAYMENT_COUNT = "already_active_payment_count"
         APPROVED_PRENOTE_COUNT = "approved_prenote_count"
@@ -1543,6 +1544,7 @@ class PaymentExtractStep(Step):
         )
 
         logger.info("Successfully moved payments files to processed folder.")
+        self.set_metrics({self.Metrics.EXTRACT_PATH: extract_data.reference_file.file_location})
 
     # TODO move to payments_util
     def move_files_from_received_to_skipped(self, extract_data: ExtractData) -> None:
@@ -1685,6 +1687,7 @@ class PaymentExtractStep(Step):
         )
 
         logger.info("Successfully moved payments files to error folder.")
+        self.set_metrics({self.Metrics.EXTRACT_PATH: extract_data.reference_file.file_location})
 
     def process_extract_data(self, download_directory: pathlib.Path) -> None:
 

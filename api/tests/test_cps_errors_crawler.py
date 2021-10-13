@@ -1,3 +1,5 @@
+import datetime
+
 import boto3
 import newrelic.agent
 
@@ -17,9 +19,9 @@ def test_reading_file_items(mock_s3_bucket):
     create_mock_s3_files(
         mock_s3_bucket,
         "received/2021-01-02-01-02-03/2021-04-02-04-04-04-filename.csv",
-        "received/2021-01-02-01-02-03/2021-04-02-04-04-04-filename2.csv",
+        "received/2021-01-02-01-02-03/2021-04-02-04-04-04-DifferentFile.csv",
         "received/2021-01-03-01-02-03-filename.csv",
-        "received/2021-01-03-01-02-03-filename2.csv",
+        "received/2021-01-03-01-02-03-DifferentFile.csv",
     )
 
     received = f"s3://{mock_s3_bucket}/received/"
@@ -35,9 +37,9 @@ def test_reading_file_items(mock_s3_bucket):
     # assert files are moved
     assert processed_items == {
         "processed/2021-01-02-01-02-03/2021-04-02-04-04-04-filename.csv",
-        "processed/2021-01-02-01-02-03/2021-04-02-04-04-04-filename2.csv",
+        "processed/2021-01-02-01-02-03/2021-04-02-04-04-04-DifferentFile.csv",
         "processed/2021-01-03-01-02-03-filename.csv",
-        "processed/2021-01-03-01-02-03-filename2.csv",
+        "processed/2021-01-03-01-02-03-DifferentFile.csv",
     }
 
 
@@ -69,7 +71,7 @@ def test_calls_to_new_relic(mocker, mock_s3_bucket):
     create_mock_s3_files(
         mock_s3_bucket,
         "received/2021-01-03-01-02-03-filename.csv",
-        "received/2021-01-03-01-02-03-filename2.csv",
+        "received/2021-01-03-01-02-03-DifferentFile.csv",
     )
 
     mock_newrelic = mocker.patch.object(newrelic.agent, "record_custom_event")
@@ -81,34 +83,47 @@ def test_calls_to_new_relic(mocker, mock_s3_bucket):
         cps_error_reports_received_s3_path=received, cps_error_reports_processed_s3_path=processed
     )
     crawler.process_files(config)
+    # update tests to have additional attributes
     mock_newrelic.assert_has_calls(
         [
             mocker.call(
                 "FINEOSBatchError",
                 {
                     "header text": "line 2 text",
-                    "s3_filename": "s3://test_bucket/received/2021-01-03-01-02-03-filename.csv",
+                    "file_timestamp": datetime.datetime(2021, 1, 3, 1, 2, 3),
+                    "file_type": "DifferentFile",
+                    "environment": "local",
+                    "s3_filename": "s3://test_bucket/received/2021-01-03-01-02-03-DifferentFile.csv",
                 },
             ),
             mocker.call(
                 "FINEOSBatchError",
                 {
                     "header text": "line 3 text",
-                    "s3_filename": "s3://test_bucket/received/2021-01-03-01-02-03-filename.csv",
+                    "file_timestamp": datetime.datetime(2021, 1, 3, 1, 2, 3),
+                    "file_type": "DifferentFile",
+                    "environment": "local",
+                    "s3_filename": "s3://test_bucket/received/2021-01-03-01-02-03-DifferentFile.csv",
                 },
             ),
             mocker.call(
                 "FINEOSBatchError",
                 {
                     "header text": "line 2 text",
-                    "s3_filename": "s3://test_bucket/received/2021-01-03-01-02-03-filename2.csv",
+                    "file_timestamp": datetime.datetime(2021, 1, 3, 1, 2, 3),
+                    "file_type": "filename",
+                    "environment": "local",
+                    "s3_filename": "s3://test_bucket/received/2021-01-03-01-02-03-filename.csv",
                 },
             ),
             mocker.call(
                 "FINEOSBatchError",
                 {
                     "header text": "line 3 text",
-                    "s3_filename": "s3://test_bucket/received/2021-01-03-01-02-03-filename2.csv",
+                    "file_timestamp": datetime.datetime(2021, 1, 3, 1, 2, 3),
+                    "file_type": "filename",
+                    "environment": "local",
+                    "s3_filename": "s3://test_bucket/received/2021-01-03-01-02-03-filename.csv",
                 },
             ),
         ]
@@ -145,6 +160,9 @@ def test_removed_columns(mocker, mock_s3_bucket):
                 {
                     "header 2": "column stuff",
                     "header 3": "more column stuff",
+                    "file_timestamp": datetime.datetime(2021, 1, 3, 1, 2, 3),
+                    "file_type": "filename",
+                    "environment": "local",
                     "s3_filename": "s3://test_bucket/received/2021-01-03-01-02-03-filename.csv",
                 },
             ),
@@ -153,8 +171,32 @@ def test_removed_columns(mocker, mock_s3_bucket):
                 {
                     "header 2": "column stuff",
                     "header 3": "more column stuff",
+                    "file_timestamp": datetime.datetime(2021, 1, 3, 1, 2, 3),
+                    "file_type": "filename",
+                    "environment": "local",
                     "s3_filename": "s3://test_bucket/received/2021-01-03-01-02-03-filename.csv",
                 },
             ),
         ]
+    )
+
+
+def test_parsing_nonstandard_files(caplog, mocker, mock_s3_bucket):
+    create_mock_s3_files(
+        mock_s3_bucket,
+        "received/2021-01-03-01-02-03-filename.csv",
+        "received/f1le-with-a-b4d-name.csv",
+    )
+
+    received = f"s3://{mock_s3_bucket}/received/"
+    processed = f"s3://{mock_s3_bucket}/processed/"
+
+    config = crawler.CPSErrorsConfig(
+        cps_error_reports_received_s3_path=received, cps_error_reports_processed_s3_path=processed
+    )
+    crawler.process_files(config)
+
+    assert (
+        "Failed to parse additional attributes from filename (s3://test_bucket/received/f1le-with-a-b4d-name.csv)"
+        in caplog.text
     )

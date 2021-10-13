@@ -119,11 +119,11 @@ exports[`ConsentToDataSharing shows the correct content for non-employers 1`] = 
     </div>
     <div
       class="usa-alert usa-alert--info usa-alert--no-icon"
+      role="region"
       tabindex="-1"
     >
       <div
         class="usa-alert__body"
-        role="region"
       >
         <div
           class="usa-alert__text"
@@ -266,11 +266,11 @@ exports[`ConsentToDataSharing shows the correct contents for employers 1`] = `
     </div>
     <div
       class="usa-alert usa-alert--info usa-alert--no-icon"
+      role="region"
       tabindex="-1"
     >
       <div
         class="usa-alert__body"
-        role="region"
       >
         <div
           class="usa-alert__text"

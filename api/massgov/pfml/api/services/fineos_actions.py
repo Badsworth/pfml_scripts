@@ -19,6 +19,7 @@ from enum import Enum
 from itertools import chain
 from typing import Any, Dict, List, Optional, Set, Tuple, Union
 
+import newrelic.agent
 import phonenumbers
 
 import massgov.pfml.db
@@ -49,7 +50,7 @@ from massgov.pfml.db.models.employees import (
     TaxIdentifier,
     User,
 )
-from massgov.pfml.fineos.exception import FINEOSClientError, FINEOSForbidden, FINEOSNotFound
+from massgov.pfml.fineos.exception import FINEOSClientError, FINEOSNotFound
 from massgov.pfml.fineos.models import CreateOrUpdateServiceAgreement
 from massgov.pfml.fineos.models.customer_api import (
     AbsenceDetails,
@@ -76,6 +77,10 @@ RELATIONSHIP_REFLEXIVE_FIELD_MAPPING = {
     RelationshipToCaregiver.SPOUSE.relationship_to_caregiver_description: "FamilyMemberDetailsQuestionGroup.familyMemberDetailsQuestions",
     RelationshipToCaregiver.SIBLING.relationship_to_caregiver_description: "FamilyMemberSiblingDetailsQuestionGroup.familyMemberDetailsQuestions",
 }
+
+
+class MarkDocumentsReceivedError(FINEOSClientError):
+    """At least one FINEOSClientError occurred when marking multiple documents as received."""
 
 
 class LeaveNotificationReason(str, Enum):
@@ -334,8 +339,9 @@ def mark_documents_as_received(
                 extra={**document_log_attrs(document)},
                 exc_info=ex,
             )
+            newrelic.agent.notice_error(attributes={**document_log_attrs(document)},)
     if exception_count > 0:
-        raise RuntimeError
+        raise MarkDocumentsReceivedError("Unable to mark some documents as received")
 
 
 def mark_single_document_as_received(
@@ -1078,19 +1084,6 @@ def get_documents(
     absence_id = get_fineos_absence_id_from_application(application)
 
     fineos_documents = fineos.get_documents(fineos_web_id, absence_id)
-    appeal_01_documents = fineos.get_documents(fineos_web_id, absence_id + "-AP-01")
-    appeal_02_documents = fineos.get_documents(fineos_web_id, absence_id + "-AP-02")
-
-    logger.info(
-        "retrieved appeal documents",
-        extra={
-            "num_appeal_01_documents": len(appeal_01_documents),
-            "num_appeal_02_documents": len(appeal_02_documents),
-        },
-    )
-
-    fineos_documents += appeal_01_documents + appeal_02_documents
-
     document_responses = list(
         map(
             lambda fd: fineos_document_response_to_document_response(fd, application),
@@ -1165,18 +1158,24 @@ def download_document(
 
     fineos_web_id = get_or_register_employee_fineos_web_id(fineos, application, db_session)
     absence_id = get_fineos_absence_id_from_application(application)
-    if not document_type or document_type != "Appeal Acknowledgment":
-        try:
-            return fineos.download_document(fineos_web_id, absence_id, fineos_document_id)
-        except FINEOSForbidden:
-            logger.info("Document not found in Absence Case - trying next case")
-            pass
-    try:
-        return fineos.download_document(fineos_web_id, absence_id + "-AP-01", fineos_document_id)
-    except FINEOSForbidden:
-        logger.info("Document not found in '-AP-01' case - trying next case")
-        pass
-    return fineos.download_document(fineos_web_id, absence_id + "-AP-02", fineos_document_id)
+
+    if not document_type or document_type == "Appeal Acknowledgment":
+        fineos_documents = fineos.get_documents(fineos_web_id, absence_id)
+        for doc in fineos_documents:
+            if fineos_document_id == str(doc.documentId):
+                absence_case = doc.caseId
+                break
+    else:
+        absence_case = absence_id
+    if not absence_case:
+        logger.warning(
+            "Document with that fineos_document_id could not be found",
+            extra={"absence_id": absence_id, "fineos_document_id": fineos_document_id,},
+        )
+        raise Exception("Document with that fineos_document_id could not be found")
+
+    response = fineos.download_document(fineos_web_id, absence_case, fineos_document_id)
+    return response
 
 
 def create_or_update_employer(

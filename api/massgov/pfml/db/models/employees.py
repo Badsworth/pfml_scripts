@@ -34,7 +34,7 @@ from sqlalchemy.sql.expression import func
 from sqlalchemy.types import JSON
 
 from ..lookup import LookupTable
-from .base import Base, TimestampMixin, deprecated_column, utc_timestamp_gen, uuid_gen
+from .base import Base, TimestampMixin, utc_timestamp_gen, uuid_gen
 from .common import PostgreSQLUUID
 from .industry_codes import LkIndustryCode
 from .verifications import Verification
@@ -321,7 +321,7 @@ class AbsencePeriod(Base, TimestampMixin):
     absence_period_start_date = Column(Date)
     absence_period_end_date = Column(Date)
     absence_period_type_id = Column(
-        Integer, ForeignKey("lk_absence_period_type.absence_period_type_id"), nullable=False
+        Integer, ForeignKey("lk_absence_period_type.absence_period_type_id")
     )
     absence_reason_qualifier_one_id = Column(
         Integer, ForeignKey("lk_absence_reason_qualifier_one.absence_reason_qualifier_one_id")
@@ -329,15 +329,13 @@ class AbsencePeriod(Base, TimestampMixin):
     absence_reason_qualifier_two_id = Column(
         Integer, ForeignKey("lk_absence_reason_qualifier_two.absence_reason_qualifier_two_id")
     )
-    absence_reason_id = Column(
-        Integer, ForeignKey("lk_absence_reason.absence_reason_id"), nullable=False
-    )
+    absence_reason_id = Column(Integer, ForeignKey("lk_absence_reason.absence_reason_id"))
     claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=False)
     fineos_absence_period_class_id = Column(Integer, nullable=False, index=True)
     fineos_absence_period_index_id = Column(Integer, nullable=False, index=True)
     fineos_leave_request_id = Column(Integer)
     leave_request_decision_id = Column(
-        Integer, ForeignKey("lk_leave_request_decision.leave_request_decision_id"), nullable=False
+        Integer, ForeignKey("lk_leave_request_decision.leave_request_decision_id")
     )
     is_id_proofed = Column(Boolean)
 
@@ -395,6 +393,9 @@ class Employer(Base, TimestampMixin):
     employer_quarterly_contribution: "Query[EmployerQuarterlyContribution]" = dynamic_loader(
         "EmployerQuarterlyContribution", back_populates="employer"
     )
+    organization_units: "Query[OrganizationUnit]" = dynamic_loader(
+        "OrganizationUnit", back_populates="employer"
+    )
 
     lk_industry_code = relationship(LkIndustryCode)
 
@@ -418,6 +419,34 @@ class Employer(Base, TimestampMixin):
         return employer_fein
 
 
+class OrganizationUnit(Base, TimestampMixin):
+    __tablename__ = "organization_unit"
+    organization_unit_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    fineos_id = Column(Text, nullable=True, unique=True)
+    name = Column(Text, unique=True, nullable=False)
+    employer_id = Column(PostgreSQLUUID, ForeignKey("employer.employer_id"), index=True)
+
+    employer = relationship("Employer", back_populates="organization_units")
+    dua_reporting_units: "Query[DuaReportingUnit]" = dynamic_loader(
+        "DuaReportingUnit", back_populates="organization_unit"
+    )
+
+
+class DuaReportingUnit(Base, TimestampMixin):
+    __tablename__ = "dua_reporting_unit"
+    dua_reporting_unit_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    dua_id = Column(Text, unique=True, nullable=False)  # The Reporting Unit Number from DUA
+    dba = Column(Text, nullable=True)
+    organization_unit_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("organization_unit.organization_unit_id"),
+        nullable=True,
+        index=True,
+    )
+
+    organization_unit = relationship("OrganizationUnit", back_populates="dua_reporting_units")
+
+
 class EmployerQuarterlyContribution(Base, TimestampMixin):
     __tablename__ = "employer_quarterly_contribution"
     employer_id = Column(
@@ -434,8 +463,8 @@ class EmployerQuarterlyContribution(Base, TimestampMixin):
 
 
 class EmployerPushToFineosQueue(Base, TimestampMixin):
-    __tablename__ = "employer_log"
-    employer_log_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    __tablename__ = "employer_push_to_fineos_queue"
+    employer_push_to_fineos_queue_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     employer_id = Column(PostgreSQLUUID, index=True)
     action = Column(Text, index=True)
     modified_at = Column(TIMESTAMP(timezone=True), default=utc_timestamp_gen)
@@ -566,11 +595,6 @@ class Employee(Base, TimestampMixin):
     ctr_address_pair_id = Column(
         PostgreSQLUUID, ForeignKey("link_ctr_address_pair.fineos_address_id"), index=True
     )
-    experian_address_pair_id = deprecated_column(
-        Column(
-            PostgreSQLUUID, ForeignKey("link_experian_address_pair.fineos_address_id"), index=True
-        )
-    )
 
     fineos_employee_first_name = Column(Text)
     fineos_employee_middle_name = Column(Text)
@@ -615,8 +639,8 @@ class Employee(Base, TimestampMixin):
 
 
 class EmployeePushToFineosQueue(Base, TimestampMixin):
-    __tablename__ = "employee_log"
-    employee_log_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    __tablename__ = "employee_push_to_fineos_queue"
+    employee_push_to_fineos_queue_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     employee_id = Column(PostgreSQLUUID, index=True)
     action = Column(Text, index=True)
     modified_at = Column(TIMESTAMP(timezone=True), default=utc_timestamp_gen)
@@ -1073,12 +1097,19 @@ class WagesAndContributions(Base, TimestampMixin):
 
 class EmployeeOccupation(Base, TimestampMixin):
     __tablename__ = "employee_occupation"
+
     employee_occupation_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     employee_id = Column(
         PostgreSQLUUID, ForeignKey("employee.employee_id"), nullable=False, index=True
     )
     employer_id = Column(
         PostgreSQLUUID, ForeignKey("employer.employer_id"), nullable=False, index=True
+    )
+    organization_unit_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("organization_unit.organization_unit_id"),
+        nullable=True,
+        index=True,
     )
     job_title = Column(Text)
     date_of_hire = Column(Date)
@@ -1091,8 +1122,11 @@ class EmployeeOccupation(Base, TimestampMixin):
     worksite_id = Column(Text)
     occupation_qualifier = Column(Text)
 
+    Index("ix_employee_occupation_employee_id_employer_id", employee_id, employer_id, unique=True)
+
     employee = relationship("Employee", back_populates="employee_occupations")
     employer = relationship("Employer", back_populates="employer_occupations")
+    organization_unit = relationship("OrganizationUnit")
 
 
 class ImportLog(Base, TimestampMixin):
@@ -1302,6 +1336,25 @@ class DiaReductionPayment(Base, TimestampMixin):
         board_no,
         unique=False,
     )
+
+
+class DuaEmployeeDemographics(Base, TimestampMixin):
+    __tablename__ = "dua_employee_demographics"
+    dua_employee_demographics_id = Column(PostgreSQLUUID, primary_key=True,)
+
+    fineos_customer_number = Column(Text, nullable=False)
+    date_of_birth = Column(Date)
+    gender_code = Column(Text)
+    occupation_code = Column(Text)
+    occupation_description = Column(Text)
+    employer_fein = Column(Text)
+    employer_reporting_unit_number = Column(Text)
+
+    # Each row should be unique. This enables us to load only new rows from a CSV and ensures that
+    # we don't include demographics twice as two different rows. Almost all fields are nullable so we
+    # have to coalesce those null values to empty strings. We've manually adjusted the migration
+    # that adds this unique constraint to coalesce those nullable fields.
+    # See: 2021_10_04_13_30_03_95d3e464a5b2_add_dua_employee_demographics_table.py
 
 
 class PubError(Base, TimestampMixin):
@@ -2398,6 +2451,39 @@ class State(LookupTable):
 
     DIA_CONSOLIDATED_REPORT_ERROR = LkState(
         190, "Consolidated DIA report for DFML error", Flow.DFML_DIA_REDUCTION_REPORT.flow_id
+    )
+
+    # Tax Withholding States
+    STATE_WITHHOLDING_READY_FOR_PROCESSING = LkState(
+        191, "State Withholding ready for processing", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    STATE_WITHHOLDING_PENDING_AUDIT = LkState(
+        192, "State Withholding awaiting Audit Report", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    STATE_WITHHOLDING_ERROR = LkState(
+        193, "State Withholding Rejected", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    STATE_WITHHOLDING_SEND_FUNDS = LkState(
+        194, "State Withholding send funds to DOR", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_READY_FOR_PROCESSING = LkState(
+        195, "Federal Withholding ready for processing", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_PENDING_AUDIT = LkState(
+        196, "Federal Withholding awaiting Audit Report", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_ERROR = LkState(
+        197, "Federal Withholding Rejected", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_SEND_FUNDS = LkState(
+        198, "Federal Withholding send funds to IRS", Flow.DELEGATED_PAYMENT.flow_id
     )
 
 

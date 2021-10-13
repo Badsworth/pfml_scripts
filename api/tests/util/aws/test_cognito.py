@@ -5,6 +5,13 @@ import faker
 import pytest
 
 import massgov.pfml.util.aws.cognito as cognito_util
+from massgov.pfml.cognito.exceptions import (
+    CognitoAccountCreationFailure,
+    CognitoLookupFailure,
+    CognitoSubNotFound,
+    CognitoUserExistsValidationError,
+    CognitoValidationError,
+)
 
 fake = faker.Faker()
 
@@ -29,7 +36,7 @@ def test_create_cognito_account(mock_cognito, mock_cognito_user_pool):
 def test_create_cognito_account_param_validation_error(mock_cognito, mock_cognito_user_pool):
     password = "short"  # invalid because it's less than 6 characters
 
-    with pytest.raises(cognito_util.CognitoValidationError) as exc:
+    with pytest.raises(CognitoValidationError) as exc:
         cognito_util.create_cognito_account(
             fake.email(domain="example.com"),
             password,
@@ -58,7 +65,7 @@ def test_create_cognito_account_invalid_password_error(
 
     monkeypatch.setattr(mock_cognito, "sign_up", sign_up)
 
-    with pytest.raises(cognito_util.CognitoValidationError) as exc:
+    with pytest.raises(CognitoValidationError) as exc:
         cognito_util.create_cognito_account(
             fake.email(domain="example.com"),
             fake.password(length=8),
@@ -87,7 +94,7 @@ def test_create_cognito_account_invalid_parameter_exception(
 
     monkeypatch.setattr(mock_cognito, "sign_up", sign_up)
 
-    with pytest.raises(cognito_util.CognitoValidationError) as exc:
+    with pytest.raises(CognitoValidationError) as exc:
         cognito_util.create_cognito_account(
             fake.email(domain="example.com"),
             " abc123",  # One known way to trigger this exception is to begin a password with a space character
@@ -116,7 +123,7 @@ def test_create_cognito_account_insecure_password_error(
 
     monkeypatch.setattr(mock_cognito, "sign_up", sign_up)
 
-    with pytest.raises(cognito_util.CognitoValidationError) as exc:
+    with pytest.raises(CognitoValidationError) as exc:
         cognito_util.create_cognito_account(
             fake.email(domain="example.com"),
             "test123456",
@@ -166,7 +173,7 @@ def test_create_cognito_account_username_exists_error(
 
     monkeypatch.setattr(mock_cognito, "sign_up", sign_up)
 
-    with pytest.raises(cognito_util.CognitoUserExistsValidationError) as exc:
+    with pytest.raises(CognitoUserExistsValidationError) as exc:
         cognito_util.create_cognito_account(
             email_address,
             password,
@@ -196,7 +203,7 @@ def test_create_cognito_account_client_error(mock_cognito, mock_cognito_user_poo
     monkeypatch.setattr(mock_cognito, "sign_up", sign_up)
 
     with pytest.raises(
-        cognito_util.CognitoAccountCreationFailure,
+        CognitoAccountCreationFailure,
         match="create_cognito_account error: CodeDeliveryFailureException: Verification code failed to deliver successfully.",
     ):
         cognito_util.create_cognito_account(
@@ -254,7 +261,7 @@ def test_lookup_cognito_account_id_missing_sub_attribute(
 
     monkeypatch.setattr(mock_cognito, "admin_get_user", admin_get_user)
 
-    with pytest.raises(cognito_util.CognitoSubNotFound):
+    with pytest.raises(CognitoSubNotFound):
         cognito_util.lookup_cognito_account_id(
             email=fake.email(domain="example.com"),
             cognito_user_pool_id=mock_cognito_user_pool["id"],
@@ -277,7 +284,7 @@ def test_lookup_cognito_account_id_retries(
 
     monkeypatch.setattr(mock_cognito, "admin_get_user", admin_get_user)
 
-    with pytest.raises(cognito_util.CognitoLookupFailure):
+    with pytest.raises(CognitoLookupFailure):
         cognito_util.lookup_cognito_account_id(
             email=fake.email(domain="example.com"),
             cognito_user_pool_id=mock_cognito_user_pool["id"],

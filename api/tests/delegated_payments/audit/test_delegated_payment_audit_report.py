@@ -85,6 +85,13 @@ def test_get_payment_audit_report_details(test_db_session, initialize_factories_
     )
     stage_payment_audit_report_details(
         payment,
+        PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH,
+        "Name mismatch Test Message",
+        None,
+        test_db_session,
+    )
+    stage_payment_audit_report_details(
+        payment,
         PaymentAuditReportType.LEAVE_PLAN_IN_REVIEW,
         "Leave Plan In Review Test Message",  # Not used
         None,
@@ -100,16 +107,17 @@ def test_get_payment_audit_report_details(test_db_session, initialize_factories_
     assert audit_report_details
     assert audit_report_details.max_weekly_benefits_details == "Max Weekly Benefits Test Message"
     assert audit_report_details.dua_dia_reduction_details == "DUA/DIA Reduction Test Message"
+    assert audit_report_details.dor_fineos_name_mismatch_details == "Name mismatch Test Message"
     assert audit_report_details.rejected_by_program_integrity
     assert not audit_report_details.skipped_by_program_integrity
     assert (
         audit_report_details.rejected_notes
-        == f"{AUDIT_REPORT_NOTES_OVERRIDE[PaymentAuditReportType.MAX_WEEKLY_BENEFITS.payment_audit_report_type_id]} (Rejected), {PaymentAuditReportType.DUA_DIA_REDUCTION.payment_audit_report_type_description}, {PaymentAuditReportType.LEAVE_PLAN_IN_REVIEW.payment_audit_report_type_description} (Skipped)"
+        == f"{AUDIT_REPORT_NOTES_OVERRIDE[PaymentAuditReportType.MAX_WEEKLY_BENEFITS.payment_audit_report_type_id]} (Rejected), {PaymentAuditReportType.DUA_DIA_REDUCTION.payment_audit_report_type_description}, {PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH.payment_audit_report_type_description}, {PaymentAuditReportType.LEAVE_PLAN_IN_REVIEW.payment_audit_report_type_description} (Skipped)"
     )
 
     # test that the audit report time was set
     audit_report_details = test_db_session.query(PaymentAuditReportDetails).all()
-    assert len(audit_report_details) == 3
+    assert len(audit_report_details) == 4
     for audit_report_detail in audit_report_details:
         assert audit_report_detail.added_to_audit_report_at == audit_report_time
 
@@ -462,6 +470,8 @@ def validate_payment_audit_csv_row_by_payment_audit_data(
         assert row[PAYMENT_AUDIT_CSV_HEADERS.dua_dia_reduction_details]
         assert row[PAYMENT_AUDIT_CSV_HEADERS.dua_dia_reduction_details] != ""
 
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.dor_fineos_name_mismatch_details] == ""
+
     assert row[PAYMENT_AUDIT_CSV_HEADERS.rejected_by_program_integrity] == (
         "Y" if scenario_descriptor.audit_report_detail_rejected else ""
     ), error_msg
@@ -485,6 +495,8 @@ def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Pay
     )
     assert row[PAYMENT_AUDIT_CSV_HEADERS.first_name] == payment.fineos_employee_first_name
     assert row[PAYMENT_AUDIT_CSV_HEADERS.last_name] == payment.fineos_employee_last_name
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.dor_first_name] == payment.claim.employee.first_name
+    assert row[PAYMENT_AUDIT_CSV_HEADERS.dor_last_name] == payment.claim.employee.last_name
 
     validate_address_columns(row, payment)
 

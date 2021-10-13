@@ -8,6 +8,7 @@ const { Runner, reporters, Suite } = require("mocha");
 const fetch = require("node-fetch");
 const debug = require("debug")("cypress:reporter:newrelic");
 const { getRunMetadata } = require("./new-relic-collect-metadata");
+const { ErrorCategory } = require("./service/error-category.js");
 
 module.exports = class NewRelicCypressReporter extends reporters.Spec {
   constructor(runner, options) {
@@ -18,12 +19,15 @@ module.exports = class NewRelicCypressReporter extends reporters.Spec {
     this.apiKey = apiKey;
     this.environment = environment;
     this.queue = [];
+    this.ErrorCategory = new ErrorCategory();
 
     // Very important: Throw no errors here, as they have the potential to hang tests.
-    if (!accountId)
+    if (!accountId) {
       return console.warn(`New Relic Reporter: Unable to determine accountId.`);
-    if (!apiKey)
+    }
+    if (!apiKey) {
       return console.warn(`New Relic Reporter: Unable to determine apiKey.`);
+    }
     debug("Booting New Relic Reporter");
 
     runner.on(Runner.constants.EVENT_TEST_END, (test) => {
@@ -35,10 +39,11 @@ module.exports = class NewRelicCypressReporter extends reporters.Spec {
       this.queue.push(promise);
     });
   }
+
   async reportTest(test) {
     const suite = getSuite(test);
     const { ciBuildId: runId, group, tag, runUrl } = await getRunMetadata();
-    const { environment } = this;
+    const { environment, ErrorCategory } = this;
     const event = {
       runId,
       eventType: "CypressTestResult",
@@ -56,16 +61,25 @@ module.exports = class NewRelicCypressReporter extends reporters.Spec {
       tag: tag ? tag.join(",") : "",
       runUrl,
     };
+    // ADD Categorization system function here
     if (test.err) {
       event.errorMessage = test.err.message;
       event.errorClass = test.err.name ?? "Error";
+      if (test.err.codeFrame && test.err.codeFrame.line) {
+        event.errorLine = test.err.codeFrame.line;
+      }
+      if (test.err.codeFrame && test.err.codeFrame.relativeFile) {
+        event.errorRelativeFile = test.err.codeFrame.relativeFile;
+      }
+      ErrorCategory.setErrorCategory(event);
     }
     return this.send(event);
   }
+
   async send(event) {
     const { accountId, apiKey } = this;
     debug("Pushing custom event to New Relic", event);
-    
+
     try {
       const res = await fetch(
         `https://insights-collector.newrelic.com/v1/accounts/${accountId}/events`,
@@ -90,6 +104,7 @@ module.exports = class NewRelicCypressReporter extends reporters.Spec {
       );
     }
   }
+
   done(failures, fn) {
     // Wait for all write promises to complete.
     if (this.queue.length) {

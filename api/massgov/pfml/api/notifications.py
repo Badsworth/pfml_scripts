@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, Optional
 from uuid import UUID
 
 import connexion
@@ -21,18 +21,8 @@ from massgov.pfml.api.services.managed_requirements import (
 )
 from massgov.pfml.api.services.service_now_actions import send_notification_to_service_now
 from massgov.pfml.db.models.applications import Notification
-from massgov.pfml.db.models.employees import (
-    AbsencePeriod,
-    AbsencePeriodType,
-    AbsenceReason,
-    AbsenceReasonQualifierOne,
-    AbsenceReasonQualifierTwo,
-    Claim,
-    Employee,
-    Employer,
-    LeaveRequestDecision,
-    ManagedRequirementType,
-)
+from massgov.pfml.db.models.employees import Claim, Employee, Employer, ManagedRequirementType
+from massgov.pfml.db.queries.absence_periods import upsert_absence_period_from_fineos_period
 from massgov.pfml.db.queries.managed_requirements import (
     create_managed_requirement_from_fineos,
     create_or_update_managed_requirement_from_fineos,
@@ -389,88 +379,17 @@ def update_absence_period(
 
     # add/update absence period table
     try:
-        populate_absence_period_table(absence_periods, claim, db_session, log_attributes)
-    except Exception:
+        for absence_period in absence_periods:
+            upsert_absence_period_from_fineos_period(
+                db_session, claim.claim_id, absence_period, log_attributes
+            )
+    except Exception as error:
         logger.exception(
             "Failed while populating AbsencePeriod Table",
             extra={**log_attributes, **_absence_detail_for_log(absence_detail)},
         )
-        raise
-
-
-def populate_absence_period_table(
-    absence_periods: List[massgov.pfml.fineos.models.customer_api.AbsencePeriod],
-    claim: Claim,
-    db_session: Session,
-    log_attributes: dict,
-) -> None:
-    """ Update AbsencePeriod Table with given list of absence periods"""
-
-    for absence_period in absence_periods:
-        # get class and index id
-        if absence_period.id:
-            period_id_data = absence_period.id.split("-")
-
-            if len(period_id_data) != 3:
-                logger.error(
-                    "Incorrect format received for absence period id",
-                    extra={**log_attributes, "absence_period.id": absence_period.id},
-                )
-                return
-
-            class_id = int(period_id_data[1])
-            index_id = int(period_id_data[2])
-        else:
-            logger.error(
-                "Failed to extract class and index id.", extra=log_attributes,
-            )
-            return
-
-        # check if absence period is present
-        db_absence_period = (
-            db_session.query(AbsencePeriod)
-            .filter(
-                AbsencePeriod.claim_id == claim.claim_id,
-                AbsencePeriod.fineos_absence_period_class_id == class_id,
-                AbsencePeriod.fineos_absence_period_index_id == index_id,
-            )
-            .one_or_none()
-        )
-
-        if db_absence_period is None:
-            db_absence_period = AbsencePeriod()
-            db_absence_period.fineos_absence_period_class_id = class_id
-            db_absence_period.fineos_absence_period_index_id = index_id
-            db_session.add(db_absence_period)
-
-        db_absence_period.claim_id = claim.claim_id
-        db_absence_period.absence_period_start_date = absence_period.startDate
-        db_absence_period.absence_period_end_date = absence_period.endDate
-
-        if absence_period.absenceType:
-            db_absence_period.absence_period_type_id = AbsencePeriodType.get_id(
-                absence_period.absenceType
-            )
-
-        if absence_period.reasonQualifier1:
-            db_absence_period.absence_reason_qualifier_one_id = AbsenceReasonQualifierOne.get_id(
-                absence_period.reasonQualifier1
-            )
-
-        if absence_period.reasonQualifier2:
-            db_absence_period.absence_reason_qualifier_two_id = AbsenceReasonQualifierTwo.get_id(
-                absence_period.reasonQualifier2
-            )
-
-        if absence_period.reason:
-            db_absence_period.absence_reason_id = AbsenceReason.get_id(absence_period.reason)
-
-        if absence_period.requestStatus:
-            db_absence_period.leave_request_decision_id = LeaveRequestDecision.get_id(
-                absence_period.requestStatus
-            )
-
-    # save to db
+        raise error
+    # only commit if there were no errors
     db_session.commit()
 
 

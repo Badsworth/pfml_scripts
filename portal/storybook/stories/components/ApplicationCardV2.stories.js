@@ -1,8 +1,8 @@
-import { generateClaim, generateNotice } from "tests/test-utils";
-
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import { ApplicationCardV2 } from "src/components/ApplicationCardV2";
 import React from "react";
+import { generateClaim } from "storybook/utils/generateClaim";
+import { generateNotice } from "storybook/utils/generateNotice";
 
 export default {
   title: "Components/ApplicationCardV2",

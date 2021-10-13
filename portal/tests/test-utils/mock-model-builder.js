@@ -28,7 +28,6 @@ import PreviousLeave, {
   PreviousLeaveReason,
   PreviousLeaveType,
 } from "../../src/models/PreviousLeave";
-
 import Address from "../../src/models/Address";
 import ConcurrentLeave from "../../src/models/ConcurrentLeave";
 import EmployerClaim from "../../src/models/EmployerClaim";
@@ -606,7 +605,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
    *
    * @returns {MockClaimBuilder}
    */
-  previousLeavesOtherReason(attrs = [{}]) {
+  previousLeavesOtherReason(attrs) {
     set(this.claimAttrs, "has_previous_leaves_other_reason", true);
     set(
       this.claimAttrs,
