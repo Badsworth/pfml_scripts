@@ -1105,6 +1105,12 @@ class EmployeeOccupation(Base, TimestampMixin):
     employer_id = Column(
         PostgreSQLUUID, ForeignKey("employer.employer_id"), nullable=False, index=True
     )
+    organization_unit_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("organization_unit.organization_unit_id"),
+        nullable=True,
+        index=True,
+    )
     job_title = Column(Text)
     date_of_hire = Column(Date)
     date_job_ended = Column(Date)
@@ -1120,6 +1126,7 @@ class EmployeeOccupation(Base, TimestampMixin):
 
     employee = relationship("Employee", back_populates="employee_occupations")
     employer = relationship("Employer", back_populates="employer_occupations")
+    organization_unit = relationship("OrganizationUnit")
 
 
 class ImportLog(Base, TimestampMixin):
