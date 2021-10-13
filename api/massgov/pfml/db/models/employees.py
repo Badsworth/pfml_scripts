@@ -1471,8 +1471,8 @@ class AbsenceReason(LookupTable):
     BEREAVEMENT = LkAbsenceReason(8, "Bereavement")
     EDUCATIONAL_ACTIVITY_FAMILY = LkAbsenceReason(9, "Educational Activity - Family")
     MEDICAL_DONATION_FAMILY = LkAbsenceReason(10, "Medical Donation - Family")
-    MILITARY_EXIGENCY_FAMILY = LkAbsenceReason(11, "Military Caregiver")
-    MILITARY_EXIGENCY_FAMILY = LkAbsenceReason(12, "Military Exigency - Family")
+    MILITARY_CAREGIVER = LkAbsenceReason(11, "Military Caregiver")
+    MILITARY_EXIGENCY_FAMILY = LkAbsenceReason(12, "Military Exigency Family")
     PREVENTATIVE_CARE_FAMILY_MEMBER = LkAbsenceReason(13, "Preventative Care - Family Member")
     PUBLIC_HEALTH_EMERGENCY_FAMILY = LkAbsenceReason(14, "Public Health Emergency - Family")
 
@@ -2583,6 +2583,10 @@ class LeaveRequestDecision(LookupTable):
     IN_REVIEW = LkLeaveRequestDecision(2, "In Review")
     APPROVED = LkLeaveRequestDecision(3, "Approved")
     DENIED = LkLeaveRequestDecision(4, "Denied")
+    CANCELLED = LkLeaveRequestDecision(5, "Cancelled")
+    WITHDRAWN = LkLeaveRequestDecision(6, "Withdrawn")
+    PROJECTED = LkLeaveRequestDecision(7, "Projected")
+    VOIDED = LkLeaveRequestDecision(8, "Voided")
 
 
 def sync_lookup_tables(db_session):
