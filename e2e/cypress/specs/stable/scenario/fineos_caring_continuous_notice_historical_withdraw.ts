@@ -1,6 +1,5 @@
 import { fineos, fineosPages, portal } from "../../../actions";
 import { Submission } from "../../../../src/types";
-import { config } from "../../../actions/common";
 
 describe("Create a new caring leave claim in FINEOS and add Historical Absence case. Then withdraw the Absence Case", () => {
   after(() => {
@@ -40,21 +39,19 @@ describe("Create a new caring leave claim in FINEOS and add Historical Absence c
     });
 
   it("Produces a withdrawn notice, avilable for download", () => {
-    if (config("HAS_WITHDRAWN_NOTICE") === "true") {
-      cy.dependsOnPreviousPass([withdraw]);
-      portal.before();
-      cy.visit("/");
-      portal.loginClaimant();
-      cy.unstash<Submission>("submission").then((submission) => {
-        portal.claimantGoToClaimStatus(submission.fineos_absence_id);
-        portal.claimantAssertClaimStatus([
-          { leave: "Care for a Family Member", status: "Withdrawn" },
-        ]);
-        cy.findByText("Pending Application Withdrawn (PDF)")
-          .should("be.visible")
-          .click();
-        portal.downloadLegalNotice(submission.fineos_absence_id);
-      });
-    }
+    cy.dependsOnPreviousPass([withdraw]);
+    portal.before();
+    cy.visit("/");
+    portal.loginClaimant();
+    cy.unstash<Submission>("submission").then((submission) => {
+      portal.claimantGoToClaimStatus(submission.fineos_absence_id);
+      portal.claimantAssertClaimStatus([
+        { leave: "Care for a Family Member", status: "Withdrawn" },
+      ]);
+      cy.findByText("Pending Application Withdrawn (PDF)")
+        .should("be.visible")
+        .click();
+      portal.downloadLegalNotice(submission.fineos_absence_id);
+    });
   });
 });
