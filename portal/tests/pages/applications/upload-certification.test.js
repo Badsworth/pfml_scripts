@@ -14,8 +14,6 @@ import { setupBenefitsApplications } from "../../test-utils/helpers";
 import userEvent from "@testing-library/user-event";
 import { v4 as uuidv4 } from "uuid";
 
-jest.mock("../../../src/services/tracker");
-
 const goToNextPage = jest.fn(() => {
   return Promise.resolve();
 });
@@ -328,7 +326,4 @@ describe("UploadCertification", () => {
       );
     });
   });
-
-  // TODO(PORTAL-383): Add tests for `DocumentUploadError`
-  it.todo("passes fileErrors into FileCard");
 });
