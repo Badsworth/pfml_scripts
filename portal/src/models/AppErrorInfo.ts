@@ -1,4 +1,3 @@
-import BaseModel from "./BaseModel";
 import { uniqueId } from "lodash";
 
 /**
@@ -11,18 +10,17 @@ import { uniqueId } from "lodash";
  * @property {string} [rule] - Name of validation issue rule (e.g "min_leave_periods", "conditional", etc)
  * @property {string} [type] - Name of validation issue type (e.g "required", "pattern", "date", etc)
  */
-class AppErrorInfo extends BaseModel {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'AppErrorInfo' is not ... Remove this comment to see the full error message
-  get defaults() {
-    return {
-      key: uniqueId("AppErrorInfo"),
-      message: null,
-      name: null,
-      field: null,
-      meta: null,
-      rule: null,
-      type: null,
-    };
+class AppErrorInfo {
+  key: string = uniqueId("AppErrorInfo");
+  message: string | null = null;
+  name: string | null = null;
+  field: string | null = null;
+  meta: Record<string, unknown> | null = null;
+  rule: string | null = null;
+  type: string | null = null;
+
+  constructor(attrs: Partial<AppErrorInfo>) {
+    Object.assign(this, attrs);
   }
 }
 

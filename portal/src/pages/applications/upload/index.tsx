@@ -76,9 +76,7 @@ export const UploadDocsOptions = (props) => {
       appLogic.setAppErrors(new AppErrorInfoCollection([appErrorInfo]));
 
       tracker.trackEvent("ValidationError", {
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'field' does not exist on type 'AppErrorI... Remove this comment to see the full error message
         issueField: appErrorInfo.field,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'type' does not exist on type 'AppErrorIn... Remove this comment to see the full error message
         issueType: appErrorInfo.type,
       });
 

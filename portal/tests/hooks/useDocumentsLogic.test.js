@@ -258,7 +258,6 @@ describe("useDocumentsLogic", () => {
           message: "Upload at least one file to continue.",
           meta: null,
           name: "ValidationError",
-          rule: null,
           type: "required",
         })
       );
