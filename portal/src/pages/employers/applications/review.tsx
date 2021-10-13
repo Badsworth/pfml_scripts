@@ -186,7 +186,7 @@ export const Review = (props) => {
       addedBenefits: [
         ...formState.addedBenefits,
         new EmployerBenefit({
-          employer_benefit_id: allEmployerBenefits.length,
+          employer_benefit_id: allEmployerBenefits.length.toString(),
         }),
       ],
     });

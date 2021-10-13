@@ -1,20 +1,17 @@
-/* eslint sort-keys: ["error", "asc"] */
-/**
- * @file Other income source
- */
-import BaseModel from "./BaseModel";
+class OtherIncome {
+  income_amount_dollars: number | null = null;
+  income_end_date: string | null = null;
+  income_start_date: string | null = null;
+  other_income_id: string | null = null;
+  income_type: typeof OtherIncomeType[keyof typeof OtherIncomeType] | null =
+    null;
 
-class OtherIncome extends BaseModel {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'OtherIncome' is not a... Remove this comment to see the full error message
-  get defaults() {
-    return {
-      income_amount_dollars: null,
-      income_amount_frequency: null,
-      income_end_date: null,
-      income_start_date: null,
-      income_type: null,
-      other_income_id: null,
-    };
+  income_amount_frequency:
+    | typeof OtherIncomeFrequency[keyof typeof OtherIncomeFrequency]
+    | null = null;
+
+  constructor(attrs: Partial<OtherIncome> = {}) {
+    Object.assign(this, attrs);
   }
 }
 

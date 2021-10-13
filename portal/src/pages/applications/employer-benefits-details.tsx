@@ -41,7 +41,6 @@ export const EmployerBenefitsDetails = (props) => {
   // If the claim doesn't have any employer benefits pre-populate the first one so that
   // it renders in the RepeatableFieldset below
   if (initialEntries.employer_benefits.length === 0) {
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     initialEntries.employer_benefits = [new EmployerBenefit()];
   }
   // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
@@ -53,7 +52,6 @@ export const EmployerBenefitsDetails = (props) => {
 
   const handleAddClick = () => {
     // Add a new blank entry
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     const updatedEntries = employer_benefits.concat([new EmployerBenefit()]);
     updateFields({ employer_benefits: updatedEntries });
   };
