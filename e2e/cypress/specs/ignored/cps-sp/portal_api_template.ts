@@ -56,7 +56,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
         claimPage.shouldHaveStatus("Restriction", "Passed");
         claimPage.shouldHaveStatus("PlanDecision", "Accepted");
         claimPage.outstandingRequirements((outstandingRequirements) => {
-          outstandingRequirements.complete();
+          outstandingRequirements.complete("Received", "Complete Employer Confirmation", true);
         });
         claimPage.approve();
       });

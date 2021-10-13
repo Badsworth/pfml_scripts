@@ -27,11 +27,11 @@ config:
           arrivalRate: 1
           name: Spike One
         - duration: 600 # Run minutes 25-35
-          maxVusers: 12
+          maxVusers: 10
           arrivalRate: 1
           name: Spike Two
         - duration: 600 # Run minutes 35-45
-          maxVusers: 18
+          maxVusers: 15
           arrivalRate: 1
           name: Spike Three
         - duration: 600 # Run minutes 45-55
