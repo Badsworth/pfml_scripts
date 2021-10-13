@@ -1,6 +1,6 @@
-import { fineos, fineosPages, portal } from "../../actions";
-import { Submission } from "../../../src/types";
-import { config } from "../../actions/common";
+import { fineos, fineosPages, portal } from "../../../actions";
+import { Submission } from "../../../../src/types";
+import { config } from "../../../actions/common";
 
 describe("Create a new caring leave claim in FINEOS and add Historical Absence case. Then withdraw the Absence Case", () => {
   after(() => {

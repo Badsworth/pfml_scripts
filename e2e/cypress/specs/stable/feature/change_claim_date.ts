@@ -1,7 +1,7 @@
-import { fineos, portal, fineosPages } from "../../actions";
-import { Submission } from "../../../src/types";
-import { extractLeavePeriod } from "../../../src/util/claims";
-import { assertValidClaim } from "../../../src/util/typeUtils";
+import { fineos, portal, fineosPages } from "../../../actions";
+import { Submission } from "../../../../src/types";
+import { extractLeavePeriod } from "../../../../src/util/claims";
+import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { format, addDays, parse } from "date-fns";
 
 describe("Claim date change", () => {

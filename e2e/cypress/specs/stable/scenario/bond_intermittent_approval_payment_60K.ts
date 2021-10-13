@@ -1,6 +1,6 @@
-import { portal, fineos, fineosPages } from "../../actions";
-import { Submission } from "../../../src/types";
-import { assertValidClaim } from "../../../src/util/typeUtils";
+import { portal, fineos, fineosPages } from "../../../actions";
+import { Submission } from "../../../../src/types";
+import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { addDays, formatISO, startOfWeek, subDays } from "date-fns";
 
 describe("Submit bonding application via the web portal: Adjudication Approval, recording actual hours & payment checking", () => {
