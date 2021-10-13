@@ -18,6 +18,12 @@ const securityGroups: [FineosSecurityGroups, boolean][] = [
   ["SaviLinx Supervisors(sec)", true],
   ["DFML IT(sec)", false],
 ];
+
+const ssoAccount2Credentials: Credentials = {
+  username: config("SSO2_USERNAME"),
+  password: config("SSO2_PASSWORD"),
+};
+
 securityGroups.forEach(([group, canChangeDocType]) => {
   describe(`${group} ${
     canChangeDocType ? "can" : "can't"
@@ -26,8 +32,9 @@ securityGroups.forEach(([group, canChangeDocType]) => {
       const submit = it("Given a submitted claim", () => {
         fineos.before();
         cy.task("chooseFineosRole", {
-          userId: config("SSO2_USERNAME"),
+          userId: ssoAccount2Credentials.username,
           preset: group,
+          debug: false,
         });
         //Submit a claim via the Fineos.
         cy.task("generateClaim", "CHAP_ER").then((claim) => {
@@ -52,10 +59,7 @@ securityGroups.forEach(([group, canChangeDocType]) => {
       } change the document type`, () => {
         cy.dependsOnPreviousPass([submit]);
         // Login as a second account and try to change the doc type
-        fineos.before({
-          username: config("SSO2_USERNAME"),
-          password: config("SSO2_PASSWORD"),
-        });
+        fineos.before(ssoAccount2Credentials);
         cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
           fineosPages.ClaimPage.visit(fineos_absence_id).documents(
             (docPage) => {
@@ -86,10 +90,7 @@ securityGroups.forEach(([group, canChangeDocType]) => {
       } change the document type`, () => {
         cy.dependsOnPreviousPass([apiSubmit]);
         // Login as a second account and try to change the doc type
-        fineos.before({
-          username: config("SSO2_USERNAME"),
-          password: config("SSO2_PASSWORD"),
-        });
+        fineos.before(ssoAccount2Credentials);
         cy.unstash<DehydratedClaim>("claim").then(() => {
           cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
             fineosPages.ClaimPage.visit(fineos_absence_id).documents((docs) => {

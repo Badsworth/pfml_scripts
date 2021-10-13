@@ -592,17 +592,68 @@ class OutstandingRequirementsPage {
     ).click();
     cy.get("#footerButtonsBar input[value='OK']").click();
   }
-  complete(receipt = "Received", reason = "Complete Employer Confirmation") {
-    cy.wait("@ajaxRender");
-    cy.wait(200);
-    cy.get("input[value='Complete']").click();
-    cy.get("#CompletionReasonWidget_PopupWidgetWrapper").within(() => {
-      cy.findByLabelText("Completion Reason").select(receipt);
-      cy.findByLabelText("Completion Notes").type(
-        `{selectall}{backspace}${reason}`
-      );
-      cy.findByText("Ok").click({ force: true });
-    });
+  complete(receipt: string, reason: string, hasAccess: boolean): this {
+    if (hasAccess) {
+      cy.wait("@ajaxRender");
+      cy.wait(200);
+      cy.get("input[value='Complete']").click();
+      cy.get("#CompletionReasonWidget_PopupWidgetWrapper").within(() => {
+        cy.findByLabelText("Completion Reason").select(receipt);
+        cy.findByLabelText("Completion Notes").type(
+          `{selectall}{backspace}${reason}`
+        );
+        cy.findByText("Ok").click({force: true});
+      });
+    } else {
+      cy.wait("@ajaxRender");
+      cy.wait(200);
+      cy.get("input[value='Complete']").should('be.disabled');
+    }
+    return this;
+  }
+  suppress(reason: string, notes: string, hasAccess: boolean): this {
+    if (hasAccess) {
+      cy.wait("@ajaxRender");
+      cy.wait(200);
+      cy.get("input[value='Suppress']").click();
+      cy.get("#SuppressionReasonWidget_PopupWidgetWrapper").within(() => {
+        cy.findByLabelText("Suppression Reason").select(reason);
+        cy.findByLabelText("Suppression Notes").type(
+          `{selectall}{backspace}${notes}`
+        );
+        cy.findByText("Ok").click({force: true});
+      });
+    } else {
+      cy.wait("@ajaxRender");
+      cy.wait(200);
+      cy.get("input[value='Suppress']").should('be.disabled');
+    }
+    return this;
+  }
+  removeOR(hasAccess: boolean): this {
+    if (hasAccess) {
+      cy.wait("@ajaxRender");
+      cy.wait(200);
+      cy.get("input[value='Remove']").click();
+      cy.get("#PopupContainer input[type='submit'][value='Yes']").click();
+    } else {
+      cy.wait("@ajaxRender");
+      cy.wait(200);
+      cy.get("input[value='Remove']").should('be.disabled');
+    }
+    return this;
+  }
+  reopen(hasAccess: boolean): this {
+    if (hasAccess) {
+      cy.wait("@ajaxRender");
+      cy.wait(200);
+      cy.get("input[value='Reopen']").click();
+    } else {
+      cy.wait("@ajaxRender");
+      cy.wait(200);
+      cy.get("input[value='Reopen']").should('be.disabled');
+    }
+    return this;
   }
 }
 

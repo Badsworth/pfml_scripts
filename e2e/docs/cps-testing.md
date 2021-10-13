@@ -28,6 +28,8 @@ The following tests name and description:
 - **secure_action_modify_delete_historical_absence_case** - This test is checking to create/modify/delete a historical absence case for each role.
 - **secure_action_correspondence** - We are checking in this test to see if the user allowed to suppress correspondence. If the user is allowed to suppress the correspondence the user will be able to click the `Suppress Notifications` in the dropdown.
 Then we are checking to see if the following message is showing `Automatic Notifications and Correspondence have been suppressed` in the alert box.
+- **secure_action_outstanding_requirement_access** - We are checking to see if different security groups have access to the Outstanding Requirement buttons available to update or change the "Employer Confirmation of Leave Data".
+The buttons we are checking are the following: Complete, Suppress, and Remove only.
 
 
 **continuous_medical_midwk_work_patterns_weight_days.ts** - This is a test that came out a regression between two release. When a claimant submitting a claim through the Portal the hours and minutes get transfer to weight in Fineos.
