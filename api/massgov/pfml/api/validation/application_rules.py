@@ -135,6 +135,24 @@ def check_codependent_fields(
     return issues
 
 
+def check_zero_income_amount(
+    item_path: str, item: Any, income_path: str,
+) -> List[ValidationErrorDetail]:
+
+    income_amount = getattr(item, income_path)
+
+    if income_amount is None or income_amount > 0:
+        return []
+
+    return [
+        ValidationErrorDetail(
+            type=IssueType.minimum,
+            message=f"{income_path} must be greater than zero",
+            field=f"{item_path}.{income_path}",
+        )
+    ]
+
+
 def check_date_range(
     start_date: Optional[date],
     start_date_path: str,
@@ -206,17 +224,20 @@ def get_employer_benefit_issues(
         "benefit_start_date",
         "benefit_type_id",
         "is_full_salary_continuous",
-    ]
-    issues += check_required_fields(
-        benefit_path, benefit, required_fields, {"benefit_type_id": "benefit_type"}
-    )
-    issues += check_codependent_fields(
-        benefit_path,
-        benefit,
         "benefit_amount_dollars",
         "benefit_amount_frequency_id",
-        {"benefit_amount_frequency_id": "benefit_amount_frequency"},
+    ]
+    issues += check_required_fields(
+        benefit_path,
+        benefit,
+        required_fields,
+        {
+            "benefit_type_id": "benefit_type",
+            "benefit_amount_frequency_id": "benefit_amount_frequency",
+        },
     )
+
+    issues += check_zero_income_amount(benefit_path, benefit, "benefit_amount_dollars",)
 
     start_date = benefit.benefit_start_date
     start_date_path = f"{benefit_path}.benefit_start_date"
@@ -256,17 +277,18 @@ def get_other_income_issues(income: OtherIncome, index: int) -> List[ValidationE
         "income_end_date",
         "income_start_date",
         "income_type_id",
-    ]
-    issues += check_required_fields(
-        income_path, income, required_fields, {"income_type_id": "income_type"}
-    )
-    issues += check_codependent_fields(
-        income_path,
-        income,
         "income_amount_dollars",
         "income_amount_frequency_id",
-        {"income_amount_frequency_id": "income_amount_frequency"},
+    ]
+
+    issues += check_required_fields(
+        income_path,
+        income,
+        required_fields,
+        {"income_type_id": "income_type", "income_amount_frequency_id": "income_amount_frequency"},
     )
+
+    issues += check_zero_income_amount(income_path, income, "income_amount_dollars",)
 
     start_date = income.income_start_date
     start_date_path = f"{income_path}.income_start_date"
