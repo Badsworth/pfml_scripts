@@ -6,6 +6,7 @@ import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
 import formatDate from "../../utils/formatDate";
+import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
@@ -31,6 +32,15 @@ export const ConcurrentLeavesIntro = (props) => {
       <Hint>
         <Trans
           i18nKey="pages.claimsConcurrentLeavesIntro.intro"
+          components={{
+            "examples-of-using-paid-leave": (
+              <a
+                href={routes.external.massgov.usingAccruedPaidLeave}
+                target="_blank"
+                rel="noreferrer noopener"
+              />
+            ),
+          }}
           values={{
             startDate,
             endDate,
