@@ -23,9 +23,7 @@ locals {
   pfmldata_bucket_resources = length(var.pfmldata_bucket_resources) > 0 ? var.pfmldata_bucket_resources : [{
     bucket_arn = data.aws_s3_bucket.agency_transfer.arn
     resource_prefixes = [
-      "reductions/dia/",
       "reductions/dia/*",
-      "reductions/dua/",
       "reductions/dua/*"
     ]
   }]
