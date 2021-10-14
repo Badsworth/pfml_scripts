@@ -1,6 +1,6 @@
 import copy
 from datetime import date, datetime, timedelta
-from typing import List
+from typing import Dict, List, Optional
 from unittest import mock
 
 import factory  # this is from the factory_boy package
@@ -31,6 +31,7 @@ from massgov.pfml.db.models.employees import (
     UserLeaveAdministrator,
 )
 from massgov.pfml.db.models.factories import (
+    AbsencePeriodFactory,
     ApplicationFactory,
     ClaimFactory,
     EmployeeFactory,
@@ -3054,6 +3055,89 @@ class TestGetClaimsEndpoint:
                 "/v1/claims?claim_status=Unknown", client, employer_auth_token
             )
             self._perform_assertions(resp, status_code=400, expected_claims=[])
+
+    # Inner class for testing Claims with Absence Periods
+    class TestClaimsWithAbsencePeriods:
+        @pytest.fixture
+        def employer(self):
+            return EmployerFactory.create()
+
+        @pytest.fixture
+        def employee(self):
+            return EmployeeFactory.create()
+
+        @pytest.fixture()
+        def claim(self, employer, employee):
+            return ClaimFactory.create(employer=employer, employee=employee, claim_type_id=1)
+
+        @pytest.fixture()
+        def claim_no_absence_period(self, employer, employee):
+            return ClaimFactory.create(employer=employer, employee=employee, claim_type_id=1)
+
+        @pytest.fixture()
+        def absence_periods(self, claim):
+            # using start and end as unique identifier because
+            # AbsencePeriodResponse does not include a unique identifier
+            start = date.today() + timedelta(days=5)
+            periods = []
+            for _ in range(5):
+                end = start + timedelta(days=10)
+                period = AbsencePeriodFactory.create(
+                    claim=claim, absence_period_start_date=start, absence_period_end_date=end
+                )
+                periods.append(period)
+                start = start + timedelta(days=20)
+            return periods
+
+        @pytest.fixture(autouse=True)
+        def load_test_db(self, claim, test_db_session, employer_user, employer, test_verification):
+            link = UserLeaveAdministrator(
+                user_id=employer_user.user_id,
+                employer_id=employer.employer_id,
+                fineos_web_id="fake-fineos-web-id",
+                verification=test_verification,
+            )
+            test_db_session.add(link)
+            test_db_session.commit()
+
+        def _find_absence_period_by_start_date(
+            self, start_date: str, absence_periods: List[AbsencePeriod]
+        ) -> Optional[AbsencePeriod]:
+            absence_period = [
+                period
+                for period in absence_periods
+                if period.absence_period_start_date.isoformat() == start_date
+            ]
+            return absence_period[0] if len(absence_period) else None
+
+        def _assert_claim_data(
+            self, claim_data: Dict, claim: Claim, absence_periods: List[AbsencePeriod]
+        ):
+            assert claim_data["fineos_absence_id"] == claim.fineos_absence_id
+            assert len(claim_data["absence_periods"]) == len(absence_periods)
+            for absence_period_data in claim_data["absence_periods"]:
+                assert self._find_absence_period_by_start_date(
+                    absence_period_data["absence_period_start_date"], absence_periods
+                )
+
+        def test_claim_with_absence_periods(
+            self, client, employer_auth_token, claim, claim_no_absence_period, absence_periods
+        ):
+            resp = client.get(
+                "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
+            )
+            assert resp.status_code == 200
+            response_body = resp.get_json()
+            claim_data = response_body.get("data")
+            assert len(claim_data) == 2
+            claim_data_with_absence_period = [
+                claim for claim in claim_data if claim["absence_periods"]
+            ][0]
+            claim_data_no_absence_period = [
+                claim for claim in claim_data if not claim["absence_periods"]
+            ][0]
+            self._assert_claim_data(claim_data_with_absence_period, claim, absence_periods)
+            self._assert_claim_data(claim_data_no_absence_period, claim_no_absence_period, [])
 
     # Inner class for testing Claims with Managed Requirements
     class TestClaimsWithManagedRequirements:

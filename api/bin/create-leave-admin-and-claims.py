@@ -13,6 +13,7 @@ from factory.faker import faker
 import massgov.pfml.db
 from massgov.pfml.db.models.employees import Role, UserLeaveAdministrator
 from massgov.pfml.db.models.factories import (
+    AbsencePeriodFactory,
     ClaimFactory,
     EmployerOnlyDORDataFactory,
     ManagedRequirementFactory,
@@ -50,8 +51,9 @@ def main(total_claims: int) -> None:
             follow_up_date=fake.date_time_between(start_date="-1d", end_date="+11d"),
             managed_requirement_status_id=random.randint(1, 3),
         )
+        absence_period = AbsencePeriodFactory.create(claim=claim)
         click.secho(
-            f"Created Claim {claim.claim_id}, and ManagedRequirement {managed_requirement.managed_requirement_id}",
+            f"Created Claim {claim.claim_id}, ManagedRequirement {managed_requirement.managed_requirement_id} and AbsencePeriod {absence_period.absence_period_id}",
             fg="cyan",
         )
 

@@ -404,6 +404,7 @@ class AbsencePeriodFactory(BaseFactory):
     absence_period_type_id = 1
     absence_reason_id = 1
     absence_reason_qualifier_one_id = 1
+    absence_reason_qualifier_two_id = 1
     is_id_proofed = False
     created_at = datetime.now()
     updated_at = datetime.now()
