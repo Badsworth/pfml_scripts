@@ -160,6 +160,8 @@ const routes = {
       intermittentLeaveGuide:
         "https://www.mass.gov/intermittent-leave-instructions",
       mailFaxInstructions: "https://www.mass.gov/pfmlsubmitinfo",
+      manageApprovedApplication:
+        "https://www.mass.gov/info-details/managing-your-approved-paid-family-or-medical-leave-claim",
       medicalBonding: "https://www.mass.gov/pfml-medical-bonding",
       multipleBirths: "https://www.mass.gov/pfml-multiple-births",
       onlineAppealsForm:
