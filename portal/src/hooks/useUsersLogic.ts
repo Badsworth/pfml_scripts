@@ -69,7 +69,6 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
   const requireUserConsentToDataAgreement = () => {
     if (!user) throw new Error("User not loaded");
     if (
-      // @ts-expect-error FIXME: Property 'consented_to_data_sharing' does not exist on type 'User'
       !user.consented_to_data_sharing &&
       !portalFlow.pathname.includes(routes.user.consentToDataSharing)
     ) {

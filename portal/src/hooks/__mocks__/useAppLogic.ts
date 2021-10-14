@@ -99,7 +99,14 @@ export default jest.fn(() => ({
   },
   setAppErrors: jest.fn(),
   updateUser: jest.fn(),
-  user: new User({ user_id: "mock_user_id", consented_to_data_sharing: true }),
+  user: new User({
+    user_id: "mock_user_id",
+    consented_to_data_sharing: true,
+    email_address: "ali@miau.com",
+    auth_id: "cognito_123",
+    roles: [],
+    user_leave_administrators: [],
+  }),
   users: {
     loadUser: jest.fn(),
     requireUserConsentToDataAgreement: jest.fn(),
