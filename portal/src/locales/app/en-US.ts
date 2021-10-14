@@ -1148,7 +1148,7 @@ const pages = {
   },
   claimsConcurrentLeavesIntro: {
     intro:
-      "<p>Next, we need to know about paid leave from your employer that you plan to use between {{startDate}} and {{endDate}}. This includes paid vacation time, sick time, personal time, and other paid time off provided by your employer. It does not include family or medical leave provided by your employer, or through a short- or long-term disability program. We’ll ask about that later.</p><p>When your PFML leave begins, there is a 7-day waiting period before PFML payments start. During this 7-day waiting period, you can use paid time off from your employer with no impact to your PFML benefit.</p><p>After the 7-day waiting period, you cannot use both paid leave from your employer and paid leave from PFML on the same days. In some cases, using accrued paid leave after the 7-day waiting period has ended can cause your PFML benefits to stop. You will need to re-apply to receive PFML benefits again. To avoid this, use accrued paid leave only at the start or end of your PFML leave.</p>",
+      "<p>Next, we need to know about paid leave from your employer that you plan to use between {{startDate}} and {{endDate}}. This includes paid vacation time, sick time, personal time, and other paid time off provided by your employer. It does not include family or medical leave provided by your employer, or through a short- or long-term disability program. We’ll ask about that later.</p><p>When your PFML leave begins, there is a 7-day waiting period before PFML payments start. During this 7-day waiting period, you can use paid time off from your employer with no impact to your PFML benefit.</p><p>After the 7-day waiting period, you cannot use both paid leave from your employer and paid leave from PFML on the same days. In some cases, using accrued paid leave after the 7-day waiting period has ended can cause your PFML benefits to stop. You will need to re-apply to receive PFML benefits again. To avoid this, use accrued paid leave only at the start or end of your PFML leave. <examples-of-using-paid-leave>See examples of how you can use accrued paid leave</examples-of-using-paid-leave>.</p>",
     sectionLabel:
       "Tell us about the accrued paid leave you'll use during your paid leave from PFML.",
     title: "$t(shared.claimsOtherLeaveTitle)",
@@ -1958,7 +1958,9 @@ const pages = {
       "If you are giving birth, you may also be eligible for paid medical leave",
     infoAlertHeading_pregnancy:
       "You may also be eligible for paid family leave",
-    infoRequestsBody:
+    infoRequestsBody_Decision:
+      "We have made a final decision for this application. Your final decision notice has more details about the appeals process.<p>If you would like to appeal the final decision, you can do so using mail, fax, or our <online-appeals-form>online appeals form</online-appeals-form>.</p>",
+    infoRequestsBody_Pending:
       "If you have a request for more information, use this button to upload the requested documentation.",
     infoRequestsHeading: "Respond to requests for information",
     leavePeriodLabel_continuous: "$t(shared.claimDurationTypeContinuous)",
@@ -1993,6 +1995,8 @@ const pages = {
       "<p>To make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. If you request a change to your start and end dates, we may need to review your application again.</p>",
     makeChangesHeading: "Make changes",
     manageApplicationHeading: "Manage your application",
+    manageApprovedApplicationText:
+      "<p>See more <manage-approved-app-link>examples of how to manage your approved application.</manage-approved-app-link></p>",
     reportOtherBenefitsBody:
       "<p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report changes to:</p><ul><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for a disability benefit or a worker’s compensation claim after you submitted your application, report this change.</li></ul>",
     reportOtherBenefitsHeading: "Report other benefits or income",

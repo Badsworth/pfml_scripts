@@ -39,7 +39,6 @@ export const OtherIncomesDetails = (props) => {
   // If the claim doesn't have any relevant entries, pre-populate the first one
   // so that it renders in the RepeatableFieldset below
   if (initialEntries.other_incomes.length === 0) {
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     initialEntries.other_incomes = [new OtherIncome()];
   }
   // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
@@ -51,7 +50,6 @@ export const OtherIncomesDetails = (props) => {
 
   const handleAddClick = () => {
     // Add a new blank entry
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     const updatedEntries = other_incomes.concat([new OtherIncome()]);
     updateFields({ other_incomes: updatedEntries });
   };

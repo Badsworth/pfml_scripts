@@ -78,7 +78,7 @@ AUDIT_REJECT_NOTE_TO_WRITEBACK_STATUS = {
     "Exempt Employer": FineosWritebackTransactionStatus.EXEMPT_EMPLOYER,
     "Weekly benefit amount exceeds $850": FineosWritebackTransactionStatus.WEEKLY_BENEFITS_AMOUNT_EXCEEDS_850,
     "Waiting Week": FineosWritebackTransactionStatus.WAITING_WEEK,
-    "Already paid for dates": FineosWritebackTransactionStatus.ALREADY_PAID_FOR_DATES,
+    "InvalidPayment PaidDate": FineosWritebackTransactionStatus.ALREADY_PAID_FOR_DATES,
     "Leave Dates Change": FineosWritebackTransactionStatus.LEAVE_DATES_CHANGE,
     "Under or Over payments(Adhocs needed)": FineosWritebackTransactionStatus.UNDER_OR_OVERPAY_ADJUSTMENT,
     "Name mismatch": FineosWritebackTransactionStatus.NAME_MISMATCH,
@@ -243,6 +243,14 @@ class PaymentRejectsStep(Step):
             raise PaymentRejectsException(
                 f"Found payment state log not in audit response pending state: {payment_state_log.end_state.state_description if payment_state_log.end_state else None}, payment_id: {payment.payment_id}"
             )
+
+        # For whatever reason, the reject notes end up with a weird
+        # character in the new line due to the process the PI team uses.
+        # Replace that character with a space so our parsing and logging
+        # logic works as expected. This char represents an unknown unicode
+        # character.
+        if rejected_notes:
+            rejected_notes = rejected_notes.replace("\ufffd", " ")
 
         if is_rejected_payment:
             self.increment(self.Metrics.REJECTED_PAYMENT_COUNT)

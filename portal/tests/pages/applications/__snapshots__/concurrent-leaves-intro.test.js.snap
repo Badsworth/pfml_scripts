@@ -27,7 +27,15 @@ exports[`ConcurrentLeavesIntroIntro renders the page 1`] = `
         When your PFML leave begins, there is a 7-day waiting period before PFML payments start. During this 7-day waiting period, you can use paid time off from your employer with no impact to your PFML benefit.
       </p>
       <p>
-        After the 7-day waiting period, you cannot use both paid leave from your employer and paid leave from PFML on the same days. In some cases, using accrued paid leave after the 7-day waiting period has ended can cause your PFML benefits to stop. You will need to re-apply to receive PFML benefits again. To avoid this, use accrued paid leave only at the start or end of your PFML leave.
+        After the 7-day waiting period, you cannot use both paid leave from your employer and paid leave from PFML on the same days. In some cases, using accrued paid leave after the 7-day waiting period has ended can cause your PFML benefits to stop. You will need to re-apply to receive PFML benefits again. To avoid this, use accrued paid leave only at the start or end of your PFML leave. 
+        <a
+          href="https://www.mass.gov/info-details/how-other-leave-and-benefits-can-affect-your-paid-family-and-medical-leave#paid-time-off-through-your-employer-"
+          rel="noreferrer noopener"
+          target="_blank"
+        >
+          See examples of how you can use accrued paid leave
+        </a>
+        .
       </p>
     </span>
     <button

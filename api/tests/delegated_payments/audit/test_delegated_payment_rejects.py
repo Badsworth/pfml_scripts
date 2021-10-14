@@ -375,6 +375,45 @@ def test_transition_audit_pending_payment_state(test_db_session, payment_rejects
         == expected_writeback_transaction_status.transaction_status_id
     )
 
+    # Reject notes have a weird character in them
+    payment_6 = PaymentFactory.create()
+    state_log_util.create_finished_state_log(
+        payment_6,
+        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
+        state_log_util.build_outcome("test"),
+        test_db_session,
+    )
+
+    payment_rejects_step.transition_audit_pending_payment_state(
+        payment_6, True, False, "InvalidPayment" + "\ufffd" + "PaidDate",
+    )
+
+    payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+        payment_6, Flow.DELEGATED_PAYMENT, test_db_session
+    )
+
+    assert payment_state_log is not None
+    assert (
+        payment_state_log.end_state_id
+        == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT.state_id
+    )
+    # Weird character replaced with space
+    assert (
+        payment_state_log.outcome["message"]
+        == "Payment rejected with notes: InvalidPayment PaidDate"
+    )
+    writeback_details = (
+        test_db_session.query(FineosWritebackDetails)
+        .filter(FineosWritebackDetails.payment_id == payment_6.payment_id)
+        .one_or_none()
+    )
+    # correct writeback details found
+    assert writeback_details is not None
+    assert (
+        writeback_details.transaction_status_id
+        == FineosWritebackTransactionStatus.ALREADY_PAID_FOR_DATES.transaction_status_id
+    )
+
 
 def test_convert_reject_notes_to_writeback_status_rejected_scenarios(
     test_db_session, payment_rejects_step

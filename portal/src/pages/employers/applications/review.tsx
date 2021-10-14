@@ -186,7 +186,7 @@ export const Review = (props) => {
       addedBenefits: [
         ...formState.addedBenefits,
         new EmployerBenefit({
-          employer_benefit_id: allEmployerBenefits.length,
+          employer_benefit_id: allEmployerBenefits.length.toString(),
         }),
       ],
     });
@@ -224,7 +224,7 @@ export const Review = (props) => {
         ...formState.addedPreviousLeaves,
         new PreviousLeave({
           is_for_current_employer: true,
-          previous_leave_id: allPreviousLeaves.length,
+          previous_leave_id: allPreviousLeaves.length.toString(),
         }),
       ],
     });

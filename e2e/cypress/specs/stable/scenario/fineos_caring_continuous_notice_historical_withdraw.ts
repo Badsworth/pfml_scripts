@@ -8,9 +8,9 @@ describe("Create a new caring leave claim in FINEOS and add Historical Absence c
   });
 
   it("Create historical absence case within Absence Case", () => {
+    fineos.before();
     cy.task("generateClaim", "HIST_CASE").then((claim) => {
       cy.task("submitClaimToAPI", claim).then((res) => {
-        fineos.before();
         cy.stash("claim", claim.claim);
         cy.stash("submission", {
           application_id: res.application_id,
@@ -39,7 +39,7 @@ describe("Create a new caring leave claim in FINEOS and add Historical Absence c
       });
     });
 
-  it("Produces a withdrawn notice, avilable for download", () => {
+  it("Produces a withdrawn notice, available for download", () => {
     if (config("HAS_WITHDRAWN_NOTICE") === "true") {
       cy.dependsOnPreviousPass([withdraw]);
       portal.before();

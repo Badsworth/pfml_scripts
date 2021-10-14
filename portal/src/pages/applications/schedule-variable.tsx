@@ -60,7 +60,6 @@ export const ScheduleVariable = (props) => {
     if (!minutesWorkedPerWeek) {
       work_pattern_days = [];
     } else {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_days' does not exist on typ... Remove this comment to see the full error message
       ({ work_pattern_days } =
         WorkPattern.createWithWeek(minutesWorkedPerWeek));
       hours_worked_per_week = round(minutesWorkedPerWeek / 60, 2);

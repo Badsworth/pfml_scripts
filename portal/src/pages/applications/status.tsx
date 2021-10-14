@@ -284,47 +284,80 @@ export const Status = ({ appLogic, query }) => {
           <Heading level="2">
             {t("pages.claimsStatus.infoRequestsHeading")}
           </Heading>
-          <p>{t("pages.claimsStatus.infoRequestsBody")}</p>
-          <ButtonLink
-            className="measure-6 margin-top-3"
-            href={appLogic.portalFlow.getNextPageRoute(
-              "UPLOAD_DOC_OPTIONS",
-              {},
-              { absence_case_id: claimDetail.fineos_absence_id }
-            )}
-          >
-            {t("pages.claimsStatus.uploadDocumentsButton")}
-          </ButtonLink>
+          <div>
+            <Trans
+              i18nKey="pages.claimsStatus.infoRequestsBody"
+              tOptions={{ context: !hasPendingStatus ? "Decision" : "Pending" }}
+              components={{
+                "online-appeals-form": (
+                  <a
+                    href={routes.external.massgov.onlineAppealsForm}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                  />
+                ),
+                p: <p className="margin-top-1"></p>,
+              }}
+            />
+          </div>
+          {hasPendingStatus && (
+            <ButtonLink
+              className="measure-6 margin-top-3"
+              href={appLogic.portalFlow.getNextPageRoute(
+                "UPLOAD_DOC_OPTIONS",
+                {},
+                { absence_case_id: claimDetail.fineos_absence_id }
+              )}
+            >
+              {t("pages.claimsStatus.uploadDocumentsButton")}
+            </ButtonLink>
+          )}
         </div>
 
         {/* Manage applications section */}
         <div className={containerClassName}>
-          <Heading level="2">
-            {t("pages.claimsStatus.manageApplicationHeading")}
-          </Heading>
-          <Heading level="3" className="margin-top-4">
-            {t("pages.claimsStatus.makeChangesHeading")}
-          </Heading>
-          <Trans
-            i18nKey="pages.claimsStatus.makeChangesBody"
-            components={{
-              "contact-center-phone-link": (
-                <a
-                  href={`tel:${t("shared.contactCenterPhoneNumberNoBreak")}`}
+          {(hasPendingStatus || hasApprovedStatus) && (
+            <div data-testid="manageApplication">
+              <Heading level="2">
+                {t("pages.claimsStatus.manageApplicationHeading")}
+              </Heading>
+              <Heading level="3" className="margin-top-4">
+                {t("pages.claimsStatus.makeChangesHeading")}
+              </Heading>
+              <Trans
+                i18nKey="pages.claimsStatus.makeChangesBody"
+                components={{
+                  "contact-center-phone-link": (
+                    <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                  ),
+                }}
+              />
+              {hasApprovedStatus && (
+                <Trans
+                  i18nKey="pages.claimsStatus.manageApprovedApplicationText"
+                  components={{
+                    "manage-approved-app-link": (
+                      <a
+                        data-testid="manageApprovedApplicationLink"
+                        href={routes.external.massgov.manageApprovedApplication}
+                        rel="noopener noreferrer"
+                        target="_blank"
+                      />
+                    ),
+                  }}
                 />
-              ),
-            }}
-          />
-          <Heading level="3" className="margin-top-4">
+              )}
+            </div>
+          )}
+
+          <Heading level="3">
             {t("pages.claimsStatus.reportOtherBenefitsHeading")}
           </Heading>
           <Trans
             i18nKey="pages.claimsStatus.reportOtherBenefitsBody"
             components={{
               "contact-center-phone-link": (
-                <a
-                  href={`tel:${t("shared.contactCenterPhoneNumberNoBreak")}`}
-                />
+                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
               ),
               ul: <ul className="usa-list" />,
               li: <li />,

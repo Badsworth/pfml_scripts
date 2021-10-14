@@ -415,11 +415,27 @@ describe("Status", () => {
     });
   });
 
-  it("includes a button to upload additional documents", () => {
+  it("includes a button to upload additional documents if there is a pending absence period", () => {
+    const absence_periods = [
+      "Withdrawn",
+      "Cancelled",
+      "Approved",
+      "Pending",
+      "Denied",
+    ].map((request_decision, fineos_leave_request_id) => ({
+      fineos_leave_request_id,
+      request_decision,
+      period_type: "Continuous",
+      reason: LeaveReason.medical,
+    }));
+
     renderPage(
       Status,
       {
-        addCustomSetup: setupHelper({ ...defaultClaimDetail }, [DOCUMENTS[1]]),
+        addCustomSetup: setupHelper({
+          ...defaultClaimDetail,
+          absence_periods,
+        }),
       },
       props
     );
@@ -852,6 +868,92 @@ describe("Status", () => {
           </a>
         `);
       });
+    });
+  });
+  describe("manage your application", () => {
+    it("is not displayed if all the claim statuses on an application are Withdrawn, Cancelled, or Denied", () => {
+      const absence_periods = ["Withdrawn", "Cancelled", "Denied"].map(
+        (request_decision, fineos_leave_request_id) => ({
+          fineos_leave_request_id,
+          request_decision,
+          period_type: "Continuous",
+          reason: LeaveReason.medical,
+        })
+      );
+
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper({
+            ...defaultClaimDetail,
+            absence_periods,
+          }),
+        },
+        props
+      );
+
+      expect(screen.queryByTestId("manageApplication")).not.toBeInTheDocument();
+    });
+
+    it("displays manage approved application link if any of the claim statuses on an application are Approved", () => {
+      const absence_periods = [
+        "Withdrawn",
+        "Cancelled",
+        "Approved",
+        "Pending",
+        "Denied",
+      ].map((request_decision, fineos_leave_request_id) => ({
+        fineos_leave_request_id,
+        request_decision,
+        period_type: "Continuous",
+        reason: LeaveReason.medical,
+      }));
+
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper({
+            ...defaultClaimDetail,
+            absence_periods,
+          }),
+        },
+        props
+      );
+
+      const manageApprovedApplicationLink = screen.getByTestId(
+        "manageApprovedApplicationLink"
+      );
+      expect(manageApprovedApplicationLink).toBeInTheDocument();
+      expect(manageApprovedApplicationLink).toMatchSnapshot();
+    });
+
+    it("is displayed if any of the claim statuses on an application are Pending and none are Approved", () => {
+      const absence_periods = [
+        "Withdrawn",
+        "Cancelled",
+        "Pending",
+        "Denied",
+      ].map((request_decision, fineos_leave_request_id) => ({
+        fineos_leave_request_id,
+        request_decision,
+        period_type: "Continuous",
+        reason: LeaveReason.medical,
+      }));
+
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper({
+            ...defaultClaimDetail,
+            absence_periods,
+          }),
+        },
+        props
+      );
+
+      const manageApplication = screen.getByTestId("manageApplication");
+      expect(manageApplication).toBeInTheDocument();
+      expect(manageApplication).toMatchSnapshot();
     });
   });
 });

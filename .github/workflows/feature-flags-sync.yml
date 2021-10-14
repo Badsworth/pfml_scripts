@@ -29,7 +29,7 @@ jobs:
         id: get-envs
         run: |
           sudo apt-get install jq
-          ENVS=$(ls | sed 's/\.yaml//g' | jq -R . | jq -s -c .)
+          ENVS=$(ls *.yaml | sed 's/\.yaml//g' | jq -R . | jq -s -c .)
           echo "::set-output name=envs::$ENVS"
 
   sync-files:
