@@ -207,11 +207,9 @@ resource "aws_api_gateway_integration_response" "pfmldata_delete_object_s3_integ
   }
 }
 
-
 # ----------------------------------------------------------------------------------------------------------------------
 # PUT /{bucket}/{key} endpoint to proxy S3 CopyObject
 # ----------------------------------------------------------------------------------------------------------------------
-
 resource "aws_api_gateway_method" "pfmldata_copy_object_method" {
   rest_api_id      = aws_api_gateway_rest_api.pfml.id
   resource_id      = aws_api_gateway_resource.pfmldata_bucket_key.id
@@ -231,6 +229,12 @@ resource "aws_api_gateway_method_response" "pfmldata_copy_object_response_200" {
   resource_id = aws_api_gateway_resource.pfmldata_bucket_key.id
   http_method = aws_api_gateway_method.pfmldata_copy_object_method.http_method
   status_code = "200"
+
+  response_parameters = {
+    "method.response.header.Timestamp"      = true
+    "method.response.header.Content-Length" = true
+    "method.response.header.Content-Type"   = true
+  }
 }
 
 resource "aws_api_gateway_method_response" "pfmldata_copy_object_response_403" {
@@ -238,6 +242,10 @@ resource "aws_api_gateway_method_response" "pfmldata_copy_object_response_403" {
   resource_id = aws_api_gateway_resource.pfmldata_bucket_key.id
   http_method = aws_api_gateway_method.pfmldata_copy_object_method.http_method
   status_code = "403"
+
+  response_parameters = {
+    "method.response.header.Content-Type" = true
+  }
 }
 
 resource "aws_api_gateway_integration" "pfmldata_copy_object_s3_integration" {
@@ -253,7 +261,12 @@ resource "aws_api_gateway_integration" "pfmldata_copy_object_s3_integration" {
   request_parameters = {
     "integration.request.path.bucket" : "method.request.path.bucket"
     "integration.request.path.key" : "method.request.path.key"
-    "integration.request.header.x-amz-copy-source" : "method.request.querystring.src"
+  }
+
+  request_templates = {
+    "application/json" : <<EOD
+#set($context.requestOverride.header.x-amz-copy-source="$input.params('bucket')/$input.params('src')")
+EOD
   }
 }
 
@@ -264,6 +277,12 @@ resource "aws_api_gateway_integration_response" "pfmldata_copy_object_s3_integra
   http_method       = aws_api_gateway_method.pfmldata_copy_object_method.http_method
   status_code       = aws_api_gateway_method_response.pfmldata_copy_object_response_200.status_code
   selection_pattern = aws_api_gateway_method_response.pfmldata_copy_object_response_200.status_code
+
+  response_parameters = {
+    "method.response.header.Timestamp"      = "integration.response.header.Date"
+    "method.response.header.Content-Length" = "integration.response.header.Content-Length"
+    "method.response.header.Content-Type"   = "integration.response.header.Content-Type"
+  }
 }
 
 resource "aws_api_gateway_integration_response" "pfmldata_copy_object_s3_integration_response_403" {
@@ -273,4 +292,8 @@ resource "aws_api_gateway_integration_response" "pfmldata_copy_object_s3_integra
   http_method       = aws_api_gateway_method.pfmldata_copy_object_method.http_method
   status_code       = aws_api_gateway_method_response.pfmldata_copy_object_response_403.status_code
   selection_pattern = aws_api_gateway_method_response.pfmldata_copy_object_response_403.status_code
+
+  response_parameters = {
+    "method.response.header.Content-Type" = "integration.response.header.Content-Type"
+  }
 }
