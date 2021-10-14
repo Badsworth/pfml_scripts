@@ -158,7 +158,6 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
         throw new ValidationError(issues, applicationsApi.i18nPrefix);
       }
 
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'application_id' does not exist on type '... Remove this comment to see the full error message
       const params = { claim_id: claim.application_id };
       portalFlow.goToNextPage({ claim, user }, params);
     } catch (error) {
@@ -179,7 +178,6 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
       setBenefitsApplication(claim);
       const context = { claim, user };
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'application_id' does not exist on type '... Remove this comment to see the full error message
       const params = { claim_id: claim.application_id };
       portalFlow.goToNextPage(context, params);
     } catch (error) {
@@ -201,7 +199,6 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
       addBenefitsApplication(claim);
 
       const context = { claim, user };
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'application_id' does not exist on type '... Remove this comment to see the full error message
       const params = { claim_id: claim.application_id };
       portalFlow.goToPageFor("CREATE_CLAIM", context, params);
     } catch (error) {
@@ -224,7 +221,6 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
       const context = { claim, user };
       const params = {
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'application_id' does not exist on type '... Remove this comment to see the full error message
         claim_id: claim.application_id,
         "part-one-submitted": "true",
       };
@@ -264,7 +260,6 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
       const context = { claim, user };
       const params = {
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'application_id' does not exist on type '... Remove this comment to see the full error message
         claim_id: claim.application_id,
         "payment-pref-submitted": "true",
       };

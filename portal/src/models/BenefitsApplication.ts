@@ -1,57 +1,87 @@
-/* eslint sort-keys: ["error", "asc"] */
 /**
  * @file Benefits application model and enum values
  */
 import { compact, get, isNil, merge, sum, sumBy, zip } from "lodash";
-
+import Address from "./Address";
 import BaseBenefitsApplication from "./BaseBenefitsApplication";
+import ConcurrentLeave from "./ConcurrentLeave";
 import { DateTime } from "luxon";
+import EmployerBenefit from "./EmployerBenefit";
 import LeaveReason from "./LeaveReason";
+import OtherIncome from "./OtherIncome";
+import PaymentPreference from "./PaymentPreference";
+import PreviousLeave from "./PreviousLeave";
 import assert from "assert";
 import spreadMinutesOverWeek from "../utils/spreadMinutesOverWeek";
 
 class BenefitsApplication extends BaseBenefitsApplication {
-  get defaults() {
-    return merge({
-      // @ts-expect-error ts-migrate(2340) FIXME: Only public and protected methods of the base clas... Remove this comment to see the full error message
-      ...super.defaults,
-      employment_status: null,
-      has_concurrent_leave: null,
-      has_continuous_leave_periods: null,
-      has_employer_benefits: null,
-      has_intermittent_leave_periods: null,
-      has_mailing_address: null,
-      has_other_incomes: null,
-      has_previous_leaves_other_reason: null,
-      has_previous_leaves_same_reason: null,
-      has_reduced_schedule_leave_periods: null,
-      has_state_id: null,
-      has_submitted_payment_preference: null,
-      leave_details: {
-        caring_leave_metadata: null,
-        child_birth_date: null,
-        child_placement_date: null,
-        employer_notified: null,
-        has_future_child_date: null,
-        pregnant_or_recent_birth: null,
-        reason_qualifier: null,
-      },
-      // address object. See Address model
-      mailing_address: null, // default value to null
-      mass_id: null,
-      // array of OtherIncome objects. See the OtherIncome model
-      other_incomes: [],
-      // See PaymentPreference model
-      payment_preference: null,
-      phone: {
-        int_code: null,
-        phone_number: null,
-        phone_type: null, // PhoneType
-      },
-      previous_leaves_other_reason: [],
-      previous_leaves_same_reason: [],
-      work_pattern: null,
-    });
+  application_id: string;
+  fineos_absence_id: string | null = null;
+  created_at: string;
+
+  first_name: string | null = null;
+  middle_name: string | null = null;
+  last_name: string | null = null;
+  concurrent_leave: ConcurrentLeave | null = null;
+  employer_benefits: EmployerBenefit[] = [];
+  date_of_birth: string | null = null;
+  employer_fein: string | null = null;
+  gender: typeof Gender[keyof typeof Gender] | null = null;
+  has_concurrent_leave: boolean | null = null;
+  has_continuous_leave_periods: boolean | null = null;
+  has_employer_benefits: boolean | null = null;
+  has_intermittent_leave_periods: boolean | null = null;
+  has_mailing_address: boolean | null = null;
+  has_other_incomes: boolean | null = null;
+  has_previous_leaves_other_reason: boolean | null = null;
+  has_previous_leaves_same_reason: boolean | null = null;
+  has_reduced_schedule_leave_periods: boolean | null = null;
+  has_state_id: boolean | null = null;
+  has_submitted_payment_preference: boolean | null = null;
+  hours_worked_per_week: number | null = null;
+  mass_id: string | null = null;
+  mailing_address: Address | null = null;
+  other_incomes: OtherIncome[] = [];
+  payment_preference: PaymentPreference | null = null;
+  previous_leaves_other_reason: PreviousLeave[] = [];
+  previous_leaves_same_reason: PreviousLeave[] = [];
+  residential_address: Address = new Address({});
+  tax_identifier: string | null = null;
+  work_pattern: WorkPattern | null = null;
+
+  employment_status:
+    | typeof EmploymentStatus[keyof typeof EmploymentStatus]
+    | null = null;
+
+  leave_details: {
+    continuous_leave_periods: ContinuousLeavePeriod[];
+    intermittent_leave_periods: IntermittentLeavePeriod[];
+    reduced_schedule_leave_periods: ReducedScheduleLeavePeriod[];
+    employer_notified: boolean | null;
+    employer_notification_date: string | null;
+    caring_leave_metadata: CaringLeaveMetadata | null;
+    child_birth_date: string | null;
+    child_placement_date: string | null;
+    has_future_child_date: boolean | null;
+    pregnant_or_recent_birth: boolean | null;
+    reason: typeof LeaveReason[keyof typeof LeaveReason] | null;
+    reason_qualifier: string | null;
+  };
+
+  phone: {
+    int_code: string | null;
+    phone_number: string | null;
+    phone_type: typeof PhoneType[keyof typeof PhoneType] | null;
+  };
+
+  status:
+    | typeof BenefitsApplicationStatus[keyof typeof BenefitsApplicationStatus]
+    | null = null;
+
+  constructor(attrs: Partial<BenefitsApplication>) {
+    super();
+    // Recursively merge with the defaults
+    merge(this, attrs);
   }
 
   /**
@@ -77,16 +107,13 @@ class BenefitsApplication extends BaseBenefitsApplication {
 
   /**
    * Check if Claim has been marked as completed yet.
-   * @returns {boolean}
    */
   get isCompleted() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'status' does not exist on type 'Benefits... Remove this comment to see the full error message
     return this.status === BenefitsApplicationStatus.completed;
   }
 
   /**
    * Determine if claim is a Medical or Pregnancy leave claim
-   * @returns {boolean}
    */
   get isMedicalOrPregnancyLeave() {
     const reason = get(this, "leave_details.reason");
@@ -95,7 +122,6 @@ class BenefitsApplication extends BaseBenefitsApplication {
 
   /**
    * Determine if claim is a Caring Leave claim
-   * @returns {boolean}
    */
   get isCaringLeave() {
     return get(this, "leave_details.reason") === LeaveReason.care;
@@ -104,10 +130,8 @@ class BenefitsApplication extends BaseBenefitsApplication {
   /**
    * Check if Claim has been submitted yet. This affects the editability
    * of some fields, and as a result, the user experience.
-   * @returns {boolean}
    */
   get isSubmitted() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'status' does not exist on type 'Benefits... Remove this comment to see the full error message
     return this.status === BenefitsApplicationStatus.submitted;
   }
 }

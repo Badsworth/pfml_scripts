@@ -91,7 +91,6 @@ describe("DateOfChild", () => {
         expect(updateClaim).toHaveBeenCalledWith(expect.any(String), {
           leave_details: {
             child_birth_date: future,
-            child_placement_date: null,
             has_future_child_date: true,
           },
         });
@@ -133,7 +132,6 @@ describe("DateOfChild", () => {
         expect(updateClaim).toHaveBeenCalledWith(expect.any(String), {
           leave_details: {
             child_birth_date: future,
-            child_placement_date: null,
             has_future_child_date: true,
           },
         });
@@ -152,7 +150,6 @@ describe("DateOfChild", () => {
       await waitFor(() => {
         expect(updateClaim).toHaveBeenCalledWith(expect.any(String), {
           leave_details: {
-            child_birth_date: null,
             child_placement_date: future,
             has_future_child_date: true,
           },
@@ -194,7 +191,6 @@ describe("DateOfChild", () => {
       await waitFor(() => {
         expect(updateClaim).toHaveBeenCalledWith(expect.any(String), {
           leave_details: {
-            child_birth_date: null,
             child_placement_date: future,
             has_future_child_date: true,
           },
@@ -232,7 +228,6 @@ describe("DateOfChild", () => {
         expect(updateClaim).toHaveBeenCalledWith(expect.any(String), {
           leave_details: {
             child_birth_date: past,
-            child_placement_date: null,
             has_future_child_date: false,
           },
         });
@@ -272,7 +267,6 @@ describe("DateOfChild", () => {
         expect(updateClaim).toHaveBeenCalledWith(expect.any(String), {
           leave_details: {
             child_birth_date: past,
-            child_placement_date: null,
             has_future_child_date: false,
           },
         });
@@ -290,7 +284,6 @@ describe("DateOfChild", () => {
       await waitFor(() => {
         expect(updateClaim).toHaveBeenCalledWith(expect.any(String), {
           leave_details: {
-            child_birth_date: null,
             child_placement_date: past,
             has_future_child_date: false,
           },
@@ -330,7 +323,6 @@ describe("DateOfChild", () => {
       await waitFor(() => {
         expect(updateClaim).toHaveBeenCalledWith(expect.any(String), {
           leave_details: {
-            child_birth_date: null,
             child_placement_date: past,
             has_future_child_date: false,
           },
