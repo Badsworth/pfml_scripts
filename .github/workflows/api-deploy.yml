@@ -716,7 +716,7 @@ jobs:
     name: End-to-End Test Deployment
     runs-on: ubuntu-latest
     needs: [update-the-deploy-branch, api-release, api-gateway-release]
-    if: github.event.inputs.deployment_env != 'prod' && github.event.inputs.deployment_env != 'uat'
+    if: github.event.inputs.deployment_env != 'prod'
     steps:
       - name: Trigger E2E Workflow
         uses: aurelien-baudet/workflow-dispatch@v2
