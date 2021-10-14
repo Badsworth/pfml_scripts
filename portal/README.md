@@ -4,7 +4,7 @@ This is a [Next.js](https://nextjs.org/docs)-powered [React](https://reactjs.org
 
 **You may also be interested in:**
 
-- [Learn TypeScript](https://www.typescriptlang.org/docs/handbook/intro.html)
+- [Using TypeScript](../docs/portal/typescript.md)
 - [Setting up project tooling](../README.md)
 - [Development practices](../docs/contributing.md)
 - [Portal software architecture design](../docs/portal/software-architecture.md)
