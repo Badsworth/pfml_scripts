@@ -366,7 +366,6 @@ export const Review = (props) => {
         })}
       </ReviewRow>
 
-      {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_type' does not exist on typ... Remove this comment to see the full error message */}
       {workPattern.work_pattern_type === WorkPatternType.fixed &&
         workPattern.minutesWorkedPerWeek !== null && (
           <ReviewRow
@@ -374,12 +373,10 @@ export const Review = (props) => {
             label={t("pages.claimsReview.workPatternDaysFixedLabel")}
             noBorder
           >
-            {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_days' does not exist on typ... Remove this comment to see the full error message */}
             <WeeklyTimeTable days={workPattern.work_pattern_days} />
           </ReviewRow>
         )}
 
-      {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_type' does not exist on typ... Remove this comment to see the full error message */}
       {workPattern.work_pattern_type === WorkPatternType.variable && (
         <ReviewRow
           level={reviewRowLevel}
@@ -541,17 +538,14 @@ export const Review = (props) => {
         <ReviewRow
           level={reviewRowLevel}
           label={t("pages.claimsReview.reducedLeaveScheduleLabel")}
-          // @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_type' does not exist on typ... Remove this comment to see the full error message
           noBorder={workPattern.work_pattern_type === WorkPatternType.fixed}
         >
-          {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_type' does not exist on typ... Remove this comment to see the full error message */}
           {workPattern.work_pattern_type === WorkPatternType.fixed && (
             <WeeklyTimeTable
               className="margin-bottom-0"
               days={reducedLeavePeriod.days}
             />
           )}
-          {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_type' does not exist on typ... Remove this comment to see the full error message */}
           {workPattern.work_pattern_type === WorkPatternType.variable &&
             t("pages.claimsReview.reducedLeaveScheduleWeeklyTotal", {
               context:

@@ -54,7 +54,6 @@ export const ReducedLeaveSchedule = (props) => {
   );
   const workPattern = new WorkPattern(claim.work_pattern);
   const gatherMinutesAsWeeklyAverage =
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_type' does not exist on typ... Remove this comment to see the full error message
     workPattern.work_pattern_type === WorkPatternType.variable;
 
   // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
@@ -102,7 +101,6 @@ export const ReducedLeaveSchedule = (props) => {
 
   const contentScheduleTypeContext = findKeyByValue(
     WorkPatternType,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_type' does not exist on typ... Remove this comment to see the full error message
     workPattern.work_pattern_type
   );
 
@@ -191,7 +189,6 @@ export const ReducedLeaveSchedule = (props) => {
             ...convertMinutesToHours(workPattern.minutesWorkedPerWeek),
           })
         ) : (
-          // @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_days' does not exist on typ... Remove this comment to see the full error message
           <WeeklyTimeTable days={workPattern.work_pattern_days} />
         )}
       </Details>
