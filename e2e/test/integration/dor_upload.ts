@@ -47,7 +47,7 @@ describe("dor_upload", () => {
   });
   afterAll(async () => {
     if (tempDir) {
-      await fs.promises.rmdir(tempDir);
+      await fs.promises.rmdir(tempDir, { recursive: true });
     }
   });
 
