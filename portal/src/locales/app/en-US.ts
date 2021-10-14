@@ -1958,7 +1958,9 @@ const pages = {
       "If you are giving birth, you may also be eligible for paid medical leave",
     infoAlertHeading_pregnancy:
       "You may also be eligible for paid family leave",
-    infoRequestsBody:
+    infoRequestsBody_Decision:
+      "We have made a final decision for this application. Your final decision notice has more details about the appeals process.<p>If you would like to appeal the final decision, you can do so using mail, fax, or our <online-appeals-form>online appeals form</online-appeals-form>.</p>",
+    infoRequestsBody_Pending:
       "If you have a request for more information, use this button to upload the requested documentation.",
     infoRequestsHeading: "Respond to requests for information",
     leavePeriodLabel_continuous: "$t(shared.claimDurationTypeContinuous)",

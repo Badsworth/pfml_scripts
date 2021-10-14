@@ -284,17 +284,34 @@ export const Status = ({ appLogic, query }) => {
           <Heading level="2">
             {t("pages.claimsStatus.infoRequestsHeading")}
           </Heading>
-          <p>{t("pages.claimsStatus.infoRequestsBody")}</p>
-          <ButtonLink
-            className="measure-6 margin-top-3"
-            href={appLogic.portalFlow.getNextPageRoute(
-              "UPLOAD_DOC_OPTIONS",
-              {},
-              { absence_case_id: claimDetail.fineos_absence_id }
-            )}
-          >
-            {t("pages.claimsStatus.uploadDocumentsButton")}
-          </ButtonLink>
+          <div>
+            <Trans
+              i18nKey="pages.claimsStatus.infoRequestsBody"
+              tOptions={{ context: !hasPendingStatus ? "Decision" : "Pending" }}
+              components={{
+                "online-appeals-form": (
+                  <a
+                    href={routes.external.massgov.onlineAppealsForm}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                  />
+                ),
+                p: <p className="margin-top-1"></p>,
+              }}
+            />
+          </div>
+          {hasPendingStatus && (
+            <ButtonLink
+              className="measure-6 margin-top-3"
+              href={appLogic.portalFlow.getNextPageRoute(
+                "UPLOAD_DOC_OPTIONS",
+                {},
+                { absence_case_id: claimDetail.fineos_absence_id }
+              )}
+            >
+              {t("pages.claimsStatus.uploadDocumentsButton")}
+            </ButtonLink>
+          )}
         </div>
 
         {/* Manage applications section */}

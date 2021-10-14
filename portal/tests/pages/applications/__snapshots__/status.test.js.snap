@@ -356,15 +356,22 @@ exports[`Status renders the page with claim detail 1`] = `
       >
         Respond to requests for information
       </h2>
-      <p>
-        If you have a request for more information, use this button to upload the requested documentation.
-      </p>
-      <a
-        class="usa-button measure-6 margin-top-3"
-        href="/applications/upload?absence_case_id=mock-absence-case-id"
-      >
-        Upload additional documents
-      </a>
+      <div>
+        We have made a final decision for this application. Your final decision notice has more details about the appeals process.
+        <p
+          class="margin-top-1"
+        >
+          If you would like to appeal the final decision, you can do so using mail, fax, or our 
+          <a
+            href="https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave"
+            rel="noreferrer noopener"
+            target="_blank"
+          >
+            online appeals form
+          </a>
+          .
+        </p>
+      </div>
     </div>
     <div
       class="border-top border-base-lighter padding-y-4"

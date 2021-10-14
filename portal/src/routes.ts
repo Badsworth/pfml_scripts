@@ -162,6 +162,8 @@ const routes = {
       mailFaxInstructions: "https://www.mass.gov/pfmlsubmitinfo",
       medicalBonding: "https://www.mass.gov/pfml-medical-bonding",
       multipleBirths: "https://www.mass.gov/pfml-multiple-births",
+      onlineAppealsForm:
+        "https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave",
       paidLeave:
         "https://www.mass.gov/topics/paid-family-and-medical-leave-in-massachusetts",
       pfml: "https://www.mass.gov/pfml",

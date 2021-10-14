@@ -415,11 +415,27 @@ describe("Status", () => {
     });
   });
 
-  it("includes a button to upload additional documents", () => {
+  it("includes a button to upload additional documents if there is a pending absence period", () => {
+    const absence_periods = [
+      "Withdrawn",
+      "Cancelled",
+      "Approved",
+      "Pending",
+      "Denied",
+    ].map((request_decision, fineos_leave_request_id) => ({
+      fineos_leave_request_id,
+      request_decision,
+      period_type: "Continuous",
+      reason: LeaveReason.medical,
+    }));
+
     renderPage(
       Status,
       {
-        addCustomSetup: setupHelper({ ...defaultClaimDetail }, [DOCUMENTS[1]]),
+        addCustomSetup: setupHelper({
+          ...defaultClaimDetail,
+          absence_periods,
+        }),
       },
       props
     );
