@@ -36,7 +36,6 @@ resource "aws_api_gateway_resource" "pfmldata_list_bucket_key" {
   parent_id   = aws_api_gateway_resource.pfmldata_list_bucket.id
   path_part   = "{key+}"
 }
-
 resource "aws_api_gateway_usage_plan" "pfmldata_plan" {
   name        = "pfmldata plan ${var.environment_name}"
   description = "Usage Plan for system (PowerAutomate) accessing files from S3"
@@ -61,7 +60,6 @@ resource "aws_api_gateway_usage_plan" "pfmldata_plan" {
 resource "aws_api_gateway_api_key" "pfmldata_api_key" {
   name = "pfmldata_api_key_${var.environment_name}"
 }
-
 resource "aws_api_gateway_usage_plan_key" "pfmldata_usage_plan_key" {
   key_id        = aws_api_gateway_api_key.pfmldata_api_key.id
   key_type      = "API_KEY"
@@ -134,3 +132,78 @@ resource "aws_api_gateway_integration_response" "pfmldata_get_object_s3_integrat
   status_code       = aws_api_gateway_method_response.pfmldata_get_object_response_403.status_code
   selection_pattern = aws_api_gateway_method_response.pfmldata_get_object_response_403.status_code
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
+# DELETE /{bucket}/{key+} endpoint to proxy S3 DeleteObject
+# ----------------------------------------------------------------------------------------------------------------------
+
+
+resource "aws_api_gateway_method" "pfmldata_delete_object_method" {
+  rest_api_id      = aws_api_gateway_rest_api.pfml.id
+  resource_id      = aws_api_gateway_resource.pfmldata_bucket_key.id
+  http_method      = "DELETE"
+  authorization    = "NONE"
+  api_key_required = true
+
+  request_parameters = {
+    "method.request.path.bucket" = true
+    "method.request.path.key"    = true
+  }
+}
+
+resource "aws_api_gateway_method_response" "pfmldata_delete_object_response_204" {
+  rest_api_id = aws_api_gateway_rest_api.pfml.id
+  resource_id = aws_api_gateway_resource.pfmldata_bucket_key.id
+  http_method = aws_api_gateway_method.pfmldata_delete_object_method.http_method
+  status_code = "204"
+  response_parameters = {
+    "method.response.header.Content-Type" = false
+  }
+}
+
+resource "aws_api_gateway_method_response" "pfmldata_delete_object_response_403" {
+  rest_api_id = aws_api_gateway_rest_api.pfml.id
+  resource_id = aws_api_gateway_resource.pfmldata_bucket_key.id
+  http_method = aws_api_gateway_method.pfmldata_delete_object_method.http_method
+  status_code = "403"
+  response_parameters = {
+    "method.response.header.Content-Type" = true
+  }
+}
+
+resource "aws_api_gateway_integration" "pfmldata_delete_object_s3_integration" {
+  rest_api_id = aws_api_gateway_rest_api.pfml.id
+  resource_id = aws_api_gateway_resource.pfmldata_bucket_key.id
+  http_method = aws_api_gateway_method.pfmldata_delete_object_method.http_method
+
+  integration_http_method = "DELETE"
+  type                    = "AWS"
+
+  uri         = "arn:aws:apigateway:us-east-1:s3:path/{bucket}/{key}"
+  credentials = aws_iam_role.pfmldata_executor_role.arn
+  request_parameters = {
+    "integration.request.path.bucket" = "method.request.path.bucket"
+    "integration.request.path.key"    = "method.request.path.key"
+  }
+}
+resource "aws_api_gateway_integration_response" "pfmldata_delete_object_s3_integration_response_204" {
+  depends_on        = [aws_api_gateway_integration.pfmldata_delete_object_s3_integration]
+  rest_api_id       = aws_api_gateway_rest_api.pfml.id
+  resource_id       = aws_api_gateway_resource.pfmldata_bucket_key.id
+  http_method       = aws_api_gateway_method.pfmldata_delete_object_method.http_method
+  status_code       = aws_api_gateway_method_response.pfmldata_delete_object_response_204.status_code
+  selection_pattern = aws_api_gateway_method_response.pfmldata_delete_object_response_204.status_code
+}
+
+resource "aws_api_gateway_integration_response" "pfmldata_delete_object_s3_integration_response_403" {
+  depends_on        = [aws_api_gateway_integration.pfmldata_delete_object_s3_integration]
+  rest_api_id       = aws_api_gateway_rest_api.pfml.id
+  resource_id       = aws_api_gateway_resource.pfmldata_bucket_key.id
+  http_method       = aws_api_gateway_method.pfmldata_delete_object_method.http_method
+  status_code       = aws_api_gateway_method_response.pfmldata_delete_object_response_403.status_code
+  selection_pattern = aws_api_gateway_method_response.pfmldata_delete_object_response_403.status_code
+  response_parameters = {
+    "method.response.header.Content-Type" = "integration.response.header.Content-Type"
+  }
+}
+
