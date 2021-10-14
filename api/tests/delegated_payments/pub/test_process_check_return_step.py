@@ -16,7 +16,6 @@ from massgov.pfml.db.models import factories
 from massgov.pfml.db.models.employees import (
     Flow,
     Payment,
-    PaymentCheck,
     PaymentCheckStatus,
     PaymentMethod,
     PaymentTransactionType,
@@ -27,6 +26,7 @@ from massgov.pfml.db.models.employees import (
     State,
 )
 from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
+from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.delegated_payments.pub import check_return, process_check_return_step
 from massgov.pfml.delegated_payments.pub.check_return import PaidStatus
 
@@ -310,7 +310,7 @@ def test_process_check_return_step_full(
     # Add payments 1 to 9 to the database. These correspond to check numbers 501 to 509 in return
     # files.
     payments = [
-        payment_by_check_sent_to_pub_factory(i, local_test_db_other_session) for i in range(1, 10)
+        payment_by_check_sent_to_pub_factory(i, local_test_db_session) for i in range(1, 10)
     ]
 
     # Run step.
@@ -327,7 +327,7 @@ def test_process_check_return_step_full(
 
     # Test updates to reference_file table.
     reference_files = (
-        local_test_db_other_session.query(ReferenceFile).order_by(ReferenceFile.created_at).all()
+        local_test_db_session.query(ReferenceFile).order_by(ReferenceFile.created_at).all()
     )
     assert len(reference_files) == 2
     for reference_file in reference_files:
@@ -392,14 +392,14 @@ def test_process_check_return_step_full(
         ),
     }
     for payment in payments:
-        local_test_db_other_session.refresh(payment)
+        local_test_db_session.refresh(payment)
         payment_state_log = massgov.pfml.api.util.state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PAYMENT, local_test_db_other_session
+            payment, Flow.DELEGATED_PAYMENT, local_test_db_session
         )
         state_id = payment_state_log.end_state.state_id
 
         writeback_state_log = massgov.pfml.api.util.state_log_util.get_latest_state_log_in_flow(
-            payment, Flow.DELEGATED_PEI_WRITEBACK, local_test_db_other_session
+            payment, Flow.DELEGATED_PEI_WRITEBACK, local_test_db_session
         )
         writeback_state_id = writeback_state_log.end_state.state_id if writeback_state_log else None
         if payment.check.check_number in expected_states:
@@ -447,7 +447,7 @@ def test_process_check_return_step_full(
             assert state_id == State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT.state_id
             assert payment.reference_files == []
 
-    errors = local_test_db_other_session.query(PubError).all()
+    errors = local_test_db_session.query(PubError).all()
     assert len(errors) == 6
     assert errors[0].reference_file == reference_files[0]
     assert errors[0].line_number == 4
@@ -477,15 +477,16 @@ def test_process_check_return_step_full(
 
 def payment_by_check_sent_to_pub_factory(
     pub_individual_id,
-    local_test_db_session,
+    test_db_session,
     end_state=State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
 ) -> Payment:
     employee = factories.EmployeeFactory.create()
     employer = factories.EmployerFactory.create()
     factories.WagesAndContributionsFactory.create(employer=employer, employee=employee)
 
-    payment = Payment(
-        payment_transaction_type_id=PaymentTransactionType.STANDARD.payment_transaction_type_id,
+    payment = DelegatedPaymentFactory(
+        test_db_session,
+        payment_transaction_type_id=PaymentTransactionType.STANDARD,
         period_start_date=datetime.date(2021, 3, 17),
         period_end_date=datetime.date(2021, 3, 24),
         payment_date=datetime.date(2021, 3, 25),
@@ -493,20 +494,9 @@ def payment_by_check_sent_to_pub_factory(
         fineos_pei_c_value=42424,
         fineos_pei_i_value=10000 + pub_individual_id,
         fineos_extraction_date=datetime.date(2021, 3, 24),
-        disb_method_id=PaymentMethod.CHECK.payment_method_id,
+        payment_method=PaymentMethod.CHECK,
         pub_individual_id=pub_individual_id,
-        check=PaymentCheck(check_number=500 + pub_individual_id),
-    )
-    local_test_db_session.add(payment)
-
-    local_test_db_session.commit()
-
-    if end_state is not None:
-        massgov.pfml.api.util.state_log_util.create_finished_state_log(
-            end_state=end_state,
-            associated_model=payment,
-            db_session=local_test_db_session,
-            outcome=massgov.pfml.api.util.state_log_util.build_outcome("Generated state"),
-        )
+        check_number=500 + pub_individual_id,
+    ).get_or_create_payment_with_state(end_state)
 
     return payment

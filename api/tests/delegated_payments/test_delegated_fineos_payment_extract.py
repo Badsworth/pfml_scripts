@@ -14,9 +14,7 @@ import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     AddressType,
     BankAccountType,
-    ClaimType,
     Employee,
-    EmployeeAddress,
     Flow,
     GeoState,
     LkState,
@@ -33,12 +31,8 @@ from massgov.pfml.db.models.employees import (
 )
 from massgov.pfml.db.models.factories import (
     AddressFactory,
-    ClaimFactory,
-    EmployeeFactory,
-    EmployeePubEftPairFactory,
     ExperianAddressPairFactory,
     PaymentFactory,
-    PubEftFactory,
     ReferenceFileFactory,
 )
 from massgov.pfml.db.models.payments import (
@@ -58,6 +52,7 @@ from massgov.pfml.delegated_payments.delegated_payments_util import (
     ValidationReason,
     get_now,
 )
+from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
     FineosPaymentData,
     create_fineos_payment_extract_files,
@@ -123,105 +118,35 @@ def create_malformed_fineos_extract(tmp_path, mock_fineos_s3_bucket, bad_fineos_
         upload_file_to_s3(payment_file, mock_fineos_s3_bucket, f"DT2/dataexports/{file_name}")
 
 
-def add_db_records(
-    db_session,
-    tin,
-    absence_case_id,
-    add_claim=True,
-    add_claim_type=True,
-    is_id_proofed=True,
-    add_address=True,
-    add_eft=True,
-    add_payment=False,
-    add_employee=True,
-    c_value=None,
-    i_value=None,
-    additional_payment_state=None,
-    claim_type=None,
-    missing_fineos_name=False,
-):
-    mailing_address = None
-    experian_address_pair = None
-    if add_address:
-        mailing_address = AddressFactory()
-        experian_address_pair = ExperianAddressPairFactory(fineos_address=mailing_address)
-
-    if add_employee:
-        if missing_fineos_name:
-            employee = EmployeeFactory.create(
-                tax_identifier=TaxIdentifier(tax_identifier=tin),
-                fineos_employee_first_name=None,
-                fineos_employee_last_name=None,
-            )
-        else:
-            employee = EmployeeFactory.create(tax_identifier=TaxIdentifier(tax_identifier=tin))
-        if add_eft:
-            pub_eft = PubEftFactory.create(
-                routing_nbr=generate_routing_nbr_from_ssn(tin),
-                account_nbr=tin,
-                prenote_state_id=PrenoteState.APPROVED.prenote_state_id,
-            )
-            EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft)
-
-        if add_address:
-            employee.addresses = [EmployeeAddress(employee=employee, address=mailing_address)]
-
-        if add_claim:
-            if not claim_type:
-                claim_type_id = ClaimType.FAMILY_LEAVE.claim_type_id if add_claim_type else None
-            else:
-                claim_type_id = ClaimType.MEDICAL_LEAVE.claim_type_id
-
-            claim = ClaimFactory.create(
-                fineos_absence_id=absence_case_id,
-                employee=employee,
-                claim_type_id=claim_type_id,
-                is_id_proofed=is_id_proofed,
-            )
-
-            # Payment needs to be attached to a claim
-            if add_payment:
-                payment = PaymentFactory.create(
-                    claim=claim,
-                    claim_type=claim.claim_type,
-                    fineos_pei_c_value=c_value,
-                    fineos_pei_i_value=i_value,
-                    experian_address_pair=experian_address_pair,
-                )
-                state_log_util.create_finished_state_log(
-                    payment, additional_payment_state, EXPECTED_OUTCOME, db_session
-                )
-
-
 def add_db_records_from_fineos_data(
     db_session,
     fineos_data,
-    add_claim=True,
-    add_claim_type=True,
     is_id_proofed=True,
-    add_address=True,
-    add_eft=True,
-    add_payment=False,
     add_employee=True,
+    add_eft=True,
+    add_claim=True,
     additional_payment_state=None,
     missing_fineos_name=False,
 ):
-    add_db_records(
+    factory_args = {}
+    if missing_fineos_name:
+        factory_args["fineos_employee_first_name"] = None
+        factory_args["fineos_employee_last_name"] = None
+
+    DelegatedPaymentFactory(
         db_session,
-        tin=fineos_data.tin,
-        absence_case_id=fineos_data.absence_case_number,
-        c_value=fineos_data.c_value,
-        i_value=fineos_data.i_value,
-        add_claim=add_claim,
-        add_claim_type=add_claim_type,
+        ssn=fineos_data.tin,
+        fineos_absence_id=fineos_data.absence_case_number,
+        fineos_pei_c_value=fineos_data.c_value,
+        fineos_pei_i_value=fineos_data.i_value,
+        prenote_state=PrenoteState.APPROVED,
         is_id_proofed=is_id_proofed,
-        add_address=add_address,
-        add_eft=add_eft,
-        add_payment=add_payment,
         add_employee=add_employee,
-        additional_payment_state=additional_payment_state,
-        missing_fineos_name=missing_fineos_name,
-    )
+        add_pub_eft=add_eft,
+        add_claim=add_claim,
+        add_payment=False,
+        **factory_args,
+    ).create_all()
 
 
 def setup_process_tests(
@@ -246,43 +171,31 @@ def setup_process_tests(
     make_s3_file(mock_s3_bucket, f"{s3_prefix}vpeiclaimdetails.csv", "vpeiclaimdetails.csv")
     make_s3_file(mock_s3_bucket, f"{s3_prefix}VBI_REQUESTEDABSENCE.csv", "VBI_REQUESTEDABSENCE.csv")
 
-    add_db_records(
-        db_session,
-        "111111111",
-        "NTN-01-ABS-01",
-        add_claim=add_claim,
-        add_address=add_address,
-        add_eft=add_eft,
-        add_payment=add_payment,
-        c_value="7326",
-        i_value="301",
-        additional_payment_state=additional_payment_state,
-    )
-    add_db_records(
-        db_session,
-        "222222222",
-        "NTN-02-ABS-02",
-        add_claim=add_claim,
-        add_address=add_address,
-        add_eft=add_eft,
-        add_payment=add_payment,
-        add_employee=add_second_employee,
-        c_value="7326",
-        i_value="302",
-        additional_payment_state=additional_payment_state,
-    )
-    add_db_records(
-        db_session,
-        "333333333",
-        "NTN-03-ABS-03",
-        add_claim=add_claim,
-        add_address=add_address,
-        add_eft=add_eft,
-        add_payment=add_payment,
-        c_value="7326",
-        i_value="303",
-        additional_payment_state=additional_payment_state,
-    )
+    for i in range(3):
+        id = str(i + 1)
+        add_employee = add_second_employee if i == 1 else True
+        add_claim = (
+            add_second_employee if i == 1 else True
+        )  # in this scenario no employee means no claim
+
+        factory = DelegatedPaymentFactory(
+            db_session,
+            ssn=(id * 9),
+            fineos_absence_id=f"NTN-0{id}-ABS-0{id}",
+            fineos_pei_c_value="7326",
+            fineos_pei_i_value=f"30{id}",
+            prenote_state=PrenoteState.APPROVED,
+            payment_end_state_message=EXPECTED_OUTCOME["message"],
+            add_address=add_address,
+            add_employee=add_employee,
+            add_claim=add_claim,
+            add_pub_eft=add_eft,
+            add_payment=add_payment,
+        )
+
+        factory.create_all()
+        if additional_payment_state:
+            factory.get_or_create_payment_with_state(additional_payment_state)
 
 
 def add_s3_files(mock_fineos_s3_bucket, s3_prefix):
@@ -1224,11 +1137,11 @@ def test_process_extract_no_fineos_name(
     state_log = state_log_util.get_latest_state_log_in_flow(
         standard_payment, Flow.DELEGATED_PAYMENT, local_test_db_session
     )
+
     assert (
         state_log.end_state_id
         == State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE.state_id
     )
-
     issues = state_log.outcome["validation_container"]["validation_issues"]
     assert len(issues) == 1
     assert issues[0] == {
@@ -1865,7 +1778,7 @@ def test_process_extract_additional_payment_types_still_require_employee(
         .filter(Payment.fineos_pei_i_value == zero_dollar_data.i_value)
         .one_or_none()
     )
-    assert zero_dollar_payment.claim_id is None  # Not attached without employee
+    assert zero_dollar_payment.claim_id
     assert zero_dollar_payment.employee_id is None
     validate_non_standard_payment_state(
         zero_dollar_payment, State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
@@ -2246,13 +2159,13 @@ def test_update_eft_existing_eft_matches_and_approved(
     )
     assert employee is not None
     # Create the EFT record
-    pub_eft_record = PubEftFactory.create(
-        prenote_state_id=PrenoteState.APPROVED.prenote_state_id,
+    pub_eft_record = DelegatedPaymentFactory(
+        local_test_db_session,
+        employee=employee,
         routing_nbr=generate_routing_nbr_from_ssn("1" * 9),
         account_nbr="1" * 9,
-        bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
-    )
-    EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft_record)
+        prenote_state=PrenoteState.APPROVED,
+    ).get_or_create_pub_eft()
 
     # Run the process
     local_payment_extract_step.run()
@@ -2310,14 +2223,14 @@ def test_update_eft_existing_eft_matches_and_not_approved(
     )
     assert employee is not None
     # Create the EFT record
-    pub_eft_record = PubEftFactory.create(
-        prenote_state_id=prenote_state.prenote_state_id,
+    pub_eft_record = DelegatedPaymentFactory(
+        local_test_db_session,
+        employee=employee,
         routing_nbr=generate_routing_nbr_from_ssn("1" * 9),
         account_nbr="1" * 9,
+        prenote_state=prenote_state,
         prenote_sent_at=get_now(),
-        bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
-    )
-    EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft_record)
+    ).get_or_create_pub_eft()
 
     # Run the process
     local_payment_extract_step.run()
@@ -2401,14 +2314,14 @@ def test_update_eft_existing_eft_matches_and_pending_with_pub(
     )
     assert employee is not None
     # Create the EFT record
-    pub_eft_record = PubEftFactory.create(
-        prenote_state_id=PrenoteState.PENDING_WITH_PUB.prenote_state_id,
+    pub_eft_record = DelegatedPaymentFactory(
+        local_test_db_session,
+        employee=employee,
         routing_nbr=generate_routing_nbr_from_ssn("1" * 9),
         account_nbr="1" * 9,
+        prenote_state=PrenoteState.PENDING_WITH_PUB,
         prenote_sent_at=get_now() - timedelta(PRENOTE_PRENDING_WAITING_PERIOD),
-        bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
-    )
-    EmployeePubEftPairFactory.create(employee=employee, pub_eft=pub_eft_record)
+    ).get_or_create_pub_eft()
 
     # Run the process
     local_payment_extract_step.run()
@@ -2471,7 +2384,6 @@ def test_update_experian_address_pair_fineos_address_no_update(
     assert employee is not None
 
     # Add the expected address to another payment associated with the employee
-    claim = ClaimFactory.create(employee=employee)
     address_pair = ExperianAddressPairFactory(
         fineos_address=AddressFactory.create(
             address_line_one="AddressLine1-1",
@@ -2481,8 +2393,10 @@ def test_update_experian_address_pair_fineos_address_no_update(
             zip_code="11111",
         )
     )
-    payment = PaymentFactory.create(claim=claim, experian_address_pair=address_pair)
-    local_test_db_session.commit()
+
+    payment = DelegatedPaymentFactory(
+        local_test_db_session, employee=employee, experian_address_pair=address_pair
+    ).get_or_create_payment()
 
     # Run the process
     local_payment_extract_step.run()
@@ -2557,10 +2471,9 @@ def test_get_active_payment_state(payment_extract_step, test_db_session):
     # Non restartable states should return the state.
     for non_restartable_state in non_restartable_states:
         # Create and load a payment in the non restartable state.
-        payment = PaymentFactory.create()
-        state_log_util.create_finished_state_log(
-            payment, non_restartable_state, EXPECTED_OUTCOME, test_db_session
-        )
+        payment = DelegatedPaymentFactory(
+            test_db_session, payment_end_state_message=EXPECTED_OUTCOME["message"]
+        ).get_or_create_payment_with_state(non_restartable_state)
 
         # Create a payment with the same C/I value
         new_payment = PaymentFactory.build(
@@ -2575,10 +2488,9 @@ def test_get_active_payment_state(payment_extract_step, test_db_session):
 
     for restartable_state in restartable_states:
         # Create and load a payment in the restartable state.
-        payment = PaymentFactory.create()
-        state_log_util.create_finished_state_log(
-            payment, restartable_state, EXPECTED_OUTCOME, test_db_session
-        )
+        payment = DelegatedPaymentFactory(
+            test_db_session, payment_end_state_message=EXPECTED_OUTCOME["message"]
+        ).get_or_create_payment_with_state(restartable_state)
 
         # Create a payment with the same C/I value
         new_payment = PaymentFactory.build(

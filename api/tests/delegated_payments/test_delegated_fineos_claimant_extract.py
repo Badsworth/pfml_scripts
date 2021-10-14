@@ -25,9 +25,7 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.factories import (
     ClaimFactory,
     EmployeeFactory,
-    EmployeePubEftPairFactory,
     EmployerFactory,
-    PubEftFactory,
     ReferenceFileFactory,
     TaxIdentifierFactory,
 )
@@ -40,6 +38,7 @@ from massgov.pfml.delegated_payments.delegated_payments_util import (
     ValidationIssue,
     ValidationReason,
 )
+from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
     FineosClaimantData,
     create_fineos_claimant_extract_files,
@@ -269,18 +268,18 @@ def test_run_step_existing_approved_eft_info(
 
     tax_identifier = TaxIdentifierFactory(tax_identifier="881778956")
     employee = EmployeeFactory(tax_identifier=tax_identifier)
-    # Add the eft
-    EmployeePubEftPairFactory.create(
-        employee=employee,
-        pub_eft=PubEftFactory.create(
-            prenote_state_id=PrenoteState.APPROVED.prenote_state_id,
-            routing_nbr="123546784",
-            account_nbr="123546784",
-            bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
-        ),
-    )
+    employer = EmployerFactory(fineos_employer_id=96)
 
-    EmployerFactory(fineos_employer_id=96)
+    # Add the eft
+    DelegatedPaymentFactory(
+        local_test_db_session,
+        ssn="881778956",
+        employee=employee,
+        employer=employer,
+        prenote_state=PrenoteState.APPROVED,
+        routing_nbr="123546784",
+        account_nbr="123546784",
+    ).get_or_create_pub_eft()
 
     local_claimant_extract_step.run()
 
@@ -329,19 +328,18 @@ def test_run_step_existing_rejected_eft_info(
 
     tax_identifier = TaxIdentifierFactory(tax_identifier="881778956")
     employee = EmployeeFactory(tax_identifier=tax_identifier)
-    # Add the eft
-    EmployeePubEftPairFactory.create(
-        employee=employee,
-        pub_eft=PubEftFactory.create(
-            prenote_state_id=PrenoteState.REJECTED.prenote_state_id,
-            routing_nbr="123546784",
-            account_nbr="123546784",
-            bank_account_type_id=BankAccountType.CHECKING.bank_account_type_id,
-            prenote_response_at=datetime.datetime(2020, 12, 6, 12, 0, 0),
-        ),
-    )
+    employer = EmployerFactory(fineos_employer_id=96)
 
-    EmployerFactory(fineos_employer_id=96)
+    # Add the eft
+    DelegatedPaymentFactory(
+        local_test_db_session,
+        employee=employee,
+        employer=employer,
+        prenote_state=PrenoteState.REJECTED,
+        routing_nbr="123546784",
+        account_nbr="123546784",
+        prenote_response_at=datetime.datetime(2020, 12, 6, 12, 0, 0),
+    ).get_or_create_pub_eft()
 
     local_claimant_extract_step.run()
 
