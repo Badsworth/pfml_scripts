@@ -1,8 +1,7 @@
 maintenance:
-    start: "2021-10-14T20:59:00-04:00"
-    # Will be manually taken down
-    # end: "2021-10-14T05:00:00-04:00"
-    enabled: 1
+    start:
+    end: 
+    enabled: 0
     options:
         pages_routes:
             - /*
