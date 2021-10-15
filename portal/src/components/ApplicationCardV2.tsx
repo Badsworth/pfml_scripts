@@ -7,12 +7,12 @@ import BenefitsApplication from "../models/BenefitsApplication";
 import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import ButtonLink from "./ButtonLink";
 import Heading from "./Heading";
-import Icon from "./Icon";
 import LeaveReason from "../models/LeaveReason";
 import LegalNoticeList from "./LegalNoticeList";
 import PropTypes from "prop-types";
 import React from "react";
 import Spinner from "./Spinner";
+import Tag from "./Tag";
 import ThrottledButton from "./ThrottledButton";
 import findKeyByValue from "../utils/findKeyByValue";
 import getLegalNotices from "../utils/getLegalNotices";
@@ -38,11 +38,7 @@ const navigateToPage = async (claim, appLogic, href) => {
  * Main header for the top of status cards
  */
 const HeaderSection = ({ title }) => (
-  <Heading
-    className="margin-bottom-1 padding-2 padding-top-3"
-    level="3"
-    size="2"
-  >
+  <Heading className="padding-top-3" level="3" size="2">
     {title}
   </Heading>
 );
@@ -55,9 +51,9 @@ HeaderSection.propTypes = {
  * Group together details for status cards
  */
 const TitleAndDetailSectionItem = ({ details, title }) => (
-  <div className="padding-2 padding-bottom-1 padding-top-0 margin-top-0">
+  <div className="padding-y-1">
     <p>{title}</p>
-    <p className="margin-bottom-05 margin-top-05 text-bold">{details}</p>
+    <p className="margin-top-05 text-bold">{details}</p>
   </div>
 );
 
@@ -90,7 +86,7 @@ const ManageDocumentSection = ({ appLogic, claim }) => {
   );
 
   return (
-    <div className="border-top border-base-lighter margin-2 margin-top-0 padding-bottom-1">
+    <div className="border-top border-base-lighter">
       <Heading className="padding-y-3" level="4">
         {t("components.applicationCardV2.otherActions")}
       </Heading>
@@ -161,10 +157,7 @@ const LegalNoticeSection = (props) => {
   if (!legalNotices.length) return null;
 
   return (
-    <div
-      className="margin-2 margin-top-0 padding-bottom-1"
-      style={{ maxWidth: 385 }}
-    >
+    <div className="margin-top-2 padding-bottom-1" style={{ maxWidth: 385 }}>
       <Heading level="3">
         {t("components.applicationCardV2.viewNotices")}
       </Heading>
@@ -208,6 +201,12 @@ const InProgressStatusCard = (props) => {
           number,
         })}
       />
+      <Tag
+        className="text-no-wrap"
+        state="warning"
+        label={t("components.applicationCardV2.inProgressTag")}
+      />
+      <p>{t("components.applicationCardV2.inProgressText")}</p>
       {claim.employer_fein && (
         <TitleAndDetailSectionItem
           title={t("components.applicationCardV2.employerEIN")}
@@ -215,7 +214,7 @@ const InProgressStatusCard = (props) => {
         />
       )}
       <LegalNoticeSection {...props} />
-      <div className="border-top border-base-lighter padding-y-2 margin-2 margin-bottom-0">
+      <div className="border-top border-base-lighter padding-top-2">
         <ButtonLink
           className="display-flex flex-align-center flex-justify-center flex-column margin-right-0"
           href={routeWithParams("applications.checklist", {
@@ -246,15 +245,6 @@ const CompletedStatusCard = ({ appLogic, claim }) => {
     context: findKeyByValue(LeaveReason, claim.leave_details?.reason),
   });
 
-  const iconComponent = (
-    <Icon
-      className="position-absolute flex-align-self-end margin-right-neg-105"
-      fill="white"
-      name="arrow_forward"
-      size={3}
-    />
-  );
-
   const statusPage = routeWithParams("applications.status", {
     absence_case_id: claim.fineos_absence_id,
   });
@@ -275,13 +265,12 @@ const CompletedStatusCard = ({ appLogic, claim }) => {
         details={claim.employer_fein}
       />
 
-      <div className="border-top border-base-lighter padding-y-2 margin-2 margin-bottom-0">
+      <div className="border-top border-base-lighter padding-y-2 margin-y-2 margin-bottom-0">
         <ThrottledButton
           className="width-full display-flex flex-align-center flex-justify-center flex-column margin-right-0"
           onClick={onClickHandler}
         >
           {t("components.applicationCardV2.viewStatusUpdatesAndDetails")}
-          {iconComponent}
         </ThrottledButton>
       </div>
       <ManageDocumentSection appLogic={appLogic} claim={claim} />
@@ -315,8 +304,12 @@ export const ApplicationCardV2 = (props) => {
 
   return (
     <div className="maxw-mobile-lg margin-bottom-3">
-      <aside className="border-top-1 border-primary" />
-      <article className="border-x border-bottom border-base-lighter">
+      <aside
+        className={`border-top-1 ${
+          status === "Completed" ? "border-primary" : "border-gold"
+        }`}
+      />
+      <article className="border-x border-bottom border-base-lighter padding-2 padding-top-0">
         {status === "Completed" ? (
           <CompletedStatusCard {...props} />
         ) : (
