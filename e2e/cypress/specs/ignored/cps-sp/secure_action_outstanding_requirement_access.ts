@@ -109,8 +109,8 @@ describe("Check the O/R is accessible to modify with secure actions", () => {
             preset: userPermission.security_group,
             debug: false,
           }).then(done);
-        })
-      })
+        });
+      });
     });
     it(`${userPermission.security_group} ${
       userPermission.employer_complete ? "can" : "can't"
@@ -118,7 +118,9 @@ describe("Check the O/R is accessible to modify with secure actions", () => {
       fineos.before(ssoAccount2Credentials);
       cy.task("generateClaim", "WDCLAIM").then((claim) => {
         cy.task("submitClaimToAPI", claim).then((response) => {
-          const claimPage = fineosPages.ClaimPage.visit(response.fineos_absence_id);
+          const claimPage = fineosPages.ClaimPage.visit(
+            response.fineos_absence_id
+          );
           claimPage.adjudicate((adjudicate) => {
             adjudicate.evidence((evidence) => {
               claim.documents.forEach((docs) => {
@@ -128,24 +130,36 @@ describe("Check the O/R is accessible to modify with secure actions", () => {
           });
           // Check the Complete, Suppress, and Remove for each secure group
           claimPage.outstandingRequirements((outstanding_requirement) => {
-            outstanding_requirement.complete("Received", "Complete Employer Confirmation", userPermission.employer_complete)
-            waitForAjaxComplete()
-            cy.screenshot(`${response.fineos_absence_id} - ${userPermission.security_group} showing access to complete is ${userPermission.employer_complete}`)
-            outstanding_requirement.reopen(userPermission.employer_reopen)
-            waitForAjaxComplete()
-            outstanding_requirement.suppress("Auto-Suppressed", "Suppress Employer Confirmation", userPermission.employer_suppress)
-            cy.screenshot(`${response.fineos_absence_id} - ${userPermission.security_group} showing access to suppress is ${userPermission.employer_suppress}`)
-            waitForAjaxComplete()
-            outstanding_requirement.reopen(userPermission.employer_reopen)
-            waitForAjaxComplete()
-            outstanding_requirement.removeOR(userPermission.employer_remove)
-            waitForAjaxComplete()
-            cy.screenshot(`${response.fineos_absence_id} - ${userPermission.security_group} showing access to remove is ${userPermission.employer_remove}`)
+            outstanding_requirement.complete(
+              "Received",
+              "Complete Employer Confirmation",
+              userPermission.employer_complete
+            );
+            waitForAjaxComplete();
+            cy.screenshot(
+              `${response.fineos_absence_id} - ${userPermission.security_group} showing access to complete is ${userPermission.employer_complete}`
+            );
+            outstanding_requirement.reopen(userPermission.employer_reopen);
+            waitForAjaxComplete();
+            outstanding_requirement.suppress(
+              "Auto-Suppressed",
+              "Suppress Employer Confirmation",
+              userPermission.employer_suppress
+            );
+            cy.screenshot(
+              `${response.fineos_absence_id} - ${userPermission.security_group} showing access to suppress is ${userPermission.employer_suppress}`
+            );
+            waitForAjaxComplete();
+            outstanding_requirement.reopen(userPermission.employer_reopen);
+            waitForAjaxComplete();
+            outstanding_requirement.removeOR(userPermission.employer_remove);
+            waitForAjaxComplete();
+            cy.screenshot(
+              `${response.fineos_absence_id} - ${userPermission.security_group} showing access to remove is ${userPermission.employer_remove}`
+            );
           });
-          }
-        );
-      })
+        });
+      });
     });
   });
 });
-

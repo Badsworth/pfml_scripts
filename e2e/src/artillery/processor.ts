@@ -68,7 +68,7 @@ function wrap(fn: ProcessorCB) {
 /**
  * Wraps a top level callback in a timer that invokes the request/response events.
  */
-async function timeRequest<R extends unknown>(
+async function timeRequest<R>(
   context: ArtilleryContext,
   ee: EventEmitter,
   fn: () => Promise<R>

@@ -12,7 +12,7 @@ export type FineosBrowserOptions = {
   credentials?: Credentials;
 };
 export class Fineos {
-  static async withBrowser<T extends unknown>(
+  static async withBrowser<T>(
     next: (page: Page) => Promise<T>,
     { debug = false, screenshots, credentials }: FineosBrowserOptions
   ): Promise<T> {
@@ -311,7 +311,10 @@ export class ConfigPage extends FineosPage {
   ): Promise<void> {
     await this.page.click(`text="Company Structure"`);
     await util.clickTab(this.page, "Users");
-    await this.page.fill("#UserSearchWidgetOrganizationStructure_un18_userID", userId);
+    await this.page.fill(
+      "#UserSearchWidgetOrganizationStructure_un18_userID",
+      userId
+    );
     await this.page.click(`input[title="Search for User"]`);
     await this.page.click(`input[title="Select to edit the user"]`);
     // Lookup the user ID, then navigate to the edit roles page.
