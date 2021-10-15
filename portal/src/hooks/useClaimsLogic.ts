@@ -17,7 +17,6 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
   // Initialized to empty collection, but will eventually store the claims
   // as API calls are made to fetch the user's claims
   const { collection: claims, setCollection: setClaims } = useCollectionState(
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     new ClaimCollection()
   );
   const [claimDetail, setClaimDetail] = useState();
@@ -37,7 +36,6 @@ const useClaimsLogic = ({ appErrorsLogic }) => {
    * Empty the claims collection so that it is fetched again from the API
    */
   const clearClaims = () => {
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     setClaims(new ClaimCollection());
     // Also clear any indication that a page is loaded, so our loadPage method
     // fetches the page from the API
