@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import AppErrorInfo from "../models/AppErrorInfo";
-import Document from "../models/Document";
+import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import FileCard from "./FileCard";
 import PropTypes from "prop-types";
 import Spinner from "./Spinner";
@@ -44,7 +44,7 @@ function renderFileCard(
 /**
  * Render a read-only FileCard for a document. These represent documents that have already been uploaded,
  * and can no longer be removed from the application. Renders the FileCard inside of a <li> element.
- * @param {Document} document The document to render as a FileCard
+ * @param {BenefitsApplicationDocument} document The document to render as a FileCard
  * @param {integer} index The zero-based index of the file in the list. This is used to
  * to interpolate a heading for the file.
  * @param {string} fileHeadingPrefix A string prefix we'll use as a heading in each FileCard. We
@@ -177,7 +177,9 @@ FileCardList.propTypes = {
   /** Button text to use when one or more files have already been selected */
   addAnotherFileButtonText: PropTypes.string.isRequired,
   /** Documents that need to be rendered as read-only FileCards, representing previously uploaded files */
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+  documents: PropTypes.arrayOf(
+    PropTypes.instanceOf(BenefitsApplicationDocument)
+  ),
 };
 
 export default FileCardList;

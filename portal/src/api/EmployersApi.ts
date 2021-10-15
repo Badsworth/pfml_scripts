@@ -4,7 +4,7 @@ import BaseApi, {
   handleError,
   handleNotOkResponse,
 } from "./BaseApi";
-import Document from "../models/Document";
+import ClaimDocument from "../models/ClaimDocument";
 import DocumentCollection from "../models/DocumentCollection";
 import EmployerClaim from "../models/EmployerClaim";
 import { UserLeaveAdministrator } from "../models/User";
@@ -59,7 +59,7 @@ export default class EmployersApi extends BaseApi {
    * Download document
    *
    * @param {string} absenceId of the Claim
-   * @param {Document} document instance of Document to download
+   * @param {ClaimDocument} document instance of ClaimDocument to download
    * @returns {Blob} file data
    */
   downloadDocument = async (absenceId, document) => {
@@ -100,7 +100,7 @@ export default class EmployersApi extends BaseApi {
    */
   getDocuments = async (absenceId) => {
     const { data } = await this.request("GET", `claims/${absenceId}/documents`);
-    let documents = data.map((documentData) => new Document(documentData));
+    let documents = data.map((documentData) => new ClaimDocument(documentData));
     documents = new DocumentCollection(documents);
 
     return {

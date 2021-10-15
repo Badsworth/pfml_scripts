@@ -4,8 +4,8 @@ import routeWithParams, {
 } from "../utils/routeWithParams";
 
 import BenefitsApplication from "../models/BenefitsApplication";
+import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import ButtonLink from "./ButtonLink";
-import Document from "../models/Document";
 import Heading from "./Heading";
 import Icon from "./Icon";
 import LeaveReason from "../models/LeaveReason";
@@ -188,7 +188,9 @@ LegalNoticeSection.propTypes = {
     }),
   }).isRequired,
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+  documents: PropTypes.arrayOf(
+    PropTypes.instanceOf(BenefitsApplicationDocument)
+  ),
   isLoadingDocuments: PropTypes.bool.isRequired,
 };
 

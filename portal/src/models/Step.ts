@@ -155,8 +155,8 @@ export default class Step {
    * @param {object} machineConfigs - configuration object for routing machine
    * @param {object} context - used for evaluating a step's status
    * @param {BenefitsApplication} [context.claim]
-   * @param {Document[]} [context.certificationDocuments]
-   * @param {Document[]} [context.idDocuments]
+   * @param {BenefitsApplicationDocument[]} [context.certificationDocuments]
+   * @param {BenefitsApplicationDocument[]} [context.idDocuments]
    * @param {object[]} [warnings] - array of validation warnings returned from API
    * @returns {Step[]}
    * @example createClaimStepsFromMachine(claimFlowConfig, { claim: { first_name: "Bud" } })

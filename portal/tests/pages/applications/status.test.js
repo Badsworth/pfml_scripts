@@ -1,11 +1,12 @@
-import Document, { DocumentType } from "../../../src/models/Document";
 import Status, { LeaveDetails } from "../../../src/pages/applications/status";
 import { cleanup, render, screen } from "@testing-library/react";
 
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
+import BenefitsApplicationDocument from "../../../src/models/BenefitsApplicationDocument";
 import ClaimDetail from "../../../src/models/ClaimDetail";
 import DocumentCollection from "../../../src/models/DocumentCollection";
+import { DocumentType } from "../../../src/models/Document";
 import LeaveReason from "../../../src/models/LeaveReason";
 import React from "react";
 import { ReasonQualifier } from "../../../src/models/BenefitsApplication";
@@ -18,7 +19,7 @@ jest.mock("next/router");
 mockRouter.asPath = routes.applications.status;
 
 const DOCUMENTS = [
-  new Document({
+  new BenefitsApplicationDocument({
     application_id: "mock-application-id",
     content_type: "image/png",
     created_at: "2020-04-05",
@@ -26,7 +27,7 @@ const DOCUMENTS = [
     fineos_document_id: "fineos-id-4",
     name: "legal notice 1",
   }),
-  new Document({
+  new BenefitsApplicationDocument({
     application_id: "not-my-application-id",
     content_type: "image/png",
     created_at: "2020-04-05",
@@ -34,7 +35,7 @@ const DOCUMENTS = [
     fineos_document_id: "fineos-id-5",
     name: "legal notice 2",
   }),
-  new Document({
+  new BenefitsApplicationDocument({
     application_id: "mock-application-id",
     content_type: "image/png",
     created_at: "2020-04-05",
@@ -42,7 +43,7 @@ const DOCUMENTS = [
     fineos_document_id: "fineos-id-6",
     name: "non-legal notice 1",
   }),
-  new Document({
+  new BenefitsApplicationDocument({
     application_id: "mock-application-id",
     content_type: "image/png",
     created_at: "2020-04-05",
@@ -739,7 +740,7 @@ describe("Status", () => {
       };
 
       const documents = [
-        new Document({
+        new BenefitsApplicationDocument({
           application_id: defaultClaimDetail.application_id,
           document_type: DocumentType.certification[LeaveReason.bonding],
         }),

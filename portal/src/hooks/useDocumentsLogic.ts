@@ -133,7 +133,7 @@ const useDocumentsLogic = ({ appErrorsLogic }) => {
 
   /**
    * Download document from the API and sets app errors if any
-   * @param {Document} document - Document instance to download
+   * @param {BenefitsApplicationDocument} document - Document instance to download
    * @returns {Blob}
    */
   const download = async (document) => {

@@ -99,7 +99,7 @@ const useEmployersLogic = ({
    * Download document from the API and set app errors if any.
    *
    * @param {string} absenceId ID of the Claim
-   * @param {Document} document - Document instasnce to download
+   * @param {ClaimDocument} document - Document instasnce to download
    * @returns {Blob} file data
    */
   const downloadDocument = async (absenceId, document) => {

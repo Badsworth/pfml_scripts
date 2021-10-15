@@ -1,10 +1,12 @@
 import BenefitsApplication, {
   ReasonQualifier,
 } from "../../models/BenefitsApplication";
-import Document, { DocumentType } from "../../models/Document";
+
 import Alert from "../../components/Alert";
+import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import ConditionalContent from "../../components/ConditionalContent";
 import DocumentRequirements from "../../components/DocumentRequirements";
+import { DocumentType } from "../../models/Document";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
 import Heading from "../../components/Heading";
@@ -64,10 +66,11 @@ export const UploadCertification = (props) => {
       break;
   }
 
-  const certificationDocuments = findDocumentsByLeaveReason(
-    documents,
-    get(claim, "leave_details.reason")
-  );
+  const certificationDocuments =
+    findDocumentsByLeaveReason<BenefitsApplicationDocument>(
+      documents,
+      get(claim, "leave_details.reason")
+    );
 
   const handleSave = async () => {
     if (files.isEmpty && certificationDocuments.length) {
@@ -209,7 +212,9 @@ UploadCertification.propTypes = {
     clearErrors: PropTypes.func.isRequired,
   }).isRequired,
   claim: PropTypes.instanceOf(BenefitsApplication),
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+  documents: PropTypes.arrayOf(
+    PropTypes.instanceOf(BenefitsApplicationDocument)
+  ),
   isLoadingDocuments: PropTypes.bool,
   query: PropTypes.shape({
     claim_id: PropTypes.string,

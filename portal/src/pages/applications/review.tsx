@@ -12,7 +12,6 @@ import BenefitsApplication, {
   WorkPattern,
   WorkPatternType,
 } from "../../models/BenefitsApplication";
-import Document, { DocumentType } from "../../models/Document";
 import EmployerBenefit, {
   EmployerBenefitFrequency,
   EmployerBenefitType,
@@ -28,8 +27,10 @@ import { compact, get, isUndefined } from "lodash";
 
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
+import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import Button from "../../components/Button";
 import { DateTime } from "luxon";
+import { DocumentType } from "../../models/Document";
 import Heading from "../../components/Heading";
 import HeadingPrefix from "../../components/HeadingPrefix";
 import Lead from "../../components/Lead";
@@ -857,7 +858,9 @@ Review.propTypes = {
     }).isRequired,
   }).isRequired,
   claim: PropTypes.instanceOf(BenefitsApplication),
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+  documents: PropTypes.arrayOf(
+    PropTypes.instanceOf(BenefitsApplicationDocument)
+  ),
   isLoadingDocuments: PropTypes.bool,
   query: PropTypes.shape({
     claim_id: PropTypes.string,
