@@ -1982,9 +1982,15 @@ components:
           items:
             $ref: "#/components/schemas/OtherIncome"
           nullable: true
+        updated_at:
+          type: string
+          format: date-time
+          example: "2020-06-26T01:02:03.967736+00:00"
         updated_time:
           type: string
           format: date-time
+          description: |
+            This field is deprecated. Please use `updated_at`.
           example: "2020-06-26T01:02:03.967736+00:00"
         status:
           type: string

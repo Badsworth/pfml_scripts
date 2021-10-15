@@ -254,7 +254,7 @@ class PreviousLeaveSameReason(PreviousLeave):
     __mapper_args__ = {"polymorphic_identity": "same_reason"}
 
 
-class Application(Base):
+class Application(Base, TimestampMixin):
     __tablename__ = "application"
     application_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     user_id = Column(PostgreSQLUUID, ForeignKey("user.user_id"), nullable=False, index=True)

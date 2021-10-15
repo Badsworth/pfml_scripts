@@ -745,6 +745,7 @@ export interface ApplicationResponse {
   employer_benefits?: EmployerBenefit[] | null;
   other_incomes?: OtherIncome[] | null;
   updated_time?: string;
+  updated_at?: string;
   status?: "Started" | "Submitted" | "Completed";
   phone?: MaskedPhone;
   has_previous_leaves_other_reason?: boolean | null;

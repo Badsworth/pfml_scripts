@@ -577,8 +577,8 @@ class ApplicationFactory(BaseFactory):
     )
     leave_reason_qualifier_id = None
 
-    start_time = Generators.TransactionDateTime
-    updated_time = factory.LazyAttribute(lambda a: a.start_time + timedelta(days=1))
+    created_at = Generators.TransactionDateTime
+    updated_at = factory.LazyAttribute(lambda a: a.created_at + timedelta(days=1))
 
 
 class AddressFactory(BaseFactory):

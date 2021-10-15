@@ -127,11 +127,11 @@ def applications_get():
 def applications_start():
     application = Application()
 
+    ensure(CREATE, application)
+
     now = datetime_util.utcnow()
     application.start_time = now
     application.updated_time = now
-
-    ensure(CREATE, application)
 
     # this should always be the case at this point, but the type for
     # current_user is still optional until we require authentication
@@ -741,6 +741,7 @@ def payment_preference_submit(application_id: UUID) -> Response:
             applications_service.add_or_update_payment_preference(
                 db_session, payment_pref_request.payment_preference, existing_application
             )
+
             existing_application.updated_time = datetime_util.utcnow()
             db_session.add(existing_application)
             db_session.commit()
