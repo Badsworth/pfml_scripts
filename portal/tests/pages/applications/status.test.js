@@ -413,6 +413,72 @@ describe("Status", () => {
         )
       ).toBeInTheDocument();
     });
+
+    it("displays status timeline for notices if notices are due but not present", () => {
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper(
+            {
+              ...defaultClaimDetail,
+              absence_periods: [
+                {
+                  period_type: "Reduced",
+                  reason: LeaveReason.pregnancy,
+                  request_decision: "Pending",
+                },
+                {
+                  period_type: "Reduced",
+                  reason: LeaveReason.bonding,
+                  request_decision: "Approved",
+                },
+              ],
+            },
+            [DOCUMENTS[1]]
+          ),
+        },
+        props
+      );
+
+      expect(
+        screen.getByText(
+          /Notices usually appear within 30 minutes after we update the status of your application./
+        )
+      ).toBeInTheDocument();
+    });
+
+    it("doesn't display status timeline for notices if notices are due and present", () => {
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper(
+            {
+              ...defaultClaimDetail,
+              absence_periods: [
+                {
+                  period_type: "Reduced",
+                  reason: LeaveReason.pregnancy,
+                  request_decision: "Pending",
+                },
+                {
+                  period_type: "Reduced",
+                  reason: LeaveReason.bonding,
+                  request_decision: "Approved",
+                },
+              ],
+            },
+            [DOCUMENTS[0]]
+          ),
+        },
+        props
+      );
+
+      expect(
+        screen.queryByText(
+          /Notices usually appear within 30 minutes after we update the status of your application./
+        )
+      ).not.toBeInTheDocument();
+    });
   });
 
   it("includes a button to upload additional documents if there is a pending absence period", () => {

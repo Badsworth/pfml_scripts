@@ -153,12 +153,46 @@ export const Status = ({ appLogic, query }) => {
       />
     );
 
+    // How many notices a user should have, based on claim decisions
+    const expectedNoticeCount = claimDetail.absence_periods.reduce(
+      (acc, { request_decision }) => {
+        const shouldHaveNotice =
+          request_decision === "Approved" ||
+          request_decision === "Denied" ||
+          request_decision === "Withdrawn";
+
+        if (shouldHaveNotice) acc += 1;
+        return acc;
+      },
+      0
+    );
+
+    // Types of notices we want to watch out for
+    const noticeTypes = {
+      [DocumentType.approvalNotice]: true,
+      [DocumentType.denialNotice]: true,
+      [DocumentType.withdrawalNotice]: true,
+    };
+
+    // Legal notices which match notice types above
+    const decisionNotices = legalNotices.filter((legalNotice) => {
+      return noticeTypes[legalNotice.document_type];
+    });
+
+    // Determines whether or not to show timeline for notice
+    const isStatusTimelineNotice = expectedNoticeCount > decisionNotices.length;
+
     return (
       <SectionWrapper>
         <Heading className="margin-bottom-1" level="2" id="view_notices">
           {t("pages.claimsStatus.viewNoticesHeading")}
         </Heading>
         {sectionBody}
+        {isStatusTimelineNotice && (
+          <p className="text-light">
+            {t("pages.claimsStatus.statusTimelineNotice")}
+          </p>
+        )}
       </SectionWrapper>
     );
   };
