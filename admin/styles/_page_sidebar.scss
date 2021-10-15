@@ -23,7 +23,8 @@
   padding: 0;
 }
 
-.menu__link {
+.menu__link,
+.settings__link {
   border-left: solid 0.29em transparent;
   color: $Color-RevolutionGray;
   display: block;
@@ -33,7 +34,8 @@
   transition: all 0.2s ease 0s;
 }
 
-.menu__link::before {
+.menu__link::before,
+.settings__link::before {
   @include IconFontProps;
   display: block;
   font-size: 1.14em;
@@ -44,7 +46,10 @@
 
 .menu__link:hover,
 .menu__link:focus,
-.menu__link--active {
+.menu__link--active,
+.settings__link:hover,
+.settings__link:focus,
+.settings__link--active {
   background: $Color-BerkshiresGreen-100;
   border-color: $Color-BerkshiresGreen-600;
   text-decoration: none;
@@ -54,7 +59,7 @@
   content: $IconHome;
 }
 
-.menu__link--users::before {
+.menu__link--user-lookup::before {
   content: $IconUsers;
 }
 
@@ -64,14 +69,6 @@
 
 .menu__link--features::before {
   content: $IconFlag;
-}
-
-.menu__link--settings::before {
-  content: $IconSettings;
-}
-
-.menu__link--help::before {
-  content: $IconHelp;
 }
 
 .settings {
@@ -84,6 +81,14 @@
   list-style: none;
   margin: 0;
   padding: 0;
+}
+
+.settings__link--settings::before {
+  content: $IconSettings;
+}
+
+.settings__link--help::before {
+  content: $IconHelp;
 }
 
 .environment {

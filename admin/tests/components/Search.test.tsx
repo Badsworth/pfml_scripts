@@ -120,4 +120,13 @@ describe("Search", () => {
 
     expect(screen.getByTestId("search-input")).toHaveValue("User");
   });
+
+  test("sets the search term when the 'search' query parameter changes", () => {
+    mockedIsClient.mockReturnValue(true);
+    mockRouter.pathname = "/users?search=User";
+
+    renderComponent();
+
+    expect(screen.getByTestId("search-input")).toHaveValue("User");
+  });
 });

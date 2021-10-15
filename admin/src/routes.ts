@@ -1,11 +1,13 @@
-const routes: Record<string, string> = {
+const routes: {
+  [key: string]: string;
+} = {
   dashboard: "/",
-  users: "/users",
-  maintenance: "/maintenance",
   features: "/features",
-  settings: "/settings",
   help: "/help",
   login: "/login",
+  maintenance: "/maintenance",
+  settings: "/settings",
+  users: "/users",
 };
 
 export default routes;

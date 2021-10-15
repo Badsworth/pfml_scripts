@@ -7,10 +7,10 @@
 /* eslint-disable */
 
 export const defaults: RequestOptions = {
-  baseUrl: "/v1",
+  baseUrl: "v1",
 };
 export const servers = {
-  developmentServer: "/v1",
+  developmentServer: "http://localhost:1550/v1",
 };
 export type RequestOptions = {
   baseUrl?: string;
@@ -161,7 +161,10 @@ export const http = {
       headers,
       fetch: customFetch,
       ...init
-    } = { ...defaults, ...req };
+    } = {
+      ...defaults,
+      ...req,
+    };
     const href = _.joinUrl(baseUrl, url);
     const res = await (customFetch || fetch)(href, {
       ...init,
@@ -294,35 +297,27 @@ export interface Meta {
     order_direction?: string;
   };
 }
-export interface ValidationErrorDetail {
+export interface Issue {
   type?: string;
   message?: string;
-  rule?: (string | number | number | boolean | any | object) | null;
-  field?: string | null;
+  rule?: string | number | number | boolean | any | object;
+  field?: string;
 }
 export interface SuccessfulResponse {
   status_code: number;
   message?: string;
   meta?: Meta;
   data?: any | object;
-  warnings?: ValidationErrorDetail[];
+  warnings?: Issue[];
 }
 export interface ErrorResponse {
   status_code: number;
   message?: string;
   meta?: Meta;
   data?: any | object;
-  warnings?: ValidationErrorDetail[];
-  errors: ValidationErrorDetail[];
+  warnings?: Issue[];
+  errors: Issue[];
 }
-export interface FlagResponse {
-  start?: string | null;
-  end?: string | null;
-  name?: string;
-  options?: object;
-  enabled?: boolean;
-}
-export type FlagsResponse = FlagResponse[];
 export type Fein = string;
 export interface UserCreateRequest {
   email_address?: string | null;
@@ -354,7 +349,7 @@ export interface UserResponse {
   user_leave_administrators?: UserLeaveAdminResponse[];
 }
 export interface EmployerAddFeinRequestBody {
-  employer_fein?: Fein | null;
+  employer_fein?: string;
 }
 export interface UserUpdateRequest {
   consented_to_data_sharing: boolean;
@@ -413,54 +408,6 @@ export interface EmployerResponse {
   employer_dba?: string;
   employer_fein?: string;
 }
-export interface AbsencePeriodStatusResponse {
-  fineos_leave_period_id?: string;
-  absence_period_start_date?: string;
-  absence_period_end_date?: string;
-  reason?:
-    | "Care for a Family Member"
-    | "Pregnancy/Maternity"
-    | "Child Bonding"
-    | "Serious Health Condition - Employ";
-  reason_qualifier_one?: "Newborn" | "Adoption" | "Foster Care";
-  reason_qualifier_two?: string;
-  period_type?: "Continuous" | "Intermittent" | "Reduced Schedule";
-  request_decision?: "Pending" | "Approved" | "Denied" | "Withdrawn";
-  evidence_status?:
-    | "Pending"
-    | "Waived"
-    | "Satisfied"
-    | "Not Satisfied"
-    | "Not Required";
-}
-export interface EvidenceStatusDetail {
-  document_name?: string;
-  is_document_received?: boolean;
-}
-export interface DetailedClaimResponse {
-  employer?: EmployerResponse;
-  employee?: EmployeeResponse;
-  application_id?: string;
-  fineos_absence_id?: any;
-  fineos_notification_id?: any;
-  created_at?: any;
-  absence_periods?: AbsencePeriodStatusResponse[];
-  outstanding_evidence?: {
-    employee_evidence?: EvidenceStatusDetail[];
-    employer_evidence?: EvidenceStatusDetail[];
-  };
-}
-export interface GETClaimsByFineosAbsenceIdResponse extends SuccessfulResponse {
-  data?: DetailedClaimResponse;
-}
-export interface ManagedRequirementResponse {
-  follow_up_date?: any;
-  responded_at?: any;
-  status?: string | null;
-  category?: string | null;
-  type?: string | null;
-  created_at?: any;
-}
 export interface ClaimResponse {
   employer?: EmployerResponse;
   employee?: EmployeeResponse;
@@ -468,17 +415,19 @@ export interface ClaimResponse {
   fineos_notification_id?: any;
   absence_period_start_date?: any;
   absence_period_end_date?: any;
-  claim_status?: any;
-  claim_type_description?: any;
+  fineos_absence_status?: any;
+  claim_type?: any;
   created_at?: any;
-  managed_requirements?: ManagedRequirementResponse[];
+}
+export interface GETClaimsByFineosAbsenceIdResponse extends SuccessfulResponse {
+  data?: ClaimResponse;
 }
 export type ClaimsResponse = ClaimResponse[];
 export interface GETClaimsResponse extends SuccessfulResponse {
   data?: ClaimsResponse;
 }
 export interface ClaimDocumentResponse {
-  created_at: any | null;
+  created_at: any;
   document_type:
     | "State managed Paid Leave Confirmation"
     | "Approval Notice"
@@ -490,12 +439,11 @@ export interface ClaimDocumentResponse {
     | "Child bonding evidence form"
     | "Care for a family member form"
     | "Military exigency form"
-    | "Pending Application Withdrawn"
-    | "Appeal Acknowledgment";
-  content_type: string | null;
+    | "Pending Application Withdrawn";
+  content_type: string;
   fineos_document_id: string;
-  name: string | null;
-  description: string | null;
+  name: string;
+  description: string;
 }
 export interface GETEmployersClaimsByFineosAbsenceIdDocumentsResponse
   extends SuccessfulResponse {
@@ -797,6 +745,7 @@ export interface ApplicationResponse {
   employer_benefits?: EmployerBenefit[] | null;
   other_incomes?: OtherIncome[] | null;
   updated_time?: string;
+  updated_at?: string;
   status?: "Started" | "Submitted" | "Completed";
   phone?: MaskedPhone;
   has_previous_leaves_other_reason?: boolean | null;
@@ -899,8 +848,7 @@ export interface DocumentResponse {
     | "Child bonding evidence form"
     | "Care for a family member form"
     | "Military exigency form"
-    | "Pending Application Withdrawn"
-    | "Appeal Acknowledgment";
+    | "Pending Application Withdrawn";
   content_type: string;
   fineos_document_id: string;
   name: string;
@@ -925,13 +873,12 @@ export interface DocumentUploadRequest {
     | "Child bonding evidence form"
     | "Care for a family member form"
     | "Military exigency form"
-    | "Pending Application Withdrawn"
-    | "Appeal Acknowledgment"
-    | "Certification Form";
+    | "Certification Form"
+    | "Pending Application Withdrawn";
   name?: string;
   description?: string;
   mark_evidence_received?: boolean;
-  file: Blob;
+  file: unknown; // TODO: Was typed as Blob when generated but encountered type errors, confirm if this was previously set to unknown manually or if further work is needed here;
 }
 export interface POSTApplicationsByApplicationIdDocumentsResponse
   extends SuccessfulResponse {
@@ -949,20 +896,15 @@ export interface EligibilityRequest {
   employer_fein: Fein;
   leave_start_date: Date;
   application_submitted_date: Date;
-  employment_status:
-    | "Employed"
-    | "Unemployed"
-    | "Self-Employed"
-    | "Unknown"
-    | "Retired";
+  employment_status: "Employed" | "Unemployed" | "Self-Employed";
 }
 export interface EligibilityResponse {
   financially_eligible: boolean;
   description: string;
-  total_wages?: number | null;
-  state_average_weekly_wage?: number | null;
-  unemployment_minimum?: number | null;
-  employer_average_weekly_wage?: number | null;
+  total_wages?: number;
+  state_average_weekly_wage?: number;
+  unemployment_minimum?: number;
+  employer_average_weekly_wage?: number;
 }
 export interface POSTFinancialEligibilityResponse extends SuccessfulResponse {
   data?: EligibilityResponse;
@@ -1016,39 +958,6 @@ export interface VerificationRequest {
   withholding_amount: number;
   withholding_quarter: string;
 }
-export interface AuthURIResponse {
-  auth_uri?: string;
-  claims_challenge?: string | null;
-  code_verifier?: string;
-  nonce?: string;
-  redirect_uri?: string;
-  scope?: string[];
-  state?: string;
-}
-export interface AuthCodeResponse {
-  code?: string;
-  session_state?: string;
-  state?: string;
-}
-export interface AdminTokenRequest {
-  authURIRes?: AuthURIResponse;
-  authCodeRes?: AuthCodeResponse;
-}
-export interface AdminTokenResponse {
-  access_token?: string;
-  refresh_token?: string;
-  id_token?: string;
-}
-export interface AdminUserResponse {
-  email_address?: string;
-  first_name?: string;
-  last_name?: string;
-  groups?: string[];
-  sub_id?: string;
-}
-export interface AdminLogoutResponse {
-  logout_uri?: string;
-}
 /**
  * Get the API status
  */
@@ -1056,16 +965,6 @@ export async function getStatus(
   options?: RequestOptions,
 ): Promise<ApiResponse<SuccessfulResponse>> {
   return await http.fetchJson("/status", {
-    ...options,
-  });
-}
-/**
- * Get feature flags
- */
-export async function getFlags(
-  options?: RequestOptions,
-): Promise<ApiResponse<FlagsResponse>> {
-  return await http.fetchJson("/flags", {
     ...options,
   });
 }
@@ -1262,15 +1161,13 @@ export async function getClaims(
     order_direction,
     employer_id,
     claim_status,
-    search,
   }: {
     page_size?: number;
     page_offset?: number;
-    order_by?: "fineos_absence_status" | "created_at" | "employee";
+    order_by?: string;
     order_direction?: "ascending" | "descending";
     employer_id?: string;
     claim_status?: string;
-    search?: string;
   } = {},
   options?: RequestOptions,
 ): Promise<ApiResponse<GETClaimsResponse>> {
@@ -1283,7 +1180,6 @@ export async function getClaims(
         order_direction,
         employer_id,
         claim_status,
-        search,
       }),
     )}`,
     {
@@ -1392,13 +1288,19 @@ export async function getApplications(
 export async function getApplicationsByApplication_id(
   {
     application_id,
+    xFfRequireOtherLeaves,
   }: {
     application_id: string;
+    xFfRequireOtherLeaves?: string;
   },
   options?: RequestOptions,
 ): Promise<ApiResponse<ApplicationResponse>> {
   return await http.fetchJson(`/applications/${application_id}`, {
     ...options,
+    headers: {
+      ...options?.headers,
+      "X-FF-Require-Other-Leaves": xFfRequireOtherLeaves,
+    },
   });
 }
 /**
@@ -1407,8 +1309,10 @@ export async function getApplicationsByApplication_id(
 export async function patchApplicationsByApplication_id(
   {
     application_id,
+    xFfRequireOtherLeaves,
   }: {
     application_id: string;
+    xFfRequireOtherLeaves?: string;
   },
   applicationRequestBody: ApplicationRequestBody,
   options?: RequestOptions,
@@ -1419,6 +1323,10 @@ export async function patchApplicationsByApplication_id(
       ...options,
       method: "PATCH",
       body: applicationRequestBody,
+      headers: {
+        ...options?.headers,
+        "X-FF-Require-Other-Leaves": xFfRequireOtherLeaves,
+      },
     }),
   );
 }
@@ -1429,8 +1337,10 @@ export async function patchApplicationsByApplication_id(
 export async function postApplicationsByApplication_idSubmit_application(
   {
     application_id,
+    xFfRequireOtherLeaves,
   }: {
     application_id: string;
+    xFfRequireOtherLeaves?: string;
   },
   options?: RequestOptions,
 ): Promise<
@@ -1441,6 +1351,10 @@ export async function postApplicationsByApplication_idSubmit_application(
     {
       ...options,
       method: "POST",
+      headers: {
+        ...options?.headers,
+        "X-FF-Require-Other-Leaves": xFfRequireOtherLeaves,
+      },
     },
   );
 }
@@ -1451,8 +1365,10 @@ export async function postApplicationsByApplication_idSubmit_application(
 export async function postApplicationsByApplication_idComplete_application(
   {
     application_id,
+    xFfRequireOtherLeaves,
   }: {
     application_id: string;
+    xFfRequireOtherLeaves?: string;
   },
   options?: RequestOptions,
 ): Promise<
@@ -1463,6 +1379,10 @@ export async function postApplicationsByApplication_idComplete_application(
     {
       ...options,
       method: "POST",
+      headers: {
+        ...options?.headers,
+        "X-FF-Require-Other-Leaves": xFfRequireOtherLeaves,
+      },
     },
   );
 }
@@ -1673,50 +1593,4 @@ export async function postEmployersVerifications(
       body: verificationRequest,
     }),
   );
-}
-/**
- * Returns azure ad authentication url to initiate user auth code flow
- */
-export async function getAdminAuthorize(
-  options?: RequestOptions,
-): Promise<ApiResponse<AuthURIResponse>> {
-  return await http.fetchJson("/admin/authorize", {
-    ...options,
-  });
-}
-/**
- * Trade an authentication code for an access token
- */
-export async function postAdminToken(
-  adminTokenRequest: AdminTokenRequest,
-  options?: RequestOptions,
-): Promise<ApiResponse<AdminTokenResponse>> {
-  return await http.fetchJson(
-    "/admin/token",
-    http.json({
-      ...options,
-      method: "POST",
-      body: adminTokenRequest,
-    }),
-  );
-}
-/**
- * Login as admin user
- */
-export async function getAdminLogin(
-  options?: RequestOptions,
-): Promise<ApiResponse<AdminUserResponse>> {
-  return await http.fetchJson("/admin/login", {
-    ...options,
-  });
-}
-/**
- * Logout admin user
- */
-export async function getAdminLogout(
-  options?: RequestOptions,
-): Promise<ApiResponse<AdminLogoutResponse>> {
-  return await http.fetchJson("/admin/logout", {
-    ...options,
-  });
 }
