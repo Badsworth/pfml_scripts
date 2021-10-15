@@ -792,6 +792,8 @@ class Payment(Base, TimestampMixin):
     claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"))
     leave_request_id = Column(PostgreSQLUUID, ForeignKey("absence_period.absence_period_id"))
 
+    vpei_id = Column(PostgreSQLUUID, ForeignKey("fineos_extract_vpei.vpei_id"))
+
     fineos_employee_first_name = Column(Text)
     fineos_employee_middle_name = Column(Text)
     fineos_employee_last_name = Column(Text)
@@ -1153,6 +1155,8 @@ class ReferenceFile(Base, TimestampMixin):
         nullable=True,
         index=True,
     )
+    # When the data within the files was processed (as determined by the particular process)
+    processed_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
 
     reference_file_type = relationship(LkReferenceFileType)
     payments = relationship("PaymentReferenceFile", back_populates="reference_file")
