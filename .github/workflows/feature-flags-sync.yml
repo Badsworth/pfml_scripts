@@ -5,7 +5,7 @@ name: Feature Flag Sync
 
 on:
   workflow_dispatch:
-
+  
   push:
     branches:
       - main
@@ -40,7 +40,7 @@ jobs:
       fail-fast: false
       matrix:
         environment: ${{ fromJSON(needs.get-envs.outputs.matrix) }}
-    
+
     steps:
       - uses: actions/checkout@v2
       - name: Configure AWS Credentials
@@ -57,3 +57,52 @@ jobs:
           BUCKET_NAME: massgov-pfml-${{ matrix.environment }}-feature-gate
         run: |
           aws s3 cp ./${{ matrix.environment }}.yaml s3://$BUCKET_NAME/features.yaml
+
+  get-sync-files-state:
+    name: Get Sync Files State
+    needs: [sync-files]
+    if: always()
+    runs-on: ubuntu-latest
+    outputs:
+      sync-files-state: ${{ steps.sync-files-state.outputs.sync-files-state }}
+    steps:
+      - uses: actions/checkout@v2
+        # https://github.com/technote-space/workflow-conclusion-action
+        # this action takes the "conclusion" status from jobs and compiles them together into an env variable with a rolled up status
+      - uses: technote-space/workflow-conclusion-action@v2
+      - name: Set sync-files-state value
+        id: sync-files-state
+        run: |
+          echo "::set-output name=sync-files-state::${{ env.WORKFLOW_CONCLUSION }}"
+
+  page-if-failed:
+    name: Send PagerDuty Alert
+    needs: [get-sync-files-state]
+    if: always() && needs.get-sync-files-state.outputs.sync-files-state == 'failure'
+    runs-on: ubuntu-latest
+    steps:
+    - name: send low priority page
+      uses: fjogeleit/http-request-action@master
+      with:
+        url: 'https://events.pagerduty.com/v2/enqueue'
+        method: 'POST'
+        contentType: 'application/json'
+        data: "{
+          \"routing_key\": \"6b02445c7be347beab083af7544913eb\", 
+          \"event_action\": \"trigger\",
+          \"dedup_key\":\"Feature Flag Sync\",
+          \"payload\": {
+            \"summary\": \"Feature Flag Sync failed\",
+            \"severity\": \"warning\",
+            \"source\": \"Feature Flag Sync\",
+            \"custom_details\": {
+              \"description\": \"Feature Flag Sync Failure. Please check the link for details. \"
+              }
+            },
+            \"links\": [
+              {
+              \"href\":\"https://github.com/EOLWD/pfml/actions/runs/${{ github.run_id }}\",
+              \"text\": \"GitHub Actions run\"
+              }
+            ]
+          }"
