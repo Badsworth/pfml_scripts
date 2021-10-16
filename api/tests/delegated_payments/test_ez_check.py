@@ -9,6 +9,7 @@ import pytest
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.delegated_payments.ez_check as ez_check
 import massgov.pfml.util.files as file_util
+from massgov.pfml.util.decimals import round_nearest_hundredth
 from tests.factories import EzCheckHeaderFactory, EzCheckRecordFactory
 
 fake = faker.Faker()
@@ -210,7 +211,7 @@ def test_ez_check_record_success():
             2,
             args["check_number"],
             args["check_date"].strftime(ez_check.DATE_FORMAT),
-            args["amount"].quantize(ez_check.TWOPLACES),
+            round_nearest_hundredth(args["amount"]),
             args["memo"],
         ]
     )

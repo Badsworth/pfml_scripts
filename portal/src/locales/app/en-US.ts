@@ -2566,6 +2566,9 @@ const components = {
     continueApplication: "Continue application",
     employerEIN: "Employer Identification Number (EIN)",
     heading: "Application {{number}}",
+    inProgressTag: "In Progress",
+    inProgressText:
+      "Submit all three parts so that we can review your application.",
     leavePeriodLabel_reduced: "$t(shared.claimDurationTypeReducedSchedule)",
     leaveReasonValue_activeDutyFamily: "$t(shared.leaveReasonActiveDutyFamily)",
     leaveReasonValue_bonding: "$t(shared.leaveReasonBondingHeader)",

@@ -16,7 +16,6 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
     addItem: addBenefitsApplication,
     updateItem: setBenefitsApplication,
     setCollection: setBenefitsApplications,
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
   } = useCollectionState(new BenefitsApplicationCollection());
 
   // Track whether the loadAll method has been called. Checking that claims

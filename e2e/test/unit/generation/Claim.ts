@@ -827,9 +827,7 @@ describe("ClaimPool", () => {
     }
   });
 
-  const collect = async function <T extends unknown>(
-    iter: AsyncIterable<T>
-  ): Promise<T[]> {
+  const collect = async function <T>(iter: AsyncIterable<T>): Promise<T[]> {
     const items = [];
     for await (const item of iter) {
       items.push(item);
