@@ -57,7 +57,7 @@ const useClaimsLogic = ({
     pageOffset: number | string = 1,
     order: {
       order_by?: string;
-      order_direction?: string;
+      order_direction?: "ascending" | "descending";
     } = {},
     filters: {
       claim_status?: string;

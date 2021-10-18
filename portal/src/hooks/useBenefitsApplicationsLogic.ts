@@ -138,19 +138,12 @@ const useBenefitsApplicationsLogic = ({
     appErrorsLogic.clearErrors();
 
     try {
-      const { claim, errors, warnings } = await applicationsApi.updateClaim(
+      const { claim, warnings } = await applicationsApi.updateClaim(
         application_id,
         patchData
       );
 
-      const issues = getRelevantIssues(errors, warnings, [portalFlow.page]);
-
-      // If there were any validation errors, then throw *before*
-      // the claim is updated in our state, to avoid overriding
-      // the user's in-progress answers
-      if (errors && errors.length) {
-        throw new ValidationError(issues, applicationsApi.i18nPrefix);
-      }
+      const issues = getRelevantIssues([], warnings, [portalFlow.page]);
 
       setBenefitsApplication(claim);
       setClaimWarnings(application_id, warnings);
@@ -242,18 +235,13 @@ const useBenefitsApplicationsLogic = ({
     appErrorsLogic.clearErrors();
 
     try {
-      const { claim, errors, warnings } =
-        await applicationsApi.submitPaymentPreference(
-          application_id,
-          paymentPreferenceData
-        );
+      const { claim, warnings } = await applicationsApi.submitPaymentPreference(
+        application_id,
+        paymentPreferenceData
+      );
 
       // This endpoint should only return errors relevant to this page so no need to filter
-      const issues = getRelevantIssues(errors, warnings, []);
-
-      if (errors && errors.length) {
-        throw new ValidationError(issues, applicationsApi.i18nPrefix);
-      }
+      const issues = getRelevantIssues([], warnings, []);
 
       setBenefitsApplication(claim);
       setClaimWarnings(application_id, warnings);
