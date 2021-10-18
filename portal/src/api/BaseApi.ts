@@ -4,6 +4,7 @@ import {
   BadRequestError,
   ForbiddenError,
   InternalServerError,
+  Issue,
   NetworkError,
   NotFoundError,
   RequestTimeoutError,
@@ -15,12 +16,29 @@ import { compact, isEmpty } from "lodash";
 import { Auth } from "@aws-amplify/auth";
 import tracker from "../services/tracker";
 
-/**
- * @typedef {Promise<{ data: object, errors: ?Array, meta: object, warnings: ?Array }>} Response
- * @property {object} data - API's JSON response
- * @property {Array} warnings - API's validation warnings, such as missing required fields. These are "warnings"
- *  because we expect some fields to be missing as the user proceeds page-by-page through the flow.
- */
+export interface ApiResponseBody<TResponseData> {
+  data?: TResponseData;
+  errors?: Issue[];
+  meta?: {
+    resource: string;
+    method: string;
+    query?: string;
+    paging?: {
+      page_offset: number;
+      page_size: number;
+      total_pages: number;
+      total_records: number;
+      order_by: string;
+      order_direction: "ascending" | "descending";
+    };
+  };
+  status_code: number;
+  // API's validation warnings, such as missing required fields. These are "warnings"
+  // because we expect some fields to be missing as the user proceeds page-by-page through the flow.
+  warnings?: Issue[];
+}
+export type ApiMethod = "DELETE" | "GET" | "PATCH" | "POST" | "PUT";
+export type ApiRequestBody = Record<string, unknown> | FormData;
 
 /**
  * Class that implements the base interaction with API resources
@@ -37,25 +55,16 @@ export default abstract class BaseApi {
 
   /**
    * Send an authenticated API request.
-   * @example const response = await this.request("GET", "users/current");
-   *
-   * @param {string} method - i.e GET, POST, etc
-   * @param {string} subPath - relative path without a leading forward slash
-   * @param {object|FormData} [body] - request body
-   * @param {object} [additionalHeaders] - request headers
-   * @param {{ excludeAuthHeader: boolean, multipartForm: boolean}}  options
-   * @returns {Response} response - rejects on non-2xx status codes
+   * @example const { data } = await this.request<{ email: string }>("GET", "users/current");
+   *          const email = data.email;
    */
-  async request(
-    method,
+  async request<TResponseData>(
+    method: ApiMethod,
     subPath = "",
-    body = null,
+    body: ApiRequestBody | null = null,
     additionalHeaders = {},
     { excludeAuthHeader = false, multipartForm = false } = {}
   ) {
-    method = method.toUpperCase();
-    validateRequestMethod(method);
-
     const url = createRequestUrl(method, this.basePath, subPath, body);
     const authHeader = excludeAuthHeader ? {} : await getAuthorizationHeader();
     const headers = {
@@ -74,8 +83,8 @@ export default abstract class BaseApi {
       headers["Content-Type"] = "application/json";
     }
 
-    const response = await this.sendRequest(url, {
-      body: method === "GET" ? null : createRequestBody(body),
+    const response = await this.sendRequest<TResponseData>(url, {
+      body: method === "GET" || !body ? null : createRequestBody(body),
       headers,
       method,
     });
@@ -85,24 +94,21 @@ export default abstract class BaseApi {
 
   /**
    * Send a request and handle the response
-   * @param {string} url
-   * @param {object} options - `fetch` options
-   * @returns {Response} response - only rejects on network failure or if anything prevented the request from completing
-   * @throws {NetworkError}
    */
-  async sendRequest(url, options) {
-    let data, errors, meta, response, warnings;
+  async sendRequest<TResponseData>(url: string, options: RequestInit) {
+    let response: Response;
+    let responseBody: ApiResponseBody<TResponseData>;
 
     try {
       tracker.trackFetchRequest(url);
       response = await fetch(url, options);
       tracker.markFetchRequestEnd();
-
-      ({ data, errors, meta, warnings } = await response.json());
+      responseBody = await response.json();
     } catch (error) {
       handleError(error);
     }
 
+    const { data, errors, meta, warnings } = responseBody;
     if (!response.ok) {
       handleNotOkResponse(url, response, errors, this.i18nPrefix, data);
     }
@@ -117,49 +123,36 @@ export default abstract class BaseApi {
 }
 
 /**
- * Ensure that method is valid HTTP method
- * @param {string} method - HTTP method
- * @throws {Error} - if method is not valid
- */
-function validateRequestMethod(method) {
-  const methods = ["DELETE", "GET", "PATCH", "POST", "PUT"];
-  if (!methods.includes(method)) {
-    throw Error(
-      `Invalid method provided, expected one of: ${methods.join(", ")}`
-    );
-  }
-}
-
-/**
  * Transform the request body into a format that fetch expects
- * @param {object|FormData} [payload] - request body
- * @returns {string|FormData} body
  */
-function createRequestBody(payload) {
-  let requestBody = payload;
-
-  if (requestBody && !(requestBody instanceof FormData)) {
-    requestBody = JSON.stringify(requestBody);
+function createRequestBody(payload?: ApiRequestBody): XMLHttpRequestBodyInit {
+  if (payload instanceof FormData) {
+    return payload;
   }
 
-  return requestBody;
+  return JSON.stringify(payload);
 }
 
 /**
  * Create the full URL for a given API path
- * @param {string} method - i.e GET, POST, etc
- * @param {string} basePath - Root path of API resource without leading slash
- * @param {string} subPath - relative path without a leading forward slash
- * @param {object|FormData} [body] - request body
- * @returns {string} url
+ * @param method
+ * @param basePath - Root path of API resource without leading slash
+ * @param subPath - relative path without a leading forward slash
+ * @param body
  */
-export function createRequestUrl(method, basePath, subPath, body) {
+export function createRequestUrl(
+  method: ApiMethod,
+  basePath: string,
+  subPath: string,
+  body?: ApiRequestBody
+) {
   // Remove leading slash from apiPath if it has one
   const cleanedPaths = compact([basePath, subPath]).map(removeLeadingSlash);
   let url = [process.env.apiUrl, ...cleanedPaths].join("/");
 
-  if (method === "GET" && body) {
+  if (method === "GET" && body && !(body instanceof FormData)) {
     // Append query string to URL
+    // @ts-expect-error: Type 'Record<string, unknown>' is not assignable to type 'string'.ts(2345)
     const params = new URLSearchParams(body).toString();
     url = `${url}?${params}`;
   }
@@ -169,8 +162,6 @@ export function createRequestUrl(method, basePath, subPath, body) {
 
 /**
  * Retrieve auth token header
- * @returns {{Authorization: string}}
- * @throws {AuthSessionMissingError}
  */
 export async function getAuthorizationHeader() {
   try {
@@ -186,10 +177,8 @@ export async function getAuthorizationHeader() {
 
 /**
  * Convert API error/warnings field paths into a field path format we use on the Portal
- * @param {{ field: string }[]} issues - API errors/warnings
- * @returns {string} fieldPath
  */
-function formatIssues(issues) {
+function formatIssues(issues?: Issue[]) {
   if (!issues) return issues;
 
   return issues.map((issue) => {
@@ -209,10 +198,8 @@ function formatIssues(issues) {
 
 /**
  * Handle request errors
- * @param {Error} error
  */
-
-export function handleError(error) {
+export function handleError(error: Error) {
   // Request failed to send or something failed while parsing the response
   // Log the JS error to support troubleshooting
   console.error(error);
@@ -221,19 +208,18 @@ export function handleError(error) {
 
 /**
  * Throw an error when the API returns a non-2xx response status code
- * @param {string} url
- * @param {object} response
- * @param {object[]} [errors] - Issues returned by the API
- * @param {string} i18nPrefix - Prefix used in ValidationError message strings
- * @param {object} data - Data from response body
- * @throws {Error} error
+ * @param url
+ * @param response
+ * @param errors - Issues returned by the API
+ * @param i18nPrefix - Prefix used in ValidationError message strings
+ * @param data
  */
 export function handleNotOkResponse(
-  url,
-  response,
-  errors = [],
-  i18nPrefix,
-  data
+  url: string,
+  response: Response,
+  errors: Issue[] = [],
+  i18nPrefix: string,
+  data: unknown
 ) {
   if (isEmpty(errors)) {
     // Response didn't include any errors that we could use to
@@ -248,14 +234,13 @@ export function handleNotOkResponse(
 
 /**
  * Remove leading slash
- * @param {string} path - relative path
- * @returns {string}
  */
-function removeLeadingSlash(path) {
+function removeLeadingSlash(path: string) {
   return path.replace(/^\//, "");
 }
 
-const throwError = ({ status }, data = {}) => {
+const throwError = (response: Response, data: unknown = {}) => {
+  const { status } = response;
   const message = `${status} status code received`;
 
   switch (status) {

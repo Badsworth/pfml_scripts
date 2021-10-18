@@ -50,8 +50,13 @@ export default class BenefitsApplicationsApi extends BaseApi {
    * @param {object|FormData} [body] - request body
    * @returns {Promise<{ data: object, warnings?: object[]}>} response - rejects on non-2xx status codes
    */
-  request(method, subPath, body) {
-    return super.request(method, subPath, body, this.featureFlagHeaders);
+  request<TResponseData>(method, subPath, body) {
+    return super.request<TResponseData>(
+      method,
+      subPath,
+      body,
+      this.featureFlagHeaders
+    );
   }
 
   /**
@@ -74,13 +79,12 @@ export default class BenefitsApplicationsApi extends BaseApi {
    */
   getClaims = async () => {
     // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
-    const { data } = await this.request("GET");
+    const { data } = await this.request<BenefitsApplication[]>("GET");
 
-    let claims = data.map((claimData) => new BenefitsApplication(claimData));
-    claims = new BenefitsApplicationCollection(claims);
+    const claims = data.map((claimData) => new BenefitsApplication(claimData));
 
     return {
-      claims,
+      claims: new BenefitsApplicationCollection(claims),
     };
   };
 

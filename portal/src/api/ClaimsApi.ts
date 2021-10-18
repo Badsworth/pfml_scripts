@@ -56,7 +56,7 @@ export default class ClaimsApi extends BaseApi {
       orderParams.order_by = "fineos_absence_status";
     }
 
-    const { data, meta } = await this.request("GET", null, {
+    const { data, meta } = await this.request<Claim[]>("GET", null, {
       page_offset: pageOffset,
       ...orderParams,
       ...filterParams,
@@ -76,7 +76,7 @@ export default class ClaimsApi extends BaseApi {
    * @returns {Promise<{ claimDetail: ClaimDetail }>}
    */
   getClaimDetail = async (absenceId) => {
-    const { data } = await this.request("GET", absenceId);
+    const { data } = await this.request<ClaimDetail>("GET", absenceId);
 
     return {
       claimDetail: new ClaimDetail(data),

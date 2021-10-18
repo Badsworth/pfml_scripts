@@ -65,7 +65,7 @@ export default class DocumentsApi extends BaseApi {
     formData.append("name", file.name);
     formData.append("mark_evidence_received", mark_evidence_received);
 
-    const { data } = await this.request(
+    const { data } = await this.request<BenefitsApplicationDocument>(
       "POST",
       `${application_id}/documents`,
       formData,
@@ -86,14 +86,16 @@ export default class DocumentsApi extends BaseApi {
    * @returns {DocumentApiListResult} The result of the API call
    */
   getDocuments = async (application_id) => {
-    const { data } = await this.request("GET", `${application_id}/documents`);
-    let documents = data.map(
+    const { data } = await this.request<BenefitsApplicationDocument[]>(
+      "GET",
+      `${application_id}/documents`
+    );
+    const documents = data.map(
       (documentData) => new BenefitsApplicationDocument(documentData)
     );
-    documents = new DocumentCollection(documents);
 
     return {
-      documents,
+      documents: new DocumentCollection(documents),
     };
   };
 
@@ -109,7 +111,6 @@ export default class DocumentsApi extends BaseApi {
     const { application_id, content_type, fineos_document_id } = document;
     const subPath = `${application_id}/documents/${fineos_document_id}`;
     const method = "GET";
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 4 arguments, but got 3.
     const url = createRequestUrl(method, this.basePath, subPath);
     const authHeader = await getAuthorizationHeader();
 

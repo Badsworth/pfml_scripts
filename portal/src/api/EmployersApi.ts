@@ -66,7 +66,6 @@ export default class EmployersApi extends BaseApi {
     const { content_type, fineos_document_id } = document;
     const subPath = `/claims/${absenceId}/documents/${fineos_document_id}`;
     const method = "GET";
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 4 arguments, but got 3.
     const url = createRequestUrl(method, this.basePath, subPath);
     const authHeader = await getAuthorizationHeader();
 
@@ -99,12 +98,16 @@ export default class EmployersApi extends BaseApi {
    * @returns {DocumentApiListResult} The result of the API call
    */
   getDocuments = async (absenceId) => {
-    const { data } = await this.request("GET", `claims/${absenceId}/documents`);
-    let documents = data.map((documentData) => new ClaimDocument(documentData));
-    documents = new DocumentCollection(documents);
+    const { data } = await this.request<ClaimDocument[]>(
+      "GET",
+      `claims/${absenceId}/documents`
+    );
+    const documents = data.map(
+      (documentData) => new ClaimDocument(documentData)
+    );
 
     return {
-      documents,
+      documents: new DocumentCollection(documents),
     };
   };
 

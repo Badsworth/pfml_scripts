@@ -42,7 +42,7 @@ export default class UsersApi extends BaseApi {
    * @returns {Promise<UsersApiResult>}
    */
   getCurrentUser = async () => {
-    const { data } = await this.request("GET", "current", null);
+    const { data } = await this.request<User>("GET", "current", null);
     const roles = this.createUserRoles(data.roles);
     const user_leave_administrators = this.createUserLeaveAdministrators(
       data.user_leave_administrators
@@ -60,7 +60,7 @@ export default class UsersApi extends BaseApi {
    * @returns {Promise<UsersApiResult>}
    */
   updateUser = async (user_id, patchData) => {
-    const { data } = await this.request("PATCH", user_id, patchData);
+    const { data } = await this.request<User>("PATCH", user_id, patchData);
     const roles = this.createUserRoles(data.roles);
     const user_leave_administrators = this.createUserLeaveAdministrators(
       data.user_leave_administrators
@@ -83,7 +83,7 @@ export default class UsersApi extends BaseApi {
    * @returns {Promise<UsersApiResult>}
    */
   convertUser = async (user_id, postData) => {
-    const { data } = await this.request(
+    const { data } = await this.request<User>(
       "POST",
       `${user_id}/convert_employer`,
       postData

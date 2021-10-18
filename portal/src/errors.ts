@@ -92,9 +92,9 @@ export class UserNotReceivedError extends BasePortalError {
  * An API response returned a status code greater than 400
  */
 export class ApiRequestError extends BasePortalError {
-  responseData?: Record<string, unknown>;
+  responseData?: unknown;
 
-  constructor(responseData?: Record<string, unknown>, ...params) {
+  constructor(responseData?: unknown, ...params) {
     super(...params);
     this.responseData = responseData;
     this.name = "ApiRequestError";
