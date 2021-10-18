@@ -56,7 +56,7 @@ def get_url_as_json(url):
         return response.json()
 
 
-def configure_azure_ad():
+def configure_azure_ad() -> Optional[MSALClientConfig]:
     global azure_config
 
     now = datetime.now()
