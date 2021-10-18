@@ -1,0 +1,49 @@
+@import "~@newrelic/nr1-community/dist/index.css";
+
+.e2e-run-history {
+}
+
+.version {
+  div {
+    display: flex;
+    flex-direction: column;
+    span {
+      color: #999;
+    }
+  }
+}
+
+.e2e-run-indicator {
+  height: 30px;
+  width: 30px;
+  display: inline-block;
+  margin: 0 3px;
+  border-radius: 15px;
+  position: relative;
+  text-align: center;
+  color: #000 !important;
+  line-height: 30px !important;
+  font-weight: bold;
+  filter: brightness(0.9) contrast(0.9) saturate(1.3) hue-rotate(-10deg);
+
+  .visually-hidden {
+    visibility: hidden;
+    position: absolute;
+  }
+
+  .ic-icon {
+    font-size: 1.2rem;
+  }
+
+  &.error {
+    background: red;
+  }
+
+  &.warn {
+    background: #d4e500;
+  }
+
+  &.ok {
+    background: #00c100;
+  }
+}
