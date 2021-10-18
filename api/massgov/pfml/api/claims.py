@@ -258,6 +258,7 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
         return error.to_api_response()
 
     log_attributes = get_employer_log_attributes(user_leave_admin.user)
+    log_attributes = {"absence_case_id": fineos_absence_id, **log_attributes}
 
     if not user_leave_admin.fineos_web_id:
         logger.error(
