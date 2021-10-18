@@ -130,9 +130,7 @@ def _process_azure_token(db_session: Session, decoded_token: dict[str, Any]) -> 
         raise Unauthorized("You do not have the correct permissions to access the Admin Portal.")
 
     # Not using "current_user" to prevent it from being mistakenly used as User type
-    # as it could be an azure user instead
-    # Bouncer creates the authentication user with a couple keys by default:
-    # https://github.com/bouncer-app/flask-bouncer/blob/master/flask_bouncer.py#L163
+    # as it could be an azure user instead.
     auth_id = decoded_token.get("sub")
     azure_user = AzureUser(
         sub_id=auth_id,

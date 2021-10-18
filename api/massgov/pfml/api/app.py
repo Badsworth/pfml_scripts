@@ -84,7 +84,7 @@ def create_app(
         elif hasattr(g, "azure_user"):
             return g.azure_user
         else:
-            raise Exception("Excepting current_user on flask's g")
+            raise Exception("Expecting current_user on flask's g")
 
     bouncer.user_loader(user_loader)
 
