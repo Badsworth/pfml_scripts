@@ -814,7 +814,7 @@ class TestGetClaimReview:
                         "type": "Time off period",
                         "status": "Known",
                         "leaveRequest": {
-                            "id": "PL-00000-0000000000",
+                            "id": "2",
                             "reasonName": "Child Bonding",
                             "qualifier1": "Newborn",
                             "qualifier2": "",
@@ -842,7 +842,7 @@ class TestGetClaimReview:
                         "type": "Time off period",
                         "status": "Known",
                         "leaveRequest": {
-                            "id": "PL-00001-0000000001",
+                            "id": "1",
                             "reasonName": "Child Bonding",
                             "qualifier1": "Newborn",
                             "qualifier2": "",
@@ -3076,8 +3076,6 @@ class TestGetClaimsEndpoint:
 
         @pytest.fixture()
         def absence_periods(self, claim):
-            # using start and end as unique identifier because
-            # AbsencePeriodResponse does not include a unique identifier
             start = date.today() + timedelta(days=5)
             periods = []
             for _ in range(5):
@@ -3100,13 +3098,13 @@ class TestGetClaimsEndpoint:
             test_db_session.add(link)
             test_db_session.commit()
 
-        def _find_absence_period_by_start_date(
-            self, start_date: str, absence_periods: List[AbsencePeriod]
+        def _find_absence_period_by_fineos_leave_request_id(
+            self, fineos_leave_request_id: str, absence_periods: List[AbsencePeriod]
         ) -> Optional[AbsencePeriod]:
             absence_period = [
                 period
                 for period in absence_periods
-                if period.absence_period_start_date.isoformat() == start_date
+                if period.fineos_leave_request_id == fineos_leave_request_id
             ]
             return absence_period[0] if len(absence_period) else None
 
@@ -3116,8 +3114,17 @@ class TestGetClaimsEndpoint:
             assert claim_data["fineos_absence_id"] == claim.fineos_absence_id
             assert len(claim_data["absence_periods"]) == len(absence_periods)
             for absence_period_data in claim_data["absence_periods"]:
-                assert self._find_absence_period_by_start_date(
-                    absence_period_data["absence_period_start_date"], absence_periods
+                absence_period = self._find_absence_period_by_fineos_leave_request_id(
+                    absence_period_data["fineos_leave_request_id"], absence_periods
+                )
+                assert absence_period is not None
+                assert (
+                    absence_period.absence_period_start_date.isoformat()
+                    == absence_period_data["absence_period_start_date"]
+                )
+                assert (
+                    absence_period.absence_period_end_date.isoformat()
+                    == absence_period_data["absence_period_end_date"]
                 )
 
         def test_claim_with_absence_periods(
