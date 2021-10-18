@@ -69,7 +69,9 @@ class FineosExtractStep(Step):
     extract_config: ExtractConfig
 
     class Metrics(str, enum.Enum):
-        pass
+        FINEOS_PREFIX = "fineos_prefix"
+        ARCHIVE_PATH = "archive_path"
+        RECORDS_PROCESSED_COUNT = "records_processed_count"
 
     def __init__(
         self,
@@ -135,6 +137,7 @@ class FineosExtractStep(Step):
                     previously_processed_date.add(date_str)
                     continue
 
+                self.set_metrics({self.Metrics.FINEOS_PREFIX: date_str})
                 self._download_and_index_data(extract_data, str(download_directory))
                 self.move_files_from_received_to_out_dir(
                     extract_data, payments_util.Constants.S3_INBOUND_PROCESSED_DIR
@@ -203,6 +206,7 @@ class FineosExtractStep(Step):
         self.db_session.add(extract_data.reference_file)
 
         logger.info("Successfully moved files to %s folder", directory_name)
+        self.set_metrics({self.Metrics.ARCHIVE_PATH: directory_name})
 
     def _download_and_index_data(self, extract_data: ExtractData, download_directory: str) -> None:
         for file_location, extract in extract_data.extract_path_mapping.items():
@@ -228,3 +232,4 @@ class FineosExtractStep(Step):
                     self.get_import_log_id(),
                 )
                 self.db_session.add(staging_table_instance)
+                self.increment(self.Metrics.RECORDS_PROCESSED_COUNT)
