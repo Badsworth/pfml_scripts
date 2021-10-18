@@ -1,17 +1,20 @@
 import EmployerClaim from "../../models/EmployerClaim";
-import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
 import formatDateRange from "../../utils/formatDateRange";
 import { useTranslation } from "../../locales/i18n";
 
+interface EmployeeInformationProps {
+  claim: EmployerClaim;
+}
+
 /**
  * Display personal details of an employee applying for leave
  * in the Leave Admin claim review page.
  */
 
-const EmployeeInformation = (props) => {
+const EmployeeInformation = (props: EmployeeInformationProps) => {
   const { t } = useTranslation();
   const {
     first_name,
@@ -55,15 +58,10 @@ const EmployeeInformation = (props) => {
         level="3"
         label={t("components.employersEmployeeInformation.dobLabel")}
       >
-        {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1. */}
         {formatDateRange(date_of_birth)}
       </ReviewRow>
     </React.Fragment>
   );
-};
-
-EmployeeInformation.propTypes = {
-  claim: PropTypes.instanceOf(EmployerClaim).isRequired,
 };
 
 export default EmployeeInformation;

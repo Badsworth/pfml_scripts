@@ -16,7 +16,13 @@ export const fields = [
   `claim.${caringLeaveMetadataKey}.family_member_date_of_birth`,
 ];
 
-export const FamilyMemberDateOfBirth = (props) => {
+interface Props {
+  appLogic: any;
+  claim: BenefitsApplication;
+  query: any;
+}
+
+export const FamilyMemberDateOfBirth = (props: Props) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
 

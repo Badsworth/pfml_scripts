@@ -2,15 +2,54 @@ import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import Fieldset from "./Fieldset";
 import FormLabel from "./FormLabel";
 import InputText from "./InputText";
-import PropTypes from "prop-types";
 import React from "react";
 import StateDropdown from "./StateDropdown";
 import { useTranslation } from "../locales/i18n";
 
+interface FieldsetAddressProps {
+  /**
+   * Error messages which may apply to one of the address fields
+   */
+  appErrors: AppErrorInfoCollection;
+  /**
+   * Localized hint text
+   */
+  hint?: string;
+  /**
+   * Localized label for the entire fieldset
+   */
+  label: string;
+  /**
+   * Determines which labels to use
+   */
+  addressType?: "residential" | "mailing";
+  /**
+   * The root HTML name value. Each field will use a name with
+   * this as the prefix.
+   */
+  name: string;
+  /**
+   * Called when any of the fields' value changes. The event `target` will
+   * include the formatted ISO 8601 date as its `value`
+   */
+  onChange: (...args: any[]) => any;
+  /**
+   * Whether or not to use a small label. Default is false.
+   */
+  smallLabel?: boolean;
+  /**
+   * The address value as an object
+   */
+  value: Record<"city" | "line_1" | "line_2" | "state" | "zip", string>;
+}
+
 /**
  * A fieldset for collecting a user's US address.
  */
-const FieldsetAddress = ({ addressType = "residential", ...props }) => {
+const FieldsetAddress = ({
+  addressType = "residential",
+  ...props
+}: FieldsetAddressProps) => {
   const { appErrors, name, onChange, value } = props;
   const { t } = useTranslation();
 
@@ -82,49 +121,6 @@ const FieldsetAddress = ({ addressType = "residential", ...props }) => {
       />
     </Fieldset>
   );
-};
-
-FieldsetAddress.propTypes = {
-  /**
-   * Error messages which may apply to one of the address fields
-   */
-  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
-  /**
-   * Localized hint text
-   */
-  hint: PropTypes.string,
-  /**
-   * Localized label for the entire fieldset
-   */
-  label: PropTypes.string.isRequired,
-  /**
-   * Determines which labels to use
-   */
-  addressType: PropTypes.oneOf(["residential", "mailing"]),
-  /**
-   * The root HTML name value. Each field will use a name with
-   * this as the prefix.
-   */
-  name: PropTypes.string.isRequired,
-  /**
-   * Called when any of the fields' value changes. The event `target` will
-   * include the formatted ISO 8601 date as its `value`
-   */
-  onChange: PropTypes.func.isRequired,
-  /**
-   * Whether or not to use a small label. Default is false.
-   */
-  smallLabel: PropTypes.bool,
-  /**
-   * The address value as an object
-   */
-  value: PropTypes.exact({
-    city: PropTypes.string,
-    line_1: PropTypes.string,
-    line_2: PropTypes.string,
-    state: PropTypes.string,
-    zip: PropTypes.string,
-  }).isRequired,
 };
 
 export default FieldsetAddress;

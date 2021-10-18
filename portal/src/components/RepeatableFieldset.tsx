@@ -1,16 +1,58 @@
 import React, { useEffect, useRef, useState } from "react";
 import Button from "./Button";
-import PropTypes from "prop-types";
 import RepeatableFieldsetCard from "./RepeatableFieldsetCard";
 import classnames from "classnames";
 import { uniqueId } from "lodash";
 import usePreviousValue from "../hooks/usePreviousValue";
 
+interface RepeatableFieldsetProps {
+  /**
+   * Localized text used in the "Add" button
+   */
+  addButtonLabel: string;
+  /** Array of entries, each of which will have the content repeated for. */
+  entries: any[];
+  /**
+   * Displayed as the heading for each card, followed by the card's position. For example
+   * if you specify "Person", headings will be "Person 1", "Person 2", etc.
+   */
+  headingPrefix: string;
+  /**
+   * Maximum number of repeatable fields
+   */
+  limit?: number;
+  /**
+   * Message to display when max number of repeatable fields have been added
+   */
+  limitMessage?: string;
+  /**
+   * Function used for rendering the fields
+   * @see https://reactjs.org/docs/render-props.html
+   */
+  render: (entry: Record<string, unknown>, index: number) => React.ReactNode;
+  /**
+   * Localized text used in the "Remove" buttons.
+   * A "Remove" button isn't rendered when the
+   * entries length is 1.
+   */
+  removeButtonLabel: string;
+  /**
+   * Event handler responsible for adding a new entry
+   */
+  onAddClick: (...args: any[]) => any;
+  /**
+   * Event handler responsible for removing an entry
+   * @param {object} entry
+   * @param {number} index
+   */
+  onRemoveClick: (entry: Record<string, unknown>, index: number) => void;
+}
+
 /**
  * Used for rendering the same set of content and fields for each
  * item in the "entries" prop.
  */
-const RepeatableFieldset = (props) => {
+const RepeatableFieldset = (props: RepeatableFieldsetProps) => {
   const { entries } = props;
   const containerRef = useRef<HTMLElement>();
   const entriesAndIds = useEntryIds(entries);
@@ -72,52 +114,6 @@ const RepeatableFieldset = (props) => {
       )}
     </section>
   );
-};
-
-RepeatableFieldset.propTypes = {
-  /**
-   * Localized text used in the "Add" button
-   */
-  addButtonLabel: PropTypes.string.isRequired,
-  /** Array of entries, each of which will have the content repeated for. */
-  entries: PropTypes.arrayOf(PropTypes.object).isRequired,
-  /**
-   * Displayed as the heading for each card, followed by the card's position. For example
-   * if you specify "Person", headings will be "Person 1", "Person 2", etc.
-   */
-  headingPrefix: PropTypes.string.isRequired,
-  /**
-   * Maximum number of repeatable fields
-   */
-  limit: PropTypes.number,
-  /**
-   * Message to display when max number of repeatable fields have been added
-   */
-  limitMessage: PropTypes.string,
-  /**
-   * Function used for rendering the fields
-   * @param {object} entry
-   * @param {number} index
-   * @returns {React.ReactNode}
-   * @see https://reactjs.org/docs/render-props.html
-   */
-  render: PropTypes.func.isRequired,
-  /**
-   * Localized text used in the "Remove" buttons.
-   * A "Remove" button isn't rendered when the
-   * entries length is 1.
-   */
-  removeButtonLabel: PropTypes.string.isRequired,
-  /**
-   * Event handler responsible for adding a new entry
-   */
-  onAddClick: PropTypes.func.isRequired,
-  /**
-   * Event handler responsible for removing an entry
-   * @param {object} entry
-   * @param {number} index
-   */
-  onRemoveClick: PropTypes.func.isRequired,
 };
 
 /**

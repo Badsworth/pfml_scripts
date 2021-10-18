@@ -45,7 +45,15 @@ export const fields = [
  */
 export const irregularOver6MonthsId = "irregularOver6Months";
 
-export const IntermittentFrequency = (props) => {
+interface Props {
+  claim?: BenefitsApplication;
+  appLogic: any;
+  query?: {
+    claim_id?: string;
+  };
+}
+
+export const IntermittentFrequency = (props: Props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -96,7 +104,6 @@ export const IntermittentFrequency = (props) => {
       onSave={handleSave}
     >
       {(claim.isMedicalOrPregnancyLeave || claim.isCaringLeave) && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; neutral:... Remove this comment to see the full error message
         <Alert state="info" neutral>
           <Trans
             i18nKey="pages.claimsIntermittentFrequency.needDocumentAlert"
@@ -172,6 +179,7 @@ export const IntermittentFrequency = (props) => {
             label: t("pages.claimsIntermittentFrequency.frequencyBasisChoice", {
               context: "irregular",
             }),
+            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ checked: boolean; label: TFunctionResult; ... Remove this comment to see the full error message
             id: irregularOver6MonthsId,
             // This choice shares the same value as another choice, which the
             // component uses as its key by default, so we override that here

@@ -21,7 +21,14 @@ export const UploadType = {
   caring_leave_certification: "UPLOAD_CARING_LEAVE_CERTIFICATION",
 };
 
-export const UploadDocsOptions = (props) => {
+interface Props {
+  appLogic: any;
+  query?: {
+    absence_case_id: string;
+  };
+}
+
+export const UploadDocsOptions = (props: Props) => {
   const {
     appLogic,
     query: { absence_case_id },

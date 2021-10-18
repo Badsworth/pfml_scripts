@@ -1,13 +1,28 @@
-import PropTypes from "prop-types";
 import React from "react";
 import Spinner from "./Spinner";
 import classnames from "classnames";
+
+interface ButtonProps {
+  "aria-controls"?: string;
+  "aria-expanded"?: "true" | "false";
+  "aria-label"?: string;
+  children: React.ReactNode;
+  className?: string;
+  loading?: boolean;
+  loadingMessage?: string;
+  inversed?: boolean;
+  name?: string;
+  onClick?: (...args: any[]) => any;
+  type?: "button" | "submit";
+  disabled?: boolean;
+  variation?: "accent-cool" | "outline" | "secondary" | "unstyled";
+}
 
 /**
  * Renders a `button` element styled as a Button component
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/button/)
  */
-function Button({ type = "button", ...props }) {
+function Button({ type = "button", ...props }: ButtonProps) {
   const showLoading = props.loading;
   // Maintain button width when in loading state by hiding content
   const children = showLoading ? (
@@ -76,57 +91,5 @@ function Button({ type = "button", ...props }) {
     </React.Fragment>
   );
 }
-
-Button.propTypes = {
-  "aria-controls": PropTypes.string,
-  "aria-expanded": PropTypes.oneOf(["true", "false"]),
-  "aria-label": PropTypes.string,
-  /**
-   * Button text
-   */
-  children: PropTypes.node.isRequired,
-  /**
-   * Additional classes to apply to the HTML element. Useful for adding
-   * utility classes to control spacing.
-   */
-  className: PropTypes.string,
-  /**
-   * Disable button and show loading indicator
-   */
-  loading: PropTypes.bool,
-  /**
-   * Display a loading message alongside the button
-   */
-  loadingMessage: PropTypes.string,
-  /**
-   * Apply the "inverse" style modifier
-   */
-  inversed: PropTypes.bool,
-  /**
-   * HTML `name` attribute
-   */
-  name: PropTypes.string,
-  /**
-   * HTML `onClick` attribute
-   */
-  onClick: PropTypes.func,
-  /**
-   * HTML `type` attribute
-   */
-  type: PropTypes.oneOf(["button", "submit"]),
-  /**
-   * Disable button click
-   */
-  disabled: PropTypes.bool,
-  /**
-   * Change the default button style
-   */
-  variation: PropTypes.oneOf([
-    "accent-cool",
-    "outline",
-    "secondary",
-    "unstyled",
-  ]),
-};
 
 export default Button;

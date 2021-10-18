@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import AppErrorInfo from "../models/AppErrorInfo";
 import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import FileCard from "./FileCard";
-import PropTypes from "prop-types";
 import Spinner from "./Spinner";
 import TempFileCollection from "../models/TempFileCollection";
 import { useTranslation } from "../locales/i18n";
@@ -61,12 +60,22 @@ function renderDocumentFileCard(document, index, fileHeadingPrefix) {
   );
 }
 
+interface FileCardListProps {
+  tempFiles: TempFileCollection;
+  fileErrors?: AppErrorInfo[];
+  onChange: (...args: any[]) => any;
+  onRemoveTempFile: (...args: any[]) => any;
+  fileHeadingPrefix: string;
+  addFirstFileButtonText: string;
+  addAnotherFileButtonText: string;
+  documents?: BenefitsApplicationDocument[];
+}
 /**
  * A list of previously uploaded files and a button to upload additional files. This component
  * renders an invisible input component to handle file selection and then renders a list of
  * FileCards for each selected file.
  */
-const FileCardList = (props) => {
+const FileCardList = (props: FileCardListProps) => {
   const { t } = useTranslation();
   const [isLoading, setIsLoading] = useState(false);
   const {
@@ -150,36 +159,6 @@ const FileCardList = (props) => {
       )}
     </div>
   );
-};
-
-FileCardList.propTypes = {
-  /**
-   * Instance of TempFileCollection representing files selected by the user but not yet uploaded
-   * and are rendered as FileCards. This should be a state variable which can be set
-   * with onChange below.
-   */
-  tempFiles: PropTypes.instanceOf(TempFileCollection).isRequired,
-  fileErrors: PropTypes.arrayOf(PropTypes.instanceOf(AppErrorInfo)),
-  /**
-   * Files change event handler. Receives array of allowed files
-   *
-   */
-  onChange: PropTypes.func.isRequired,
-  /** Remove file event handlers. Receives a single file instance */
-  onRemoveTempFile: PropTypes.func.isRequired,
-  /**
-   * File descriptor prefix. This will be displayed in each file card. For example
-   * if you specify "Document" file headings will be "Document 1", "Document 2", etc.
-   */
-  fileHeadingPrefix: PropTypes.string.isRequired,
-  /** Button text to use when no files have been selected yet */
-  addFirstFileButtonText: PropTypes.string.isRequired,
-  /** Button text to use when one or more files have already been selected */
-  addAnotherFileButtonText: PropTypes.string.isRequired,
-  /** Documents that need to be rendered as read-only FileCards, representing previously uploaded files */
-  documents: PropTypes.arrayOf(
-    PropTypes.instanceOf(BenefitsApplicationDocument)
-  ),
 };
 
 export default FileCardList;

@@ -1,13 +1,40 @@
 import { Helmet } from "react-helmet"; // we don't use next/head because of https://lwd.atlassian.net/browse/CP-1071
-import PropTypes from "prop-types";
 import React from "react";
 import classnames from "classnames";
+
+interface TitleProps {
+  /**
+   * Title text
+   */
+  children: React.ReactNode;
+  /**
+   * HTML element used to render the page title
+   */
+  component?: "h1" | "legend";
+  /** Visually hide the title */
+  hidden?: boolean;
+  /** Override default bottom margin */
+  marginBottom?: "1" | "2" | "3" | "4" | "5" | "6" | "7" | "8";
+  /**
+   * By default, the text you pass in is also used for the title displayed
+   * in search engines and the browser tab. This can be overridden by setting
+   * this prop.
+   */
+  seoTitle?: string;
+  /**
+   * Enable the smaller title variant, which is used as a "section" title
+   * for sets of question pages.
+   */
+  small?: boolean;
+  /** Override default font weight */
+  weight?: "normal" | "bold";
+}
 
 /**
  * A page title. This also sets the title displayed in search engines and
  * the browser tab. There should only be one of these per page!
  */
-const Title = ({ component = "h1", small = false, ...props }) => {
+const Title = ({ component = "h1", small = false, ...props }: TitleProps) => {
   const TitleElement = component;
   const marginBottom = props.marginBottom ? props.marginBottom : "2";
 
@@ -28,40 +55,12 @@ const Title = ({ component = "h1", small = false, ...props }) => {
       <Helmet>
         <title>{seoTitle}</title>
       </Helmet>
-      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: any; tabIndex: string; className... Remove this comment to see the full error message */}
+      {/* @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number'. */}
       <TitleElement tabIndex="-1" className={classes}>
         {props.children}
       </TitleElement>
     </React.Fragment>
   );
-};
-
-Title.propTypes = {
-  /**
-   * Title text
-   */
-  children: PropTypes.node.isRequired,
-  /**
-   * HTML element used to render the page title
-   */
-  component: PropTypes.oneOf(["h1", "legend"]),
-  /** Visually hide the title */
-  hidden: PropTypes.bool,
-  /** Override default bottom margin */
-  marginBottom: PropTypes.oneOf(["1", "2", "3", "4", "5", "6", "7", "8"]),
-  /**
-   * By default, the text you pass in is also used for the title displayed
-   * in search engines and the browser tab. This can be overridden by setting
-   * this prop.
-   */
-  seoTitle: PropTypes.string,
-  /**
-   * Enable the smaller title variant, which is used as a "section" title
-   * for sets of question pages.
-   */
-  small: PropTypes.bool,
-  /** Override default font weight */
-  weight: PropTypes.oneOf(["normal", "bold"]),
 };
 
 export default Title;

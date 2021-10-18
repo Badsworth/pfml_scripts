@@ -18,7 +18,24 @@ import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
 import withWithholding from "../../../hoc/withWithholding";
 
-export const VerifyContributions = (props) => {
+interface Props {
+  appLogic: {
+    appErrors?: AppErrorInfoCollection;
+    employers?: {
+      submitWithholding: (...args: any[]) => any;
+    };
+    users: {
+      user?: User;
+    };
+  };
+  query: {
+    employer_id: string;
+    next?: string;
+  };
+  withholding: Withholding;
+}
+
+export const VerifyContributions = (props: Props) => {
   const { appLogic, query, withholding } = props;
   const {
     users: { user },
@@ -44,6 +61,7 @@ export const VerifyContributions = (props) => {
     const payload = {
       employer_id: query.employer_id,
       withholding_amount: formState.withholdingAmount,
+      // @ts-expect-error ts-migrate(2339) FIXME: Property 'filing_period' does not exist on type 'W... Remove this comment to see the full error message
       withholding_quarter: withholding.filing_period,
     };
 
@@ -94,7 +112,7 @@ export const VerifyContributions = (props) => {
         <Trans
           i18nKey="pages.employersOrganizationsVerifyContributions.detailsList"
           values={{
-            // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
+            // @ts-expect-error ts-migrate(2339) FIXME: Property 'filing_period' does not exist on type 'W... Remove this comment to see the full error message
             date: formatDateRange(withholding.filing_period),
           }}
           components={{
@@ -131,7 +149,7 @@ export const VerifyContributions = (props) => {
         label={t(
           "pages.employersOrganizationsVerifyContributions.withholdingAmountLabel",
           {
-            // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
+            // @ts-expect-error ts-migrate(2339) FIXME: Property 'filing_period' does not exist on type 'W... Remove this comment to see the full error message
             date: formatDateRange(withholding.filing_period),
           }
         )}

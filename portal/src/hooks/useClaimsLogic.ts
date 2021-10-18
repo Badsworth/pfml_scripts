@@ -69,7 +69,7 @@ const useClaimsLogic = ({
 
     // Or have we already loaded this page with the same order and filter params?
     if (
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'page_offset' does not exist on type 'Pag... Remove this comment to see the full error message
+      // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'number' is not assignable to par... Remove this comment to see the full error message
       parseInt(paginationMeta.page_offset) === parseInt(pageOffset) &&
       isEqual(activeFilters, filters) &&
       isEqual(activeOrder, order)

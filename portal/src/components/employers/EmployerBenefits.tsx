@@ -3,19 +3,28 @@ import AmendableEmployerBenefit from "./AmendableEmployerBenefit";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import EmployerBenefit from "../../models/EmployerBenefit";
 import Heading from "../Heading";
-import PropTypes from "prop-types";
 import React from "react";
 import Table from "../Table";
 import { Trans } from "react-i18next";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
+interface EmployerBenefitsProps {
+  addedBenefits: EmployerBenefit[];
+  appErrors: AppErrorInfoCollection;
+  employerBenefits?: EmployerBenefit[];
+  onAdd: (...args: any[]) => any;
+  onChange: (...args: any[]) => any;
+  onRemove: (...args: any[]) => any;
+  shouldShowV2: boolean;
+}
+
 /**
  * Display all employer benefits
  * in the Leave Admin claim review page.
  */
 
-const EmployerBenefits = (props) => {
+const EmployerBenefits = (props: EmployerBenefitsProps) => {
   const { t } = useTranslation();
   const {
     addedBenefits,
@@ -119,17 +128,6 @@ const EmployerBenefits = (props) => {
       </Table>
     </React.Fragment>
   );
-};
-
-EmployerBenefits.propTypes = {
-  addedBenefits: PropTypes.arrayOf(PropTypes.instanceOf(EmployerBenefit))
-    .isRequired,
-  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
-  employerBenefits: PropTypes.arrayOf(PropTypes.instanceOf(EmployerBenefit)),
-  onAdd: PropTypes.func.isRequired,
-  onChange: PropTypes.func.isRequired,
-  onRemove: PropTypes.func.isRequired,
-  shouldShowV2: PropTypes.bool.isRequired,
 };
 
 export default EmployerBenefits;

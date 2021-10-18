@@ -14,7 +14,11 @@ import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
-export const VerifyAccount = (props) => {
+interface Props {
+  appLogic: any;
+}
+
+export const VerifyAccount = (props: Props) => {
   const { appLogic } = props;
   const { appErrors, auth } = appLogic;
   const { t } = useTranslation();
@@ -70,10 +74,10 @@ export const VerifyAccount = (props) => {
         href={routes.auth.login}
       />
       {codeResent && appErrors.isEmpty && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; className: string; headi... Remove this comment to see the full error message
         <Alert
           className="margin-bottom-3 margin-top-0"
           heading={t("pages.authVerifyAccount.codeResentHeading")}
+          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: TFunctionResult; className: stri... Remove this comment to see the full error message
           name="code-resent-message"
           role="alert"
           state="success"

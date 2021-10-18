@@ -29,7 +29,15 @@ export const fields = [
   "claim.mailing_address.zip",
 ];
 
-export const Address = (props) => {
+interface Props {
+  claim?: BenefitsApplication;
+  appLogic: any;
+  query?: {
+    claim_id?: string;
+  };
+}
+
+export const Address = (props: Props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -101,6 +109,7 @@ export const Address = (props) => {
       />
       <ConditionalContent
         fieldNamesClearedWhenHidden={["mailing_address"]}
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '(name: any) => any' is not assignable to typ... Remove this comment to see the full error message
         getField={getField}
         clearField={clearField}
         updateFields={updateFields}

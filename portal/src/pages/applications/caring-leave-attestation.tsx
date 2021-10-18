@@ -14,7 +14,17 @@ import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
-export const CaringLeaveAttestation = (props) => {
+interface Props {
+  appLogic: {
+    portalFlow?: {
+      getNextPageRoute: (...args: any[]) => any;
+    };
+  };
+  claim: BenefitsApplication;
+  query: any;
+}
+
+export const CaringLeaveAttestation = (props: Props) => {
   const { t } = useTranslation();
   const { appLogic, claim, query } = props;
   const relationship = get(
@@ -38,7 +48,6 @@ export const CaringLeaveAttestation = (props) => {
           ),
         }}
       />
-      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element[]; className: string; st... Remove this comment to see the full error message */}
       <Alert className="measure-6" state="info" noIcon>
         <p>
           {t("pages.claimsCaringLeaveAttestation.truthAttestation", {

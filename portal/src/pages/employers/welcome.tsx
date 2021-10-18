@@ -21,7 +21,16 @@ const IconWait = (props) => (
   </svg>
 );
 
-export const Welcome = ({ appLogic, user }) => {
+interface WelcomeProps {
+  appLogic: {
+    portalFlow: {
+      pathname: string;
+    };
+  };
+  user: User;
+}
+
+export const Welcome = ({ appLogic, user }: WelcomeProps) => {
   const { t } = useTranslation();
   const iconProps = {
     className: "margin-right-2 text-secondary text-middle",
@@ -40,7 +49,6 @@ export const Welcome = ({ appLogic, user }) => {
           <Title>{t("pages.employersWelcome.welcomeTitle")}</Title>
 
           {hasVerifiableEmployer && (
-            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; heading:... Remove this comment to see the full error message
             <Alert
               state="warning"
               heading={t("pages.employersWelcome.verificationAlertTitle")}
@@ -58,7 +66,6 @@ export const Welcome = ({ appLogic, user }) => {
             </Alert>
           )}
 
-          {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; }' is no... Remove this comment to see the full error message */}
           <Alert state="info">
             <p>
               <Trans i18nKey="pages.employersWelcome.otherLeaveInfoAlertBody" />

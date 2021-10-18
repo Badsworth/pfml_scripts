@@ -3,12 +3,74 @@ import Dropdown from "./Dropdown";
 import Fieldset from "./Fieldset";
 import FormLabel from "./FormLabel";
 import InputNumber from "./InputNumber";
-import PropTypes from "prop-types";
 import React from "react";
 import classnames from "classnames";
 import convertMinutesToHours from "../utils/convertMinutesToHours";
 
-const InputHours = (props) => {
+interface InputHoursProps {
+  /**
+   * HTML input `name` attribute
+   */
+  name: string;
+  /**
+   * Localized error message. Setting this enables the error state styling.
+   */
+  errorMsg?: React.ReactNode;
+  /**
+   * Localized label for the entire fieldset
+   */
+  label: React.ReactNode;
+  /**
+   * Override the label's default text-bold class
+   */
+  labelClassName?: string;
+  /**
+   * Enable the smaller label variant
+   */
+  smallLabel?: boolean;
+  /**
+   * Localized example text
+   */
+  example?: string;
+  /**
+   * Localized hint text
+   */
+  hint?: React.ReactNode;
+  /**
+   * Localized text indicating this field is optional
+   */
+  optionalText?: React.ReactNode;
+  /**
+   * Localized label for the hours field
+   */
+  hoursLabel?: string;
+  /**
+   * Apply error styling to the day `input`
+   */
+  hoursInvalid?: boolean;
+  /**
+   * Localized label for the minutes field
+   */
+  minutesLabel?: string;
+  /**
+   * Apply error styling to the day `input`
+   */
+  minutesInvalid?: boolean;
+  /**
+   * Amount to increment minutes input. Must be an integer and must be a factor of 60.
+   */
+  minutesIncrement: number;
+  /**
+   * HTML input `onChange` attribute
+   */
+  onChange: (...args: any[]) => any;
+  /**
+   * Hours value represented in minutes. Must be a whole number.
+   */
+  value?: number | string;
+}
+
+const InputHours = (props: InputHoursProps) => {
   const formGroupClasses = classnames("usa-form-group", {
     "usa-form-group--error": !!props.errorMsg,
   });
@@ -122,69 +184,6 @@ const InputHours = (props) => {
       />
     </Fieldset>
   );
-};
-
-InputHours.propTypes = {
-  /**
-   * HTML input `name` attribute
-   */
-  name: PropTypes.string.isRequired,
-  /**
-   * Localized error message. Setting this enables the error state styling.
-   */
-  errorMsg: PropTypes.node,
-  /**
-   * Localized label for the entire fieldset
-   */
-  label: PropTypes.node.isRequired,
-  /**
-   * Override the label's default text-bold class
-   */
-  labelClassName: PropTypes.string,
-  /**
-   * Enable the smaller label variant
-   */
-  smallLabel: PropTypes.bool,
-  /**
-   * Localized example text
-   */
-  example: PropTypes.string,
-  /**
-   * Localized hint text
-   */
-  hint: PropTypes.node,
-  /**
-   * Localized text indicating this field is optional
-   */
-  optionalText: PropTypes.node,
-  /**
-   * Localized label for the hours field
-   */
-  hoursLabel: PropTypes.string,
-  /**
-   * Apply error styling to the day `input`
-   */
-  hoursInvalid: PropTypes.bool,
-  /**
-   * Localized label for the minutes field
-   */
-  minutesLabel: PropTypes.string,
-  /**
-   * Apply error styling to the day `input`
-   */
-  minutesInvalid: PropTypes.bool,
-  /**
-   * Amount to increment minutes input. Must be an integer and must be a factor of 60.
-   */
-  minutesIncrement: PropTypes.number.isRequired,
-  /**
-   * HTML input `onChange` attribute
-   */
-  onChange: PropTypes.func.isRequired,
-  /**
-   * Hours value represented in minutes. Must be a whole number.
-   */
-  value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
 };
 
 export default InputHours;

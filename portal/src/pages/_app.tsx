@@ -1,7 +1,7 @@
 import "../../styles/app.scss";
 
 import React, { useEffect, useState } from "react";
-
+import { AppProps } from "next/app";
 import { Auth } from "@aws-amplify/auth";
 import PageWrapper from "../components/PageWrapper";
 import PropTypes from "prop-types";
@@ -43,7 +43,7 @@ tracker.initialize();
  * @see https://nextjs.org/docs/advanced-features/custom-app
  * @returns {React.Component}
  */
-export const App = ({ Component, pageProps }) => {
+export const App = ({ Component, pageProps }: AppProps) => {
   const router = useRouter();
   useFeatureFlagsFromQueryEffect();
 

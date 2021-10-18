@@ -20,7 +20,12 @@ export const fields = [
   "claim.work_pattern.work_pattern_days[*].minutes",
 ];
 
-export const ScheduleFixed = (props) => {
+interface Props {
+  claim: BenefitsApplication;
+  appLogic: any;
+}
+
+export const ScheduleFixed = (props: Props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

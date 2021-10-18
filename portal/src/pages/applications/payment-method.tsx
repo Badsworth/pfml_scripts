@@ -35,7 +35,15 @@ export const fields = [
   `claim.${routingNumberField}`,
 ];
 
-export const PaymentMethod = (props) => {
+interface Props {
+  claim?: BenefitsApplication;
+  query?: {
+    claim_id?: string;
+  };
+  appLogic: any;
+}
+
+export const PaymentMethod = (props: Props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -108,6 +116,7 @@ export const PaymentMethod = (props) => {
             "payment_preference.bank_account_type",
             "payment_preference.routing_number",
           ]}
+          // @ts-expect-error ts-migrate(2322) FIXME: Type '(name: any) => any' is not assignable to typ... Remove this comment to see the full error message
           getField={getField}
           updateFields={updateFields}
           clearField={clearField}

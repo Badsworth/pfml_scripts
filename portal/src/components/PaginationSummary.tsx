@@ -1,8 +1,13 @@
-import PropTypes from "prop-types";
 import React from "react";
 import { useTranslation } from "../locales/i18n";
 
-const PaginationSummary = (props) => {
+interface PaginationSummaryProps {
+  pageOffset: number;
+  pageSize: number;
+  totalRecords: number;
+}
+
+const PaginationSummary = (props: PaginationSummaryProps) => {
   const { pageOffset, pageSize, totalRecords } = props;
   const { t } = useTranslation();
 
@@ -22,13 +27,6 @@ const PaginationSummary = (props) => {
       })}
     </p>
   );
-};
-
-PaginationSummary.propTypes = {
-  /** Current page number */
-  pageOffset: PropTypes.number.isRequired,
-  pageSize: PropTypes.number.isRequired,
-  totalRecords: PropTypes.number.isRequired,
 };
 
 export default PaginationSummary;

@@ -28,7 +28,14 @@ export const fields = [
   "claim.previous_leaves_same_reason[*].worked_per_week_minutes",
 ];
 
-export const PreviousLeavesSameReasonDetails = (props) => {
+interface PreviousLeavesSameReasonDetailsProps {
+  appLogic: any;
+  claim: BenefitsApplication;
+}
+
+export const PreviousLeavesSameReasonDetails = (
+  props: PreviousLeavesSameReasonDetailsProps
+) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
   const limit = 6;
@@ -141,7 +148,16 @@ PreviousLeavesSameReasonDetails.propTypes = {
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
-export const PreviousLeaveSameReasonDetailsCard = (props) => {
+interface PreviousLeaveSameReasonDetailsCardProps {
+  claim: BenefitsApplication;
+  entry: PreviousLeave;
+  getFunctionalInputProps: (...args: any[]) => any;
+  index: number;
+}
+
+export const PreviousLeaveSameReasonDetailsCard = (
+  props: PreviousLeaveSameReasonDetailsCardProps
+) => {
   const { t } = useTranslation();
   const {
     claim: { employer_fein },

@@ -14,7 +14,12 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_previous_leaves_other_reason"];
 
-export const PreviousLeavesOtherReason = (props) => {
+interface Props {
+  appLogic: any;
+  claim: BenefitsApplication;
+}
+
+export const PreviousLeavesOtherReason = (props: Props) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
 

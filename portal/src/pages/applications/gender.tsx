@@ -14,7 +14,12 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.gender"];
 
-export const Gender = (props) => {
+interface Props {
+  appLogic: any;
+  claim: BenefitsApplication;
+}
+
+export const Gender = (props: Props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

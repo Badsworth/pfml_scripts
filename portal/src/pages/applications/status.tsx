@@ -27,7 +27,33 @@ import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
 
-export const Status = ({ appLogic, query }) => {
+interface StatusProps {
+  appLogic: {
+    appErrors: any;
+    claims: {
+      claimDetail?: ClaimDetail;
+      isLoadingClaimDetail?: boolean;
+      loadClaimDetail: (...args: any[]) => any;
+    };
+    documents?: {
+      documents: DocumentCollection;
+      download: (...args: any[]) => any;
+      hasLoadedClaimDocuments: (...args: any[]) => any;
+      loadAll: (...args: any[]) => any;
+    };
+    portalFlow: {
+      goTo: (...args: any[]) => any;
+      getNextPageRoute: (...args: any[]) => any;
+    };
+  };
+  query: {
+    absence_case_id?: string;
+    claim_id?: string;
+    uploaded_document_type?: string;
+  };
+}
+
+export const Status = ({ appLogic, query }: StatusProps) => {
   const { t } = useTranslation();
   const {
     claims: { claimDetail, isLoadingClaimDetail, loadClaimDetail },
@@ -439,7 +465,11 @@ export const StatusTagMap = {
   Cancelled: "inactive",
 };
 
-export const LeaveDetails = ({ absenceDetails = {} }) => {
+interface LeaveDetailsProps {
+  absenceDetails?: any;
+}
+
+export const LeaveDetails = ({ absenceDetails = {} }: LeaveDetailsProps) => {
   const { t } = useTranslation();
   return map(absenceDetails, (absenceItem, absenceItemName) => (
     <div
@@ -516,6 +546,22 @@ LeaveDetails.propTypes = {
   absenceDetails: PropTypes.object,
 };
 
+interface TimelineProps {
+  absencePeriods: AbsencePeriod[];
+  applicationId?: string;
+  bondingAbsencePeriod?: {
+    reason_qualifier_one?: string;
+  };
+  employerFollowUpDate?: string;
+  docList: any[];
+  absenceCaseId: string;
+  appLogic?: {
+    portalFlow?: {
+      getNextPageRoute: (...args: any[]) => any;
+    };
+  };
+}
+
 export const Timeline = ({
   employerFollowUpDate = null,
   applicationId,
@@ -523,7 +569,7 @@ export const Timeline = ({
   absencePeriods,
   absenceCaseId,
   appLogic,
-}) => {
+}: TimelineProps) => {
   const { t } = useTranslation();
 
   const shouldRenderCertificationButton = (absencePeriodReason, docList) =>

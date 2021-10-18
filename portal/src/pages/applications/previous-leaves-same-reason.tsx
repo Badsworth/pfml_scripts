@@ -13,7 +13,12 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_previous_leaves_same_reason"];
 
-export const PreviousLeavesSameReason = (props) => {
+interface Props {
+  appLogic: any;
+  claim: BenefitsApplication;
+}
+
+export const PreviousLeavesSameReason = (props: Props) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
 

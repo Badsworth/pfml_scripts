@@ -22,10 +22,17 @@ import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
+interface Props {
+  claim?: BenefitsApplication;
+  query?: {
+    claim_id?: string;
+  };
+}
+
 /**
  * Success page, shown when an application is successfully submitted.
  */
-export const Success = (props) => {
+export const Success = (props: Props) => {
   const { claim } = props;
   const { t } = useTranslation();
   const iconProps = {
@@ -104,7 +111,6 @@ export const Success = (props) => {
         {!["leaveNotInFuture", "medicalPregnantFuture", "caringLeave"].includes(
           claimContext
         ) && (
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; autoWidt... Remove this comment to see the full error message
           <Alert state="warning" autoWidth>
             <Trans
               i18nKey="pages.claimsSuccess.proofRequired"

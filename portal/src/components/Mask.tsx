@@ -1,5 +1,4 @@
 import Icon from "./Icon";
-import PropTypes from "prop-types";
 import React from "react";
 import classnames from "classnames";
 
@@ -101,12 +100,17 @@ export function maskValue(value, mask) {
   return value;
 }
 
+interface MaskProps {
+  children: any;
+  mask?: "currency" | "fein" | "hours" | "phone" | "ssn" | "zip";
+}
+
 /**
  * Mask component that takes an input field and applies a specified mask.
  * Adapted from [CMS design system MaskedField](https://design.cms.gov/components/masked-field).
  * Source code: [Mask](https://github.com/CMSgov/design-system/blob/master/packages/design-system/src/components/TextField/Mask.jsx)
  */
-function Mask(props) {
+function Mask(props: MaskProps) {
   const field = React.Children.only(props.children);
 
   /**
@@ -195,16 +199,5 @@ function Mask(props) {
     </div>
   );
 }
-
-Mask.propTypes = {
-  /**
-   * Must contain InputText element.
-   */
-  children: PropTypes.node.isRequired,
-  /**
-   * The mask type to be applied.
-   */
-  mask: PropTypes.oneOf(["currency", "fein", "hours", "phone", "ssn", "zip"]),
-};
 
 export default Mask;

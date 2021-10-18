@@ -8,7 +8,18 @@ import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
 
-export const Success = (props) => {
+interface Props {
+  appLogic?: {
+    portalFlow: {
+      getNextPageRoute: (...args: any[]) => any;
+    };
+  };
+  query: {
+    absence_id: string;
+  };
+}
+
+export const Success = (props: Props) => {
   const { t } = useTranslation();
   const {
     appLogic,

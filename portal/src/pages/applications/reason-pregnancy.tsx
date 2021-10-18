@@ -12,7 +12,15 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.leave_details.pregnant_or_recent_birth"];
 
-export const ReasonPregnancy = (props) => {
+interface Props {
+  claim: BenefitsApplication;
+  appLogic: any;
+  query?: {
+    claim_id?: string;
+  };
+}
+
+export const ReasonPregnancy = (props: Props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

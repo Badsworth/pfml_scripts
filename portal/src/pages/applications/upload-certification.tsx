@@ -28,7 +28,24 @@ import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 import withClaimDocuments from "../../hoc/withClaimDocuments";
 
-export const UploadCertification = (props) => {
+interface Props {
+  appLogic: {
+    appErrors: any;
+    catchError: (...args: any[]) => any;
+    documents: any;
+    portalFlow: any;
+    clearErrors: (...args: any[]) => any;
+  };
+  claim?: BenefitsApplication;
+  documents?: BenefitsApplicationDocument[];
+  isLoadingDocuments?: boolean;
+  query?: {
+    claim_id?: string;
+    additionalDoc?: string;
+  };
+}
+
+export const UploadCertification = (props: Props) => {
   const { appLogic, claim, documents, isLoadingDocuments, query } = props;
   const { t } = useTranslation();
   const claimReason = claim.leave_details.reason;
@@ -160,7 +177,6 @@ export const UploadCertification = (props) => {
       <FileUploadDetails />
 
       {hasLoadingDocumentsError && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; noIc... Remove this comment to see the full error message
         <Alert className="margin-bottom-3" noIcon>
           <Trans
             i18nKey="pages.claimsUploadCertification.documentsLoadError"

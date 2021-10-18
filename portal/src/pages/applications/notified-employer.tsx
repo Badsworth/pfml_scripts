@@ -17,10 +17,18 @@ export const fields = [
   "claim.leave_details.employer_notification_date",
 ];
 
+interface Props {
+  claim?: BenefitsApplication;
+  appLogic: any;
+  query?: {
+    claim_id?: string;
+  };
+}
+
 /**
  * A form page to capture a user's attestation of having notified their employer.
  */
-export const NotifiedEmployer = (props) => {
+export const NotifiedEmployer = (props: Props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -64,6 +72,7 @@ export const NotifiedEmployer = (props) => {
         fieldNamesClearedWhenHidden={[
           "leave_details.employer_notification_date",
         ]}
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '(name: any) => any' is not assignable to typ... Remove this comment to see the full error message
         getField={getField}
         updateFields={updateFields}
         clearField={clearField}
@@ -82,7 +91,6 @@ export const NotifiedEmployer = (props) => {
         />
       </ConditionalContent>
       <ConditionalContent visible={employer_notified === false}>
-        {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; state: string; role: str... Remove this comment to see the full error message */}
         <Alert state="warning" role="alert" autoWidth>
           {t("pages.claimsNotifiedEmployer.mustNotifyEmployerWarning")}
         </Alert>

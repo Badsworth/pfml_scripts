@@ -2,7 +2,6 @@ import React, { useRef } from "react";
 import Fieldset from "./Fieldset";
 import FormLabel from "./FormLabel";
 import InputText from "./InputText";
-import PropTypes from "prop-types";
 import classnames from "classnames";
 
 /**
@@ -69,6 +68,73 @@ export function parseDateParts(value) {
   };
 }
 
+interface InputDateProps {
+  /**
+   * Localized label for the day field
+   */
+  dayLabel: React.ReactNode;
+  /**
+   * Apply error styling to the day `input`
+   */
+  dayInvalid?: boolean;
+  /**
+   * Localized error message. Setting this enables the error state styling.
+   */
+  errorMsg?: React.ReactNode;
+  /**
+   * Localized example text for the entire fieldset
+   */
+  example?: string;
+  /**
+   * Localized hint text for the entire fieldset
+   */
+  hint?: React.ReactNode;
+  /**
+   * Localized label for the entire fieldset
+   */
+  label: React.ReactNode;
+  /**
+   * Localized label for the month field
+   */
+  monthLabel: React.ReactNode;
+  /**
+   * Apply error styling to the month `input`
+   */
+  monthInvalid?: boolean;
+  /**
+   * A name for the full date string. This is used for generating the individual field names
+   * and is the name used as the onChange event's `target.name`
+   */
+  name: string;
+  /**
+   * Called when any of the fields' value changes. The event `target` will
+   * include the formatted ISO 8601 date as its `value`
+   */
+  onChange?: (...args: any[]) => any;
+  /**
+   * Localized text indicating this field is optional
+   */
+  optionalText?: React.ReactNode;
+  /**
+   * Enable the smaller label variant
+   */
+  smallLabel?: boolean;
+  /**
+   * The full ISO 8601 date (`YYYY-MM-DD`). If a date part is not yet set, leave
+   * it blank (i.e `2019--10`). Use this prop in combination with `onChange`
+   * for a controlled component.
+   */
+  value?: string;
+  /**
+   * Apply error styling to the year `input`
+   */
+  yearInvalid?: boolean;
+  /**
+   * Localized label for the year `input` field
+   */
+  yearLabel: React.ReactNode;
+}
+
 /**
  * Date text fields (month, day, year). Also renders supporting UI elements like label,
  * hint text, and error message. The expected and returned value of this component is an
@@ -76,7 +142,7 @@ export function parseDateParts(value) {
  *
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/form-controls)
  */
-function InputDate(props) {
+function InputDate(props: InputDateProps) {
   const hasError = !!props.errorMsg;
   const values = parseDateParts(props.value);
   const inputClassNames = {
@@ -226,72 +292,5 @@ function InputDate(props) {
     </Fieldset>
   );
 }
-
-InputDate.propTypes = {
-  /**
-   * Localized label for the day field
-   */
-  dayLabel: PropTypes.node.isRequired,
-  /**
-   * Apply error styling to the day `input`
-   */
-  dayInvalid: PropTypes.bool,
-  /**
-   * Localized error message. Setting this enables the error state styling.
-   */
-  errorMsg: PropTypes.node,
-  /**
-   * Localized example text for the entire fieldset
-   */
-  example: PropTypes.string,
-  /**
-   * Localized hint text for the entire fieldset
-   */
-  hint: PropTypes.node,
-  /**
-   * Localized label for the entire fieldset
-   */
-  label: PropTypes.node.isRequired,
-  /**
-   * Localized label for the month field
-   */
-  monthLabel: PropTypes.node.isRequired,
-  /**
-   * Apply error styling to the month `input`
-   */
-  monthInvalid: PropTypes.bool,
-  /**
-   * A name for the full date string. This is used for generating the individual field names
-   * and is the name used as the onChange event's `target.name`
-   */
-  name: PropTypes.string.isRequired,
-  /**
-   * Called when any of the fields' value changes. The event `target` will
-   * include the formatted ISO 8601 date as its `value`
-   */
-  onChange: PropTypes.func,
-  /**
-   * Localized text indicating this field is optional
-   */
-  optionalText: PropTypes.node,
-  /**
-   * Enable the smaller label variant
-   */
-  smallLabel: PropTypes.bool,
-  /**
-   * The full ISO 8601 date (`YYYY-MM-DD`). If a date part is not yet set, leave
-   * it blank (i.e `2019--10`). Use this prop in combination with `onChange`
-   * for a controlled component.
-   */
-  value: PropTypes.string,
-  /**
-   * Apply error styling to the year `input`
-   */
-  yearInvalid: PropTypes.bool,
-  /**
-   * Localized label for the year `input` field
-   */
-  yearLabel: PropTypes.node.isRequired,
-};
 
 export default InputDate;

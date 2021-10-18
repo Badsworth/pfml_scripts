@@ -1,9 +1,14 @@
 import Heading from "./Heading";
-import PropTypes from "prop-types";
 import React from "react";
 import classnames from "classnames";
 
-const StatusRow = ({ className = "", children, label }) => {
+interface StatusRowProps {
+  className?: string;
+  children: React.ReactNode;
+  label: React.ReactNode;
+}
+
+const StatusRow = ({ className = "", children, label }: StatusRowProps) => {
   const classes = classnames(`margin-bottom-2 padding-bottom-2`, className);
 
   return (
@@ -14,13 +19,6 @@ const StatusRow = ({ className = "", children, label }) => {
       {children}
     </div>
   );
-};
-
-StatusRow.propTypes = {
-  /** Additional classNames to add */
-  className: PropTypes.string,
-  children: PropTypes.node.isRequired,
-  label: PropTypes.node.isRequired,
 };
 
 export default StatusRow;

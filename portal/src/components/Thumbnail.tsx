@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import PropTypes from "prop-types";
 
 /**
  * Create a URL for an image preview of image files and then trigger the component to render.
@@ -25,10 +24,14 @@ const loadImagePreview = (file, setPreviewLoading, setImageSrc) => {
   }
 };
 
+interface ThumbnailProps {
+  file?: any;
+}
+
 /**
  * Displays a thumbnail preview for a file input field
  */
-const Thumbnail = (props) => {
+const Thumbnail = (props: ThumbnailProps) => {
   const { file } = props;
   const [previewLoading, setPreviewLoading] = useState(true);
   const [imageSrc, setImageSrc] = useState();
@@ -73,11 +76,6 @@ const Thumbnail = (props) => {
       )}
     </div>
   );
-};
-
-Thumbnail.propTypes = {
-  /** File we'll display a thumbnail for */
-  file: PropTypes.object,
 };
 
 export default Thumbnail;

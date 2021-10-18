@@ -21,7 +21,13 @@ export const fields = [
   `claim.${caringLeaveMetadataKey}.relationship_to_caregiver`,
 ];
 
-export const FamilyMemberRelationship = (props) => {
+interface Props {
+  appLogic: any;
+  claim: BenefitsApplication;
+  query: any;
+}
+
+export const FamilyMemberRelationship = (props: Props) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
 

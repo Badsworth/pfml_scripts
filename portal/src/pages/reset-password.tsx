@@ -16,7 +16,11 @@ import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
-export const ResetPassword = (props) => {
+interface Props {
+  appLogic: any;
+}
+
+export const ResetPassword = (props: Props) => {
   const { appLogic } = props;
   const { appErrors, auth } = appLogic;
   const { t } = useTranslation();
@@ -59,10 +63,10 @@ export const ResetPassword = (props) => {
         href={routes.auth.login}
       />
       {codeResent && appErrors.isEmpty && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; className: string; headi... Remove this comment to see the full error message
         <Alert
           className="margin-bottom-3 margin-top-0"
           heading={t("pages.authResetPassword.codeResentHeading")}
+          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; head... Remove this comment to see the full error message
           name="code-resent-message"
           role="alert"
           state="warning"

@@ -30,7 +30,26 @@ import { useTranslation } from "../../locales/i18n";
 import withClaims from "../../hoc/withClaims";
 import withUser from "../../hoc/withUser";
 
-export const Dashboard = (props) => {
+interface DashboardProps {
+  appLogic: {
+    portalFlow: {
+      getNextPageRoute: (...args: any[]) => any;
+      pathname: string;
+      updateQuery: (...args: any[]) => any;
+    };
+  };
+  query: {
+    claim_status?: string;
+    employer_id?: string;
+    order_by?: "absence_status" | "created_at" | "employee";
+    order_direction?: "ascending" | "descending";
+    page_offset?: string;
+    search?: string;
+  };
+  user: User;
+}
+
+export const Dashboard = (props: DashboardProps) => {
   const showReviewByStatus = isFeatureEnabled("employerShowReviewByStatus");
   const { t } = useTranslation();
   const introElementRef = useRef(null);
@@ -85,7 +104,6 @@ export const Dashboard = (props) => {
 
       <div className="measure-6">
         {props.user.hasVerifiableEmployer && (
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; heading:... Remove this comment to see the full error message
           <Alert
             state="warning"
             heading={t("pages.employersDashboard.verificationTitle")}
@@ -159,12 +177,14 @@ export const Dashboard = (props) => {
       />
       <PaginatedClaimsTableWithClaims
         appLogic={props.appLogic}
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ appLogic: any; user: any; updatePageQuery:... Remove this comment to see the full error message
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ appLogic: { portalFlow: { getNextPageRoute... Remove this comment to see the full error message
         user={props.user}
         updatePageQuery={updatePageQuery}
         sort={
           <SortDropdown
+            // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type '"absence_... Remove this comment to see the full error message
             order_by={apiParams.order_by}
+            // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type '"ascendin... Remove this comment to see the full error message
             order_direction={apiParams.order_direction}
             updatePageQuery={updatePageQuery}
           />
@@ -193,7 +213,20 @@ Dashboard.propTypes = {
   user: PropTypes.instanceOf(User).isRequired,
 };
 
-const PaginatedClaimsTable = (props) => {
+interface PaginatedClaimsTableProps {
+  appLogic?: any;
+  claims?: ClaimCollection;
+  paginationMeta?: PaginationMeta;
+  updatePageQuery: (...args: any[]) => any;
+  sort: React.ReactNode;
+  user: User;
+  query?: {
+    order_by?: "absence_status" | "created_at" | "employee";
+    order_direction?: "ascending" | "descending";
+  };
+}
+
+const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
   const { paginationMeta, updatePageQuery, user } = props;
   const { t } = useTranslation();
 
@@ -312,11 +345,18 @@ PaginatedClaimsTable.propTypes = {
   }),
 };
 
+interface ClaimTableRowsProps {
+  appLogic?: any;
+  claims?: ClaimCollection;
+  tableColumnKeys: string[];
+  user: User;
+}
+
 /**
  * Renders the <tr> elements for each claim, or a message indicating
  * no claim data exists
  */
-const ClaimTableRows = (props) => {
+const ClaimTableRows = (props: ClaimTableRowsProps) => {
   const { appLogic, claims, tableColumnKeys, user } = props;
   const { t } = useTranslation();
 
@@ -351,7 +391,6 @@ const ClaimTableRows = (props) => {
 
     switch (columnKey) {
       case "created_at":
-        // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
         return formatDateRange(get(claim, columnKey));
       case "fineos_absence_id":
         return isEmployerRegisteredInFineos ? (
@@ -386,29 +425,39 @@ const ClaimTableRows = (props) => {
     }
   };
 
-  return claims.items.map((claim) => (
-    <tr key={claim.fineos_absence_id}>
-      <th
-        scope="row"
-        data-label={t("pages.employersDashboard.tableColHeading", {
-          context: tableColumnKeys[0],
-        })}
-        data-test={tableColumnKeys[0]}
-      >
-        {getValueForColumn(claim, tableColumnKeys[0])}
-      </th>
-      {tableColumnKeys.slice(1).map((columnKey) => (
-        <td
-          key={columnKey}
-          data-label={t("pages.employersDashboard.tableColHeading", {
-            context: columnKey,
-          })}
-        >
-          {getValueForColumn(claim, columnKey)}
-        </td>
-      ))}
-    </tr>
-  ));
+  const renderClaimItems = () => {
+    const claimItemsJSX = [];
+
+    claims.items.forEach((claim) => {
+      claimItemsJSX.push(
+        <tr key={claim.fineos_absence_id}>
+          <th
+            scope="row"
+            data-label={t("pages.employersDashboard.tableColHeading", {
+              context: tableColumnKeys[0],
+            })}
+            data-test={tableColumnKeys[0]}
+          >
+            {getValueForColumn(claim, tableColumnKeys[0])}
+          </th>
+          {tableColumnKeys.slice(1).map((columnKey) => (
+            <td
+              key={columnKey}
+              data-label={t("pages.employersDashboard.tableColHeading", {
+                context: columnKey,
+              })}
+            >
+              {getValueForColumn(claim, columnKey)}
+            </td>
+          ))}
+        </tr>
+      );
+    });
+
+    return claimItemsJSX;
+  };
+
+  return <React.Fragment>{renderClaimItems()}</React.Fragment>;
 };
 
 ClaimTableRows.propTypes = {
@@ -422,7 +471,6 @@ const DashboardInfoAlert = () => {
   const { t } = useTranslation();
 
   return (
-    // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; heading:... Remove this comment to see the full error message
     <Alert state="info" heading={t("pages.employersDashboard.betaHeader")}>
       <p>
         <Trans
@@ -442,7 +490,16 @@ const DashboardInfoAlert = () => {
   );
 };
 
-const Filters = (props) => {
+interface FiltersProps {
+  params: {
+    claim_status?: string;
+    employer_id?: string;
+  };
+  updatePageQuery: (...args: any[]) => any;
+  user: User;
+}
+
+const Filters = (props: FiltersProps) => {
   const { updatePageQuery, user } = props;
   const { t } = useTranslation();
 
@@ -567,12 +624,14 @@ const Filters = (props) => {
     : // API filtering uses this as a catchall for several pending-like statuses
       ["Pending"];
 
+  const expandAria = showFilters ? "true" : "false";
+
   return (
     <React.Fragment>
       <div className="padding-bottom-3 bg-base-lightest padding-x-3">
         <Button
           aria-controls={filtersContainerId}
-          aria-expanded={showFilters.toString()}
+          aria-expanded={expandAria}
           onClick={handleFilterToggleClick}
           variation="outline"
         >
@@ -667,6 +726,7 @@ const Filters = (props) => {
                 onClick={() =>
                   handleRemoveFilterClick(
                     "claim_status",
+                    // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'string[]' is not assignable to p... Remove this comment to see the full error message
                     activeFilters.claim_status.filter((s) => s !== status)
                   )
                 }
@@ -691,7 +751,12 @@ Filters.propTypes = {
   user: PropTypes.instanceOf(User).isRequired,
 };
 
-const FilterMenuButton = (props) => {
+interface FilterMenuButtonProps {
+  children: React.ReactNode;
+  onClick: (...args: any[]) => any;
+}
+
+const FilterMenuButton = (props: FilterMenuButtonProps) => {
   const { t } = useTranslation();
 
   return (
@@ -720,7 +785,12 @@ FilterMenuButton.propTypes = {
   onClick: PropTypes.func.isRequired,
 };
 
-const Search = (props) => {
+interface SearchProps {
+  initialValue?: string;
+  updatePageQuery: (...args: any[]) => any;
+}
+
+const Search = (props: SearchProps) => {
   const { initialValue, updatePageQuery } = props;
   const { t } = useTranslation();
 
@@ -773,7 +843,13 @@ Search.propTypes = {
   updatePageQuery: PropTypes.func.isRequired,
 };
 
-const SortDropdown = (props) => {
+interface SortDropdownProps {
+  order_by?: "absence_status" | "created_at" | "employee";
+  order_direction?: "ascending" | "descending";
+  updatePageQuery: (...args: any[]) => any;
+}
+
+const SortDropdown = (props: SortDropdownProps) => {
   const { order_by, order_direction, updatePageQuery } = props;
   const choices = new Map([
     ["newest", "created_at,descending"],

@@ -32,7 +32,26 @@ import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 import withClaimDocuments from "../../hoc/withClaimDocuments";
 
-export const Checklist = (props) => {
+interface Props {
+  appLogic: {
+    appErrors: any;
+    benefitsApplications: {
+      warningsLists: any;
+    };
+    portalFlow: {
+      getNextPageRoute: (...args: any[]) => any;
+    };
+  };
+  claim: BenefitsApplication;
+  documents?: BenefitsApplicationDocument[];
+  isLoadingDocuments?: boolean;
+  query?: {
+    "part-one-submitted"?: string;
+    "payment-pref-submitted"?: string;
+  };
+}
+
+export const Checklist = (props: Props) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments, query } = props;
   const { appErrors } = appLogic;
@@ -330,10 +349,10 @@ export const Checklist = (props) => {
   return (
     <div className="measure-6">
       {partOneSubmitted && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; head... Remove this comment to see the full error message
         <Alert
           className="margin-bottom-3"
           heading={t("pages.claimsChecklist.partOneSubmittedHeading")}
+          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; head... Remove this comment to see the full error message
           name="part-one-submitted-message"
           state="success"
         >
@@ -348,10 +367,10 @@ export const Checklist = (props) => {
         </Alert>
       )}
       {paymentPrefSubmitted && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; className: string; headi... Remove this comment to see the full error message
         <Alert
           className="margin-bottom-3"
           heading={t("pages.claimsChecklist.partTwoSubmittedHeading")}
+          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: TFunctionResult; className: stri... Remove this comment to see the full error message
           name="part-two-submitted-message"
           state="success"
         >
@@ -383,7 +402,6 @@ export const Checklist = (props) => {
           {...sharedStepListProps}
         >
           {stepGroup.number === 3 && hasLoadingDocumentsError ? (
-            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; noIc... Remove this comment to see the full error message
             <Alert className="margin-bottom-3" noIcon>
               <Trans
                 i18nKey="pages.claimsChecklist.documentsLoadError"

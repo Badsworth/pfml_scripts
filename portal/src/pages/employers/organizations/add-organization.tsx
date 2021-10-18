@@ -12,7 +12,16 @@ import useThrottledHandler from "../../../hooks/useThrottledHandler";
 import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
 
-export const AddOrganization = (props) => {
+interface Props {
+  appLogic: {
+    appErrors?: AppErrorInfoCollection;
+    employers: {
+      addEmployer: (...args: any[]) => any;
+    };
+  };
+}
+
+export const AddOrganization = (props: Props) => {
   const { appLogic } = props;
   const { t } = useTranslation();
 

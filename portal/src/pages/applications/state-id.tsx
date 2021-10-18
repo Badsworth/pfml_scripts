@@ -12,7 +12,15 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_state_id", "claim.mass_id"];
 
-export const StateId = (props) => {
+interface Props {
+  appLogic: any;
+  claim: any;
+  query?: {
+    claim_id?: string;
+  };
+}
+
+export const StateId = (props: Props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -62,6 +70,7 @@ export const StateId = (props) => {
 
       <ConditionalContent
         fieldNamesClearedWhenHidden={["mass_id"]}
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '(name: any) => any' is not assignable to typ... Remove this comment to see the full error message
         getField={getField}
         clearField={clearField}
         updateFields={updateFields}

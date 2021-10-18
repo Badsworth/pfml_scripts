@@ -10,7 +10,13 @@ import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
-export const ConcurrentLeavesIntro = (props) => {
+interface Props {
+  appLogic: any;
+  claim: BenefitsApplication;
+  query: any;
+}
+
+export const ConcurrentLeavesIntro = (props: Props) => {
   const { t } = useTranslation();
   const { appLogic, claim, query } = props;
 

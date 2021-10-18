@@ -11,10 +11,15 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.tax_identifier"];
 
+interface Props {
+  claim: BenefitsApplication;
+  appLogic: any;
+}
+
 /**
  * A form page to capture the worker's SSN or ITIN.
  */
-export const Ssn = (props) => {
+export const Ssn = (props: Props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

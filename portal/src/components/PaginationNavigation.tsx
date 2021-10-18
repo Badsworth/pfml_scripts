@@ -1,6 +1,5 @@
 import { Machine } from "xstate";
 import Pagination from "@massds/mayflower-react/dist/Pagination";
-import PropTypes from "prop-types";
 import React from "react";
 import { times } from "lodash";
 import { useTranslation } from "../locales/i18n";
@@ -149,10 +148,19 @@ export const getTruncatedPageRange = (pageOffset, totalPages) => {
   }
 };
 
+interface PaginationNavigationProps {
+  /** The current page's number */
+  pageOffset: number;
+  /** Total pages available. Also can be read as "The last page number" */
+  totalPages: number;
+  /** Page button click handler. Gets the requested page number as a param */
+  onClick: (arg: number) => void;
+}
+
 /**
  * Next/previous navigation and page number buttons
  */
-const PaginationNavigation = (props) => {
+const PaginationNavigation = (props: PaginationNavigationProps) => {
   const { pageOffset, totalPages, onClick } = props;
   const { t } = useTranslation();
   const isFirstPage = pageOffset === 1;
@@ -208,15 +216,6 @@ const PaginationNavigation = (props) => {
       }}
     />
   );
-};
-
-PaginationNavigation.propTypes = {
-  /** The current page's number */
-  pageOffset: PropTypes.number.isRequired,
-  /** Total pages available. Also can be read as "The last page number" */
-  totalPages: PropTypes.number.isRequired,
-  /** Page button click handler. Gets the requested page number as a param */
-  onClick: PropTypes.func.isRequired,
 };
 
 export default PaginationNavigation;

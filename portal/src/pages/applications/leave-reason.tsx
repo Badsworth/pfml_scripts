@@ -23,7 +23,12 @@ export const fields = [
   "claim.leave_details.reason_qualifier",
 ];
 
-export const LeaveReason = (props) => {
+interface Props {
+  claim?: BenefitsApplication;
+  appLogic: any;
+}
+
+export const LeaveReason = (props: Props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -111,7 +116,6 @@ export const LeaveReason = (props) => {
       title={t("pages.claimsLeaveReason.title")}
       onSave={handleSave}
     >
-      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; neutral:... Remove this comment to see the full error message */}
       <Alert state="info" neutral>
         <Trans
           i18nKey="pages.claimsLeaveReason.alertBody"
@@ -149,7 +153,6 @@ export const LeaveReason = (props) => {
           claim.leave_details.reason !== reason
         }
       >
-        {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; heading:... Remove this comment to see the full error message */}
         <Alert
           state="warning"
           heading={t("pages.claimsLeaveReason.leaveReasonChangedAlertTitle")}
@@ -160,6 +163,7 @@ export const LeaveReason = (props) => {
 
       <ConditionalContent
         fieldNamesClearedWhenHidden={["leave_details.reason_qualifier"]}
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '(name: any) => any' is not assignable to typ... Remove this comment to see the full error message
         getField={getField}
         clearField={clearField}
         updateFields={updateFields}

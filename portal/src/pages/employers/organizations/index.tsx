@@ -12,7 +12,21 @@ import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
 
-export const Index = (props) => {
+interface Props {
+  appLogic: {
+    portalFlow: {
+      getNextPageRoute: (...args: any[]) => any;
+    };
+    users: {
+      user: User;
+    };
+  };
+  query?: {
+    account_converted?: string;
+  };
+}
+
+export const Index = (props: Props) => {
   const { appLogic, query } = props;
   const { t } = useTranslation();
   const { hasVerifiableEmployer, user_leave_administrators } =
@@ -27,7 +41,6 @@ export const Index = (props) => {
       />
       <Title>{t("pages.employersOrganizations.title")}</Title>
       {accountConverted && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; heading: string; state: ... Remove this comment to see the full error message
         <Alert
           heading={t("pages.employersOrganizations.convertHeading")}
           state="success"
@@ -36,7 +49,6 @@ export const Index = (props) => {
         </Alert>
       )}
       {hasVerifiableEmployer && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; heading:... Remove this comment to see the full error message
         <Alert
           state="warning"
           heading={t("pages.employersOrganizations.verificationTitle")}
