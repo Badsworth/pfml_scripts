@@ -1052,7 +1052,7 @@ export function addOrganization(fein: string, withholding: number): void {
       withholding.toString()
     );
     cy.get('button[type="submit"]').click();
-    cy.contains("h1", "Thanks for verifying your paid leave contributions");
+    cy.contains("h1", "Thanks for verifying your paid leave contributions", {timeout: 30000});
     cy.contains("p", "Your account has been verified");
     cy.contains("button", "Continue").click();
     cy.get('a[href^="/employers/organizations/verify-contributions"]').should(
