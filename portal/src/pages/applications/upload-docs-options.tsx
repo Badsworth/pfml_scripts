@@ -24,7 +24,7 @@ export const UploadType = {
 export const UploadDocsOptions = (props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState();
   const upload_docs_options = formState.upload_docs_options;
 

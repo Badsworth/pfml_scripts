@@ -28,7 +28,6 @@ export const VerifyContributions = (props) => {
     return employer.employer_id === query.employer_id;
   });
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState({
     withholdingAmount: 0,
   });

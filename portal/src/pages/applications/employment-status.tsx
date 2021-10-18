@@ -33,7 +33,6 @@ export const EmploymentStatus = (props) => {
     initialFormState.employment_status = EmploymentStatusEnum.employed;
   }
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, getField, updateFields, clearField } =
     useFormState(initialFormState);
   const employment_status = get(formState, "employment_status");

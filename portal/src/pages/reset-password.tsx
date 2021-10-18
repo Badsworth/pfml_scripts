@@ -28,7 +28,6 @@ export const ResetPassword = (props) => {
   // which we need for resetting their password
   const showEmailField = !cachedEmail;
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState({
     code: "",
     password: "",

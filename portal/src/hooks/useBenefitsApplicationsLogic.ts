@@ -1,12 +1,25 @@
-import { NotFoundError, ValidationError } from "../errors";
+import { Issue, NotFoundError, ValidationError } from "../errors";
+import BenefitsApplication from "../models/BenefitsApplication";
 import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
 import BenefitsApplicationsApi from "../api/BenefitsApplicationsApi";
+import PaymentPreference from "../models/PaymentPreference";
+import User from "../models/User";
 import getRelevantIssues from "../utils/getRelevantIssues";
 import routes from "../routes";
+import useAppErrorsLogic from "./useAppErrorsLogic";
 import useCollectionState from "./useCollectionState";
+import usePortalFlow from "./usePortalFlow";
 import { useState } from "react";
 
-const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
+const useBenefitsApplicationsLogic = ({
+  appErrorsLogic,
+  portalFlow,
+  user,
+}: {
+  appErrorsLogic: ReturnType<typeof useAppErrorsLogic>;
+  portalFlow: ReturnType<typeof usePortalFlow>;
+  user: User;
+}) => {
   // State representing the collection of applications for the current user.
   // Initialize to empty collection, but will eventually store the applications
   // state as API calls are made to fetch the user's applications and/or create
@@ -31,11 +44,8 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
   /**
    * Store warnings for a specific claim
-   * @param {string} application_id
-   * @param {Array} warnings
-   * @private
    */
-  const setClaimWarnings = (application_id, warnings) => {
+  const setClaimWarnings = (application_id: string, warnings: Issue[]) => {
     setWarningsLists((prevWarningsList) => {
       return {
         ...prevWarningsList,
@@ -47,11 +57,8 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   /**
    * Check if a claim and its warnings have been loaded. This helps
    * our withBenefitsApplication higher-order component accurately display a loading state.
-   *
-   * @param {string} application_id
-   * @returns {boolean}
    */
-  const hasLoadedBenefitsApplicationAndWarnings = (application_id) => {
+  const hasLoadedBenefitsApplicationAndWarnings = (application_id: string) => {
     // !! so we always return a Boolean
     return !!(
       warningsLists.hasOwnProperty(application_id) &&
@@ -61,9 +68,8 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
   /**
    * Load a single claim
-   * @param {string} application_id - ID of claim to load
    */
-  const load = async (application_id) => {
+  const load = async (application_id: string) => {
     if (!user) throw new Error("Cannot load claim before user is loaded");
 
     // Skip API request if we already have the claim AND its validation warnings.
@@ -121,11 +127,13 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
   /**
    * Update the claim in the API and set application errors if any
-   * @param {string} application_id - application id for claim
-   * @param {object} patchData - subset of claim data that will be updated, and
+   * @param patchData - subset of claim data that will be updated, and
    * used as the list of fields to filter validation warnings by
    */
-  const update = async (application_id, patchData) => {
+  const update = async (
+    application_id: string,
+    patchData: Partial<BenefitsApplication>
+  ) => {
     if (!user) return;
     appErrorsLogic.clearErrors();
 
@@ -166,9 +174,8 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
   /**
    * Complete the claim in the API
-   * @param {string} application_id
    */
-  const complete = async (application_id) => {
+  const complete = async (application_id: string) => {
     if (!user) return;
     appErrorsLogic.clearErrors();
 
@@ -186,7 +193,6 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
   /**
    * Create the claim in the API. Handles errors and routing.
-   * @returns {Promise}
    */
   const create = async () => {
     if (!user) return;
@@ -207,9 +213,8 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
 
   /**
    * Submit the claim in the API and set application errors if any
-   * @param {string} application_id - application id for claim
    */
-  const submit = async (application_id) => {
+  const submit = async (application_id: string) => {
     if (!user) return;
     appErrorsLogic.clearErrors();
 
@@ -230,8 +235,8 @@ const useBenefitsApplicationsLogic = ({ appErrorsLogic, portalFlow, user }) => {
   };
 
   const submitPaymentPreference = async (
-    application_id,
-    paymentPreferenceData
+    application_id: string,
+    paymentPreferenceData: Partial<PaymentPreference>
   ) => {
     if (!user) return;
     appErrorsLogic.clearErrors();

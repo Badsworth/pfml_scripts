@@ -1,14 +1,19 @@
+import { Issue, ValidationError } from "../errors";
 import Compressor from "compressorjs";
 import TempFile from "../models/TempFile";
 import TempFileCollection from "../models/TempFileCollection";
-import { ValidationError } from "../errors";
 import { snakeCase } from "lodash";
 import { t } from "../locales/i18n";
 import tracker from "../services/tracker";
+import useAppErrorsLogic from "./useAppErrorsLogic";
 import useCollectionState from "./useCollectionState";
 
 // Only image and pdf files are allowed to be uploaded
-const defaultAllowedFileTypes = ["image/png", "image/jpeg", "application/pdf"];
+const defaultAllowedFileTypes = [
+  "image/png",
+  "image/jpeg",
+  "application/pdf",
+] as const;
 
 // Max file size in bytes
 const defaultMaximumFileSize = 4500000;
@@ -18,15 +23,13 @@ const disallowedReasons = {
   size: "size",
   sizeAndType: "sizeAndType",
   type: "type",
-};
+} as const;
 
 /**
  * Compress an image which size is greater than maximum file size and  returns a promise
- * @param {File} file
- * @param {number} maximumFileSize - Size at which compression will be attempted
- * @returns {Promise<File>}
+ * @param maximumFileSize - Size at which compression will be attempted
  */
-function optimizeFileSize(file, maximumFileSize) {
+function optimizeFileSize(file: Blob, maximumFileSize: number): Promise<Blob> {
   return new Promise((resolve) => {
     if (
       file.size <= maximumFileSize ||
@@ -39,7 +42,8 @@ function optimizeFileSize(file, maximumFileSize) {
       quality: 0.6,
       checkOrientation: false, // Improves compression speed for larger files
       convertSize: maximumFileSize,
-      success: (compressedBlob) => {
+      success: (compressedBlob: Blob) => {
+        // TODO (PORTAL-25): Stop referencing/setting the name
         // @ts-expect-error ts-migrate(2339) FIXME: Property 'name' does not exist on type 'Blob'.
         const fileName = compressedBlob.name;
         const fileNameWithPrefix = "Compressed_" + fileName;
@@ -48,6 +52,7 @@ function optimizeFileSize(file, maximumFileSize) {
           originalSize: file.size,
           compressedSize: compressedBlob.size,
         });
+        // TODO (PORTAL-25): Stop referencing/setting the name
         // @ts-expect-error ts-migrate(2339) FIXME: Property 'name' does not exist on type 'Blob'.
         compressedBlob.name = fileNameWithPrefix;
         resolve(compressedBlob);
@@ -71,11 +76,9 @@ function optimizeFileSize(file, maximumFileSize) {
 
 /**
  * Attempt to reduce the size of files
- * @param {File[]} files
- * @param {number} maximumFileSize - Size at which compression will be attempted
- * @returns {Promise<File[]>}
+ * @param maximumFileSize - Size at which compression will be attempted
  */
-function optimizeFiles(files, maximumFileSize) {
+function optimizeFiles(files: Blob[], maximumFileSize: number) {
   const compressPromises = files.map((file) =>
     optimizeFileSize(file, maximumFileSize)
   );
@@ -86,14 +89,18 @@ function optimizeFiles(files, maximumFileSize) {
 /**
  * Filter a list of files into sets of allowed files and disallowed files based on file types and sizes.
  * Track disallowed files with a ValidationError event.
- * @param {File[]} files Files to filter
- * @param {object} options
- * @param {string[]} options.allowedFileTypes
- * @param {number} options.maximumFileSize
- * @returns {object} { allowedFiles: File[], issues:Issue[] }
  * @example const { allowedFiles,issues }  = filterAllowedFiles(files);
  */
-function filterAllowedFiles(files, { allowedFileTypes, maximumFileSize }) {
+function filterAllowedFiles(
+  files: Blob[],
+  {
+    allowedFileTypes,
+    maximumFileSize,
+  }: {
+    allowedFileTypes: readonly string[];
+    maximumFileSize: number;
+  }
+) {
   const allowedFiles = [];
   const issues = [];
 
@@ -118,7 +125,7 @@ function filterAllowedFiles(files, { allowedFileTypes, maximumFileSize }) {
 
     if (disallowedReason) {
       issues.push(getIssueForDisallowedFile(file, disallowedReason));
-      // TODO (CP-1771): Remove tracking once error handling supports additional event data
+      // TODO (PORTAL-375): Remove tracking once error handling supports additional event data
       tracker.trackEvent("FileValidationError", {
         ...fileTrackingData,
         issueType: `invalid_${snakeCase(disallowedReason)}`,
@@ -138,17 +145,19 @@ function filterAllowedFiles(files, { allowedFileTypes, maximumFileSize }) {
 
 /**
  * Return ValidationError issues for disallowed file
- * @param {File} disallowedFile - file that is not allowed
- * @param {string} disallowedReason - reason file is not allowed (size, sizeAndType, or type)
- * @returns {Issue}
+ * @param disallowedReason - reason file is not allowed (size, sizeAndType, or type)
  */
-function getIssueForDisallowedFile(disallowedFile, disallowedReason) {
+function getIssueForDisallowedFile(
+  disallowedFile: Blob,
+  disallowedReason: string
+): Issue {
   const i18nKey = `errors.invalidFile_${disallowedReason}`;
 
   return {
     message: t(i18nKey, {
       context: disallowedReason,
-      disallowedFileNames: disallowedFile.name,
+      disallowedFileNames:
+        disallowedFile instanceof File ? disallowedFile.name : "",
     }),
   };
 }
@@ -158,6 +167,11 @@ const useFilesLogic = ({
   catchError,
   clearErrors,
   maximumFileSize = defaultMaximumFileSize,
+}: {
+  allowedFileTypes?: readonly string[];
+  catchError: ReturnType<typeof useAppErrorsLogic>["catchError"];
+  clearErrors: ReturnType<typeof useAppErrorsLogic>["clearErrors"];
+  maximumFileSize?: number;
 }) => {
   const {
     collection: files,
@@ -167,9 +181,8 @@ const useFilesLogic = ({
 
   /**
    * Async function handles file optimization and filter logic
-   * @param {File[]} files
    */
-  const processFiles = async (files) => {
+  const processFiles = async (files: Blob[]) => {
     clearErrors();
     const compressedFiles = await optimizeFiles(files, maximumFileSize);
 

@@ -17,7 +17,7 @@ export const fields = ["claim.has_previous_leaves_other_reason"];
 export const PreviousLeavesOtherReason = (props) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,

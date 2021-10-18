@@ -73,7 +73,6 @@ export const Review = (props) => {
     (leave, index) => new PreviousLeave({ ...leave, previous_leave_id: index })
   );
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { clearField, getField, formState, updateFields } = useFormState({
     // base fields
     concurrentLeave: claim.concurrent_leave,

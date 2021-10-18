@@ -38,7 +38,6 @@ export const VerifyAccount = (props) => {
     return null;
   };
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState({
     code: "",
     username: createAccountUsername,

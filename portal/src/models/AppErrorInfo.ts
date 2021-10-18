@@ -12,7 +12,7 @@ import { uniqueId } from "lodash";
  */
 class AppErrorInfo {
   key: string = uniqueId("AppErrorInfo");
-  message: string | null = null;
+  message: string | JSX.Element | null = null;
   name: string | null = null;
   field: string | null = null;
   meta: Record<string, unknown> | null = null;

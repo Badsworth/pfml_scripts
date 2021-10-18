@@ -73,7 +73,6 @@ describe("usePiiHandlers", () => {
       handleFocus(event);
       expect(props.onChange).toHaveBeenCalledTimes(3);
       expect(props.onChange.mock.calls[2][0]).toEqual({
-        _originalEvent: event,
         target: expect.objectContaining({ value: "" }),
       });
     });

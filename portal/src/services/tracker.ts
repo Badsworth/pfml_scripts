@@ -4,6 +4,8 @@
  */
 import type NewRelicBrowser from "new-relic-browser";
 
+export type NewRelicEventAttributes = Record<string, number | string>;
+
 declare global {
   interface Window {
     NREUM?: Record<string, unknown>;
@@ -61,7 +63,7 @@ function newrelicReady() {
  * @param {Error} error
  * @param {object} [customAttributes] - name/value pairs representing custom attributes
  */
-function noticeError(error, customAttributes) {
+function noticeError(error, customAttributes: NewRelicEventAttributes = {}) {
   if (newrelicReady()) {
     window.newrelic.noticeError(error, {
       ...moduleGlobal.customPageAttributes,
@@ -80,7 +82,10 @@ function noticeError(error, customAttributes) {
  * @param {object.<string, string|number>} [customPageAttributes] Optional custom attributes to set for the page and for subsequent events on the same page
  *  rather than a specific resource. For example /claims/:id rather than /claims/123
  */
-function startPageView(routeName, customPageAttributes) {
+function startPageView(
+  routeName,
+  customPageAttributes?: NewRelicEventAttributes
+) {
   if (newrelicReady()) {
     // First end previous interaction if that's still in progress
     window.newrelic.interaction().end();
@@ -98,7 +103,7 @@ function startPageView(routeName, customPageAttributes) {
  * @param {string} name - Name or category of the action
  * @param {object} [customAttributes] - name/value pairs representing custom attributes
  */
-function trackEvent(name, customAttributes) {
+function trackEvent(name, customAttributes: NewRelicEventAttributes = {}) {
   if (newrelicReady()) {
     window.newrelic.addPageAction(name, {
       ...moduleGlobal.customPageAttributes,

@@ -68,8 +68,10 @@
           "error",
           { "argsIgnorePattern": "^_" }
         ],
+        "jsdoc/check-param-names": "off",
         "jsdoc/require-param-type": "off",
         "jsdoc/require-returns": "off",
+        "jsdoc/require-returns-type": "off",
         "no-restricted-syntax": [
           "error",
           {

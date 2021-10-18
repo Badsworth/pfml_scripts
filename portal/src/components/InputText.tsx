@@ -40,6 +40,7 @@ function InputText({ type = "text", ...props }) {
     }
   );
 
+  // @ts-expect-error ts(2345) - hopefully fixed once this component's props are typed using an interface
   const { handleFocus, handleBlur } = usePiiHandlers(props);
 
   const field = (

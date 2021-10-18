@@ -41,7 +41,7 @@ export const OtherIncomesDetails = (props) => {
   if (initialEntries.other_incomes.length === 0) {
     initialEntries.other_incomes = [new OtherIncome()];
   }
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState(initialEntries);
   const other_incomes = get(formState, "other_incomes");
 
