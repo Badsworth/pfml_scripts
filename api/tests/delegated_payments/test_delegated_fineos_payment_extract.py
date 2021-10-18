@@ -20,6 +20,7 @@ from massgov.pfml.db.models.employees import (
     PaymentTransactionType,
     PrenoteState,
     PubEft,
+    ReferenceFile,
     ReferenceFileType,
     State,
     StateLog,
@@ -370,6 +371,40 @@ def test_run_step_happy_path(
     # Verify a few of the metrics were added to the import log table
     import_log_report = json.loads(payment.fineos_extract_import_log.report)
     assert import_log_report["standard_valid_payment_count"] == 2
+
+
+def test_run_step_multiple_times(
+    local_payment_extract_step, local_test_db_session,
+):
+    # Test what happens if we run multiple times on the same data
+    # After the first run, the step should no-op as the reference file
+    # has already been processed.
+    payment_data = FineosPaymentData()
+    add_db_records_from_fineos_data(local_test_db_session, payment_data)
+
+    payment_datasets = [payment_data]
+    stage_data(payment_datasets, local_test_db_session)
+
+    # First run
+    local_payment_extract_step.run()
+
+    # Make sure the processed ID is set.
+    reference_files = local_test_db_session.query(ReferenceFile).all()
+    assert len(reference_files) == 1
+    assert (
+        reference_files[0].processed_import_log_id == local_payment_extract_step.get_import_log_id()
+    )
+
+    payments_after_first_run = local_test_db_session.query(Payment).all()
+    assert len(payments_after_first_run) == 1
+
+    # Run again a few times
+    local_payment_extract_step.run()
+    local_payment_extract_step.run()
+    local_payment_extract_step.run()
+
+    payments_after_all_runs = local_test_db_session.query(Payment).all()
+    assert len(payments_after_all_runs) == 1
 
 
 @freeze_time("2021-01-13 11:12:12", tz_offset=5)  # payments_util.get_now returns EST time

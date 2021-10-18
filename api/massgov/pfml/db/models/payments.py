@@ -3,6 +3,7 @@ from typing import Optional, cast
 
 from sqlalchemy import JSON, TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql.schema import Index
 
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import Claim, Employee, ImportLog, Payment, ReferenceFile
@@ -144,6 +145,14 @@ class FineosExtractVpeiPaymentDetails(Base, TimestampMixin):
         Integer, ForeignKey("import_log.import_log_id"), index=True
     )
 
+    Index(
+        "ix_payment_details_c_i_reference_file_id",
+        fineos_extract_import_log_id,
+        peclassid,
+        peindexid,
+        unique=False,
+    )
+
     reference_file = relationship(ReferenceFile)
 
 
@@ -213,6 +222,14 @@ class FineosExtractVpeiClaimDetails(Base, TimestampMixin):
     )
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    Index(
+        "ix_claim_details_c_i_reference_file_id",
+        fineos_extract_import_log_id,
+        peclassid,
+        peindexid,
+        unique=False,
     )
 
     reference_file = relationship(ReferenceFile)
@@ -338,6 +355,14 @@ class FineosExtractVbiRequestedAbsence(Base, TimestampMixin):
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
     )
+
+    Index(
+        "ix_payment_details_leaverequest_reference_file_id",
+        fineos_extract_import_log_id,
+        leaverequest_id,
+        unique=False,
+    )
+
     reference_file = relationship(ReferenceFile)
 
 
@@ -410,6 +435,13 @@ class FineosExtractEmployeeFeed(Base, TimestampMixin):
     )
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    Index(
+        "ix_employee_feed_import_log_id_customerno",
+        fineos_extract_import_log_id,
+        customerno,
+        unique=False,
     )
 
     reference_file = relationship(ReferenceFile)

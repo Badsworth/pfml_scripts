@@ -90,6 +90,7 @@ class FineosExtractStep(Step):
         with tempfile.TemporaryDirectory() as download_directory:
             self.process_extracts(pathlib.Path(download_directory))
 
+        self.db_session.commit()
         logger.info(
             "Successfully consumed FINEOS extract data for %s",
             self.extract_config.reference_file_type.reference_file_type_description,
