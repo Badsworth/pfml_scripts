@@ -1,5 +1,5 @@
 locals {
-  cert_domain = lookup(module.constants.cert_domains, var.environment_name)
+  cert_domain = lookup(module.constants.admin_portal_cert_domains, var.environment_name)
   domain      = lookup(module.constants.admin_domains, var.environment_name)
 }
 

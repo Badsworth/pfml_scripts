@@ -155,6 +155,22 @@ output "cert_domains" {
   }
 }
 
+# Mapping of admin portal environments to certificate domain lookups
+output "admin_portal_cert_domains" {
+  # you cannot lookup certs by a SAN, so we lookup based on the first domain
+  # that is specified in the certificate.
+  value = {
+    "test"        = "paidleave-admin-test.eol.mass.gov",
+    "stage"       = "paidleave-admin-test.eol.mass.gov",
+    "performance" = "paidleave-admin-test.eol.mass.gov",
+    "training"    = "paidleave-admin-test.eol.mass.gov",
+    "breakfix"    = "paidleave-admin-test.eol.mass.gov",
+    "cps-preview" = "paidleave-admin-test.eol.mass.gov",
+    "uat"         = "paidleave-admin-test.eol.mass.gov",
+    "prod"        = "paidleave-admin.eol.mass.gov"
+  }
+}
+
 # Mapping of human-readable names to the unique channel ID.
 # We prefer to use the channel ID in case the channel name changes in Slack.
 #
