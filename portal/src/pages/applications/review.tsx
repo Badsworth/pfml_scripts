@@ -108,7 +108,6 @@ export const Review = (props) => {
 
   const steps = Step.createClaimStepsFromMachine(
     claimantConfigs,
-    // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ claim: any; }' is not assignab... Remove this comment to see the full error message
     {
       claim: props.claim,
     },
