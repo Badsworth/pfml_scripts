@@ -1,5 +1,5 @@
 /* eslint-disable no-alert */
-import Document from "src/models/Document";
+import BenefitsApplicationDocument from "src/models/BenefitsApplicationDocument";
 import FileCardList from "src/components/FileCardList";
 import React from "react";
 import useFilesLogic from "src/hooks/useFilesLogic";
@@ -16,7 +16,7 @@ export default {
 
 export const Default = (args) => {
   const initialDocuments = [
-    new Document({
+    new BenefitsApplicationDocument({
       content_type: "image/jpeg",
       created_at: "2021-01-30",
     }),

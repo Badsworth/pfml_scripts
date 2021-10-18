@@ -1,28 +1,38 @@
 import routes, { isApplicationsRoute, isEmployersRoute } from "../routes";
 import { useMemo, useState } from "react";
+import BenefitsApplication from "../models/BenefitsApplication";
 import User from "../models/User";
 import { UserNotReceivedError } from "../errors";
 import UsersApi from "../api/UsersApi";
+import useAppErrorsLogic from "./useAppErrorsLogic";
+import usePortalFlow from "./usePortalFlow";
 
 /**
  * Hook that defines user state
- * @param {object} props
- * @param {object} props.appErrorsLogic - Utilities for set application's error  state
- * @param {boolean} props.isLoggedIn
- * @param {object} props.portalFlow - Utilities for navigating portal application
- * @returns {object} { user: User, loadUser: Function }
  */
-const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
+const useUsersLogic = ({
+  appErrorsLogic,
+  isLoggedIn,
+  portalFlow,
+}: {
+  appErrorsLogic: ReturnType<typeof useAppErrorsLogic>;
+  isLoggedIn: boolean;
+  portalFlow: ReturnType<typeof usePortalFlow>;
+}) => {
   const usersApi = useMemo(() => new UsersApi(), []);
   const [user, setUser] = useState<User>();
 
   /**
    * Update user through a PATCH request to /users
-   * @param {string} user_id - ID of user being updated
-   * @param {object} patchData - User fields to update
-   * @param {BenefitsApplication} [claim] - Update user in the context of a claim to determine the next page route.
+   * @param user_id - ID of user being updated
+   * @param patchData - User fields to update
+   * @param [claim] - Update user in the context of a claim to determine the next page route.
    */
-  const updateUser = async (user_id, patchData, claim) => {
+  const updateUser = async (
+    user_id: User["user_id"],
+    patchData: Partial<User>,
+    claim?: BenefitsApplication
+  ) => {
     appErrorsLogic.clearErrors();
 
     try {
@@ -99,10 +109,13 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
 
   /**
    * Convert user role through a POST request to /users/{user_id}/convert_employer
-   * @param {string} user_id - ID of user being converted
-   * @param {object} postData - User fields to update - role and leave admin
+   * @param user_id - ID of user being converted
+   * @param postData - User fields to update - role and leave admin
    */
-  const convertUser = async (user_id, postData) => {
+  const convertUser = async (
+    user_id: User["user_id"],
+    postData: Partial<User>
+  ) => {
     appErrorsLogic.clearErrors();
 
     try {

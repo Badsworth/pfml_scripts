@@ -43,7 +43,6 @@ from massgov.pfml.db.models.payments import (
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
 )
-from massgov.pfml.delegated_payments.delegated_fineos_payment_extract import CiIndex
 from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
     generate_claimant_data_files,
     generate_payment_extract_files,
@@ -133,15 +132,16 @@ class TestDataSet:
 
     def get_scenario_data_by_payment_ci(self, c_value: str, i_value: str) -> Optional[ScenarioData]:
         for scenario_data in self.scenario_dataset:
-            if CiIndex(c=scenario_data.payment_c_value, i=scenario_data.payment_i_value) == CiIndex(
-                c=c_value, i=i_value
+            if (
+                scenario_data.payment_c_value == c_value
+                and scenario_data.payment_i_value == i_value
             ):
                 return scenario_data
 
-            elif CiIndex(
-                c=scenario_data.additional_payment_c_value,
-                i=scenario_data.additional_payment_i_value,
-            ) == CiIndex(c=c_value, i=i_value):
+            elif (
+                scenario_data.additional_payment_c_value == c_value
+                and scenario_data.additional_payment_i_value == i_value
+            ):
                 return scenario_data
         return None
 
@@ -642,7 +642,12 @@ def test_e2e_pub_payments(
                 ),
                 "cancellation_count": len([ScenarioName.CANCELLATION_PAYMENT]),
                 "claim_details_record_count": len(SCENARIO_DESCRIPTORS)
-                - len([ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED]),
+                - len(
+                    [
+                        ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
+                        ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED,
+                    ]
+                ),
                 "claim_not_found_count": 0,
                 "claimant_mismatch_count": len(
                     [ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT]
@@ -716,7 +721,12 @@ def test_e2e_pub_payments(
                 "processed_payment_count": len(SCENARIO_DESCRIPTORS)
                 - len([ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED]),
                 "requested_absence_record_count": len(SCENARIO_DESCRIPTORS)
-                - len([ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED]),
+                - len(
+                    [
+                        ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
+                        ScenarioName.CLAIMANT_PRENOTED_NO_PAYMENT_RECEIVED,
+                    ]
+                ),
                 "standard_valid_payment_count": len(
                     [
                         ScenarioName.HAPPY_PATH_MEDICAL_ACH_PRENOTED,

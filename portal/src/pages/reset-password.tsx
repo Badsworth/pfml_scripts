@@ -6,6 +6,7 @@ import InputPassword from "../components/InputPassword";
 import InputText from "../components/InputText";
 import Lead from "../components/Lead";
 import PropTypes from "prop-types";
+import ThrottledButton from "../components/ThrottledButton";
 import Title from "../components/Title";
 import { Trans } from "react-i18next";
 import { get } from "lodash";
@@ -27,7 +28,6 @@ export const ResetPassword = (props) => {
   // which we need for resetting their password
   const showEmailField = !cachedEmail;
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState({
     code: "",
     password: "",
@@ -40,12 +40,11 @@ export const ResetPassword = (props) => {
     return await auth.resetPassword(username, code, password);
   });
 
-  const handleResendCodeClick = useThrottledHandler(async (event) => {
-    event.preventDefault();
+  const handleResendCodeClick = async () => {
     setCodeResent(false);
     await auth.resendForgotPasswordCode(formState.username);
     setCodeResent(true);
-  });
+  };
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors,
@@ -108,15 +107,14 @@ export const ResetPassword = (props) => {
       />
 
       <div>
-        <Button
+        <ThrottledButton
           className="margin-top-1"
           name="resend-code-button"
           onClick={handleResendCodeClick}
           variation="unstyled"
-          loading={handleResendCodeClick.isThrottled}
         >
           {t("pages.authVerifyAccount.resendCodeLink")}
-        </Button>
+        </ThrottledButton>
       </div>
 
       <InputPassword

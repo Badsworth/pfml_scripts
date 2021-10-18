@@ -19,7 +19,7 @@ export const ConvertToEmployer = (props) => {
   const { appLogic, user, claims } = props;
   const { t } = useTranslation();
   const { convertUser } = appLogic.users;
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState({ employer_fein: "" });
   const hasClaims = !claims.isEmpty;
   const getFunctionalInputProps = useFunctionalInputProps({

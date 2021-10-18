@@ -1,16 +1,14 @@
-/** @typedef {import('../models/LeaveReason').default} LeaveReason */
-/** @typedef {import('../models/Document').default} Document */
-
+import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
+import ClaimDocument from "../models/ClaimDocument";
 import { DocumentType } from "../models/Document";
 import findDocumentsByTypes from "./findDocumentsByTypes";
 
 /**
  * Get certification documents based on application leave reason
- * @param {Document[]} documents
- * @param {LeaveReason} leaveReason
- * @returns {Document[]}
  */
-const findDocumentsByLeaveReason = (documents, leaveReason) => {
+function findDocumentsByLeaveReason<
+  T extends BenefitsApplicationDocument | ClaimDocument
+>(documents: T[], leaveReason): T[] {
   // TODO (CP-2029): Remove the medicalCertification type from this array when it becomes obsolete
   const documentFilters = [DocumentType.certification.medicalCertification];
 
@@ -18,6 +16,6 @@ const findDocumentsByLeaveReason = (documents, leaveReason) => {
     documentFilters.push(DocumentType.certification[leaveReason]);
   }
   return findDocumentsByTypes(documents, documentFilters);
-};
+}
 
 export default findDocumentsByLeaveReason;

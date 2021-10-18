@@ -26,7 +26,11 @@ export default class ClaimsApi extends BaseApi {
    * @param {string} [filters.search]
    * @returns {Promise<{ claims: ClaimCollection, paginationMeta: PaginationMeta }>}
    */
-  getClaims = async (pageOffset = 1, order = {}, filters = {}) => {
+  getClaims = async (
+    pageOffset: string | number = 1,
+    order = {},
+    filters = {}
+  ) => {
     const orderParams = { ...order };
     // We display Closed and Completed claims as the same to the user, so we
     // want the Closed filter to encompass both.

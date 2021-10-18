@@ -13,9 +13,8 @@ function ThrottledButton({ onClick, ...props }) {
   const handleClick = useThrottledHandler(async (event) => {
     event.preventDefault();
 
-    const resp = onClick();
+    const resp = onClick(event);
     if (!(resp instanceof Promise)) {
-      // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
       tracker.trackEvent(
         "onClick wasn't a Promise, so user isn't seeing a loading indicator."
       );

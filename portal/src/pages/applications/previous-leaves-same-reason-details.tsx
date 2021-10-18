@@ -40,7 +40,7 @@ export const PreviousLeavesSameReasonDetails = (props) => {
   }
 
   // default to one existing previous leave.
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState(initialEntries);
   const previous_leaves_same_reason = get(
     formState,

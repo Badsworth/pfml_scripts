@@ -1,9 +1,10 @@
 /* eslint testing-library/prefer-user-event: 0 */
-import Document, { DocumentType } from "../../../../src/models/Document";
 import { MockEmployerClaimBuilder, renderPage } from "../../../test-utils";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import ClaimDocument from "../../../../src/models/ClaimDocument";
 import ConcurrentLeave from "../../../../src/models/ConcurrentLeave";
 import DocumentCollection from "../../../../src/models/DocumentCollection";
+import { DocumentType } from "../../../../src/models/Document";
 import { EmployerBenefitFrequency } from "../../../../src/models/EmployerBenefit";
 import EmployerClaim from "../../../../src/models/EmployerClaim";
 import LeaveReason from "../../../../src/models/LeaveReason";
@@ -14,21 +15,21 @@ import userEvent from "@testing-library/user-event";
 jest.mock("../../../../src/hooks/useAppLogic");
 
 const DOCUMENTS = new DocumentCollection([
-  new Document({
+  new ClaimDocument({
     content_type: "image/png",
     created_at: "2020-04-05",
     document_type: DocumentType.certification.medicalCertification,
     fineos_document_id: "fineos-id-4",
     name: "Medical cert doc",
   }),
-  new Document({
+  new ClaimDocument({
     content_type: "application/pdf",
     created_at: "2020-01-02",
     document_type: DocumentType.approvalNotice,
     fineos_document_id: "fineos-id-1",
     name: "Approval notice doc",
   }),
-  new Document({
+  new ClaimDocument({
     content_type: "application/pdf",
     created_at: "2020-02-01",
     document_type: DocumentType.certification[LeaveReason.care],

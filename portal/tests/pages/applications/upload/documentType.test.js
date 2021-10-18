@@ -1,4 +1,3 @@
-import Document, { DocumentType } from "../../../../src/models/Document";
 import UploadDocument, {
   getStaticPaths,
 } from "../../../../src/pages/applications/upload/[documentType]";
@@ -6,6 +5,8 @@ import UploadDocument, {
 import { act, render, screen } from "@testing-library/react";
 import AppErrorInfo from "../../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../../src/models/AppErrorInfoCollection";
+import BenefitsApplicationDocument from "../../../../src/models/BenefitsApplicationDocument";
+import { DocumentType } from "../../../../src/models/Document";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import React from "react";
 import User from "../../../../src/models/User";
@@ -149,7 +150,7 @@ describe(UploadDocument, () => {
               .mockImplementation(() => true);
             appLogic.documents.attach = jest.fn();
             appLogic.documents.documents = appLogic.documents.documents.addItem(
-              new Document({
+              new BenefitsApplicationDocument({
                 application_id: "mock-claim-id",
                 fineos_document_id: uuidv4(),
                 document_type: DocumentType.identityVerification,

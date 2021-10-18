@@ -46,12 +46,12 @@ def wages_gte_thirty_times_wba(
     total_wages: decimal.Decimal,
     individual_average_weekly_wage: decimal.Decimal,
     state_average_weekly_wage: decimal.Decimal,
-    effective_date: datetime.date,
+    maximum_weekly_benefit_amount: decimal.Decimal,
 ) -> bool:
     # Terminology note: wba = weekly benefit amount
 
     wba = calculate_weekly_benefit_amount(
-        individual_average_weekly_wage, state_average_weekly_wage, effective_date
+        individual_average_weekly_wage, state_average_weekly_wage, maximum_weekly_benefit_amount
     )
 
     eligibility_threshold = wba * 30

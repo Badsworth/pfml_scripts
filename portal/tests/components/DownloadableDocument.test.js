@@ -1,11 +1,12 @@
-import Document, { DocumentType } from "../../src/models/Document";
 import { render, screen } from "@testing-library/react";
+import BenefitsApplicationDocument from "../../src/models/BenefitsApplicationDocument";
+import { DocumentType } from "../../src/models/Document";
 import DownloadableDocument from "../../src/components/DownloadableDocument";
 import Icon from "../../src/components/Icon";
 import React from "react";
 import userEvent from "@testing-library/user-event";
 
-const DOCUMENT = new Document({
+const DOCUMENT = new BenefitsApplicationDocument({
   content_type: "image/png",
   created_at: "2020-04-05",
   document_type: DocumentType.certification.medicalCertification,
@@ -13,7 +14,7 @@ const DOCUMENT = new Document({
   name: "Medical cert doc",
 });
 
-const LEGAL_NOTICE = new Document({
+const LEGAL_NOTICE = new BenefitsApplicationDocument({
   content_type: "image/png",
   created_at: "2020-04-05",
   document_type: DocumentType.approvalNotice,

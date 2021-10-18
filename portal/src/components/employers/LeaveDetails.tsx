@@ -1,7 +1,7 @@
 import Alert from "../Alert";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
+import ClaimDocument from "../../models/ClaimDocument";
 import ConditionalContent from "../ConditionalContent";
-import Document from "../../models/Document";
 import DownloadableDocument from "../DownloadableDocument";
 import EmployerClaim from "../../models/EmployerClaim";
 import FormLabel from "../FormLabel";
@@ -246,7 +246,7 @@ LeaveDetails.propTypes = {
   appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
   believeRelationshipAccurate: PropTypes.oneOf(["Yes", "Unknown", "No"]),
   claim: PropTypes.instanceOf(EmployerClaim).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+  documents: PropTypes.arrayOf(PropTypes.instanceOf(ClaimDocument)),
   downloadDocument: PropTypes.func.isRequired,
   onChangeBelieveRelationshipAccurate: PropTypes.func,
   relationshipInaccurateReason: PropTypes.string,

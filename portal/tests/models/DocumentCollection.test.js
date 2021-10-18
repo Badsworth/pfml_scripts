@@ -1,18 +1,18 @@
-import Document from "../../src/models/Document";
+import BenefitsApplicationDocument from "../../src/models/BenefitsApplicationDocument";
 import DocumentCollection from "../../src/models/DocumentCollection";
 
 describe("DocumentCollection", () => {
   describe("#filterByApplication", () => {
     it("returns only Documents associated with the given application", () => {
-      const applicationADocument1 = new Document({
+      const applicationADocument1 = new BenefitsApplicationDocument({
         application_id: "a",
         fineos_document_id: "a_1",
       });
-      const applicationADocument2 = new Document({
+      const applicationADocument2 = new BenefitsApplicationDocument({
         application_id: "a",
         fineos_document_id: "a_2",
       });
-      const applicationBDocument1 = new Document({
+      const applicationBDocument1 = new BenefitsApplicationDocument({
         application_id: "b",
         fineos_document_id: "b_1",
       });

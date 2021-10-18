@@ -1,8 +1,9 @@
-import Document, { DocumentType } from "src/models/Document";
+import BenefitsApplicationDocument from "src/models/BenefitsApplicationDocument";
+import { DocumentType } from "src/models/Document";
 import DownloadableDocument from "src/components/DownloadableDocument";
 import React from "react";
 
-const DOCUMENT = new Document({
+const DOCUMENT = new BenefitsApplicationDocument({
   content_type: "image/png",
   created_at: "2020-04-05",
   document_type: DocumentType.approvalNotice,

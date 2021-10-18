@@ -26,7 +26,9 @@ function BackButton(props) {
   }
 
   const handleClick = () => {
-    tracker.trackEvent("BackButton clicked", { behaveLikeBrowserBackButton });
+    tracker.trackEvent("BackButton clicked", {
+      behaveLikeBrowserBackButton: behaveLikeBrowserBackButton.toString(),
+    });
     if (behaveLikeBrowserBackButton) {
       historyApi.back();
     }

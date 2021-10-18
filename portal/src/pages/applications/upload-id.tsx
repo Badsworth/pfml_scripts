@@ -1,9 +1,9 @@
-import Document, { DocumentType } from "../../models/Document";
-
 import Accordion from "../../components/Accordion";
 import AccordionItem from "../../components/AccordionItem";
 import Alert from "../../components/Alert";
+import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import DocumentRequirements from "../../components/DocumentRequirements";
+import { DocumentType } from "../../models/Document";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
 import Heading from "../../components/Heading";
@@ -47,9 +47,10 @@ export const UploadId = (props) => {
     claim.application_id
   );
 
-  const idDocuments = findDocumentsByTypes(documents, [
-    DocumentType.identityVerification,
-  ]);
+  const idDocuments = findDocumentsByTypes<BenefitsApplicationDocument>(
+    documents,
+    [DocumentType.identityVerification]
+  );
 
   const handleSave = async () => {
     if (files.isEmpty && idDocuments.length) {
@@ -192,7 +193,9 @@ UploadId.propTypes = {
     clearErrors: PropTypes.func.isRequired,
   }).isRequired,
   claim: PropTypes.object.isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+  documents: PropTypes.arrayOf(
+    PropTypes.instanceOf(BenefitsApplicationDocument)
+  ),
   isLoadingDocuments: PropTypes.bool,
   query: PropTypes.shape({
     claim_id: PropTypes.string,

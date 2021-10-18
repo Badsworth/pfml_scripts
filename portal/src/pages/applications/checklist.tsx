@@ -2,14 +2,16 @@ import BenefitsApplication, {
   BenefitsApplicationStatus,
   ReasonQualifier,
 } from "../../models/BenefitsApplication";
-import Document, { DocumentType } from "../../models/Document";
+
 import StepModel, { ClaimSteps } from "../../models/Step";
 import { camelCase, filter, findIndex, get } from "lodash";
 
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
+import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import ButtonLink from "../../components/ButtonLink";
 import Details from "../../components/Details";
+import { DocumentType } from "../../models/Document";
 import HeadingPrefix from "../../components/HeadingPrefix";
 import LeaveReason from "../../models/LeaveReason";
 import PropTypes from "prop-types";
@@ -424,7 +426,9 @@ Checklist.propTypes = {
     }).isRequired,
   }).isRequired,
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+  documents: PropTypes.arrayOf(
+    PropTypes.instanceOf(BenefitsApplicationDocument)
+  ),
   isLoadingDocuments: PropTypes.bool,
   query: PropTypes.shape({
     "part-one-submitted": PropTypes.string,

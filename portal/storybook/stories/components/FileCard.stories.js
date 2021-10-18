@@ -1,5 +1,6 @@
-import Document, { DocumentType } from "src/models/Document";
 import React, { useEffect, useState } from "react";
+import BenefitsApplicationDocument from "src/models/BenefitsApplicationDocument";
+import { DocumentType } from "src/models/Document";
 import FileCard from "src/components/FileCard";
 
 export default {
@@ -30,7 +31,7 @@ export const DocumentCard = () => {
     <FileCard
       heading="Document 1"
       document={
-        new Document({
+        new BenefitsApplicationDocument({
           application_id: "mock-application-id",
           created_at: "2021-01-01",
           document_type: DocumentType.identityVerification,

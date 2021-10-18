@@ -53,7 +53,7 @@ describe("<BackButton>", () => {
     userEvent.click(screen.getByRole("button"));
 
     expect(spy).toHaveBeenCalledWith("BackButton clicked", {
-      behaveLikeBrowserBackButton: true,
+      behaveLikeBrowserBackButton: "true",
     });
   });
 
@@ -81,7 +81,7 @@ describe("<BackButton>", () => {
     userEvent.click(screen.getByRole("link"));
 
     expect(spy).toHaveBeenCalledWith("BackButton clicked", {
-      behaveLikeBrowserBackButton: false,
+      behaveLikeBrowserBackButton: "false",
     });
   });
 });

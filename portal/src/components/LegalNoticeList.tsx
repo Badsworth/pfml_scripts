@@ -1,4 +1,4 @@
-import Document from "../models/Document";
+import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import DownloadableDocument from "./DownloadableDocument";
 import Icon from "./Icon";
 import PropTypes from "prop-types";
@@ -54,7 +54,9 @@ export default function LegalNoticeList(props) {
 }
 
 LegalNoticeList.propTypes = {
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+  documents: PropTypes.arrayOf(
+    PropTypes.instanceOf(BenefitsApplicationDocument)
+  ),
   /** 
     The function called when the document's link is clicked. It will receive an instance of the document as an argument.
    */

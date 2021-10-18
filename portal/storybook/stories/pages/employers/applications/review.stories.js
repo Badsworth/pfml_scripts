@@ -1,7 +1,8 @@
-import Document, { DocumentType } from "src/models/Document";
 import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
+import ClaimDocument from "src/models/ClaimDocument";
 import DocumentCollection from "src/models/DocumentCollection";
+import { DocumentType } from "src/models/Document";
 import { MockEmployerClaimBuilder } from "tests/test-utils";
 import React from "react";
 import { Review } from "src/pages/employers/applications/review";
@@ -129,7 +130,7 @@ function getDocuments(documentation, leaveReason) {
 
   return isWithoutDocumentation
     ? new DocumentCollection()
-    : new DocumentCollection([new Document(documentData)]);
+    : new DocumentCollection([new ClaimDocument(documentData)]);
 }
 
 function getAppErrorInfoCollection(errorTypes = []) {

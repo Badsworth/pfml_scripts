@@ -1,8 +1,9 @@
-import Document, { DocumentType } from "../../../../src/models/Document";
 import { MockEmployerClaimBuilder, renderPage } from "../../../test-utils";
 import { screen, waitFor } from "@testing-library/react";
 import { AbsenceCaseStatus } from "../../../../src/models/Claim";
+import ClaimDocument from "../../../../src/models/ClaimDocument";
 import DocumentCollection from "../../../../src/models/DocumentCollection";
+import { DocumentType } from "../../../../src/models/Document";
 import Status from "../../../../src/pages/employers/applications/status";
 import userEvent from "@testing-library/user-event";
 
@@ -14,7 +15,7 @@ function setup(models = {}) {
       .completed()
       .create(),
     documents: new DocumentCollection([
-      new Document({
+      new ClaimDocument({
         content_type: "application/pdf",
         created_at: "2021-01-02",
         document_type: DocumentType.approvalNotice,
@@ -97,7 +98,7 @@ describe("Status", () => {
       const num = (documents.length + 1).toString().padStart(2, "0");
 
       documents.push(
-        new Document({
+        new ClaimDocument({
           document_type,
           content_type: "application/pdf",
           created_at: `2021-01-${num}`,
@@ -121,7 +122,7 @@ describe("Status", () => {
   });
 
   it("download documents on click", () => {
-    const document = new Document({
+    const document = new ClaimDocument({
       content_type: "application/pdf",
       created_at: "2021-01-02",
       document_type: DocumentType.approvalNotice,

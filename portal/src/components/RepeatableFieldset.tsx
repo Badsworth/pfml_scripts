@@ -18,7 +18,6 @@ const RepeatableFieldset = (props) => {
   const limitReached = props.limit ? entries.length >= props.limit : false;
 
   useEffect(() => {
-    // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
     if (entriesAndIds.length > previousEntriesLength) {
       // When a new entry is added to the list, focus and scroll it into view.
       const lastEntry = containerRef.current.querySelector(

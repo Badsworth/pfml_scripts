@@ -1,10 +1,11 @@
 import BenefitsApplication, {
   ReasonQualifier,
 } from "../models/BenefitsApplication";
-import Document, { DocumentType } from "../models/Document";
 
 import Alert from "./Alert";
+import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import ButtonLink from "./ButtonLink";
+import { DocumentType } from "../models/Document";
 import DownloadableDocument from "./DownloadableDocument";
 import Heading from "./Heading";
 import LeaveReason from "../models/LeaveReason";
@@ -72,7 +73,9 @@ ApplicationCard.propTypes = {
     }),
   }).isRequired,
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+  documents: PropTypes.arrayOf(
+    PropTypes.instanceOf(BenefitsApplicationDocument)
+  ),
   /**
    * Cards are displayed in a list. What position is this card?
    */
@@ -254,7 +257,9 @@ LegalNotices.propTypes = {
     }),
   }).isRequired,
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+  documents: PropTypes.arrayOf(
+    PropTypes.instanceOf(BenefitsApplicationDocument)
+  ),
 };
 
 /**
@@ -374,7 +379,9 @@ function ApplicationActions(props) {
 
 ApplicationActions.propTypes = {
   claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+  documents: PropTypes.arrayOf(
+    PropTypes.instanceOf(BenefitsApplicationDocument)
+  ),
 };
 
 export default withClaimDocuments(ApplicationCard);

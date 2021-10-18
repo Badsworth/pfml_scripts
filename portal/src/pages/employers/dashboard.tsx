@@ -465,7 +465,7 @@ const Filters = (props) => {
    */
   const activeFilters = getFormStateFromQuery();
   const [showFilters, setShowFilters] = useState(false);
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState(activeFilters);
   // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ formState: any; updateFields: ... Remove this comment to see the full error message
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -724,7 +724,6 @@ const Search = (props) => {
   const { initialValue, updatePageQuery } = props;
   const { t } = useTranslation();
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState({ search: initialValue });
   // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ formState: any; updateFields: ... Remove this comment to see the full error message
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -789,7 +788,7 @@ const SortDropdown = (props) => {
   }
 
   const { t } = useTranslation();
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState({
     orderAndDirection: compact([order_by, order_direction]).join(","),
   });

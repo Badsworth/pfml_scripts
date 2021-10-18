@@ -12,7 +12,6 @@ import BenefitsApplication, {
   WorkPattern,
   WorkPatternType,
 } from "../../models/BenefitsApplication";
-import Document, { DocumentType } from "../../models/Document";
 import EmployerBenefit, {
   EmployerBenefitFrequency,
   EmployerBenefitType,
@@ -28,8 +27,9 @@ import { compact, get, isUndefined } from "lodash";
 
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
-import Button from "../../components/Button";
+import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import { DateTime } from "luxon";
+import { DocumentType } from "../../models/Document";
 import Heading from "../../components/Heading";
 import HeadingPrefix from "../../components/HeadingPrefix";
 import Lead from "../../components/Lead";
@@ -38,6 +38,7 @@ import PropTypes from "prop-types";
 import ReviewHeading from "../../components/ReviewHeading";
 import ReviewRow from "../../components/ReviewRow";
 import Spinner from "../../components/Spinner";
+import ThrottledButton from "../../components/ThrottledButton";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import WeeklyTimeTable from "../../components/WeeklyTimeTable";
@@ -52,7 +53,6 @@ import getMissingRequiredFields from "../../utils/getMissingRequiredFields";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import tracker from "../../services/tracker";
-import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 import withClaimDocuments from "../../hoc/withClaimDocuments";
@@ -108,7 +108,6 @@ export const Review = (props) => {
 
   const steps = Step.createClaimStepsFromMachine(
     claimantConfigs,
-    // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ claim: any; }' is not assignab... Remove this comment to see the full error message
     {
       claim: props.claim,
     },
@@ -131,7 +130,7 @@ export const Review = (props) => {
     }
   };
 
-  const handleSubmit = useThrottledHandler(async () => {
+  const handleSubmit = async () => {
     setShowNewFieldError(false);
     if (usePartOneReview) {
       await appLogic.benefitsApplications.submit(claim.application_id);
@@ -139,7 +138,7 @@ export const Review = (props) => {
     }
 
     await appLogic.benefitsApplications.complete(claim.application_id);
-  });
+  };
 
   const contentContext = usePartOneReview ? "part1" : "final";
   // Adjust heading levels depending on if there's a "Part 1" heading at the top of the page or not
@@ -832,17 +831,16 @@ export const Review = (props) => {
         </React.Fragment>
       )}
 
-      <Button
+      <ThrottledButton
         className="margin-top-3"
         onClick={handleSubmit}
         type="button"
-        loading={handleSubmit.isThrottled}
         loadingMessage={t("pages.claimsReview.submitLoadingMessage")}
       >
         {t("pages.claimsReview.submitAction", {
           context: usePartOneReview ? "part1" : "final",
         })}
-      </Button>
+      </ThrottledButton>
     </div>
   );
 };
@@ -857,7 +855,9 @@ Review.propTypes = {
     }).isRequired,
   }).isRequired,
   claim: PropTypes.instanceOf(BenefitsApplication),
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
+  documents: PropTypes.arrayOf(
+    PropTypes.instanceOf(BenefitsApplicationDocument)
+  ),
   isLoadingDocuments: PropTypes.bool,
   query: PropTypes.shape({
     claim_id: PropTypes.string,

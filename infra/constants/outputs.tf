@@ -152,3 +152,11 @@ output "slackbot_channels" {
     "mass-pfml-pd-warnings" = "C01GTDGBR0F"
   }
 }
+
+output "bucket_replication_environment" {
+  value = "prod"
+}
+
+output "bucket_replication_role" {
+  value = aws_iam_role.replication.arn
+}

@@ -1,6 +1,7 @@
-import Document, { DocumentType } from "../models/Document";
-
+import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import Button from "./Button";
+import ClaimDocument from "../models/ClaimDocument";
+import { DocumentType } from "../models/Document";
 import PropTypes from "prop-types";
 import React from "react";
 import classnames from "classnames";
@@ -73,7 +74,10 @@ const DownloadableDocument = (props) => {
 DownloadableDocument.propTypes = {
   /** Required absence case ID, if the user is a Leave Admin */
   absenceId: PropTypes.string,
-  document: PropTypes.instanceOf(Document).isRequired,
+  document: PropTypes.oneOfType([
+    PropTypes.instanceOf(BenefitsApplicationDocument),
+    PropTypes.instanceOf(ClaimDocument),
+  ]).isRequired,
   /** Overrides the name displayed for the document */
   displayDocumentName: PropTypes.string,
   onDownloadClick: PropTypes.func.isRequired,

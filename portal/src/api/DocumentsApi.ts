@@ -4,14 +4,14 @@ import BaseApi, {
   handleError,
   handleNotOkResponse,
 } from "./BaseApi";
-import Document from "../models/Document";
+import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import DocumentCollection from "../models/DocumentCollection";
 import assert from "assert";
 import routes from "../routes";
 
 /**
  * @typedef {object} DocumentApiSingleResult
- * @property {Document} document - If the request succeeded, this will contain the created claim
+ * @property {BenefitsApplicationDocument} document - If the request succeeded, this will contain the created claim
  */
 
 /**
@@ -21,7 +21,7 @@ import routes from "../routes";
 
 /**
  * @typedef {{ blob: Blob }} DocumentResponse
- * @property {Blob} blob - Document data
+ * @property {Blob} blob - BenefitsApplicationDocument data
  */
 
 export default class DocumentsApi extends BaseApi {
@@ -74,7 +74,7 @@ export default class DocumentsApi extends BaseApi {
     );
 
     return {
-      document: new Document(data),
+      document: new BenefitsApplicationDocument(data),
     };
   };
 
@@ -87,7 +87,9 @@ export default class DocumentsApi extends BaseApi {
    */
   getDocuments = async (application_id) => {
     const { data } = await this.request("GET", `${application_id}/documents`);
-    let documents = data.map((documentData) => new Document(documentData));
+    let documents = data.map(
+      (documentData) => new BenefitsApplicationDocument(documentData)
+    );
     documents = new DocumentCollection(documents);
 
     return {
@@ -99,7 +101,7 @@ export default class DocumentsApi extends BaseApi {
    * Download document
    *
    * Corresponds to this API endpoint: /application/{application_id}/documents/{fineos_document_id}
-   * @param {Document} document instance of Document to download
+   * @param {BenefitsApplicationDocument} document instance of BenefitsApplicationDocument to download
    * @returns {Blob} file data
    */
   downloadDocument = async (document) => {
