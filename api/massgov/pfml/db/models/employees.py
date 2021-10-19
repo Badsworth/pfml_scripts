@@ -1097,6 +1097,30 @@ class WagesAndContributions(Base, TimestampMixin):
     employer = relationship("Employer", back_populates="wages_and_contributions")
 
 
+class WagesAndContributionsHistory(Base, TimestampMixin):
+    __tablename__ = "wages_and_contributions_history"
+    wages_and_contributions_history_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    is_independent_contractor = Column(Boolean, nullable=False)
+    is_opted_in = Column(Boolean, nullable=False)
+    employee_ytd_wages = Column(Numeric(asdecimal=True), nullable=False)
+    employee_qtr_wages = Column(Numeric(asdecimal=True), nullable=False)
+    employee_med_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    employer_med_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    employee_fam_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    employer_fam_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True, nullable=True
+    )
+    wage_and_contribution_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("wages_and_contributions.wage_and_contribution_id"),
+        index=True,
+        nullable=False,
+    )
+
+    wage_and_contribution = relationship("WagesAndContributions")
+
+
 class EmployeeOccupation(Base, TimestampMixin):
     __tablename__ = "employee_occupation"
 
