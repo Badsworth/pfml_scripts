@@ -44,12 +44,7 @@ from massgov.pfml.api.validation.exceptions import (
     ValidationErrorDetail,
     ValidationException,
 )
-from massgov.pfml.db.models.applications import (  # ContentType,
-    Application,
-    Document,
-    DocumentType,
-    LeaveReason,
-)
+from massgov.pfml.db.models.applications import Application, Document, DocumentType, LeaveReason
 from massgov.pfml.fineos.exception import (
     FINEOSClientBadResponse,
     FINEOSClientError,
@@ -608,7 +603,6 @@ def document_upload(application_id, body, file):
         document.created_at = now
         document.updated_at = now
         document.document_type_id = DocumentType.get_id(document_type)
-        # document.content_type_id = ContentType.get_id(content_type)
         document.size_bytes = file_size
         document.fineos_id = fineos_document["documentId"]
         document.is_stored_in_s3 = False
