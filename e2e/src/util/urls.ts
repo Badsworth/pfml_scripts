@@ -1,4 +1,5 @@
 import { URL, URLSearchParams } from "url";
+import { add } from "date-fns";
 
 /**
  * This file contains helpers to generate URLs for common services.
@@ -59,4 +60,45 @@ export function cloudwatchInsights(
   );
   cloudwatchUrl.hash = `logsV2:logs-insights?${fragmentQuery}`;
   return cloudwatchUrl.toString();
+}
+
+/**
+ * Generate a link to NR APM for a specific time range and environment.
+ *
+ * @param start
+ * @param end
+ * @param environment
+ */
+export function generateNRAPMLink(
+  start: Date,
+  end: Date,
+  environment: keyof typeof NRGUIDMap
+): string {
+  const pack = (obj: unknown) =>
+    Buffer.from(JSON.stringify(obj)).toString("base64");
+  const params = new URLSearchParams({
+    "platform[accountId]": "2837112",
+    "platform[timeRange][begin_time]": add(start, { minutes: -3 })
+      .getTime()
+      .toString(),
+    "platform[timeRange][end_time]": add(end, { minutes: 3 })
+      .getTime()
+      .toString(),
+    "platform[$isFallbackTimeRange]": "false",
+    // This is a base64 encoded string. I think it should be basically static?
+    pane: pack({
+      nerdletId: "apm-nerdlets.overview",
+      entityGuid: NRGUIDMap[environment],
+      isOverview: true,
+      referrers: {
+        launcherId: "nr1-core.explorer",
+        nerdletId: "nr1-core.listing",
+      },
+    }),
+  });
+  return `https://one.newrelic.com/launcher/nr1-core.explorer?${params.toString()}`;
+}
+enum NRGUIDMap {
+  "test" = "MjgzNzExMnxBUE18QVBQTElDQVRJT058MTExNDExNzUxNQ",
+  "performance" = "MjgzNzExMnxBUE18QVBQTElDQVRJT058OTgwNjIyODYz",
 }

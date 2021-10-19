@@ -52,24 +52,28 @@ const userTypes: {
     can_add_case: false,
   },
 ];
+
+const ssoAccount2Credentials: Credentials = {
+  username: config("SSO2_USERNAME"),
+  password: config("SSO2_PASSWORD"),
+};
+
 Cypress.config("baseUrl", getFineosBaseUrl());
 
-describe("Historical absence secure actions", () => {
+describe("Add case to check the secure actions", () => {
   userTypes.forEach((userType) => {
     describe(`${userType.security_group}:`, () => {
       before((done) => {
         cy.task("chooseFineosRole", {
-          userId: config("SSO2_USERNAME"),
+          userId: ssoAccount2Credentials.username,
           preset: userType.security_group,
+          debug: false,
         }).then(done);
       });
       it(`${userType.security_group} ${
         userType.can_add_case ? "can" : "can't"
       } add case on intake`, () => {
-        fineos.before({
-          username: config("SSO2_USERNAME"),
-          password: config("SSO2_PASSWORD"),
-        });
+        fineos.before(ssoAccount2Credentials);
         //Submit a claim via the API, including Employer Response.
         cy.task("generateClaim", "CHAP_ER").then((claim) => {
           assertValidClaim(claim.claim);

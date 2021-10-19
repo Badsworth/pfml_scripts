@@ -12,7 +12,7 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import PaymentMethod, PaymentTransactionType
-from massgov.pfml.delegated_payments.mock.mock_util import generate_routing_nbr_from_ssn
+from massgov.pfml.delegated_payments.mock.mock_util import MockData, generate_routing_nbr_from_ssn
 from massgov.pfml.delegated_payments.mock.scenario_data_generator import (
     INVALID_ADDRESS,
     MATCH_ADDRESS,
@@ -43,24 +43,7 @@ REQUESTED_ABSENCE_FIELD_NAMES = (
 )
 
 
-class FineosData:
-    def __init__(self, generate_defaults, **kwargs):
-        self.generate_defaults = generate_defaults
-        self.kwargs = kwargs
-
-    def get_value(self, key, default):
-        # We want to support setting values as None
-        contains_value = key in self.kwargs
-
-        if not contains_value:
-            if self.generate_defaults:
-                return default
-            return ""
-
-        return self.kwargs.get(key)
-
-
-class FineosClaimantData(FineosData):
+class FineosClaimantData(MockData):
     def __init__(
         self,
         generate_defaults=True,
@@ -164,7 +147,7 @@ class FineosClaimantData(FineosData):
         return requested_absence_record
 
 
-class FineosPaymentData(FineosData):
+class FineosPaymentData(MockData):
     """
     FINEOS Data contains all data we care about for processing a FINEOS extract
     With no parameters,, will generate a valid, mostly-random valid standard payment

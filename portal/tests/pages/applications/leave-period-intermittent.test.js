@@ -102,7 +102,9 @@ describe("LeavePeriodIntermittent", () => {
   });
 
   it("sends continuous leave dates and ID to the api when the user enters leave data", async () => {
-    const claim = new MockBenefitsApplicationBuilder().create();
+    const claim = new MockBenefitsApplicationBuilder()
+      .medicalLeaveReason()
+      .create();
     const { updateSpy } = setup({ claim });
 
     userEvent.click(screen.getByRole("radio", { name: /yes/i }));

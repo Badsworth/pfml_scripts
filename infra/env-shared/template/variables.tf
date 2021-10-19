@@ -46,3 +46,12 @@ variable "is_adhoc_workspace" {
   type        = bool
   default     = false
 }
+
+variable "pfmldata_bucket_resources" {
+  description = "S3 bucket resources included in pfmldata S3 proxy"
+  type = list(object({
+    bucket_arn        = string
+    resource_prefixes = list(string)
+  }))
+  default = []
+}

@@ -13,9 +13,9 @@ import {
 } from "../../src/errors";
 import { Auth } from "@aws-amplify/auth";
 import BaseApi from "../../src/api/BaseApi";
+import { mockAuth } from "../test-utils";
 import tracker from "../../src/services/tracker";
 
-jest.mock("@aws-amplify/auth");
 jest.mock("../../src/services/tracker");
 
 describe("BaseApi", () => {
@@ -34,11 +34,7 @@ describe("BaseApi", () => {
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYW1lIjoiQnVkIn0.YDRecdsqG_plEwM0H8rK7t2z0R3XRNESJB5ZXk-FRN8";
 
   beforeEach(() => {
-    jest.spyOn(Auth, "currentSession").mockImplementation(() =>
-      Promise.resolve({
-        accessToken: { jwtToken: accessTokenJwt },
-      })
-    );
+    mockAuth(true, accessTokenJwt);
 
     global.fetch = jest.fn().mockResolvedValue({
       json: jest.fn().mockResolvedValue({ data: [], errors: [], warnings: [] }),
@@ -192,19 +188,6 @@ describe("BaseApi", () => {
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
-  it("transforms the method to uppercase", async () => {
-    const method = "get";
-
-    await testsApi.request(method, "users");
-
-    expect(fetch).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({
-        method: "GET",
-      })
-    );
-  });
-
   it("removes the leading slash from the path", async () => {
     const method = "GET";
     const path = "/users";
@@ -228,18 +211,6 @@ describe("BaseApi", () => {
       expect(fetch).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({ body })
-      );
-    });
-  });
-
-  describe("when the method is invalid", () => {
-    it("throws an error", async () => {
-      const method = "WRONG";
-
-      await expect(
-        testsApi.request(method, "users")
-      ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"Invalid method provided, expected one of: DELETE, GET, PATCH, POST, PUT"`
       );
     });
   });
@@ -348,16 +319,6 @@ describe("BaseApi", () => {
         expect.objectContaining({ type: "required", field: "gamma[4]" }),
       ]);
     });
-  });
-
-  it("throws an error if i18nPrefix isn't defined on the subclass", () => {
-    class MyApi extends BaseApi {
-      get basePath() {
-        return "/api";
-      }
-    }
-
-    expect(() => new MyApi()).toThrow();
   });
 
   describe("when the fetch request fails", () => {

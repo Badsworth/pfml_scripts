@@ -1,10 +1,9 @@
-import datetime
-from decimal import Decimal
 from enum import Enum
 from typing import Optional, cast
 
 from sqlalchemy import JSON, TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql.schema import Index
 
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import Claim, Employee, ImportLog, Payment, ReferenceFile
@@ -134,8 +133,8 @@ class FineosExtractVpeiPaymentDetails(Base, TimestampMixin):
     businessnetbe_moncur = Column(Text)
     duetype = Column(Text)
     groupid = Column(Text)
-    peclassid = Column(Text)
-    peindexid = Column(Text)
+    peclassid = Column(Text, index=True)
+    peindexid = Column(Text, index=True)
     claimdetailsclassid = Column(Text)
     claimdetailsindexid = Column(Text)
     dateinterface = Column(Text)
@@ -144,6 +143,14 @@ class FineosExtractVpeiPaymentDetails(Base, TimestampMixin):
     )
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    Index(
+        "ix_payment_details_c_i_reference_file_id",
+        fineos_extract_import_log_id,
+        peclassid,
+        peindexid,
+        unique=False,
     )
 
     reference_file = relationship(ReferenceFile)
@@ -207,14 +214,22 @@ class FineosExtractVpeiClaimDetails(Base, TimestampMixin):
     diag3medicalc = Column(Text)
     diag4medicalc = Column(Text)
     diag5medicalc = Column(Text)
-    peclassid = Column(Text)
-    peindexid = Column(Text)
+    peclassid = Column(Text, index=True)
+    peindexid = Column(Text, index=True)
     dateinterface = Column(Text)
     reference_file_id = Column(
         PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
     )
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    Index(
+        "ix_claim_details_c_i_reference_file_id",
+        fineos_extract_import_log_id,
+        peclassid,
+        peindexid,
+        unique=False,
     )
 
     reference_file = relationship(ReferenceFile)
@@ -303,7 +318,7 @@ class FineosExtractVbiRequestedAbsence(Base, TimestampMixin):
     employer_name = Column(Text)
     employment_classid = Column(Text)
     employment_indexid = Column(Text)
-    leaverequest_id = Column(Text)
+    leaverequest_id = Column(Text, index=True)
     leaverequest_notificationdate = Column(Text)
     leaverequest_lastupdatedate = Column(Text)
     leaverequest_originalrequest = Column(Text)
@@ -340,6 +355,14 @@ class FineosExtractVbiRequestedAbsence(Base, TimestampMixin):
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
     )
+
+    Index(
+        "ix_payment_details_leaverequest_reference_file_id",
+        fineos_extract_import_log_id,
+        leaverequest_id,
+        unique=False,
+    )
+
     reference_file = relationship(ReferenceFile)
 
 
@@ -366,7 +389,7 @@ class FineosExtractEmployeeFeed(Base, TimestampMixin):
     maritalstatus = Column(Text)
     disabled = Column(Text)
     natinsno = Column(Text)
-    customerno = Column(Text)
+    customerno = Column(Text, index=True)
     referenceno = Column(Text)
     identificatio = Column(Text)
     unverified = Column(Text)
@@ -412,6 +435,13 @@ class FineosExtractEmployeeFeed(Base, TimestampMixin):
     )
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    Index(
+        "ix_employee_feed_import_log_id_customerno",
+        fineos_extract_import_log_id,
+        customerno,
+        unique=False,
     )
 
     reference_file = relationship(ReferenceFile)
@@ -596,6 +626,8 @@ class MmarsPaymentRefunds(Base, TimestampMixin):
     payment = relationship(Payment)
 
 
+# TO-DO: this has been consolidated into the applications.state_metric table and can be removed
+# after the app code (including the initial migration) has been deployed
 class MaximumWeeklyBenefitAmount(Base):
     # See regulations for how this is calculated:
     # https://malegislature.gov/Laws/GeneralLaws/PartI/TitleXXII/Chapter175M/Section3
@@ -603,12 +635,6 @@ class MaximumWeeklyBenefitAmount(Base):
 
     effective_date = Column(Date, primary_key=True, nullable=False)
     maximum_weekly_benefit_amount = Column(Numeric, nullable=False)
-
-    def __init__(self, effective_date: datetime.date, maximum_weekly_benefit_amount: str):
-        """ Constructor takes metric as a string to maintain precision. """
-
-        self.effective_date = effective_date
-        self.maximum_weekly_benefit_amount = Decimal(maximum_weekly_benefit_amount)
 
 
 class FineosWritebackDetails(Base, TimestampMixin):
@@ -996,16 +1022,5 @@ class LinkSplitPayment(Base, TimestampMixin):
 def sync_lookup_tables(db_session):
     FineosWritebackTransactionStatus.sync_to_database(db_session)
     PaymentAuditReportType.sync_to_database(db_session)
-
-
-def sync_maximum_weekly_benefit_amount(db_session):
-    maximum_weekly_benefit_amounts = [
-        MaximumWeeklyBenefitAmount(datetime.date(2020, 10, 1), "850.00"),
-    ]
-
-    for maximum_weekly_benefit_amount in maximum_weekly_benefit_amounts:
-        instance = db_session.merge(maximum_weekly_benefit_amount)
-        if db_session.is_modified(instance):
-            logger.info("updating maximum weekly benefit amount %r", instance)
 
     db_session.commit()

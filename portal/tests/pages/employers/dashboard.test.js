@@ -1,8 +1,4 @@
-import Claim, {
-  ClaimEmployee,
-  ClaimEmployer,
-  ManagedRequirement,
-} from "../../../src/models/Claim";
+import Claim, { ClaimEmployee } from "../../../src/models/Claim";
 import User, { UserLeaveAdministrator } from "../../../src/models/User";
 import { cleanup, screen, within } from "@testing-library/react";
 import ClaimCollection from "../../../src/models/ClaimCollection";
@@ -55,11 +51,11 @@ const getClaims = (leaveAdmin) => {
         middle_name: null,
         last_name: "Doe",
       }),
-      employer: new ClaimEmployer({
+      employer: {
         employer_dba: leaveAdmin.employer_dba,
         employer_fein: leaveAdmin.employer_fein,
         employer_id: leaveAdmin.employer_id,
-      }),
+      },
       fineos_absence_id: "NTN-111-ABS-01",
       claim_status: "Approved",
     }),
@@ -544,9 +540,9 @@ describe("Employer dashboard", () => {
 
     const claims = getClaims(verifiedUserLeaveAdministrator);
     claims[0].managed_requirements = [
-      new ManagedRequirement({
+      {
         follow_up_date: "2050-01-30",
-      }),
+      },
     ];
 
     const userAttrs = {

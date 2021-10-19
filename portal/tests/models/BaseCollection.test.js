@@ -8,12 +8,6 @@ describe("BaseCollection", () => {
   }
 
   describe("#constructor", () => {
-    it("cannot instantiate BaseCollection directly", () => {
-      expect(() => {
-        return new BaseCollection();
-      }).toThrow();
-    });
-
     it("creates an empty collection when no parameters are passed", () => {
       const collection = new TestCollection();
 

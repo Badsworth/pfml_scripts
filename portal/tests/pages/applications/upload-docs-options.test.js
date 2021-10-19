@@ -51,7 +51,9 @@ describe("UploadDocsOptions", () => {
     expect(choices).toMatchSnapshot(
       {},
       // include leave reason in snapshot title:
-      `${claim.leave_details.reason} ${claim.leave_details.reason_qualifier}`
+      `${claim.leave_details.reason || ""} ${
+        claim.leave_details.reason_qualifier || ""
+      }`
     );
   });
 

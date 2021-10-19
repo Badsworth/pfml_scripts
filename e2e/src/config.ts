@@ -86,6 +86,9 @@ const file: Partial<Configuration> =
 // The default layer is a set of default values which will be used if nothing is set.
 const defaults: Partial<Configuration> = {
   NEWRELIC_ACCOUNTID: "2837112",
+  DOR_IMPORT_URI: "s3://massgov-pfml-TARGET_ENV-agency-transfer/dor/received/",
+  DOR_ETL_ARN:
+    "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-TARGET_ENV-dor-fineos-etl",
 };
 export const merged = {
   ...defaults,

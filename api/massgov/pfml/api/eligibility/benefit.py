@@ -4,23 +4,15 @@
 # See https://lwd.atlassian.net/wiki/spaces/DD/pages/341049523/Benefit+Calculation
 #
 
-import datetime
 import decimal
 
 
 def calculate_weekly_benefit_amount(
     individual_average_weekly_wage: decimal.Decimal,
     state_average_weekly_wage: decimal.Decimal,
-    effective_date: datetime.date,
+    maximum_benefit: decimal.Decimal,
 ) -> decimal.Decimal:
     # Terminology note: aww = average weekly wage
-
-    if effective_date.year == 2021:
-        # Maximum benefit for the 1st yr of the program is $850
-        maximum_benefit = decimal.Decimal(850)
-    else:
-        maximum_benefit = state_average_weekly_wage * decimal.Decimal("0.64")
-
     half_state_aww = state_average_weekly_wage * decimal.Decimal("0.5")
 
     # Split the individual aww into the portion below 50% of the state aww and the portion above

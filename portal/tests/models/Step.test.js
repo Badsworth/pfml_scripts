@@ -1,4 +1,3 @@
-import BaseModel from "../../src/models/BaseModel";
 import { MockBenefitsApplicationBuilder } from "../test-utils";
 import Step from "../../src/models/Step";
 import claimantConfig from "../../src/flows/claimant";
@@ -214,56 +213,6 @@ describe("Step Model", () => {
         });
 
         expect(step.status).toEqual("in_progress");
-      });
-
-      describe("when a field is a model", () => {
-        class TestModel extends BaseModel {
-          get defaults() {
-            return {
-              value: null,
-            };
-          }
-        }
-
-        it("returns not_started when field is the default value", () => {
-          const warnings = [{ field: "field_e" }];
-          const claim = {
-            field_a: null,
-            field_b: null,
-            field_c: new TestModel(),
-            field_d: null,
-            field_e: null,
-          };
-
-          const step = new Step({
-            name,
-            pages,
-            context: { claim },
-            warnings,
-          });
-
-          expect(step.status).toEqual("not_started");
-        });
-
-        it("returns in_progress when field is not the default value", () => {
-          const warnings = [{ field: "field_e" }];
-          const claim = {
-            field_a: null,
-            field_b: null,
-            field_c: new TestModel({ value: "Started" }),
-            field_d: null,
-            field_e: null,
-          };
-
-          const step = new Step({
-            name,
-            pages,
-            context: { claim },
-            warnings,
-          });
-
-          expect(step.status).toEqual("in_progress");
-        });
       });
     });
 

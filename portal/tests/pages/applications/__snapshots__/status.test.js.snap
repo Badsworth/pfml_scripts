@@ -274,6 +274,43 @@ exports[`Status info alert displays if claimant has pregnancy but not bonding cl
 </div>
 `;
 
+exports[`Status manage your application displays manage approved application link if any of the claim statuses on an application are Approved 1`] = `
+<a
+  data-testid="manageApprovedApplicationLink"
+  href="https://www.mass.gov/info-details/managing-your-approved-paid-family-or-medical-leave-claim"
+  rel="noopener noreferrer"
+  target="_blank"
+>
+  examples of how to manage your approved application.
+</a>
+`;
+
+exports[`Status manage your application is displayed if any of the claim statuses on an application are Pending and none are Approved 1`] = `
+<div
+  data-testid="manageApplication"
+>
+  <h2
+    class="font-heading-md text-bold"
+  >
+    Manage your application
+  </h2>
+  <h3
+    class="margin-top-4 font-heading-sm text-bold"
+  >
+    Make changes
+  </h3>
+  <p>
+    To make changes to your application, call the Contact Center at 
+    <a
+      href="tel:(833) 344-7365"
+    >
+      (833) 344‑7365
+    </a>
+    . If you request a change to your start and end dates, we may need to review your application again.
+  </p>
+</div>
+`;
+
 exports[`Status renders the page with claim detail 1`] = `
 <div>
   <a
@@ -356,47 +393,35 @@ exports[`Status renders the page with claim detail 1`] = `
       >
         Respond to requests for information
       </h2>
-      <p>
-        If you have a request for more information, use this button to upload the requested documentation.
-      </p>
-      <a
-        class="usa-button measure-6 margin-top-3"
-        href="/applications/upload?absence_case_id=mock-absence-case-id"
-      >
-        Upload additional documents
-      </a>
+      <div>
+        We have made a final decision for this application. Your final decision notice has more details about the appeals process.
+        <p
+          class="margin-top-1"
+        >
+          If you would like to appeal the final decision, you can do so using mail, fax, or our 
+          <a
+            href="https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave"
+            rel="noreferrer noopener"
+            target="_blank"
+          >
+            online appeals form
+          </a>
+          .
+        </p>
+      </div>
     </div>
     <div
       class="border-top border-base-lighter padding-y-4"
     >
-      <h2
-        class="font-heading-md text-bold"
-      >
-        Manage your application
-      </h2>
       <h3
-        class="margin-top-4 font-heading-sm text-bold"
-      >
-        Make changes
-      </h3>
-      <p>
-        To make changes to your application, call the Contact Center at 
-        <a
-          href="tel:(833) 344‑7365"
-        >
-          (833) 344‑7365
-        </a>
-        . If you request a change to your start and end dates, we may need to review your application again.
-      </p>
-      <h3
-        class="margin-top-4 font-heading-sm text-bold"
+        class="font-heading-sm text-bold"
       >
         Report other benefits or income
       </h3>
       <p>
         If your plans for other benefits or income during your paid leave have changed, call the Contact Center at 
         <a
-          href="tel:(833) 344‑7365"
+          href="tel:(833) 344-7365"
         >
           (833) 344‑7365
         </a>

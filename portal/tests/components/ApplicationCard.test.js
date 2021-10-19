@@ -1,8 +1,9 @@
-import Document, { DocumentType } from "../../src/models/Document";
 import { render, screen } from "@testing-library/react";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { ApplicationCard } from "../../src/components/ApplicationCard";
+import BenefitsApplicationDocument from "../../src/models/BenefitsApplicationDocument";
+import { DocumentType } from "../../src/models/Document";
 import { MockBenefitsApplicationBuilder } from "../test-utils";
 import React from "react";
 import userEvent from "@testing-library/user-event";
@@ -73,17 +74,18 @@ describe("ApplicationCard", () => {
     renderCard({
       claim: new MockBenefitsApplicationBuilder().absenceId().create(),
       documents: [
-        new Document({
+        new BenefitsApplicationDocument({
           application_id: "mock-claim-id",
           document_type: DocumentType.appealAcknowledgment,
+          fineos_document_id: "mock-document-1",
         }),
-        new Document({
+        new BenefitsApplicationDocument({
           application_id: "mock-claim-id",
           document_type: DocumentType.approvalNotice,
           fineos_document_id: "mock-document-3",
         }),
         // Throw in a non-legal notice to confirm it doesn't get rendered
-        new Document({
+        new BenefitsApplicationDocument({
           application_id: "mock-claim-id",
           document_type: DocumentType.certification.medicalCertification,
           fineos_document_id: "mock-document-6",
@@ -229,7 +231,7 @@ describe("ApplicationCard", () => {
     renderCard({
       claim,
       documents: [
-        new Document({
+        new BenefitsApplicationDocument({
           application_id: claim.application_id,
           created_at: "2021-01-01",
           document_type: DocumentType.denialNotice,
@@ -250,7 +252,7 @@ describe("ApplicationCard", () => {
     renderCard({
       claim,
       documents: [
-        new Document({
+        new BenefitsApplicationDocument({
           application_id: claim.application_id,
           created_at: "2021-01-01",
           document_type: DocumentType.denialNotice,

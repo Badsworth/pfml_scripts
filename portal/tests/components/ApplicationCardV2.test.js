@@ -1,10 +1,12 @@
-import Document, { DocumentType } from "../../src/models/Document";
 import { act, render, screen } from "@testing-library/react";
 
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { ApplicationCardV2 } from "../../src/components/ApplicationCardV2";
+import BenefitsApplicationDocument from "../../src/models/BenefitsApplicationDocument";
 import ClaimDetail from "../../src/models/ClaimDetail";
+import { DocumentType } from "../../src/models/Document";
+
 import { MockBenefitsApplicationBuilder } from "../test-utils";
 import React from "react";
 import User from "../../src/models/User";
@@ -184,7 +186,9 @@ describe("ApplicationCardV2", () => {
 
   it("in progress claims don't show EIN in the title section", () => {
     const claim = new MockBenefitsApplicationBuilder().submitted().create();
-    render(<ApplicationCardV2WithAppLogic claim={claim} number={2} />);
+    render(
+      <ApplicationCardV2WithAppLogic claim={claim} number={2} documents={[]} />
+    );
     expect(
       screen.getByRole("heading", { name: "Application 2" })
     ).toBeInTheDocument();
@@ -261,11 +265,11 @@ describe("ApplicationCardV2", () => {
         claim={claim}
         number={2}
         documents={[
-          new Document({
+          new BenefitsApplicationDocument({
             application_id: "mock-claim-id",
             document_type: DocumentType.appealAcknowledgment,
           }),
-          new Document({
+          new BenefitsApplicationDocument({
             application_id: "mock-claim-id",
             document_type: DocumentType.approvalNotice,
             fineos_document_id: "mock-document-3",
@@ -285,11 +289,12 @@ describe("ApplicationCardV2", () => {
         claim={claim}
         number={2}
         documents={[
-          new Document({
+          new BenefitsApplicationDocument({
             application_id: "mock-claim-id",
             document_type: DocumentType.appealAcknowledgment,
+            fineos_document_id: "mock-document-1",
           }),
-          new Document({
+          new BenefitsApplicationDocument({
             application_id: "mock-claim-id",
             document_type: DocumentType.approvalNotice,
             fineos_document_id: "mock-document-3",

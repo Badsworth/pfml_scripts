@@ -15,11 +15,15 @@ const permissions: [FineosSecurityGroups, boolean][] = [
   ["SaviLinx Secured Agents(sec)", false],
   ["SaviLinx Supervisors(sec)", false],
   ["DFML IT(sec)", false],
-  ["Post-Prod Admin(sec)", false],
 ];
 
+const ssoAccount2Credentials: Credentials = {
+  username: config("SSO2_USERNAME"),
+  password: config("SSO2_PASSWORD"),
+};
+
 permissions.forEach(([userSecurityGroup, canChangeDocType]) => {
-  describe("Supress correspondence secure actions", () => {
+  describe("Bulk payee secure actions", () => {
     let ssn: string;
     const approval = it("Given a fully approved claim", () => {
       // Submit a claim via the API, including Employer Response.
@@ -29,9 +33,9 @@ permissions.forEach(([userSecurityGroup, canChangeDocType]) => {
           assertValidClaim(claim.claim);
           ssn = claim.claim.tax_identifier;
           cy.task("chooseFineosRole", {
-            userId: config("SSO2_USERNAME"),
+            userId: ssoAccount2Credentials.username,
             preset: userSecurityGroup,
-            debug: true,
+            debug: false,
           });
         });
       });
@@ -39,13 +43,9 @@ permissions.forEach(([userSecurityGroup, canChangeDocType]) => {
 
     it(`${userSecurityGroup} ${
       canChangeDocType ? "can" : "cannot"
-    } suppress notifications`, () => {
+    } click the bulk payee checkbox `, () => {
       cy.dependsOnPreviousPass([approval]);
-      fineos.before({
-        username: config("SSO2_USERNAME"),
-        password: config("SSO2_PASSWORD"),
-      });
-      // @todo: create claimant in all envs for this test
+      fineos.before(ssoAccount2Credentials);
       fineosPages.ClaimantPage.visit(ssn)
         .paymentPreferences()
         .edit()

@@ -849,21 +849,6 @@ def set_previous_leaves(
         db_session.add(new_previous_leave)
 
 
-def remove_employer_benefit(db_session: db.Session, employer_benefit: EmployerBenefit) -> None:
-    db_session.delete(employer_benefit)
-    db_session.commit()
-
-
-def remove_other_income(db_session: db.Session, other_income: OtherIncome) -> None:
-    db_session.delete(other_income)
-    db_session.commit()
-
-
-def remove_previous_leave(db_session: db.Session, previous_leave: PreviousLeave) -> None:
-    db_session.delete(previous_leave)
-    db_session.commit()
-
-
 def add_or_update_phone(
     db_session: db.Session, phone: Optional[apps_common_io.Phone], application: Application,
 ) -> None:

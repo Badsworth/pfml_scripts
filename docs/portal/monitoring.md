@@ -52,8 +52,6 @@ SELECT timestamp, componentStack, stackTrace FROM JavaScriptError WHERE appName 
 
 Each environment requires its own New Relic Browser "app" in order for us to differentiate between data coming in from the different environments. Create these through the New Relic site. Each New Relic app has its own `applicationId`, which will need set as part of the JS snippet included in our HTML.
 
-[CP-417](https://lwd.atlassian.net/browse/cp-417) is tracking the work to create New Relic apps for each environment.
-
 ### Enabling New Relic Browser
 
 If you have a browser extension installed to block trackers, you may need to safelist the New Relic snippet to allow it to make requests. If it's not being blocked, then it should Just Work. You can verify this by viewing the Network tab in DevTools, and observe payloads occasionally being sent to `bam.nr-data.net`

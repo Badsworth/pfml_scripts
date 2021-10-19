@@ -94,7 +94,11 @@ describe("Post-approval (notifications/notices)", () => {
             adjudication.acceptLeavePlan();
           });
           claimPage.outstandingRequirements((outstandingRequirements) => {
-            outstandingRequirements.complete();
+            outstandingRequirements.complete(
+              "Received",
+              "Complete Employer Confirmation",
+              true
+            );
           });
           claimPage.approve();
         });

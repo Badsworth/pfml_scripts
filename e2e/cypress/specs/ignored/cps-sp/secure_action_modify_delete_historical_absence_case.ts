@@ -42,6 +42,7 @@ securityGroups.forEach(([userSecurityGroup, canUseSecureAction]) => {
           cy.task("chooseFineosRole", {
             userId: ssoAccount2Credentials.username,
             preset: userSecurityGroup,
+            debug: false,
           });
         });
       });

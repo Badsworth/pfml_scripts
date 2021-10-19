@@ -3,6 +3,23 @@ from typing import Optional
 from massgov.pfml.util.routing_number_validation import compute_checksum
 
 
+class MockData:
+    def __init__(self, generate_defaults, **kwargs):
+        self.generate_defaults = generate_defaults
+        self.kwargs = kwargs
+
+    def get_value(self, key, default):
+        # We want to support setting values as None
+        contains_value = key in self.kwargs
+
+        if not contains_value:
+            if self.generate_defaults:
+                return default
+            return ""
+
+        return self.kwargs.get(key)
+
+
 def generate_routing_nbr_from_ssn(ssn: str) -> Optional[str]:
     if len(ssn) != 9 or not ssn.isnumeric():
         return None  # This'll cause issues for a test if you want this set

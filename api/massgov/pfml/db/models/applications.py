@@ -1,6 +1,7 @@
 import datetime
 from decimal import Decimal
 from enum import Enum
+from typing import Optional
 
 from sqlalchemy import TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text, case
 from sqlalchemy.dialects.postgresql import JSONB
@@ -20,6 +21,7 @@ from massgov.pfml.db.models.employees import (
     User,
 )
 from massgov.pfml.rmv.models import RmvAcknowledgement
+from massgov.pfml.util.decimals import round_nearest_hundredth
 
 from ..lookup import LookupTable
 from .base import Base, TimestampMixin, uuid_gen
@@ -254,7 +256,7 @@ class PreviousLeaveSameReason(PreviousLeave):
     __mapper_args__ = {"polymorphic_identity": "same_reason"}
 
 
-class Application(Base):
+class Application(Base, TimestampMixin):
     __tablename__ = "application"
     application_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     user_id = Column(PostgreSQLUUID, ForeignKey("user.user_id"), nullable=False, index=True)
@@ -806,12 +808,14 @@ class StateMetric(Base, TimestampMixin):
     effective_date = Column(Date, primary_key=True, nullable=False)
     unemployment_minimum_earnings = Column(Numeric, nullable=False)
     average_weekly_wage = Column(Numeric, nullable=False)
+    maximum_weekly_benefit_amount = Column(Numeric, nullable=False)
 
     def __init__(
         self,
         effective_date: datetime.date,
         unemployment_minimum_earnings: str,
         average_weekly_wage: str,
+        maximum_weekly_benefit_amount: Optional[str] = None,
     ):
         """Constructor that takes metric values as strings.
 
@@ -822,25 +826,43 @@ class StateMetric(Base, TimestampMixin):
         self.unemployment_minimum_earnings = Decimal(unemployment_minimum_earnings)
         self.average_weekly_wage = Decimal(average_weekly_wage)
 
+        # When the maximum weekly benefit is not manually set, it will be calculated based on
+        # the average weekly wage, as per the regulation:
+        # https://malegislature.gov/Laws/GeneralLaws/PartI/TitleXXII/Chapter175M/Section3
+        if maximum_weekly_benefit_amount is None:
+            self.maximum_weekly_benefit_amount = round_nearest_hundredth(
+                self.average_weekly_wage * Decimal(".64")
+            )
+        else:
+            self.maximum_weekly_benefit_amount = Decimal(maximum_weekly_benefit_amount)
+
     def __repr__(self):
-        return "StateMetric(%s, %s, %s)" % (
+        return "StateMetric(%s, %s, %s, %s)" % (
             self.effective_date,
             self.unemployment_minimum_earnings,
             self.average_weekly_wage,
+            self.maximum_weekly_benefit_amount,
         )
 
 
 def sync_state_metrics(db_session):
+    # For the first year of the program, the maximum weekly benefit is $850, which needs to
+    # be set directly. Beyond that, we should only directly set the unempleoyment minimum
+    # earnings and the average weekly wage. The maximum weekly benefit amount will then be
+    # calculated based on the average weekly wage.
+
     state_metrics = [
         StateMetric(
             effective_date=datetime.date(2020, 10, 1),
             unemployment_minimum_earnings="5100.00",
             average_weekly_wage="1431.66",
+            maximum_weekly_benefit_amount="850.00",
         ),
         StateMetric(
             effective_date=datetime.date(2021, 1, 1),
             unemployment_minimum_earnings="5400.00",
             average_weekly_wage="1487.78",
+            maximum_weekly_benefit_amount="850.00",
         ),
     ]
 

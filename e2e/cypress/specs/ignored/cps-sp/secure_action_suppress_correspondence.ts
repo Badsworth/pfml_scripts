@@ -17,7 +17,6 @@ const permissions: [FineosSecurityGroups, boolean][] = [
   ["SaviLinx Secured Agents(sec)", false],
   ["SaviLinx Supervisors(sec)", true],
   ["DFML IT(sec)", false],
-  ["Post-Prod Admin(sec)", false],
 ];
 // Set baseurl
 Cypress.config("baseUrl", getFineosBaseUrl());
@@ -28,7 +27,7 @@ const ssoAccount2Credentials: Credentials = {
 };
 
 permissions.forEach(([securityGroup, canUseSecureAction]) => {
-  describe("Supress correspondence secure actions", () => {
+  describe("Suppress correspondence secure actions", () => {
     const submission = it("Given a submitted claim", () => {
       //Submit a claim via the API, including Employer Response.
       cy.task("generateClaim", "CHAP_ER").then((claim) => {

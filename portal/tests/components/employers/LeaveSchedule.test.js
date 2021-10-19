@@ -34,16 +34,16 @@ describe("LeaveSchedule", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders reduced schedule without documents", () => {
+  it("renders reduced schedule", () => {
     render(<LeaveSchedule claim={REDUCED_CLAIM} />);
-    expect(
-      screen.getByRole("row", {
-        name: "Reduced leave schedule Contact us at (833) 344‑7365 for details about the leave schedule.",
-      })
-    ).toBeInTheDocument();
+    const row = screen.getByRole("row", {
+      name: /Reduced leave schedule/i,
+    });
+
+    expect(row).toMatchSnapshot();
   });
 
-  it("renders reduced schedule with documents", () => {
+  it("renders reference to downloading docs when reduced schedule claim has documents", () => {
     render(<LeaveSchedule claim={REDUCED_CLAIM} hasDocuments={true} />);
     expect(
       screen.getByText(/Download the attached documentation for more details./)
@@ -89,7 +89,7 @@ describe("LeaveSchedule", () => {
     ).toBeInTheDocument();
     expect(
       screen.getByRole("row", {
-        name: "Reduced leave schedule Contact us at (833) 344‑7365 for details about the leave schedule.",
+        name: "2/1/2021 to 7/1/2021 Reduced leave schedule Contact us at (833) 344‑7365 for details about the leave schedule.",
       })
     ).toBeInTheDocument();
   });

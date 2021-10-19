@@ -2,11 +2,7 @@ import ClaimDetail, {
   AbsencePeriod,
   OutstandingEvidence,
 } from "../../src/models/ClaimDetail";
-import {
-  ClaimEmployee,
-  ClaimEmployer,
-  ManagedRequirement,
-} from "../../src/models/Claim";
+import { ClaimEmployee } from "../../src/models/Claim";
 
 describe("ClaimDetail", () => {
   it("creates an employee and an employer", () => {
@@ -17,7 +13,7 @@ describe("ClaimDetail", () => {
     expect(claimDetail.employee).toBeInstanceOf(ClaimEmployee);
     expect(claimDetail.employee.email_address).toBe("alsofake@fake.com");
     expect(claimDetail.employee.first_name).toBe("Baxter");
-    expect(claimDetail.employer).toBeInstanceOf(ClaimEmployer);
+    expect(claimDetail.employer).toEqual({ employer_fein: "00-3456789" });
     expect(claimDetail.employer.employer_fein).toBe("00-3456789");
   });
 
@@ -171,7 +167,7 @@ describe("ClaimDetail", () => {
     const claimDetail = new ClaimDetail({ managed_requirements });
 
     claimDetail.managed_requirements.forEach((managed_requirement) => {
-      expect(managed_requirement).toBeInstanceOf(ManagedRequirement);
+      expect(managed_requirement).toEqual(requirement);
     });
   });
 

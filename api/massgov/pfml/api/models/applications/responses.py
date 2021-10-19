@@ -58,7 +58,7 @@ class ApplicationResponse(PydanticBaseModel):
     leave_details: Optional[MaskedApplicationLeaveDetails]
     payment_preference: Optional[MaskedPaymentPreference]
     work_pattern: Optional[WorkPattern]
-    updated_time: datetime
+    updated_time: Optional[datetime]
     status: Optional[ApplicationStatus]
     has_mailing_address: Optional[bool]
     mailing_address: Optional[MaskedAddress]
@@ -75,6 +75,7 @@ class ApplicationResponse(PydanticBaseModel):
     has_previous_leaves_other_reason: Optional[bool]
     has_previous_leaves_same_reason: Optional[bool]
     has_concurrent_leave: Optional[bool]
+    updated_at: datetime
 
     @classmethod
     def from_orm(cls, application: Application) -> "ApplicationResponse":
@@ -106,6 +107,8 @@ class ApplicationResponse(PydanticBaseModel):
 
         if application.claim is not None:
             application_response.fineos_absence_id = application.claim.fineos_absence_id
+
+        application_response.updated_time = application_response.updated_at
 
         return application_response
 

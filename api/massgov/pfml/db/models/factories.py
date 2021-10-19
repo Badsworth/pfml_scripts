@@ -17,7 +17,6 @@ from sqlalchemy.orm import scoped_session
 import massgov.pfml.db as db
 import massgov.pfml.db.models.applications as application_models
 import massgov.pfml.db.models.employees as employee_models
-import massgov.pfml.db.models.payments as payment_models
 import massgov.pfml.db.models.verifications as verification_models
 import massgov.pfml.util.datetime as datetime_util
 
@@ -322,7 +321,7 @@ class EmployeePushToFineosQueueFactory(BaseFactory):
     class Meta:
         model = employee_models.EmployeePushToFineosQueue
 
-    employee_log_id = Generators.UuidObj
+    employee_push_to_fineos_queue_id = Generators.UuidObj
     employee_id = None
     employer_id = None
     action = "UPDATE_NEW_EMPLOYER"
@@ -334,7 +333,7 @@ class EmployerPushToFineosQueueFactoryFactory(BaseFactory):
     class Meta:
         model = employee_models.EmployerPushToFineosQueue
 
-    employer_log_id = Generators.UuidObj
+    employer_push_to_fineos_queue_id = Generators.UuidObj
     employer_id = None
     action = "INSERT"
     modified_at = Generators.UtcNow
@@ -404,6 +403,7 @@ class AbsencePeriodFactory(BaseFactory):
     absence_period_type_id = 1
     absence_reason_id = 1
     absence_reason_qualifier_one_id = 1
+    absence_reason_qualifier_two_id = 1
     is_id_proofed = False
     created_at = datetime.now()
     updated_at = datetime.now()
@@ -576,8 +576,8 @@ class ApplicationFactory(BaseFactory):
     )
     leave_reason_qualifier_id = None
 
-    start_time = Generators.TransactionDateTime
-    updated_time = factory.LazyAttribute(lambda a: a.start_time + timedelta(days=1))
+    created_at = Generators.TransactionDateTime
+    updated_at = factory.LazyAttribute(lambda a: a.created_at + timedelta(days=1))
 
 
 class AddressFactory(BaseFactory):
@@ -765,13 +765,6 @@ class StateMetricFactory(BaseFactory):
     effective_date = datetime(2019, 10, 1)
     unemployment_minimum_earnings = Decimal("5000")
     average_weekly_wage = Decimal("1331.66")
-
-
-class MaximumWeeklyBenefitAmountFactory(BaseFactory):
-    class Meta:
-        model = payment_models.MaximumWeeklyBenefitAmount
-
-    effective_date = datetime(2019, 10, 1)
     maximum_weekly_benefit_amount = Decimal("1000.00")
 
 

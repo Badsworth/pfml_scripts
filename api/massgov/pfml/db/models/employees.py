@@ -463,8 +463,8 @@ class EmployerQuarterlyContribution(Base, TimestampMixin):
 
 
 class EmployerPushToFineosQueue(Base, TimestampMixin):
-    __tablename__ = "employer_log"
-    employer_log_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    __tablename__ = "employer_push_to_fineos_queue"
+    employer_push_to_fineos_queue_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     employer_id = Column(PostgreSQLUUID, index=True)
     action = Column(Text, index=True)
     modified_at = Column(TIMESTAMP(timezone=True), default=utc_timestamp_gen)
@@ -639,8 +639,8 @@ class Employee(Base, TimestampMixin):
 
 
 class EmployeePushToFineosQueue(Base, TimestampMixin):
-    __tablename__ = "employee_log"
-    employee_log_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    __tablename__ = "employee_push_to_fineos_queue"
+    employee_push_to_fineos_queue_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     employee_id = Column(PostgreSQLUUID, index=True)
     action = Column(Text, index=True)
     modified_at = Column(TIMESTAMP(timezone=True), default=utc_timestamp_gen)
@@ -791,6 +791,8 @@ class Payment(Base, TimestampMixin):
     )
     claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"))
     leave_request_id = Column(PostgreSQLUUID, ForeignKey("absence_period.absence_period_id"))
+
+    vpei_id = Column(PostgreSQLUUID, ForeignKey("fineos_extract_vpei.vpei_id"))
 
     fineos_employee_first_name = Column(Text)
     fineos_employee_middle_name = Column(Text)
@@ -1105,6 +1107,12 @@ class EmployeeOccupation(Base, TimestampMixin):
     employer_id = Column(
         PostgreSQLUUID, ForeignKey("employer.employer_id"), nullable=False, index=True
     )
+    organization_unit_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("organization_unit.organization_unit_id"),
+        nullable=True,
+        index=True,
+    )
     job_title = Column(Text)
     date_of_hire = Column(Date)
     date_job_ended = Column(Date)
@@ -1120,6 +1128,7 @@ class EmployeeOccupation(Base, TimestampMixin):
 
     employee = relationship("Employee", back_populates="employee_occupations")
     employer = relationship("Employer", back_populates="employer_occupations")
+    organization_unit = relationship("OrganizationUnit")
 
 
 class ImportLog(Base, TimestampMixin):
@@ -1146,6 +1155,8 @@ class ReferenceFile(Base, TimestampMixin):
         nullable=True,
         index=True,
     )
+    # When the data within the files was processed (as determined by the particular process)
+    processed_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
 
     reference_file_type = relationship(LkReferenceFileType)
     payments = relationship("PaymentReferenceFile", back_populates="reference_file")
@@ -1464,8 +1475,8 @@ class AbsenceReason(LookupTable):
     BEREAVEMENT = LkAbsenceReason(8, "Bereavement")
     EDUCATIONAL_ACTIVITY_FAMILY = LkAbsenceReason(9, "Educational Activity - Family")
     MEDICAL_DONATION_FAMILY = LkAbsenceReason(10, "Medical Donation - Family")
-    MILITARY_EXIGENCY_FAMILY = LkAbsenceReason(11, "Military Caregiver")
-    MILITARY_EXIGENCY_FAMILY = LkAbsenceReason(12, "Military Exigency - Family")
+    MILITARY_CAREGIVER = LkAbsenceReason(11, "Military Caregiver")
+    MILITARY_EXIGENCY_FAMILY = LkAbsenceReason(12, "Military Exigency Family")
     PREVENTATIVE_CARE_FAMILY_MEMBER = LkAbsenceReason(13, "Preventative Care - Family Member")
     PUBLIC_HEALTH_EMERGENCY_FAMILY = LkAbsenceReason(14, "Public Health Emergency - Family")
 
@@ -2580,6 +2591,10 @@ class LeaveRequestDecision(LookupTable):
     IN_REVIEW = LkLeaveRequestDecision(2, "In Review")
     APPROVED = LkLeaveRequestDecision(3, "Approved")
     DENIED = LkLeaveRequestDecision(4, "Denied")
+    CANCELLED = LkLeaveRequestDecision(5, "Cancelled")
+    WITHDRAWN = LkLeaveRequestDecision(6, "Withdrawn")
+    PROJECTED = LkLeaveRequestDecision(7, "Projected")
+    VOIDED = LkLeaveRequestDecision(8, "Voided")
 
 
 def sync_lookup_tables(db_session):

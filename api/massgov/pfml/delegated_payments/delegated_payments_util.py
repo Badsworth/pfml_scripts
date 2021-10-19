@@ -46,10 +46,21 @@ from massgov.pfml.util.routing_number_validation import validate_routing_number
 
 logger = logging.get_logger(__package__)
 
+ExtractTable = Union[
+    Type[FineosExtractVpei],
+    Type[FineosExtractVpeiClaimDetails],
+    Type[FineosExtractVpeiPaymentDetails],
+    Type[FineosExtractVbiRequestedAbsenceSom],
+    Type[FineosExtractEmployeeFeed],
+    Type[FineosExtractVbiRequestedAbsence],
+]
+
 
 @dataclass(frozen=True, eq=True)
 class FineosExtract:
     file_name: str
+
+    table: ExtractTable = field(compare=False, repr=False)
 
     # Note field names is simply a list
     # of fields we care about. Extracts
@@ -72,6 +83,14 @@ class Constants:
     FILE_NAME_PUB_POSITIVE_PAY = "EOLWD-DFML-POSITIVE-PAY"
     FILE_NAME_PAYMENT_AUDIT_REPORT = "Payment-Audit-Report"
     FILE_NAME_RAW_PUB_ACH_FILE = "ACD9T136-DFML"
+
+    REQUESTED_ABSENCE_SOM_FILE_NAME = "VBI_REQUESTEDABSENCE_SOM.csv"
+    EMPLOYEE_FEED_FILE_NAME = "Employee_feed.csv"
+
+    PEI_EXPECTED_FILE_NAME = "vpei.csv"
+    PAYMENT_DETAILS_EXPECTED_FILE_NAME = "vpeipaymentdetails.csv"
+    CLAIM_DETAILS_EXPECTED_FILE_NAME = "vpeiclaimdetails.csv"
+    REQUESTED_ABSENCE_FILE_NAME = "VBI_REQUESTEDABSENCE.csv"
 
     NACHA_FILE_FORMAT = f"%Y-%m-%d-%H-%M-%S-{FILE_NAME_PUB_NACHA}"
 
@@ -141,6 +160,7 @@ class FineosExtractConstants:
     # FINEOS Claimant Extract Files
     VBI_REQUESTED_ABSENCE_SOM = FineosExtract(
         file_name="VBI_REQUESTEDABSENCE_SOM.csv",
+        table=FineosExtractVbiRequestedAbsenceSom,
         field_names=[
             "ABSENCEPERIOD_CLASSID",
             "ABSENCEPERIOD_INDEXID",
@@ -159,6 +179,7 @@ class FineosExtractConstants:
 
     EMPLOYEE_FEED = FineosExtract(
         file_name="Employee_feed.csv",
+        table=FineosExtractEmployeeFeed,
         field_names=[
             "C",
             "I",
@@ -183,6 +204,7 @@ class FineosExtractConstants:
 
     VPEI = FineosExtract(
         file_name="vpei.csv",
+        table=FineosExtractVpei,
         field_names=[
             "C",
             "I",
@@ -207,6 +229,7 @@ class FineosExtractConstants:
 
     PAYMENT_DETAILS = FineosExtract(
         file_name="vpeipaymentdetails.csv",
+        table=FineosExtractVpeiPaymentDetails,
         field_names=[
             "PECLASSID",
             "PEINDEXID",
@@ -218,6 +241,7 @@ class FineosExtractConstants:
 
     CLAIM_DETAILS = FineosExtract(
         file_name="vpeiclaimdetails.csv",
+        table=FineosExtractVpeiClaimDetails,
         field_names=["PECLASSID", "PEINDEXID", "ABSENCECASENU", "LEAVEREQUESTI"],
     )
 
@@ -225,6 +249,7 @@ class FineosExtractConstants:
     # do not confuse it with the similar _SOM one in the claimant extract
     VBI_REQUESTED_ABSENCE = FineosExtract(
         file_name="VBI_REQUESTEDABSENCE.csv",
+        table=FineosExtractVbiRequestedAbsence,
         field_names=[
             "LEAVEREQUEST_DECISION",
             "LEAVEREQUEST_ID",
@@ -264,6 +289,7 @@ class Regexes:
 class ValidationReason(str, Enum):
     MISSING_FIELD = "MissingField"
     MISSING_DATASET = "MissingDataset"
+    TOO_MANY_DATASETS = "TooManyDatasets"
     MISSING_IN_DB = "MissingInDB"
     MISSING_FINEOS_NAME = "MissingFineosName"
     FIELD_TOO_SHORT = "FieldTooShort"
@@ -401,6 +427,52 @@ def validate_csv_input(
     custom_validator_func: Optional[Callable[[str], Optional[ValidationReason]]] = None,
 ) -> Optional[str]:
     value = data.get(key)
+    if value == "Unknown":
+        value = None  # Effectively treating "" and "Unknown" the same
+
+    if required and not value:
+        errors.add_validation_issue(ValidationReason.MISSING_FIELD, key)
+        return None
+
+    validation_issues = []
+    # Check the length only if it is defined/not empty
+    if value:
+        if min_length and len(value) < min_length:
+            validation_issues.append(ValidationReason.FIELD_TOO_SHORT)
+        if max_length and len(value) > max_length:
+            validation_issues.append(ValidationReason.FIELD_TOO_LONG)
+
+        # Also only bother with custom validation if the value exists
+        if custom_validator_func:
+            reason = custom_validator_func(value)
+            if reason:
+                validation_issues.append(reason)
+
+    if required:
+
+        for validation_issue in validation_issues:
+            # Any non-missing error types add the value to the error details
+            # Note that this means these reports will contain PII data
+            errors.add_validation_issue(validation_issue, f"{key}: {value}")
+
+    # If any of the specific validations hit an error, don't return the value
+    # This is true even if the field is not required as we may still use the field.
+    if len(validation_issues) > 0:
+        return None
+
+    return value
+
+
+def validate_db_input(
+    key: str,
+    data: Any,
+    errors: ValidationContainer,
+    required: Optional[bool] = False,
+    min_length: Optional[int] = None,
+    max_length: Optional[int] = None,
+    custom_validator_func: Optional[Callable[[str], Optional[ValidationReason]]] = None,
+) -> Optional[str]:
+    value = getattr(data, key.lower(), None)
     if value == "Unknown":
         value = None  # Effectively treating "" and "Unknown" the same
 
@@ -915,14 +987,7 @@ def get_attribute_names(cls):
 
 def create_staging_table_instance(
     data: Dict,
-    db_cls: Union[
-        Type[FineosExtractVpei],
-        Type[FineosExtractVpeiClaimDetails],
-        Type[FineosExtractVpeiPaymentDetails],
-        Type[FineosExtractVbiRequestedAbsenceSom],
-        Type[FineosExtractEmployeeFeed],
-        Type[FineosExtractVbiRequestedAbsence],
-    ],
+    db_cls: ExtractTable,
     ref_file: ReferenceFile,
     fineos_extract_import_log_id: Optional[int],
 ) -> base.Base:
@@ -942,18 +1007,20 @@ def create_staging_table_instance(
         absence_casestatus. We will log a warning stating property new_column is not included in model
         class VbiRequestedAbsenceSom.
     """
-
+    lower_data = make_keys_lowercase(data)
     # check if extracted data types match our db model properties
     known_properties = set(get_attribute_names(db_cls))
-    extracted_properties = set(data.keys())
+    extracted_properties = set(lower_data.keys())
     difference = [prop for prop in extracted_properties if prop not in known_properties]
 
     if len(difference) > 0:
         logger.warning(f"{db_cls.__name__} does not include properties: {','.join(difference)}")
-        [data.pop(diff) for diff in difference]
+        [lower_data.pop(diff) for diff in difference]
 
     return db_cls(
-        **data, reference_file=ref_file, fineos_extract_import_log_id=fineos_extract_import_log_id,
+        **lower_data,
+        reference_file=ref_file,
+        fineos_extract_import_log_id=fineos_extract_import_log_id,
     )
 
 

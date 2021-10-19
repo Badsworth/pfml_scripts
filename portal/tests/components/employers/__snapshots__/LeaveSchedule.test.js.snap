@@ -1,0 +1,23 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LeaveSchedule renders reduced schedule 1`] = `
+<tr>
+  <th
+    scope="row"
+  >
+    2/1/2021 to 7/1/2021
+  </th>
+  <td>
+    Reduced leave schedule
+  </td>
+  <td>
+    Contact us at 
+    <a
+      href="tel:(833) 344-7365"
+    >
+      (833) 344‑7365
+    </a>
+     for details about the leave schedule.
+  </td>
+</tr>
+`;

@@ -90,22 +90,6 @@ class RmvClient:
         # If the RMV responds with an Acknowledgement value, all other fields
         # will be None, so just return the Acknowledgement
         if res.Acknowledgement:
-            rmv_acknowledgement = RmvAcknowledgement(res.Acknowledgement)
-
-            if rmv_acknowledgement is RmvAcknowledgement.REQUIRED_FIELDS_MISSING:
-                logger.info(
-                    "Unable to retrieve record from RMV API",
-                    extra={
-                        "first_name_length": len(req_body["FirstName"]),
-                        "last_name_length": len(req_body["LastName"]),
-                        "license_id_length": len(req_body["LicenseID"])
-                        if req_body["LicenseID"] is not None
-                        else 0,
-                        "license_id_supplied": req_body["LicenseID"] is not None,
-                        "acknowledgement": res.Acknowledgement,
-                    },
-                )
-
-            return rmv_acknowledgement
+            return RmvAcknowledgement(res.Acknowledgement)
 
         return VendorLicenseInquiryResponse(**zeep_helpers.serialize_object(res))

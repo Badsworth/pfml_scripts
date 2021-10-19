@@ -1,4 +1,3 @@
-import Document, { DocumentType } from "../../../src/models/Document";
 import {
   DurationBasis,
   EmploymentStatus,
@@ -27,8 +26,10 @@ import Review, {
 import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
+import BenefitsApplicationDocument from "../../../src/models/BenefitsApplicationDocument";
 import { DateTime } from "luxon";
 import DocumentCollection from "../../../src/models/DocumentCollection";
+import { DocumentType } from "../../../src/models/Document";
 import { mockRouter } from "next/router";
 import routes from "../../../src/routes";
 import { setupBenefitsApplications } from "../../test-utils/helpers";
@@ -197,15 +198,15 @@ describe("Review Page", () => {
     setup({
       claim,
       documents: [
-        new Document({
+        new BenefitsApplicationDocument({
           application_id: claim.application_id,
           document_type: DocumentType.certification[claim.leave_details.reason],
         }),
-        new Document({
+        new BenefitsApplicationDocument({
           application_id: claim.application_id,
           document_type: DocumentType.certification[claim.leave_details.reason],
         }),
-        new Document({
+        new BenefitsApplicationDocument({
           application_id: claim.application_id,
           document_type: DocumentType.identityVerification,
         }),

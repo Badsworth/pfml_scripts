@@ -1,9 +1,10 @@
 /* eslint testing-library/prefer-user-event: 0 */
-import Document, { DocumentType } from "../../../../src/models/Document";
 import { MockEmployerClaimBuilder, renderPage } from "../../../test-utils";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import ClaimDocument from "../../../../src/models/ClaimDocument";
 import ConcurrentLeave from "../../../../src/models/ConcurrentLeave";
 import DocumentCollection from "../../../../src/models/DocumentCollection";
+import { DocumentType } from "../../../../src/models/Document";
 import { EmployerBenefitFrequency } from "../../../../src/models/EmployerBenefit";
 import EmployerClaim from "../../../../src/models/EmployerClaim";
 import LeaveReason from "../../../../src/models/LeaveReason";
@@ -14,21 +15,21 @@ import userEvent from "@testing-library/user-event";
 jest.mock("../../../../src/hooks/useAppLogic");
 
 const DOCUMENTS = new DocumentCollection([
-  new Document({
+  new ClaimDocument({
     content_type: "image/png",
     created_at: "2020-04-05",
     document_type: DocumentType.certification.medicalCertification,
     fineos_document_id: "fineos-id-4",
     name: "Medical cert doc",
   }),
-  new Document({
+  new ClaimDocument({
     content_type: "application/pdf",
     created_at: "2020-01-02",
     document_type: DocumentType.approvalNotice,
     fineos_document_id: "fineos-id-1",
     name: "Approval notice doc",
   }),
-  new Document({
+  new ClaimDocument({
     content_type: "application/pdf",
     created_at: "2020-02-01",
     document_type: DocumentType.certification[LeaveReason.care],
@@ -451,9 +452,92 @@ describe("Review", () => {
     });
   });
 
-  it.todo("sets 'previous_leaves' based on PreviousLeaves");
+  it("sets 'previous_leaves' based on PreviousLeaves", async () => {
+    setup();
+    userEvent.click(
+      screen.getByRole("button", { name: "Add a previous leave" })
+    );
+    userEvent.click(screen.getAllByRole("radio", { name: "Yes" })[0]);
+    const [startMonthInput, endMonthInput] = screen.getAllByRole("textbox", {
+      name: "Month",
+    });
+    const [startDayInput, endDayInput] = screen.getAllByRole("textbox", {
+      name: "Day",
+    });
+    const [startYearInput, endYearInput] = screen.getAllByRole("textbox", {
+      name: "Year",
+    });
+    fireEvent.change(startYearInput, { target: { value: "2021" } });
+    fireEvent.change(startDayInput, { target: { value: "10" } });
+    fireEvent.change(startMonthInput, { target: { value: "10" } });
+    fireEvent.change(endYearInput, { target: { value: "2021" } });
+    fireEvent.change(endDayInput, { target: { value: "17" } });
+    fireEvent.change(endMonthInput, { target: { value: "10" } });
 
-  it.todo("sets 'employer_benefits' based on EmployerBenefits");
+    userEvent.click(screen.getByRole("button", { name: "Submit" }));
+
+    await waitFor(() => {
+      expect(submitClaimReview).toHaveBeenCalledWith(
+        "NTN-111-ABS-01",
+        expect.objectContaining({
+          previous_leaves: [
+            expect.objectContaining({
+              is_for_current_employer: true,
+              leave_start_date: "2021-10-10",
+              leave_end_date: "2021-10-17",
+              type: "same_reason",
+            }),
+          ],
+        })
+      );
+    });
+  });
+
+  it("sets 'employer_benefits' based on EmployerBenefits", async () => {
+    setup();
+    userEvent.click(
+      screen.getByRole("button", { name: "Add an employer-sponsored benefit" })
+    );
+    userEvent.click(
+      screen.getByRole("radio", {
+        name: "Temporary disability insurance Short-term or long-term disability",
+      })
+    );
+    const [startMonthInput, endMonthInput] = screen.getAllByRole("textbox", {
+      name: "Month",
+    });
+    const [startDayInput, endDayInput] = screen.getAllByRole("textbox", {
+      name: "Day",
+    });
+    const [startYearInput, endYearInput] = screen.getAllByRole("textbox", {
+      name: "Year",
+    });
+    fireEvent.change(startYearInput, { target: { value: "2021" } });
+    fireEvent.change(startDayInput, { target: { value: "10" } });
+    fireEvent.change(startMonthInput, { target: { value: "10" } });
+    fireEvent.change(endYearInput, { target: { value: "2021" } });
+    fireEvent.change(endDayInput, { target: { value: "17" } });
+    fireEvent.change(endMonthInput, { target: { value: "10" } });
+    userEvent.click(screen.getAllByRole("radio", { name: "Yes" })[0]);
+
+    userEvent.click(screen.getByRole("button", { name: "Submit" }));
+
+    await waitFor(() => {
+      expect(submitClaimReview).toHaveBeenCalledWith(
+        "NTN-111-ABS-01",
+        expect.objectContaining({
+          employer_benefits: expect.arrayContaining([
+            expect.objectContaining({
+              is_full_salary_continuous: true,
+              benefit_start_date: "2021-10-10",
+              benefit_end_date: "2021-10-17",
+              benefit_type: "Short-term disability insurance",
+            }),
+          ]),
+        })
+      );
+    });
+  });
 
   it("sends concurrent leave if uses_second_eform_version is true", async () => {
     const claimWithConcurrentLeave = baseClaimBuilder

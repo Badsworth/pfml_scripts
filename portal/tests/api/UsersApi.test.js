@@ -1,8 +1,7 @@
-import { Auth } from "@aws-amplify/auth";
 import User from "../../src/models/User";
 import UsersApi from "../../src/api/UsersApi";
+import { mockAuth } from "../test-utils";
 
-jest.mock("@aws-amplify/auth");
 jest.mock("../../src/services/tracker");
 
 const mockFetch = ({
@@ -51,11 +50,7 @@ describe("users API", () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    jest.spyOn(Auth, "currentSession").mockImplementation(() =>
-      Promise.resolve({
-        accessToken: { jwtToken: accessTokenJwt },
-      })
-    );
+    mockAuth(true, accessTokenJwt);
     usersApi = new UsersApi();
   });
 
@@ -174,21 +169,24 @@ describe("users API", () => {
       const response = await usersApi.updateUser(user.user_id, user);
       expect(response.user).toBeInstanceOf(User);
       expect(response.user).toMatchInlineSnapshot(`
-        User {
-          "auth_id": null,
-          "consented_to_data_sharing": true,
-          "email_address": null,
-          "roles": Array [
-            UserRole {
-              "role_description": null,
-              "role_id": null,
-            },
-          ],
-          "status": null,
-          "user_id": "mock-user_id",
-          "user_leave_administrators": Array [],
-        }
-      `);
+User {
+  "auth_id": undefined,
+  "consented_to_data_sharing": true,
+  "email_address": undefined,
+  "roles": Array [
+    UserRole {
+      "role": Object {
+        "role_description": "Employer",
+        "role_id": 1,
+      },
+      "role_description": null,
+      "role_id": null,
+    },
+  ],
+  "user_id": "mock-user_id",
+  "user_leave_administrators": Array [],
+}
+`);
     });
   });
 });

@@ -1,3 +1,6 @@
+import os
+import re
+from datetime import datetime
 from typing import Any
 
 import boto3
@@ -56,6 +59,22 @@ def send_rows_to_nr(config, client, file):
 
         for row in CSVSourceWrapper(received_file):
             count += 1
+
+            # Adding extra attributes to the row
+
+            # E.g. For a file path s3://bucket/folder/2020-12-01-file-name.csv return file-name.csv
+            matches = re.search(r"(\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2})-(.*).csv", received_file)
+            if matches is not None:
+                # convert to date ob
+                row["file_timestamp"] = datetime.strptime(matches.group(1), "%Y-%m-%d-%H-%M-%S")
+                row["file_type"] = matches.group(2)
+            else:
+                logger.warning(
+                    "Failed to parse additional attributes from filename (%s)" % (received_file),
+                    exc_info=True,
+                )
+
+            row["environment"] = os.environ["ENVIRONMENT"]
             row["s3_filename"] = received_file
 
             # Avoid sending RAWLINE data, as it often contains PII

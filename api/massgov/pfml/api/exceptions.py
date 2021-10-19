@@ -1,4 +1,4 @@
-from werkzeug.exceptions import NotFound
+from werkzeug.exceptions import Forbidden, NotFound
 
 import massgov.pfml.api.util.response as response_util
 from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
@@ -22,4 +22,18 @@ class ObjectNotFound(NotFound):
                 ValidationErrorDetail(message=self.description, type=IssueType.object_not_found)
             ],
             data=self.data,
+        ).to_api_response()
+
+
+class ClaimWithdrawn(Forbidden):
+    def to_api_response(self):
+        issue = ValidationErrorDetail(
+            message="Claim has been withdrawn.", type=IssueType.fineos_claim_withdrawn,
+        )
+
+        return response_util.error_response(
+            status_code=Forbidden,
+            message="Claim has been withdrawn. Unable to display claim status.",
+            errors=[issue],
+            data=None,
         ).to_api_response()

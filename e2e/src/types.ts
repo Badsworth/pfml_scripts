@@ -58,7 +58,9 @@ export type SubjectOptions =
   | "denial (employer)"
   | "approval (employer)"
   | "denial (claimant)"
+  | "appeal (employer)"
   | "approval (claimant)"
+  | "appeal (claimant)"
   | "review leave hours"
   | "request for additional info"
   | "extension of benefits";
@@ -119,6 +121,7 @@ export type OtherTasks =
   | "Manual Intervention required to Approve Periods"
   | "Review Appeal "
   | "Schedule Hearing"
+  | "Send Decision Notice"
   | "Conduct Hearing";
 /**Tasks avalable in fineos */
 export type FineosTasks = DocumentReviewTasks | ERTasks | OtherTasks;

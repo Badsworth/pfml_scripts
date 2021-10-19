@@ -5,11 +5,9 @@
     "ecmaVersion": 2020,
     "sourceType": "module"
   },
-  "extends": ["plugin:@typescript-eslint/recommended", "prettier"],
+  "extends": ["prettier"],
   "plugins": ["unused-imports"],
   "rules": {
-    "@typescript-eslint/ban-ts-comment": "off",
-    "@typescript-eslint/no-unused-vars": "off",
     "unused-imports/no-unused-imports": "warn",
     "unused-imports/no-unused-vars": [
       "warn",
@@ -21,5 +19,15 @@
         "ignoreRestSiblings": true
       }
     ]
-  }
+  },
+  "overrides": [
+    {
+      "files": ["**/*.ts"],
+      "extends": ["plugin:@typescript-eslint/recommended"],
+      "rules": {
+        "@typescript-eslint/ban-ts-comment": "off",
+        "@typescript-eslint/no-unused-vars": "off"
+      }
+    }
+  ]
 }

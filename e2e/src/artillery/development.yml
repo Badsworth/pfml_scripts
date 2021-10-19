@@ -1,0 +1,25 @@
+config:
+  processor: ./processor.js
+  includeFiles:
+    - .env
+    - ./employees
+    - ./forms
+  environments:
+    performance:
+      phases:
+        - duration: 240
+          arrivalRate: 1
+          maxVusers: 1
+          name: Development
+    test:
+      phases:
+        - duration: 1
+          arrivalRate: 1
+          name: Development
+
+scenarios:
+  - name: Submit and Adjudicate
+    flow:
+      # This flow is similar to what runs in the cloud, but it happens all in one place.
+      # Nothing is queued to SQS - it just happens sequentially.
+      - function: submitAndAdjudicate

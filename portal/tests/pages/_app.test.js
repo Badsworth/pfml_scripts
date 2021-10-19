@@ -11,7 +11,7 @@ import useTrackerPageView from "../../src/hooks/useTrackerPageView";
 jest.mock("next/dynamic", () => () => (_props) => null);
 jest.mock("../../src/api/UsersApi");
 jest.mock("../../src/hooks/useAppLogic");
-jest.mock("../../src/hooks/useTrackerPageView.js");
+jest.mock("../../src/hooks/useTrackerPageView");
 jest.mock("lodash/uniqueId", () => {
   return jest.fn().mockReturnValue("mocked-for-snapshots");
 });

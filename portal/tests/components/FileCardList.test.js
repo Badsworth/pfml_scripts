@@ -1,6 +1,7 @@
-import Document, { DocumentType } from "../../src/models/Document";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
+import BenefitsApplicationDocument from "../../src/models/BenefitsApplicationDocument";
+import { DocumentType } from "../../src/models/Document";
 import FileCardList from "../../src/components/FileCardList";
 import React from "react";
 import TempFile from "../../src/models/TempFile";
@@ -10,13 +11,9 @@ import { makeFile } from "../test-utils";
 import userEvent from "@testing-library/user-event";
 
 const makeFileObjectHelper = (attrs = {}) => {
-  const file = new TempFile({ id: attrs.id });
-  const name = attrs.name || `${file.id}.pdf`;
-  const type = attrs.type || "application/pdf";
-
-  file.file = makeFile({ name, type });
-
-  return file;
+  const fileAttrs = attrs.id ? { id: attrs.id } : {};
+  fileAttrs.file = makeFile(attrs);
+  return new TempFile(fileAttrs);
 };
 
 const onChange = jest.fn();
@@ -51,7 +48,9 @@ describe("FileCardList", () => {
 
   it("with previously selected files, renders them and user can remove", () => {
     renderComponent({
-      tempFiles: new TempFileCollection([makeFileObjectHelper()]),
+      tempFiles: new TempFileCollection([
+        makeFileObjectHelper({ name: "TempFile1.pdf" }),
+      ]),
     });
     const [documentFileCards, fileCards] = screen.getAllByRole("list");
     expect(documentFileCards).toBeEmptyDOMElement();
@@ -151,13 +150,13 @@ describe("FileCardList", () => {
   });
 
   it("renders file cards for documents", () => {
-    const newDoc1 = new Document({
+    const newDoc1 = new BenefitsApplicationDocument({
       document_type: DocumentType.certification.medicalCertification,
       application_id: "mock_application_id",
       fineos_document_id: "testId1",
       created_at: "2020-11-26",
     });
-    const newDoc2 = new Document({
+    const newDoc2 = new BenefitsApplicationDocument({
       document_type: DocumentType.certification.medicalCertification,
       application_id: "mock_application_id",
       fineos_document_id: "testId2",

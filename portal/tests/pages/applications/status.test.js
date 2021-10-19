@@ -1,12 +1,13 @@
-import Document, { DocumentType } from "../../../src/models/Document";
 import Status, { LeaveDetails } from "../../../src/pages/applications/status";
 import { cleanup, render, screen } from "@testing-library/react";
+
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
+import BenefitsApplicationDocument from "../../../src/models/BenefitsApplicationDocument";
 import ClaimDetail from "../../../src/models/ClaimDetail";
 import DocumentCollection from "../../../src/models/DocumentCollection";
+import { DocumentType } from "../../../src/models/Document";
 import LeaveReason from "../../../src/models/LeaveReason";
-import { ManagedRequirement } from "../../../src/models/Claim";
 import React from "react";
 import { ReasonQualifier } from "../../../src/models/BenefitsApplication";
 import { mockRouter } from "next/router";
@@ -18,7 +19,7 @@ jest.mock("next/router");
 mockRouter.asPath = routes.applications.status;
 
 const DOCUMENTS = [
-  new Document({
+  new BenefitsApplicationDocument({
     application_id: "mock-application-id",
     content_type: "image/png",
     created_at: "2020-04-05",
@@ -26,7 +27,7 @@ const DOCUMENTS = [
     fineos_document_id: "fineos-id-4",
     name: "legal notice 1",
   }),
-  new Document({
+  new BenefitsApplicationDocument({
     application_id: "not-my-application-id",
     content_type: "image/png",
     created_at: "2020-04-05",
@@ -34,7 +35,7 @@ const DOCUMENTS = [
     fineos_document_id: "fineos-id-5",
     name: "legal notice 2",
   }),
-  new Document({
+  new BenefitsApplicationDocument({
     application_id: "mock-application-id",
     content_type: "image/png",
     created_at: "2020-04-05",
@@ -42,7 +43,7 @@ const DOCUMENTS = [
     fineos_document_id: "fineos-id-6",
     name: "non-legal notice 1",
   }),
-  new Document({
+  new BenefitsApplicationDocument({
     application_id: "mock-application-id",
     content_type: "image/png",
     created_at: "2020-04-05",
@@ -74,6 +75,7 @@ const defaultClaimDetail = {
   fineos_absence_id: "mock-absence-case-id",
   employer: { employer_fein: "12-1234567" },
 };
+
 const props = {
   query: { absence_case_id: defaultClaimDetail.fineos_absence_id },
 };
@@ -103,6 +105,21 @@ describe("Status", () => {
     );
 
     expect(goToSpy).toHaveBeenCalledWith(routes.applications.index);
+  });
+
+  it("redirects to 404 if there's no absence case ID", () => {
+    renderPage(
+      Status,
+      {
+        addCustomSetup: setupHelper(),
+      },
+      { query: {} }
+    );
+
+    const pageNotFoundHeading = screen.getByRole("heading", {
+      name: /Page not found/,
+    });
+    expect(pageNotFoundHeading).toBeInTheDocument();
   });
 
   it("renders the page with back button if error exists", () => {
@@ -397,13 +414,95 @@ describe("Status", () => {
         )
       ).toBeInTheDocument();
     });
+
+    it("displays status timeline for notices if notices are due but not present", () => {
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper(
+            {
+              ...defaultClaimDetail,
+              absence_periods: [
+                {
+                  period_type: "Reduced",
+                  reason: LeaveReason.pregnancy,
+                  request_decision: "Pending",
+                },
+                {
+                  period_type: "Reduced",
+                  reason: LeaveReason.bonding,
+                  request_decision: "Approved",
+                },
+              ],
+            },
+            [DOCUMENTS[1]]
+          ),
+        },
+        props
+      );
+
+      expect(
+        screen.getByText(
+          /Notices usually appear within 30 minutes after we update the status of your application./
+        )
+      ).toBeInTheDocument();
+    });
+
+    it("doesn't display status timeline for notices if notices are due and present", () => {
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper(
+            {
+              ...defaultClaimDetail,
+              absence_periods: [
+                {
+                  period_type: "Reduced",
+                  reason: LeaveReason.pregnancy,
+                  request_decision: "Pending",
+                },
+                {
+                  period_type: "Reduced",
+                  reason: LeaveReason.bonding,
+                  request_decision: "Approved",
+                },
+              ],
+            },
+            [DOCUMENTS[0]]
+          ),
+        },
+        props
+      );
+
+      expect(
+        screen.queryByText(
+          /Notices usually appear within 30 minutes after we update the status of your application./
+        )
+      ).not.toBeInTheDocument();
+    });
   });
 
-  it("includes a button to upload additional documents", () => {
+  it("includes a button to upload additional documents if there is a pending absence period", () => {
+    const absence_periods = [
+      "Withdrawn",
+      "Cancelled",
+      "Approved",
+      "Pending",
+      "Denied",
+    ].map((request_decision, fineos_leave_request_id) => ({
+      fineos_leave_request_id,
+      request_decision,
+      period_type: "Continuous",
+      reason: LeaveReason.medical,
+    }));
+
     renderPage(
       Status,
       {
-        addCustomSetup: setupHelper({ ...defaultClaimDetail }, [DOCUMENTS[1]]),
+        addCustomSetup: setupHelper({
+          ...defaultClaimDetail,
+          absence_periods,
+        }),
       },
       props
     );
@@ -563,14 +662,14 @@ describe("Status", () => {
             addCustomSetup: setupHelper({
               ...claimDetailAttrs,
               managed_requirements: [
-                new ManagedRequirement({
+                {
                   follow_up_date: null,
                   status: "Open",
-                }),
-                new ManagedRequirement({
+                },
+                {
                   follow_up_date: "2022-01-01",
                   status: "Completed",
-                }),
+                },
               ],
             }),
           },
@@ -596,18 +695,18 @@ describe("Status", () => {
             addCustomSetup: setupHelper({
               ...claimDetailAttrs,
               managed_requirements: [
-                new ManagedRequirement({
+                {
                   follow_up_date: "2021-01-01",
                   status: "Completed",
-                }),
-                new ManagedRequirement({
+                },
+                {
                   follow_up_date: "2021-01-01",
                   status: "Suppressed",
-                }),
-                new ManagedRequirement({
+                },
+                {
                   follow_up_date: "2022-12-01",
                   status: "Open",
-                }),
+                },
               ],
             }),
           },
@@ -641,7 +740,7 @@ describe("Status", () => {
       };
 
       const documents = [
-        new Document({
+        new BenefitsApplicationDocument({
           application_id: defaultClaimDetail.application_id,
           document_type: DocumentType.certification[LeaveReason.bonding],
         }),
@@ -655,14 +754,14 @@ describe("Status", () => {
               {
                 ...claimDetailAttrs,
                 managed_requirements: [
-                  new ManagedRequirement({
+                  {
                     follow_up_date: null,
                     status: "Open",
-                  }),
-                  new ManagedRequirement({
+                  },
+                  {
                     follow_up_date: "2022-01-01",
                     status: "Completed",
-                  }),
+                  },
                 ],
               },
               documents
@@ -691,18 +790,18 @@ describe("Status", () => {
               {
                 ...claimDetailAttrs,
                 managed_requirements: [
-                  new ManagedRequirement({
+                  {
                     follow_up_date: "2021-01-01",
                     status: "Completed",
-                  }),
-                  new ManagedRequirement({
+                  },
+                  {
                     follow_up_date: "2021-01-01",
                     status: "Suppressed",
-                  }),
-                  new ManagedRequirement({
+                  },
+                  {
                     follow_up_date: "2022-12-01",
                     status: "Open",
-                  }),
+                  },
                 ],
               },
               documents
@@ -836,6 +935,92 @@ describe("Status", () => {
           </a>
         `);
       });
+    });
+  });
+  describe("manage your application", () => {
+    it("is not displayed if all the claim statuses on an application are Withdrawn, Cancelled, or Denied", () => {
+      const absence_periods = ["Withdrawn", "Cancelled", "Denied"].map(
+        (request_decision, fineos_leave_request_id) => ({
+          fineos_leave_request_id,
+          request_decision,
+          period_type: "Continuous",
+          reason: LeaveReason.medical,
+        })
+      );
+
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper({
+            ...defaultClaimDetail,
+            absence_periods,
+          }),
+        },
+        props
+      );
+
+      expect(screen.queryByTestId("manageApplication")).not.toBeInTheDocument();
+    });
+
+    it("displays manage approved application link if any of the claim statuses on an application are Approved", () => {
+      const absence_periods = [
+        "Withdrawn",
+        "Cancelled",
+        "Approved",
+        "Pending",
+        "Denied",
+      ].map((request_decision, fineos_leave_request_id) => ({
+        fineos_leave_request_id,
+        request_decision,
+        period_type: "Continuous",
+        reason: LeaveReason.medical,
+      }));
+
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper({
+            ...defaultClaimDetail,
+            absence_periods,
+          }),
+        },
+        props
+      );
+
+      const manageApprovedApplicationLink = screen.getByTestId(
+        "manageApprovedApplicationLink"
+      );
+      expect(manageApprovedApplicationLink).toBeInTheDocument();
+      expect(manageApprovedApplicationLink).toMatchSnapshot();
+    });
+
+    it("is displayed if any of the claim statuses on an application are Pending and none are Approved", () => {
+      const absence_periods = [
+        "Withdrawn",
+        "Cancelled",
+        "Pending",
+        "Denied",
+      ].map((request_decision, fineos_leave_request_id) => ({
+        fineos_leave_request_id,
+        request_decision,
+        period_type: "Continuous",
+        reason: LeaveReason.medical,
+      }));
+
+      renderPage(
+        Status,
+        {
+          addCustomSetup: setupHelper({
+            ...defaultClaimDetail,
+            absence_periods,
+          }),
+        },
+        props
+      );
+
+      const manageApplication = screen.getByTestId("manageApplication");
+      expect(manageApplication).toBeInTheDocument();
+      expect(manageApplication).toMatchSnapshot();
     });
   });
 });
