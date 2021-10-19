@@ -1,6 +1,6 @@
+/* eslint-disable react/prop-types */
 import React, { useEffect, useState } from "react";
 import { camelCase, get, uniqueId } from "lodash";
-import PropTypes from "prop-types";
 import mermaid from "mermaid";
 
 /**
@@ -36,12 +36,6 @@ const FlowDiagram = ({ direction = "TB", ...props }) => {
       />
     </React.Fragment>
   );
-};
-
-FlowDiagram.propTypes = {
-  direction: PropTypes.oneOf(["TB", "LR"]),
-  maxWidth: PropTypes.string,
-  states: PropTypes.object.isRequired,
 };
 
 export default FlowDiagram;
