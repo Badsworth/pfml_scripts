@@ -696,14 +696,14 @@ class LkDocumentType(Base):
         self.document_type_description = document_type_description
 
 
-class LkContentType(Base):
-    __tablename__ = "lk_content_type"
-    content_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    content_type_description = Column(Text, nullable=False)
+# class LkContentType(Base):
+#     __tablename__ = "lk_content_type"
+#     content_type_id = Column(Integer, primary_key=True, autoincrement=True)
+#     content_type_description = Column(Text, nullable=False)
 
-    def __init__(self, content_type_id, content_type_description):
-        self.content_type_id = content_type_id
-        self.content_type_description = content_type_description
+#     def __init__(self, content_type_id, content_type_description):
+#         self.content_type_id = content_type_id
+#         self.content_type_description = content_type_description
 
 
 class DocumentType(LookupTable):
@@ -729,15 +729,15 @@ class DocumentType(LookupTable):
     APPEAL_ACKNOWLEDGMENT = LkDocumentType(15, "Appeal Acknowledgment")
 
 
-class ContentType(LookupTable):
-    model = LkContentType
-    column_names = ("content_type_id", "content_type_description")
+# class ContentType(LookupTable):
+#     model = LkContentType
+#     column_names = ("content_type_id", "content_type_description")
 
-    PDF = LkContentType(1, "application/pdf")
-    JPEG = LkContentType(2, "image/jpeg")
-    PNG = LkContentType(3, "image/png")
-    TIFF = LkContentType(4, "image/tiff")
-    HEIC = LkContentType(5, "image/heic")
+#     PDF = LkContentType(1, "application/pdf")
+#     JPEG = LkContentType(2, "image/jpeg")
+#     PNG = LkContentType(3, "image/png")
+#     TIFF = LkContentType(4, "image/tiff")
+#     HEIC = LkContentType(5, "image/heic")
 
 
 class Document(Base, TimestampMixin):
@@ -750,7 +750,7 @@ class Document(Base, TimestampMixin):
     document_type_id = Column(
         Integer, ForeignKey("lk_document_type.document_type_id"), nullable=False
     )
-    content_type_id = Column(Integer, ForeignKey("lk_content_type.content_type_id"), nullable=False)
+    # content_type_id = Column(Integer, ForeignKey("lk_content_type.content_type_id"), nullable=False)
     size_bytes = Column(Integer, nullable=False)
     fineos_id = Column(Text, nullable=True)
     is_stored_in_s3 = Column(Boolean, nullable=False)
@@ -758,7 +758,7 @@ class Document(Base, TimestampMixin):
     description = Column(Text, nullable=False)
 
     document_type_instance = relationship(LkDocumentType)
-    content_type_instance = relationship(LkContentType)
+    # content_type_instance = relationship(LkContentType)
 
 
 class RMVCheckApiErrorCode(Enum):
@@ -927,7 +927,7 @@ def sync_lookup_tables(db_session):
     EmployerBenefitType.sync_to_database(db_session)
     OtherIncomeType.sync_to_database(db_session)
     DocumentType.sync_to_database(db_session)
-    ContentType.sync_to_database(db_session)
+    # ContentType.sync_to_database(db_session)
     DayOfWeek.sync_to_database(db_session)
     WorkPatternType.sync_to_database(db_session)
     PhoneType.sync_to_database(db_session)
