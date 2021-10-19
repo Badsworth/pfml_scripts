@@ -102,6 +102,7 @@ class FineosExtractStep(Step):
             self.process_extracts(pathlib.Path(download_directory))
 
         self.db_session.commit()
+
         logger.info(
             "Successfully consumed FINEOS extract data for %s",
             self.extract_config.reference_file_type.reference_file_type_description,
@@ -221,7 +222,7 @@ class FineosExtractStep(Step):
         self.db_session.add(extract_data.reference_file)
 
         logger.info("Successfully moved files to %s folder", directory_name)
-        self.set_metrics({self.Metrics.ARCHIVE_PATH: directory_name})
+        self.set_metrics({self.Metrics.ARCHIVE_PATH: new_file_location})
 
     def _download_and_index_data(self, extract_data: ExtractData, download_directory: str) -> None:
         for file_location, extract in extract_data.extract_path_mapping.items():

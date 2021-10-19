@@ -2224,7 +2224,7 @@ def test_e2e_process_payment_reconciliation(
             "FineosExtractStep",
             {
                 "fineos_prefix": "2021-05-01-21-00-00",
-                "archive_path": "processed",
+                "archive_path": "s3://test_bucket/cps/inbound/processed/2021-05-01-21-00-00-payment-reconciliation-extract",
                 "records_processed_count": len(payments_util.PAYMENT_RECONCILIATION_EXTRACT_FILES)
                 * extract_count,
             },
