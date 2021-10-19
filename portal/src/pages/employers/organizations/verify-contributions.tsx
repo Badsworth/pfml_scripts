@@ -60,7 +60,6 @@ export const VerifyContributions = (props: VerifyContributionsProps) => {
     const payload = {
       employer_id: query.employer_id,
       withholding_amount: formState.withholdingAmount,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'filing_period' does not exist on type 'W... Remove this comment to see the full error message
       withholding_quarter: withholding.filing_period,
     };
 
@@ -111,7 +110,6 @@ export const VerifyContributions = (props: VerifyContributionsProps) => {
         <Trans
           i18nKey="pages.employersOrganizationsVerifyContributions.detailsList"
           values={{
-            // @ts-expect-error ts-migrate(2339) FIXME: Property 'filing_period' does not exist on type 'W... Remove this comment to see the full error message
             date: formatDateRange(withholding.filing_period),
           }}
           components={{
@@ -148,7 +146,6 @@ export const VerifyContributions = (props: VerifyContributionsProps) => {
         label={t(
           "pages.employersOrganizationsVerifyContributions.withholdingAmountLabel",
           {
-            // @ts-expect-error ts-migrate(2339) FIXME: Property 'filing_period' does not exist on type 'W... Remove this comment to see the full error message
             date: formatDateRange(withholding.filing_period),
           }
         )}
