@@ -25,7 +25,6 @@ import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
-
 interface StatusProps {
   appLogic: {
     appErrors: any;
@@ -51,6 +50,9 @@ interface StatusProps {
     uploaded_document_type?: string;
   };
 }
+
+const containerClassName =
+  "border-bottom border-base-lighter measure-6 padding-y-4";
 
 export const Status = ({ appLogic, query }: StatusProps) => {
   const { t } = useTranslation();
@@ -116,7 +118,7 @@ export const Status = ({ appLogic, query }: StatusProps) => {
   // Check both because claimDetail could be cached from a different status page.
   if (isLoadingClaimDetail || !claimDetail) {
     return (
-      <div className="margin-top-8 text-center">
+      <div className="text-center">
         <Spinner
           aria-valuetext={t("pages.claimsStatus.loadingClaimDetailLabel")}
         />
@@ -134,8 +136,6 @@ export const Status = ({ appLogic, query }: StatusProps) => {
   const documentsForApplication = allClaimDocuments.filterByApplication(
     claimDetail.application_id
   );
-
-  const containerClassName = "border-top border-base-lighter padding-y-4";
 
   const ViewYourNotices = () => {
     const legalNotices = getLegalNotices(documentsForApplication);
@@ -174,7 +174,7 @@ export const Status = ({ appLogic, query }: StatusProps) => {
       />
     );
 
-    // How many notices a user should have, based on claim decisions
+    // How many claim decisions
     const expectedNoticeCount = claimDetail.absence_periods.reduce(
       (acc, { request_decision }) => {
         const shouldHaveNotice =
@@ -200,12 +200,14 @@ export const Status = ({ appLogic, query }: StatusProps) => {
       return noticeTypes[legalNotice.document_type];
     });
 
-    // Determines whether or not to show timeline for notice
-    const isStatusTimelineNotice = expectedNoticeCount > decisionNotices.length;
+    // Show timeline for notice if there are no notices and expectedNotices > amount of Notices
+    const isStatusTimelineNotice = !decisionNotices.length
+      ? expectedNoticeCount > decisionNotices.length
+      : null;
 
     return (
       <SectionWrapper>
-        <Heading className="margin-bottom-1" level="2" id="view_notices">
+        <Heading level="2" id="view_notices">
           {t("pages.claimsStatus.viewNoticesHeading")}
         </Heading>
         {sectionBody}
@@ -243,7 +245,6 @@ export const Status = ({ appLogic, query }: StatusProps) => {
     <React.Fragment>
       {uploaded_document_type && (
         <Alert
-          className="margin-bottom-3"
           heading={t("pages.claimsStatus.uploadSuccessHeading", {
             document: t("pages.claimsStatus.uploadSuccessHeadingDocumentName", {
               context: uploaded_document_type,
@@ -292,19 +293,19 @@ export const Status = ({ appLogic, query }: StatusProps) => {
         label={t("pages.claimsStatus.backButtonLabel")}
         href={routes.applications.index}
       />
-      <div className="measure-6">
-        <Title weight="normal" small marginBottom="3">
+      <div>
+        <Title weight="normal" small>
           {t("pages.claimsStatus.applicationDetails")}
         </Title>
 
         {/* Heading section */}
 
-        <Heading level="2" size="1" className="margin-bottom-3">
+        <Heading level="2" size="1">
           {t("pages.claimsStatus.leaveReasonValueHeader", {
             context: findKeyByValue(LeaveReason, firstAbsenceDetail),
           })}
         </Heading>
-        <div className="display-flex border-base-lighter margin-bottom-4 bg-base-lightest padding-2">
+        <div className="display-flex bg-base-lightest padding-2">
           <div className="padding-right-10">
             <Heading weight="normal" level="2" size="4">
               {t("pages.claimsStatus.applicationID")}
@@ -370,13 +371,13 @@ export const Status = ({ appLogic, query }: StatusProps) => {
         </div>
 
         {/* Manage applications section */}
-        <div className={containerClassName}>
+        <div className="measure-6 padding-y-4">
           {(hasPendingStatus || hasApprovedStatus) && (
             <div data-testid="manageApplication">
               <Heading level="2">
                 {t("pages.claimsStatus.manageApplicationHeading")}
               </Heading>
-              <Heading level="3" className="margin-top-4">
+              <Heading level="3" className="margin-top-3">
                 {t("pages.claimsStatus.makeChangesHeading")}
               </Heading>
               <Trans
@@ -441,10 +442,7 @@ interface LeaveDetailsProps {
 export const LeaveDetails = ({ absenceDetails = {} }: LeaveDetailsProps) => {
   const { t } = useTranslation();
   return map(absenceDetails, (absenceItem, absenceItemName) => (
-    <div
-      key={absenceItemName}
-      className="border-base-lighter margin-bottom-4 padding-top-4 border-top"
-    >
+    <div key={absenceItemName} className={containerClassName}>
       <Heading level="2">
         {t("pages.claimsStatus.leaveReasonValue", {
           context: findKeyByValue(LeaveReason, absenceItemName),
@@ -464,20 +462,19 @@ export const LeaveDetails = ({ absenceDetails = {} }: LeaveDetailsProps) => {
             ) => (
               <div
                 key={fineos_leave_request_id}
-                className={`margin-top-${ind > 0 ? "5" : "4"}`}
+                className={`margin-top-${ind ? "6" : "4"}`}
               >
-                <Heading className="margin-bottom-1" level="3">
+                <Heading level="3">
                   {t("pages.claimsStatus.leavePeriodLabel", {
                     context: period_type.split(" ")[0].toLowerCase(),
                   })}
                 </Heading>
-                <p className="margin-top-0 margin-bottom-1">
+                <p>
                   {`From ${formatDate(
                     absence_period_start_date
                   ).full()} to ${formatDate(absence_period_end_date).full()}`}
                 </p>
                 <Tag
-                  className="padding-x-1 margin-top-0 margin-bottom-05"
                   label={request_decision}
                   state={StatusTagMap[request_decision]}
                 />
@@ -492,7 +489,7 @@ export const LeaveDetails = ({ absenceDetails = {} }: LeaveDetailsProps) => {
                         target="_blank"
                       />
                     ),
-                    p: <p className="margin-top-1"></p>,
+                    p: <p></p>,
                     "request-appeal-link": (
                       <a
                         href={routes.external.massgov.requestAnAppealForPFML}
@@ -500,7 +497,7 @@ export const LeaveDetails = ({ absenceDetails = {} }: LeaveDetailsProps) => {
                         target="_blank"
                       />
                     ),
-                    "request-decision-info": <p className="margin-0"></p>,
+                    "request-decision-info": <p></p>,
                   }}
                 />
               </div>
@@ -629,7 +626,7 @@ export const Timeline = ({
     </React.Fragment>
   );
   return (
-    <div data-testid="timeline" className="border-base-lighter margin-bottom-4">
+    <div data-testid="timeline" className={containerClassName}>
       {!bondingAbsencePeriod ||
       // eslint-disable-next-line react/prop-types
       !shouldRenderCertificationButton(bondingAbsencePeriod.reason, docList) ? (
