@@ -7,6 +7,7 @@ export default {
   args: {
     endDate: "2021-03-31",
     startDate: "2021-01-01",
+    showWaitingDayPeriod: true,
   },
 };
 

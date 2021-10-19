@@ -2977,7 +2977,8 @@ const components = {
     toggleLabel: "Show password",
   },
   leaveDatesAlert: {
-    heading: "Your leave dates for paid leave",
+    heading: "Your leave dates for paid leave from PFML",
+    leaveDatesHeading: "Your 7-day waiting period dates",
   },
   maintenanceAlertBar: {
     message_withEndTime:

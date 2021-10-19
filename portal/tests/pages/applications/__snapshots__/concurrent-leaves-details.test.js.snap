@@ -24,7 +24,7 @@ exports[`ConcurrentLeavesDetails renders the page 1`] = `
         class="display-block line-height-sans-5 measure-5 usa-intro"
       >
         <div
-          class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-4"
+          class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-0"
           role="region"
           tabindex="-1"
         >
@@ -34,12 +34,32 @@ exports[`ConcurrentLeavesDetails renders the page 1`] = `
             <h2
               class="usa-alert__heading font-heading-md text-bold"
             >
-              Your leave dates for paid leave
+              Your leave dates for paid leave from PFML
             </h2>
             <div
               class="usa-alert__text"
             >
               1/1/2021 to 6/1/2021
+            </div>
+          </div>
+        </div>
+        <div
+          class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-0 margin-bottom-4"
+          role="region"
+          tabindex="-1"
+        >
+          <div
+            class="usa-alert__body"
+          >
+            <h2
+              class="usa-alert__heading font-heading-md text-bold"
+            >
+              Your 7-day waiting period dates
+            </h2>
+            <div
+              class="usa-alert__text"
+            >
+              1/1/2021 to 1/8/2021
             </div>
           </div>
         </div>

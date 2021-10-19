@@ -77,6 +77,7 @@ export const ConcurrentLeavesDetails = (
         hint={
           <React.Fragment>
             <LeaveDatesAlert
+              showWaitingDayPeriod
               startDate={claim.leaveStartDate}
               endDate={claim.leaveEndDate}
             />
