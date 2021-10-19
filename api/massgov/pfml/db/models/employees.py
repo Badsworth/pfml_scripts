@@ -947,7 +947,7 @@ class User(Base, TimestampMixin):
     __tablename__ = "user"
     user_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     sub_id = Column(Text, index=True, unique=True)
-    email_address = Column(Text)
+    email_address = Column(Text, unique=True)
     consented_to_data_sharing = Column(Boolean, default=False, nullable=False)
 
     roles = relationship("LkRole", secondary="link_user_role", uselist=True)
