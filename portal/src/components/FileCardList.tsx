@@ -3,27 +3,24 @@ import AppErrorInfo from "../models/AppErrorInfo";
 import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import FileCard from "./FileCard";
 import Spinner from "./Spinner";
+import TempFile from "../models/TempFile";
 import TempFileCollection from "../models/TempFileCollection";
 import { useTranslation } from "../locales/i18n";
 
 /**
  * Render a FileCard. This handles some busy work such as creating a onRemove handler and
  * interpolating a heading string for the file. Renders the FileCard inside of a <li> element.
- * @param {TempFile} tempFile The file to render as a FileCard
- * @param {integer} index The zero-based index of the file in the list. This is used to
+ * @param index The zero-based index of the file in the list. This is used to
  * to interpolate a heading for the file.
- * @param {Function} onRemoveTempFile Handler for removing a single file.
- * @param {string} fileHeadingPrefix A string prefix we'll use as a heading in each FileCard. We
+ * @param fileHeadingPrefix A string prefix we'll use as a heading in each FileCard. We
  * will use the index param to interpolate the heading.
- * @param {string} [errorMsg]
- * @returns {React.Component} A <li> element containing the rendered FileCard.
  */
 function renderFileCard(
-  tempFile,
-  index,
-  onRemoveTempFile,
-  fileHeadingPrefix,
-  errorMsg = null
+  tempFile: TempFile,
+  index: number,
+  onRemoveTempFile: (id: string) => void,
+  fileHeadingPrefix: string,
+  errorMsg: React.ReactNode = null
 ) {
   const handleRemoveClick = () => onRemoveTempFile(tempFile.id);
   const heading = `${fileHeadingPrefix} ${index + 1}`;
@@ -43,14 +40,16 @@ function renderFileCard(
 /**
  * Render a read-only FileCard for a document. These represent documents that have already been uploaded,
  * and can no longer be removed from the application. Renders the FileCard inside of a <li> element.
- * @param {BenefitsApplicationDocument} document The document to render as a FileCard
- * @param {integer} index The zero-based index of the file in the list. This is used to
+ * @param index The zero-based index of the file in the list. This is used to
  * to interpolate a heading for the file.
- * @param {string} fileHeadingPrefix A string prefix we'll use as a heading in each FileCard. We
+ * @param fileHeadingPrefix A string prefix we'll use as a heading in each FileCard. We
  * will use the index param to interpolate the heading.
- * @returns {React.Component} A <li> element containing the rendered FileCard.
  */
-function renderDocumentFileCard(document, index, fileHeadingPrefix) {
+function renderDocumentFileCard(
+  document: BenefitsApplicationDocument,
+  index: number,
+  fileHeadingPrefix: string
+) {
   const heading = `${fileHeadingPrefix} ${index + 1}`;
 
   return (

@@ -104,22 +104,22 @@ const InputHours = (props: InputHoursProps) => {
     );
   }
 
-  const handleHoursChange = (event) => {
+  const handleHoursChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     // Change input to null if the hours field is blank and no minutes are provided
     const isBlank = event.target.value === "" && hoursMinutes.minutes === 0;
     const value = isBlank
       ? null
-      : Math.floor(event.target.value) * 60 + hoursMinutes.minutes;
-    dispatchChange(value, event);
+      : Math.floor(Number(event.target.value)) * 60 + hoursMinutes.minutes;
+    dispatchChange(value);
   };
 
-  const handleMinutesChange = (event) => {
+  const handleMinutesChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     // Change input to null if the minutes field is blank and no hours are provided
     const isBlank = event.target.value === "" && hoursMinutes.hours === 0;
     const value = isBlank
       ? null
       : hoursMinutes.hours * 60 + Number(event.target.value);
-    dispatchChange(value, event);
+    dispatchChange(value);
   };
 
   /**
@@ -127,19 +127,17 @@ const InputHours = (props: InputHoursProps) => {
    * that our form event handlers can manage this field's state just like
    * it does with other fields like InputText. We also include the original
    * event, but only for debugging purposes.
-   * @param {string} value - ISO 8601 date string
-   * @param {SyntheticEvent} originalEvent - Original event that triggered this change
    */
-  function dispatchChange(value, originalEvent) {
+  function dispatchChange(value: null | number) {
     const target = document.createElement("input");
+    const parsedValue = value === null ? "" : value.toString();
     target.setAttribute("name", props.name);
-    target.setAttribute("value", value);
+    target.setAttribute("value", parsedValue);
     target.setAttribute("data-value-type", "integer");
     target.name = props.name;
-    target.value = value;
+    target.value = parsedValue;
 
     props.onChange({
-      _originalEvent: originalEvent,
       target,
     });
   }

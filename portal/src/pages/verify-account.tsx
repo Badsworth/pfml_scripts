@@ -32,7 +32,6 @@ export const VerifyAccount = (props: Props) => {
 
   /**
    * Get the initial value for the "Are you creating an employer account?" option
-   * @returns {boolean|null}
    */
   const getInitialIsEmployerValue = () => {
     if (employerIdNumber) return true;

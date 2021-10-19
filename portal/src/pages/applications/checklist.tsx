@@ -117,21 +117,17 @@ export const Checklist = (props: Props) => {
 
   /**
    * Get the number of a Step for display in the checklist.
-   * @param {StepModel} step
-   * @returns {number}
    */
-  function getStepNumber(step) {
+  function getStepNumber(step: StepModel) {
     const index = findIndex(allSteps, { name: step.name });
     return index + 1;
   }
 
   /**
    * Get the content to show for a submitted step
-   * @param {StepModel} step
-   * @returns {React.Component}
    */
   // TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
-  function getStepSubmittedContent(step) {
+  function getStepSubmittedContent(step: StepModel) {
     const hasReductionsData =
       get(claim, "has_employer_benefits") !== null ||
       get(claim, "has_other_incomes") !== null ||
@@ -178,10 +174,8 @@ export const Checklist = (props: Props) => {
 
   /**
    * Helper method for rendering steps for one of the StepLists
-   * @param {StepModel[]} steps
-   * @returns {Step[]}
    */
-  function renderSteps(steps) {
+  function renderSteps(steps: StepModel[]) {
     return steps.map((step) => {
       const description = getStepDescription(step.name, claim);
       const stepHref = appLogic.portalFlow.getNextPageRoute(
@@ -257,11 +251,8 @@ export const Checklist = (props: Props) => {
   /**
    * Helper method for generating a context string used to differentiate i18n keys
    * for the various Step content strings.
-   * @param {string} stepName
-   * @param {BenefitsApplication} claim
-   * @returns {string|undefined}
    */
-  function getStepDescription(stepName, claim) {
+  function getStepDescription(stepName: string, claim: BenefitsApplication) {
     const claimReason = get(claim, "leave_details.reason");
     const claimReasonQualifier = get(claim, "leave_details.reason_qualifier");
     const hasFutureChildDate = get(
@@ -300,10 +291,8 @@ export const Checklist = (props: Props) => {
 
   /**
    * Conditionally output a description for each Part of the checklist
-   * @param {StepGroup[]} stepGroup
-   * @returns {string|null}
    */
-  function stepListDescription(stepGroup) {
+  function stepListDescription(stepGroup: StepGroup) {
     if (!stepGroup.isEnabled) return null;
 
     // context has to be a string

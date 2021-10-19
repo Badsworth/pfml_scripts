@@ -41,7 +41,6 @@ tracker.initialize();
  * Overrides the default Next.js App so that we can persist common layout
  * across page changes, and other advanced features like injecting data into pages.
  * @see https://nextjs.org/docs/advanced-features/custom-app
- * @returns {React.Component}
  */
 export const App = ({ Component, pageProps }: AppProps) => {
   const router = useRouter();
@@ -66,12 +65,17 @@ export const App = ({ Component, pageProps }: AppProps) => {
      * Event handler for when a page route transition has ended
      * (either successfully or unsuccessfully).
      * Scrolls the window to the top of the document upon route changes.
-     * @param {string} url - the new URL shown in the browser, including the basePath
-     * @param {object} options
-     * @param {boolean} options.shallow - Primarily used in our route events to determine if scroll/active
+     * @param options.shallow - Primarily used in our route events to determine if scroll/active
      *  focus should change. Learn more: https://nextjs.org/docs/routing/shallow-routing
      */
-    const handleRouteChangeEnd = (url, { shallow }) => {
+    const handleRouteChangeEnd = (
+      url: string,
+      {
+        shallow,
+      }: {
+        shallow?: boolean;
+      } = {}
+    ) => {
       setUI((ui) => {
         return { ...ui, isLoading: false };
       });
@@ -83,27 +87,36 @@ export const App = ({ Component, pageProps }: AppProps) => {
 
     /**
      * Fires when there's an error when changing routes, or a route load is cancelled
-     * @param {object} _err
-     * @param {boolean} _err.cancelled - Indicates if the navigation was cancelled
-     * @param {string} url
-     * @param {object} options
-     * @param {boolean} options.shallow - Primarily used in our route events to determine if scroll/active
+     * @param _err.cancelled - Indicates if the navigation was cancelled
+     * @param options.shallow - Primarily used in our route events to determine if scroll/active
      *  focus should change. Learn more: https://nextjs.org/docs/routing/shallow-routing
      */
-    const handleRouteChangeError = (_err, url, options = {}) => {
-      // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{}' is not assignable to paramet... Remove this comment to see the full error message
+    const handleRouteChangeError = (
+      _err: {
+        cancelled: boolean;
+      },
+      url: string,
+      options: {
+        shallow?: boolean;
+      } = {}
+    ) => {
       handleRouteChangeEnd(url, options);
     };
 
     /**
      * Event handler for when a page route is transitioning
-     * @param {string} url - the new URL shown in the browser, including the basePath
-     * @param {object} options
-     * @param {boolean} options.shallow - Primarily used in our route events to determine if scroll/active
+     * @param url - the new URL shown in the browser, including the basePath
+     * @param options.shallow - Primarily used in our route events to determine if scroll/active
      *  focus should change. Learn more: https://nextjs.org/docs/routing/shallow-routing
      */
-    // @ts-expect-error ts-migrate(2525) FIXME: Initializer provides no value for this binding ele... Remove this comment to see the full error message
-    const handleRouteChangeStart = (url, { shallow } = {}) => {
+    const handleRouteChangeStart = (
+      url: string,
+      {
+        shallow,
+      }: {
+        shallow?: boolean;
+      } = {}
+    ) => {
       if (!shallow) {
         appLogic.clearErrors();
         setUI((ui) => {
@@ -114,13 +127,18 @@ export const App = ({ Component, pageProps }: AppProps) => {
 
     /**
      * Fires when a route changed completely
-     * @param {string} url - the new URL shown in the browser, including the basePath
-     * @param {object} options
-     * @param {boolean} options.shallow - Primarily used in our route events to determine if scroll/active
+     * @param url - the new URL shown in the browser, including the basePath
+     * @param options.shallow - Primarily used in our route events to determine if scroll/active
      *  focus should change. Learn more: https://nextjs.org/docs/routing/shallow-routing
      */
-    // @ts-expect-error ts-migrate(2525) FIXME: Initializer provides no value for this binding ele... Remove this comment to see the full error message
-    const handleRouteChangeComplete = (url = "", { shallow } = {}) => {
+    const handleRouteChangeComplete = (
+      url = "",
+      {
+        shallow,
+      }: {
+        shallow?: boolean;
+      } = {}
+    ) => {
       handleRouteChangeEnd(url, { shallow });
 
       // For screen readers, we want to move their active focus towards the top

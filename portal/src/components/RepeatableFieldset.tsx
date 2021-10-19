@@ -42,8 +42,6 @@ interface RepeatableFieldsetProps {
   onAddClick: (...args: any[]) => any;
   /**
    * Event handler responsible for removing an entry
-   * @param {object} entry
-   * @param {number} index
    */
   onRemoveClick: (entry: Record<string, unknown>, index: number) => void;
 }
@@ -119,11 +117,9 @@ const RepeatableFieldset = (props: RepeatableFieldsetProps) => {
 /**
  * Takes an array of entries, and pair each entry with a unique id.
  * The entry-id mapping remains stable across re-renders.
- * Returns an array of [entry, id] pairs.
- * @param {Array} entries List of entries
- * @returns {[*,string][]} List of entry, id pairs
+ * @returns List of [entry, id] pairs
  */
-function useEntryIds(entries) {
+function useEntryIds(entries: unknown[]) {
   const [entryIdMap, setEntryIdMap] = useState(createEntryIdMap(entries));
   useEffect(() => {
     setEntryIdMap(createEntryIdMap(entries, entryIdMap));
@@ -139,10 +135,11 @@ function useEntryIds(entries) {
  * Create a map from entries to ids.
  * If the entry already existed previously, use the same id.
  * Otherwise, create a new id.
- * @param {Array} entries List of entries
- * @param {Map<*,string>} [prevEntryIdMap] Previous map from entries to ids
  */
-function createEntryIdMap(entries, prevEntryIdMap = new Map()) {
+function createEntryIdMap(
+  entries: unknown[],
+  prevEntryIdMap: Map<any, string> = new Map()
+) {
   const entryIdMap = new Map();
   for (const entry of entries) {
     const entryId = prevEntryIdMap.get(entry);

@@ -135,12 +135,12 @@ function InputNumber(props: InputNumberProps) {
 
 /**
  * Checks if the given value is allowed in this input field.
- * @function isAllowedValue
- * @param {string} value - The user-generated input.
- * @param {boolean} allowDecimals - Controls whether or not numbers with decimals are allowed.
- * @param {boolean} allowNegative - Controls whether or not negative numbers are allowed.
  */
-export function isAllowedValue(value, allowDecimals, allowNegative) {
+export function isAllowedValue(
+  value: string,
+  allowDecimals: boolean,
+  allowNegative: boolean
+) {
   if (!isNumber(value, allowDecimals)) {
     return false;
   }
@@ -158,11 +158,8 @@ export function isAllowedValue(value, allowDecimals, allowNegative) {
  * Allows commas, ie "1,234"
  * Allows optional leading hyphens for negative numbers, ie "-123"
  * Optionally allows decimals, ie "1,234.56"
- * @function isNumber
- * @param {string} value - The user-generated input.
- * @param {boolean} allowDecimals - Controls whether or not numbers with decimals are allowed.
  */
-function isNumber(value, allowDecimals) {
+function isNumber(value: string, allowDecimals: boolean) {
   // digits, with optional commas, and optional leading hyphen for negatives
   const digits = /^-?[\d,]*/g;
 
@@ -177,10 +174,8 @@ function isNumber(value, allowDecimals) {
 
 /**
  * Checks if the given value is a negative number.
- * @function isNumber
- * @param {string} value - The user-generated input.
  */
-function isNegative(value) {
+function isNegative(value: string) {
   return value.charAt(0) === "-";
 }
 

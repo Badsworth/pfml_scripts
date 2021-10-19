@@ -1,6 +1,12 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import Claim, { AbsenceCaseStatus } from "../../models/Claim";
+import React, {
+  FormEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { camelCase, compact, find, get, isEqual, startCase } from "lodash";
-import { AbsenceCaseStatus } from "../../models/Claim";
 import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
 import Alert from "../../components/Alert";
 import Button from "../../components/Button";
@@ -69,17 +75,18 @@ export const Dashboard = (props: DashboardProps) => {
    * Update the page's query string, to load a different page number,
    * or change the filter/sort of the loaded claims. The name/value
    * are merged with the existing query string.
-   * @param {Array<{ name: string, value: number|string }>} paramsToUpdate
    */
-  const updatePageQuery = (paramsToUpdate) => {
+  const updatePageQuery = (
+    paramsToUpdate: Array<{ name: string; value: number | string | string[] }>
+  ) => {
     const params = new URLSearchParams(window.location.search);
 
     paramsToUpdate.forEach(({ name, value }) => {
-      if (!value || value.length === 0) {
+      if (!value || (typeof value !== "number" && value.length === 0)) {
         // Remove param if its value is null, undefined, empty string, or empty array
         params.delete(name);
       } else {
-        params.set(name, value);
+        params.set(name, value.toString());
       }
     });
 
@@ -245,7 +252,6 @@ const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
    * Used for rendering header labels and the field(s) in each column. These
    * mostly mirror the name of the fields rendered, but not exactly
    * since some columns might require multiple fields.
-   * @type {string[]}
    */
   const tableColumnKeys = Object.entries(tableColumnVisibility)
     .filter(([_columnKey, isVisible]) => isVisible)
@@ -253,9 +259,8 @@ const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
 
   /**
    * Event handler for when a next/prev pagination button is clicked
-   * @param {number|string} pageOffset - Page number to load
    */
-  const handlePaginationNavigationClick = (pageOffset) => {
+  const handlePaginationNavigationClick = (pageOffset: number | string) => {
     updatePageQuery([
       {
         name: "page_offset",
@@ -373,11 +378,8 @@ const ClaimTableRows = (props: ClaimTableRowsProps) => {
   /**
    * Helper for mapping a column key to the value
    * the user should see
-   * @param {EmployerClaim} claim
-   * @param {string} columnKey
-   * @returns {string|React.ReactNode}
    */
-  const getValueForColumn = (claim, columnKey) => {
+  const getValueForColumn = (claim: Claim, columnKey: string) => {
     const claimRoute = appLogic.portalFlow.getNextPageRoute(
       "VIEW_CLAIM",
       {},
@@ -506,7 +508,6 @@ const Filters = (props: FiltersProps) => {
   /**
    * Returns all filter fields with their values set based on
    * what's currently being applied to the API requests
-   * @returns { { employer_id: string, claim_status: string[] } }
    */
   const getFormStateFromQuery = useCallback(() => {
     const claim_status = get(props.params, "claim_status");
@@ -551,9 +552,8 @@ const Filters = (props: FiltersProps) => {
   /**
    * Event handler for when the user applies their status and
    * organization filter selections
-   * @param {object} evt
    */
-  const handleSubmit = (evt) => {
+  const handleSubmit = (evt: FormEvent) => {
     evt.preventDefault();
     const params = [];
 
@@ -596,11 +596,14 @@ const Filters = (props: FiltersProps) => {
 
   /**
    * Click event handler for an individual filter's removal button.
-   * @param {string} name - Filter query param name
-   * @param {string|Array} value - Leave empty to remove filter, or pass in the updated
+   * @param name - Filter query param name
+   * @param value - Leave empty to remove filter, or pass in the updated
    *  value if the filter is a checkbox field
    */
-  const handleRemoveFilterClick = (name, value = "") => {
+  const handleRemoveFilterClick = (
+    name: string,
+    value: string | string[] = ""
+  ) => {
     updatePageQuery([
       {
         name,
@@ -726,7 +729,6 @@ const Filters = (props: FiltersProps) => {
                 onClick={() =>
                   handleRemoveFilterClick(
                     "claim_status",
-                    // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'string[]' is not assignable to p... Remove this comment to see the full error message
                     activeFilters.claim_status.filter((s) => s !== status)
                   )
                 }
@@ -801,7 +803,7 @@ const Search = (props: SearchProps) => {
     updateFields,
   });
 
-  const handleSubmit = (evt) => {
+  const handleSubmit = (evt: FormEvent) => {
     evt.preventDefault();
 
     updatePageQuery([
@@ -876,10 +878,9 @@ const SortDropdown = (props: SortDropdownProps) => {
 
   /**
    * Convert a selected dropdown option to order_by and order_direction params
-   * @param {string} orderAndDirection - comma-delineated order_by,order_direction
-   * @returns {Array<{ name: string, value: string }>}
+   * @param orderAndDirection - comma-delineated order_by,order_direction
    */
-  const getParamsFromOrderAndDirection = (orderAndDirection) => {
+  const getParamsFromOrderAndDirection = (orderAndDirection: string) => {
     const [order_by, order_direction] = orderAndDirection.split(",");
 
     return [

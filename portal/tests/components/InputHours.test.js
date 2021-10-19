@@ -124,7 +124,27 @@ describe("InputHours", () => {
 
     userEvent.selectOptions(screen.getByRole("combobox"), ["0"]);
 
+    expect(onChange).toHaveBeenCalledWith({
+      target: expect.objectContaining({
+        value: "0",
+      }),
+    });
     expect(screen.getByRole("combobox")).toHaveValue("0");
+  });
+
+  it("supports clearing of hours value", () => {
+    const onChange = jest.fn();
+    setup({ value: 60 * 2, onChange });
+
+    userEvent.clear(screen.getByRole("textbox"));
+    userEvent.type(screen.getByRole("textbox"), "0");
+
+    expect(onChange).toHaveBeenCalledWith({
+      target: expect.objectContaining({
+        value: "0",
+      }),
+    });
+    expect(screen.getByRole("textbox")).toHaveValue("0");
   });
 
   it("propagates valid input with useHandleInputChange", () => {

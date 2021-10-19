@@ -18,7 +18,7 @@ interface FileCardProps {
   };
   /** Event handler for when the "Remove" button is clicked. We'll pass it the `id` prop above. */
   onRemoveClick?: (...args: any[]) => any;
-  errorMsg?: string;
+  errorMsg?: React.ReactNode;
 }
 
 /**

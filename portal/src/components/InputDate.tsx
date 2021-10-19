@@ -7,32 +7,36 @@ import classnames from "classnames";
 /**
  * Add leading zeros if the numbers are less than 10
  * @example addLeadingZero(1) => "01"
- * @param {string|number} value
- * @returns {string}
  */
-function addLeadingZero(value) {
-  if (!value || value.match(/^0/)) return value;
+function addLeadingZero(value: string | number) {
+  if (!value || (typeof value === "string" && value.match(/^0/))) return value;
 
-  return value.toString().padStart(2, 0);
+  return value.toString().padStart(2, "0");
 }
 
 /**
  * Format the month/day/year fields as a single ISO 8601 date string
- * @param {object} date
- * @param {number|string} date.day
- * @param {number|string} date.month
- * @param {number|string} date.year
- * @param {object} [options]
- * @param {boolean} [options.skipLeadingZeros]
- * @returns {string} ISO 8601 date string (YYYY-MM-DD)
+ * @returns ISO 8601 date string (YYYY-MM-DD)
  */
-export function formatFieldsAsISO8601({ month, day, year }, options = {}) {
+export function formatFieldsAsISO8601(
+  {
+    month,
+    day,
+    year,
+  }: {
+    day: number | string;
+    month: number | string;
+    year: number | string;
+  },
+  options: {
+    skipLeadingZeros?: boolean;
+  } = {}
+) {
   // Disallow anything other than numbers, and restrict invalid lengths
-  month = month ? month.replace(/\D/g, "") : ""; // "abc" => ""
-  day = day ? day.replace(/\D/g, "") : "";
-  year = year ? year.replace(/\D/g, "") : "";
+  month = month ? month.toString().replace(/\D/g, "") : ""; // "abc" => ""
+  day = day ? day.toString().replace(/\D/g, "") : "";
+  year = year ? year.toString().replace(/\D/g, "") : "";
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'skipLeadingZeros' does not exist on type... Remove this comment to see the full error message
   if (!options.skipLeadingZeros) {
     month = addLeadingZero(month);
     day = addLeadingZero(day);
@@ -48,10 +52,9 @@ export function formatFieldsAsISO8601({ month, day, year }, options = {}) {
 
 /**
  * Break apart the ISO 8601 date string into month/day/year parts, for UI rendering
- * @param {string} value - ISO 8601 date string
- * @returns {{ month: string, day: string, year: string }}
+ * @param value - ISO 8601 date string
  */
-export function parseDateParts(value) {
+export function parseDateParts(value: string) {
   if (value) {
     const parts = value.split("-"); // "YYYY-MM-DD" => ["YYYY", "MM", "DD"]
     return {
@@ -173,9 +176,8 @@ function InputDate(props: InputDateProps) {
    * This is responsible for formatting the full date and sending
    * it back to our parent component via the function passed to
    * us in the *onChange* prop.
-   * @param {React.SyntheticEvent} evt
    */
-  const handleBlur = (evt) => {
+  const handleBlur = (evt: React.FocusEvent<HTMLInputElement>) => {
     const isoDate = formatFieldsAsISO8601({
       month: inputTextRefs.month.current.value,
       day: inputTextRefs.day.current.value,
@@ -190,9 +192,8 @@ function InputDate(props: InputDateProps) {
    * This is responsible for formatting the full date and sending
    * it back to our parent component via the function passed to
    * us in the onChange prop.
-   * @param {React.SyntheticEvent} evt
    */
-  const handleChange = (evt) => {
+  const handleChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const date = formatFieldsAsISO8601(
       {
         month: inputTextRefs.month.current.value,
@@ -215,17 +216,19 @@ function InputDate(props: InputDateProps) {
    * that our form event handlers can manage this field's state just like
    * it does with other fields like InputText. We also include the original
    * event, but only for debugging purposes.
-   * @param {string} value - ISO 8601 date string
-   * @param {SyntheticEvent} originalEvent - Original event that triggered this change
    */
-  function dispatchChange(value, originalEvent) {
-    const target = originalEvent.target.cloneNode(true);
+  function dispatchChange(
+    value: string,
+    originalEvent:
+      | React.ChangeEvent<HTMLInputElement>
+      | React.FocusEvent<HTMLInputElement>
+  ) {
+    const target = originalEvent.target.cloneNode(true) as HTMLInputElement; // https://github.com/microsoft/TypeScript/issues/283
     // Replace day/month/year field name with actual date field name
     target.name = props.name;
     target.value = value;
 
     props.onChange({
-      _originalEvent: originalEvent,
       target,
     });
   }

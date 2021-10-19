@@ -70,9 +70,10 @@ export const IntermittentFrequency = (props: Props) => {
    * e.g 6 (frequency interval) months (frequency interval basis)
    * This callback determines whether the frequency interval should be set
    * by the id of the choice input.
-   * @param {SyntheticEvent} event - Change event
    */
-  const handleFrequencyIntervalBasisChange = (event) => {
+  const handleFrequencyIntervalBasisChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const frequency_interval =
       event.target.id === irregularOver6MonthsId ? 6 : 1;
 
