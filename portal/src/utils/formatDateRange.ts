@@ -15,9 +15,9 @@ import { t } from "../locales/i18n";
  * @see https://moment.github.io/luxon/docs/manual/intl.html
  */
 export default function formatDateRange(
-  startIsoDate,
-  endIsoDate,
-  customDelimiter
+  startIsoDate: string,
+  endIsoDate?: string,
+  customDelimiter?: string
 ) {
   const startDate = formatDate(startIsoDate).short();
   const endDate = formatDate(endIsoDate).short();
@@ -26,7 +26,6 @@ export default function formatDateRange(
 
   if (startDate && endDate) {
     // Set the default delimiter from the i18n file
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
     delimiter = ` ${t("shared.dateRangeDelimiter")} `;
 
     // Use a custom delimiter if one is passed

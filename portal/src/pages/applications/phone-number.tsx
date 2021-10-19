@@ -16,10 +16,15 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.phone.phone_number", "claim.phone.phone_type"];
 
+interface Props {
+  appLogic: any;
+  claim: BenefitsApplication;
+}
+
 /**
  * A form page to capture the worker's phone number.
  */
-export const PhoneNumber = (props) => {
+export const PhoneNumber = (props: Props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

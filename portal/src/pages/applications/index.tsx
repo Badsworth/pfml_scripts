@@ -11,13 +11,24 @@ import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
+import usePortalFlow from "../../hooks/usePortalFlow";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplications from "../../hoc/withBenefitsApplications";
+
+interface IndexProps {
+  appLogic: {
+    portalFlow: ReturnType<typeof usePortalFlow>;
+  };
+  claims: BenefitsApplicationCollection;
+  query?: {
+    uploadedAbsenceId?: string;
+  };
+}
 
 /**
  * List of all applications associated with the authenticated user
  */
-export const Index = (props) => {
+export const Index = (props: IndexProps) => {
   const { appLogic, claims, query } = props;
   const { t } = useTranslation();
 
@@ -34,10 +45,10 @@ export const Index = (props) => {
   return (
     <React.Fragment>
       {query && query.uploadedAbsenceId && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; className: string; headi... Remove this comment to see the full error message
         <Alert
           className="margin-bottom-3"
           heading={t("pages.applications.uploadSuccessHeading")}
+          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: TFunctionResult; className: stri... Remove this comment to see the full error message
           name="upload-success-message"
           state="success"
         >

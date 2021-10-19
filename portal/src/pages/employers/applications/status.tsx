@@ -22,7 +22,21 @@ import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
-export const Status = (props) => {
+interface Props {
+  appLogic: {
+    employers: {
+      claim?: EmployerClaim;
+      documents?: DocumentCollection;
+      downloadDocument: (...args: any[]) => any;
+      loadDocuments: (...args: any[]) => any;
+    };
+  };
+  query: {
+    absence_id?: string;
+  };
+}
+
+export const Status = (props: Props) => {
   const {
     appLogic,
     query: { absence_id: absenceId },
@@ -95,7 +109,6 @@ export const Status = (props) => {
       {/* TODO (EMPLOYER-448): Show leave duration and the intermittent leave period dates when API returns them to Portal */}
       {!isIntermittent && (
         <StatusRow label={t("pages.employersClaimsStatus.leaveDurationLabel")}>
-          {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
           {formatDateRange(claim.leaveStartDate, claim.leaveEndDate)}
         </StatusRow>
       )}

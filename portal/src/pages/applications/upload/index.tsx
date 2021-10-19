@@ -1,4 +1,6 @@
 import React, { useEffect } from "react";
+import { TFunction, useTranslation } from "react-i18next";
+import { AbsencePeriod } from "../../../models/ClaimDetail";
 import AppErrorInfo from "../../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../models/AppErrorInfoCollection";
 import InputChoiceGroup from "../../../components/InputChoiceGroup";
@@ -9,7 +11,6 @@ import Spinner from "../../../components/Spinner";
 import tracker from "../../../services/tracker";
 import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
-import { useTranslation } from "react-i18next";
 
 export const UploadType = {
   mass_id: "UPLOAD_MASS_ID",
@@ -21,7 +22,14 @@ export const UploadType = {
   caring_leave_certification: "UPLOAD_CARING_LEAVE_CERTIFICATION",
 };
 
-export const UploadDocsOptions = (props) => {
+interface Props {
+  appLogic: any;
+  query?: {
+    absence_case_id: string;
+  };
+}
+
+export const UploadDocsOptions = (props: Props) => {
   const {
     appLogic,
     query: { absence_case_id },
@@ -119,13 +127,13 @@ UploadDocsOptions.propTypes = {
 export default UploadDocsOptions;
 
 /**
- * Determine what choices to show based on the abence period's leave reason
- * @param  {Array.AbsencePeriod} absencePeriods array of claim detail's absence periods
- * @param  {string} currentValue current value of input
- * @param  {Function} t useTranslation function
- * @returns {Array} array of input choices { checked, label, value }
+ * Determine what choices to show based on the absence period's leave reason
  */
-const getInputChoices = (absencePeriods, currentValue, t) => {
+const getInputChoices = (
+  absencePeriods: AbsencePeriod[],
+  currentValue: string,
+  t: TFunction
+) => {
   const choices = [
     {
       checked: currentValue === UploadType.mass_id,

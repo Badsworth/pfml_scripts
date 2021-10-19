@@ -114,7 +114,7 @@ const useUsersLogic = ({
    */
   const convertUser = async (
     user_id: User["user_id"],
-    postData: Partial<User>
+    postData: { employer_fein: string }
   ) => {
     appErrorsLogic.clearErrors();
 

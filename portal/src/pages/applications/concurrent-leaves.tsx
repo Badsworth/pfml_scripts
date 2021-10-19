@@ -15,7 +15,13 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_concurrent_leave"];
 
-export const ConcurrentLeaves = (props) => {
+interface Props {
+  appLogic: any;
+  claim: BenefitsApplication;
+  query: any;
+}
+
+export const ConcurrentLeaves = (props: Props) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
 

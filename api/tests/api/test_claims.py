@@ -1959,11 +1959,7 @@ class TestGetClaimEndpoint:
         )
 
         assert response.status_code == 500
-        tests.api.validate_error_response(
-            response,
-            500,
-            message="No employee or employer tied to this claim. Cannot retrieve absence periods from FINEOS.",
-        )
+        assert "Can't get absence periods from FINEOS - No employee for claim" in caplog.text
 
     def test_get_claim_with_no_tax_identifier(
         self, caplog, client, auth_token, user, test_db_session
@@ -1985,17 +1981,9 @@ class TestGetClaimEndpoint:
         )
 
         assert response.status_code == 500
-        tests.api.validate_error_response(
-            response,
-            500,
-            message="No employee or employer tied to this claim. Cannot retrieve absence periods from FINEOS.",
-        )
-        assert (
-            "No employee or employer tied to this claim. Cannot retrieve absence periods from FINEOS."
-            in caplog.text
-        )
+        assert "Can't get absence periods from FINEOS - No employee for claim" in caplog.text
 
-    @mock.patch("massgov.pfml.api.claims.get_absence_periods")
+    @mock.patch("massgov.pfml.api.services.claims.get_absence_periods")
     def test_withdrawn_claim_returns_403(
         self, mock_get_absence_periods, client, auth_token, user, test_db_session
     ):
@@ -2082,9 +2070,9 @@ class TestGetClaimEndpoint:
             claim_data["absence_periods"][0], leave_period
         )
 
-    @mock.patch("massgov.pfml.api.claims.get_absence_periods")
+    @mock.patch("massgov.pfml.api.services.claims.get_absence_periods")
     def test_get_claim_with_no_leave_periods_returns_500(
-        self, mock_get_absence_periods, claim, client, auth_token, setup_db
+        self, mock_get_absence_periods, claim, client, auth_token, setup_db, caplog
     ):
         mock_get_absence_periods.return_value = []
 
@@ -2094,9 +2082,7 @@ class TestGetClaimEndpoint:
         )
 
         assert response.status_code == 500
-
-        message = response.get_json().get("message")
-        assert message == "No absence periods found for claim"
+        assert "No absence periods found for claim" in caplog.text
 
     def test_get_claim_with_managed_requirements(self, client, auth_token, user, test_db_session):
         employer = EmployerFactory.create(employer_fein="813648030")

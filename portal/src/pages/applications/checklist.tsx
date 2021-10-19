@@ -32,7 +32,26 @@ import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 import withClaimDocuments from "../../hoc/withClaimDocuments";
 
-export const Checklist = (props) => {
+interface Props {
+  appLogic: {
+    appErrors: any;
+    benefitsApplications: {
+      warningsLists: any;
+    };
+    portalFlow: {
+      getNextPageRoute: (...args: any[]) => any;
+    };
+  };
+  claim: BenefitsApplication;
+  documents?: BenefitsApplicationDocument[];
+  isLoadingDocuments?: boolean;
+  query?: {
+    "part-one-submitted"?: string;
+    "payment-pref-submitted"?: string;
+  };
+}
+
+export const Checklist = (props: Props) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments, query } = props;
   const { appErrors } = appLogic;
@@ -98,21 +117,17 @@ export const Checklist = (props) => {
 
   /**
    * Get the number of a Step for display in the checklist.
-   * @param {StepModel} step
-   * @returns {number}
    */
-  function getStepNumber(step) {
+  function getStepNumber(step: StepModel) {
     const index = findIndex(allSteps, { name: step.name });
     return index + 1;
   }
 
   /**
    * Get the content to show for a submitted step
-   * @param {StepModel} step
-   * @returns {React.Component}
    */
   // TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
-  function getStepSubmittedContent(step) {
+  function getStepSubmittedContent(step: StepModel) {
     const hasReductionsData =
       get(claim, "has_employer_benefits") !== null ||
       get(claim, "has_other_incomes") !== null ||
@@ -159,10 +174,8 @@ export const Checklist = (props) => {
 
   /**
    * Helper method for rendering steps for one of the StepLists
-   * @param {StepModel[]} steps
-   * @returns {Step[]}
    */
-  function renderSteps(steps) {
+  function renderSteps(steps: StepModel[]) {
     return steps.map((step) => {
       const description = getStepDescription(step.name, claim);
       const stepHref = appLogic.portalFlow.getNextPageRoute(
@@ -238,11 +251,8 @@ export const Checklist = (props) => {
   /**
    * Helper method for generating a context string used to differentiate i18n keys
    * for the various Step content strings.
-   * @param {string} stepName
-   * @param {BenefitsApplication} claim
-   * @returns {string|undefined}
    */
-  function getStepDescription(stepName, claim) {
+  function getStepDescription(stepName: string, claim: BenefitsApplication) {
     const claimReason = get(claim, "leave_details.reason");
     const claimReasonQualifier = get(claim, "leave_details.reason_qualifier");
     const hasFutureChildDate = get(
@@ -281,10 +291,8 @@ export const Checklist = (props) => {
 
   /**
    * Conditionally output a description for each Part of the checklist
-   * @param {StepGroup[]} stepGroup
-   * @returns {string|null}
    */
-  function stepListDescription(stepGroup) {
+  function stepListDescription(stepGroup: StepGroup) {
     if (!stepGroup.isEnabled) return null;
 
     // context has to be a string
@@ -330,10 +338,10 @@ export const Checklist = (props) => {
   return (
     <div className="measure-6">
       {partOneSubmitted && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; head... Remove this comment to see the full error message
         <Alert
           className="margin-bottom-3"
           heading={t("pages.claimsChecklist.partOneSubmittedHeading")}
+          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; head... Remove this comment to see the full error message
           name="part-one-submitted-message"
           state="success"
         >
@@ -348,10 +356,10 @@ export const Checklist = (props) => {
         </Alert>
       )}
       {paymentPrefSubmitted && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; className: string; headi... Remove this comment to see the full error message
         <Alert
           className="margin-bottom-3"
           heading={t("pages.claimsChecklist.partTwoSubmittedHeading")}
+          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: TFunctionResult; className: stri... Remove this comment to see the full error message
           name="part-two-submitted-message"
           state="success"
         >
@@ -383,7 +391,6 @@ export const Checklist = (props) => {
           {...sharedStepListProps}
         >
           {stepGroup.number === 3 && hasLoadingDocumentsError ? (
-            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; noIc... Remove this comment to see the full error message
             <Alert className="margin-bottom-3" noIcon>
               <Trans
                 i18nKey="pages.claimsChecklist.documentsLoadError"

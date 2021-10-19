@@ -13,10 +13,21 @@ import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import useLoggedInRedirect from "../../hooks/useLoggedInRedirect";
+import usePortalFlow from "../../hooks/usePortalFlow";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 
-export const CreateAccount = (props) => {
+interface Props {
+  appLogic: {
+    appErrors?: AppErrorInfoCollection;
+    auth: {
+      createEmployerAccount: (...args: any[]) => any;
+    };
+    portalFlow: ReturnType<typeof usePortalFlow>;
+  };
+}
+
+export const CreateAccount = (props: Props) => {
   const { appLogic } = props;
   const { t } = useTranslation();
   useLoggedInRedirect(appLogic.portalFlow);
@@ -46,7 +57,6 @@ export const CreateAccount = (props) => {
     <React.Fragment>
       <form className="usa-form" onSubmit={handleSubmit} method="post">
         <Title>{t("pages.employersAuthCreateAccount.title")}</Title>
-        {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; classNam... Remove this comment to see the full error message */}
         <Alert state="info" className="margin-bottom-3" neutral>
           <Trans
             i18nKey="pages.employersAuthCreateAccount.alertHeading"

@@ -21,7 +21,12 @@ export const UploadType = {
   certification: "UPLOAD_CERTIFICATION",
 };
 
-export const UploadDocsOptions = (props) => {
+interface Props {
+  claim?: BenefitsApplication;
+  appLogic: any;
+}
+
+export const UploadDocsOptions = (props: Props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

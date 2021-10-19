@@ -7,9 +7,16 @@ import Title from "../components/Title";
 import { Trans } from "react-i18next";
 import routes from "../routes";
 import useLoggedInRedirect from "../hooks/useLoggedInRedirect";
+import usePortalFlow from "../hooks/usePortalFlow";
 import { useTranslation } from "../locales/i18n";
 
-export const Index = (props) => {
+interface Props {
+  appLogic: {
+    portalFlow: ReturnType<typeof usePortalFlow>;
+  };
+}
+
+export const Index = (props: Props) => {
   const { appLogic } = props;
   const { t } = useTranslation();
 

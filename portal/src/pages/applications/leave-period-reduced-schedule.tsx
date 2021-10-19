@@ -32,7 +32,15 @@ export const fields = [
   `claim.${leavePeriodPath}.start_date`,
 ];
 
-export const LeavePeriodReducedSchedule = (props) => {
+interface Props {
+  appLogic: any;
+  claim: BenefitsApplication;
+  query?: {
+    claim_id?: string;
+  };
+}
+
+export const LeavePeriodReducedSchedule = (props: Props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -92,7 +100,6 @@ export const LeavePeriodReducedSchedule = (props) => {
       onSave={handleSave}
     >
       {(claim.isMedicalOrPregnancyLeave || claim.isCaringLeave) && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; neutral:... Remove this comment to see the full error message
         <Alert state="info" neutral>
           <Trans
             i18nKey="pages.claimsLeavePeriodReducedSchedule.needDocumentAlert"
@@ -162,6 +169,7 @@ export const LeavePeriodReducedSchedule = (props) => {
 
       <ConditionalContent
         fieldNamesClearedWhenHidden={[leavePeriodsListPath]}
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '(name: any) => any' is not assignable to typ... Remove this comment to see the full error message
         getField={getField}
         clearField={clearField}
         updateFields={updateFields}

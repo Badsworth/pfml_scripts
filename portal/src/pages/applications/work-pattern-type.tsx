@@ -13,7 +13,12 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.work_pattern.work_pattern_type"];
 
-export const WorkPatternType = (props) => {
+interface Props {
+  appLogic: any;
+  claim: BenefitsApplication;
+}
+
+export const WorkPatternType = (props: Props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

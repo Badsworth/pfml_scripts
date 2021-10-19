@@ -32,7 +32,17 @@ export const fields = [
   "claim.employer_benefits[*].is_full_salary_continuous",
 ];
 
-export const EmployerBenefitsDetails = (props) => {
+interface EmployerBenefitsDetailsProps {
+  claim?: BenefitsApplication;
+  appLogic: any;
+  query?: {
+    claim_id?: string;
+  };
+}
+
+export const EmployerBenefitsDetails = (
+  props: EmployerBenefitsDetailsProps
+) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
   const limit = 6;
@@ -123,10 +133,17 @@ EmployerBenefitsDetails.propTypes = {
   }),
 };
 
+interface EmployerBenefitCardProps {
+  index: number;
+  entry: any;
+  getFunctionalInputProps: (...args: any[]) => any;
+  updateFields: (...args: any[]) => any;
+}
+
 /**
  * Helper component for rendering employer benefit cards
  */
-export const EmployerBenefitCard = (props) => {
+export const EmployerBenefitCard = (props: EmployerBenefitCardProps) => {
   const { t } = useTranslation();
   const { entry, getFunctionalInputProps, index, updateFields } = props;
   const clearField = (fieldName) => updateFields({ [fieldName]: null });
@@ -228,6 +245,7 @@ export const EmployerBenefitCard = (props) => {
           `employer_benefits[${index}].benefit_amount_dollars`,
         ]}
         clearField={clearField}
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '(fieldName: any) => any' is not assignable t... Remove this comment to see the full error message
         getField={getEntryField}
         updateFields={updateFields}
         visible={get(entry, "is_full_salary_continuous") === false}

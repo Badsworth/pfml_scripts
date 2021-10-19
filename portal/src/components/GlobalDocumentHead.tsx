@@ -20,7 +20,7 @@ function GlobalDocumentHead() {
               // @ts-expect-error ts-migrate(2339) FIXME: Property 'auth' does not exist on type 'string'.
               process.env.gtmConfig.auth
             }&gtm_preview=${
-              // @ts-expect-error ts-migrate(2339) FIXME: Property 'preview' does not exist on type 'string'.
+              // @ts-expect-error ts-migrate(2339) FIXME: Property 'preview' does not exist on type 'string'... Remove this comment to see the full error message
               process.env.gtmConfig.preview
             }&gtm_cookies_win=x';f.parentNode.insertBefore(j,f);\n` +
             "})(window,document,'script','dataLayer','GTM-MCLNNQC');",

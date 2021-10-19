@@ -19,7 +19,12 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.employment_status", "claim.employer_fein"];
 
-export const EmploymentStatus = (props) => {
+interface Props {
+  appLogic: any;
+  claim: BenefitsApplication;
+}
+
+export const EmploymentStatus = (props: Props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -52,7 +57,6 @@ export const EmploymentStatus = (props) => {
       onSave={handleSave}
     >
       {!showEmploymentStatus && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; neutral:... Remove this comment to see the full error message
         <Alert state="info" neutral>
           <Trans
             i18nKey="pages.claimsEmploymentStatus.alertBody"
@@ -88,6 +92,7 @@ export const EmploymentStatus = (props) => {
 
       <ConditionalContent
         fieldNamesClearedWhenHidden={["employer_fein"]}
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '(name: any) => any' is not assignable to typ... Remove this comment to see the full error message
         getField={getField}
         clearField={clearField}
         updateFields={updateFields}

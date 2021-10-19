@@ -19,7 +19,13 @@ export const fields = [
   "claim.concurrent_leave.leave_end_date",
 ];
 
-export const ConcurrentLeavesDetails = (props) => {
+interface Props {
+  appLogic: any;
+  claim: BenefitsApplication;
+  query: any;
+}
+
+export const ConcurrentLeavesDetails = (props: Props) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
   const employer_fein = claim.employer_fein;

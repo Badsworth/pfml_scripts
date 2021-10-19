@@ -1,6 +1,5 @@
 import EmployerClaim from "../../models/EmployerClaim";
 import IntermittentLeaveSchedule from "./IntermittentLeaveSchedule";
-import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import Table from "../Table";
@@ -9,11 +8,16 @@ import formatDateRange from "../../utils/formatDateRange";
 import { get } from "lodash";
 import { useTranslation } from "../../locales/i18n";
 
+interface LeaveScheduleProps {
+  claim: EmployerClaim;
+  hasDocuments?: boolean;
+}
+
 /**
  * Display leave periods by leave type
  * in the Leave Admin claim review page.
  */
-const LeaveSchedule = ({ hasDocuments, claim }) => {
+const LeaveSchedule = ({ hasDocuments, claim }: LeaveScheduleProps) => {
   const { t } = useTranslation();
   const {
     isContinuous,
@@ -58,7 +62,6 @@ const LeaveSchedule = ({ hasDocuments, claim }) => {
           {isContinuous && (
             <tr>
               <th scope="row">
-                {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
                 {formatDateRange(
                   get(
                     claim,
@@ -81,7 +84,6 @@ const LeaveSchedule = ({ hasDocuments, claim }) => {
           {isReducedSchedule && (
             <tr>
               <th scope="row">
-                {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
                 {formatDateRange(
                   get(
                     claim,
@@ -115,7 +117,7 @@ const LeaveSchedule = ({ hasDocuments, claim }) => {
           )}
           {isIntermittent && (
             <IntermittentLeaveSchedule
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ intermittentLeavePeriods: any; hasDocument... Remove this comment to see the full error message
+              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ intermittentLeavePeriods: IntermittentLeav... Remove this comment to see the full error message
               intermittentLeavePeriods={intermittent_leave_periods}
               hasDocuments={hasDocuments}
             />
@@ -124,11 +126,6 @@ const LeaveSchedule = ({ hasDocuments, claim }) => {
       </Table>
     </React.Fragment>
   );
-};
-
-LeaveSchedule.propTypes = {
-  claim: PropTypes.instanceOf(EmployerClaim).isRequired,
-  hasDocuments: PropTypes.bool,
 };
 
 export default LeaveSchedule;

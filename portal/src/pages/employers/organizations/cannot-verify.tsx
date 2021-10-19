@@ -8,7 +8,18 @@ import User from "../../../models/User";
 import routes from "../../../routes";
 import withUser from "../../../hoc/withUser";
 
-export const CannotVerify = (props) => {
+interface Props {
+  appLogic: {
+    users: {
+      user: User;
+    };
+  };
+  query: {
+    employer_id: string;
+  };
+}
+
+export const CannotVerify = (props: Props) => {
   const { appLogic, query } = props;
   const {
     users: { user },

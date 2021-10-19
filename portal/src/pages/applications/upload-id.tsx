@@ -22,7 +22,25 @@ import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 import withClaimDocuments from "../../hoc/withClaimDocuments";
 
-export const UploadId = (props) => {
+interface Props {
+  appLogic: {
+    appErrors: any;
+    catchError: (...args: any[]) => any;
+    documents: any;
+    portalFlow: any;
+    clearErrors: (...args: any[]) => any;
+  };
+  claim: any;
+  documents?: BenefitsApplicationDocument[];
+  isLoadingDocuments?: boolean;
+  query?: {
+    claim_id?: string;
+    showStateId?: string;
+    additionalDoc?: string;
+  };
+}
+
+export const UploadId = (props: Props) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments, query } = props;
   const { files, processFiles, removeFile } = useFilesLogic({
@@ -140,7 +158,6 @@ export const UploadId = (props) => {
         <FileUploadDetails />
 
         {hasLoadingDocumentsError && (
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; noIc... Remove this comment to see the full error message
           <Alert className="margin-bottom-3" noIcon>
             <Trans
               i18nKey="pages.claimsUploadId.documentsLoadError"

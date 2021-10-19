@@ -16,7 +16,15 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_other_incomes"];
 
-export const OtherIncomes = (props) => {
+interface Props {
+  claim?: BenefitsApplication;
+  query?: {
+    claim_id?: string;
+  };
+  appLogic: any;
+}
+
+export const OtherIncomes = (props: Props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -111,7 +119,6 @@ export const OtherIncomes = (props) => {
         }
       />
       <ConditionalContent visible={formState.has_other_incomes === false}>
-        {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; state: string; role: str... Remove this comment to see the full error message */}
         <Alert state="info" role="alert" slim>
           {t("pages.claimsOtherIncomes.choiceNoAlert")}
         </Alert>

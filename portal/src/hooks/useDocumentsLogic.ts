@@ -6,7 +6,7 @@ import {
 import { useMemo, useState } from "react";
 import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import DocumentCollection from "../models/DocumentCollection";
-import { DocumentType } from "../models/Document";
+import { DocumentTypeEnum } from "../models/Document";
 import DocumentsApi from "../api/DocumentsApi";
 import assert from "assert";
 import useAppErrorsLogic from "./useAppErrorsLogic";
@@ -82,8 +82,8 @@ const useDocumentsLogic = ({
    */
   const attach = (
     application_id: string,
-    filesWithUniqueId: Array<{ id: string; file: Blob }> = [],
-    documentType: typeof DocumentType[keyof typeof DocumentType],
+    filesWithUniqueId: Array<{ id: string; file: File }> = [],
+    documentType: DocumentTypeEnum,
     mark_evidence_received: boolean
   ) => {
     assert(application_id);

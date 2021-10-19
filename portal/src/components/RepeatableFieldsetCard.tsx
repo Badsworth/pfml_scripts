@@ -1,14 +1,24 @@
 import Button from "./Button";
-import PropTypes from "prop-types";
 import React from "react";
 import useUniqueId from "../hooks/useUniqueId";
+
+interface RepeatableFieldsetCardProps {
+  children: React.ReactNode;
+  className?: string;
+  entry: any;
+  heading: string;
+  index?: number;
+  removeButtonLabel: string;
+  onRemoveClick: (entry: Record<string, unknown>, index: number) => void;
+  showRemoveButton?: boolean;
+}
 
 /**
  * Used by the `RepeatableFieldset` component. This is rendered
  * for each entry, and is responsible for rendering the
  * fieldset content.
  */
-const RepeatableFieldsetCard = (props) => {
+const RepeatableFieldsetCard = (props: RepeatableFieldsetCardProps) => {
   const id = useUniqueId("RepeatableFieldsetCard");
 
   const handleRemoveClick = async () => {
@@ -44,34 +54,6 @@ const RepeatableFieldsetCard = (props) => {
       </fieldset>
     </div>
   );
-};
-
-RepeatableFieldsetCard.propTypes = {
-  /** Card content */
-  children: PropTypes.node.isRequired,
-  /** Additional classNames to add */
-  className: PropTypes.string,
-  /** The item this card is associated with */
-  entry: PropTypes.object.isRequired,
-  heading: PropTypes.string.isRequired,
-  /** Index of this entry in the list of entries */
-  index: PropTypes.number,
-  /**
-   * Localized text used in the "Remove" buttons.
-   * A "Remove" button isn't rendered when the
-   * entries length is 1.
-   */
-  removeButtonLabel: PropTypes.string.isRequired,
-  /**
-   * Event handler responsible for removing an entry
-   * @param {object} entry
-   * @param {number} index
-   */
-  onRemoveClick: PropTypes.func.isRequired,
-  /**
-   * Render the remove button so the user can remove the card
-   */
-  showRemoveButton: PropTypes.bool,
 };
 
 export default RepeatableFieldsetCard;

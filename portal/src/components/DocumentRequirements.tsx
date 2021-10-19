@@ -1,15 +1,18 @@
 import Heading from "./Heading";
-import PropTypes from "prop-types";
 import React from "react";
 import { Trans } from "react-i18next";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 
+interface DocumentRequirementsProps {
+  type: "id" | "certification";
+}
+
 /**
  * A summary box that highlights key information.
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/summary-box/)
  */
-function DocumentRequirements(props) {
+function DocumentRequirements(props: DocumentRequirementsProps) {
   const { t } = useTranslation();
   return (
     <div className="usa-summary-box margin-bottom-2" role="complementary">
@@ -38,9 +41,5 @@ function DocumentRequirements(props) {
     </div>
   );
 }
-
-DocumentRequirements.propTypes = {
-  type: PropTypes.oneOf(["id", "certification"]),
-};
 
 export default DocumentRequirements;

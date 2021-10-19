@@ -20,7 +20,15 @@ export const fields = [
   `claim.${hasFutureChildDateField}`,
 ];
 
-export const DateOfChild = (props) => {
+interface Props {
+  appLogic: any;
+  claim: any;
+  query?: {
+    claim_id?: string;
+  };
+}
+
+export const DateOfChild = (props: Props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

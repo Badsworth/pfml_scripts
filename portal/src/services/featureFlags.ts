@@ -8,10 +8,9 @@ const featureFlagsParamName = "_ff";
 
 /**
  * Check whether a feature flag is enabled
- * @param {string} name - Feature flag name
- * @returns {boolean} Whether the flag is defined and enabled
+ * @param name - Feature flag name
  */
-export function isFeatureEnabled(name) {
+export function isFeatureEnabled(name: string) {
   const cookieFlags = getCookieFlags();
   if (cookieFlags.hasOwnProperty(name)) return cookieFlags[name];
 
@@ -22,7 +21,7 @@ export function isFeatureEnabled(name) {
 
 /**
  * Get the feature flags that are stored in the cookie
- * @returns {object} - name/value for each feature flag
+ * @returns name/value for each feature flag
  */
 function getCookieFlags() {
   const cookie = Cookies.get(featureFlagsParamName);
@@ -35,10 +34,8 @@ function getCookieFlags() {
 /**
  * Check if a flag is defined at the environment-level, indicating
  * that it's a valid flag that we can override through the query string.
- * @param {string} flagName
- * @returns {boolean}
  */
-function flagExistsInEnvironment(flagName) {
+function flagExistsInEnvironment(flagName: string) {
   // https://nextjs.org/docs/api-reference/next.config.js/environment-variables
   const environmentFlags = process.env.featureFlags;
 
@@ -54,9 +51,8 @@ function flagExistsInEnvironment(flagName) {
  * feature flags. Expects a querystring with a param of _ff.
  * For example, example.com?_ff=showSite:true;enableClaimFlow:false would enable
  * showSite and disable enableClaimFlow
- * @param {URLSearchParams} searchParams
  */
-export function storeFeatureFlagsFromQuery(searchParams) {
+export function storeFeatureFlagsFromQuery(searchParams: URLSearchParams) {
   if (!searchParams) return;
 
   const paramValue = searchParams.get(featureFlagsParamName);
@@ -76,16 +72,14 @@ export function storeFeatureFlagsFromQuery(searchParams) {
     });
 
   // Track when someone sets feature flag(s) through their browser
-  tracker.trackEvent("manual_feature_flags", { flags });
+  tracker.trackEvent("manual_feature_flags", { flags: JSON.stringify(flags) });
 }
 
 /**
  * Updates the feature flag cookie based on the given flag name/value.
  * This merges the given flag with any existing cookie value.
- * @param {string} flagName
- * @param {string} flagValue
  */
-export function updateCookieWithFlag(flagName, flagValue) {
+export function updateCookieWithFlag(flagName: string, flagValue: string) {
   const cookieFlags = getCookieFlags();
 
   if (flagValue === "reset") delete cookieFlags[flagName];

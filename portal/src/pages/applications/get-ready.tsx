@@ -13,7 +13,17 @@ import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplications from "../../hoc/withBenefitsApplications";
 
-export const GetReady = (props) => {
+interface Props {
+  appLogic: {
+    portalFlow?: {
+      getNextPageRoute: (...args: any[]) => any;
+      pathname: string;
+    };
+  };
+  claims: BenefitsApplicationCollection;
+}
+
+export const GetReady = (props: Props) => {
   const { appLogic, claims } = props;
   const { t } = useTranslation();
 
@@ -41,7 +51,6 @@ export const GetReady = (props) => {
 
       <Title>{t("pages.getReady.title")}</Title>
 
-      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element[]; heading: string; stat... Remove this comment to see the full error message */}
       <Alert
         heading={t("pages.getReady.alertHeading")}
         state="info"

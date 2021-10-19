@@ -8,7 +8,13 @@ import { Trans } from "react-i18next";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
-export const EmployerBenefitsIntro = (props) => {
+interface Props {
+  appLogic: any;
+  claim: BenefitsApplication;
+  query: any;
+}
+
+export const EmployerBenefitsIntro = (props: Props) => {
   const { t } = useTranslation();
   const { appLogic, claim, query } = props;
 

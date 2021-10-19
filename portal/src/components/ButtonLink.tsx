@@ -1,14 +1,24 @@
 /* eslint-disable jsx-a11y/no-static-element-interactions, jsx-a11y/click-events-have-key-events */
 import Link from "next/link";
-import PropTypes from "prop-types";
 import React from "react";
 import classnames from "classnames";
+
+interface ButtonLinkProps {
+  disabled?: boolean;
+  children: React.ReactNode;
+  "aria-label"?: string;
+  className?: string;
+  href: string;
+  variation?: "outline" | "secondary" | "accent-cool" | "unstyled";
+  inversed?: boolean;
+  onClick?: (...args: any[]) => any;
+}
 
 /**
  * Next.js [`Link`](https://nextjs.org/docs/api-reference/next/link)
  * styled as a button. Provides client-side transitions between routes.
  */
-const ButtonLink = (props) => {
+const ButtonLink = (props: ButtonLinkProps) => {
   const classes = classnames(
     "usa-button",
     props.className,
@@ -46,45 +56,6 @@ const ButtonLink = (props) => {
       </a>
     </Link>
   );
-};
-
-ButtonLink.propTypes = {
-  /**
-   * Disable button click
-   */
-  disabled: PropTypes.bool,
-  /**
-   * Button text.
-   */
-  children: PropTypes.node.isRequired,
-  /**
-   * Button's aria-label text.
-   * TODO (EMPLOYER-1718) - Use hyphen-casing for ARIA attributes
-   */
-  "aria-label": PropTypes.string,
-  /**
-   * Additional classes to apply to the HTML element. Useful for adding
-   * utility classes to control spacing.
-   */
-  className: PropTypes.string,
-  /**
-   * Href for link.
-   */
-  href: PropTypes.string.isRequired,
-  /**
-   * If present, determines button style variation.
-   */
-  variation: PropTypes.oneOf([
-    "outline",
-    "secondary",
-    "accent-cool",
-    "unstyled",
-  ]),
-  /**
-   * Apply the "inverse" style modifier
-   */
-  inversed: PropTypes.bool,
-  onClick: PropTypes.func,
 };
 
 export default ButtonLink;

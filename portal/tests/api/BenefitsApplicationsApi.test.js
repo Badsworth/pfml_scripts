@@ -256,11 +256,10 @@ describe("BenefitsApplicationsApi", () => {
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
-        Object {
-          "errors": undefined,
-          "warnings": Array [],
-        }
-      `);
+Object {
+  "warnings": Array [],
+}
+`);
     });
   });
 
@@ -341,11 +340,10 @@ describe("BenefitsApplicationsApi", () => {
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
-        Object {
-          "errors": undefined,
-          "warnings": Array [],
-        }
-      `);
+Object {
+  "warnings": Array [],
+}
+`);
     });
   });
 });

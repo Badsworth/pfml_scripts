@@ -475,6 +475,7 @@ class ClaimantExtractStep(Step):
             self.process_absence_case(
                 cast(str, curr_absence_case_number), records_in_same_absence_case, reference_file
             )
+            reference_file.processed_import_log_id = self.get_import_log_id()
 
     def process_absence_case(
         self,

@@ -30,7 +30,15 @@ export const fields = [
   "claim.other_incomes[*].income_type",
 ];
 
-export const OtherIncomesDetails = (props) => {
+interface OtherIncomesDetailsProps {
+  claim?: BenefitsApplication;
+  appLogic: any;
+  query?: {
+    claim_id?: string;
+  };
+}
+
+export const OtherIncomesDetails = (props: OtherIncomesDetailsProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
   const limit = 6;
@@ -116,10 +124,16 @@ OtherIncomesDetails.propTypes = {
   }),
 };
 
+interface OtherIncomeCardProps {
+  index: number;
+  entry: any;
+  getFunctionalInputProps: (...args: any[]) => any;
+}
+
 /**
  * Group of fields for an OtherIncome instance
  */
-export const OtherIncomeCard = (props) => {
+export const OtherIncomeCard = (props: OtherIncomeCardProps) => {
   const { t } = useTranslation();
   const { entry, getFunctionalInputProps, index } = props;
 

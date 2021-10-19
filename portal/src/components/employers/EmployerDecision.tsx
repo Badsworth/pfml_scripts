@@ -1,13 +1,19 @@
 import React, { useEffect } from "react";
 import InputChoiceGroup from "../InputChoiceGroup";
-import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
 import { Trans } from "react-i18next";
 import routes from "../../routes";
 import usePreviousValue from "../../hooks/usePreviousValue";
 import { useTranslation } from "../../locales/i18n";
 
-const EmployerDecision = (props) => {
+interface EmployerDecisionProps {
+  employerDecisionInput?: "Approve" | "Deny";
+  fraud?: string;
+  getFunctionalInputProps: (...args: any[]) => any;
+  updateFields: (...args: any[]) => any;
+}
+
+const EmployerDecision = (props: EmployerDecisionProps) => {
   const { t } = useTranslation();
   // keep track of previous value for fraud prop to know when to clear employer decision
   const previouslyFraud = usePreviousValue(props.fraud);
@@ -60,13 +66,6 @@ const EmployerDecision = (props) => {
       type="radio"
     />
   );
-};
-
-EmployerDecision.propTypes = {
-  employerDecisionInput: PropTypes.oneOf(["Approve", "Deny"]),
-  fraud: PropTypes.string,
-  getFunctionalInputProps: PropTypes.func.isRequired,
-  updateFields: PropTypes.func.isRequired,
 };
 
 export default EmployerDecision;

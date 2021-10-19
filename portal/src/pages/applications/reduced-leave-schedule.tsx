@@ -44,7 +44,15 @@ export const fields = [
   `claim.${leavePeriodPath}.wednesday_off_minutes`,
 ];
 
-export const ReducedLeaveSchedule = (props) => {
+interface Props {
+  claim?: BenefitsApplication;
+  appLogic: any;
+  query?: {
+    claim_id?: string;
+  };
+}
+
+export const ReducedLeaveSchedule = (props: Props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -123,7 +131,6 @@ export const ReducedLeaveSchedule = (props) => {
       onSave={handleSave}
     >
       {(claim.isMedicalOrPregnancyLeave || claim.isCaringLeave) && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; neutral:... Remove this comment to see the full error message
         <Alert state="info" neutral>
           <Trans
             i18nKey="pages.claimsReducedLeaveSchedule.needDocumentAlert"

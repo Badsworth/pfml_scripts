@@ -256,11 +256,13 @@ export class WorkPattern {
 
   /**
    * Create a WorkPattern with a week, splitting provided minutes across 7 work_pattern_days.
-   * @param {number} minutesWorkedPerWeek - average minutes worked per week. Must be an integer. Will split minutes evenly across 7 day week
-   * @param {WorkPattern} [workPattern] - optional, work pattern attributes to apply to new WorkPattern
-   * @returns {WorkPattern}
+   * @param minutesWorkedPerWeek - average minutes worked per week. Must be an integer. Will split minutes evenly across 7 day week
+   * @param workPattern - work pattern attributes to apply to new WorkPattern
    */
-  static createWithWeek(minutesWorkedPerWeek, workPattern = {}) {
+  static createWithWeek(
+    minutesWorkedPerWeek: number,
+    workPattern: WorkPattern | Record<string, never> = {}
+  ) {
     assert(!isNil(minutesWorkedPerWeek));
     const minutesOverWeek = spreadMinutesOverWeek(minutesWorkedPerWeek);
 

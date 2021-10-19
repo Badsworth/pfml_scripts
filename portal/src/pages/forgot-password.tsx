@@ -11,7 +11,11 @@ import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
-export const ForgotPassword = (props) => {
+interface Props {
+  appLogic: any;
+}
+
+export const ForgotPassword = (props: Props) => {
   const { appLogic } = props;
   const { t } = useTranslation();
 

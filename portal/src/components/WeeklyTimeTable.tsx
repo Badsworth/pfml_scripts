@@ -1,12 +1,20 @@
-import PropTypes from "prop-types";
 import React from "react";
 import Table from "./Table";
 import { useTranslation } from "react-i18next";
 
+interface WeeklyTimeTableProps {
+  className?: string;
+  days: Array<{
+    /** Sunday–Saturday */
+    day_of_week: string;
+    minutes?: number;
+  }>;
+}
+
 /**
  * A table for reviewing hours/minutes in a weekly format
  */
-export const WeeklyTimeTable = (props) => {
+export const WeeklyTimeTable = (props: WeeklyTimeTableProps) => {
   const { t } = useTranslation();
   const days = props.days;
   return (
@@ -35,21 +43,6 @@ export const WeeklyTimeTable = (props) => {
       </tbody>
     </Table>
   );
-};
-
-WeeklyTimeTable.propTypes = {
-  /** Additional classNames to add */
-  className: PropTypes.string,
-  /**
-   * Data corresponding to 7 days
-   */
-  days: PropTypes.arrayOf(
-    PropTypes.shape({
-      /** Sunday–Saturday */
-      day_of_week: PropTypes.string.isRequired,
-      minutes: PropTypes.number,
-    })
-  ).isRequired,
 };
 
 export default WeeklyTimeTable;

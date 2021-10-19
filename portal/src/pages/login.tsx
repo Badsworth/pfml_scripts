@@ -12,10 +12,26 @@ import routes from "../routes";
 import useFormState from "../hooks/useFormState";
 import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
 import useLoggedInRedirect from "../hooks/useLoggedInRedirect";
+import usePortalFlow from "../hooks/usePortalFlow";
 import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
-export const Login = (props) => {
+interface Props {
+  appLogic: {
+    appErrors?: AppErrorInfoCollection;
+    auth: {
+      login: (...args: any[]) => any;
+    };
+    portalFlow: ReturnType<typeof usePortalFlow>;
+  };
+  query: {
+    "account-verified"?: string;
+    "session-timed-out"?: string;
+    next?: string;
+  };
+}
+
+export const Login = (props: Props) => {
   const { appLogic, query } = props;
   const { t } = useTranslation();
   useLoggedInRedirect(appLogic.portalFlow);
@@ -48,10 +64,10 @@ export const Login = (props) => {
   return (
     <React.Fragment>
       {accountVerified && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; className: string; headi... Remove this comment to see the full error message
         <Alert
           className="margin-bottom-3"
           heading={t("pages.authLogin.accountVerifiedHeading")}
+          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: TFunctionResult; className: stri... Remove this comment to see the full error message
           name="account-verified-message"
           state="success"
         >
@@ -60,10 +76,10 @@ export const Login = (props) => {
       )}
 
       {sessionTimedOut && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; className: string; headi... Remove this comment to see the full error message
         <Alert
           className="margin-bottom-3"
           heading={t("pages.authLogin.sessionTimedOutHeading")}
+          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: TFunctionResult; className: stri... Remove this comment to see the full error message
           name="session-timed-out-message"
           state="info"
         >

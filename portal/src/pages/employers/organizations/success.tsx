@@ -8,7 +8,20 @@ import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
 
-export const Success = (props) => {
+interface Props {
+  appLogic: {
+    portalFlow: {
+      goTo: (...args: any[]) => any;
+    };
+  };
+  query: {
+    employer_id: string;
+    next: string;
+  };
+  user?: User;
+}
+
+export const Success = (props: Props) => {
   const { appLogic, query, user } = props;
   const { t } = useTranslation();
 

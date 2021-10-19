@@ -14,7 +14,23 @@ import formatDateRange from "../../../utils/formatDateRange";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
-export const NewApplication = (props) => {
+interface Props {
+  appLogic: {
+    employers: {
+      claim?: EmployerClaim;
+    };
+    portalFlow: {
+      goTo: (...args: any[]) => any;
+      goToNextPage: (...args: any[]) => any;
+      goToPageFor: (...args: any[]) => any;
+    };
+  };
+  query: {
+    absence_id: string;
+  };
+}
+
+export const NewApplication = (props: Props) => {
   const { t } = useTranslation();
   const {
     appLogic: {
@@ -68,11 +84,9 @@ export const NewApplication = (props) => {
           name: claim.fullName,
         })}
       </Title>
-      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; }' is no... Remove this comment to see the full error message */}
       <Alert state="warning">
         <Trans
           i18nKey="pages.employersClaimsNewApplication.instructionsFollowUpDate"
-          // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
           values={{ date: formatDateRange(claim.follow_up_date) }}
         />
       </Alert>
@@ -132,7 +146,6 @@ export const NewApplication = (props) => {
           {claim.tax_identifier}
         </StatusRow>
         <StatusRow label={t("pages.employersClaimsNewApplication.dobLabel")}>
-          {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1. */}
           {formatDateRange(claim.date_of_birth)}
         </StatusRow>
         <ConditionalContent
@@ -150,7 +163,6 @@ export const NewApplication = (props) => {
                 )}
               </Heading>
               <Trans i18nKey="pages.employersClaimsNewApplication.instructions" />
-              {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; noIcon: true; state: str... Remove this comment to see the full error message */}
               <Alert noIcon state="info">
                 {t("pages.employersClaimsNewApplication.agreementBody")}
               </Alert>

@@ -13,7 +13,16 @@ import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
 
-export const ConsentToDataSharing = (props) => {
+interface Props {
+  appLogic: {
+    users: {
+      updateUser: (...args: any[]) => any;
+    };
+  };
+  user: User;
+}
+
+export const ConsentToDataSharing = (props: Props) => {
   const { t } = useTranslation();
   const { appLogic, user } = props;
   const { updateUser } = appLogic.users;
@@ -99,7 +108,6 @@ export const ConsentToDataSharing = (props) => {
         </AccordionItem>
       </Accordion>
 
-      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element[]; state: string; noIcon... Remove this comment to see the full error message */}
       <Alert state="info" noIcon>
         <p>{t("pages.userConsentToDataSharing.agreementBody")}</p>
         <Button type="submit" loading={handleSubmit.isThrottled}>

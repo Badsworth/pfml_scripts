@@ -40,7 +40,26 @@ import useThrottledHandler from "../../../hooks/useThrottledHandler";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
-export const Review = (props) => {
+interface Props {
+  appLogic: {
+    appErrors: any;
+    employers: {
+      claim?: EmployerClaim;
+      documents?: DocumentCollection;
+      downloadDocument: (...args: any[]) => any;
+      loadDocuments: (...args: any[]) => any;
+      submitClaimReview: (...args: any[]) => any;
+    };
+    portalFlow?: {
+      goTo: (...args: any[]) => any;
+    };
+  };
+  query: {
+    absence_id: string;
+  };
+}
+
+export const Review = (props: Props) => {
   const {
     appLogic,
     query: { absence_id: absenceId },
@@ -67,9 +86,11 @@ export const Review = (props) => {
   // the functionality described above will need to be reimplemented.
   const indexedEmployerBenefits = claim.employer_benefits.map(
     (benefit, index) =>
+      // @ts-expect-error ts-migrate(2322) FIXME: Type 'number' is not assignable to type 'string'.
       new EmployerBenefit({ ...benefit, employer_benefit_id: index })
   );
   const indexedPreviousLeaves = claim.previous_leaves.map(
+    // @ts-expect-error ts-migrate(2322) FIXME: Type 'number' is not assignable to type 'string'.
     (leave, index) => new PreviousLeave({ ...leave, previous_leave_id: index })
   );
 
@@ -384,11 +405,9 @@ export const Review = (props) => {
           name: claim.fullName,
         })}
       </Title>
-      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; noIcon: ... Remove this comment to see the full error message */}
       <Alert state="warning" noIcon>
         <Trans
           i18nKey="pages.employersClaimsReview.instructionsFollowUpDate"
-          // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
           values={{ date: formatDateRange(claim.follow_up_date) }}
         />
       </Alert>
@@ -427,7 +446,7 @@ export const Review = (props) => {
         }
       />
       <LeaveSchedule
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ appLogic: any; claim: any; hasDocuments: b... Remove this comment to see the full error message
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ appLogic: { appErrors: any; employers: { c... Remove this comment to see the full error message
         appLogic={appLogic}
         claim={claim}
         hasDocuments={!!certificationDocuments.length}

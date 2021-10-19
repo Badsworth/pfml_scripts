@@ -17,7 +17,12 @@ export const fields = [
   "claim.last_name",
 ];
 
-export const Name = (props) => {
+interface Props {
+  appLogic: any;
+  claim: BenefitsApplication;
+}
+
+export const Name = (props: Props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

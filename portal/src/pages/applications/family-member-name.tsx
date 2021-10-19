@@ -21,7 +21,12 @@ export const fields = [
   `claim.${caringLeavePath}.family_member_last_name`,
 ];
 
-export const FamilyMemberName = (props) => {
+interface Props {
+  appLogic: any;
+  claim: BenefitsApplication;
+}
+
+export const FamilyMemberName = (props: Props) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
 
