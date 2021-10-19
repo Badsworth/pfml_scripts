@@ -166,6 +166,9 @@ pub-payments-create-pub-files:
 pub-payments-process-pub-returns:
 	$(PY_RUN_CMD) pub-payments-process-pub-returns --steps ALL $(DECODE_LOG)
 
+pub-payments-process-snapshot:
+	$(PY_RUN_CMD) pub-payments-process-snapshot --steps ALL $(DECODE_LOG)
+
 pub-payments-mock-generate:
 	$(PY_RUN_CMD)  pub-payments-mock-generate $(DECODE_LOG)
 

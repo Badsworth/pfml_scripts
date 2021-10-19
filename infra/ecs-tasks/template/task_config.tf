@@ -50,6 +50,7 @@ locals {
     { name : "FINEOS_AWS_IAM_ROLE_EXTERNAL_ID", value : var.fineos_aws_iam_role_external_id },
     { name : "FINEOS_DATA_IMPORT_PATH", value : var.fineos_data_import_path },
     { name : "FINEOS_DATA_EXPORT_PATH", value : var.fineos_data_export_path },
+    { name : "FINEOS_ADHOC_DATA_EXPORT_PATH", value : var.fineos_adhoc_data_export_path },
     # This should just be fineos_data_export_path but we'll roll with this for now
     # to avoid breaking the camel's back
     { name : "FINEOS_FOLDER_PATH", value : var.fineos_import_employee_updates_input_directory_path }

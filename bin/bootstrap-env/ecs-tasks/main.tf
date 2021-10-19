@@ -60,6 +60,7 @@ module "tasks" {
 
   # TODO: Values from FINEOS.
   fineos_data_export_path         = ""
+  fineos_adhoc_data_export_path   = ""
   fineos_data_import_path         = ""
   fineos_error_export_path        = ""
 

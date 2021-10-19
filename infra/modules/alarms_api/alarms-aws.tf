@@ -10,7 +10,8 @@ locals {
     "dor-fineos-etl",
     "import-fineos-to-warehouse",
     "pub-payments-process-fineos",
-    "weekend-pub-claimant-extract"
+    "weekend-pub-claimant-extract",
+    "pub-payments-process-snapshot"
   ]
 }
 

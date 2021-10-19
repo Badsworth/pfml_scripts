@@ -2564,6 +2564,10 @@ class ReferenceFileType(LookupTable):
         30, "Consolidated DIA payments for DFML reduction report", 1
     )
 
+    FINEOS_PAYMENT_RECONCILIATION_EXTRACT = LkReferenceFileType(
+        31, "Payment reconciliation extract", 3
+    )
+
 
 class Title(LookupTable):
     model = LkTitle
