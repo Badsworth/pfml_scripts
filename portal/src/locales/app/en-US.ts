@@ -1119,9 +1119,16 @@ const pages = {
     submitButton: "Review and submit application",
     title: "Checklist: Create a new application",
   },
+
   claimsConcurrentLeaves: {
     choiceNo: "$t(shared.choiceNo)",
+    choiceNoHint:
+      "I don't need to report any employer sponsored accrued paid leave after the 7-day waiting period, or I don't know yet",
     choiceYes: "$t(shared.choiceYes)",
+    choiceYesHint:
+      "I need to report employer-sponsored accrued paid leave I will use after the 7-day waiting period",
+    dontNeedToReport:
+      "You don't need to report accrued paid leave that you use during the 7-day waiting period",
     hintWhatKindBody:
       "<p>This includes any paid vacation time, sick time, and personal time. It should be reported if it’s taken during your leave period, whether it’s during the 7-day waiting period or after. Reminder: you can use accrued paid leave during the 7-day waiting period with no impact to your PFML benefit.</p>",
     hintWhatKindHeading: "What kinds of accrued paid leave to report",
@@ -1131,9 +1138,19 @@ const pages = {
       "<ul><li>You had a serious health condition, including illness, injury, or pregnancy.</li><li>If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care.</li><li>You bonded with your child after birth or placement.</li><li>You needed to manage family affairs while a family member is on active duty in the armed forces.</li><li>You needed to care for a family member who serves in the armed forces.</li><li>You needed to care for a family member with a serious health condition.</li></ul>",
     hintWhenToReportDetailsLabel: "What are the qualifying reasons?",
     hintWhenToReportHeading: "When you need to report it",
+    intro_Continuous:
+      "Employer-sponsored paid vacation time, sick time, and personal time you plan to take during your paid leave from PFML.",
+    intro_ContinuousReduced:
+      "Employer-sponsored paid vacation time, sick time, and personal time.",
+    intro_ReducedOrIntermittent:
+      "<div><p>Employer-sponsored paid vacation time, sick time, and personal time that:</p><ul><li>You are planning to use on days when you are also taking PFML leave.</li></ul><p>Or</p><ul><li>You are planning to use for a PFML qualifying reason, even if it’s not the same reason you are applying for now.</li></ul></div>",
     sectionLabel:
       "Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?",
     title: "$t(shared.claimsOtherLeaveTitle)",
+    typesOfLeaveToReport:
+      "For PFML leave that includes taking time off work completely for a period of time (continuous leave), you need to report any accrued paid leave you plan to take during that continuous leave.",
+    whenToReportContinuousLeave: "When to report during continuous leave",
+    whenToReportReducedLeave: "When to report during reduced leave",
   },
   claimsConcurrentLeavesDetails: {
     choiceNo: "$t(shared.choiceNo)",

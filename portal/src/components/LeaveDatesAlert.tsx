@@ -48,7 +48,7 @@ function LeaveDatesAlert(props: LeaveDatesAlertProps) {
         >
           {formatDateRange(
             props.startDate,
-            `${DateTime.fromISO(props.startDate).plus({ days: 7 })}`
+            `${DateTime.fromISO(props.startDate).plus({ days: 7 }).toISO()}`
           )}
         </Alert>
       )}
