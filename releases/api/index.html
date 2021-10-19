@@ -1082,12 +1082,12 @@
 <tbody>
 <tr>
 <td>test</td>
-<td><a href="https://github.com/EOLWD/pfml/commits/85bbbe825">85bbbe825</a> (<a href="https://github.com/EOLWD/pfml/compare/api/v2.29.0...85bbbe825">80 commits ahead</a> of <a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.29.0">api/v2.29.0</a>)</td>
+<td><a href="https://github.com/EOLWD/pfml/commits/6ab2ab039">6ab2ab039</a> (<a href="https://github.com/EOLWD/pfml/compare/api/v2.30.0-rc1...6ab2ab039">1 commits ahead</a> of <a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.30.0-rc1">api/v2.30.0-rc1</a>)</td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(test)">GitHub</a></td>
 </tr>
 <tr>
 <td>stage</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.29.0">api/v2.29.0</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.30.0-rc1">api/v2.30.0-rc1</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(stage)">GitHub</a></td>
 </tr>
 <tr>
@@ -1097,7 +1097,7 @@
 </tr>
 <tr>
 <td>performance</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.29.0">api/v2.29.0</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.30.0-rc1">api/v2.30.0-rc1</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(performance)">GitHub</a></td>
 </tr>
 <tr>
@@ -1107,7 +1107,7 @@
 </tr>
 <tr>
 <td>uat</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.29.0">api/v2.29.0</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.30.0-rc1">api/v2.30.0-rc1</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(uat)">GitHub</a></td>
 </tr>
 <tr>
@@ -1117,75 +1117,19 @@
 </tr>
 <tr>
 <td>cps-preview</td>
-<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.29.0">api/v2.29.0</a></td>
+<td><a href="https://github.com/EOLWD/pfml/releases/tag/api/v2.30.0-rc1">api/v2.30.0-rc1</a></td>
 <td><a href="https://github.com/EOLWD/pfml/deployments/activity_log?environment=api+(cps-preview)">GitHub</a></td>
 </tr>
 </tbody>
 </table>
 <p>Full release notes are available in <a href="https://lwd.atlassian.net/wiki/spaces/DD/pages/1086226543/2021+Releases">Confluence</a>.</p>
-<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (API-1970,API-1950,INFRA-672,API-1699,PORTAL-807,infra-616,API-1970,infra-616,PORTAL-868,API-1970,PORTAL-728,API-1882,API-1970,API-1898,API-1915,API-1779,API-1901,PORTAL-797,API-1973,API-1887,PORTAL-778,API-1990,API-1904,API-1918,API-1924,PORTAL-782)">Jira List</a>):</p>
+<p>Next Release (<a href="https://lwd.atlassian.net/issues/?jql=id in (PORTAL-819)">Jira List</a>):</p>
 <ul>
-<li>add fineos_absence_id to log (<a href="https://github.com/EOLWD/pfml/pull/5823">#5823</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PORTAL-868">PORTAL-868</a>: Turn <code>USE_CLAIM_STATUS_URL</code> feature flag ON by default in all environments (<a href="https://github.com/EOLWD/pfml/pull/5830">#5830</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PORTAL-807">PORTAL-807</a>: Separate API layer and service layer concerns for <code>get_claim</code> (<a href="https://github.com/EOLWD/pfml/pull/5747">#5747</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PORTAL-797">PORTAL-797</a>: Fix typing for fineos_absence_id in ClaimReviewResponse (<a href="https://github.com/EOLWD/pfml/pull/5813">#5813</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PORTAL-782">PORTAL-782</a>: validation for zero income backend (<a href="https://github.com/EOLWD/pfml/pull/5595">#5595</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PORTAL-778">PORTAL-778</a>: Include Absence Periods in GET /claims response (<a href="https://github.com/EOLWD/pfml/pull/5759">#5759</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/PORTAL-728">PORTAL-728</a>: Sync fineos_leave_request_id on Absence Period records at all places Absence Periods get synced (<a href="https://github.com/EOLWD/pfml/pull/5822">#5822</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/INFRA-672">INFRA-672</a>: Convert scripted-releases into a Poetry project (<a href="https://github.com/EOLWD/pfml/pull/5449">#5449</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1990">API-1990</a>: Replace invalid characters with spaces in reject report notes (<a href="https://github.com/EOLWD/pfml/pull/5789">#5789</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1973">API-1973</a>: Add delegated payments test factory utility. (<a href="https://github.com/EOLWD/pfml/pull/5337">#5337</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1970">API-1970</a>: Store employee feed data in memory rather than query constantly (<a href="https://github.com/EOLWD/pfml/pull/5855">#5855</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1970">API-1970</a>: Fixes to the recent extract processing changes. (<a href="https://github.com/EOLWD/pfml/pull/5837">#5837</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1970">API-1970</a>: Detach loading of extracts from the extract processing (<a href="https://github.com/EOLWD/pfml/pull/5268">#5268</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1970">API-1970</a>: Add the new consume extract step in the weekend PUB job (<a href="https://github.com/EOLWD/pfml/pull/5831">#5831</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1950">API-1950</a>: Payment Reconciliation Report ECS Task (<a href="https://github.com/EOLWD/pfml/pull/5697">#5697</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1924">API-1924</a>: Add OrganizationUnit relationship to EmployeeOccupation (<a href="https://github.com/EOLWD/pfml/pull/5780">#5780</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1918">API-1918</a>: add new lookuptable enums and fix typos (<a href="https://github.com/EOLWD/pfml/pull/5779">#5779</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1915">API-1915</a>: add abstract base class <code>AbstractServiceNowClient</code> (<a href="https://github.com/EOLWD/pfml/pull/5582">#5582</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1904">API-1904</a>: DELETE /{bucket}/{key} endpoint to proxy S3 DeleteObject (<a href="https://github.com/EOLWD/pfml/pull/5735">#5735</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1901">API-1901</a>: proxy listobjectsv2 (<a href="https://github.com/EOLWD/pfml/pull/5736">#5736</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1898">API-1898</a>: add logging of calls and return values to all methods of <code>MockFINEOSClient</code> (<a href="https://github.com/EOLWD/pfml/pull/5784">#5784</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1887">API-1887</a>: Power automate role configuration adjustments (<a href="https://github.com/EOLWD/pfml/pull/5804">#5804</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1882">API-1882</a>: Dynamically calculate the weekly maximum benefit amount (<a href="https://github.com/EOLWD/pfml/pull/5812">#5812</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1779">API-1779</a>: - Add TimestampMixin to Application model (<a href="https://github.com/EOLWD/pfml/pull/5439">#5439</a>)</li>
-<li><a href="https://lwd.atlassian.net/browse/API-1699">API-1699</a>: - Add unique constraint to user.email_address (<a href="https://github.com/EOLWD/pfml/pull/4547">#4547</a>)</li>
-<li>Update org unit name (<a href="https://github.com/EOLWD/pfml/pull/5799">#5799</a>)</li>
-<li>Revert "Jamiet/infra-616 Enable Bucket replication on production buckets (<a href="https://github.com/EOLWD/pfml/pull/5824">#5824</a>)" (#5840)</li>
-<li>Jamiet/infra-616 Enable Bucket replication on production buckets (<a href="https://github.com/EOLWD/pfml/pull/5824">#5824</a>)</li>
-<li>Create PUT CopyObject TF resources (<a href="https://github.com/EOLWD/pfml/pull/5820">#5820</a>)</li>
+<li><a href="https://lwd.atlassian.net/browse/PORTAL-819">PORTAL-819</a>: (Pre-work refactor) Simplify <code>get_concurrent_leave_issues</code> (<a href="https://github.com/EOLWD/pfml/pull/5845">#5845</a>)</li>
 </ul>
 <details>
 <summary>Raw</summary>
- <br>* add fineos_absence_id to log ([#5823](https://github.com/EOLWD/pfml/pull/5823))
- <br>* [PORTAL-868](https://lwd.atlassian.net/browse/PORTAL-868): Turn `USE_CLAIM_STATUS_URL` feature flag ON by default in all environments ([#5830](https://github.com/EOLWD/pfml/pull/5830))
- <br>* [PORTAL-807](https://lwd.atlassian.net/browse/PORTAL-807): Separate API layer and service layer concerns for `get_claim` ([#5747](https://github.com/EOLWD/pfml/pull/5747))
- <br>* [PORTAL-797](https://lwd.atlassian.net/browse/PORTAL-797): Fix typing for fineos_absence_id in ClaimReviewResponse ([#5813](https://github.com/EOLWD/pfml/pull/5813))
- <br>* [PORTAL-782](https://lwd.atlassian.net/browse/PORTAL-782): validation for zero income backend ([#5595](https://github.com/EOLWD/pfml/pull/5595))
- <br>* [PORTAL-778](https://lwd.atlassian.net/browse/PORTAL-778): Include Absence Periods in GET /claims response ([#5759](https://github.com/EOLWD/pfml/pull/5759))
- <br>* [PORTAL-728](https://lwd.atlassian.net/browse/PORTAL-728): Sync fineos_leave_request_id on Absence Period records at all places Absence Periods get synced ([#5822](https://github.com/EOLWD/pfml/pull/5822))
- <br>* [INFRA-672](https://lwd.atlassian.net/browse/INFRA-672): Convert scripted-releases into a Poetry project ([#5449](https://github.com/EOLWD/pfml/pull/5449))
- <br>* [API-1990](https://lwd.atlassian.net/browse/API-1990): Replace invalid characters with spaces in reject report notes ([#5789](https://github.com/EOLWD/pfml/pull/5789))
- <br>* [API-1973](https://lwd.atlassian.net/browse/API-1973): Add delegated payments test factory utility. ([#5337](https://github.com/EOLWD/pfml/pull/5337))
- <br>* [API-1970](https://lwd.atlassian.net/browse/API-1970): Store employee feed data in memory rather than query constantly ([#5855](https://github.com/EOLWD/pfml/pull/5855))
- <br>* [API-1970](https://lwd.atlassian.net/browse/API-1970): Fixes to the recent extract processing changes. ([#5837](https://github.com/EOLWD/pfml/pull/5837))
- <br>* [API-1970](https://lwd.atlassian.net/browse/API-1970): Detach loading of extracts from the extract processing ([#5268](https://github.com/EOLWD/pfml/pull/5268))
- <br>* [API-1970](https://lwd.atlassian.net/browse/API-1970): Add the new consume extract step in the weekend PUB job ([#5831](https://github.com/EOLWD/pfml/pull/5831))
- <br>* [API-1950](https://lwd.atlassian.net/browse/API-1950): Payment Reconciliation Report ECS Task ([#5697](https://github.com/EOLWD/pfml/pull/5697))
- <br>* [API-1924](https://lwd.atlassian.net/browse/API-1924): Add OrganizationUnit relationship to EmployeeOccupation ([#5780](https://github.com/EOLWD/pfml/pull/5780))
- <br>* [API-1918](https://lwd.atlassian.net/browse/API-1918): add new lookuptable enums and fix typos ([#5779](https://github.com/EOLWD/pfml/pull/5779))
- <br>* [API-1915](https://lwd.atlassian.net/browse/API-1915): add abstract base class `AbstractServiceNowClient` ([#5582](https://github.com/EOLWD/pfml/pull/5582))
- <br>* [API-1904](https://lwd.atlassian.net/browse/API-1904): DELETE /{bucket}/{key} endpoint to proxy S3 DeleteObject ([#5735](https://github.com/EOLWD/pfml/pull/5735))
- <br>* [API-1901](https://lwd.atlassian.net/browse/API-1901): proxy listobjectsv2 ([#5736](https://github.com/EOLWD/pfml/pull/5736))
- <br>* [API-1898](https://lwd.atlassian.net/browse/API-1898): add logging of calls and return values to all methods of `MockFINEOSClient` ([#5784](https://github.com/EOLWD/pfml/pull/5784))
- <br>* [API-1887](https://lwd.atlassian.net/browse/API-1887): Power automate role configuration adjustments ([#5804](https://github.com/EOLWD/pfml/pull/5804))
- <br>* [API-1882](https://lwd.atlassian.net/browse/API-1882): Dynamically calculate the weekly maximum benefit amount ([#5812](https://github.com/EOLWD/pfml/pull/5812))
- <br>* [API-1779](https://lwd.atlassian.net/browse/API-1779): - Add TimestampMixin to Application model ([#5439](https://github.com/EOLWD/pfml/pull/5439))
- <br>* [API-1699](https://lwd.atlassian.net/browse/API-1699): - Add unique constraint to user.email_address ([#4547](https://github.com/EOLWD/pfml/pull/4547))
- <br>* Update org unit name ([#5799](https://github.com/EOLWD/pfml/pull/5799))
- <br>* Revert "Jamiet/infra-616 Enable Bucket replication on production buckets ([#5824](https://github.com/EOLWD/pfml/pull/5824))" (#5840)
- <br>* Jamiet/infra-616 Enable Bucket replication on production buckets ([#5824](https://github.com/EOLWD/pfml/pull/5824))
- <br>* Create PUT CopyObject TF resources ([#5820](https://github.com/EOLWD/pfml/pull/5820))
+ <br>* [PORTAL-819](https://lwd.atlassian.net/browse/PORTAL-819): (Pre-work refactor) Simplify `get_concurrent_leave_issues` ([#5845](https://github.com/EOLWD/pfml/pull/5845))
 </details>
                 
               
