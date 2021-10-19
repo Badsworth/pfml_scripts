@@ -3,7 +3,6 @@ import Details from "../../components/Details";
 import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
@@ -15,13 +14,13 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_concurrent_leave"];
 
-interface Props {
+interface ConcurrentLeavesProps {
   appLogic: any;
   claim: BenefitsApplication;
   query: any;
 }
 
-export const ConcurrentLeaves = (props: Props) => {
+export const ConcurrentLeaves = (props: ConcurrentLeavesProps) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
 
@@ -96,12 +95,6 @@ export const ConcurrentLeaves = (props: Props) => {
       />
     </QuestionPage>
   );
-};
-
-ConcurrentLeaves.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  query: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(ConcurrentLeaves);

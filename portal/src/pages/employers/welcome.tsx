@@ -5,7 +5,6 @@ import Heading from "../../components/Heading";
 import Icon from "../../components/Icon";
 import Link from "next/link";
 import NewTag from "../../components/NewTag";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
@@ -168,15 +167,6 @@ export const Welcome = ({ appLogic, user }: WelcomeProps) => {
       </div>
     </React.Fragment>
   );
-};
-
-Welcome.propTypes = {
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      pathname: PropTypes.string.isRequired,
-    }).isRequired,
-  }).isRequired,
-  user: PropTypes.instanceOf(User).isRequired,
 };
 
 export default withUser(Welcome);

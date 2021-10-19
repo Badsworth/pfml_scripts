@@ -5,7 +5,6 @@ import AppErrorInfo from "../../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../models/AppErrorInfoCollection";
 import InputChoiceGroup from "../../../components/InputChoiceGroup";
 import LeaveReason from "../../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../../components/QuestionPage";
 import Spinner from "../../../components/Spinner";
 import tracker from "../../../services/tracker";
@@ -115,13 +114,6 @@ export const UploadDocsOptions = (props: Props) => {
       />
     </QuestionPage>
   );
-};
-
-UploadDocsOptions.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    absence_case_id: PropTypes.string.isRequired,
-  }),
 };
 
 export default UploadDocsOptions;

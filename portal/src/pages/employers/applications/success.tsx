@@ -1,5 +1,4 @@
 import BackButton from "../../../components/BackButton";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
@@ -8,7 +7,7 @@ import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
 
-interface Props {
+interface SuccessProps {
   appLogic?: {
     portalFlow: {
       getNextPageRoute: (...args: any[]) => any;
@@ -19,7 +18,7 @@ interface Props {
   };
 }
 
-export const Success = (props: Props) => {
+export const Success = (props: SuccessProps) => {
   const { t } = useTranslation();
   const {
     appLogic,
@@ -57,17 +56,6 @@ export const Success = (props: Props) => {
       <UserFeedback url={routes.external.massgov.feedbackEmployer} />
     </React.Fragment>
   );
-};
-
-Success.propTypes = {
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      getNextPageRoute: PropTypes.func.isRequired,
-    }).isRequired,
-  }),
-  query: PropTypes.shape({
-    absence_id: PropTypes.string.isRequired,
-  }).isRequired,
 };
 
 export default withUser(Success);

@@ -5,7 +5,6 @@ import AppErrorInfo from "../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { get } from "lodash";
@@ -21,12 +20,12 @@ export const UploadType = {
   certification: "UPLOAD_CERTIFICATION",
 };
 
-interface Props {
+interface UploadDocsOptionsProps {
   claim?: BenefitsApplication;
   appLogic: any;
 }
 
-export const UploadDocsOptions = (props: Props) => {
+export const UploadDocsOptions = (props: UploadDocsOptionsProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -117,11 +116,6 @@ export const UploadDocsOptions = (props: Props) => {
       />
     </QuestionPage>
   );
-};
-
-UploadDocsOptions.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(UploadDocsOptions);

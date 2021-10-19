@@ -6,7 +6,6 @@ import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputText from "../../components/InputText";
 import Lead from "../../components/Lead";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";
@@ -90,11 +89,6 @@ export const PhoneNumber = (props: Props) => {
       />
     </QuestionPage>
   );
-};
-
-PhoneNumber.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
 export default withBenefitsApplication(PhoneNumber);

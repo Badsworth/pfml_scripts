@@ -14,7 +14,6 @@ import Details from "../../components/Details";
 import { DocumentType } from "../../models/Document";
 import HeadingPrefix from "../../components/HeadingPrefix";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import React from "react";
 import Spinner from "../../components/Spinner";
 import Step from "../../components/Step";
@@ -28,19 +27,18 @@ import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
+import usePortalFlow from "../../hooks/usePortalFlow";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 import withClaimDocuments from "../../hoc/withClaimDocuments";
 
-interface Props {
+interface ChecklistProps {
   appLogic: {
     appErrors: any;
     benefitsApplications: {
       warningsLists: any;
     };
-    portalFlow: {
-      getNextPageRoute: (...args: any[]) => any;
-    };
+    portalFlow: ReturnType<typeof usePortalFlow>;
   };
   claim: BenefitsApplication;
   documents?: BenefitsApplicationDocument[];
@@ -51,7 +49,7 @@ interface Props {
   };
 }
 
-export const Checklist = (props: Props) => {
+export const Checklist = (props: ChecklistProps) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments, query } = props;
   const { appErrors } = appLogic;
@@ -420,27 +418,6 @@ export const Checklist = (props: Props) => {
       </ButtonLink>
     </div>
   );
-};
-
-Checklist.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    benefitsApplications: PropTypes.shape({
-      warningsLists: PropTypes.object.isRequired,
-    }).isRequired,
-    portalFlow: PropTypes.shape({
-      getNextPageRoute: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  documents: PropTypes.arrayOf(
-    PropTypes.instanceOf(BenefitsApplicationDocument)
-  ),
-  isLoadingDocuments: PropTypes.bool,
-  query: PropTypes.shape({
-    "part-one-submitted": PropTypes.string,
-    "payment-pref-submitted": PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(withClaimDocuments(Checklist));

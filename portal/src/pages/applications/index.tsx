@@ -5,7 +5,6 @@ import BenefitsApplicationCollection from "../../models/BenefitsApplicationColle
 import ButtonLink from "../../components/ButtonLink";
 import Heading from "../../components/Heading";
 import Lead from "../../components/Lead";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
@@ -138,18 +137,5 @@ function ApplicationCard(props) {
     <ApplicationCardV1 {...props} />
   );
 }
-
-Index.propTypes = {
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      goTo: PropTypes.func.isRequired,
-      pathname: PropTypes.string.isRequired,
-    }).isRequired,
-  }).isRequired,
-  claims: PropTypes.instanceOf(BenefitsApplicationCollection).isRequired,
-  query: PropTypes.shape({
-    uploadedAbsenceId: PropTypes.string,
-  }),
-};
 
 export default withBenefitsApplications(Index);

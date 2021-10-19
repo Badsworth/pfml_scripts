@@ -3,7 +3,6 @@ import ConcurrentLeave from "../../models/ConcurrentLeave";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { get } from "lodash";
@@ -19,13 +18,15 @@ export const fields = [
   "claim.concurrent_leave.leave_end_date",
 ];
 
-interface Props {
+interface ConcurrentLeavesDetailsProps {
   appLogic: any;
   claim: BenefitsApplication;
   query: any;
 }
 
-export const ConcurrentLeavesDetails = (props: Props) => {
+export const ConcurrentLeavesDetails = (
+  props: ConcurrentLeavesDetailsProps
+) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
   const employer_fein = claim.employer_fein;
@@ -101,12 +102,6 @@ export const ConcurrentLeavesDetails = (props: Props) => {
       />
     </QuestionPage>
   );
-};
-
-ConcurrentLeavesDetails.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  query: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(ConcurrentLeavesDetails);

@@ -6,7 +6,6 @@ import ConditionalContent from "../../../components/ConditionalContent";
 import EmployerClaim from "../../../models/EmployerClaim";
 import Heading from "../../../components/Heading";
 import InputChoiceGroup from "../../../components/InputChoiceGroup";
-import PropTypes from "prop-types";
 import StatusRow from "../../../components/StatusRow";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
@@ -14,7 +13,7 @@ import formatDateRange from "../../../utils/formatDateRange";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
-interface Props {
+interface NewApplicationProps {
   appLogic: {
     employers: {
       claim?: EmployerClaim;
@@ -30,7 +29,7 @@ interface Props {
   };
 }
 
-export const NewApplication = (props: Props) => {
+export const NewApplication = (props: NewApplicationProps) => {
   const { t } = useTranslation();
   const {
     appLogic: {
@@ -178,22 +177,6 @@ export const NewApplication = (props: Props) => {
       </form>
     </React.Fragment>
   );
-};
-
-NewApplication.propTypes = {
-  appLogic: PropTypes.shape({
-    employers: PropTypes.shape({
-      claim: PropTypes.instanceOf(EmployerClaim),
-    }).isRequired,
-    portalFlow: PropTypes.shape({
-      goTo: PropTypes.func.isRequired,
-      goToNextPage: PropTypes.func.isRequired,
-      goToPageFor: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-  query: PropTypes.shape({
-    absence_id: PropTypes.string.isRequired,
-  }).isRequired,
 };
 
 export default withEmployerClaim(NewApplication);

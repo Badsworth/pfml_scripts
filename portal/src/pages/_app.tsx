@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import { AppProps } from "next/app";
 import { Auth } from "@aws-amplify/auth";
 import PageWrapper from "../components/PageWrapper";
-import PropTypes from "prop-types";
 import { initializeI18n } from "../locales/i18n";
 import tracker from "../services/tracker";
 import useAppLogic from "../hooks/useAppLogic";
@@ -186,14 +185,6 @@ export const App = ({ Component, pageProps }: AppProps) => {
       <Component appLogic={appLogic} query={router.query} {...pageProps} />
     </PageWrapper>
   );
-};
-
-App.propTypes = {
-  // Next.js sets Component for us. This is the React component
-  // exported from our pages/*.js files
-  Component: PropTypes.elementType.isRequired,
-  // Next.js sets pageProps for us
-  pageProps: PropTypes.object,
 };
 
 export default App;

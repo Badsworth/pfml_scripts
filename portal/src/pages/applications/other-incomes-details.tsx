@@ -12,7 +12,6 @@ import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputCurrency from "../../components/InputCurrency";
 import InputDate from "../../components/InputDate";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
@@ -33,9 +32,6 @@ export const fields = [
 interface OtherIncomesDetailsProps {
   claim?: BenefitsApplication;
   appLogic: any;
-  query?: {
-    claim_id?: string;
-  };
 }
 
 export const OtherIncomesDetails = (props: OtherIncomesDetailsProps) => {
@@ -114,14 +110,6 @@ export const OtherIncomesDetails = (props: OtherIncomesDetailsProps) => {
       />
     </QuestionPage>
   );
-};
-
-OtherIncomesDetails.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 interface OtherIncomeCardProps {
@@ -221,12 +209,6 @@ export const OtherIncomeCard = (props: OtherIncomeCardProps) => {
       </Fieldset>
     </React.Fragment>
   );
-};
-
-OtherIncomeCard.propTypes = {
-  index: PropTypes.number.isRequired,
-  entry: PropTypes.object.isRequired,
-  getFunctionalInputProps: PropTypes.func.isRequired,
 };
 
 export default withBenefitsApplication(OtherIncomesDetails);

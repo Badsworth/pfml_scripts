@@ -20,7 +20,6 @@ import FileUploadDetails from "../../../components/FileUploadDetails";
 import Heading from "../../../components/Heading";
 import Lead from "../../../components/Lead";
 import LeaveReason from "../../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../../components/QuestionPage";
 import React from "react";
 import Spinner from "../../../components/Spinner";
@@ -119,10 +118,6 @@ const CertificationUpload = ({ path }: CertificationUploadProps) => {
   );
 };
 
-CertificationUpload.propTypes = {
-  path: PropTypes.string.isRequired,
-};
-
 interface IdentificationUploadProps {
   path: string;
 }
@@ -187,10 +182,6 @@ const IdentificationUpload = ({ path }: IdentificationUploadProps) => {
       )}
     </React.Fragment>
   );
-};
-
-IdentificationUpload.propTypes = {
-  path: PropTypes.string.isRequired,
 };
 
 interface DocumentUploadProps {
@@ -338,34 +329,6 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
       )}
     </QuestionPage>
   );
-};
-
-DocumentUpload.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    catchError: PropTypes.func.isRequired,
-    documents: PropTypes.object.isRequired,
-    portalFlow: PropTypes.object.isRequired,
-    clearErrors: PropTypes.func.isRequired,
-  }).isRequired,
-  documents: PropTypes.arrayOf(
-    PropTypes.instanceOf(BenefitsApplicationDocument)
-  ),
-  isLoadingDocuments: PropTypes.bool,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string.isRequired,
-    absence_case_id: PropTypes.string.isRequired,
-    additionalDoc: PropTypes.string,
-    documentType: PropTypes.oneOf([
-      "state-id",
-      "other-id",
-      "proof-of-birth",
-      "proof-of-placement",
-      "medical-certification",
-      "pregnancy-medical-certification",
-      "family-member-medical-certification",
-    ]).isRequired,
-  }),
 };
 
 export default withClaimDocuments(DocumentUpload);

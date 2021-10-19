@@ -12,7 +12,6 @@ import Heading from "../../components/Heading";
 import LeaveReason from "../../models/LeaveReason";
 import LegalNoticeList from "../../components/LegalNoticeList";
 import PageNotFound from "../404";
-import PropTypes from "prop-types";
 import Spinner from "../../components/Spinner";
 import Tag from "../../components/Tag";
 import Title from "../../components/Title";
@@ -148,16 +147,12 @@ export const Status = ({ appLogic, query }: StatusProps) => {
       hasDocumentsLoadError(appLogic.appErrors, claimDetail.application_id) ||
       legalNotices.length === 0;
 
-    const SectionWrapper = ({ children }) => (
+    interface SectionWrapperProps {
+      children: React.ReactNode;
+    }
+    const SectionWrapper = ({ children }: SectionWrapperProps) => (
       <div className={containerClassName}>{children}</div>
     );
-
-    SectionWrapper.propTypes = {
-      children: PropTypes.oneOfType([
-        PropTypes.arrayOf(PropTypes.node),
-        PropTypes.node,
-      ]).isRequired,
-    };
 
     if (shouldShowSpinner) {
       // claim documents are loading.
@@ -429,32 +424,6 @@ export const Status = ({ appLogic, query }: StatusProps) => {
   );
 };
 
-Status.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    claims: PropTypes.shape({
-      claimDetail: PropTypes.instanceOf(ClaimDetail),
-      isLoadingClaimDetail: PropTypes.bool,
-      loadClaimDetail: PropTypes.func.isRequired,
-    }).isRequired,
-    documents: PropTypes.shape({
-      documents: PropTypes.instanceOf(DocumentCollection).isRequired,
-      download: PropTypes.func.isRequired,
-      hasLoadedClaimDocuments: PropTypes.func.isRequired,
-      loadAll: PropTypes.func.isRequired,
-    }),
-    portalFlow: PropTypes.shape({
-      goTo: PropTypes.func.isRequired,
-      getNextPageRoute: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-  query: PropTypes.shape({
-    absence_case_id: PropTypes.string,
-    claim_id: PropTypes.string,
-    uploaded_document_type: PropTypes.string,
-  }).isRequired,
-};
-
 export default withUser(Status);
 
 export const StatusTagMap = {
@@ -542,16 +511,9 @@ export const LeaveDetails = ({ absenceDetails = {} }: LeaveDetailsProps) => {
   ));
 };
 
-LeaveDetails.propTypes = {
-  absenceDetails: PropTypes.object,
-};
-
 interface TimelineProps {
   absencePeriods: AbsencePeriod[];
   applicationId?: string;
-  bondingAbsencePeriod?: {
-    reason_qualifier_one?: string;
-  };
   employerFollowUpDate?: string;
   docList: any[];
   absenceCaseId: string;
@@ -581,8 +543,10 @@ export const Timeline = ({
     absencePeriods,
     (absencePeriod) => absencePeriod.reason === LeaveReason.bonding
   );
-
-  const FollowUpSteps = ({ bondingAbsencePeriod }) => {
+  interface FollowUpStepsProps {
+    bondingAbsencePeriod: any;
+  }
+  const FollowUpSteps = ({ bondingAbsencePeriod }: FollowUpStepsProps) => {
     let typeOfProof;
     if (bondingAbsencePeriod.reason_qualifier_one === "Adoption") {
       typeOfProof = "adoption";
@@ -675,21 +639,4 @@ export const Timeline = ({
       )}
     </div>
   );
-};
-
-Timeline.propTypes = {
-  absencePeriods: PropTypes.arrayOf(PropTypes.instanceOf(AbsencePeriod))
-    .isRequired,
-  applicationId: PropTypes.string,
-  bondingAbsencePeriod: PropTypes.shape({
-    reason_qualifier_one: PropTypes.string,
-  }),
-  employerFollowUpDate: PropTypes.string,
-  docList: PropTypes.array.isRequired,
-  absenceCaseId: PropTypes.string.isRequired,
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      getNextPageRoute: PropTypes.func.isRequired,
-    }),
-  }),
 };

@@ -8,7 +8,6 @@ import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
 import Lead from "../../components/Lead";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
 import findKeyByValue from "../../utils/findKeyByValue";
@@ -32,7 +31,7 @@ export const fields = [
   `claim.${leavePeriodPath}.start_date`,
 ];
 
-interface Props {
+interface LeavePeriodContinuousProps {
   appLogic: any;
   claim: BenefitsApplication;
   query?: {
@@ -40,7 +39,7 @@ interface Props {
   };
 }
 
-export const LeavePeriodContinuous = (props: Props) => {
+export const LeavePeriodContinuous = (props: LeavePeriodContinuousProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -157,7 +156,6 @@ export const LeavePeriodContinuous = (props: Props) => {
 
       <ConditionalContent
         fieldNamesClearedWhenHidden={[leavePeriodsListPath]}
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '(name: any) => any' is not assignable to typ... Remove this comment to see the full error message
         getField={getField}
         clearField={clearField}
         updateFields={updateFields}
@@ -201,14 +199,6 @@ export const LeavePeriodContinuous = (props: Props) => {
       </ConditionalContent>
     </QuestionPage>
   );
-};
-
-LeavePeriodContinuous.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(LeavePeriodContinuous);

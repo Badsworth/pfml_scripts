@@ -1,23 +1,23 @@
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
+import usePortalFlow from "../../hooks/usePortalFlow";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
-interface Props {
+interface BondingLeaveAttestationProps {
   appLogic: {
-    portalFlow?: {
-      getNextPageRoute: (...args: any[]) => any;
-    };
+    portalFlow?: ReturnType<typeof usePortalFlow>;
   };
   query: any;
 }
 
-export const BondingLeaveAttestation = (props: Props) => {
+export const BondingLeaveAttestation = (
+  props: BondingLeaveAttestationProps
+) => {
   const { t } = useTranslation();
   const { appLogic, query } = props;
 
@@ -40,15 +40,6 @@ export const BondingLeaveAttestation = (props: Props) => {
       </Alert>
     </React.Fragment>
   );
-};
-
-BondingLeaveAttestation.propTypes = {
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      getNextPageRoute: PropTypes.func.isRequired,
-    }),
-  }).isRequired,
-  query: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(BondingLeaveAttestation);

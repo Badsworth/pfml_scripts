@@ -1,7 +1,6 @@
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import Button from "../../components/Button";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
@@ -10,11 +9,11 @@ import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
 
-interface Props {
+interface StartProps {
   appLogic: any;
 }
 
-export const Start = (props: Props) => {
+export const Start = (props: StartProps) => {
   const { t } = useTranslation();
 
   const handleSubmit = useThrottledHandler(async (event) => {
@@ -52,10 +51,6 @@ export const Start = (props: Props) => {
       </form>
     </React.Fragment>
   );
-};
-
-Start.propTypes = {
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default withUser(Start);

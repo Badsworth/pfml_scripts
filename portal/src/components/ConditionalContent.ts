@@ -17,7 +17,7 @@ interface ConditionalContentProps {
   /**
    * Method called to cache the value of each field listed in `fieldNamesClearedWhenHidden`
    */
-  getField?: () => void;
+  getField?: (arg: string) => any;
   /**
    * Method called to restore the previous values of all fields listed in `fieldNamesClearedWhenHidden`
    */

@@ -34,7 +34,6 @@ import Heading from "../../components/Heading";
 import HeadingPrefix from "../../components/HeadingPrefix";
 import Lead from "../../components/Lead";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import ReviewHeading from "../../components/ReviewHeading";
 import ReviewRow from "../../components/ReviewRow";
 import Spinner from "../../components/Spinner";
@@ -87,9 +86,6 @@ interface ReviewProps {
   claim?: BenefitsApplication;
   documents?: BenefitsApplicationDocument[];
   isLoadingDocuments?: boolean;
-  query?: {
-    claim_id?: string;
-  };
 }
 
 /**
@@ -859,28 +855,10 @@ export const Review = (props: ReviewProps) => {
   );
 };
 
-Review.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    benefitsApplications: PropTypes.object.isRequired,
-    clearRequiredFieldErrors: PropTypes.func.isRequired,
-    portalFlow: PropTypes.shape({
-      getNextPageRoute: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  documents: PropTypes.arrayOf(
-    PropTypes.instanceOf(BenefitsApplicationDocument)
-  ),
-  isLoadingDocuments: PropTypes.bool,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
-};
-
 interface PreviousLeaveListProps {
   type: "sameReason" | "otherReason";
   entries: PreviousLeave[];
+  /** start index for previous leave label */
   startIndex: number;
   reviewRowLevel: "2" | "3" | "4" | "5" | "6";
 }
@@ -944,15 +922,6 @@ export const PreviousLeaveList = (props: PreviousLeaveListProps) => {
   ));
 };
 
-PreviousLeaveList.propTypes = {
-  /** Previous leave type */
-  type: PropTypes.oneOf(["sameReason", "otherReason"]).isRequired,
-  entries: PropTypes.arrayOf(PropTypes.instanceOf(PreviousLeave)).isRequired,
-  /** start index for previous leave label */
-  startIndex: PropTypes.number.isRequired,
-  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
-};
-
 interface EmployerBenefitListProps {
   entries: EmployerBenefit[];
   reviewRowLevel: "2" | "3" | "4" | "5" | "6";
@@ -1009,11 +978,6 @@ export const EmployerBenefitList = (props: EmployerBenefitListProps) => {
   });
 };
 
-EmployerBenefitList.propTypes = {
-  entries: PropTypes.arrayOf(PropTypes.instanceOf(EmployerBenefit)).isRequired,
-  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
-};
-
 interface OtherIncomeListProps {
   entries: OtherIncome[];
   reviewRowLevel: "2" | "3" | "4" | "5" | "6";
@@ -1064,11 +1028,6 @@ export const OtherIncomeList = (props: OtherIncomeListProps) => {
   });
 };
 
-OtherIncomeList.propTypes = {
-  entries: PropTypes.arrayOf(PropTypes.instanceOf(OtherIncome)).isRequired,
-  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
-};
-
 interface OtherLeaveEntryProps {
   amount?: string;
   dates: string;
@@ -1094,14 +1053,6 @@ export const OtherLeaveEntry = (props: OtherLeaveEntryProps) => {
       </ul>
     </ReviewRow>
   );
-};
-
-OtherLeaveEntry.propTypes = {
-  amount: PropTypes.string,
-  dates: PropTypes.string.isRequired,
-  label: PropTypes.string.isRequired,
-  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
-  type: PropTypes.string,
 };
 
 export default withBenefitsApplication(withClaimDocuments(Review));

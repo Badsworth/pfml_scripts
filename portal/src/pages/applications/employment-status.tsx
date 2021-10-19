@@ -7,7 +7,6 @@ import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputText from "../../components/InputText";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
@@ -19,12 +18,12 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.employment_status", "claim.employer_fein"];
 
-interface Props {
+interface EmploymentStatusProps {
   appLogic: any;
   claim: BenefitsApplication;
 }
 
-export const EmploymentStatus = (props: Props) => {
+export const EmploymentStatus = (props: EmploymentStatusProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -92,7 +91,6 @@ export const EmploymentStatus = (props: Props) => {
 
       <ConditionalContent
         fieldNamesClearedWhenHidden={["employer_fein"]}
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '(name: any) => any' is not assignable to typ... Remove this comment to see the full error message
         getField={getField}
         clearField={clearField}
         updateFields={updateFields}
@@ -108,11 +106,6 @@ export const EmploymentStatus = (props: Props) => {
       </ConditionalContent>
     </QuestionPage>
   );
-};
-
-EmploymentStatus.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
 export default withBenefitsApplication(EmploymentStatus);

@@ -4,7 +4,6 @@ import Button from "../components/Button";
 import InputPassword from "../components/InputPassword";
 import InputText from "../components/InputText";
 import Link from "next/link";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../components/Title";
 import { Trans } from "react-i18next";
@@ -16,7 +15,7 @@ import usePortalFlow from "../hooks/usePortalFlow";
 import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
-interface Props {
+interface CreateAccountProps {
   appLogic: {
     appErrors?: AppErrorInfoCollection;
     auth: {
@@ -26,7 +25,7 @@ interface Props {
   };
 }
 
-export const CreateAccount = (props: Props) => {
+export const CreateAccount = (props: CreateAccountProps) => {
   const { appLogic } = props;
   const { t } = useTranslation();
   useLoggedInRedirect(appLogic.portalFlow);
@@ -106,18 +105,6 @@ export const CreateAccount = (props: Props) => {
       </div>
     </form>
   );
-};
-
-CreateAccount.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.instanceOf(AppErrorInfoCollection),
-    auth: PropTypes.shape({
-      createAccount: PropTypes.func.isRequired,
-    }).isRequired,
-    portalFlow: PropTypes.shape({
-      goTo: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
 };
 
 export default CreateAccount;

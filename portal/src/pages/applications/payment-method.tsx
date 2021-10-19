@@ -12,7 +12,6 @@ import FormLabel from "../../components/FormLabel";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputText from "../../components/InputText";
 import Lead from "../../components/Lead";
-import PropTypes from "prop-types";
 import React from "react";
 import ThrottledButton from "../../components/ThrottledButton";
 import Title from "../../components/Title";
@@ -35,7 +34,7 @@ export const fields = [
   `claim.${routingNumberField}`,
 ];
 
-interface Props {
+interface PaymentMethodProps {
   claim?: BenefitsApplication;
   query?: {
     claim_id?: string;
@@ -43,7 +42,7 @@ interface Props {
   appLogic: any;
 }
 
-export const PaymentMethod = (props: Props) => {
+export const PaymentMethod = (props: PaymentMethodProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -116,7 +115,6 @@ export const PaymentMethod = (props: Props) => {
             "payment_preference.bank_account_type",
             "payment_preference.routing_number",
           ]}
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '(name: any) => any' is not assignable to typ... Remove this comment to see the full error message
           getField={getField}
           updateFields={updateFields}
           clearField={clearField}
@@ -195,14 +193,6 @@ export const PaymentMethod = (props: Props) => {
       </form>
     </React.Fragment>
   );
-};
-
-PaymentMethod.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(PaymentMethod);

@@ -13,7 +13,6 @@ import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputCurrency from "../../components/InputCurrency";
 import InputDate from "../../components/InputDate";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
@@ -35,9 +34,6 @@ export const fields = [
 interface EmployerBenefitsDetailsProps {
   claim?: BenefitsApplication;
   appLogic: any;
-  query?: {
-    claim_id?: string;
-  };
 }
 
 export const EmployerBenefitsDetails = (
@@ -123,14 +119,6 @@ export const EmployerBenefitsDetails = (
       />
     </QuestionPage>
   );
-};
-
-EmployerBenefitsDetails.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 interface EmployerBenefitCardProps {
@@ -245,7 +233,6 @@ export const EmployerBenefitCard = (props: EmployerBenefitCardProps) => {
           `employer_benefits[${index}].benefit_amount_dollars`,
         ]}
         clearField={clearField}
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '(fieldName: any) => any' is not assignable t... Remove this comment to see the full error message
         getField={getEntryField}
         updateFields={updateFields}
         visible={get(entry, "is_full_salary_continuous") === false}
@@ -279,13 +266,6 @@ export const EmployerBenefitCard = (props: EmployerBenefitCardProps) => {
       </ConditionalContent>
     </React.Fragment>
   );
-};
-
-EmployerBenefitCard.propTypes = {
-  index: PropTypes.number.isRequired,
-  entry: PropTypes.object.isRequired,
-  getFunctionalInputProps: PropTypes.func.isRequired,
-  updateFields: PropTypes.func.isRequired,
 };
 
 export default withBenefitsApplication(EmployerBenefitsDetails);

@@ -3,7 +3,6 @@ import BenefitsApplication, {
 } from "../../models/BenefitsApplication";
 
 import InputChoiceGroup from "../../components/InputChoiceGroup";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { get } from "lodash";
@@ -14,12 +13,12 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.gender"];
 
-interface Props {
+interface GenderProps {
   appLogic: any;
   claim: BenefitsApplication;
 }
 
-export const Gender = (props: Props) => {
+export const Gender = (props: GenderProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -79,11 +78,6 @@ export const Gender = (props: Props) => {
       />
     </QuestionPage>
   );
-};
-
-Gender.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
 export default withBenefitsApplication(Gender);

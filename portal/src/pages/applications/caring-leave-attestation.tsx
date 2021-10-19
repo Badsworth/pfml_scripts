@@ -4,21 +4,19 @@ import BenefitsApplication, {
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import findKeyByValue from "../../utils/findKeyByValue";
 import { get } from "lodash";
 import routes from "../../routes";
+import usePortalFlow from "../../hooks/usePortalFlow";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 interface Props {
   appLogic: {
-    portalFlow?: {
-      getNextPageRoute: (...args: any[]) => any;
-    };
+    portalFlow?: ReturnType<typeof usePortalFlow>;
   };
   claim: BenefitsApplication;
   query: any;
@@ -63,16 +61,6 @@ export const CaringLeaveAttestation = (props: Props) => {
       </Alert>
     </React.Fragment>
   );
-};
-
-CaringLeaveAttestation.propTypes = {
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      getNextPageRoute: PropTypes.func.isRequired,
-    }),
-  }).isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  query: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(CaringLeaveAttestation);
