@@ -44,9 +44,8 @@ from massgov.pfml.api.validation.exceptions import (
     ValidationErrorDetail,
     ValidationException,
 )
-from massgov.pfml.db.models.applications import (
+from massgov.pfml.db.models.applications import (  # ContentType,
     Application,
-    # ContentType,
     Document,
     DocumentType,
     LeaveReason,
@@ -646,11 +645,12 @@ def document_upload(application_id, body, file):
         logger.info(
             "document_upload success", extra=log_attributes,
         )
-
+        document_response = DocumentResponse.from_orm(document)
+        document_response.content_type = content_type
         # Return response
         return response_util.success_response(
             message="Successfully uploaded document",
-            data=DocumentResponse.from_orm(document).dict(),
+            data=document_response.dict(),
             status_code=200,
         ).to_api_response()
 
