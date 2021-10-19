@@ -1382,7 +1382,7 @@ describe("useAuthLogic", () => {
         "SUBMIT",
         {},
         {
-          "account-verified": true,
+          "account-verified": "true",
         }
       );
     });
@@ -1473,7 +1473,7 @@ describe("useAuthLogic", () => {
         "SUBMIT",
         {},
         {
-          "account-verified": true,
+          "account-verified": "true",
         }
       );
     });

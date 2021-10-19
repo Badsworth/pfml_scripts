@@ -41,7 +41,7 @@ const usePortalFlow = () => {
    */
   const goTo = (
     route: string,
-    params?: Record<string, unknown>,
+    params?: Record<string, string>,
     options: {
       redirect?: boolean;
     } = {}
@@ -65,7 +65,7 @@ const usePortalFlow = () => {
   const getNextPageRoute = (
     event: string,
     context?: Record<string, unknown>,
-    params?: Record<string, unknown>
+    params?: Record<string, string>
   ) => {
     // @ts-expect-error FIXME: Property 'isAdditionalDoc' is missing in type 'Record<string, unknown>'
     const nextRoutingMachine = routingMachine.withContext(context);
@@ -76,7 +76,7 @@ const usePortalFlow = () => {
     if (!nextPageRoute) {
       throw new RouteTransitionError(`Next page not found for: ${event}`);
     }
-    return createRouteWithQuery(nextPageRoute.value, params);
+    return createRouteWithQuery(nextPageRoute.value.toString(), params);
   };
 
   /**
@@ -90,7 +90,7 @@ const usePortalFlow = () => {
   const goToPageFor = (
     event: string,
     context?: Record<string, unknown>,
-    params?: Record<string, unknown>,
+    params?: Record<string, string>,
     options: {
       redirect?: boolean;
     } = {}
@@ -106,7 +106,7 @@ const usePortalFlow = () => {
    */
   const goToNextPage = (
     context: Record<string, unknown>,
-    params: Record<string, unknown> = {},
+    params: Record<string, string> = {},
     event = "CONTINUE"
   ) => {
     goToPageFor(event, context, params);
@@ -116,7 +116,7 @@ const usePortalFlow = () => {
    * Change the query params of the current page
    * @param params - query parameters to append to page route
    */
-  const updateQuery = (params: Record<string, unknown>) => {
+  const updateQuery = (params: Record<string, string>) => {
     const url = createRouteWithQuery(pathname, params);
     router.push(url, undefined, {
       // Prevent unnecessary scroll position changes or other

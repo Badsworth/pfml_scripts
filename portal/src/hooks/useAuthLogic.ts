@@ -348,7 +348,7 @@ const useAuthLogic = ({
         "SUBMIT",
         {},
         {
-          "account-verified": true,
+          "account-verified": "true",
         }
       );
     } catch (error) {
@@ -364,7 +364,7 @@ const useAuthLogic = ({
           "SUBMIT",
           {},
           {
-            "account-verified": true,
+            "account-verified": "true",
           }
         );
       }

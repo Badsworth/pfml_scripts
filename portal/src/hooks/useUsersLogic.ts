@@ -123,7 +123,7 @@ const useUsersLogic = ({
       setUser(user);
 
       portalFlow.goTo(routes.employers.organizations, {
-        account_converted: true,
+        account_converted: "true",
       });
     } catch (error) {
       appErrorsLogic.catchError(error);

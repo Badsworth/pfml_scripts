@@ -2,10 +2,8 @@ import { DateTime } from "luxon";
 
 /**
  * Format the given date as an internationalized, human-readable string
- * @param {string} isoDate - ISO 8601 date string
- * @returns {{ full: Function, short: Function }}
  */
-export default function formatDate(isoDate) {
+export default function formatDate(isoDate: string) {
   const dateTime = DateTime.fromISO(isoDate);
 
   return {
