@@ -29,6 +29,7 @@ import User from "../../models/User";
 import formatDateRange from "../../utils/formatDateRange";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
+import useAppLogic from "../../hooks/useAppLogic";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -36,13 +37,7 @@ import withClaims from "../../hoc/withClaims";
 import withUser from "../../hoc/withUser";
 
 interface DashboardProps {
-  appLogic: {
-    portalFlow: {
-      getNextPageRoute: (...args: any[]) => any;
-      pathname: string;
-      updateQuery: (...args: any[]) => any;
-    };
-  };
+  appLogic: ReturnType<typeof useAppLogic>;
   query: {
     claim_status?: string;
     employer_id?: string;
@@ -63,12 +58,7 @@ export const Dashboard = (props: DashboardProps) => {
     order_by: showReviewByStatus ? "absence_status" : "created_at",
     order_direction: showReviewByStatus ? "ascending" : "descending",
     ...props.query,
-  };
-
-  const PaginatedClaimsTableWithClaims = withClaims(
-    PaginatedClaimsTable,
-    apiParams
-  );
+  } as const;
 
   /**
    * Update the page's query string, to load a different page number,
@@ -101,6 +91,21 @@ export const Dashboard = (props: DashboardProps) => {
 
     // Scroll user back to top of the table actions
     if (introElementRef.current) introElementRef.current.scrollIntoView();
+  };
+
+  const PaginatedClaimsTableWithClaims = withClaims(
+    PaginatedClaimsTable,
+    apiParams
+  );
+  const componentSpecificProps = {
+    updatePageQuery,
+    sort: (
+      <SortDropdown
+        order_by={apiParams.order_by}
+        order_direction={apiParams.order_direction}
+        updatePageQuery={updatePageQuery}
+      />
+    ),
   };
 
   return (
@@ -183,25 +188,15 @@ export const Dashboard = (props: DashboardProps) => {
       />
       <PaginatedClaimsTableWithClaims
         appLogic={props.appLogic}
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ appLogic: { portalFlow: { getNextPageRoute... Remove this comment to see the full error message
         user={props.user}
-        updatePageQuery={updatePageQuery}
-        sort={
-          <SortDropdown
-            // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type '"absence_... Remove this comment to see the full error message
-            order_by={apiParams.order_by}
-            // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type '"ascendin... Remove this comment to see the full error message
-            order_direction={apiParams.order_direction}
-            updatePageQuery={updatePageQuery}
-          />
-        }
+        {...componentSpecificProps}
       />
     </React.Fragment>
   );
 };
 
 interface PaginatedClaimsTableProps {
-  appLogic?: any;
+  appLogic?: ReturnType<typeof useAppLogic>;
   claims?: ClaimCollection;
   paginationMeta?: PaginationMeta;
   updatePageQuery: (...args: any[]) => any;

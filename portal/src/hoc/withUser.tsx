@@ -1,9 +1,14 @@
 import React, { useEffect } from "react";
-import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
 import User from "../models/User";
 import routes from "../routes";
+import useAppLogic from "../hooks/useAppLogic";
 import { useTranslation } from "../locales/i18n";
+
+interface ComponentWithUserProps {
+  appLogic: ReturnType<typeof useAppLogic>;
+  user: User;
+}
 
 /**
  * Higher order component that provides the current logged in Portal user object
@@ -16,7 +21,7 @@ import { useTranslation } from "../locales/i18n";
  * @returns {React.Component} - Component with user prop
  */
 const withUser = (Component) => {
-  const ComponentWithUser = (props) => {
+  const ComponentWithUser = (props: ComponentWithUserProps) => {
     const { appLogic } = props;
     const { auth, portalFlow, users } = appLogic;
     const { t } = useTranslation();
@@ -59,25 +64,6 @@ const withUser = (Component) => {
       return null;
 
     return <Component {...props} user={users.user} />;
-  };
-
-  ComponentWithUser.propTypes = {
-    appLogic: PropTypes.shape({
-      auth: PropTypes.shape({
-        isLoggedIn: PropTypes.bool,
-        requireLogin: PropTypes.func.isRequired,
-      }),
-      portalFlow: PropTypes.shape({
-        pathname: PropTypes.string.isRequired,
-      }),
-      users: PropTypes.shape({
-        loadUser: PropTypes.func.isRequired,
-        requireUserConsentToDataAgreement: PropTypes.func.isRequired,
-        requireUserRole: PropTypes.func.isRequired,
-        user: PropTypes.instanceOf(User),
-      }).isRequired,
-      appErrors: PropTypes.object.isRequired,
-    }).isRequired,
   };
 
   return ComponentWithUser;

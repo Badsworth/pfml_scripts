@@ -1,9 +1,24 @@
 import React, { useEffect, useState } from "react";
-import PropTypes from "prop-types";
 import Spinner from "../components/Spinner";
 import User from "../models/User";
 import routes from "../routes";
+import usePortalFlow from "../hooks/usePortalFlow";
 import { useTranslation } from "../locales/i18n";
+
+interface ComponentWithWithholdingProps {
+  appLogic: {
+    employers: {
+      loadWithholding: (employer_id: string) => any;
+    };
+    portalFlow: ReturnType<typeof usePortalFlow>;
+    users: {
+      user: User;
+    };
+  };
+  query: {
+    employer_id: string;
+  };
+}
 
 /**
  * Higher order component that loads withholding data if not yet loaded,
@@ -13,7 +28,7 @@ import { useTranslation } from "../locales/i18n";
  * @returns {React.Component} - Component with withholding data
  */
 const withWithholding = (Component) => {
-  const ComponentWithWithholding = (props) => {
+  const ComponentWithWithholding = (props: ComponentWithWithholdingProps) => {
     const { appLogic, query } = props;
     const {
       users: { user },
@@ -57,21 +72,6 @@ const withWithholding = (Component) => {
         {withholding && <Component {...props} withholding={withholding} />}
       </React.Fragment>
     );
-  };
-
-  ComponentWithWithholding.propTypes = {
-    appLogic: PropTypes.shape({
-      employers: PropTypes.shape({
-        loadWithholding: PropTypes.func.isRequired,
-      }).isRequired,
-      portalFlow: PropTypes.shape({
-        goTo: PropTypes.func.isRequired,
-      }).isRequired,
-      users: PropTypes.shape({
-        user: PropTypes.instanceOf(User).isRequired,
-      }).isRequired,
-    }).isRequired,
-    query: PropTypes.object.isRequired,
   };
 
   return ComponentWithWithholding;
