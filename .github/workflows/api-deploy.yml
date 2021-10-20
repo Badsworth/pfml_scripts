@@ -793,6 +793,7 @@ jobs:
           }' https://slack.com/api/chat.postMessage)
 
   update-erd:
+    runs-on: ubuntu-latest
     needs: [update-the-deploy-branch, api-release, deploy-info]
     steps:
       - name: Checkout
