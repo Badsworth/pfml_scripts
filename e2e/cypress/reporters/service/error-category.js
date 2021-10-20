@@ -83,6 +83,7 @@ class ErrorCategory {
           .setSubCategory(this.SUB_CATEGORY.INFRASTRUCTURE_CONNECTION.FAILURE504)
             .addRule(`Error`, `*Application submission failed:*(504*`)
             .addRule(`CypressError`, `*cy.task('submitClaimToAPI')*(504*`)
+            .addRule(`CypressError`, `*> 504:*`)
 
     /**
      * Known Issues
@@ -115,6 +116,7 @@ class ErrorCategory {
     var escapeRegex = (str) =>
       str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
 
+    str = str.replace("\n", " ")
     // "."  => Find a single character, except newline or line terminator
     // ".*" => Matches any string that contains zero or more characters
     rule = rule.split("*").map(escapeRegex).join(".*");
