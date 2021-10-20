@@ -259,27 +259,54 @@ exports[`Status manage your application displays manage approved application lin
 
 exports[`Status manage your application is displayed if any of the claim statuses on an application are Pending and none are Approved 1`] = `
 <div
+  class="measure-6 padding-y-4"
   data-testid="manageApplication"
 >
-  <h2
-    class="font-heading-md text-bold"
-  >
-    Manage your application
-  </h2>
+  <div>
+    <h2
+      class="font-heading-md text-bold"
+    >
+      Manage your application
+    </h2>
+    <h3
+      class="margin-top-3 font-heading-sm text-bold"
+    >
+      Make changes
+    </h3>
+    <p>
+      To make changes to your application, call the Contact Center at 
+      <a
+        href="tel:(833) 344-7365"
+      >
+        (833) 344‑7365
+      </a>
+      . If you request a change to your start and end dates, we may need to review your application again.
+    </p>
+  </div>
   <h3
-    class="margin-top-3 font-heading-sm text-bold"
+    class="font-heading-sm text-bold"
   >
-    Make changes
+    Report other benefits or income
   </h3>
   <p>
-    To make changes to your application, call the Contact Center at 
+    If your plans for other benefits or income during your paid leave have changed, call the Contact Center at 
     <a
       href="tel:(833) 344-7365"
     >
       (833) 344‑7365
     </a>
-    . If you request a change to your start and end dates, we may need to review your application again.
+    . Report changes to:
   </p>
+  <ul
+    class="usa-list"
+  >
+    <li>
+      Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.
+    </li>
+    <li>
+      Income from other sources during your leave. For example, if you got approved for a disability benefit or a worker’s compensation claim after you submitted your application, report this change.
+    </li>
+  </ul>
 </div>
 `;
 
@@ -379,34 +406,6 @@ exports[`Status renders the page if the only errors are DocumentsLoadError 1`] =
           .
         </p>
       </div>
-    </div>
-    <div
-      class="measure-6 padding-y-4"
-    >
-      <h3
-        class="font-heading-sm text-bold"
-      >
-        Report other benefits or income
-      </h3>
-      <p>
-        If your plans for other benefits or income during your paid leave have changed, call the Contact Center at 
-        <a
-          href="tel:(833) 344-7365"
-        >
-          (833) 344‑7365
-        </a>
-        . Report changes to:
-      </p>
-      <ul
-        class="usa-list"
-      >
-        <li>
-          Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.
-        </li>
-        <li>
-          Income from other sources during your leave. For example, if you got approved for a disability benefit or a worker’s compensation claim after you submitted your application, report this change.
-        </li>
-      </ul>
     </div>
   </div>
 </div>
@@ -508,34 +507,6 @@ exports[`Status renders the page with claim detail 1`] = `
           .
         </p>
       </div>
-    </div>
-    <div
-      class="measure-6 padding-y-4"
-    >
-      <h3
-        class="font-heading-sm text-bold"
-      >
-        Report other benefits or income
-      </h3>
-      <p>
-        If your plans for other benefits or income during your paid leave have changed, call the Contact Center at 
-        <a
-          href="tel:(833) 344-7365"
-        >
-          (833) 344‑7365
-        </a>
-        . Report changes to:
-      </p>
-      <ul
-        class="usa-list"
-      >
-        <li>
-          Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.
-        </li>
-        <li>
-          Income from other sources during your leave. For example, if you got approved for a disability benefit or a worker’s compensation claim after you submitted your application, report this change.
-        </li>
-      </ul>
     </div>
   </div>
 </div>

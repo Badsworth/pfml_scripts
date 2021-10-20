@@ -358,9 +358,12 @@ export const Status = ({ appLogic, query }: StatusProps) => {
         </div>
 
         {/* Manage applications section */}
-        <div className="measure-6 padding-y-4">
-          {(hasPendingStatus || hasApprovedStatus) && (
-            <div data-testid="manageApplication">
+        {(hasPendingStatus || hasApprovedStatus) && (
+          <div
+            className="measure-6 padding-y-4"
+            data-testid="manageApplication"
+          >
+            <div>
               <Heading level="2">
                 {t("pages.claimsStatus.manageApplicationHeading")}
               </Heading>
@@ -391,22 +394,22 @@ export const Status = ({ appLogic, query }: StatusProps) => {
                 />
               )}
             </div>
-          )}
 
-          <Heading level="3">
-            {t("pages.claimsStatus.reportOtherBenefitsHeading")}
-          </Heading>
-          <Trans
-            i18nKey="pages.claimsStatus.reportOtherBenefitsBody"
-            components={{
-              "contact-center-phone-link": (
-                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-              ),
-              ul: <ul className="usa-list" />,
-              li: <li />,
-            }}
-          />
-        </div>
+            <Heading level="3">
+              {t("pages.claimsStatus.reportOtherBenefitsHeading")}
+            </Heading>
+            <Trans
+              i18nKey="pages.claimsStatus.reportOtherBenefitsBody"
+              components={{
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
+                ul: <ul className="usa-list" />,
+                li: <li />,
+              }}
+            />
+          </div>
+        )}
       </div>
     </React.Fragment>
   );
