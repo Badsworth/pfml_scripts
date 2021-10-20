@@ -2,7 +2,7 @@ name: Pull Request title linter
 
 on:
   pull_request:
-    types: [opened, edited, reopened]
+    types: [opened, edited, reopened, synchronize]
 
 jobs:
   check_title:
@@ -11,7 +11,17 @@ jobs:
       - name: Check PR title
         shell: python
         run: |
+          import re
           import sys
+
+          TITLE_RE = re.compile(r"[A-Z]+-\d+:")
+
           title = "${{ github.event.pull_request.title }}"
+
           print(sys.version)
-          print("PR title: %r", title)
+          print("PR title: %r" % title)
+
+          if TITLE_RE.match(title):
+              pass
+          else:
+              raise RuntimeError("PR title must start with JIRA ticket")
