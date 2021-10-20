@@ -214,12 +214,12 @@ def build_auth_code_flow() -> Optional[dict[str, Optional[Union[str, list]]]]:
     azure_config = configure_azure_ad()
     if azure_config is None:
         return None
-    app = _build_msal_app()
-    if app is not None:
-        return app.initiate_auth_code_flow(
-            azure_config.scopes, redirect_uri=azure_config.redirect_uri
-        )
-    return None
+    msal_app = _build_msal_app()
+    if msal_app is None:
+        return None
+    return msal_app.initiate_auth_code_flow(
+        azure_config.scopes, redirect_uri=azure_config.redirect_uri
+    )
 
 
 def build_access_token(

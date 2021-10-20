@@ -55,3 +55,14 @@ class AdminTokenResponse(PydanticBaseModel):
     access_token: str
     refresh_token: str
     id_token: str
+
+
+class AdminUserResponse(PydanticBaseModel):
+    """Response object for a given AzureUser object """
+
+    sub_id: str
+    first_name: Optional[str]
+    last_name: Optional[str]
+    email_address: str
+    groups: List[str]
+    permissions: List[str]

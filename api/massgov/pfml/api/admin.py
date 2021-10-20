@@ -13,7 +13,11 @@ from massgov.pfml.api.authentication import (
 )
 from massgov.pfml.api.authorization.flask import READ, ensure
 from massgov.pfml.api.models.users.requests import AdminTokenRequest
-from massgov.pfml.api.models.users.responses import AdminTokenResponse, AuthURIResponse
+from massgov.pfml.api.models.users.responses import (
+    AdminTokenResponse,
+    AdminUserResponse,
+    AuthURIResponse,
+)
 from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
 from massgov.pfml.db.models.employees import AzureUser, LkAzurePermission
 
@@ -104,5 +108,5 @@ def azure_user_response(user: AzureUser) -> Dict[str, Any]:
         f"{permission.azure_permission_resource}_{permission.azure_permission_action}".upper()
         for permission in permissions
     ]
-
-    return response
+    logger.info(response)
+    return AdminUserResponse.parse_obj(response).__dict__

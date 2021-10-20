@@ -1510,23 +1510,27 @@ components:
     AdminUserResponse:
       type: object
       properties:
-        email_address:
+        sub_id:
           type: string
-          format: email
-          example: "janedoe@example.com"
+          example: "QfbsFWS4NTwEUFQKUCmwipIyJiZOxxKBLGSQC0tNFAB"
         first_name:
           type: string
           example: "Jane"
         last_name:
           type: string
           example: "Doe"
+        email_address:
+          type: string
+          format: email
+          example: "janedoe@example.com"
         groups:
           type: array
           items:
             type: string
-        sub_id:
-          type: string
-          example: "QfbsFWS4NTwEUFQKUCmwipIyJiZOxxKBLGSQC0tNFAB"
+        permission:
+          type: array
+          items:
+            type: number
 
     RoleResponse:
       type: object
