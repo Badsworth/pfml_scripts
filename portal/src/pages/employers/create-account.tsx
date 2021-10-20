@@ -1,5 +1,5 @@
 import Alert from "../../components/Alert";
-import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
+import { AppLogic } from "../../hooks/useAppLogic";
 import Button from "../../components/Button";
 import Details from "../../components/Details";
 import InputPassword from "../../components/InputPassword";
@@ -12,18 +12,11 @@ import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import useLoggedInRedirect from "../../hooks/useLoggedInRedirect";
-import usePortalFlow from "../../hooks/usePortalFlow";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 
 interface CreateAccountProps {
-  appLogic: {
-    appErrors?: AppErrorInfoCollection;
-    auth: {
-      createEmployerAccount: (...args: any[]) => any;
-    };
-    portalFlow: ReturnType<typeof usePortalFlow>;
-  };
+  appLogic: AppLogic;
 }
 
 export const CreateAccount = (props: CreateAccountProps) => {

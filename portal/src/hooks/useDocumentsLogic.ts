@@ -4,18 +4,19 @@ import {
   ValidationError,
 } from "../errors";
 import { useMemo, useState } from "react";
+import { AppErrorsLogic } from "./useAppErrorsLogic";
 import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import DocumentCollection from "../models/DocumentCollection";
 import { DocumentTypeEnum } from "../models/Document";
 import DocumentsApi from "../api/DocumentsApi";
+import TempFile from "../models/TempFile";
 import assert from "assert";
-import useAppErrorsLogic from "./useAppErrorsLogic";
 import useCollectionState from "./useCollectionState";
 
 const useDocumentsLogic = ({
   appErrorsLogic,
 }: {
-  appErrorsLogic: ReturnType<typeof useAppErrorsLogic>;
+  appErrorsLogic: AppErrorsLogic;
 }) => {
   /**
    * State representing the collection of documents for the current user.
@@ -82,7 +83,7 @@ const useDocumentsLogic = ({
    */
   const attach = (
     application_id: string,
-    filesWithUniqueId: Array<{ id: string; file: File }> = [],
+    filesWithUniqueId: TempFile[],
     documentType: DocumentTypeEnum,
     mark_evidence_received: boolean
   ) => {

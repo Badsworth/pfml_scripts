@@ -1,18 +1,14 @@
 import { Trans, useTranslation } from "react-i18next";
+import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import Lead from "../../../components/Lead";
 import React from "react";
 import Title from "../../../components/Title";
-import User from "../../../models/User";
 import routes from "../../../routes";
 import withUser from "../../../hoc/withUser";
 
 interface CannotVerifyProps {
-  appLogic: {
-    users: {
-      user: User;
-    };
-  };
+  appLogic: AppLogic;
   query: {
     employer_id: string;
   };

@@ -1,3 +1,4 @@
+import { AppLogic } from "../hooks/useAppLogic";
 import ButtonLink from "../components/ButtonLink";
 import Heading from "../components/Heading";
 import Link from "next/link";
@@ -6,13 +7,10 @@ import Title from "../components/Title";
 import { Trans } from "react-i18next";
 import routes from "../routes";
 import useLoggedInRedirect from "../hooks/useLoggedInRedirect";
-import usePortalFlow from "../hooks/usePortalFlow";
 import { useTranslation } from "../locales/i18n";
 
 interface IndexProps {
-  appLogic: {
-    portalFlow: ReturnType<typeof usePortalFlow>;
-  };
+  appLogic: AppLogic;
 }
 
 export const Index = (props: IndexProps) => {

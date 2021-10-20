@@ -26,6 +26,7 @@ import Step, { ClaimSteps } from "../../models/Step";
 import { compact, get, isUndefined } from "lodash";
 
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
 import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import { DateTime } from "luxon";
@@ -75,14 +76,7 @@ function formatAddress(address) {
 }
 
 interface ReviewProps {
-  appLogic: {
-    appErrors: any;
-    benefitsApplications: any;
-    clearRequiredFieldErrors: (...args: any[]) => any;
-    portalFlow: {
-      getNextPageRoute: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
   claim?: BenefitsApplication;
   documents?: BenefitsApplicationDocument[];
   isLoadingDocuments?: boolean;

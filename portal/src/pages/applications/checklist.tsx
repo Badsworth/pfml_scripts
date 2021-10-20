@@ -2,11 +2,10 @@ import BenefitsApplication, {
   BenefitsApplicationStatus,
   ReasonQualifier,
 } from "../../models/BenefitsApplication";
-
 import StepModel, { ClaimSteps } from "../../models/Step";
 import { camelCase, filter, findIndex, get } from "lodash";
-
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
 import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import ButtonLink from "../../components/ButtonLink";
@@ -27,19 +26,12 @@ import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
-import usePortalFlow from "../../hooks/usePortalFlow";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 import withClaimDocuments from "../../hoc/withClaimDocuments";
 
 interface ChecklistProps {
-  appLogic: {
-    appErrors: any;
-    benefitsApplications: {
-      warningsLists: any;
-    };
-    portalFlow: ReturnType<typeof usePortalFlow>;
-  };
+  appLogic: AppLogic;
   claim: BenefitsApplication;
   documents?: BenefitsApplicationDocument[];
   isLoadingDocuments?: boolean;

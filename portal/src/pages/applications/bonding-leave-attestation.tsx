@@ -1,17 +1,15 @@
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
-import usePortalFlow from "../../hooks/usePortalFlow";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 interface BondingLeaveAttestationProps {
-  appLogic: {
-    portalFlow?: ReturnType<typeof usePortalFlow>;
-  };
+  appLogic: AppLogic;
   query: any;
 }
 

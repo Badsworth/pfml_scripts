@@ -2,7 +2,7 @@
 import routeWithParams, {
   createRouteWithQuery,
 } from "../utils/routeWithParams";
-
+import { AppLogic } from "../hooks/useAppLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
 import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import ButtonLink from "./ButtonLink";
@@ -65,15 +65,7 @@ const TitleAndDetailSectionItem = ({
 );
 
 interface ManageDocumentSectionProps {
-  appLogic: {
-    claims: {
-      isLoadingClaimDetail?: boolean;
-      loadClaimDetail: (...args: any[]) => any;
-    };
-    portalFlow: {
-      goTo: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
   claim: BenefitsApplication;
 }
 
@@ -128,12 +120,7 @@ const ManageDocumentSection = ({
 };
 
 interface LegalNoticeSectionProps {
-  appLogic: {
-    appErrors: any;
-    documents?: {
-      download: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
   claim: BenefitsApplication;
   documents?: BenefitsApplicationDocument[];
   isLoadingDocuments: boolean;
@@ -236,15 +223,7 @@ const InProgressStatusCard = (props: InProgressStatusCardProps) => {
 
 interface CompletedStatusCardProps {
   claim: BenefitsApplication;
-  appLogic: {
-    claims: {
-      isLoadingClaimDetail?: boolean;
-      loadClaimDetail: (...args: any[]) => any;
-    };
-    portalFlow: {
-      goTo: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
 }
 
 /**
@@ -292,19 +271,7 @@ const CompletedStatusCard = ({ appLogic, claim }: CompletedStatusCardProps) => {
 
 interface ApplicationCardV2Props {
   claim: BenefitsApplication;
-  appLogic: {
-    appErrors: any;
-    claims: {
-      isLoadingClaimDetail?: boolean;
-      loadClaimDetail: (...args: any[]) => any;
-    };
-    documents?: {
-      download: (...args: any[]) => any;
-    };
-    portalFlow: {
-      goTo: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
   isLoadingDocuments: boolean;
   number: number;
 }

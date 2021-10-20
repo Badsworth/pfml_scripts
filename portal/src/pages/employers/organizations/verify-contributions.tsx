@@ -1,4 +1,4 @@
-import AppErrorInfoCollection from "../../../models/AppErrorInfoCollection";
+import { AppLogic } from "../../../hooks/useAppLogic";
 import Button from "../../../components/Button";
 import Details from "../../../components/Details";
 import InputCurrency from "../../../components/InputCurrency";
@@ -6,7 +6,6 @@ import Lead from "../../../components/Lead";
 import React from "react";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
-import User from "../../../models/User";
 import Withholding from "../../../models/Withholding";
 import formatDateRange from "../../../utils/formatDateRange";
 import routes from "../../../routes";
@@ -18,15 +17,7 @@ import withUser from "../../../hoc/withUser";
 import withWithholding from "../../../hoc/withWithholding";
 
 interface VerifyContributionsProps {
-  appLogic: {
-    appErrors?: AppErrorInfoCollection;
-    employers?: {
-      submitWithholding: (...args: any[]) => any;
-    };
-    users: {
-      user?: User;
-    };
-  };
+  appLogic: AppLogic;
   query: {
     employer_id: string;
     next?: string;

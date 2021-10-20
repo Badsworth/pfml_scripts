@@ -2,6 +2,7 @@ import BenefitsApplication, {
   RelationshipToCaregiver,
 } from "../../models/BenefitsApplication";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import React from "react";
@@ -10,14 +11,11 @@ import { Trans } from "react-i18next";
 import findKeyByValue from "../../utils/findKeyByValue";
 import { get } from "lodash";
 import routes from "../../routes";
-import usePortalFlow from "../../hooks/usePortalFlow";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 interface Props {
-  appLogic: {
-    portalFlow?: ReturnType<typeof usePortalFlow>;
-  };
+  appLogic: AppLogic;
   claim: BenefitsApplication;
   query: any;
 }

@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
 import { isNil, omitBy } from "lodash";
+import { AppLogic } from "../hooks/useAppLogic";
 import ClaimCollection from "../models/ClaimCollection";
 import PaginationMeta from "../models/PaginationMeta";
 import Spinner from "../components/Spinner";
-import useAppLogic from "../hooks/useAppLogic";
 import { useTranslation } from "../locales/i18n";
 import withUser from "./withUser";
 
@@ -17,7 +17,7 @@ interface ApiParams {
 }
 
 interface ComponentWithClaimsProps {
-  appLogic: ReturnType<typeof useAppLogic>;
+  appLogic: AppLogic;
   claims: {
     activeFilters: {
       employer_id: string;

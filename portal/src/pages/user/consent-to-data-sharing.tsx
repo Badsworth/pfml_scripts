@@ -1,6 +1,7 @@
 import Accordion from "../../components/Accordion";
 import AccordionItem from "../../components/AccordionItem";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import Button from "../../components/Button";
 import React from "react";
 import Title from "../../components/Title";
@@ -13,11 +14,7 @@ import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
 
 interface ConsentToDataSharingProps {
-  appLogic: {
-    users: {
-      updateUser: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
   user: User;
 }
 

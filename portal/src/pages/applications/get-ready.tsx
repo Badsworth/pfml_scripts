@@ -1,5 +1,6 @@
 import { IconLaptop, IconPhone } from "@massds/mayflower-react/dist/Icon";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
 import ButtonLink from "../../components/ButtonLink";
 import Heading from "../../components/Heading";
@@ -9,14 +10,11 @@ import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import routes from "../../routes";
-import usePortalFlow from "../../hooks/usePortalFlow";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplications from "../../hoc/withBenefitsApplications";
 
 interface GetReadyProps {
-  appLogic: {
-    portalFlow?: ReturnType<typeof usePortalFlow>;
-  };
+  appLogic: AppLogic;
   claims: BenefitsApplicationCollection;
 }
 

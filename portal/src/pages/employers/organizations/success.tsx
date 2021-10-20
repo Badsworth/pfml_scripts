@@ -1,3 +1,4 @@
+import { AppLogic } from "../../../hooks/useAppLogic";
 import Button from "../../../components/Button";
 import React from "react";
 import Title from "../../../components/Title";
@@ -8,11 +9,7 @@ import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
 
 interface SuccessProps {
-  appLogic: {
-    portalFlow: {
-      goTo: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
   query: {
     employer_id: string;
     next: string;

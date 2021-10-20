@@ -1,12 +1,12 @@
 // @ts-nocheck https://lwd.atlassian.net/browse/PORTAL-427
-import ClaimDetail, { AbsencePeriod } from "../../models/ClaimDetail";
 import React, { useEffect } from "react";
 import { find, get, has, map } from "lodash";
 
+import { AbsencePeriod } from "../../models/ClaimDetail";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
-import DocumentCollection from "../../models/DocumentCollection";
 import { DocumentType } from "../../models/Document";
 import Heading from "../../components/Heading";
 import LeaveReason from "../../models/LeaveReason";
@@ -26,24 +26,7 @@ import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
 interface StatusProps {
-  appLogic: {
-    appErrors: any;
-    claims: {
-      claimDetail?: ClaimDetail;
-      isLoadingClaimDetail?: boolean;
-      loadClaimDetail: (...args: any[]) => any;
-    };
-    documents?: {
-      documents: DocumentCollection;
-      download: (...args: any[]) => any;
-      hasLoadedClaimDocuments: (...args: any[]) => any;
-      loadAll: (...args: any[]) => any;
-    };
-    portalFlow: {
-      goTo: (...args: any[]) => any;
-      getNextPageRoute: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
   query: {
     absence_case_id?: string;
     claim_id?: string;

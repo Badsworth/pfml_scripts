@@ -1,11 +1,11 @@
 import { Issue, ValidationError } from "../errors";
+import { AppErrorsLogic } from "./useAppErrorsLogic";
 import Compressor from "compressorjs";
 import TempFile from "../models/TempFile";
 import TempFileCollection from "../models/TempFileCollection";
 import { snakeCase } from "lodash";
 import { t } from "../locales/i18n";
 import tracker from "../services/tracker";
-import useAppErrorsLogic from "./useAppErrorsLogic";
 import useCollectionState from "./useCollectionState";
 
 // Only image and pdf files are allowed to be uploaded
@@ -169,8 +169,8 @@ const useFilesLogic = ({
   maximumFileSize = defaultMaximumFileSize,
 }: {
   allowedFileTypes?: readonly string[];
-  catchError: ReturnType<typeof useAppErrorsLogic>["catchError"];
-  clearErrors: ReturnType<typeof useAppErrorsLogic>["clearErrors"];
+  catchError: AppErrorsLogic["catchError"];
+  clearErrors: AppErrorsLogic["clearErrors"];
   maximumFileSize?: number;
 }) => {
   const {

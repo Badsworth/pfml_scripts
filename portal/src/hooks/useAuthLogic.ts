@@ -6,22 +6,22 @@ import {
 } from "../errors";
 import { compact, trim } from "lodash";
 import { useMemo, useState } from "react";
+import { AppErrorsLogic } from "./useAppErrorsLogic";
 import { Auth } from "@aws-amplify/auth";
+import { PortalFlow } from "./usePortalFlow";
 import { RoleDescription } from "../models/User";
 import UsersApi from "../api/UsersApi";
 import assert from "assert";
 import { createRouteWithQuery } from "../utils/routeWithParams";
 import routes from "../routes";
 import tracker from "../services/tracker";
-import useAppErrorsLogic from "./useAppErrorsLogic";
-import usePortalFlow from "./usePortalFlow";
 
 const useAuthLogic = ({
   appErrorsLogic,
   portalFlow,
 }: {
-  appErrorsLogic: ReturnType<typeof useAppErrorsLogic>;
-  portalFlow: ReturnType<typeof usePortalFlow>;
+  appErrorsLogic: AppErrorsLogic;
+  portalFlow: PortalFlow;
 }) => {
   const usersApi = useMemo(() => new UsersApi(), []);
 
@@ -640,3 +640,4 @@ function trackAuthRequest(action: string) {
 }
 
 export default useAuthLogic;
+export type AuthLogic = ReturnType<typeof useAuthLogic>;

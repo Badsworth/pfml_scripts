@@ -11,6 +11,7 @@
 import Accordion from "../../../components/Accordion";
 import AccordionItem from "../../../components/AccordionItem";
 import Alert from "../../../components/Alert";
+import { AppLogic } from "../../../hooks/useAppLogic";
 import BenefitsApplicationDocument from "../../../models/BenefitsApplicationDocument";
 import ConditionalContent from "../../../components/ConditionalContent";
 import DocumentRequirements from "../../../components/DocumentRequirements";
@@ -185,13 +186,7 @@ const IdentificationUpload = ({ path }: IdentificationUploadProps) => {
 };
 
 interface DocumentUploadProps {
-  appLogic: {
-    appErrors: any;
-    catchError: (...args: any[]) => any;
-    documents: any;
-    portalFlow: any;
-    clearErrors: (...args: any[]) => any;
-  };
+  appLogic: AppLogic;
   documents?: BenefitsApplicationDocument[];
   isLoadingDocuments?: boolean;
   query?: {

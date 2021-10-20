@@ -1,5 +1,6 @@
 import { IconMail, IconPdf } from "@massds/mayflower-react/dist/Icon";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
 import Heading from "../../components/Heading";
 import Icon from "../../components/Icon";
@@ -21,11 +22,7 @@ const IconWait = (props) => (
 );
 
 interface WelcomeProps {
-  appLogic: {
-    portalFlow: {
-      pathname: string;
-    };
-  };
+  appLogic: AppLogic;
   user: User;
 }
 

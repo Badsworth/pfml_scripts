@@ -9,6 +9,7 @@ import React, {
 import { camelCase, compact, find, get, isEqual, startCase } from "lodash";
 import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import Button from "../../components/Button";
 import ClaimCollection from "../../models/ClaimCollection";
 import Details from "../../components/Details";
@@ -29,7 +30,6 @@ import User from "../../models/User";
 import formatDateRange from "../../utils/formatDateRange";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
-import useAppLogic from "../../hooks/useAppLogic";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -37,7 +37,7 @@ import withClaims from "../../hoc/withClaims";
 import withUser from "../../hoc/withUser";
 
 interface DashboardProps {
-  appLogic: ReturnType<typeof useAppLogic>;
+  appLogic: AppLogic;
   query: {
     claim_status?: string;
     employer_id?: string;
@@ -196,7 +196,7 @@ export const Dashboard = (props: DashboardProps) => {
 };
 
 interface PaginatedClaimsTableProps {
-  appLogic?: ReturnType<typeof useAppLogic>;
+  appLogic?: AppLogic;
   claims?: ClaimCollection;
   paginationMeta?: PaginationMeta;
   updatePageQuery: (...args: any[]) => any;

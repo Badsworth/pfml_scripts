@@ -1,25 +1,12 @@
 import React, { useEffect } from "react";
-import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
-import EmployerClaim from "../models/EmployerClaim";
+import { AppLogic } from "../hooks/useAppLogic";
 import { Spinner } from "../components/Spinner";
-import User from "../models/User";
 import routes from "../routes";
-import usePortalFlow from "../hooks/usePortalFlow";
 import { useTranslation } from "react-i18next";
 import withUser from "./withUser";
 
 interface ComponentWithClaimProps {
-  appLogic: {
-    appErrors: AppErrorInfoCollection;
-    employers: {
-      claim?: EmployerClaim;
-      loadClaim: (absence_id: string) => void;
-    };
-    portalFlow: ReturnType<typeof usePortalFlow>;
-    users: {
-      user: User;
-    };
-  };
+  appLogic: AppLogic;
   query: {
     absence_id: string;
   };

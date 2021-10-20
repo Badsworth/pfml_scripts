@@ -158,3 +158,4 @@ export function getRouteFromPathWithParams(pathWithParams: string) {
 }
 
 export default usePortalFlow;
+export type PortalFlow = ReturnType<typeof usePortalFlow>;

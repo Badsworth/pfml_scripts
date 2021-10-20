@@ -12,22 +12,18 @@ import {
 } from "../errors";
 import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
+import { PortalFlow } from "./usePortalFlow";
 import React from "react";
 import { Trans } from "react-i18next";
 import routes from "../routes";
 import tracker from "../services/tracker";
 import useCollectionState from "./useCollectionState";
-import usePortalFlow from "./usePortalFlow";
 import { useTranslation } from "../locales/i18n";
 
 /**
  * React hook for creating and managing the state of app errors in an AppErrorInfoCollection
  */
-const useAppErrorsLogic = ({
-  portalFlow,
-}: {
-  portalFlow: ReturnType<typeof usePortalFlow>;
-}) => {
+const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
   const { i18n, t } = useTranslation();
 
   /**
@@ -425,3 +421,4 @@ const useAppErrorsLogic = ({
 };
 
 export default useAppErrorsLogic;
+export type AppErrorsLogic = ReturnType<typeof useAppErrorsLogic>;

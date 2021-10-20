@@ -1,4 +1,5 @@
 import Alert from "../../../components/Alert";
+import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import ButtonLink from "../../../components/ButtonLink";
 import LeaveAdministratorRow from "../../../components/employers/LeaveAdministratorRow";
@@ -6,20 +7,12 @@ import React from "react";
 import Table from "../../../components/Table";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
-import User from "../../../models/User";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
 
 interface IndexProps {
-  appLogic: {
-    portalFlow: {
-      getNextPageRoute: (...args: any[]) => any;
-    };
-    users: {
-      user: User;
-    };
-  };
+  appLogic: AppLogic;
   query?: {
     account_converted?: string;
   };

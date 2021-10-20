@@ -1,4 +1,4 @@
-import EmployerClaim from "../../../models/EmployerClaim";
+import { AppLogic } from "../../../hooks/useAppLogic";
 import React from "react";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
@@ -9,11 +9,7 @@ import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
 interface ConfirmationProps {
-  appLogic: {
-    employers: {
-      claim?: EmployerClaim;
-    };
-  };
+  appLogic: AppLogic;
   query: {
     absence_id: string;
   };

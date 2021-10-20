@@ -1,4 +1,4 @@
-import AppErrorInfoCollection from "../../../models/AppErrorInfoCollection";
+import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
 import InputText from "../../../components/InputText";
@@ -12,12 +12,7 @@ import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
 
 interface AddOrganizationProps {
-  appLogic: {
-    appErrors?: AppErrorInfoCollection;
-    employers: {
-      addEmployer: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
 }
 
 export const AddOrganization = (props: AddOrganizationProps) => {

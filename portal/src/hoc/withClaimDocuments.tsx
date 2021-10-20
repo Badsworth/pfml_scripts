@@ -1,20 +1,10 @@
 import React, { useEffect } from "react";
-import DocumentCollection from "../models/DocumentCollection";
-import User from "../models/User";
+import { AppLogic } from "../hooks/useAppLogic";
 import assert from "assert";
 import withUser from "./withUser";
 
 interface ComponentWithDocumentsProps {
-  appLogic: {
-    users: {
-      user: User;
-    };
-    documents: {
-      hasLoadedClaimDocuments: (application_id: string) => boolean;
-      documents: DocumentCollection;
-      loadAll: (application_id: string) => void;
-    };
-  };
+  appLogic: AppLogic;
   claim: {
     application_id: string;
   };

@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import Alert from "../../../components/Alert";
+import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
 import ConditionalContent from "../../../components/ConditionalContent";
-import EmployerClaim from "../../../models/EmployerClaim";
 import Heading from "../../../components/Heading";
 import InputChoiceGroup from "../../../components/InputChoiceGroup";
 import StatusRow from "../../../components/StatusRow";
@@ -14,16 +14,7 @@ import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
 interface NewApplicationProps {
-  appLogic: {
-    employers: {
-      claim?: EmployerClaim;
-    };
-    portalFlow: {
-      goTo: (...args: any[]) => any;
-      goToNextPage: (...args: any[]) => any;
-      goToPageFor: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
   query: {
     absence_id: string;
   };

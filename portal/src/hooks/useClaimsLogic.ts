@@ -1,17 +1,17 @@
 import { ClaimWithdrawnError, ValidationError } from "../errors";
+import { AppErrorsLogic } from "./useAppErrorsLogic";
 import ClaimCollection from "../models/ClaimCollection";
 import ClaimDetail from "../models/ClaimDetail";
 import ClaimsApi from "../api/ClaimsApi";
 import PaginationMeta from "../models/PaginationMeta";
 import { isEqual } from "lodash";
-import useAppErrorsLogic from "./useAppErrorsLogic";
 import useCollectionState from "./useCollectionState";
 import { useState } from "react";
 
 const useClaimsLogic = ({
   appErrorsLogic,
 }: {
-  appErrorsLogic: ReturnType<typeof useAppErrorsLogic>;
+  appErrorsLogic: AppErrorsLogic;
 }) => {
   const claimsApi = new ClaimsApi();
 
@@ -149,3 +149,4 @@ const useClaimsLogic = ({
 };
 
 export default useClaimsLogic;
+export type ClaimsLogic = ReturnType<typeof useClaimsLogic>;

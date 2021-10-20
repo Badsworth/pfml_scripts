@@ -1,20 +1,12 @@
 import React, { useEffect, useState } from "react";
+import { AppLogic } from "../hooks/useAppLogic";
 import Spinner from "../components/Spinner";
-import User from "../models/User";
+import Withholding from "../models/Withholding";
 import routes from "../routes";
-import usePortalFlow from "../hooks/usePortalFlow";
 import { useTranslation } from "../locales/i18n";
 
 interface ComponentWithWithholdingProps {
-  appLogic: {
-    employers: {
-      loadWithholding: (employer_id: string) => any;
-    };
-    portalFlow: ReturnType<typeof usePortalFlow>;
-    users: {
-      user: User;
-    };
-  };
+  appLogic: AppLogic;
   query: {
     employer_id: string;
   };
@@ -35,7 +27,7 @@ const withWithholding = (Component) => {
     } = appLogic;
     const { t } = useTranslation();
     const [shouldLoadWithholding, setShouldLoadWithholding] = useState(true);
-    const [withholding, setWithholding] = useState();
+    const [withholding, setWithholding] = useState<Withholding>();
 
     const employer = user.user_leave_administrators.find((employer) => {
       return employer.employer_id === query.employer_id;

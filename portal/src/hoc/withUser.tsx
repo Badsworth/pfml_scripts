@@ -1,12 +1,12 @@
 import React, { useEffect } from "react";
+import { AppLogic } from "../hooks/useAppLogic";
 import Spinner from "../components/Spinner";
 import User from "../models/User";
 import routes from "../routes";
-import useAppLogic from "../hooks/useAppLogic";
 import { useTranslation } from "../locales/i18n";
 
 interface ComponentWithUserProps {
-  appLogic: ReturnType<typeof useAppLogic>;
+  appLogic: AppLogic;
   user: User;
 }
 

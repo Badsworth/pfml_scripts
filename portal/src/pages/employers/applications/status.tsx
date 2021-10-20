@@ -2,11 +2,10 @@ import React, { useEffect } from "react";
 
 import { AbsenceCaseStatus } from "../../../models/Claim";
 import AbsenceCaseStatusTag from "../../../components/AbsenceCaseStatusTag";
+import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
-import DocumentCollection from "../../../models/DocumentCollection";
 import { DocumentType } from "../../../models/Document";
 import DownloadableDocument from "../../../components/DownloadableDocument";
-import EmployerClaim from "../../../models/EmployerClaim";
 import Heading from "../../../components/Heading";
 import Lead from "../../../components/Lead";
 import LeaveReason from "../../../models/LeaveReason";
@@ -22,14 +21,7 @@ import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
 interface StatusProps {
-  appLogic: {
-    employers: {
-      claim?: EmployerClaim;
-      documents?: DocumentCollection;
-      downloadDocument: (...args: any[]) => any;
-      loadDocuments: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
   query: {
     absence_id?: string;
   };
