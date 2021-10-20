@@ -9,6 +9,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Check PR title
+        env:
+          TITLE: ${{ github.event.pull_request.title }}
         shell: python
         run: |
           import re
@@ -16,7 +18,7 @@ jobs:
 
           TITLE_RE = re.compile(r"[A-Z]+-\d+:")
 
-          title = "${{ github.event.pull_request.title }}"
+          title = os.environ["TITLE"]
 
           print(sys.version)
           print("PR title: %r" % title)
@@ -24,4 +26,5 @@ jobs:
           if TITLE_RE.match(title):
               pass
           else:
+              print("::error title=Invalid PR title::Please start the PR title with a JIRA ticket, e.g. AAA-123: ...")
               raise RuntimeError("PR title must start with JIRA ticket")
