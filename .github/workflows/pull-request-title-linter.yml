@@ -1,0 +1,17 @@
+name: Pull Request title linter
+
+on:
+  pull_request:
+    types: [opened, edited, reopened]
+
+jobs:
+  check_title:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check PR title
+        shell: python
+        run: |
+          import sys
+          title = "${{ github.event.pull_request.title }}"
+          print(sys.version)
+          print("PR title: %r", title)
