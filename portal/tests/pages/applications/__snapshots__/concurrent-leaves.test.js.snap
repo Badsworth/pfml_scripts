@@ -62,7 +62,7 @@ exports[`ConcurrentLeaves renders the continuous page content 1`] = `
               <div
                 class="usa-alert__text"
               >
-                1/1/2021 to 1/8/2021
+                1/1/2021 to 1/7/2021
               </div>
             </div>
           </div>
@@ -236,7 +236,7 @@ exports[`ConcurrentLeaves renders the intermittent reduced page content 1`] = `
               <div
                 class="usa-alert__text"
               >
-                2/1/2021 to 2/8/2021
+                2/1/2021 to 2/7/2021
               </div>
             </div>
           </div>
@@ -462,7 +462,7 @@ exports[`ConcurrentLeaves renders the page 1`] = `
               <div
                 class="usa-alert__text"
               >
-                1/1/2021 to 1/8/2021
+                1/1/2021 to 1/7/2021
               </div>
             </div>
           </div>
@@ -637,7 +637,7 @@ exports[`ConcurrentLeaves renders the page when the claim does not contain concu
               <div
                 class="usa-alert__text"
               >
-                1/1/2021 to 1/8/2021
+                1/1/2021 to 1/7/2021
               </div>
             </div>
           </div>
@@ -811,7 +811,7 @@ exports[`ConcurrentLeaves renders the reduced page content 1`] = `
               <div
                 class="usa-alert__text"
               >
-                2/1/2021 to 2/8/2021
+                2/1/2021 to 2/7/2021
               </div>
             </div>
           </div>
