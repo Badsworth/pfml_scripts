@@ -13,6 +13,7 @@ jobs:
           TITLE: ${{ github.event.pull_request.title }}
         shell: python
         run: |
+          import os
           import re
           import sys
 
