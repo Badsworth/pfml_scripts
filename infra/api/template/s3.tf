@@ -1,7 +1,3 @@
-data "aws_iam_role" "replication" {
-  name = "massgov-pfml-prod-s3-replication"
-}
-
 resource "aws_s3_bucket" "document_upload" {
   bucket = "massgov-pfml-${var.environment_name}-document"
   acl    = "private"
@@ -15,7 +11,6 @@ resource "aws_s3_bucket" "document_upload" {
   }
 
   # claimants can only delete and re-upload documents, never update
-  # NOTE: Disabling versioning removes the capability for the bucket to be replicated.
   versioning {
     enabled = "false"
   }
@@ -39,7 +34,7 @@ resource "aws_s3_bucket" "feature_gate" {
       }
     }
   }
-  # NOTE: Disabling versioning removes the capability for the bucket to be replicated.
+
   versioning {
     enabled = "false"
   }
@@ -63,35 +58,11 @@ resource "aws_s3_bucket" "business_intelligence_tool" {
     }
   }
 
-  versioning {
-    enabled = true
-  }
-
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags[var.environment_name],
     public      = "no"
     Name        = "massgov-pfml-${var.environment_name}-BI-tool"
   })
-
-  dynamic "replication_configuration" {
-    for_each = var.environment_name == module.constants.bucket_replication_environment ? [1] : []
-    content {
-      role = data.aws_iam_role.replication.name
-      rules {
-        id     = "replicateFullBucket"
-        status = "Enabled"
-
-        destination {
-          bucket        = "arn:aws:s3:::massgov-pfml-${var.environment_name}-BI-tool-replica"
-          storage_class = "STANDARD"
-          account_id    = "018311717589"
-          access_control_translation {
-            owner = "Destination"
-          }
-        }
-      }
-    }
-  }
 }
 
 resource "aws_kms_key" "id_proofing_document_upload_kms_key" {
