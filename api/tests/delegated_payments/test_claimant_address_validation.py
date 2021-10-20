@@ -1,27 +1,13 @@
-import os
-import re
-from pathlib import Path, PosixPath
-from typing import Any, Dict
 from unittest import mock
 
 import factory
-import faker
 import pytest
 from sqlalchemy.sql.functions import now
 
 import massgov.pfml.db as db
 import massgov.pfml.delegated_payments.claimant_address_validation as claimant_address_validation
-import massgov.pfml.delegated_payments.pub.pub_check as pub_check
 import massgov.pfml.experian.address_validate_soap.client as soap_api
-import massgov.pfml.util.files as file_util
-from massgov.pfml.db.models.employees import (
-    Claim,
-    Employee,
-    ExperianAddressPair,
-    GeoState,
-    Payment,
-    ReferenceFile,
-)
+from massgov.pfml.db.models.employees import Claim, Employee, ExperianAddressPair, GeoState, Payment
 from massgov.pfml.db.models.factories import (
     AddressFactory,
     ClaimFactory,
@@ -30,9 +16,7 @@ from massgov.pfml.db.models.factories import (
     ExperianAddressPairFactory,
     FineosExtractEmployeeFeedFactory,
     PaymentFactory,
-    ReferenceFileFactory,
 )
-from massgov.pfml.db.models.payments import FineosExtractEmployeeFeed
 from massgov.pfml.delegated_payments.address_validation import Constants
 from massgov.pfml.experian.address_validate_soap.client import Client
 from massgov.pfml.experian.address_validate_soap.mock_caller import MockVerificationZeepCaller
@@ -81,9 +65,7 @@ def experian_factory_with_experian_address(address_factory):
     return ExperianAddressPairFactory.build(experian_address=address_factory)
 
 
-def test_employee_exists_for_customer_number(
-    local_test_db_session, local_test_db_other_session, employee_extract_factory
-):
+def test_employee_exists_for_customer_number(local_test_db_session, employee_extract_factory):
 
     employee = local_test_db_session.query(Employee).filter(
         Employee.fineos_customer_number == employee_extract_factory.customerno
@@ -116,18 +98,12 @@ def is_address_same(address, employee_extract_factory):
         and address.zip_code == employee_extract_factory.postcode
     ):
         result = True
-    assert False == result
-
-
-def add_new_address_as_fineos(employee_extract_factory):
-
-    return experian_factory
-    _
+    assert result is False
 
 
 def test_validate_claimant_address_already_validated(experian_factory_with_experian_address):
 
-    assert not None == experian_factory_with_experian_address.experian_address is not None
+    assert experian_factory_with_experian_address.experian_address is not None
 
 
 def test_validate_claimant_address_has_all_parts(employee_extract_factory):
@@ -139,8 +115,7 @@ def test_validate_claimant_address_has_all_parts(employee_extract_factory):
         or not employee_extract_factory.postcode
     ):
         result = False
-    print(employee_extract_factory.postcode)
-    assert True == result
+    assert result is True
 
 
 def test_process_address_via_soap_api(
@@ -189,11 +164,9 @@ def test_create_address_report(claimant_address_step):
     results = []
     results.append(result1)
     results.append(result2)
-    report_path = f"local_s3/agency-transfer/reports/"
-    file_name = f"Claimant_address_report"
+    report_path = "local_s3/agency-transfer/reports/"
+    file_name = "Claimant_address_report"
     out_path = claimant_address_step.create_address_report(results, file_name, report_path)
-
-    filename_pattern = r"\d{4}-\d{2}-\d{2}\/\d{4}-\d{2}-\d{2}-\d{2}-\d{2}-\d{2}-Claimant-Address-Validation-Report.csv"
     assert out_path
 
 
@@ -248,4 +221,4 @@ def test_is_address_new_or_updated(local_test_db_session, employee_extract_facto
         ):
             result = True
 
-        assert result == True
+        assert result is True
