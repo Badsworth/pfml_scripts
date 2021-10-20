@@ -1530,7 +1530,7 @@ components:
         permission:
           type: array
           items:
-            type: number
+            type: string
 
     RoleResponse:
       type: object
