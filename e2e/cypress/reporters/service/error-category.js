@@ -113,10 +113,9 @@ class ErrorCategory {
 
   matchRuleExpl(str, rule) {
     // for this solution to work on any string, no matter what characters it has
-    var escapeRegex = (str) =>
-      str.replace(/([.*+?^=!:${}()|\[\]\/\\])/g, "\\$1");
+    var escapeRegex = (str) => str.replace(/([.*+?^=!:${}()|[\]/\\])/g, "\\$1");
 
-    str = str.replace("\n", " ")
+    str = str.replace("\n", " ");
     // "."  => Find a single character, except newline or line terminator
     // ".*" => Matches any string that contains zero or more characters
     rule = rule.split("*").map(escapeRegex).join(".*");

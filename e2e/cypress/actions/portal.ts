@@ -1052,7 +1052,9 @@ export function addOrganization(fein: string, withholding: number): void {
       withholding.toString()
     );
     cy.get('button[type="submit"]').click();
-    cy.contains("h1", "Thanks for verifying your paid leave contributions", {timeout: 30000});
+    cy.contains("h1", "Thanks for verifying your paid leave contributions", {
+      timeout: 30000,
+    });
     cy.contains("p", "Your account has been verified");
     cy.contains("button", "Continue").click();
     cy.get('a[href^="/employers/organizations/verify-contributions"]').should(
@@ -1427,7 +1429,7 @@ function reportOtherLeavesAndBenefits(claim: ApplicationRequestBody): void {
 
   cy.contains(
     "form",
-    /(Will you use any employer\-sponsored benefits from this employer during your paid leave from PFML\?|Will you use any employer\-sponsored benefits from this employer during your paid leave from PFML\?)/
+    /(Will you use any employer-sponsored benefits from this employer during your paid leave from PFML\?|Will you use any employer-sponsored benefits from this employer during your paid leave from PFML\?)/
   ).within(() => {
     const labelSelector = (content: string) =>
       content.startsWith(claim.employer_benefits ? "Yes" : "No");

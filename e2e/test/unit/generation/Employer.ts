@@ -26,11 +26,11 @@ describe("Employer Generation", () => {
     expect(employers.pop()).toMatchObject({
       accountKey: expect.stringMatching(/\d{11}/),
       name: expect.any(String),
-      fein: expect.stringMatching(/\d{2}\-\d{7}/),
+      fein: expect.stringMatching(/\d{2}-\d{7}/),
       street: expect.any(String),
       city: expect.any(String),
       state: "MA",
-      zip: expect.stringMatching(/\d{5}\-\d{4}/),
+      zip: expect.stringMatching(/\d{5}-\d{4}/),
       dba: expect.any(String),
       family_exemption: false,
       medical_exemption: false,
