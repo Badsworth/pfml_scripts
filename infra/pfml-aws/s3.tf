@@ -11,7 +11,8 @@ locals {
 
 data "aws_iam_role" "replication" {
   name = "massgov-pfml-prod-s3-replication"
-  }
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_s3_bucket" "terraform" {
@@ -42,7 +43,7 @@ resource "aws_s3_bucket" "terraform" {
     rules {
       id     = "replicateFullBucket"
       status = "Enabled"
-# Note: These buckets already exist
+      # Note: These buckets already exist
       destination {
         bucket        = "arn:aws:s3:::massgov-pfml-${each.key}-env-mgmt-replica"
         storage_class = "STANDARD"
