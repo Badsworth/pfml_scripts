@@ -27,5 +27,5 @@ jobs:
           if TITLE_RE.match(title):
               pass
           else:
-              print("::error file=docs/contributing.md,line=1,title=Invalid PR title::Please start the PR title with a JIRA ticket, e.g. AAA-123: ...")
+              print("::error file=/docs/contributing.md,line=1,title=Invalid PR title::Please start the PR title with a JIRA ticket, e.g. AAA-123: ...")
               raise RuntimeError("PR title must start with JIRA ticket")
