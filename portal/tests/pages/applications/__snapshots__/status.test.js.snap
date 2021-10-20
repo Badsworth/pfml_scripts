@@ -303,22 +303,20 @@ exports[`Status renders the page if the only errors are DocumentsLoadError 1`] =
     </svg>
     Back to your applications
   </a>
-  <div
-    class="measure-6"
-  >
+  <div>
     <h1
-      class="js-title margin-top-0 margin-bottom-3 font-heading-sm line-height-sans-3 text-normal"
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3 text-normal"
       tabindex="-1"
     >
       Application details
     </h1>
     <h2
-      class="margin-bottom-3 font-heading-lg text-bold"
+      class="font-heading-lg text-bold"
     >
       pages.claimsStatus.leaveReasonValueHeader
     </h2>
     <div
-      class="display-flex border-base-lighter margin-bottom-4 bg-base-lightest padding-2"
+      class="display-flex bg-base-lightest padding-2"
     >
       <div
         class="padding-right-10"
@@ -348,7 +346,7 @@ exports[`Status renders the page if the only errors are DocumentsLoadError 1`] =
       </div>
     </div>
     <div
-      class="border-top border-base-lighter padding-y-4"
+      class="border-bottom border-base-lighter measure-6 padding-y-4"
     >
       <span
         aria-valuetext="Loading legal notices"
@@ -357,7 +355,7 @@ exports[`Status renders the page if the only errors are DocumentsLoadError 1`] =
       />
     </div>
     <div
-      class="border-top border-base-lighter padding-y-4"
+      class="border-bottom border-base-lighter measure-6 padding-y-4"
       id="upload_documents"
     >
       <h2
@@ -383,7 +381,7 @@ exports[`Status renders the page if the only errors are DocumentsLoadError 1`] =
       </div>
     </div>
     <div
-      class="border-top border-base-lighter padding-y-4"
+      class="measure-6 padding-y-4"
     >
       <h3
         class="font-heading-sm text-bold"

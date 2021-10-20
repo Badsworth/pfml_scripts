@@ -180,6 +180,17 @@ export const Success = (props: SuccessProps) => {
           }}
         />
 
+        <div className="add-aspect-16x9">
+          <iframe
+            className="pin-left pin-y width-full height-full"
+            title="DFML - What comes between \“submit\” and receiving payments"
+            src="https://player.vimeo.com/video/609976204?h=902acebe39"
+            allowFullScreen
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          />
+        </div>
+
         <Heading level="2">{t("pages.claimsSuccess.learnMoreHeading")}</Heading>
 
         <Trans
