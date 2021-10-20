@@ -154,16 +154,6 @@ export class RequestTimeoutError extends ApiRequestError {
 }
 
 /**
- * A GET request to the `/claims` endpoint for claim detail failed.
- */
-export class ClaimDetailLoadError extends BasePortalError {
-  constructor(...params) {
-    super(...params);
-    this.name = "ClaimDetailLoadError";
-  }
-}
-
-/**
  * A GET request to an Application's `/documents` endpoint failed
  * @example new DocumentsLoadError('mock_application_id')
  */

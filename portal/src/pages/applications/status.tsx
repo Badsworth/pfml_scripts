@@ -67,6 +67,7 @@ export const Status = ({ appLogic, query }: StatusProps) => {
     portalFlow,
   } = appLogic;
   const { absence_case_id, uploaded_document_type } = query;
+
   useEffect(() => {
     if (!isFeatureEnabled("claimantShowStatusPage")) {
       portalFlow.goTo(routes.applications.index);
@@ -105,8 +106,11 @@ export const Status = ({ appLogic, query }: StatusProps) => {
   const isAbsenceCaseId = Boolean(query.absence_case_id?.length);
   if (!isAbsenceCaseId) return <PageNotFound />;
 
-  // If the claim has an error, include the back button w/error
-  if (appLogic.appErrors.items.length) {
+  // only hide page content if there is an error that's not DocumentsLoadError.
+  const hasNonDocumentsLoadError: boolean = appLogic.appErrors.items.some(
+    (error) => error.name !== "DocumentsLoadError"
+  );
+  if (hasNonDocumentsLoadError) {
     return (
       <BackButton
         label={t("pages.claimsStatus.backButtonLabel")}

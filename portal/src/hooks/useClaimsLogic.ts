@@ -1,8 +1,4 @@
-import {
-  ClaimDetailLoadError,
-  ClaimWithdrawnError,
-  ValidationError,
-} from "../errors";
+import { ClaimWithdrawnError, ValidationError } from "../errors";
 import ClaimCollection from "../models/ClaimCollection";
 import ClaimDetail from "../models/ClaimDetail";
 import ClaimsApi from "../api/ClaimsApi";
@@ -130,7 +126,7 @@ const useClaimsLogic = ({
           new ClaimWithdrawnError(absenceId, error.issues[0])
         );
       } else {
-        appErrorsLogic.catchError(new ClaimDetailLoadError(absenceId));
+        appErrorsLogic.catchError(error);
       }
     } finally {
       setIsLoadingClaimDetail(false);
