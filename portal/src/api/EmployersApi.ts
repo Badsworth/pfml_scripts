@@ -61,8 +61,7 @@ export default class EmployersApi extends BaseApi {
     }
 
     if (!response.ok) {
-      // @ts-expect-error ts-migrate(2554) FIXME: Expected 5 arguments, but got 2.
-      handleNotOkResponse(url, response);
+      handleNotOkResponse(response, [], this.i18nPrefix);
     }
 
     return blob;

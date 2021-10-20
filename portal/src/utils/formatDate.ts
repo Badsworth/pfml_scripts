@@ -7,9 +7,6 @@ export default function formatDate(isoDate: string) {
   const dateTime = DateTime.fromISO(isoDate);
 
   return {
-    /**
-     * @returns {string} date formatted as January 1, 2000
-     */
     full: () => {
       if (dateTime.isValid) {
         return dateTime.toLocaleString(DateTime.DATE_FULL);
@@ -17,9 +14,7 @@ export default function formatDate(isoDate: string) {
 
       return "";
     },
-    /**
-     * @returns {string} date formatted as 1/1/2000
-     */
+
     short: () => {
       if (dateTime.isValid) {
         return dateTime.toLocaleString();

@@ -110,7 +110,7 @@ export default abstract class BaseApi {
 
     const { data, errors, meta, warnings } = responseBody;
     if (!response.ok) {
-      handleNotOkResponse(url, response, errors, this.i18nPrefix, data);
+      handleNotOkResponse(response, errors, this.i18nPrefix, data);
     }
 
     return {
@@ -152,8 +152,14 @@ export function createRequestUrl(
 
   if (method === "GET" && body && !(body instanceof FormData)) {
     // Append query string to URL
-    // @ts-expect-error: Type 'Record<string, unknown>' is not assignable to type 'string'.ts(2345)
-    const params = new URLSearchParams(body).toString();
+    const searchBody = {};
+    Object.entries(body).forEach(([key, value]) => {
+      const stringValue =
+        typeof value === "string" ? value : JSON.stringify(value);
+      searchBody[key] = stringValue;
+    });
+
+    const params = new URLSearchParams(searchBody).toString();
     url = `${url}?${params}`;
   }
 
@@ -215,11 +221,10 @@ export function handleError(error: Error) {
  * @param data
  */
 export function handleNotOkResponse(
-  url: string,
   response: Response,
   errors: Issue[] = [],
   i18nPrefix: string,
-  data: unknown
+  data?: unknown
 ) {
   if (isEmpty(errors)) {
     // Response didn't include any errors that we could use to

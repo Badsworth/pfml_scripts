@@ -186,11 +186,11 @@ const useAuthLogic = ({
     const requestData = {
       email_address,
       password,
+      user_leave_administrator: {},
       role: { role_description },
     };
 
     if (role_description === RoleDescription.employer) {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'user_leave_administrator' does not exist... Remove this comment to see the full error message
       requestData.user_leave_administrator = { employer_fein };
     }
 
