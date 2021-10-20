@@ -20,8 +20,17 @@ const useEmployeesLogic = ({ appErrorsLogic, portalFlow }) => {
     }
   };
 
+  const employerHasOrgUnits = async (employer_fein) => {
+    try {
+      return await employeesApi.employerHasOrgUnits(employer_fein)
+    } catch (error) {
+      appErrorsLogic.catchError(error);
+    }
+  }
+
   return {
     search,
+    employerHasOrgUnits,
   };
 };
 

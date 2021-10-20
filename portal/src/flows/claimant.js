@@ -17,6 +17,7 @@ import {
 } from "../models/BenefitsApplication";
 
 import { ClaimSteps } from "../models/Step";
+import EmployeesApi from "../api/EmployeesApi";
 import { fields as addressFields } from "../pages/applications/address";
 import { fields as concurrentLeavesDetailsFields } from "../pages/applications/concurrent-leaves-details";
 import { fields as concurrentLeavesFields } from "../pages/applications/concurrent-leaves";
@@ -64,8 +65,15 @@ export const guards = {
   isBondingLeave: ({ claim }) => claim.isBondingLeave,
   isEmployed: ({ claim }) =>
     get(claim, "employment_status") === EmploymentStatus.employed,  
-  isEmployedAndPickDeparment: ({ claim }) =>
-    get(claim, "employment_status") === EmploymentStatus.employed && isFeatureEnabled("claimantShowDepartments"),
+  isEmployedAndPickDeparment: async ({ claim }) => {
+    const employeesApi = new EmployeesApi();
+    const employerHasDepartments = await employeesApi.employerHasOrgUnits(claim.employer_fein);
+    return (
+      get(claim, "employment_status") === EmploymentStatus.employed 
+      && employerHasDepartments
+      && isFeatureEnabled("claimantShowDepartments")
+    )
+  },
   isCompleted: ({ claim }) => claim.isCompleted,
   hasStateId: ({ claim }) => claim.has_state_id === true,
   hasConcurrentLeave: ({ claim }) => claim.has_concurrent_leave === true,

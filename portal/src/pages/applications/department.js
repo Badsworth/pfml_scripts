@@ -114,15 +114,11 @@ export const Department = (props) => {
         middle_name: claim.middle_name ?? "",
         tax_identifier_last4: claim.tax_identifier.slice(-4),
       });
-      if (employee) claimantDeps = employee.reporting_units;
+      if (employee) {
+        claimantDeps = employee.connected_reporting_units;
+        employerDeps = employee.organization_units;
+      }
     }
-    // obtain the full list of departments connected to this claimant's employer
-    if (!employerDepartments.length) {
-      // const deps = await appLogic.benefitsApplications.getDepartmentsByEmployer(claim.employer_fein)
-      // employerDeps = [];
-      employerDeps = [...claimantDeps].slice(1);
-    }
-    // claimantDeps = claimantDeps.slice(0, 1);
 
     setDepartments(claimantDeps?.length ? claimantDeps : employerDeps);
     setEmployerDepartments(employerDeps);
