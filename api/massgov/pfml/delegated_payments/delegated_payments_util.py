@@ -22,6 +22,7 @@ from massgov.pfml.db.models.employees import (
     Claim,
     ClaimType,
     Employee,
+    EmployeeAddress,
     ExperianAddressPair,
     LkClaimType,
     LkReferenceFileType,
@@ -768,6 +769,40 @@ def find_existing_address_pair(
 
     # For each address associated with prior payments for the claimant
     # see if either the address from FINEOS matches or the one returned
+    # by Experian matches (in case FINEOS is updated to the more correct one)
+    for experian_address_pair in experian_address_pairs:
+
+        existing_fineos_address = experian_address_pair.fineos_address
+        existing_experian_address = experian_address_pair.experian_address
+
+        if existing_fineos_address and is_same_address(new_address, existing_fineos_address):
+            return experian_address_pair
+
+        if existing_experian_address and is_same_address(new_address, existing_experian_address):
+            return experian_address_pair
+
+    return None
+
+
+def find_existing_address_pair_in_employee_address(
+    employee: Optional[Employee], new_address: Address, db_session: db.Session
+) -> Optional[ExperianAddressPair]:
+    if not employee:
+        return None
+
+    subquery = db_session.query(EmployeeAddress.address_id).filter(
+        EmployeeAddress.employee_id == employee.employee_id
+    )
+    experian_address_pairs = (
+        db_session.query(ExperianAddressPair)
+        .join(EmployeeAddress, EmployeeAddress.address_id == ExperianAddressPair.fineos_address_id)
+        .filter(EmployeeAddress.address_id.in_(subquery))
+        .all()
+    )
+    logger.debug("subquery is %s", subquery)
+    logger.debug("resulting expression is, %s", experian_address_pairs)
+    # For each address in employee address see if either the address from
+    # FINEOS matches or the one returned
     # by Experian matches (in case FINEOS is updated to the more correct one)
     for experian_address_pair in experian_address_pairs:
 

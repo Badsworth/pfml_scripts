@@ -2559,6 +2559,9 @@ class ReferenceFileType(LookupTable):
     DIA_CONSOLIDATED_REDUCTION_REPORT_ERRORS = LkReferenceFileType(
         30, "Consolidated DIA payments for DFML reduction report", 1
     )
+    CLAIMANT_ADDRESS_VALIDATION_REPORT = LkReferenceFileType(
+        31, "Claimant Address validation Report", 1
+    )
 
 
 class Title(LookupTable):

@@ -160,6 +160,9 @@ fineos-eligibility-feed-export: ## Run an eligibility feed export
 pub-payments-process-fineos:
 	$(PY_RUN_CMD) pub-payments-process-fineos --steps ALL $(DECODE_LOG)
 
+pub-claimant-address-validation:
+	$(PY_RUN_CMD) pub-claimant-address-validation --steps ALL $(DECODE_LOG)
+
 pub-payments-create-pub-files:
 	$(PY_RUN_CMD) pub-payments-create-pub-files --steps ALL $(DECODE_LOG)
 

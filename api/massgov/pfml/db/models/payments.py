@@ -406,7 +406,7 @@ class FineosExtractEmployeeFeed(Base, TimestampMixin):
     sortcode = Column(Text)
     accounttype = Column(Text)
     active_absence_flag = Column(Text)
-
+    created_at = Column(TIMESTAMP(timezone=True), nullable=True,)
     reference_file_id = Column(
         PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
     )
