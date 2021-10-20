@@ -1132,3 +1132,35 @@ data "aws_iam_policy_document" "evaluate_new_financial_eligibility" {
     ]
   }
 }
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for dua-import-employee-demographics
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "dua_import_employee_demographics_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-dua-import-employee-demographics-task-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy" "dua_import_employee_demographics_role_policy" {
+  name   = "${local.app_name}-${var.environment_name}-dua-import-employee-demographics-task-role-policy"
+  role   = aws_iam_role.dua_import_employee_demographics_task_role.id
+  policy = data.aws_iam_policy_document.dua_import_employee_demographics.json
+}
+
+data "aws_iam_policy_document" "dua_import_employee_demographics" {
+  # Allow writing results to S3.
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:ListBucket",
+      "s3:DeleteObject"
+    ]
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*"
+    ]
+  }
+}

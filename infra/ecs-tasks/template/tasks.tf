@@ -283,6 +283,18 @@ locals {
       ]
     },
 
+    "dua-import-employee-demographics" = {
+      command   = ["dua-import-employee-demographics"]
+      task_role = aws_iam_role.dua_import_employee_demographics_task_role.arn
+      cpu            = 2048,
+      memory         = 4096,
+      env = [
+        local.db_access,
+        local.eolwd_moveit_access,
+        local.reductions_folders
+      ]
+    }
+    
     "report-sequential-employment" = {
       command   = ["report-sequential-employment"]
       task_role = aws_iam_role.task_execute_sql_task_role.arn

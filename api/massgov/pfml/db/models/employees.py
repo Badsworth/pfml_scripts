@@ -1368,15 +1368,30 @@ class DiaReductionPayment(Base, TimestampMixin):
 
 class DuaEmployeeDemographics(Base, TimestampMixin):
     __tablename__ = "dua_employee_demographics"
-    dua_employee_demographics_id = Column(PostgreSQLUUID, primary_key=True,)
+    dua_employee_demographics_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
 
-    fineos_customer_number = Column(Text, nullable=False)
+    # All the below rows marked primary_key=True due to ON CONFLICT resolution
+    fineos_customer_number = Column(Text)
     date_of_birth = Column(Date)
     gender_code = Column(Text)
     occupation_code = Column(Text)
     occupation_description = Column(Text)
     employer_fein = Column(Text)
     employer_reporting_unit_number = Column(Text)
+
+    # this Unique index is required since our test framework does not run migrations
+    # it is excluded from migrations. see api/massgov/pfml/db/migrations/env.py
+    Index(
+        "dua_employee_demographics_unique_import_data_idx",
+        fineos_customer_number,
+        date_of_birth,
+        gender_code,
+        occupation_code,
+        occupation_description,
+        employer_fein,
+        employer_reporting_unit_number,
+        unique=True,
+    )
 
     # Each row should be unique. This enables us to load only new rows from a CSV and ensures that
     # we don't include demographics twice as two different rows. Almost all fields are nullable so we
@@ -2591,6 +2606,8 @@ class ReferenceFileType(LookupTable):
     FINEOS_PAYMENT_RECONCILIATION_EXTRACT = LkReferenceFileType(
         31, "Payment reconciliation extract", 3
     )
+
+    DUA_DEMOGRAPHICS_FILE = LkReferenceFileType(32, "DUA demographics", 1)
 
 
 class Title(LookupTable):
