@@ -25,6 +25,8 @@ const errors = {
         required: "Select Yes if your leave is from this employer.",
       },
       leave_end_date: {
+        conflicting:
+          "$t(shared.disallow_overlapping_waiting_period_and_concurrent_leave_end_date)",
         format:
           "The date your leave ends must include a valid month, day, and year.",
         invalid_date_range:
@@ -33,6 +35,8 @@ const errors = {
         required: "Enter the date this leave ends.",
       },
       leave_start_date: {
+        conflicting:
+          "$t(shared.disallow_overlapping_waiting_period_and_concurrent_leave_start_date)",
         format:
           "The date your leave starts must include a valid month, day, and year.",
         minimum: "Enter a date after December 31, 2020.",
@@ -493,6 +497,10 @@ const errors = {
         "Your previous leave dates cannot overlap with the PFML leave dates you are applying for. Check that you’ve entered the correct start and end dates for your leave details and previous leave.",
       disallow_overlapping_leave_periods:
         "Your reduced leave schedule cannot overlap with your continuous or intermittent leave. Check whether you’ve entered the correct start and end dates for each leave period.",
+      disallow_overlapping_waiting_period_and_concurrent_leave_end_date:
+        "$t(shared.disallow_overlapping_waiting_period_and_concurrent_leave_end_date)",
+      disallow_overlapping_waiting_period_and_concurrent_leave_start_date:
+        "$t(shared.disallow_overlapping_waiting_period_and_concurrent_leave_start_date)",
       disallow_submit_over_60_days_before_start_date:
         "The date your leave begins is more than 60 days in the future. Submit your application within 60 days of your leave start date.",
       min_leave_periods:
@@ -790,6 +798,10 @@ const shared = {
   departmentOfRevenuePhoneNumber:
     "(617)$t(chars.nbsp)466$t(chars.nbhyphen)3950",
   disallow12moLeavePeriod: "Your leave cannot be 12 months or more.",
+  disallow_overlapping_waiting_period_and_concurrent_leave_end_date:
+    "The last day of your accrued paid leave must be after the 7-day waiting period for PFML.",
+  disallow_overlapping_waiting_period_and_concurrent_leave_start_date:
+    "The first day of your accrued paid leave must be after the 7-day waiting period for PFML.",
   // TODO (CP-1335): Add i18next formatter for time
   displayTime: "{{hours}}h {{minutes}}m",
   // TODO (CP-1335): Add i18next formatter for time
