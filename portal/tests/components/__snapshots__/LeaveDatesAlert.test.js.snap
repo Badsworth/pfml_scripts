@@ -12,7 +12,7 @@ exports[`LeaveDatesAlert renders 7 day waiting period when showWaitingDayPeriod 
   <div
     class="usa-alert__text"
   >
-    1/31/2021 to 2/7/2021
+    1/31/2021 to 2/6/2021
   </div>
 </div>
 `;
