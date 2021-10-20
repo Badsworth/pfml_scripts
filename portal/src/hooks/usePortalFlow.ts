@@ -1,6 +1,6 @@
 import machineConfigs, { guards } from "../flows";
-import { Machine } from "xstate";
 import { RouteTransitionError } from "../errors";
+import { createMachine } from "xstate";
 import { createRouteWithQuery } from "../utils/routeWithParams";
 import { useMemo } from "react";
 import { useRouter } from "next/router";
@@ -12,8 +12,10 @@ const usePortalFlow = () => {
   /**
    * @see https://xstate.js.org/docs/guides/machines.html
    */
-  // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
-  const routingMachine = useMemo(() => Machine(machineConfigs, { guards }), []);
+  const routingMachine = useMemo(
+    () => createMachine(machineConfigs, { guards }),
+    []
+  );
 
   // TODO (CP-732) use custom useRouter
   const router = useRouter();
@@ -67,7 +69,6 @@ const usePortalFlow = () => {
     context?: Record<string, unknown>,
     params?: Record<string, string>
   ) => {
-    // @ts-expect-error FIXME: Property 'isAdditionalDoc' is missing in type 'Record<string, unknown>'
     const nextRoutingMachine = routingMachine.withContext(context);
     const nextPageRoute = nextRoutingMachine.transition(
       pageRoute || pathname,
