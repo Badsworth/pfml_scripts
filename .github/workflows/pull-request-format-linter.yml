@@ -1,8 +1,8 @@
 #
-# GitHub action to check PR follows our preferred format.
+# GitHub action to check each pull request follows our preferred format.
 #
 
-name: Pull Request format linter
+name: Pull request format linter
 
 on:
   pull_request:
@@ -10,10 +10,10 @@ on:
 
 jobs:
   check_title_and_body:
-    name: Check PR title and body
+    name: Check title and body
     runs-on: ubuntu-latest
     steps:
-      - name: Check PR title and body
+      - name: Check title and body
         env:
           TITLE: ${{ github.event.pull_request.title }}
           BODY: ${{ github.event.pull_request.body }}
@@ -38,7 +38,8 @@ jobs:
 
           if not TITLE_RE.match(title):
               print("::error title=PR title doesn't start with ticket::"
-                    "Please start the PR title with a JIRA ticket, for example \"AAA-123: /summary/\"")
+                    "Please start the PR title with a JIRA ticket, "
+                    "for example \"AAA-123: /summary/\"")
               failures += 1
 
           if not BODY_RE.search(body):
