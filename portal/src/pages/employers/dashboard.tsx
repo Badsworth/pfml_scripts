@@ -80,8 +80,7 @@ export const Dashboard = (props: DashboardProps) => {
     });
 
     const paramsObj = {};
-    // @ts-expect-error ts-migrate(2569) FIXME: Type 'IterableIterator<[string, string]>' is not a... Remove this comment to see the full error message
-    for (const [paramKey, paramValue] of params.entries()) {
+    for (const [paramKey, paramValue] of Array.from(params.entries())) {
       paramsObj[paramKey] = paramValue;
     }
 
@@ -476,7 +475,6 @@ const Filters = (props: FiltersProps) => {
   const [showFilters, setShowFilters] = useState(false);
 
   const { formState, updateFields } = useFormState(activeFilters);
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ formState: any; updateFields: ... Remove this comment to see the full error message
   const getFunctionalInputProps = useFunctionalInputProps({
     formState,
     updateFields,
@@ -735,7 +733,6 @@ const Search = (props: SearchProps) => {
   const { t } = useTranslation();
 
   const { formState, updateFields } = useFormState({ search: initialValue });
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ formState: any; updateFields: ... Remove this comment to see the full error message
   const getFunctionalInputProps = useFunctionalInputProps({
     formState,
     updateFields,
@@ -802,7 +799,6 @@ const SortDropdown = (props: SortDropdownProps) => {
   const { formState, updateFields } = useFormState({
     orderAndDirection: compact([order_by, order_direction]).join(","),
   });
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ formState: any; updateFields: ... Remove this comment to see the full error message
   const getFunctionalInputProps = useFunctionalInputProps({
     formState,
     updateFields,
@@ -842,9 +838,10 @@ const SortDropdown = (props: SortDropdownProps) => {
     <Dropdown
       {...getFunctionalInputProps("orderAndDirection")}
       onChange={handleChange}
-      // @ts-expect-error ts-migrate(2322) FIXME: Type '{ label: TFunctionResult; value: string; }[]... Remove this comment to see the full error message
       choices={Array.from(choices).map(([key, value]) => ({
-        label: t("pages.employersDashboard.sortChoice", { context: key }),
+        label: t<string>("pages.employersDashboard.sortChoice", {
+          context: key,
+        }),
         value,
       }))}
       label={t("pages.employersDashboard.sortLabel")}

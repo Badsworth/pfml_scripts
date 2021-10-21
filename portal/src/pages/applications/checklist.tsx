@@ -331,8 +331,6 @@ export const Checklist = (props: ChecklistProps) => {
         <Alert
           className="margin-bottom-3"
           heading={t("pages.claimsChecklist.partOneSubmittedHeading")}
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; head... Remove this comment to see the full error message
-          name="part-one-submitted-message"
           state="success"
         >
           <Trans
@@ -349,8 +347,6 @@ export const Checklist = (props: ChecklistProps) => {
         <Alert
           className="margin-bottom-3"
           heading={t("pages.claimsChecklist.partTwoSubmittedHeading")}
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: TFunctionResult; className: stri... Remove this comment to see the full error message
-          name="part-two-submitted-message"
           state="success"
         >
           {t("pages.claimsChecklist.partTwoSubmittedDescription")}

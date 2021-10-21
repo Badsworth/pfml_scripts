@@ -45,8 +45,6 @@ export const Index = (props: IndexProps) => {
         <Alert
           className="margin-bottom-3"
           heading={t("pages.applications.uploadSuccessHeading")}
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: TFunctionResult; className: stri... Remove this comment to see the full error message
-          name="upload-success-message"
           state="success"
         >
           {t("pages.applications.uploadSuccessMessage", {

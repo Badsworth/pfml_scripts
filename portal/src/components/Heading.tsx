@@ -37,8 +37,7 @@ interface HeadingProps {
  * `Title` component instead.
  */
 const Heading = (props: HeadingProps) => {
-  const { level, size, weight, id } = props;
-  const HeadingElement = `h${level}`;
+  const { children, level, size, weight, id } = props;
   const stylingLevel = size ? parseInt(size) : parseInt(level);
 
   const classes = classnames(props.className, {
@@ -51,12 +50,21 @@ const Heading = (props: HeadingProps) => {
     "text-normal": weight === "normal" || (!weight && stylingLevel >= 5),
   });
 
-  return (
-    // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: ReactNode; id: string; className... Remove this comment to see the full error message
-    <HeadingElement id={id} className={classes}>
-      {props.children}
-    </HeadingElement>
-  );
+  const headingProps = { id, className: classes, children };
+
+  /* eslint-disable jsx-a11y/heading-has-content */
+  switch (level) {
+    case "2":
+      return <h2 {...headingProps} />;
+    case "3":
+      return <h3 {...headingProps} />;
+    case "4":
+      return <h4 {...headingProps} />;
+    case "5":
+      return <h5 {...headingProps} />;
+    case "6":
+      return <h6 {...headingProps} />;
+  }
 };
 
 export default Heading;
