@@ -26,7 +26,7 @@ resource "aws_s3_bucket" "pfml_reports" {
     public      = "no"
     Name        = "massgov-pfml-${var.environment_name}-reports"
   })
-
+# this allow replication of production buckets to the lwditonline aws account
   dynamic "replication_configuration" {
     for_each = var.environment_name == module.constants.bucket_replication_environment ? [1] : []
     content {

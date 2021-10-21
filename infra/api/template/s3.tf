@@ -15,7 +15,7 @@ resource "aws_s3_bucket" "document_upload" {
   }
 
   # claimants can only delete and re-upload documents, never update
-  # NOTE: Disabling versioning removes the capability for the bucket to be replicated.
+  ## NOTE: Disabling versioning removes the capability for the bucket to be replicated.
   versioning {
     enabled = "false"
   }
@@ -39,7 +39,7 @@ resource "aws_s3_bucket" "feature_gate" {
       }
     }
   }
-  # NOTE: Disabling versioning removes the capability for the bucket to be replicated.
+  ## NOTE: Disabling versioning removes the capability for the bucket to be replicated.
   versioning {
     enabled = "false"
   }
