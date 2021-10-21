@@ -1,7 +1,7 @@
 """nullable_content_type_table
 
 Revision ID: 458af2d103eb
-Revises: 175e38fc50d0
+Revises: 3765c13fe7e6
 Create Date: 2021-10-21 16:48:11.138836
 
 """
@@ -10,7 +10,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "458af2d103eb"
-down_revision = "175e38fc50d0"
+down_revision = "3765c13fe7e6"
 branch_labels = None
 depends_on = None
 
