@@ -14,13 +14,21 @@ import Heading from "../Heading";
 import InputChoiceGroup from "../InputChoiceGroup";
 import InputCurrency from "../InputCurrency";
 import InputDate from "../InputDate";
-import PropTypes from "prop-types";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import { get } from "lodash";
 import getInputValueFromEvent from "../../utils/getInputValueFromEvent";
 import useAutoFocusEffect from "../../hooks/useAutoFocusEffect";
 import { useTranslation } from "../../locales/i18n";
+
+interface AmendableEmployerBenefitProps {
+  appErrors: AppErrorInfoCollection;
+  employerBenefit: EmployerBenefit;
+  isAddedByLeaveAdmin: boolean;
+  onChange: (...args: any[]) => any;
+  onRemove: (...args: any[]) => any;
+  shouldShowV2: boolean;
+}
 
 /**
  * Display an employer benefit and amendment form
@@ -34,7 +42,7 @@ const AmendableEmployerBenefit = ({
   onChange,
   onRemove,
   shouldShowV2,
-}) => {
+}: AmendableEmployerBenefitProps) => {
   const { t } = useTranslation();
   const [amendment, setAmendment] = useState(employerBenefit);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
@@ -143,7 +151,6 @@ const AmendableEmployerBenefit = ({
   const BenefitDetailsRow = () => (
     <tr data-testid="benefit-details-row">
       <th scope="row">
-        {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
         {formatDateRange(
           employerBenefit.benefit_start_date,
           employerBenefit.benefit_end_date
@@ -343,15 +350,6 @@ const AmendableEmployerBenefit = ({
       </ConditionalContent>
     </React.Fragment>
   );
-};
-
-AmendableEmployerBenefit.propTypes = {
-  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
-  employerBenefit: PropTypes.instanceOf(EmployerBenefit).isRequired,
-  isAddedByLeaveAdmin: PropTypes.bool.isRequired,
-  onChange: PropTypes.func.isRequired,
-  onRemove: PropTypes.func.isRequired,
-  shouldShowV2: PropTypes.bool.isRequired,
 };
 
 export default AmendableEmployerBenefit;

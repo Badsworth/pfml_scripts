@@ -25,6 +25,8 @@ const errors = {
         required: "Select Yes if your leave is from this employer.",
       },
       leave_end_date: {
+        conflicting:
+          "$t(shared.disallow_overlapping_waiting_period_and_concurrent_leave_end_date)",
         format:
           "The date your leave ends must include a valid month, day, and year.",
         invalid_date_range:
@@ -33,6 +35,8 @@ const errors = {
         required: "Enter the date this leave ends.",
       },
       leave_start_date: {
+        conflicting:
+          "$t(shared.disallow_overlapping_waiting_period_and_concurrent_leave_start_date)",
         format:
           "The date your leave starts must include a valid month, day, and year.",
         minimum: "Enter a date after December 31, 2020.",
@@ -493,6 +497,10 @@ const errors = {
         "Your previous leave dates cannot overlap with the PFML leave dates you are applying for. Check that you’ve entered the correct start and end dates for your leave details and previous leave.",
       disallow_overlapping_leave_periods:
         "Your reduced leave schedule cannot overlap with your continuous or intermittent leave. Check whether you’ve entered the correct start and end dates for each leave period.",
+      disallow_overlapping_waiting_period_and_concurrent_leave_end_date:
+        "$t(shared.disallow_overlapping_waiting_period_and_concurrent_leave_end_date)",
+      disallow_overlapping_waiting_period_and_concurrent_leave_start_date:
+        "$t(shared.disallow_overlapping_waiting_period_and_concurrent_leave_start_date)",
       disallow_submit_over_60_days_before_start_date:
         "The date your leave begins is more than 60 days in the future. Submit your application within 60 days of your leave start date.",
       min_leave_periods:
@@ -790,6 +798,10 @@ const shared = {
   departmentOfRevenuePhoneNumber:
     "(617)$t(chars.nbsp)466$t(chars.nbhyphen)3950",
   disallow12moLeavePeriod: "Your leave cannot be 12 months or more.",
+  disallow_overlapping_waiting_period_and_concurrent_leave_end_date:
+    "The last day of your accrued paid leave must be after the 7-day waiting period for PFML.",
+  disallow_overlapping_waiting_period_and_concurrent_leave_start_date:
+    "The first day of your accrued paid leave must be after the 7-day waiting period for PFML.",
   // TODO (CP-1335): Add i18next formatter for time
   displayTime: "{{hours}}h {{minutes}}m",
   // TODO (CP-1335): Add i18next formatter for time
@@ -899,6 +911,8 @@ const shared = {
     "<track-status-link>Track the status of your application here</track-status-link>.",
   usernameLabel: "Email address",
   verificationCodeLabel: "6-digit code",
+  viewPostSubmissionVideo:
+    "View the video below to learn about what happens between submitting your application and receiving payments.",
 };
 
 const pages = {
@@ -1119,9 +1133,16 @@ const pages = {
     submitButton: "Review and submit application",
     title: "Checklist: Create a new application",
   },
+
   claimsConcurrentLeaves: {
     choiceNo: "$t(shared.choiceNo)",
+    choiceNoHint:
+      "I don't need to report any employer sponsored accrued paid leave after the 7-day waiting period, or I don't know yet",
     choiceYes: "$t(shared.choiceYes)",
+    choiceYesHint:
+      "I need to report employer-sponsored accrued paid leave I will use after the 7-day waiting period",
+    dontNeedToReport:
+      "You don't need to report accrued paid leave that you use during the 7-day waiting period",
     hintWhatKindBody:
       "<p>This includes any paid vacation time, sick time, and personal time. It should be reported if it’s taken during your leave period, whether it’s during the 7-day waiting period or after. Reminder: you can use accrued paid leave during the 7-day waiting period with no impact to your PFML benefit.</p>",
     hintWhatKindHeading: "What kinds of accrued paid leave to report",
@@ -1131,9 +1152,19 @@ const pages = {
       "<ul><li>You had a serious health condition, including illness, injury, or pregnancy.</li><li>If you were sick, you were out of work for at least 3 days and needed continuing care from your health care provider or needed inpatient care.</li><li>You bonded with your child after birth or placement.</li><li>You needed to manage family affairs while a family member is on active duty in the armed forces.</li><li>You needed to care for a family member who serves in the armed forces.</li><li>You needed to care for a family member with a serious health condition.</li></ul>",
     hintWhenToReportDetailsLabel: "What are the qualifying reasons?",
     hintWhenToReportHeading: "When you need to report it",
+    intro_Continuous:
+      "Employer-sponsored paid vacation time, sick time, and personal time you plan to take during your paid leave from PFML.",
+    intro_ContinuousReduced:
+      "Employer-sponsored paid vacation time, sick time, and personal time.",
+    intro_ReducedOrIntermittent:
+      "<div><p>Employer-sponsored paid vacation time, sick time, and personal time that:</p><ul><li>You are planning to use on days when you are also taking PFML leave.</li></ul><p>Or</p><ul><li>You are planning to use for a PFML qualifying reason, even if it’s not the same reason you are applying for now.</li></ul></div>",
     sectionLabel:
       "Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?",
     title: "$t(shared.claimsOtherLeaveTitle)",
+    typesOfLeaveToReport:
+      "For PFML leave that includes taking time off work completely for a period of time (continuous leave), you need to report any accrued paid leave you plan to take during that continuous leave.",
+    whenToReportContinuousLeave: "When to report during continuous leave",
+    whenToReportReducedLeave: "When to report during reduced leave",
   },
   claimsConcurrentLeavesDetails: {
     choiceNo: "$t(shared.choiceNo)",
@@ -2046,16 +2077,16 @@ const pages = {
   },
   claimsSuccess: {
     adjudicationProcess:
-      "<ul> <li>Your employer has 10 business days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.</li><li>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</li><li>$t(shared.trackStatus)</li></ul>",
+      "<ul> <li>Your employer has 10 business days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.</li><li>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</li><li>$t(shared.trackStatus)</li><li>$t(shared.viewPostSubmissionVideo)</li></ul>",
     adjudicationProcessHeading: "What happens next",
     adjudicationProcess_bondingAdoptFosterFuture:
-      "<ul><li>Your employer has 10 days to provide feedback on your application.</li> <li>Once you’ve provided proof of placement, we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> <li>If you need to change your leave dates because your child arrived in your home earlier or later than expected, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li><li>$t(shared.trackStatus)</li></ul>",
+      "<ul><li>Your employer has 10 days to provide feedback on your application.</li> <li>Once you’ve provided proof of placement, we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> <li>If you need to change your leave dates because your child arrived in your home earlier or later than expected, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li><li>$t(shared.trackStatus)</li><li>$t(shared.viewPostSubmissionVideo)</li></ul>",
     adjudicationProcess_bondingNewbornFuture:
-      "<ul><li>Your employer has 10 days to provide feedback on your application.</li> <li>Once you’ve provided proof of birth, we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> <li>If you need to change your leave dates because your child was born earlier or later than expected, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li><li>$t(shared.trackStatus)</li></ul>",
+      "<ul><li>Your employer has 10 days to provide feedback on your application.</li> <li>Once you’ve provided proof of birth, we’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li> <li>If you need to change your leave dates because your child was born earlier or later than expected, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li><li>$t(shared.trackStatus)</li><li>$t(shared.viewPostSubmissionVideo)</li></ul>",
     adjudicationProcess_caringLeave:
-      "<ul><li>Your employer has 10 business days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.</li><li>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</li><li>If you need to end your leave early, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</li><li>$t(shared.trackStatus)</li></ul>",
+      "<ul><li>Your employer has 10 business days to provide feedback on your application.</li> <li>We’ll confirm your eligibility and make sure that your documents are valid.</li> <li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision. Your employer will also get a copy of the decision.</li><li>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started. If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts. After that, you will receive your payments every week.</li><li>If you need to end your leave early, you must call the DFML Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</li><li>$t(shared.trackStatus)</li><li>$t(shared.viewPostSubmissionVideo)</li></ul>",
     adjudicationProcess_medicalPregnantFuture:
-      "<ul><li>Your employer has 10 days to provide feedback on your application.</li><li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li><li>$t(shared.trackStatus)</li></ul>",
+      "<ul><li>Your employer has 10 days to provide feedback on your application.</li><li>After we’ve made a decision, you’ll receive an email notification with a link to details about the decision.</li><li>If your application is approved prior to your leave, you can expect your first payment to arrive about 3 weeks after your leave starts. Otherwise, you can expect your first payment 2-3 weeks after your leave is approved.</li><li>$t(shared.trackStatus)</li><li>$t(shared.viewPostSubmissionVideo)</li></ul>",
     claimantApplicationId:
       "Your application ID is <strong>{{absence_id}}</strong>",
     exitLink: "View your application",
@@ -2977,7 +3008,8 @@ const components = {
     toggleLabel: "Show password",
   },
   leaveDatesAlert: {
-    heading: "Your leave dates for paid leave",
+    heading: "Your leave dates for paid leave from PFML",
+    leaveDatesHeading: "Your 7-day waiting period dates",
   },
   maintenanceAlertBar: {
     message_withEndTime:

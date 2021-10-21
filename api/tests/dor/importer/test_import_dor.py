@@ -30,6 +30,7 @@ from massgov.pfml.db.models.employees import (
     EmployerQuarterlyContribution,
     GeoState,
     WagesAndContributions,
+    WagesAndContributionsHistory,
 )
 from massgov.pfml.db.models.factories import EmployerQuarterlyContributionFactory
 from massgov.pfml.dor.importer.import_dor import (
@@ -776,6 +777,8 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     assert report.unmodified_employees_count == 0
     assert report.updated_wages_and_contributions_count == 0
 
+    # Verify no WagesAndContributionsHistory records exist
+    assert test_db_session.query(WagesAndContributionsHistory).count() == 0
     # Verify Employee Logs are correct (1)
     employee_insert_logs1: List[EmployeePushToFineosQueue] = (
         test_db_session.query(EmployeePushToFineosQueue)
@@ -858,7 +861,6 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
 
     # confirm updates are persisted
     report3, report_log_entry3 = get_new_import_report(test_db_session)
-
     updated_employee_wage_data_payload = test_data.get_updated_employee_wage_data()
     import_dor.import_employees_and_wage_data(
         test_db_session,
@@ -893,6 +895,15 @@ def test_employee_wage_data_update(test_db_session, dor_employer_lookups):
     assert report3.unmodified_employees_count == 0
     assert report3.updated_wages_and_contributions_count == 1
     assert report3.unmodified_wages_and_contributions_count == 0
+
+    # Verify WagesAndContributionsHistory has been persisted
+    wage_history_records = test_db_session.query(WagesAndContributionsHistory).all()
+    assert len(wage_history_records) == 1
+    assert wage_history_records[0].wage_and_contribution == persisted_wage_info
+    # Validate that the data captured is the previous data
+    validate_wage_history_persistence(
+        employee_wage_data_payload, wage_history_records[0], report_log_entry.import_log_id
+    )
 
     # Verify Employee Logs are correct (3)
     employee_insert_logs3: List[EmployeePushToFineosQueue] = (
@@ -946,6 +957,18 @@ def validate_wage_persistence(employee_wage_payload, wage_row, import_log_id):
     assert wage_row.employee_fam_contribution == employee_wage_payload["employee_family"]
     assert wage_row.employer_fam_contribution == employee_wage_payload["employer_family"]
     assert wage_row.latest_import_log_id == import_log_id
+
+
+def validate_wage_history_persistence(employee_wage_payload, wage_row, import_log_id):
+    assert wage_row.is_independent_contractor == employee_wage_payload["independent_contractor"]
+    assert wage_row.is_opted_in == employee_wage_payload["opt_in"]
+    assert wage_row.employee_ytd_wages == employee_wage_payload["employee_ytd_wages"]
+    assert wage_row.employee_qtr_wages == employee_wage_payload["employee_qtr_wages"]
+    assert wage_row.employee_med_contribution == employee_wage_payload["employee_medical"]
+    assert wage_row.employer_med_contribution == employee_wage_payload["employer_medical"]
+    assert wage_row.employee_fam_contribution == employee_wage_payload["employee_family"]
+    assert wage_row.employer_fam_contribution == employee_wage_payload["employer_family"]
+    assert wage_row.import_log_id == import_log_id
 
 
 def validate_employer_persistence(employer_payload, employer_row, import_log_id):

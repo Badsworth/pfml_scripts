@@ -5,7 +5,6 @@ import AppErrorInfo from "../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { get } from "lodash";
@@ -21,10 +20,15 @@ export const UploadType = {
   certification: "UPLOAD_CERTIFICATION",
 };
 
-export const UploadDocsOptions = (props) => {
+interface UploadDocsOptionsProps {
+  claim?: BenefitsApplication;
+  appLogic: any;
+}
+
+export const UploadDocsOptions = (props: UploadDocsOptionsProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState();
   const upload_docs_options = formState.upload_docs_options;
 
@@ -112,11 +116,6 @@ export const UploadDocsOptions = (props) => {
       />
     </QuestionPage>
   );
-};
-
-UploadDocsOptions.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(UploadDocsOptions);

@@ -1,10 +1,15 @@
 import NavigationTabs from "../NavigationTabs";
-import PropTypes from "prop-types";
 import React from "react";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
-const EmployerNavigationTabs = ({ activePath }) => {
+interface EmployerNavigationTabsProps {
+  activePath: string;
+}
+
+const EmployerNavigationTabs = ({
+  activePath,
+}: EmployerNavigationTabsProps) => {
   const { t } = useTranslation();
   const tabs = [
     {
@@ -18,10 +23,6 @@ const EmployerNavigationTabs = ({ activePath }) => {
   ];
 
   return <NavigationTabs tabs={tabs} activePath={activePath} />;
-};
-
-EmployerNavigationTabs.propTypes = {
-  activePath: PropTypes.string.isRequired,
 };
 
 export default EmployerNavigationTabs;

@@ -2,9 +2,9 @@ import BenefitsApplication, {
   RelationshipToCaregiver,
 } from "../../models/BenefitsApplication";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
@@ -14,7 +14,13 @@ import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
-export const CaringLeaveAttestation = (props) => {
+interface Props {
+  appLogic: AppLogic;
+  claim: BenefitsApplication;
+  query: any;
+}
+
+export const CaringLeaveAttestation = (props: Props) => {
   const { t } = useTranslation();
   const { appLogic, claim, query } = props;
   const relationship = get(
@@ -38,7 +44,6 @@ export const CaringLeaveAttestation = (props) => {
           ),
         }}
       />
-      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element[]; className: string; st... Remove this comment to see the full error message */}
       <Alert className="measure-6" state="info" noIcon>
         <p>
           {t("pages.claimsCaringLeaveAttestation.truthAttestation", {
@@ -54,16 +59,6 @@ export const CaringLeaveAttestation = (props) => {
       </Alert>
     </React.Fragment>
   );
-};
-
-CaringLeaveAttestation.propTypes = {
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      getNextPageRoute: PropTypes.func.isRequired,
-    }),
-  }).isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  query: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(CaringLeaveAttestation);

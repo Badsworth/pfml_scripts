@@ -8,7 +8,10 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import ReferenceFile, ReferenceFileType
 from massgov.pfml.db.models.payments import (
+    FineosExtractCancelledPayments,
     FineosExtractEmployeeFeed,
+    FineosExtractPaymentFullSnapshot,
+    FineosExtractReplacedPayments,
     FineosExtractVbiRequestedAbsence,
     FineosExtractVbiRequestedAbsenceSom,
     FineosExtractVpei,
@@ -18,6 +21,7 @@ from massgov.pfml.db.models.payments import (
 from massgov.pfml.delegated_payments.fineos_extract_step import (
     CLAIMANT_EXTRACT_CONFIG,
     PAYMENT_EXTRACT_CONFIG,
+    PAYMENT_RECONCILIATION_EXTRACT_CONFIG,
     FineosExtractStep,
 )
 from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
@@ -25,6 +29,7 @@ from massgov.pfml.delegated_payments.mock.fineos_extract_data import (
     FineosPaymentData,
     create_fineos_claimant_extract_files,
     create_fineos_payment_extract_files,
+    generate_payment_reconciliation_extract_files,
 )
 
 date_str = "2020-08-01-12-00-00"
@@ -277,6 +282,81 @@ def test_run_happy_path(
             payment_reference_file.reference_file_type_id
             == ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id
         )
+
+
+def test_payment_reconciliation_extracts(
+    mock_s3_bucket,
+    mock_fineos_s3_bucket,
+    set_exporter_env_vars,
+    local_test_db_session,
+    local_test_db_other_session,
+    monkeypatch,
+):
+    monkeypatch.setenv("FINEOS_PAYMENT_RECONCILIATION_EXTRACT_MAX_HISTORY_DATE", "2019-12-31")
+
+    # Create payment reconciliation extract files
+    folder_path = os.path.join(f"s3://{mock_fineos_s3_bucket}", "DT2/dataExtracts/AdHocExtract/")
+    extract_records = generate_payment_reconciliation_extract_files(folder_path, f"{date_str}-", 10)
+
+    # Run the extract
+    fineos_extract_step = FineosExtractStep(
+        db_session=local_test_db_session,
+        log_entry_db_session=local_test_db_other_session,
+        extract_config=PAYMENT_RECONCILIATION_EXTRACT_CONFIG,
+    )
+    fineos_extract_step.run()
+
+    # Verify files
+    expected_path_prefix = f"s3://{mock_s3_bucket}/cps/inbound/processed/"
+    files = file_util.list_files(expected_path_prefix, recursive=True)
+    assert len(files) == 3
+
+    payment_reconciliation_prefix = f"{date_str}-payment-reconciliation-extract/{date_str}"
+    assert (
+        f"{payment_reconciliation_prefix}-{payments_util.FineosExtractConstants.PAYMENT_FULL_SNAPSHOT.file_name}"
+        in files
+    )
+    assert (
+        f"{payment_reconciliation_prefix}-{payments_util.FineosExtractConstants.REPLACED_PAYMENTS_EXTRACT.file_name}"
+        in files
+    )
+    assert (
+        f"{payment_reconciliation_prefix}-{payments_util.FineosExtractConstants.CANCELLED_PAYMENTS_EXTRACT.file_name}"
+        in files
+    )
+
+    payment_reference_file = (
+        local_test_db_session.query(ReferenceFile)
+        .filter(
+            ReferenceFile.file_location
+            == expected_path_prefix + f"{date_str}-payment-reconciliation-extract"
+        )
+        .one_or_none()
+    )
+    assert payment_reference_file
+    assert (
+        payment_reference_file.reference_file_type_id
+        == ReferenceFileType.FINEOS_PAYMENT_RECONCILIATION_EXTRACT.reference_file_type_id
+    )
+
+    validate_records(
+        extract_records[payments_util.FineosExtractConstants.PAYMENT_FULL_SNAPSHOT.file_name],
+        FineosExtractPaymentFullSnapshot,
+        "I",
+        local_test_db_session,
+    )
+    validate_records(
+        extract_records[payments_util.FineosExtractConstants.CANCELLED_PAYMENTS_EXTRACT.file_name],
+        FineosExtractCancelledPayments,
+        "I",
+        local_test_db_session,
+    )
+    validate_records(
+        extract_records[payments_util.FineosExtractConstants.REPLACED_PAYMENTS_EXTRACT.file_name],
+        FineosExtractReplacedPayments,
+        "I",
+        local_test_db_session,
+    )
 
 
 def test_run_with_error_during_processing(

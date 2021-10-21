@@ -1,4 +1,3 @@
-import PropTypes from "prop-types";
 import React from "react";
 import Tag from "../Tag";
 import { UserLeaveAdministrator } from "../../models/User";
@@ -6,7 +5,13 @@ import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
-export const LeaveAdministratorRow = ({ leaveAdmin }) => {
+interface LeaveAdministratorRowProps {
+  leaveAdmin?: UserLeaveAdministrator;
+}
+
+export const LeaveAdministratorRow = ({
+  leaveAdmin,
+}: LeaveAdministratorRowProps) => {
   const {
     employer_dba,
     employer_fein,
@@ -72,10 +77,6 @@ export const LeaveAdministratorRow = ({ leaveAdmin }) => {
       </td>
     </tr>
   );
-};
-
-LeaveAdministratorRow.propTypes = {
-  leaveAdmin: PropTypes.instanceOf(UserLeaveAdministrator),
 };
 
 export default LeaveAdministratorRow;

@@ -1,4 +1,5 @@
 import { Auth } from "@aws-amplify/auth";
+import { PortalFlow } from "./usePortalFlow";
 import routes from "../routes";
 import { useEffect } from "react";
 
@@ -6,7 +7,10 @@ import { useEffect } from "react";
  * Hook that redirects a user if they're logged in. By default, they're redirected to
  * the landing page, which has its own redirect logic based on the user's role.
  */
-const useLoggedInRedirect = (portalFlow, redirectTo = routes.index) => {
+const useLoggedInRedirect = (
+  portalFlow: PortalFlow,
+  redirectTo = routes.index
+) => {
   useEffect(() => {
     Auth.currentUserInfo()
       .then((userInfo) => {

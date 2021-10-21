@@ -137,7 +137,7 @@ export default class CaringLeaveProviderForm extends AbstractDocumentGenerator<{
             data["Continuous end dd"] = format(end_date, "dd");
             data["Continuous end yyyy"] = format(end_date, "yyyy");
             break;
-          case "intermittent":
+          case "intermittent": {
             // Section 4C
             const {
               duration,
@@ -169,7 +169,8 @@ export default class CaringLeaveProviderForm extends AbstractDocumentGenerator<{
             // Days it will last.
             data["Days"] = duration.toString();
             break;
-          case "reduced_schedule":
+          }
+          case "reduced_schedule": {
             // Section 4B
             const reducedPeriod = period as ReducedScheduleLeavePeriods;
             const totalMinutes =
@@ -196,6 +197,7 @@ export default class CaringLeaveProviderForm extends AbstractDocumentGenerator<{
               totalMinutes / 60
             ).toString();
             break;
+          }
         }
       } else {
         switch (leave_type) {

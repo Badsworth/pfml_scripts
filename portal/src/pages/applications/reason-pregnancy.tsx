@@ -2,7 +2,6 @@ import { get, pick } from "lodash";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";
@@ -12,11 +11,18 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.leave_details.pregnant_or_recent_birth"];
 
-export const ReasonPregnancy = (props) => {
+interface ReasonPregnancyProps {
+  claim: BenefitsApplication;
+  appLogic: any;
+  query?: {
+    claim_id?: string;
+  };
+}
+
+export const ReasonPregnancy = (props: ReasonPregnancyProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -65,14 +71,6 @@ export const ReasonPregnancy = (props) => {
       />
     </QuestionPage>
   );
-};
-
-ReasonPregnancy.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(ReasonPregnancy);

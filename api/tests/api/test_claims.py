@@ -814,7 +814,7 @@ class TestGetClaimReview:
                         "type": "Time off period",
                         "status": "Known",
                         "leaveRequest": {
-                            "id": "PL-00000-0000000000",
+                            "id": "2",
                             "reasonName": "Child Bonding",
                             "qualifier1": "Newborn",
                             "qualifier2": "",
@@ -842,7 +842,7 @@ class TestGetClaimReview:
                         "type": "Time off period",
                         "status": "Known",
                         "leaveRequest": {
-                            "id": "PL-00001-0000000001",
+                            "id": "1",
                             "reasonName": "Child Bonding",
                             "qualifier1": "Newborn",
                             "qualifier2": "",
@@ -1959,11 +1959,7 @@ class TestGetClaimEndpoint:
         )
 
         assert response.status_code == 500
-        tests.api.validate_error_response(
-            response,
-            500,
-            message="No employee or employer tied to this claim. Cannot retrieve absence periods from FINEOS.",
-        )
+        assert "Can't get absence periods from FINEOS - No employee for claim" in caplog.text
 
     def test_get_claim_with_no_tax_identifier(
         self, caplog, client, auth_token, user, test_db_session
@@ -1985,17 +1981,9 @@ class TestGetClaimEndpoint:
         )
 
         assert response.status_code == 500
-        tests.api.validate_error_response(
-            response,
-            500,
-            message="No employee or employer tied to this claim. Cannot retrieve absence periods from FINEOS.",
-        )
-        assert (
-            "No employee or employer tied to this claim. Cannot retrieve absence periods from FINEOS."
-            in caplog.text
-        )
+        assert "Can't get absence periods from FINEOS - No employee for claim" in caplog.text
 
-    @mock.patch("massgov.pfml.api.claims.get_absence_periods")
+    @mock.patch("massgov.pfml.api.services.claims.get_absence_periods")
     def test_withdrawn_claim_returns_403(
         self, mock_get_absence_periods, client, auth_token, user, test_db_session
     ):
@@ -2082,9 +2070,9 @@ class TestGetClaimEndpoint:
             claim_data["absence_periods"][0], leave_period
         )
 
-    @mock.patch("massgov.pfml.api.claims.get_absence_periods")
+    @mock.patch("massgov.pfml.api.services.claims.get_absence_periods")
     def test_get_claim_with_no_leave_periods_returns_500(
-        self, mock_get_absence_periods, claim, client, auth_token, setup_db
+        self, mock_get_absence_periods, claim, client, auth_token, setup_db, caplog
     ):
         mock_get_absence_periods.return_value = []
 
@@ -2094,9 +2082,7 @@ class TestGetClaimEndpoint:
         )
 
         assert response.status_code == 500
-
-        message = response.get_json().get("message")
-        assert message == "No absence periods found for claim"
+        assert "No absence periods found for claim" in caplog.text
 
     def test_get_claim_with_managed_requirements(self, client, auth_token, user, test_db_session):
         employer = EmployerFactory.create(employer_fein="813648030")
@@ -3076,8 +3062,6 @@ class TestGetClaimsEndpoint:
 
         @pytest.fixture()
         def absence_periods(self, claim):
-            # using start and end as unique identifier because
-            # AbsencePeriodResponse does not include a unique identifier
             start = date.today() + timedelta(days=5)
             periods = []
             for _ in range(5):
@@ -3100,13 +3084,13 @@ class TestGetClaimsEndpoint:
             test_db_session.add(link)
             test_db_session.commit()
 
-        def _find_absence_period_by_start_date(
-            self, start_date: str, absence_periods: List[AbsencePeriod]
+        def _find_absence_period_by_fineos_leave_request_id(
+            self, fineos_leave_request_id: str, absence_periods: List[AbsencePeriod]
         ) -> Optional[AbsencePeriod]:
             absence_period = [
                 period
                 for period in absence_periods
-                if period.absence_period_start_date.isoformat() == start_date
+                if period.fineos_leave_request_id == fineos_leave_request_id
             ]
             return absence_period[0] if len(absence_period) else None
 
@@ -3116,8 +3100,17 @@ class TestGetClaimsEndpoint:
             assert claim_data["fineos_absence_id"] == claim.fineos_absence_id
             assert len(claim_data["absence_periods"]) == len(absence_periods)
             for absence_period_data in claim_data["absence_periods"]:
-                assert self._find_absence_period_by_start_date(
-                    absence_period_data["absence_period_start_date"], absence_periods
+                absence_period = self._find_absence_period_by_fineos_leave_request_id(
+                    absence_period_data["fineos_leave_request_id"], absence_periods
+                )
+                assert absence_period is not None
+                assert (
+                    absence_period.absence_period_start_date.isoformat()
+                    == absence_period_data["absence_period_start_date"]
+                )
+                assert (
+                    absence_period.absence_period_end_date.isoformat()
+                    == absence_period_data["absence_period_end_date"]
                 )
 
         def test_claim_with_absence_periods(

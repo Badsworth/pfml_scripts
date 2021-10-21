@@ -1,8 +1,13 @@
-import PropTypes from "prop-types";
 import React from "react";
 import classnames from "classnames";
 
-const Tag = ({ label, state, className }) => {
+interface TagProps {
+  className?: string;
+  label: string;
+  state: "success" | "warning" | "error" | "inactive" | "pending";
+}
+
+const Tag = ({ label, state, className }: TagProps) => {
   const classes = classnames(
     "usa-tag",
     "display-inline-block",
@@ -27,13 +32,6 @@ const Tag = ({ label, state, className }) => {
   );
 
   return <span className={classes}>{label}</span>;
-};
-
-Tag.propTypes = {
-  className: PropTypes.string,
-  label: PropTypes.string.isRequired,
-  state: PropTypes.oneOf(["success", "warning", "error", "inactive", "pending"])
-    .isRequired,
 };
 
 export default Tag;

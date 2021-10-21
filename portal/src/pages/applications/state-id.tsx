@@ -1,7 +1,6 @@
 import ConditionalContent from "../../components/ConditionalContent";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputText from "../../components/InputText";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { pick } from "lodash";
@@ -12,21 +11,29 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_state_id", "claim.mass_id"];
 
-export const StateId = (props) => {
+interface StateIdProps {
+  appLogic: any;
+  claim: any;
+  query?: {
+    claim_id?: string;
+  };
+}
+
+export const StateId = (props: StateIdProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
   );
   const { has_state_id } = formState;
 
   const handleSave = () => {
-    // @ts-expect-error ts-migrate(2525) FIXME: Initializer provides no value for this binding ele... Remove this comment to see the full error message
-    const { mass_id, ...requestData } = { ...formState };
+    const requestData = Object.assign({}, formState);
     // API requires any letters in the ID to be uppercase:
-    requestData.mass_id = mass_id ? mass_id.toUpperCase() : mass_id;
+    requestData.mass_id = formState.mass_id
+      ? formState.mass_id.toUpperCase()
+      : formState.mass_id;
 
     return appLogic.benefitsApplications.update(
       claim.application_id,
@@ -76,14 +83,6 @@ export const StateId = (props) => {
       </ConditionalContent>
     </QuestionPage>
   );
-};
-
-StateId.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(StateId);

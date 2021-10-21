@@ -1,9 +1,16 @@
 import React, { useEffect, useState } from "react";
-import PropTypes from "prop-types";
+import { AppLogic } from "../hooks/useAppLogic";
 import Spinner from "../components/Spinner";
-import User from "../models/User";
+import Withholding from "../models/Withholding";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
+
+interface ComponentWithWithholdingProps {
+  appLogic: AppLogic;
+  query: {
+    employer_id: string;
+  };
+}
 
 /**
  * Higher order component that loads withholding data if not yet loaded,
@@ -13,14 +20,14 @@ import { useTranslation } from "../locales/i18n";
  * @returns {React.Component} - Component with withholding data
  */
 const withWithholding = (Component) => {
-  const ComponentWithWithholding = (props) => {
+  const ComponentWithWithholding = (props: ComponentWithWithholdingProps) => {
     const { appLogic, query } = props;
     const {
       users: { user },
     } = appLogic;
     const { t } = useTranslation();
     const [shouldLoadWithholding, setShouldLoadWithholding] = useState(true);
-    const [withholding, setWithholding] = useState();
+    const [withholding, setWithholding] = useState<Withholding>();
 
     const employer = user.user_leave_administrators.find((employer) => {
       return employer.employer_id === query.employer_id;
@@ -57,21 +64,6 @@ const withWithholding = (Component) => {
         {withholding && <Component {...props} withholding={withholding} />}
       </React.Fragment>
     );
-  };
-
-  ComponentWithWithholding.propTypes = {
-    appLogic: PropTypes.shape({
-      employers: PropTypes.shape({
-        loadWithholding: PropTypes.func.isRequired,
-      }).isRequired,
-      portalFlow: PropTypes.shape({
-        goTo: PropTypes.func.isRequired,
-      }).isRequired,
-      users: PropTypes.shape({
-        user: PropTypes.instanceOf(User).isRequired,
-      }).isRequired,
-    }).isRequired,
-    query: PropTypes.object.isRequired,
   };
 
   return ComponentWithWithholding;

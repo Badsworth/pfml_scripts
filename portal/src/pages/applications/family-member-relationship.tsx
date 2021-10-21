@@ -5,7 +5,6 @@ import BenefitsApplication, {
 import { get, pick } from "lodash";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
@@ -21,10 +20,18 @@ export const fields = [
   `claim.${caringLeaveMetadataKey}.relationship_to_caregiver`,
 ];
 
-export const FamilyMemberRelationship = (props) => {
+interface FamilyMemberRelationshipProps {
+  appLogic: any;
+  claim: BenefitsApplication;
+  query: any;
+}
+
+export const FamilyMemberRelationship = (
+  props: FamilyMemberRelationshipProps
+) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState({
     leave_details: {
       caring_leave_metadata: new CaringLeaveMetadata(
@@ -119,12 +126,6 @@ export const FamilyMemberRelationship = (props) => {
       />
     </QuestionPage>
   );
-};
-
-FamilyMemberRelationship.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  query: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(FamilyMemberRelationship);

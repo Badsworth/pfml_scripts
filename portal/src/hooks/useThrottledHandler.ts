@@ -1,30 +1,19 @@
-import { useEffect, useRef, useState } from "react";
-import assert from "assert";
-
-/**
- * @callback asyncHandler
- * @param {Event} DOM event
- * @returns {Promise}
- */
+import { SyntheticEvent, useEffect, useRef, useState } from "react";
 
 /**
  * Hook that prevents simultaneous calls for react event handlers
- * @param {Function} asyncHandler - async react event handler
- * @returns {Function} { throttledHandler, throttledHandler.isThrottled }
  */
-const useThrottledHandler = (asyncHandler) => {
+const useThrottledHandler = <TEvent extends SyntheticEvent>(
+  asyncHandler: (event: TEvent) => Promise<void>
+) => {
   const [isThrottled, setIsThrottled] = useState(false);
   const hasCanceled = useRef(false);
 
-  const throttledHandler = async (...args) => {
+  const throttledHandler = async (event: TEvent) => {
     if (isThrottled) return;
 
     setIsThrottled(true);
-    const resultPromise = asyncHandler(...args);
-
-    // enforce that handler must return a promise
-    assert(resultPromise instanceof Promise);
-    await resultPromise;
+    await asyncHandler(event);
 
     if (!hasCanceled.current) {
       setIsThrottled(false);

@@ -44,7 +44,6 @@ export default jest.fn(() => ({
   },
   claims: {
     activeFilters: {},
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     claimDetail: new ClaimDetail(),
     claims: new ClaimCollection(),
     clearClaims: jest.fn(),

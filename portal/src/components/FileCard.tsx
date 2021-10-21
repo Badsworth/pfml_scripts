@@ -1,16 +1,30 @@
 import Button from "./Button";
 import Heading from "./Heading";
-import PropTypes from "prop-types";
 import React from "react";
 import Thumbnail from "./Thumbnail";
 import classnames from "classnames";
 import formatDateRange from "../utils/formatDateRange";
 import { useTranslation } from "../locales/i18n";
 
+interface FileCardProps {
+  document?: {
+    created_at: string;
+  };
+  heading: string;
+  file?: {
+    dateUploaded?: string;
+    name: string;
+    type: string;
+  };
+  /** Event handler for when the "Remove" button is clicked. We'll pass it the `id` prop above. */
+  onRemoveClick?: (...args: any[]) => any;
+  errorMsg?: React.ReactNode;
+}
+
 /**
  * A FileCard renders a file's info, thumbnail, and a button to remove the file.
  */
-const FileCard = (props) => {
+const FileCard = (props: FileCardProps) => {
   const { t } = useTranslation();
   const { document, file, heading, errorMsg } = props;
   const removeButton = t("components.fileCard.removeButton");
@@ -40,7 +54,6 @@ const FileCard = (props) => {
           <React.Fragment>
             <div className={filenameClasses}>
               {t("components.fileCard.uploadDate", {
-                // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
                 date: formatDateRange(document.created_at),
               })}
             </div>
@@ -63,29 +76,6 @@ const FileCard = (props) => {
       </div>
     </div>
   );
-};
-
-FileCard.propTypes = {
-  /** The heading displayed for this file */
-  document: PropTypes.shape({
-    created_at: PropTypes.string.isRequired,
-  }),
-  /** The heading displayed for this file */
-  heading: PropTypes.string.isRequired,
-  /**
-   * Note that this should actually be a File instance. However the File class is a
-   * browser feature, not a Node.js feature, and so it isn't available for server-side
-   * rendering. For that reason we specify a custom shape here but in reality we expect
-   * a File. See [File docs]( https://developer.mozilla.org/en-US/docs/Web/API/File).
-   */
-  file: PropTypes.shape({
-    dateUploaded: PropTypes.string,
-    name: PropTypes.string.isRequired,
-    type: PropTypes.string.isRequired,
-  }),
-  /** Event handler for when the "Remove" button is clicked. We'll pass it the `id` prop above. */
-  onRemoveClick: PropTypes.func,
-  errorMsg: PropTypes.string,
 };
 
 export default FileCard;

@@ -8,7 +8,7 @@ import { useState } from "react";
  * @returns {object} { flags: Object, getFlag: Function, loadFlags: Function }
  */
 const useFlagsLogic = () => {
-  const [flags, setFlags] = useState([]);
+  const [flags, setFlags] = useState<Flag[]>([]);
   const featureFlagsApi = new FeatureFlagsApi();
 
   /**
@@ -27,13 +27,11 @@ const useFlagsLogic = () => {
   /**
    * Get and return a specific feature flag from the
    * set of flags
-   * @param {string} flag_name - Flag name to retrieve
-   * @returns {Flag}
    */
-  const getFlag = (flag_name) => {
+  const getFlag = (flag_name: string) => {
     return (
-      // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-      new Flag(flags.filter((flag) => flag.name === flag_name)[0]) || new Flag()
+      new Flag(flags.filter((flag) => flag.name === flag_name)[0]) ||
+      new Flag({})
     );
   };
 

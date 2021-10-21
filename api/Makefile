@@ -166,6 +166,9 @@ pub-payments-create-pub-files:
 pub-payments-process-pub-returns:
 	$(PY_RUN_CMD) pub-payments-process-pub-returns --steps ALL $(DECODE_LOG)
 
+pub-payments-process-snapshot:
+	$(PY_RUN_CMD) pub-payments-process-snapshot --steps ALL $(DECODE_LOG)
+
 pub-payments-mock-generate:
 	$(PY_RUN_CMD)  pub-payments-mock-generate $(DECODE_LOG)
 
@@ -438,6 +441,21 @@ test-watch-changed: ## Watch and run `make test-changed` on file changes
 
 test-watch-focus: ## Watch and run tests decorated with `@pytest.mark.dev_focus` on file changes
 	$(call run_test_watch,-m dev_focus $(args))
+
+start-release: ## Creates a new release series. Increments the API's minor version number.
+	pushd ../bin/ci && poetry run scripted-releases --app api start-release $(args) && popd
+
+update-release: ## Updates an in-progress release series. Increments the API's RC number.
+	pushd ../bin/ci && poetry run scripted-releases --app api update-release $(args) && popd
+
+finalize-release: ## Marks a release series as approved to go to prod. Enables hotfixes; disables updates.
+	pushd ../bin/ci && poetry run scripted-releases --app api finalize-release $(args) && popd
+
+hotfix: ## Alters a release series that already went to prod. Increments the API's patch version number.
+	pushd ../bin/ci && poetry run scripted-releases --app api hotfix $(args) && popd
+
+major-release: ## Creates a new release series. Increments the API's MAJOR version number.
+	pushd ../bin/ci && poetry run scripted-releases --app api major-release $(args) && popd
 
 API_PATHS := . ../infra/api ../infra/ecs-tasks ../infra/env-shared ../infra/modules/ecs_task_scheduler ../infra/modules/s3_ecs_trigger
 release-notes: refs=origin/deploy/api/stage..origin/main

@@ -57,10 +57,11 @@ module "tasks" {
   fineos_eligibility_feed_output_directory_path       = "s3://fin-sompre-data-import/UAT"
   fineos_import_employee_updates_input_directory_path = "s3://fin-sompre-data-export/UAT/dataexports"
 
-  fineos_data_export_path   = "s3://fin-sompre-data-export/UAT/dataexports"
-  fineos_data_import_path   = "s3://fin-sompre-data-import/UAT/peiupdate"
-  fineos_error_export_path  = "s3://fin-sompre-data-export/UAT/errorExtracts"
-  fineos_report_export_path = "s3://fin-sompre-data-export/UAT/reportExtract"
+  fineos_data_export_path       = "s3://fin-sompre-data-export/UAT/dataexports"
+  fineos_adhoc_data_export_path = "s3://fin-somdev-data-export/UAT/dataExtracts/AdHocExtract"
+  fineos_data_import_path       = "s3://fin-sompre-data-import/UAT/peiupdate"
+  fineos_error_export_path      = "s3://fin-sompre-data-export/UAT/errorExtracts"
+  fineos_report_export_path     = "s3://fin-sompre-data-export/UAT/reportExtract"
 
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-uat/rmv_client_certificate-LWvMFe"

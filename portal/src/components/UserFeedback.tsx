@@ -1,13 +1,16 @@
 import Heading from "./Heading";
-import PropTypes from "prop-types";
 import React from "react";
 import { Trans } from "react-i18next";
 import { useTranslation } from "../locales/i18n";
 
+interface UserFeedbackProps {
+  url: string;
+}
+
 /**
  * Global user feedback module to gather data on user's experience with the site
  */
-const UserFeedback = (props) => {
+const UserFeedback = (props: UserFeedbackProps) => {
   const { t } = useTranslation();
 
   return (
@@ -26,11 +29,6 @@ const UserFeedback = (props) => {
       </p>
     </div>
   );
-};
-
-UserFeedback.propTypes = {
-  /** URL for the feedback survey */
-  url: PropTypes.string.isRequired,
 };
 
 export default UserFeedback;

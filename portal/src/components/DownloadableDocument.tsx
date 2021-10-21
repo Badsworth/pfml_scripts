@@ -2,7 +2,6 @@ import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import Button from "./Button";
 import ClaimDocument from "../models/ClaimDocument";
 import { DocumentType } from "../models/Document";
-import PropTypes from "prop-types";
 import React from "react";
 import classnames from "classnames";
 import download from "downloadjs";
@@ -11,10 +10,20 @@ import formatDateRange from "../utils/formatDateRange";
 import tracker from "../services/tracker";
 import { useTranslation } from "../locales/i18n";
 
+interface DownloadableDocumentProps {
+  /** Required absence case ID, if the user is a Leave Admin */
+  absenceId?: string;
+  document: BenefitsApplicationDocument | ClaimDocument;
+  displayDocumentName?: string;
+  onDownloadClick: (...args: any[]) => any;
+  showCreatedAt?: boolean;
+  icon?: React.ReactNode;
+}
+
 /**
  * Link and metadata for a document
  */
-const DownloadableDocument = (props) => {
+const DownloadableDocument = (props: DownloadableDocumentProps) => {
   const {
     absenceId,
     document,
@@ -62,7 +71,6 @@ const DownloadableDocument = (props) => {
       {showCreatedAt && (
         <div className="text-base-dark">
           {t("components.downloadableDocument.createdAtDate", {
-            // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
             date: formatDateRange(document.created_at),
           })}
         </div>
@@ -71,21 +79,10 @@ const DownloadableDocument = (props) => {
   );
 };
 
-DownloadableDocument.propTypes = {
-  /** Required absence case ID, if the user is a Leave Admin */
-  absenceId: PropTypes.string,
-  document: PropTypes.oneOfType([
-    PropTypes.instanceOf(BenefitsApplicationDocument),
-    PropTypes.instanceOf(ClaimDocument),
-  ]).isRequired,
-  /** Overrides the name displayed for the document */
-  displayDocumentName: PropTypes.string,
-  onDownloadClick: PropTypes.func.isRequired,
-  showCreatedAt: PropTypes.bool,
-  icon: PropTypes.node,
-};
-
-function getDocumentName(document, t) {
+function getDocumentName(
+  document: any,
+  t: (arg: string, arg2?: { context: string }) => string
+) {
   if (
     [
       DocumentType.appealAcknowledgment,

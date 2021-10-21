@@ -40,8 +40,8 @@ describe("EmployeeGenerator", () => {
     expect(employee).toMatchObject({
       first_name: expect.any(String),
       last_name: expect.any(String),
-      ssn: expect.stringMatching(/\d{3}\-\d{2}\-\d{4}/),
-      date_of_birth: expect.stringMatching(/\d{4}\-\d{2}\-\d{2}/),
+      ssn: expect.stringMatching(/\d{3}-\d{2}-\d{4}/),
+      date_of_birth: expect.stringMatching(/\d{4}-\d{2}-\d{2}/),
       occupations: expect.arrayContaining([
         expect.objectContaining({
           fein: employer.fein,

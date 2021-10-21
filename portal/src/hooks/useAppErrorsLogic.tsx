@@ -5,12 +5,14 @@ import {
   CognitoAuthError,
   DocumentsLoadError,
   DocumentsUploadError,
+  Issue,
   LeaveAdminForbiddenError,
   NetworkError,
   ValidationError,
 } from "../errors";
 import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
+import { PortalFlow } from "./usePortalFlow";
 import React from "react";
 import { Trans } from "react-i18next";
 import routes from "../routes";
@@ -20,22 +22,13 @@ import { useTranslation } from "../locales/i18n";
 
 /**
  * React hook for creating and managing the state of app errors in an AppErrorInfoCollection
- * @param {object} params
- * @param {object} params.portalFlow
- * @returns {{ appErrors: AppErrorInfoCollection, setAppErrors: Function, catchError: catchErrorFunction, clearErrors: clearErrorsFunction }}
  */
-const useAppErrorsLogic = ({ portalFlow }) => {
+const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
   const { i18n, t } = useTranslation();
-
-  /**
-   * @callback addErrorFunction
-   * @param {AppErrorInfo} error
-   */
 
   /**
    * State representing both application errors and
    * validation errors
-   * @type {{addItem: addErrorFunction, collection: AppErrorInfoCollection, setCollection: Function}}
    */
   const {
     addItem: addError,
@@ -45,10 +38,8 @@ const useAppErrorsLogic = ({ portalFlow }) => {
 
   /**
    * Converts a JavaScript error into an AppErrorInfo object and adds it to the app error collection
-   * @callback catchErrorFunction
-   * @param {Error} error - Error or custom subclass of Error
    */
-  const catchError = (error) => {
+  const catchError = (error: Error) => {
     if (error instanceof AuthSessionMissingError) {
       handleAuthSessionMissingError(error);
     } else if (error instanceof ValidationError) {
@@ -72,7 +63,6 @@ const useAppErrorsLogic = ({ portalFlow }) => {
 
   /**
    * Convenience method for setting errors to null
-   * @callback clearErrorsFunction
    */
   const clearErrors = () => {
     setAppErrors(() => new AppErrorInfoCollection());
@@ -82,7 +72,6 @@ const useAppErrorsLogic = ({ portalFlow }) => {
    * Convenience method for removing required field errors. This is used by the review page
    * to hide required field errors and instead display a more user-friendly message to users
    * that they need to go back and complete all required fields
-   * @callback clearErrorsFunction
    */
   const clearRequiredFieldErrors = () => {
     const remainingErrors = appErrors.items.filter(
@@ -94,22 +83,16 @@ const useAppErrorsLogic = ({ portalFlow }) => {
 
   /**
    * Convert an API error/warning into a user friendly message
-   * @param {object} issue - API error/warning
-   * @param {string} issue.field
-   * @param {string} issue.message - Technical message intended for debugging purposes, but
-   *  can be used as a last resort if no other message is available.
-   * @param {string} issue.rule
-   * @param {string} issue.type
-   * @param {string} i18nPrefix - prefix used in the i18n key
-   * @param {Object} [tOptions] - additional key/value pairs used in the i18n message interpolation
-   * @returns {string | Trans} Internationalized error message or Trans component
+   * @param i18nPrefix - prefix used in the i18n key
+   * @param [tOptions] - additional key/value pairs used in the i18n message interpolation
    * @example getMessageFromIssue(issue, "applications");
    */
   const getMessageFromIssue = (
-    { field, message, rule, type },
-    i18nPrefix,
-    tOptions
+    issue: Issue,
+    i18nPrefix: string,
+    tOptions?: Record<string, unknown>
   ) => {
+    const { field, message, rule, type } = issue;
     let issueMessageKey;
 
     if (field) {
@@ -158,12 +141,13 @@ const useAppErrorsLogic = ({ portalFlow }) => {
 
   /**
    * Create the custom HTML error message, if the given error type requires HTML formatting/links
-   * @param {string} type
-   * @param {string} issueMessageKey
-   * @param {Object} [tOptions] - additional key/value pairs used in the i18n message interpolation
-   * @returns {Trans} React node for the message, if the given error type should have an HTML message
+   * @param [tOptions] - additional key/value pairs used in the i18n message interpolation
    */
-  const maybeGetHtmlErrorMessage = (type, issueMessageKey, tOptions) => {
+  const maybeGetHtmlErrorMessage = (
+    type: string,
+    issueMessageKey: string,
+    tOptions?: Record<string, unknown>
+  ) => {
     if (!issueMessageKey || !i18n.exists(issueMessageKey)) return;
 
     // TODO (CP-1532): Remove once links in error messages are fully supported
@@ -266,9 +250,8 @@ const useAppErrorsLogic = ({ portalFlow }) => {
 
   /**
    * Handle and track the AuthSessionMissingError
-   * @param {AuthSessionMissingError} error
    */
-  const handleAuthSessionMissingError = (error) => {
+  const handleAuthSessionMissingError = (error: AuthSessionMissingError) => {
     tracker.trackEvent("AuthSessionMissingError", {
       errorMessage: error.message,
       errorName: error.name,
@@ -279,9 +262,8 @@ const useAppErrorsLogic = ({ portalFlow }) => {
 
   /**
    * Add and track the Error
-   * @param {Error} error
    */
-  const handleError = (error) => {
+  const handleError = (error: Error) => {
     const appError = new AppErrorInfo({
       name: error.name,
       message: t("errors.caughtError", { context: error.name }),
@@ -302,42 +284,44 @@ const useAppErrorsLogic = ({ portalFlow }) => {
         errorName: error.name,
       });
     } else {
-      // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
       tracker.noticeError(error);
     }
   };
 
   /**
    * Add and track documents-related error or issue
-   * @param {DocumentsLoadError|DocumentsUploadError} error
    */
-  const handleDocumentsError = (error) => {
+  const handleDocumentsError = (
+    error: DocumentsLoadError | DocumentsUploadError
+  ) => {
+    const issue =
+      error instanceof DocumentsUploadError ? error.issue : undefined;
+
     const appError = new AppErrorInfo({
       name: error.name,
-      message: error.issue
-        ? // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
-          getMessageFromIssue(error.issue, "documents")
+      message: issue
+        ? getMessageFromIssue(issue, "documents")
         : t("errors.caughtError", { context: error.name }),
       meta: {
         application_id: error.application_id,
-        file_id: error.file_id,
+        file_id:
+          error instanceof DocumentsUploadError ? error.file_id : undefined,
       },
     });
 
     addError(appError);
 
     tracker.trackEvent(error.name, {
-      issueField: error.issue ? error.issue.field : null,
-      issueRule: error.issue ? error.issue.rule : null,
-      issueType: error.issue ? error.issue.type : null,
+      issueField: issue ? issue.field : null,
+      issueRule: issue ? issue.rule : null,
+      issueType: issue ? issue.type : null,
     });
   };
 
   /**
    * Add and track claim detail withdrawn error
-   * @param {ClaimWithdrawnError} error
    */
-  const handleClaimWithdrawnError = (error) => {
+  const handleClaimWithdrawnError = (error: ClaimWithdrawnError) => {
     const appError = new AppErrorInfo({
       name: error.name,
       message: getMessageFromIssue(error.issue, "claimStatus", {
@@ -356,13 +340,11 @@ const useAppErrorsLogic = ({ portalFlow }) => {
 
   /**
    * Add and track issues in a ValidationError
-   * @param {ValidationError} error
    */
-  const handleValidationError = (error) => {
+  const handleValidationError = (error: ValidationError) => {
     error.issues.forEach((issue) => {
       const appError = new AppErrorInfo({
         field: issue.field,
-        // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
         message: getMessageFromIssue(issue, error.i18nPrefix),
         name: error.name,
         rule: issue.rule,
@@ -387,14 +369,12 @@ const useAppErrorsLogic = ({ portalFlow }) => {
 
   /**
    * Add and track issues in a CognitoAuthError
-   * @param {CognitoAuthError} error
    */
-  const handleCognitoAuthError = (error) => {
+  const handleCognitoAuthError = (error: CognitoAuthError) => {
     const appError = new AppErrorInfo({
       name: error.name,
       message: error.issue
-        ? // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
-          getMessageFromIssue(error.issue, "auth")
+        ? getMessageFromIssue(error.issue, "auth")
         : t("errors.network"),
     });
 
@@ -410,14 +390,13 @@ const useAppErrorsLogic = ({ portalFlow }) => {
   /**
    * Redirect to either the Verify Contributions or Cannot Verify page
    * based on if the UserLeaveAdministrator is verifiable.
-   * @param {LeaveAdminForbiddenError} error
    */
-  const handleLeaveAdminForbiddenError = (error) => {
+  const handleLeaveAdminForbiddenError = (error: LeaveAdminForbiddenError) => {
     tracker.trackEvent("LeaveAdminForbiddenError", {
       errorMessage: error.message,
       errorName: error.name,
       employerId: error.employer_id,
-      hasVerificationData: error.has_verification_data,
+      hasVerificationData: error.has_verification_data.toString(),
     });
 
     if (error.has_verification_data) {
@@ -442,3 +421,4 @@ const useAppErrorsLogic = ({ portalFlow }) => {
 };
 
 export default useAppErrorsLogic;
+export type AppErrorsLogic = ReturnType<typeof useAppErrorsLogic>;

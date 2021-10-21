@@ -38,7 +38,7 @@ const submitter = getPortalSubmitter();
 describe("Claim post-submit processing:", () => {
   // Generate a test for every post submit command
   // @todo We should add those post processing commands to metadata type for ScenarioSpecification
-  ["APPROVE", , "DENY", "APPROVEDOCS", "APPROVEDOCSEROPEN"].forEach(
+  ["APPROVE", "DENY", "APPROVEDOCS", "APPROVEDOCSEROPEN"].forEach(
     (postSubmitCommand) => {
       test(`Can complete Post Submit Action: ${postSubmitCommand} on a submitted claim`, async () => {
         // Create a scenario using base

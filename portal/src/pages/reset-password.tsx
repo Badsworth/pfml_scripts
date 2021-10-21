@@ -5,7 +5,7 @@ import Button from "../components/Button";
 import InputPassword from "../components/InputPassword";
 import InputText from "../components/InputText";
 import Lead from "../components/Lead";
-import PropTypes from "prop-types";
+import ThrottledButton from "../components/ThrottledButton";
 import Title from "../components/Title";
 import { Trans } from "react-i18next";
 import { get } from "lodash";
@@ -15,7 +15,11 @@ import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
-export const ResetPassword = (props) => {
+interface ResetPasswordProps {
+  appLogic: any;
+}
+
+export const ResetPassword = (props: ResetPasswordProps) => {
   const { appLogic } = props;
   const { appErrors, auth } = appLogic;
   const { t } = useTranslation();
@@ -27,7 +31,6 @@ export const ResetPassword = (props) => {
   // which we need for resetting their password
   const showEmailField = !cachedEmail;
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState({
     code: "",
     password: "",
@@ -40,12 +43,11 @@ export const ResetPassword = (props) => {
     return await auth.resetPassword(username, code, password);
   });
 
-  const handleResendCodeClick = useThrottledHandler(async (event) => {
-    event.preventDefault();
+  const handleResendCodeClick = async () => {
     setCodeResent(false);
     await auth.resendForgotPasswordCode(formState.username);
     setCodeResent(true);
-  });
+  };
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors,
@@ -60,10 +62,10 @@ export const ResetPassword = (props) => {
         href={routes.auth.login}
       />
       {codeResent && appErrors.isEmpty && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; className: string; headi... Remove this comment to see the full error message
         <Alert
           className="margin-bottom-3 margin-top-0"
           heading={t("pages.authResetPassword.codeResentHeading")}
+          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; head... Remove this comment to see the full error message
           name="code-resent-message"
           role="alert"
           state="warning"
@@ -108,15 +110,14 @@ export const ResetPassword = (props) => {
       />
 
       <div>
-        <Button
+        <ThrottledButton
           className="margin-top-1"
           name="resend-code-button"
           onClick={handleResendCodeClick}
           variation="unstyled"
-          loading={handleResendCodeClick.isThrottled}
         >
           {t("pages.authVerifyAccount.resendCodeLink")}
-        </Button>
+        </ThrottledButton>
       </div>
 
       <InputPassword
@@ -132,10 +133,6 @@ export const ResetPassword = (props) => {
       </Button>
     </form>
   );
-};
-
-ResetPassword.propTypes = {
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default ResetPassword;

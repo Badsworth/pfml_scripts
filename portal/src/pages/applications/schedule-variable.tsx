@@ -6,7 +6,6 @@ import { pick, round } from "lodash";
 import Heading from "../../components/Heading";
 import InputHours from "../../components/InputHours";
 import Lead from "../../components/Lead";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
 import routes from "../../routes";
@@ -24,12 +23,17 @@ export const fields = [
   "claim.work_pattern.work_pattern_days[0].minutes",
 ];
 
-export const ScheduleVariable = (props) => {
+interface ScheduleVariableProps {
+  claim: BenefitsApplication;
+  appLogic: any;
+}
+
+export const ScheduleVariable = (props: ScheduleVariableProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
   const workPattern = new WorkPattern(claim.work_pattern);
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   // minutesWorkedPerWeek will be spread across
   // 7 work_pattern_days when user submits and is not a part of the Claim model.
@@ -108,11 +112,6 @@ export const ScheduleVariable = (props) => {
       />
     </QuestionPage>
   );
-};
-
-ScheduleVariable.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(ScheduleVariable);

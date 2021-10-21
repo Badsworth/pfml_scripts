@@ -3,6 +3,7 @@ from typing import Optional, cast
 
 from sqlalchemy import JSON, TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql.schema import Index
 
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import Claim, Employee, ImportLog, Payment, ReferenceFile
@@ -144,6 +145,14 @@ class FineosExtractVpeiPaymentDetails(Base, TimestampMixin):
         Integer, ForeignKey("import_log.import_log_id"), index=True
     )
 
+    Index(
+        "ix_payment_details_c_i_reference_file_id",
+        fineos_extract_import_log_id,
+        peclassid,
+        peindexid,
+        unique=False,
+    )
+
     reference_file = relationship(ReferenceFile)
 
 
@@ -213,6 +222,14 @@ class FineosExtractVpeiClaimDetails(Base, TimestampMixin):
     )
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    Index(
+        "ix_claim_details_c_i_reference_file_id",
+        fineos_extract_import_log_id,
+        peclassid,
+        peindexid,
+        unique=False,
     )
 
     reference_file = relationship(ReferenceFile)
@@ -338,6 +355,14 @@ class FineosExtractVbiRequestedAbsence(Base, TimestampMixin):
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
     )
+
+    Index(
+        "ix_payment_details_leaverequest_reference_file_id",
+        fineos_extract_import_log_id,
+        leaverequest_id,
+        unique=False,
+    )
+
     reference_file = relationship(ReferenceFile)
 
 
@@ -404,6 +429,179 @@ class FineosExtractEmployeeFeed(Base, TimestampMixin):
     sortcode = Column(Text)
     accounttype = Column(Text)
     active_absence_flag = Column(Text)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    Index(
+        "ix_employee_feed_import_log_id_customerno",
+        fineos_extract_import_log_id,
+        customerno,
+        unique=False,
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+
+class FineosExtractPaymentFullSnapshot(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_payment_full_snapshot"
+
+    payment_report_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    c = Column(Text)
+    i = Column(Text)
+    flags = Column(Text)
+    partitionid = Column(Text)
+    lastupdatedate = Column(Text)
+    boeversion = Column(Text)
+    c_osuser_updatedby = Column(Text)
+    i_osuser_updatedby = Column(Text)
+    addressline1 = Column(Text)
+    addressline2 = Column(Text)
+    addressline3 = Column(Text)
+    addressline4 = Column(Text)
+    addressline5 = Column(Text)
+    addressline6 = Column(Text)
+    addressline7 = Column(Text)
+    advicetopay = Column(Text)
+    advicetopayov = Column(Text)
+    amalgamationc = Column(Text)
+    amount_monamt = Column(Text)
+    amount_moncur = Column(Text)
+    checkcutting = Column(Text)
+    confirmedbyus = Column(Text)
+    confirmeduid = Column(Text)
+    contractref = Column(Text)
+    correspcountr = Column(Text)
+    currency = Column(Text)
+    dateinterface = Column(Text)
+    datelastproce = Column(Text)
+    description = Column(Text)
+    employeecontr = Column(Text)
+    eventeffectiv = Column(Text)
+    eventreason = Column(Text)
+    eventtype = Column(Text)
+    extractiondat = Column(Text)
+    grosspaymenta_monamt = Column(Text)
+    grosspaymenta_moncur = Column(Text)
+    insuredreside = Column(Text)
+    nametoprinton = Column(Text)
+    nominatedpaye = Column(Text)
+    nompayeecusto = Column(Text)
+    nompayeedob = Column(Text)
+    nompayeefulln = Column(Text)
+    nompayeesocnu = Column(Text)
+    notes = Column(Text)
+    payeeaccountn = Column(Text)
+    payeeaccountt = Column(Text)
+    payeeaddress = Column(Text)
+    payeebankbran = Column(Text)
+    payeebankcode = Column(Text)
+    payeebankinst = Column(Text)
+    payeebanksort = Column(Text)
+    payeecorrespo = Column(Text)
+    payeecustomer = Column(Text)
+    payeedob = Column(Text)
+    payeefullname = Column(Text)
+    payeeidentifi = Column(Text)
+    payeesocnumbe = Column(Text)
+    paymentadd = Column(Text)
+    paymentadd1 = Column(Text)
+    paymentadd2 = Column(Text)
+    paymentadd3 = Column(Text)
+    paymentadd4 = Column(Text)
+    paymentadd5 = Column(Text)
+    paymentadd6 = Column(Text)
+    paymentadd7 = Column(Text)
+    paymentaddcou = Column(Text)
+    paymentcorrst = Column(Text)
+    paymentdate = Column(Text)
+    paymentfreque = Column(Text)
+    paymentmethod = Column(Text)
+    paymentpostco = Column(Text)
+    paymentpremis = Column(Text)
+    paymenttrigge = Column(Text)
+    paymenttype = Column(Text)
+    paymethcurren = Column(Text)
+    percenttaxabl = Column(Text)
+    postcode = Column(Text)
+    premisesno = Column(Text)
+    setupbyuserid = Column(Text)
+    setupbyuserna = Column(Text)
+    status = Column(Text)
+    statuseffecti = Column(Text)
+    statusreason = Column(Text)
+    stockno = Column(Text)
+    summaryeffect = Column(Text)
+    summarystatus = Column(Text)
+    taxoverride = Column(Text)
+    taxwageamount_monamt = Column(Text)
+    taxwageamount_moncur = Column(Text)
+    transactionno = Column(Text)
+    transactionst = Column(Text)
+    transstatusda = Column(Text)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+
+class FineosExtractCancelledPayments(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_cancelled_payments"
+
+    canelled_payment_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    c = Column(Text)
+    i = Column(Text)
+    statusreason = Column(Text)
+    grossamount = Column(Text)
+    addedby = Column(Text)
+    issuedate = Column(Text)
+    cancellationdate = Column(Text)
+    transactionstatusdate = Column(Text)
+    transactionstatus = Column(Text)
+    extractiondate = Column(Text)
+    stocknumber = Column(Text)
+    claimnumber = Column(Text)
+    benefitcasenumber = Column(Text)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+
+class FineosExtractReplacedPayments(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_replaced_payments"
+
+    replaced_payment_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    c = Column(Text)
+    i = Column(Text)
+    statusreason = Column(Text)
+    grossamount = Column(Text)
+    addedby = Column(Text)
+    issuedate = Column(Text)
+    cancellationdate = Column(Text)
+    transactionstatusdate = Column(Text)
+    transactionstatus = Column(Text)
+    extractiondate = Column(Text)
+    stocknumber = Column(Text)
+    claimnumber = Column(Text)
+    benefitcasenumber = Column(Text)
 
     reference_file_id = Column(
         PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True

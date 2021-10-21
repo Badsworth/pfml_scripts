@@ -4,7 +4,6 @@ import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";
@@ -17,14 +16,21 @@ export const fields = [
   "claim.leave_details.employer_notification_date",
 ];
 
+interface NotifiedEmployerProps {
+  claim?: BenefitsApplication;
+  appLogic: any;
+  query?: {
+    claim_id?: string;
+  };
+}
+
 /**
  * A form page to capture a user's attestation of having notified their employer.
  */
-export const NotifiedEmployer = (props) => {
+export const NotifiedEmployer = (props: NotifiedEmployerProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
   );
@@ -83,21 +89,12 @@ export const NotifiedEmployer = (props) => {
         />
       </ConditionalContent>
       <ConditionalContent visible={employer_notified === false}>
-        {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; state: string; role: str... Remove this comment to see the full error message */}
         <Alert state="warning" role="alert" autoWidth>
           {t("pages.claimsNotifiedEmployer.mustNotifyEmployerWarning")}
         </Alert>
       </ConditionalContent>
     </QuestionPage>
   );
-};
-
-NotifiedEmployer.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(NotifiedEmployer);

@@ -1,7 +1,6 @@
 import { get, pick, set } from "lodash";
 import { DateTime } from "luxon";
 import InputDate from "../../components/InputDate";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { ReasonQualifier } from "../../models/BenefitsApplication";
@@ -20,10 +19,18 @@ export const fields = [
   `claim.${hasFutureChildDateField}`,
 ];
 
-export const DateOfChild = (props) => {
+interface DateOfChildProps {
+  appLogic: any;
+  claim: any;
+  query?: {
+    claim_id?: string;
+  };
+}
+
+export const DateOfChild = (props: DateOfChildProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, getField, updateFields } = useFormState(
     pick(props, fields).claim
   );
@@ -81,14 +88,6 @@ export const DateOfChild = (props) => {
       />
     </QuestionPage>
   );
-};
-
-DateOfChild.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(DateOfChild);

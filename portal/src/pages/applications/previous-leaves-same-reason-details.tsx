@@ -8,7 +8,6 @@ import InputDate from "../../components/InputDate";
 import InputHours from "../../components/InputHours";
 import LeaveReason from "../../models/LeaveReason";
 import PreviousLeave from "../../models/PreviousLeave";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
@@ -28,7 +27,14 @@ export const fields = [
   "claim.previous_leaves_same_reason[*].worked_per_week_minutes",
 ];
 
-export const PreviousLeavesSameReasonDetails = (props) => {
+interface PreviousLeavesSameReasonDetailsProps {
+  appLogic: any;
+  claim: BenefitsApplication;
+}
+
+export const PreviousLeavesSameReasonDetails = (
+  props: PreviousLeavesSameReasonDetailsProps
+) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
   const limit = 6;
@@ -40,7 +46,7 @@ export const PreviousLeavesSameReasonDetails = (props) => {
   }
 
   // default to one existing previous leave.
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState(initialEntries);
   const previous_leaves_same_reason = get(
     formState,
@@ -136,12 +142,16 @@ export const PreviousLeavesSameReasonDetails = (props) => {
   );
 };
 
-PreviousLeavesSameReasonDetails.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-};
+interface PreviousLeaveSameReasonDetailsCardProps {
+  claim: BenefitsApplication;
+  entry: PreviousLeave;
+  getFunctionalInputProps: (...args: any[]) => any;
+  index: number;
+}
 
-export const PreviousLeaveSameReasonDetailsCard = (props) => {
+export const PreviousLeaveSameReasonDetailsCard = (
+  props: PreviousLeaveSameReasonDetailsCardProps
+) => {
   const { t } = useTranslation();
   const {
     claim: { employer_fein },
@@ -251,13 +261,6 @@ export const PreviousLeaveSameReasonDetailsCard = (props) => {
       />
     </React.Fragment>
   );
-};
-
-PreviousLeaveSameReasonDetailsCard.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  entry: PropTypes.instanceOf(PreviousLeave).isRequired,
-  getFunctionalInputProps: PropTypes.func.isRequired,
-  index: PropTypes.number.isRequired,
 };
 
 export default withBenefitsApplication(PreviousLeavesSameReasonDetails);

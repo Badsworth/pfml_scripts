@@ -54,6 +54,12 @@ class PaymentsS3Config(PydanticBaseSettings):
     fineos_data_export_path: str = Field(
         NOT_SET, description="This is where FINEOS makes extract files available to us"
     )
+    # FINEOS allows us to generate adhoc query data export files for PFML API to pick up
+    # This is where FINEOS makes those adhoc extract files available to us
+    # Ex: s3://fin-somprod-data-export/PRD/dataExtracts/AdHocExtract/
+    fineos_adhoc_data_export_path: str = Field(
+        NOT_SET, description="This is where FINEOS makes adhoc extract files available to us"
+    )
     # PFML API generates files for FINEOS to process
     # This is where FINEOS picks up files from us
     # Ex: s3://fin-somprod-data-import/PRD/peiupdate/
@@ -144,6 +150,11 @@ class PaymentsDateConfig(PydanticBaseSettings):
     # PFML API will not process FINEOS payment data older than this date
     fineos_payment_extract_max_history_date: str = Field(
         NOT_SET, description="The earliest file we will copy from FINEOS for the payment extract"
+    )
+    # PFML API will not process FINEOS payment data older than this date
+    fineos_payment_reconciliation_extract_max_history_date: str = Field(
+        NOT_SET,
+        description="The earliest file we will copy from FINEOS for the payment reconciliation extract",
     )
 
 

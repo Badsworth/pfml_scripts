@@ -1,4 +1,9 @@
+import claimantFlow, { ClaimantFlowState } from "../flows/claimant";
 import { get, groupBy, isEmpty, map } from "lodash";
+import BenefitsApplication from "./BenefitsApplication";
+import BenefitsApplicationDocument from "./BenefitsApplicationDocument";
+import ClaimDocument from "./ClaimDocument";
+import { Issue } from "../errors";
 import getRelevantIssues from "../utils/getRelevantIssues";
 
 type Context = Record<string, unknown>;
@@ -33,7 +38,6 @@ const fieldHasValue = (fieldPath: string, context: Context) => {
  * A model that represents a section in a user flow
  * and gives the completion status based on the current
  * state of user data
- * @returns {Step}
  */
 export default class Step {
   name: string;
@@ -53,7 +57,7 @@ export default class Step {
    */
   pages: Array<{
     route: string;
-    meta: { step: string; fields: string[]; applicableRules: string[] };
+    meta: ClaimantFlowState["meta"];
   }>;
 
   /**
@@ -80,7 +84,7 @@ export default class Step {
    * this if a Step doesn't include a field, or if it has its own
    * completeCond set.
    */
-  warnings?: Array<Record<string, unknown>>;
+  warnings?: Issue[];
 
   constructor(
     attrs: Omit<
@@ -152,23 +156,20 @@ export default class Step {
   /**
    * Create an array of Steps from routing machine configuration
    * @see ../flows/index.js
-   * @param {object} machineConfigs - configuration object for routing machine
-   * @param {object} context - used for evaluating a step's status
-   * @param {BenefitsApplication} [context.claim]
-   * @param {BenefitsApplicationDocument[]} [context.certificationDocuments]
-   * @param {BenefitsApplicationDocument[]} [context.idDocuments]
-   * @param {object[]} [warnings] - array of validation warnings returned from API
-   * @returns {Step[]}
    * @example createClaimStepsFromMachine(claimFlowConfig, { claim: { first_name: "Bud" } })
    */
   static createClaimStepsFromMachine = (
-    machineConfigs,
-    context = {
+    machineConfigs: typeof claimantFlow,
+    context: {
+      claim: BenefitsApplication | Record<string, never>;
+      certificationDocuments?: BenefitsApplicationDocument[] | ClaimDocument[];
+      idDocuments?: BenefitsApplicationDocument[] | ClaimDocument[];
+    } = {
       claim: {},
       certificationDocuments: [],
       idDocuments: [],
     },
-    warnings
+    warnings?: Issue[]
   ) => {
     const { claim } = context;
     const pages = map(machineConfigs.states, (state, key) =>
@@ -178,7 +179,6 @@ export default class Step {
 
     const verifyId = new Step({
       name: ClaimSteps.verifyId,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isSubmitted' does not exist on type '{}'... Remove this comment to see the full error message
       editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.verifyId],
@@ -188,7 +188,6 @@ export default class Step {
 
     const employerInformation = new Step({
       name: ClaimSteps.employerInformation,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isSubmitted' does not exist on type '{}'... Remove this comment to see the full error message
       editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.employerInformation],
@@ -199,7 +198,6 @@ export default class Step {
 
     const leaveDetails = new Step({
       name: ClaimSteps.leaveDetails,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isSubmitted' does not exist on type '{}'... Remove this comment to see the full error message
       editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.leaveDetails],
@@ -210,7 +208,6 @@ export default class Step {
 
     const otherLeave = new Step({
       name: ClaimSteps.otherLeave,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isSubmitted' does not exist on type '{}'... Remove this comment to see the full error message
       editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.otherLeave],
@@ -222,7 +219,6 @@ export default class Step {
     const reviewAndConfirm = new Step({
       name: ClaimSteps.reviewAndConfirm,
       completeCond: (context) => get(context.claim, "isSubmitted"),
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isSubmitted' does not exist on type '{}'... Remove this comment to see the full error message
       editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.reviewAndConfirm],
@@ -234,7 +230,6 @@ export default class Step {
       name: ClaimSteps.payment,
       completeCond: (context) =>
         get(context.claim, "has_submitted_payment_preference"),
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'has_submitted_payment_preference' does n... Remove this comment to see the full error message
       editable: !claim.has_submitted_payment_preference,
       group: 2,
       pages: pagesByStep[ClaimSteps.payment],

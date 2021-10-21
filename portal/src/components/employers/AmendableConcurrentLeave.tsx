@@ -6,10 +6,17 @@ import ConcurrentLeave from "../../models/ConcurrentLeave";
 import ConditionalContent from "../ConditionalContent";
 import Heading from "../Heading";
 import InputDate from "../InputDate";
-import PropTypes from "prop-types";
 import formatDateRange from "../../utils/formatDateRange";
 import useAutoFocusEffect from "../../hooks/useAutoFocusEffect";
 import { useTranslation } from "../../locales/i18n";
+
+interface AmendableConcurrentLeaveProps {
+  appErrors: AppErrorInfoCollection;
+  concurrentLeave: ConcurrentLeave;
+  isAddedByLeaveAdmin: boolean;
+  onChange: (...args: any[]) => any;
+  onRemove: (...args: any[]) => any;
+}
 
 /**
  * Display a concurrent leave and amendment form
@@ -22,7 +29,7 @@ const AmendableConcurrentLeave = ({
   isAddedByLeaveAdmin,
   onChange,
   onRemove,
-}) => {
+}: AmendableConcurrentLeaveProps) => {
   const { t } = useTranslation();
   const [amendment, setAmendment] = useState(concurrentLeave);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
@@ -84,7 +91,6 @@ const AmendableConcurrentLeave = ({
   const ConcurrentLeaveDetailsRow = () => (
     <tr>
       <th scope="row">
-        {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
         {formatDateRange(
           concurrentLeave.leave_start_date,
           concurrentLeave.leave_end_date
@@ -155,14 +161,6 @@ const AmendableConcurrentLeave = ({
       </ConditionalContent>
     </React.Fragment>
   );
-};
-
-AmendableConcurrentLeave.propTypes = {
-  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
-  concurrentLeave: PropTypes.instanceOf(ConcurrentLeave).isRequired,
-  isAddedByLeaveAdmin: PropTypes.bool.isRequired,
-  onChange: PropTypes.func.isRequired,
-  onRemove: PropTypes.func.isRequired,
 };
 
 export default AmendableConcurrentLeave;

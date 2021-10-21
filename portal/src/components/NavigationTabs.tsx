@@ -1,9 +1,16 @@
 import Link from "next/link";
-import PropTypes from "prop-types";
 import React from "react";
 import classNames from "classnames";
 
-const NavigationTabs = ({ activePath, tabs }) => {
+interface NavigationTabsProps {
+  activePath: string;
+  tabs: Array<{
+    label: string;
+    href: string;
+  }>;
+}
+
+const NavigationTabs = ({ activePath, tabs }: NavigationTabsProps) => {
   const isActive = (tab) => tab.href === activePath;
 
   return (
@@ -30,16 +37,6 @@ const NavigationTabs = ({ activePath, tabs }) => {
       ))}
     </nav>
   );
-};
-
-NavigationTabs.propTypes = {
-  activePath: PropTypes.string.isRequired,
-  tabs: PropTypes.arrayOf(
-    PropTypes.shape({
-      label: PropTypes.string.isRequired,
-      href: PropTypes.string.isRequired,
-    })
-  ).isRequired,
 };
 
 export default NavigationTabs;

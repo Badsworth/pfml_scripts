@@ -108,6 +108,12 @@ variable "fineos_data_export_path" {
   default     = ""
 }
 
+variable "fineos_adhoc_data_export_path" {
+  description = "FINEOS generates adhoc data export files from custom queries for PFML API to pick up"
+  type        = string
+  default     = ""
+}
+
 variable "fineos_data_import_path" {
   description = "PFML API generates files for FINEOS to process"
   type        = string

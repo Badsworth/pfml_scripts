@@ -1,7 +1,14 @@
-import { CognitoAuthError, ValidationError } from "../errors";
+import {
+  CognitoAuthError,
+  CognitoError,
+  Issue,
+  ValidationError,
+} from "../errors";
 import { compact, trim } from "lodash";
 import { useMemo, useState } from "react";
+import { AppErrorsLogic } from "./useAppErrorsLogic";
 import { Auth } from "@aws-amplify/auth";
+import { PortalFlow } from "./usePortalFlow";
 import { RoleDescription } from "../models/User";
 import UsersApi from "../api/UsersApi";
 import assert from "assert";
@@ -9,15 +16,13 @@ import { createRouteWithQuery } from "../utils/routeWithParams";
 import routes from "../routes";
 import tracker from "../services/tracker";
 
-// TODO (CP-1771): This file makes reference to an Issue type that is not yet defined.
-
-/**
- * @param {object} params
- * @param {object} params.appErrorsLogic
- * @param {object} params.portalFlow
- * @returns {object}
- */
-const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
+const useAuthLogic = ({
+  appErrorsLogic,
+  portalFlow,
+}: {
+  appErrorsLogic: AppErrorsLogic;
+  portalFlow: PortalFlow;
+}) => {
   const usersApi = useMemo(() => new UsersApi(), []);
 
   // TODO (CP-872): Rather than setting default values for authLogic methods,
@@ -41,9 +46,8 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
   /**
    * Initiate the Forgot Password flow, sending a verification code when user exists.
    * If there are any errors, sets app errors on the page.
-   * @param {string} username Email address that is used as the username
    */
-  const forgotPassword = async (username) => {
+  const forgotPassword = async (username: string) => {
     const success = await sendForgotPasswordConfirmation(username);
 
     if (success) {
@@ -55,17 +59,14 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
 
   /**
    * Initiate the Forgot Password flow, sending a verification code when user exists.
-   * @param {string} username Email address that is used as the username
    */
-  const resendForgotPasswordCode = async (username) => {
+  const resendForgotPasswordCode = async (username: string) => {
     await sendForgotPasswordConfirmation(username);
   };
 
   /**
    * Initiate the Forgot Password flow, sending a verification code when user exists.
-   * @param {string} username Email address that is used as the username
-   * @returns {boolean} Whether the code was sent successfully or not
-   * @private
+   * @returns Whether the code was sent successfully or not
    */
   const sendForgotPasswordConfirmation = async (username = "") => {
     appErrorsLogic.clearErrors();
@@ -96,11 +97,10 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
   /**
    * Log in to Portal with the given username (email) and password.
    * If there are any errors, set app errors on the page.
-   * @param {string} username Email address that is used as the username
-   * @param {string} password Password
-   * @param {string} [next] Redirect url after login
+   * @param password Password
+   * @param [next] Redirect url after login
    */
-  const login = async (username = "", password, next = null) => {
+  const login = async (username = "", password: string, next?: string) => {
     appErrorsLogic.clearErrors();
     username = trim(username);
 
@@ -138,13 +138,10 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
 
   /**
    * Log out of the Portal
-   * @param {object} [options]
-   * @param {boolean} options.sessionTimedOut Whether the logout occurred automatically as a result of
-   *  session timeout. Defaults to false
+   * @param options.sessionTimedOut Whether the logout occurred automatically as a result of session timeout.
    */
-  const logout = async (options = {}) => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'sessionTimedOut' does not exist on type ... Remove this comment to see the full error message
-    const { sessionTimedOut = false } = options;
+  const logout = async (options = { sessionTimedOut: false }) => {
+    const { sessionTimedOut } = options;
 
     // Set global: true to invalidate all refresh tokens associated with the user on the Cognito servers
     // Notes:
@@ -161,7 +158,6 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
       await Auth.signOut({ global: true });
       tracker.markFetchRequestEnd();
     } catch (error) {
-      // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
       tracker.noticeError(error);
     }
     setIsLoggedIn(false);
@@ -176,17 +172,13 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
 
   /**
    * Shared logic to create an account through the API
-   * @param {string} email_address
-   * @param {string} password Password
-   * @param {RoleDescription} role_description
-   * @param {string} [employer_fein]
    * @private
    */
   const _createAccountInApi = async (
-    email_address,
-    password,
-    role_description,
-    employer_fein
+    email_address: string,
+    password: string,
+    role_description: typeof RoleDescription[keyof typeof RoleDescription],
+    employer_fein?: string
   ) => {
     appErrorsLogic.clearErrors();
     email_address = trim(email_address);
@@ -194,11 +186,11 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
     const requestData = {
       email_address,
       password,
+      user_leave_administrator: {},
       role: { role_description },
     };
 
     if (role_description === RoleDescription.employer) {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'user_leave_administrator' does not exist... Remove this comment to see the full error message
       requestData.user_leave_administrator = { employer_fein };
     }
 
@@ -222,22 +214,20 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
   /**
    * Create Portal account with the given username (email) and password.
    * If there are any errors, set app errors on the page.
-   * @param {string} username Email address that is used as the username
-   * @param {string} password Password
    */
-  const createAccount = async (username = "", password) => {
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 4 arguments, but got 3.
+  const createAccount = async (username = "", password: string) => {
     await _createAccountInApi(username, password, RoleDescription.claimant);
   };
 
   /**
    * Create Employer Portal account with the given username (email), password, and employer ID number.
    * If there are any errors, set app errors on the page.
-   * @param {string} username Email address that is used as the username
-   * @param {string} password Password
-   * @param {string} ein Employer id number (known as EIN or FEIN)
    */
-  const createEmployerAccount = async (username = "", password, ein) => {
+  const createEmployerAccount = async (
+    username = "",
+    password: string,
+    ein: string
+  ) => {
     await _createAccountInApi(
       username,
       password,
@@ -301,9 +291,6 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
   /**
    * Use a verification code to confirm the user is who they say they are
    * and allow them to reset their password
-   * @param {string} username - Email address that is used as the username
-   * @param {string} code - verification code
-   * @param {string} password - new password
    */
   const resetPassword = async (username = "", code = "", password = "") => {
     appErrorsLogic.clearErrors();
@@ -328,9 +315,6 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
   /**
    * Use a verification code to confirm the user is who they say they are
    * and allow them to reset their password
-   * @param {string} username - Email address that is used as the username
-   * @param {string} code - verification code
-   * @param {string} password - new password
    * @private
    */
   const resetPasswordInCognito = async (
@@ -352,8 +336,6 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
 
   /**
    * Shared logic to verify an account
-   * @param {string} username Email address that is used as the username
-   * @param {string} code Verification code that is emailed to the user
    * @private
    */
   const verifyAccountInCognito = async (username = "", code = "") => {
@@ -366,7 +348,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
         "SUBMIT",
         {},
         {
-          "account-verified": true,
+          "account-verified": "true",
         }
       );
     } catch (error) {
@@ -382,7 +364,7 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
           "SUBMIT",
           {},
           {
-            "account-verified": true,
+            "account-verified": "true",
           }
         );
       }
@@ -396,8 +378,6 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
    * Verify Portal account with the one time verification code that
    * was emailed to the user. If there are any errors, set app errors
    * on the page.
-   * @param {string} username Email address that is used as the username
-   * @param {string} code Verification code that is emailed to the user
    */
   const verifyAccount = async (username = "", code = "") => {
     appErrorsLogic.clearErrors();
@@ -434,13 +414,13 @@ const useAuthLogic = ({ appErrorsLogic, portalFlow }) => {
   };
 };
 
-function combineValidationIssues(...issues) {
+function combineValidationIssues(...issues: Issue[]) {
   const combinedIssues = compact(issues);
   if (combinedIssues.length === 0) return;
   return combinedIssues;
 }
 
-function validateCode(code) {
+function validateCode(code?: string) {
   if (!code) {
     return {
       field: "code",
@@ -454,7 +434,7 @@ function validateCode(code) {
   }
 }
 
-function validateUsername(username) {
+function validateUsername(username?: string) {
   if (!username) {
     return {
       field: "username",
@@ -463,7 +443,7 @@ function validateUsername(username) {
   }
 }
 
-function validatePassword(password) {
+function validatePassword(password?: string) {
   if (!password) {
     return {
       field: "password",
@@ -477,10 +457,8 @@ function validatePassword(password) {
  * CognitoAuthError.
  * For a list of possible exceptions, see
  * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ForgotPassword.html#API_ForgotPassword_Errors
- * @param {{ code: string, message: string }} error Error object that was thrown by Amplify's Auth.signIn method
- * @returns {CognitoAuthError}
  */
-function getForgotPasswordError(error) {
+function getForgotPasswordError(error: CognitoError) {
   let issue;
   const errorCodeToIssueMap = {
     CodeDeliveryFailureException: { field: "code", type: "deliveryFailure" },
@@ -503,10 +481,8 @@ function getForgotPasswordError(error) {
  * CognitoAuthError objects.
  * For a list of possible exceptions, see
  * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_InitiateAuth.html#API_InitiateAuth_Errors
- * @param {{ code: string, message: string }} error Error object that was thrown by Amplify
- * @returns {CognitoAuthError}
  */
-function getLoginError(error) {
+function getLoginError(error: CognitoError) {
   let issue;
   const invalidParameterIssue = { type: "invalidParametersFallback" };
 
@@ -531,10 +507,8 @@ function getLoginError(error) {
  * CognitoAuthError.
  * For a list of possible exceptions, see
  * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmForgotPassword.html
- * @param {{ code: string, message: string }} error Error object that was thrown by Amplify
- * @returns {CognitoAuthError}
  */
-function getResetPasswordError(error) {
+function getResetPasswordError(error: CognitoError) {
   let issue;
   const errorCodeToIssueMap = {
     CodeMismatchException: { field: "code", type: "mismatchException" },
@@ -560,10 +534,8 @@ function getResetPasswordError(error) {
  * CognitoAuthError.
  * For a list of possible exceptions, see
  * https://docs.aws.amazon.com/cognito-user-identity-pools/latest/APIReference/API_ConfirmSignUp.html
- * @param {{ code: string, message: string }} error Error object that was thrown by Amplify
- * @returns {CognitoAuthError}
  */
-function getVerifyAccountError(error) {
+function getVerifyAccountError(error: CognitoError) {
   let issue;
   const errorCodeToIssueMap = {
     CodeMismatchException: { field: "code", type: "mismatchException" },
@@ -580,10 +552,8 @@ function getVerifyAccountError(error) {
 /**
  * InvalidPasswordException may occur for a variety of reasons,
  * so our errors needs to reflect this nuance.
- * @param {{ code: string, message: string }} error Error object that was thrown by Amplify
- * @returns {Issue}
  */
-function getInvalidPasswordExceptionIssue(error) {
+function getInvalidPasswordExceptionIssue(error: CognitoError): Issue {
   // These are the specific Cognito errors that can occur:
   //
   // 1. When password is less than 6 characters long
@@ -622,11 +592,11 @@ function getInvalidPasswordExceptionIssue(error) {
 /**
  * NotAuthorizedException may occur for a variety of reasons,
  * so our errors needs to reflect this nuance.
- * @param {{ code: string, message: string }} error Error object that was thrown by Amplify
- * @param {string} context - i18next context, representing the action that resulted in this exception (e.g login)
- * @returns {Issue}
  */
-function getNotAuthorizedExceptionIssue(error, context) {
+function getNotAuthorizedExceptionIssue(
+  error: CognitoError,
+  context: "forgotPassword" | "login"
+): Issue {
   // These are the specific Cognito errors that can occur:
   //
   // 1. When password or username is invalid (error is same for either scenario)
@@ -663,10 +633,11 @@ function getNotAuthorizedExceptionIssue(error, context) {
 
 /**
  * Ensure Cognito AJAX requests are traceable in New Relic
- * @param {string} action - name of the Cognito method being called
+ * @param action - name of the Cognito method being called
  */
-function trackAuthRequest(action) {
+function trackAuthRequest(action: string) {
   tracker.trackFetchRequest(`cognito ${action}`);
 }
 
 export default useAuthLogic;
+export type AuthLogic = ReturnType<typeof useAuthLogic>;

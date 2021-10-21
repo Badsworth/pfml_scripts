@@ -1,11 +1,10 @@
 import Alert from "../../components/Alert";
-import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
+import { AppLogic } from "../../hooks/useAppLogic";
 import Button from "../../components/Button";
 import Details from "../../components/Details";
 import InputPassword from "../../components/InputPassword";
 import InputText from "../../components/InputText";
 import Lead from "../../components/Lead";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
@@ -16,12 +15,15 @@ import useLoggedInRedirect from "../../hooks/useLoggedInRedirect";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 
-export const CreateAccount = (props) => {
+interface CreateAccountProps {
+  appLogic: AppLogic;
+}
+
+export const CreateAccount = (props: CreateAccountProps) => {
   const { appLogic } = props;
   const { t } = useTranslation();
   useLoggedInRedirect(appLogic.portalFlow);
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState({
     password: "",
     email_address: "",
@@ -47,7 +49,6 @@ export const CreateAccount = (props) => {
     <React.Fragment>
       <form className="usa-form" onSubmit={handleSubmit} method="post">
         <Title>{t("pages.employersAuthCreateAccount.title")}</Title>
-        {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; classNam... Remove this comment to see the full error message */}
         <Alert state="info" className="margin-bottom-3" neutral>
           <Trans
             i18nKey="pages.employersAuthCreateAccount.alertHeading"
@@ -138,18 +139,6 @@ export const CreateAccount = (props) => {
       </div>
     </React.Fragment>
   );
-};
-
-CreateAccount.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.instanceOf(AppErrorInfoCollection),
-    auth: PropTypes.shape({
-      createEmployerAccount: PropTypes.func.isRequired,
-    }).isRequired,
-    portalFlow: PropTypes.shape({
-      goTo: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
 };
 
 export default CreateAccount;

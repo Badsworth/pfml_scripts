@@ -4,12 +4,20 @@ import {
   ValidationError,
 } from "../errors";
 import { useMemo, useState } from "react";
+import { AppErrorsLogic } from "./useAppErrorsLogic";
+import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import DocumentCollection from "../models/DocumentCollection";
+import { DocumentTypeEnum } from "../models/Document";
 import DocumentsApi from "../api/DocumentsApi";
+import TempFile from "../models/TempFile";
 import assert from "assert";
 import useCollectionState from "./useCollectionState";
 
-const useDocumentsLogic = ({ appErrorsLogic }) => {
+const useDocumentsLogic = ({
+  appErrorsLogic,
+}: {
+  appErrorsLogic: AppErrorsLogic;
+}) => {
   /**
    * State representing the collection of documents for the current user.
    * Initialize to empty collection, but will eventually store the document
@@ -34,20 +42,15 @@ const useDocumentsLogic = ({ appErrorsLogic }) => {
    * Check if docs for this application have been loaded
    * We use a separate array and state here, rather than using the DocumentCollection,
    * because documents that don't have items won't be represented in the DocumentCollection.
-   *
-   * @param {string} application_id
-   * @returns {boolean}
    */
-  const hasLoadedClaimDocuments = (application_id) =>
+  const hasLoadedClaimDocuments = (application_id: string) =>
     loadedApplicationDocs.includes(application_id);
 
   /**
    * Load all documents for a user's claim
    * This must be called before documents are available
-   * @param {string} application_id - application id for claim
    */
-  const loadAll = async (application_id) => {
-    assert(application_id);
+  const loadAll = async (application_id: string) => {
     // if documents already contains docs for application_id, don't load again
     if (hasLoadedClaimDocuments(application_id)) {
       return;
@@ -71,19 +74,18 @@ const useDocumentsLogic = ({ appErrorsLogic }) => {
 
   /**
    * Submit files to the API and set application errors if any
-   * @param {string} application_id - application id for claim
-   * @param {{id:string, file:File}[]} filesWithUniqueId - array of objects including unique Id and File to upload and attach to the application
-   * @param {string} documentType - category of documents
-   * @param {boolean} mark_evidence_received - Set the flag used to indicate whether
+   * @param application_id - application id for claim
+   * @param filesWithUniqueId - array of objects including unique Id and File to upload and attach to the application
+   * @param documentType - category of documents
+   * @param mark_evidence_received - Set the flag used to indicate whether
    * the doc is ready for review or not. Docs added to a claim that was completed
    * through a channel other than the Portal require this flag being set to `true`.
-   * @returns {Promise[]}
    */
   const attach = (
-    application_id,
-    filesWithUniqueId = [],
-    documentType,
-    mark_evidence_received
+    application_id: string,
+    filesWithUniqueId: TempFile[],
+    documentType: DocumentTypeEnum,
+    mark_evidence_received: boolean
   ) => {
     assert(application_id);
     appErrorsLogic.clearErrors();
@@ -132,10 +134,8 @@ const useDocumentsLogic = ({ appErrorsLogic }) => {
 
   /**
    * Download document from the API and sets app errors if any
-   * @param {BenefitsApplicationDocument} document - Document instance to download
-   * @returns {Blob}
    */
-  const download = async (document) => {
+  const download = async (document: BenefitsApplicationDocument) => {
     appErrorsLogic.clearErrors();
     try {
       const response = await documentsApi.downloadDocument(document);

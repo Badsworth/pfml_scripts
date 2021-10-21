@@ -1,16 +1,56 @@
 import React, { useEffect, useRef, useState } from "react";
 import Button from "./Button";
-import PropTypes from "prop-types";
 import RepeatableFieldsetCard from "./RepeatableFieldsetCard";
 import classnames from "classnames";
 import { uniqueId } from "lodash";
 import usePreviousValue from "../hooks/usePreviousValue";
 
+interface RepeatableFieldsetProps {
+  /**
+   * Localized text used in the "Add" button
+   */
+  addButtonLabel: string;
+  /** Array of entries, each of which will have the content repeated for. */
+  entries: any[];
+  /**
+   * Displayed as the heading for each card, followed by the card's position. For example
+   * if you specify "Person", headings will be "Person 1", "Person 2", etc.
+   */
+  headingPrefix: string;
+  /**
+   * Maximum number of repeatable fields
+   */
+  limit?: number;
+  /**
+   * Message to display when max number of repeatable fields have been added
+   */
+  limitMessage?: string;
+  /**
+   * Function used for rendering the fields
+   * @see https://reactjs.org/docs/render-props.html
+   */
+  render: (entry: Record<string, unknown>, index: number) => React.ReactNode;
+  /**
+   * Localized text used in the "Remove" buttons.
+   * A "Remove" button isn't rendered when the
+   * entries length is 1.
+   */
+  removeButtonLabel: string;
+  /**
+   * Event handler responsible for adding a new entry
+   */
+  onAddClick: (...args: any[]) => any;
+  /**
+   * Event handler responsible for removing an entry
+   */
+  onRemoveClick: (entry: Record<string, unknown>, index: number) => void;
+}
+
 /**
  * Used for rendering the same set of content and fields for each
  * item in the "entries" prop.
  */
-const RepeatableFieldset = (props) => {
+const RepeatableFieldset = (props: RepeatableFieldsetProps) => {
   const { entries } = props;
   const containerRef = useRef<HTMLElement>();
   const entriesAndIds = useEntryIds(entries);
@@ -18,7 +58,6 @@ const RepeatableFieldset = (props) => {
   const limitReached = props.limit ? entries.length >= props.limit : false;
 
   useEffect(() => {
-    // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
     if (entriesAndIds.length > previousEntriesLength) {
       // When a new entry is added to the list, focus and scroll it into view.
       const lastEntry = containerRef.current.querySelector(
@@ -75,60 +114,12 @@ const RepeatableFieldset = (props) => {
   );
 };
 
-RepeatableFieldset.propTypes = {
-  /**
-   * Localized text used in the "Add" button
-   */
-  addButtonLabel: PropTypes.string.isRequired,
-  /** Array of entries, each of which will have the content repeated for. */
-  entries: PropTypes.arrayOf(PropTypes.object).isRequired,
-  /**
-   * Displayed as the heading for each card, followed by the card's position. For example
-   * if you specify "Person", headings will be "Person 1", "Person 2", etc.
-   */
-  headingPrefix: PropTypes.string.isRequired,
-  /**
-   * Maximum number of repeatable fields
-   */
-  limit: PropTypes.number,
-  /**
-   * Message to display when max number of repeatable fields have been added
-   */
-  limitMessage: PropTypes.string,
-  /**
-   * Function used for rendering the fields
-   * @param {object} entry
-   * @param {number} index
-   * @returns {React.ReactNode}
-   * @see https://reactjs.org/docs/render-props.html
-   */
-  render: PropTypes.func.isRequired,
-  /**
-   * Localized text used in the "Remove" buttons.
-   * A "Remove" button isn't rendered when the
-   * entries length is 1.
-   */
-  removeButtonLabel: PropTypes.string.isRequired,
-  /**
-   * Event handler responsible for adding a new entry
-   */
-  onAddClick: PropTypes.func.isRequired,
-  /**
-   * Event handler responsible for removing an entry
-   * @param {object} entry
-   * @param {number} index
-   */
-  onRemoveClick: PropTypes.func.isRequired,
-};
-
 /**
  * Takes an array of entries, and pair each entry with a unique id.
  * The entry-id mapping remains stable across re-renders.
- * Returns an array of [entry, id] pairs.
- * @param {Array} entries List of entries
- * @returns {[*,string][]} List of entry, id pairs
+ * @returns List of [entry, id] pairs
  */
-function useEntryIds(entries) {
+function useEntryIds(entries: unknown[]) {
   const [entryIdMap, setEntryIdMap] = useState(createEntryIdMap(entries));
   useEffect(() => {
     setEntryIdMap(createEntryIdMap(entries, entryIdMap));
@@ -144,10 +135,11 @@ function useEntryIds(entries) {
  * Create a map from entries to ids.
  * If the entry already existed previously, use the same id.
  * Otherwise, create a new id.
- * @param {Array} entries List of entries
- * @param {Map<*,string>} [prevEntryIdMap] Previous map from entries to ids
  */
-function createEntryIdMap(entries, prevEntryIdMap = new Map()) {
+function createEntryIdMap(
+  entries: unknown[],
+  prevEntryIdMap: Map<any, string> = new Map()
+) {
   const entryIdMap = new Map();
   for (const entry of entries) {
     const entryId = prevEntryIdMap.get(entry);

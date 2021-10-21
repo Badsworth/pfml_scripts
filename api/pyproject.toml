@@ -115,6 +115,7 @@ fineos-eligibility-feed-export = "massgov.pfml.fineos.eligibility_feed_export.el
 pub-payments-process-fineos = "massgov.pfml.delegated_payments.task.process_fineos_extracts:main"
 pub-payments-create-pub-files = "massgov.pfml.delegated_payments.task.process_pub_payments:main"
 pub-payments-process-pub-returns = "massgov.pfml.delegated_payments.task.process_pub_responses:main"
+pub-payments-process-snapshot = "massgov.pfml.delegated_payments.task.process_fineos_reconciliation_extracts:main"
 pub-payments-mock-generate = "massgov.pfml.delegated_payments.mock.mock_generate:main"
 ach-reader = "massgov.pfml.delegated_payments.util.ach.ach_tool:ach_reader"
 check-reader = "massgov.pfml.delegated_payments.pub.check_tool:check_reader"
@@ -131,6 +132,7 @@ delegated-payment-audit-rejects-generate = "massgov.pfml.delegated_payments.audi
 delegated-payment-check-response-generate = "massgov.pfml.delegated_payments.mock.generate_check_response:generate_check_response_files"
 report-sequential-employment = "massgov.pfml.report.sequential_employment:main"
 update-gender-data-from-rmv = "massgov.pfml.rmv.update_gender_data:main"
+dua-import-employee-demographics = "massgov.pfml.dua.import_employee_demographics:main"
 pub-payments-process-1099-documents = "massgov.pfml.delegated_payments.task.process_1099_documents:main"
 
 [tool.black]
