@@ -21,12 +21,13 @@ paths:
         - $ref: "#/parameters/Key"
         - $ref: "#/parameters/MaxKeys"
         - $ref: "#/parameters/StartAfter"
+        - $ref: "#/parameters/NoSlashfix"
       produces: [application/xml, application/json]
       responses:
         "200":
           description: A successful ListObjectsV2 XML response.
           schema:
-            $ref: "#/definitions/ListObjectsResponse"
+            $ref: "#/definitions/XMLResponse"
           headers:
             Date: { description: "Tue, 19 Oct 2021 19:29:57 GMT", type: string }
             Content-Type:
@@ -72,6 +73,8 @@ paths:
               { description: Length of response body, type: integer }
         "403":
           $ref: "#/responses/Unauthorized"
+        "404":
+          $ref: "#/responses/NotFound"
         "500":
           $ref: "#/responses/Error"
     delete:
@@ -107,15 +110,19 @@ paths:
         "200":
           description: A successful CopyObject XML response.
           schema:
-            $ref: "#/definitions/CopyObject"
+            $ref: "#/definitions/XMLResponse"
           headers:
             Date: { description: "Tue, 19 Oct 2021 19:29:57 GMT", type: string }
             Content-Type:
               { description: Content-Type of response body., type: string }
             Content-Length:
               { description: Length of response body, type: integer }
+        "400":
+          $ref: "#/responses/InvalidArgument"
         "403":
           $ref: "#/responses/Unauthorized"
+        "404":
+          $ref: "#/responses/NotFound"
         "500":
           $ref: "#/responses/Error"
 parameters:
@@ -157,7 +164,24 @@ parameters:
     required: false
     type: string
     format: ""
+  NoSlashfix:
+    name: no_slash_fix
+    x-ms-summary: Prevent forward slash from appending to path.
+    description: Any value supplied to this function will prevent the key in the path parameter from automatically having a forward slash at the end.
+    in: query
+    required: false
+    type: string
+    x-ms-visibility: internal
 responses:
+  InvalidArgument:
+    description: An invalid argument response.
+    headers:
+      Date: { description: "Tue, 19 Oct 2021 19:29:57 GMT", type: string }
+      Content-Type:
+        { description: Content-Type of response body., type: string }
+      Content-Length: { description: Length of response body, type: integer }
+    schema:
+      $ref: "#/definitions/XMLResponse"
   Unauthorized:
     description: A forbidden response.
     headers:
@@ -166,7 +190,16 @@ responses:
         { description: Content-Type of response body., type: string }
       Content-Length: { description: Length of response body, type: integer }
     schema:
-      $ref: "#/definitions/UnauthorizedResponse"
+      $ref: "#/definitions/XMLResponse"
+  NotFound:
+    description: A content not found response.
+    headers:
+      Date: { description: "Tue, 19 Oct 2021 19:29:57 GMT", type: string }
+      Content-Type:
+        { description: Content-Type of response body., type: string }
+      Content-Length: { description: Length of response body, type: integer }
+    schema:
+      $ref: "#/definitions/XMLResponse"
   Error:
     description: An internal server error JSON response.
     headers:
@@ -175,9 +208,13 @@ responses:
         { description: Content-Type of response body., type: string }
       Content-Length: { description: Length of response body, type: integer }
     schema:
-      $ref: "#/definitions/ErrorResponse"
+      $ref: "#/definitions/APIGatewayErrorResponse"
 definitions:
-  ListObjectsResponse:
+  XMLResponse:
+    title: XML Response
+    description: An application/xml response string.
+    type: string
+  ListObjects:
     title: List ObjectsV2 Response
     description: A [ListObjectsV2](https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html) response body.
     xml:
@@ -246,9 +283,9 @@ definitions:
         type: string
         description: "Returns the ETag of the new object. The ETag reflects only changes to the contents of an object,not its metadata."
       LastModified: { type: string, description: Creation date of the object. }
-  UnauthorizedResponse:
-    title: Forbidden Response
-    description: Forbidden response body.
+  S3ErrorResponse:
+    title: S3 Error Response
+    description: S3 Error response body.
     type: object
     xml:
       name: Error
@@ -257,7 +294,7 @@ definitions:
       Message: { title: Message, type: string }
       RequestId: { title: RequestId, type: string }
       HostId: { title: HostId, type: string }
-  ErrorResponse:
+  APIGatewayErrorResponse:
     title: Error Response
     description: Error response body.
     type: object
