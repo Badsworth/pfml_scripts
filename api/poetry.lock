@@ -1250,7 +1250,7 @@ dev = ["coverage", "flake8", "mock", "pylint", "pytest", "pytest-cov", "sphinx",
 name = "pydot"
 version = "1.4.2"
 description = "Python interface to Graphviz's Dot"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=2.7, !=3.0.*, !=3.1.*, !=3.2.*, !=3.3.*"
 
@@ -1301,7 +1301,7 @@ test = ["flaky", "pretend", "pytest (>=3.0.1)"]
 name = "pyparsing"
 version = "2.4.7"
 description = "Python parsing module"
-category = "main"
+category = "dev"
 optional = false
 python-versions = ">=2.6, !=3.0.*, !=3.1.*, !=3.2.*"
 
@@ -1630,7 +1630,7 @@ botocore = ">=1.12.36,<2.0a.0"
 name = "sadisplay"
 version = "0.4.9"
 description = "SqlAlchemy schema display script"
-category = "main"
+category = "dev"
 optional = false
 python-versions = "*"
 
@@ -2100,7 +2100,7 @@ api-only-dependencies = ["connexion", "flask-bouncer", "flask_cors", "Flask-HTTP
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "9feb044545fc302298d05e6627902eae074129a6922e5e23fe9a92e32700dbbb"
+content-hash = "37ef21b01b480f20569a2fb52c9dddfa49b5223d91a632af2cb7d71af97eacfa"
 
 [metadata.files]
 alembic = [
