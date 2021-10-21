@@ -1,0 +1,12 @@
+FINEOS,BirthDt,GenderCd,OccupationCode,OccupationDesc,FEIN,EmployerUnitNumber
+1234567,19780217,F,1120,Sales Managers,,
+7654321,19791013,M,1120,Marketing Managers,,
+1111111,19980506,M,5191,Packaging and Filling Machine Operators and Tenders,12345678,0
+2222222,19580115,F,1120,,,
+3333333,19961108,F,3520,Cooks  Fast Food,,
+4444444,19950318,F,2920,Licensed Practical and Licensed Vocational Nurses,99999999,0
+4444444,19950318,M,2920,Licensed Practical and Licensed Vocational Nurses,88888888,0
+3333333,19961108,F,3520,Cooks  Fast Food,,
+5555555,19921108,U,3520,Cooks  Fast Food,,
+6666666,20020113,X,3520,Cooks  Fast Food,,
+7777777,20090113,,3521,Another Occupation,,

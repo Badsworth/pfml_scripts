@@ -115,7 +115,23 @@ const uploadDocEvents = {
   ],
 };
 
-export default {
+interface ConditionalEvent {
+  target: string;
+  cond?: string;
+}
+
+export interface ClaimantFlowState {
+  meta?: {
+    applicableRules?: string[];
+    fields?: string[];
+    step?: string;
+  };
+  on: Record<string, string | ConditionalEvent[]>;
+}
+
+const claimantFlow: {
+  states: Record<string, ClaimantFlowState>;
+} = {
   states: {
     [routes.applications.getReady]: {
       meta: {},
@@ -751,3 +767,5 @@ export default {
     },
   },
 };
+
+export default claimantFlow;

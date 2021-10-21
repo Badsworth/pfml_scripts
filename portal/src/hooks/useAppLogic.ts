@@ -73,3 +73,4 @@ const useAppLogic = () => {
 };
 
 export default useAppLogic;
+export type AppLogic = ReturnType<typeof useAppLogic>;

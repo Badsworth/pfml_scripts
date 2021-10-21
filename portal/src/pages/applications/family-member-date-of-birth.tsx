@@ -3,7 +3,6 @@ import BenefitsApplication, {
 } from "../../models/BenefitsApplication";
 import { get, pick } from "lodash";
 import InputDate from "../../components/InputDate";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";
@@ -16,7 +15,15 @@ export const fields = [
   `claim.${caringLeaveMetadataKey}.family_member_date_of_birth`,
 ];
 
-export const FamilyMemberDateOfBirth = (props) => {
+interface FamilyMemberDateOfBirthProps {
+  appLogic: any;
+  claim: BenefitsApplication;
+  query: any;
+}
+
+export const FamilyMemberDateOfBirth = (
+  props: FamilyMemberDateOfBirthProps
+) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
 
@@ -62,12 +69,6 @@ export const FamilyMemberDateOfBirth = (props) => {
       />
     </QuestionPage>
   );
-};
-
-FamilyMemberDateOfBirth.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  query: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(FamilyMemberDateOfBirth);

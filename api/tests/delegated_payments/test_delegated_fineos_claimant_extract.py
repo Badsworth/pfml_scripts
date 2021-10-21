@@ -15,6 +15,7 @@ from massgov.pfml.db.models.employees import (
     Employee,
     ImportLog,
     PrenoteState,
+    ReferenceFile,
     ReferenceFileType,
     State,
 )
@@ -244,6 +245,49 @@ def test_run_step_happy_path(
     assert import_log_report["valid_claim_count"] == 1
 
 
+def test_run_step_multiple_times(
+    local_claimant_extract_step, local_test_db_session,
+):
+    # Test what happens if we run multiple times on the same data
+    # After the first run, the step should no-op as the reference file
+    # has already been processed.
+
+    claimant_data = FineosClaimantData()
+    add_db_records_from_fineos_data(local_test_db_session, claimant_data)
+
+    stage_data([claimant_data], local_test_db_session)
+
+    # First run
+    local_claimant_extract_step.run()
+
+    # Make sure the processed ID is set.
+    reference_files = local_test_db_session.query(ReferenceFile).all()
+    assert len(reference_files) == 1
+    assert (
+        reference_files[0].processed_import_log_id
+        == local_claimant_extract_step.get_import_log_id()
+    )
+
+    claim_after_first_run = (
+        local_test_db_session.query(Claim)
+        .filter(Claim.fineos_absence_id == claimant_data.absence_case_number)
+        .one_or_none()
+    )
+
+    # Run again a few times
+    local_claimant_extract_step.run()
+    local_claimant_extract_step.run()
+    local_claimant_extract_step.run()
+
+    # Verify the claim hasn't been updated again
+    claim_after_many_runs = (
+        local_test_db_session.query(Claim)
+        .filter(Claim.fineos_absence_id == claimant_data.absence_case_number)
+        .one_or_none()
+    )
+    assert claim_after_first_run.updated_at == claim_after_many_runs.updated_at
+
+
 def test_run_step_existing_approved_eft_info(
     local_claimant_extract_step, local_test_db_session,
 ):
@@ -420,7 +464,7 @@ def make_claimant_data_from_fineos_data(fineos_data):
     )
 
     return claimant_extract.ClaimantData(
-        fineos_data.absence_case_number, [requested_absence], [employee_feed]
+        fineos_data.absence_case_number, [requested_absence], employee_feed
     )
 
 
@@ -439,7 +483,7 @@ def make_claimant_data_with_incorrect_request_absence(fineos_data):
     )
 
     return claimant_extract.ClaimantData(
-        fineos_data.absence_case_number, [requested_absence], [employee_feed]
+        fineos_data.absence_case_number, [requested_absence], employee_feed
     )
 
 

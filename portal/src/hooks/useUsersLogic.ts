@@ -1,11 +1,11 @@
 import routes, { isApplicationsRoute, isEmployersRoute } from "../routes";
 import { useMemo, useState } from "react";
+import { AppErrorsLogic } from "./useAppErrorsLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
+import { PortalFlow } from "./usePortalFlow";
 import User from "../models/User";
 import { UserNotReceivedError } from "../errors";
 import UsersApi from "../api/UsersApi";
-import useAppErrorsLogic from "./useAppErrorsLogic";
-import usePortalFlow from "./usePortalFlow";
 
 /**
  * Hook that defines user state
@@ -15,9 +15,9 @@ const useUsersLogic = ({
   isLoggedIn,
   portalFlow,
 }: {
-  appErrorsLogic: ReturnType<typeof useAppErrorsLogic>;
+  appErrorsLogic: AppErrorsLogic;
   isLoggedIn: boolean;
-  portalFlow: ReturnType<typeof usePortalFlow>;
+  portalFlow: PortalFlow;
 }) => {
   const usersApi = useMemo(() => new UsersApi(), []);
   const [user, setUser] = useState<User>();
@@ -114,7 +114,7 @@ const useUsersLogic = ({
    */
   const convertUser = async (
     user_id: User["user_id"],
-    postData: Partial<User>
+    postData: { employer_fein: string }
   ) => {
     appErrorsLogic.clearErrors();
 
@@ -123,7 +123,7 @@ const useUsersLogic = ({
       setUser(user);
 
       portalFlow.goTo(routes.employers.organizations, {
-        account_converted: true,
+        account_converted: "true",
       });
     } catch (error) {
       appErrorsLogic.catchError(error);
@@ -142,3 +142,4 @@ const useUsersLogic = ({
 };
 
 export default useUsersLogic;
+export type UsersLogic = ReturnType<typeof useUsersLogic>;

@@ -83,11 +83,11 @@ def get_leave_details(absence_periods: Dict) -> LeaveDetails:
                 reduced_end_date = end_date
 
         elif decision["period"]["type"] == "Episodic":
-            # FINEOS has yet to implement data for Episodic (intermittent) leaves
-            # TODO when this info is available https://lwd.atlassian.net/browse/EMPLOYER-448
-            # Send a static fake start and end date for recognition from the front end
-            intermittent_start_date = datetime(2021, 1, 1, 0, 0)
-            intermittent_end_date = datetime(2021, 2, 1, 0, 0)
+            if intermittent_start_date is None or start_date < reduced_start_date:
+                intermittent_start_date = start_date
+
+            if intermittent_end_date is None or end_date > reduced_end_date:
+                intermittent_end_date = end_date
 
     if continuous_start_date is not None and continuous_end_date is not None:
         leave_details["continuous_leave_periods"] = [

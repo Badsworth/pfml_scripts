@@ -1651,8 +1651,8 @@ def test_get_leave_details(period_decisions):
 
     assert leave_details.continuous_leave_periods[0].start_date == date(2021, 2, 1)
     assert leave_details.continuous_leave_periods[0].end_date == date(2021, 2, 24)
-    assert leave_details.intermittent_leave_periods[0].start_date == date(2021, 1, 1)
-    assert leave_details.intermittent_leave_periods[0].end_date == date(2021, 2, 1)
+    assert leave_details.intermittent_leave_periods[0].start_date == date(2021, 1, 15)
+    assert leave_details.intermittent_leave_periods[0].end_date == date(2021, 1, 20)
     assert leave_details.reduced_schedule_leave_periods[0].start_date == date(2021, 1, 4)
     assert leave_details.reduced_schedule_leave_periods[0].end_date == date(2021, 1, 29)
 

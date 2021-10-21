@@ -121,7 +121,7 @@ export default class HealthCareProviderForm extends AbstractDocumentGenerator<{
             data["Continuous end dd"] = format(end_date, "dd");
             data["Continuous end yyyy"] = format(end_date, "yyyy");
             break;
-          case "intermittent":
+          case "intermittent": {
             const {
               duration,
               duration_basis,
@@ -153,7 +153,8 @@ export default class HealthCareProviderForm extends AbstractDocumentGenerator<{
             data["Days"] = duration.toString();
             data["Yes"] = "Yes";
             break;
-          case "reduced_schedule":
+          }
+          case "reduced_schedule": {
             const reducedPeriod = period as ReducedScheduleLeavePeriods;
             const totalMinutes =
               (reducedPeriod.monday_off_minutes ?? 0) +
@@ -179,6 +180,7 @@ export default class HealthCareProviderForm extends AbstractDocumentGenerator<{
               totalMinutes / 60
             ).toString();
             break;
+          }
         }
       } else {
         switch (leave_type) {

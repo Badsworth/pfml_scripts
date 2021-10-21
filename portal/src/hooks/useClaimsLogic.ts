@@ -1,21 +1,17 @@
-import {
-  ClaimDetailLoadError,
-  ClaimWithdrawnError,
-  ValidationError,
-} from "../errors";
+import { ClaimWithdrawnError, ValidationError } from "../errors";
+import { AppErrorsLogic } from "./useAppErrorsLogic";
 import ClaimCollection from "../models/ClaimCollection";
 import ClaimDetail from "../models/ClaimDetail";
 import ClaimsApi from "../api/ClaimsApi";
 import PaginationMeta from "../models/PaginationMeta";
 import { isEqual } from "lodash";
-import useAppErrorsLogic from "./useAppErrorsLogic";
 import useCollectionState from "./useCollectionState";
 import { useState } from "react";
 
 const useClaimsLogic = ({
   appErrorsLogic,
 }: {
-  appErrorsLogic: ReturnType<typeof useAppErrorsLogic>;
+  appErrorsLogic: AppErrorsLogic;
 }) => {
   const claimsApi = new ClaimsApi();
 
@@ -57,7 +53,7 @@ const useClaimsLogic = ({
     pageOffset: number | string = 1,
     order: {
       order_by?: string;
-      order_direction?: string;
+      order_direction?: "ascending" | "descending";
     } = {},
     filters: {
       claim_status?: string;
@@ -69,8 +65,7 @@ const useClaimsLogic = ({
 
     // Or have we already loaded this page with the same order and filter params?
     if (
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'page_offset' does not exist on type 'Pag... Remove this comment to see the full error message
-      parseInt(paginationMeta.page_offset) === parseInt(pageOffset) &&
+      paginationMeta.page_offset === Number(pageOffset) &&
       isEqual(activeFilters, filters) &&
       isEqual(activeOrder, order)
     ) {
@@ -130,7 +125,7 @@ const useClaimsLogic = ({
           new ClaimWithdrawnError(absenceId, error.issues[0])
         );
       } else {
-        appErrorsLogic.catchError(new ClaimDetailLoadError(absenceId));
+        appErrorsLogic.catchError(error);
       }
     } finally {
       setIsLoadingClaimDetail(false);
@@ -153,3 +148,4 @@ const useClaimsLogic = ({
 };
 
 export default useClaimsLogic;
+export type ClaimsLogic = ReturnType<typeof useClaimsLogic>;

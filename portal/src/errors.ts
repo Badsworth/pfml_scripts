@@ -92,9 +92,9 @@ export class UserNotReceivedError extends BasePortalError {
  * An API response returned a status code greater than 400
  */
 export class ApiRequestError extends BasePortalError {
-  responseData?: Record<string, unknown>;
+  responseData?: unknown;
 
-  constructor(responseData?: Record<string, unknown>, ...params) {
+  constructor(responseData?: unknown, ...params) {
     super(...params);
     this.responseData = responseData;
     this.name = "ApiRequestError";
@@ -150,16 +150,6 @@ export class RequestTimeoutError extends ApiRequestError {
   constructor(...params) {
     super(...params);
     this.name = "RequestTimeoutError";
-  }
-}
-
-/**
- * A GET request to the `/claims` endpoint for claim detail failed.
- */
-export class ClaimDetailLoadError extends BasePortalError {
-  constructor(...params) {
-    super(...params);
-    this.name = "ClaimDetailLoadError";
   }
 }
 

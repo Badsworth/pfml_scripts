@@ -38,6 +38,7 @@
         "plugin:@typescript-eslint/recommended" // rules specific to typescript, e.g., writing interfaces
       ],
       "rules": {
+        "@typescript-eslint/no-explicit-any": "off", // TODO: (PORTAL-876 - turn this on!)
         "@typescript-eslint/ban-ts-comment": [
           "error",
           {

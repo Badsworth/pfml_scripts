@@ -12,7 +12,6 @@ import FormLabel from "../../components/FormLabel";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputText from "../../components/InputText";
 import Lead from "../../components/Lead";
-import PropTypes from "prop-types";
 import React from "react";
 import ThrottledButton from "../../components/ThrottledButton";
 import Title from "../../components/Title";
@@ -35,7 +34,15 @@ export const fields = [
   `claim.${routingNumberField}`,
 ];
 
-export const PaymentMethod = (props) => {
+interface PaymentMethodProps {
+  claim?: BenefitsApplication;
+  query?: {
+    claim_id?: string;
+  };
+  appLogic: any;
+}
+
+export const PaymentMethod = (props: PaymentMethodProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -186,14 +193,6 @@ export const PaymentMethod = (props) => {
       </form>
     </React.Fragment>
   );
-};
-
-PaymentMethod.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(PaymentMethod);

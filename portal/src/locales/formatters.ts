@@ -10,12 +10,12 @@ import convertMinutesToHours from "../utils/convertMinutesToHours";
 /**
  * Add additional formatting to a given translation string
  * @see https://www.i18next.com/translation-function/formatting
- * @param {string} value - the string to be formatted
- * @param {string} format - the type of formatting
- * @param {string} locale - language code
- * @returns {string} formatted value
  */
-export default function formatValue(value, format, locale) {
+export default function formatValue(
+  value: string,
+  format: "currency" | "ein" | "hoursMinutesDuration",
+  locale: string
+) {
   if (format === "currency") {
     return formatCurrency(value, locale);
   } else if (format === "ein") {
@@ -29,24 +29,22 @@ export default function formatValue(value, format, locale) {
 /**
  * Formats number into currency. For example:
  *   1000 -> $1,000.00
- * @param {string} value - the string to be formatted
- * @param {string} locale - language code
- * @returns {string} formatted value
  */
-function formatCurrency(value, locale) {
+function formatCurrency(value: string, locale: string) {
+  const number = Number(value);
+  if (isNaN(number)) return value;
+
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency: "USD",
-  }).format(value);
+  }).format(number);
 }
 
 /**
  * Formats an EIN returned from the server to utilize a non-breaking hyphen
  * so that the entire EIN is always displayed on the same line if possible.
- * @param {string} value - the string to be formatted
- * @returns {string} formatted value
  */
-function formatEmployerFein(value) {
+function formatEmployerFein(value: string) {
   return value.replace("-", "‑");
 }
 
@@ -54,11 +52,8 @@ function formatEmployerFein(value) {
  * Formats a duration into hours and minutes. For example:
  *   480 -> 8h
  *   475 -> 7h 55m
- * @param {string} value - the string to be formatted
- * @param {string} _locale - language code
- * @returns {string} formatted value
  */
-function formatHoursMinutesDuration(value, _locale) {
+function formatHoursMinutesDuration(value: string, _locale: string) {
   // Add any internationalizations here. For example:
   // if (locale === 'en-US') {
   //   return `${value} minutes`
@@ -66,7 +61,7 @@ function formatHoursMinutesDuration(value, _locale) {
 
   // The default return value will be the English-idiomatic "h" and "m" abbreviations for
   // hours and minutes
-  const { hours, minutes } = convertMinutesToHours(value);
+  const { hours, minutes } = convertMinutesToHours(Number(value));
   if (minutes === 0) return `${hours}h`;
   return `${hours}h ${minutes}m`;
 }

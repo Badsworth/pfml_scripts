@@ -7,7 +7,6 @@ import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputText from "../../components/InputText";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
@@ -19,7 +18,12 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.employment_status", "claim.employer_fein"];
 
-export const EmploymentStatus = (props) => {
+interface EmploymentStatusProps {
+  appLogic: any;
+  claim: BenefitsApplication;
+}
+
+export const EmploymentStatus = (props: EmploymentStatusProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -52,7 +56,6 @@ export const EmploymentStatus = (props) => {
       onSave={handleSave}
     >
       {!showEmploymentStatus && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; neutral:... Remove this comment to see the full error message
         <Alert state="info" neutral>
           <Trans
             i18nKey="pages.claimsEmploymentStatus.alertBody"
@@ -103,11 +106,6 @@ export const EmploymentStatus = (props) => {
       </ConditionalContent>
     </QuestionPage>
   );
-};
-
-EmploymentStatus.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
 export default withBenefitsApplication(EmploymentStatus);

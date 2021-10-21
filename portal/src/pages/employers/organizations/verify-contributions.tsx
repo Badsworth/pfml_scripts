@@ -1,13 +1,11 @@
-import AppErrorInfoCollection from "../../../models/AppErrorInfoCollection";
+import { AppLogic } from "../../../hooks/useAppLogic";
 import Button from "../../../components/Button";
 import Details from "../../../components/Details";
 import InputCurrency from "../../../components/InputCurrency";
 import Lead from "../../../components/Lead";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
-import User from "../../../models/User";
 import Withholding from "../../../models/Withholding";
 import formatDateRange from "../../../utils/formatDateRange";
 import routes from "../../../routes";
@@ -18,7 +16,16 @@ import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
 import withWithholding from "../../../hoc/withWithholding";
 
-export const VerifyContributions = (props) => {
+interface VerifyContributionsProps {
+  appLogic: AppLogic;
+  query: {
+    employer_id: string;
+    next?: string;
+  };
+  withholding: Withholding;
+}
+
+export const VerifyContributions = (props: VerifyContributionsProps) => {
   const { appLogic, query, withholding } = props;
   const {
     users: { user },
@@ -94,7 +101,6 @@ export const VerifyContributions = (props) => {
         <Trans
           i18nKey="pages.employersOrganizationsVerifyContributions.detailsList"
           values={{
-            // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
             date: formatDateRange(withholding.filing_period),
           }}
           components={{
@@ -131,7 +137,6 @@ export const VerifyContributions = (props) => {
         label={t(
           "pages.employersOrganizationsVerifyContributions.withholdingAmountLabel",
           {
-            // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
             date: formatDateRange(withholding.filing_period),
           }
         )}
@@ -142,23 +147,6 @@ export const VerifyContributions = (props) => {
       </Button>
     </form>
   );
-};
-
-VerifyContributions.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.instanceOf(AppErrorInfoCollection),
-    employers: PropTypes.shape({
-      submitWithholding: PropTypes.func.isRequired,
-    }),
-    users: PropTypes.shape({
-      user: PropTypes.instanceOf(User),
-    }).isRequired,
-  }).isRequired,
-  query: PropTypes.shape({
-    employer_id: PropTypes.string.isRequired,
-    next: PropTypes.string,
-  }).isRequired,
-  withholding: PropTypes.instanceOf(Withholding).isRequired,
 };
 
 export default withUser(withWithholding(VerifyContributions));

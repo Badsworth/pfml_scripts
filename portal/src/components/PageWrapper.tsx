@@ -8,7 +8,6 @@ import ErrorBoundary from "./ErrorBoundary";
 import ErrorsSummary from "./ErrorsSummary";
 import Header from "./Header";
 import { Helmet } from "react-helmet";
-import PropTypes from "prop-types";
 import React from "react";
 import Spinner from "./Spinner";
 import dynamic from "next/dynamic";
@@ -21,12 +20,19 @@ import { useTranslation } from "../locales/i18n";
 const Footer = dynamic(() => import("./Footer"));
 const MaintenanceTakeover = dynamic(() => import("./MaintenanceTakeover"));
 
+interface PageWrapperProps {
+  appLogic: any;
+  children: React.ReactNode;
+  isLoading?: boolean;
+  maintenance?: any;
+}
+
 /**
  * This component renders the global page elements, such as header/footer, site-level
  * error alert, and maintenance page when enabled. Every page on the site is rendered
  * with this component as its parent.
  */
-const PageWrapper = (props) => {
+const PageWrapper = (props: PageWrapperProps) => {
   const { appLogic, isLoading, maintenance } = props;
   const { t } = useTranslation();
 
@@ -135,16 +141,6 @@ const PageWrapper = (props) => {
       </div>
     </ErrorBoundary>
   );
-};
-
-PageWrapper.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  /** Page body */
-  children: PropTypes.node.isRequired,
-  /** Is this page changing or in process of loading? */
-  isLoading: PropTypes.bool,
-  /** Maintenance feature flag data */
-  maintenance: PropTypes.object,
 };
 
 export default PageWrapper;

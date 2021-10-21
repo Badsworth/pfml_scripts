@@ -49,7 +49,6 @@ abstract class BaseBenefitsApplication {
       this,
       `leave_details.continuous_leave_periods[0]`
     );
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     return formatDateRange(start_date, end_date);
   }
 
@@ -70,7 +69,6 @@ abstract class BaseBenefitsApplication {
       this,
       `leave_details.intermittent_leave_periods[0]`
     );
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     return formatDateRange(start_date, end_date);
   }
 
@@ -91,7 +89,6 @@ abstract class BaseBenefitsApplication {
       this,
       `leave_details.reduced_schedule_leave_periods[0]`
     );
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     return formatDateRange(start_date, end_date);
   }
 

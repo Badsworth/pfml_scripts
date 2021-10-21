@@ -30,8 +30,8 @@ const useFlagsLogic = () => {
    */
   const getFlag = (flag_name: string) => {
     return (
-      // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-      new Flag(flags.filter((flag) => flag.name === flag_name)[0]) || new Flag()
+      new Flag(flags.filter((flag) => flag.name === flag_name)[0]) ||
+      new Flag({})
     );
   };
 

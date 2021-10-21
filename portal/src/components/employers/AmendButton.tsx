@@ -1,14 +1,17 @@
 import Button from "../Button";
 import Icon from "../Icon";
-import PropTypes from "prop-types";
 import React from "react";
 import { useTranslation } from "../../locales/i18n";
+
+interface AmendButtonProps {
+  onClick?: (...args: any[]) => any;
+}
 
 /**
  * Link with edit icon for amendable sections
  * in the Leave Admin claim review page.
  */
-const AmendButton = ({ onClick }) => {
+const AmendButton = ({ onClick }: AmendButtonProps) => {
   const { t } = useTranslation();
 
   return (
@@ -25,11 +28,6 @@ const AmendButton = ({ onClick }) => {
       {t("components.amendButton.amend")}
     </Button>
   );
-};
-
-AmendButton.propTypes = {
-  /** Displays the amendment form */
-  onClick: PropTypes.func,
 };
 
 export default AmendButton;

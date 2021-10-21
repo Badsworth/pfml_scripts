@@ -26,6 +26,7 @@ import Step, { ClaimSteps } from "../../models/Step";
 import { compact, get, isUndefined } from "lodash";
 
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
 import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import { DateTime } from "luxon";
@@ -34,7 +35,6 @@ import Heading from "../../components/Heading";
 import HeadingPrefix from "../../components/HeadingPrefix";
 import Lead from "../../components/Lead";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import ReviewHeading from "../../components/ReviewHeading";
 import ReviewRow from "../../components/ReviewRow";
 import Spinner from "../../components/Spinner";
@@ -75,11 +75,18 @@ function formatAddress(address) {
   return formatted;
 }
 
+interface ReviewProps {
+  appLogic: AppLogic;
+  claim?: BenefitsApplication;
+  documents?: BenefitsApplicationDocument[];
+  isLoadingDocuments?: boolean;
+}
+
 /**
  * Application review page, allowing a user to review the info
  * they've entered before they submit it.
  */
-export const Review = (props) => {
+export const Review = (props: ReviewProps) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments } = props;
 
@@ -108,7 +115,6 @@ export const Review = (props) => {
 
   const steps = Step.createClaimStepsFromMachine(
     claimantConfigs,
-    // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ claim: any; }' is not assignab... Remove this comment to see the full error message
     {
       claim: props.claim,
     },
@@ -154,7 +160,9 @@ export const Review = (props) => {
   useEffect(() => {
     const missingFields = getMissingRequiredFields(appErrors.items);
     if (missingFields.length) {
-      tracker.trackEvent("Missing required fields", { missingFields });
+      tracker.trackEvent("Missing required fields", {
+        missingFields: JSON.stringify(missingFields),
+      });
 
       clearRequiredFieldErrors();
       if (!showNewFieldError) {
@@ -172,7 +180,6 @@ export const Review = (props) => {
   return (
     <div className="measure-6">
       {showNewFieldError && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; }' i... Remove this comment to see the full error message
         <Alert className="margin-bottom-3">
           <Trans
             i18nKey="pages.claimsReview.missingRequiredFieldError"
@@ -298,7 +305,6 @@ export const Review = (props) => {
         level={reviewRowLevel}
         label={t("pages.claimsReview.userDateOfBirthLabel")}
       >
-        {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1. */}
         {formatDateRange(get(claim, "date_of_birth"))}
       </ReviewRow>
 
@@ -444,7 +450,6 @@ export const Review = (props) => {
           level={reviewRowLevel}
           label={t("pages.claimsReview.childBirthDateLabel")}
         >
-          {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1. */}
           {formatDateRange(get(claim, "leave_details.child_birth_date"))}
         </ReviewRow>
       )}
@@ -457,7 +462,6 @@ export const Review = (props) => {
             level={reviewRowLevel}
             label={t("pages.claimsReview.childPlacementDateLabel")}
           >
-            {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1. */}
             {formatDateRange(get(claim, "leave_details.child_placement_date"))}
           </ReviewRow>
         )}
@@ -501,7 +505,6 @@ export const Review = (props) => {
             level={reviewRowLevel}
             label={t("pages.claimsReview.familyMemberDateOfBirthLabel")}
           >
-            {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1. */}
             {formatDateRange(
               get(
                 claim,
@@ -617,12 +620,14 @@ export const Review = (props) => {
               ? t("pages.claimsReview.otherLeaveChoiceYes")
               : t("pages.claimsReview.otherLeaveChoiceNo")}
           </ReviewRow>
+          {/* @ts-expect-error ts-migrate(2786) FIXME: 'PreviousLeaveList' cannot be used as a JSX compon... Remove this comment to see the full error message */}
           <PreviousLeaveList
             entries={get(claim, "previous_leaves_same_reason")}
             type="sameReason"
             startIndex={0}
             reviewRowLevel={reviewRowLevel}
           />
+          {/* @ts-expect-error ts-migrate(2786) FIXME: 'PreviousLeaveList' cannot be used as a JSX compon... Remove this comment to see the full error message */}
           <PreviousLeaveList
             entries={get(claim, "previous_leaves_other_reason")}
             type="otherReason"
@@ -646,7 +651,6 @@ export const Review = (props) => {
               label={t("pages.claimsReview.concurrentLeaveLabel")}
             >
               <p className="text-base-darker margin-top-1">
-                {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
                 {formatDateRange(
                   get(claim, "concurrent_leave.leave_start_date"),
                   get(claim, "concurrent_leave.leave_end_date")
@@ -674,6 +678,7 @@ export const Review = (props) => {
           </ReviewRow>
 
           {get(claim, "has_employer_benefits") && (
+            // @ts-expect-error ts-migrate(2786) FIXME: 'EmployerBenefitList' cannot be used as a JSX comp... Remove this comment to see the full error message
             <EmployerBenefitList
               entries={get(claim, "employer_benefits")}
               reviewRowLevel={reviewRowLevel}
@@ -691,6 +696,7 @@ export const Review = (props) => {
           </ReviewRow>
 
           {get(claim, "has_other_incomes") && (
+            // @ts-expect-error ts-migrate(2786) FIXME: 'OtherIncomeList' cannot be used as a JSX componen... Remove this comment to see the full error message
             <OtherIncomeList
               entries={get(claim, "other_incomes")}
               reviewRowLevel={reviewRowLevel}
@@ -775,7 +781,6 @@ export const Review = (props) => {
             })}
           </Heading>
           {hasLoadingDocumentsError && (
-            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; noIc... Remove this comment to see the full error message
             <Alert className="margin-bottom-3" noIcon>
               <Trans
                 i18nKey="pages.claimsReview.documentsLoadError"
@@ -846,26 +851,15 @@ export const Review = (props) => {
   );
 };
 
-Review.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    benefitsApplications: PropTypes.object.isRequired,
-    clearRequiredFieldErrors: PropTypes.func.isRequired,
-    portalFlow: PropTypes.shape({
-      getNextPageRoute: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  documents: PropTypes.arrayOf(
-    PropTypes.instanceOf(BenefitsApplicationDocument)
-  ),
-  isLoadingDocuments: PropTypes.bool,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
-};
+interface PreviousLeaveListProps {
+  type: "sameReason" | "otherReason";
+  entries: PreviousLeave[];
+  /** start index for previous leave label */
+  startIndex: number;
+  reviewRowLevel: "2" | "3" | "4" | "5" | "6";
+}
 
-export const PreviousLeaveList = (props) => {
+export const PreviousLeaveList = (props: PreviousLeaveListProps) => {
   const { t } = useTranslation();
   if (!props.entries) return null;
 
@@ -878,7 +872,6 @@ export const PreviousLeaveList = (props) => {
       })}
     >
       <p className="text-base-darker margin-top-1">
-        {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
         {formatDateRange(entry.leave_start_date, entry.leave_end_date)}
       </p>
       <ul className="usa-list margin-top-1">
@@ -925,20 +918,16 @@ export const PreviousLeaveList = (props) => {
   ));
 };
 
-PreviousLeaveList.propTypes = {
-  /** Previous leave type */
-  type: PropTypes.oneOf(["sameReason", "otherReason"]).isRequired,
-  entries: PropTypes.arrayOf(PropTypes.instanceOf(PreviousLeave)).isRequired,
-  /** start index for previous leave label */
-  startIndex: PropTypes.number.isRequired,
-  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
-};
+interface EmployerBenefitListProps {
+  entries: EmployerBenefit[];
+  reviewRowLevel: "2" | "3" | "4" | "5" | "6";
+}
 
 /*
  * Helper component for rendering an array of EmployerBenefit
  * objects.
  */
-export const EmployerBenefitList = (props) => {
+export const EmployerBenefitList = (props: EmployerBenefitListProps) => {
   const { t } = useTranslation();
   const { entries, reviewRowLevel } = props;
 
@@ -951,7 +940,6 @@ export const EmployerBenefitList = (props) => {
       context: findKeyByValue(EmployerBenefitType, entry.benefit_type),
     });
 
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     const dates = formatDateRange(
       entry.benefit_start_date,
       entry.benefit_end_date
@@ -986,16 +974,16 @@ export const EmployerBenefitList = (props) => {
   });
 };
 
-EmployerBenefitList.propTypes = {
-  entries: PropTypes.arrayOf(PropTypes.instanceOf(EmployerBenefit)).isRequired,
-  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
-};
+interface OtherIncomeListProps {
+  entries: OtherIncome[];
+  reviewRowLevel: "2" | "3" | "4" | "5" | "6";
+}
 
 /*
  * Helper component for rendering an array of OtherIncome
  * objects.
  */
-export const OtherIncomeList = (props) => {
+export const OtherIncomeList = (props: OtherIncomeListProps) => {
   const { t } = useTranslation();
   const { entries, reviewRowLevel } = props;
 
@@ -1008,7 +996,6 @@ export const OtherIncomeList = (props) => {
       context: findKeyByValue(OtherIncomeType, entry.income_type),
     });
 
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     const dates = formatDateRange(
       entry.income_start_date,
       entry.income_end_date
@@ -1037,17 +1024,20 @@ export const OtherIncomeList = (props) => {
   });
 };
 
-OtherIncomeList.propTypes = {
-  entries: PropTypes.arrayOf(PropTypes.instanceOf(OtherIncome)).isRequired,
-  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
-};
+interface OtherLeaveEntryProps {
+  amount?: string;
+  dates: string;
+  label: string;
+  reviewRowLevel: "2" | "3" | "4" | "5" | "6";
+  type?: string;
+}
 
 /*
  * Helper component for rendering a single other leave entry. This will
  * render a ReviewRow with the specified label, date string,
  * and an optional type string and amount string
  */
-export const OtherLeaveEntry = (props) => {
+export const OtherLeaveEntry = (props: OtherLeaveEntryProps) => {
   const { amount, dates, label, reviewRowLevel, type } = props;
 
   return (
@@ -1059,14 +1049,6 @@ export const OtherLeaveEntry = (props) => {
       </ul>
     </ReviewRow>
   );
-};
-
-OtherLeaveEntry.propTypes = {
-  amount: PropTypes.string,
-  dates: PropTypes.string.isRequired,
-  label: PropTypes.string.isRequired,
-  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
-  type: PropTypes.string,
 };
 
 export default withBenefitsApplication(withClaimDocuments(Review));

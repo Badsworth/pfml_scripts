@@ -1,13 +1,13 @@
+import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import { get } from "lodash";
 
-/** @typedef {import('../models/AppErrorInfoCollection').default} AppErrorInfoCollection */
 /**
  * Check if a DocumentsLoadError related to loading exists for the given application
- * @param {AppErrorInfoCollection} appErrors
- * @param {string} applicationId
- * @returns {boolean}
  */
-const hasDocumentsLoadError = (appErrors, applicationId) =>
+const hasDocumentsLoadError = (
+  appErrors: AppErrorInfoCollection,
+  applicationId: string
+) =>
   appErrors.items.some(
     (error) =>
       error.name === "DocumentsLoadError" &&

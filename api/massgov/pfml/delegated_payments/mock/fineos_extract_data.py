@@ -4,7 +4,7 @@ import os
 from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import List, cast
+from typing import Dict, List, cast
 
 import faker
 
@@ -608,3 +608,30 @@ def generate_claimant_data_files(
         fineos_claimant_dataset.append(fineos_claimant_data)
     # create the files
     create_fineos_claimant_extract_files(fineos_claimant_dataset, folder_path, date_of_extract)
+
+
+def generate_payment_reconciliation_extract_files(
+    folder_path: str, date_prefix: str, row_count: int
+) -> Dict[str, List[Dict]]:
+    extract_records = {}
+    for extract_file in payments_util.PAYMENT_RECONCILIATION_EXTRACT_FILES:
+        csv_handle = _create_file(
+            folder_path, date_prefix, extract_file.file_name, extract_file.field_names
+        )
+
+        # write the respective rows
+        records = []
+        for i in range(row_count):
+            row = {}
+            for field_name in extract_file.field_names:
+                row[field_name] = "test"
+            row["C"] = "1"
+            row["I"] = str(i)
+
+            csv_handle.csv_writer.writerow(row)
+            records.append(row)
+
+        csv_handle.file.close()
+        extract_records[extract_file.file_name] = records
+
+    return extract_records

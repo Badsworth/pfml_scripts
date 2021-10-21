@@ -244,7 +244,10 @@ export class ClaimPage {
   // No assert ClaimStatus for Declined for the absence case
   // won't say "Declined".
   denyExtendedTime(reason: string): this {
-    cy.get("tr.ListRowSelected").click();
+    waitForAjaxComplete();
+    cy.get("table[id$='leaveRequestListviewWidget']").within(() => {
+      cy.get("tr.ListRowSelected").click();
+    });
     cy.get('a[title="Deny the Pending Leave Request"]').click({
       force: true,
     });

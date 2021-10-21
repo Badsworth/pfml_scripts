@@ -5,7 +5,7 @@ import { uniqueId } from "lodash";
  */
 class TempFile {
   id?: string = uniqueId("TempFile");
-  file: Blob;
+  file: File;
 
   constructor(attrs: TempFile) {
     Object.assign(this, attrs);

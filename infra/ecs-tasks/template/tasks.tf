@@ -224,6 +224,19 @@ locals {
       ]
     },
 
+    "pub-payments-process-snapshot" = {
+      command   = ["pub-payments-process-snapshot"]
+      task_role = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-snapshot"
+      cpu       = 2048
+      memory    = 16384
+      env = [
+        local.db_access,
+        local.fineos_s3_access,
+        local.pub_s3_folders,
+        { name : "FINEOS_PAYMENT_RECONCILIATION_EXTRACT_MAX_HISTORY_DATE", value : "2021-10-01" }
+      ]
+    },
+
     "fineos-bucket-tool" = {
       command   = ["fineos-bucket-tool"]
       task_role = aws_iam_role.fineos_bucket_tool_role.arn
@@ -270,6 +283,18 @@ locals {
       ]
     },
 
+    "dua-import-employee-demographics" = {
+      command   = ["dua-import-employee-demographics"]
+      task_role = aws_iam_role.dua_import_employee_demographics_task_role.arn
+      cpu            = 2048,
+      memory         = 4096,
+      env = [
+        local.db_access,
+        local.eolwd_moveit_access,
+        local.reductions_folders
+      ]
+    }
+    
     "report-sequential-employment" = {
       command   = ["report-sequential-employment"]
       task_role = aws_iam_role.task_execute_sql_task_role.arn

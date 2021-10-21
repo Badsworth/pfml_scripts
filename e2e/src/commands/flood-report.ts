@@ -63,7 +63,7 @@ async function buildReport(ids: string[]): Promise<string[]> {
 
     const newrelic = generateNRAPMLink(start, end, "performance");
     const runtime = `${format(start, "p")}-${format(end, "p")}`;
-    const name = flood.name.replace(/.* Preset \- /, "");
+    const name = flood.name.replace(/.* Preset - /, "");
     return {
       total,
       failed,
@@ -101,6 +101,7 @@ async function parseFailures(data: NodeJS.ReadableStream): Promise<StepCounts> {
           counts[row.Label] = { passed: 0, failed: 0 };
         }
         counts[row.Label].failed += parseInt(row.Value);
+        break;
       case "passed":
         if (!(row.Label in counts)) {
           counts[row.Label] = { passed: 0, failed: 0 };

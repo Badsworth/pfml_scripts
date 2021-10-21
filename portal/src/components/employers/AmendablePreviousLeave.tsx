@@ -10,12 +10,20 @@ import ConditionalContent from "../ConditionalContent";
 import Heading from "../Heading";
 import InputChoiceGroup from "../InputChoiceGroup";
 import InputDate from "../InputDate";
-import PropTypes from "prop-types";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import { get } from "lodash";
 import useAutoFocusEffect from "../../hooks/useAutoFocusEffect";
 import { useTranslation } from "../../locales/i18n";
+
+interface AmendablePreviousLeaveProps {
+  appErrors: AppErrorInfoCollection;
+  isAddedByLeaveAdmin: boolean;
+  onChange: (...args: any[]) => any;
+  onRemove: (...args: any[]) => any;
+  previousLeave: PreviousLeave;
+  shouldShowV2: boolean;
+}
 
 /**
  * Display a previous leave and amendment form
@@ -29,7 +37,7 @@ const AmendablePreviousLeave = ({
   onRemove,
   previousLeave,
   shouldShowV2,
-}) => {
+}: AmendablePreviousLeaveProps) => {
   const { t } = useTranslation();
   const [amendment, setAmendment] = useState(previousLeave);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
@@ -100,7 +108,6 @@ const AmendablePreviousLeave = ({
   const LeaveDetailsRow = () => (
     <tr>
       <th scope="row">
-        {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
         {formatDateRange(
           previousLeave.leave_start_date,
           previousLeave.leave_end_date
@@ -303,15 +310,6 @@ const AmendablePreviousLeave = ({
       </ConditionalContent>
     </React.Fragment>
   );
-};
-
-AmendablePreviousLeave.propTypes = {
-  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
-  isAddedByLeaveAdmin: PropTypes.bool.isRequired,
-  onChange: PropTypes.func.isRequired,
-  onRemove: PropTypes.func.isRequired,
-  previousLeave: PropTypes.instanceOf(PreviousLeave).isRequired,
-  shouldShowV2: PropTypes.bool.isRequired,
 };
 
 export default AmendablePreviousLeave;

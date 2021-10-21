@@ -1,5 +1,4 @@
 import { AbsenceCaseStatus } from "../models/Claim";
-import PropTypes from "prop-types";
 import React from "react";
 import Tag from "./Tag";
 import findKeyByValue from "../utils/findKeyByValue";
@@ -8,7 +7,17 @@ import { isFeatureEnabled } from "../services/featureFlags";
 import { orderBy } from "lodash";
 import { useTranslation } from "../locales/i18n";
 
-const AbsenceCaseStatusTag = ({ status, managedRequirements }) => {
+interface AbsenceCaseStatusTagProps {
+  status?: string;
+  managedRequirements?: Array<{
+    follow_up_date: string;
+  }>;
+}
+
+const AbsenceCaseStatusTag = ({
+  status,
+  managedRequirements,
+}: AbsenceCaseStatusTagProps) => {
   const { t } = useTranslation();
   const mappedStatus = findKeyByValue(AbsenceCaseStatus, status);
 
@@ -69,13 +78,6 @@ const AbsenceCaseStatusTag = ({ status, managedRequirements }) => {
     // TODO (EMPLOYER-1542): Replace with `inactive` tag on line 52
     <React.Fragment>--</React.Fragment>
   );
-};
-
-AbsenceCaseStatusTag.propTypes = {
-  status: PropTypes.string,
-  managedRequirements: PropTypes.arrayOf(
-    PropTypes.shape({ follow_up_date: PropTypes.string.isRequired })
-  ),
 };
 
 export default AbsenceCaseStatusTag;

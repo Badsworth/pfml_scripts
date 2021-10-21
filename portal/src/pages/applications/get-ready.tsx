@@ -1,11 +1,11 @@
 import { IconLaptop, IconPhone } from "@massds/mayflower-react/dist/Icon";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
 import ButtonLink from "../../components/ButtonLink";
 import Heading from "../../components/Heading";
 import Icon from "../../components/Icon";
 import Link from "next/link";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
@@ -13,7 +13,12 @@ import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplications from "../../hoc/withBenefitsApplications";
 
-export const GetReady = (props) => {
+interface GetReadyProps {
+  appLogic: AppLogic;
+  claims: BenefitsApplicationCollection;
+}
+
+export const GetReady = (props: GetReadyProps) => {
   const { appLogic, claims } = props;
   const { t } = useTranslation();
 
@@ -41,7 +46,6 @@ export const GetReady = (props) => {
 
       <Title>{t("pages.getReady.title")}</Title>
 
-      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element[]; heading: string; stat... Remove this comment to see the full error message */}
       <Alert
         heading={t("pages.getReady.alertHeading")}
         state="info"
@@ -188,16 +192,6 @@ export const GetReady = (props) => {
       </div>
     </React.Fragment>
   );
-};
-
-GetReady.propTypes = {
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      getNextPageRoute: PropTypes.func.isRequired,
-      pathname: PropTypes.string.isRequired,
-    }),
-  }).isRequired,
-  claims: PropTypes.instanceOf(BenefitsApplicationCollection).isRequired,
 };
 
 export default withBenefitsApplications(GetReady);

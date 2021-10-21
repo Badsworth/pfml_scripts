@@ -13,7 +13,6 @@ import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputCurrency from "../../components/InputCurrency";
 import InputDate from "../../components/InputDate";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
@@ -32,7 +31,14 @@ export const fields = [
   "claim.employer_benefits[*].is_full_salary_continuous",
 ];
 
-export const EmployerBenefitsDetails = (props) => {
+interface EmployerBenefitsDetailsProps {
+  claim?: BenefitsApplication;
+  appLogic: any;
+}
+
+export const EmployerBenefitsDetails = (
+  props: EmployerBenefitsDetailsProps
+) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
   const limit = 6;
@@ -115,18 +121,17 @@ export const EmployerBenefitsDetails = (props) => {
   );
 };
 
-EmployerBenefitsDetails.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
-};
+interface EmployerBenefitCardProps {
+  index: number;
+  entry: any;
+  getFunctionalInputProps: (...args: any[]) => any;
+  updateFields: (...args: any[]) => any;
+}
 
 /**
  * Helper component for rendering employer benefit cards
  */
-export const EmployerBenefitCard = (props) => {
+export const EmployerBenefitCard = (props: EmployerBenefitCardProps) => {
   const { t } = useTranslation();
   const { entry, getFunctionalInputProps, index, updateFields } = props;
   const clearField = (fieldName) => updateFields({ [fieldName]: null });
@@ -261,13 +266,6 @@ export const EmployerBenefitCard = (props) => {
       </ConditionalContent>
     </React.Fragment>
   );
-};
-
-EmployerBenefitCard.propTypes = {
-  index: PropTypes.number.isRequired,
-  entry: PropTypes.object.isRequired,
-  getFunctionalInputProps: PropTypes.func.isRequired,
-  updateFields: PropTypes.func.isRequired,
 };
 
 export default withBenefitsApplication(EmployerBenefitsDetails);

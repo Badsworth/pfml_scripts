@@ -6,7 +6,6 @@ import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputText from "../../components/InputText";
 import Lead from "../../components/Lead";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";
@@ -16,10 +15,15 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.phone.phone_number", "claim.phone.phone_type"];
 
+interface Props {
+  appLogic: any;
+  claim: BenefitsApplication;
+}
+
 /**
  * A form page to capture the worker's phone number.
  */
-export const PhoneNumber = (props) => {
+export const PhoneNumber = (props: Props) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -85,11 +89,6 @@ export const PhoneNumber = (props) => {
       />
     </QuestionPage>
   );
-};
-
-PhoneNumber.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
 export default withBenefitsApplication(PhoneNumber);
