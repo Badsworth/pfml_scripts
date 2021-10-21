@@ -213,6 +213,7 @@ definitions:
   XMLResponse:
     title: XML Response
     description: An application/xml response string.
+    xml: { name: XML }
     type: string
   ListObjects:
     title: List ObjectsV2 Response
