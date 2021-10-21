@@ -1,8 +1,7 @@
-import AppErrorInfoCollection from "../../../models/AppErrorInfoCollection";
+import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
 import InputText from "../../../components/InputText";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../../components/Title";
 import routes from "../../../routes";
@@ -12,16 +11,11 @@ import useThrottledHandler from "../../../hooks/useThrottledHandler";
 import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
 
-interface Props {
-  appLogic: {
-    appErrors?: AppErrorInfoCollection;
-    employers: {
-      addEmployer: (...args: any[]) => any;
-    };
-  };
+interface AddOrganizationProps {
+  appLogic: AppLogic;
 }
 
-export const AddOrganization = (props: Props) => {
+export const AddOrganization = (props: AddOrganizationProps) => {
   const { appLogic } = props;
   const { t } = useTranslation();
 
@@ -70,15 +64,6 @@ export const AddOrganization = (props: Props) => {
       </Button>
     </form>
   );
-};
-
-AddOrganization.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.instanceOf(AppErrorInfoCollection),
-    employers: PropTypes.shape({
-      addEmployer: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
 };
 
 export default withUser(AddOrganization);

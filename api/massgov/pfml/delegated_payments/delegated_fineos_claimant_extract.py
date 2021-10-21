@@ -103,7 +103,7 @@ class ClaimantData:
         self,
         absence_case_id: str,
         requested_absences: List[FineosExtractVbiRequestedAbsenceSom],
-        employee_records: List[FineosExtractEmployeeFeed],
+        employee_record: Optional[FineosExtractEmployeeFeed],
         count_incrementer: Optional[Callable[[str], None]] = None,
     ):
         self.absence_period_data = []
@@ -113,7 +113,7 @@ class ClaimantData:
         self.count_incrementer = count_incrementer
 
         self._process_requested_absences(requested_absences)
-        self._process_employee_feed(employee_records)
+        self._process_employee_feed(employee_record)
 
     def _process_requested_absences(
         self, requested_absences: List[FineosExtractVbiRequestedAbsenceSom]
@@ -218,7 +218,7 @@ class ClaimantData:
         )
 
     def _process_employee_feed(
-        self, employee_feed_records: List[FineosExtractEmployeeFeed]
+        self, employee_feed_record: Optional[FineosExtractEmployeeFeed]
     ) -> None:
         # If there isn't a FINEOS Customer Number, we can't lookup the employee record
         if not self.fineos_customer_number:
@@ -228,7 +228,7 @@ class ClaimantData:
         # with the employee feed. There will be a mix of records with
         # DEFPAYMENTPREF set to Y/N. Y indicating that it's the default payment
         # preference. We always prefer the default, but there can be many of each.
-        if not employee_feed_records:
+        if not employee_feed_record:
             error_msg = (
                 f"Employee in VBI_REQUESTEDABSENCE_SOM with absence id {self.absence_case_id} and customer nbr {self.fineos_customer_number} "
                 "not found in employee feed file"
@@ -247,30 +247,29 @@ class ClaimantData:
             # Can't process subsequent records as they pull from employee_feed
             return
 
-        employee_feed = self._determine_employee_feed_info(employee_feed_records)
         # Shouldn't be possible, but making the linter happy
-        if employee_feed:
+        if employee_feed_record:
             self.employee_tax_identifier = payments_util.validate_db_input(
-                "NATINSNO", employee_feed, self.validation_container, True
+                "NATINSNO", employee_feed_record, self.validation_container, True
             )
 
             self.date_of_birth = payments_util.validate_db_input(
-                "DATEOFBIRTH", employee_feed, self.validation_container, True
+                "DATEOFBIRTH", employee_feed_record, self.validation_container, True
             )
 
             self.employee_first_name = payments_util.validate_db_input(
-                "FIRSTNAMES", employee_feed, self.validation_container, True
+                "FIRSTNAMES", employee_feed_record, self.validation_container, True
             )
 
             self.employee_middle_name = payments_util.validate_db_input(
-                "INITIALS", employee_feed, self.validation_container, False
+                "INITIALS", employee_feed_record, self.validation_container, False
             )
 
             self.employee_last_name = payments_util.validate_db_input(
-                "LASTNAME", employee_feed, self.validation_container, True
+                "LASTNAME", employee_feed_record, self.validation_container, True
             )
 
-            self._process_payment_preferences(employee_feed)
+            self._process_payment_preferences(employee_feed_record)
 
     def _process_payment_preferences(self, employee_feed: FineosExtractEmployeeFeed) -> None:
         # We only care about the payment preference fields if it is the default payment
@@ -328,32 +327,6 @@ class ClaimantData:
             if nbr_of_validation_issues == len(self.validation_container.validation_issues):
                 self.should_do_eft_operations = True
 
-    def _determine_employee_feed_info(
-        self, employee_feed_records: List[FineosExtractEmployeeFeed]
-    ) -> Optional[FineosExtractEmployeeFeed]:
-        # No records shouldn't be possible
-        # based on the calling logic, but this
-        # makes the linter happy
-        if len(employee_feed_records) == 0:
-            return None
-
-        # If there is only one record, just use it
-        if len(employee_feed_records) == 1:
-            return employee_feed_records[0]
-
-        # Try filtering to just DEFPAYMENTPREF = 'Y'
-        defpaymentpref_records = list(
-            filter(lambda record: record.defpaymentpref == "Y", employee_feed_records)
-        )
-
-        # If there are any default payment preference records
-        # Just use one of them, they should all be identical
-        if len(defpaymentpref_records) > 0:
-            return defpaymentpref_records[0]
-
-        # Otherwise, we're fine with any DEFPAYMENTPREF value here
-        return employee_feed_records[0]
-
     def get_traceable_details(self) -> Dict[str, Optional[Any]]:
         return {
             "absence_case_id": self.absence_case_id,
@@ -410,6 +383,56 @@ class ClaimantExtractStep(Step):
 
         logger.info("Done processing claimant extract data")
 
+    def get_employee_feed_map(
+        self, reference_file: ReferenceFile
+    ) -> Dict[str, FineosExtractEmployeeFeed]:
+        """
+        Querying the DB to cache all of the employee feed info
+        that is from the same batch as the requested absence data
+        we are processing.
+        """
+        employee_feed_records = (
+            self.db_session.query(FineosExtractEmployeeFeed)
+            .filter(FineosExtractEmployeeFeed.reference_file_id == reference_file.reference_file_id)
+            .all()
+        )
+
+        # The same customerno can appear many times in the employee feed.
+        # We want to prefer using a record with the default payment pref
+        # set to true, but are fine if it's not, just can't do EFT processing later.
+        employee_feed_mapping: Dict[str, FineosExtractEmployeeFeed] = {}
+        for employee_feed_record in employee_feed_records:
+            self.increment(self.Metrics.EMPLOYEE_FEED_RECORD_COUNT)
+            customerno = employee_feed_record.customerno
+
+            # Adding to make the type checker happy
+            if not customerno:
+                logger.warning(
+                    "Customer number not set for employee feed record %s",
+                    employee_feed_record.employee_feed_id,
+                )
+                continue
+
+            # Associate the first record we come across with the customerno
+            # regardless of default payment preference status
+            existing_record = employee_feed_mapping.get(customerno)
+            if not existing_record:
+                employee_feed_mapping[customerno] = employee_feed_record
+                continue
+
+            # All default payment preferences are the same for
+            # the records we care about, so if the record is already
+            # set as such, just continue and don't update
+            if existing_record.defpaymentpref == "Y":
+                continue
+
+            # The record being processed is a defpaymentpref, use it
+            # over whatever we previously found
+            if employee_feed_record.defpaymentpref == "Y":
+                employee_feed_mapping[customerno] = employee_feed_record
+
+        return employee_feed_mapping
+
     def process_records_to_db(self) -> None:
         reference_file = (
             self.db_session.query(ReferenceFile)
@@ -441,6 +464,8 @@ class ClaimantExtractStep(Step):
             .all()
         )
 
+        employee_feed_map = self.get_employee_feed_map(reference_file)
+
         # We grab the first record from the list so we
         # can setup the grouping logic without dealing with nulls
         record_iter = iter(records)
@@ -460,6 +485,7 @@ class ClaimantExtractStep(Step):
                     self.process_absence_case(
                         cast(str, curr_absence_case_number),
                         records_in_same_absence_case,
+                        employee_feed_map,
                         reference_file,
                     )
 
@@ -473,7 +499,10 @@ class ClaimantExtractStep(Step):
 
             # Process the last record
             self.process_absence_case(
-                cast(str, curr_absence_case_number), records_in_same_absence_case, reference_file
+                cast(str, curr_absence_case_number),
+                records_in_same_absence_case,
+                employee_feed_map,
+                reference_file,
             )
             reference_file.processed_import_log_id = self.get_import_log_id()
 
@@ -481,23 +510,25 @@ class ClaimantExtractStep(Step):
         self,
         absence_case_id: str,
         requested_absences: List[FineosExtractVbiRequestedAbsenceSom],
+        employee_feed_map: Dict[str, FineosExtractEmployeeFeed],
         reference_file: ReferenceFile,
     ) -> None:
         self.increment(self.Metrics.PROCESSED_REQUESTED_ABSENCE_COUNT)
         customerno = requested_absences[0].employee_customerno
 
-        employee_records = (
-            self.db_session.query(FineosExtractEmployeeFeed)
-            .filter(
-                FineosExtractEmployeeFeed.customerno == customerno,
-                FineosExtractEmployeeFeed.reference_file_id == reference_file.reference_file_id,
+        # Just here to make type checker happy, shouldn't realistically happen
+        # But if the customer number isn't set, the error log will let us know
+        if customerno:
+            employee_record = employee_feed_map.get(customerno)
+        else:
+            employee_record = None
+            logger.error(
+                "No employee customer number found for requested absence record %s",
+                requested_absences[0].vbi_requested_absence_som_id,
             )
-            .all()
-        )
-        self.increment(self.Metrics.EMPLOYEE_FEED_RECORD_COUNT, len(employee_records))
 
         claimant_data = ClaimantData(
-            absence_case_id, requested_absences, employee_records, self.increment
+            absence_case_id, requested_absences, employee_record, self.increment
         )
 
         logger.info(

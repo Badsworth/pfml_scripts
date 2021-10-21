@@ -9,6 +9,7 @@ import React, {
 import { camelCase, compact, find, get, isEqual, startCase } from "lodash";
 import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import Button from "../../components/Button";
 import ClaimCollection from "../../models/ClaimCollection";
 import Details from "../../components/Details";
@@ -21,7 +22,6 @@ import Link from "next/link";
 import PaginationMeta from "../../models/PaginationMeta";
 import PaginationNavigation from "../../components/PaginationNavigation";
 import PaginationSummary from "../../components/PaginationSummary";
-import PropTypes from "prop-types";
 import Table from "../../components/Table";
 import Title from "../../components/Title";
 import TooltipIcon from "../../components/TooltipIcon";
@@ -37,13 +37,7 @@ import withClaims from "../../hoc/withClaims";
 import withUser from "../../hoc/withUser";
 
 interface DashboardProps {
-  appLogic: {
-    portalFlow: {
-      getNextPageRoute: (...args: any[]) => any;
-      pathname: string;
-      updateQuery: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
   query: {
     claim_status?: string;
     employer_id?: string;
@@ -64,12 +58,7 @@ export const Dashboard = (props: DashboardProps) => {
     order_by: showReviewByStatus ? "absence_status" : "created_at",
     order_direction: showReviewByStatus ? "ascending" : "descending",
     ...props.query,
-  };
-
-  const PaginatedClaimsTableWithClaims = withClaims(
-    PaginatedClaimsTable,
-    apiParams
-  );
+  } as const;
 
   /**
    * Update the page's query string, to load a different page number,
@@ -102,6 +91,21 @@ export const Dashboard = (props: DashboardProps) => {
 
     // Scroll user back to top of the table actions
     if (introElementRef.current) introElementRef.current.scrollIntoView();
+  };
+
+  const PaginatedClaimsTableWithClaims = withClaims(
+    PaginatedClaimsTable,
+    apiParams
+  );
+  const componentSpecificProps = {
+    updatePageQuery,
+    sort: (
+      <SortDropdown
+        order_by={apiParams.order_by}
+        order_direction={apiParams.order_direction}
+        updatePageQuery={updatePageQuery}
+      />
+    ),
   };
 
   return (
@@ -184,53 +188,21 @@ export const Dashboard = (props: DashboardProps) => {
       />
       <PaginatedClaimsTableWithClaims
         appLogic={props.appLogic}
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ appLogic: { portalFlow: { getNextPageRoute... Remove this comment to see the full error message
         user={props.user}
-        updatePageQuery={updatePageQuery}
-        sort={
-          <SortDropdown
-            // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type '"absence_... Remove this comment to see the full error message
-            order_by={apiParams.order_by}
-            // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type '"ascendin... Remove this comment to see the full error message
-            order_direction={apiParams.order_direction}
-            updatePageQuery={updatePageQuery}
-          />
-        }
+        {...componentSpecificProps}
       />
     </React.Fragment>
   );
 };
 
-Dashboard.propTypes = {
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      getNextPageRoute: PropTypes.func.isRequired,
-      pathname: PropTypes.string.isRequired,
-      updateQuery: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-  query: PropTypes.shape({
-    claim_status: PropTypes.string,
-    employer_id: PropTypes.string,
-    order_by: PropTypes.oneOf(["absence_status", "created_at", "employee"]),
-    order_direction: PropTypes.oneOf(["ascending", "descending"]),
-    page_offset: PropTypes.string,
-    search: PropTypes.string,
-  }).isRequired,
-  user: PropTypes.instanceOf(User).isRequired,
-};
-
 interface PaginatedClaimsTableProps {
-  appLogic?: any;
+  appLogic?: AppLogic;
   claims?: ClaimCollection;
   paginationMeta?: PaginationMeta;
   updatePageQuery: (...args: any[]) => any;
+  /** Pass in the SortDropdown so it can be rendered in the expected inline UI position */
   sort: React.ReactNode;
   user: User;
-  query?: {
-    order_by?: "absence_status" | "created_at" | "employee";
-    order_direction?: "ascending" | "descending";
-  };
 }
 
 const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
@@ -334,20 +306,6 @@ const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
       )}
     </React.Fragment>
   );
-};
-
-PaginatedClaimsTable.propTypes = {
-  appLogic: Dashboard.propTypes.appLogic,
-  claims: PropTypes.instanceOf(ClaimCollection),
-  paginationMeta: PropTypes.instanceOf(PaginationMeta),
-  updatePageQuery: PropTypes.func.isRequired,
-  /** Pass in the SortDropdown so it can be rendered in the expected inline UI position */
-  sort: PropTypes.node.isRequired,
-  user: PropTypes.instanceOf(User).isRequired,
-  query: PropTypes.shape({
-    order_by: PropTypes.oneOf(["absence_status", "created_at", "employee"]),
-    order_direction: PropTypes.oneOf(["ascending", "descending"]),
-  }),
 };
 
 interface ClaimTableRowsProps {
@@ -460,13 +418,6 @@ const ClaimTableRows = (props: ClaimTableRowsProps) => {
   };
 
   return <React.Fragment>{renderClaimItems()}</React.Fragment>;
-};
-
-ClaimTableRows.propTypes = {
-  appLogic: Dashboard.propTypes.appLogic,
-  claims: PropTypes.instanceOf(ClaimCollection),
-  tableColumnKeys: PropTypes.arrayOf(PropTypes.string).isRequired,
-  user: PropTypes.instanceOf(User).isRequired,
 };
 
 const DashboardInfoAlert = () => {
@@ -744,15 +695,6 @@ const Filters = (props: FiltersProps) => {
   );
 };
 
-Filters.propTypes = {
-  params: PropTypes.shape({
-    claim_status: PropTypes.string,
-    employer_id: PropTypes.string,
-  }).isRequired,
-  updatePageQuery: PropTypes.func.isRequired,
-  user: PropTypes.instanceOf(User).isRequired,
-};
-
 interface FilterMenuButtonProps {
   children: React.ReactNode;
   onClick: (...args: any[]) => any;
@@ -782,12 +724,8 @@ const FilterMenuButton = (props: FilterMenuButtonProps) => {
   );
 };
 
-FilterMenuButton.propTypes = {
-  children: PropTypes.node.isRequired,
-  onClick: PropTypes.func.isRequired,
-};
-
 interface SearchProps {
+  /** The current search value */
   initialValue?: string;
   updatePageQuery: (...args: any[]) => any;
 }
@@ -837,12 +775,6 @@ const Search = (props: SearchProps) => {
       </form>
     </div>
   );
-};
-
-Search.propTypes = {
-  /** The current search value */
-  initialValue: PropTypes.string,
-  updatePageQuery: PropTypes.func.isRequired,
 };
 
 interface SortDropdownProps {
@@ -923,12 +855,6 @@ const SortDropdown = (props: SortDropdownProps) => {
       hideEmptyChoice
     />
   );
-};
-
-SortDropdown.propTypes = {
-  order_by: PropTypes.oneOf(["absence_status", "created_at", "employee"]),
-  order_direction: PropTypes.oneOf(["ascending", "descending"]),
-  updatePageQuery: PropTypes.func.isRequired,
 };
 
 export default withUser(Dashboard);

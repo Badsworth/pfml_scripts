@@ -4,7 +4,6 @@ import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import FieldsetAddress from "../../components/FieldsetAddress";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
@@ -29,7 +28,7 @@ export const fields = [
   "claim.mailing_address.zip",
 ];
 
-interface Props {
+interface AddressProps {
   claim?: BenefitsApplication;
   appLogic: any;
   query?: {
@@ -37,7 +36,7 @@ interface Props {
   };
 }
 
-export const Address = (props: Props) => {
+export const Address = (props: AddressProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -109,7 +108,6 @@ export const Address = (props: Props) => {
       />
       <ConditionalContent
         fieldNamesClearedWhenHidden={["mailing_address"]}
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '(name: any) => any' is not assignable to typ... Remove this comment to see the full error message
         getField={getField}
         clearField={clearField}
         updateFields={updateFields}
@@ -125,14 +123,6 @@ export const Address = (props: Props) => {
       </ConditionalContent>
     </QuestionPage>
   );
-};
-
-Address.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(Address);

@@ -5,8 +5,7 @@ import { ChangeEvent, FocusEvent, FocusEventHandler, useRef } from "react";
  */
 const usePiiHandlers = (inputProps: {
   name: string;
-  type: string;
-  value: string;
+  value: string | number;
   onChange: (event: { target: Node }) => void;
   onBlur: FocusEventHandler<HTMLInputElement>;
   onFocus: FocusEventHandler<HTMLInputElement>;
@@ -43,11 +42,11 @@ const usePiiHandlers = (inputProps: {
    * @param originalEvent - Original event that triggered this change
    */
   const dispatchChange = (
-    value: string,
+    value: string | number,
     originalEvent: ChangeEvent<HTMLInputElement> | FocusEvent<HTMLInputElement>
   ) => {
     const target = originalEvent.target.cloneNode(true) as HTMLInputElement; // https://github.com/microsoft/TypeScript/issues/283
-    target.value = value;
+    target.value = value.toString();
 
     inputProps.onChange({ target });
   };

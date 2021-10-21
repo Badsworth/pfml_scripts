@@ -11,6 +11,7 @@
 import Accordion from "../../../components/Accordion";
 import AccordionItem from "../../../components/AccordionItem";
 import Alert from "../../../components/Alert";
+import { AppLogic } from "../../../hooks/useAppLogic";
 import BenefitsApplicationDocument from "../../../models/BenefitsApplicationDocument";
 import ConditionalContent from "../../../components/ConditionalContent";
 import DocumentRequirements from "../../../components/DocumentRequirements";
@@ -20,7 +21,6 @@ import FileUploadDetails from "../../../components/FileUploadDetails";
 import Heading from "../../../components/Heading";
 import Lead from "../../../components/Lead";
 import LeaveReason from "../../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../../components/QuestionPage";
 import React from "react";
 import Spinner from "../../../components/Spinner";
@@ -119,10 +119,6 @@ const CertificationUpload = ({ path }: CertificationUploadProps) => {
   );
 };
 
-CertificationUpload.propTypes = {
-  path: PropTypes.string.isRequired,
-};
-
 interface IdentificationUploadProps {
   path: string;
 }
@@ -189,18 +185,8 @@ const IdentificationUpload = ({ path }: IdentificationUploadProps) => {
   );
 };
 
-IdentificationUpload.propTypes = {
-  path: PropTypes.string.isRequired,
-};
-
 interface DocumentUploadProps {
-  appLogic: {
-    appErrors: any;
-    catchError: (...args: any[]) => any;
-    documents: any;
-    portalFlow: any;
-    clearErrors: (...args: any[]) => any;
-  };
+  appLogic: AppLogic;
   documents?: BenefitsApplicationDocument[];
   isLoadingDocuments?: boolean;
   query?: {
@@ -338,34 +324,6 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
       )}
     </QuestionPage>
   );
-};
-
-DocumentUpload.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    catchError: PropTypes.func.isRequired,
-    documents: PropTypes.object.isRequired,
-    portalFlow: PropTypes.object.isRequired,
-    clearErrors: PropTypes.func.isRequired,
-  }).isRequired,
-  documents: PropTypes.arrayOf(
-    PropTypes.instanceOf(BenefitsApplicationDocument)
-  ),
-  isLoadingDocuments: PropTypes.bool,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string.isRequired,
-    absence_case_id: PropTypes.string.isRequired,
-    additionalDoc: PropTypes.string,
-    documentType: PropTypes.oneOf([
-      "state-id",
-      "other-id",
-      "proof-of-birth",
-      "proof-of-placement",
-      "medical-certification",
-      "pregnancy-medical-certification",
-      "family-member-medical-certification",
-    ]).isRequired,
-  }),
 };
 
 export default withClaimDocuments(DocumentUpload);

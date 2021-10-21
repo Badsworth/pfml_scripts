@@ -61,7 +61,7 @@ function formatHoursMinutesDuration(value: string, _locale: string) {
 
   // The default return value will be the English-idiomatic "h" and "m" abbreviations for
   // hours and minutes
-  const { hours, minutes } = convertMinutesToHours(value);
+  const { hours, minutes } = convertMinutesToHours(Number(value));
   if (minutes === 0) return `${hours}h`;
   return `${hours}h ${minutes}m`;
 }

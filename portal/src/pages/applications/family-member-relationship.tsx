@@ -5,7 +5,6 @@ import BenefitsApplication, {
 import { get, pick } from "lodash";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
@@ -21,13 +20,15 @@ export const fields = [
   `claim.${caringLeaveMetadataKey}.relationship_to_caregiver`,
 ];
 
-interface Props {
+interface FamilyMemberRelationshipProps {
   appLogic: any;
   claim: BenefitsApplication;
   query: any;
 }
 
-export const FamilyMemberRelationship = (props: Props) => {
+export const FamilyMemberRelationship = (
+  props: FamilyMemberRelationshipProps
+) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
 
@@ -125,12 +126,6 @@ export const FamilyMemberRelationship = (props: Props) => {
       />
     </QuestionPage>
   );
-};
-
-FamilyMemberRelationship.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  query: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(FamilyMemberRelationship);

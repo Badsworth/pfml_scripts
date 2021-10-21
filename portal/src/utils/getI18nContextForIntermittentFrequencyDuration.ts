@@ -1,18 +1,17 @@
 import {
   DurationBasis,
   FrequencyIntervalBasis,
+  IntermittentLeavePeriod,
 } from "../models/BenefitsApplication";
 import findKeyByValue from "./findKeyByValue";
-
-/** @typedef {import('../models/BenefitsApplication').IntermittentLeavePeriod} IntermittentLeavePeriod */
 
 /**
  * Get an i18n `context` string for outputting a plain language description
  * of an Intermittent Leave Period's frequency and duration data
- * @param {IntermittentLeavePeriod} leavePeriod
- * @returns {string}
  */
-function getI18nContextForIntermittentFrequencyDuration(leavePeriod) {
+function getI18nContextForIntermittentFrequencyDuration(
+  leavePeriod: IntermittentLeavePeriod
+) {
   let frequencyContext;
   const durationContext = findKeyByValue(
     DurationBasis,

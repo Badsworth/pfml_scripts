@@ -61,8 +61,7 @@ export default class EmployersApi extends BaseApi {
     }
 
     if (!response.ok) {
-      // @ts-expect-error ts-migrate(2554) FIXME: Expected 5 arguments, but got 2.
-      handleNotOkResponse(url, response);
+      handleNotOkResponse(response, [], this.i18nPrefix);
     }
 
     return blob;
@@ -89,7 +88,10 @@ export default class EmployersApi extends BaseApi {
    * Retrieves the date for which the leave admin must search for withholding data from MTC.
    */
   getWithholding = async (employer_id: string) => {
-    const { data } = await this.request("GET", `withholding/${employer_id}`);
+    const { data } = await this.request<Withholding>(
+      "GET",
+      `withholding/${employer_id}`
+    );
     return new Withholding(data);
   };
 

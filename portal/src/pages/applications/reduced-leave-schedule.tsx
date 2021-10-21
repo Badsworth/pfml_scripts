@@ -11,7 +11,6 @@ import Heading from "../../components/Heading";
 import InputHours from "../../components/InputHours";
 import Lead from "../../components/Lead";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
@@ -44,7 +43,7 @@ export const fields = [
   `claim.${leavePeriodPath}.wednesday_off_minutes`,
 ];
 
-interface Props {
+interface ReducedLeaveScheduleProps {
   claim?: BenefitsApplication;
   appLogic: any;
   query?: {
@@ -52,7 +51,7 @@ interface Props {
   };
 }
 
-export const ReducedLeaveSchedule = (props: Props) => {
+export const ReducedLeaveSchedule = (props: ReducedLeaveScheduleProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -227,14 +226,6 @@ export const ReducedLeaveSchedule = (props: Props) => {
         ))}
     </QuestionPage>
   );
-};
-
-ReducedLeaveSchedule.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(ReducedLeaveSchedule);

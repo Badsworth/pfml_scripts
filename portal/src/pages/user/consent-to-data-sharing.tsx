@@ -1,8 +1,8 @@
 import Accordion from "../../components/Accordion";
 import AccordionItem from "../../components/AccordionItem";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import Button from "../../components/Button";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
@@ -13,16 +13,12 @@ import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
 
-interface Props {
-  appLogic: {
-    users: {
-      updateUser: (...args: any[]) => any;
-    };
-  };
+interface ConsentToDataSharingProps {
+  appLogic: AppLogic;
   user: User;
 }
 
-export const ConsentToDataSharing = (props: Props) => {
+export const ConsentToDataSharing = (props: ConsentToDataSharingProps) => {
   const { t } = useTranslation();
   const { appLogic, user } = props;
   const { updateUser } = appLogic.users;
@@ -116,15 +112,6 @@ export const ConsentToDataSharing = (props: Props) => {
       </Alert>
     </form>
   );
-};
-
-ConsentToDataSharing.propTypes = {
-  appLogic: PropTypes.shape({
-    users: PropTypes.shape({
-      updateUser: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-  user: PropTypes.instanceOf(User).isRequired,
 };
 
 export default withUser(ConsentToDataSharing);

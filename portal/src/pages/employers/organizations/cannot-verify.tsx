@@ -1,25 +1,20 @@
 import { Trans, useTranslation } from "react-i18next";
+import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import Lead from "../../../components/Lead";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../../components/Title";
-import User from "../../../models/User";
 import routes from "../../../routes";
 import withUser from "../../../hoc/withUser";
 
-interface Props {
-  appLogic: {
-    users: {
-      user: User;
-    };
-  };
+interface CannotVerifyProps {
+  appLogic: AppLogic;
   query: {
     employer_id: string;
   };
 }
 
-export const CannotVerify = (props: Props) => {
+export const CannotVerify = (props: CannotVerifyProps) => {
   const { appLogic, query } = props;
   const {
     users: { user },
@@ -64,17 +59,6 @@ export const CannotVerify = (props: Props) => {
       </p>
     </React.Fragment>
   );
-};
-
-CannotVerify.propTypes = {
-  appLogic: PropTypes.shape({
-    users: PropTypes.shape({
-      user: PropTypes.instanceOf(User).isRequired,
-    }).isRequired,
-  }).isRequired,
-  query: PropTypes.shape({
-    employer_id: PropTypes.string.isRequired,
-  }).isRequired,
 };
 
 export default withUser(CannotVerify);

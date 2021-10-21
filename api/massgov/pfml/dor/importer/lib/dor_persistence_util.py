@@ -17,6 +17,7 @@ from massgov.pfml.db.models.employees import (
     GeoState,
     TaxIdentifier,
     WagesAndContributions,
+    WagesAndContributionsHistory,
 )
 from massgov.pfml.util.datetime import to_datetime
 from massgov.pfml.util.pydantic.types import TaxIdUnformattedStr
@@ -269,8 +270,29 @@ def create_wages_and_contributions(
     return wage
 
 
+def _capture_current_wage_and_contribution_state(
+    wage_and_contribution_record: WagesAndContributions,
+) -> WagesAndContributionsHistory:
+    return WagesAndContributionsHistory(
+        wage_and_contribution_id=wage_and_contribution_record.wage_and_contribution_id,
+        is_independent_contractor=wage_and_contribution_record.is_independent_contractor,
+        is_opted_in=wage_and_contribution_record.is_opted_in,
+        employee_ytd_wages=wage_and_contribution_record.employee_ytd_wages,
+        employee_qtr_wages=wage_and_contribution_record.employee_qtr_wages,
+        employee_med_contribution=wage_and_contribution_record.employee_med_contribution,
+        employer_med_contribution=wage_and_contribution_record.employer_med_contribution,
+        employee_fam_contribution=wage_and_contribution_record.employee_fam_contribution,
+        employer_fam_contribution=wage_and_contribution_record.employer_fam_contribution,
+        import_log_id=wage_and_contribution_record.latest_import_log_id,
+    )
+
+
 def check_and_update_wages_and_contributions(
-    db_session, existing_wages_and_contributions, employee_wage_info, import_log_entry_id
+    db_session,
+    existing_wages_and_contributions,
+    employee_wage_info,
+    import_log_entry_id,
+    wage_history_records,
 ):
     do_update = (
         existing_wages_and_contributions.is_independent_contractor
@@ -293,6 +315,10 @@ def check_and_update_wages_and_contributions(
     if not do_update:
         return False
 
+    wage_and_contribution_history = _capture_current_wage_and_contribution_state(
+        existing_wages_and_contributions
+    )
+
     existing_wages_and_contributions.is_independent_contractor = employee_wage_info[
         "independent_contractor"
     ]
@@ -312,6 +338,8 @@ def check_and_update_wages_and_contributions(
         "employer_family"
     ]
     existing_wages_and_contributions.latest_import_log_id = import_log_entry_id
+
+    wage_history_records.append(wage_and_contribution_history)
 
     return True
 

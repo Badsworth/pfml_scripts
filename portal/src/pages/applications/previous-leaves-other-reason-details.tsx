@@ -8,7 +8,6 @@ import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
 import InputHours from "../../components/InputHours";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
@@ -143,11 +142,6 @@ export const PreviousLeavesOtherReasonDetails = (
       />
     </QuestionPage>
   );
-};
-
-PreviousLeavesOtherReasonDetails.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
 interface PreviousLeavesOtherReasonDetailsCardProps {
@@ -332,13 +326,6 @@ export const PreviousLeavesOtherReasonDetailsCard = (
       />
     </React.Fragment>
   );
-};
-
-PreviousLeavesOtherReasonDetailsCard.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  entry: PropTypes.instanceOf(PreviousLeave).isRequired,
-  getFunctionalInputProps: PropTypes.func.isRequired,
-  index: PropTypes.number.isRequired,
 };
 
 export default withBenefitsApplication(PreviousLeavesOtherReasonDetails);

@@ -4,17 +4,16 @@ import PreviousLeave, {
 import React, { useEffect, useState } from "react";
 import { get, isEqual, isNil, omit } from "lodash";
 import Alert from "../../../components/Alert";
+import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
 import ConcurrentLeave from "../../../components/employers/ConcurrentLeave";
 import ConcurrentLeaveModel from "../../../models/ConcurrentLeave";
-import DocumentCollection from "../../../models/DocumentCollection";
 import { DocumentType } from "../../../models/Document";
 import EmployeeInformation from "../../../components/employers/EmployeeInformation";
 import EmployeeNotice from "../../../components/employers/EmployeeNotice";
 import EmployerBenefit from "../../../models/EmployerBenefit";
 import EmployerBenefits from "../../../components/employers/EmployerBenefits";
-import EmployerClaim from "../../../models/EmployerClaim";
 import EmployerDecision from "../../../components/employers/EmployerDecision";
 import Feedback from "../../../components/employers/Feedback";
 import FraudReport from "../../../components/employers/FraudReport";
@@ -23,7 +22,6 @@ import LeaveDetails from "../../../components/employers/LeaveDetails";
 import LeaveReason from "../../../models/LeaveReason";
 import LeaveSchedule from "../../../components/employers/LeaveSchedule";
 import PreviousLeaves from "../../../components/employers/PreviousLeaves";
-import PropTypes from "prop-types";
 import ReviewHeading from "../../../components/ReviewHeading";
 import ReviewRow from "../../../components/ReviewRow";
 import SupportingWorkDetails from "../../../components/employers/SupportingWorkDetails";
@@ -40,26 +38,14 @@ import useThrottledHandler from "../../../hooks/useThrottledHandler";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
-interface Props {
-  appLogic: {
-    appErrors: any;
-    employers: {
-      claim?: EmployerClaim;
-      documents?: DocumentCollection;
-      downloadDocument: (...args: any[]) => any;
-      loadDocuments: (...args: any[]) => any;
-      submitClaimReview: (...args: any[]) => any;
-    };
-    portalFlow?: {
-      goTo: (...args: any[]) => any;
-    };
-  };
+interface ReviewProps {
+  appLogic: AppLogic;
   query: {
     absence_id: string;
   };
 }
 
-export const Review = (props: Props) => {
+export const Review = (props: ReviewProps) => {
   const {
     appLogic,
     query: { absence_id: absenceId },
@@ -446,7 +432,7 @@ export const Review = (props: Props) => {
         }
       />
       <LeaveSchedule
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ appLogic: { appErrors: any; employers: { c... Remove this comment to see the full error message
+        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ appLogic: AppLogic; appErrors: any; employers: { c... Remove this comment to see the full error message
         appLogic={appLogic}
         claim={claim}
         hasDocuments={!!certificationDocuments.length}
@@ -568,25 +554,6 @@ export const Review = (props: Props) => {
       </form>
     </div>
   );
-};
-
-Review.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    employers: PropTypes.shape({
-      claim: PropTypes.instanceOf(EmployerClaim),
-      documents: PropTypes.instanceOf(DocumentCollection),
-      downloadDocument: PropTypes.func.isRequired,
-      loadDocuments: PropTypes.func.isRequired,
-      submitClaimReview: PropTypes.func.isRequired,
-    }).isRequired,
-    portalFlow: PropTypes.shape({
-      goTo: PropTypes.func.isRequired,
-    }),
-  }).isRequired,
-  query: PropTypes.shape({
-    absence_id: PropTypes.string.isRequired,
-  }).isRequired,
 };
 
 export default withEmployerClaim(Review);

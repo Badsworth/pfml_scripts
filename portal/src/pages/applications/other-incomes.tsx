@@ -5,7 +5,6 @@ import Heading from "../../components/Heading";
 import Icon from "../../components/Icon";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { pick } from "lodash";
@@ -16,7 +15,7 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_other_incomes"];
 
-interface Props {
+interface OtherIncomesProps {
   claim?: BenefitsApplication;
   query?: {
     claim_id?: string;
@@ -24,7 +23,7 @@ interface Props {
   appLogic: any;
 }
 
-export const OtherIncomes = (props: Props) => {
+export const OtherIncomes = (props: OtherIncomesProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -125,14 +124,6 @@ export const OtherIncomes = (props: Props) => {
       </ConditionalContent>
     </QuestionPage>
   );
-};
-
-OtherIncomes.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(OtherIncomes);

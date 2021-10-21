@@ -5,7 +5,6 @@ import { get, pick } from "lodash";
 import Fieldset from "../../components/Fieldset";
 import FormLabel from "../../components/FormLabel";
 import InputText from "../../components/InputText";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";
@@ -21,12 +20,12 @@ export const fields = [
   `claim.${caringLeavePath}.family_member_last_name`,
 ];
 
-interface Props {
+interface FamilyMemberNameProps {
   appLogic: any;
   claim: BenefitsApplication;
 }
 
-export const FamilyMemberName = (props: Props) => {
+export const FamilyMemberName = (props: FamilyMemberNameProps) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
 
@@ -88,11 +87,6 @@ export const FamilyMemberName = (props: Props) => {
       </Fieldset>
     </QuestionPage>
   );
-};
-
-FamilyMemberName.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
 export default withBenefitsApplication(FamilyMemberName);

@@ -3,9 +3,9 @@ import { TFunction, useTranslation } from "react-i18next";
 import { AbsencePeriod } from "../../../models/ClaimDetail";
 import AppErrorInfo from "../../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../models/AppErrorInfoCollection";
+import BackButton from "../../../components/BackButton";
 import InputChoiceGroup from "../../../components/InputChoiceGroup";
 import LeaveReason from "../../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../../components/QuestionPage";
 import Spinner from "../../../components/Spinner";
 import tracker from "../../../services/tracker";
@@ -58,11 +58,13 @@ export const UploadDocsOptions = (props: Props) => {
     ? getInputChoices(claimDetail.absence_periods, upload_docs_options, t)
     : [];
 
-  const hasClaimDetailLoadError = appLogic.appErrors.items.some(
-    (error) => error.name === "ClaimDetailLoadError"
+  // we should still display content if there are exclusively DocumentsLoadErrors.
+  const hasNonDocumentsLoadError = appLogic.appErrors.items.some(
+    (error) => error.name !== "DocumentsLoadError"
   );
-
-  if (hasClaimDetailLoadError) return null;
+  if (hasNonDocumentsLoadError) {
+    return <BackButton />;
+  }
 
   if (isLoadingClaimDetail || !claimDetail)
     return (
@@ -115,13 +117,6 @@ export const UploadDocsOptions = (props: Props) => {
       />
     </QuestionPage>
   );
-};
-
-UploadDocsOptions.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    absence_case_id: PropTypes.string.isRequired,
-  }),
 };
 
 export default UploadDocsOptions;

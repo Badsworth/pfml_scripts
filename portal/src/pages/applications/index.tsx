@@ -1,24 +1,21 @@
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import ApplicationCardV1 from "../../components/ApplicationCard";
 import ApplicationCardV2 from "../../components/ApplicationCardV2";
 import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
 import ButtonLink from "../../components/ButtonLink";
 import Heading from "../../components/Heading";
 import Lead from "../../components/Lead";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
-import usePortalFlow from "../../hooks/usePortalFlow";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplications from "../../hoc/withBenefitsApplications";
 
 interface IndexProps {
-  appLogic: {
-    portalFlow: ReturnType<typeof usePortalFlow>;
-  };
+  appLogic: AppLogic;
   claims: BenefitsApplicationCollection;
   query?: {
     uploadedAbsenceId?: string;
@@ -138,18 +135,5 @@ function ApplicationCard(props) {
     <ApplicationCardV1 {...props} />
   );
 }
-
-Index.propTypes = {
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      goTo: PropTypes.func.isRequired,
-      pathname: PropTypes.string.isRequired,
-    }).isRequired,
-  }).isRequired,
-  claims: PropTypes.instanceOf(BenefitsApplicationCollection).isRequired,
-  query: PropTypes.shape({
-    uploadedAbsenceId: PropTypes.string,
-  }),
-};
 
 export default withBenefitsApplications(Index);

@@ -12,7 +12,6 @@ import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputNumber from "../../components/InputNumber";
 import Lead from "../../components/Lead";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import findKeyByValue from "../../utils/findKeyByValue";
@@ -45,7 +44,7 @@ export const fields = [
  */
 export const irregularOver6MonthsId = "irregularOver6Months";
 
-interface Props {
+interface IntermittentFrequencyProps {
   claim?: BenefitsApplication;
   appLogic: any;
   query?: {
@@ -53,7 +52,7 @@ interface Props {
   };
 }
 
-export const IntermittentFrequency = (props: Props) => {
+export const IntermittentFrequency = (props: IntermittentFrequencyProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -255,14 +254,6 @@ export const IntermittentFrequency = (props: Props) => {
       )}
     </QuestionPage>
   );
-};
-
-IntermittentFrequency.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(IntermittentFrequency);

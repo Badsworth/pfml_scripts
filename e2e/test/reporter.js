@@ -1,4 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+/* eslint-env node */
 const fetch = require("node-fetch");
 
 // Get NR credentials from env

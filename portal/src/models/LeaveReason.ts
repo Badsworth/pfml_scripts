@@ -15,4 +15,6 @@ const LeaveReason = {
   serviceMemberFamily: "Military Caregiver",
 } as const;
 
+export type LeaveReasonType = typeof LeaveReason[keyof typeof LeaveReason];
+
 export default LeaveReason;

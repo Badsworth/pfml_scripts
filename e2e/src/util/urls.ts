@@ -41,12 +41,13 @@ export function cloudwatchInsights(
       case "number":
       case "boolean":
         return `${v}`;
-      default:
+      default: {
         // @ts-ignore
         const parts = Object.entries(v).map(([subK, subV]) => {
           return `${subK}~${encode(subV)}`;
         });
         return `~(${parts.join("~")})`;
+      }
     }
   };
   const fragmentQuery = encodeURIComponent(

@@ -1,6 +1,6 @@
-import { Machine } from "xstate";
 import Pagination from "@massds/mayflower-react/dist/Pagination";
 import React from "react";
+import { createMachine } from "xstate";
 import { times } from "lodash";
 import { useTranslation } from "../locales/i18n";
 
@@ -62,7 +62,7 @@ export const truncationStates = {
 /**
  * State machine representing the truncation states and their conditions (guards)
  */
-const truncationMachine = Machine(
+const truncationMachine = createMachine(
   {
     context: {
       // These should be defined when starting the machine, using withContext

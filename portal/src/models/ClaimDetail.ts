@@ -14,12 +14,12 @@ class ClaimDetail {
     OutstandingEvidence[]
   > = null;
 
-  constructor(attrs: ClaimDetail | null) {
-    Object.assign(this, attrs);
-
+  constructor(attrs?: ClaimDetail) {
     if (!attrs) {
       return;
     }
+
+    Object.assign(this, attrs);
 
     if (attrs.employee) {
       this.employee = new ClaimEmployee(attrs.employee);

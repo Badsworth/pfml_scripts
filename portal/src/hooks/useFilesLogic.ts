@@ -1,11 +1,11 @@
 import { Issue, ValidationError } from "../errors";
+import { AppErrorsLogic } from "./useAppErrorsLogic";
 import Compressor from "compressorjs";
 import TempFile from "../models/TempFile";
 import TempFileCollection from "../models/TempFileCollection";
 import { snakeCase } from "lodash";
 import { t } from "../locales/i18n";
 import tracker from "../services/tracker";
-import useAppErrorsLogic from "./useAppErrorsLogic";
 import useCollectionState from "./useCollectionState";
 
 // Only image and pdf files are allowed to be uploaded
@@ -42,9 +42,7 @@ function optimizeFileSize(file: Blob, maximumFileSize: number): Promise<Blob> {
       quality: 0.6,
       checkOrientation: false, // Improves compression speed for larger files
       convertSize: maximumFileSize,
-      success: (compressedBlob: Blob) => {
-        // TODO (PORTAL-25): Stop referencing/setting the name
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'name' does not exist on type 'Blob'.
+      success: (compressedBlob: File) => {
         const fileName = compressedBlob.name;
         const fileNameWithPrefix = "Compressed_" + fileName;
 
@@ -53,7 +51,7 @@ function optimizeFileSize(file: Blob, maximumFileSize: number): Promise<Blob> {
           compressedSize: compressedBlob.size,
         });
         // TODO (PORTAL-25): Stop referencing/setting the name
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'name' does not exist on type 'Blob'.
+        // @ts-expect-error Cannot assign to 'name' because it is a read-only property
         compressedBlob.name = fileNameWithPrefix;
         resolve(compressedBlob);
       },
@@ -169,8 +167,8 @@ const useFilesLogic = ({
   maximumFileSize = defaultMaximumFileSize,
 }: {
   allowedFileTypes?: readonly string[];
-  catchError: ReturnType<typeof useAppErrorsLogic>["catchError"];
-  clearErrors: ReturnType<typeof useAppErrorsLogic>["clearErrors"];
+  catchError: AppErrorsLogic["catchError"];
+  clearErrors: AppErrorsLogic["clearErrors"];
   maximumFileSize?: number;
 }) => {
   const {

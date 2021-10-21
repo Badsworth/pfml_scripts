@@ -95,7 +95,7 @@ const InputHours = (props: InputHoursProps) => {
     value: i * props.minutesIncrement,
   }));
 
-  const hoursMinutes = convertMinutesToHours(props.value || 0);
+  const hoursMinutes = convertMinutesToHours(Number(props.value) || 0);
 
   if (hoursMinutes.minutes % props.minutesIncrement !== 0) {
     // eslint-disable-next-line no-console

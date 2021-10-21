@@ -33,7 +33,10 @@ from massgov.pfml.db.models.employees import (
     State,
 )
 from massgov.pfml.db.models.payments import (
+    FineosExtractCancelledPayments,
     FineosExtractEmployeeFeed,
+    FineosExtractPaymentFullSnapshot,
+    FineosExtractReplacedPayments,
     FineosExtractVbiRequestedAbsence,
     FineosExtractVbiRequestedAbsenceSom,
     FineosExtractVpei,
@@ -53,6 +56,9 @@ ExtractTable = Union[
     Type[FineosExtractVbiRequestedAbsenceSom],
     Type[FineosExtractEmployeeFeed],
     Type[FineosExtractVbiRequestedAbsence],
+    Type[FineosExtractCancelledPayments],
+    Type[FineosExtractPaymentFullSnapshot],
+    Type[FineosExtractReplacedPayments],
 ]
 
 
@@ -153,6 +159,23 @@ class Constants:
             for overpayment_type in OVERPAYMENT_TYPES_WITHOUT_PAYMENT_DETAILS
         ]
     )
+
+
+CANCELLED_OR_REPLACED_EXTRACT_FIELD_NAMES = [
+    "C",
+    "I",
+    "STATUSREASON",
+    "GROSSAMOUNT",
+    "ADDEDBY",
+    "ISSUEDATE",
+    "CANCELLATIONDATE",
+    "TRANSACTIONSTATUSDATE",
+    "TRANSACTIONSTATUS",
+    "EXTRACTIONDATE",
+    "STOCKNUMBER",
+    "CLAIMNUMBER",
+    "BENEFITCASENUMBER",
+]
 
 
 @dataclass
@@ -258,6 +281,117 @@ class FineosExtractConstants:
         ],
     )
 
+    PAYMENT_FULL_SNAPSHOT = FineosExtract(
+        file_name="SOM_PEI_Fullextract.csv",
+        table=FineosExtractPaymentFullSnapshot,
+        field_names=[
+            "C",
+            "I",
+            "FLAGS",
+            "PARTITIONID",
+            "LASTUPDATEDATE",
+            "BOEVERSION",
+            "C_OSUSER_UPDATEDBY",
+            "I_OSUSER_UPDATEDBY",
+            "ADDRESSLINE1",
+            "ADDRESSLINE2",
+            "ADDRESSLINE3",
+            "ADDRESSLINE4",
+            "ADDRESSLINE5",
+            "ADDRESSLINE6",
+            "ADDRESSLINE7",
+            "ADVICETOPAY",
+            "ADVICETOPAYOV",
+            "AMALGAMATIONC",
+            "AMOUNT_MONAMT",
+            "AMOUNT_MONCUR",
+            "CHECKCUTTING",
+            "CONFIRMEDBYUS",
+            "CONFIRMEDUID",
+            "CONTRACTREF",
+            "CORRESPCOUNTR",
+            "CURRENCY",
+            "DATEINTERFACE",
+            "DATELASTPROCE",
+            "DESCRIPTION",
+            "EMPLOYEECONTR",
+            "EVENTEFFECTIV",
+            "EVENTREASON",
+            "EVENTTYPE",
+            "EXTRACTIONDAT",
+            "GROSSPAYMENTA_MONAMT",
+            "GROSSPAYMENTA_MONCUR",
+            "INSUREDRESIDE",
+            "NAMETOPRINTON",
+            "NOMINATEDPAYE",
+            "NOMPAYEECUSTO",
+            "NOMPAYEEDOB",
+            "NOMPAYEEFULLN",
+            "NOMPAYEESOCNU",
+            "NOTES",
+            "PAYEEACCOUNTN",
+            "PAYEEACCOUNTT",
+            "PAYEEADDRESS",
+            "PAYEEBANKBRAN",
+            "PAYEEBANKCODE",
+            "PAYEEBANKINST",
+            "PAYEEBANKSORT",
+            "PAYEECORRESPO",
+            "PAYEECUSTOMER",
+            "PAYEEDOB",
+            "PAYEEFULLNAME",
+            "PAYEEIDENTIFI",
+            "PAYEESOCNUMBE",
+            "PAYMENTADD",
+            "PAYMENTADD1",
+            "PAYMENTADD2",
+            "PAYMENTADD3",
+            "PAYMENTADD4",
+            "PAYMENTADD5",
+            "PAYMENTADD6",
+            "PAYMENTADD7",
+            "PAYMENTADDCOU",
+            "PAYMENTCORRST",
+            "PAYMENTDATE",
+            "PAYMENTFREQUE",
+            "PAYMENTMETHOD",
+            "PAYMENTPOSTCO",
+            "PAYMENTPREMIS",
+            "PAYMENTTRIGGE",
+            "PAYMENTTYPE",
+            "PAYMETHCURREN",
+            "PERCENTTAXABL",
+            "POSTCODE",
+            "PREMISESNO",
+            "SETUPBYUSERID",
+            "SETUPBYUSERNA",
+            "STATUS",
+            "STATUSEFFECTI",
+            "STATUSREASON",
+            "STOCKNO",
+            "SUMMARYEFFECT",
+            "SUMMARYSTATUS",
+            "TAXOVERRIDE",
+            "TAXWAGEAMOUNT_MONAMT",
+            "TAXWAGEAMOUNT_MONCUR",
+            "TRANSACTIONNO",
+            "TRANSACTIONST",
+            "TRANSSTATUSDA",
+        ],
+    )
+
+    CANCELLED_PAYMENTS_EXTRACT = FineosExtract(
+        file_name="SOM_PEI_CancelledRecords.csv",
+        table=FineosExtractCancelledPayments,
+        field_names=CANCELLED_OR_REPLACED_EXTRACT_FIELD_NAMES,
+    )
+
+    REPLACED_PAYMENTS_EXTRACT = FineosExtract(
+        file_name="SOM_PEI_ReplacedRecords.csv",
+        table=FineosExtractReplacedPayments,
+        field_names=CANCELLED_OR_REPLACED_EXTRACT_FIELD_NAMES,
+    )
+
 
 CLAIMANT_EXTRACT_FILES = [
     FineosExtractConstants.VBI_REQUESTED_ABSENCE_SOM,
@@ -273,6 +407,15 @@ PAYMENT_EXTRACT_FILES = [
     FineosExtractConstants.VBI_REQUESTED_ABSENCE,
 ]
 PAYMENT_EXTRACT_FILE_NAMES = [extract_file.file_name for extract_file in PAYMENT_EXTRACT_FILES]
+
+PAYMENT_RECONCILIATION_EXTRACT_FILES = [
+    FineosExtractConstants.PAYMENT_FULL_SNAPSHOT,
+    FineosExtractConstants.CANCELLED_PAYMENTS_EXTRACT,
+    FineosExtractConstants.REPLACED_PAYMENTS_EXTRACT,
+]
+PAYMENT_RECONCILIATION_EXTRACT_FILE_NAMES = [
+    extract_file.file_name for extract_file in PAYMENT_RECONCILIATION_EXTRACT_FILES
+]
 
 
 class Regexes:
@@ -563,6 +706,7 @@ def get_fineos_max_history_date(export_type: LkReferenceFileType) -> datetime:
     Only accepts:
         - ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
         - ReferenceFileType.FINEOS_PAYMENT_EXTRACT
+        - ReferenceFileType.FINEOS_PAYMENT_RECONCILIATION_EXTRACT
 
     Raises:
         ValueError: An unacceptable ReferenceFileType or a bad datestring was
@@ -581,6 +725,11 @@ def get_fineos_max_history_date(export_type: LkReferenceFileType) -> datetime:
         == ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id
     ):
         datestring = date_config.fineos_payment_extract_max_history_date
+    elif (
+        export_type.reference_file_type_id
+        == ReferenceFileType.FINEOS_PAYMENT_RECONCILIATION_EXTRACT.reference_file_type_id
+    ):
+        datestring = date_config.fineos_payment_reconciliation_extract_max_history_date
 
     else:
         raise ValueError(f"Incorrect export_type {export_type} provided")
@@ -590,11 +739,14 @@ def get_fineos_max_history_date(export_type: LkReferenceFileType) -> datetime:
 
 # TODO: This function should probably get broken down into smaller functions
 def copy_fineos_data_to_archival_bucket(
-    db_session: db.Session, expected_file_names: List[str], export_type: LkReferenceFileType
+    db_session: db.Session,
+    expected_file_names: List[str],
+    export_type: LkReferenceFileType,
+    source_folder_s3_config_key: str = "fineos_data_export_path",
 ) -> Dict[str, Dict[str, str]]:
     # stage source and destination folders
     s3_config = payments_config.get_s3_config()
-    source_folder = s3_config.fineos_data_export_path
+    source_folder = getattr(s3_config, source_folder_s3_config_key)
     destination_folder = os.path.join(
         s3_config.pfml_fineos_extract_archive_path, Constants.S3_INBOUND_RECEIVED_DIR
     )

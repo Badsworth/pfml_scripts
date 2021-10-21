@@ -1,8 +1,8 @@
 import BenefitsApplication, {
   ReasonQualifier,
 } from "../models/BenefitsApplication";
-
 import Alert from "./Alert";
+import { AppLogic } from "../hooks/useAppLogic";
 import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import ButtonLink from "./ButtonLink";
 import { DocumentType } from "../models/Document";
@@ -22,12 +22,7 @@ import { useTranslation } from "../locales/i18n";
 import withClaimDocuments from "../hoc/withClaimDocuments";
 
 interface ApplicationCardProps {
-  appLogic: {
-    appErrors: any;
-    documents?: {
-      download: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
   claim: BenefitsApplication;
   documents: BenefitsApplicationDocument[];
   /**

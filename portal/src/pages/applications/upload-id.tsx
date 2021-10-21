@@ -1,13 +1,13 @@
 import Accordion from "../../components/Accordion";
 import AccordionItem from "../../components/AccordionItem";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import DocumentRequirements from "../../components/DocumentRequirements";
 import { DocumentType } from "../../models/Document";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
 import Heading from "../../components/Heading";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import Spinner from "../../components/Spinner";
@@ -22,14 +22,8 @@ import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 import withClaimDocuments from "../../hoc/withClaimDocuments";
 
-interface Props {
-  appLogic: {
-    appErrors: any;
-    catchError: (...args: any[]) => any;
-    documents: any;
-    portalFlow: any;
-    clearErrors: (...args: any[]) => any;
-  };
+interface UploadIdProps {
+  appLogic: AppLogic;
   claim: any;
   documents?: BenefitsApplicationDocument[];
   isLoadingDocuments?: boolean;
@@ -40,7 +34,7 @@ interface Props {
   };
 }
 
-export const UploadId = (props: Props) => {
+export const UploadId = (props: UploadIdProps) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments, query } = props;
   const { files, processFiles, removeFile } = useFilesLogic({
@@ -199,26 +193,6 @@ export const UploadId = (props: Props) => {
       </div>
     </QuestionPage>
   );
-};
-
-UploadId.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    catchError: PropTypes.func.isRequired,
-    documents: PropTypes.object.isRequired,
-    portalFlow: PropTypes.object.isRequired,
-    clearErrors: PropTypes.func.isRequired,
-  }).isRequired,
-  claim: PropTypes.object.isRequired,
-  documents: PropTypes.arrayOf(
-    PropTypes.instanceOf(BenefitsApplicationDocument)
-  ),
-  isLoadingDocuments: PropTypes.bool,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-    showStateId: PropTypes.string,
-    additionalDoc: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(withClaimDocuments(UploadId));

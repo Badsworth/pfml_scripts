@@ -6,7 +6,6 @@ import { get, pick, round } from "lodash";
 import Heading from "../../components/Heading";
 import InputHours from "../../components/InputHours";
 import Lead from "../../components/Lead";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";
@@ -20,12 +19,12 @@ export const fields = [
   "claim.work_pattern.work_pattern_days[*].minutes",
 ];
 
-interface Props {
+interface ScheduleFixedProps {
   claim: BenefitsApplication;
   appLogic: any;
 }
 
-export const ScheduleFixed = (props: Props) => {
+export const ScheduleFixed = (props: ScheduleFixedProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -87,11 +86,6 @@ export const ScheduleFixed = (props: Props) => {
       ))}
     </QuestionPage>
   );
-};
-
-ScheduleFixed.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(ScheduleFixed);

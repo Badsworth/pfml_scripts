@@ -1,5 +1,5 @@
+import { AppLogic } from "../../../hooks/useAppLogic";
 import Button from "../../../components/Button";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
@@ -8,12 +8,8 @@ import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
 
-interface Props {
-  appLogic: {
-    portalFlow: {
-      goTo: (...args: any[]) => any;
-    };
-  };
+interface SuccessProps {
+  appLogic: AppLogic;
   query: {
     employer_id: string;
     next: string;
@@ -21,7 +17,7 @@ interface Props {
   user?: User;
 }
 
-export const Success = (props: Props) => {
+export const Success = (props: SuccessProps) => {
   const { appLogic, query, user } = props;
   const { t } = useTranslation();
 
@@ -66,19 +62,6 @@ export const Success = (props: Props) => {
       </Button>
     </React.Fragment>
   );
-};
-
-Success.propTypes = {
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      goTo: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-  query: PropTypes.shape({
-    employer_id: PropTypes.string.isRequired,
-    next: PropTypes.string.isRequired,
-  }).isRequired,
-  user: PropTypes.instanceOf(User),
 };
 
 export default withUser(Success);

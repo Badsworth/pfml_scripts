@@ -1,7 +1,6 @@
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Heading from "../../components/Heading";
 import Hint from "../../components/Hint";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
@@ -10,13 +9,13 @@ import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
-interface Props {
+interface ConcurrentLeavesIntroProps {
   appLogic: any;
   claim: BenefitsApplication;
   query: any;
 }
 
-export const ConcurrentLeavesIntro = (props: Props) => {
+export const ConcurrentLeavesIntro = (props: ConcurrentLeavesIntroProps) => {
   const { t } = useTranslation();
   const { appLogic, claim, query } = props;
 
@@ -55,12 +54,6 @@ export const ConcurrentLeavesIntro = (props: Props) => {
       </Hint>
     </QuestionPage>
   );
-};
-
-ConcurrentLeavesIntro.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  query: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(ConcurrentLeavesIntro);

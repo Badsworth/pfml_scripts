@@ -1,5 +1,5 @@
 import Alert from "../../components/Alert";
-import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
 import Button from "../../components/Button";
 import InputText from "../../components/InputText";
@@ -15,16 +15,7 @@ import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplications from "../../hoc/withBenefitsApplications";
 
 interface ConvertToEmployerProps {
-  appLogic: {
-    users?: {
-      convertUser: (user_id: string, postData: any) => Record<string, User>;
-    };
-    portalFlow?: {
-      goTo: (...args: any[]) => any;
-      goToPageFor: (...args: any[]) => any;
-    };
-    appErrors?: AppErrorInfoCollection;
-  };
+  appLogic: AppLogic;
   claims: BenefitsApplicationCollection;
   user: User;
 }

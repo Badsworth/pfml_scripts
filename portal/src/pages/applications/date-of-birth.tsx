@@ -1,5 +1,4 @@
 import InputDate from "../../components/InputDate";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { pick } from "lodash";
@@ -10,7 +9,7 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.date_of_birth"];
 
-interface Props {
+interface DateOfBirthProps {
   appLogic: any;
   claim: any;
   query?: {
@@ -18,7 +17,7 @@ interface Props {
   };
 }
 
-export const DateOfBirth = (props: Props) => {
+export const DateOfBirth = (props: DateOfBirthProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -48,14 +47,6 @@ export const DateOfBirth = (props: Props) => {
       />
     </QuestionPage>
   );
-};
-
-DateOfBirth.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(DateOfBirth);

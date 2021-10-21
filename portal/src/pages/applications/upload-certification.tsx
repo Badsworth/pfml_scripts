@@ -3,6 +3,7 @@ import BenefitsApplication, {
 } from "../../models/BenefitsApplication";
 
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import ConditionalContent from "../../components/ConditionalContent";
 import DocumentRequirements from "../../components/DocumentRequirements";
@@ -12,7 +13,6 @@ import FileUploadDetails from "../../components/FileUploadDetails";
 import Heading from "../../components/Heading";
 import Lead from "../../components/Lead";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import Spinner from "../../components/Spinner";
@@ -28,14 +28,8 @@ import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 import withClaimDocuments from "../../hoc/withClaimDocuments";
 
-interface Props {
-  appLogic: {
-    appErrors: any;
-    catchError: (...args: any[]) => any;
-    documents: any;
-    portalFlow: any;
-    clearErrors: (...args: any[]) => any;
-  };
+interface UploadCertificationProps {
+  appLogic: AppLogic;
   claim?: BenefitsApplication;
   documents?: BenefitsApplicationDocument[];
   isLoadingDocuments?: boolean;
@@ -45,7 +39,7 @@ interface Props {
   };
 }
 
-export const UploadCertification = (props: Props) => {
+export const UploadCertification = (props: UploadCertificationProps) => {
   const { appLogic, claim, documents, isLoadingDocuments, query } = props;
   const { t } = useTranslation();
   const claimReason = claim.leave_details.reason;
@@ -217,25 +211,6 @@ export const UploadCertification = (props: Props) => {
       )}
     </QuestionPage>
   );
-};
-
-UploadCertification.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    catchError: PropTypes.func.isRequired,
-    documents: PropTypes.object.isRequired,
-    portalFlow: PropTypes.object.isRequired,
-    clearErrors: PropTypes.func.isRequired,
-  }).isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  documents: PropTypes.arrayOf(
-    PropTypes.instanceOf(BenefitsApplicationDocument)
-  ),
-  isLoadingDocuments: PropTypes.bool,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-    additionalDoc: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(withClaimDocuments(UploadCertification));

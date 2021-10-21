@@ -5,7 +5,6 @@ import Button from "../components/Button";
 import InputPassword from "../components/InputPassword";
 import InputText from "../components/InputText";
 import Lead from "../components/Lead";
-import PropTypes from "prop-types";
 import ThrottledButton from "../components/ThrottledButton";
 import Title from "../components/Title";
 import { Trans } from "react-i18next";
@@ -16,11 +15,11 @@ import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
-interface Props {
+interface ResetPasswordProps {
   appLogic: any;
 }
 
-export const ResetPassword = (props: Props) => {
+export const ResetPassword = (props: ResetPasswordProps) => {
   const { appLogic } = props;
   const { appErrors, auth } = appLogic;
   const { t } = useTranslation();
@@ -134,10 +133,6 @@ export const ResetPassword = (props: Props) => {
       </Button>
     </form>
   );
-};
-
-ResetPassword.propTypes = {
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default ResetPassword;
