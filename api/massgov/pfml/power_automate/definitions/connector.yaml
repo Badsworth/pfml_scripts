@@ -13,7 +13,7 @@ paths:
     get:
       operationId: ListObjects
       summary: List S3 Objects
-      description: List S3 objects in a bucket using the S3 action [ListObjectsV2](https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html#API_ListObjectsV2_ResponseSyntax).
+      description: List S3 objects in a bucket using the S3 action [ListObjectsV2](https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html).
       parameters:
         - $ref: "#/parameters/Bucket"
         - $ref: "#/parameters/Key"
@@ -172,7 +172,7 @@ responses:
 definitions:
   ListObjectsResponse:
     title: List ObjectsV2 Response
-    description: A [ListObjectsV2](https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html#API_ListObjectsV2_ResponseSyntax) response body.
+    description: A [ListObjectsV2](https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html) response body.
     xml:
       name: ListBucketResult
     type: object
