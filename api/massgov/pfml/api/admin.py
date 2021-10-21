@@ -108,5 +108,4 @@ def azure_user_response(user: AzureUser) -> Dict[str, Any]:
         f"{permission.azure_permission_resource}_{permission.azure_permission_action}".upper()
         for permission in permissions
     ]
-    logger.info(response)
     return AdminUserResponse.parse_obj(response).__dict__

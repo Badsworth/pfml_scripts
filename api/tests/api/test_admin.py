@@ -42,6 +42,7 @@ def test_admin_login_success(
         AzureGroup.NON_PROD.azure_group_guid,
         AzureGroup.NON_PROD_ADMIN.azure_group_guid,
     ]
+    azure_token["unique_name"] = "email@example.com"
     test_db_session.add(
         AzureGroupPermission(
             azure_group_id=AzureGroup.NON_PROD_ADMIN.azure_group_id,
@@ -62,13 +63,15 @@ def test_admin_login_success(
     )
     with app.app.test_request_context("/v1/admin/login"):
         response = client.get("/v1/admin/login", headers={"Authorization": f"Bearer {encoded}"})
+        data = response.get_json().get("data")
+        assert response.status_code == 200
         assert g.azure_user.sub_id == "foo"
         assert g.azure_user.permissions == [
             AzurePermission.USER_READ.azure_permission_id,
             AzurePermission.USER_EDIT.azure_permission_id,
         ]
-        assert response.get_json().get("data").get("permissions") == ["USER_READ", "USER_EDIT"]
-        assert response.status_code == 200
+        assert data.get("email_address") == "email@example.com"
+        assert data.get("permissions") == ["USER_READ", "USER_EDIT"]
 
 
 def test_admin_login_unauthorized(client, app, mock_azure, auth_token_unit):
