@@ -22,6 +22,7 @@ jobs:
         run: |
           import os
           import re
+          import sys
 
           TITLE_RE = re.compile(r"[A-Z]+-\d+:")
           BODY_RE = re.compile(r"https://lwd.atlassian.net/browse/[A-Z]+-\d+")
@@ -30,23 +31,23 @@ jobs:
           body = os.environ["BODY"]
           state = os.environ["STATE"]
 
-          print("github.event.pull_request.title: %r" % title)
+          print("::group::github.event.pull_request.title: %r" % title)
           print("github.event.pull_request.body: %r" % body)
           print("github.event.pull_request.state: %r" % state)
+          print("::endgroup::")
 
-          failures = 0
+          problem_count = 0
 
           if not TITLE_RE.match(title):
               print("::error title=PR title doesn't start with ticket::"
                     "Please start the PR title with a JIRA ticket, "
                     "for example \"AAA-123: /summary/\"")
-              failures += 1
+              problem_count += 1
 
           if not BODY_RE.search(body):
               print("::error title=PR description doesn't link to ticket::"
                     "Please include a JIRA ticket link in the PR description, "
                     "for example https://lwd.atlassian.net/browse/AAA-123")
-              failures += 1
+              problem_count += 1
 
-          if failures:
-              raise RuntimeError("%i problems found" % failures)
+          sys.exit(problem_count)
