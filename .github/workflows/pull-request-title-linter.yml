@@ -1,31 +1,51 @@
-name: Pull Request title linter
+#
+# GitHub action to check PR follows our preferred format.
+#
+
+name: Pull Request format linter
 
 on:
   pull_request:
     types: [opened, edited, reopened, synchronize]
 
 jobs:
-  check_title:
+  check_title_and_body:
+    name: Check PR title and body
     runs-on: ubuntu-latest
     steps:
-      - name: Check PR title
+      - name: Check PR title and body
         env:
           TITLE: ${{ github.event.pull_request.title }}
+          BODY: ${{ github.event.pull_request.body }}
+          STATE: ${{ github.event.pull_request.state }}
         shell: python
         run: |
           import os
           import re
-          import sys
 
           TITLE_RE = re.compile(r"[A-Z]+-\d+:")
+          BODY_RE = re.compile(r"https://lwd.atlassian.net/browse/[A-Z]+-\d+")
 
           title = os.environ["TITLE"]
+          body = os.environ["TITLE"]
+          state = os.environ["TITLE"]
 
-          print(sys.version)
-          print("PR title: %r" % title)
+          print("github.event.pull_request.title: %r" % title)
+          print("github.event.pull_request.body: %r" % body)
+          print("github.event.pull_request.state: %r" % state)
 
-          if TITLE_RE.match(title):
-              pass
-          else:
-              print("::error file=/docs/contributing.md,line=1,title=Invalid PR title::Please start the PR title with a JIRA ticket, e.g. AAA-123: ...")
-              raise RuntimeError("PR title must start with JIRA ticket")
+          failures = 0
+
+          if not TITLE_RE.match(title):
+              print("::error title=PR title doesn't start with ticket::"
+                    "Please start the PR title with a JIRA ticket, for example \"AAA-123: /summary/\"")
+              failures += 1
+
+          if not BODY_RE.search(body):
+              print("::error title=PR description doesn't link to ticket::"
+                    "Please include a JIRA ticket link in the PR description, "
+                    "for example https://lwd.atlassian.net/browse/AAA-123")
+              failures += 1
+
+          if failures:
+              raise RuntimeError("%i problems found" % failures)
