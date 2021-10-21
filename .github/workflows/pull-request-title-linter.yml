@@ -27,8 +27,8 @@ jobs:
           BODY_RE = re.compile(r"https://lwd.atlassian.net/browse/[A-Z]+-\d+")
 
           title = os.environ["TITLE"]
-          body = os.environ["TITLE"]
-          state = os.environ["TITLE"]
+          body = os.environ["BODY"]
+          state = os.environ["STATE"]
 
           print("github.event.pull_request.title: %r" % title)
           print("github.event.pull_request.body: %r" % body)
