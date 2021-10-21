@@ -153,6 +153,7 @@ output "slackbot_channels" {
   }
 }
 
+# Reuseable constant to switch environments for testing
 output "bucket_replication_environment" {
   value = "prod"
 }

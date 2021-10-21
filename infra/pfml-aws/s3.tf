@@ -37,13 +37,12 @@ resource "aws_s3_bucket" "terraform" {
     public      = "no"
     Name        = "pfml-${each.key}-env-mgmt"
   })
-
+# this allow replication of production buckets to the lwditonline aws account
   replication_configuration {
     role = data.aws_iam_role.replication.name
     rules {
       id     = "replicateFullBucket"
       status = "Enabled"
-      # Note: These buckets already exist
       destination {
         bucket        = "arn:aws:s3:::massgov-pfml-${each.key}-env-mgmt-replica"
         storage_class = "STANDARD"
@@ -104,7 +103,7 @@ resource "aws_s3_bucket" "agency_transfer" {
     Name        = "massgov-pfml-${each.key}-agency-transfer"
     public      = "no"
   })
-
+# this allow replication of production buckets to the lwditonline aws account
   dynamic "replication_configuration" {
     for_each = each.key == module.constants.bucket_replication_environment ? [1] : []
     content {
