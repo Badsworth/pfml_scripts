@@ -77,7 +77,7 @@ export default class Step {
   /**
    * Context used for evaluating a step's status
    */
-  context?: Context;
+  context: Context = {};
   /**
    * Array of validation warnings from the API, used for determining
    * the completion status of Steps that include fields. You can exclude
@@ -100,8 +100,8 @@ export default class Step {
     Object.assign(this, attrs);
   }
 
-  get fields() {
-    return this.pages.flatMap((page) => page.meta.fields);
+  get fields(): string[] {
+    return this.pages.flatMap((page) => page.meta?.fields || []);
   }
 
   get status() {
@@ -148,7 +148,7 @@ export default class Step {
   }
 
   get isDisabled() {
-    if (!this.dependsOn.length) return false;
+    if (!this.dependsOn || !this.dependsOn.length) return false;
 
     return this.dependsOn.some((dependedOnStep) => !dependedOnStep.isComplete);
   }

@@ -18,6 +18,7 @@ const uploadDocumentsHelper = async (
     await Promise.all(
       zip(tempFiles.items, uploadPromises).map(
         async ([successfullyUploadedFile, uploadPromise]) => {
+          if (!uploadPromise || !successfullyUploadedFile) return true;
           const { success } = await uploadPromise;
           if (success) {
             removeTempFile(successfullyUploadedFile.id);

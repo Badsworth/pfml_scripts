@@ -4,6 +4,10 @@ import {
   Issue,
   ValidationError,
 } from "../errors";
+import {
+  NullableQueryParams,
+  createRouteWithQuery,
+} from "../utils/routeWithParams";
 import { compact, trim } from "lodash";
 import { useMemo, useState } from "react";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
@@ -12,7 +16,6 @@ import { PortalFlow } from "./usePortalFlow";
 import { RoleDescription } from "../models/User";
 import UsersApi from "../api/UsersApi";
 import assert from "assert";
-import { createRouteWithQuery } from "../utils/routeWithParams";
 import routes from "../routes";
 import tracker from "../services/tracker";
 
@@ -44,16 +47,14 @@ const useAuthLogic = ({
    * Sometimes we need to persist information the user entered on
    * one auth screen so it can be reused on a subsequent auth screen.
    * For these cases we need to store this data in memory.
-   * @property {object} authData - data to store between page transitions
-   * @property {Function} setAuthData - updated the cached authentication info
+   * @property authData - data to store between page transitions
    */
   const [authData, setAuthData] = useState({});
 
   /**
-   * @property {?boolean} isLoggedIn - Whether the user is logged in or not, or null if logged in status has not been checked yet
-   * @property {Function} setIsLoggedIn - Set whether the user is logged in or not after the logged in status has been checked
+   * @property isLoggedIn - Whether the user is logged in or not, or null if logged in status has not been checked yet
    */
-  const [isLoggedIn, setIsLoggedIn] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   /**
    * Initiate the Forgot Password flow, sending a verification code when user exists.
@@ -183,7 +184,7 @@ const useAuthLogic = ({
       tracker.noticeError(error);
     }
     setIsLoggedIn(false);
-    const params = {};
+    const params: NullableQueryParams = {};
     if (sessionTimedOut) {
       params["session-timed-out"] = "true";
     }
@@ -451,7 +452,7 @@ const useAuthLogic = ({
   };
 };
 
-function combineValidationIssues(...issues: Issue[]) {
+function combineValidationIssues(...issues: Array<Issue | undefined>) {
   const combinedIssues = compact(issues);
   if (combinedIssues.length === 0) return;
   return combinedIssues;

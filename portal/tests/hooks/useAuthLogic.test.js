@@ -138,6 +138,7 @@ describe("useAuthLogic", () => {
 
     expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
       issueField: "username",
+      issueRule: "",
       issueType: "required",
     });
 
@@ -324,10 +325,12 @@ describe("useAuthLogic", () => {
 
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "username",
+        issueRule: "",
         issueType: "required",
       });
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "password",
+        issueRule: "",
         issueType: "required",
       });
 
@@ -910,6 +913,7 @@ describe("useAuthLogic", () => {
 
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "username",
+        issueRule: "",
         issueType: "required",
       });
 
@@ -1020,14 +1024,17 @@ describe("useAuthLogic", () => {
 
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "code",
+        issueRule: "",
         issueType: "required",
       });
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "username",
+        issueRule: "",
         issueType: "required",
       });
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "password",
+        issueRule: "",
         issueType: "required",
       });
 
@@ -1277,10 +1284,12 @@ describe("useAuthLogic", () => {
 
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "username",
+        issueRule: "",
         issueType: "required",
       });
       expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
         issueField: "code",
+        issueRule: "",
         issueType: "required",
       });
 
@@ -1308,6 +1317,7 @@ describe("useAuthLogic", () => {
 
         expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
           issueField: "code",
+          issueRule: "",
           issueType: "pattern",
         });
 

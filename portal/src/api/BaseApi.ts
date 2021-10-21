@@ -17,7 +17,7 @@ import { Auth } from "@aws-amplify/auth";
 import tracker from "../services/tracker";
 
 export interface ApiResponseBody<TResponseData> {
-  data?: TResponseData;
+  data: TResponseData;
   errors?: Issue[];
   meta?: {
     resource: string;
@@ -61,7 +61,7 @@ export default abstract class BaseApi {
   async request<TResponseData>(
     method: ApiMethod,
     subPath = "",
-    body: ApiRequestBody | null = null,
+    body?: ApiRequestBody,
     additionalHeaders = {},
     { excludeAuthHeader = false, multipartForm = false } = {}
   ) {
@@ -105,7 +105,7 @@ export default abstract class BaseApi {
       tracker.markFetchRequestEnd();
       responseBody = await response.json();
     } catch (error) {
-      handleError(error);
+      throw fetchErrorToNetworkError(error);
     }
 
     const { data, errors, meta, warnings } = responseBody;
@@ -117,7 +117,7 @@ export default abstract class BaseApi {
       data,
       meta,
       // Guaranteeing warnings is always an array makes our code simpler
-      warnings: formatIssues(warnings) || [],
+      warnings: Array.isArray(warnings) ? formatIssues(warnings) : [],
     };
   }
 }
@@ -184,9 +184,7 @@ export async function getAuthorizationHeader() {
 /**
  * Convert API error/warnings field paths into a field path format we use on the Portal
  */
-function formatIssues(issues?: Issue[]) {
-  if (!issues) return issues;
-
+function formatIssues(issues: Issue[]) {
   return issues.map((issue) => {
     if (!issue.field) return issue;
 
@@ -205,11 +203,11 @@ function formatIssues(issues?: Issue[]) {
 /**
  * Handle request errors
  */
-export function handleError(error: unknown) {
+export function fetchErrorToNetworkError(error: unknown) {
   // Request failed to send or something failed while parsing the response
   // Log the JS error to support troubleshooting
   console.error(error);
-  throw new NetworkError(error instanceof Error ? error.message : "");
+  return new NetworkError(error instanceof Error ? error.message : "");
 }
 
 /**

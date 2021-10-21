@@ -36,7 +36,9 @@ const useDocumentsLogic = ({
   } = useCollectionState(new DocumentCollection());
 
   const documentsApi = useMemo(() => new DocumentsApi(), []);
-  const [loadedApplicationDocs, setLoadedApplicationDocs] = useState([]);
+  const [loadedApplicationDocs, setLoadedApplicationDocs] = useState<string[]>(
+    []
+  );
 
   /**
    * Check if docs for this application have been loaded

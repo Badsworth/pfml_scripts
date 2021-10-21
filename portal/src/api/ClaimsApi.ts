@@ -50,7 +50,7 @@ export default class ClaimsApi extends BaseApi {
       orderParams.order_by = "fineos_absence_status";
     }
 
-    const { data, meta } = await this.request<Claim[]>("GET", null, {
+    const { data, meta } = await this.request<Claim[]>("GET", undefined, {
       page_offset: pageOffset,
       ...orderParams,
       ...filterParams,
@@ -60,7 +60,7 @@ export default class ClaimsApi extends BaseApi {
 
     return {
       claims: new ClaimCollection(claims),
-      paginationMeta: meta ? new PaginationMeta(meta.paging) : null,
+      paginationMeta: new PaginationMeta(meta ? meta.paging : {}),
     };
   };
 

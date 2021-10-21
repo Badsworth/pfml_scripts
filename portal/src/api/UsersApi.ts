@@ -16,7 +16,7 @@ export default class UsersApi extends BaseApi {
    * @param requestData - Registration fields
    */
   createUser = async (requestData: Record<string, unknown>) => {
-    const { data } = await this.request(
+    const { data } = await this.request<User>(
       "POST",
       "",
       requestData,
@@ -33,7 +33,7 @@ export default class UsersApi extends BaseApi {
    * Get the currently authenticated user
    */
   getCurrentUser = async () => {
-    const { data } = await this.request<User>("GET", "current", null);
+    const { data } = await this.request<User>("GET", "current");
     const roles = this.createUserRoles(data.roles);
     const user_leave_administrators = this.createUserLeaveAdministrators(
       data.user_leave_administrators

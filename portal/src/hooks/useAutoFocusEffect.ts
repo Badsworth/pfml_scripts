@@ -14,12 +14,12 @@ const useAutoFocusEffect = ({
   isAmendmentFormDisplayed: boolean;
 }) => {
   useEffect(() => {
-    if (containerRef && isAmendmentFormDisplayed) {
+    if (containerRef && isAmendmentFormDisplayed && containerRef.current) {
       const amendmentForm =
         containerRef.current.querySelector(".c-amendment-form");
-      const focusableElement = amendmentForm.querySelector(
-        "[tabIndex]:first-child, label"
-      );
+      const focusableElement = amendmentForm
+        ? amendmentForm.querySelector("[tabIndex]:first-child, label")
+        : null;
       if (focusableElement instanceof HTMLElement) focusableElement.focus();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -18,7 +18,7 @@ const useBenefitsApplicationsLogic = ({
 }: {
   appErrorsLogic: AppErrorsLogic;
   portalFlow: PortalFlow;
-  user: User;
+  user?: User;
 }) => {
   // State representing the collection of applications for the current user.
   // Initialize to empty collection, but will eventually store the applications
