@@ -761,7 +761,6 @@ class Document(Base, TimestampMixin):
     description = Column(Text, nullable=False)
 
     document_type_instance = relationship(LkDocumentType)
-    content_type_instance = relationship(LkContentType)
 
 
 class RMVCheckApiErrorCode(Enum):
