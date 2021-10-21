@@ -1,0 +1,265 @@
+swagger: "2.0"
+info:
+  title: AWS S3 Connector [test]
+  description: Connector for Authorized for AWS S3 resources.
+  version: "1.1"
+host: paidleave-api-test.mass.gov
+basePath: /pfmldata
+schemes: [https]
+consumes: []
+produces: []
+paths:
+  /list/{bucket}/{key}:
+    get:
+      operationId: ListObjects
+      summary: List S3 Objects
+      description: List S3 objects in a bucket using the S3 action [ListObjectsV2](https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html#API_ListObjectsV2_ResponseSyntax).
+      parameters:
+        - $ref: "#/parameters/Bucket"
+        - $ref: "#/parameters/Key"
+        - $ref: "#/parameters/MaxKeys"
+        - $ref: "#/parameters/StartAfter"
+      produces: [application/xml, application/json]
+      responses:
+        "200":
+          description: A successful ListObjectsV2 XML response.
+          schema:
+            $ref: "#/definitions/ListObjectsResponse"
+          headers:
+            Date: { description: "Tue, 19 Oct 2021 19:29:57 GMT", type: string }
+            Content-Type:
+              { description: Content-Type of response body., type: string }
+            Content-Length:
+              { description: Length of response body, type: integer }
+        "403":
+          $ref: "#/responses/Unauthorized"
+        "500":
+          $ref: "#/responses/Error"
+  /{bucket}/{key}:
+    get:
+      operationId: GetObject
+      summary: Get S3 Object
+      description: Retrieves S3 object in a bucket using the S3 action [GetObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html).
+      parameters:
+        - $ref: "#/parameters/Bucket"
+        - $ref: "#/parameters/Key"
+      produces:
+        - multipart/form-data
+        - application/pdf
+        - image/jpg
+        - image/jpeg
+        - image/png
+        - image/tiff
+        - image/heic
+        - application/xml
+        - application/json
+      responses:
+        "200":
+          description: A successful GetObject File response.
+          schema:
+            title: File Body
+            description: Raw file contents response body.
+            type: string
+            format: binary
+          headers:
+            Date: { description: "Tue, 19 Oct 2021 19:29:57 GMT", type: string }
+            Content-Type:
+              { description: Content-Type of response body., type: string }
+            Content-Length:
+              { description: Length of response body, type: integer }
+        "403":
+          $ref: "#/responses/Unauthorized"
+        "500":
+          $ref: "#/responses/Error"
+    delete:
+      operationId: DeleteObject
+      summary: Delete S3 Object
+      description: Removes S3 object in a bucket using the S3 action [DeleteObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObject.html).
+      parameters:
+        - $ref: "#/parameters/Bucket"
+        - $ref: "#/parameters/Key"
+      responses:
+        "204":
+          description: A successful DeleteObject empty response.
+          headers:
+            Date: { description: "Tue, 19 Oct 2021 19:29:57 GMT", type: string }
+        "403":
+          $ref: "#/responses/Unauthorized"
+        "500":
+          $ref: "#/responses/Error"
+    put:
+      operationId: CopyObject
+      summary: Copy S3 Object.
+      description: Copies S3 object in a bucket to another location in same bucket using S3 action [CopyObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html).
+      parameters:
+        - $ref: "#/parameters/Bucket"
+        - $ref: "#/parameters/Key"
+        - $ref: "#/parameters/Src"
+      produces: [application/xml, application/json]
+      responses:
+        "200":
+          description: A successful CopyObject XML response.
+          schema:
+            $ref: "#/definitions/CopyObject"
+          headers:
+            Date: { description: "Tue, 19 Oct 2021 19:29:57 GMT", type: string }
+            Content-Type:
+              { description: Content-Type of response body., type: string }
+            Content-Length:
+              { description: Length of response body, type: integer }
+        "403":
+          $ref: "#/responses/Unauthorized"
+        "500":
+          $ref: "#/responses/Error"
+parameters:
+  Bucket:
+    name: bucket
+    x-ms-summary: Bucket
+    description: S3 Bucket name
+    in: path
+    required: true
+    type: string
+  Key:
+    name: key
+    x-ms-summary: Key
+    description: S3 Key
+    in: path
+    required: true
+    type: string
+  Src:
+    name: src
+    x-ms-summary: Source
+    description: S3 Source Key
+    in: query
+    required: true
+    type: string
+    format: html
+  MaxKeys:
+    name: max_keys
+    x-ms-summary: Max Response Keys
+    description: Maximum number of keys returned in response.
+    in: query
+    required: false
+    type: string
+    default: 1
+  StartAfter:
+    name: start_after
+    x-ms-summary: Start After Key
+    description: Start listing results lexicographically after this key.
+    in: query
+    required: false
+    type: string
+    format: ""
+responses:
+  Unauthorized:
+    description: A forbidden response.
+    headers:
+      Date: { description: "Tue, 19 Oct 2021 19:29:57 GMT", type: string }
+      Content-Type:
+        { description: Content-Type of response body., type: string }
+      Content-Length: { description: Length of response body, type: integer }
+    schema:
+      $ref: "#/definitions/UnauthorizedResponse"
+  Error:
+    description: An internal server error JSON response.
+    headers:
+      Date: { description: "Tue, 19 Oct 2021 19:29:57 GMT", type: string }
+      Content-Type:
+        { description: Content-Type of response body., type: string }
+      Content-Length: { description: Length of response body, type: integer }
+    schema:
+      $ref: "#/definitions/ErrorResponse"
+definitions:
+  ListObjectsResponse:
+    title: List ObjectsV2 Response
+    description: A [ListObjectsV2](https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html#API_ListObjectsV2_ResponseSyntax) response body.
+    xml:
+      name: ListBucketResult
+    type: object
+    properties:
+      Name:
+        title: Name
+        description: The bucket name.
+        type: string
+      Prefix:
+        title: Prefix
+        description: Keys that begin with the indicated prefix.
+        type: string
+      Delimiter:
+        title: Delimiter
+        description: Causes keys that contain the same string between the prefix and the first occurrence of the delimiter to be rolled up into a single result element.
+        type: string
+      KeyCount:
+        title: KeyCount
+        description: The number of keys returned with this request. KeyCount will always be less than or equals to MaxKeys field.
+        type: string
+      MaxKeys: { title: MaxKeys, type: number }
+      StartAfter: { title: StartAfter, type: string }
+      IsTruncated:
+        {
+          title: IsTruncated,
+          description: Set to false if all of the results were returned.,
+          type: boolean,
+        }
+      EncodingType: { title: EncodingType, type: string }
+      ContinuationToken: { title: ContinuationToken, type: string }
+      NextContinuationToken: { title: NextContinuationToken, type: string }
+      CommonPrefixes:
+        type: array
+        description: All of the keys (up to 1,000) rolled up into a common prefix count as a single return when calculating the number of returns.
+        items:
+          type: object
+          properties:
+            Prefix: { type: string }
+      Contents:
+        type: array
+        description: Metadata about each object returned.
+        items:
+          type: object
+          properties:
+            Key: { type: string }
+            ETag: { type: string }
+            LastModified: { type: string }
+            Size: { type: string }
+            StorageClass: { type: string }
+            Owner:
+              type: object
+              properties:
+                DisplayName: { type: string }
+                ID: { type: string }
+  CopyObject:
+    title: Copy Object Response
+    description: A [CopyObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html) response body.
+    xml:
+      name: CopyObjectResult
+    type: object
+    properties:
+      ETag:
+        title: ETag
+        type: string
+        description: "Returns the ETag of the new object. The ETag reflects only changes to the contents of an object,not its metadata."
+      LastModified: { type: string, description: Creation date of the object. }
+  UnauthorizedResponse:
+    title: Forbidden Response
+    description: Forbidden response body.
+    type: object
+    xml:
+      name: Error
+    properties:
+      Code: { title: Code, type: string }
+      Message: { title: Message, type: string }
+      RequestId: { title: RequestId, type: string }
+      HostId: { title: HostId, type: string }
+  ErrorResponse:
+    title: Error Response
+    description: Error response body.
+    type: object
+    xml:
+      name: Error
+    properties:
+      message: { type: string, description: API Error message. }
+securityDefinitions:
+  API Key: { type: apiKey, in: header, name: X-API-Key }
+security:
+  - API Key: []
+tags: []
