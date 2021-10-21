@@ -64,7 +64,7 @@ const useEmployersLogic = ({
           new LeaveAdminForbiddenError(
             employer_id,
             has_verification_data,
-            error.message
+            error instanceof Error ? error.message : ""
           )
         );
       } else {

@@ -123,7 +123,9 @@ const useDocumentsLogic = ({
           new DocumentsUploadError(
             application_id,
             fileWithUniqueId.id,
-            error.issues ? error.issues[0] : null
+            error instanceof ValidationError && error.issues
+              ? error.issues[0]
+              : null
           )
         );
         return { success: false };

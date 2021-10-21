@@ -62,16 +62,25 @@ function newrelicReady() {
  * @see https://docs.newrelic.com/docs/browser/new-relic-browser/browser-agent-spa-api/noticeerror-browser-agent-api
  */
 function noticeError(
-  error: Error,
+  error: unknown,
   customAttributes: NewRelicEventAttributes = {}
 ) {
-  if (newrelicReady()) {
+  if (!newrelicReady()) return;
+
+  if (error instanceof Error) {
     window.newrelic.noticeError(error, {
       ...moduleGlobal.customPageAttributes,
       ...customAttributes,
       environment: process.env.buildEnv,
       portalReleaseVersion: process.env.releaseVersion,
     });
+  } else {
+    trackEvent(
+      "Tried tracking error, but it wasn't an Error instance. See errorContents.",
+      {
+        errorContents: JSON.stringify(error),
+      }
+    );
   }
 }
 

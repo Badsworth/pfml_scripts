@@ -176,7 +176,7 @@ export async function getAuthorizationHeader() {
     return { Authorization: `Bearer ${jwtToken}` };
   } catch (error) {
     // Amplify returns a string for the error...
-    const message = typeof error === "string" ? error : error.message;
+    const message = error instanceof Error ? error.message : error;
     throw new AuthSessionMissingError(message);
   }
 }
@@ -205,11 +205,11 @@ function formatIssues(issues?: Issue[]) {
 /**
  * Handle request errors
  */
-export function handleError(error: Error) {
+export function handleError(error: unknown) {
   // Request failed to send or something failed while parsing the response
   // Log the JS error to support troubleshooting
   console.error(error);
-  throw new NetworkError(error.message);
+  throw new NetworkError(error instanceof Error ? error.message : "");
 }
 
 /**

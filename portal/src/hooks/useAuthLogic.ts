@@ -16,6 +16,18 @@ import { createRouteWithQuery } from "../utils/routeWithParams";
 import routes from "../routes";
 import tracker from "../services/tracker";
 
+function isCognitoError(error: unknown): error is CognitoError {
+  if (
+    error &&
+    typeof error === "object" &&
+    error.hasOwnProperty("code") !== undefined
+  ) {
+    return true;
+  }
+
+  return false;
+}
+
 const useAuthLogic = ({
   appErrorsLogic,
   portalFlow,
@@ -88,6 +100,11 @@ const useAuthLogic = ({
 
       return true;
     } catch (error) {
+      if (!isCognitoError(error)) {
+        appErrorsLogic.catchError(error);
+        return false;
+      }
+
       const authError = getForgotPasswordError(error);
       appErrorsLogic.catchError(authError);
       return false;
@@ -127,6 +144,11 @@ const useAuthLogic = ({
         portalFlow.goToPageFor("LOG_IN");
       }
     } catch (error) {
+      if (!isCognitoError(error)) {
+        appErrorsLogic.catchError(error);
+        return;
+      }
+
       if (error.code === "UserNotConfirmedException") {
         portalFlow.goToPageFor("UNCONFIRMED_ACCOUNT");
         return;
@@ -284,6 +306,11 @@ const useAuthLogic = ({
 
       // TODO (CP-600): Show success message
     } catch (error) {
+      if (!isCognitoError(error)) {
+        appErrorsLogic.catchError(error);
+        return;
+      }
+
       appErrorsLogic.catchError(new CognitoAuthError(error));
     }
   };
@@ -329,6 +356,11 @@ const useAuthLogic = ({
 
       portalFlow.goToPageFor("SET_NEW_PASSWORD");
     } catch (error) {
+      if (!isCognitoError(error)) {
+        appErrorsLogic.catchError(error);
+        return;
+      }
+
       const authError = getResetPasswordError(error);
       appErrorsLogic.catchError(authError);
     }
@@ -352,6 +384,11 @@ const useAuthLogic = ({
         }
       );
     } catch (error) {
+      if (!isCognitoError(error)) {
+        appErrorsLogic.catchError(error);
+        return;
+      }
+
       // If the error is the user trying to re-verified an already-verified account then we can redirect
       // them to the login page. This only occurs if the user's account is already verified and the
       // verification code they use is valid.

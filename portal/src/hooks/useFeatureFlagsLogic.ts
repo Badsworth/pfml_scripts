@@ -19,7 +19,7 @@ const useFlagsLogic = () => {
       setFlags(await featureFlagsApi.getFlags());
     } catch (error) {
       tracker.trackEvent("Feature flags API request failed", {
-        errorMessage: error.message,
+        errorMessage: error instanceof Error ? error.message : "",
       });
     }
   };

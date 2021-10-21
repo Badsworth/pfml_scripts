@@ -39,7 +39,7 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
   /**
    * Converts a JavaScript error into an AppErrorInfo object and adds it to the app error collection
    */
-  const catchError = (error: Error) => {
+  const catchError = (error: unknown) => {
     if (error instanceof AuthSessionMissingError) {
       handleAuthSessionMissingError(error);
     } else if (error instanceof ValidationError) {
@@ -263,10 +263,12 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
   /**
    * Add and track the Error
    */
-  const handleError = (error: Error) => {
+  const handleError = (error: unknown) => {
+    const errorName = error instanceof Error ? error.name : "";
+
     const appError = new AppErrorInfo({
-      name: error.name,
-      message: t("errors.caughtError", { context: error.name }),
+      name: errorName,
+      message: t("errors.caughtError", { context: errorName }),
     });
 
     addError(appError);
