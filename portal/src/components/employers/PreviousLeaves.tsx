@@ -13,7 +13,7 @@ import { useTranslation } from "../../locales/i18n";
 interface PreviousLeavesProps {
   addedPreviousLeaves: PreviousLeave[];
   appErrors: AppErrorInfoCollection;
-  onAdd: (...args: any[]) => any;
+  onAdd: React.MouseEventHandler<HTMLButtonElement>;
   onChange: (...args: any[]) => any;
   onRemove: (...args: any[]) => any;
   previousLeaves?: PreviousLeave[];

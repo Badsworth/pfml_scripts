@@ -11,7 +11,7 @@ interface ButtonLinkProps {
   href: string;
   variation?: "outline" | "secondary" | "accent-cool" | "unstyled";
   inversed?: boolean;
-  onClick?: (...args: any[]) => any;
+  onClick?: React.MouseEventHandler<HTMLAnchorElement>;
 }
 
 /**

@@ -47,7 +47,7 @@ export const ScheduleVariable = (props: ScheduleVariableProps) => {
     updateFields,
   });
 
-  const handleHoursChange = (event) => {
+  const handleHoursChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const minutesStr = event.target.value;
 
     // The input is coerced into a string by InputHours.js

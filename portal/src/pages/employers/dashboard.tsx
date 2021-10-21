@@ -695,7 +695,7 @@ const Filters = (props: FiltersProps) => {
 
 interface FilterMenuButtonProps {
   children: React.ReactNode;
-  onClick: (...args: any[]) => any;
+  onClick: React.MouseEventHandler<HTMLButtonElement>;
 }
 
 const FilterMenuButton = (props: FilterMenuButtonProps) => {
@@ -823,7 +823,7 @@ const SortDropdown = (props: SortDropdownProps) => {
     ];
   };
 
-  const handleChange = (evt) => {
+  const handleChange = (evt: React.ChangeEvent<HTMLSelectElement>) => {
     updatePageQuery([
       ...getParamsFromOrderAndDirection(evt.target.value),
       {

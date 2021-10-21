@@ -87,7 +87,7 @@ interface InputCurrencyProps {
 const InputCurrency = (props: InputCurrencyProps) => {
   const [maskedValue, setMaskedValue] = useState(maskCurrency(props.value));
 
-  const handleChange = (event) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const maskedValue = event.target.value;
     // getInputValueFromEvent will strip comma masks from value
     // store masked value to be displayed to user
