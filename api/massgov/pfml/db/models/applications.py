@@ -748,7 +748,7 @@ class Document(Base, TimestampMixin):
         PostgreSQLUUID, ForeignKey("application.application_id"), nullable=False, index=True
     )
     document_type_id = Column(
-        Integer, ForeignKey("lk_document_type.document_type_id"), nullable=False
+        Integer, ForeignKey("lk_document_type.document_type_id"), nullable=True
     )
     content_type_id = Column(Integer, ForeignKey("lk_content_type.content_type_id"), nullable=False)
     size_bytes = Column(Integer, nullable=False)
