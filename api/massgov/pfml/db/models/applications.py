@@ -750,7 +750,7 @@ class Document(Base, TimestampMixin):
     document_type_id = Column(
         Integer, ForeignKey("lk_document_type.document_type_id"), nullable=False
     )
-    content_type_id = Column(Integer, ForeignKey("lk_content_type.content_type_id"), nullable=True)
+    content_type_id = deprecated_column(Column(Integer, ForeignKey("lk_content_type.content_type_id"), nullable=True))
     size_bytes = Column(Integer, nullable=False)
     fineos_id = Column(Text, nullable=True)
     is_stored_in_s3 = Column(Boolean, nullable=False)
