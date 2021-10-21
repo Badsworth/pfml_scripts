@@ -110,7 +110,7 @@ function InputNumber(props: InputNumberProps) {
 
   const inputMode = valueType === "integer" ? "numeric" : "decimal";
 
-  const handleChange = (event) => {
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     if (!props.onChange) return;
     const value = event.target.value;
 

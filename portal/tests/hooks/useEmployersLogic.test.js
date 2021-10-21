@@ -1,4 +1,8 @@
-import { BadRequestError, LeaveAdminForbiddenError } from "../../src/errors";
+import {
+  BadRequestError,
+  ForbiddenError,
+  LeaveAdminForbiddenError,
+} from "../../src/errors";
 import { act, renderHook } from "@testing-library/react-hooks";
 import {
   addEmployerMock,
@@ -146,16 +150,13 @@ describe("useEmployersLogic", () => {
       it("catches instances of LeaveAdminForbiddenError", async () => {
         const catchErrorSpy = jest.spyOn(appErrorsLogic, "catchError");
         getClaimMock.mockImplementationOnce(() => {
-          // eslint-disable-next-line no-throw-literal
-          throw {
-            responseData: {
+          throw new ForbiddenError(
+            {
               employer_id: "some-employer-id",
               has_verification_data: "true",
             },
-            errors: [],
-            message: "User is not Verified",
-            status_code: 403,
-          };
+            "User is not Verified"
+          );
         });
 
         await act(async () => {

@@ -1,7 +1,7 @@
 import BaseApi, {
   createRequestUrl,
+  fetchErrorToNetworkError,
   getAuthorizationHeader,
-  handleError,
   handleNotOkResponse,
 } from "./BaseApi";
 import ClaimDocument from "../models/ClaimDocument";
@@ -24,12 +24,19 @@ export default class EmployersApi extends BaseApi {
    * Add an FEIN to the logged in Leave Administrator
    */
   addEmployer = async (postData: { employer_fein: string }) => {
-    const { data } = await this.request("POST", "add", postData);
+    const { data } = await this.request<UserLeaveAdministrator>(
+      "POST",
+      "add",
+      postData
+    );
     return new UserLeaveAdministrator(data);
   };
 
   getClaim = async (absenceId: string) => {
-    const { data } = await this.request("GET", `claims/${absenceId}/review`);
+    const { data } = await this.request<EmployerClaim>(
+      "GET",
+      `claims/${absenceId}/review`
+    );
 
     return {
       claim: new EmployerClaim(data),
@@ -49,7 +56,7 @@ export default class EmployersApi extends BaseApi {
 
     const headers = {
       ...authHeader,
-      "Content-Type": content_type,
+      "Content-Type": content_type || "",
     };
 
     let blob: Blob, response: Response;
@@ -57,7 +64,7 @@ export default class EmployersApi extends BaseApi {
       response = await fetch(url, { headers, method });
       blob = await response.blob();
     } catch (error) {
-      handleError(error);
+      throw fetchErrorToNetworkError(error);
     }
 
     if (!response.ok) {

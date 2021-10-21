@@ -198,7 +198,8 @@ const LeaveDetails = (props: LeaveDetailsProps) => {
             getField={() => relationshipInaccurateReason}
             clearField={() => onChangeRelationshipInaccurateReason("")}
             updateFields={(e) =>
-              // @ts-expect-error ts-migrate(2339) FIXME: Property 'value' does not exist on type 'unknown'.
+              // TODO (PORTAL-921): Fix or remove these props. This callback is never called currently.
+              // @ts-expect-error updateFields doesn't receive an event!!
               onChangeRelationshipInaccurateReason(e.target.value)
             }
             visible={believeRelationshipAccurate === "No"}

@@ -13,7 +13,7 @@ import { useTranslation } from "../../locales/i18n";
 interface PreviousLeavesProps {
   addedPreviousLeaves: PreviousLeave[];
   appErrors: AppErrorInfoCollection;
-  onAdd: (...args: any[]) => any;
+  onAdd: React.MouseEventHandler<HTMLButtonElement>;
   onChange: (...args: any[]) => any;
   onRemove: (...args: any[]) => any;
   previousLeaves?: PreviousLeave[];
@@ -61,8 +61,6 @@ const PreviousLeaves = (props: PreviousLeavesProps) => {
         label={t(
           "components.employersPreviousLeaves.qualifyingReasonDetailsLabel"
         )}
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element[]; label: string; classN... Remove this comment to see the full error message
-        className="text-bold"
       >
         <p>{t("components.employersPreviousLeaves.qualifyingReasonContent")}</p>
         <ul className="usa-list">

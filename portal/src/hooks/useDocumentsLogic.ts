@@ -36,7 +36,9 @@ const useDocumentsLogic = ({
   } = useCollectionState(new DocumentCollection());
 
   const documentsApi = useMemo(() => new DocumentsApi(), []);
-  const [loadedApplicationDocs, setLoadedApplicationDocs] = useState([]);
+  const [loadedApplicationDocs, setLoadedApplicationDocs] = useState<string[]>(
+    []
+  );
 
   /**
    * Check if docs for this application have been loaded
@@ -123,7 +125,9 @@ const useDocumentsLogic = ({
           new DocumentsUploadError(
             application_id,
             fileWithUniqueId.id,
-            error.issues ? error.issues[0] : null
+            error instanceof ValidationError && error.issues
+              ? error.issues[0]
+              : null
           )
         );
         return { success: false };

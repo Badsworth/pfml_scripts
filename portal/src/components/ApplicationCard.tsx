@@ -181,7 +181,7 @@ function ApplicationDetails(props: ApplicationDetailsProps) {
 }
 
 interface LegalNoticesProps {
-  appLogic: any;
+  appLogic: AppLogic;
   claim: BenefitsApplication;
   documents: BenefitsApplicationDocument[];
 }

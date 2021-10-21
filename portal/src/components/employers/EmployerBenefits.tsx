@@ -13,7 +13,7 @@ interface EmployerBenefitsProps {
   addedBenefits: EmployerBenefit[];
   appErrors: AppErrorInfoCollection;
   employerBenefits?: EmployerBenefit[];
-  onAdd: (...args: any[]) => any;
+  onAdd: React.MouseEventHandler<HTMLButtonElement>;
   onChange: (...args: any[]) => any;
   onRemove: (...args: any[]) => any;
   shouldShowV2: boolean;

@@ -1,7 +1,7 @@
 import BaseApi, {
   createRequestUrl,
+  fetchErrorToNetworkError,
   getAuthorizationHeader,
-  handleError,
   handleNotOkResponse,
 } from "./BaseApi";
 import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
@@ -51,7 +51,7 @@ export default class DocumentsApi extends BaseApi {
       "POST",
       `${application_id}/documents`,
       formData,
-      null,
+      undefined,
       { multipartForm: true }
     );
 
@@ -90,7 +90,7 @@ export default class DocumentsApi extends BaseApi {
 
     const headers = {
       ...authHeader,
-      "Content-Type": content_type,
+      "Content-Type": content_type || "",
     };
 
     let blob: Blob, response: Response;
@@ -98,7 +98,7 @@ export default class DocumentsApi extends BaseApi {
       response = await fetch(url, { headers, method });
       blob = await response.blob();
     } catch (error) {
-      handleError(error);
+      throw fetchErrorToNetworkError(error);
     }
 
     if (!response.ok) {

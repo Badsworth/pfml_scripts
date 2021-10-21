@@ -1,7 +1,10 @@
+import {
+  NullableQueryParams,
+  createRouteWithQuery,
+} from "../utils/routeWithParams";
 import machineConfigs, { guards } from "../flows";
 import { RouteTransitionError } from "../errors";
 import { createMachine } from "xstate";
-import { createRouteWithQuery } from "../utils/routeWithParams";
 import { useMemo } from "react";
 import { useRouter } from "next/router";
 
@@ -43,7 +46,7 @@ const usePortalFlow = () => {
    */
   const goTo = (
     route: string,
-    params?: Record<string, string>,
+    params?: NullableQueryParams,
     options: {
       redirect?: boolean;
     } = {}
@@ -66,8 +69,8 @@ const usePortalFlow = () => {
    */
   const getNextPageRoute = (
     event: string,
-    context?: Record<string, unknown>,
-    params?: Record<string, string>
+    context: Record<string, unknown> = {},
+    params?: NullableQueryParams
   ) => {
     const nextRoutingMachine = routingMachine.withContext(context);
     const nextPageRoute = nextRoutingMachine.transition(
@@ -91,7 +94,7 @@ const usePortalFlow = () => {
   const goToPageFor = (
     event: string,
     context?: Record<string, unknown>,
-    params?: Record<string, string>,
+    params?: NullableQueryParams,
     options: {
       redirect?: boolean;
     } = {}
@@ -107,7 +110,7 @@ const usePortalFlow = () => {
    */
   const goToNextPage = (
     context: Record<string, unknown>,
-    params: Record<string, string> = {},
+    params: NullableQueryParams = {},
     event = "CONTINUE"
   ) => {
     goToPageFor(event, context, params);
@@ -117,7 +120,7 @@ const usePortalFlow = () => {
    * Change the query params of the current page
    * @param params - query parameters to append to page route
    */
-  const updateQuery = (params: Record<string, string>) => {
+  const updateQuery = (params: NullableQueryParams) => {
     const url = createRouteWithQuery(pathname, params);
     router.push(url, undefined, {
       // Prevent unnecessary scroll position changes or other

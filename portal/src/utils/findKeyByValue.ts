@@ -5,8 +5,9 @@ import { invert } from "lodash";
  */
 function findKeyByValue(
   collection: Record<string, unknown>,
-  targetValue: string
+  targetValue?: string | null
 ) {
+  if (!targetValue) return undefined;
   return invert(collection)[targetValue];
 }
 

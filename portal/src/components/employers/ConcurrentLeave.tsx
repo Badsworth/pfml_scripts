@@ -11,7 +11,7 @@ interface ConcurrentLeaveProps {
   addedConcurrentLeave?: ConcurrentLeaveModel;
   appErrors: AppErrorInfoCollection;
   concurrentLeave?: ConcurrentLeaveModel;
-  onAdd: (...args: any[]) => any;
+  onAdd: React.MouseEventHandler<HTMLButtonElement>;
   onChange: (...args: any[]) => any;
   onRemove: (...args: any[]) => any;
 }
