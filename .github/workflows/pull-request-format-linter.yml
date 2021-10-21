@@ -41,3 +41,5 @@ jobs:
                     "Please include a JIRA ticket link in the PR description, "
                     "for example https://lwd.atlassian.net/browse/AAA-123")
               problem_count += 1
+
+          sys.exit(problem_count)
