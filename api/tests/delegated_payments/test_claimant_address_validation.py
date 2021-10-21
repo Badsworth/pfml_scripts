@@ -2,7 +2,6 @@ from unittest import mock
 
 import factory
 import pytest
-from sqlalchemy.sql.functions import now
 
 import massgov.pfml.db as db
 import massgov.pfml.delegated_payments.claimant_address_validation as claimant_address_validation

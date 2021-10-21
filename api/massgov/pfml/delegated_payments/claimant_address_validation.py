@@ -1,7 +1,7 @@
 import os
 import pathlib
 import uuid
-from typing import Any, Dict, List, Optional, Tuple, Union, cast
+from typing import Any, Dict, List, Optional, Tuple, cast
 
 from sqlalchemy.sql.functions import func
 
@@ -60,25 +60,23 @@ class ClaimantAddressValidationStep(AddressValidationStep):
                 .label("R"),
             ).subquery()
             logger.debug("Subquery for employee feed %s", subquery)
-            employee_feed_data: List[FineosExtractEmployeeFeed] = self.db_session.query(
-                subquery
-            ).filter(subquery.c.R == 1)
+            employee_feed_data = self.db_session.query(subquery).filter(subquery.c.R == 1)
         except Exception:
             self.db_session.rollback()
             logger.exception("Error processing addresses")
             raise
 
-        logger.info("Number of rows retrieved from table %s", len(list(employee_feed_data)))
-        return employee_feed_data
+        return cast(List[FineosExtractEmployeeFeed], employee_feed_data)
 
     # Query the employee table and return employee record that
     # matches the customer number given
-    def get_employee_record(self, customerno) -> Employee:
-        employee = (
-            self.db_session.query(Employee)
-            .filter(Employee.fineos_customer_number == customerno)
-            .one_or_none()
-        )
+    def get_employee_record(self, customerno: Optional[str]) -> Optional[Employee]:
+        if customerno:
+            employee = (
+                self.db_session.query(Employee)
+                .filter(Employee.fineos_customer_number == customerno)
+                .one_or_none()
+            )
         return employee
 
     # Process all the logic needed to validate address if not validated and
@@ -106,7 +104,7 @@ class ClaimantAddressValidationStep(AddressValidationStep):
                     )
                     logger.debug("Is address new or updated", has_address_update)
                     # Call validation on this address
-                    result = self._validate_claimant_address(
+                    result = self.validate_claimant_address(
                         employee_feed_address_data, address_pair, experian_soap_client
                     )
                     self.increment(self.Metrics.VALIDATED_ADDRESS_COUNT)
@@ -147,7 +145,7 @@ class ClaimantAddressValidationStep(AddressValidationStep):
 
     def is_address_new_or_updated(
         self, employee_feed_address_data: Address, employee: Employee
-    ) -> Tuple[Optional[ExperianAddressPair], bool]:
+    ) -> Tuple[ExperianAddressPair, bool]:
 
         # If existing_address_pair exists, compare the existing fineos_address with the employee_feed_data address
         #  If they're the same, nothing needs to be done, so we can return the address
@@ -191,7 +189,7 @@ class ClaimantAddressValidationStep(AddressValidationStep):
         and calls the function to validate address using Experian
     """
 
-    def _validate_claimant_address(
+    def validate_claimant_address(
         self,
         address: Address,
         address_pair: ExperianAddressPair,
@@ -199,12 +197,12 @@ class ClaimantAddressValidationStep(AddressValidationStep):
     ) -> Dict[str, Any]:
 
         # already validated
-        if address_pair.experian_address is not None:
+        if address_pair and address_pair.experian_address is not None:
             logger.info("Address in experian address pair %s", address_pair.experian_address)
             self.increment(self.Metrics.PREVIOUSLY_VALIDATED_MATCH_COUNT)
             addr_result = self._build_experian_outcome(
                 Constants.MESSAGE_ALREADY_VALIDATED,
-                cast(Address, address_pair.experian_address),
+                address_pair.experian_address,
                 Constants.PREVIOUSLY_VERIFIED,
             )
             return addr_result
@@ -213,26 +211,22 @@ class ClaimantAddressValidationStep(AddressValidationStep):
             self.increment(self.Metrics.ADDRESS_MISSING_COMPONENT_COUNT)
             addr_result = self._build_experian_outcome(
                 Constants.MESSAGE_ADDRESS_MISSING_PART,
-                cast(Address, address),
+                address,
                 Constants.MESSAGE_ADDRESS_MISSING_PART,
             )
             return addr_result
-
-        addr_result = self._process_address_via_soap_api(
-            experian_soap_client, address, address_pair
-        )
+        addr_result = self.process_address_via_soap_api(experian_soap_client, address, address_pair)
         return addr_result
 
     """Calls experian using SOAP call to validate address
         Returns the result of the call as a dictionary object"""
 
-    def _process_address_via_soap_api(
+    def process_address_via_soap_api(
         self,
         experian_soap_client: soap_api.Client,
         address: Address,
         address_pair: ExperianAddressPair,
     ) -> Dict[str, Any]:
-
         try:
             logger.info("Calling experian on the address %s", address.address_line_one)
             response = self._experian_soap_response_for_address(experian_soap_client, address)
@@ -254,32 +248,34 @@ class ClaimantAddressValidationStep(AddressValidationStep):
         if response.verify_level == sm.VerifyLevel.VERIFIED:
             self.increment(self.Metrics.VERIFIED_EXPERIAN_MATCH)
             formatted_address = experian_verification_response_to_address(response)
-
-            if not self._does_address_have_all_parts(address):
-                self.increment(self.Metrics.INVALID_EXPERIAN_FORMAT)
-                outcome = self._outcome_for_search_result(
-                    response, Constants.MESSAGE_INVALID_EXPERIAN_FORMAT_RESPONSE, address,
-                )
-                logger.info("Experian return address has missing parts, wasnt supposed to occur")
-            else:
-                # formatted_address.address_id = uuid.uuid4()
-                formatted_address.address_type_id = AddressType.MAILING.address_type_id
-                address_pair.experian_address = formatted_address
-                # new_experian_address_pair = ExperianAddressPair(
-                # experian_address=formatted_address
-                # )
-                logger.info(
-                    "Going to add the addrss to Employee experian Address %s",
-                    address_pair.fineos_address,
-                )
-                self.db_session.add(formatted_address)
-                # self.db_session.add(new_experian_address_pair)
-                outcome = self._outcome_for_search_result(
-                    response, Constants.MESSAGE_VALID_ADDRESS, address,
-                )
-                self.increment(self.Metrics.VALID_EXPERIAN_FORMAT)
-                logger.info("Valid verified experian address was returned")
-            return outcome
+            if formatted_address:
+                if not self._does_address_have_all_parts(formatted_address):
+                    self.increment(self.Metrics.INVALID_EXPERIAN_FORMAT)
+                    outcome = self._outcome_for_search_result(
+                        response, Constants.MESSAGE_INVALID_EXPERIAN_FORMAT_RESPONSE, address,
+                    )
+                    logger.info(
+                        "Experian return address has missing parts, wasnt supposed to occur"
+                    )
+                else:
+                    # formatted_address.address_id = uuid.uuid4()
+                    formatted_address.address_type_id = AddressType.MAILING.address_type_id
+                    address_pair.experian_address = formatted_address
+                    # new_experian_address_pair = ExperianAddressPair(
+                    # experian_address=formatted_address
+                    # )
+                    logger.info(
+                        "Going to add the addrss to Employee experian Address %s",
+                        address_pair.fineos_address,
+                    )
+                    self.db_session.add(formatted_address)
+                    # self.db_session.add(new_experian_address_pair)
+                    outcome = self._outcome_for_search_result(
+                        response, Constants.MESSAGE_VALID_ADDRESS, address,
+                    )
+                    self.increment(self.Metrics.VALID_EXPERIAN_FORMAT)
+                    logger.info("Valid verified experian address was returned")
+                return outcome
 
         # Experian returned a non-verified scenario, all of these
         # are cases that are considered errors
@@ -291,7 +287,7 @@ class ClaimantAddressValidationStep(AddressValidationStep):
         return outcome
 
     """Checks if all required address lines exist
-        Returns a boolean value, True is all lines exist, False if missing"""
+    Returns a boolean value, True is all lines exist, False if missing"""
 
     def _does_address_have_all_parts(self, address: Address) -> bool:
         if (
@@ -326,23 +322,23 @@ class ClaimantAddressValidationStep(AddressValidationStep):
         )
 
         # The address passed into this is the incoming address validated.
-        # outcome = self._build_experian_outcome(msg, address, verify_level)
+        outcome = self._build_experian_outcome(msg, address, verify_level)
 
         # Right now we only have the one result.
         response_address = experian_verification_response_to_address(result)
         if response_address:
-            response_text = address_to_experian_suggestion_text_format(response_address)
-            return self._build_experian_outcome(msg, address, verify_level, response_text)
-        else:
-            return self._build_experian_outcome(msg, address, verify_level)
+            label = Constants.OUTPUT_ADDRESS_KEY_PREFIX
+            outcome[Constants.EXPERIAN_RESULT_KEY][
+                label
+            ] = address_to_experian_suggestion_text_format(response_address)
         # logger.info("In %s", type(outcome))
-        # return outcome
+        return outcome
 
     """Builds a dicitonary object of messages and/or address returned from
         experian call"""
 
     def _build_experian_outcome(
-        self, msg: str, address: Address, confidence: str, experian_address=None
+        self, msg: str, address: Address, confidence: str
     ) -> Dict[str, Any]:
         # print(address, msg)
         logger.info("Building experian address outcome...")
@@ -350,7 +346,6 @@ class ClaimantAddressValidationStep(AddressValidationStep):
             Constants.EXPERIAN_RESULT_KEY: {
                 Constants.INPUT_ADDRESS_KEY: address_to_experian_suggestion_text_format(address),
                 Constants.CONFIDENCE_KEY: confidence,
-                Constants.OUTPUT_ADDRESS_KEY_PREFIX: experian_address,
                 Constants.MESSAGE_KEY: msg,
             },
         }
@@ -359,7 +354,9 @@ class ClaimantAddressValidationStep(AddressValidationStep):
     """Generates the report from the list of validation results.
         Called from upload_results_s3"""
 
-    def create_address_report(self, addr_reports: List[Dict], file_name, pathName) -> pathlib.Path:
+    def create_address_report(
+        self, addr_reports: List[Dict], file_name: str, pathName: str
+    ) -> pathlib.Path:
         logger.debug("Address results,%s", addr_reports)
         return file_util.create_csv_from_list(
             addr_reports, Constants.CLAIMANT_ADDRESS_VALIDATION_FIELDS, file_name, pathName
@@ -369,7 +366,7 @@ class ClaimantAddressValidationStep(AddressValidationStep):
     """Calls the create file function and uploads the created
         file to S3 location specified"""
 
-    def upload_results_s3(self, addr_reports: List[Dict]) -> ReferenceFile:
+    def upload_results_s3(self, addr_reports: List[Any]) -> ReferenceFile:
 
         s3_config = payments_config.get_s3_config()
         now = payments_util.get_now()
@@ -386,7 +383,7 @@ class ClaimantAddressValidationStep(AddressValidationStep):
         outgoing_s3_path = os.path.join(
             dfml_sharepoint_outgoing_path, Constants.CLAIMANT_ADDRESS_VALIDATION_FILENAME
         )
-        file_util.upload_to_s3(str(address_report_csv_path), outgoing_s3_path)
+        file_util.copy_file(str(address_report_csv_path), outgoing_s3_path)
         logger.info("Wrote address validation report file to s3 path %s", outgoing_s3_path)
         return ReferenceFile(
             file_location=os.path.join(address_report_source_path, file_name),

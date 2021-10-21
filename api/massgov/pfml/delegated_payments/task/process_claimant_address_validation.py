@@ -3,7 +3,6 @@ import sys
 from typing import List
 
 import massgov.pfml.db as db
-import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.delegated_payments.claimant_address_validation import (
     ClaimantAddressValidationStep,
@@ -24,7 +23,6 @@ ALLOWED_VALUES = [
 
 class Configuration:
     validate_addresses: bool
-    make_reports: bool
 
     def __init__(self, input_args: List[str]):
         parser = argparse.ArgumentParser(description="Validate address for 1099G form generation")
