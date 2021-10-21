@@ -4,6 +4,7 @@
 import codecs
 import subprocess
 
+import pydot
 import sadisplay
 
 from massgov.pfml.db.models import applications, employees, payments, verifications
@@ -25,12 +26,6 @@ for module, file_name in schema_modules:
 
     with codecs.open(f"{file_name}.dot", "w", encoding="utf8") as f:
         dot_file = f.write(sadisplay.dot(description))
-        print(dot_file)
 
-    # TODO:
-    # use python library
-    # https://graphviz.org/resources/#python
-    process = subprocess.Popen(
-        f"dot -Tpng {file_name}.dot > {file_name}.png", shell=True, stdout=subprocess.PIPE
-    )
-    process.wait()
+    (graph,) = pydot.graph_from_dot_file(f"{file_name}.dot")
+    graph.write_png(f"{file_name}.png")

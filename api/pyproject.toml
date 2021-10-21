@@ -47,6 +47,7 @@ zeep = { version = "^3.4.0", optional = true }
 Flask = "^1.1.0"
 SQLAlchemy-Utils = "^0.37.8"
 sadisplay = "^0.4.9"
+pydot = "^1.4.2"
 
 
 [tool.poetry.dev-dependencies]
