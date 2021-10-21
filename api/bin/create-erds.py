@@ -2,7 +2,6 @@
 # Generate database schema diagram
 
 import codecs
-import subprocess
 
 import pydot
 import sadisplay
