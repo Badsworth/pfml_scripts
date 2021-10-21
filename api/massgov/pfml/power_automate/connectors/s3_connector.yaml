@@ -1,8 +1,8 @@
 swagger: "2.0"
 info:
-  title: AWS S3 Connector [test]
-  description: Connector for Authorized for AWS S3 resources.
-  version: "1.1"
+  title: Mass PFML S3 [test]
+  description: Provides authorized access to AWS S3 resources for the Massachusetts Paid Family & Medical Leave Program.
+  version: "1.2"
 host: paidleave-api-test.mass.gov
 basePath: /pfmldata
 schemes: [https]
@@ -14,6 +14,8 @@ paths:
       operationId: ListObjects
       summary: List S3 Objects
       description: List S3 objects in a bucket using the S3 action [ListObjectsV2](https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html).
+      tags:
+        - Bucket
       parameters:
         - $ref: "#/parameters/Bucket"
         - $ref: "#/parameters/Key"
@@ -40,11 +42,12 @@ paths:
       operationId: GetObject
       summary: Get S3 Object
       description: Retrieves S3 object in a bucket using the S3 action [GetObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html).
+      tags:
+        - Object
       parameters:
         - $ref: "#/parameters/Bucket"
         - $ref: "#/parameters/Key"
       produces:
-        - multipart/form-data
         - application/pdf
         - image/jpg
         - image/jpeg
@@ -75,6 +78,8 @@ paths:
       operationId: DeleteObject
       summary: Delete S3 Object
       description: Removes S3 object in a bucket using the S3 action [DeleteObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObject.html).
+      tags:
+        - Object
       parameters:
         - $ref: "#/parameters/Bucket"
         - $ref: "#/parameters/Key"
@@ -91,6 +96,8 @@ paths:
       operationId: CopyObject
       summary: Copy S3 Object.
       description: Copies S3 object in a bucket to another location in same bucket using S3 action [CopyObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html).
+      tags:
+        - Object
       parameters:
         - $ref: "#/parameters/Bucket"
         - $ref: "#/parameters/Key"
