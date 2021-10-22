@@ -12,7 +12,7 @@ interface ButtonProps {
   loadingMessage?: string;
   inversed?: boolean;
   name?: string;
-  onClick?: (...args: any[]) => any;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
   type?: "button" | "submit";
   disabled?: boolean;
   variation?: "accent-cool" | "outline" | "secondary" | "unstyled";

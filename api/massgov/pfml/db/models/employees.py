@@ -1370,14 +1370,13 @@ class DuaEmployeeDemographics(Base, TimestampMixin):
     __tablename__ = "dua_employee_demographics"
     dua_employee_demographics_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
 
-    # All the below rows marked primary_key=True due to ON CONFLICT resolution
-    fineos_customer_number = Column(Text)
-    date_of_birth = Column(Date)
-    gender_code = Column(Text)
-    occupation_code = Column(Text)
-    occupation_description = Column(Text)
-    employer_fein = Column(Text)
-    employer_reporting_unit_number = Column(Text)
+    fineos_customer_number = Column(Text, nullable=True)
+    date_of_birth = Column(Date, nullable=True)
+    gender_code = Column(Text, nullable=True)
+    occupation_code = Column(Text, nullable=True)
+    occupation_description = Column(Text, nullable=True)
+    employer_fein = Column(Text, nullable=True)
+    employer_reporting_unit_number = Column(Text, nullable=True)
 
     # this Unique index is required since our test framework does not run migrations
     # it is excluded from migrations. see api/massgov/pfml/db/migrations/env.py

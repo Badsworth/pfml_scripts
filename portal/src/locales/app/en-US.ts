@@ -1858,10 +1858,7 @@ const pages = {
     partDescription_1:
       "If you need to make edits to Part 1, you’ll need to call our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Your application ID is <strong>{{absence_id}}</strong>",
     partHeadingPrefix: "Part {{number}}",
-    partHeading_1_final:
-      "Review: Tell us about yourself and your$t(chars.nbsp)leave",
-    partHeading_1_part1:
-      "Review and confirm: Tell us about yourself and your$t(chars.nbsp)leave",
+    partHeading_1: "Review: Tell us about yourself and your$t(chars.nbsp)leave",
     partHeading_2: "Review: Your payment information",
     partHeading_3: "Review: Upload document",
     partOneNextSteps:
@@ -1913,7 +1910,8 @@ const pages = {
     submitAction_final: "Submit application",
     submitAction_part1: "Submit Part 1",
     submitLoadingMessage: "Submitting… Do not refresh or go back.",
-    title:
+    title_final: "Review and submit your application",
+    title_part1:
       "Check your answers before submitting your$t(chars.nbsp)application.",
     userDateOfBirthLabel: "Date of birth",
     userGenderLabel: "Gender Identity",

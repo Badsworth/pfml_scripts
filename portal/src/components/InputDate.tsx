@@ -113,7 +113,7 @@ interface InputDateProps {
    * Called when any of the fields' value changes. The event `target` will
    * include the formatted ISO 8601 date as its `value`
    */
-  onChange?: (...args: any[]) => any;
+  onChange?: React.ChangeEventHandler<HTMLInputElement>;
   /**
    * Localized text indicating this field is optional
    */
@@ -229,6 +229,7 @@ function InputDate(props: InputDateProps) {
     target.value = value;
 
     props.onChange({
+      ...originalEvent,
       target,
     });
   }

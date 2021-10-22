@@ -65,8 +65,6 @@ export const ResetPassword = (props: ResetPasswordProps) => {
         <Alert
           className="margin-bottom-3 margin-top-0"
           heading={t("pages.authResetPassword.codeResentHeading")}
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; head... Remove this comment to see the full error message
-          name="code-resent-message"
           role="alert"
           state="warning"
         >

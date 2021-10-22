@@ -63,7 +63,7 @@ interface DropdownProps {
   /**
    * HTML input `onChange` attribute
    */
-  onChange?: (...args: any[]) => any;
+  onChange?: React.ChangeEventHandler<HTMLSelectElement>;
   /**
    * Enable the smaller label variant
    */

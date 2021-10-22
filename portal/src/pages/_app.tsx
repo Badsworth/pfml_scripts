@@ -26,11 +26,11 @@ Auth.configure({
     // path: '/', (optional)
   },
   mandatorySignIn: false,
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'cognitoRegion' does not exist on type 's... Remove this comment to see the full error message
+  // @ts-expect-error TODO (PORTAL-353): Environment variables should be strings
   region: process.env.awsConfig.cognitoRegion,
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'cognitoUserPoolId' does not exist on typ... Remove this comment to see the full error message
+  // @ts-expect-error TODO (PORTAL-353): Environment variables should be strings
   userPoolId: process.env.awsConfig.cognitoUserPoolId,
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'cognitoUserPoolWebClientId' does not exi... Remove this comment to see the full error message
+  // @ts-expect-error TODO (PORTAL-353): Environment variables should be strings
   userPoolWebClientId: process.env.awsConfig.cognitoUserPoolWebClientId,
 });
 initializeI18n();
@@ -47,7 +47,7 @@ export const App = ({ Component, pageProps }: AppProps) => {
 
   const appLogic = useAppLogic();
   useSessionTimeout(
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'secondsOfInactivityUntilLogout' does not... Remove this comment to see the full error message
+    // @ts-expect-error TODO (PORTAL-353): Environment variables should be strings
     process.env.session.secondsOfInactivityUntilLogout,
     appLogic.auth
   );

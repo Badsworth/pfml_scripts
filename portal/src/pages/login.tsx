@@ -59,8 +59,6 @@ export const Login = (props: LoginProps) => {
         <Alert
           className="margin-bottom-3"
           heading={t("pages.authLogin.accountVerifiedHeading")}
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: TFunctionResult; className: stri... Remove this comment to see the full error message
-          name="account-verified-message"
           state="success"
         >
           {t("pages.authLogin.accountVerified")}
@@ -71,8 +69,6 @@ export const Login = (props: LoginProps) => {
         <Alert
           className="margin-bottom-3"
           heading={t("pages.authLogin.sessionTimedOutHeading")}
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: TFunctionResult; className: stri... Remove this comment to see the full error message
-          name="session-timed-out-message"
           state="info"
         >
           {t("pages.authLogin.sessionTimedOut")}

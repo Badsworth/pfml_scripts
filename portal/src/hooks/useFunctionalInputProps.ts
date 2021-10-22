@@ -12,7 +12,7 @@ function useFunctionalInputProps({
   formState,
   updateFields,
 }: {
-  appErrors: AppErrorInfoCollection;
+  appErrors?: AppErrorInfoCollection;
   formState: FormState["formState"];
   updateFields: FormState["updateFields"];
 }) {

@@ -706,14 +706,14 @@ exports[`Review Page renders Review page with Part 1 content and edit links when
       Check your answers before submitting your application.
     </h1>
     <h2
-      class="margin-top-0 font-heading-lg text-bold"
+      class="margin-top-0 font-heading-md text-bold"
     >
       <span
         class="display-block font-heading-2xs margin-bottom-2 text-base-dark text-bold"
       >
         Part 1
       </span>
-      Review and confirm: Tell us about yourself and your leave
+      Review: Tell us about yourself and your leave
     </h2>
     <div
       class="display-flex flex-align-end margin-top-6 margin-bottom-3"
@@ -1436,13 +1436,13 @@ exports[`Review Page renders Review page with all sections and only edit links f
     class="measure-6"
   >
     <h1
-      class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2 usa-sr-only"
+      class="js-title margin-top-0 margin-bottom-6 font-heading-lg line-height-sans-2"
       tabindex="-1"
     >
-      Check your answers before submitting your application.
+      Review and submit your application
     </h1>
     <h2
-      class="margin-top-0 font-heading-lg text-bold"
+      class="margin-top-0 font-heading-md text-bold"
     >
       <span
         class="display-block font-heading-2xs margin-bottom-2 text-base-dark text-bold"
@@ -1772,7 +1772,7 @@ exports[`Review Page renders Review page with all sections and only edit links f
       </div>
     </div>
     <h2
-      class="font-heading-lg text-bold"
+      class="font-heading-md text-bold"
     >
       <span
         class="display-block font-heading-2xs margin-bottom-2 text-base-dark text-bold"
@@ -1847,7 +1847,7 @@ exports[`Review Page renders Review page with all sections and only edit links f
       </div>
     </div>
     <h2
-      class="font-heading-lg text-bold"
+      class="font-heading-md text-bold"
     >
       <span
         class="display-block font-heading-2xs margin-bottom-2 text-base-dark text-bold"

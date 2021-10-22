@@ -12,7 +12,7 @@ class ClaimDetail {
   outstanding_evidence: Record<
     "employee_evidence" | "employer_evidence",
     OutstandingEvidence[]
-  > = null;
+  > | null = null;
 
   constructor(attrs?: ClaimDetail) {
     if (!attrs) {
@@ -32,21 +32,21 @@ class ClaimDetail {
     }
 
     if (
-      attrs.outstanding_evidence &&
-      attrs.outstanding_evidence.employee_evidence
+      this.outstanding_evidence &&
+      this.outstanding_evidence.employee_evidence
     ) {
       this.outstanding_evidence.employee_evidence =
-        attrs.outstanding_evidence.employee_evidence.map(
+        this.outstanding_evidence.employee_evidence.map(
           (evidence) => new OutstandingEvidence(evidence)
         );
     }
 
     if (
-      attrs.outstanding_evidence &&
-      attrs.outstanding_evidence.employer_evidence
+      this.outstanding_evidence &&
+      this.outstanding_evidence.employer_evidence
     ) {
       this.outstanding_evidence.employer_evidence =
-        attrs.outstanding_evidence.employer_evidence.map(
+        this.outstanding_evidence.employer_evidence.map(
           (evidence) => new OutstandingEvidence(evidence)
         );
     }
