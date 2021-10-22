@@ -13,7 +13,7 @@ data "aws_region" "current" {
 terraform {
 
     backend "s3" {
-    bucket         = "massgov-pfml-prod-env-mgmt"
+    bucket         = "massgov-pfml-test-env-mgmt"
     key            = "terraform/iam.tfstate"
     region         = "us-east-1"
     dynamodb_table = "terraform_locks"
