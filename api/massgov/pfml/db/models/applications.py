@@ -9,6 +9,7 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import backref, relationship
 
 import massgov.pfml.util.logging
+from massgov.pfml.db.models.base import deprecated_column
 from massgov.pfml.db.models.employees import (
     Address,
     Claim,
@@ -750,7 +751,9 @@ class Document(Base, TimestampMixin):
     document_type_id = Column(
         Integer, ForeignKey("lk_document_type.document_type_id"), nullable=False
     )
-    content_type_id = Column(Integer, ForeignKey("lk_content_type.content_type_id"), nullable=False)
+    content_type_id = deprecated_column(
+        Column(Integer, ForeignKey("lk_content_type.content_type_id"), nullable=True)
+    )
     size_bytes = Column(Integer, nullable=False)
     fineos_id = Column(Text, nullable=True)
     is_stored_in_s3 = Column(Boolean, nullable=False)
@@ -758,7 +761,6 @@ class Document(Base, TimestampMixin):
     description = Column(Text, nullable=False)
 
     document_type_instance = relationship(LkDocumentType)
-    content_type_instance = relationship(LkContentType)
 
 
 class RMVCheckApiErrorCode(Enum):
