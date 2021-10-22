@@ -224,20 +224,19 @@ def get_employer_benefit_issues(
         "benefit_start_date",
         "benefit_type_id",
         "is_full_salary_continuous",
-        "benefit_amount_dollars",
-        "benefit_amount_frequency_id",
     ]
     issues += check_required_fields(
-        benefit_path,
-        benefit,
-        required_fields,
-        {
-            "benefit_type_id": "benefit_type",
-            "benefit_amount_frequency_id": "benefit_amount_frequency",
-        },
+        benefit_path, benefit, required_fields, {"benefit_type_id": "benefit_type",},
     )
 
-    issues += check_zero_income_amount(benefit_path, benefit, "benefit_amount_dollars",)
+    if benefit.is_full_salary_continuous is False:
+        issues += check_required_fields(
+            benefit_path,
+            benefit,
+            ["benefit_amount_dollars", "benefit_amount_frequency_id",],
+            {"benefit_amount_frequency_id": "benefit_amount_frequency",},
+        )
+        issues += check_zero_income_amount(benefit_path, benefit, "benefit_amount_dollars",)
 
     start_date = benefit.benefit_start_date
     start_date_path = f"{benefit_path}.benefit_start_date"
