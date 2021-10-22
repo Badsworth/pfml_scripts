@@ -1,0 +1,38 @@
+# This workflow generates database erds files for the api schema
+
+name: API ERD Create
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - api/massgov/pfml/db/models/**
+
+env:
+  github_api: "https://api.github.com/repos/EOLWD/pfml"
+  workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+  version: ${{ github.event.inputs.version || 'main' }}
+  working-dir: ./api
+  python-version: 3.9
+
+  # Set a timeout of two minutes for all terraform commands in the workflow
+  # to account for parallel jobs working in the same environment with the same
+  # terraform state files.
+  TF_CLI_ARGS: '-lock-timeout=120s'
+
+jobs:
+  update-erd:
+    runs-on: ubuntu-latest
+    needs: [update-the-deploy-branch, api-release, deploy-info]
+    steps:
+      - name: "Create ERDs"
+        run: make create-erds
+
+      - uses: EndBug/add-and-commit@v6
+        with:
+          add: '../docs/assets/api/erds
+          message: 'ERD generation auto-commit'
+        env:
+          # This is necessary in order to push a commit to the repo
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
