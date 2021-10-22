@@ -1,7 +1,7 @@
 """Adding new batch status column
 
 Revision ID: efbf721141cb
-Revises: 3765c13fe7e6
+Revises: 458af2d103eb
 Create Date: 2021-10-22 13:35:24.339850
 
 """
@@ -10,7 +10,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "efbf721141cb"
-down_revision = "3765c13fe7e6"
+down_revision = "458af2d103eb"
 branch_labels = None
 depends_on = None
 
