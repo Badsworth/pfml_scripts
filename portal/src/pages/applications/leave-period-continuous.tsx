@@ -34,7 +34,7 @@ export const fields = [
 interface LeavePeriodContinuousProps {
   appLogic: any;
   claim: BenefitsApplication;
-  query?: {
+  query: {
     claim_id?: string;
   };
 }

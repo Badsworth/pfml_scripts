@@ -29,9 +29,9 @@ export const fields = [
 ];
 
 interface AddressProps {
-  claim?: BenefitsApplication;
+  claim: BenefitsApplication;
   appLogic: any;
-  query?: {
+  query: {
     claim_id?: string;
   };
 }

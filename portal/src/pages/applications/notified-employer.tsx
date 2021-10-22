@@ -17,9 +17,9 @@ export const fields = [
 ];
 
 interface NotifiedEmployerProps {
-  claim?: BenefitsApplication;
+  claim: BenefitsApplication;
   appLogic: any;
-  query?: {
+  query: {
     claim_id?: string;
   };
 }

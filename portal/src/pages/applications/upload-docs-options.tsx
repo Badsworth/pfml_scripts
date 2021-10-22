@@ -21,7 +21,7 @@ export const UploadType = {
 };
 
 interface UploadDocsOptionsProps {
-  claim?: BenefitsApplication;
+  claim: BenefitsApplication;
   appLogic: any;
 }
 

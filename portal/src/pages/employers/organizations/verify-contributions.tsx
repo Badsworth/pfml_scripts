@@ -6,6 +6,7 @@ import Lead from "../../../components/Lead";
 import React from "react";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
+import User from "../../../models/User";
 import Withholding from "../../../models/Withholding";
 import formatDateRange from "../../../utils/formatDateRange";
 import routes from "../../../routes";
@@ -13,7 +14,6 @@ import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../../../hooks/useThrottledHandler";
 import { useTranslation } from "../../../locales/i18n";
-import withUser from "../../../hoc/withUser";
 import withWithholding from "../../../hoc/withWithholding";
 
 interface VerifyContributionsProps {
@@ -22,14 +22,12 @@ interface VerifyContributionsProps {
     employer_id: string;
     next?: string;
   };
+  user: User;
   withholding: Withholding;
 }
 
 export const VerifyContributions = (props: VerifyContributionsProps) => {
-  const { appLogic, query, withholding } = props;
-  const {
-    users: { user },
-  } = appLogic;
+  const { appLogic, query, user, withholding } = props;
   const { t } = useTranslation();
   const employer = user.user_leave_administrators.find((employer) => {
     return employer.employer_id === query.employer_id;
@@ -147,4 +145,4 @@ export const VerifyContributions = (props: VerifyContributionsProps) => {
   );
 };
 
-export default withUser(withWithholding(VerifyContributions));
+export default withWithholding(VerifyContributions);

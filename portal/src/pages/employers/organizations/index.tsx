@@ -7,22 +7,23 @@ import React from "react";
 import Table from "../../../components/Table";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
+import User from "../../../models/User";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
 
 interface IndexProps {
   appLogic: AppLogic;
-  query?: {
+  query: {
     account_converted?: string;
   };
+  user: User;
 }
 
 export const Index = (props: IndexProps) => {
   const { appLogic, query } = props;
   const { t } = useTranslation();
-  const { hasVerifiableEmployer, user_leave_administrators } =
-    appLogic.users.user;
+  const { hasVerifiableEmployer, user_leave_administrators } = props.user;
   const accountConverted = query?.account_converted === "true";
 
   return (

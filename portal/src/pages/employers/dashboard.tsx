@@ -195,9 +195,9 @@ export const Dashboard = (props: DashboardProps) => {
 };
 
 interface PaginatedClaimsTableProps {
-  appLogic?: AppLogic;
-  claims?: ClaimCollection;
-  paginationMeta?: PaginationMeta;
+  appLogic: AppLogic;
+  claims: ClaimCollection;
+  paginationMeta: PaginationMeta;
   updatePageQuery: (...args: any[]) => any;
   /** Pass in the SortDropdown so it can be rendered in the expected inline UI position */
   sort: React.ReactNode;
@@ -308,8 +308,8 @@ const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
 };
 
 interface ClaimTableRowsProps {
-  appLogic?: any;
-  claims?: ClaimCollection;
+  appLogic: any;
+  claims: ClaimCollection;
   tableColumnKeys: string[];
   user: User;
 }

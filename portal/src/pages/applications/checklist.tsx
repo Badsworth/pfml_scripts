@@ -33,9 +33,9 @@ import withClaimDocuments from "../../hoc/withClaimDocuments";
 interface ChecklistProps {
   appLogic: AppLogic;
   claim: BenefitsApplication;
-  documents?: BenefitsApplicationDocument[];
-  isLoadingDocuments?: boolean;
-  query?: {
+  documents: BenefitsApplicationDocument[];
+  isLoadingDocuments: boolean;
+  query: {
     "part-one-submitted"?: string;
     "payment-pref-submitted"?: string;
   };

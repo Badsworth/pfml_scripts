@@ -30,10 +30,10 @@ import withClaimDocuments from "../../hoc/withClaimDocuments";
 
 interface UploadCertificationProps {
   appLogic: AppLogic;
-  claim?: BenefitsApplication;
-  documents?: BenefitsApplicationDocument[];
-  isLoadingDocuments?: boolean;
-  query?: {
+  claim: BenefitsApplication;
+  documents: BenefitsApplicationDocument[];
+  isLoadingDocuments: boolean;
+  query: {
     claim_id?: string;
     additionalDoc?: string;
   };

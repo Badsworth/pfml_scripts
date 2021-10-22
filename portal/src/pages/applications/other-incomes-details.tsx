@@ -30,7 +30,7 @@ export const fields = [
 ];
 
 interface OtherIncomesDetailsProps {
-  claim?: BenefitsApplication;
+  claim: BenefitsApplication;
   appLogic: any;
 }
 

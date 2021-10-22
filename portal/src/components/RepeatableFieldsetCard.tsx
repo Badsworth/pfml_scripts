@@ -7,7 +7,7 @@ interface RepeatableFieldsetCardProps {
   className?: string;
   entry: any;
   heading: string;
-  index?: number;
+  index: number;
   removeButtonLabel: string;
   onRemoveClick: (entry: Record<string, unknown>, index: number) => void;
   showRemoveButton?: boolean;

@@ -24,7 +24,7 @@ export const UploadType = {
 
 interface Props {
   appLogic: any;
-  query?: {
+  query: {
     absence_case_id: string;
   };
 }

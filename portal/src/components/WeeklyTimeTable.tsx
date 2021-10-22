@@ -1,3 +1,4 @@
+import { OrderedDaysOfWeek } from "../models/BenefitsApplication";
 import React from "react";
 import Table from "./Table";
 import { useTranslation } from "react-i18next";
@@ -5,9 +6,8 @@ import { useTranslation } from "react-i18next";
 interface WeeklyTimeTableProps {
   className?: string;
   days: Array<{
-    /** Sunday–Saturday */
-    day_of_week: string;
-    minutes?: number;
+    day_of_week: typeof OrderedDaysOfWeek[number] | null;
+    minutes: number | null;
   }>;
 }
 

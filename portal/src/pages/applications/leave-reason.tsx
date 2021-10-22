@@ -23,7 +23,7 @@ export const fields = [
 ];
 
 interface LeaveReasonProps {
-  claim?: BenefitsApplication;
+  claim: BenefitsApplication;
   appLogic: any;
 }
 

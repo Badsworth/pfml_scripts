@@ -506,7 +506,7 @@ interface TimelineProps {
   employerFollowUpDate?: string;
   docList: any[];
   absenceCaseId: string;
-  appLogic?: {
+  appLogic: {
     portalFlow?: {
       getNextPageRoute: (...args: any[]) => any;
     };

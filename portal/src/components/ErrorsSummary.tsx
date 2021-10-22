@@ -6,7 +6,7 @@ import { Trans } from "react-i18next";
 import { useTranslation } from "../locales/i18n";
 
 interface ErrorsSummaryProps {
-  errors?: AppErrorInfoCollection;
+  errors: AppErrorInfoCollection;
 }
 
 /**

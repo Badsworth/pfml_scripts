@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { AppLogic } from "../hooks/useAppLogic";
 import { Spinner } from "../components/Spinner";
+import User from "../models/User";
 import routes from "../routes";
 import { useTranslation } from "react-i18next";
 import withUser from "./withUser";
@@ -10,6 +11,7 @@ interface ComponentWithClaimProps {
   query: {
     absence_id: string;
   };
+  user: User;
 }
 
 /**
@@ -21,14 +23,13 @@ interface ComponentWithClaimProps {
  */
 const withEmployerClaim = (Component) => {
   const ComponentWithClaim = (props: ComponentWithClaimProps) => {
-    const { appLogic, query } = props;
+    const { appLogic, query, user } = props;
     const { t } = useTranslation();
     const absenceId = query.absence_id;
     const claim =
       appLogic.employers.claim?.fineos_absence_id === absenceId
         ? appLogic.employers.claim
         : null;
-    const user = appLogic.users.user;
 
     useEffect(() => {
       if (!claim) {

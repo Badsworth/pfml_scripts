@@ -61,13 +61,13 @@ function renderDocumentFileCard(
 
 interface FileCardListProps {
   tempFiles: TempFileCollection;
-  fileErrors?: AppErrorInfo[];
+  fileErrors: AppErrorInfo[];
   onChange: (files: Blob[]) => Promise<void>;
   onRemoveTempFile: (id: string) => void;
   fileHeadingPrefix: string;
   addFirstFileButtonText: string;
   addAnotherFileButtonText: string;
-  documents?: BenefitsApplicationDocument[];
+  documents: BenefitsApplicationDocument[];
 }
 /**
  * A list of previously uploaded files and a button to upload additional files. This component

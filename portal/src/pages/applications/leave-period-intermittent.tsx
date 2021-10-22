@@ -34,7 +34,7 @@ export const fields = [
 interface LeavePeriodIntermittentProps {
   appLogic: any;
   claim: BenefitsApplication;
-  query?: {
+  query: {
     claim_id?: string;
   };
 }

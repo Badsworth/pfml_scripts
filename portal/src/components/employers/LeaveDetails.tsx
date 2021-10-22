@@ -21,11 +21,11 @@ interface LeaveDetailsProps {
   appErrors: AppErrorInfoCollection;
   believeRelationshipAccurate?: "Yes" | "Unknown" | "No";
   claim: EmployerClaim;
-  documents?: ClaimDocument[];
+  documents: ClaimDocument[];
   downloadDocument: (...args: any[]) => any;
-  onChangeBelieveRelationshipAccurate?: (arg: string) => void;
+  onChangeBelieveRelationshipAccurate: (arg: string) => void;
   relationshipInaccurateReason?: string;
-  onChangeRelationshipInaccurateReason?: (arg: string) => void;
+  onChangeRelationshipInaccurateReason: (arg: string) => void;
 }
 
 /**

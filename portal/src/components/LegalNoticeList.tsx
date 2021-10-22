@@ -7,7 +7,7 @@ import getLegalNotices from "../utils/getLegalNotices";
 import { useTranslation } from "../locales/i18n";
 
 interface LegalNoticeListProps {
-  documents?: Array<BenefitsApplicationDocument | ClaimDocument>;
+  documents: Array<BenefitsApplicationDocument | ClaimDocument>;
   onDownloadClick?: (...args: any[]) => any;
 }
 

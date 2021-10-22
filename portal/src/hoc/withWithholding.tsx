@@ -1,15 +1,18 @@
 import React, { useEffect, useState } from "react";
 import { AppLogic } from "../hooks/useAppLogic";
 import Spinner from "../components/Spinner";
+import User from "../models/User";
 import Withholding from "../models/Withholding";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
+import withUser from "./withUser";
 
 interface ComponentWithWithholdingProps {
   appLogic: AppLogic;
   query: {
     employer_id: string;
   };
+  user: User;
 }
 
 /**
@@ -21,10 +24,7 @@ interface ComponentWithWithholdingProps {
  */
 const withWithholding = (Component) => {
   const ComponentWithWithholding = (props: ComponentWithWithholdingProps) => {
-    const { appLogic, query } = props;
-    const {
-      users: { user },
-    } = appLogic;
+    const { appLogic, query, user } = props;
     const { t } = useTranslation();
     const [shouldLoadWithholding, setShouldLoadWithholding] = useState(true);
     const [withholding, setWithholding] = useState<Withholding>();
@@ -66,7 +66,7 @@ const withWithholding = (Component) => {
     );
   };
 
-  return ComponentWithWithholding;
+  return withUser(ComponentWithWithholding);
 };
 
 export default withWithholding;

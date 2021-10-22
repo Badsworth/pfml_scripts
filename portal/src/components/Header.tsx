@@ -14,8 +14,8 @@ interface HeaderProps {
   user?: User;
   onLogout: React.MouseEventHandler<HTMLButtonElement>;
   showUpcomingMaintenanceAlertBar?: boolean;
-  maintenanceStartTime?: string;
-  maintenanceEndTime?: string;
+  maintenanceStartTime: string | null;
+  maintenanceEndTime: string | null;
 }
 
 /**

@@ -45,9 +45,9 @@ export const fields = [
 export const irregularOver6MonthsId = "irregularOver6Months";
 
 interface IntermittentFrequencyProps {
-  claim?: BenefitsApplication;
+  claim: BenefitsApplication;
   appLogic: any;
-  query?: {
+  query: {
     claim_id?: string;
   };
 }

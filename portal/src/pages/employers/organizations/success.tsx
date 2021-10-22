@@ -14,7 +14,7 @@ interface SuccessProps {
     employer_id: string;
     next: string;
   };
-  user?: User;
+  user: User;
 }
 
 export const Success = (props: SuccessProps) => {

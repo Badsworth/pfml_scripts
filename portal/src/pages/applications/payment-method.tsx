@@ -35,8 +35,8 @@ export const fields = [
 ];
 
 interface PaymentMethodProps {
-  claim?: BenefitsApplication;
-  query?: {
+  claim: BenefitsApplication;
+  query: {
     claim_id?: string;
   };
   appLogic: any;

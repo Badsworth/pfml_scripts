@@ -8,8 +8,6 @@ import withWithholding from "../../src/hoc/withWithholding";
 const mockEmployerId = "mock-employer-id";
 const mockPageContent = "Claim is loaded. This is the page.";
 
-jest.mock("../../src/hooks/useAppLogic");
-
 function setupUser(verified = false) {
   return new User({
     consented_to_data_sharing: true,

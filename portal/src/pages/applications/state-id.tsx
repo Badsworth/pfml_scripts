@@ -14,7 +14,7 @@ export const fields = ["claim.has_state_id", "claim.mass_id"];
 interface StateIdProps {
   appLogic: any;
   claim: any;
-  query?: {
+  query: {
     claim_id?: string;
   };
 }

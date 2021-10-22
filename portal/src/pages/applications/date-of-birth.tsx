@@ -12,7 +12,7 @@ export const fields = ["claim.date_of_birth"];
 interface DateOfBirthProps {
   appLogic: any;
   claim: any;
-  query?: {
+  query: {
     claim_id?: string;
   };
 }

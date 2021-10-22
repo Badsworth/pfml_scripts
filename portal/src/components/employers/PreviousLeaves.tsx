@@ -16,7 +16,7 @@ interface PreviousLeavesProps {
   onAdd: React.MouseEventHandler<HTMLButtonElement>;
   onChange: (...args: any[]) => any;
   onRemove: (...args: any[]) => any;
-  previousLeaves?: PreviousLeave[];
+  previousLeaves: PreviousLeave[];
   shouldShowV2: boolean;
 }
 

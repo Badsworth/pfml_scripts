@@ -14,7 +14,7 @@ export const fields = ["claim.leave_details.pregnant_or_recent_birth"];
 interface ReasonPregnancyProps {
   claim: BenefitsApplication;
   appLogic: any;
-  query?: {
+  query: {
     claim_id?: string;
   };
 }

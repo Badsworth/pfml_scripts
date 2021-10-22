@@ -6,6 +6,7 @@ import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import { DocumentType } from "../../../models/Document";
 import DownloadableDocument from "../../../components/DownloadableDocument";
+import EmployerClaim from "../../../models/EmployerClaim";
 import Heading from "../../../components/Heading";
 import Lead from "../../../components/Lead";
 import LeaveReason from "../../../models/LeaveReason";
@@ -22,6 +23,7 @@ import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
 interface StatusProps {
   appLogic: AppLogic;
+  claim: EmployerClaim;
   query: {
     absence_id?: string;
   };
@@ -30,10 +32,11 @@ interface StatusProps {
 export const Status = (props: StatusProps) => {
   const {
     appLogic,
+    claim,
     query: { absence_id: absenceId },
   } = props;
   const {
-    employers: { claim, documents, downloadDocument },
+    employers: { documents, downloadDocument },
   } = appLogic;
   const { isContinuous, isIntermittent, isReducedSchedule } = claim;
   const { t } = useTranslation();

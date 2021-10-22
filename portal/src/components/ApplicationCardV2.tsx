@@ -121,7 +121,7 @@ const ManageDocumentSection = ({
 interface LegalNoticeSectionProps {
   appLogic: AppLogic;
   claim: BenefitsApplication;
-  documents?: BenefitsApplicationDocument[];
+  documents: BenefitsApplicationDocument[];
   isLoadingDocuments: boolean;
 }
 
@@ -174,6 +174,7 @@ const LegalNoticeSection = (props: LegalNoticeSectionProps) => {
 
 interface InProgressStatusCardProps {
   claim: BenefitsApplication;
+  documents: BenefitsApplicationDocument[];
   isLoadingDocuments: boolean;
   number: number;
   appLogic: any;
@@ -271,6 +272,7 @@ const CompletedStatusCard = ({ appLogic, claim }: CompletedStatusCardProps) => {
 interface ApplicationCardV2Props {
   claim: BenefitsApplication;
   appLogic: AppLogic;
+  documents: BenefitsApplicationDocument[];
   isLoadingDocuments: boolean;
   number: number;
 }

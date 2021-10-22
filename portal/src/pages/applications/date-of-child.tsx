@@ -22,7 +22,7 @@ export const fields = [
 interface DateOfChildProps {
   appLogic: any;
   claim: any;
-  query?: {
+  query: {
     claim_id?: string;
   };
 }

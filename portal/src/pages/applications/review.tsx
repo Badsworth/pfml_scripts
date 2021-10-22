@@ -77,9 +77,9 @@ function formatAddress(address) {
 
 interface ReviewProps {
   appLogic: AppLogic;
-  claim?: BenefitsApplication;
-  documents?: BenefitsApplicationDocument[];
-  isLoadingDocuments?: boolean;
+  claim: BenefitsApplication;
+  documents: BenefitsApplicationDocument[];
+  isLoadingDocuments: boolean;
 }
 
 /**

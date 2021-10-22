@@ -16,8 +16,8 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 export const fields = ["claim.has_employer_benefits"];
 
 interface EmployerBenefitsProps {
-  claim?: BenefitsApplication;
-  query?: {
+  claim: BenefitsApplication;
+  query: {
     claim_id?: string;
   };
   appLogic: any;

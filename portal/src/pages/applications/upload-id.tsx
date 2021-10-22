@@ -25,9 +25,9 @@ import withClaimDocuments from "../../hoc/withClaimDocuments";
 interface UploadIdProps {
   appLogic: AppLogic;
   claim: any;
-  documents?: BenefitsApplicationDocument[];
-  isLoadingDocuments?: boolean;
-  query?: {
+  documents: BenefitsApplicationDocument[];
+  isLoadingDocuments: boolean;
+  query: {
     claim_id?: string;
     showStateId?: string;
     additionalDoc?: string;

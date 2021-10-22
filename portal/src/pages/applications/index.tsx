@@ -17,7 +17,7 @@ import withBenefitsApplications from "../../hoc/withBenefitsApplications";
 interface IndexProps {
   appLogic: AppLogic;
   claims: BenefitsApplicationCollection;
-  query?: {
+  query: {
     uploadedAbsenceId?: string;
   };
 }

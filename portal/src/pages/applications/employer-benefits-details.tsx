@@ -32,7 +32,7 @@ export const fields = [
 ];
 
 interface EmployerBenefitsDetailsProps {
-  claim?: BenefitsApplication;
+  claim: BenefitsApplication;
   appLogic: any;
 }
 

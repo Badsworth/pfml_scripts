@@ -14,6 +14,7 @@ import EmployeeInformation from "../../../components/employers/EmployeeInformati
 import EmployeeNotice from "../../../components/employers/EmployeeNotice";
 import EmployerBenefit from "../../../models/EmployerBenefit";
 import EmployerBenefits from "../../../components/employers/EmployerBenefits";
+import EmployerClaim from "../../../models/EmployerClaim";
 import EmployerDecision from "../../../components/employers/EmployerDecision";
 import Feedback from "../../../components/employers/Feedback";
 import FraudReport from "../../../components/employers/FraudReport";
@@ -40,6 +41,7 @@ import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
 interface ReviewProps {
   appLogic: AppLogic;
+  claim: EmployerClaim;
   query: {
     absence_id: string;
   };
@@ -48,11 +50,12 @@ interface ReviewProps {
 export const Review = (props: ReviewProps) => {
   const {
     appLogic,
+    claim,
     query: { absence_id: absenceId },
   } = props;
   const {
     appErrors,
-    employers: { claim, documents, downloadDocument, loadDocuments },
+    employers: { documents, downloadDocument, loadDocuments },
   } = appLogic;
   const { t } = useTranslation();
 

@@ -8,7 +8,7 @@ import { orderBy } from "lodash";
 import { useTranslation } from "../locales/i18n";
 
 interface AbsenceCaseStatusTagProps {
-  status?: string;
+  status?: string | null;
   managedRequirements?: Array<{
     follow_up_date: string;
   }>;
