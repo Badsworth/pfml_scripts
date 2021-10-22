@@ -11,6 +11,10 @@ module "constants" {
   source = "../../constants"
 }
 
+module "iam" {
+  source = "../../iam"
+}
+
 locals {
   # This adds a header so Swagger UI knows where to find UI files on the server.
   #

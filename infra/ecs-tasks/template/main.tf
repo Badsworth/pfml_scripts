@@ -31,3 +31,7 @@ locals {
 module "constants" {
   source = "../../constants"
 }
+
+module "iam" {
+  source = "../../iam"
+}
