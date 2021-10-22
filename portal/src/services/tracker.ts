@@ -62,16 +62,25 @@ function newrelicReady() {
  * @see https://docs.newrelic.com/docs/browser/new-relic-browser/browser-agent-spa-api/noticeerror-browser-agent-api
  */
 function noticeError(
-  error: Error,
+  error: unknown,
   customAttributes: NewRelicEventAttributes = {}
 ) {
-  if (newrelicReady()) {
-    window.newrelic.noticeError(error, {
+  if (!newrelicReady()) return;
+
+  if (error instanceof Error) {
+    window.newrelic?.noticeError(error, {
       ...moduleGlobal.customPageAttributes,
       ...customAttributes,
-      environment: process.env.buildEnv,
-      portalReleaseVersion: process.env.releaseVersion,
+      environment: process.env.buildEnv || "",
+      portalReleaseVersion: process.env.releaseVersion || "",
     });
+  } else {
+    trackEvent(
+      "Tried tracking error, but it wasn't an Error instance. See errorContents.",
+      {
+        errorContents: JSON.stringify(error),
+      }
+    );
   }
 }
 
@@ -89,12 +98,12 @@ function startPageView(
 ) {
   if (newrelicReady()) {
     // First end previous interaction if that's still in progress
-    window.newrelic.interaction().end();
+    window.newrelic?.interaction().end();
 
     moduleGlobal.customPageAttributes = customPageAttributes || {};
-    window.newrelic.interaction();
+    window.newrelic?.interaction();
     setPageAttributesOnInteraction();
-    window.newrelic.setCurrentRouteName(routeName);
+    window.newrelic?.setCurrentRouteName(routeName);
   }
 }
 
@@ -108,11 +117,11 @@ function trackEvent(
   customAttributes: NewRelicEventAttributes = {}
 ) {
   if (newrelicReady()) {
-    window.newrelic.addPageAction(name, {
+    window.newrelic?.addPageAction(name, {
       ...moduleGlobal.customPageAttributes,
       ...customAttributes,
-      environment: process.env.buildEnv,
-      portalReleaseVersion: process.env.releaseVersion,
+      environment: process.env.buildEnv || "",
+      portalReleaseVersion: process.env.releaseVersion || "",
     });
   }
 }
@@ -128,18 +137,18 @@ function trackEvent(
 function trackFetchRequest(requestName: string) {
   if (newrelicReady()) {
     // First end previous interaction if that's still in progress
-    window.newrelic.interaction().end();
+    window.newrelic?.interaction().end();
 
     const trackedName = requestName.replace("https://", "");
-    window.newrelic.interaction().setName(`fetch: ${trackedName}`);
+    window.newrelic?.interaction().setName(`fetch: ${trackedName}`);
     window.newrelic
-      .interaction()
+      ?.interaction()
       .setAttribute("environment", process.env.buildEnv);
     window.newrelic
-      .interaction()
+      ?.interaction()
       .setAttribute("portalReleaseVersion", process.env.releaseVersion);
     setPageAttributesOnInteraction();
-    window.newrelic.interaction().save();
+    window.newrelic?.interaction().save();
   }
 }
 
@@ -150,7 +159,7 @@ function trackFetchRequest(requestName: string) {
  */
 function markFetchRequestEnd() {
   if (newrelicReady()) {
-    window.newrelic.interaction().end();
+    window.newrelic?.interaction().end();
   }
 }
 
@@ -159,7 +168,7 @@ function setPageAttributesOnInteraction() {
     for (const [name, value] of Object.entries(
       moduleGlobal.customPageAttributes
     )) {
-      window.newrelic.interaction().setAttribute(name, value);
+      window.newrelic?.interaction().setAttribute(name, value);
     }
   }
 }

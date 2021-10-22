@@ -100,16 +100,6 @@ describe("InputText", () => {
     );
   });
 
-  it("prevents usage of HTML number type", () => {
-    jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
-    setup({ type: "number" });
-
-    const field = screen.getByRole("textbox");
-
-    expect(field.type).toBe("text");
-    expect(field.inputMode).toBe("numeric");
-  });
-
   it("supports password input type", () => {
     setup({ type: "password", label: "Password field" });
     // Password inputs don't have an implicit role

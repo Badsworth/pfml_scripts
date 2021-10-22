@@ -9,7 +9,7 @@ interface StateDropdownProps {
   inputClassName?: string;
   label: React.ReactNode;
   name: string;
-  onChange?: (...args: any[]) => any;
+  onChange?: React.ChangeEventHandler<HTMLSelectElement>;
   optionalText?: React.ReactNode;
   smallLabel?: boolean;
   value?: string;

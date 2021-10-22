@@ -147,7 +147,6 @@ export const Review = (props: ReviewProps) => {
     await appLogic.benefitsApplications.complete(claim.application_id);
   };
 
-  const contentContext = usePartOneReview ? "part1" : "final";
   // Adjust heading levels depending on if there's a "Part 1" heading at the top of the page or not
   const reviewHeadingLevel = usePartOneReview ? "3" : "2";
   const reviewRowLevel = usePartOneReview ? "4" : "3";
@@ -201,15 +200,18 @@ export const Review = (props: ReviewProps) => {
       )}
       <BackButton />
 
-      <Title hidden>{t("pages.claimsReview.title")}</Title>
+      {usePartOneReview && (
+        <Title hidden>{t("pages.claimsReview.title_part1")}</Title>
+      )}
+      {!usePartOneReview && (
+        <Title marginBottom="6">{t("pages.claimsReview.title_final")}</Title>
+      )}
 
-      <Heading className="margin-top-0" level="2" size="1">
+      <Heading className="margin-top-0" level="2">
         <HeadingPrefix>
           {t("pages.claimsReview.partHeadingPrefix", { number: 1 })}
         </HeadingPrefix>
-        {t("pages.claimsReview.partHeading", {
-          context: `${1}_${contentContext}`,
-        })}
+        {t("pages.claimsReview.partHeading_1")}
       </Heading>
 
       {!usePartOneReview && (
@@ -620,14 +622,12 @@ export const Review = (props: ReviewProps) => {
               ? t("pages.claimsReview.otherLeaveChoiceYes")
               : t("pages.claimsReview.otherLeaveChoiceNo")}
           </ReviewRow>
-          {/* @ts-expect-error ts-migrate(2786) FIXME: 'PreviousLeaveList' cannot be used as a JSX compon... Remove this comment to see the full error message */}
           <PreviousLeaveList
             entries={get(claim, "previous_leaves_same_reason")}
             type="sameReason"
             startIndex={0}
             reviewRowLevel={reviewRowLevel}
           />
-          {/* @ts-expect-error ts-migrate(2786) FIXME: 'PreviousLeaveList' cannot be used as a JSX compon... Remove this comment to see the full error message */}
           <PreviousLeaveList
             entries={get(claim, "previous_leaves_other_reason")}
             type="otherReason"
@@ -678,7 +678,6 @@ export const Review = (props: ReviewProps) => {
           </ReviewRow>
 
           {get(claim, "has_employer_benefits") && (
-            // @ts-expect-error ts-migrate(2786) FIXME: 'EmployerBenefitList' cannot be used as a JSX comp... Remove this comment to see the full error message
             <EmployerBenefitList
               entries={get(claim, "employer_benefits")}
               reviewRowLevel={reviewRowLevel}
@@ -696,7 +695,6 @@ export const Review = (props: ReviewProps) => {
           </ReviewRow>
 
           {get(claim, "has_other_incomes") && (
-            // @ts-expect-error ts-migrate(2786) FIXME: 'OtherIncomeList' cannot be used as a JSX componen... Remove this comment to see the full error message
             <OtherIncomeList
               entries={get(claim, "other_incomes")}
               reviewRowLevel={reviewRowLevel}
@@ -718,7 +716,7 @@ export const Review = (props: ReviewProps) => {
         </div>
       ) : (
         <React.Fragment>
-          <Heading level="2" size="1">
+          <Heading level="2">
             <HeadingPrefix>
               {t("pages.claimsReview.partHeadingPrefix", { number: 2 })}
             </HeadingPrefix>
@@ -772,7 +770,7 @@ export const Review = (props: ReviewProps) => {
               </ReviewRow>
             </React.Fragment>
           )}
-          <Heading level="2" size="1">
+          <Heading level="2">
             <HeadingPrefix>
               {t("pages.claimsReview.partHeadingPrefix", { number: 3 })}
             </HeadingPrefix>
@@ -863,7 +861,7 @@ export const PreviousLeaveList = (props: PreviousLeaveListProps) => {
   const { t } = useTranslation();
   if (!props.entries) return null;
 
-  return props.entries.map((entry, index) => (
+  const rows = props.entries.map((entry, index) => (
     <ReviewRow
       level={props.reviewRowLevel}
       key={`${props.type}-${index}`}
@@ -916,6 +914,8 @@ export const PreviousLeaveList = (props: PreviousLeaveListProps) => {
       </ul>
     </ReviewRow>
   ));
+
+  return <React.Fragment>{rows}</React.Fragment>;
 };
 
 interface EmployerBenefitListProps {
@@ -931,7 +931,7 @@ export const EmployerBenefitList = (props: EmployerBenefitListProps) => {
   const { t } = useTranslation();
   const { entries, reviewRowLevel } = props;
 
-  return entries.map((entry, index) => {
+  const rows = entries.map((entry, index) => {
     const label = t("pages.claimsReview.employerBenefitEntryLabel", {
       count: index + 1,
     });
@@ -972,6 +972,8 @@ export const EmployerBenefitList = (props: EmployerBenefitListProps) => {
       />
     );
   });
+
+  return <React.Fragment>{rows}</React.Fragment>;
 };
 
 interface OtherIncomeListProps {
@@ -987,7 +989,7 @@ export const OtherIncomeList = (props: OtherIncomeListProps) => {
   const { t } = useTranslation();
   const { entries, reviewRowLevel } = props;
 
-  return entries.map((entry, index) => {
+  const rows = entries.map((entry, index) => {
     const label = t("pages.claimsReview.otherIncomeEntryLabel", {
       count: index + 1,
     });
@@ -1022,6 +1024,8 @@ export const OtherIncomeList = (props: OtherIncomeListProps) => {
       />
     );
   });
+
+  return <React.Fragment>{rows}</React.Fragment>;
 };
 
 interface OtherLeaveEntryProps {

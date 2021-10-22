@@ -179,7 +179,6 @@ export const IntermittentFrequency = (props: IntermittentFrequencyProps) => {
             label: t("pages.claimsIntermittentFrequency.frequencyBasisChoice", {
               context: "irregular",
             }),
-            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ checked: boolean; label: TFunctionResult; ... Remove this comment to see the full error message
             id: irregularOver6MonthsId,
             // This choice shares the same value as another choice, which the
             // component uses as its key by default, so we override that here

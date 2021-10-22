@@ -62,8 +62,8 @@ function renderDocumentFileCard(
 interface FileCardListProps {
   tempFiles: TempFileCollection;
   fileErrors?: AppErrorInfo[];
-  onChange: (...args: any[]) => any;
-  onRemoveTempFile: (...args: any[]) => any;
+  onChange: (files: Blob[]) => Promise<void>;
+  onRemoveTempFile: (id: string) => void;
   fileHeadingPrefix: string;
   addFirstFileButtonText: string;
   addAnotherFileButtonText: string;
@@ -114,7 +114,7 @@ const FileCardList = (props: FileCardListProps) => {
     ? props.addFirstFileButtonText
     : props.addAnotherFileButtonText;
 
-  const handleChange = async (event) => {
+  const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     // This will only have files selected this time, not previously selected files
     // e.target.files is a FileList type which isn't an array, but we can turn it into one
     // @see https://developer.mozilla.org/en-US/docs/Web/API/FileList

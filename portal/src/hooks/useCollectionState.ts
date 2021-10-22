@@ -15,7 +15,7 @@ const useCollectionState = <
   TCollection extends BaseCollection<TItem>,
   TItem = InferCollectionItem<TCollection>
 >(
-  initialCollection?: TCollection
+  initialCollection: TCollection
 ) => {
   const [collection, setCollection] = useState(initialCollection);
 

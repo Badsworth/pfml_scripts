@@ -85,6 +85,8 @@ interface InputTextProps {
   smallLabel?: boolean;
   /**
    * HTML input `type` attribute. Defaults to "text".
+   * Usage of type="number" is not allowed, see:
+   * https://css-tricks.com/you-probably-dont-need-input-typenumber/
    */
   type?: "email" | "password" | "tel" | "text";
   /**
@@ -117,15 +119,6 @@ function InputText({ type = "text", ...props }: InputTextProps) {
   inputId = props.inputId || inputId;
 
   const hasError = !!props.errorMsg;
-  let inputMode = props.inputMode;
-
-  // @ts-expect-error ts-migrate(2367) FIXME: This condition will always return 'false' since th... Remove this comment to see the full error message
-  if (type === "number") {
-    // Prevent usage of type="number"
-    // See: https://css-tricks.com/you-probably-dont-need-input-typenumber/
-    type = "text";
-    inputMode = "numeric";
-  }
 
   const fieldClasses = classnames("usa-input", props.inputClassName, {
     "usa-input--error": hasError,
@@ -140,7 +133,6 @@ function InputText({ type = "text", ...props }: InputTextProps) {
     }
   );
 
-  // @ts-expect-error ts(2345) - hopefully fixed once this component's props are typed using an interface
   const { handleFocus, handleBlur } = usePiiHandlers(props);
 
   const field = (
@@ -150,7 +142,7 @@ function InputText({ type = "text", ...props }: InputTextProps) {
       className={fieldClasses}
       data-value-type={props.valueType}
       id={inputId}
-      inputMode={inputMode}
+      inputMode={props.inputMode}
       maxLength={props.maxLength}
       name={props.name}
       onBlur={props.pii ? handleBlur : props.onBlur}

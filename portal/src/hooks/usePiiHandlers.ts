@@ -5,10 +5,10 @@ import { ChangeEvent, FocusEvent, FocusEventHandler, useRef } from "react";
  */
 const usePiiHandlers = (inputProps: {
   name: string;
-  value: string | number;
-  onChange: (event: { target: Node }) => void;
-  onBlur: FocusEventHandler<HTMLInputElement>;
-  onFocus: FocusEventHandler<HTMLInputElement>;
+  value?: string | number;
+  onChange?: (event: { target: Node }) => void;
+  onBlur?: FocusEventHandler<HTMLInputElement>;
+  onFocus?: FocusEventHandler<HTMLInputElement>;
 }) => {
   const initialValue = useRef(inputProps.value);
   const shouldClearValue = useRef(!!inputProps.value);

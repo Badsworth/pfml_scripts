@@ -63,7 +63,7 @@ interface InputHoursProps {
   /**
    * HTML input `onChange` attribute
    */
-  onChange: (...args: any[]) => any;
+  onChange: React.ChangeEventHandler<HTMLInputElement>;
   /**
    * Hours value represented in minutes. Must be a whole number.
    */
@@ -139,7 +139,7 @@ const InputHours = (props: InputHoursProps) => {
 
     props.onChange({
       target,
-    });
+    } as React.ChangeEvent<HTMLInputElement>);
   }
 
   return (

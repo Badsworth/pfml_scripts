@@ -29,7 +29,7 @@ const disallowedReasons = {
  * Compress an image which size is greater than maximum file size and  returns a promise
  * @param maximumFileSize - Size at which compression will be attempted
  */
-function optimizeFileSize(file: Blob, maximumFileSize: number): Promise<Blob> {
+function optimizeFileSize(file: File, maximumFileSize: number): Promise<File> {
   return new Promise((resolve) => {
     if (
       file.size <= maximumFileSize ||
@@ -76,7 +76,7 @@ function optimizeFileSize(file: Blob, maximumFileSize: number): Promise<Blob> {
  * Attempt to reduce the size of files
  * @param maximumFileSize - Size at which compression will be attempted
  */
-function optimizeFiles(files: Blob[], maximumFileSize: number) {
+function optimizeFiles(files: File[], maximumFileSize: number) {
   const compressPromises = files.map((file) =>
     optimizeFileSize(file, maximumFileSize)
   );
@@ -90,7 +90,7 @@ function optimizeFiles(files: Blob[], maximumFileSize: number) {
  * @example const { allowedFiles,issues }  = filterAllowedFiles(files);
  */
 function filterAllowedFiles(
-  files: Blob[],
+  files: File[],
   {
     allowedFileTypes,
     maximumFileSize,
@@ -99,11 +99,11 @@ function filterAllowedFiles(
     maximumFileSize: number;
   }
 ) {
-  const allowedFiles = [];
-  const issues = [];
+  const allowedFiles: File[] = [];
+  const issues: Issue[] = [];
 
   files.forEach((file) => {
-    let disallowedReason = null;
+    let disallowedReason = "";
 
     if (file.size > maximumFileSize) {
       disallowedReason = disallowedReasons.size;
@@ -146,7 +146,7 @@ function filterAllowedFiles(
  * @param disallowedReason - reason file is not allowed (size, sizeAndType, or type)
  */
 function getIssueForDisallowedFile(
-  disallowedFile: Blob,
+  disallowedFile: File,
   disallowedReason: string
 ): Issue {
   const i18nKey = `errors.invalidFile_${disallowedReason}`;
@@ -180,7 +180,7 @@ const useFilesLogic = ({
   /**
    * Async function handles file optimization and filter logic
    */
-  const processFiles = async (files: Blob[]) => {
+  const processFiles = async (files: File[]) => {
     clearErrors();
     const compressedFiles = await optimizeFiles(files, maximumFileSize);
 

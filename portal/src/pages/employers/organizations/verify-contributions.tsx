@@ -129,8 +129,6 @@ export const VerifyContributions = (props: VerifyContributionsProps) => {
       <InputCurrency
         {...getFunctionalInputProps("withholdingAmount")}
         onChange={handleAmountChange}
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ onChange: (event: any) => void; mask: stri... Remove this comment to see the full error message
-        mask="currency"
         hint={t(
           "pages.employersOrganizationsVerifyContributions.withholdingAmountHint"
         )}

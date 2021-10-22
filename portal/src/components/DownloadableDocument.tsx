@@ -40,7 +40,7 @@ const DownloadableDocument = (props: DownloadableDocumentProps) => {
 
   const documentName = getDocumentName(document, t);
 
-  const handleClick = async (event) => {
+  const handleClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     let documentData;
     if (absenceId) {

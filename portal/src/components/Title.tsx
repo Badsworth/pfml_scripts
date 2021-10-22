@@ -55,8 +55,7 @@ const Title = ({ component = "h1", small = false, ...props }: TitleProps) => {
       <Helmet>
         <title>{seoTitle}</title>
       </Helmet>
-      {/* @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number'. */}
-      <TitleElement tabIndex="-1" className={classes}>
+      <TitleElement tabIndex={-1} className={classes}>
         {props.children}
       </TitleElement>
     </React.Fragment>

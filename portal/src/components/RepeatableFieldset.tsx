@@ -39,7 +39,7 @@ interface RepeatableFieldsetProps {
   /**
    * Event handler responsible for adding a new entry
    */
-  onAddClick: (...args: any[]) => any;
+  onAddClick: React.MouseEventHandler<HTMLButtonElement>;
   /**
    * Event handler responsible for removing an entry
    */

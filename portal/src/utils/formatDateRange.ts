@@ -16,7 +16,7 @@ export default function formatDateRange(
   customDelimiter?: string
 ) {
   const startDate = formatDate(startIsoDate).short();
-  const endDate = formatDate(endIsoDate).short();
+  const endDate = endIsoDate ? formatDate(endIsoDate).short() : "";
 
   let delimiter = "";
 

@@ -101,8 +101,6 @@ export const FamilyMemberRelationship = (
             />
             <Details
               label={t("pages.claimsFamilyMemberRelationship.detailsLabel")}
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; label: string; classNam... Remove this comment to see the full error message
-              className="text-bold"
             >
               <Trans
                 i18nKey="pages.claimsFamilyMemberRelationship.detailsBody"

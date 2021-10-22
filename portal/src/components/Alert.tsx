@@ -48,8 +48,7 @@ const Alert = React.forwardRef<any, AlertProps>(
     );
 
     return (
-      // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number'.
-      <div className={classes} role={role} ref={ref} tabIndex="-1">
+      <div className={classes} role={role} ref={ref} tabIndex={-1}>
         <div className="usa-alert__body">
           {props.heading && (
             <Heading

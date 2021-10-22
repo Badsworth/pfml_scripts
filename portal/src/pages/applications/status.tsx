@@ -1,4 +1,3 @@
-// @ts-nocheck https://lwd.atlassian.net/browse/PORTAL-427
 import React, { useEffect } from "react";
 import { find, get, has, map } from "lodash";
 
@@ -25,6 +24,7 @@ import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
+
 interface StatusProps {
   appLogic: AppLogic;
   query: {
@@ -237,7 +237,6 @@ export const Status = ({ appLogic, query }: StatusProps) => {
               context: uploaded_document_type,
             }),
           })}
-          name="upload-success-message"
           state="success"
         >
           {t("pages.applications.uploadSuccessMessage", {
@@ -312,7 +311,6 @@ export const Status = ({ appLogic, query }: StatusProps) => {
             employerFollowUpDate={
               claimDetail.managedRequirementByFollowUpDate[0]?.follow_up_date
             }
-            absenceDetails={absenceDetails}
             applicationId={claimDetail.application_id}
             docList={documentsForApplication}
             absenceCaseId={claimDetail.fineos_absence_id}
@@ -431,71 +429,75 @@ interface LeaveDetailsProps {
 
 export const LeaveDetails = ({ absenceDetails = {} }: LeaveDetailsProps) => {
   const { t } = useTranslation();
-  return map(absenceDetails, (absenceItem, absenceItemName) => (
-    <div key={absenceItemName} className={containerClassName}>
-      <Heading level="2">
-        {t("pages.claimsStatus.leaveReasonValue", {
-          context: findKeyByValue(LeaveReason, absenceItemName),
-        })}
-      </Heading>
-      {absenceItem.length
-        ? absenceItem.map(
-            (
-              {
-                period_type,
-                absence_period_start_date,
-                absence_period_end_date,
-                request_decision,
-                fineos_leave_request_id,
-              },
-              ind
-            ) => (
-              <div
-                key={fineos_leave_request_id}
-                className={`margin-top-${ind ? "6" : "4"}`}
-              >
-                <Heading level="3">
-                  {t("pages.claimsStatus.leavePeriodLabel", {
-                    context: period_type.split(" ")[0].toLowerCase(),
-                  })}
-                </Heading>
-                <p>
-                  {`From ${formatDate(
-                    absence_period_start_date
-                  ).full()} to ${formatDate(absence_period_end_date).full()}`}
-                </p>
-                <Tag
-                  label={request_decision}
-                  state={StatusTagMap[request_decision]}
-                />
-                <Trans
-                  i18nKey="pages.claimsStatus.leaveStatusMessage"
-                  tOptions={{ context: request_decision }}
-                  components={{
-                    "application-link": (
-                      <a
-                        href={routes.applications.getReady}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      />
-                    ),
-                    p: <p></p>,
-                    "request-appeal-link": (
-                      <a
-                        href={routes.external.massgov.requestAnAppealForPFML}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      />
-                    ),
-                    "request-decision-info": <p></p>,
-                  }}
-                />
-              </div>
-            )
-          )
-        : null}
-    </div>
-  ));
+
+  return (
+    <React.Fragment>
+      {map(absenceDetails, (absenceItem, absenceItemName) => (
+        <div key={absenceItemName} className={containerClassName}>
+          <Heading level="2">
+            {t("pages.claimsStatus.leaveReasonValue", {
+              context: findKeyByValue(LeaveReason, absenceItemName),
+            })}
+          </Heading>
+          {absenceItem.length &&
+            absenceItem.map(
+              (
+                {
+                  period_type,
+                  absence_period_start_date,
+                  absence_period_end_date,
+                  request_decision,
+                  fineos_leave_request_id,
+                },
+                ind
+              ) => (
+                <div
+                  key={fineos_leave_request_id}
+                  className={`margin-top-${ind ? "6" : "4"}`}
+                >
+                  <Heading level="3">
+                    {t("pages.claimsStatus.leavePeriodLabel", {
+                      context: period_type.split(" ")[0].toLowerCase(),
+                    })}
+                  </Heading>
+                  <p>
+                    {`From ${formatDate(
+                      absence_period_start_date
+                    ).full()} to ${formatDate(absence_period_end_date).full()}`}
+                  </p>
+                  <Tag
+                    label={request_decision}
+                    state={StatusTagMap[request_decision]}
+                  />
+                  <Trans
+                    i18nKey="pages.claimsStatus.leaveStatusMessage"
+                    tOptions={{ context: request_decision }}
+                    components={{
+                      "application-link": (
+                        <a
+                          href={routes.applications.getReady}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        />
+                      ),
+                      p: <p></p>,
+                      "request-appeal-link": (
+                        <a
+                          href={routes.external.massgov.requestAnAppealForPFML}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        />
+                      ),
+                      "request-decision-info": <p></p>,
+                    }}
+                  />
+                </div>
+              )
+            )}
+        </div>
+      ))}
+    </React.Fragment>
+  );
 };
 
 interface TimelineProps {

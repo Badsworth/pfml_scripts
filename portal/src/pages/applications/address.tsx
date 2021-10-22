@@ -70,14 +70,12 @@ export const Address = (props: AddressProps) => {
     "residential_address"
   );
   if (!residentialAddressProps.value) {
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-    residentialAddressProps.value = new AddressModel();
+    residentialAddressProps.value = new AddressModel({});
   }
 
   const mailingAddressProps = getFunctionalInputProps("mailing_address");
   if (!mailingAddressProps.value) {
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-    mailingAddressProps.value = new AddressModel();
+    mailingAddressProps.value = new AddressModel({});
   }
 
   return (

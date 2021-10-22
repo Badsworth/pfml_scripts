@@ -805,7 +805,6 @@ class DocumentFactory(BaseFactory):
     document_type_id = random.randint(
         1, application_models.DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_id
     )
-    content_type_id = random.randint(1, application_models.ContentType.HEIC.content_type_id)
 
     # These values have no special meaning, just bounds so we get some variation.
     size_bytes = random.randint(1989, 24_072_020)
