@@ -1,4 +1,5 @@
 import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
+import ClaimDocument from "../models/ClaimDocument";
 import DownloadableDocument from "./DownloadableDocument";
 import Icon from "./Icon";
 import React from "react";
@@ -6,7 +7,7 @@ import getLegalNotices from "../utils/getLegalNotices";
 import { useTranslation } from "../locales/i18n";
 
 interface LegalNoticeListProps {
-  documents?: BenefitsApplicationDocument[];
+  documents?: Array<BenefitsApplicationDocument | ClaimDocument>;
   onDownloadClick?: (...args: any[]) => any;
 }
 
