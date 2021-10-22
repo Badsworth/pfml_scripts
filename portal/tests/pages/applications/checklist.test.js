@@ -44,7 +44,7 @@ describe("Checklist", () => {
     const { container } = renderChecklist();
     expect(container).toMatchSnapshot();
     expect(screen.getByText("Part 1")).toBeInTheDocument();
-    expect(screen.getByText("Part 1")).toBeInTheDocument();
+    expect(screen.getByText("Part 2")).toBeInTheDocument();
     expect(screen.getByText("Part 3")).toBeInTheDocument();
   });
 
@@ -160,7 +160,7 @@ describe("Checklist", () => {
 
     it("renders alert", () => {
       expect(
-        screen.getByText(/Part 1 of your application was confirmed./)
+        screen.getByText(/You successfully submitted Part 1./)
       ).toBeInTheDocument();
       expect(screen.getByText(/Your application ID is/)).toBeInTheDocument();
     });
@@ -217,11 +217,8 @@ describe("Checklist", () => {
 
     it("renders alert that Part 2 is confirmed", () => {
       expect(
-        screen.getByText(/Part 2 of your application was confirmed./)
-      ).toBeInTheDocument();
-      expect(
         screen.getByText(
-          /Now, you can work on Part 3, and submit your application./
+          /You successfully submitted Part 2. Submit Part 3 so that we can review your application./
         )
       ).toBeInTheDocument();
     });

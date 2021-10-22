@@ -55,7 +55,7 @@ const StepList = (props: StepListProps) => {
 
   return (
     <div className="margin-bottom-8">
-      <Heading level="2" size="1">
+      <Heading level="2" size="2">
         {title}
       </Heading>
       {description && <p>{description}</p>}

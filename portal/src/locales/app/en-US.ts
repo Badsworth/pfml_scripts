@@ -1072,11 +1072,9 @@ const pages = {
     otherLeaveSubmittedIntro:
       "<p>If you have any other leaves, benefits, or income to report, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
     partOneSubmittedDescription:
-      "Your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you’ll need to call our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Now, you can work on Parts 2 and 3, and submit your application.",
-    partOneSubmittedHeading: "Part 1 of your application was confirmed.",
+      "You successfully submitted Part 1. Submit Parts 2 and 3 so that we can review your application.",
     partTwoSubmittedDescription:
-      "Now, you can work on Part 3, and submit your application.",
-    partTwoSubmittedHeading: "Part 2 of your application was confirmed.",
+      "You successfully submitted Part 2. Submit Part 3 so that we can review your application.",
     resume: "Resume",
     // Resume button aria-label for screen readers, since VoiceOver reads "résumé":
     resumeScreenReader: "Continue with",
@@ -1111,7 +1109,7 @@ const pages = {
     stepListDescription_1:
       "Your progress is automatically saved as you complete the application. You can edit any information you enter in Part 1 until step 5 is completed.",
     stepListDescription_1_submitted:
-      "If you need to edit your information in Part 1, you’ll need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Your application ID is <strong>{{absence_id}}</strong>.",
+      "Your in-progress application will be viewable by our Contact Center staff. If you need to edit your information in Part 1, you’ll need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Your application ID is <strong>{{absence_id}}</strong>.",
     stepListDescription_2:
       "Entering payment information here leads to faster processing, but you can also call$t(chars.nbsp)<contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
     stepListDescription_2_submitted:
@@ -1131,7 +1129,8 @@ const pages = {
     stepTitle_uploadId: "Upload identification document",
     stepTitle_verifyId: "Verify your identification",
     submitButton: "Review and submit application",
-    title: "Checklist: Create a new application",
+    title: "Your in-progress application",
+    titleBody: "Submit all three parts so that we can review your application.",
   },
 
   claimsConcurrentLeaves: {
