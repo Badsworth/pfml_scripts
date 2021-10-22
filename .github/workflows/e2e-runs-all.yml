@@ -57,4 +57,4 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Link to run
-        run: echo ${{ fromJSON(steps.get_jobs_for_run.outputs.data) }}
+        run: echo ${{ steps.get_jobs_for_run.outputs.data }}
