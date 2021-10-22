@@ -265,7 +265,6 @@ describe("useDocumentsLogic", () => {
         expect.objectContaining({
           field: "file",
           message: "Upload at least one file to continue.",
-          meta: null,
           name: "ValidationError",
           type: "required",
         })
