@@ -9,7 +9,6 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import backref, relationship
 
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.base import deprecated_column
 from massgov.pfml.db.models.employees import (
     Address,
     Claim,
