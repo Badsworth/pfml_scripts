@@ -1105,6 +1105,7 @@ class Pfml1099Batch(Base, TimestampMixin):
     tax_year = Column(Integer, nullable=False)
     batch_run_date = Column(Date, nullable=False)
     correction_ind = Column(Boolean, nullable=False)
+    batch_status = Column(Text)
 
 
 class Pfml1099Withholding(Base, TimestampMixin):
