@@ -1,4 +1,5 @@
 cypress/videos
+cypress/screenshots
 node_modules
 .env
 *-users.json
@@ -7,3 +8,4 @@ tmp
 dist
 scripts/*
 !scripts/*.sh
+nerdpack/dist

@@ -1,15 +1,15 @@
 import { compact, find, map } from "lodash";
+import { Issue } from "../errors";
 
 /**
  * Combines API errors and warnings into a single array of issues.
  * Optionally filters warnings based on field names.
- * @param {Array<object>} errors
- * @param {Array<{object}>} warnings
- * @param {Array<{meta: {applicableRules: string[], fields: string[]}}>} [pages] - Page state nodes, which
- *  when present will be used to filter warnings to only those with matching `applicableRules` or `fields`
- * @returns {Array<object>} Combination of errors and relevant warnings
  */
-function getRelevantIssues(errors = [], warnings = [], pages = []) {
+function getRelevantIssues(
+  errors: Issue[] = [],
+  warnings: Issue[] = [],
+  pages: any[] = []
+) {
   let relevantWarnings = warnings;
 
   if (warnings.length && pages.length) {

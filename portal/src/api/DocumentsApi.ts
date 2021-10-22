@@ -1,28 +1,14 @@
 import BaseApi, {
   createRequestUrl,
+  fetchErrorToNetworkError,
   getAuthorizationHeader,
-  handleError,
   handleNotOkResponse,
 } from "./BaseApi";
 import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import DocumentCollection from "../models/DocumentCollection";
+import { DocumentTypeEnum } from "../models/Document";
 import assert from "assert";
 import routes from "../routes";
-
-/**
- * @typedef {object} DocumentApiSingleResult
- * @property {BenefitsApplicationDocument} document - If the request succeeded, this will contain the created claim
- */
-
-/**
- * @typedef {object} DocumentApiListResult
- * @property {DocumentCollection} [documents] - If the request succeeded, this will contain a list of documents
- */
-
-/**
- * @typedef {{ blob: Blob }} DocumentResponse
- * @property {Blob} blob - BenefitsApplicationDocument data
- */
 
 export default class DocumentsApi extends BaseApi {
   get basePath() {
@@ -34,22 +20,15 @@ export default class DocumentsApi extends BaseApi {
   }
 
   /**
-   * Submit documents one at a time
-   *
-   * Corresponds to this API endpoint: /application/{application_id}/documents
-   * @param {string} application_id ID of the Claim
-   * @param {File} file - The File object to upload
-   * @param {string} document_type type of documents
-   * @param {boolean} mark_evidence_received - Set the flag used to indicate whether
+   * @param mark_evidence_received - Set the flag used to indicate whether
    * the doc is ready for review or not. Docs added to a claim that was completed
    * through a channel other than the Portal require this flag being set to `true`.
-   * @returns {DocumentApiSingleResult} The result of the API call
    */
   attachDocument = async (
-    application_id,
-    file,
-    document_type,
-    mark_evidence_received
+    application_id: string,
+    file: File,
+    document_type: DocumentTypeEnum,
+    mark_evidence_received: boolean
   ) => {
     const formData = new FormData();
     formData.append("document_type", document_type);
@@ -63,13 +42,16 @@ export default class DocumentsApi extends BaseApi {
     // https://developer.mozilla.org/en-US/docs/Web/API/FormData/append#append_parameters
     formData.append("file", file, file.name);
     formData.append("name", file.name);
-    formData.append("mark_evidence_received", mark_evidence_received);
+    formData.append(
+      "mark_evidence_received",
+      mark_evidence_received.toString()
+    );
 
-    const { data } = await this.request(
+    const { data } = await this.request<BenefitsApplicationDocument>(
       "POST",
       `${application_id}/documents`,
       formData,
-      null,
+      undefined,
       { multipartForm: true }
     );
 
@@ -80,55 +62,47 @@ export default class DocumentsApi extends BaseApi {
 
   /**
    * Load all documents for an application
-   *
-   * Corresponds to this API endpoint: /application/{application_id}/documents
-   * @param {string} application_id ID of the Claim
-   * @returns {DocumentApiListResult} The result of the API call
    */
-  getDocuments = async (application_id) => {
-    const { data } = await this.request("GET", `${application_id}/documents`);
-    let documents = data.map(
+  getDocuments = async (application_id: string) => {
+    const { data } = await this.request<BenefitsApplicationDocument[]>(
+      "GET",
+      `${application_id}/documents`
+    );
+    const documents = data.map(
       (documentData) => new BenefitsApplicationDocument(documentData)
     );
-    documents = new DocumentCollection(documents);
 
     return {
-      documents,
+      documents: new DocumentCollection(documents),
     };
   };
 
   /**
-   * Download document
-   *
-   * Corresponds to this API endpoint: /application/{application_id}/documents/{fineos_document_id}
-   * @param {BenefitsApplicationDocument} document instance of BenefitsApplicationDocument to download
-   * @returns {Blob} file data
+   * @param document instance of BenefitsApplicationDocument to download
    */
-  downloadDocument = async (document) => {
+  downloadDocument = async (document: BenefitsApplicationDocument) => {
     assert(document);
     const { application_id, content_type, fineos_document_id } = document;
     const subPath = `${application_id}/documents/${fineos_document_id}`;
     const method = "GET";
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 4 arguments, but got 3.
     const url = createRequestUrl(method, this.basePath, subPath);
     const authHeader = await getAuthorizationHeader();
 
     const headers = {
       ...authHeader,
-      "Content-Type": content_type,
+      "Content-Type": content_type || "",
     };
 
-    let blob, response;
+    let blob: Blob, response: Response;
     try {
       response = await fetch(url, { headers, method });
       blob = await response.blob();
     } catch (error) {
-      handleError(error);
+      throw fetchErrorToNetworkError(error);
     }
 
     if (!response.ok) {
-      // @ts-expect-error ts-migrate(2554) FIXME: Expected 5 arguments, but got 2.
-      handleNotOkResponse(url, response);
+      handleNotOkResponse(response, [], this.i18nPrefix);
     }
 
     return blob;

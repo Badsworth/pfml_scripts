@@ -1,9 +1,12 @@
 data "aws_s3_bucket" "agency_transfer" {
   bucket = "massgov-pfml-${var.environment_name}-agency-transfer"
 }
-# Note: these data inputs seem to do the same thing
 data "aws_s3_bucket" "reports" {
   bucket = "massgov-pfml-${var.environment_name}-reports"
+}
+
+data "aws_iam_role" "replication" {
+  name = "massgov-pfml-prod-s3-replication"
 }
 
 resource "aws_s3_bucket" "execute_sql_export" {
@@ -31,7 +34,7 @@ resource "aws_s3_bucket" "execute_sql_export" {
   dynamic "replication_configuration" {
     for_each = var.environment_name == module.constants.bucket_replication_environment ? [1] : []
     content {
-      role = module.constants.bucket_replication_role
+      role = data.aws_iam_role.replication.name
       rules {
         id     = "replicateFullBucket"
         status = "Enabled"

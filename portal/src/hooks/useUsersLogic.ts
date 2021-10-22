@@ -1,11 +1,11 @@
 import routes, { isApplicationsRoute, isEmployersRoute } from "../routes";
 import { useMemo, useState } from "react";
+import { AppErrorsLogic } from "./useAppErrorsLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
+import { PortalFlow } from "./usePortalFlow";
 import User from "../models/User";
 import { UserNotReceivedError } from "../errors";
 import UsersApi from "../api/UsersApi";
-import useAppErrorsLogic from "./useAppErrorsLogic";
-import usePortalFlow from "./usePortalFlow";
 
 /**
  * Hook that defines user state
@@ -15,9 +15,9 @@ const useUsersLogic = ({
   isLoggedIn,
   portalFlow,
 }: {
-  appErrorsLogic: ReturnType<typeof useAppErrorsLogic>;
+  appErrorsLogic: AppErrorsLogic;
   isLoggedIn: boolean;
-  portalFlow: ReturnType<typeof usePortalFlow>;
+  portalFlow: PortalFlow;
 }) => {
   const usersApi = useMemo(() => new UsersApi(), []);
   const [user, setUser] = useState<User>();
@@ -40,7 +40,7 @@ const useUsersLogic = ({
       setUser(user);
 
       const context = claim ? { claim, user } : { user };
-      const params = claim ? { claim_id: claim.application_id } : null;
+      const params = claim ? { claim_id: claim.application_id } : {};
       portalFlow.goToNextPage(context, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
@@ -95,6 +95,11 @@ const useUsersLogic = ({
     const pathname = portalFlow.pathname;
     if (pathname === routes.user.consentToDataSharing) return;
 
+    if (!user) {
+      portalFlow.goTo(routes.index, {}, { redirect: true });
+      return;
+    }
+
     // Portal currently does not support hybrid account (both Employer AND Claimant account)
     // If user has Employer role, they cannot access Claimant Portal regardless of multiple roles
     if (!user.hasEmployerRole && isEmployersRoute(pathname)) {
@@ -114,7 +119,7 @@ const useUsersLogic = ({
    */
   const convertUser = async (
     user_id: User["user_id"],
-    postData: Partial<User>
+    postData: { employer_fein: string }
   ) => {
     appErrorsLogic.clearErrors();
 
@@ -123,7 +128,7 @@ const useUsersLogic = ({
       setUser(user);
 
       portalFlow.goTo(routes.employers.organizations, {
-        account_converted: true,
+        account_converted: "true",
       });
     } catch (error) {
       appErrorsLogic.catchError(error);
@@ -142,3 +147,4 @@ const useUsersLogic = ({
 };
 
 export default useUsersLogic;
+export type UsersLogic = ReturnType<typeof useUsersLogic>;

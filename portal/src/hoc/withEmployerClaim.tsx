@@ -1,12 +1,16 @@
 import React, { useEffect } from "react";
-import EmployerClaim from "../models/EmployerClaim";
-import PropTypes from "prop-types";
+import { AppLogic } from "../hooks/useAppLogic";
 import { Spinner } from "../components/Spinner";
-import User from "../models/User";
-import assert from "assert";
 import routes from "../routes";
 import { useTranslation } from "react-i18next";
 import withUser from "./withUser";
+
+interface ComponentWithClaimProps {
+  appLogic: AppLogic;
+  query: {
+    absence_id: string;
+  };
+}
 
 /**
  * Higher order component that (1) loads a claim if not yet loaded and adds a single claim to the wrapper component
@@ -16,7 +20,7 @@ import withUser from "./withUser";
  * @returns {React.Component} component with claim prop
  */
 const withEmployerClaim = (Component) => {
-  const ComponentWithClaim = (props) => {
+  const ComponentWithClaim = (props: ComponentWithClaimProps) => {
     const { appLogic, query } = props;
     const { t } = useTranslation();
     const absenceId = query.absence_id;
@@ -25,10 +29,6 @@ const withEmployerClaim = (Component) => {
         ? appLogic.employers.claim
         : null;
     const user = appLogic.users.user;
-
-    assert(appLogic.employers);
-    // Since we are within a withUser higher order component, user should always be set
-    assert(user);
 
     useEffect(() => {
       if (!claim) {
@@ -86,27 +86,6 @@ const withEmployerClaim = (Component) => {
     }
 
     return <Component {...props} claim={claim} />;
-  };
-
-  ComponentWithClaim.propTypes = {
-    appLogic: PropTypes.shape({
-      appErrors: PropTypes.object.isRequired,
-      employers: PropTypes.shape({
-        claim: PropTypes.instanceOf(EmployerClaim),
-        loadClaim: PropTypes.func.isRequired,
-      }).isRequired,
-      portalFlow: PropTypes.shape({
-        goTo: PropTypes.func.isRequired,
-        pathname: PropTypes.string.isRequired,
-        pathWithParams: PropTypes.string,
-      }),
-      users: PropTypes.shape({
-        user: PropTypes.instanceOf(User).isRequired,
-      }).isRequired,
-    }).isRequired,
-    query: PropTypes.shape({
-      absence_id: PropTypes.string.isRequired,
-    }),
   };
 
   return withUser(ComponentWithClaim);

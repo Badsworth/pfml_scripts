@@ -10,7 +10,7 @@ export async function getFineosEndpoints(): Promise<FineosAPIResult[]> {
   return JSON.parse(raw);
 }
 
-const fineosIDRE = /NTN-\d+[\-\dA-Z]*/;
+const fineosIDRE = /NTN-\d+[-\dA-Z]*/;
 export type FineosAPIResult = { FINEOSUrl: string; FINEOSMethod: string };
 
 /**

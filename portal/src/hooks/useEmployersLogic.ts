@@ -1,13 +1,14 @@
 import { get, isNil } from "lodash";
 import { useMemo, useState } from "react";
+import { AppErrorsLogic } from "./useAppErrorsLogic";
 import ClaimDocument from "../models/ClaimDocument";
+import { ClaimsLogic } from "./useClaimsLogic";
+import DocumentCollection from "../models/DocumentCollection";
 import EmployerClaim from "../models/EmployerClaim";
 import EmployersApi from "../api/EmployersApi";
 import { LeaveAdminForbiddenError } from "../errors";
-import useAppErrorsLogic from "./useAppErrorsLogic";
-import useClaimsLogic from "./useClaimsLogic";
-import usePortalFlow from "./usePortalFlow";
-import useUsersLogic from "./useUsersLogic";
+import { PortalFlow } from "./usePortalFlow";
+import { UsersLogic } from "./useUsersLogic";
 
 const useEmployersLogic = ({
   appErrorsLogic,
@@ -15,13 +16,13 @@ const useEmployersLogic = ({
   portalFlow,
   setUser,
 }: {
-  appErrorsLogic: ReturnType<typeof useAppErrorsLogic>;
-  clearClaims: ReturnType<typeof useClaimsLogic>["clearClaims"];
-  portalFlow: ReturnType<typeof usePortalFlow>;
-  setUser: ReturnType<typeof useUsersLogic>["setUser"];
+  appErrorsLogic: AppErrorsLogic;
+  clearClaims: ClaimsLogic["clearClaims"];
+  portalFlow: PortalFlow;
+  setUser: UsersLogic["setUser"];
 }) => {
   const [claim, setEmployerClaim] = useState<EmployerClaim | null>(null);
-  const [documents, setDocuments] = useState(null);
+  const [documents, setDocuments] = useState<DocumentCollection | null>(null);
   const employersApi = useMemo(() => new EmployersApi(), []);
 
   /**
@@ -64,7 +65,7 @@ const useEmployersLogic = ({
           new LeaveAdminForbiddenError(
             employer_id,
             has_verification_data,
-            error.message
+            error instanceof Error ? error.message : ""
           )
         );
       } else {

@@ -302,47 +302,48 @@ def get_other_income_issues(income: OtherIncome, index: int) -> List[ValidationE
 
 
 def get_concurrent_leave_issues(application: Application) -> List[ValidationErrorDetail]:
+    concurrent_leave = application.concurrent_leave
+
+    if not application.has_concurrent_leave and not concurrent_leave:
+        return []
+
+    if application.has_concurrent_leave and not concurrent_leave:
+        issue = ValidationErrorDetail(
+            type=IssueType.required,
+            rule=IssueRule.conditional,
+            message="when has_concurrent_leave is true, concurrent_leave must be present",
+            field="concurrent_leave",
+        )
+        return [issue]
+
+    if not application.has_concurrent_leave and concurrent_leave:
+        issue = ValidationErrorDetail(
+            type=IssueType.required,
+            rule=IssueRule.conditional,
+            message="when has_concurrent_leave is false, concurrent_leave must be null",
+            field="concurrent_leave",
+        )
+        return [issue]
+
     issues = []
 
-    if application.has_concurrent_leave and application.concurrent_leave:
-        concurrent_leave = application.concurrent_leave
-        issues += check_date_range(
-            concurrent_leave.leave_start_date,
-            "concurrent_leave.leave_start_date",
-            concurrent_leave.leave_end_date,
-            "concurrent_leave.leave_end_date",
-            PFML_PROGRAM_LAUNCH_DATE,
-        )
+    required_fields = [
+        "leave_start_date",
+        "leave_end_date",
+        "is_for_current_employer",
+    ]
 
-        required_fields = [
-            "leave_start_date",
-            "leave_end_date",
-            "is_for_current_employer",
-        ]
+    issues += check_required_fields(
+        "concurrent_leave", application.concurrent_leave, required_fields
+    )
 
-        issues += check_required_fields(
-            "concurrent_leave", application.concurrent_leave, required_fields
-        )
-    else:
-        if application.has_concurrent_leave and not application.concurrent_leave:
-            issues.append(
-                ValidationErrorDetail(
-                    type=IssueType.required,
-                    rule=IssueRule.conditional,
-                    message="when has_concurrent_leave is true, concurrent_leave must be present",
-                    field="concurrent_leave",
-                )
-            )
-        else:
-            if not application.has_concurrent_leave and application.concurrent_leave:
-                issues.append(
-                    ValidationErrorDetail(
-                        type=IssueType.required,
-                        rule=IssueRule.conditional,
-                        message="when has_concurrent_leave is false, concurrent_leave must be null",
-                        field="concurrent_leave",
-                    )
-                )
+    issues += check_date_range(
+        concurrent_leave.leave_start_date,
+        "concurrent_leave.leave_start_date",
+        concurrent_leave.leave_end_date,
+        "concurrent_leave.leave_end_date",
+        PFML_PROGRAM_LAUNCH_DATE,
+    )
 
     return issues
 

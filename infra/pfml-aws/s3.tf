@@ -9,6 +9,10 @@ locals {
   environments = ["test", "stage", "prod", "performance", "training", "uat", "breakfix", "cps-preview", "adhoc"]
 }
 
+data "aws_iam_role" "replication" {
+  name = "massgov-pfml-prod-s3-replication"
+}
+
 # ----------------------------------------------------------------------------------------------------------------------
 
 resource "aws_s3_bucket" "terraform" {
@@ -35,11 +39,11 @@ resource "aws_s3_bucket" "terraform" {
   })
 
   replication_configuration {
-    role = module.constants.bucket_replication_role
+    role = data.aws_iam_role.replication.name
     rules {
       id     = "replicateFullBucket"
       status = "Enabled"
-# Note: These buckets already exist
+      # Note: These buckets already exist
       destination {
         bucket        = "arn:aws:s3:::massgov-pfml-${each.key}-env-mgmt-replica"
         storage_class = "STANDARD"
@@ -104,7 +108,7 @@ resource "aws_s3_bucket" "agency_transfer" {
   dynamic "replication_configuration" {
     for_each = each.key == module.constants.bucket_replication_environment ? [1] : []
     content {
-      role = module.constants.bucket_replication_role
+      role = data.aws_iam_role.replication.name
       rules {
         id     = "replicateFullBucket"
         status = "Enabled"

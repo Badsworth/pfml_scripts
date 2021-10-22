@@ -3,7 +3,6 @@
  *
  * It is written in JS because it's required directly by Cypress, not transpiled.
  */
-/* eslint-disable @typescript-eslint/no-var-requires */
 const { Runner, reporters, Suite } = require("mocha");
 const fetch = require("node-fetch");
 const debug = require("debug")("cypress:reporter:newrelic");

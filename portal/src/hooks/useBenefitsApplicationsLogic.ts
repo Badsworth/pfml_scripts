@@ -1,14 +1,14 @@
 import { Issue, NotFoundError, ValidationError } from "../errors";
+import { AppErrorsLogic } from "./useAppErrorsLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
 import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
 import BenefitsApplicationsApi from "../api/BenefitsApplicationsApi";
 import PaymentPreference from "../models/PaymentPreference";
+import { PortalFlow } from "./usePortalFlow";
 import User from "../models/User";
 import getRelevantIssues from "../utils/getRelevantIssues";
 import routes from "../routes";
-import useAppErrorsLogic from "./useAppErrorsLogic";
 import useCollectionState from "./useCollectionState";
-import usePortalFlow from "./usePortalFlow";
 import { useState } from "react";
 
 const useBenefitsApplicationsLogic = ({
@@ -16,9 +16,9 @@ const useBenefitsApplicationsLogic = ({
   portalFlow,
   user,
 }: {
-  appErrorsLogic: ReturnType<typeof useAppErrorsLogic>;
-  portalFlow: ReturnType<typeof usePortalFlow>;
-  user: User;
+  appErrorsLogic: AppErrorsLogic;
+  portalFlow: PortalFlow;
+  user?: User;
 }) => {
   // State representing the collection of applications for the current user.
   // Initialize to empty collection, but will eventually store the applications
@@ -138,19 +138,12 @@ const useBenefitsApplicationsLogic = ({
     appErrorsLogic.clearErrors();
 
     try {
-      const { claim, errors, warnings } = await applicationsApi.updateClaim(
+      const { claim, warnings } = await applicationsApi.updateClaim(
         application_id,
         patchData
       );
 
-      const issues = getRelevantIssues(errors, warnings, [portalFlow.page]);
-
-      // If there were any validation errors, then throw *before*
-      // the claim is updated in our state, to avoid overriding
-      // the user's in-progress answers
-      if (errors && errors.length) {
-        throw new ValidationError(issues, applicationsApi.i18nPrefix);
-      }
+      const issues = getRelevantIssues([], warnings, [portalFlow.page]);
 
       setBenefitsApplication(claim);
       setClaimWarnings(application_id, warnings);
@@ -242,18 +235,13 @@ const useBenefitsApplicationsLogic = ({
     appErrorsLogic.clearErrors();
 
     try {
-      const { claim, errors, warnings } =
-        await applicationsApi.submitPaymentPreference(
-          application_id,
-          paymentPreferenceData
-        );
+      const { claim, warnings } = await applicationsApi.submitPaymentPreference(
+        application_id,
+        paymentPreferenceData
+      );
 
       // This endpoint should only return errors relevant to this page so no need to filter
-      const issues = getRelevantIssues(errors, warnings, []);
-
-      if (errors && errors.length) {
-        throw new ValidationError(issues, applicationsApi.i18nPrefix);
-      }
+      const issues = getRelevantIssues([], warnings, []);
 
       setBenefitsApplication(claim);
       setClaimWarnings(application_id, warnings);

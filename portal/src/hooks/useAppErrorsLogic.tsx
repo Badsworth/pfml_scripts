@@ -12,22 +12,19 @@ import {
 } from "../errors";
 import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
+import { PortalFlow } from "./usePortalFlow";
 import React from "react";
 import { Trans } from "react-i18next";
+import { get } from "lodash";
 import routes from "../routes";
 import tracker from "../services/tracker";
 import useCollectionState from "./useCollectionState";
-import usePortalFlow from "./usePortalFlow";
 import { useTranslation } from "../locales/i18n";
 
 /**
  * React hook for creating and managing the state of app errors in an AppErrorInfoCollection
  */
-const useAppErrorsLogic = ({
-  portalFlow,
-}: {
-  portalFlow: ReturnType<typeof usePortalFlow>;
-}) => {
+const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
   const { i18n, t } = useTranslation();
 
   /**
@@ -43,7 +40,7 @@ const useAppErrorsLogic = ({
   /**
    * Converts a JavaScript error into an AppErrorInfo object and adds it to the app error collection
    */
-  const catchError = (error: Error) => {
+  const catchError = (error: unknown) => {
     if (error instanceof AuthSessionMissingError) {
       handleAuthSessionMissingError(error);
     } else if (error instanceof ValidationError) {
@@ -122,11 +119,8 @@ const useAppErrorsLogic = ({
     // 1. Display a field or rule-level message if present:
     //    a. Field-level: "errors.applications.ssn.required" => "Please enter your SSN."
     //    b. Rule-level: "errors.applications.rules.min_leave_periods" => "At least one leave period is required."
-    const issueMessage = t(issueMessageKey, { field });
-
-    // When a translation is missing, the key will be returned
-    if (issueMessage !== issueMessageKey && issueMessage) {
-      return issueMessage;
+    if (issueMessageKey && i18n.exists(issueMessageKey)) {
+      return t(issueMessageKey, { field });
     }
 
     // 3. Display generic message if present: "errors.validationFallback.pattern" => "Field (ssn) is invalid format."
@@ -148,11 +142,11 @@ const useAppErrorsLogic = ({
    * @param [tOptions] - additional key/value pairs used in the i18n message interpolation
    */
   const maybeGetHtmlErrorMessage = (
-    type: string,
-    issueMessageKey: string,
+    type?: string,
+    issueMessageKey?: string,
     tOptions?: Record<string, unknown>
   ) => {
-    if (!issueMessageKey || !i18n.exists(issueMessageKey)) return;
+    if (!type || !issueMessageKey || !i18n.exists(issueMessageKey)) return;
 
     // TODO (CP-1532): Remove once links in error messages are fully supported
     if (type === "fineos_case_creation_issues") {
@@ -267,10 +261,12 @@ const useAppErrorsLogic = ({
   /**
    * Add and track the Error
    */
-  const handleError = (error: Error) => {
+  const handleError = (error: unknown) => {
+    const errorName = error instanceof Error ? error.name : "";
+
     const appError = new AppErrorInfo({
-      name: error.name,
-      message: t("errors.caughtError", { context: error.name }),
+      name: errorName,
+      message: t("errors.caughtError", { context: errorName }),
     });
 
     addError(appError);
@@ -316,9 +312,9 @@ const useAppErrorsLogic = ({
     addError(appError);
 
     tracker.trackEvent(error.name, {
-      issueField: issue ? issue.field : null,
-      issueRule: issue ? issue.rule : null,
-      issueType: issue ? issue.type : null,
+      issueField: get(issue, "field", ""),
+      issueRule: get(issue, "rule", ""),
+      issueType: get(issue, "type", ""),
     });
   };
 
@@ -336,9 +332,9 @@ const useAppErrorsLogic = ({
     addError(appError);
 
     tracker.trackEvent(error.name, {
-      issueField: error.issue ? error.issue.field : null,
-      issueRule: error.issue ? error.issue.rule : null,
-      issueType: error.issue ? error.issue.type : null,
+      issueField: get(error.issue, "field", ""),
+      issueRule: get(error.issue, "rule", ""),
+      issueType: get(error.issue, "type", ""),
     });
   };
 
@@ -364,9 +360,9 @@ const useAppErrorsLogic = ({
       tracker.trackEvent(error.name, {
         // Do not log the error message, since it's not guaranteed that it won't include PII.
         // For example, issues thrown from OpenAPI validation logic sometimes includes the field value.
-        issueField: field,
-        issueRule: rule,
-        issueType: type,
+        issueField: field || "",
+        issueRule: rule || "",
+        issueType: type || "",
       });
     });
   };
@@ -425,3 +421,4 @@ const useAppErrorsLogic = ({
 };
 
 export default useAppErrorsLogic;
+export type AppErrorsLogic = ReturnType<typeof useAppErrorsLogic>;

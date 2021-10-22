@@ -283,6 +283,7 @@ describe("useAppErrorsLogic", () => {
 
     expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
       issueField: "first_name",
+      issueRule: "",
       issueType: "required",
     });
   });

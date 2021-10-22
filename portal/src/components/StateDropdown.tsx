@@ -1,60 +1,25 @@
 /* eslint sort-keys: "error" */
 import Dropdown from "./Dropdown";
-import PropTypes from "prop-types";
 import React from "react";
+
+interface StateDropdownProps {
+  emptyChoiceLabel: string;
+  errorMsg?: React.ReactNode;
+  hint?: React.ReactNode;
+  inputClassName?: string;
+  label: React.ReactNode;
+  name: string;
+  onChange?: React.ChangeEventHandler<HTMLSelectElement>;
+  optionalText?: React.ReactNode;
+  smallLabel?: boolean;
+  value?: string;
+}
 
 /**
  * A dropdown of all US states, federal districts, and inhabited territories.
  */
-const StateDropdown = (props) => {
-  return (
-    <Dropdown
-      autoComplete="address-level1"
-      choices={stateDropdownChoices}
-      {...props}
-    />
-  );
-};
-
-StateDropdown.propTypes = {
-  /**
-   * Localized label for the initially selected option when no value is set
-   */
-  emptyChoiceLabel: PropTypes.string.isRequired,
-  /**
-   * Localized error message. Setting this enables the error state styling.
-   */
-  errorMsg: PropTypes.node,
-  /**
-   * Localized hint text
-   */
-  hint: PropTypes.node,
-  /**
-   * Additional classes to include on the HTML input
-   */
-  inputClassName: PropTypes.string,
-  /**
-   * Localized label
-   */
-  label: PropTypes.node.isRequired,
-  /**
-   * HTML input `name` attribute
-   */
-  name: PropTypes.string.isRequired,
-  /**
-   * HTML input `onChange` attribute
-   */
-  onChange: PropTypes.func,
-  /**
-   * Localized text indicating this field is optional
-   */
-  optionalText: PropTypes.node,
-  /**
-   * Enable the smaller label variant
-   */
-  smallLabel: PropTypes.bool,
-  /** The `value` of the selected choice */
-  value: PropTypes.string,
+const StateDropdown = (props: StateDropdownProps) => {
+  return <Dropdown choices={stateDropdownChoices} {...props} />;
 };
 
 // All US states, federal districts, and inhabited territories.

@@ -3,17 +3,25 @@ import AmendableConcurrentLeave from "./AmendableConcurrentLeave";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConcurrentLeaveModel from "../../models/ConcurrentLeave";
 import Heading from "../Heading";
-import PropTypes from "prop-types";
 import React from "react";
 import Table from "../Table";
 import { useTranslation } from "../../locales/i18n";
+
+interface ConcurrentLeaveProps {
+  addedConcurrentLeave?: ConcurrentLeaveModel;
+  appErrors: AppErrorInfoCollection;
+  concurrentLeave?: ConcurrentLeaveModel;
+  onAdd: React.MouseEventHandler<HTMLButtonElement>;
+  onChange: (...args: any[]) => any;
+  onRemove: (...args: any[]) => any;
+}
 
 /**
  * Display a current leave taken by the employee
  * in the Leave Admin claim review page.
  */
 
-const ConcurrentLeave = (props) => {
+const ConcurrentLeave = (props: ConcurrentLeaveProps) => {
   const { t } = useTranslation();
   const {
     addedConcurrentLeave,
@@ -78,15 +86,6 @@ const ConcurrentLeave = (props) => {
       </Table>
     </React.Fragment>
   );
-};
-
-ConcurrentLeave.propTypes = {
-  addedConcurrentLeave: PropTypes.instanceOf(ConcurrentLeaveModel),
-  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
-  concurrentLeave: PropTypes.instanceOf(ConcurrentLeaveModel),
-  onAdd: PropTypes.func.isRequired,
-  onChange: PropTypes.func.isRequired,
-  onRemove: PropTypes.func.isRequired,
 };
 
 export default ConcurrentLeave;

@@ -1,7 +1,7 @@
 import { EmptyState, NrqlQuery } from "nr1";
 import { Timeline } from "@newrelic/nr1-community";
 import React from "react";
-import {labelComponent} from "../common";
+import { labelComponent } from "../common";
 
 export default function DeploymentsWidget({
   environment,

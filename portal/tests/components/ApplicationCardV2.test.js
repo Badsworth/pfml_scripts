@@ -186,7 +186,9 @@ describe("ApplicationCardV2", () => {
 
   it("in progress claims don't show EIN in the title section", () => {
     const claim = new MockBenefitsApplicationBuilder().submitted().create();
-    render(<ApplicationCardV2WithAppLogic claim={claim} number={2} />);
+    render(
+      <ApplicationCardV2WithAppLogic claim={claim} number={2} documents={[]} />
+    );
     expect(
       screen.getByRole("heading", { name: "Application 2" })
     ).toBeInTheDocument();

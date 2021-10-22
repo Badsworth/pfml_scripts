@@ -26,6 +26,7 @@ import Step, { ClaimSteps } from "../../models/Step";
 import { compact, get, isUndefined } from "lodash";
 
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
 import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import { DateTime } from "luxon";
@@ -34,7 +35,6 @@ import Heading from "../../components/Heading";
 import HeadingPrefix from "../../components/HeadingPrefix";
 import Lead from "../../components/Lead";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import ReviewHeading from "../../components/ReviewHeading";
 import ReviewRow from "../../components/ReviewRow";
 import Spinner from "../../components/Spinner";
@@ -75,11 +75,18 @@ function formatAddress(address) {
   return formatted;
 }
 
+interface ReviewProps {
+  appLogic: AppLogic;
+  claim?: BenefitsApplication;
+  documents?: BenefitsApplicationDocument[];
+  isLoadingDocuments?: boolean;
+}
+
 /**
  * Application review page, allowing a user to review the info
  * they've entered before they submit it.
  */
-export const Review = (props) => {
+export const Review = (props: ReviewProps) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments } = props;
 
@@ -140,7 +147,6 @@ export const Review = (props) => {
     await appLogic.benefitsApplications.complete(claim.application_id);
   };
 
-  const contentContext = usePartOneReview ? "part1" : "final";
   // Adjust heading levels depending on if there's a "Part 1" heading at the top of the page or not
   const reviewHeadingLevel = usePartOneReview ? "3" : "2";
   const reviewRowLevel = usePartOneReview ? "4" : "3";
@@ -153,7 +159,9 @@ export const Review = (props) => {
   useEffect(() => {
     const missingFields = getMissingRequiredFields(appErrors.items);
     if (missingFields.length) {
-      tracker.trackEvent("Missing required fields", { missingFields });
+      tracker.trackEvent("Missing required fields", {
+        missingFields: JSON.stringify(missingFields),
+      });
 
       clearRequiredFieldErrors();
       if (!showNewFieldError) {
@@ -171,7 +179,6 @@ export const Review = (props) => {
   return (
     <div className="measure-6">
       {showNewFieldError && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; }' i... Remove this comment to see the full error message
         <Alert className="margin-bottom-3">
           <Trans
             i18nKey="pages.claimsReview.missingRequiredFieldError"
@@ -193,15 +200,18 @@ export const Review = (props) => {
       )}
       <BackButton />
 
-      <Title hidden>{t("pages.claimsReview.title")}</Title>
+      {usePartOneReview && (
+        <Title hidden>{t("pages.claimsReview.title_part1")}</Title>
+      )}
+      {!usePartOneReview && (
+        <Title marginBottom="6">{t("pages.claimsReview.title_final")}</Title>
+      )}
 
-      <Heading className="margin-top-0" level="2" size="1">
+      <Heading className="margin-top-0" level="2">
         <HeadingPrefix>
           {t("pages.claimsReview.partHeadingPrefix", { number: 1 })}
         </HeadingPrefix>
-        {t("pages.claimsReview.partHeading", {
-          context: `${1}_${contentContext}`,
-        })}
+        {t("pages.claimsReview.partHeading_1")}
       </Heading>
 
       {!usePartOneReview && (
@@ -297,7 +307,6 @@ export const Review = (props) => {
         level={reviewRowLevel}
         label={t("pages.claimsReview.userDateOfBirthLabel")}
       >
-        {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1. */}
         {formatDateRange(get(claim, "date_of_birth"))}
       </ReviewRow>
 
@@ -443,7 +452,6 @@ export const Review = (props) => {
           level={reviewRowLevel}
           label={t("pages.claimsReview.childBirthDateLabel")}
         >
-          {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1. */}
           {formatDateRange(get(claim, "leave_details.child_birth_date"))}
         </ReviewRow>
       )}
@@ -456,7 +464,6 @@ export const Review = (props) => {
             level={reviewRowLevel}
             label={t("pages.claimsReview.childPlacementDateLabel")}
           >
-            {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1. */}
             {formatDateRange(get(claim, "leave_details.child_placement_date"))}
           </ReviewRow>
         )}
@@ -500,7 +507,6 @@ export const Review = (props) => {
             level={reviewRowLevel}
             label={t("pages.claimsReview.familyMemberDateOfBirthLabel")}
           >
-            {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1. */}
             {formatDateRange(
               get(
                 claim,
@@ -645,7 +651,6 @@ export const Review = (props) => {
               label={t("pages.claimsReview.concurrentLeaveLabel")}
             >
               <p className="text-base-darker margin-top-1">
-                {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
                 {formatDateRange(
                   get(claim, "concurrent_leave.leave_start_date"),
                   get(claim, "concurrent_leave.leave_end_date")
@@ -711,7 +716,7 @@ export const Review = (props) => {
         </div>
       ) : (
         <React.Fragment>
-          <Heading level="2" size="1">
+          <Heading level="2">
             <HeadingPrefix>
               {t("pages.claimsReview.partHeadingPrefix", { number: 2 })}
             </HeadingPrefix>
@@ -765,7 +770,7 @@ export const Review = (props) => {
               </ReviewRow>
             </React.Fragment>
           )}
-          <Heading level="2" size="1">
+          <Heading level="2">
             <HeadingPrefix>
               {t("pages.claimsReview.partHeadingPrefix", { number: 3 })}
             </HeadingPrefix>
@@ -774,7 +779,6 @@ export const Review = (props) => {
             })}
           </Heading>
           {hasLoadingDocumentsError && (
-            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; noIc... Remove this comment to see the full error message
             <Alert className="margin-bottom-3" noIcon>
               <Trans
                 i18nKey="pages.claimsReview.documentsLoadError"
@@ -845,30 +849,19 @@ export const Review = (props) => {
   );
 };
 
-Review.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    benefitsApplications: PropTypes.object.isRequired,
-    clearRequiredFieldErrors: PropTypes.func.isRequired,
-    portalFlow: PropTypes.shape({
-      getNextPageRoute: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  documents: PropTypes.arrayOf(
-    PropTypes.instanceOf(BenefitsApplicationDocument)
-  ),
-  isLoadingDocuments: PropTypes.bool,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
-};
+interface PreviousLeaveListProps {
+  type: "sameReason" | "otherReason";
+  entries: PreviousLeave[];
+  /** start index for previous leave label */
+  startIndex: number;
+  reviewRowLevel: "2" | "3" | "4" | "5" | "6";
+}
 
-export const PreviousLeaveList = (props) => {
+export const PreviousLeaveList = (props: PreviousLeaveListProps) => {
   const { t } = useTranslation();
   if (!props.entries) return null;
 
-  return props.entries.map((entry, index) => (
+  const rows = props.entries.map((entry, index) => (
     <ReviewRow
       level={props.reviewRowLevel}
       key={`${props.type}-${index}`}
@@ -877,7 +870,6 @@ export const PreviousLeaveList = (props) => {
       })}
     >
       <p className="text-base-darker margin-top-1">
-        {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
         {formatDateRange(entry.leave_start_date, entry.leave_end_date)}
       </p>
       <ul className="usa-list margin-top-1">
@@ -922,26 +914,24 @@ export const PreviousLeaveList = (props) => {
       </ul>
     </ReviewRow>
   ));
+
+  return <React.Fragment>{rows}</React.Fragment>;
 };
 
-PreviousLeaveList.propTypes = {
-  /** Previous leave type */
-  type: PropTypes.oneOf(["sameReason", "otherReason"]).isRequired,
-  entries: PropTypes.arrayOf(PropTypes.instanceOf(PreviousLeave)).isRequired,
-  /** start index for previous leave label */
-  startIndex: PropTypes.number.isRequired,
-  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
-};
+interface EmployerBenefitListProps {
+  entries: EmployerBenefit[];
+  reviewRowLevel: "2" | "3" | "4" | "5" | "6";
+}
 
 /*
  * Helper component for rendering an array of EmployerBenefit
  * objects.
  */
-export const EmployerBenefitList = (props) => {
+export const EmployerBenefitList = (props: EmployerBenefitListProps) => {
   const { t } = useTranslation();
   const { entries, reviewRowLevel } = props;
 
-  return entries.map((entry, index) => {
+  const rows = entries.map((entry, index) => {
     const label = t("pages.claimsReview.employerBenefitEntryLabel", {
       count: index + 1,
     });
@@ -950,7 +940,6 @@ export const EmployerBenefitList = (props) => {
       context: findKeyByValue(EmployerBenefitType, entry.benefit_type),
     });
 
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     const dates = formatDateRange(
       entry.benefit_start_date,
       entry.benefit_end_date
@@ -983,22 +972,24 @@ export const EmployerBenefitList = (props) => {
       />
     );
   });
+
+  return <React.Fragment>{rows}</React.Fragment>;
 };
 
-EmployerBenefitList.propTypes = {
-  entries: PropTypes.arrayOf(PropTypes.instanceOf(EmployerBenefit)).isRequired,
-  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
-};
+interface OtherIncomeListProps {
+  entries: OtherIncome[];
+  reviewRowLevel: "2" | "3" | "4" | "5" | "6";
+}
 
 /*
  * Helper component for rendering an array of OtherIncome
  * objects.
  */
-export const OtherIncomeList = (props) => {
+export const OtherIncomeList = (props: OtherIncomeListProps) => {
   const { t } = useTranslation();
   const { entries, reviewRowLevel } = props;
 
-  return entries.map((entry, index) => {
+  const rows = entries.map((entry, index) => {
     const label = t("pages.claimsReview.otherIncomeEntryLabel", {
       count: index + 1,
     });
@@ -1007,7 +998,6 @@ export const OtherIncomeList = (props) => {
       context: findKeyByValue(OtherIncomeType, entry.income_type),
     });
 
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     const dates = formatDateRange(
       entry.income_start_date,
       entry.income_end_date
@@ -1034,19 +1024,24 @@ export const OtherIncomeList = (props) => {
       />
     );
   });
+
+  return <React.Fragment>{rows}</React.Fragment>;
 };
 
-OtherIncomeList.propTypes = {
-  entries: PropTypes.arrayOf(PropTypes.instanceOf(OtherIncome)).isRequired,
-  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
-};
+interface OtherLeaveEntryProps {
+  amount?: string;
+  dates: string;
+  label: string;
+  reviewRowLevel: "2" | "3" | "4" | "5" | "6";
+  type?: string;
+}
 
 /*
  * Helper component for rendering a single other leave entry. This will
  * render a ReviewRow with the specified label, date string,
  * and an optional type string and amount string
  */
-export const OtherLeaveEntry = (props) => {
+export const OtherLeaveEntry = (props: OtherLeaveEntryProps) => {
   const { amount, dates, label, reviewRowLevel, type } = props;
 
   return (
@@ -1058,14 +1053,6 @@ export const OtherLeaveEntry = (props) => {
       </ul>
     </ReviewRow>
   );
-};
-
-OtherLeaveEntry.propTypes = {
-  amount: PropTypes.string,
-  dates: PropTypes.string.isRequired,
-  label: PropTypes.string.isRequired,
-  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
-  type: PropTypes.string,
 };
 
 export default withBenefitsApplication(withClaimDocuments(Review));

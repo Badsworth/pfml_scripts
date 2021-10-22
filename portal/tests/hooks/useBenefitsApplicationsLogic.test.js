@@ -545,36 +545,6 @@ describe("useBenefitsApplicationsLogic", () => {
           ]);
         });
 
-        it("does not update the local claim if response included any errors", async () => {
-          mockRouter.pathname = routes.applications.name;
-          const claimResponse = new MockBenefitsApplicationBuilder()
-            .id(applicationId)
-            .create();
-          const last_name = "Name in API";
-
-          setup();
-
-          await act(async () => {
-            await claimsLogic.create();
-          });
-
-          updateClaimMock.mockResolvedValueOnce({
-            claim: { ...claimResponse, last_name },
-            errors: [{ rule: "disallow_foo" }],
-            warnings: [],
-            // Responses with errors receive a 400 status
-            success: false,
-          });
-
-          await act(async () => {
-            await claimsLogic.update(applicationId, patchData);
-          });
-
-          const claim = claimsLogic.benefitsApplications.getItem(applicationId);
-
-          expect(claim.last_name).toBeNull();
-        });
-
         it("reports warnings for fields on the Name page", async () => {
           mockRouter.pathname = routes.applications.name;
 

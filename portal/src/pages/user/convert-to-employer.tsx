@@ -1,9 +1,8 @@
 import Alert from "../../components/Alert";
-import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
 import Button from "../../components/Button";
 import InputText from "../../components/InputText";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
@@ -15,7 +14,13 @@ import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplications from "../../hoc/withBenefitsApplications";
 
-export const ConvertToEmployer = (props) => {
+interface ConvertToEmployerProps {
+  appLogic: AppLogic;
+  claims: BenefitsApplicationCollection;
+  user: User;
+}
+
+export const ConvertToEmployer = (props: ConvertToEmployerProps) => {
   const { appLogic, user, claims } = props;
   const { t } = useTranslation();
   const { convertUser } = appLogic.users;
@@ -60,7 +65,6 @@ export const ConvertToEmployer = (props) => {
   return (
     <React.Fragment>
       <Title>{t("pages.convertToEmployer.title")}</Title>
-      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; heading: string; state:... Remove this comment to see the full error message */}
       <Alert
         heading={t("pages.convertToEmployer.alertHeading")}
         state="warning"
@@ -96,21 +100,6 @@ export const ConvertToEmployer = (props) => {
       </form>
     </React.Fragment>
   );
-};
-
-ConvertToEmployer.propTypes = {
-  appLogic: PropTypes.shape({
-    users: PropTypes.shape({
-      convertUser: PropTypes.func.isRequired,
-    }),
-    portalFlow: PropTypes.shape({
-      goTo: PropTypes.func.isRequired,
-      goToPageFor: PropTypes.func.isRequired,
-    }),
-    appErrors: PropTypes.instanceOf(AppErrorInfoCollection),
-  }).isRequired,
-  claims: PropTypes.instanceOf(BenefitsApplicationCollection).isRequired,
-  user: PropTypes.instanceOf(User).isRequired,
 };
 
 export default withBenefitsApplications(ConvertToEmployer);

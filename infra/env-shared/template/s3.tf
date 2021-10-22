@@ -1,6 +1,10 @@
 data "aws_s3_bucket" "agency_transfer" {
   bucket = "massgov-pfml-${var.environment_name}-agency-transfer"
 }
+
+data "aws_iam_role" "replication" {
+  name = "massgov-pfml-prod-s3-replication"
+}
 resource "aws_s3_bucket" "pfml_reports" {
   bucket = "massgov-pfml-${var.environment_name}-reports"
   acl    = "private"
@@ -26,7 +30,7 @@ resource "aws_s3_bucket" "pfml_reports" {
   dynamic "replication_configuration" {
     for_each = var.environment_name == module.constants.bucket_replication_environment ? [1] : []
     content {
-      role = module.constants.bucket_replication_role
+      role = data.aws_iam_role.replication.name
       rules {
         id     = "replicateFullBucket"
         status = "Enabled"

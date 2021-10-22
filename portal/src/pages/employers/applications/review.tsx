@@ -4,17 +4,16 @@ import PreviousLeave, {
 import React, { useEffect, useState } from "react";
 import { get, isEqual, isNil, omit } from "lodash";
 import Alert from "../../../components/Alert";
+import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
 import ConcurrentLeave from "../../../components/employers/ConcurrentLeave";
 import ConcurrentLeaveModel from "../../../models/ConcurrentLeave";
-import DocumentCollection from "../../../models/DocumentCollection";
 import { DocumentType } from "../../../models/Document";
 import EmployeeInformation from "../../../components/employers/EmployeeInformation";
 import EmployeeNotice from "../../../components/employers/EmployeeNotice";
 import EmployerBenefit from "../../../models/EmployerBenefit";
 import EmployerBenefits from "../../../components/employers/EmployerBenefits";
-import EmployerClaim from "../../../models/EmployerClaim";
 import EmployerDecision from "../../../components/employers/EmployerDecision";
 import Feedback from "../../../components/employers/Feedback";
 import FraudReport from "../../../components/employers/FraudReport";
@@ -23,7 +22,6 @@ import LeaveDetails from "../../../components/employers/LeaveDetails";
 import LeaveReason from "../../../models/LeaveReason";
 import LeaveSchedule from "../../../components/employers/LeaveSchedule";
 import PreviousLeaves from "../../../components/employers/PreviousLeaves";
-import PropTypes from "prop-types";
 import ReviewHeading from "../../../components/ReviewHeading";
 import ReviewRow from "../../../components/ReviewRow";
 import SupportingWorkDetails from "../../../components/employers/SupportingWorkDetails";
@@ -40,7 +38,14 @@ import useThrottledHandler from "../../../hooks/useThrottledHandler";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
-export const Review = (props) => {
+interface ReviewProps {
+  appLogic: AppLogic;
+  query: {
+    absence_id: string;
+  };
+}
+
+export const Review = (props: ReviewProps) => {
   const {
     appLogic,
     query: { absence_id: absenceId },
@@ -67,10 +72,11 @@ export const Review = (props) => {
   // the functionality described above will need to be reimplemented.
   const indexedEmployerBenefits = claim.employer_benefits.map(
     (benefit, index) =>
-      new EmployerBenefit({ ...benefit, employer_benefit_id: index })
+      new EmployerBenefit({ ...benefit, employer_benefit_id: index.toString() })
   );
   const indexedPreviousLeaves = claim.previous_leaves.map(
-    (leave, index) => new PreviousLeave({ ...leave, previous_leave_id: index })
+    (leave, index) =>
+      new PreviousLeave({ ...leave, previous_leave_id: index.toString() })
   );
 
   const { clearField, getField, formState, updateFields } = useFormState({
@@ -331,6 +337,7 @@ export const Review = (props) => {
       : formState.hours_worked_per_week;
 
     const payload = {
+      believe_relationship_accurate: undefined,
       comment: formState.comment || "",
       concurrent_leave,
       employer_benefits,
@@ -344,6 +351,7 @@ export const Review = (props) => {
         !isEqual(concurrent_leave, formState.concurrentLeave) ||
         !isEqual(claim.hours_worked_per_week, hours_worked_per_week),
       leave_reason: leaveReason,
+      relationship_inaccurate_reason: undefined,
       uses_second_eform_version: !!claim.uses_second_eform_version,
     };
 
@@ -352,10 +360,10 @@ export const Review = (props) => {
         formState.believeRelationshipAccurate === "No"
           ? formState.relationshipInaccurateReason
           : "";
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'believe_relationship_accurate' does not ... Remove this comment to see the full error message
+
       payload.believe_relationship_accurate =
         formState.believeRelationshipAccurate;
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'relationship_inaccurate_reason' does not... Remove this comment to see the full error message
+
       payload.relationship_inaccurate_reason = parsedRelationshipComment;
     }
 
@@ -384,11 +392,9 @@ export const Review = (props) => {
           name: claim.fullName,
         })}
       </Title>
-      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; noIcon: ... Remove this comment to see the full error message */}
       <Alert state="warning" noIcon>
         <Trans
           i18nKey="pages.employersClaimsReview.instructionsFollowUpDate"
-          // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
           values={{ date: formatDateRange(claim.follow_up_date) }}
         />
       </Alert>
@@ -427,8 +433,6 @@ export const Review = (props) => {
         }
       />
       <LeaveSchedule
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ appLogic: any; claim: any; hasDocuments: b... Remove this comment to see the full error message
-        appLogic={appLogic}
         claim={claim}
         hasDocuments={!!certificationDocuments.length}
       />
@@ -499,8 +503,6 @@ export const Review = (props) => {
               onAdd={handleConcurrentLeaveAdd}
               onChange={handleConcurrentLeaveInputChange}
               onRemove={handleConcurrentLeaveRemove}
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ appErrors: any; addedConcurrentLeave: any;... Remove this comment to see the full error message
-              shouldShowV2={shouldShowV2}
             />
           </React.Fragment>
         )}
@@ -549,25 +551,6 @@ export const Review = (props) => {
       </form>
     </div>
   );
-};
-
-Review.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    employers: PropTypes.shape({
-      claim: PropTypes.instanceOf(EmployerClaim),
-      documents: PropTypes.instanceOf(DocumentCollection),
-      downloadDocument: PropTypes.func.isRequired,
-      loadDocuments: PropTypes.func.isRequired,
-      submitClaimReview: PropTypes.func.isRequired,
-    }).isRequired,
-    portalFlow: PropTypes.shape({
-      goTo: PropTypes.func.isRequired,
-    }),
-  }).isRequired,
-  query: PropTypes.shape({
-    absence_id: PropTypes.string.isRequired,
-  }).isRequired,
 };
 
 export default withEmployerClaim(Review);

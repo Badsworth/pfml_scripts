@@ -22,7 +22,7 @@ const useAppLogic = () => {
   // to fetch the user (or create the user on their first login)
   const users = useUsersLogic({
     appErrorsLogic,
-    isLoggedIn: auth.isLoggedIn,
+    isLoggedIn: !!auth.isLoggedIn,
     portalFlow,
   });
 
@@ -73,3 +73,4 @@ const useAppLogic = () => {
 };
 
 export default useAppLogic;
+export type AppLogic = ReturnType<typeof useAppLogic>;

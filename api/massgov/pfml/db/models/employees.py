@@ -947,7 +947,7 @@ class User(Base, TimestampMixin):
     __tablename__ = "user"
     user_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     sub_id = Column(Text, index=True, unique=True)
-    email_address = Column(Text)
+    email_address = Column(Text, unique=True)
     consented_to_data_sharing = Column(Boolean, default=False, nullable=False)
 
     roles = relationship("LkRole", secondary="link_user_role", uselist=True)
@@ -1095,6 +1095,30 @@ class WagesAndContributions(Base, TimestampMixin):
 
     employee = relationship("Employee", back_populates="wages_and_contributions")
     employer = relationship("Employer", back_populates="wages_and_contributions")
+
+
+class WagesAndContributionsHistory(Base, TimestampMixin):
+    __tablename__ = "wages_and_contributions_history"
+    wages_and_contributions_history_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    is_independent_contractor = Column(Boolean, nullable=False)
+    is_opted_in = Column(Boolean, nullable=False)
+    employee_ytd_wages = Column(Numeric(asdecimal=True), nullable=False)
+    employee_qtr_wages = Column(Numeric(asdecimal=True), nullable=False)
+    employee_med_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    employer_med_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    employee_fam_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    employer_fam_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True, nullable=True
+    )
+    wage_and_contribution_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("wages_and_contributions.wage_and_contribution_id"),
+        index=True,
+        nullable=False,
+    )
+
+    wage_and_contribution = relationship("WagesAndContributions")
 
 
 class EmployeeOccupation(Base, TimestampMixin):
@@ -1344,15 +1368,29 @@ class DiaReductionPayment(Base, TimestampMixin):
 
 class DuaEmployeeDemographics(Base, TimestampMixin):
     __tablename__ = "dua_employee_demographics"
-    dua_employee_demographics_id = Column(PostgreSQLUUID, primary_key=True,)
+    dua_employee_demographics_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
 
-    fineos_customer_number = Column(Text, nullable=False)
-    date_of_birth = Column(Date)
-    gender_code = Column(Text)
-    occupation_code = Column(Text)
-    occupation_description = Column(Text)
-    employer_fein = Column(Text)
-    employer_reporting_unit_number = Column(Text)
+    fineos_customer_number = Column(Text, nullable=True)
+    date_of_birth = Column(Date, nullable=True)
+    gender_code = Column(Text, nullable=True)
+    occupation_code = Column(Text, nullable=True)
+    occupation_description = Column(Text, nullable=True)
+    employer_fein = Column(Text, nullable=True)
+    employer_reporting_unit_number = Column(Text, nullable=True)
+
+    # this Unique index is required since our test framework does not run migrations
+    # it is excluded from migrations. see api/massgov/pfml/db/migrations/env.py
+    Index(
+        "dua_employee_demographics_unique_import_data_idx",
+        fineos_customer_number,
+        date_of_birth,
+        gender_code,
+        occupation_code,
+        occupation_description,
+        employer_fein,
+        employer_reporting_unit_number,
+        unique=True,
+    )
 
     # Each row should be unique. This enables us to load only new rows from a CSV and ensures that
     # we don't include demographics twice as two different rows. Almost all fields are nullable so we
@@ -2563,6 +2601,12 @@ class ReferenceFileType(LookupTable):
     DIA_CONSOLIDATED_REDUCTION_REPORT_ERRORS = LkReferenceFileType(
         30, "Consolidated DIA payments for DFML reduction report", 1
     )
+
+    FINEOS_PAYMENT_RECONCILIATION_EXTRACT = LkReferenceFileType(
+        31, "Payment reconciliation extract", 3
+    )
+
+    DUA_DEMOGRAPHICS_FILE = LkReferenceFileType(32, "DUA demographics", 1)
 
 
 class Title(LookupTable):

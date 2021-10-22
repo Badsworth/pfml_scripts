@@ -1,10 +1,9 @@
 import Alert from "../components/Alert";
-import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
+import { AppLogic } from "../hooks/useAppLogic";
 import Button from "../components/Button";
 import InputPassword from "../components/InputPassword";
 import InputText from "../components/InputText";
 import Link from "next/link";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../components/Title";
 import { Trans } from "react-i18next";
@@ -15,7 +14,16 @@ import useLoggedInRedirect from "../hooks/useLoggedInRedirect";
 import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
-export const Login = (props) => {
+interface LoginProps {
+  appLogic: AppLogic;
+  query: {
+    "account-verified"?: string;
+    "session-timed-out"?: string;
+    next?: string;
+  };
+}
+
+export const Login = (props: LoginProps) => {
   const { appLogic, query } = props;
   const { t } = useTranslation();
   useLoggedInRedirect(appLogic.portalFlow);
@@ -48,11 +56,9 @@ export const Login = (props) => {
   return (
     <React.Fragment>
       {accountVerified && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; className: string; headi... Remove this comment to see the full error message
         <Alert
           className="margin-bottom-3"
           heading={t("pages.authLogin.accountVerifiedHeading")}
-          name="account-verified-message"
           state="success"
         >
           {t("pages.authLogin.accountVerified")}
@@ -60,11 +66,9 @@ export const Login = (props) => {
       )}
 
       {sessionTimedOut && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; className: string; headi... Remove this comment to see the full error message
         <Alert
           className="margin-bottom-3"
           heading={t("pages.authLogin.sessionTimedOutHeading")}
-          name="session-timed-out-message"
           state="info"
         >
           {t("pages.authLogin.sessionTimedOut")}
@@ -136,23 +140,6 @@ export const Login = (props) => {
       </form>
     </React.Fragment>
   );
-};
-
-Login.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.instanceOf(AppErrorInfoCollection),
-    auth: PropTypes.shape({
-      login: PropTypes.func.isRequired,
-    }).isRequired,
-    portalFlow: PropTypes.shape({
-      goTo: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-  query: PropTypes.shape({
-    "account-verified": PropTypes.string,
-    "session-timed-out": PropTypes.string,
-    next: PropTypes.string,
-  }).isRequired,
 };
 
 export default Login;

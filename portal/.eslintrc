@@ -38,6 +38,7 @@
         "plugin:@typescript-eslint/recommended" // rules specific to typescript, e.g., writing interfaces
       ],
       "rules": {
+        "@typescript-eslint/no-explicit-any": "off", // TODO: (PORTAL-876 - turn this on!)
         "@typescript-eslint/ban-ts-comment": [
           "error",
           {
@@ -70,6 +71,7 @@
         ],
         "jsdoc/check-param-names": "off",
         "jsdoc/require-param-type": "off",
+        "jsdoc/require-property-type": "off",
         "jsdoc/require-returns": "off",
         "jsdoc/require-returns-type": "off",
         "no-restricted-syntax": [

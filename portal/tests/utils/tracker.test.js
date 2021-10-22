@@ -13,12 +13,21 @@ describe("tracker", () => {
   // here and in the mocked newrelic object below
   const newrelicMethods = [
     // Mappings of tracker.METHOD_NAME to newrelic.METHOD_NAME
-    { trackerMethod: "noticeError", newrelicMethod: "noticeError" },
     {
+      args: [new Error()],
+      trackerMethod: "noticeError",
+      newrelicMethod: "noticeError",
+    },
+    {
+      args: ["/test"],
       trackerMethod: "startPageView",
       newrelicMethod: "setCurrentRouteName",
     },
-    { trackerMethod: "trackEvent", newrelicMethod: "addPageAction" },
+    {
+      args: ["Event description"],
+      trackerMethod: "trackEvent",
+      newrelicMethod: "addPageAction",
+    },
   ];
 
   describe("when newrelic is defined", () => {
@@ -45,9 +54,9 @@ describe("tracker", () => {
       };
     });
 
-    newrelicMethods.forEach(({ trackerMethod, newrelicMethod }) => {
+    newrelicMethods.forEach(({ args, trackerMethod, newrelicMethod }) => {
       it(`${trackerMethod}: calls newrelic.${newrelicMethod}`, () => {
-        tracker[trackerMethod]();
+        tracker[trackerMethod](...args);
 
         expect(newrelic[newrelicMethod]).toHaveBeenCalledTimes(1);
       });

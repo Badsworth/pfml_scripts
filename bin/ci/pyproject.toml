@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "scripted-releases"
+version = "0.0.5"
+description = "Automated release-process tasks for MA PFML. Create, update, finalize, hotfix, & version bump."
+authors = ["apopma <adapopma@navapbc.com>", "aplybeah <alsia@navapbc.com>", "paz-focus <paz.tursun@focusconsulting.io>"]
+
+[tool.poetry.dependencies]
+python = "^3.8"
+GitPython = "^3.1.18"
+semver = "^2.13.0"
+
+[tool.poetry.dev-dependencies]
+pytest = "^6.0.0"
+pytest-mock = "^3.3.1"
+
+[tool.poetry.scripts]
+scripted-releases = "release:entrypoint"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"

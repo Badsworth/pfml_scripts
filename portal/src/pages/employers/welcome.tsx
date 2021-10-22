@@ -1,11 +1,11 @@
 import { IconMail, IconPdf } from "@massds/mayflower-react/dist/Icon";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import EmployerNavigationTabs from "../../components/employers/EmployerNavigationTabs";
 import Heading from "../../components/Heading";
 import Icon from "../../components/Icon";
 import Link from "next/link";
 import NewTag from "../../components/NewTag";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
@@ -21,7 +21,12 @@ const IconWait = (props) => (
   </svg>
 );
 
-export const Welcome = ({ appLogic, user }) => {
+interface WelcomeProps {
+  appLogic: AppLogic;
+  user: User;
+}
+
+export const Welcome = ({ appLogic, user }: WelcomeProps) => {
   const { t } = useTranslation();
   const iconProps = {
     className: "margin-right-2 text-secondary text-middle",
@@ -40,7 +45,6 @@ export const Welcome = ({ appLogic, user }) => {
           <Title>{t("pages.employersWelcome.welcomeTitle")}</Title>
 
           {hasVerifiableEmployer && (
-            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; heading:... Remove this comment to see the full error message
             <Alert
               state="warning"
               heading={t("pages.employersWelcome.verificationAlertTitle")}
@@ -58,7 +62,6 @@ export const Welcome = ({ appLogic, user }) => {
             </Alert>
           )}
 
-          {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; }' is no... Remove this comment to see the full error message */}
           <Alert state="info">
             <p>
               <Trans i18nKey="pages.employersWelcome.otherLeaveInfoAlertBody" />
@@ -161,15 +164,6 @@ export const Welcome = ({ appLogic, user }) => {
       </div>
     </React.Fragment>
   );
-};
-
-Welcome.propTypes = {
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      pathname: PropTypes.string.isRequired,
-    }).isRequired,
-  }).isRequired,
-  user: PropTypes.instanceOf(User).isRequired,
 };
 
 export default withUser(Welcome);

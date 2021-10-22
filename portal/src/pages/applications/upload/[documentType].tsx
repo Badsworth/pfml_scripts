@@ -11,6 +11,7 @@
 import Accordion from "../../../components/Accordion";
 import AccordionItem from "../../../components/AccordionItem";
 import Alert from "../../../components/Alert";
+import { AppLogic } from "../../../hooks/useAppLogic";
 import BenefitsApplicationDocument from "../../../models/BenefitsApplicationDocument";
 import ConditionalContent from "../../../components/ConditionalContent";
 import DocumentRequirements from "../../../components/DocumentRequirements";
@@ -20,7 +21,6 @@ import FileUploadDetails from "../../../components/FileUploadDetails";
 import Heading from "../../../components/Heading";
 import Lead from "../../../components/Lead";
 import LeaveReason from "../../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../../components/QuestionPage";
 import React from "react";
 import Spinner from "../../../components/Spinner";
@@ -55,7 +55,11 @@ const pathsToDocumentTypes = {
   [uploadRoutes.stateId]: DocumentType.identityVerification,
 };
 
-const CertificationUpload = ({ path }) => {
+interface CertificationUploadProps {
+  path: string;
+}
+
+const CertificationUpload = ({ path }: CertificationUploadProps) => {
   const context = {
     [uploadRoutes.bondingProofOfPlacement]: "bonding_adopt_foster",
     [uploadRoutes.bondingProofOfBirth]: "bonding_newborn",
@@ -115,11 +119,11 @@ const CertificationUpload = ({ path }) => {
   );
 };
 
-CertificationUpload.propTypes = {
-  path: PropTypes.string.isRequired,
-};
+interface IdentificationUploadProps {
+  path: string;
+}
 
-const IdentificationUpload = ({ path }) => {
+const IdentificationUpload = ({ path }: IdentificationUploadProps) => {
   const { t } = useTranslation();
   const isStateId = path === uploadRoutes.stateId;
 
@@ -181,11 +185,26 @@ const IdentificationUpload = ({ path }) => {
   );
 };
 
-IdentificationUpload.propTypes = {
-  path: PropTypes.string.isRequired,
-};
+interface DocumentUploadProps {
+  appLogic: AppLogic;
+  documents?: BenefitsApplicationDocument[];
+  isLoadingDocuments?: boolean;
+  query?: {
+    claim_id: string;
+    absence_case_id: string;
+    additionalDoc?: string;
+    documentType:
+      | "state-id"
+      | "other-id"
+      | "proof-of-birth"
+      | "proof-of-placement"
+      | "medical-certification"
+      | "pregnancy-medical-certification"
+      | "family-member-medical-certification";
+  };
+}
 
-export const DocumentUpload = (props) => {
+export const DocumentUpload = (props: DocumentUploadProps) => {
   const { appLogic, documents, isLoadingDocuments, query } = props;
   const { appErrors, portalFlow } = appLogic;
   const { t } = useTranslation();
@@ -267,7 +286,6 @@ export const DocumentUpload = (props) => {
       {isIdUpload && <IdentificationUpload path={path} />}
       <FileUploadDetails />
       {hasLoadingDocumentsError && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; noIc... Remove this comment to see the full error message
         <Alert className="margin-bottom-3" noIcon role="alert">
           <Trans
             i18nKey="pages.claimsUploadDocumentType.documentsLoadError"
@@ -306,34 +324,6 @@ export const DocumentUpload = (props) => {
       )}
     </QuestionPage>
   );
-};
-
-DocumentUpload.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    catchError: PropTypes.func.isRequired,
-    documents: PropTypes.object.isRequired,
-    portalFlow: PropTypes.object.isRequired,
-    clearErrors: PropTypes.func.isRequired,
-  }).isRequired,
-  documents: PropTypes.arrayOf(
-    PropTypes.instanceOf(BenefitsApplicationDocument)
-  ),
-  isLoadingDocuments: PropTypes.bool,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string.isRequired,
-    absence_case_id: PropTypes.string.isRequired,
-    additionalDoc: PropTypes.string,
-    documentType: PropTypes.oneOf([
-      "state-id",
-      "other-id",
-      "proof-of-birth",
-      "proof-of-placement",
-      "medical-certification",
-      "pregnancy-medical-certification",
-      "family-member-medical-certification",
-    ]).isRequired,
-  }),
 };
 
 export default withClaimDocuments(DocumentUpload);

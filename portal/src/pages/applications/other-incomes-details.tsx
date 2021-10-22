@@ -12,7 +12,6 @@ import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputCurrency from "../../components/InputCurrency";
 import InputDate from "../../components/InputDate";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
@@ -30,7 +29,12 @@ export const fields = [
   "claim.other_incomes[*].income_type",
 ];
 
-export const OtherIncomesDetails = (props) => {
+interface OtherIncomesDetailsProps {
+  claim?: BenefitsApplication;
+  appLogic: any;
+}
+
+export const OtherIncomesDetails = (props: OtherIncomesDetailsProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
   const limit = 6;
@@ -108,18 +112,16 @@ export const OtherIncomesDetails = (props) => {
   );
 };
 
-OtherIncomesDetails.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
-};
+interface OtherIncomeCardProps {
+  index: number;
+  entry: any;
+  getFunctionalInputProps: (...args: any[]) => any;
+}
 
 /**
  * Group of fields for an OtherIncome instance
  */
-export const OtherIncomeCard = (props) => {
+export const OtherIncomeCard = (props: OtherIncomeCardProps) => {
   const { t } = useTranslation();
   const { entry, getFunctionalInputProps, index } = props;
 
@@ -207,12 +209,6 @@ export const OtherIncomeCard = (props) => {
       </Fieldset>
     </React.Fragment>
   );
-};
-
-OtherIncomeCard.propTypes = {
-  index: PropTypes.number.isRequired,
-  entry: PropTypes.object.isRequired,
-  getFunctionalInputProps: PropTypes.func.isRequired,
 };
 
 export default withBenefitsApplication(OtherIncomesDetails);

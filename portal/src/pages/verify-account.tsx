@@ -4,7 +4,6 @@ import BackButton from "../components/BackButton";
 import Button from "../components/Button";
 import InputText from "../components/InputText";
 import Lead from "../components/Lead";
-import PropTypes from "prop-types";
 import ThrottledButton from "../components/ThrottledButton";
 import Title from "../components/Title";
 import { get } from "lodash";
@@ -14,7 +13,11 @@ import useFunctionalInputProps from "../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
-export const VerifyAccount = (props) => {
+interface VerifyAccountProps {
+  appLogic: any;
+}
+
+export const VerifyAccount = (props: VerifyAccountProps) => {
   const { appLogic } = props;
   const { appErrors, auth } = appLogic;
   const { t } = useTranslation();
@@ -28,7 +31,6 @@ export const VerifyAccount = (props) => {
 
   /**
    * Get the initial value for the "Are you creating an employer account?" option
-   * @returns {boolean|null}
    */
   const getInitialIsEmployerValue = () => {
     if (employerIdNumber) return true;
@@ -70,11 +72,9 @@ export const VerifyAccount = (props) => {
         href={routes.auth.login}
       />
       {codeResent && appErrors.isEmpty && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; className: string; headi... Remove this comment to see the full error message
         <Alert
           className="margin-bottom-3 margin-top-0"
           heading={t("pages.authVerifyAccount.codeResentHeading")}
-          name="code-resent-message"
           role="alert"
           state="success"
         >
@@ -123,10 +123,6 @@ export const VerifyAccount = (props) => {
       </Button>
     </form>
   );
-};
-
-VerifyAccount.propTypes = {
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default VerifyAccount;

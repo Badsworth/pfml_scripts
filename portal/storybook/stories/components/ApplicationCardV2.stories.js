@@ -21,7 +21,7 @@ export default {
           "Medical",
           "Pregnancy",
           "In Progress",
-          "In Progress + No EIN",
+          "In Progress + EIN",
           "In Progress + Notices",
         ],
       },
@@ -60,11 +60,13 @@ export const Story = ({ claim, ...args }) => {
       },
 
       "In Progress": {
-        claim: generateClaim("employed"),
+        claim: generateClaim("address"),
+        documents: [],
       },
 
-      "In Progress + No EIN": {
-        claim: generateClaim("address"),
+      "In Progress + EIN": {
+        claim: generateClaim("employed"),
+        documents: [],
       },
 
       "In Progress + Notices": {

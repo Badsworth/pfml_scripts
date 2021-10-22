@@ -1,28 +1,46 @@
 import BaseCollection from "../models/BaseCollection";
 import { useState } from "react";
 
+// Gets the typeof for the class we're storing in the collection
+type InferCollectionItem<TCollection> = TCollection extends BaseCollection<
+  infer K
+>
+  ? K
+  : any;
+
 /**
  * React hook for creating a state for a Collection of objects
  */
-const useCollectionState = <TCollectionItem>(
-  initialCollection?: BaseCollection<TCollectionItem>
+const useCollectionState = <
+  TCollection extends BaseCollection<TItem>,
+  TItem = InferCollectionItem<TCollection>
+>(
+  initialCollection: TCollection
 ) => {
   const [collection, setCollection] = useState(initialCollection);
 
-  const addItem = (item: TCollectionItem) => {
-    setCollection((prevCollection) => prevCollection.addItem(item));
+  const addItem = (item: TItem) => {
+    setCollection(
+      (prevCollection) => prevCollection.addItem(item) as TCollection
+    );
   };
 
-  const addItems = (items: TCollectionItem[]) => {
-    setCollection((prevCollection) => prevCollection.addItems(items));
+  const addItems = (items: TItem[]) => {
+    setCollection(
+      (prevCollection) => prevCollection.addItems(items) as TCollection
+    );
   };
 
-  const updateItem = (item: TCollectionItem) => {
-    setCollection((prevCollection) => prevCollection.updateItem(item));
+  const updateItem = (item: TItem) => {
+    setCollection(
+      (prevCollection) => prevCollection.updateItem(item) as TCollection
+    );
   };
 
   const removeItem = (itemId: string) => {
-    setCollection((prevCollection) => prevCollection.removeItem(itemId));
+    setCollection(
+      (prevCollection) => prevCollection.removeItem(itemId) as TCollection
+    );
   };
 
   return {

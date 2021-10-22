@@ -1,7 +1,6 @@
 import ConditionalContent from "../../components/ConditionalContent";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputText from "../../components/InputText";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { pick } from "lodash";
@@ -12,7 +11,15 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_state_id", "claim.mass_id"];
 
-export const StateId = (props) => {
+interface StateIdProps {
+  appLogic: any;
+  claim: any;
+  query?: {
+    claim_id?: string;
+  };
+}
+
+export const StateId = (props: StateIdProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -76,14 +83,6 @@ export const StateId = (props) => {
       </ConditionalContent>
     </QuestionPage>
   );
-};
-
-StateId.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(StateId);

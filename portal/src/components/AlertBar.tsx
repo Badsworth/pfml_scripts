@@ -1,11 +1,14 @@
 import Icon from "./Icon";
-import PropTypes from "prop-types";
 import React from "react";
+
+interface AlertBarProps {
+  children: React.ReactNode;
+}
 
 /**
  * Alert bar displayed at the very top of a page
  */
-const AlertBar = (props) => {
+const AlertBar = (props: AlertBarProps) => {
   const { children } = props;
 
   return (
@@ -24,13 +27,6 @@ const AlertBar = (props) => {
       </div>
     </div>
   );
-};
-
-AlertBar.propTypes = {
-  /**
-   * Text/HTML for alert message.
-   */
-  children: PropTypes.node.isRequired,
 };
 
 export default AlertBar;

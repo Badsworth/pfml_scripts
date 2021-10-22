@@ -8,7 +8,6 @@ import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
 import Lead from "../../components/Lead";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
 import findKeyByValue from "../../utils/findKeyByValue";
@@ -32,7 +31,17 @@ export const fields = [
   `claim.${leavePeriodPath}.start_date`,
 ];
 
-export const LeavePeriodReducedSchedule = (props) => {
+interface LeavePeriodReducedScheduleProps {
+  appLogic: any;
+  claim: BenefitsApplication;
+  query?: {
+    claim_id?: string;
+  };
+}
+
+export const LeavePeriodReducedSchedule = (
+  props: LeavePeriodReducedScheduleProps
+) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -92,7 +101,6 @@ export const LeavePeriodReducedSchedule = (props) => {
       onSave={handleSave}
     >
       {(claim.isMedicalOrPregnancyLeave || claim.isCaringLeave) && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; neutral:... Remove this comment to see the full error message
         <Alert state="info" neutral>
           <Trans
             i18nKey="pages.claimsLeavePeriodReducedSchedule.needDocumentAlert"
@@ -207,14 +215,6 @@ export const LeavePeriodReducedSchedule = (props) => {
       </ConditionalContent>
     </QuestionPage>
   );
-};
-
-LeavePeriodReducedSchedule.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(LeavePeriodReducedSchedule);
