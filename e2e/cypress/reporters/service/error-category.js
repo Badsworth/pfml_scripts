@@ -48,6 +48,7 @@ class ErrorCategory {
             .addRule(`AssertionError`, `*expected * to contain text * but the text was*`)
             .addRule(`AssertionError`, `*expected * to have class *`)
             .addRule(`AssertionError`, `*Timed out retrying % expected % to include '/applications/success'%*`)
+            .addRule(`AssertionError`, `*Timed out retrying * Expected claim*to be*`)
 
           .setSubCategory(this.SUB_CATEGORY.CONTENT.UPDATE)
             .addRule(`TestingLibraryElementError`, `*Unable to find*with the text*`)
@@ -81,7 +82,7 @@ class ErrorCategory {
             .addRule(`CypressError`, `*cy.task('submitClaimToAPI')*(503*`)
 
           .setSubCategory(this.SUB_CATEGORY.INFRASTRUCTURE_CONNECTION.FAILURE504)
-            .addRule(`Error`, `*Application submission failed:*(504*`)
+            .addRule(`Error`, `*Application submission failed*(504*`)
             .addRule(`CypressError`, `*cy.task('submitClaimToAPI')*(504*`)
             .addRule(`CypressError`, `*> 504:*`)
 
@@ -113,12 +114,14 @@ class ErrorCategory {
 
   matchRuleExpl(str, rule) {
     // for this solution to work on any string, no matter what characters it has
-    var escapeRegex = (str) => str.replace(/([.*+?^=!:${}()|[\]/\\])/g, "\\$1");
+    var escapeRegex = (ruleStr) =>
+      ruleStr.replace(/([.*+?^=!:${}()|[\]/\\])/g, "\\$1");
 
-    str = str.replace("\n", " ");
-    // "."  => Find a single character, except newline or line terminator
-    // ".*" => Matches any string that contains zero or more characters
-    rule = rule.split("*").map(escapeRegex).join(".*");
+    // Remove all whitespace from string being evaluated
+    str = str.replace(/(\r\n|\n|\r)/gm, " ");
+
+    // "([\s\S]*?)" => Matches any string that contains zero or more characters
+    rule = rule.split("*").map(escapeRegex).join("([\\s\\S]*?)");
 
     // "^"  => Matches any string with the following at the beginning of it
     // "$"  => Matches any string with that in front at the end of it
