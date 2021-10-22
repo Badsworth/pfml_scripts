@@ -30,8 +30,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        environment:
-          ["test", "stage", "performance", "training", "uat", "cps-preview"]
+        environment: ["test", "stage"]
     steps:
       - name: Trigger E2E Workflow
         uses: aurelien-baudet/workflow-dispatch@v2
@@ -40,7 +39,6 @@ jobs:
           token: ${{ secrets.PFML_DEVOPS_TOKEN }}
           wait-for-completion: false
           display-workflow-run-url: false # aurelien-baudet/workflow-dispatch@v2 outputs the link to "test" run for each environment
-          run: echo "You can follow the running workflow here - https://github.com/EOLWD/pfml/actions/runs/${{github.run_id}}"
           inputs: |
             {
               "target_environment": "${{ matrix.environment }}",
@@ -51,8 +49,8 @@ jobs:
             }
       # 1 filter json, find e2e job for the corresponding environment
       # 2 log run url of job
-      - uses: octokit/request-action@v2.x
-        id: get_jobs_for_run
+      - name: get_jobs_for_run
+        uses: octokit/request-action@v2.x
         with:
           route: GET /repos/EOLWD/pfml/actions/runs/${{github.run_id}}/jobs
         env:
