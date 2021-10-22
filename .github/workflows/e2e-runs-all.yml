@@ -49,10 +49,12 @@ jobs:
             }
       # 1 filter json, find e2e job for the corresponding environment
       # 2 log run url of job
-      - name: get_jobs_for_run
+      - id: get_jobs_for_run
+        name: Get jobs for run
         uses: octokit/request-action@v2.x
         with:
           route: GET /repos/EOLWD/pfml/actions/runs/${{github.run_id}}/jobs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: "echo ${{ steps.get_jobs_for_run.outputs.data }}"
+      - name: Link to run
+        run: echo ${{ fromJSON(steps.get_jobs_for_run.outputs.data) }}
