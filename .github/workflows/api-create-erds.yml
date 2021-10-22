@@ -24,7 +24,6 @@ env:
 jobs:
   update-erds:
     runs-on: ubuntu-latest
-    needs: [update-erds]
     steps:
       - name: "Create ERDs"
         run: make create-erds
