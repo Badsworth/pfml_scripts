@@ -27,7 +27,7 @@ export function logSubmissions(
     const [now] = process.hrtime();
     processed++;
     const elapsed = now - start;
-    const cpm = ((processed / elapsed) * 60).toPrecision(1);
+    const cpm = ((processed / elapsed) * 60).toFixed(1);
     if (result.error) {
       errors++;
       log(
@@ -117,8 +117,7 @@ export function postProcess(
  */
 export function watchFailures(
   results: AnyIterable<SubmissionResult>,
-  consecErrorLmt = 3,
-  testing = false // flag to improve the testability
+  consecErrorLmt = 3
 ): AsyncGenerator<SubmissionResult> {
   let consecutiveErrors = 0;
   return (async function* _() {
@@ -136,11 +135,10 @@ export function watchFailures(
           result.claim,
           `Delaying next submission for ${
             delayMs / 1000
-          } due to consecutive errors received.`
+          } seconds due to ${consecutiveErrors} consecutive errors received.`
         );
       }
-      await delay(testing ? 50 : delayMs);
-
+      await delay(delayMs);
       yield result;
     }
   })();
@@ -167,11 +165,11 @@ function getDelayMS(consecutiveErrors: number) {
   return 0;
 }
 
-/* 
+/*
  This function is used to reset the consecutiveError value
  If the current amount of consectuive errors is greater than 6, we
  should reset the amount of consecutive errors to 3.
- 
+
  This extra step will help determine if the submission should run at full speed (submission was successful on subsequent submissions after reset)
 */
 function handleSucess(consecutiveErrors: number) {

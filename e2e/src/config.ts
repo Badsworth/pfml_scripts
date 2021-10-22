@@ -38,10 +38,11 @@ function getRawEnvironment() {
     FINEOS_USERNAME: process.env.E2E_FINEOS_USERNAME,
     FINEOS_PASSWORD: process.env.E2E_FINEOS_PASSWORD,
     FINEOS_USERS: process.env.E2E_FINEOS_USERS,
-    FINEOS_HAS_UPDATED_EFORMS: process.env.E2E_FINEOS_HAS_UPDATED_EFORMS,
 
     SSO_USERNAME: process.env.E2E_SSO_USERNAME,
     SSO_PASSWORD: process.env.E2E_SSO_PASSWORD,
+    SSO2_USERNAME: process.env.E2E_SSO2_USERNAME,
+    SSO2_PASSWORD: process.env.E2E_SSO2_PASSWORD,
 
     TESTMAIL_APIKEY: process.env.E2E_TESTMAIL_APIKEY,
     TESTMAIL_NAMESPACE: process.env.E2E_TESTMAIL_NAMESPACE,
@@ -52,6 +53,15 @@ function getRawEnvironment() {
     FLOOD_API_TOKEN: process.env.E2E_FLOOD_API_TOKEN,
     LST_EMPLOYEES_FILE: process.env.E2E_LST_EMPLOYEES_FILE,
     LST_EMPLOYERS_FILE: process.env.E2E_LST_EMPLOYERS_FILE,
+
+    NEWRELIC_APIKEY: process.env.E2E_NEWRELIC_APIKEY,
+    NEWRELIC_ACCOUNTID: process.env.E2E_NEWRELIC_ACCOUNTID,
+    NEWRELIC_INGEST_KEY: process.env.E2E_NEWRELIC_INGEST_KEY,
+
+    DOR_IMPORT_URI: process.env.E2E_DOR_IMPORT_URI,
+    DOR_ETL_ARN: process.env.E2E_DOR_ETL_ARN,
+
+    HAS_WITHDRAWN_NOTICE: process.env.HAS_WITHDRAWN_NOTICE,
   };
 }
 
@@ -75,7 +85,10 @@ const file: Partial<Configuration> =
 
 // The default layer is a set of default values which will be used if nothing is set.
 const defaults: Partial<Configuration> = {
-  FINEOS_HAS_UPDATED_EFORMS: "false",
+  NEWRELIC_ACCOUNTID: "2837112",
+  DOR_IMPORT_URI: "s3://massgov-pfml-TARGET_ENV-agency-transfer/dor/received/",
+  DOR_ETL_ARN:
+    "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-TARGET_ENV-dor-fineos-etl",
 };
 export const merged = {
   ...defaults,

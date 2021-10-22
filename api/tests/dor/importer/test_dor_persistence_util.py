@@ -1,6 +1,10 @@
+#
+# Tests for massgov.pfml.dor.importer.dor_persistence_util.
+#
+
 import copy
+import datetime
 import uuid
-from datetime import date, datetime
 from decimal import Decimal
 
 import pytest
@@ -11,12 +15,10 @@ from massgov.pfml.db.models.employees import Country, EmployerQuarterlyContribut
 from massgov.pfml.db.models.factories import (
     EmployeeFactory,
     EmployerFactory,
+    EmployerQuarterlyContributionFactory,
     TaxIdentifierFactory,
     WagesAndContributionsFactory,
 )
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 sample_employee_file = "DORDFML_20200519120622"
 sample_employer_file = "DORDFMLEMP_20200519120622"
@@ -32,13 +34,13 @@ def test_get_wages_and_contributions_by_employee_ids(test_db_session, initialize
     employee1 = EmployeeFactory.create()
     employee2 = EmployeeFactory.create()
     WagesAndContributionsFactory.create(
-        employee=employee1, employer=employer, filing_period=date(2020, 6, 30),
+        employee=employee1, employer=employer, filing_period=datetime.date(2020, 6, 30),
     )
     WagesAndContributionsFactory.create(
-        employee=employee1, employer=employer, filing_period=date(2020, 9, 30),
+        employee=employee1, employer=employer, filing_period=datetime.date(2020, 9, 30),
     )
     WagesAndContributionsFactory.create(
-        employee=employee2, employer=employer, filing_period=date(2020, 9, 30),
+        employee=employee2, employer=employer, filing_period=datetime.date(2020, 9, 30),
     )
     wages = util.get_wages_and_contributions_by_employee_ids(
         test_db_session, [employee1.employee_id, employee2.employee_id]
@@ -48,7 +50,7 @@ def test_get_wages_and_contributions_by_employee_ids(test_db_session, initialize
 
 def test_get_wages_and_contributions_by_employee_id_and_filling_period(test_db_session):
     wage_row = util.get_wages_and_contributions_by_employee_id_and_filling_period(
-        test_db_session, uuid.uuid4(), uuid.uuid4(), date.today()
+        test_db_session, uuid.uuid4(), uuid.uuid4(), datetime.date.today()
     )
 
     assert wage_row is None
@@ -143,10 +145,14 @@ def test_check_and_update_wages_and_contributions(test_db_session, initialize_fa
         employer_fam_contribution=payload["employer_family"],
     )
 
+    wage_history_records = []
+
+    existing_import_log = wages_row.latest_import_log_id
     updated = util.check_and_update_wages_and_contributions(
-        test_db_session, wages_row, payload, uuid.uuid4()
+        test_db_session, wages_row, payload, uuid.uuid4(), wage_history_records
     )
 
+    assert len(wage_history_records) == 0
     assert not updated
     assert len(test_db_session.dirty) == 0
 
@@ -154,8 +160,25 @@ def test_check_and_update_wages_and_contributions(test_db_session, initialize_fa
     updated_wages_payload["employer_medical"] = Decimal("1384.64")
 
     updated = util.check_and_update_wages_and_contributions(
-        test_db_session, wages_row, updated_wages_payload, uuid.uuid4()
+        test_db_session, wages_row, updated_wages_payload, uuid.uuid4(), wage_history_records
     )
+
+    assert len(wage_history_records) == 1
+    # Currently Unpersisted
+    wage_history_record = wage_history_records[0]
+    assert wage_history_record.wages_and_contributions_history_id is None
+    # Records previous value
+    assert wage_history_record.employer_med_contribution == Decimal("1384.58")
+    # Records all new values
+    assert wage_history_record.wage_and_contribution_id == wages_row.wage_and_contribution_id
+    assert wage_history_record.is_independent_contractor == wages_row.is_independent_contractor
+    assert wage_history_record.is_opted_in == wages_row.is_opted_in
+    assert wage_history_record.employee_ytd_wages == wages_row.employee_ytd_wages
+    assert wage_history_record.employee_qtr_wages == wages_row.employee_qtr_wages
+    assert wage_history_record.employee_med_contribution == wages_row.employee_med_contribution
+    assert wage_history_record.employee_fam_contribution == wages_row.employee_fam_contribution
+    assert wage_history_record.employer_fam_contribution == wages_row.employer_fam_contribution
+    assert wage_history_record.import_log_id == existing_import_log
 
     assert updated
     assert len(test_db_session.dirty) == 1
@@ -166,19 +189,19 @@ def test_check_and_update_employer_quarterly_contribution(
 ):
     payload = {
         "total_pfml_contribution": Decimal("15234.58"),
-        "received_date": date(2021, 6, 21),
+        "received_date": datetime.date(2021, 6, 21),
         "pfm_account_id": "12345678912345",
-        "updated_date": datetime(2021, 6, 22, 19, 1, 12),
+        "updated_date": datetime.datetime(2021, 6, 22, 19, 1, 12),
     }
 
     employer = EmployerFactory.create()
     employer_contribution_row = EmployerQuarterlyContribution(
         employer_id=employer.employer_id,
-        filing_period=date(2020, 6, 30),
+        filing_period=datetime.date(2020, 6, 30),
         pfm_account_id=payload["pfm_account_id"],
         employer_total_pfml_contribution=payload["total_pfml_contribution"],
-        dor_received_date=datetime(2021, 6, 21, 0, 0, 0),
-        dor_updated_date=datetime(2021, 6, 22, 19, 1, 12),
+        dor_received_date=datetime.datetime(2021, 6, 21, 0, 0, 0),
+        dor_updated_date=datetime.datetime(2021, 6, 22, 19, 1, 12),
     )
     test_db_session.add(employer_contribution_row)
     test_db_session.commit()
@@ -208,19 +231,19 @@ def test_check_and_update_employer_quarterly_contribution_update_twice(
 ):
     payload = {
         "total_pfml_contribution": Decimal("20.00"),
-        "received_date": date(2021, 6, 21),
+        "received_date": datetime.date(2021, 6, 21),
         "pfm_account_id": "12345678912345",
-        "updated_date": datetime(2021, 6, 22, 19, 1, 12),
+        "updated_date": datetime.datetime(2021, 6, 22, 19, 1, 12),
     }
 
     employer = EmployerFactory.create()
     employer_contribution_row = EmployerQuarterlyContribution(
         employer_id=employer.employer_id,
-        filing_period=date(2020, 6, 30),
+        filing_period=datetime.date(2020, 6, 30),
         pfm_account_id=payload["pfm_account_id"],
         employer_total_pfml_contribution=Decimal("10.00"),
-        dor_received_date=datetime(2021, 6, 10, 0, 0, 0),
-        dor_updated_date=datetime(2021, 6, 11, 18, 0, 12),
+        dor_received_date=datetime.datetime(2021, 6, 10, 0, 0, 0),
+        dor_updated_date=datetime.datetime(2021, 6, 11, 18, 0, 12),
     )
     test_db_session.add(employer_contribution_row)
     test_db_session.commit()
@@ -251,3 +274,36 @@ def test_dict_to_employee_removes_underscores_in_names():
 
     assert underscored_employee.first_name == "Jane Foo"
     assert underscored_employee.last_name == "Bar Smith"
+
+
+def test_get_employers_by_account_key(test_db_session, employers):
+    entries = util.get_employers_by_account_key(
+        test_db_session, {"44100000001", "44100000002", "44100000003", "44100099999"}
+    )
+    assert entries == {
+        "44100000001": employers[0].employer_id,
+        "44100000002": employers[1].employer_id,
+        "44100000003": employers[2].employer_id,
+    }
+
+
+def test_get_employer_quarterly_info_by_employer_id(test_db_session, employers):
+    contrib1 = EmployerQuarterlyContributionFactory.create(
+        employer=employers[0], filing_period=datetime.date(2021, 3, 31)
+    )
+    contrib2 = EmployerQuarterlyContributionFactory.create(
+        employer=employers[0], filing_period=datetime.date(2021, 6, 30)
+    )
+    contrib3 = EmployerQuarterlyContributionFactory.create(
+        employer=employers[2], filing_period=datetime.date(2021, 3, 31)
+    )
+
+    quarterly_map = util.get_employer_quarterly_info_by_employer_id(
+        test_db_session, {e.employer_id for e in employers}
+    )
+
+    assert quarterly_map == {
+        (employers[0].employer_id, datetime.date(2021, 3, 31)): contrib1,
+        (employers[0].employer_id, datetime.date(2021, 6, 30)): contrib2,
+        (employers[2].employer_id, datetime.date(2021, 3, 31)): contrib3,
+    }

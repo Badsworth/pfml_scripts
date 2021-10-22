@@ -11,12 +11,13 @@ import {
 import Datetime from "react-datetime";
 import { useRouter } from "next/router";
 import { Helmet } from "react-helmet-async";
-import Link from "next/link";
 import React from "react";
+import Tooltip from "../../components/Tooltip";
 import moment from "moment";
 
 export default function Maintenance() {
   const router = useRouter();
+
 
   type FormValues = {
     name: string;
@@ -131,14 +132,17 @@ export default function Maintenance() {
   };
 
   const DateTimeField = (
-    props: { label: string } & FieldHookConfig<string>,
+    props: {
+      label: string;
+      toolTipText: React.ReactNode;
+    } & FieldHookConfig<string>,
   ) => {
     const [field, meta, helpers] = useField(props);
     const { setValue } = helpers;
     const renderInput = (options: any) => {
       return (
         <label className="maintenance-configure__label">
-          {props.label}
+          {props.label} <Tooltip>{props.toolTipText}</Tooltip>
           <input {...options} />
           {meta.touched && meta.error ? (
             <div className="maintenance-configure__error">{meta.error}</div>
@@ -257,8 +261,26 @@ export default function Maintenance() {
               label="Name"
             />
             <div className="maintenance-configure__datetimes-wrapper">
-              <DateTimeField name="start" label="Start Date/Time" />
-              <DateTimeField name="end" label="End Date/Time" />
+              <DateTimeField
+                name="start"
+                label="Start Date/Time"
+                toolTipText={
+                  <>
+                    To start maintenance <strong>now</strong>, leave the Start
+                    Date/Time field blank.
+                  </>
+                }
+              />
+              <DateTimeField
+                name="end"
+                label="End Date/Time"
+                toolTipText={
+                  <>
+                    To keep maintenance on <strong>indefinitely</strong>, leave
+                    the End Date/Time field blank.
+                  </>
+                }
+              />
             </div>
             <fieldset className="maintenance-configure__fieldset">
               <legend>Page Routes</legend>
@@ -338,13 +360,14 @@ export default function Maintenance() {
               )}
             </fieldset>
             <button
-              className="maintenance-configure__btn btn"
+              className="maintenance-configure__btn btn btn--cancel"
               type="button"
               disabled={props.isSubmitting}
+              onClick={() => {
+                router.push("/maintenance");
+              }}
             >
-              <Link href="/maintenance">
-                <a>Cancel</a>
-              </Link>
+              Cancel
             </button>
             <button
               className="maintenance-configure__btn btn"

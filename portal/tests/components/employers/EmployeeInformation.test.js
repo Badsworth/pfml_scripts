@@ -1,55 +1,43 @@
+import { render, screen } from "@testing-library/react";
 import EmployeeInformation from "../../../src/components/employers/EmployeeInformation";
 import { MockEmployerClaimBuilder } from "../../test-utils";
 import React from "react";
-import ReviewRow from "../../../src/components/ReviewRow";
-import { shallow } from "enzyme";
+
+const claim = new MockEmployerClaimBuilder().completed().create();
 
 describe("EmployeeInformation", () => {
-  const getAddressHtml = (secondLine) =>
-    `<span class="residential-address">1234 My St.<br/>${
-      secondLine ? secondLine + "<br/>" : ""
-    }Boston, MA 00000</span>`;
-  let claim, wrapper;
-
-  beforeEach(() => {
-    claim = new MockEmployerClaimBuilder().completed().create();
-    wrapper = shallow(<EmployeeInformation claim={claim} />);
-  });
-
   it("renders the component", () => {
-    expect(wrapper).toMatchSnapshot();
+    const { container } = render(<EmployeeInformation claim={claim} />);
+    expect(container).toMatchSnapshot();
   });
 
   it("renders one line break if second address line does not exist", () => {
-    expect(wrapper.find(".residential-address").html()).toEqual(
-      getAddressHtml()
-    );
+    render(<EmployeeInformation claim={claim} />);
+    expect(
+      screen.getByTestId("residential-address").querySelectorAll("br").length
+    ).toBe(1);
   });
 
   it("renders two line breaks if second address line exists", () => {
-    const secondAddressLine = "Apt 1";
     const claimWithSecondAddressLine = new MockEmployerClaimBuilder()
       .address({
         city: "Boston",
         line_1: "1234 My St.",
-        line_2: secondAddressLine,
+        line_2: "Apt 1",
         state: "MA",
         zip: "00000",
       })
       .create();
 
-    const wrapper = shallow(
-      <EmployeeInformation claim={claimWithSecondAddressLine} />
-    );
+    render(<EmployeeInformation claim={claimWithSecondAddressLine} />);
 
-    expect(wrapper.find(".residential-address").html()).toEqual(
-      getAddressHtml(secondAddressLine)
-    );
+    expect(
+      screen.getByTestId("residential-address").querySelectorAll("br").length
+    ).toBe(2);
   });
 
   it("renders formatted date of birth", () => {
-    expect(
-      wrapper.find(ReviewRow).last().children().first().text()
-    ).toMatchInlineSnapshot(`"7/17/****"`);
+    render(<EmployeeInformation claim={claim} />);
+    expect(screen.getByText("7/17/****")).toBeInTheDocument();
   });
 });

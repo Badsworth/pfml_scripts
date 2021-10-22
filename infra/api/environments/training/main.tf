@@ -56,12 +56,10 @@ module "api" {
   cognito_user_pool_id                                = "us-east-1_gHLjkp4A8"
   cognito_user_pool_client_id                         = "2hr6bckdopamvq92jahr542p5p"
   cognito_user_pool_keys_url                          = "https://cognito-idp.us-east-1.amazonaws.com/us-east-1_gHLjkp4A8/.well-known/jwks.json"
-  cognito_post_confirmation_lambda_artifact_s3_key    = local.cognito_post_confirmation_lambda_artifact_s3_key
-  cognito_pre_signup_lambda_artifact_s3_key           = local.cognito_pre_signup_lambda_artifact_s3_key
   cognito_enable_provisioned_concurrency              = false
   rmv_client_base_url                                 = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn                   = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-training/rmv_client_certificate-uUtNEp"
-  rmv_check_behavior                                  = "partially_mocked"
+  rmv_api_behavior                                    = "partially_mocked"
   rmv_check_mock_success                              = "1"
   fineos_client_integration_services_api_url          = "https://trn-api.masspfml.fineos.com/integration-services/"
   fineos_client_group_client_api_url                  = "https://trn-api.masspfml.fineos.com/groupclientapi/"
@@ -72,7 +70,7 @@ module "api" {
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/TRN/dataexports"
   fineos_aws_iam_role_arn                             = null // TODO if needed
   fineos_aws_iam_role_external_id                     = null // TODO if needed
-  service_now_base_url                                = "https://savilinxstage.servicenowservices.com"
+  service_now_base_url                                = "https://savilinxtrain.servicenowservices.com"
   portal_base_url                                     = "https://paidleave-training.mass.gov"
   enable_application_fraud_check                      = "0"
   release_version                                     = var.release_version

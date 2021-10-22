@@ -1,49 +1,78 @@
-import { mount, shallow } from "enzyme";
+import { render, screen } from "@testing-library/react";
+import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import EmployeeNotice from "../../../src/components/employers/EmployeeNotice";
 import React from "react";
-import { simulateEvents } from "../../test-utils";
+import { renderHook } from "@testing-library/react-hooks";
+import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps";
 
-describe("EmployeeNotice", () => {
-  let wrapper;
-  const onChange = jest.fn();
+function setupGetFunctionalInputProps(updateFields) {
+  let getFunctionalInputProps;
 
-  beforeEach(() => {
-    wrapper = shallow(<EmployeeNotice fraud="No" onChange={onChange} />);
+  renderHook(() => {
+    getFunctionalInputProps = useFunctionalInputProps({
+      appErrors: new AppErrorInfoCollection(),
+      formState: {},
+      updateFields,
+    });
   });
 
+  return getFunctionalInputProps;
+}
+
+function renderComponent(customProps = {}) {
+  const updateFields = jest.fn();
+
+  const props = {
+    getFunctionalInputProps: setupGetFunctionalInputProps(updateFields),
+    updateFields,
+    ...customProps,
+  };
+
+  return render(<EmployeeNotice {...props} />);
+}
+
+describe("EmployeeNotice", () => {
   it("renders the component", () => {
-    expect(wrapper).toMatchSnapshot();
+    const { container } = renderComponent();
+
+    expect(container).toMatchSnapshot();
   });
 
   it("does not select any option by default", () => {
-    const choices = wrapper.find("InputChoiceGroup").prop("choices");
+    renderComponent();
+    const choices = screen.getAllByRole("radio");
 
     for (const choice of choices) {
       expect(choice.checked).toBe(false);
+      expect(choice).toBeEnabled();
     }
   });
 
   it("unselects and disables options if fraud is reported", () => {
-    wrapper = shallow(<EmployeeNotice fraud="Yes" onChange={onChange} />);
-
-    const choices = wrapper.find("InputChoiceGroup").prop("choices");
+    renderComponent({ fraudInput: "Yes" });
+    const choices = screen.getAllByRole("radio");
 
     for (const choice of choices) {
       expect(choice.checked).toBe(false);
-      expect(choice.disabled).toBe(true);
+      expect(choice).toBeDisabled();
     }
   });
 
-  it('calls "onChange" when fraud choice has changed', () => {
-    wrapper = mount(<EmployeeNotice fraud="No" onChange={onChange} />);
-    const { changeRadioGroup } = simulateEvents(wrapper);
+  it("resets form's 'employee_notice' if changing from fraud to not fraud", () => {
+    const updateFields = jest.fn();
+    const props = {
+      getFunctionalInputProps: setupGetFunctionalInputProps(updateFields),
+      updateFields,
+    };
 
-    changeRadioGroup("employeeNotice", "Yes");
-    changeRadioGroup("employeeNotice", "No");
+    const { rerender } = render(<EmployeeNotice {...props} fraudInput="Yes" />);
+    expect(props.updateFields).toHaveBeenCalledTimes(1); // on mount, because Fraud = Yes
 
-    expect(onChange).toHaveBeenCalledTimes(3);
-    expect(onChange).toHaveBeenNthCalledWith(1, undefined);
-    expect(onChange).toHaveBeenNthCalledWith(2, "Yes");
-    expect(onChange).toHaveBeenNthCalledWith(3, "No");
+    rerender(<EmployeeNotice {...props} fraudInput="No" />);
+
+    expect(props.updateFields).toHaveBeenCalledTimes(2); // another time when Fraud prop changes
+    expect(props.updateFields).toHaveBeenLastCalledWith({
+      employee_notice: undefined,
+    });
   });
 });

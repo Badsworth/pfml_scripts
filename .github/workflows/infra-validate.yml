@@ -15,19 +15,19 @@ env:
   workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
 jobs:
-  tf-format:
-    name: "tf format check"
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-
-      - name: tf-format-check
-        uses: hashicorp/terraform-github-actions@master
-        with:
-          tf_actions_version: ${{ env[format('{0}-{1}', 'tf-version', matrix.component)] || env.tf-version-default }}
-          tf_actions_subcommand: "fmt"
-          tf_actions_working_dir: ${{ env.working-dir }}
-          tf_actions_comment: false
+#  tf-format:
+#    name: "tf format check"
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#
+#      - name: tf-format-check
+#        uses: hashicorp/terraform-github-actions@master
+#        with:
+#          tf_actions_version: ${{ env[format('{0}-{1}', 'tf-version', matrix.component)] || env.tf-version-default }}
+#          tf_actions_subcommand: "fmt"
+#          tf_actions_working_dir: ${{ env.working-dir }}
+#          tf_actions_comment: false
 
   tf-validate:
     name: "tf validate"
@@ -112,7 +112,8 @@ jobs:
   # Run Terriyay
   get-tf-state:
     name: Finalize terraform state
-    needs: [tf-format, tf-validate]
+    # Removed the `tf-format` from the needs section while the block is commented out.
+    needs: [tf-validate]
     if: always() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:

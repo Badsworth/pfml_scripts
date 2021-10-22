@@ -9,8 +9,8 @@ module.exports = {
   apiUrl: "https://paidleave-api-breakfix.eol.mass.gov/api/v1",
   awsConfig: {
     // Cognito Breakfix environment (must match whatever API environment we're targeting)
-    cognitoUserPoolId: "us-east-1_Bi6tPV5hz",
-    cognitoUserPoolWebClientId: "606qc6fmb1sn3pcujrav20h66l",
+    cognitoUserPoolId: "us-east-1_ZM6ztWTcs",
+    cognitoUserPoolWebClientId: "1ijqntaslj2des88rlrdvoqlm5",
   },
   domain: "paidleave-breakfix.eol.mass.gov",
   gtmConfig: {},

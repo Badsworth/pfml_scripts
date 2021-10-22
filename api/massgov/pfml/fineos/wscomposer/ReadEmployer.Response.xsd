@@ -1,114 +1,109 @@
-<?xml version="1.0" encoding="utf-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.fineos.com/wscomposer/ReadEmployer"
-targetNamespace="http://www.fineos.com/wscomposer/ReadEmployer"
-xmlns:tns="http://www.fineos.com/wscomposer/ReadEmployer" elementFormDefault="unqualified">
-  <xs:element name="ReadEmployerResponse" type="tns:ReadEmployer" />
+<?xml version="1.0" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.fineos.com/wscomposer/ReadEmployer" xmlns:tns="http://www.fineos.com/wscomposer/ReadEmployer" targetNamespace="http://www.fineos.com/wscomposer/ReadEmployer" elementFormDefault="unqualified">
+  <xs:element name="ReadEmployerResponse" type="tns:ReadEmployer"/>
   <xs:complexType name="ReadEmployer">
     <xs:sequence>
       <xs:sequence minOccurs="0" maxOccurs="unbounded">
-        <xs:element name="OCOrganisation" type="tns:OCOrganisation" />
+        <xs:element name="OCOrganisation" type="tns:OCOrganisation"/>
       </xs:sequence>
       <xs:element name="additional-data-set" minOccurs="0">
+            
         <xs:complexType>
+                  
           <xs:sequence>
+                        
             <xs:element name="additional-data" minOccurs="0" maxOccurs="unbounded">
+                              
               <xs:complexType>
+                                    
                 <xs:sequence>
-                  <xs:element name="name" type="xs:string" />
-                  <xs:element name="value" type="xs:string" />
+                                          
+                  <xs:element name="name" type="xs:string"/>
+                                          
+                  <xs:element name="value" type="xs:string"/>
+                                      
                 </xs:sequence>
+                                
               </xs:complexType>
+                          
             </xs:element>
+                    
           </xs:sequence>
+              
         </xs:complexType>
       </xs:element>
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="OCParty">
     <xs:annotation>
-      <xs:documentation>OCParty represents a person or organisational unit being managed by the system. It is a
-      potential starting point for traversing the data model, selected by its unique identifier. It is used to group
-      contacts, tasks, documents, related parties and other artefacts/data that relate to this one particular
-      individual/unit.</xs:documentation>
+      <xs:documentation>OCParty represents a person or organisational unit being managed by the system. It is a potential starting point for traversing the data model, selected by its unique identifier. It is used to group contacts, tasks, documents, related parties and other artefacts/data that relate to this one particular individual/unit. </xs:documentation>
     </xs:annotation>
     <xs:complexContent>
       <xs:extension base="tns:OCTaskSubject">
         <xs:sequence>
           <xs:element name="C_CORRESP_PRIVHOLDER" minOccurs="1" maxOccurs="1" type="xs:int">
             <xs:annotation>
-              <xs:documentation>C value of a user that is to be associated with this party. May be used to store the
-              fact that the same party is represented as both a user and a party on ths system. Also used to identify a
-              customer manager for a particular client. Data only.</xs:documentation>
+              <xs:documentation>C value of a user that is to be associated with this party. May be used to store the fact that the same party is represented as both a user and a party on ths system. Also used to identify a customer manager for a particular client. Data only. </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="C_OSGROUP_OWP" minOccurs="1" maxOccurs="1" type="xs:int">
             <xs:annotation>
-              <xs:documentation>C value of a department that is responsible for this party. Allows the assignment of
-              parties to different parts of the organisation.</xs:documentation>
+              <xs:documentation>C value of a department that is responsible for this party. Allows the assignment of parties to different parts of the organisation. </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="CorrespNeedsTranslation" minOccurs="1" maxOccurs="1" type="xs:boolean">
             <xs:annotation>
-              <xs:documentation>Indicates if we need to translate any written correspondance that goes to the
-              party.</xs:documentation>
+              <xs:documentation>Indicates if we need to translate any written correspondance that goes to the party. </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="CulturalConsiderations" minOccurs="1" maxOccurs="1">
             <xs:annotation>
-              <xs:documentation>This attribute records cultural specifics that should be taken into account when
-              dealing with the party.</xs:documentation>
+              <xs:documentation>This attribute records cultural specifics that should be taken into account when dealing with the party. </xs:documentation>
             </xs:annotation>
             <xs:simpleType>
               <xs:restriction base="xs:string">
-                <xs:maxLength value="4000" />
+                <xs:maxLength value="4000"/>
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
           <xs:element name="CustomerNo" minOccurs="1" maxOccurs="1">
             <xs:annotation>
-              <xs:documentation>The unique identifier for parties in the system.</xs:documentation>
+              <xs:documentation>The unique identifier for parties in the system. </xs:documentation>
             </xs:annotation>
             <xs:simpleType>
               <xs:restriction base="xs:string">
-                <xs:maxLength value="50" />
+                <xs:maxLength value="50"/>
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
           <xs:element name="Disabled" minOccurs="1" maxOccurs="1" type="xs:boolean">
             <xs:annotation>
-              <xs:documentation>Flag to indicate status of Party i.e. Disabled or Enabled (aka deleted). By default,
-              Enabled will be set to False</xs:documentation>
+              <xs:documentation>Flag to indicate status of Party i.e. Disabled or Enabled (aka deleted). By default, Enabled will be set to False </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="ExcludePartyFromSearch" minOccurs="1" maxOccurs="1" type="xs:boolean">
             <xs:annotation>
-              <xs:documentation>When true, this party need not satisfy the usual mandatory data requirements. However,
-              this party will be excluded from the results of a Party Search.</xs:documentation>
+              <xs:documentation>When true, this party need not satisfy the usual mandatory data requirements. However, this party will be excluded from the results of a Party Search. </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="FailedLogonAttempts" minOccurs="1" maxOccurs="1" type="xs:int">
             <xs:annotation>
-              <xs:documentation>The current number of consecutive failed self service logon attempts. May be configured
-              to control lock out after a certain number of failures.</xs:documentation>
+              <xs:documentation>The current number of consecutive failed self service logon attempts. May be configured to control lock out after a certain number of failures. </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="GroupClient" minOccurs="1" maxOccurs="1" type="xs:boolean">
             <xs:annotation>
-              <xs:documentation>Specifies if this party is a client of the overall organisation or just a client of its
-              department for reporting purposes only.</xs:documentation>
+              <xs:documentation>Specifies if this party is a client of the overall organisation or just a client of its department for reporting purposes only. </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="I_CORRESP_PRIVHOLDER" minOccurs="1" maxOccurs="1" type="xs:long">
             <xs:annotation>
-              <xs:documentation>I value of a user that is to be associated with this party. May be used to store the
-              fact that the same party is represented as both a user and a party on ths system. Also used to identify a
-              customer manager for a particular client. Data only.</xs:documentation>
+              <xs:documentation>I value of a user that is to be associated with this party. May be used to store the fact that the same party is represented as both a user and a party on ths system. Also used to identify a customer manager for a particular client. Data only. </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="I_OSGROUP_OWP" minOccurs="1" maxOccurs="1" type="xs:long">
             <xs:annotation>
-              <xs:documentation>I value of a department that is responsible for this party. Allows the assignment of
-              parties to different parts of the organisation.</xs:documentation>
+              <xs:documentation>I value of a department that is responsible for this party. Allows the assignment of parties to different parts of the organisation. </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="IdentificationNumberType" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
@@ -118,117 +113,106 @@ xmlns:tns="http://www.fineos.com/wscomposer/ReadEmployer" elementFormDefault="un
           </xs:element>
           <xs:element name="LastSuccessfulLogon" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
             <xs:annotation>
-              <xs:documentation>Indicates the date and time of the last occasion when the customer successfully logged
-              on to the self service function.</xs:documentation>
+              <xs:documentation>Indicates the date and time of the last occasion when the customer successfully logged on to the self service function. </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="NotificationIssued" minOccurs="1" maxOccurs="1" type="xs:boolean">
             <xs:annotation>
-              <xs:documentation>Indicates whether notification has been issued.</xs:documentation>
+              <xs:documentation>Indicates whether notification has been issued. </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="PartyType" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
             <xs:annotation>
-              <xs:documentation>The role this party has with our business. Generally used to differentiate between
-              clients, suppliers, partners etc.</xs:documentation>
+              <xs:documentation>The role this party has with our business. Generally used to differentiate between clients, suppliers, partners etc. </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="Password" minOccurs="1" maxOccurs="1">
             <xs:annotation>
-              <xs:documentation>This party's password for logging onto self service functionality.</xs:documentation>
+              <xs:documentation>This party's password for logging onto self service functionality. </xs:documentation>
             </xs:annotation>
             <xs:simpleType>
               <xs:restriction base="xs:string">
-                <xs:maxLength value="20" />
+                <xs:maxLength value="20"/>
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
           <xs:element name="Position1" minOccurs="1" maxOccurs="1" type="xs:int">
             <xs:annotation>
-              <xs:documentation>Transient.</xs:documentation>
+              <xs:documentation>Transient. </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="Position2" minOccurs="1" maxOccurs="1" type="xs:int">
             <xs:annotation>
-              <xs:documentation>Transient.</xs:documentation>
+              <xs:documentation>Transient. </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="PronouncedAs" minOccurs="1" maxOccurs="1">
             <xs:annotation>
-              <xs:documentation>A phonetic spelling of this party's name to aid staff in
-              pronunciation.</xs:documentation>
+              <xs:documentation>A phonetic spelling of this party's name to aid staff in pronunciation. </xs:documentation>
             </xs:annotation>
             <xs:simpleType>
               <xs:restriction base="xs:string">
-                <xs:maxLength value="100" />
+                <xs:maxLength value="100"/>
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
           <xs:element name="ReferenceGloballyUnique" minOccurs="1" maxOccurs="1" type="xs:boolean">
             <xs:annotation>
-              <xs:documentation>To define that this party is unique if this is set to true and there is no other party
-              with same referenceNo. By default, flag will be set to False</xs:documentation>
+              <xs:documentation>To define that this party is unique if this is set to true and there is no other party with same referenceNo. By default, flag will be set to False </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="ReferenceNo" minOccurs="1" maxOccurs="1">
             <xs:annotation>
-              <xs:documentation>A reference number that is unique within the context of the source system where the
-              party originated (SourceSystem).</xs:documentation>
+              <xs:documentation>A reference number that is unique within the context of the source system where the party originated (SourceSystem). </xs:documentation>
             </xs:annotation>
             <xs:simpleType>
               <xs:restriction base="xs:string">
-                <xs:maxLength value="40" />
+                <xs:maxLength value="40"/>
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
           <xs:element name="SecuredClient" minOccurs="1" maxOccurs="1" type="xs:boolean">
             <xs:annotation>
-              <xs:documentation>Specifies that this client is a secure client and thus can only be opened by users who
-              have access to the secure client secured action.</xs:documentation>
+              <xs:documentation>Specifies that this client is a secure client and thus can only be opened by users who have access to the secure client secured action. </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="SelfServiceEnabled" minOccurs="1" maxOccurs="1" type="xs:boolean">
             <xs:annotation>
-              <xs:documentation>Master switch to control whether a party has permission to access self service
-              functionality.</xs:documentation>
+              <xs:documentation>Master switch to control whether a party has permission to access self service functionality. </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="SourceSystem" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
             <xs:annotation>
-              <xs:documentation>This attribute identifies the system that the Party is managed by. The default value is
-              Internal which indicates that the Party is managed by the FINEOS System.</xs:documentation>
+              <xs:documentation>This attribute identifies the system that the Party is managed by. The default value is Internal which indicates that the Party is managed by the FINEOS System. </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="SuppressMktg" minOccurs="1" maxOccurs="1" type="xs:boolean">
             <xs:annotation>
-              <xs:documentation>Indicates that all marketing information is to be suppressed for this
-              party.</xs:documentation>
+              <xs:documentation>Indicates that all marketing information is to be suppressed for this party. </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="TenureStart" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
             <xs:annotation>
-              <xs:documentation>The date when this party first became a customer/client.</xs:documentation>
+              <xs:documentation>The date when this party first became a customer/client. </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="UnVerified" minOccurs="1" maxOccurs="1" type="xs:boolean">
             <xs:annotation>
-              <xs:documentation>Indicates whether the Party has been verified or not. That is, indicates that the party
-              has in some way been verified that they are who they claim to be and contact details have been
-              verified</xs:documentation>
+              <xs:documentation>Indicates whether the Party has been verified or not. That is, indicates that the party has in some way been verified that they are who they claim to be and contact details have been verified </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="NextPartyNumber" minOccurs="1" maxOccurs="1">
             <xs:simpleType>
               <xs:restriction base="xs:string">
-                <xs:maxLength value="20" />
+                <xs:maxLength value="20"/>
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
-          <xs:element name="PartyDetailsUpdated" minOccurs="1" maxOccurs="1" type="xs:boolean"></xs:element>
+          <xs:element name="PartyDetailsUpdated" minOccurs="1" maxOccurs="1" type="xs:boolean"/>
           <xs:element name="TransientNameAsString" minOccurs="1" maxOccurs="1">
             <xs:simpleType>
               <xs:restriction base="xs:string">
-                <xs:maxLength value="20" />
+                <xs:maxLength value="20"/>
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
@@ -272,284 +256,559 @@ xmlns:tns="http://www.fineos.com/wscomposer/ReadEmployer" elementFormDefault="un
         <xs:sequence>
           <xs:element name="AccountingDate" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
             <xs:annotation>
-              <xs:documentation>The annual accounting date for this organisation.</xs:documentation>
+              <xs:documentation>The annual accounting date for this organisation. </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="BusinessType" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
             <xs:annotation>
-              <xs:documentation>Indicates the type of business the organisation is involved .</xs:documentation>
+              <xs:documentation>Indicates the type of business the organisation is involved . </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="Category" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
             <xs:annotation>
-              <xs:documentation>Provides a means of categorising an organisation. For example, if the organisation is
-              an employer or an association without employees.</xs:documentation>
+              <xs:documentation>Provides a means of categorising an organisation. For example, if the organisation is an employer or an association without employees.</xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="CompanyNumber" minOccurs="1" maxOccurs="1">
             <xs:simpleType>
               <xs:restriction base="xs:string">
-                <xs:maxLength value="10" />
+                <xs:maxLength value="10"/>
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
           <xs:element name="CorporateTaxDistrict" minOccurs="1" maxOccurs="1">
             <xs:annotation>
-              <xs:documentation>This organisation's tax district code for corporate tax PAYE
-              purposes.</xs:documentation>
+              <xs:documentation>This organisation's tax district code for corporate tax PAYE purposes. </xs:documentation>
             </xs:annotation>
             <xs:simpleType>
               <xs:restriction base="xs:string">
-                <xs:maxLength value="50" />
+                <xs:maxLength value="50"/>
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
           <xs:element name="CorporateTaxNumber" minOccurs="1" maxOccurs="1">
             <xs:annotation>
-              <xs:documentation>This organisation's tax number for corporate tax PAYE purposes.</xs:documentation>
+              <xs:documentation>This organisation's tax number for corporate tax PAYE purposes. </xs:documentation>
             </xs:annotation>
             <xs:simpleType>
               <xs:restriction base="xs:string">
-                <xs:maxLength value="50" />
+                <xs:maxLength value="50"/>
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
           <xs:element name="DateBusinessCommenced" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
             <xs:annotation>
-              <xs:documentation>Date this organisation commenced trading (or whatever other activitiy it is involved
-              ).</xs:documentation>
+              <xs:documentation>Date this organisation commenced trading (or whatever other activitiy it is involved ). </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="DoingBusinessAs" minOccurs="1" maxOccurs="1">
             <xs:annotation>
-              <xs:documentation>Trading name of the organisation if different to the organisation
-              name.</xs:documentation>
+              <xs:documentation>Trading name of the organisation if different to the organisation name. </xs:documentation>
             </xs:annotation>
             <xs:simpleType>
               <xs:restriction base="xs:string">
-                <xs:maxLength value="100" />
+                <xs:maxLength value="100"/>
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
           <xs:element name="EndOfTrading" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
             <xs:annotation>
-              <xs:documentation>Date to represent end of trading.</xs:documentation>
+              <xs:documentation>Date to represent end of trading. </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="EOTReasonCode" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
             <xs:annotation>
-              <xs:documentation>Reason why organisation ended trading</xs:documentation>
+              <xs:documentation>Reason why organisation ended trading </xs:documentation>
             </xs:annotation>
           </xs:element>
-          <xs:element name="EOTReasonInd" minOccurs="1" maxOccurs="1" type="xs:boolean"></xs:element>
+          <xs:element name="EOTReasonInd" minOccurs="1" maxOccurs="1" type="xs:boolean"/>
           <xs:element name="FinancialYearEnd" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
             <xs:annotation>
-              <xs:documentation>The date the financial year ends for this organisation.</xs:documentation>
+              <xs:documentation>The date the financial year ends for this organisation. </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="LegalBusinessName" minOccurs="1" maxOccurs="1">
             <xs:annotation>
-              <xs:documentation>Legal entity name of the organisation if different from the organisation
-              name.</xs:documentation>
+              <xs:documentation>Legal entity name of the organisation if different from the organisation name. </xs:documentation>
             </xs:annotation>
             <xs:simpleType>
               <xs:restriction base="xs:string">
-                <xs:maxLength value="100" />
+                <xs:maxLength value="100"/>
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
           <xs:element name="LegalStatus" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
             <xs:annotation>
-              <xs:documentation>The legal status/structure of this company e.g. Incorporated, Limited
-              etc.</xs:documentation>
+              <xs:documentation>The legal status/structure of this company e.g. Incorporated, Limited etc. </xs:documentation>
             </xs:annotation>
           </xs:element>
           <xs:element name="Name" minOccurs="1" maxOccurs="1">
             <xs:annotation>
-              <xs:documentation>The name of the organisation.</xs:documentation>
+              <xs:documentation>The name of the organisation. </xs:documentation>
             </xs:annotation>
             <xs:simpleType>
               <xs:restriction base="xs:string">
-                <xs:maxLength value="100" />
+                <xs:maxLength value="100"/>
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
           <xs:element name="PayeTaxDistrict" minOccurs="1" maxOccurs="1">
             <xs:annotation>
-              <xs:documentation>This organisation's tax district code for PAYE purposes.</xs:documentation>
+              <xs:documentation>This organisation's tax district code for PAYE purposes. </xs:documentation>
             </xs:annotation>
             <xs:simpleType>
               <xs:restriction base="xs:string">
-                <xs:maxLength value="50" />
+                <xs:maxLength value="50"/>
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
           <xs:element name="PayeTaxNumber" minOccurs="1" maxOccurs="1">
             <xs:annotation>
-              <xs:documentation>This organisation's tax number for PAYE purposes.</xs:documentation>
+              <xs:documentation>This organisation's tax number for PAYE purposes. </xs:documentation>
             </xs:annotation>
             <xs:simpleType>
               <xs:restriction base="xs:string">
-                <xs:maxLength value="50" />
+                <xs:maxLength value="50"/>
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
           <xs:element name="RegisteredNumber" minOccurs="1" maxOccurs="1">
             <xs:annotation>
-              <xs:documentation>The registered number of an organisation.</xs:documentation>
+              <xs:documentation>The registered number of an organisation. </xs:documentation>
             </xs:annotation>
             <xs:simpleType>
               <xs:restriction base="xs:string">
-                <xs:maxLength value="50" />
+                <xs:maxLength value="50"/>
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
           <xs:element name="ShortName" minOccurs="1" maxOccurs="1">
             <xs:annotation>
-              <xs:documentation>Shortened version of organisation name.</xs:documentation>
+              <xs:documentation>Shortened version of organisation name. </xs:documentation>
             </xs:annotation>
             <xs:simpleType>
               <xs:restriction base="xs:string">
-                <xs:maxLength value="10" />
+                <xs:maxLength value="10"/>
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
           <xs:element name="UpperName" minOccurs="1" maxOccurs="1">
             <xs:annotation>
-              <xs:documentation>Upper case version of Name for indexing.</xs:documentation>
+              <xs:documentation>Upper case version of Name for indexing. </xs:documentation>
             </xs:annotation>
             <xs:simpleType>
               <xs:restriction base="xs:string">
-                <xs:maxLength value="100" />
+                <xs:maxLength value="100"/>
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
           <xs:element name="UpperRegisteredNumber" minOccurs="1" maxOccurs="1">
             <xs:annotation>
-              <xs:documentation>Upper case version of registered number for indexing.</xs:documentation>
+              <xs:documentation>Upper case version of registered number for indexing. </xs:documentation>
             </xs:annotation>
             <xs:simpleType>
               <xs:restriction base="xs:string">
-                <xs:maxLength value="50" />
+                <xs:maxLength value="50"/>
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
           <xs:element name="UpperShortName" minOccurs="1" maxOccurs="1">
             <xs:annotation>
-              <xs:documentation>Upper case version of Shortname for indexing.</xs:documentation>
+              <xs:documentation>Upper case version of Shortname for indexing. </xs:documentation>
             </xs:annotation>
             <xs:simpleType>
               <xs:restriction base="xs:string">
-                <xs:maxLength value="10" />
+                <xs:maxLength value="10"/>
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
           <xs:element name="VatNumber" minOccurs="1" maxOccurs="1">
             <xs:annotation>
-              <xs:documentation>This organisation's VAT number.</xs:documentation>
+              <xs:documentation>This organisation's VAT number. </xs:documentation>
             </xs:annotation>
             <xs:simpleType>
               <xs:restriction base="xs:string">
-                <xs:maxLength value="50" />
+                <xs:maxLength value="50"/>
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
+	  <xs:element minOccurs="0" maxOccurs="1" name="organisationUnits" type="tns:organisationUnits_OCOrganisation_OrganisationUnit_List"/>
         </xs:sequence>
       </xs:extension>
     </xs:complexContent>
   </xs:complexType>
-  <!-- Common Fineos Data Types -->
-  <xs:simpleType name="OID">
-    <xs:restriction base="xs:string">
-      <xs:pattern value="[pPtT][eElL]:\d{1,5}:\d{1,10}" />
-    </xs:restriction>
-  </xs:simpleType>
-  <xs:complexType name="FineosEnum">
+  <xs:complexType name="organisationUnits_OCOrganisation_OrganisationUnit_List">
     <xs:annotation>
-      <xs:documentation>An enumeration data-type similar to the Enum data-type introduced in Java 5. This allows a
-      Business Object (BO) attribute to have one of a set of pre-defined values that are stored in the
-      database.</xs:documentation>
+      <xs:documentation>The list of OrganisationUnit entities for this organisation</xs:documentation>
     </xs:annotation>
-    <xs:sequence>
-      <xs:choice>
-        <xs:element name="InstanceDomainAndFullId" type="tns:InstanceNameAndDomainNameAndFullId">
-          <xs:annotation>
-            <xs:documentation>An Enum sepecifying Instance Name and Domian Name and FullId</xs:documentation>
-          </xs:annotation>
-        </xs:element>
-        <xs:element name="InstanceAndDomainName" type="tns:InstanceNameAndDomainName">
-          <xs:annotation>
-            <xs:documentation>An Enum sepecifying Instance Name and Domian Name</xs:documentation>
-          </xs:annotation>
-        </xs:element>
-        <xs:element name="FullId" type="xs:long">
-          <xs:annotation>
-            <xs:documentation>An Enum sepecifying Fullid</xs:documentation>
-          </xs:annotation>
-        </xs:element>
-      </xs:choice>
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="OrganisationUnit" type="tns:organisationUnits_OrganisationUnit"/>
     </xs:sequence>
   </xs:complexType>
-  <xs:complexType name="InstanceNameAndDomainNameAndFullId">
+  <xs:complexType name="organisationUnits_OrganisationUnit">
     <xs:annotation>
-      <xs:documentation>Instance name Domain Name and FullId are Expected for enum values. This is type used in Read
-      Service for Enums.</xs:documentation>
+      <xs:documentation>An organisation unit is a grouping within an organisation, and can be used to represent concepts such as department, union, team or employee group.</xs:documentation>
     </xs:annotation>
     <xs:sequence>
-      <xs:element name="InstanceName" type="xs:string">
+      <xs:element name="OID" minOccurs="1" maxOccurs="1" type="tns:OID">
         <xs:annotation>
-          <xs:documentation>Instance Name for this Enum</xs:documentation>
+          <xs:documentation>OID Control Attribute</xs:documentation>
         </xs:annotation>
       </xs:element>
-      <xs:element name="DomainName" type="xs:string">
+      <xs:element name="BOEVersion" minOccurs="1" maxOccurs="1" type="xs:long">
         <xs:annotation>
-          <xs:documentation>Domain in which the instance name belongs</xs:documentation>
+          <xs:documentation>BOE Version Control Attribute</xs:documentation>
         </xs:annotation>
       </xs:element>
-      <xs:element name="FullId" type="xs:long">
+      <xs:element name="LastUpdateDate" minOccurs="1" maxOccurs="1" type="xs:dateTime">
         <xs:annotation>
-          <xs:documentation>Full ID identifies the instance and the Domain</xs:documentation>
+          <xs:documentation>Last UpdateDate Control Attribute</xs:documentation>
         </xs:annotation>
       </xs:element>
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name="InstanceNameAndDomainName">
-    <xs:annotation>
-      <xs:documentation>Instance Name, Domain Name are Expected for Enum Values.</xs:documentation>
-    </xs:annotation>
-    <xs:sequence>
-      <xs:element name="InstanceName" type="xs:string">
+      <xs:element name="UserUpdatedBy" minOccurs="1" maxOccurs="1" type="xs:string">
         <xs:annotation>
-          <xs:documentation>Instance Name for this Enum</xs:documentation>
+          <xs:documentation>Last UpdatedBy Control Attribute</xs:documentation>
         </xs:annotation>
       </xs:element>
-      <xs:element name="DomainName" type="xs:string">
+      <xs:element name="EffectiveFrom" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
         <xs:annotation>
-          <xs:documentation>Domain in which the instance name belongs</xs:documentation>
+          <xs:documentation>The date that this organisation unit comes into effect.</xs:documentation>
         </xs:annotation>
       </xs:element>
-    </xs:sequence>
-  </xs:complexType>
-  <xs:complexType name="Money">
-    <xs:annotation>
-      <xs:documentation>DataType for representing the Fineos Money Object</xs:documentation>
-    </xs:annotation>
-    <xs:sequence>
-      <xs:element name="CurrencyCode">
+      <xs:element name="EffectiveTo" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
         <xs:annotation>
-          <xs:documentation>Optional Currency Code for the Fineos Money</xs:documentation>
+          <xs:documentation>The date that this organisation unit ceases to be in effect.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="ExternalReference" minOccurs="1" maxOccurs="1">
+        <xs:annotation>
+          <xs:documentation>A reference number that is unique within the context of the source system from where the organisation unit originated. This attribute is coupled with the SourceSystem attribute.</xs:documentation>
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:maxLength value="3" />
+            <xs:maxLength value="50"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
-      <xs:element name="Amount" type="xs:decimal">
+      <xs:element name="Name" minOccurs="1" maxOccurs="1">
         <xs:annotation>
-          <xs:documentation>BigDecimal amount for the Fineos Money</xs:documentation>
+          <xs:documentation>The name of the organisation unit within an organisation.</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:maxLength value="50"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="SourceSystem" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
+        <xs:annotation>
+          <xs:documentation>This attribute identifies the system that the organisation unit is managed by. The default value is Internal which indicates that the organisation unit is managed by the FINEOS System.</xs:documentation>
         </xs:annotation>
       </xs:element>
+      <xs:element name="orgUnitLocationLinks" type="tns:organisationUnits.orgUnitLocationLinks_OrganisationUnit_OrgUnitLocationLink_List"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="organisationUnits.orgUnitLocationLinks_OrganisationUnit_OrgUnitLocationLink_List">
+    <xs:annotation>
+      <xs:documentation>One to Many relationship between OrgUnitLocationLink and OrganisationUnit</xs:documentation>
+    </xs:annotation>
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="OrgUnitLocationLink" type="tns:organisationUnits.orgUnitLocationLinks_OrgUnitLocationLink"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="organisationUnits.orgUnitLocationLinks_OrgUnitLocationLink">
+    <xs:annotation>
+      <xs:documentation>Link class between OCPartyLocationAssociation and OrganisationUnit</xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="OID" minOccurs="1" maxOccurs="1" type="tns:OID">
+        <xs:annotation>
+          <xs:documentation>OID Control Attribute</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="BOEVersion" minOccurs="1" maxOccurs="1" type="xs:long">
+        <xs:annotation>
+          <xs:documentation>BOE Version Control Attribute</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="LastUpdateDate" minOccurs="1" maxOccurs="1" type="xs:dateTime">
+        <xs:annotation>
+          <xs:documentation>Last UpdateDate Control Attribute</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="UserUpdatedBy" minOccurs="1" maxOccurs="1" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>Last UpdatedBy Control Attribute</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="partyLocationAssociation" type="tns:organisationUnits.orgUnitLocationLinks.partyLocationAssociation_OCPartyLocationAssociation_OrgUnitLocationLink_List"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="organisationUnits.orgUnitLocationLinks.partyLocationAssociation_OCPartyLocationAssociation_OrgUnitLocationLink_List">
+    <xs:annotation>
+      <xs:documentation>Many to one relationship between OCPartyLocationAssociation and OrgUnitLocationLink</xs:documentation>
+    </xs:annotation>
+    <xs:sequence minOccurs="0" maxOccurs="unbounded">
+      <xs:element name="OCPartyLocationAssociation" type="tns:organisationUnits.orgUnitLocationLinks.partyLocationAssociation_OCPartyLocationAssociation"/>
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="organisationUnits.orgUnitLocationLinks.partyLocationAssociation_OCPartyLocationAssociation">
+    <xs:annotation>
+      <xs:documentation>The OCPartyLocationAssociation entity will be used in linking a party and either a physical location or a party address. </xs:documentation>
+    </xs:annotation>
+    <xs:sequence>
+      <xs:element name="OID" minOccurs="1" maxOccurs="1" type="tns:OID">
+        <xs:annotation>
+          <xs:documentation>OID Control Attribute</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="BOEVersion" minOccurs="1" maxOccurs="1" type="xs:long">
+        <xs:annotation>
+          <xs:documentation>BOE Version Control Attribute</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="LastUpdateDate" minOccurs="1" maxOccurs="1" type="xs:dateTime">
+        <xs:annotation>
+          <xs:documentation>Last UpdateDate Control Attribute</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="UserUpdatedBy" minOccurs="1" maxOccurs="1" type="xs:string">
+        <xs:annotation>
+          <xs:documentation>Last UpdatedBy Control Attribute</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="Description" minOccurs="1" maxOccurs="1">
+        <xs:annotation>
+          <xs:documentation>Description of the relationship between the Party and the Physical Location </xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:maxLength value="2000"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="EffectiveFrom" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
+        <xs:annotation>
+          <xs:documentation>Indicates the startdate that the relationship between the Party and the Physical Location comes into effect.If set to Low Date, the association has always been in place </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="EffectiveTo" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
+        <xs:annotation>
+          <xs:documentation>Indicates the date that the relationship between the Party and the Physical Location ends.If set to Low Date, the association has always been in place </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="ExternalReference" minOccurs="1" maxOccurs="1">
+        <xs:annotation>
+          <xs:documentation>A reference number that is unique within the context of the source system from where the party location originated. This attribute is coupled with the SourceSystem attribute.</xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:maxLength value="50"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="Name" minOccurs="1" maxOccurs="1">
+        <xs:annotation>
+          <xs:documentation>This will allow a user to provide a name for the Party-Location assocation being created </xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:maxLength value="200"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="PartyLocationAssociationType" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
+        <xs:annotation>
+          <xs:documentation>Indicates the type of relationship between the Party and the Physical Location </xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="SourceSystem" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
+        <xs:annotation>
+          <xs:documentation>This attribute identifies the system that the party location is managed by. The default value is Internal which indicates that the party location is managed by the FINEOS System.</xs:documentation>
+        </xs:annotation>
+      </xs:element>
+      <xs:element name="UpperName" minOccurs="1" maxOccurs="1">
+        <xs:annotation>
+          <xs:documentation>Name value stored in Upper Case for indexing reasons </xs:documentation>
+        </xs:annotation>
+        <xs:simpleType>
+          <xs:restriction base="xs:string">
+            <xs:maxLength value="200"/>
+          </xs:restriction>
+        </xs:simpleType>
+      </xs:element>
+      <xs:element name="ReferenceNumberValidated" minOccurs="1" maxOccurs="1" type="xs:boolean"/>
+    </xs:sequence>
+  </xs:complexType>
+  <!-- Common Fineos Data Types -->
+  <xs:simpleType name="OID">
+    	
+    <xs:restriction base="xs:string">
+      		
+      <xs:pattern value="[pPtT][eElL]:\d{1,5}:\d{1,10}"/>
+      	
+    </xs:restriction>
+  </xs:simpleType>
+  <xs:complexType name="FineosEnum">
+    	
+    <xs:annotation>
+      		
+      <xs:documentation>An enumeration data-type similar to the Enum			data-type introduced in Java 5. This allows a Business			Object			(BO)			attribute to have one of a set of pre-defined values that			are stored			in the database.      </xs:documentation>
+      	
+    </xs:annotation>
+    	
+    <xs:sequence>
+      		
+      <xs:choice>
+        			
+        <xs:element name="InstanceDomainAndFullId" type="tns:InstanceNameAndDomainNameAndFullId">
+          			
+          <xs:annotation>
+            					
+            <xs:documentation>An Enum sepecifying Instance Name and Domian Name and FullId</xs:documentation>
+            				
+          </xs:annotation>
+          			
+        </xs:element>
+        			
+        <xs:element name="InstanceAndDomainName" type="tns:InstanceNameAndDomainName">
+          				
+          <xs:annotation>
+            					
+            <xs:documentation>An Enum sepecifying Instance Name and Domian Name</xs:documentation>
+            				
+          </xs:annotation>
+          			
+        </xs:element>
+        			
+        <xs:element name="FullId" type="xs:long">
+          				
+          <xs:annotation>
+            					
+            <xs:documentation>An Enum sepecifying Fullid</xs:documentation>
+            				
+          </xs:annotation>
+          			
+        </xs:element>
+        		
+      </xs:choice>
+      	
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="InstanceNameAndDomainNameAndFullId">
+    	
+    <xs:annotation>
+      		
+      <xs:documentation>Instance name Domain Name and FullId are Expected for enum values. This is type used in Read Service for Enums.          </xs:documentation>
+      			
+    </xs:annotation>
+    	
+    <xs:sequence>
+      		
+      <xs:element name="InstanceName" type="xs:string">
+        			
+        <xs:annotation>
+          				
+          <xs:documentation>Instance Name for this Enum</xs:documentation>
+          			
+        </xs:annotation>
+        		
+      </xs:element>
+      		
+      <xs:element name="DomainName" type="xs:string">
+        			
+        <xs:annotation>
+          				
+          <xs:documentation>Domain in which the instance name belongs</xs:documentation>
+          			
+        </xs:annotation>
+        		
+      </xs:element>
+      		
+      <xs:element name="FullId" type="xs:long">
+        			
+        <xs:annotation>
+          				
+          <xs:documentation>Full ID identifies the instance and the Domain</xs:documentation>
+          			
+        </xs:annotation>
+        		
+      </xs:element>
+      	
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="InstanceNameAndDomainName">
+    	
+    <xs:annotation>
+      		
+      <xs:documentation>Instance Name, Domain Name are Expected for Enum Values.          </xs:documentation>
+      			
+    </xs:annotation>
+    	
+    <xs:sequence>
+      		
+      <xs:element name="InstanceName" type="xs:string">
+        			
+        <xs:annotation>
+          				
+          <xs:documentation>Instance Name for this Enum</xs:documentation>
+          			
+        </xs:annotation>
+        		
+      </xs:element>
+      		
+      <xs:element name="DomainName" type="xs:string">
+        			
+        <xs:annotation>
+          				
+          <xs:documentation>Domain in which the instance name belongs</xs:documentation>
+          			
+        </xs:annotation>
+        		
+      </xs:element>
+      	
+    </xs:sequence>
+  </xs:complexType>
+  <xs:complexType name="Money">
+    	
+    <xs:annotation>
+      		
+      <xs:documentation>			DataType for representing the Fineos Money			Object      </xs:documentation>
+      	
+    </xs:annotation>
+    	
+    <xs:sequence>
+      		
+      <xs:element name="CurrencyCode">
+        			
+        <xs:annotation>
+          				
+          <xs:documentation>Optional Currency Code for the Fineos					Money          </xs:documentation>
+          			
+        </xs:annotation>
+        			
+        <xs:simpleType>
+          				
+          <xs:restriction base="xs:string">
+            					
+            <xs:maxLength value="3"/>
+            				
+          </xs:restriction>
+          			
+        </xs:simpleType>
+        		
+      </xs:element>
+      		
+      <xs:element name="Amount" type="xs:decimal">
+        			
+        <xs:annotation>
+          				
+          <xs:documentation>BigDecimal amount for the Fineos Money          </xs:documentation>
+          			
+        </xs:annotation>
+        		
+      </xs:element>
+      	
     </xs:sequence>
   </xs:complexType>
 </xs:schema>

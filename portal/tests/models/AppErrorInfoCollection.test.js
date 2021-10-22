@@ -1,13 +1,13 @@
+import { render, screen } from "@testing-library/react";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import React from "react";
 import { Trans } from "react-i18next";
-import { shallow } from "enzyme";
 
 describe("AppErrorInfoCollection", () => {
   // eslint-disable-next-line react/prop-types
   const TestErrorComponent = ({ errors }) => {
-    return <React.Fragment>{errors}</React.Fragment>;
+    return <div data-testid="error-container">{errors}</div>;
   };
   describe("fieldErrorMessage", () => {
     it("returns null result if there are no errors", () => {
@@ -27,10 +27,8 @@ describe("AppErrorInfoCollection", () => {
       const field = "first_name";
 
       const result = collection.fieldErrorMessage(field);
-
-      expect(
-        shallow(<TestErrorComponent errors={result} />).html()
-      ).toMatchInlineSnapshot(`""`);
+      render(<TestErrorComponent errors={result} />);
+      expect(screen.getByTestId("error-container")).toBeEmptyDOMElement();
     });
 
     it("returns merged string if multiple errors match the given field's path", () => {
@@ -47,12 +45,17 @@ describe("AppErrorInfoCollection", () => {
       ]);
 
       const result = collection.fieldErrorMessage(field);
+      const { container } = render(<TestErrorComponent errors={result} />);
 
-      expect(
-        shallow(<TestErrorComponent errors={result} />).html()
-      ).toMatchInlineSnapshot(
-        `"Day must be less than 31. Year must be greater than 1900."`
-      );
+      expect(container.firstChild).toMatchInlineSnapshot(`
+        <div
+          data-testid="error-container"
+        >
+          Day must be less than 31.
+           
+          Year must be greater than 1900.
+        </div>
+      `);
     });
 
     it("returns merged string and components if multiple errors match the given field's path", () => {
@@ -76,12 +79,22 @@ describe("AppErrorInfoCollection", () => {
       ]);
 
       const result = collection.fieldErrorMessage(field);
-
-      expect(
-        shallow(<TestErrorComponent errors={result} />).html()
-      ).toMatchInlineSnapshot(
-        `"We couldn’t find you in our system. Check that you entered your employer’s Employer Identification Number (EIN) correctly. If you continue to get this error, <a href=\\"test/link\\">follow these instructions</a> and we’ll set up your application through our Contact Center. Fineos issues happened."`
-      );
+      const { container } = render(<TestErrorComponent errors={result} />);
+      expect(container.firstChild).toMatchInlineSnapshot(`
+        <div
+          data-testid="error-container"
+        >
+          We couldn’t find you in our system. Check that you entered your employer’s Employer Identification Number (EIN) correctly. If you continue to get this error, 
+          <a
+            href="test/link"
+          >
+            follow these instructions
+          </a>
+           and we’ll set up your application through our Contact Center.
+           
+          Fineos issues happened.
+        </div>
+      `);
     });
   });
 });

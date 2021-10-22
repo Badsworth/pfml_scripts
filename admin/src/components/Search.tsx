@@ -1,16 +1,26 @@
 import { ChangeEvent, FormEvent, useEffect, useState } from "react";
+import { useRouter } from "next/router";
 import useDebounce from "../hooks/useDebounce";
+import isClient from "../utils/isClient";
 
-type Props = {
+export type Props = {
   search: (searchTerm: string) => Promise<unknown>;
   setResults: any; // @todo: better type?
   debounceDelay?: number;
 };
 
 const Search = ({ search, setResults, debounceDelay }: Props) => {
+  const router = useRouter();
   const [isSearching, setIsSearching] = useState(false);
-  const [searchTerm, setSearchTerm] = useState("");
+
+  const [searchTerm, setSearchTerm]: [string, any] = useState("");
   const debouncedSearchTerm = useDebounce(searchTerm, debounceDelay || 500);
+
+  useEffect(() => {
+    if (isClient() && router.query.search != null) {
+      setSearchTerm(router.query.search);
+    }
+  }, [router.query.search]);
 
   useEffect(() => {
     if (debouncedSearchTerm) {
@@ -26,6 +36,9 @@ const Search = ({ search, setResults, debounceDelay }: Props) => {
   }, [debouncedSearchTerm]);
 
   const searchOnChange = (e: ChangeEvent<HTMLInputElement>) => {
+    if (isClient()) {
+      localStorage.setItem("user-search-term", e.target.value);
+    }
     setSearchTerm(e.target.value);
   };
 
@@ -34,13 +47,19 @@ const Search = ({ search, setResults, debounceDelay }: Props) => {
   };
 
   return (
-    <form onSubmit={searchOnSubmit} className="search">
+    <form
+      onSubmit={searchOnSubmit}
+      className="search"
+      data-testid="search-form"
+    >
       <div className="search__input-wrapper">
         <input
           type="text"
           className="search__input"
           onChange={searchOnChange}
           placeholder="Enter email address"
+          data-testid="search-input"
+          value={searchTerm}
         />
         <i className="pfml-icon--search search__icon"></i>
       </div>

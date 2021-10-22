@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from typing import Optional
 
+from massgov.pfml.db.models.payments import PaymentAuditReportType
 from massgov.pfml.delegated_payments.reporting.delegated_abstract_reporting import AbstractRecord
 
 
@@ -13,6 +14,9 @@ class PaymentAuditCSV(AbstractRecord):
     fineos_customer_number: Optional[str]
     first_name: Optional[str]
     last_name: Optional[str]
+    dor_first_name: Optional[str]
+    dor_last_name: Optional[str]
+    dor_fineos_name_mismatch_details: Optional[str]
     address_line_1: Optional[str]
     address_line_2: Optional[str]
     city: Optional[str]
@@ -37,9 +41,24 @@ class PaymentAuditCSV(AbstractRecord):
     previously_errored_payment_count: Optional[str]
     previously_rejected_payment_count: Optional[str]
     previously_skipped_payment_count: Optional[str]
-    rejected_by_program_integrity: Optional[str]
-    rejected_notes: Optional[str]
-    skipped_by_program_integrity: Optional[str]
+
+    max_weekly_benefits_details: Optional[str] = None
+    dua_dia_reduction_details: Optional[str] = None
+    rejected_by_program_integrity: Optional[str] = None
+    skipped_by_program_integrity: Optional[str] = None
+    rejected_notes: Optional[str] = None
+
+
+@dataclass
+class PaymentAuditDetails:
+    """Subset of payment audit report relevant to system generated details"""
+
+    max_weekly_benefits_details: Optional[str] = None
+    dua_dia_reduction_details: Optional[str] = None
+    dor_fineos_name_mismatch_details: Optional[str] = None
+    rejected_by_program_integrity: bool = False
+    skipped_by_program_integrity: bool = False
+    rejected_notes: Optional[str] = None
 
 
 PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
@@ -48,6 +67,9 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     fineos_customer_number="Customer Number",
     first_name="First Name",
     last_name="Last Name",
+    dor_first_name="DOR First Name",
+    dor_last_name="DOR Last Name",
+    dor_fineos_name_mismatch_details=PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH.payment_audit_report_type_description,
     address_line_1="Address Line 1",
     address_line_2="Address Line 2",
     city="City",
@@ -72,7 +94,9 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     previously_errored_payment_count="Previously Errored Payment Count",
     previously_rejected_payment_count="Previously Rejected Payment Count",
     previously_skipped_payment_count="Previously Skipped Payment Count",
+    max_weekly_benefits_details=PaymentAuditReportType.MAX_WEEKLY_BENEFITS.payment_audit_report_type_description,
+    dua_dia_reduction_details=PaymentAuditReportType.DUA_DIA_REDUCTION.payment_audit_report_type_description,
     rejected_by_program_integrity="Reject",
-    rejected_notes="Reject Notes",
     skipped_by_program_integrity="Skip",
+    rejected_notes="Reject Notes",
 )

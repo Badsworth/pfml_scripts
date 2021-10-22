@@ -1,6 +1,10 @@
-import { renderWithAppLogic, simulateEvents } from "../../test-utils";
+import { screen, waitFor } from "@testing-library/react";
+import BenefitsApplication from "../../../src/models/BenefitsApplication";
 import FamilyMemberName from "../../../src/pages/applications/family-member-name";
 import { pick } from "lodash";
+import { renderPage } from "../../test-utils";
+import { setupBenefitsApplications } from "../../test-utils/helpers";
+import userEvent from "@testing-library/user-event";
 
 const caringLeavePath = "leave_details.caring_leave_metadata";
 
@@ -14,73 +18,81 @@ const defaultName = {
   },
 };
 
+const updateClaim = jest.fn(() => {
+  return Promise.resolve();
+});
+
 const setup = (name) => {
-  const { appLogic, wrapper } = renderWithAppLogic(FamilyMemberName, {
-    claimAttrs: {
-      ...name,
-    },
-  });
-
-  const { changeField, submitForm } = simulateEvents(wrapper);
-
-  return {
-    appLogic,
-    changeField,
-    submitForm,
-    wrapper,
+  const claimAttrs = {
+    ...name,
   };
+  const claim = new BenefitsApplication({
+    application_id: "mock_application_id",
+    ...claimAttrs,
+  });
+  const cb = (appLogic) => {
+    appLogic.benefitsApplications.update = updateClaim;
+  };
+  return renderPage(
+    FamilyMemberName,
+    {
+      addCustomSetup: (appLogic) => {
+        setupBenefitsApplications(appLogic, [claim], cb);
+      },
+    },
+    { query: { claim_id: "mock_application_id" } }
+  );
 };
 
 describe("FamilyMemberName", () => {
   it("renders the page", () => {
-    const { wrapper } = setup(defaultName);
-    expect(wrapper).toMatchSnapshot();
+    const { container } = setup(defaultName);
+    expect(container).toMatchSnapshot();
   });
 
   it("calls claims.update when the form is successfully submitted with pre-filled data", async () => {
-    const { appLogic, submitForm } = setup(defaultName);
-    const update = jest.spyOn(appLogic.benefitsApplications, "update");
+    setup(defaultName);
 
-    await submitForm();
-
-    expect(update).toHaveBeenCalledWith(
-      expect.any(String),
-      pick(defaultName, [
-        `${caringLeavePath}.family_member_first_name`,
-        `${caringLeavePath}.family_member_last_name`,
-        `${caringLeavePath}.family_member_middle_name`,
-      ])
-    );
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
+    await waitFor(() => {
+      expect(updateClaim).toHaveBeenCalledWith(
+        expect.any(String),
+        pick(defaultName, [
+          `${caringLeavePath}.family_member_first_name`,
+          `${caringLeavePath}.family_member_last_name`,
+          `${caringLeavePath}.family_member_middle_name`,
+        ])
+      );
+    });
   });
 
   it("calls claims.update when the form is successfully submitted with new data", async () => {
-    const { appLogic, changeField, submitForm } = setup({});
-    const update = jest.spyOn(appLogic.benefitsApplications, "update");
+    setup();
 
     const caringLeave = defaultName.leave_details.caring_leave_metadata;
-
-    changeField(
-      `${caringLeavePath}.family_member_first_name`,
+    userEvent.type(
+      screen.getByRole("textbox", { name: "First name" }),
       caringLeave.family_member_first_name
     );
-    changeField(
-      `${caringLeavePath}.family_member_middle_name`,
+    userEvent.type(
+      screen.getByRole("textbox", { name: "Middle name (optional)" }),
       caringLeave.family_member_middle_name
     );
-    changeField(
-      `${caringLeavePath}.family_member_last_name`,
+    userEvent.type(
+      screen.getByRole("textbox", { name: "Last name" }),
       caringLeave.family_member_last_name
     );
 
-    await submitForm();
-
-    expect(update).toHaveBeenCalledWith(
-      expect.any(String),
-      pick(defaultName, [
-        `${caringLeavePath}.family_member_first_name`,
-        `${caringLeavePath}.family_member_last_name`,
-        `${caringLeavePath}.family_member_middle_name`,
-      ])
-    );
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
+    await waitFor(() => {
+      expect(updateClaim).toHaveBeenCalledWith(
+        expect.any(String),
+        pick(defaultName, [
+          `${caringLeavePath}.family_member_first_name`,
+          `${caringLeavePath}.family_member_last_name`,
+          `${caringLeavePath}.family_member_middle_name`,
+        ])
+      );
+    });
   });
 });

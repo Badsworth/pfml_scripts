@@ -29,6 +29,9 @@ const config = {
     // Mayflowers requires us to expose its includePaths so its imports work
     includePaths: mayflowerAssets.includePaths,
   },
+  images: {
+    disableStaticImages: true,
+  },
   trailingSlash: true,
   webpack: function (webpackConfig) {
     // Include our polyfills before all other code
@@ -38,7 +41,7 @@ const config = {
     webpackConfig.entry = async () => {
       const entries = await originalEntry();
       const mainEntryFilename = "main.js";
-      const polyfillsPath = "./src/polyfills.js";
+      const polyfillsPath = "./src/polyfills.ts";
 
       if (
         entries[mainEntryFilename] &&

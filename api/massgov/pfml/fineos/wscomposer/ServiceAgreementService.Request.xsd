@@ -1,41 +1,49 @@
-<?xml version="1.0" encoding="utf-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.fineos.com/wscomposer/ServiceAgreementService"
-targetNamespace="http://www.fineos.com/wscomposer/ServiceAgreementService"
-xmlns:tns="http://www.fineos.com/wscomposer/ServiceAgreementService" elementFormDefault="unqualified">
+<?xml version="1.0" ?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns="http://www.fineos.com/wscomposer/ServiceAgreementService" xmlns:tns="http://www.fineos.com/wscomposer/ServiceAgreementService" targetNamespace="http://www.fineos.com/wscomposer/ServiceAgreementService" elementFormDefault="unqualified">
   <xs:element name="WSUpdateRequest">
     <xs:complexType>
       <xs:sequence>
-        <xs:element maxOccurs="1" name="config-name" type="xs:string" />
-        <xs:element name="update-data" type="tns:ServiceAgreementService" />
+        <xs:element maxOccurs="1" name="config-name" type="xs:string"/>
+        <xs:element name="update-data" type="tns:ServiceAgreementService"/>
       </xs:sequence>
     </xs:complexType>
   </xs:element>
   <xs:complexType name="ServiceAgreementService">
     <xs:sequence>
       <xs:sequence minOccurs="0" maxOccurs="unbounded">
-        <xs:element name="OCCase" type="tns:OCCase" />
+        <xs:element name="OCCase" type="tns:OCCase"/>
       </xs:sequence>
       <xs:element name="additional-data-set" minOccurs="0">
+            
         <xs:complexType>
+                  
           <xs:sequence>
+                        
             <xs:element name="additional-data" minOccurs="0" maxOccurs="unbounded">
+                              
               <xs:complexType>
+                                    
                 <xs:sequence>
-                  <xs:element name="name" type="xs:string" />
-                  <xs:element name="value" type="xs:string" />
+                                          
+                  <xs:element name="name" type="xs:string"/>
+                                          
+                  <xs:element name="value" type="xs:string"/>
+                                      
                 </xs:sequence>
+                                
               </xs:complexType>
+                          
             </xs:element>
+                    
           </xs:sequence>
+              
         </xs:complexType>
       </xs:element>
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="OCCase">
     <xs:annotation>
-      <xs:documentation>OCCase represents a virtual file. It is a potential starting point for traversing the data
-      model, selected by its unique identifier. It is used to group contacts, tasks, documents, related parties and
-      other artefacts/data that relate to this one particular issue.</xs:documentation>
+      <xs:documentation>OCCase represents a virtual file. It is a potential starting point for traversing the data model, selected by its unique identifier. It is used to group contacts, tasks, documents, related parties and other artefacts/data that relate to this one particular issue. </xs:documentation>
     </xs:annotation>
     <xs:sequence>
       <xs:element name="OID" minOccurs="0" maxOccurs="1" type="tns:OID">
@@ -60,14 +68,12 @@ xmlns:tns="http://www.fineos.com/wscomposer/ServiceAgreementService" elementForm
       </xs:element>
       <xs:element name="persistent-oid" minOccurs="0" maxOccurs="1" type="tns:OID">
         <xs:annotation>
-          <xs:documentation>Shadow persistent field for OID. OID of the persistent BO the transient BO
-          represents</xs:documentation>
+          <xs:documentation>Shadow persistent field for OID. OID of the persistent BO the transient BO represents</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="persistent-boeversion" minOccurs="0" maxOccurs="1" type="xs:long">
         <xs:annotation>
-          <xs:documentation>Shadow persistent field for BOEVersion. BOEVersion of the persistent BO the transient BO
-          represents</xs:documentation>
+          <xs:documentation>Shadow persistent field for BOEVersion. BOEVersion of the persistent BO the transient BO represents</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="AdminGroup" minOccurs="1" maxOccurs="1">
@@ -76,246 +82,316 @@ xmlns:tns="http://www.fineos.com/wscomposer/ServiceAgreementService" elementForm
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:maxLength value="300" />
+            <xs:maxLength value="300"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
       <xs:element name="AdminGroupAutoSet" minOccurs="1" maxOccurs="1" type="xs:boolean">
         <xs:annotation>
-          <xs:documentation>Transient attribute. Flag to indicate that the admin group has been automtically
-          set.</xs:documentation>
+          <xs:documentation>Transient attribute. Flag to indicate that the admin group has been automtically set.</xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="Anonymised" minOccurs="1" maxOccurs="1" type="xs:boolean">
         <xs:annotation>
-          <xs:documentation>This field can be used to capture if the Case is Anonymised.</xs:documentation>
+          <xs:documentation>This field can be used to capture if the Case is Anonymised. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="AnonymiseDate" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
         <xs:annotation>
-          <xs:documentation>This field can be used to capture the Date of the Case Anonymisation.</xs:documentation>
+          <xs:documentation>This field can be used to capture the Date of the Case Anonymisation. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="AnonymiseMode" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
         <xs:annotation>
-          <xs:documentation>This field can be used to capture the Case Anonymise Mode.</xs:documentation>
+          <xs:documentation>This field can be used to capture the Case Anonymise Mode. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="C_CreatedBy" minOccurs="1" maxOccurs="1" type="xs:int">
         <xs:annotation>
-          <xs:documentation>The user who originaly created this case.</xs:documentation>
+          <xs:documentation>The user who originaly created this case. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="CaseComplexity" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
         <xs:annotation>
-          <xs:documentation>This field can be used to capture the expected complexity level involved in managing the
-          case.</xs:documentation>
+          <xs:documentation>This field can be used to capture the expected complexity level involved in managing the case. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="CaseFlag" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
         <xs:annotation>
-          <xs:documentation>This field can be used to capture the case flag associated to the case.</xs:documentation>
+          <xs:documentation>This field can be used to capture the case flag associated to the case. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="CaseNumber" minOccurs="1" maxOccurs="1">
         <xs:annotation>
-          <xs:documentation>A unique identifier for this case. This is generally exposed to the user interface and
-          generated documentation. The case number is generally created on instantiation of the case based on a
-          sequence.</xs:documentation>
+          <xs:documentation>A unique identifier for this case. This is generally exposed to the user interface and generated documentation. The case number is generally created on instantiation of the case based on a sequence. </xs:documentation>
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:maxLength value="254" />
+            <xs:maxLength value="254"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
       <xs:element name="CaseOwnerComment" minOccurs="1" maxOccurs="1">
         <xs:annotation>
-          <xs:documentation>The comment set by the user currently assigned to the case.</xs:documentation>
+          <xs:documentation>The comment set by the user currently assigned to the case. </xs:documentation>
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:maxLength value="250" />
+            <xs:maxLength value="250"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
       <xs:element name="CollapseView" minOccurs="1" maxOccurs="1" type="xs:boolean">
         <xs:annotation>
-          <xs:documentation>Collapse claim and benefit View.</xs:documentation>
+          <xs:documentation>Collapse claim and benefit View. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="DateCreated" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
         <xs:annotation>
-          <xs:documentation>The date and time when this case was originally created.</xs:documentation>
+          <xs:documentation>The date and time when this case was originally created. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="DefaultCurrency" minOccurs="1" maxOccurs="1" type="tns:FineosEnum">
         <xs:annotation>
-          <xs:documentation>This represents the selected currency applicable to all amounts linked to this
-          case.</xs:documentation>
+          <xs:documentation>This represents the selected currency applicable to all amounts linked to this case. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="Description" minOccurs="1" maxOccurs="1">
         <xs:annotation>
-          <xs:documentation>Description for this case as entered by the user</xs:documentation>
+          <xs:documentation>Description for this case as entered by the user </xs:documentation>
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:maxLength value="2000" />
+            <xs:maxLength value="2000"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
       <xs:element name="EffectiveDate" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
         <xs:annotation>
-          <xs:documentation>The date on which the accident or loss took place</xs:documentation>
+          <xs:documentation>The date on which the accident or loss took place </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="FollowUpDate" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
         <xs:annotation>
-          <xs:documentation>Records the date by which all managed requirements on a case should be followed up. This
-          field is informational only.</xs:documentation>
+          <xs:documentation>Records the date by which all managed requirements on a case should be followed up. This field is informational only. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="I_CreatedBy" minOccurs="1" maxOccurs="1" type="xs:long">
         <xs:annotation>
-          <xs:documentation>The user who originaly created this case.</xs:documentation>
+          <xs:documentation>The user who originaly created this case. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="MasterPlanId" minOccurs="1" maxOccurs="1">
         <xs:annotation>
-          <xs:documentation>The masterplan id of the Master Plan record that the case is linked to.</xs:documentation>
+          <xs:documentation>The masterplan id of the Master Plan record that the case is linked to. </xs:documentation>
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:maxLength value="255" />
+            <xs:maxLength value="255"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
       <xs:element name="MemberId" minOccurs="1" maxOccurs="1">
         <xs:annotation>
-          <xs:documentation>The member id of the membership record that the case is linked to.</xs:documentation>
+          <xs:documentation>The member id of the membership record that the case is linked to. </xs:documentation>
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:maxLength value="255" />
+            <xs:maxLength value="255"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
       <xs:element name="NotProceedingWithDate" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
         <xs:annotation>
-          <xs:documentation>Records the date after which the case should no longer be progressed. This field is
-          informational only.</xs:documentation>
+          <xs:documentation>Records the date after which the case should no longer be progressed. This field is informational only. </xs:documentation>
         </xs:annotation>
       </xs:element>
       <xs:element name="ParentCaseNumber" minOccurs="1" maxOccurs="1">
         <xs:annotation>
-          <xs:documentation>Transient attribute. Case Number of the parent case.</xs:documentation>
+          <xs:documentation>Transient attribute. Case Number of the parent case. </xs:documentation>
         </xs:annotation>
         <xs:simpleType>
           <xs:restriction base="xs:string">
-            <xs:maxLength value="20" />
+            <xs:maxLength value="20"/>
           </xs:restriction>
         </xs:simpleType>
       </xs:element>
       <xs:element name="ToDate" minOccurs="1" maxOccurs="1" nillable="true" type="xs:dateTime">
         <xs:annotation>
-          <xs:documentation>The To Date of the Case.</xs:documentation>
+          <xs:documentation>The To Date of the Case. </xs:documentation>
         </xs:annotation>
       </xs:element>
     </xs:sequence>
   </xs:complexType>
   <!-- Common Fineos Data Types -->
   <xs:simpleType name="OID">
+    	
     <xs:restriction base="xs:string">
-      <xs:pattern value="[pPtT][eElL]:\d{1,5}:\d{1,10}" />
+      		
+      <xs:pattern value="[pPtT][eElL]:\d{1,5}:\d{1,10}"/>
+      	
     </xs:restriction>
   </xs:simpleType>
   <xs:complexType name="FineosEnum">
+    	
     <xs:annotation>
-      <xs:documentation>An enumeration data-type similar to the Enum data-type introduced in Java 5. This allows a
-      Business Object (BO) attribute to have one of a set of pre-defined values that are stored in the
-      database.</xs:documentation>
+      		
+      <xs:documentation>An enumeration data-type similar to the Enum			data-type introduced in Java 5. This allows a Business			Object			(BO)			attribute to have one of a set of pre-defined values that			are stored			in the database.      </xs:documentation>
+      	
     </xs:annotation>
+    	
     <xs:sequence>
+      		
       <xs:choice>
+        			
         <xs:element name="InstanceDomainAndFullId" type="tns:InstanceNameAndDomainNameAndFullId">
+          			
           <xs:annotation>
+            					
             <xs:documentation>An Enum sepecifying Instance Name and Domian Name and FullId</xs:documentation>
+            				
           </xs:annotation>
+          			
         </xs:element>
+        			
         <xs:element name="InstanceAndDomainName" type="tns:InstanceNameAndDomainName">
+          				
           <xs:annotation>
+            					
             <xs:documentation>An Enum sepecifying Instance Name and Domian Name</xs:documentation>
+            				
           </xs:annotation>
+          			
         </xs:element>
+        			
         <xs:element name="FullId" type="xs:long">
+          				
           <xs:annotation>
+            					
             <xs:documentation>An Enum sepecifying Fullid</xs:documentation>
+            				
           </xs:annotation>
+          			
         </xs:element>
+        		
       </xs:choice>
+      	
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="InstanceNameAndDomainNameAndFullId">
+    	
     <xs:annotation>
-      <xs:documentation>Instance name Domain Name and FullId are Expected for enum values. This is type used in Read
-      Service for Enums.</xs:documentation>
+      		
+      <xs:documentation>Instance name Domain Name and FullId are Expected for enum values. This is type used in Read Service for Enums.          </xs:documentation>
+      			
     </xs:annotation>
+    	
     <xs:sequence>
+      		
       <xs:element name="InstanceName" type="xs:string">
+        			
         <xs:annotation>
+          				
           <xs:documentation>Instance Name for this Enum</xs:documentation>
+          			
         </xs:annotation>
+        		
       </xs:element>
+      		
       <xs:element name="DomainName" type="xs:string">
+        			
         <xs:annotation>
+          				
           <xs:documentation>Domain in which the instance name belongs</xs:documentation>
+          			
         </xs:annotation>
+        		
       </xs:element>
+      		
       <xs:element name="FullId" type="xs:long">
+        			
         <xs:annotation>
+          				
           <xs:documentation>Full ID identifies the instance and the Domain</xs:documentation>
+          			
         </xs:annotation>
+        		
       </xs:element>
+      	
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="InstanceNameAndDomainName">
+    	
     <xs:annotation>
-      <xs:documentation>Instance Name, Domain Name are Expected for Enum Values.</xs:documentation>
+      		
+      <xs:documentation>Instance Name, Domain Name are Expected for Enum Values.          </xs:documentation>
+      			
     </xs:annotation>
+    	
     <xs:sequence>
+      		
       <xs:element name="InstanceName" type="xs:string">
+        			
         <xs:annotation>
+          				
           <xs:documentation>Instance Name for this Enum</xs:documentation>
+          			
         </xs:annotation>
+        		
       </xs:element>
+      		
       <xs:element name="DomainName" type="xs:string">
+        			
         <xs:annotation>
+          				
           <xs:documentation>Domain in which the instance name belongs</xs:documentation>
+          			
         </xs:annotation>
+        		
       </xs:element>
+      	
     </xs:sequence>
   </xs:complexType>
   <xs:complexType name="Money">
+    	
     <xs:annotation>
-      <xs:documentation>DataType for representing the Fineos Money Object</xs:documentation>
+      		
+      <xs:documentation>			DataType for representing the Fineos Money			Object      </xs:documentation>
+      	
     </xs:annotation>
+    	
     <xs:sequence>
+      		
       <xs:element name="CurrencyCode">
+        			
         <xs:annotation>
-          <xs:documentation>Optional Currency Code for the Fineos Money</xs:documentation>
+          				
+          <xs:documentation>Optional Currency Code for the Fineos					Money          </xs:documentation>
+          			
         </xs:annotation>
+        			
         <xs:simpleType>
+          				
           <xs:restriction base="xs:string">
-            <xs:maxLength value="3" />
+            					
+            <xs:maxLength value="3"/>
+            				
           </xs:restriction>
+          			
         </xs:simpleType>
+        		
       </xs:element>
+      		
       <xs:element name="Amount" type="xs:decimal">
+        			
         <xs:annotation>
-          <xs:documentation>BigDecimal amount for the Fineos Money</xs:documentation>
+          				
+          <xs:documentation>BigDecimal amount for the Fineos Money          </xs:documentation>
+          			
         </xs:annotation>
+        		
       </xs:element>
+      	
     </xs:sequence>
   </xs:complexType>
 </xs:schema>

@@ -1,5 +1,4 @@
-import { describe, beforeAll, test, expect } from "@jest/globals";
-import aws from "aws-sdk";
+import { describe, beforeAll, test, expect, jest } from "@jest/globals";
 import config from "../../src/config";
 import {
   getAuthManager,
@@ -11,43 +10,28 @@ import {
   generateCredentials,
   getClaimantCredentials,
 } from "../../src/util/credentials";
-import { endOfQuarter, formatISO, subQuarters, getQuarter } from "date-fns";
-import AuthenticationManager from "submission/AuthenticationManager";
+import { endOfQuarter, formatISO, subQuarters } from "date-fns";
+import AuthenticationManager from "../../src/submission/AuthenticationManager";
 import {
   getUsersCurrent,
   UserResponse,
   EmployerClaimRequestBody,
 } from "../../src/_api";
 import { ClaimGenerator } from "../../src/generation/Claim";
-import { ScenarioSpecification } from "generation/Scenario";
+import { ScenarioSpecification } from "../../src/generation/Scenario";
+import { Credentials } from "../../src/types";
+import { Employer } from "../../src/generation/Employer";
 
 let authenticator: AuthenticationManager;
 let leave_admin_creds_1: Credentials;
 let leave_admin_creds_2: Credentials;
 let employer: Employer;
 
-// starting ecs and cloudwatch instances
-const ecs = new aws.ECS();
-const cloudwatch = new aws.CloudWatchEvents();
+jest.retryTimes(3);
 
-// convert format for ECS call
-function convertNetworkConfiguration(
-  cloudwatchConfiguration?: AWS.CloudWatchEvents.NetworkConfiguration
-): AWS.ECS.NetworkConfiguration | undefined {
-  if (cloudwatchConfiguration && cloudwatchConfiguration.awsvpcConfiguration) {
-    return {
-      awsvpcConfiguration: {
-        subnets: cloudwatchConfiguration.awsvpcConfiguration.Subnets,
-        securityGroups:
-          cloudwatchConfiguration.awsvpcConfiguration.SecurityGroups,
-        assignPublicIp:
-          cloudwatchConfiguration.awsvpcConfiguration.AssignPublicIp,
-      },
-    };
-  }
-  return;
-}
-
+/**
+ * @group nightly
+ */
 describe("Series of test that verifies LAs are properly registered in Fineos", () => {
   beforeAll(async () => {
     leave_admin_creds_1 = generateCredentials();
@@ -61,10 +45,12 @@ describe("Series of test that verifies LAs are properly registered in Fineos", (
 
   test("Register Leave Admins (** verify only one LA **)", async () => {
     const fein = employer.fein;
-    const withholding_amount = employer.withholdings[getQuarter(new Date())];
+    const withholding_amount =
+      employer.withholdings[employer.withholdings.length - 1];
     const quarter = formatISO(endOfQuarter(subQuarters(new Date(), 2)), {
       representation: "date",
     });
+
     try {
       await authenticator.registerLeaveAdmin(
         leave_admin_creds_1.username,
@@ -91,57 +77,6 @@ describe("Series of test that verifies LAs are properly registered in Fineos", (
     }
   }, 60000);
 
-  test("Run and wait for ECS task to complete", async () => {
-    const targets = await cloudwatch
-      .listTargetsByRule({
-        Rule: `register-leave-admins-with-fineos_${config(
-          "ENVIRONMENT"
-        )}_schedule`,
-      })
-      .promise();
-    const target = targets.Targets?.[0];
-
-    if (!target || !target.EcsParameters) {
-      throw new Error("Unable to determine target for rule");
-    }
-    console.log("ECS task to register LAs in Fineos has started ...");
-    const ECS_result = await ecs
-      .runTask({
-        cluster: target.Arn,
-        group: target.EcsParameters.Group,
-        taskDefinition: target.EcsParameters.TaskDefinitionArn,
-        networkConfiguration: convertNetworkConfiguration(
-          target.EcsParameters.NetworkConfiguration
-        ),
-        launchType: target.EcsParameters.LaunchType,
-        count: target.EcsParameters.TaskCount,
-        platformVersion: target.EcsParameters.PlatformVersion,
-        startedBy: "integration-testing",
-      })
-      .promise();
-
-    if (!ECS_result.tasks) {
-      throw new Error("No task found from ECS run!");
-    }
-    const result = await ecs
-      .waitFor("tasksStopped", {
-        cluster: target.Arn,
-        tasks: [ECS_result.tasks[0].taskArn] as string[],
-      })
-      .promise();
-
-    if ((result.failures?.length ?? 0) > 0) {
-      throw new Error(
-        `Task failed with error: ${result.failures
-          ?.map((f) => f.reason)
-          .join(", ")}`
-      );
-    }
-    console.log(
-      "ECS task to register LAs in Fineos has completed successfully!"
-    );
-  }, 120000);
-
   test("Check LA user object for has_fineos_registration property", async () => {
     const session_1 = await authenticator.authenticate(
       leave_admin_creds_1.username,
@@ -167,14 +102,14 @@ describe("Series of test that verifies LAs are properly registered in Fineos", (
       },
     };
 
-    const leave_admin_info_1 = ((await getUsersCurrent(
+    const leave_admin_info_1 = (await getUsersCurrent(
       pmflApiOptions_1
-    )) as unknown) as {
+    )) as unknown as {
       data: { data: UserResponse };
     };
-    const leave_admin_info_2 = ((await getUsersCurrent(
+    const leave_admin_info_2 = (await getUsersCurrent(
       pmflApiOptions_2
-    )) as unknown) as {
+    )) as unknown as {
       data: { data: UserResponse };
     };
 
@@ -202,7 +137,6 @@ describe("Series of test that verifies LAs are properly registered in Fineos", (
   }, 60000);
 
   test("Submit Claim and confirm the right LA can access the review page", async () => {
-    jest.retryTimes(3);
     const employeePool = await getEmployeePool();
     const submitter = getPortalSubmitter();
     const RLAF_test: ScenarioSpecification = {
@@ -229,7 +163,6 @@ describe("Series of test that verifies LAs are properly registered in Fineos", (
       RLAF_test.employee,
       RLAF_test.claim
     );
-
     const res = await submitter.submit(claim, getClaimantCredentials());
     console.log("API submission completed successfully");
 

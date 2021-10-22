@@ -1,0 +1,43 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AlertBar renders the children as the alert body text 1`] = `
+<div
+  class="padding-y-2 bg-warning"
+>
+  <div
+    class="grid-container"
+  >
+    <div
+      class="grid-row"
+    >
+      <div
+        class="grid-col"
+      >
+        <div
+          class="display-flex"
+        >
+          <i
+            class="margin-right-2"
+          >
+            <svg
+              aria-hidden="true"
+              class="usa-icon--size-4"
+              focusable="false"
+              role="img"
+            >
+              <use
+                xlink:href="/img/sprite.svg#bell_ring"
+              />
+            </svg>
+          </i>
+          <p
+            class="margin-0 text-ink"
+          >
+            This is your alert
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+`;

@@ -5,7 +5,7 @@ import pytest
 from freezegun import freeze_time
 
 import massgov.pfml.api.util.state_log_util as state_log_util
-import massgov.pfml.payments.payments_util as payments_util
+import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 from massgov.pfml.db.models.employees import (
     Claim,
     Employee,
@@ -23,9 +23,6 @@ from massgov.pfml.db.models.factories import (
     ReferenceFileFactory,
 )
 from tests.helpers.state_log import default_outcome, setup_state_log
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 ### Setup methods for various state log scenarios ###
 
@@ -221,9 +218,9 @@ def test_create_finished_state_log_same_flow(initialize_factories_session, test_
         else:
             raise Exception("This should not happen - the test is broken")
 
-    state_log_a.prev_state_log_id is None
-    state_log_b.prev_state_log_id == state_log_a.state_log_id
-    state_log_c.prev_state_log_id == state_log_b.state_log_id
+    assert state_log_a.prev_state_log_id is None
+    assert state_log_b.prev_state_log_id == state_log_a.state_log_id
+    assert state_log_c.prev_state_log_id == state_log_b.state_log_id
 
 
 def test_create_finished_state_log_different_flow(initialize_factories_session, test_db_session):

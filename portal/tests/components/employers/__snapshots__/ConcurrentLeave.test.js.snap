@@ -1,48 +1,55 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`ConcurrentLeave renders the component 1`] = `
-<Fragment>
-  <Heading
-    level="3"
+<div>
+  <h3
+    class="font-heading-sm text-bold"
   >
     Concurrent accrued paid leave
-  </Heading>
+  </h3>
   <p>
     Your employee has told us about the following accrued paid leave they plan to use concurrent with their paid leave from PFML. This includes paid vacation time, sick time, personal time, and other paid time off. It does not include a family or medical leave policy or a disability program. There’s a 7-day unpaid waiting period, and employees are allowed to use accrued paid leave to overlap that period.
   </p>
-  <Table
-    className="width-full"
+  <table
+    class="usa-table usa-table--borderless c-table width-full"
   >
     <thead>
       <tr>
         <th
-          colSpan="2"
           scope="col"
         >
           Date range
         </th>
+        <th />
       </tr>
     </thead>
     <tbody>
-      <AmendableConcurrentLeave
-        appErrors={
-          AppErrorInfoCollection {
-            "items": Array [],
-            "itemsById": Object {},
-          }
-        }
-        concurrentLeave={
-          ConcurrentLeave {
-            "is_for_current_employer": true,
-            "leave_end_date": "2020-03-06",
-            "leave_start_date": "2020-03-01",
-          }
-        }
-        isAddedByLeaveAdmin={false}
-        onChange={[Function]}
-        onRemove={[Function]}
-      />
+      <tr>
+        <th
+          scope="row"
+        >
+          3/1/2020 to 3/6/2020
+        </th>
+        <td>
+          <button
+            class="usa-button position-relative text-no-wrap usa-button--unstyled"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="usa-icon text-middle margin-right-05 margin-top-neg-05"
+              focusable="false"
+              role="img"
+            >
+              <use
+                xlink:href="/img/sprite.svg#edit"
+              />
+            </svg>
+            Amend
+          </button>
+        </td>
+      </tr>
     </tbody>
-  </Table>
-</Fragment>
+  </table>
+</div>
 `;

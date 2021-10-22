@@ -1,74 +1,63 @@
-import {
-  MockBenefitsApplicationBuilder,
-  renderWithAppLogic,
-  simulateEvents,
-} from "../../test-utils";
-import PreviousLeave from "../../../src/models/PreviousLeave";
+import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
+import { screen, waitFor } from "@testing-library/react";
 import PreviousLeavesOtherReason from "../../../src/pages/applications/previous-leaves-other-reason";
+import { setupBenefitsApplications } from "../../test-utils/helpers";
+import userEvent from "@testing-library/user-event";
 
-jest.mock("../../../src/hooks/useAppLogic");
+const setup = (
+  claim = new MockBenefitsApplicationBuilder().continuous().create()
+) => {
+  let updateSpy;
 
-const setup = (claimAttrs = {}) => {
-  const { appLogic, claim, wrapper } = renderWithAppLogic(
+  const utils = renderPage(
     PreviousLeavesOtherReason,
-    { claimAttrs }
+    {
+      addCustomSetup: (appLogic) => {
+        setupBenefitsApplications(appLogic, [claim]);
+        updateSpy = jest.spyOn(appLogic.benefitsApplications, "update");
+      },
+    },
+    { query: { claim_id: claim.application_id } }
   );
 
-  const { changeRadioGroup, submitForm } = simulateEvents(wrapper);
-
   return {
-    appLogic,
-    changeRadioGroup,
-    claim,
-    submitForm,
-    wrapper,
+    updateSpy,
+    ...utils,
   };
 };
 
 describe("PreviousLeavesOtherReason", () => {
   it("renders the page", () => {
-    const { wrapper } = setup(
-      new MockBenefitsApplicationBuilder().continuous().create()
-    );
-
-    expect(wrapper).toMatchSnapshot();
+    const { container } = setup();
+    expect(container).toMatchSnapshot();
   });
 
   it("submits form with has_previous_leaves_other_reason value", async () => {
-    const { appLogic, changeRadioGroup, claim, submitForm } = setup();
-    const spy = jest.spyOn(appLogic.benefitsApplications, "update");
+    const { updateSpy } = setup();
 
-    await changeRadioGroup("has_previous_leaves_other_reason", "true");
-    await submitForm();
-    expect(spy).toHaveBeenCalledWith(claim.application_id, {
-      has_previous_leaves_other_reason: true,
+    userEvent.click(screen.getByRole("radio", { name: /Yes/i }));
+    userEvent.click(screen.getByRole("button", { name: /save/i }));
+
+    await waitFor(() => {
+      expect(updateSpy).toHaveBeenCalledWith(expect.any(String), {
+        has_previous_leaves_other_reason: true,
+      });
     });
   });
 
-  it("sets previous_leaves_other_reason to null when has_previous_leaves_other_reason is false and previous_leaves exist", async () => {
-    const { appLogic, changeRadioGroup, claim, submitForm } = setup({
-      previous_leaves_other_reason: [new PreviousLeave()],
-    });
-    const spy = jest.spyOn(appLogic.benefitsApplications, "update");
+  it("sets previous_leaves_other_reason to null when has_previous_leaves_other_reason changes to false", async () => {
+    const { updateSpy } = setup(
+      new MockBenefitsApplicationBuilder().previousLeavesOtherReason().create()
+    );
 
-    await changeRadioGroup("has_previous_leaves_other_reason", "false");
-    await submitForm();
-    expect(spy).toHaveBeenCalledWith(claim.application_id, {
-      has_previous_leaves_other_reason: false,
-      previous_leaves_other_reason: null,
-    });
-  });
+    userEvent.click(screen.getByRole("radio", { name: /No/i }));
+    userEvent.click(screen.getByRole("button", { name: /save/i }));
 
-  it("does not set previous_leaves_other_reason to null when has_previous_leaves_other_reason is false but previous_leaves do not exist", async () => {
-    const { appLogic, changeRadioGroup, claim, submitForm } = setup({
-      previous_leaves_other_reason: [],
-    });
-    const spy = jest.spyOn(appLogic.benefitsApplications, "update");
-
-    await changeRadioGroup("has_previous_leaves_other_reason", "false");
-    await submitForm();
-    expect(spy).toHaveBeenCalledWith(claim.application_id, {
-      has_previous_leaves_other_reason: false,
+    await waitFor(() => {
+      expect(updateSpy).toHaveBeenCalledWith(expect.any(String), {
+        has_previous_leaves_other_reason: false,
+        previous_leaves_other_reason: null,
+      });
     });
   });
 });

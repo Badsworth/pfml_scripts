@@ -1,7 +1,7 @@
-import { makeFile, testHook } from "../test-utils";
+import { act, renderHook } from "@testing-library/react-hooks";
 import TempFileCollection from "../../src/models/TempFileCollection";
 import { ValidationError } from "../../src/errors";
-import { act } from "react-dom/test-utils";
+import { makeFile } from "../test-utils";
 import tracker from "../../src/services/tracker";
 import useFilesLogic from "../../src/hooks/useFilesLogic";
 
@@ -12,7 +12,7 @@ describe("useFilesLogic", () => {
   beforeEach(() => {
     clearErrors = jest.fn();
     catchError = jest.fn();
-    testHook(() => {
+    renderHook(() => {
       ({ processFiles, removeFile, files } = useFilesLogic({
         clearErrors,
         catchError,
@@ -38,7 +38,7 @@ describe("useFilesLogic", () => {
       expect(catchError).not.toHaveBeenCalled();
       expect(files.items).toEqual([
         { id: "TempFile1", file: makeFile({ name: "file1" }) },
-        { id: "TempFile3", file: makeFile({ name: "file2" }) },
+        { id: "TempFile2", file: makeFile({ name: "file2" }) },
       ]);
     });
 

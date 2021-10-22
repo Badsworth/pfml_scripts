@@ -1,405 +1,446 @@
-import {
-  MockBenefitsApplicationBuilder,
-  renderWithAppLogic,
-} from "../../test-utils";
-import Checklist from "../../../src/pages/applications/checklist";
+import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
+import BenefitsApplicationDocument from "../../../src/models/BenefitsApplicationDocument";
+import { Checklist } from "../../../src/pages/applications/checklist";
 import { DocumentType } from "../../../src/models/Document";
 import LeaveReason from "../../../src/models/LeaveReason";
 import { mockRouter } from "next/router";
-import { mount } from "enzyme";
-import routes from "../../../src/routes";
+import { screen } from "@testing-library/react";
 
-function renderStepListDescription(stepListWrapper) {
-  return stepListWrapper
-    .dive()
-    .find(`Trans[i18nKey="pages.claimsChecklist.stepListDescription"]`)
-    .dive();
-}
-
-// Dive more levels to account for withClaimDocuments HOC
-const diveLevels = 4;
+const renderChecklist = (claim, warnings, customProps) => {
+  if (!claim) {
+    claim = new MockBenefitsApplicationBuilder().create();
+  }
+  if (!warnings) {
+    warnings = [
+      {
+        field: "first_name",
+        message: "first_name is required",
+        type: "required",
+      },
+    ];
+  }
+  const options = {
+    addCustomSetup: (appLogic) => {
+      appLogic.benefitsApplications.warningsLists = {
+        mock_application_id: warnings,
+      };
+    },
+  };
+  const props = {
+    query: { claim_id: "mock_application_id" },
+    claim,
+    documents: [],
+    ...customProps,
+  };
+  return renderPage(Checklist, options, props);
+};
 
 describe("Checklist", () => {
   beforeEach(() => {
-    mockRouter.pathname = routes.applications.checklist;
+    mockRouter.pathname = "/applications/checklist";
   });
 
-  it("renders multiple StepList components with list of Steps", () => {
-    const { wrapper } = renderWithAppLogic(Checklist, {
-      diveLevels,
-      hasLoadedClaimDocuments: true,
+  it("renders multiple steps", () => {
+    const { container } = renderChecklist();
+    expect(container).toMatchSnapshot();
+    expect(screen.getByText("Part 1")).toBeInTheDocument();
+    expect(screen.getByText("Part 1")).toBeInTheDocument();
+    expect(screen.getByText("Part 3")).toBeInTheDocument();
+  });
+
+  it("initially only the first CTA is enabled and verify id description is displayed", () => {
+    renderChecklist();
+    expect(
+      screen.getByText(
+        /You can use a variety of documents to verify your identity, but it’s easiest if you have a Massachusetts driver’s license or Massachusetts Identification Card./
+      )
+    ).toBeInTheDocument();
+    expect(screen.getAllByRole("listitem")).toHaveLength(3);
+    expect(
+      screen.getByText(/Your name as it appears on your ID./)
+    ).toBeInTheDocument();
+    const start = screen.getByRole("link", {
+      name: "Start: Verify your identification",
     });
-
-    expect(wrapper).toMatchSnapshot();
-    expect(wrapper.exists("Spinner")).toBe(false);
+    expect(start).toHaveClass("usa-button");
   });
 
-  it("renders description for Step", () => {
-    expect.assertions(7);
-
-    const { wrapper } = renderWithAppLogic(Checklist, {
-      // Avoids a blank description for the Upload Certification step,
-      // which we have more unit tests for below to capture its other
-      // variations
-      claimAttrs: new MockBenefitsApplicationBuilder()
-        .bondingBirthLeaveReason()
-        .create(),
-      diveLevels,
-      hasLoadedClaimDocuments: true,
-    });
-    const steps = wrapper.find("Step");
-
-    steps.forEach((step) => {
-      expect(step.find("Trans").dive()).toMatchSnapshot();
-    });
+  it("other CTA options are disabled", () => {
+    renderChecklist();
+    expect(
+      screen.getByRole("button", {
+        name: "Start: Enter employment information",
+      })
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", {
+        name: "Start: Enter leave details",
+      })
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", {
+        name: "Start: Report other leave, benefits, and income",
+      })
+    ).toBeDisabled();
+    expect(
+      screen.getByRole("button", {
+        name: "Review and submit application",
+      })
+    ).toBeDisabled();
   });
 
-  it("renders 'In progress' version of Part 1 StepList description when claim isn't yet submitted", () => {
-    const { wrapper } = renderWithAppLogic(Checklist, { diveLevels });
-    const part1List = wrapper.find("StepList").at(0);
-
-    expect(renderStepListDescription(part1List)).toMatchSnapshot();
+  it("On click start, user would be routed to expected destination", () => {
+    renderChecklist();
+    expect(
+      screen.getByRole("link", {
+        name: "Start: Verify your identification",
+      })
+    ).toHaveAttribute(
+      "href",
+      "/applications/name?claim_id=mock_application_id"
+    );
   });
 
-  describe("when Part 1 is submitted", () => {
-    let wrapper;
+  it("when verify your id is submitted, next section renders as expected", () => {
+    const warnings = [
+      {
+        field: "employment_status",
+        message: "employment_status is required",
+        type: "required",
+      },
+      {
+        field: "leave_details.employer_notified",
+        message: "leave_details.employer_notified is required",
+        type: "required",
+      },
+      {
+        field: "work_pattern.work_pattern_type",
+        message: "work_pattern.work_pattern_type is required",
+        type: "required",
+      },
+    ];
+    renderChecklist(new MockBenefitsApplicationBuilder().create(), warnings);
+    expect(screen.getByText(/Completed/)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Edit: Verify your identification" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("The date you told your employer you were taking leave.")
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", {
+        name: "Start: Enter employment information",
+      })
+    ).toHaveAttribute(
+      "href",
+      "/applications/employment-status?claim_id=mock_application_id"
+    );
+    expect(
+      screen.getByRole("link", {
+        name: "Start: Enter employment information",
+      })
+    ).toBeEnabled();
+  });
 
+  describe("Part 2", () => {
     beforeEach(() => {
-      const claim = new MockBenefitsApplicationBuilder().submitted().create();
-
-      ({ wrapper } = renderWithAppLogic(Checklist, {
-        claimAttrs: claim,
-        diveLevels,
-        warningsLists: {
-          [claim.application_id]: [],
+      const warnings = [];
+      const customProps = {
+        query: {
+          claim_id: "mock_application_id",
+          "part-one-submitted": "true",
         },
-      }));
+      };
+      renderChecklist(
+        new MockBenefitsApplicationBuilder().submitted().create(),
+        warnings,
+        customProps
+      );
     });
 
-    it("renders different description for Part 1", () => {
-      const part1List = wrapper.find("StepList").at(0);
-
-      expect(renderStepListDescription(part1List)).toMatchSnapshot();
-    });
-
-    it("renders descriptions for Part 2", () => {
-      const part2List = wrapper.find("StepList").at(1);
-
-      expect(renderStepListDescription(part2List)).toMatchSnapshot();
-    });
-
-    it("does not render descriptions for Part 3", () => {
-      const part3List = wrapper.find("StepList").at(2);
-
+    it("renders alert", () => {
       expect(
-        part3List.exists(
-          `Trans[i18nKey="pages.claimsChecklist.stepListDescription"]`
-        )
-      ).toBe(false);
+        screen.getByText(/Part 1 of your application was confirmed./)
+      ).toBeInTheDocument();
+      expect(screen.getByText(/Your application ID is/)).toBeInTheDocument();
+    });
+
+    it("renders prior steps in black", () => {
+      for (let step = 1; step <= 5; step++) {
+        expect(screen.getByText(step)).toHaveClass("bg-black");
+      }
+    });
+
+    it("renders payment heading and description", () => {
+      expect(
+        screen.getByText("Enter your payment information")
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(/Tell us how you want to receive payment./)
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("link", { name: "Start: Add payment information" })
+      ).toBeInTheDocument();
+    });
+
+    it("CTA would direct user to expected location", () => {
+      expect(
+        screen.getByRole("link", { name: "Start: Add payment information" })
+      ).toBeEnabled();
+      expect(
+        screen.getByRole("link", { name: "Start: Add payment information" })
+      ).toHaveAttribute(
+        "href",
+        "/applications/payment-method?claim_id=mock_application_id"
+      );
     });
   });
 
-  describe("when Part 2 is submitted", () => {
-    let wrapper;
-
+  describe("Part 3", () => {
     beforeEach(() => {
-      const claim = new MockBenefitsApplicationBuilder()
-        .paymentPrefSubmitted()
-        .create();
-
-      ({ wrapper } = renderWithAppLogic(Checklist, {
-        claimAttrs: claim,
-        diveLevels,
-        warningsLists: {
-          [claim.application_id]: [],
-        },
-      }));
-    });
-
-    it("Payment pref step is not editable", () => {
-      const paymentPrefStep = wrapper.find("Step").at(4);
-
-      expect(paymentPrefStep.prop("editable")).toBe(false);
-    });
-
-    it("renders submitted descriptions for Part 2", () => {
-      const part2List = wrapper.find("StepList").at(1);
-
-      expect(renderStepListDescription(part2List)).toMatchSnapshot();
-    });
-
-    it("renders descriptions for Part 3", () => {
-      const part3List = wrapper.find("StepList").at(2);
-
-      expect(renderStepListDescription(part3List)).toMatchSnapshot();
-    });
-  });
-
-  it("renders success message after submitting part one", () => {
-    const claim = new MockBenefitsApplicationBuilder().submitted().create();
-    const { wrapper } = renderWithAppLogic(Checklist, {
-      claimAttrs: claim,
-      diveLevels,
-      props: {
-        query: { "part-one-submitted": "true", claim_id: claim.application_id },
-      },
-    });
-
-    const partOneSubmittedMessage = wrapper.find({
-      name: "part-one-submitted-message",
-    });
-
-    expect(partOneSubmittedMessage).toHaveLength(1);
-    expect(partOneSubmittedMessage.find("Trans").dive()).toMatchSnapshot();
-  });
-
-  it("renders success message after submitting part 2", () => {
-    const claim = new MockBenefitsApplicationBuilder()
-      .submitted()
-      .directDeposit()
-      .create();
-    const { wrapper } = renderWithAppLogic(Checklist, {
-      claimAttrs: claim,
-      diveLevels,
-      props: {
+      const warnings = [];
+      const customProps = {
         query: {
+          claim_id: "mock_application_id",
           "payment-pref-submitted": "true",
-          claim_id: claim.application_id,
         },
-      },
-    });
-
-    const partTwoSubmittedMessage = wrapper.find({
-      name: "part-two-submitted-message",
-    });
-    expect(partTwoSubmittedMessage).toHaveLength(1);
-    expect(partTwoSubmittedMessage).toMatchSnapshot();
-  });
-
-  it("enables Review and Submit button when all Parts are completed", () => {
-    const claim = new MockBenefitsApplicationBuilder().complete().create();
-
-    const { wrapper } = renderWithAppLogic(Checklist, {
-      claimAttrs: claim,
-      diveLevels,
-      hasLoadedClaimDocuments: true,
-      hasUploadedIdDocuments: true,
-      hasUploadedCertificationDocuments: {
-        document_type: DocumentType.certification.medicalCertification,
-      },
-      warningsLists: {
-        [claim.application_id]: [],
-      },
-    });
-
-    expect(wrapper.find("ButtonLink").prop("disabled")).toBe(false);
-  });
-
-  describe("Upload leave certification step", () => {
-    it("renders medical leave content if claim reason is medical", () => {
-      const claim = new MockBenefitsApplicationBuilder().submitted().create();
-      const { wrapper } = renderWithAppLogic(Checklist, {
-        claimAttrs: claim,
-        diveLevels,
-        hasLoadedClaimDocuments: true,
-      });
-      const uploadCertificationStep = wrapper.find("Step").at(6);
-      expect(uploadCertificationStep.find("Trans").dive()).toMatchSnapshot();
-    });
-
-    it("renders newborn bonding leave content if claim reason is newborn", () => {
-      const claim = new MockBenefitsApplicationBuilder()
-        .submitted()
-        .bondingBirthLeaveReason()
-        .create();
-      const { wrapper } = renderWithAppLogic(Checklist, {
-        claimAttrs: claim,
-        diveLevels,
-        hasLoadedClaimDocuments: true,
-      });
-      const uploadCertificationStep = wrapper.find("Step").at(6);
-
-      expect(uploadCertificationStep.find("Trans").dive()).toMatchSnapshot();
-    });
-
-    it("renders adoption bonding leave content if claim reason is adoption", () => {
-      const claim = new MockBenefitsApplicationBuilder()
-        .submitted()
-        .bondingAdoptionLeaveReason()
-        .create();
-      const { wrapper } = renderWithAppLogic(Checklist, {
-        claimAttrs: claim,
-        diveLevels,
-        hasLoadedClaimDocuments: true,
-      });
-      const uploadCertificationStep = wrapper.find("Step").at(6);
-
-      expect(uploadCertificationStep.find("Trans").dive()).toMatchSnapshot();
-    });
-  });
-
-  describe("when loading documents", () => {
-    it("renders spinner for loading", () => {
-      const { wrapper } = renderWithAppLogic(Checklist, {
-        diveLevels,
-      });
-
-      expect(wrapper.exists("Spinner")).toBe(true);
-      expect(wrapper.find("Step")).toHaveLength(5);
-    });
-
-    it("renders Alert when there is an error for loading documents", () => {
-      const { wrapper } = renderWithAppLogic(Checklist, {
-        diveLevels,
-        hasLoadingDocumentsError: true,
-      });
-
-      expect(wrapper.find("StepList").at(2).exists("Alert")).toBe(true);
-      expect(wrapper.find("Step")).toHaveLength(5);
-    });
-  });
-
-  describe("Upload document steps status", () => {
-    const startStatus = "not_started";
-    const completeStatus = "completed";
-
-    it("renders both doc steps as not completed", () => {
-      const claim = new MockBenefitsApplicationBuilder().complete().create();
-      const { wrapper } = renderWithAppLogic(Checklist, {
-        claimAttrs: claim,
-        diveLevels,
-        hasLoadedClaimDocuments: true,
-        warningsLists: {
-          [claim.application_id]: [],
-        },
-      });
-      expect(wrapper.find("Step").at(5).prop("status")).toBe(startStatus);
-      expect(wrapper.find("Step").at(6).prop("status")).toBe(startStatus);
-    });
-
-    it("renders id doc step as completed", () => {
-      const claim = new MockBenefitsApplicationBuilder().complete().create();
-      const { wrapper } = renderWithAppLogic(Checklist, {
-        claimAttrs: claim,
-        diveLevels,
-        hasLoadedClaimDocuments: true,
-        hasUploadedIdDocuments: true,
-        warningsLists: {
-          [claim.application_id]: [],
-        },
-      });
-      expect(wrapper.find("Step").at(5).prop("status")).toBe(completeStatus);
-      expect(wrapper.find("Step").at(6).prop("status")).toBe(startStatus);
-    });
-
-    it("renders certification doc step as completed when the document type matches the leave reason", () => {
-      const claim = new MockBenefitsApplicationBuilder()
-        .medicalLeaveReason()
-        .complete()
-        .create();
-      const { wrapper } = renderWithAppLogic(Checklist, {
-        claimAttrs: claim,
-        diveLevels,
-        hasLoadedClaimDocuments: true,
-        hasUploadedCertificationDocuments: {
-          document_type: DocumentType.certification[LeaveReason.medical],
-          numberOfDocs: 1,
-        },
-      });
-      expect(wrapper.find("Step").at(5).prop("status")).toBe(startStatus);
-      expect(wrapper.find("Step").at(6).prop("status")).toBe(completeStatus);
-    });
-
-    it("renders certification doc step as incomplete when the document type does not match the leave reason", () => {
-      const claim = new MockBenefitsApplicationBuilder()
-        .medicalLeaveReason()
-        .complete()
-        .create();
-      const { wrapper } = renderWithAppLogic(Checklist, {
-        claimAttrs: claim,
-        diveLevels,
-        hasLoadedClaimDocuments: true,
-        hasUploadedCertificationDocuments: {
-          document_type: DocumentType.certification[LeaveReason.care],
-          numberOfDocs: 1,
-        },
-      });
-      expect(wrapper.find("Step").at(5).prop("status")).toBe(startStatus);
-      expect(wrapper.find("Step").at(6).prop("status")).toBe(startStatus);
-    });
-
-    // TODO (CP-2029): Remove this test once claims filed before 7/1/2021 are adjudicated and we don't use State managed Paid Leave Confirmation
-    it("renders certification doc step as complete when the Document Type is State managed Paid Leave Confirmation", () => {
-      // This is for the case of claims created prior to 7/1, until we can remove this doc type
-      const claim = new MockBenefitsApplicationBuilder()
-        .medicalLeaveReason()
-        .complete()
-        .create();
-      const { wrapper } = renderWithAppLogic(Checklist, {
-        claimAttrs: claim,
-        diveLevels,
-        hasLoadedClaimDocuments: true,
-        hasUploadedCertificationDocuments: {
-          document_type: DocumentType.certification.medicalCertification,
-          numberOfDocs: 1,
-        },
-      });
-      expect(wrapper.find("Step").at(5).prop("status")).toBe(startStatus);
-      expect(wrapper.find("Step").at(6).prop("status")).toBe(completeStatus);
-    });
-  });
-
-  // TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
-  describe("when Part 1 is submitted w/o Other Leave data", () => {
-    it("passes submittedContent to Other Leave step", () => {
-      process.env.featureFlags = {
-        claimantShowOtherLeaveStep: true,
       };
+      renderChecklist(
+        new MockBenefitsApplicationBuilder()
+          .complete()
+          .directDeposit()
+          .create(),
+        warnings,
+        customProps
+      );
+    });
 
-      const claim = new MockBenefitsApplicationBuilder()
-        .submitted()
-        .nullOtherLeave()
-        .create();
-      const { wrapper } = renderWithAppLogic(Checklist, {
-        claimAttrs: claim,
-        diveLevels,
-        query: {
-          "part-one-submitted": "true",
-        },
-      });
+    it("renders alert that Part 2 is confirmed", () => {
+      expect(
+        screen.getByText(/Part 2 of your application was confirmed./)
+      ).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Now, you can work on Part 3, and submit your application./
+        )
+      ).toBeInTheDocument();
+    });
 
-      const otherLeaveStep = wrapper
-        .find("Step")
-        .at(3)
-        .prop("submittedContent");
-      const otherLeaveStepProp = mount(otherLeaveStep);
+    it("renders prior step in black", () => {
+      for (let step = 1; step <= 6; step++) {
+        expect(screen.getByText(step)).toHaveClass("bg-black");
+      }
+    });
 
-      expect(otherLeaveStepProp).toMatchSnapshot();
+    it("renders documents heading and description", () => {
+      expect(screen.getByText("Upload your documents")).toBeInTheDocument();
+      expect(
+        screen.getByText(
+          /Upload proof of identity. If you entered a Massachusetts driver’s license or Mass ID number in step 1, upload the same ID./
+        )
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("link", {
+          name: "Start: Upload identification document",
+        })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("link", { name: "fax or mail documents" })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("link", {
+          name: "Certification of Your Serious Health Condition",
+        })
+      ).toBeInTheDocument();
+    });
+
+    it("renders two CTA options that would direct to expected locations", () => {
+      expect(
+        screen.getByRole("link", {
+          name: "Start: Upload identification document",
+        })
+      ).toBeEnabled();
+      expect(
+        screen.getByRole("link", {
+          name: "Start: Upload leave certification documents",
+        })
+      ).toBeEnabled();
+      expect(
+        screen.getByRole("link", {
+          name: "Start: Upload identification document",
+        })
+      ).toHaveAttribute(
+        "href",
+        "/applications/upload-id?claim_id=mock_application_id"
+      );
+      expect(
+        screen.getByRole("link", {
+          name: "Start: Upload leave certification documents",
+        })
+      ).toHaveAttribute(
+        "href",
+        "/applications/upload-certification?claim_id=mock_application_id"
+      );
     });
   });
 
-  // TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
-  describe("when Part 1 is submitted w/ Other Leave data", () => {
-    it("does not pass submittedContent to Other Leave step", () => {
-      process.env.featureFlags = {
-        claimantShowOtherLeaveStep: true,
-      };
-
-      const claim = new MockBenefitsApplicationBuilder().submitted().create();
-      const { wrapper } = renderWithAppLogic(Checklist, {
-        claimAttrs: claim,
-        diveLevels,
+  describe("Part 3, varied leave reasons", () => {
+    it("renders proper description for leave reason bonding new born", () => {
+      const warnings = [];
+      const customProps = {
         query: {
-          "part-one-submitted": "true",
+          claim_id: "mock_application_id",
+          "payment-pref-submitted": "true",
         },
-      });
+      };
+      renderChecklist(
+        new MockBenefitsApplicationBuilder()
+          .complete()
+          .directDeposit()
+          .bondingBirthLeaveReason()
+          .create(),
+        warnings,
+        customProps
+      );
+      expect(
+        screen.getByText(
+          /You need to provide your child’s birth certificate or a document from a health care provider that shows the child’s date of birth./
+        )
+      ).toBeInTheDocument();
+    });
 
-      const otherLeaveStep = wrapper
-        .find("Step")
-        .at(3)
-        .prop("submittedContent");
+    it("renders proper description for leave reason adoptions", () => {
+      const warnings = [];
+      const customProps = {
+        query: {
+          claim_id: "mock_application_id",
+          "payment-pref-submitted": "true",
+        },
+      };
+      renderChecklist(
+        new MockBenefitsApplicationBuilder()
+          .complete()
+          .directDeposit()
+          .bondingAdoptionLeaveReason()
+          .create(),
+        warnings,
+        customProps
+      );
+      expect(
+        screen.getByText(
+          /You need to provide a statement confirming the placement and the date of placement./
+        )
+      ).toBeInTheDocument();
+    });
 
-      expect(otherLeaveStep).toBeNull();
+    it("renders proper description for leave reason medical", () => {
+      const warnings = [];
+      const customProps = {
+        query: {
+          claim_id: "mock_application_id",
+          "payment-pref-submitted": "true",
+        },
+      };
+      renderChecklist(
+        new MockBenefitsApplicationBuilder()
+          .complete()
+          .directDeposit()
+          .medicalLeaveReason()
+          .create(),
+        warnings,
+        customProps
+      );
+      expect(
+        screen.getByText(/You need to provide your completed/)
+      ).toBeInTheDocument();
+    });
+
+    it("renders proper description for leave reason care", () => {
+      const warnings = [];
+      const customProps = {
+        query: {
+          claim_id: "mock_application_id",
+          "payment-pref-submitted": "true",
+        },
+      };
+      renderChecklist(
+        new MockBenefitsApplicationBuilder()
+          .complete()
+          .directDeposit()
+          .caringLeaveReason()
+          .create(),
+        warnings,
+        customProps
+      );
+      expect(
+        screen.getByText(/You need to provide your completed/)
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("link", {
+          name: "Certification of Your Family Member’s Serious Health Condition",
+        })
+      ).toBeInTheDocument();
+    });
+  });
+  describe("Submit", () => {
+    it("enables Review and Submit once all portions are completed", () => {
+      const warnings = [];
+      const customProps = {
+        documents: [
+          new BenefitsApplicationDocument({
+            application_id: "mock-claim-id",
+            document_type: DocumentType.certification[LeaveReason.pregnancy],
+          }),
+          new BenefitsApplicationDocument({
+            application_id: "mock-claim-id",
+            document_type: DocumentType.identityVerification,
+          }),
+        ],
+      };
+      renderChecklist(
+        new MockBenefitsApplicationBuilder()
+          .complete()
+          .pregnancyLeaveReason()
+          .create(),
+        warnings,
+        customProps
+      );
+      expect(
+        screen.getByRole("link", { name: "Review and submit application" })
+      ).toBeEnabled();
+      expect(
+        screen.getByRole("link", { name: "Review and submit application" })
+      ).toHaveAttribute(
+        "href",
+        "/applications/review?claim_id=mock_application_id"
+      );
+    });
+
+    it("does not enable Review and Submit when there is a document type mismatch", () => {
+      const warnings = [];
+      const customProps = {
+        documents: [
+          new BenefitsApplicationDocument({
+            application_id: "mock-claim-id",
+            document_type: DocumentType.certification[LeaveReason.pregnancy],
+          }),
+          new BenefitsApplicationDocument({
+            application_id: "mock-claim-id",
+            document_type: DocumentType.identityVerification,
+          }),
+        ],
+      };
+      renderChecklist(
+        new MockBenefitsApplicationBuilder()
+          .complete()
+          .caringLeaveReason()
+          .create(),
+        warnings,
+        customProps
+      );
+      expect(
+        screen.getByRole("button", { name: "Review and submit application" })
+      ).toBeDisabled();
     });
   });
 });

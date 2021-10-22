@@ -17,11 +17,6 @@ module.exports = {
     cognitoUserPoolId: "us-east-1_HpL4XslLg",
     cognitoUserPoolWebClientId: "10rjcp71r8bnk4459c67bn18t8",
   },
-  // Enable the maintenance page on these routes:
-  // See docs/portal/maintenance-pages.md for details.
-  maintenancePageRoutes: [],
-  maintenanceStart: null,
-  maintenanceEnd: null,
   newRelicAppId: null,
   gtmConfig: {
     // Google Tag Manager Stage environment

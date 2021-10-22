@@ -13,6 +13,9 @@ import type {
   EmployerClaimRequestBody,
   GETEmployersClaimsByFineosAbsenceIdReviewResponse,
 } from "../../_api";
+import { splitClaimToParts } from "../../util/common";
+import assert from "assert";
+import { DashboardClaimStatus } from "../../../cypress/actions/portal";
 
 let authToken: string;
 let username: string;
@@ -168,21 +171,21 @@ async function submitEmployerResponse(
   data: Cfg.LSTSimClaim
 ): Promise<void> {
   if (!data.employerResponse) return;
-  // sort claims in portal
   await (await Util.waitForElement(browser, By.linkText("Dashboard"))).click();
-  const sorts = [
-    "Oldest applications",
-    "Last name – A to Z",
-    "Last name – Z to A",
-    "Newest applications",
-  ] as const;
-  const randomIndex = Math.floor(Math.random() * sorts.length);
-  await Util.waitForElement(browser, Util.byLabelled("Sort"));
-  await (await Util.labelled(browser, "Sort")).click();
-  await browser.selectByText(
-    By.nameAttr("orderAndDirection"),
-    sorts[randomIndex]
-  );
+  await filterClaims(browser, "Review by");
+  await randomClaimSort(browser); // filter for "Review by" status
+  // Randomly Select Search Methods
+  switch (randomNumber(2)) {
+    case 0:
+      await searchAbsenceCaseNumber(browser, fineosId);
+      break;
+    case 1:
+      await searchName(browser, data);
+      break;
+  }
+
+  console.log("Sort and Search Completed w/o errors!");
+
   // submit response directly to API
   const employerResponse = data.employerResponse;
   const review = await pRetry(
@@ -260,10 +263,9 @@ async function setFeatureFlags(browser: Browser): Promise<void> {
     name: "_ff",
     value: JSON.stringify({
       pfmlTerriyay: true,
-      claimantShowAuth: true,
-      claimantAuthThroughApi: true,
-      employerShowDashboard: true,
       employerShowDashboardSort: true,
+      employerShowDashboardSearch: true,
+      employerShowReviewByStatus: true,
     }),
     url: config("PORTAL_BASEURL"),
   });
@@ -273,113 +275,7 @@ function getClaimParts(
   data: Cfg.LSTSimClaim
 ): Partial<Cfg.LSTSimClaim["claim"]>[] {
   const { claim } = data;
-  const { leave_details } = claim;
-  return [
-    {
-      first_name: claim.first_name,
-      middle_name: null,
-      last_name: claim.last_name,
-    },
-    {
-      has_mailing_address: claim.has_mailing_address,
-      residential_address: claim.residential_address,
-      mailing_address: claim.mailing_address,
-    },
-    {
-      date_of_birth: claim.date_of_birth,
-    },
-    {
-      has_state_id: claim.has_state_id,
-      mass_id: claim.mass_id,
-    },
-    {
-      tax_identifier: claim.tax_identifier,
-    },
-    {
-      employment_status: claim.employment_status,
-      employer_fein: claim.employer_fein,
-    },
-    {
-      leave_details: {
-        employer_notified: leave_details?.employer_notified,
-        employer_notification_date: leave_details?.employer_notification_date,
-      },
-    },
-    {
-      work_pattern: {
-        work_pattern_type: claim.work_pattern?.work_pattern_type,
-      },
-    },
-    {
-      hours_worked_per_week: claim.hours_worked_per_week,
-      work_pattern: {
-        work_pattern_days: claim.work_pattern?.work_pattern_days,
-      },
-    },
-    {
-      leave_details: {
-        reason: leave_details?.reason,
-        reason_qualifier: leave_details?.reason_qualifier,
-      },
-    },
-    {
-      leave_details: {
-        child_birth_date: leave_details?.child_birth_date,
-        child_placement_date: leave_details?.child_placement_date,
-        pregnant_or_recent_birth: leave_details?.pregnant_or_recent_birth,
-      },
-    },
-    {
-      has_continuous_leave_periods: claim.has_continuous_leave_periods,
-      leave_details: {
-        continuous_leave_periods: leave_details?.continuous_leave_periods,
-      },
-    },
-    {
-      has_reduced_schedule_leave_periods:
-        claim.has_reduced_schedule_leave_periods,
-    },
-    {
-      has_intermittent_leave_periods: claim.has_intermittent_leave_periods,
-    },
-    {
-      phone: {
-        int_code: "1",
-        phone_number: "844-781-3163",
-        phone_type: "Cell",
-      },
-    },
-    {
-      has_previous_leaves_same_reason: claim.has_previous_leaves_same_reason,
-    },
-    {
-      previous_leaves_same_reason: claim.previous_leaves_same_reason,
-    },
-    {
-      has_previous_leaves_other_reason: claim.has_previous_leaves_other_reason,
-    },
-    {
-      previous_leaves_other_reason: claim.previous_leaves_other_reason,
-    },
-    {
-      has_concurrent_leave: claim.has_concurrent_leave,
-    },
-    {
-      concurrent_leave: claim.concurrent_leave,
-    },
-    {
-      has_employer_benefits: claim.has_employer_benefits,
-    },
-    {
-      employer_benefits: claim.employer_benefits,
-    },
-    {
-      has_other_incomes: claim.has_other_incomes,
-    },
-    {
-      other_incomes: claim.other_incomes,
-    },
-  ];
+  return splitClaimToParts(claim);
 }
 
 async function createApplication(browser: Browser): Promise<void> {
@@ -518,4 +414,162 @@ async function completeApplication(browser: Browser): Promise<void> {
     application_id: res.data.application_id,
     fineos_absence_id: res.data.fineos_absence_id,
   });
+}
+
+async function searchAbsenceCaseNumber(
+  browser: Browser,
+  claimID: string
+): Promise<void> {
+  await (
+    await Util.labelled(browser, "Search for employee name or application ID")
+  ).type(claimID);
+  await (
+    await Util.waitForElement(browser, By.css('button[type="submit"]'))
+  ).click();
+  await Util.waitForElement(browser, By.linkText(claimID)).then(async (el) => {
+    assert.strictEqual(await el.text(), claimID);
+  });
+  await browser
+    .findElements(By.css("table.usa-table > tbody > tr"))
+    .then(async (el) => {
+      assert.strictEqual(el.length, 1);
+    });
+}
+
+async function searchName(
+  browser: Browser,
+  data: Cfg.LSTSimClaim
+): Promise<void> {
+  const { claim } = data;
+  const { first_name, last_name } = claim;
+  const full_name = `${first_name} ${last_name}`;
+
+  switch (randomNumber(3)) {
+    // First Name Only
+    case 0:
+      await (
+        await Util.labelled(
+          browser,
+          "Search for employee name or application ID"
+        )
+      ).type(first_name as string);
+      await (
+        await Util.waitForElement(browser, By.css('button[type="submit"]'))
+      ).click();
+      await Util.waitForElement(
+        browser,
+        By.partialLinkText(first_name as string)
+      );
+      await browser
+        .findElements(By.css("table.usa-table > tbody > tr"))
+        .then(async (el) => {
+          assert.ok(
+            el.length >= 1,
+            "Expect there to be at least 1 or more rows"
+          );
+        });
+      break;
+    // First and Last Name
+    case 1:
+      await (
+        await Util.labelled(
+          browser,
+          "Search for employee name or application ID"
+        )
+      ).type(full_name);
+      await (
+        await Util.waitForElement(browser, By.css('button[type="submit"]'))
+      ).click();
+      await Util.waitForElement(browser, By.linkText(full_name));
+      await browser
+        .findElements(By.css("table.usa-table > tbody > tr"))
+        .then(async (el) => {
+          assert.ok(
+            el.length >= 1,
+            "Expect there to be at least 1 or more rows"
+          );
+        });
+      break;
+    // Last name only
+    case 2:
+      await (
+        await Util.labelled(
+          browser,
+          "Search for employee name or application ID"
+        )
+      ).type(last_name as string);
+      await (
+        await Util.waitForElement(browser, By.css('button[type="submit"]'))
+      ).click();
+      await Util.waitForElement(
+        browser,
+        By.partialLinkText(last_name as string)
+      );
+      await browser
+        .findElements(By.css("table.usa-table > tbody > tr"))
+        .then(async (el) => {
+          assert.ok(
+            el.length >= 1,
+            "Expect there to be at least 1 or more rows"
+          );
+        });
+      break;
+  }
+}
+
+async function randomClaimSort(browser: Browser): Promise<void> {
+  const sorts = [
+    "Oldest applications",
+    "Last name – A to Z",
+    "Last name – Z to A",
+    "Newest applications",
+    "Status",
+  ] as const;
+  const randomIndex = randomNumber(sorts.length);
+  await Util.waitForElement(browser, Util.byLabelled("Sort"));
+  await (await Util.labelled(browser, "Sort")).click();
+  await browser.selectByText(
+    By.nameAttr("orderAndDirection"),
+    sorts[randomIndex]
+  );
+}
+
+function randomNumber(n: number): number {
+  return Math.floor(Math.random() * n);
+}
+
+/**
+ * Applies a single filter by status. Checks the results, clears filters.
+ * @param status
+ */
+async function filterClaims(browser: Browser, status: DashboardClaimStatus) {
+  // find filters button
+  await browser
+    .findElement(By.css('button[aria-controls="filters"]'))
+    .then((button) => button.click());
+  // Select the right filter
+  await Util.waitForElement(browser, Util.byContains("label", status)).then(
+    (el) => el.click()
+  );
+  // Apply filters
+  await browser
+    .findElement(By.visibleText("Apply filters"))
+    .then((el) => el.click());
+  // Check results
+  await browser
+    .findElements(By.css("table.usa-table > tbody > tr"))
+    .then(async (rows) => {
+      for (const row of rows) {
+        const text = await row.text();
+        console.log(text);
+        assert.ok(
+          text.includes(status),
+          `Expected all rows to have status: ${status}`
+        );
+      }
+    });
+  // Disable filter
+  await browser
+    .findElement(Util.byButtonText(status))
+    .then((button) => button.click());
 }

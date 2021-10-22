@@ -131,7 +131,31 @@ file-like objects, should generally prefer using in-memory constructs like
 a test needs to load test fixture files or use `tmp_path` to work with a real
 file for some purpose, those do not need to be tagged `integration`.
 
-Decorate any individual test with `@pytest.mark.integration`.
+**In the vast majority of cases, the appropriate tests will get automatically tagged with the `integration` marker behind the scenes via the fixtures it uses.**
+
+### Automatic marking
+
+Test fixtures that use real resources should request the fixture
+`has_external_dependencies`.
+
+```python
+@pytest.fixture
+def some_fixture_using_real_resources(has_external_dependencies):
+  ...
+```
+
+Fixtures that have the `has_external_dependencies` fixture
+in their dependency graph do not need to explicitly
+request the `has_external_dependencies` fixture.
+
+All tests that request a fixture with `has_external_dependencies`
+in their dependency graph will be automatically marked
+with the `integration` marker.
+
+### Manual marking
+
+To manually mark integration tests, decorate any individual test
+with `@pytest.mark.integration`.
 
 If all (or almost all) tests in a given test file are integration tests, they
 can be tagged all at once with a declaration like the following at the top of

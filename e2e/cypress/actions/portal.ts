@@ -36,46 +36,30 @@ import {
   dateToReviewFormat,
   minutesToHoursAndMinutes,
 } from "../../src/util/claims";
+import { APILeaveReason } from "generation/Claim";
+import { getClaimantCredentials, getLeaveAdminCredentials } from "../config";
 
-/**
- *
- * @param flags set feature flags you want to override from defaults
- * @default {
-    pfmlTerriyay: true,
-    claimantShowAuth: true,
-    claimantShowMedicalLeaveType: true,
-    noMaintenance: true,
-    employerShowSelfRegistrationForm: true,
-    claimantShowOtherLeaveStep: true,
-    claimantAuthThroughApi: true,
-    employerShowAddOrganization: true,
-    employerShowVerifications: true,
-    employerShowDashboard: true,
-    useNewPlanProofs: config("HAS_FINEOS_SP") === "true",
-    showCaringLeaveType: config("HAS_FINEOS_SP") === "true",
-  }
- */
-export function before(flags?: Partial<FeatureFlags>): void {
+/**Set portal feature flags */
+function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
   // Set the feature flag necessary to see the portal.
   const defaults: FeatureFlags = {
     pfmlTerriyay: true,
-    claimantShowAuth: true,
-    claimantShowMedicalLeaveType: true,
     noMaintenance: true,
-    employerShowSelfRegistrationForm: true,
-    claimantShowOtherLeaveStep: true,
-    claimantAuthThroughApi: true,
-    employerShowAddOrganization: true,
-    employerShowVerifications: true,
-    employerShowDashboard: true,
-    useNewPlanProofs: true,
-    showCaringLeaveType: true,
+    claimantShowStatusPage: true,
+    employerShowDashboardSearch: true,
+    employerShowReviewByStatus: true,
   };
-  cy.setCookie(
-    "_ff",
-    JSON.stringify(flags ? { ...defaults, ...flags } : defaults),
-    { log: true }
-  );
+  cy.setCookie("_ff", JSON.stringify({ ...defaults, ...flags }), { log: true });
+}
+
+/**
+ *
+ * @param flags feature flags you want to override from defaults
+ */
+export function before(flags?: Partial<FeatureFlags>): void {
+  Cypress.config("baseUrl", config("PORTAL_BASEURL"));
+  // Set the feature flags necessary to see the portal.
+  setFeatureFlags(flags);
 
   // Setup a route for application submission so we can extract claim ID later.
   cy.intercept({
@@ -83,11 +67,22 @@ export function before(flags?: Partial<FeatureFlags>): void {
     url: "**/api/v1/applications/*/submit_application",
   }).as("submitClaimResponse");
 
-  // Block new-relic.js outright due to issues with Cypress networking code.
-  // Without this block, test retries on the portal error out due to fetch() errors.
-  cy.intercept("**/new-relic.js", (req) => {
-    req.reply("console.log('Fake New Relic script loaded');");
-  });
+  cy.intercept(
+    /\/api\/v1\/(employers\/claims|applications)\/.*\/documents\/\d+/
+  ).as("documentDownload");
+
+  cy.intercept({
+    url: /\/api\/v1\/applications\/.*\/documents/,
+    method: "POST",
+  }).as("documentUpload");
+
+  cy.intercept(/\/api\/v1\/claims\?page_offset=\d+$/).as(
+    "dashboardDefaultQuery"
+  );
+  cy.intercept(/\/api\/v1\/applications$/).as("getApplications");
+  cy.intercept(/\/api\/v1\/claims\?(page_offset=\d+)?&?(order_by)/).as(
+    "dashboardClaimQueries"
+  );
 
   deleteDownloadsFolder();
 }
@@ -179,37 +174,81 @@ export function deleteDownloadsFolder(): void {
  */
 export function downloadLegalNotice(claim_id: string): void {
   const downloadsFolder = Cypress.config("downloadsFolder");
-  cy.task("getNoticeFileName", downloadsFolder, { timeout: 20000 }).then(
-    (filename) => {
-      expect(
-        filename.length,
-        "downloads folder should contain only one file"
-      ).to.equal(1);
-      expect(
-        path.extname(filename[0]),
-        "Expect file extension to be a PDF"
-      ).to.equal(".pdf");
-      cy.task("getParsedPDF", path.join(downloadsFolder, filename[0])).then(
-        (pdf) => {
-          const application_id_from_notice = email.getTextBetween(
-            pdf.text,
-            "Application ID:",
-            "\n"
-          );
-          expect(
-            application_id_from_notice,
-            `The claim_id within the legal notice should be: ${application_id_from_notice}`
-          ).to.equal(claim_id);
-        }
-      );
-    }
-  );
+  cy.wait("@documentDownload", { timeout: 30000 });
+  cy.task("getNoticeFileName", downloadsFolder).then((filename) => {
+    expect(
+      filename.length,
+      "downloads folder should contain only one file"
+    ).to.equal(1);
+    expect(
+      path.extname(filename[0]),
+      "Expect file extension to be a PDF"
+    ).to.equal(".pdf");
+    cy.task("getParsedPDF", path.join(downloadsFolder, filename[0])).then(
+      (pdf) => {
+        const application_id_from_notice = email.getTextBetween(
+          pdf.text,
+          "Application ID:",
+          "\n"
+        );
+        expect(
+          application_id_from_notice,
+          `The claim_id within the legal notice should be: ${application_id_from_notice}`
+        ).to.equal(claim_id);
+      }
+    );
+  });
+}
+
+/**
+ * Downloads Legal Notice based on type this can be used for a subcase (e.g. Appeals)
+ *
+ * Also does basic assertion on contents of legal notice doc
+ */
+export function downloadLegalNoticeSubcase(
+  claim_id: string,
+  sub_case: string
+): void {
+  const downloadsFolder = Cypress.config("downloadsFolder");
+  cy.wait("@documentDownload", { timeout: 30000 });
+  cy.task("getNoticeFileName", downloadsFolder).then((filename) => {
+    expect(
+      filename.length,
+      "downloads folder should contain only one file"
+    ).to.equal(1);
+    expect(
+      path.extname(filename[0]),
+      "Expect file extension to be a PDF"
+    ).to.equal(".pdf");
+    cy.task("getParsedPDF", path.join(downloadsFolder, filename[0])).then(
+      (pdf) => {
+        const application_id_from_notice = email.getTextBetween(
+          pdf.text,
+          "Application ID:",
+          "\n"
+        );
+        expect(
+          application_id_from_notice,
+          `The claim_id within the legal notice should be: ${application_id_from_notice}`
+        ).to.equal(claim_id + sub_case);
+      }
+    );
+  });
+}
+
+export function loginClaimant(credentials = getClaimantCredentials()): void {
+  login(credentials);
+}
+
+export function loginLeaveAdmin(employer_fein: string): void {
+  const credentials = getLeaveAdminCredentials(employer_fein);
+  login(credentials);
 }
 
 export function login(credentials: Credentials): void {
   cy.visit(`${config("PORTAL_BASEURL")}/login`);
-  cy.labelled("Email address").type(credentials.username);
-  cy.labelled("Password").typeMasked(credentials.password);
+  cy.findByLabelText("Email address").type(credentials.username);
+  cy.findByLabelText("Password").typeMasked(credentials.password);
   cy.contains("button", "Log in").click({ waitForAnimations: true });
   cy.url().should("not.include", "login");
 }
@@ -221,13 +260,19 @@ export function logout(): void {
 
 export function registerAsClaimant(credentials: Credentials): void {
   cy.visit("/create-account");
-  cy.labelled("Email address").type(credentials.username);
-  cy.labelled("Password").type(credentials.password);
+  cy.findByLabelText("Email address").type(credentials.username);
+  cy.findByLabelText("Password").type(credentials.password);
   cy.contains("button", "Create account").click();
   cy.task("getAuthVerification", credentials.username).then((code) => {
-    cy.labelled("6-digit code").type(code as string);
-    cy.contains("button", "Submit").click();
+    cy.findByLabelText("6-digit code").type(code as string);
   });
+  // Wait for cognito to finish before declaring registration complete.
+  cy.intercept({
+    url: `https://cognito-idp.us-east-1.amazonaws.com/`,
+    times: 1,
+  }).as("cognito");
+  cy.contains("button", "Submit").click();
+  cy.wait("@cognito");
 }
 
 export function registerAsLeaveAdmin(
@@ -235,23 +280,22 @@ export function registerAsLeaveAdmin(
   fein: string
 ): void {
   cy.visit("/employers/create-account");
-  cy.labelled("Email address").type(credentials.username);
-  cy.labelled("Password").type(credentials.password);
-  cy.labelled("Employer ID number").type(fein);
+  cy.findByLabelText("Email address").type(credentials.username);
+  cy.findByLabelText("Password").type(credentials.password);
+  cy.findByLabelText("Employer ID number (EIN)").type(fein);
   cy.contains("button", "Create account").click();
   cy.task("getAuthVerification", credentials.username as string).then(
     (code: string) => {
-      cy.labelled("6-digit code").type(code as string);
-      cy.contains("button", "Submit").click();
+      cy.findByLabelText("6-digit code").type(code as string);
     }
   );
-}
-
-export function employerLogin(credentials: Credentials): void {
-  cy.labelled("Email address").type(credentials.username);
-  cy.labelled("Password").typeMasked(credentials.password);
-  cy.contains("button", "Log in").click();
-  cy.url().should("not.include", "login");
+  // Wait for cognito to finish before declaring registration complete.
+  cy.intercept({
+    url: `https://cognito-idp.us-east-1.amazonaws.com/`,
+    times: 1,
+  }).as("cognito");
+  cy.contains("button", "Submit").click();
+  cy.wait("@cognito");
 }
 
 export function assertLoggedIn(): void {
@@ -260,7 +304,7 @@ export function assertLoggedIn(): void {
 
 export function startClaim(): void {
   cy.get('[href="/applications/start/"]').click();
-  cy.contains("button", "I understand and agree").click();
+  cy.findByText("I understand and agree").click();
   cy.location({ timeout: 30000 }).should((location) => {
     expect(location.pathname, "Expect to be on the checklist page").to.equal(
       "/applications/checklist/"
@@ -277,36 +321,39 @@ export function clickChecklistButton(label: string): void {
 }
 
 export function verifyIdentity(application: ApplicationRequestBody): void {
-  cy.labelled("First name").type(application.first_name as string);
-  cy.labelled("Last name").type(application.last_name as string);
+  cy.findByLabelText("First name").type(application.first_name as string);
+  cy.findByLabelText("Last name").type(application.last_name as string);
   cy.log("Employer FEIN", application.employer_fein);
   cy.contains("button", "Save and continue").click();
 
   cy.get("[data-cy='gender-form']").within(() => {
-    if (isNotNull(application.gender)) cy.labelled(application.gender).check();
+    if (isNotNull(application.gender))
+      cy.findByLabelText(application.gender).check();
     cy.contains("button", "Save and continue").click();
   });
 
   // Added Phone Section behind Feature Flag
-  cy.labelled("Phone number").type(application.phone?.phone_number as string);
+  cy.findByLabelText("Phone number").type(
+    application.phone?.phone_number as string
+  );
   // Answers Number Type
   cy.get(":nth-child(2) > .usa-radio__label").click();
   cy.contains("button", "Save and continue").click();
 
-  cy.labelled("Address").type(
+  cy.findByLabelText("Address").type(
     (application.mailing_address &&
       application.mailing_address.line_1) as string
   );
-  cy.labelled("City").type(
+  cy.findByLabelText("City").type(
     (application.mailing_address && application.mailing_address.city) as string
   );
-  cy.labelled("State")
+  cy.findByLabelText("State")
     .get("select")
     .select(
       (application.mailing_address &&
         application.mailing_address.state) as string
     );
-  cy.labelled("ZIP").type(
+  cy.findByLabelText("ZIP").type(
     (application.mailing_address && application.mailing_address.zip) as string
   );
 
@@ -351,10 +398,12 @@ export function selectClaimType(application: ApplicationRequestBody): void {
     throw new Error("Claim is missing reason or reason qualifier");
   }
   const reasonMap: Record<typeof reason, string | RegExp> = {
-    "Serious Health Condition - Employee": /I can’t work due to (an|my) illness, injury, or pregnancy./,
+    "Serious Health Condition - Employee":
+      /I can’t work due to (an|my) illness, injury, or pregnancy./,
     "Child Bonding":
       "I need to bond with my child after birth, adoption, or foster placement.",
-    "Pregnancy/Maternity": /I can’t work due to (an|my) illness, injury, or pregnancy./,
+    "Pregnancy/Maternity":
+      /I can’t work due to (an|my) illness, injury, or pregnancy./,
     "Care for a Family Member": "I need to care for my family member",
   };
   cy.contains(reasonMap[reason]).click();
@@ -474,7 +523,7 @@ export function enterReducedWorkHours(
 
   for (const info of weekdayInfo) {
     cy.contains("fieldset", info.day).within(() => {
-      cy.labelled("Hours").type(info.hours.toString());
+      cy.findByLabelText("Hours").type(info.hours.toString());
     });
   }
   cy.contains("button", "Save and continue").click();
@@ -514,16 +563,12 @@ export function enterEmployerInfo(application: ApplicationRequestBody): void {
   // Preceeded by - "I click on the checklist button called {string}"
   //                with the label "Enter employment information"
   if (application.employment_status === "Employed") {
-    cy.labelled(
+    cy.findByLabelText(
       "What is your employer’s Employer Identification Number (EIN)?"
     ).type(application.employer_fein as string);
   }
   cy.contains("button", "Save and continue").click();
   if (application.employment_status === "Employed") {
-    // @todo: Set to application property once it exists.
-    // cy.labelled("On average, how many hours do you work each week?").type("40");
-    // cy.contains("button", "Save and continue").click();
-
     cy.contains(
       "fieldset",
       "Have you told your employer that you are taking leave?"
@@ -538,13 +583,13 @@ export function enterEmployerInfo(application: ApplicationRequestBody): void {
         const notificationDate = new Date(
           application.leave_details?.employer_notification_date as string
         );
-        cy.labelled("Month").type(
+        cy.findByLabelText("Month").type(
           (notificationDate.getMonth() + 1).toString() as string
         );
-        cy.labelled("Day").type(
+        cy.findByLabelText("Day").type(
           notificationDate.getUTCDate().toString() as string
         );
-        cy.labelled("Year").type(
+        cy.findByLabelText("Year").type(
           notificationDate.getUTCFullYear().toString() as string
         );
       });
@@ -578,8 +623,8 @@ export function describeWorkSchedule(
     }
     const [hours, minutes] = minutesToHoursAndMinutes(workDay.minutes);
     cy.contains("fieldset", workDay.day_of_week).within(() => {
-      cy.labelled("Hours").type(hours.toString());
-      cy.labelled("minutes").select(minutes.toString(), {
+      cy.findByLabelText("Hours").type(hours.toString());
+      cy.findByLabelText("Minutes").select(minutes.toString(), {
         force: true,
       });
     });
@@ -587,46 +632,31 @@ export function describeWorkSchedule(
   cy.contains("button", "Save and continue").click();
 }
 
-export function confirmInfo(): void {
-  // Usually preceeded by - "I am on the claims Review page"
-  cy.contains("Submit Part 1").click();
-}
-
-// Payment Section Currently Removed
-// @Todo: Once this prop has been added back to ApplicationRequestBody
-
 export function addPaymentInfo(
   paymentPreference: PaymentPreferenceRequestBody
 ): void {
   // Preceeded by - "I am on the claims Checklist page";
   // Preceeded by - "I click on the checklist button called {string}"
   //                with the label "Add payment information"
-  const {
-    payment_method,
-    account_number,
-    routing_number,
-    bank_account_type,
-  } = paymentPreference.payment_preference as PaymentPreference;
+  const { payment_method, account_number, routing_number, bank_account_type } =
+    paymentPreference.payment_preference as PaymentPreference;
 
-  cy.contains("fieldset", "How do you want to get your weekly benefit?").within(
-    () => {
-      const paymentInfoLabel = {
-        Debit: "Direct deposit",
-        Check: "Paper check",
-        "Elec Funds Transfer": "Direct deposit",
-      };
-      cy.contains(
-        paymentInfoLabel[
-          payment_method as "Debit" | "Check" | "Elec Funds Transfer"
-        ]
-      ).click();
-    }
-  );
+  inFieldsetLabelled("How do you want to get your weekly benefit?", () => {
+    const paymentInfoLabel: Record<
+      NonNullable<PaymentPreference["payment_method"]>,
+      string
+    > = {
+      Debit: "Direct deposit",
+      Check: "Paper check",
+      "Elec Funds Transfer": "Direct deposit",
+    };
+    if (payment_method) cy.contains(paymentInfoLabel[payment_method]).click();
+  });
   switch (payment_method) {
     case "Debit":
     case "Elec Funds Transfer":
-      cy.labelled("Routing number").type(routing_number as string);
-      cy.labelled("Account number").type(account_number as string);
+      cy.findByLabelText("Routing number").type(routing_number as string);
+      cy.findByLabelText("Account number").type(account_number as string);
       inFieldsetLabelled("Account type", () => {
         cy.get("input[type='radio']").check(bank_account_type as string, {
           force: true,
@@ -637,20 +667,20 @@ export function addPaymentInfo(
     default:
       throw new Error("Unknown payment method");
   }
-  cy.contains("button", "Submit Part 2").click();
+  cy.findByText("Submit Part 2").click();
 }
 
 export function addId(idType: string): void {
   const docName = idType.replace(" ", "_");
-  cy.labelled("Choose files").attachFile({
+  cy.findByLabelText("Choose files").attachFile({
     filePath: `${docName}.pdf`,
     encoding: "binary",
   });
-  cy.contains("button", "Save and continue").click();
+  cy.findByText("Save and continue").click();
 }
 
 export function addLeaveDocs(leaveType: string): void {
-  cy.labelled("Choose files").attachFile({
+  cy.findByLabelText("Choose files").attachFile({
     filePath: `${leaveType}.pdf`,
     encoding: "binary",
   });
@@ -677,18 +707,18 @@ export function enterBondingDateInfo(
 
     case "Foster Care":
     case "Adoption":
-      cy.contains(
-        "fieldset",
-        "When did the child arrive in your home through foster care or adoption?"
-      ).within(() => {
-        const DOB = new Date(
-          application.leave_details?.child_placement_date as string
-        );
+      inFieldsetLabelled(
+        "When did the child arrive in your home through foster care or adoption?",
+        () => {
+          const DOB = new Date(
+            application.leave_details?.child_placement_date as string
+          );
 
-        cy.contains("Month").type(String(DOB.getMonth() + 1) as string);
-        cy.contains("Day").type(String(DOB.getUTCDate()) as string);
-        cy.contains("Year").type(String(DOB.getUTCFullYear()) as string);
-      });
+          cy.contains("Month").type(String(DOB.getMonth() + 1) as string);
+          cy.contains("Day").type(String(DOB.getUTCDate()) as string);
+          cy.contains("Year").type(String(DOB.getUTCFullYear()) as string);
+        }
+      );
       break;
 
     default:
@@ -714,7 +744,7 @@ export function goToDashboardFromApplicationsPage(): void {
 }
 
 export function goToDashboardFromSuccessPage(): void {
-  cy.contains("Return to applications").click();
+  cy.get('a[href="/applications/"]').click();
 }
 
 export function confirmClaimSubmissionSucces(): void {
@@ -776,7 +806,7 @@ export function completeIntermittentLeaveDetails(
         throw new Error("Duration basis should be Days");
       }
       // @bc: This label was changed recently: "At least a day" -> "At least one day".
-      cy.labelled(/At least (a|one) day/).click({ force: true });
+      cy.findByLabelText(/At least (a|one) day/).click({ force: true });
     }
   );
   if (!leave.duration) {
@@ -802,8 +832,10 @@ export function visitActionRequiredERFormPage(fineosAbsenceId: string): void {
   cy.visit(
     `/employers/applications/new-application/?absence_id=${fineosAbsenceId}`
   );
-  cy.contains("Are you the right person to respond to this application?");
-  cy.contains("Yes").click();
+  cy.contains("Are you the right person to respond to this application?", {
+    timeout: 20000,
+  });
+  cy.contains("label", "Yes").click();
   cy.contains("Agree and submit").click();
 }
 
@@ -866,12 +898,12 @@ export function checkNoticeForLeaveAdmin(
 
   switch (noticeType) {
     case "approval":
-      cy.contains("h1", claimantName).should("be.visible");
+      cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
       cy.findByText("Approval notice (PDF)").should("be.visible").click();
       break;
 
     case "denial":
-      cy.contains("h1", claimantName).should("be.visible");
+      cy.contains("h1", claimantName, { timeout: 20000 }).should("be.visible");
       cy.findByText("Denial notice (PDF)").should("be.visible").click();
       break;
 
@@ -881,7 +913,7 @@ export function checkNoticeForLeaveAdmin(
 }
 
 export function confirmEligibleClaimant(): void {
-  cy.contains("button", "I understand and agree").click();
+  cy.findByText("I understand and agree").click();
 }
 
 export function submitClaimPartOne(application: ApplicationRequestBody): void {
@@ -926,7 +958,7 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
     confirmEligibleClaimant();
   }
   onPage("review");
-  confirmInfo();
+  cy.findByText("Submit Part 1").click();
 }
 
 export function answerCaringLeaveQuestions(
@@ -934,11 +966,11 @@ export function answerCaringLeaveQuestions(
 ): void {
   cy.contains("I am caring for my sibling.").click();
   cy.contains("Save and continue").click();
-  cy.labelled("First name").type(
+  cy.findByLabelText("First name").type(
     application.leave_details?.caring_leave_metadata
       ?.family_member_first_name as string
   );
-  cy.labelled("Last name").type(
+  cy.findByLabelText("Last name").type(
     application.leave_details?.caring_leave_metadata
       ?.family_member_first_name as string
   );
@@ -947,11 +979,13 @@ export function answerCaringLeaveQuestions(
     application.leave_details?.caring_leave_metadata
       ?.family_member_date_of_birth as string
   );
-  cy.labelled("Month").type(
+  cy.findByLabelText("Month").type(
     (familyMemberDOB.getMonth() + 1).toString() as string
   );
-  cy.labelled("Day").type(familyMemberDOB.getUTCDate().toString() as string);
-  cy.labelled("Year").type(
+  cy.findByLabelText("Day").type(
+    familyMemberDOB.getUTCDate().toString() as string
+  );
+  cy.findByLabelText("Year").type(
     familyMemberDOB.getUTCFullYear().toString() as string
   );
   cy.contains("Save and continue").click();
@@ -998,7 +1032,9 @@ export function verifyLeaveAdmin(withholding: number): void {
     .click();
   cy.get('input[id="InputText1"]').type(withholding.toString());
   cy.get('button[type="submit"').click();
-  cy.contains("h1", "Thanks for verifying your paid leave contributions");
+  cy.contains("h1", "Thanks for verifying your paid leave contributions", {
+    timeout: 30000,
+  });
   cy.contains("p", "Your account has been verified");
   cy.contains("button", "Continue").click();
   cy.get('a[href^="/employers/organizations/verify-contributions"]').should(
@@ -1014,9 +1050,13 @@ export function addOrganization(fein: string, withholding: number): void {
   cy.get('input[name="ein"]').type(fein);
   cy.get('button[type="submit"').click();
   if (withholding !== 0) {
-    cy.get('input[name="withholdingAmount"]').type(withholding.toString());
+    cy.get('input[name="withholdingAmount"]', { timeout: 30000 }).type(
+      withholding.toString()
+    );
     cy.get('button[type="submit"]').click();
-    cy.contains("h1", "Thanks for verifying your paid leave contributions");
+    cy.contains("h1", "Thanks for verifying your paid leave contributions", {
+      timeout: 30000,
+    });
     cy.contains("p", "Your account has been verified");
     cy.contains("button", "Continue").click();
     cy.get('a[href^="/employers/organizations/verify-contributions"]').should(
@@ -1032,16 +1072,29 @@ export function addOrganization(fein: string, withholding: number): void {
  */
 export function assertZeroWithholdings(): void {
   cy.contains(
-    /(Employer has no verification data|Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications)/
+    /(Employer has no verification data|Your account can’t be verified yet, because your organization has not made any paid leave contributions. Once this organization pays quarterly taxes, you can verify your account and review applications)/,
+    { timeout: 30000 }
   );
 }
+export type ClaimantStatus =
+  | "Approved"
+  | "Denied"
+  | "Closed"
+  | "Withdrawn"
+  | "Pending"
+  | "Cancelled";
+
+export type DashboardClaimStatus =
+  | ClaimantStatus
+  | "--"
+  | "No action required"
+  | "Review by";
 
 export function selectClaimFromEmployerDashboard(
-  fineosAbsenceId: string,
-  status: "Approved" | "Denied" | "Closed" | "--"
+  fineosAbsenceId: string
 ): void {
   goToEmployerDashboard();
-  cy.contains("tr", fineosAbsenceId).should("contain.text", status);
+  searchClaims(fineosAbsenceId);
   cy.findByText(fineosAbsenceId).click();
 }
 
@@ -1098,9 +1151,11 @@ const leaveReasonMap: Record<ValidPreviousLeave["leave_reason"], string> = {
 function reportPreviousLeave(leave: ValidPreviousLeave, index: number) {
   inFieldsetLabelled(`Previous leave ${index + 1}`, () => {
     if (leave.type === "other_reason")
-      cy.labelled(leaveReasonMap[leave.leave_reason]).click({ force: true });
+      cy.findByLabelText(leaveReasonMap[leave.leave_reason]).click({
+        force: true,
+      });
     inFieldsetLabelled("Did you take leave from this employer?", () => {
-      cy.labelled("Yes").check({ force: true });
+      cy.findByLabelText("Yes").check({ force: true });
     });
 
     fillDateFieldset(
@@ -1146,7 +1201,9 @@ function reportAccruedLeave(accruedLeave: ValidConcurrentLeave): void {
   inFieldsetLabelled(
     "Will you use accrued paid leave from this employer?",
     () => {
-      cy.labelled(accruedLeave.is_for_current_employer ? "Yes" : "No").check({
+      cy.findByLabelText(
+        accruedLeave.is_for_current_employer ? "Yes" : "No"
+      ).check({
         force: true,
       });
     }
@@ -1177,7 +1234,9 @@ const benefitTypeMap: Record<ValidEmployerBenefit["benefit_type"], string> = {
 function reportEmployerBenefit(benefit: ValidEmployerBenefit, index: number) {
   inFieldsetLabelled(`Benefit ${index + 1}`, () => {
     inFieldsetLabelled("What kind of employer-sponsored benefit is it?", () => {
-      cy.labelled(benefitTypeMap[benefit.benefit_type]).click({ force: true });
+      cy.findByLabelText(benefitTypeMap[benefit.benefit_type]).click({
+        force: true,
+      });
     });
 
     fillDateFieldset(
@@ -1193,7 +1252,9 @@ function reportEmployerBenefit(benefit: ValidEmployerBenefit, index: number) {
     inFieldsetLabelled(
       "Does this employer-sponsored benefit fully replace your wages?",
       () => {
-        cy.labelled(benefit.is_full_salary_continuous ? "Yes" : "No").click({
+        cy.findByLabelText(
+          benefit.is_full_salary_continuous ? "Yes" : "No"
+        ).click({
           force: true,
         });
       }
@@ -1241,7 +1302,7 @@ const otherIncomeTypeMap: Record<ValidOtherIncome["income_type"], string> = {
 function reportOtherIncome(income: ValidOtherIncome, index: number): void {
   inFieldsetLabelled(`Income ${index + 1}`, () => {
     inFieldsetLabelled("What kind of income is it?", () => {
-      cy.labelled(otherIncomeTypeMap[income.income_type]).click({
+      cy.findByLabelText(otherIncomeTypeMap[income.income_type]).click({
         force: true,
       });
     });
@@ -1256,7 +1317,7 @@ function reportOtherIncome(income: ValidOtherIncome, index: number): void {
     );
 
     inFieldsetLabelled("How much will you receive?", () => {
-      cy.labelled("Amount").type(`${income.income_amount_dollars}`);
+      cy.findByLabelText("Amount").type(`${income.income_amount_dollars}`);
 
       const frequencyMap: Record<
         ValidOtherIncome["income_amount_frequency"],
@@ -1268,7 +1329,7 @@ function reportOtherIncome(income: ValidOtherIncome, index: number): void {
         "Per Month": "Monthly",
       };
 
-      cy.labelled("Frequency").select(
+      cy.findByLabelText("Frequency").select(
         frequencyMap[income.income_amount_frequency]
       );
     });
@@ -1279,7 +1340,7 @@ function reportOtherIncome(income: ValidOtherIncome, index: number): void {
  * Report other incomes. Must be navigated to the other incomes form.
  * @param other_incomes - array of OtherIncome objects with all the required properties.
  */
-"Tell us about your other sources of income during your leave dates for paid leave from PFML.";
+("Tell us about your other sources of income during your leave dates for paid leave from PFML.");
 function reportOtherIncomes(other_incomes: ValidOtherIncome[]): void {
   cy.contains(
     "form",
@@ -1312,12 +1373,16 @@ function reportOtherLeavesAndBenefits(claim: ApplicationRequestBody): void {
   if (previous_leaves_same_reason?.length) {
     assertIsTypedArray(previous_leaves_same_reason, isValidPreviousLeave);
 
-    cy.labelled("Yes").click({ force: true });
+    cy.findByLabelText((content: string) => content.startsWith("Yes")).click({
+      force: true,
+    });
     cy.contains("button", "Save and continue").click();
 
     reportPreviousLeaves(previous_leaves_same_reason);
   } else {
-    cy.labelled("No").click({ force: true });
+    cy.findByLabelText((content: string) => content.startsWith("No")).click({
+      force: true,
+    });
     cy.contains("button", "Save and continue").click();
   }
 
@@ -1325,13 +1390,16 @@ function reportOtherLeavesAndBenefits(claim: ApplicationRequestBody): void {
   cy.url().should("include", "previous-leaves-other-reason");
   if (previous_leaves_other_reason?.length) {
     assertIsTypedArray(previous_leaves_other_reason, isValidPreviousLeave);
-
-    cy.labelled("Yes").click({ force: true });
+    cy.findByLabelText((content: string) => content.startsWith("Yes")).click({
+      force: true,
+    });
     cy.contains("button", "Save and continue").click();
 
     reportPreviousLeaves(previous_leaves_other_reason);
   } else {
-    cy.labelled("No").click({ force: true });
+    cy.findByLabelText((content: string) => content.startsWith("No")).click({
+      force: true,
+    });
     cy.contains("button", "Save and continue").click();
   }
 
@@ -1346,7 +1414,11 @@ function reportOtherLeavesAndBenefits(claim: ApplicationRequestBody): void {
     "Will you use any employer-sponsored accrued paid leave during your paid leave from PFML?"
   )
     .within(() => {
-      cy.labelled(claim.concurrent_leave ? "Yes" : "No").check({ force: true });
+      const selector = (content: string) =>
+        content.startsWith(claim.concurrent_leave ? "Yes" : "No");
+      cy.findByLabelText(selector).check({
+        force: true,
+      });
     })
     .submit();
   if (isValidConcurrentLeave(claim.concurrent_leave))
@@ -1359,9 +1431,13 @@ function reportOtherLeavesAndBenefits(claim: ApplicationRequestBody): void {
 
   cy.contains(
     "form",
-    "Will you use any employer-sponsored benefits from this employer during your paid leave from PFML?"
+    /(Will you use any employer-sponsored benefits from this employer during your paid leave from PFML\?|Will you use any employer-sponsored benefits from this employer during your paid leave from PFML\?)/
   ).within(() => {
-    cy.labelled(claim.employer_benefits ? "Yes" : "No").click({ force: true });
+    const labelSelector = (content: string) =>
+      content.startsWith(claim.employer_benefits ? "Yes" : "No");
+    cy.findByLabelText(labelSelector).click({
+      force: true,
+    });
     cy.contains("Save and continue").click();
   });
 
@@ -1374,7 +1450,11 @@ function reportOtherLeavesAndBenefits(claim: ApplicationRequestBody): void {
     "form",
     "Will you receive income from any other sources during your leave dates for paid leave?"
   ).within(() => {
-    cy.labelled(claim.other_incomes ? "Yes" : "No").click({ force: true });
+    cy.findByLabelText(claim.other_incomes ? "Yes" : "No", {
+      exact: false,
+    }).click({
+      force: true,
+    });
     cy.contains("Save and continue").click();
   });
 
@@ -1406,6 +1486,29 @@ type UploadAdditonalDocumentOptions =
   | "Certification";
 
 export function uploadAdditionalDocument(
+  type: UploadAdditonalDocumentOptions,
+  docName: string
+): void {
+  cy.contains("Upload additional documents").click();
+  cy.contains("label", type).click();
+  cy.contains("button", "Save and continue").click();
+  if (type !== "Certification") {
+    addId(docName);
+  } else {
+    addLeaveDocs(docName);
+  }
+  // Hotfix: Wait for this to complete, plus a margin.
+  cy.wait("@documentUpload", { timeout: 30000 })
+    .its("response.statusCode")
+    .should("eq", 200);
+  // @todo: success banner is not available in all environments yet - reinstate assertion after 9/22 https://nava.slack.com/archives/C023NUQ2Y0K/p1631810839125300?thread_ts=1631806074.115000&cid=C023NUQ2Y0K
+  // cy.contains(
+  //   /You('ve)? successfully submitted your (certification form|(identification )?documents)/,
+  //   { timeout: 30000 }
+  // );
+}
+
+export function uploadAdditionalDocumentLegacy(
   fineosClaimId: string,
   type: UploadAdditonalDocumentOptions,
   docName: string
@@ -1420,7 +1523,9 @@ export function uploadAdditionalDocument(
   } else {
     addLeaveDocs(docName);
   }
-  cy.contains("You successfully submitted your documents");
+  cy.wait("@documentUpload", { timeout: 30000 })
+    .its("response.statusCode")
+    .should("eq", 200);
 }
 
 /**
@@ -1715,4 +1820,212 @@ export function assertLeaveType(leaveType: "Active duty"): void {
   cy.findByText("Leave type", { selector: "h3" })
     .next()
     .should("contain.text", leaveType);
+}
+export type FilterOptionsFlags = {
+  [key in DashboardClaimStatus]?: true | false;
+};
+type FilterOptions = {
+  status?: FilterOptionsFlags;
+  // employerId | employerName | option index
+  organization?: string | number;
+};
+/**Filter claims by given parameters
+ * @example
+ * portal.filterLADashboardBy({
+ *   status: {
+ *     Closed: true,
+ *     Denied: true,
+ *   },
+ * }); //Shows claims with status of 'Closed' & 'Denied'
+ */
+export function filterLADashboardBy(filters: FilterOptions): void {
+  cy.get('button[aria-controls="filters"]')
+    .invoke("text")
+    .then((text) => {
+      if (text.includes("Show filters"))
+        cy.findByText("Show filters", { exact: false }).click();
+    });
+  cy.findByText("Hide filters").should("be.visible");
+  const { status, organization } = filters;
+  if (status)
+    cy.get("#filters fieldset").within(() => {
+      for (const [k, v] of Object.entries(status)) {
+        if (v) cy.findByLabelText(k).click({ force: true });
+      }
+    });
+
+  if (organization) {
+    if (typeof organization === "string") {
+      cy.get(`select[name="employer_id"] > option`).select(organization);
+    } else {
+      cy.get(`select[name="employer_id"] > option`)
+        .eq(organization)
+        .then((element) =>
+          cy
+            .get(`select[name="employer_id"]`)
+            .select(element.val() as string, { force: true })
+        );
+    }
+  }
+
+  cy.findByText("Apply filters").should("not.be.disabled").click();
+  cy.get('span[role="progressbar"]').should("be.visible");
+  cy.wait("@dashboardClaimQueries");
+  cy.contains("table", "Employer ID number").should("be.visible");
+}
+/**Looks if dashboard is empty */
+function checkDashboardIsEmpty() {
+  return cy
+    .contains("table", "Employer ID number")
+    .find("tbody tr")
+    .then(($tr) => {
+      return $tr.text() === "No applications on file";
+    });
+}
+/**Asserts that all claims visible on the page have a status */
+export function assertClaimsHaveStatus(status: DashboardClaimStatus): void {
+  checkDashboardIsEmpty().then((hasNoClaims) => {
+    // Make sure it passes if there are no claims with that status.
+    if (hasNoClaims) return;
+    cy.contains("table", "Employer ID number")
+      .find('tbody tr td[data-label="Status"]')
+      .each((el) => {
+        expect(el).to.contain.text(status);
+      });
+  });
+}
+
+export function clearFilters(): void {
+  cy.get('button[aria-controls="filters"]')
+    .invoke("text")
+    .then((text) => {
+      if (text.includes("Show filters"))
+        cy.findByText("Show filters", { exact: false }).click();
+      cy.findByText("Reset all filters").click();
+      cy.get('span[role="progressbar"]').should("be.visible");
+      cy.wait("@dashboardClaimQueries");
+      cy.contains("table", "Employer ID number").should("be.visible");
+    });
+}
+
+/**Sorts claims on the dashboard*/
+export function sortClaims(
+  by: "new" | "old" | "name_asc" | "name_desc" | "status",
+  // @TODO split the query assertion into it's own function.
+  assertQuery = true
+): void {
+  const sortValuesMap = {
+    new: {
+      // Value of the <option> tag for the sort select
+      value: "created_at,descending",
+      // Query associated with it
+      query: "order_by=created_at&order_direction=descending",
+    },
+    old: {
+      value: "created_at,ascending",
+      query: "order_by=created_at&order_direction=ascending",
+    },
+    name_asc: {
+      value: "employee,ascending",
+      query: "order_by=employee&order_direction=ascending",
+    },
+    name_desc: {
+      value: "employee,descending",
+      query: "order_by=employee&order_direction=descending",
+    },
+    status: {
+      value: "absence_status,ascending",
+      query: "fineos_absence_status&order_direction=ascending",
+    },
+  };
+  cy.findByLabelText("Sort").then((el) => {
+    if (el.val() === sortValuesMap[by].value) return;
+    cy.wrap(el).select(sortValuesMap[by].value);
+    cy.get('span[role="progressbar"]').should("be.visible");
+    if (assertQuery)
+      cy.wait("@dashboardClaimQueries")
+        .its("request.url")
+        .should("include", sortValuesMap[by].query);
+  });
+}
+
+export function claimantGoToClaimStatus(fineosAbsenceId: string): void {
+  cy.wait("@getApplications").wait(150);
+  cy.contains("article", fineosAbsenceId).within(() => {
+    cy.contains("View status updates and details").click();
+    cy.url().should(
+      "include",
+      `/applications/status/?absence_case_id=${fineosAbsenceId}`
+    );
+  });
+}
+
+type LeaveStatus = {
+  leave: NonNullable<APILeaveReason>;
+  status: ClaimantStatus;
+  leavePeriods?: [string, string];
+};
+
+export function claimantAssertClaimStatus(leaves: LeaveStatus[]): void {
+  const leaveReasonHeadings = {
+    "Serious Health Condition - Employee": "Medical leave",
+    "Child Bonding": "Leave to bond with a child",
+    "Care for a Family Member": "Leave to care for a family member schedule",
+    "Pregnancy/Maternity": "",
+  } as const;
+
+  for (const { leave, status, leavePeriods } of leaves) {
+    cy.contains(leaveReasonHeadings[leave])
+      .parent()
+      .within(() => {
+        cy.contains(status);
+        leavePeriods?.forEach((period) => cy.contains(period));
+      });
+  }
+}
+
+/**
+ * Stubs the response of `GET: /applications` endpoint to contain no applications.
+ * Claimant is redirected straight to "Start Application" page if he has no open aplications.
+ */
+export const skipLoadingClaimantApplications = (): void => {
+  cy.intercept(/\/api\/v1\/applications$/, { times: 1 }, (req) => {
+    req.reply((res) => {
+      res.body.data = [];
+      res.send();
+    });
+  });
+};
+
+/**
+ * Search claims in LA dashboard by id or employee name.
+ * Expects to only find a single match.
+ * @param idOrName - claim ID or name of the employee
+ * @param expectSingleMatch - searching by name can yield more than 1 match, default `true`
+ */
+export function searchClaims(idOrName: string, expectSingleMatch = true): void {
+  cy.findByLabelText("Search for employee name or application ID").type(
+    `${idOrName}{enter}`
+  );
+  cy.get('span[role="progressbar"]').should("be.visible");
+  cy.wait("@dashboardClaimQueries");
+  cy.get("table tbody tr")
+    .should(expectSingleMatch ? "have.lengthOf" : "have.length.gte", 1)
+    .each((el) => {
+      expect(el).to.contain.text(idOrName);
+    });
+}
+
+/**
+ * Reset LA dashboard search input to empty state to show all of available claims.
+ */
+export function clearSearch(): void {
+  cy.findByLabelText("Search for employee name or application ID").type(
+    `{selectAll}{backspace}{enter}`
+  );
+  cy.get('span[role="progressbar"]').should("be.visible");
+  cy.wait("@dashboardClaimQueries");
+  cy.get("table tbody").should(($table) => {
+    expect($table.children().length).to.be.gt(1);
+  });
 }

@@ -4,21 +4,20 @@ import {
   MockEmployerClaimBuilder,
 } from "./mock-model-builder";
 import { createInputElement, makeFile } from "./makeFile";
+
+import { createMockBenefitsApplication } from "./createMockBenefitsApplication";
+import mockAuth from "./mockAuth";
 import mockFetch from "./mockFetch";
-import mockLoggedInAuthSession from "./mockLoggedInAuthSession";
-import renderWithAppLogic from "./renderWithAppLogic";
-import simulateEvents from "./simulateEvents";
-import testHook from "./testHook";
+import { renderPage } from "./renderPage";
 
 export {
   BaseMockBenefitsApplicationBuilder,
   createInputElement,
+  createMockBenefitsApplication,
   makeFile,
   MockBenefitsApplicationBuilder,
   MockEmployerClaimBuilder,
-  renderWithAppLogic,
+  mockAuth,
   mockFetch,
-  mockLoggedInAuthSession,
-  simulateEvents,
-  testHook,
+  renderPage,
 };

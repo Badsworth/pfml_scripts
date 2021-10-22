@@ -6,11 +6,12 @@
 # in the API README to generate an associated table migration.
 
 from sqlalchemy import Column, ForeignKey, Integer, Text
-from sqlalchemy.dialects.postgresql import JSONB, UUID
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
 from ..lookup import LookupTable
 from .base import Base, TimestampMixin, uuid_gen
+from .common import PostgreSQLUUID
 
 
 class LkVerificationType(Base):
@@ -19,7 +20,7 @@ class LkVerificationType(Base):
 
     __tablename__ = "lk_verification_type"
     verification_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    verification_type_description = Column(Text)
+    verification_type_description = Column(Text, nullable=False)
 
     def __init__(self, verification_type_id, verification_type_description):
         self.verification_type_id = verification_type_id
@@ -40,7 +41,7 @@ class Verification(Base, TimestampMixin):
     """
 
     __tablename__ = "verification"
-    verification_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    verification_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     verification_type_id = Column(
         Integer, ForeignKey("lk_verification_type.verification_type_id"), nullable=False
     )

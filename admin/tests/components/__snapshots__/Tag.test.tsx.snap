@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Tag renders the default component 1`] = `
+<span
+  className="tag tag--green"
+  data-testid="tag"
+>
+  Test Tag
+</span>
+`;

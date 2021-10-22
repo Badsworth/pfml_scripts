@@ -1,112 +1,116 @@
-import {
-  MockBenefitsApplicationBuilder,
-  renderWithAppLogic,
-  simulateEvents,
-} from "../../test-utils";
+import { createMockBenefitsApplication, renderPage } from "../../test-utils";
+import { screen, waitFor } from "@testing-library/react";
+
 import ConcurrentLeaves from "../../../src/pages/applications/concurrent-leaves";
-import { mount } from "enzyme";
+import { setupBenefitsApplications } from "../../test-utils/helpers";
+import userEvent from "@testing-library/user-event";
 
-jest.mock("../../../src/hooks/useAppLogic");
+const updateClaim = jest.fn(() => {
+  return Promise.resolve();
+});
 
-const setup = (options = { hasConcurrentLeave: true }) => {
-  const claim = options.hasConcurrentLeave
-    ? new MockBenefitsApplicationBuilder()
-        .continuous()
-        .concurrentLeave()
-        .employed()
-        .create()
-    : new MockBenefitsApplicationBuilder().continuous().employed().create();
-
-  const { appLogic, wrapper } = renderWithAppLogic(ConcurrentLeaves, {
-    claimAttrs: claim,
-  });
-
-  const { changeRadioGroup, submitForm } = simulateEvents(wrapper);
-
-  return {
-    appLogic,
-    changeRadioGroup,
-    claim,
-    submitForm,
-    wrapper,
+const setup = (...types) => {
+  const cb = (appLogic) => {
+    appLogic.benefitsApplications.update = updateClaim;
   };
+
+  return renderPage(
+    ConcurrentLeaves,
+    {
+      addCustomSetup: (hook) => {
+        setupBenefitsApplications(
+          hook,
+          [createMockBenefitsApplication(...types)],
+          cb
+        );
+      },
+    },
+    { query: { claim_id: "mock_application_id" } }
+  );
 };
 
 describe("ConcurrentLeaves", () => {
   it("renders the page", () => {
-    const { wrapper } = setup();
-    const inputChoiceGroupHint = wrapper.find("InputChoiceGroup").prop("hint");
-    const hintComponent = mount(inputChoiceGroupHint);
+    const { container } = setup("continuous", "concurrentLeave", "employed");
+    expect(container).toMatchSnapshot();
+  });
 
-    expect(wrapper).toMatchSnapshot();
-    expect(hintComponent).toMatchSnapshot();
+  it("renders the continuous page content", () => {
+    const { container } = setup("continuous");
+    expect(container).toMatchSnapshot();
+  });
+
+  it("renders the reduced page content", () => {
+    const { container } = setup("reducedSchedule");
+    expect(container).toMatchSnapshot();
+  });
+
+  it("renders the intermittent reduced page content", () => {
+    const { container } = setup("intermittent");
+    expect(container).toMatchSnapshot();
   });
 
   it("calls claims.update when user clicks continue", async () => {
-    const { appLogic, claim, submitForm } = setup();
+    setup("continuous", "concurrentLeave", "employed");
 
-    await submitForm();
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
 
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
-        has_concurrent_leave: claim.has_concurrent_leave,
-      }
-    );
+    await waitFor(() => {
+      expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
+        has_concurrent_leave: true,
+      });
+    });
   });
 
   it("sends concurrent_leave as null to the API if has_concurrent_leave changes to no", async () => {
-    const { appLogic, changeRadioGroup, claim, submitForm } = setup();
+    setup("continuous", "concurrentLeave", "employed");
 
-    changeRadioGroup("has_concurrent_leave", "false");
-
-    await submitForm();
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
+    userEvent.click(
+      screen.getByRole("radio", { name: /no i don't need to report/i })
+    );
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
+    await waitFor(() => {
+      expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
         has_concurrent_leave: false,
         concurrent_leave: null,
-      }
-    );
-  });
-});
-
-describe("when the claim does not contain concurrent leave data", () => {
-  const disableConcurrentLeave = { hasConcurrentLeave: false };
-
-  it("renders the page", () => {
-    const { wrapper } = setup(disableConcurrentLeave);
-    expect(wrapper).toMatchSnapshot();
+      });
+    });
   });
 
-  it("sends the user's input to the API when the user clicks continue", async () => {
-    const { appLogic, changeRadioGroup, claim, submitForm } = setup(
-      disableConcurrentLeave
+  it("renders the page when the claim does not contain concurrent leave data", () => {
+    const { container } = setup("continuous", "employed");
+    expect(container).toMatchSnapshot();
+  });
+
+  it("with no concurrent leave data, user can click no and expected info is sent to API", async () => {
+    setup("continuous", "employed");
+
+    userEvent.click(
+      screen.getByRole("radio", { name: /no i don't need to report/i })
     );
 
-    // check that "false" works
-    changeRadioGroup("has_concurrent_leave", false);
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
 
-    await submitForm();
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
+    await waitFor(() => {
+      expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
         has_concurrent_leave: false,
-      }
+      });
+    });
+  });
+
+  it("with no concurrent leave data, user can click yes and expected info is sent to API", async () => {
+    setup("continuous", "employed");
+
+    userEvent.click(
+      screen.getByRole("radio", { name: /yes i need to report/i })
     );
 
-    // check that "true" works
-    changeRadioGroup("has_concurrent_leave", true);
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
 
-    await submitForm();
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      claim.application_id,
-      {
+    await waitFor(() => {
+      expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
         has_concurrent_leave: true,
-      }
-    );
+      });
+    });
   });
 });

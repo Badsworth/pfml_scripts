@@ -1,13 +1,14 @@
+import { render, screen } from "@testing-library/react";
 import AmendmentForm from "../../../src/components/employers/AmendmentForm";
 import React from "react";
-import { shallow } from "enzyme";
+import userEvent from "@testing-library/user-event";
 
 describe("AmendmentForm", () => {
   const onDestroy = jest.fn();
   const destroyButtonLabel = "Destroy";
 
   it("renders the component", () => {
-    const wrapper = shallow(
+    const { container } = render(
       <AmendmentForm
         onDestroy={onDestroy}
         destroyButtonLabel={destroyButtonLabel}
@@ -16,11 +17,11 @@ describe("AmendmentForm", () => {
       </AmendmentForm>
     );
 
-    expect(wrapper).toMatchSnapshot();
+    expect(container.firstChild).toMatchSnapshot();
   });
 
   it("shows a button labeled with destroyButtonLabel", () => {
-    const wrapper = shallow(
+    render(
       <AmendmentForm
         onDestroy={onDestroy}
         destroyButtonLabel={destroyButtonLabel}
@@ -28,12 +29,11 @@ describe("AmendmentForm", () => {
         <p>Testing</p>
       </AmendmentForm>
     );
-
-    expect(wrapper.find("Button").dive().text()).toEqual("Destroy");
+    expect(screen.getByRole("button", { name: "Destroy" })).toBeInTheDocument();
   });
 
   it("calls 'onDestroy' when the destroy button is clicked", () => {
-    const wrapper = shallow(
+    render(
       <AmendmentForm
         onDestroy={onDestroy}
         destroyButtonLabel={destroyButtonLabel}
@@ -41,8 +41,7 @@ describe("AmendmentForm", () => {
         <p>Testing</p>
       </AmendmentForm>
     );
-    wrapper.find("Button").simulate("click");
-
+    userEvent.click(screen.getByRole("button", { name: "Destroy" }));
     expect(onDestroy).toHaveBeenCalled();
   });
 });

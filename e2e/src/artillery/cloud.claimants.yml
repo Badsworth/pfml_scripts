@@ -1,0 +1,55 @@
+config:
+  processor: ./processor.js
+  plugins:
+    influxdb:
+      scope: "{{ $processEnvironment.ARTILLERY_ROOT }}/dist/plugins/"
+      url: "{{ $processEnvironment.INFLUX_URL }}"
+      token: "{{ $processEnvironment.INFLUX_TOKEN }}"
+      organization: "{{ $processEnvironment.INFLUX_ORGANIZATION }}"
+      bucket: "{{ $processEnvironment.INFLUX_BUCKET }}"
+  includeFiles:
+    - .env
+    - ./employees
+    - ./forms
+  environments:
+    performance:
+      phases:
+        - duration: 300 # Run minutes 0-5
+          arrivalRate: .25 # When starting our load test, we send one user per instance every 4 seconds until we reach maxVusers
+          maxVusers: 1
+          name: Warm Up
+        - duration: 300 # Run minutes 5-10
+          maxVusers: 4
+          arrivalRate: 1
+          name: Steady State (Portal Claims Normal Traffic)
+        - duration: 600 # Run minutes 10-20
+          maxVusers: 8
+          arrivalRate: 1
+          name: Spike One
+        - duration: 600 # Run minutes 25-35
+          maxVusers: 10
+          arrivalRate: 1
+          name: Spike Two
+        - duration: 600 # Run minutes 35-45
+          maxVusers: 15
+          arrivalRate: 1
+          name: Spike Three
+        - duration: 600 # Run minutes 45-55
+          maxVusers: 2
+          arrivalRate: 1
+          name: Steady State (#2)
+        - duration: 300 # Run minutes 55-65
+          maxVusers: 2
+          arrivalRate: .5
+          name: Cool Down
+    test:
+      phases:
+        - duration: 240
+          arrivalRate: 1
+          maxVusers: 1
+          name: Development
+
+scenarios:
+  - name: Claim Submission
+    flow:
+      - function: submitAndStore

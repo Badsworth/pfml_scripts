@@ -4,6 +4,9 @@ from unittest import mock
 import pytest
 
 from massgov.pfml.api.models.notifications.requests import NotificationRequest
+from massgov.pfml.api.services.managed_requirements import (
+    get_fineos_managed_requirements_from_notification,
+)
 from massgov.pfml.db.models.employees import (
     Claim,
     ManagedRequirement,
@@ -18,15 +21,10 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.db.queries.managed_requirements import (
     create_managed_requirement_from_fineos,
-    get_fineos_managed_requirements_from_notification,
     get_managed_requirement_by_fineos_managed_requirement_id,
     update_managed_requirement_from_fineos,
 )
 from massgov.pfml.fineos.models.group_client_api import ManagedRequirementDetails
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 leave_admin_body = {
     "absence_case_id": "NTN-111-ABS-01",

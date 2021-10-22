@@ -1,96 +1,90 @@
 import PaginationNavigation, {
   getTruncatedPageRange,
 } from "../../src/components/PaginationNavigation";
+import { render, screen, within } from "@testing-library/react";
 import React from "react";
-import { shallow } from "enzyme";
+import userEvent from "@testing-library/user-event";
 
-const setup = (customProps = {}) => {
-  const props = Object.assign(
-    {
-      pageOffset: 2,
-      totalPages: 3,
-      onClick: jest.fn(),
-    },
-    customProps
-  );
-
-  const wrapper = shallow(<PaginationNavigation {...props} />);
-
-  return { wrapper, props };
+const onClick = jest.fn();
+const renderComponent = (customProps) => {
+  const props = {
+    pageOffset: 2,
+    totalPages: 3,
+    onClick,
+    ...customProps,
+  };
+  return render(<PaginationNavigation {...props} />);
 };
 
 describe("PaginationNavigation", () => {
-  const selectNthLink = (wrapper, index) => {
-    return wrapper
-      .find("Pagination")
-      .dive()
-      .find("a")
-      .at(index)
-      .simulate("click", {
-        preventDefault: () => jest.fn(),
-      });
-  };
-
   it("renders the component with a truncated pagination range", () => {
-    const { wrapper } = setup({ totalPages: 10 });
-
-    expect(wrapper).toMatchSnapshot();
+    const { container } = renderComponent({ totalPages: 10 });
+    expect(screen.getAllByRole("button")).toHaveLength(11);
+    expect(container.firstChild).toMatchSnapshot();
   });
 
   it("displays a link for previous, next, and each page number", () => {
-    const { wrapper } = setup();
+    renderComponent({ totalPages: 2 });
 
-    expect(wrapper.find("Pagination").dive().find("a")).toHaveLength(5);
+    const [previous, goToOne, goToTwo, next] = screen.getAllByRole("button");
+
+    expect(within(previous).getByText(/Previous/)).toBeInTheDocument();
+    expect(within(next).getByText(/Next/)).toBeInTheDocument();
+    expect(within(goToOne).getByText(/1/)).toBeInTheDocument();
+    expect(within(goToTwo).getByText(/2/)).toBeInTheDocument();
   });
 
   it("calls function to fetch updated list when a page is selected", () => {
-    const { props, wrapper } = setup();
-
-    selectNthLink(wrapper, 3); // Select 3rd page
-    expect(props.onClick).toHaveBeenCalled();
+    renderComponent();
+    userEvent.click(screen.getByRole("button", { name: "Go to Page 3" }));
+    expect(onClick).toHaveBeenCalledWith(3);
   });
 
   it("calls function to fetch updated list when 'Previous' is clicked", () => {
-    const { props, wrapper } = setup();
-
-    selectNthLink(wrapper, 0); // Select 'Previous' link
-    expect(props.onClick).toHaveBeenCalledWith(1); // 1st page
+    renderComponent();
+    userEvent.click(
+      screen.getByRole("button", { name: "Go to Previous page" })
+    );
+    expect(onClick).toHaveBeenCalledWith(1); // 1st page
   });
 
   it("calls function to fetch updated list when 'Next' is clicked", () => {
-    const { props, wrapper } = setup();
-
-    selectNthLink(wrapper, 4); // Select 'Next' link
-    expect(props.onClick).toHaveBeenCalledWith(3); // 3rd page
+    renderComponent();
+    userEvent.click(screen.getByRole("button", { name: "Go to Next page" }));
+    expect(onClick).toHaveBeenCalledWith(3); // 3rd page
   });
 
   describe("when selected page is first page", () => {
     it("disables the 'Previous' link", () => {
-      const { wrapper } = setup({ pageOffset: 1 });
-
-      expect(wrapper.find("Pagination").prop("prev").disabled).toBe(true);
+      renderComponent({ pageOffset: 1 });
+      expect(
+        screen.getByRole("button", { name: "Go to Previous page" })
+      ).toHaveAttribute("aria-disabled", "true");
     });
 
     it("does not call function to fetch updated list when 'Previous' is clicked", () => {
-      const { props, wrapper } = setup({ pageOffset: 1 });
-
-      selectNthLink(wrapper, 0);
-      expect(props.onClick).not.toHaveBeenCalled();
+      renderComponent({ pageOffset: 1 });
+      const previous = screen.getByRole("button", {
+        name: "Go to Previous page",
+      });
+      userEvent.click(previous);
+      expect(onClick).not.toHaveBeenCalled();
     });
   });
 
   describe("when selected page is last page", () => {
     it("disables the 'Next' link", () => {
-      const { wrapper } = setup({ pageOffset: 3, totalPages: 3 });
-
-      expect(wrapper.find("Pagination").prop("next").disabled).toBe(true);
+      renderComponent({ pageOffset: 3, totalPages: 3 });
+      expect(
+        screen.getByRole("button", { name: "Go to Next page" })
+      ).toHaveAttribute("aria-disabled", "true");
     });
 
     it("does not call function to fetch updated list when 'Next' is clicked", () => {
-      const { props, wrapper } = setup({ pageOffset: 3, totalPages: 3 });
-
-      selectNthLink(wrapper, 4);
-      expect(props.onClick).not.toHaveBeenCalled();
+      renderComponent({ pageOffset: 3, totalPages: 3 });
+      const next = screen.getByRole("button", { name: "Go to Next page" });
+      userEvent.click(next);
+      expect(onClick).not.toHaveBeenCalled();
     });
   });
 });

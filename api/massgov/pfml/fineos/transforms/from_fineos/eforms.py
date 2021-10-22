@@ -2,8 +2,10 @@ import math
 import re
 from typing import List, Optional, Union
 
+import pydantic
 from pydantic import BaseModel
 
+import massgov.pfml.util.logging
 from massgov.pfml.api.models.claims.common import PreviousLeave
 from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit
 from massgov.pfml.fineos.models.group_client_api import EForm
@@ -12,6 +14,12 @@ from massgov.pfml.fineos.transforms.common import (
     FineosEmployerBenefitEnum,
 )
 from massgov.pfml.fineos.transforms.from_fineos.base import TransformEformAttributes
+
+logger = massgov.pfml.util.logging.get_logger(__name__)
+
+
+class EformParseError(Exception):
+    """An error or validation failure when reading or parsing an EForm."""
 
 
 class TransformOtherLeaveAttributes(TransformEformAttributes):
@@ -99,7 +107,14 @@ class TransformPreviousLeaveFromOtherLeaveEform(BaseModel):
             leave["type"] = (
                 "same_reason" if leave["is_for_same_reason"] == "Yes" else "other_reason"
             )
-        return [PreviousLeave.parse_obj(leave) for leave in previous_leaves]
+        try:
+            return [PreviousLeave.parse_obj(leave) for leave in previous_leaves]
+        except pydantic.ValidationError:
+            logger.exception(
+                "could not parse PreviousLeave object",
+                extra={"previous_leaves": repr(previous_leaves)},
+            )
+            raise EformParseError("could not parse PreviousLeave object")
 
 
 class TransformConcurrentLeaveFromOtherLeaveEform(BaseModel):
@@ -110,9 +125,18 @@ class TransformConcurrentLeaveFromOtherLeaveEform(BaseModel):
             eform["eformAttributes"]
         )
         # The eform should only ever have 0 or 1 concurrent leave
-        concurrent_leave = (
-            ConcurrentLeave.parse_obj(concurrent_leaves[0]) if len(concurrent_leaves) > 0 else None
-        )
+        try:
+            concurrent_leave = (
+                ConcurrentLeave.parse_obj(concurrent_leaves[0])
+                if len(concurrent_leaves) > 0
+                else None
+            )
+        except pydantic.ValidationError:
+            logger.exception(
+                "could not parse ConcurrentLeave object",
+                extra={"concurrent_leaves": repr(concurrent_leaves)},
+            )
+            raise EformParseError("could not parse ConcurrentLeave object")
         return concurrent_leave
 
 

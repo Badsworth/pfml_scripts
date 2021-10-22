@@ -5,14 +5,18 @@ import re
 from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from typing import TYPE_CHECKING, Dict, List, Optional
+from typing import TYPE_CHECKING, Dict, List, Optional, Sequence
 
 import boto3
 from botocore.exceptions import ClientError
 from pydantic import BaseModel, validator
 
 import massgov.pfml.util.logging as logging
-from massgov.pfml.api.validation.exceptions import ValidationErrorDetail, ValidationException
+from massgov.pfml.api.validation.exceptions import (
+    IssueType,
+    ValidationErrorDetail,
+    ValidationException,
+)
 from massgov.pfml.util.files import read_file
 
 if TYPE_CHECKING:
@@ -33,8 +37,7 @@ class EmailRecipient(BaseModel):
     def check_to_addresses_format(cls, emails):  # noqa: B902
         if len(emails) == 0:
             validation_error = ValidationErrorDetail(
-                message="Have to provide at least one valid email address",
-                type="missing_email_format",
+                message="Have to provide at least one valid email address", type=IssueType.required,
             )
             raise ValidationException(
                 errors=[validation_error], message="Email validation error", data={}
@@ -55,7 +58,7 @@ class EmailRecipient(BaseModel):
         regex = r"^(?!.*\.-.*$|.*-\..*$)([a-zA-Z0-9._-]+)([a-zA-Z0-9]@[a-zA-Z0-9])([a-zA-Z0-9.-]+)([a-zA-Z0-9]\.[a-zA-Z]{2,3})$"
         if not re.match(regex, email):
             validation_error = ValidationErrorDetail(
-                message=f"Email format has to match {regex}", type="incorrect_email_format",
+                message=f"Email format has to match {regex}", type=IssueType.pattern,
             )
             raise ValidationException(
                 errors=[validation_error], message="Email validation error", data={}
@@ -68,7 +71,7 @@ def send_email(
     body_text: str,
     sender: str,
     bounce_forwarding_email_address_arn: str,
-    attachments: Optional[List[AnyPath]] = None,
+    attachments: Optional[Sequence[AnyPath]] = None,
 ) -> Dict:
     """
     attachments is a list containing the full-paths to the file that will be attached to the email.
@@ -118,8 +121,8 @@ def send_email(
         raise RuntimeError("Error sending email: %s", error_message)
 
 
-def create_email_attachments(msg_container: MIMEMultipart, attachments: List[AnyPath]) -> None:
+def create_email_attachments(msg_container: MIMEMultipart, attachments: Sequence[AnyPath]) -> None:
     for attachment in attachments:
         att = MIMEApplication(read_file(attachment, mode="rb"))
-        att.add_header("Content-Disposition", "attachment", filename=os.path.basename(attachment))
+        att.add_header("Content-Disposition", "attachment", filename=os.path.basename(attachment))  # type: ignore
         msg_container.attach(att)

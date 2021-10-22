@@ -1,12 +1,11 @@
 import PaymentPreference, {
   PaymentPreferenceMethod,
 } from "../../src/models/PaymentPreference";
-import { Auth } from "@aws-amplify/auth";
 import BenefitsApplication from "../../src/models/BenefitsApplication";
 import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import BenefitsApplicationsApi from "../../src/api/BenefitsApplicationsApi";
+import { mockAuth } from "../test-utils";
 
-jest.mock("@aws-amplify/auth");
 jest.mock("../../src/services/tracker");
 
 const mockFetch = ({
@@ -34,11 +33,7 @@ describe("BenefitsApplicationsApi", () => {
   beforeEach(() => {
     process.env.featureFlags = {};
     jest.resetAllMocks();
-    jest.spyOn(Auth, "currentSession").mockImplementation(() =>
-      Promise.resolve({
-        accessToken: { jwtToken: accessTokenJwt },
-      })
-    );
+    mockAuth(true, accessTokenJwt);
 
     claimsApi = new BenefitsApplicationsApi();
   });
@@ -73,22 +68,6 @@ describe("BenefitsApplicationsApi", () => {
           headers: baseRequestHeaders,
           method: "GET",
         }
-      );
-    });
-
-    it("includes feature flag headers when relevant feature flags are enabled", async () => {
-      process.env.featureFlags = { claimantShowOtherLeaveStep: true };
-
-      await claimsApi.getClaim(claim.application_id);
-
-      expect(fetch).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          headers: {
-            ...baseRequestHeaders,
-            "X-FF-Require-Other-Leaves": true,
-          },
-        })
       );
     });
 
@@ -232,22 +211,6 @@ describe("BenefitsApplicationsApi", () => {
       );
     });
 
-    it("includes feature flag headers when relevant feature flags are enabled", async () => {
-      process.env.featureFlags = { claimantShowOtherLeaveStep: true };
-
-      await claimsApi.completeClaim(claim.application_id);
-
-      expect(fetch).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          headers: {
-            ...baseRequestHeaders,
-            "X-FF-Require-Other-Leaves": true,
-          },
-        })
-      );
-    });
-
     it("resolves with claim properties", async () => {
       const { claim: claimResponse } = await claimsApi.completeClaim(
         claim.application_id
@@ -284,22 +247,6 @@ describe("BenefitsApplicationsApi", () => {
       );
     });
 
-    it("includes feature flag headers when relevant feature flags are enabled", async () => {
-      process.env.featureFlags = { claimantShowOtherLeaveStep: true };
-
-      await claimsApi.updateClaim(claim.application_id, claim);
-
-      expect(fetch).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          headers: {
-            ...baseRequestHeaders,
-            "X-FF-Require-Other-Leaves": true,
-          },
-        })
-      );
-    });
-
     it("resolves with claim, errors and warnings properties", async () => {
       const { claim: claimResponse, ...rest } = await claimsApi.updateClaim(
         claim.application_id,
@@ -309,11 +256,10 @@ describe("BenefitsApplicationsApi", () => {
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
-        Object {
-          "errors": undefined,
-          "warnings": Array [],
-        }
-      `);
+Object {
+  "warnings": Array [],
+}
+`);
     });
   });
 
@@ -340,22 +286,6 @@ describe("BenefitsApplicationsApi", () => {
           headers: baseRequestHeaders,
           method: "POST",
         }
-      );
-    });
-
-    it("includes feature flag headers when relevant feature flags are enabled", async () => {
-      process.env.featureFlags = { claimantShowOtherLeaveStep: true };
-
-      await claimsApi.submitClaim(claim.application_id);
-
-      expect(fetch).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          headers: {
-            ...baseRequestHeaders,
-            "X-FF-Require-Other-Leaves": true,
-          },
-        })
       );
     });
 
@@ -400,25 +330,6 @@ describe("BenefitsApplicationsApi", () => {
       );
     });
 
-    it("includes feature flag headers when relevant feature flags are enabled", async () => {
-      process.env.featureFlags = { claimantShowOtherLeaveStep: true };
-
-      await claimsApi.submitPaymentPreference(
-        claim.application_id,
-        payment_preference
-      );
-
-      expect(fetch).toHaveBeenCalledWith(
-        expect.any(String),
-        expect.objectContaining({
-          headers: {
-            ...baseRequestHeaders,
-            "X-FF-Require-Other-Leaves": true,
-          },
-        })
-      );
-    });
-
     it("resolves with claim properties", async () => {
       const { claim: claimResponse, ...rest } =
         await claimsApi.submitPaymentPreference(
@@ -429,11 +340,10 @@ describe("BenefitsApplicationsApi", () => {
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
-        Object {
-          "errors": undefined,
-          "warnings": Array [],
-        }
-      `);
+Object {
+  "warnings": Array [],
+}
+`);
     });
   });
 });

@@ -65,7 +65,9 @@ def init(program_name):
         extra={
             "hostname": platform.node(),
             "cpu_count": os.cpu_count(),
-            "cpu_usable": len(os.sched_getaffinity(0)),
+            "cpu_usable": (
+                len(os.sched_getaffinity(0)) if "sched_getaffinity" in dir(os) else "unknown"
+            ),
         },
     )
     logger.info("invoked as: %s", " ".join(original_argv))

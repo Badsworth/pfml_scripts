@@ -25,10 +25,8 @@ resource "aws_ssm_parameter" "db_password" {
   })
 }
 
-resource "aws_db_subnet_group" "rds_postgres_dbprivate" {
-  name        = "${local.app_name}-${var.environment_name}-rds"
-  description = "Mass RDS DB subnet group"
-  subnet_ids  = var.vpc_db_subnet_ids
+data "aws_db_subnet_group" "rds_postgres_dbprivate" {
+  name = var.environment_name == "prod" ? "eolwd-pfml-prod-dbprivate" : "eolwd-pfml-nonprod-dbprivate"
 }
 
 resource "aws_db_instance" "default" {
@@ -70,7 +68,7 @@ resource "aws_db_instance" "default" {
   # This is required by Smartronix CIS Benchmark audits, which are run via AWS Config through their CAMS Monitoring Harness.
   deletion_protection = true
 
-  db_subnet_group_name = aws_db_subnet_group.rds_postgres_dbprivate.name
+  db_subnet_group_name = data.aws_db_subnet_group.rds_postgres_dbprivate.name
   parameter_group_name = var.environment_name == "prod" ? "pfml-postgres12-prod" : "pfml-postgres12-non-prod"
 
   monitoring_interval = 30

@@ -3,6 +3,7 @@ import sys
 from typing import List
 
 import massgov.pfml.db as db
+import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.delegated_payments.audit.delegated_payment_rejects import PaymentRejectsStep
 from massgov.pfml.delegated_payments.delegated_fineos_pei_writeback import FineosPeiWritebackStep
@@ -95,6 +96,7 @@ def _process_pub_payments(
 ) -> None:
     """Process PUB Payments"""
     logger.info("Start - PUB Payments ECS Task")
+    start_time = payments_util.get_now()
 
     if config.pickup_files:
         PickupResponseFilesStep(
@@ -126,4 +128,5 @@ def _process_pub_payments(
             report_names=CREATE_PUB_FILES_REPORTS,
         ).run()
 
+    payments_util.create_success_file(start_time, "pub-payments-create-pub-files")
     logger.info("Done - PUB Payments ECS Task")

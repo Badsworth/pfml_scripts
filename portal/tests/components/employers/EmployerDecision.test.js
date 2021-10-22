@@ -1,18 +1,17 @@
-import { mount, shallow } from "enzyme";
-import { simulateEvents, testHook } from "../../test-utils";
+import { render, screen } from "@testing-library/react";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import EmployerDecision from "../../../src/components/employers/EmployerDecision";
 import React from "react";
-import { act } from "react-dom/test-utils";
-import { merge } from "lodash";
+import { renderHook } from "@testing-library/react-hooks";
 import useFunctionalInputProps from "../../../src/hooks/useFunctionalInputProps";
+import userEvent from "@testing-library/user-event";
 
 describe("EmployerDecision", () => {
   const updateFields = jest.fn();
   let getFunctionalInputProps;
 
   beforeEach(() => {
-    testHook(() => {
+    renderHook(() => {
       getFunctionalInputProps = useFunctionalInputProps({
         appErrors: new AppErrorInfoCollection(),
         formState: { employerDecision: "Approve" },
@@ -21,33 +20,28 @@ describe("EmployerDecision", () => {
     });
   });
 
-  function render(shouldMount = false, customProps = {}) {
+  function renderComponent(customProps = {}) {
     const defaultProps = {
       employerDecision: undefined,
       fraud: undefined,
       getFunctionalInputProps,
       updateFields,
+      ...customProps,
     };
-    const props = merge(defaultProps, customProps);
-    if (shouldMount) {
-      return mount(<EmployerDecision {...props} />);
-    } else {
-      return shallow(<EmployerDecision {...props} />);
-    }
+    return render(<EmployerDecision {...defaultProps} />);
   }
 
   it("renders the component", () => {
-    const wrapper = render();
-    expect(wrapper).toMatchSnapshot();
+    const { container } = renderComponent();
+    expect(container.firstChild).toMatchSnapshot();
   });
 
   it("updates the form state on change", () => {
-    const wrapper = render();
-    const { changeRadioGroup } = simulateEvents(wrapper);
-
-    changeRadioGroup("employer_decision", "Approve");
-    changeRadioGroup("employer_decision", "Deny");
-
+    renderComponent();
+    userEvent.click(screen.getByRole("radio", { name: "Approve" }));
+    userEvent.click(
+      screen.getByRole("radio", { name: "Deny (explain below)" })
+    );
     expect(updateFields).toHaveBeenCalledTimes(2);
     expect(updateFields).toHaveBeenNthCalledWith(1, {
       employer_decision: "Approve",
@@ -57,50 +51,41 @@ describe("EmployerDecision", () => {
     });
   });
 
-  describe("when fraud is reported", () => {
-    it('calls "updateFields" with employer decision of deny', () => {
-      render(true, { fraud: "Yes" });
-      expect(updateFields).toHaveBeenCalledWith({ employer_decision: "Deny" });
-    });
+  it("when fraud is reported, calls updateFields with employer decision of deny", () => {
+    renderComponent({ fraud: "Yes" });
+    expect(updateFields).toHaveBeenCalledWith({ employer_decision: "Deny" });
+  });
 
-    it('disables the "Approve" option', () => {
-      const wrapper = render(true, { fraud: "Yes" });
-      const approveOption = wrapper
-        .find("InputChoiceGroup")
-        .prop("choices")
-        .find((choice) => choice.value === "Approve");
-      expect(approveOption.disabled).toBe(true);
-    });
+  it('when fraud is reported, disables the "Approve" option', () => {
+    renderComponent({ fraud: "Yes" });
+    expect(screen.getByRole("radio", { name: "Approve" })).toBeDisabled();
+  });
 
-    describe("and is changed to 'No'", () => {
-      it('re-enables the "Approve" option', () => {
-        const wrapper = render(true, { fraud: "Yes" });
-        act(() => {
-          wrapper.setProps({ fraud: "No" });
-        });
-        wrapper.update();
+  it('when fraud report is reverted, re-enables the "Approve" option', () => {
+    const { rerender } = renderComponent({ fraud: "Yes" });
+    const props = {
+      employerDecision: undefined,
+      fraud: undefined,
+      getFunctionalInputProps,
+      updateFields,
+    };
+    rerender(<EmployerDecision {...props} />);
+    expect(screen.getByRole("radio", { name: "Approve" })).toBeEnabled();
+  });
 
-        const choices = wrapper.find("InputChoiceGroup").prop("choices");
-        const approveOption = choices.find(
-          (choice) => choice.value === "Approve"
-        );
+  it("when fraud report is reverted, clears the selection", () => {
+    const { rerender } = renderComponent({ fraud: "Yes" });
+    const props = {
+      employerDecision: undefined,
+      fraud: undefined,
+      getFunctionalInputProps,
+      updateFields,
+    };
+    rerender(<EmployerDecision {...props} />);
 
-        expect(approveOption.disabled).toBe(false);
-      });
-
-      it("clears the selection", () => {
-        const wrapper = render(true, { fraud: "Yes" });
-        act(() => {
-          wrapper.setProps({ fraud: "No" });
-        });
-        // for useEffect to take place
-        wrapper.update();
-
-        const choices = wrapper.find("InputChoiceGroup").prop("choices");
-        for (const choice of choices) {
-          expect(choice.checked).toBe(false);
-        }
-      });
-    });
+    const choices = screen.getAllByRole("radio");
+    for (const choice of choices) {
+      expect(choice.checked).toBe(false);
+    }
   });
 });

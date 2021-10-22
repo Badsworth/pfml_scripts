@@ -3,9 +3,9 @@ import {
   FrequencyIntervalBasis,
   IntermittentLeavePeriod,
 } from "../../../src/models/BenefitsApplication";
+import { render, screen } from "@testing-library/react";
 import IntermittentLeaveSchedule from "../../../src/components/employers/IntermittentLeaveSchedule";
 import React from "react";
-import { shallow } from "enzyme";
 
 describe("IntermittentLeaveSchedule", () => {
   const regularIntermittentLeavePeriods = [
@@ -21,8 +21,6 @@ describe("IntermittentLeaveSchedule", () => {
     }),
   ];
 
-  let wrapper;
-
   it("renders an irregular intermittent leave period", () => {
     const irregularIntermittentLeavePeriod = [
       new IntermittentLeavePeriod({
@@ -36,45 +34,66 @@ describe("IntermittentLeaveSchedule", () => {
         frequency_interval_basis: FrequencyIntervalBasis.months,
       }),
     ];
-
-    wrapper = shallow(
-      <IntermittentLeaveSchedule
-        intermittentLeavePeriods={irregularIntermittentLeavePeriod}
-      />
+    render(
+      <table>
+        <tbody>
+          <IntermittentLeaveSchedule
+            intermittentLeavePeriods={irregularIntermittentLeavePeriod}
+          />
+        </tbody>
+      </table>
     );
 
-    expect(wrapper).toMatchSnapshot();
-    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+    expect(screen.getByText(/Intermittent leave/)).toBeInTheDocument();
+    expect(screen.getByText(/Contact us at/)).toBeInTheDocument();
   });
 
   it("renders a regular intermittent leave period", () => {
-    wrapper = shallow(
-      <IntermittentLeaveSchedule
-        intermittentLeavePeriods={regularIntermittentLeavePeriods}
-      />
+    render(
+      <table>
+        <tbody>
+          <IntermittentLeaveSchedule
+            intermittentLeavePeriods={regularIntermittentLeavePeriods}
+          />
+        </tbody>
+      </table>
     );
-
-    expect(wrapper).toMatchSnapshot();
+    expect(screen.getByText(/Intermittent leave/)).toBeInTheDocument();
+    expect(screen.getByText(/Contact us at/)).toBeInTheDocument();
   });
 
   it("renders correct text with documents", () => {
-    wrapper = shallow(
-      <IntermittentLeaveSchedule
-        hasDocuments
-        intermittentLeavePeriods={regularIntermittentLeavePeriods}
-      />
+    render(
+      <table>
+        <tbody>
+          <IntermittentLeaveSchedule
+            hasDocuments
+            intermittentLeavePeriods={regularIntermittentLeavePeriods}
+          />
+        </tbody>
+      </table>
     );
-
-    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+    expect(screen.getByText(/Intermittent leave/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Download the attached documentation or contact us at/)
+    ).toBeInTheDocument();
   });
 
   it("renders correct text without documents", () => {
-    wrapper = shallow(
-      <IntermittentLeaveSchedule
-        intermittentLeavePeriods={regularIntermittentLeavePeriods}
-      />
+    render(
+      <table>
+        <tbody>
+          <IntermittentLeaveSchedule
+            intermittentLeavePeriods={regularIntermittentLeavePeriods}
+          />
+        </tbody>
+      </table>
     );
 
-    expect(wrapper.find("Trans").dive()).toMatchSnapshot();
+    expect(screen.getByText(/Intermittent leave/)).toBeInTheDocument();
+    expect(screen.getByText(/Contact us at/)).toBeInTheDocument();
+    expect(
+      screen.queryByText(/Download the attached documentation or contact us at/)
+    ).not.toBeInTheDocument();
   });
 });

@@ -1,11 +1,10 @@
 import copy
-import logging  # noqa: B1
-from datetime import date
+from datetime import date, timedelta
 from unittest import mock
 
 import pytest
 
-import massgov.pfml.fineos.mock_client
+import massgov.pfml.util.datetime as datetime_util
 from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.exceptions import ObjectNotFound
 from massgov.pfml.api.models.claims.common import PreviousLeave
@@ -16,15 +15,15 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     get_claim_as_leave_admin,
     get_documents_as_leave_admin,
     get_leave_details,
-    register_leave_admin_with_fineos,
 )
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
-from massgov.pfml.db.models.employees import UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory
 from massgov.pfml.fineos import FINEOSClient, create_client
-from massgov.pfml.fineos.common import DOWNLOADABLE_DOC_TYPES
 from massgov.pfml.fineos.models import CreateOrUpdateLeaveAdmin, group_client_api
-from massgov.pfml.fineos.models.group_client_api import GroupClientDocument
+from massgov.pfml.fineos.models.group_client_api import (
+    GroupClientDocument,
+    ManagedRequirementDetails,
+)
 
 
 @pytest.fixture
@@ -221,6 +220,39 @@ def period_decisions_no_plan():
             ],
         }
     )
+
+
+@pytest.fixture
+def mock_managed_requirements():
+    today = datetime_util.utcnow().date()
+    return [
+        {
+            "managedReqId": 123,
+            "category": "Employer Confirmation",
+            "type": "Employer Confirmation of Leave Data",
+            "followUpDate": today + timedelta(days=10),
+            "documentReceived": True,
+            "creator": "Fake Creator",
+            "status": "Open",
+            "subjectPartyName": "Fake Name",
+            "sourceOfInfoPartyName": "Fake Sourcee",
+            "creationDate": today,
+            "dateSuppressed": None,
+        },
+        {
+            "managedReqId": 124,
+            "category": "Employer Confirmation",
+            "type": "Employer Confirmation of Leave Data",
+            "followUpDate": today + timedelta(days=10),
+            "documentReceived": True,
+            "creator": "Fake Creator",
+            "status": "Complete",
+            "subjectPartyName": "Fake Name",
+            "sourceOfInfoPartyName": "Fake Sourcee",
+            "creationDate": today,
+            "dateSuppressed": None,
+        },
+    ]
 
 
 def mock_fineos_client_period_decisions(period_decisions_data):
@@ -1614,161 +1646,49 @@ def test_create_leave_admin_request_payload():
     assert payload.__contains__("<ns0:enabled>true</ns0:enabled>")
 
 
-@pytest.mark.integration
-def test_register_leave_admin_with_fineos(employer_user, test_db_session):
-    employer = EmployerFactory.create()
-    register_leave_admin_with_fineos(
-        "Bob Smith",
-        "test@test.com",
-        "817",
-        "1234560",
-        employer,
-        employer_user,
-        test_db_session,
-        None,
-    )
-    created_leave_admin = (
-        test_db_session.query(UserLeaveAdministrator)
-        .filter(UserLeaveAdministrator.user_id == employer_user.user_id)
-        .one()
-    )
-
-    assert created_leave_admin is not None
-    assert created_leave_admin.fineos_web_id.startswith("pfml_leave_admin_")
-    assert created_leave_admin.employer_id == employer.employer_id
-
-
-@pytest.mark.integration
-def test_register_previously_registered_leave_admin_with_fineos(
-    employer_user, test_db_session, caplog
-):
-    employer = EmployerFactory.create()
-    ula = UserLeaveAdministrator(
-        user=employer_user, employer=employer, fineos_web_id="EXISTING_USER"
-    )
-    test_db_session.add(ula)
-    test_db_session.commit()
-    fineos_client = create_client()
-    caplog.set_level(logging.INFO)  # noqa: B1
-    capture = massgov.pfml.fineos.mock_client.start_capture()
-
-    register_leave_admin_with_fineos(
-        admin_full_name="Bob Smith",
-        admin_email="test@test.com",
-        admin_area_code="817",
-        admin_phone_number="1234560",
-        employer=employer,
-        user=employer_user,
-        db_session=test_db_session,
-        fineos_client=fineos_client,
-        force_register=False,
-    )
-
-    assert "User previously registered in FINEOS and force_register off" in caplog.text
-
-    capture = massgov.pfml.fineos.mock_client.get_capture()
-    # Assert no calls to FINEOS made
-    assert not capture
-    created_leave_admin = (
-        test_db_session.query(UserLeaveAdministrator)
-        .filter(UserLeaveAdministrator.user_id == employer_user.user_id)
-        .one()
-    )
-
-    assert created_leave_admin is not None
-    assert created_leave_admin.fineos_web_id == "EXISTING_USER"
-    caplog.clear()
-    register_leave_admin_with_fineos(
-        admin_full_name="Bob Smith",
-        admin_email="test@test.com",
-        admin_area_code="817",
-        admin_phone_number="1234560",
-        employer=employer,
-        user=employer_user,
-        db_session=test_db_session,
-        fineos_client=fineos_client,
-        force_register=True,
-    )
-    capture = massgov.pfml.fineos.mock_client.get_capture()
-    assert capture[0][0] == "create_or_update_leave_admin"
-
-    created_leave_admin = (
-        test_db_session.query(UserLeaveAdministrator)
-        .filter(UserLeaveAdministrator.user_id == employer_user.user_id)
-        .one()
-    )
-    assert created_leave_admin.fineos_web_id != "EXISTING_USER"
-    assert created_leave_admin.fineos_web_id.startswith("pfml_leave_admin_")
-
-
 def test_get_leave_details(period_decisions):
     leave_details = get_leave_details(period_decisions.dict())
 
     assert leave_details.continuous_leave_periods[0].start_date == date(2021, 2, 1)
     assert leave_details.continuous_leave_periods[0].end_date == date(2021, 2, 24)
-    assert leave_details.intermittent_leave_periods[0].start_date == date(2021, 1, 1)
-    assert leave_details.intermittent_leave_periods[0].end_date == date(2021, 2, 1)
+    assert leave_details.intermittent_leave_periods[0].start_date == date(2021, 1, 15)
+    assert leave_details.intermittent_leave_periods[0].end_date == date(2021, 1, 20)
     assert leave_details.reduced_schedule_leave_periods[0].start_date == date(2021, 1, 4)
     assert leave_details.reduced_schedule_leave_periods[0].end_date == date(2021, 1, 29)
 
 
-@pytest.mark.integration
 def test_get_claim_plan(mock_fineos_period_decisions, initialize_factories_session):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details = get_claim_as_leave_admin(
+    leave_details, _, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
     )
     assert leave_details.status == "Known"
 
 
-@pytest.mark.integration
 def test_get_claim_no_plan(mock_fineos_period_decisions_no_plan, initialize_factories_session):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details = get_claim_as_leave_admin(
+    leave_details, _, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions_no_plan
     )
     assert leave_details.status == "Known"
 
 
-@pytest.mark.integration
-def test_get_claim_eform_type_contains_neither_version_no_feature_toggle(
+def test_get_claim_eform_type_contains_neither_version(
     mock_fineos_period_decisions, initialize_factories_session
 ):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details = get_claim_as_leave_admin(
-        fineos_user_id,
-        absence_id,
-        employer,
-        fineos_client=mock_fineos_period_decisions,
-        default_to_v2=False,
-    )
-    assert leave_details.uses_second_eform_version is False
-
-
-@pytest.mark.integration
-def test_get_claim_eform_type_contains_neither_version_with_feature_toggle(
-    mock_fineos_period_decisions, initialize_factories_session
-):
-    fineos_user_id = "Friendly_HR"
-    absence_id = "NTN-001-ABS-001"
-    employer = EmployerFactory.create()
-    leave_details = get_claim_as_leave_admin(
-        fineos_user_id,
-        absence_id,
-        employer,
-        fineos_client=mock_fineos_period_decisions,
-        default_to_v2=True,
+    leave_details, _, _ = get_claim_as_leave_admin(
+        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions,
     )
     assert leave_details.uses_second_eform_version is True
 
 
-@pytest.mark.integration
 def test_get_claim_other_income_eform_type_contains_both_versions(
     mock_fineos_other_income_eform_both_versions, initialize_factories_session
 ):
@@ -1784,14 +1704,13 @@ def test_get_claim_other_income_eform_type_contains_both_versions(
         )
 
 
-@pytest.mark.integration
 def test_get_claim_other_leaves_v2_eform(
     mock_fineos_other_leaves_v2_eform, initialize_factories_session
 ):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details = get_claim_as_leave_admin(
+    leave_details, _, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_leaves_v2_eform,
     )
 
@@ -1868,14 +1787,13 @@ def test_get_claim_other_leaves_v2_eform(
     )
 
 
-@pytest.mark.integration
 def test_get_claim_other_leaves_v2_accrued_leave_different_employer_eform(
     mock_fineos_other_leaves_v2_accrued_leave_different_employer_eform, initialize_factories_session
 ):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details = get_claim_as_leave_admin(
+    leave_details, _, _ = get_claim_as_leave_admin(
         fineos_user_id,
         absence_id,
         employer,
@@ -1897,12 +1815,11 @@ def test_get_claim_other_leaves_v2_accrued_leave_different_employer_eform(
     assert leave_details.concurrent_leave is None
 
 
-@pytest.mark.integration
 def test_get_claim_other_income(mock_fineos_other_income_v1_eform, initialize_factories_session):
     fineos_user_id = "Friendly_HR"
     absence_id = "NTN-001-ABS-001"
     employer = EmployerFactory.create()
-    leave_details = get_claim_as_leave_admin(
+    leave_details, _, _ = get_claim_as_leave_admin(
         fineos_user_id, absence_id, employer, fineos_client=mock_fineos_other_income_v1_eform,
     )
     assert leave_details.date_of_birth == "****-12-25"
@@ -1934,22 +1851,111 @@ def test_get_claim_other_income(mock_fineos_other_income_v1_eform, initialize_fa
     assert leave_details.uses_second_eform_version is False
 
 
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
+def test_get_claim_with_open_managed_requirement(
+    mock_get_req,
+    mock_fineos_period_decisions,
+    initialize_factories_session,
+    mock_managed_requirements,
+):
+    mock_get_req.return_value = [
+        ManagedRequirementDetails.parse_obj(mr) for mr in mock_managed_requirements
+    ]
+    fineos_user_id = "Friendly_HR"
+    absence_id = "NTN-001-ABS-001"
+    employer = EmployerFactory.create()
+    leave_details, managed_requirements, _ = get_claim_as_leave_admin(
+        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
+    )
+    assert leave_details.status == "Known"
+    assert len(managed_requirements) == len(mock_managed_requirements)
+    assert leave_details.is_reviewable
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
+def test_get_claim_with_closed_managed_requirement(
+    mock_get_req,
+    mock_fineos_period_decisions,
+    initialize_factories_session,
+    mock_managed_requirements,
+):
+    returned_managed_req = []
+    for mr in mock_managed_requirements:
+        mr = ManagedRequirementDetails.parse_obj(mr)
+        mr.status = "Complete"
+        returned_managed_req.append(mr)
+    mock_get_req.return_value = returned_managed_req
+    fineos_user_id = "Friendly_HR"
+    absence_id = "NTN-001-ABS-001"
+    employer = EmployerFactory.create()
+    leave_details, managed_requirements, _ = get_claim_as_leave_admin(
+        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
+    )
+    assert leave_details.status == "Known"
+    assert len(managed_requirements) == len(mock_managed_requirements)
+    assert not leave_details.is_reviewable
+
+
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_managed_requirements")
+def test_get_claim_with_open_expired_managed_requirement(
+    mock_get_req,
+    mock_fineos_period_decisions,
+    initialize_factories_session,
+    mock_managed_requirements,
+):
+    returned_managed_req = []
+    for mr in mock_managed_requirements:
+        mr = ManagedRequirementDetails.parse_obj(mr)
+        mr.followUpDate = datetime_util.utcnow().date() - timedelta(days=3)
+        returned_managed_req.append(mr)
+    mock_get_req.return_value = returned_managed_req
+    fineos_user_id = "Friendly_HR"
+    absence_id = "NTN-001-ABS-001"
+    employer = EmployerFactory.create()
+    leave_details, managed_requirements, _ = get_claim_as_leave_admin(
+        fineos_user_id, absence_id, employer, fineos_client=mock_fineos_period_decisions
+    )
+    assert leave_details.status == "Known"
+    assert len(managed_requirements) == len(mock_managed_requirements)
+    assert not leave_details.is_reviewable
+
+
 # testing class for get_documents_as_leave_admin
+@mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.group_client_get_documents")
 class TestGetDocumentsAsLeaveAdmin:
     @pytest.fixture
-    def absence_id(self):
-        # TODO: (EMPLOYER-1584): Don't rely on FINEOS mock_client and magic strings for mocking
-        return "leave_admin_mixed_allowable_doc_types"
+    def group_client_document(self):
+        return GroupClientDocument(
+            name="approval notice",
+            documentId=1,
+            type="document",
+            caseId="123",
+            description="foo bar",
+            originalFilename="test.pdf",
+        )
 
-    def test_get_documents(self, absence_id):
-        documents = get_documents_as_leave_admin("fake_id", absence_id)
-        assert len(documents) > 0
+    @pytest.fixture
+    def group_client_doc_invalid_type(self):
+        return GroupClientDocument(
+            name="invalid type",
+            documentId=2,
+            type="document",
+            caseId="234",
+            description="foo bar",
+            originalFilename="test.pdf",
+        )
 
-    def test_filters_non_downloadable_documents(self, absence_id):
-        documents = get_documents_as_leave_admin("fake_id", absence_id)
-
-        for document in documents:
-            assert document.document_type.lower() in DOWNLOADABLE_DOC_TYPES
+    def test_get_documents(
+        self, mock_group_client_get_docs, group_client_document, group_client_doc_invalid_type,
+    ):
+        mock_group_client_get_docs.return_value = [
+            group_client_document,
+            group_client_doc_invalid_type,
+        ]
+        documents = get_documents_as_leave_admin("fake-user-id", "fake-absence-id")
+        mock_group_client_get_docs.assert_called_once_with("fake-user-id", "fake-absence-id")
+        assert len(documents) == 1
+        assert documents[0].fineos_document_id == "1"
 
 
 # testing class for download_document_as_leave_admin

@@ -11,7 +11,16 @@ const nextConfig = require("../next.config");
 const webpack = require("webpack");
 
 module.exports = {
-  addons: ["@storybook/addon-docs"],
+  addons: [
+    "@storybook/addon-a11y",
+    "@storybook/addon-docs",
+    {
+      name: "@storybook/addon-essentials",
+      options: {
+        backgrounds: false,
+      },
+    },
+  ],
   stories: ["./stories/**/*.stories.@(js|mdx)"],
   /**
    * Customize the Webpack configuration used by Storybook so it supports

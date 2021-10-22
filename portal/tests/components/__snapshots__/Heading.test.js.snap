@@ -1,0 +1,113 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Heading Heading classes adds the className to the other heading classes 1`] = `
+<h2
+  class="margin-bottom-2 font-heading-md text-bold"
+>
+  Foobar
+</h2>
+`;
+
+exports[`Heading Heading levels renders correct heading based on level 1`] = `
+<h2
+  class="font-heading-md text-bold"
+>
+  2
+</h2>
+`;
+
+exports[`Heading Heading levels renders correct heading based on level 2`] = `
+<h3
+  class="font-heading-sm text-bold"
+>
+  3
+</h3>
+`;
+
+exports[`Heading Heading levels renders correct heading based on level 3`] = `
+<h4
+  class="font-heading-xs text-bold"
+>
+  4
+</h4>
+`;
+
+exports[`Heading Heading levels renders correct heading based on level 4`] = `
+<h5
+  class="font-heading-2xs text-normal"
+>
+  5
+</h5>
+`;
+
+exports[`Heading Heading levels renders correct heading based on level 5`] = `
+<h6
+  class="font-heading-2xs text-normal"
+>
+  6
+</h6>
+`;
+
+exports[`Heading Heading sizes renders the correct classes for available sizes 1`] = `
+<h2
+  class="font-heading-lg text-bold"
+>
+  1
+</h2>
+`;
+
+exports[`Heading Heading sizes renders the correct classes for available sizes 2`] = `
+<h3
+  class="font-heading-md text-bold"
+>
+  2
+</h3>
+`;
+
+exports[`Heading Heading sizes renders the correct classes for available sizes 3`] = `
+<h4
+  class="font-heading-sm text-bold"
+>
+  3
+</h4>
+`;
+
+exports[`Heading Heading sizes renders the correct classes for available sizes 4`] = `
+<h5
+  class="font-heading-xs text-bold"
+>
+  4
+</h5>
+`;
+
+exports[`Heading Heading sizes renders the correct classes for available sizes 5`] = `
+<h6
+  class="font-heading-2xs text-normal"
+>
+  5
+</h6>
+`;
+
+exports[`Heading Heading sizes renders the correct classes for available sizes 6`] = `
+<h6
+  class="font-heading-2xs text-normal"
+>
+  6
+</h6>
+`;
+
+exports[`Heading Heading weight default heading weight is correct 1`] = `
+<h2
+  class="font-heading-md text-normal"
+>
+  Foobar
+</h2>
+`;
+
+exports[`Heading Heading weight overrides default heading weight 1`] = `
+<h2
+  class="font-heading-md text-bold"
+>
+  Foobar
+</h2>
+`;

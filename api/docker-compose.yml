@@ -52,20 +52,21 @@ services:
       - DB_USERNAME=pfml_api
       - DB_PASSWORD=secret123
       - DB_NESSUS_PASSWORD=nessussecret123
-      - CORS_ORIGINS=http://localhost:3000
+      - CORS_ORIGINS=http://localhost:3000,http://localhost:3001
       - COGNITO_USER_POOL_KEYS_URL=file:///app/jwks.json
       # Stage Cognito resource
       - COGNITO_USER_POOL_ID=us-east-1_HpL4XslLg
       - COGNITO_USER_POOL_CLIENT_ID=10rjcp71r8bnk4459c67bn18t8
       - DASHBOARD_PASSWORD=secret123
-      - LOGGING_LEVEL=massgov.pfml.fineos.fineos_client=DEBUG
+      - LOGGING_LEVEL=massgov.pfml.fineos.fineos_client=DEBUG,massgov.pfml.servicenow.client=DEBUG
       - ENABLE_EMPLOYEE_ENDPOINTS=1
       - FOLDER_PATH=dor_mock
       - FINEOS_FOLDER_PATH=fineos_mock
       # Enable this variable after initial full load
       # - ELIGIBILITY_FEED_MODE=updates
+      # Enable this variable to configure calls to the RMV API
+      - RMV_API_BEHAVIOR=fully_mocked
       # Enable this variable to configure /rmv-check
-      - RMV_CHECK_BEHAVIOR=fully_mocked
       - RMV_CHECK_MOCK_SUCCESS=1
       # Enable these variables to use a real FINEOS API instead of a mock:
       # - FINEOS_CLIENT_CUSTOMER_API_URL=https://idt-api.masspfml.fineos.com/customerapi/
@@ -84,8 +85,6 @@ services:
       - PORTAL_BASE_URL=https://paidleave.mass.gov
       - ENABLE_APPLICATION_FRAUD_CHECK=0
       # Payments env vars
-      # - FINEOS_VENDOR_MAX_HISTORY_DATE=2021-01-01
-      # - FINEOS_PAYMENT_MAX_HISTORY_DATE=2021-01-01
       # - PAYMENTS_GAX_BIEVNT_EMAIL=
       # - PAYMENTS_DFML_BUSINESS_OPERATIONS_EMAIL=
       - AGENCY_REDUCTIONS_EMAIL_ADDRESS=EOL-DL-DFML-Agency-Reductions@mass.gov
@@ -105,6 +104,16 @@ services:
       #- AWS_PROFILE=AWS-498823821309-Infrastructure-Admin_profile
       #- NEW_PLAN_PROOFS_ACTIVE_AT=2021-06-26 00:00:00+00:00
       #- FEATURES_FILE_PATH=file:///app/features.yaml
+      # Uncomment and set these in order to enable Azure AD SSO in the admin portal
+      #- AZURE_AD_APPLICATION_CLIENT_ID=ecc75e15-cd60-4e28-b62f-d1bf80e05d4d
+      #- AZURE_AD_OBJECT_ID=7ee79648-2fec-425e-9985-a56e792771d0
+      #- AZURE_AD_DIRECTORY_TENANT_ID=3e861d16-48b7-4a0e-9806-8c04d81b7b2a
+      #- AZURE_AD_AUTHORITY_DOMAIN=login.microsoftonline.com
+      # Non-prod admin portal group id from Azure AD
+      #- AZURE_AD_AUTHORIZATION_GUID=67f909a7-049b-4844-98eb-beec1bd35fc0
+      # For development grab the non-prod azure_ad_secret_value from parameter store.
+      # - AZURE_AD_SECRET_VALUE=
+      - ADMIN_PORTAL_BASE_URL=http://localhost:3001
 
     networks:
       main:

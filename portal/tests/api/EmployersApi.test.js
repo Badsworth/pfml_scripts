@@ -1,11 +1,10 @@
 import Address from "../../src/models/Address";
-import { Auth } from "@aws-amplify/auth";
-import Document from "../../src/models/Document";
+import ClaimDocument from "../../src/models/ClaimDocument";
 import DocumentCollection from "../../src/models/DocumentCollection";
 import EmployerClaim from "../../src/models/EmployerClaim";
 import EmployersApi from "../../src/api/EmployersApi";
+import { mockAuth } from "../test-utils";
 
-jest.mock("@aws-amplify/auth");
 jest.mock("../../src/services/tracker");
 
 const mockFetch = ({
@@ -101,11 +100,7 @@ describe("EmployersApi", () => {
   let employersApi;
   beforeEach(() => {
     jest.resetAllMocks();
-    jest.spyOn(Auth, "currentSession").mockImplementation(() =>
-      Promise.resolve({
-        accessToken: { jwtToken: accessTokenJwt },
-      })
-    );
+    mockAuth(true, accessTokenJwt);
     employersApi = new EmployersApi();
   });
 
@@ -159,23 +154,6 @@ describe("EmployersApi", () => {
         );
       });
 
-      it("sends GET request with headers to /employers/claim/{absenceId}/review", async () => {
-        process.env.featureFlags = { claimantShowOtherLeaveStep: true };
-
-        await employersApi.getClaim(absenceId);
-
-        expect(fetch).toHaveBeenCalledWith(
-          `${process.env.apiUrl}/employers/claims/${absenceId}/review`,
-          expect.objectContaining({
-            headers: {
-              ...headers,
-              "X-FF-Default-To-V2": true,
-            },
-            method: "GET",
-          })
-        );
-      });
-
       it("resolves with claim", async () => {
         const response = await employersApi.getClaim(absenceId);
 
@@ -198,7 +176,7 @@ describe("EmployersApi", () => {
       });
 
       it("sends GET request to /employers/claims/{absence_id}/documents/{document_id}", async () => {
-        const document = new Document({
+        const document = new ClaimDocument({
           fineos_document_id: 1234,
           content_type: "image/png",
         });
@@ -215,7 +193,7 @@ describe("EmployersApi", () => {
       });
 
       it("returns a Blob object", async () => {
-        const document = new Document({
+        const document = new ClaimDocument({
           fineos_document_id: 1234,
           content_type: "image/png",
         });
@@ -255,7 +233,7 @@ describe("EmployersApi", () => {
 
       it("resolves with documents", async () => {
         const expectedDocuments = mockDocumentCollection.map(
-          (documentInfo) => new Document(documentInfo)
+          (documentInfo) => new ClaimDocument(documentInfo)
         );
 
         const response = await employersApi.getDocuments(absenceId);

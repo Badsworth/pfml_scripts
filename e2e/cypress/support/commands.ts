@@ -4,28 +4,6 @@
 // https://on.cypress.io/custom-commands
 // ***********************************************s
 import "@testing-library/cypress/add-commands";
-/**
- * This command selects an input by the HTML label "for" value.
- */
-Cypress.Commands.add("labelled", (label: string | RegExp) => {
-  return cy.contains("label", label, { matchCase: false }).then(($el) => {
-    const labelFor = $el.attr("for");
-
-    if (labelFor && labelFor.length > 0) {
-      // Use Cypress.$ because cy.get seems to be scoped to the label.
-      // Also, escape "(" and ")" in the selector. Fineos uses these in some of its IDs, and Cypress
-      // does not like them.
-      return Cypress.$(`#${labelFor.replace(/(?<!\\)([()])/g, "\\$1")}`);
-    }
-
-    // Support elements where the label is simply wrapped around the input (eg: file inputs).
-    const nestedElement = Cypress.$("input", $el);
-    if (nestedElement && nestedElement.length === 1) {
-      return nestedElement;
-    }
-    throw new Error(`Unable to find for attribute or nested input for label.`);
-  });
-});
 
 /**
  * This command types, but masks the input in the logs (eg: for passwords).

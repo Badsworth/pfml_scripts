@@ -1,57 +1,71 @@
-import { renderWithAppLogic, simulateEvents } from "../../test-utils";
-
+import { screen, waitFor } from "@testing-library/react";
+import BenefitsApplication from "../../../src/models/BenefitsApplication";
+import BenefitsApplicationCollection from "../../../src/models/BenefitsApplicationCollection";
 import Gender from "../../../src/pages/applications/gender";
 import { pick } from "lodash";
+import { renderPage } from "../../test-utils";
+import { setupBenefitsApplications } from "../../test-utils/helpers";
+import userEvent from "@testing-library/user-event";
 
-jest.mock("../../../src/hooks/useAppLogic");
+const updateClaim = jest.fn(() => {
+  return Promise.resolve();
+});
 
 const defaultGender = {
-  gender: "Woman", //
+  gender: "Woman",
 };
+
 const setup = (gender) => {
-  const { appLogic, wrapper } = renderWithAppLogic(Gender, {
-    claimAttrs: {
-      ...gender,
-    },
-  });
-
-  const { changeRadioGroup, submitForm } = simulateEvents(wrapper);
-
-  return {
-    appLogic,
-    changeRadioGroup,
-    submitForm,
-    wrapper,
+  const claimAttrs = {
+    ...gender,
   };
+  const claim = new BenefitsApplication({
+    application_id: "mock_application_id",
+    ...claimAttrs,
+  });
+  return renderPage(
+    Gender,
+    {
+      addCustomSetup: (appLogic) => {
+        setupBenefitsApplications(appLogic);
+        appLogic.benefitsApplications.update = updateClaim;
+        appLogic.benefitsApplications.benefitsApplications =
+          new BenefitsApplicationCollection([claim]);
+      },
+    },
+    { query: { claim_id: "mock_application_id" } }
+  );
 };
 
 describe("Gender", () => {
   it("renders the page", () => {
-    const { wrapper } = setup(defaultGender);
-    expect(wrapper).toMatchSnapshot();
+    const { container } = setup(defaultGender);
+    expect(container).toMatchSnapshot();
   });
 
   it("calls claims.update when the form is successfully submitted with pre-filled data", async () => {
-    const { appLogic, submitForm } = setup(defaultGender);
+    setup(defaultGender);
 
-    await submitForm();
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      expect.any(String),
-      pick(defaultGender, ["gender"])
-    );
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
+    await waitFor(() => {
+      expect(updateClaim).toHaveBeenCalledWith(
+        expect.any(String),
+        pick(defaultGender, ["gender"])
+      );
+    });
   });
 
   it("calls claims.update when the form is successfully submitted with new data", async () => {
-    const { appLogic, changeRadioGroup, submitForm } = setup({});
+    setup({});
 
-    changeRadioGroup("gender", defaultGender.gender);
+    userEvent.click(screen.getByRole("radio", { name: "Woman" }));
 
-    await submitForm();
-
-    expect(appLogic.benefitsApplications.update).toHaveBeenCalledWith(
-      expect.any(String),
-      pick(defaultGender, ["gender"])
-    );
+    userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
+    await waitFor(() => {
+      expect(updateClaim).toHaveBeenCalledWith(
+        expect.any(String),
+        pick(defaultGender, ["gender"])
+      );
+    });
   });
 });

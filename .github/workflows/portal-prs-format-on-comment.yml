@@ -10,6 +10,7 @@ on:
 
 env:
   nodeVersion: 15.x
+  working-dir: ./portal
 
 jobs:
   comment-check:
@@ -59,9 +60,11 @@ jobs:
 
       - name: install
         run: npm install
+        working-directory: ${{ env.working-dir }}
 
       - name: format
-        run: npm run portal:format
+        run: npm run format
+        working-directory: ${{ env.working-dir }}
 
       - uses: EndBug/add-and-commit@v6
         with:

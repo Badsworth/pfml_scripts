@@ -1,12 +1,25 @@
-from typing import Any, Callable, List, Union
+from typing import Callable, List, Union
 
 from bouncer.constants import CREATE, EDIT, READ  # noqa: F401 F403
 from bouncer.models import RuleList
 from flask_bouncer import Bouncer  # noqa: F401
 
 from massgov.pfml.api.models.applications.responses import DocumentResponse
-from massgov.pfml.db.models.applications import Document, DocumentType
-from massgov.pfml.db.models.employees import LkRole, Role, User
+from massgov.pfml.db.models.applications import (
+    Application,
+    Document,
+    DocumentType,
+    Notification,
+    RMVCheck,
+)
+from massgov.pfml.db.models.employees import (
+    AzurePermission,
+    AzureUser,
+    Employee,
+    LkRole,
+    Role,
+    User,
+)
 
 
 def has_role_in(user: User, accepted_roles: List[LkRole]) -> bool:
@@ -18,10 +31,16 @@ def has_role_in(user: User, accepted_roles: List[LkRole]) -> bool:
     return False
 
 
-def create_authorization(enable_employees: bool) -> Callable[[User, Any], None]:
-    def define_authorization(user: User, they: RuleList) -> None:
+def create_authorization(
+    enable_employees: bool,
+) -> Callable[[Union[User, AzureUser], RuleList], None]:
+    def define_authorization(user: Union[User, AzureUser], they: RuleList) -> None:
+        # Admin portal azure authentication/authorization
+        if isinstance(user, AzureUser):
+            administrator(user, they)
+
         # FINEOS endpoint auth
-        if has_role_in(user, [Role.FINEOS]):
+        elif has_role_in(user, [Role.FINEOS]):
             financial_eligibility(user, they)
             rmv_check(user, they)
             notifications(user, they)
@@ -36,6 +55,18 @@ def create_authorization(enable_employees: bool) -> Callable[[User, Any], None]:
     return define_authorization
 
 
+def administrator(azure_user: AzureUser, they: RuleList) -> None:
+    they.can((EDIT, READ), AzureUser, sub_id=azure_user.sub_id)
+
+    for permission in AzurePermission.get_all():
+        if permission.azure_permission_id in azure_user.permissions:
+            # If user can do something else than READ, they can also READ
+            # Deduplicate by first creating a set. Otherwise, the tuple would
+            # READ, READ if the action was READ.
+            access = tuple({READ, permission.azure_permission_action})
+            they.can(access, permission)
+
+
 def leave_admins(user: User, they: RuleList) -> None:
     if has_role_in(user, [Role.EMPLOYER]):
         they.can((EDIT, READ), "EMPLOYER_API")
@@ -46,7 +77,7 @@ def financial_eligibility(user: User, they: RuleList) -> None:
 
 
 def rmv_check(user: User, they: RuleList) -> None:
-    they.can(CREATE, "RMVCheck")
+    they.can(CREATE, RMVCheck)
 
 
 def can_download(user: User, doc: Union[Document, DocumentResponse]) -> bool:
@@ -66,6 +97,8 @@ def can_download(user: User, doc: Union[Document, DocumentResponse]) -> bool:
                 DocumentType.APPROVAL_NOTICE.document_type_description,
                 DocumentType.REQUEST_FOR_MORE_INFORMATION.document_type_description,
                 DocumentType.DENIAL_NOTICE.document_type_description,
+                DocumentType.WITHDRAWAL_NOTICE.document_type_description,
+                DocumentType.APPEAL_ACKNOWLEDGMENT.document_type_description,
             ]
         ]
 
@@ -87,33 +120,33 @@ def can_download(user: User, doc: Union[Document, DocumentResponse]) -> bool:
 
 
 def users(user: User, they: RuleList) -> None:
-    they.can((EDIT, READ), "User", user_id=user.user_id)
+    they.can((EDIT, READ), User, user_id=user.user_id)
 
 
 def employees(user: User, they: RuleList) -> None:
-    they.can((READ, EDIT), "Employee")
+    they.can((READ, EDIT), Employee)
 
 
 def applications(user: User, they: RuleList) -> None:
-    they.can(CREATE, "Application")
-    they.can((EDIT, READ), "Application", user_id=user.user_id)
+    they.can(CREATE, Application)
+    they.can((EDIT, READ), Application, user_id=user.user_id)
 
 
 def documents(user: User, they: RuleList) -> None:
     they.can(
         CREATE,
-        "Document",
+        Document,
         lambda d: d.user_id == user.user_id and user.consented_to_data_sharing is True,
     )
 
     they.can(
-        READ, "Document", lambda d: d.user_id == user.user_id and can_download(user, d),
+        READ, Document, lambda d: d.user_id == user.user_id and can_download(user, d),
     )
 
     they.can(
-        READ, "DocumentResponse", lambda d: d.user_id == user.user_id and can_download(user, d),
+        READ, DocumentResponse, lambda d: d.user_id == user.user_id and can_download(user, d),
     )
 
 
 def notifications(user: User, they: RuleList) -> None:
-    they.can(CREATE, "Notification")
+    they.can(CREATE, Notification)

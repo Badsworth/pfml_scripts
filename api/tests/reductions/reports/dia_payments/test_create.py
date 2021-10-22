@@ -4,7 +4,6 @@ import io
 import os
 
 import boto3
-import pytest
 
 import massgov.pfml.reductions.reports.dia_payments.create as dia_payments_reports_create
 from massgov.pfml.db.models.employees import (
@@ -21,6 +20,7 @@ from massgov.pfml.db.models.factories import (
     EmployeeFactory,
     EmployeeWithFineosNumberFactory,
 )
+from massgov.pfml.reductions.reports.models.dia import make_report_row_from_payment
 from massgov.pfml.util.batch.log import LogEntry
 
 
@@ -28,7 +28,7 @@ def test_write_dfml_report_rows_no_claim_info():
     output_file = io.StringIO()
 
     payment_data = (DiaReductionPaymentFactory.build(), None)
-    payment_rows = [dia_payments_reports_create._make_report_row_from_payment(payment_data)]
+    payment_rows = [make_report_row_from_payment(payment_data)]
 
     dia_payments_reports_create._write_dfml_report_rows(output_file, payment_rows)
 
@@ -66,7 +66,7 @@ def test_write_dfml_report_rows_some_claim_info():
     output_file = io.StringIO()
 
     payment_data = (DiaReductionPaymentFactory.build(), ClaimFactory.build())
-    payment_rows = [dia_payments_reports_create._make_report_row_from_payment(payment_data)]
+    payment_rows = [make_report_row_from_payment(payment_data)]
 
     dia_payments_reports_create._write_dfml_report_rows(output_file, payment_rows)
 
@@ -111,7 +111,7 @@ def test_write_dfml_report_rows_full_claim_info():
             fineos_absence_status_id=AbsenceStatus.ADJUDICATION.absence_status_id,
         ),
     )
-    payment_rows = [dia_payments_reports_create._make_report_row_from_payment(payment_data)]
+    payment_rows = [make_report_row_from_payment(payment_data)]
 
     dia_payments_reports_create._write_dfml_report_rows(output_file, payment_rows)
 
@@ -152,14 +152,12 @@ def test_format_data_for_report_none():
         assert v == "NO NEW PAYMENTS"
 
 
-@pytest.mark.integration
 def test_get_data_for_report_none(test_db_session):
     payment_data = dia_payments_reports_create._get_data_for_report(test_db_session)
 
     assert payment_data == []
 
 
-@pytest.mark.integration
 def test_get_data_for_report_no_matching_employee(test_db_session, initialize_factories_session):
     reduction_payment = DiaReductionPaymentFactory.create()
 
@@ -168,7 +166,6 @@ def test_get_data_for_report_no_matching_employee(test_db_session, initialize_fa
     assert payment_data == [(reduction_payment, None)]
 
 
-@pytest.mark.integration
 def test_get_data_for_report_no_claim(test_db_session, initialize_factories_session):
     reduction_payment = DiaReductionPaymentFactory.create()
 
@@ -179,7 +176,6 @@ def test_get_data_for_report_no_claim(test_db_session, initialize_factories_sess
     assert payment_data == [(reduction_payment, None)]
 
 
-@pytest.mark.integration
 def test_get_data_for_report_single_claim(test_db_session, initialize_factories_session):
     reduction_payment = DiaReductionPaymentFactory.create()
     employee = EmployeeFactory.create(
@@ -192,7 +188,6 @@ def test_get_data_for_report_single_claim(test_db_session, initialize_factories_
     assert payment_data == [(reduction_payment, claim)]
 
 
-@pytest.mark.integration
 def test_get_data_for_report_multiple_claim(test_db_session, initialize_factories_session):
     reduction_payment = DiaReductionPaymentFactory.create()
     employee = EmployeeFactory.create(
@@ -208,7 +203,6 @@ def test_get_data_for_report_multiple_claim(test_db_session, initialize_factorie
     assert payment_data == [(reduction_payment, claim) for claim in claims]
 
 
-@pytest.mark.integration
 def test_get_data_for_report_multiple_everything(test_db_session, initialize_factories_session):
     # first set
     employee_1 = EmployeeWithFineosNumberFactory.create()
@@ -239,7 +233,6 @@ def test_get_data_for_report_multiple_everything(test_db_session, initialize_fac
     assert payment_data == data_1 + data_2 + data_3
 
 
-@pytest.mark.integration
 def test_create_report_new_dia_payments_to_dfml(
     initialize_factories_session, monkeypatch, mock_s3_bucket, test_db_session
 ):

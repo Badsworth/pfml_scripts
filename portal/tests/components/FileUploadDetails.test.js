@@ -1,11 +1,10 @@
-import FilUploadDetails from "../../src/components/FileUploadDetails";
+import FileUploadDetails from "../../src/components/FileUploadDetails";
 import React from "react";
-import { shallow } from "enzyme";
+import { render } from "@testing-library/react";
 
 describe("FileUploadDetails", () => {
   it("renders the details with text", () => {
-    const wrapper = shallow(<FilUploadDetails />);
-
-    expect(wrapper).toMatchSnapshot();
+    const { container } = render(<FileUploadDetails />);
+    expect(container.firstChild).toMatchSnapshot();
   });
 });

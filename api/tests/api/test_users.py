@@ -8,19 +8,16 @@ import pytest
 from dateutil.relativedelta import relativedelta
 
 import tests.api
+from massgov.pfml.cognito.exceptions import CognitoUserExistsValidationError
 from massgov.pfml.db.models.employees import Role, User, UserLeaveAdministrator
 from massgov.pfml.db.models.factories import (
     EmployerFactory,
     EmployerQuarterlyContributionFactory,
     UserFactory,
 )
-from massgov.pfml.util.aws.cognito import CognitoUserExistsValidationError
 from massgov.pfml.util.strings import format_fein
 
 fake = faker.Faker()
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 
 @pytest.fixture
@@ -430,7 +427,6 @@ def test_users_convert_employer_bad_fein(client, user, auth_token):
     assert {
         "field": "employer_fein",
         "message": "Invalid FEIN",
-        "rule": "",
         "type": "require_employer",
     } in errors
 

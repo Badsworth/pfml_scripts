@@ -2,42 +2,43 @@
 
 exports[`Step renders component 1`] = `
 <div
-  className="display-flex border-bottom border-base-light padding-y-3"
+  class="display-flex border-bottom border-base-light padding-y-3"
 >
-  <StepNumber
-    screenReaderPrefix="Step"
-    state="not_started"
+  <div
+    aria-label="Step 1"
+    class="radius-pill text-center height-5 width-5 margin-top-2px font-sans-md text-base-lightest line-height-sans-6 bg-secondary"
   >
     1
-  </StepNumber>
+  </div>
   <div
-    className="flex-fill margin-left-2 grid-row margin-top-1"
+    class="flex-fill margin-left-2 grid-row margin-top-1"
   >
     <div
-      className="tablet:grid-col-8"
+      class="tablet:grid-col-8"
     >
-      <Heading
-        className=""
-        level="3"
+      <h3
+        class="font-heading-sm text-bold"
       >
         Step Title
-      </Heading>
+      </h3>
       <div
-        className="usa-prose"
+        class="usa-prose"
       >
-        <Child />
+        <div>
+          Description of step
+        </div>
       </div>
     </div>
     <div
-      className="margin-top-2 tablet:margin-top-0 tablet:text-right tablet:grid-col-4"
+      class="margin-top-2 tablet:margin-top-0 tablet:text-right tablet:grid-col-4"
     >
-      <ButtonLink
-        ariaLabel="Start: Step Title"
-        className="width-auto"
+      <a
+        aria-label="Start: Step Title"
+        class="usa-button width-auto"
         href="/path-to-step-question"
       >
         Start
-      </ButtonLink>
+      </a>
     </div>
   </div>
 </div>

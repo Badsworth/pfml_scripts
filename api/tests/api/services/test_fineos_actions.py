@@ -1,11 +1,14 @@
+import datetime
 import io
 import re
 from datetime import date, timedelta
+from unittest import mock
 
 import pytest
 
 import massgov.pfml.fineos
 import massgov.pfml.fineos.mock_client as fineos_mock
+from massgov.pfml.api.models.claims.responses import AbsencePeriodStatusResponse
 from massgov.pfml.api.services import fineos_actions
 from massgov.pfml.db.models.applications import (
     Application,
@@ -36,14 +39,11 @@ from massgov.pfml.db.models.factories import (
     ReducedScheduleLeavePeriodFactory,
     WorkPatternFixedFactory,
 )
-from massgov.pfml.fineos import FINEOSClient
+from massgov.pfml.fineos import FINEOSClient, exception
 from massgov.pfml.fineos.exception import FINEOSClientBadResponse, FINEOSClientError, FINEOSNotFound
 from massgov.pfml.fineos.models import CreateOrUpdateEmployer, CreateOrUpdateServiceAgreement
 from massgov.pfml.fineos.models.customer_api import Address as FineosAddress
 from massgov.pfml.fineos.models.customer_api import CustomerAddress
-
-# almost every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 
 def test_register_employee_pass(test_db_session):
@@ -477,8 +477,6 @@ def test_employer_creation_exception(test_db_session):
         fineos_actions.create_or_update_employer(fineos_client, employer)
 
 
-# not an integration test, but marked as such by global pytest.mark.integration
-# at top of file
 def test_creating_request_payload():
     create_or_update_request = CreateOrUpdateEmployer(
         fineos_customer_nbr="pfml_test_payload",
@@ -496,8 +494,6 @@ def test_creating_request_payload():
     assert payload.__contains__("<DoingBusinessAs>Test Organization DBA</DoingBusinessAs>")
 
 
-# not an integration test, but marked as such by global pytest.mark.integration
-# at top of file
 def test_creating_request_payload_with_other_names():
     create_or_update_request = CreateOrUpdateEmployer(
         fineos_customer_nbr="pfml_test_payload",
@@ -742,17 +738,17 @@ def test_create_service_agreement_for_employer(test_db_session):
 
     fineos_actions.create_or_update_employer(fineos_client, employer)
 
-    fineos_sa_id = fineos_actions.create_service_agreement_for_employer(fineos_client, employer)
+    fineos_sa_id = fineos_actions.create_service_agreement_for_employer(
+        fineos_client, employer, True
+    )
 
     assert fineos_sa_id is not None
     assert fineos_sa_id == "SA-123"
 
 
-# not an integration test, but marked as such by global pytest.mark.integration
-# at top of file
 def test_create_service_agreement_payload():
     service_agreement_inputs = CreateOrUpdateServiceAgreement(
-        absence_management_flag=True, leave_plans="MA PFML - Family, MA PFML - Military Care"
+        leave_plans="MA PFML - Family, MA PFML - Military Care", unlink_leave_plans=True,
     )
     payload = FINEOSClient._create_service_agreement_payload(123, service_agreement_inputs)
 
@@ -770,7 +766,7 @@ def test_create_service_agreement_payload():
     )
 
     service_agreement_inputs = CreateOrUpdateServiceAgreement(
-        absence_management_flag=False, leave_plans=""
+        absence_management_flag=False, unlink_leave_plans=True,
     )
     payload = FINEOSClient._create_service_agreement_payload(123, service_agreement_inputs)
 
@@ -788,8 +784,79 @@ def test_create_service_agreement_payload():
     )
 
 
-# not an integration test, but marked as such by global pytest.mark.integration
-# at top of file
+def test_service_agreement_exempt_to_not_payload():
+    employer = Employer()
+    employer.employer_fein = "888447598"
+    employer.employer_name = "Test Organization Name"
+    employer.employer_dba = "Test Organization DBA"
+    employer.family_exemption = False
+    employer.medical_exemption = False
+    prev_family_exemption = True
+    prev_medical_exemption = True
+    prev_exemption_cease_date = date(2021, 2, 9)
+
+    service_agreement_inputs = fineos_actions.resolve_service_agreement_inputs(
+        False, employer, prev_family_exemption, prev_medical_exemption, prev_exemption_cease_date,
+    )
+
+    payload = FINEOSClient._create_service_agreement_payload(123, service_agreement_inputs)
+
+    assert payload is not None
+    assert payload.__contains__("<config-name>ServiceAgreementService</config-name>")
+    assert payload.__contains__("<name>CustomerNumber</name>")
+    assert payload.__contains__("<value>123</value>")
+    # Leave plans are unordered sets so the order cannot be guaranteed.
+    assert payload.__contains__("<name>LeavePlans</name>")
+    assert payload.__contains__("<value>MA PFML -")
+    assert payload.count("MA PFML - ") == 3
+    assert payload.__contains__("<name>AbsenceManagement</name>")
+    assert re.search("<name>AbsenceManagement</name>\\s+<value>True</value>", payload) is not None
+    assert payload.__contains__("<name>UnlinkAllExistingLeavePlans</name>")
+    assert (
+        re.search("<name>UnlinkAllExistingLeavePlans</name>\\s+<value>True</value>", payload)
+        is not None
+    )
+    assert payload.__contains__("<name>StartDate</name>")
+    assert re.search("<name>StartDate</name>\\s+<value>2021-02-09</value>", payload) is not None
+
+
+def test_service_agreement_not_exempt_to_exempt_payload():
+    employer = Employer()
+    employer.employer_fein = "888447598"
+    employer.employer_name = "Test Organization Name"
+    employer.employer_dba = "Test Organization DBA"
+    employer.family_exemption = True
+    employer.medical_exemption = True
+    employer.exemption_commence_date = date(2021, 2, 9)
+    prev_family_exemption = False
+    prev_medical_exemption = False
+    prev_exemption_cease_date = None
+
+    service_agreement_inputs = fineos_actions.resolve_service_agreement_inputs(
+        False, employer, prev_family_exemption, prev_medical_exemption, prev_exemption_cease_date,
+    )
+    payload = FINEOSClient._create_service_agreement_payload(123, service_agreement_inputs)
+
+    assert payload is not None
+    assert payload.__contains__("<config-name>ServiceAgreementService</config-name>")
+    assert payload.__contains__("<name>CustomerNumber</name>")
+    assert payload.__contains__("<value>123</value>")
+    # Leave plans are unordered sets so the order cannot be guaranteed.
+    assert payload.__contains__("<name>LeavePlans</name>")
+    assert payload.__contains__("<value>MA PFML -")
+    assert payload.count("MA PFML - ") == 3
+    assert payload.__contains__("<name>AbsenceManagement</name>")
+    assert re.search("<name>AbsenceManagement</name>\\s+<value>True</value>", payload) is not None
+    assert payload.__contains__("<name>UnlinkAllExistingLeavePlans</name>")
+    assert (
+        re.search("<name>UnlinkAllExistingLeavePlans</name>\\s+<value>False</value>", payload)
+        is not None
+    )
+    assert payload.__contains__("<name>EndDate</name>")
+    # The EndDate is set to the day BEFORE the exemption commence date.
+    assert re.search("<name>EndDate</name>\\s+<value>2021-02-08</value>", payload) is not None
+
+
 def test_resolve_leave_plans():
     # Family Exemption = false
     # Medical Exemption = false
@@ -1281,3 +1348,51 @@ def test_format_other_leaves_data_all_present(user, test_db_session):
     ]
 
     assert eform.eformAttributes == expected_attributes
+
+
+class TestGetAbsencePeriods:
+    @mock.patch("massgov.pfml.api.services.fineos_actions.register_employee")
+    def test_success(self, mock_register, test_db_session, user):
+        mock_register.return_value = "web_id"
+
+        employee_tax_id = "123-45-6789"
+        employer_fein = "12-3456789"
+        # TODO (PORTAL-752): don't use magic string here
+        absence_case_id = "NTN-304363-ABS-01"
+        absence_periods = fineos_actions.get_absence_periods(
+            employee_tax_id, employer_fein, absence_case_id, test_db_session
+        )
+
+        assert type(absence_periods[0]) == AbsencePeriodStatusResponse
+        assert absence_periods == [
+            AbsencePeriodStatusResponse(
+                fineos_leave_period_id="PL-14449-0000002237",
+                absence_period_start_date=datetime.date(2021, 1, 29),
+                absence_period_end_date=datetime.date(2021, 1, 30),
+                reason="Child Bonding",
+                reason_qualifier_one="Foster Care",
+                reason_qualifier_two="",
+                period_type="Continuous",
+                request_decision="Pending",
+                evidence_status=None,
+            )
+        ]
+
+    @mock.patch("massgov.pfml.api.services.fineos_actions.register_employee")
+    def test_with_fineos_error(self, mock_register, test_db_session, user, caplog):
+        error = exception.FINEOSClientBadResponse(
+            "get_absence", 200, 403, "Unable to get absence periods"
+        )
+        mock_register.side_effect = error
+
+        employee_tax_id = "123-45-6789"
+        employer_fein = "12-3456789"
+        absence_case_id = "NTN-304363-ABS-01"
+        try:
+            fineos_actions.get_absence_periods(
+                employee_tax_id, employer_fein, absence_case_id, test_db_session
+            )
+        except FINEOSClientBadResponse:
+            pass
+
+        assert "Unable to get absence periods" in caplog.text

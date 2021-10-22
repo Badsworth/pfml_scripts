@@ -49,7 +49,7 @@ export const Primary = (args) => {
 
 In Next.js, [a page is just a React component](https://nextjs.org/docs/basic-features/pages). This enables some pretty cool capabilities when combined with Storybook. Specifically, this means we can create a Story that renders a Page component, which allows us to preview an entire page without navigating through the entire application flow to preview the page.
 
-For the Create Claim flow, we're [generating a Storybook page for each page in the flow](../../portal/bin/generate-claims-page-stories.js). Engineers can override the generated story by adding a `*.stories.js` file for the page in the `storybook/stories/pages/claims/` directory.
+For the Create Claim flow, we're [generating a Storybook page for each page in the flow](../../portal/bin/generate-claims-page-stories.js). Engineers can override the generated story by adding a `*.stories.js` file for the page in the `storybook/stories/pages/applications` directory.
 
 ### How Storybook interacts with our source code
 

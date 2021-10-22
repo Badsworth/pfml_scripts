@@ -5,7 +5,7 @@
  * @see https://medium.com/storybookjs/declarative-storybook-configuration-49912f77b78
  */
 import "../styles/app.scss"; // Apply global styling to our stories
-import { Anchor, DocsContainer } from "@storybook/addon-docs/blocks";
+import { Anchor, DocsContainer } from "@storybook/addon-docs";
 import React from "react";
 import { initializeI18n } from "../src/locales/i18n";
 
@@ -20,6 +20,10 @@ const CustomContainer = ({ children, context }) => (
 );
 
 export const parameters = {
+  actions: {
+    // https://storybook.js.org/docs/react/essentials/actions
+    argTypesRegex: "^on[A-Z].*",
+  },
   docs: {
     // Prevent Storybook from scrolling to the bottom of a long story
     // https://github.com/storybookjs/storybook/issues/10983#issuecomment-708599819

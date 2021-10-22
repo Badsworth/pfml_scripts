@@ -1,10 +1,8 @@
-import { Auth } from "@aws-amplify/auth";
-import Document from "../../src/models/Document";
+import { makeFile, mockAuth } from "../test-utils";
+import BenefitsApplicationDocument from "../../src/models/BenefitsApplicationDocument";
 import DocumentCollection from "../../src/models/DocumentCollection";
 import DocumentsApi from "../../src/api/DocumentsApi";
-import { makeFile } from "../test-utils";
 
-jest.mock("@aws-amplify/auth");
 jest.mock("../../src/services/tracker");
 
 const mockFetch = ({
@@ -33,11 +31,7 @@ describe("DocumentsApi", () => {
 
   beforeEach(() => {
     jest.resetAllMocks();
-    jest.spyOn(Auth, "currentSession").mockImplementation(() =>
-      Promise.resolve({
-        accessToken: { jwtToken: accessTokenJwt },
-      })
-    );
+    mockAuth(true, accessTokenJwt);
     documentsApi = new DocumentsApi();
   });
 
@@ -91,7 +85,7 @@ describe("DocumentsApi", () => {
             "Mock Category",
             false
           );
-        expect(documentResponse).toBeInstanceOf(Document);
+        expect(documentResponse).toBeInstanceOf(BenefitsApplicationDocument);
       });
 
       it("sends POST request with the mark_evidence_received flag", async () => {
@@ -166,15 +160,15 @@ describe("DocumentsApi", () => {
           documents: expect.any(DocumentCollection),
         });
         expect(result.documents.items).toEqual([
-          new Document({
+          new BenefitsApplicationDocument({
             application_id: applicationId,
             fineos_document_id: 1,
           }),
-          new Document({
+          new BenefitsApplicationDocument({
             application_id: applicationId,
             fineos_document_id: 2,
           }),
-          new Document({
+          new BenefitsApplicationDocument({
             application_id: applicationId,
             fineos_document_id: 3,
           }),
@@ -192,7 +186,7 @@ describe("DocumentsApi", () => {
     });
 
     it("sends GET request to /applications/{application_id/documents/{fineos_document_id}", async () => {
-      const document = new Document({
+      const document = new BenefitsApplicationDocument({
         fineos_document_id: 1234,
         content_type: "image/png",
         application_id: applicationId,
@@ -209,7 +203,7 @@ describe("DocumentsApi", () => {
     });
 
     it("returns a Blob object", async () => {
-      const document = new Document({
+      const document = new BenefitsApplicationDocument({
         fineos_document_id: 1234,
         content_type: "image/png",
         application_id: applicationId,

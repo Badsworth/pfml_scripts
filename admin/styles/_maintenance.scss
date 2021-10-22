@@ -1,4 +1,3 @@
-/** @define maintenance */
 .maintenance {
   background: #fff;
   border-radius: $Border-Radius;
@@ -7,8 +6,8 @@
   padding: 1.43em 1.71em;
 }
 
-/** @define maintenance-info */
 .maintenance-info {
+  align-items: center;
   display: flex;
 }
 
@@ -25,16 +24,6 @@
   flex: 1 1 auto;
 }
 
-.maintenance-info__a-config {
-  text-decoration: none;
-}
-
-.maintenance-info__a-config::before {
-  content: '\e905';
-  font-family: 'SiteAdminPortal' !important;
-}
-
-/** @define maintenance-configure */
 .maintenance-configure {
   background: #fff;
   border-radius: $Border-Radius;
@@ -58,7 +47,6 @@
   width: 49%;
 }
 
-/** @define maintenance-status */
 .maintenance-status {
   background: $Color-BayBlue-50;
   border-radius: 8px;

@@ -1,4 +1,9 @@
-import { BadRequestError, LeaveAdminForbiddenError } from "../../src/errors";
+import {
+  BadRequestError,
+  ForbiddenError,
+  LeaveAdminForbiddenError,
+} from "../../src/errors";
+import { act, renderHook } from "@testing-library/react-hooks";
 import {
   addEmployerMock,
   downloadDocumentMock,
@@ -10,8 +15,6 @@ import {
 } from "../../src/api/EmployersApi";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import { act } from "react-dom/test-utils";
-import { testHook } from "../test-utils";
 import { uniqueId } from "lodash";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useEmployersLogic from "../../src/hooks/useEmployersLogic";
@@ -23,15 +26,17 @@ jest.mock("../../src/services/tracker");
 describe("useEmployersLogic", () => {
   const absenceId = "mock-fineos-absence-id-1";
   const employerId = "mock-employer-id";
-  let appErrorsLogic, employersLogic, portalFlow, setUser;
+  let appErrorsLogic, clearClaims, employersLogic, portalFlow, setUser;
 
-  function renderHook() {
+  function setup() {
+    clearClaims = jest.fn();
     setUser = jest.fn();
-    testHook(() => {
+    renderHook(() => {
       portalFlow = usePortalFlow();
       appErrorsLogic = useAppErrorsLogic({ portalFlow });
       employersLogic = useEmployersLogic({
         appErrorsLogic,
+        clearClaims,
         portalFlow,
         setUser,
       });
@@ -39,7 +44,7 @@ describe("useEmployersLogic", () => {
   }
 
   beforeEach(() => {
-    renderHook();
+    setup();
   });
 
   afterEach(() => {
@@ -145,16 +150,13 @@ describe("useEmployersLogic", () => {
       it("catches instances of LeaveAdminForbiddenError", async () => {
         const catchErrorSpy = jest.spyOn(appErrorsLogic, "catchError");
         getClaimMock.mockImplementationOnce(() => {
-          // eslint-disable-next-line no-throw-literal
-          throw {
-            responseData: {
+          throw new ForbiddenError(
+            {
               employer_id: "some-employer-id",
               has_verification_data: "true",
             },
-            errors: [],
-            message: "User is not Verified",
-            status_code: 403,
-          };
+            "User is not Verified"
+          );
         });
 
         await act(async () => {
@@ -350,13 +352,14 @@ describe("useEmployersLogic", () => {
       expect(submitClaimReviewMock).toHaveBeenCalledWith(absenceId, patchData);
     });
 
-    it("clears the cached claim", async () => {
+    it("clears the cached EmployerClaim and claims", async () => {
       await act(async () => {
         await employersLogic.loadClaim(absenceId);
         await employersLogic.submitClaimReview(absenceId, patchData);
       });
 
       expect(employersLogic.claim).toBeNull();
+      expect(clearClaims).toHaveBeenCalled();
     });
 
     describe("errors", () => {

@@ -8,7 +8,7 @@
 
 Flood takes a `.zip` and exports it in the same directory as our main script, but our codebase is importing some files outside our `src/flood` folder, which causes import paths to be wrong and errors to occur due to missing files.
 
-The workaround for this is keeping the `scripts/makeFloodBundle.sh` script updated with *outsider files* we import - `makeFloodBundle` copies all external dependencies into a `src/flood/simulation` folder, adjusts all those import paths, and creates the `.zip` we need.
+The workaround for this is keeping the `scripts/makeFloodBundle.sh` script updated with _outsider files_ we import - `makeFloodBundle` copies all external dependencies into a `src/flood/simulation` folder, adjusts all those import paths, and creates the `.zip` we need.
 
 ### To deploy:
 
@@ -19,7 +19,7 @@ The workaround for this is keeping the `scripts/makeFloodBundle.sh` script updat
     - Everything inside the `src/flood` folder, **except**:
       - `index.perf.ts`, it is uploaded separately
       - `tmp` folders, get generated locally, but are irrelevant
-      -  Other irrelevant files such as `deployment.md` this one.
+      - Other irrelevant files such as `deployment.md` this one.
     - External file/scripts dependencies, as of 6th November 2020:
       - `src/simulation/types.ts` which depends on `src/api.ts`
       - `src/simulation/documents.ts`
@@ -35,7 +35,7 @@ The workaround for this is keeping the `scripts/makeFloodBundle.sh` script updat
   - Select "Parameters" of this Load & Stress Test
     - Time duration
     - User concurrency
-    - User Ramp up time (*important*)
+    - User Ramp up time (_important_)
   - Click "Launch Test"
 - Wait for the script to start running...
 - No red warning icon? Success!

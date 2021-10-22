@@ -17,18 +17,11 @@ const flagsConfig = {
     // TODO (CP-534): Show all options when portal supports activeDutyFamily, serviceMemberFamily
     claimantShowMilitaryLeaveTypes: false,
 
-    // When this flag is enabled, the "Other leave, income, and benefits" step of
-    // the Claim flow becomes visible, and its validation rules are applied via
-    // a X-FF-Require-Other-Leaves header on API requests.
-    claimantShowOtherLeaveStep: true,
+    // When this flag is enabled, the claim status page for claimants will show
+    claimantShowStatusPage: false,
 
-    // When this flag is enabled, the Leave Admin dashboard supports search functionality
-    // TODO (EMPLOYER-1500): Remove flag
-    employerShowDashboardSearch: false,
-
-    // When this flag is enabled, the Leave Admin dashboard supports sorting functionality
-    // TODO (EMPLOYER-1539): Remove flag
-    employerShowDashboardSort: false,
+    // When this flag is enabled, the claim payments section for claimants will show
+    claimantShowPayments: false,
 
     // When this flag is enabled, the "Previous leaves" section on Review page is visible
     // TODO (EMPLOYER-718): Remove flag
@@ -59,17 +52,41 @@ const flagsConfig = {
   // Environments can optionally override a default feature flag below.
   // The environment keys should use the same envName defined in
   // environment config files.
-  "cps-preview": {},
+  "cps-preview": {
+    claimantShowStatusPage: true,
+    employerShowReviewByStatus: true,
+  },
   development: {
+    claimantShowStatusPage: true,
+    employerShowReviewByStatus: true,
     example: true,
     pfmlTerriyay: true,
   },
-  test: {},
-  stage: {},
-  training: {},
-  performance: {},
-  uat: {},
-  prod: { pfmlTerriyay: true },
+  test: {
+    claimantShowStatusPage: true,
+    employerShowReviewByStatus: true,
+  },
+  stage: {
+    claimantShowStatusPage: true,
+    employerShowReviewByStatus: true,
+  },
+  training: {
+    claimantShowStatusPage: true,
+    employerShowReviewByStatus: true,
+  },
+  performance: {
+    claimantShowStatusPage: true,
+    employerShowReviewByStatus: true,
+  },
+  uat: {
+    claimantShowStatusPage: true,
+    employerShowReviewByStatus: true,
+  },
+  prod: {
+    claimantShowStatusPage: true,
+    employerShowReviewByStatus: true,
+    pfmlTerriyay: true,
+  },
 };
 
 /**

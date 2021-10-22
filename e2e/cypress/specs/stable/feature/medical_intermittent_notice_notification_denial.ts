@@ -1,48 +1,36 @@
 import { fineos, portal, email, fineosPages } from "../../../actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../../config";
 import { Submission } from "../../../../src/types";
-import { config } from "../../../actions/common";
+import { assertValidClaim } from "../../../../src/util/typeUtils";
+import { getClaimantCredentials } from "../../../config";
 
 describe("Denial Notification and Notice", () => {
   after(() => {
     portal.deleteDownloadsFolder();
   });
 
-  const credentials: Credentials = {
-    username: config("PORTAL_USERNAME"),
-    password: config("PORTAL_PASSWORD"),
-  };
+  const submit = it("Given a fully denied claim", () => {
+    fineos.before();
 
-  const submit = it(
-    "Given a fully denied claim",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      fineos.before();
-      cy.visit("/");
-
-      cy.task("generateClaim", "MED_INTER_INEL").then((claim) => {
-        cy.task("submitClaimToAPI", {
-          ...claim,
-          credentials,
-        }).then((res) => {
-          cy.stash("claim", claim.claim);
-          cy.stash("submission", {
-            application_id: res.application_id,
-            fineos_absence_id: res.fineos_absence_id,
-            timestamp_from: Date.now(),
-          });
-
-          fineosPages.ClaimPage.visit(res.fineos_absence_id)
-            .shouldHaveStatus("Eligibility", "Not Met")
-            .deny("Claimant wages failed 30x rule")
-            .triggerNotice("Leave Request Declined")
-            .documents((docPage) =>
-              docPage.assertDocumentExists("Denial Notice")
-            );
+    cy.task("generateClaim", "MED_INTER_INEL").then((claim) => {
+      cy.task("submitClaimToAPI", claim).then((res) => {
+        cy.stash("claim", claim.claim);
+        cy.stash("submission", {
+          application_id: res.application_id,
+          fineos_absence_id: res.fineos_absence_id,
+          timestamp_from: Date.now(),
         });
+
+        fineosPages.ClaimPage.visit(res.fineos_absence_id)
+          .shouldHaveStatus("Eligibility", "Not Met")
+          .deny("Claimant wages failed 30x rule")
+          .triggerNotice("Leave Request Declined")
+          .triggerNotice("Preliminary Designation")
+          .documents((docPage) =>
+            docPage.assertDocumentExists("Denial Notice")
+          );
       });
-    }
-  );
+    });
+  });
 
   it(
     "Should generate a legal notice (Denial) that the claimant can view",
@@ -51,22 +39,28 @@ describe("Denial Notification and Notice", () => {
       cy.dependsOnPreviousPass([submit]);
       portal.before();
       cy.unstash<Submission>("submission").then((submission) => {
-        portal.login(credentials);
+        portal.loginClaimant();
         cy.log("Waiting for documents");
         cy.task(
           "waitForClaimDocuments",
           {
-            credentials: credentials,
+            credentials: getClaimantCredentials(),
             application_id: submission.application_id,
             document_type: "Denial Notice",
           },
-          { timeout: 300000 }
+          { timeout: 45000 }
         );
         cy.log("Finished waiting for documents");
-        cy.visit("/applications");
-        cy.contains("article", submission.fineos_absence_id).within(() => {
-          cy.findByText("Denial notice (PDF)").should("be.visible").click();
-        });
+        portal.claimantGoToClaimStatus(submission.fineos_absence_id);
+        portal.claimantAssertClaimStatus([
+          {
+            leave: "Serious Health Condition - Employee",
+            status: "Denied",
+          },
+        ]);
+        cy.findByText("Denial notice (PDF)")
+          .should("be.visible")
+          .click({ force: true });
         portal.downloadLegalNotice(submission.fineos_absence_id);
       });
     }
@@ -81,15 +75,10 @@ describe("Denial Notification and Notice", () => {
       cy.visit("/");
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-          if (!claim.employer_fein) {
-            throw new Error("Claim must include employer FEIN");
-          }
+          assertValidClaim(claim);
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
-          portal.login(getLeaveAdminCredentials(claim.employer_fein));
-          portal.selectClaimFromEmployerDashboard(
-            submission.fineos_absence_id,
-            "--"
-          );
+          portal.loginLeaveAdmin(claim.employer_fein);
+          portal.selectClaimFromEmployerDashboard(submission.fineos_absence_id);
           portal.checkNoticeForLeaveAdmin(
             submission.fineos_absence_id,
             employeeFullName,
@@ -110,7 +99,6 @@ describe("Denial Notification and Notice", () => {
         cy.unstash<Submission>("submission").then((submission) => {
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
           const subject = email.getNotificationSubject(
-            employeeFullName,
             "application started",
             submission.fineos_absence_id
           );
@@ -118,12 +106,12 @@ describe("Denial Notification and Notice", () => {
             .getEmails(
               {
                 address: "gqzap.notifications@inbox.testmail.app",
-                subject: subject,
+                subjectWildcard: subject,
                 timestamp_from: submission.timestamp_from,
                 messageWildcard: submission.fineos_absence_id,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
-              180000
+              45000
             )
             .then(() => {
               const dob =
@@ -148,7 +136,6 @@ describe("Denial Notification and Notice", () => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
           const employeeFullName = `${claim.first_name} ${claim.last_name}`;
           const subjectEmployer = email.getNotificationSubject(
-            employeeFullName,
             "denial (employer)",
             submission.application_id
           );
@@ -157,13 +144,13 @@ describe("Denial Notification and Notice", () => {
             .getEmails(
               {
                 address: "gqzap.notifications@inbox.testmail.app",
-                subject: subjectEmployer,
+                subjectWildcard: subjectEmployer,
                 messageWildcard: submission.fineos_absence_id,
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
               // Reduced timeout, since we have multiple tests that run prior to this.
-              60000
+              30000
             )
             .then(() => {
               const dob =
@@ -187,30 +174,26 @@ describe("Denial Notification and Notice", () => {
     () => {
       cy.dependsOnPreviousPass([submit]);
       cy.unstash<Submission>("submission").then((submission) => {
-        cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
-          const subjectClaimant = email.getNotificationSubject(
-            `${claim.first_name} ${claim.last_name}`,
-            "denial (claimant)",
-            submission.application_id
-          );
-          // Check email for Claimant/Employee
-          email
-            .getEmails(
-              {
-                address: "gqzap.notifications@inbox.testmail.app",
-                subject: subjectClaimant,
-                messageWildcard: submission.fineos_absence_id,
-                timestamp_from: submission.timestamp_from,
-                debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
-              },
-              // Reduced timeout, since we have multiple tests that run prior to this.
-              30000
-            )
-            .then(() => {
-              cy.wait(100);
-              cy.contains(submission.fineos_absence_id);
-            });
-        });
+        const subjectClaimant = email.getNotificationSubject(
+          "denial (claimant)",
+          submission.application_id
+        );
+        // Check email for Claimant/Employee
+        email
+          .getEmails(
+            {
+              address: "gqzap.notifications@inbox.testmail.app",
+              subjectWildcard: subjectClaimant,
+              messageWildcard: submission.fineos_absence_id,
+              timestamp_from: submission.timestamp_from,
+              debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
+            },
+            // Reduced timeout, since we have multiple tests that run prior to this.
+            30000
+          )
+          .then(() => {
+            cy.contains(submission.fineos_absence_id);
+          });
       });
     }
   );

@@ -2,7 +2,7 @@
 
 exports[`NewTag renders the component 1`] = `
 <strong
-  className="usa-tag radius-md margin-left-1"
+  class="usa-tag radius-md margin-left-1"
 >
   New
 </strong>

@@ -1,0 +1,43 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`LegalNoticeList renders only documents that are legal notices 1`] = `
+<div>
+  <p
+    class="padding-bottom-2 margin-top-05"
+  >
+    When you click the notice link, the file will download to your device.
+  </p>
+  <ul
+    class="add-list-reset"
+  >
+    <li
+      class="grid-row flex-row flex-justify-start flex-align-start margin-bottom-1 text-primary"
+    >
+      <svg
+        aria-hidden="true"
+        class="usa-icon--size-3 margin-right-1"
+        fill="currentColor"
+        focusable="false"
+        role="img"
+      >
+        <use
+          xlink:href="/img/sprite.svg#file_present"
+        />
+      </svg>
+      <div>
+        <button
+          class="usa-button position-relative text-bold usa-button--unstyled"
+          type="button"
+        >
+          Approval notice (PDF)
+        </button>
+        <div
+          class="text-base-dark"
+        >
+          Posted 4/5/2020
+        </div>
+      </div>
+    </li>
+  </ul>
+</div>
+`;

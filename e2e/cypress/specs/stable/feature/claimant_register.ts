@@ -5,7 +5,7 @@ describe("Claimant Registration", () => {
     portal.before();
     cy.task("generateCredentials").then((credentials) => {
       portal.registerAsClaimant(credentials);
-      portal.login(credentials);
+      portal.loginClaimant(credentials);
       portal.assertLoggedIn();
     });
   });

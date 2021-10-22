@@ -1,19 +1,29 @@
-type Props = {
-  rows: any[];
+export type Props<T> = {
+  rows: T[];
   cols: {
-    title: string;
+    title?: string;
     width?: string;
     align?: "left" | "center" | "right" | "justify" | "char" | undefined;
-    content: (data: any) => JSX.Element;
+    content: (data: T) => React.ReactChild;
   }[];
   hideHeaders?: boolean;
   noResults?: JSX.Element;
+  rowClasses?: string;
+  colClasses?: string;
 };
 
-const Table = ({ rows, cols, hideHeaders, noResults }: Props) => {
+const Table = <T,>({
+  rows,
+  cols,
+  hideHeaders,
+  noResults,
+  rowClasses,
+  colClasses = "",
+}: Props<T>) => {
   if (rows.length === 0 || cols.length === 0) {
     return noResults || <p>No results found</p>;
   }
+
   return (
     <table className="table" cellPadding="0" cellSpacing="0">
       {!hideHeaders && (
@@ -29,11 +39,11 @@ const Table = ({ rows, cols, hideHeaders, noResults }: Props) => {
       )}
       <tbody className="table__body">
         {rows.map((row, di) => (
-          <tr key={di}>
+          <tr className={rowClasses} key={di}>
             {cols.map((col, hi) => (
               <td
                 key={hi}
-                className="table__col"
+                className={`table__col`}
                 width={col.width}
                 align={col.align}
               >

@@ -7,17 +7,23 @@ import {
   getFlagsByName,
 } from "../api";
 import Alert from "../components/Alert";
+import ConfirmationDialog from "../components/ConfirmationDialog";
 import Link from "next/link";
 import { Helmet } from "react-helmet-async";
 import React from "react";
 import Table from "../components/Table";
 import Toggle from "../components/Toggle";
+import VerticalMenu from "../components/VerticalMenu";
 import moment from "moment";
 
 export default function Maintenance() {
   const [maintenanceHistory, setMaintenanceHistory] =
     React.useState<FlagsResponse>([]);
   const [maintenance, setMaintenance] = React.useState<Flag | null>(null);
+
+
+  const [showConfirmationDialog, setShowConfirmationDialog] =
+    React.useState(false);
 
   React.useEffect(() => {
     getFlagsByName({ name: "maintenance" }).then(
@@ -32,10 +38,23 @@ export default function Maintenance() {
     );
   }, []);
 
-  type optionsObject = {
+  type options = {
     name?: string;
     page_routes?: string[];
   };
+
+
+  const confirmationDialogCancelCallback = () => {
+    setShowConfirmationDialog(false);
+  };
+
+  const confirmationDialogContinueCallback = () => {
+    setMaintenance({ ...maintenance, ...{ enabled: false } });
+    // disable at API.
+    //patchFlagsByName({ name: "maintenance" }, flag).then().finally();
+    setShowConfirmationDialog(false);
+  };
+
 
   const checkedValues = [
     "/*",
@@ -49,7 +68,7 @@ export default function Maintenance() {
   const formatDateTime = (datetime: string) => {
     return moment(datetime).format("MM-DD-YY hh:mmA");
   };
-  const getName = (m: Flag) => <>{(m?.options as optionsObject)?.name}</>;
+  const getName = (m: Flag) => <>{(m?.options as options)?.name}</>;
   const getDuration = (m: Flag) => (
     <>
       {(m.start ? formatDateTime(m.start) : "No start provided") +
@@ -58,46 +77,45 @@ export default function Maintenance() {
     </>
   );
   const getPageRoutes = (m: Flag) => {
-    const routes = (m?.options as optionsObject)?.page_routes ?? [];
+    const routes = (m?.options as options)?.page_routes ?? [];
 
     return routes.join(", ");
   };
   const getCreatedBy = (m: Flag) => <>{"Admin"}</>;
   const getOptions = (m: Flag) => {
     const linkValues: { [key: string]: string | string[] } = {};
-    linkValues.name = (m?.options as optionsObject)?.name ?? "";
+    linkValues.name = (m?.options as options)?.name ?? "";
     const page_routes =
-      ((m?.options as optionsObject)?.page_routes as string[]) ?? [];
+      ((m?.options as options)?.page_routes as string[]) ?? [];
     linkValues.checked_page_routes = page_routes.filter((item) =>
       checkedValues.includes(item),
     );
     linkValues.custom_page_routes = page_routes.filter(
       (item) => !checkedValues.includes(item),
     );
+
     return (
       <>
-        <button type="button" className="btn">
-          <Link
-            href={{
-              pathname: "/maintenance/add",
-              query: linkValues,
-            }}
-          >
-            <a>Clone</a>
-          </Link>
-        </button>
+        <Link
+          href={{
+            pathname: "/maintenance/add",
+            query: linkValues,
+          }}
+        >
+          <a>Clone</a>
+        </Link>
       </>
     );
+  };
+
+  const getMaintenanceEnabled = (): boolean => {
+    return maintenance ? maintenance.enabled ?? false : false;
   };
 
   return (
     <>
       <Helmet>
         <title>Maintenance</title>
-        <link
-          href="https://fonts.googleapis.com/icon?family=Material+Icons"
-          rel="stylesheet"
-        />
       </Helmet>
 
       <h1>Maintenance</h1>
@@ -115,17 +133,38 @@ export default function Maintenance() {
               to users instead of the normal page content.
             </p>
           </div>
-          <Toggle status={false} />
-          <button type="button" className="btn">
-            <Link
-              href={{
-                pathname: "/maintenance/add",
-              }}
-            >
-              <a className="maintenance-info__a-config"></a>
-            </Link>
-          </button>
+          <Toggle status={getMaintenanceEnabled()} />
+          <VerticalMenu
+            options={[
+              {
+                enabled: !getMaintenanceEnabled(),
+                href: "/maintenance/add",
+                text: "Configure",
+                type: "link",
+              },
+              {
+                enabled: getMaintenanceEnabled(),
+                href: "/maintenance/add",
+                text: "Edit",
+                type: "link",
+              },
+              {
+                enabled: getMaintenanceEnabled(),
+                onClick: () => setShowConfirmationDialog(true),
+                text: "Turn Off",
+                type: "button",
+              },
+            ]}
+          />
         </div>
+        {showConfirmationDialog && (
+          <ConfirmationDialog
+            title="Turn off Maintenance"
+            body="If maintenance is turned off, the maintenance takeover component will no longer be shown in the portal. The change may take up to 5 minutes for some users due to browser cache."
+            handleCancelCallback={confirmationDialogCancelCallback}
+            handleContinueCallback={confirmationDialogContinueCallback}
+          />
+        )}
         {maintenance && (maintenance.enabled ?? false) && (
           <div className="maintenance-status">
             <div className="maintenance-status__row">

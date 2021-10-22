@@ -51,10 +51,19 @@
 #
 # Error: ClientException: Duplicate secret names found: DB_NESSUS_PASSWORD. Each secret name must be unique.
 #
+# If your environment variable must be configurable for each environment, add a variable in `variables.tf` and
+# reference it using `var.my_variable_name`. This value can be passed in by each environment's main.tf file:
+#
+# module "tasks" {
+#   ...
+#   my_variable_name = "something"
+# }
+#
 # Resource Limits
 # ===============
 #
-# CPU and memory defaults are 512 (CPU units) and 1024 (MB).
+# CPU and memory defaults are 1024 (CPU units) and 2048 (MB).
+
 # If you need more resources than this, add "cpu" or "memory" keys to your ECS task's
 # entry in locals.tasks. The defaults will be used if these keys are absent.
 #
@@ -100,19 +109,8 @@ locals {
       command   = ["execute-sql"]
       task_role = aws_iam_role.task_execute_sql_task_role.arn
       env = [
-        local.db_access,
+        var.enforce_execute_sql_read_only ? local.db_read_only_access : local.db_access,
         { name : "S3_EXPORT_BUCKET", value : "massgov-pfml-${var.environment_name}-execute-sql-export" }
-      ]
-    },
-
-    "bulk-user-import" = {
-      command   = ["bulk-user-import"]
-      task_role = aws_iam_role.task_bulk_import_task_role.arn
-      env = [
-        local.db_access,
-        local.fineos_api_access,
-        { name : "PROCESS_CSV_DATA_BUCKET_NAME", value : "${aws_s3_bucket.bulk_user_import.bucket}" },
-        { name : "COGNITO_IDENTITY_POOL_ID", value : "${var.cognito_user_pool_id}" }
       ]
     },
 
@@ -142,16 +140,6 @@ locals {
       ]
     },
 
-    "register-leave-admins-with-fineos" = {
-      command   = ["register-leave-admins-with-fineos"]
-      task_role = aws_iam_role.register_admins_task_role.arn,
-      cpu       = 4096,
-      memory    = 18432,
-      env = [
-        local.db_access,
-        local.fineos_api_access
-      ]
-    }
 
     "load-employers-to-fineos" = {
       command = ["load-employers-to-fineos"]
@@ -220,43 +208,6 @@ locals {
       ]
     }
 
-    "payments-ctr-process" = {
-      command        = ["payments-ctr-process"]
-      task_role      = aws_iam_role.payments_ctr_process_task_role.arn
-      execution_role = aws_iam_role.payments_ctr_import_execution_role.arn
-      cpu            = 2048
-      memory         = 16384
-      env = [
-        local.db_access,
-        local.datamart_access,
-        local.eolwd_moveit_access,
-        local.emails_ctr,
-        { name : "PFML_ERROR_REPORTS_PATH", value : "${var.pfml_error_reports_path}" },
-        { name : "CTR_MOVEIT_INCOMING_PATH", value : "${var.ctr_moveit_incoming_path}" },
-        { name : "CTR_MOVEIT_OUTGOING_PATH", value : "${var.ctr_moveit_outgoing_path}" },
-        { name : "CTR_MOVEIT_ARCHIVE_PATH", value : "${var.ctr_moveit_archive_path}" },
-        { name : "PFML_CTR_INBOUND_PATH", value : "${var.pfml_ctr_inbound_path}" },
-        { name : "PFML_CTR_OUTBOUND_PATH", value : "${var.pfml_ctr_outbound_path}" }
-      ]
-    },
-
-    "payments-fineos-process" = {
-      command   = ["payments-fineos-process"]
-      task_role = aws_iam_role.payments_fineos_process_task_role.arn
-      cpu       = 2048
-      memory    = 16384
-      env = [
-        local.db_access,
-        local.fineos_s3_access,
-        local.emails_ctr,
-        { name : "FINEOS_PAYMENT_MAX_HISTORY_DATE", value : "${var.fineos_payment_max_history_date}" },
-        { name : "FINEOS_VENDOR_MAX_HISTORY_DATE", value : "${var.fineos_vendor_max_history_date}" },
-        { name : "PFML_FINEOS_INBOUND_PATH", value : "${var.pfml_fineos_inbound_path}" },
-        { name : "PFML_FINEOS_OUTBOUND_PATH", value : "${var.pfml_fineos_outbound_path}" },
-        { name : "PFML_ERROR_REPORTS_PATH", value : "${var.pfml_error_reports_path}" },
-      ]
-    },
-
     "pub-payments-process-fineos" = {
       command   = ["pub-payments-process-fineos"]
       task_role = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-fineos"
@@ -273,12 +224,16 @@ locals {
       ]
     },
 
-    "fineos-test-vendor-export-generate" = {
-      command   = ["fineos-test-vendor-export-generate"]
-      task_role = aws_iam_role.payments_fineos_process_task_role.arn
+    "pub-payments-process-snapshot" = {
+      command   = ["pub-payments-process-snapshot"]
+      task_role = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-snapshot"
+      cpu       = 2048
+      memory    = 16384
       env = [
         local.db_access,
-        local.fineos_s3_access
+        local.fineos_s3_access,
+        local.pub_s3_folders,
+        { name : "FINEOS_PAYMENT_RECONCILIATION_EXTRACT_MAX_HISTORY_DATE", value : "2021-10-01" }
       ]
     },
 
@@ -290,51 +245,15 @@ locals {
       ]
     },
 
-    "cps-errors" = {
-      command             = ["cps-errors"]
+    "cps-errors-crawler" = {
+      command             = ["cps-errors-crawler"]
       containers_template = "default_template.json"
-      task_role           = aws_iam_role.cps_errors_task_role.arn
-    },
+      task_role           = aws_iam_role.cps_errors_crawler_task_role.arn
+      env = [
+        { name : "CPS_ERROR_REPORTS_RECEIVED_S3_PATH", value : "s3://${data.aws_s3_bucket.agency_transfer.id}/cps-errors/received/" },
+        { name : "CPS_ERROR_REPORTS_PROCESSED_S3_PATH", value : "s3://${data.aws_s3_bucket.agency_transfer.id}/cps-errors/processed/" },
+      ]
 
-    "payments-rotate-data-mart-password" = {
-      command   = ["payments-rotate-data-mart-password"]
-      task_role = aws_iam_role.payments_ctr_process_task_role.arn
-      env = [
-        local.datamart_access,
-        { name : "CTR_DATA_MART_PASSWORD_OLD", valueFrom : "/service/${local.app_name}/${var.environment_name}/ctr-data-mart-password-old" }
-      ]
-    },
-
-    "payments-ctr-vc-code-cleanup" = {
-      command   = ["payments-ctr-vc-code-cleanup"]
-      task_role = aws_iam_role.payments_ctr_process_task_role.arn
-      env = [
-        local.db_access,
-        local.datamart_access
-      ]
-    },
-
-    "payments-payment-voucher-plus" = {
-      command   = ["payments-payment-voucher-plus"]
-      task_role = aws_iam_role.payments_fineos_process_task_role.arn
-      cpu       = 2048
-      memory    = 16384
-      env = [
-        local.db_access,
-        local.datamart_access,
-        local.fineos_s3_access,
-        local.emails_ctr,
-        { name : "PFML_ERROR_REPORTS_PATH", value : "${var.pfml_error_reports_path}" },
-        { name : "PFML_VOUCHER_OUTPUT_PATH", value : "${var.pfml_voucher_output_path}" },
-        { name : "FINEOS_VENDOR_MAX_HISTORY_DATE", value : "${var.fineos_vendor_max_history_date}" },
-        { name : "PFML_FINEOS_INBOUND_PATH", value : "${var.pfml_fineos_inbound_path}" }
-      ]
-    },
-    "transmogrify-state" = {
-      command = ["transmogrify-state"],
-      env = [
-        local.db_access
-      ]
     },
 
     "import-fineos-to-warehouse" = {
@@ -343,6 +262,45 @@ locals {
       env = [
         local.fineos_s3_access,
         { name : "BI_WAREHOUSE_PATH", value : "s3://massgov-pfml-${var.environment_name}-business-intelligence-tool/warehouse/raw/fineos/" }
+      ]
+    },
+
+    "update-gender-data-from-rmv" = {
+      command   = ["update-gender-data-from-rmv"]
+      task_role = aws_iam_role.update_gender_data_from_rmv_task_role.arn
+      env = [
+        local.db_access,
+        local.rmv_api_access
+      ]
+    },
+
+    "evaluate-new-eligibility" = {
+      command   = ["evaluate-new-eligibility"]
+      task_role = aws_iam_role.evaluate_new_financial_eligibility_task_role.arn
+      env = [
+        local.db_access,
+        { name : "S3_EXPORT_BUCKET", value : "s3://massgov-pfml-${var.environment_name}-execute-sql-export" }
+      ]
+    },
+
+    "dua-import-employee-demographics" = {
+      command   = ["dua-import-employee-demographics"]
+      task_role = aws_iam_role.dua_import_employee_demographics_task_role.arn
+      cpu            = 2048,
+      memory         = 4096,
+      env = [
+        local.db_access,
+        local.eolwd_moveit_access,
+        local.reductions_folders
+      ]
+    }
+    
+    "report-sequential-employment" = {
+      command   = ["report-sequential-employment"]
+      task_role = aws_iam_role.task_execute_sql_task_role.arn
+      env = [
+        local.db_access,
+        { name : "S3_BUCKET", value : "s3://massgov-pfml-${var.environment_name}-execute-sql-export" }
       ]
     },
   }
@@ -358,8 +316,8 @@ resource "aws_ecs_task_definition" "ecs_tasks" {
   family                   = "${local.app_name}-${var.environment_name}-${each.key}"
   task_role_arn            = lookup(each.value, "task_role", null)
   execution_role_arn       = lookup(each.value, "execution_role", aws_iam_role.task_executor.arn)
-  cpu                      = tostring(lookup(each.value, "cpu", 512))
-  memory                   = tostring(lookup(each.value, "memory", 1024))
+  cpu                      = tostring(lookup(each.value, "cpu", 1024))
+  memory                   = tostring(lookup(each.value, "memory", 2048))
   requires_compatibilities = ["FARGATE"]
   network_mode             = "awsvpc"
 
@@ -372,8 +330,8 @@ resource "aws_ecs_task_definition" "ecs_tasks" {
       name                   = each.key,
       image                  = format("%s:%s", data.aws_ecr_repository.app.repository_url, var.service_docker_tag),
       command                = each.value.command,
-      cpu                    = tonumber(lookup(each.value, "cpu", 512)) - 256,
-      memory                 = tonumber(lookup(each.value, "memory", 1024)) - 512,
+      cpu                    = lookup(each.value, "cpu", 1024),
+      memory                 = lookup(each.value, "memory", 2048),
       networkMode            = "awsvpc",
       essential              = true,
       readonlyRootFilesystem = false, # False by default; some tasks write local files.
@@ -401,52 +359,6 @@ resource "aws_ecs_task_definition" "ecs_tasks" {
       #
       environment = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if contains(keys(val), "value")]
       secrets     = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if !contains(keys(val), "value")]
-    },
-    {
-      name              = "newrelic-infra",
-      image             = "498823821309.dkr.ecr.us-east-1.amazonaws.com/eolwd-pfml-dockerhub-mirror:newrelic.infrastructure-bundle.2.6.1",
-      cpu               = 256,
-      memoryReservation = 512,
-      environment = [
-        {
-          name  = "NRIA_OVERRIDE_HOST_ROOT",
-          value = ""
-        },
-        {
-          name  = "NRIA_IS_FORWARD_ONLY",
-          value = "true"
-        },
-        {
-          name  = "FARGATE",
-          value = "true"
-        },
-        {
-          name  = "ENABLE_NRI_ECS",
-          value = "true"
-        },
-        {
-          name  = "NRIA_PASSTHROUGH_ENVIRONMENT",
-          value = "ECS_CONTAINER_METADATA_URI,ENABLE_NRI_ECS,FARGATE"
-        },
-        {
-          name  = "NRIA_CUSTOM_ATTRIBUTES",
-          value = "{\"nrDeployMethod\":\"downloadPage\"}"
-        }
-      ],
-      secrets = [
-        {
-          valueFrom : "/service/${local.app_name}/common/newrelic-license-key",
-          name : "NRIA_LICENSE_KEY"
-        }
-      ],
-      logConfiguration = {
-        logDriver = "awslogs",
-        options = {
-          "awslogs-group"         = aws_cloudwatch_log_group.ecs_tasks.name,
-          "awslogs-region"        = data.aws_region.current.name,
-          "awslogs-stream-prefix" = var.environment_name
-        }
-      }
     }
   ])
 }

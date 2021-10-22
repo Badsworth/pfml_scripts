@@ -1,7 +1,6 @@
 import dataclasses
 import re
 from datetime import date, datetime, timedelta
-from typing import Tuple
 
 import faker
 import pytest
@@ -17,7 +16,6 @@ from massgov.pfml.db.models.employees import (
     LkPaymentMethod,
     LkState,
     Payment,
-    PaymentCheck,
     PaymentMethod,
     PaymentReferenceFile,
     ReferenceFile,
@@ -25,17 +23,13 @@ from massgov.pfml.db.models.employees import (
     State,
     StateLog,
 )
-from massgov.pfml.db.models.factories import PaymentFactory
 from massgov.pfml.db.models.payments import (
     ACTIVE_WRITEBACK_RECORD_STATUS,
     PENDING_ACTIVE_WRITEBACK_RECORD_STATUS,
-    FineosWritebackDetails,
     FineosWritebackTransactionStatus,
     LkFineosWritebackTransactionStatus,
 )
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
+from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 
 fake = faker.Faker()
 
@@ -58,45 +52,25 @@ def local_fineos_pei_writeback_step(
     )
 
 
-def _generate_payment(payment_method: LkPaymentMethod = PaymentMethod.ACH) -> Payment:
-    payment = PaymentFactory.create(
-        fineos_pei_c_value=str(fake.random_int(min=1000, max=9999)),
-        fineos_pei_i_value=str(fake.random_int(min=1000, max=9999)),
-        fineos_extraction_date=date.today() - timedelta(days=fake.random_int()),
-        disb_method_id=payment_method.payment_method_id,
-    )
-    if payment_method == PaymentMethod.CHECK:
-        check_number = check_number_provider["check_number"]
-        check_number_provider["check_number"] += 1
-        payment.check = PaymentCheck(check_number=check_number)
-
-    return payment
-
-
 def _generate_payment_and_state(
     test_db_session: db.Session, state: LkState, payment_method: LkPaymentMethod = PaymentMethod.ACH
 ) -> Payment:
-    payment = _generate_payment(payment_method)
-    state_log_util.create_finished_state_log(
-        associated_model=payment,
-        end_state=state,
-        outcome=state_log_util.build_outcome("Creating for test"),
-        db_session=test_db_session,
-    )
+    check_number = None
+    if payment_method == PaymentMethod.CHECK:
+        check_number = check_number_provider["check_number"]
+        check_number_provider["check_number"] += 1
+        # payment.check = PaymentCheck(check_number=check_number)
+
+    payment = DelegatedPaymentFactory(
+        test_db_session,
+        fineos_pei_c_value="1000",
+        fineos_pei_i_value=str(fake.unique.random_int(min=1000, max=9999)),
+        fineos_extraction_date=date.today() - timedelta(days=fake.random_int()),
+        payment_method=payment_method,
+        check_number=check_number,
+    ).get_or_create_payment_with_state(state)
+
     return payment
-
-
-def _generate_payment_and_state_tuple(
-    test_db_session: db.Session, state: State, payment_method: LkPaymentMethod = PaymentMethod.ACH
-) -> Tuple[Payment, StateLog]:
-    payment = _generate_payment(payment_method)
-    state_log = state_log_util.create_finished_state_log(
-        associated_model=payment,
-        end_state=state,
-        outcome=state_log_util.build_outcome("Creating for test"),
-        db_session=test_db_session,
-    )
-    return payment, state_log
 
 
 def _generate_payment_and_state_with_writeback_details(
@@ -106,17 +80,9 @@ def _generate_payment_and_state_with_writeback_details(
     payment_method: LkPaymentMethod = PaymentMethod.ACH,
 ) -> Payment:
     payment = _generate_payment_and_state(db_session, payment_state, payment_method)
-
-    state_log_util.create_finished_state_log(
-        associated_model=payment,
-        end_state=State.DELEGATED_ADD_TO_FINEOS_WRITEBACK,
-        outcome=state_log_util.build_outcome("test"),
-        db_session=db_session,
+    DelegatedPaymentFactory(db_session, payment=payment).get_or_create_payment_with_writeback(
+        transaction_status
     )
-    writeback_details = FineosWritebackDetails(
-        payment=payment, transaction_status_id=transaction_status.transaction_status_id,
-    )
-    db_session.add(writeback_details)
 
     return payment
 

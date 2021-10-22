@@ -17,6 +17,7 @@ import requests
 import massgov.pfml.fineos.fineos_client
 import massgov.pfml.fineos.models
 from massgov.pfml.fineos.exception import FINEOSClientError
+from massgov.pfml.fineos.models.customer_api.spec import AbsenceDetails
 from massgov.pfml.fineos.models.group_client_api import EForm, EFormAttribute, ModelEnum
 
 TEST_FOLDER = pathlib.Path(__file__).parent
@@ -674,3 +675,76 @@ def test_customer_api_documents_403(httpserver, fineos_client):
 
     documents = fineos_client.get_documents("FINEOS_WEB_ID", "123456789")
     assert len(documents) == 0
+
+
+class TestGetAbsence:
+    @pytest.fixture
+    def absence(self):
+        return """
+        {
+            "absenceId": "NTN-100-ABS-01",
+            "creationDate": "2021-09-01T17:32:53Z",
+            "lastUpdatedDate": "2021-09-02T20:09:49Z",
+            "status": "Adjudication",
+            "notifiedBy": "Jane Doe",
+            "notificationDate": "2021-09-01",
+            "absencePeriods": [
+                {
+                "id": "PL-14449-0000133341",
+                "reason": "Serious Health Condition - Employee",
+                "reasonQualifier1": "Not Work Related",
+                "reasonQualifier2": "Sickness",
+                "startDate": "2021-10-05",
+                "endDate": "2021-10-06",
+                "expectedReturnToWorkDate": "",
+                "status": "Known",
+                "requestStatus": "Pending",
+                "absenceType": "Continuous"
+                }
+            ],
+            "absenceDays": [
+                {
+                "date": "2021-10-05",
+                "timeRequested": "8.00",
+                "timeRequestedBasis": "Hours",
+                "timeDeducted": "08:00",
+                "timeDeductedBasis": "Hours",
+                "decision": ""
+                }
+            ],
+            "reportedTimeOff": [
+                {
+                "startDate": "2021-10-05",
+                "endDate": "2021-10-06",
+                "startDateFullDay": true,
+                "startDateOffHours": 0,
+                "startDateOffMinutes": 0,
+                "endDateOffHours": 0,
+                "endDateOffMinutes": 0,
+                "endDateFullDay": true,
+                "decision": "Pending"
+                }
+            ],
+            "reportedReducedSchedule": [],
+            "selectedLeavePlans": [
+                {
+                "longName": "MA PFML - Employee",
+                "category": "Paid",
+                "applicability": "Applicable",
+                "eligibility": "Met",
+                "decision": "Pending Certification"
+                }
+            ],
+            "financialCaseIds": []
+        }
+            """
+
+    def test_get_absence(self, httpserver, fineos_client, absence):
+        httpserver.expect_ordered_request(
+            "/customerapi/customer/absence/absences/NTN-100-ABS-01",
+            method="GET",
+            headers={"userid": "FINEOS_WEB_ID", "Content-Type": "application/json"},
+        ).respond_with_data(absence, content_type="application/json")
+        response = fineos_client.get_absence("FINEOS_WEB_ID", "NTN-100-ABS-01")
+
+        assert type(response) == AbsenceDetails

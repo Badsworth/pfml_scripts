@@ -1,326 +1,115 @@
-import Document, { DocumentType } from "../../src/models/Document";
+import { render, screen } from "@testing-library/react";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
 import { ApplicationCard } from "../../src/components/ApplicationCard";
+import BenefitsApplicationDocument from "../../src/models/BenefitsApplicationDocument";
+import { DocumentType } from "../../src/models/Document";
 import { MockBenefitsApplicationBuilder } from "../test-utils";
 import React from "react";
-import { shallow } from "enzyme";
+import userEvent from "@testing-library/user-event";
+
+const download = jest.fn(() => {
+  return Promise.resolve([]);
+});
+
+const renderCard = (props) => {
+  const defaultProps = {
+    appLogic: {
+      appErrors: new AppErrorInfoCollection([]),
+      documents: {
+        download,
+      },
+    },
+    documents: [],
+    number: 2,
+    claim: new MockBenefitsApplicationBuilder().create(),
+    ...props,
+  };
+  render(<ApplicationCard {...defaultProps} />);
+};
 
 describe("ApplicationCard", () => {
-  let props;
-  const render = (claim, additionalProps = {}) => {
-    props = Object.assign(
-      {
-        appLogic: {
-          appErrors: new AppErrorInfoCollection([]),
-          documents: {
-            download: jest.fn(),
-          },
-        },
-        documents: [],
-      },
-      additionalProps
-    );
-
-    return shallow(<ApplicationCard claim={claim} number={2} {...props} />);
-  };
-
-  it("uses generic text as the main heading", () => {
-    const wrapper = render(new MockBenefitsApplicationBuilder().create());
-
-    expect(wrapper.find("header")).toMatchSnapshot();
+  it("uses generic text for main heading when fineos_absence_id is not present", () => {
+    renderCard();
+    expect(
+      screen.getByRole("heading", { name: "Application 2" })
+    ).toBeInTheDocument();
   });
 
-  it("renders empty div for details section when claim is empty", () => {
-    const wrapper = render(new MockBenefitsApplicationBuilder().create());
-
-    expect(wrapper.find("ApplicationDetails").dive()).toMatchInlineSnapshot(
-      `<div />`
-    );
+  it("doesn't render application details if none present", () => {
+    renderCard();
+    expect(screen.queryByText(/Employer EIN/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Continuous leave/)).not.toBeInTheDocument();
   });
 
-  it("renders EIN", () => {
-    const wrapper = render(
-      new MockBenefitsApplicationBuilder().employed().create()
-    );
-
-    expect(wrapper.find("ApplicationDetails").dive()).toMatchSnapshot();
+  it("renders application details, particularly EIN, when present ", () => {
+    renderCard({
+      claim: new MockBenefitsApplicationBuilder().employed().create(),
+    });
+    expect(screen.queryByText(/Employer EIN/)).toBeInTheDocument();
+    expect(screen.queryByText(/12-3456789/)).toBeInTheDocument();
   });
 
   it("renders continuous and reduced schedule leave period date ranges", () => {
-    const wrapper = render(
-      new MockBenefitsApplicationBuilder()
+    renderCard({
+      claim: new MockBenefitsApplicationBuilder()
         .reducedSchedule()
         .continuous()
-        .create()
-    );
-
-    expect(wrapper.find("ApplicationDetails").dive()).toMatchSnapshot();
+        .create(),
+    });
+    expect(screen.getByText("1/1/2021 to 6/1/2021")).toBeInTheDocument();
+    expect(screen.getByText("Reduced leave schedule")).toBeInTheDocument();
+    expect(screen.getByText("2/1/2021 to 7/1/2021")).toBeInTheDocument();
   });
 
   it("renders Intermittent leave period date range", () => {
-    const wrapper = render(
-      new MockBenefitsApplicationBuilder().intermittent().create()
-    );
-
-    expect(wrapper.find("ApplicationDetails").dive()).toMatchSnapshot();
+    renderCard({
+      claim: new MockBenefitsApplicationBuilder().intermittent().create(),
+    });
+    expect(screen.getByText("2/1/2021 to 7/1/2021")).toBeInTheDocument();
+    expect(screen.getByText("Intermittent leave")).toBeInTheDocument();
   });
 
-  it("does not render legal notices section when claim is not submitted", () => {
-    const wrapper = render(new MockBenefitsApplicationBuilder().create());
-
-    expect(wrapper.find("LegalNotices").dive().isEmptyRender()).toBe(true);
-  });
-
-  describe("when the claim status is Submitted", () => {
-    const submittedClaim = new MockBenefitsApplicationBuilder()
-      .submitted()
-      .create();
-
-    it("includes a link to complete the claim", () => {
-      const wrapper = render(submittedClaim);
-      const actions = wrapper.find("ApplicationActions").dive();
-
-      expect(actions.find("ButtonLink")).toMatchSnapshot();
-    });
-
-    it("uses the Case ID as the main heading and includes leave reason", () => {
-      const wrapper = render(submittedClaim);
-
-      expect(wrapper.find("header")).toMatchSnapshot();
-    });
-
-    it("renders legal notices text", () => {
-      const wrapper = render(
-        new MockBenefitsApplicationBuilder().completed().create()
-      );
-
-      expect(wrapper.find("LegalNotices").dive()).toMatchSnapshot();
-    });
-  });
-
-  // TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
-  describe("when the claim status is Submitted with null Other Leave data and the feature flag is true", () => {
-    it("renders a promt to call the Contact Center", () => {
-      process.env.featureFlags = {
-        claimantShowOtherLeaveStep: true,
-      };
-      const wrapper = render(
-        new MockBenefitsApplicationBuilder()
-          .submitted()
-          .medicalLeaveReason()
-          .nullOtherLeave()
-          .create()
-      );
-      const actions = wrapper.find("ApplicationActions").dive();
-      const instructions = actions.find(
-        `Trans[i18nKey="components.applicationCard.reductionsInstructions_missingData"]`
-      );
-
-      expect(instructions.exists()).toBe(true);
-      expect(instructions.dive()).toMatchSnapshot();
-    });
-  });
-
-  describe("when the claim status is Completed", () => {
-    it("includes a button to upload additional documents", () => {
-      process.env.featureFlags = {
-        claimantShowOtherLeaveStep: false,
-      };
-      const wrapper = render(
-        new MockBenefitsApplicationBuilder().completed().create()
-      );
-      const actions = wrapper.find("ApplicationActions").dive();
-
-      expect(actions.find("ButtonLink")).toMatchSnapshot();
-    });
-
-    it("renders instructions about reductions", () => {
-      const wrapper = render(
-        new MockBenefitsApplicationBuilder()
-          .completed()
-          .bondingBirthLeaveReason()
-          .hasFutureChild()
-          .create()
-      );
-      const actions = wrapper.find("ApplicationActions").dive();
-      const instructions = actions.find(
-        `Trans[i18nKey="components.applicationCard.reductionsInstructions_old"]`
-      );
-
-      expect(instructions.exists()).toBe(true);
-      expect(instructions.dive()).toMatchSnapshot();
-    });
-
-    describe("when the Other Leave feature flag is true", () => {
-      it("renders new instructions about reductions", () => {
-        process.env.featureFlags = {
-          claimantShowOtherLeaveStep: true,
-        };
-        const wrapper = render(
-          new MockBenefitsApplicationBuilder()
-            .completed()
-            .bondingBirthLeaveReason()
-            .hasFutureChild()
-            .create()
-        );
-        const actions = wrapper.find("ApplicationActions").dive();
-        const instructions = actions.find(
-          `Trans[i18nKey="components.applicationCard.reductionsInstructions"]`
-        );
-
-        expect(instructions.exists()).toBe(true);
-        expect(instructions.dive()).toMatchSnapshot();
-      });
-    });
-
-    describe("when it's a bonding claim with no cert doc", () => {
-      it("renders guidance to upload a birth cert doc for new birth", () => {
-        const wrapper = render(
-          new MockBenefitsApplicationBuilder()
-            .completed()
-            .bondingBirthLeaveReason()
-            .hasFutureChild()
-            .create()
-        );
-        const actions = wrapper.find("ApplicationActions").dive();
-
-        expect(actions.html()).toMatch(
-          `Once your child is born, submit proof of birth so that we can make a decision.`
-        );
-      });
-
-      it("renders guidance to upload an adoption cert doc for adoption", () => {
-        const wrapper = render(
-          new MockBenefitsApplicationBuilder()
-            .completed()
-            .bondingAdoptionLeaveReason()
-            .hasFutureChild()
-            .create()
-        );
-        const actions = wrapper.find("ApplicationActions").dive();
-
-        expect(actions.html()).toMatch(
-          `Once your child arrives, submit proof of placement so that we can make a decision.`
-        );
-      });
-    });
-  });
-
-  describe("when there is a denial notice", () => {
-    it("includes a button to upload additional documents", () => {
-      const claim = new MockBenefitsApplicationBuilder().submitted().create();
-      const documents = [
-        new Document({
-          application_id: claim.application_id,
-          created_at: "2021-01-01",
-          document_type: DocumentType.denialNotice,
-          fineos_document_id: "mock-document-4",
+  it("renders legal notices when needed", () => {
+    renderCard({
+      claim: new MockBenefitsApplicationBuilder().absenceId().create(),
+      documents: [
+        new BenefitsApplicationDocument({
+          application_id: "mock-claim-id",
+          document_type: DocumentType.appealAcknowledgment,
+          fineos_document_id: "mock-document-1",
         }),
-      ];
-
-      const wrapper = render(claim, { documents });
-      const actions = wrapper.find("ApplicationActions").dive();
-
-      expect(actions.find("ButtonLink")).toMatchSnapshot();
-    });
-
-    it("does not include a link to complete the claim", () => {
-      const claim = new MockBenefitsApplicationBuilder().create();
-      const documents = [
-        new Document({
-          application_id: claim.application_id,
-          created_at: "2021-01-01",
-          document_type: DocumentType.denialNotice,
-          fineos_document_id: "mock-document-4",
-        }),
-      ];
-
-      const wrapper = render(claim, { documents });
-      const actions = wrapper.find("ApplicationActions").dive();
-
-      expect(actions.find({ "data-test": "resume-button" }).exists()).toBe(
-        false
-      );
-    });
-  });
-
-  describe("when there are legal notices", () => {
-    it("displays legal notices and explains that notices download to the device", () => {
-      const claim = new MockBenefitsApplicationBuilder().submitted().create();
-      const documents = [
-        new Document({
-          application_id: claim.application_id,
-          created_at: "2021-01-01",
+        new BenefitsApplicationDocument({
+          application_id: "mock-claim-id",
           document_type: DocumentType.approvalNotice,
           fineos_document_id: "mock-document-3",
         }),
-        new Document({
-          application_id: claim.application_id,
-          content_type: "image/png",
-          created_at: "2021-01-01",
-          document_type: DocumentType.denialNotice,
-          fineos_document_id: "mock-document-4",
-        }),
-        new Document({
-          application_id: claim.application_id,
-          content_type: "application/pdf",
-          created_at: "2021-01-01",
-          document_type: DocumentType.requestForInfoNotice,
-          fineos_document_id: "mock-document-5",
-        }),
         // Throw in a non-legal notice to confirm it doesn't get rendered
-        new Document({
-          application_id: claim.application_id,
-          created_at: "2020-12-01",
+        new BenefitsApplicationDocument({
+          application_id: "mock-claim-id",
           document_type: DocumentType.certification.medicalCertification,
           fineos_document_id: "mock-document-6",
         }),
-      ];
-
-      const wrapper = render(claim, { documents });
-      const legalNotices = wrapper.find("LegalNotices").dive();
-
-      const listItems = legalNotices.find("DownloadableDocument");
-
-      expect.assertions(4);
-      expect(legalNotices.find("p")).toMatchSnapshot();
-      listItems.forEach((listItem) =>
-        expect(listItem.dive()).toMatchSnapshot()
-      );
+      ],
     });
-
-    describe("when the user clicks on the download link", () => {
-      it("calls documentsLogic.download", () => {
-        const claim = new MockBenefitsApplicationBuilder().completed().create();
-        const documents = [
-          new Document({
-            application_id: claim.application_id,
-            created_at: "2021-01-01",
-            document_type: DocumentType.approvalNotice,
-            fineos_document_id: "mock-document-3",
-          }),
-        ];
-
-        const wrapper = render(claim, { documents });
-        const legalNotices = wrapper.find("LegalNotices").dive();
-
-        legalNotices
-          .find("DownloadableDocument")
-          .dive()
-          .find("Button")
-          .simulate("click", {
-            preventDefault: () => jest.fn(),
-          });
-
-        expect(props.appLogic.documents.download).toHaveBeenCalledWith(
-          documents[0]
-        );
-      });
-    });
+    expect(screen.getAllByRole("listitem")).toHaveLength(2);
+    expect(
+      screen.getByRole("heading", { name: "Download your notices" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Appeal Acknowledgment (PDF)" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Approval notice (PDF)" })
+    ).toBeInTheDocument();
+    expect(download).not.toHaveBeenCalled();
+    userEvent.click(
+      screen.getByRole("button", { name: "Approval notice (PDF)" })
+    );
+    expect(download).toHaveBeenCalled();
   });
 
-  it("renders Alert inside the component when there is an error loading documents", () => {
+  it("alerts when there is an err downloading documents", () => {
     const claim = new MockBenefitsApplicationBuilder().completed().create();
     const appLogic = {
       appErrors: new AppErrorInfoCollection([
@@ -330,9 +119,149 @@ describe("ApplicationCard", () => {
         }),
       ]),
     };
-    const wrapper = render(claim, { appLogic });
-    const legalNotices = wrapper.find("LegalNotices").dive();
+    renderCard({ claim, appLogic });
+    expect(
+      screen.getByText(
+        /An error was encountered while checking your application for documents./
+      )
+    ).toBeInTheDocument();
+  });
 
-    expect(legalNotices.find("Alert Trans").dive()).toMatchSnapshot();
+  it("does not render legal notices section when claim is not submitted", () => {
+    renderCard({ claim: new MockBenefitsApplicationBuilder().create() });
+    expect(
+      screen.queryByRole("heading", { name: "Download your notices" })
+    ).not.toBeInTheDocument();
+  });
+
+  it("for submitted claims, it shows a link to complete the claim", () => {
+    renderCard({
+      claim: new MockBenefitsApplicationBuilder().submitted().create(),
+    });
+    expect(
+      screen.getByRole("link", { name: "Continue application" })
+    ).toBeInTheDocument();
+  });
+
+  it("for submitted claims, it uses case id in header and includes legal notices text", () => {
+    renderCard({
+      claim: new MockBenefitsApplicationBuilder().submitted().create(),
+    });
+    expect(
+      screen.getByRole("heading", { name: "NTN-111-ABS-01" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Download your notices" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        /Once we’ve made a decision, you can download the decision notice here. You’ll also get an email notification./
+      )
+    ).toBeInTheDocument();
+  });
+
+  // TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
+  it("Can handle submitted claims with null other leave data", () => {
+    renderCard({
+      claim: new MockBenefitsApplicationBuilder()
+        .submitted()
+        .medicalLeaveReason()
+        .nullOtherLeave()
+        .create(),
+    });
+    expect(screen.getByText(/call the Contact Center/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/Report any of these situations:/)
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "(833) 344‑7365" })
+    ).toBeInTheDocument();
+  });
+
+  it("for completed claims, include button for addl documents", () => {
+    renderCard({
+      claim: new MockBenefitsApplicationBuilder().completed().create(),
+    });
+    expect(
+      screen.getByRole("link", { name: "Upload additional documents" })
+    ).toBeInTheDocument();
+  });
+
+  it("for completed claims, instructions about reductions are included", () => {
+    renderCard({
+      claim: new MockBenefitsApplicationBuilder().completed().create(),
+    });
+    expect(
+      screen.getByText(
+        /If your plans for other benefits or income during your paid leave have changed, call the Contact Center/
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("can handle bonding claims with no cert docs for births", () => {
+    renderCard({
+      claim: new MockBenefitsApplicationBuilder()
+        .completed()
+        .bondingBirthLeaveReason()
+        .hasFutureChild()
+        .create(),
+    });
+    expect(
+      screen.getByText(/Once your child is born, submit proof of birth/)
+    ).toBeInTheDocument();
+  });
+
+  it("can handle bonding claims with no cert docs for adoptions", () => {
+    renderCard({
+      claim: new MockBenefitsApplicationBuilder()
+        .completed()
+        .bondingAdoptionLeaveReason()
+        .hasFutureChild()
+        .create(),
+    });
+    expect(
+      screen.getByText(
+        /submit proof of placement so that we can make a decision/
+      )
+    ).toBeInTheDocument();
+  });
+
+  it("with a denial notice, users have the option to upload addl documentation", () => {
+    const claim = new MockBenefitsApplicationBuilder().submitted().create();
+    renderCard({
+      claim,
+      documents: [
+        new BenefitsApplicationDocument({
+          application_id: claim.application_id,
+          created_at: "2021-01-01",
+          document_type: DocumentType.denialNotice,
+          fineos_document_id: "mock-document-4",
+        }),
+      ],
+    });
+    expect(
+      screen.getByRole("button", { name: "Denial notice (PDF)" })
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Upload additional documents" })
+    ).toBeInTheDocument();
+  });
+
+  it("no Continue Application button included when there is a denial notice", () => {
+    const claim = new MockBenefitsApplicationBuilder().submitted().create();
+    renderCard({
+      claim,
+      documents: [
+        new BenefitsApplicationDocument({
+          application_id: claim.application_id,
+          created_at: "2021-01-01",
+          document_type: DocumentType.denialNotice,
+          fineos_document_id: "mock-document-4",
+        }),
+      ],
+    });
+    expect(
+      screen.queryByRole("link", { name: "Continue application" })
+    ).not.toBeInTheDocument();
   });
 });

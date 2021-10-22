@@ -11,7 +11,7 @@ from massgov.pfml.api.models.claims.common import (
     PreviousLeave,
 )
 from massgov.pfml.api.models.common import ConcurrentLeave
-from massgov.pfml.db.models.employees import Claim, ManagedRequirement
+from massgov.pfml.db.models.employees import AbsencePeriod, Claim, ManagedRequirement
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import (
     FEINFormattedStr,
@@ -60,6 +60,70 @@ class ManagedRequirementResponse(PydanticBaseModel):
         return managed_requirement_response
 
 
+class AbsencePeriodStatusResponse(PydanticBaseModel):
+    """Pydantic Model for absence period returned by fineos"""
+
+    fineos_leave_period_id: Optional[str]
+    absence_period_start_date: Optional[date]
+    absence_period_end_date: Optional[date]
+    reason: Optional[str]
+    reason_qualifier_one: Optional[str]
+    reason_qualifier_two: Optional[str]
+    period_type: Optional[str]
+    request_decision: Optional[str]
+    # Not in absence_period yet. Should be N/A, Pending, Waived, Satisfied, Not Satisfied, Not Required
+    evidence_status: Optional[str]
+
+
+class AbsencePeriodResponse(PydanticBaseModel):
+    """Pydantic Model for absence period returned by the database"""
+
+    fineos_absence_period_class_id: int
+    fineos_absence_period_index_id: int
+    absence_period_start_date: Optional[date]
+    absence_period_end_date: Optional[date]
+    type: Optional[str]
+    reason: Optional[str]
+    reason_qualifier_one: Optional[str]
+    reason_qualifier_two: Optional[str]
+    request_decision: Optional[str]
+    fineos_leave_request_id: Optional[int]
+    is_id_proofed: Optional[bool]
+
+    @classmethod
+    def from_orm(cls, absence_period: AbsencePeriod) -> "AbsencePeriodResponse":
+        absence_response = super().from_orm(absence_period)
+        if absence_period.absence_period_type:
+            absence_response.type = (
+                absence_period.absence_period_type.absence_period_type_description
+            )
+        if absence_period.absence_reason:
+            absence_response.reason = absence_period.absence_reason.absence_reason_description
+        if absence_period.absence_reason_qualifier_one:
+            absence_response.reason_qualifier_one = (
+                absence_period.absence_reason_qualifier_one.absence_reason_qualifier_one_description
+            )
+        if absence_period.absence_reason_qualifier_two:
+            absence_response.reason_qualifier_two = (
+                absence_period.absence_reason_qualifier_two.absence_reason_qualifier_two_description
+            )
+        if absence_period.leave_request_decision:
+            absence_response.request_decision = (
+                absence_period.leave_request_decision.leave_request_decision_description
+            )
+        return absence_response
+
+
+class EvidenceDetail(PydanticBaseModel):
+    document_name: Optional[str]
+    is_document_received: Optional[bool]
+
+
+class OutstandingEvidenceResponse(PydanticBaseModel):
+    employee_evidence: Optional[List[EvidenceDetail]]
+    employer_evidence: Optional[List[EvidenceDetail]]
+
+
 class ClaimResponse(PydanticBaseModel):
     fineos_absence_id: Optional[str]
     employer: Optional[EmployerResponse]
@@ -71,6 +135,7 @@ class ClaimResponse(PydanticBaseModel):
     claim_type_description: Optional[str]
     created_at: Optional[date]
     managed_requirements: Optional[List[ManagedRequirementResponse]]
+    absence_periods: Optional[List[AbsencePeriodResponse]] = None
 
     @classmethod
     def from_orm(cls, claim: Claim) -> "ClaimResponse":
@@ -82,13 +147,39 @@ class ClaimResponse(PydanticBaseModel):
         return claim_response
 
 
+# This class is intended to show more granular data about a claim that is not shown in the dashboard,
+# where ClaimResponse is used. For now the detailed data is absence_periods and outstanding evidence.
+class DetailedClaimResponse(PydanticBaseModel):
+    application_id: Optional[str]
+    fineos_absence_id: Optional[str]
+    employer: Optional[EmployerResponse]
+    employee: Optional[EmployeeResponse]
+    fineos_notification_id: Optional[str]
+    claim_status: Optional[str]
+    created_at: Optional[date]
+    absence_periods: Optional[List[AbsencePeriodStatusResponse]]
+    managed_requirements: Optional[List[ManagedRequirementResponse]]
+    # Place holder for future implementation.
+    outstanding_evidence: Optional[OutstandingEvidenceResponse]
+
+    @classmethod
+    def from_orm(cls, claim: Claim) -> "DetailedClaimResponse":
+        claim_response = super().from_orm(claim)
+        if claim.fineos_absence_status:
+            claim_response.claim_status = claim.fineos_absence_status.absence_status_description
+        # Dropping data from DB acquired automatically through the super()_from_orm call.
+        # The periods are populated using FINEOS API data.
+        claim_response.absence_periods = []
+        return claim_response
+
+
 class ClaimReviewResponse(PydanticBaseModel):
     date_of_birth: Optional[MaskedDateStr]
     employer_benefits: Optional[List[EmployerBenefit]]
     employer_dba: str
     employer_fein: FEINFormattedStr
     employer_id: UUID4
-    fineos_absence_id: Optional[str]
+    fineos_absence_id: str
     first_name: Optional[str]
     hours_worked_per_week: Optional[Decimal]
     last_name: Optional[str]
@@ -106,8 +197,8 @@ class ClaimReviewResponse(PydanticBaseModel):
 
 class DocumentResponse(PydanticBaseModel):
     created_at: Optional[date]
-    document_type: Optional[str]
+    document_type: str
     content_type: Optional[str]
-    fineos_document_id: Optional[str]
-    name: str
-    description: str
+    fineos_document_id: str
+    name: Optional[str]
+    description: Optional[str]

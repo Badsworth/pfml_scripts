@@ -6,7 +6,6 @@
 - [Authorization](#authorization)
 - [Running In Hosted Environments](#running-in-hosted-environments)
   - [ECS](#ecs)
-  - [Lambda](#lambda)
 
 ## Key Technologies
 
@@ -87,17 +86,13 @@ action on the given subject.
 
 ## Running In Hosted Environments
 
-There are two ways code gets run in hosted environments, as tasks on [AWS
-Elastic Container Service (ECS) clusters][ecs-docs] (backed by [AWS
-Fargate][fargate-docs]) and as [AWS Lambdas][lambda-docs].
+Application code gets run as tasks on [AWS Elastic Container Service (ECS)
+clusters][ecs-docs], backed by [AWS Fargate][fargate-docs]
 
 [ecs-docs]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/Welcome.html
 [fargate-docs]: https://docs.aws.amazon.com/AmazonECS/latest/developerguide/AWS_Fargate.html
-[lambda-docs]: https://docs.aws.amazon.com/lambda/latest/dg/welcome.html
 
-For actually performing deploys, see
-[/docs/deployment.md](/docs/deployment.md).
-
+For actually performing deploys, see [/docs/deployment.md](/docs/deployment.md).
 
 ### ECS
 
@@ -121,20 +116,3 @@ Other ECS tasks are in
 are not a part of an ECS service, the tasks are launched/started on demand
 (either by an automated process like a scheduled AWS EventBridge event, Step
 Function, or manually through the [/bin/run-ecs-task](/bin/run-ecs-task/) tool).
-
-### Lambda
-
-Lambdas are a little different. Their main source code lives somewhere in
-[massgov/](/api/massgov), with their build infrastructure in
-[lambdas/](/api/lambdas) which is mostly boilerplate to import the correct
-module from [massgov/](/api/massgov) and build it as appropriate for the Lambda
-runtime.
-
-The Lambda building happens via the AWS Serverless Application Model (SAM) CLI
-tool, which takes the project Python package and builds its dependencies inside
-a Docker container matching the Lambda runtime environment (for cases where a
-dependency needs a compiled component). This generates a ZIP of the Lambda,
-which can then be uploaded to S3.
-
-The Lambda configuration and deploys are done in Terraform, at
-[/infra/api/template/lambda.tf](/infra/api/template/lambda.tf).

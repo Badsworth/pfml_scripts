@@ -15,13 +15,6 @@ from massgov.pfml.db.models.employees import (
     PrenoteState,
     PubEft,
 )
-from massgov.pfml.db.models.factories import (
-    ClaimFactory,
-    EmployeeFactory,
-    EmployeePubEftPairFactory,
-    PaymentFactory,
-    PubEftFactory,
-)
 from massgov.pfml.delegated_payments.delegated_payments_nacha import (
     NachaBatchType,
     add_eft_prenote_to_nacha_file,
@@ -30,6 +23,7 @@ from massgov.pfml.delegated_payments.delegated_payments_nacha import (
     create_nacha_file,
     send_nacha_file,
 )
+from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.delegated_payments.util.ach.nacha import NachaEntry, NachaFile
 
 
@@ -44,6 +38,18 @@ def test_name_truncation(monkeypatch):
     )
 
     assert entry.get_value("name") == "Smith-Westfield Johnat"
+    assert entry.get_value("name") == "Smith-Westfield Johnathan"[:22]
+
+    entry = NachaEntry(
+        trans_code="22",
+        receiving_dfi_id="23138010",
+        dfi_act_num="122424",
+        amount=123.00,
+        id="1224asdfgasdf",
+        name="Smith John",
+    )
+
+    assert entry.get_value("name") == "Smith John            "
 
 
 @freeze_time("2021-03-17 21:58:00")
@@ -121,22 +127,32 @@ def test_generate_nacha_file_multiple_batches(monkeypatch, test_db_session):
     assert ach_output == expected_output
 
 
-def test_nacha_file_prenote_entries():
+def test_nacha_file_prenote_entries(test_db_session, initialize_factories_session):
     nacha_file = create_nacha_file()
 
     employees_with_eft = []
     for _ in range(5):
-        employees_with_eft.append(build_employee_with_eft(PrenoteState.PENDING_PRE_PUB))
+        employees_with_eft.append(
+            build_employee_with_eft(test_db_session, PrenoteState.PENDING_PRE_PUB)
+        )
 
     add_eft_prenote_to_nacha_file(nacha_file, employees_with_eft)
 
     assert len(nacha_file.batches[0].entries) == 5
 
+    for index, employee_with_eft in enumerate(employees_with_eft):
+        entry = nacha_file.batches[0].entries[index]
+        pub_eft = employee_with_eft[1]
+        assert (
+            entry.get_value("name").strip()
+            == f"{pub_eft.fineos_employee_last_name} {pub_eft.fineos_employee_first_name}"[:22]
+        )
 
-def test_nacha_file_prenote_entries_errors():
+
+def test_nacha_file_prenote_entries_errors(test_db_session, initialize_factories_session):
     nacha_file = create_nacha_file()
 
-    employee_with_eft = build_employee_with_eft(PrenoteState.APPROVED)
+    employee_with_eft = build_employee_with_eft(test_db_session, PrenoteState.APPROVED)
 
     with pytest.raises(
         Exception,
@@ -145,14 +161,14 @@ def test_nacha_file_prenote_entries_errors():
         add_eft_prenote_to_nacha_file(nacha_file, [employee_with_eft])
 
 
-def test_nacha_file_payment_entries():
+def test_nacha_file_payment_entries(test_db_session, initialize_factories_session):
     nacha_file = create_nacha_file()
 
     payments = []
     for _ in range(5):
-        payments.append(build_payment(PaymentMethod.ACH, ClaimType.FAMILY_LEAVE))
+        payments.append(build_payment(test_db_session, PaymentMethod.ACH, ClaimType.FAMILY_LEAVE))
     for _ in range(5):
-        payments.append(build_payment(PaymentMethod.ACH, ClaimType.MEDICAL_LEAVE))
+        payments.append(build_payment(test_db_session, PaymentMethod.ACH, ClaimType.MEDICAL_LEAVE))
 
     add_payments_to_nacha_file(nacha_file, payments)
 
@@ -161,29 +177,38 @@ def test_nacha_file_payment_entries():
     assert len(nacha_file.batches[1].entries) == 5
 
 
-def test_nacha_file_payment_entries_one_leave_type():
+def test_nacha_file_payment_entries_one_leave_type(test_db_session, initialize_factories_session):
     # Same as above, but only one leave type, only one batch should be added.
     nacha_file = create_nacha_file()
 
     payments = []
     for _ in range(5):
-        payments.append(build_payment(PaymentMethod.ACH, ClaimType.FAMILY_LEAVE))
+        payments.append(build_payment(test_db_session, PaymentMethod.ACH, ClaimType.FAMILY_LEAVE))
 
     add_payments_to_nacha_file(nacha_file, payments)
     assert len(nacha_file.batches[0].entries) == 5
 
+    for index, payment in enumerate(payments):
+        entry = nacha_file.batches[0].entries[index]
+        assert (
+            entry.get_value("name").strip()
+            == f"{payment.fineos_employee_last_name} {payment.fineos_employee_first_name}"[:22]
+        )
 
-def test_nacha_file_payment_and_prenote_entries():
+
+def test_nacha_file_payment_and_prenote_entries(test_db_session, initialize_factories_session):
     nacha_file = create_nacha_file()
     payments = []
     for _ in range(5):
-        payments.append(build_payment(PaymentMethod.ACH, ClaimType.FAMILY_LEAVE))
+        payments.append(build_payment(test_db_session, PaymentMethod.ACH, ClaimType.FAMILY_LEAVE))
     for _ in range(5):
-        payments.append(build_payment(PaymentMethod.ACH, ClaimType.MEDICAL_LEAVE))
+        payments.append(build_payment(test_db_session, PaymentMethod.ACH, ClaimType.MEDICAL_LEAVE))
 
     employees_with_eft = []
     for _ in range(7):
-        employees_with_eft.append(build_employee_with_eft(PrenoteState.PENDING_PRE_PUB))
+        employees_with_eft.append(
+            build_employee_with_eft(test_db_session, PrenoteState.PENDING_PRE_PUB)
+        )
 
     # Add all payments and EFT
     add_payments_to_nacha_file(nacha_file, payments)
@@ -196,8 +221,8 @@ def test_nacha_file_payment_and_prenote_entries():
 
 # TODO check payment method https://lwd.atlassian.net/browse/PUB-106
 # def test_nacha_file_payment_entries_errors():
-#     valid_payment = build_payment(PaymentMethod.ACH)
-#     invalid_payment_record = build_payment(PaymentMethod.CHECK)
+#     valid_payment = build_payment(test_db_session,PaymentMethod.ACH)
+#     invalid_payment_record = build_payment(test_db_session,PaymentMethod.CHECK)
 
 #     payments = [valid_payment, invalid_payment_record]
 
@@ -214,13 +239,13 @@ def test_nacha_file_payment_and_prenote_entries():
 # parse and validate and contents of generated nacha file for ach and pre note fields
 
 
-def test_nacha_file_upload(mock_s3_bucket):
+def test_nacha_file_upload(mock_s3_bucket, test_db_session, initialize_factories_session):
     nacha_file = create_nacha_file()
 
-    employee_with_eft = build_employee_with_eft(PrenoteState.PENDING_PRE_PUB)
+    employee_with_eft = build_employee_with_eft(test_db_session, PrenoteState.PENDING_PRE_PUB)
     add_eft_prenote_to_nacha_file(nacha_file, [employee_with_eft])
 
-    payment = build_payment(PaymentMethod.ACH)
+    payment = build_payment(test_db_session, PaymentMethod.ACH)
     add_payments_to_nacha_file(nacha_file, [payment])
 
     archive_folder_path = f"s3://{mock_s3_bucket}/pub/archive"
@@ -241,25 +266,22 @@ def test_nacha_file_upload(mock_s3_bucket):
     assert len([line for line in file_stream]) == 10
 
 
-def build_employee_with_eft(prenote_state: LkPrenoteState) -> Tuple[Employee, PubEft]:
-    employee = EmployeeFactory.build()
-    pub_eft = PubEftFactory.build(prenote_state_id=prenote_state.prenote_state_id)
-    EmployeePubEftPairFactory.build(employee=employee, pub_eft=pub_eft)
-
-    return (employee, pub_eft)
+def build_employee_with_eft(db_session, prenote_state: LkPrenoteState) -> Tuple[Employee, PubEft]:
+    factory = DelegatedPaymentFactory(db_session, prenote_state=prenote_state)
+    factory.get_or_create_pub_eft()
+    return (factory.employee, factory.pub_eft)
 
 
-def build_payment(payment_method: LkPaymentMethod, claim_type: ClaimType = ClaimType.FAMILY_LEAVE):
-    employee_with_eft = build_employee_with_eft(PrenoteState.PENDING_PRE_PUB)
-    employee = employee_with_eft[0]
-    pub_eft = employee_with_eft[1]
-
-    claim = ClaimFactory.build(employee=employee, claim_type_id=claim_type.claim_type_id)
-    payment = PaymentFactory.build(
-        claim=claim,
-        pub_eft=pub_eft,
-        disb_method_id=payment_method.payment_method_id,
+def build_payment(
+    db_session, payment_method: LkPaymentMethod, claim_type: ClaimType = ClaimType.FAMILY_LEAVE
+):
+    factory = DelegatedPaymentFactory(
+        db_session,
+        set_pub_eft_in_payment=True,
         claim_type=claim_type,
-        claim_type_id=claim_type.claim_type_id,
+        prenote_state=PrenoteState.PENDING_PRE_PUB,
+        payment_method=payment_method,
     )
+    factory.get_or_create_pub_eft()
+    payment = factory.get_or_create_payment()
     return payment

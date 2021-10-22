@@ -1,9 +1,11 @@
+import usePortalFlow, {
+  getRouteFromPathWithParams,
+} from "../../src/hooks/usePortalFlow";
 import RouteTransitionError from "../../src/errors";
 import machineConfigs from "../../src/flows";
 import { mockRouter } from "next/router";
+import { renderHook } from "@testing-library/react-hooks";
 import routes from "../../src/routes";
-import { testHook } from "../test-utils";
-import usePortalFlow from "../../src/hooks/usePortalFlow";
 
 jest.mock("next/router");
 
@@ -12,7 +14,7 @@ describe("usePortalFlow", () => {
     let portalFlow;
 
     beforeEach(() => {
-      testHook(() => {
+      renderHook(() => {
         mockRouter.pathname = "/dashboard";
         portalFlow = usePortalFlow();
       });
@@ -37,7 +39,7 @@ describe("usePortalFlow", () => {
       mockRouter.pathname = routes.applications.start;
       expectedRoute =
         machineConfigs.states[mockRouter.pathname].on.CREATE_CLAIM;
-      testHook(() => {
+      renderHook(() => {
         portalFlow = usePortalFlow();
       });
     });
@@ -67,7 +69,7 @@ describe("usePortalFlow", () => {
       it("throws error", () => {
         mockRouter.pathname = "/not/in/configs";
 
-        testHook(() => {
+        renderHook(() => {
           portalFlow = usePortalFlow();
         });
 
@@ -85,7 +87,7 @@ describe("usePortalFlow", () => {
     beforeEach(() => {
       mockRouter.pathname = routes.applications.checklist;
       expectedRoute = machineConfigs.states[mockRouter.pathname].on.VERIFY_ID;
-      testHook(() => {
+      renderHook(() => {
         portalFlow = usePortalFlow();
       });
     });
@@ -108,7 +110,7 @@ describe("usePortalFlow", () => {
       it("throws error", () => {
         mockRouter.pathname = "/not/in/configs";
 
-        testHook(() => {
+        renderHook(() => {
           portalFlow = usePortalFlow();
         });
 
@@ -127,7 +129,7 @@ describe("usePortalFlow", () => {
     beforeEach(() => {
       mockRouter.pathname = routes.applications.ssn;
       nextPageRoute = machineConfigs.states[mockRouter.pathname].on.CONTINUE;
-      testHook(() => {
+      renderHook(() => {
         portalFlow = usePortalFlow();
       });
     });
@@ -152,7 +154,7 @@ describe("usePortalFlow", () => {
         let portalFlow;
         mockRouter.pathname = "/not/in/configs";
 
-        testHook(() => {
+        renderHook(() => {
           portalFlow = usePortalFlow();
         });
 
@@ -170,7 +172,7 @@ describe("usePortalFlow", () => {
       let portalFlow;
       mockRouter.pathname = routes.applications.ssn;
 
-      testHook(() => {
+      renderHook(() => {
         portalFlow = usePortalFlow();
       });
 
@@ -188,5 +190,39 @@ describe("usePortalFlow", () => {
         }
       `);
     });
+  });
+});
+
+describe(getRouteFromPathWithParams, () => {
+  it("returns empty string if passed an empty string", () => {
+    expect(getRouteFromPathWithParams("")).toEqual("");
+  });
+  it("returns undefined if passed undefined", () => {
+    expect(getRouteFromPathWithParams(undefined)).toEqual(undefined);
+  });
+  it("returns null if passed null", () => {
+    expect(getRouteFromPathWithParams(null)).toEqual(null);
+  });
+
+  it("removes hash", () => {
+    expect(getRouteFromPathWithParams("/applications/name#abcdefg")).toEqual(
+      "/applications/name"
+    );
+  });
+  it("removes query", () => {
+    expect(getRouteFromPathWithParams("/applications/name?abc=defg")).toEqual(
+      "/applications/name"
+    );
+  });
+  it("removes trailing slash", () => {
+    expect(getRouteFromPathWithParams("/applications/name/")).toEqual(
+      "/applications/name"
+    );
+  });
+
+  it("removes query, hash, and trailing slash", () => {
+    expect(
+      getRouteFromPathWithParams("/applications/name/?abc=defg#abcdefg")
+    ).toEqual("/applications/name");
   });
 });

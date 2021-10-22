@@ -1,43 +1,28 @@
-import {
-  MockEmployerClaimBuilder,
-  renderWithAppLogic,
-  testHook,
-} from "../../../test-utils";
+import { MockEmployerClaimBuilder, renderPage } from "../../../test-utils";
 import Confirmation from "../../../../src/pages/employers/applications/confirmation";
-import { act } from "react-dom/test-utils";
-import useAppLogic from "../../../../src/hooks/useAppLogic";
-
-jest.mock("../../../../src/hooks/useAppLogic");
 
 describe("Confirmation", () => {
-  const claim = new MockEmployerClaimBuilder()
-    .completed()
-    .reviewable(true)
-    .create();
-  const query = { absence_id: "NTN-111-ABS-01" };
-  let appLogic, wrapper;
+  it("renders the component", () => {
+    const claim = new MockEmployerClaimBuilder()
+      .completed()
+      .reviewable(true)
+      .absenceId("my-absence-id")
+      .create();
 
-  beforeEach(() => {
-    testHook(() => {
-      appLogic = useAppLogic();
-    });
-    appLogic.employers.claim = claim;
-
-    act(() => {
-      ({ wrapper } = renderWithAppLogic(Confirmation, {
-        employerClaimAttrs: claim,
-        props: {
-          appLogic,
-          query,
+    const { container } = renderPage(
+      Confirmation,
+      {
+        addCustomSetup: (appLogicHook) => {
+          appLogicHook.employers.claim = claim;
+          appLogicHook.portalFlow.getNextPageRoute = jest.fn();
+          appLogicHook.pathname = "";
         },
-      }));
-    });
-  });
+      },
+      {
+        query: { absence_id: "my-absence-id" },
+      }
+    );
 
-  it("renders the page", () => {
-    expect(wrapper).toMatchSnapshot();
-    wrapper.find("Trans").forEach((trans) => {
-      expect(trans.dive()).toMatchSnapshot();
-    });
+    expect(container).toMatchSnapshot();
   });
 });

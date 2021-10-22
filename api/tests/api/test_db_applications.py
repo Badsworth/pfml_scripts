@@ -1,16 +1,11 @@
 import uuid
 
-import pytest
-
 from massgov.pfml.db.models.applications import (
     Application,
     ApplicationPaymentPreference,
     ConcurrentLeave,
 )
 from massgov.pfml.db.models.employees import BankAccountType, PaymentMethod
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 
 def test_application(test_db_session, user):
@@ -27,7 +22,7 @@ def test_application(test_db_session, user):
 
     inserted_application = test_db_session.query(Application).get(application_id)
 
-    assert uuid.UUID(str(inserted_application.application_id)).version == 4
+    assert inserted_application.application_id.version == 4
     assert inserted_application.nickname == "My Leave Application"
     assert inserted_application.first_name == "John"
     assert inserted_application.last_name == "Doe"
@@ -59,7 +54,7 @@ def test_payment_preference(test_db_session, user):
         test_db_session.query(Application).get(application.application_id).payment_preference
     )
 
-    assert uuid.UUID(str(inserted_payment_pref.payment_pref_id)).version == 4
+    assert inserted_payment_pref.payment_pref_id.version == 4
     assert inserted_payment_pref.payment_method_id == 1
     assert inserted_payment_pref.account_method_id == 2
     assert inserted_payment_pref.account_number == "1234567890"
@@ -96,7 +91,7 @@ def test_pregnant_recent_birth_flag(test_db_session, user):
 
     inserted_application = test_db_session.query(Application).get(application_id)
 
-    assert uuid.UUID(str(inserted_application.application_id)).version == 4
+    assert inserted_application.application_id.version == 4
     assert inserted_application.pregnant_or_recent_birth is True
 
 

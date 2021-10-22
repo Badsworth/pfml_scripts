@@ -1,0 +1,1 @@
+SELECT COUNT(*) FROM fineos_extract_payment_full_snapshot

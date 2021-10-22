@@ -1,5 +1,4 @@
-import { act } from "react-dom/test-utils";
-import { testHook } from "../test-utils";
+import { act, renderHook } from "@testing-library/react-hooks";
 import usePreviousValue from "../../src/hooks/usePreviousValue";
 import { useState } from "react";
 
@@ -7,7 +6,7 @@ describe("usePreviousValue", () => {
   it("returns the previous value when the value changes", () => {
     let previousValue, setValue, value;
 
-    testHook(() => {
+    renderHook(() => {
       [value, setValue] = useState("a");
       previousValue = usePreviousValue(value);
     });

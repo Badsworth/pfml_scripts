@@ -1,8 +1,6 @@
-/* eslint-disable import/first */
-jest.mock("../../../src/hooks/useAppLogic");
-
 import {
   DurationBasis,
+  EmploymentStatus,
   FrequencyIntervalBasis,
   IntermittentLeavePeriod,
 } from "../../../src/models/BenefitsApplication";
@@ -10,485 +8,394 @@ import EmployerBenefit, {
   EmployerBenefitFrequency,
   EmployerBenefitType,
 } from "../../../src/models/EmployerBenefit";
-import {
-  MockBenefitsApplicationBuilder,
-  renderWithAppLogic,
-} from "../../test-utils";
+import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
 import OtherIncome, {
   OtherIncomeFrequency,
   OtherIncomeType,
 } from "../../../src/models/OtherIncome";
-
 import PreviousLeave, {
   PreviousLeaveReason,
 } from "../../../src/models/PreviousLeave";
+import React, { useEffect } from "react";
 import Review, {
   EmployerBenefitList,
   OtherIncomeList,
   OtherLeaveEntry,
   PreviousLeaveList,
 } from "../../../src/pages/applications/review";
+import { cleanup, render, screen, waitFor } from "@testing-library/react";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
+import BenefitsApplicationDocument from "../../../src/models/BenefitsApplicationDocument";
 import { DateTime } from "luxon";
+import DocumentCollection from "../../../src/models/DocumentCollection";
 import { DocumentType } from "../../../src/models/Document";
-import LeaveReason from "../../../src/models/LeaveReason";
-import React from "react";
-import { act } from "react-dom/test-utils";
 import { mockRouter } from "next/router";
 import routes from "../../../src/routes";
-import { shallow } from "enzyme";
-import useAppLogic from "../../../src/hooks/useAppLogic";
-import usePortalFlow from "../../../src/hooks/usePortalFlow";
+import { setupBenefitsApplications } from "../../test-utils/helpers";
+import userEvent from "@testing-library/user-event";
 
-const setup = (options = {}) => {
+const setup = ({ appErrors, claim, documents } = {}) => {
   // Set the correct initial path so that generated URLs are correct
   mockRouter.pathname = routes.applications.review;
 
-  options = {
-    claimAttrs: new MockBenefitsApplicationBuilder().part1Complete().create(),
-    // Dive more levels to account for withClaimDocuments HOC
-    diveLevels: 4,
-    ...options,
-  };
-  const { appLogic, claim, wrapper } = renderWithAppLogic(Review, options);
+  if (!claim) {
+    claim = new MockBenefitsApplicationBuilder().part1Complete().create();
+  }
 
-  return { appLogic, claim, wrapper };
+  let completeSpy, submitSpy;
+  const utils = renderPage(
+    Review,
+    {
+      addCustomSetup: (appLogic) => {
+        submitSpy = jest.spyOn(appLogic.benefitsApplications, "submit");
+        completeSpy = jest.spyOn(appLogic.benefitsApplications, "complete");
+
+        // Mock the Application
+        setupBenefitsApplications(appLogic, [claim]);
+
+        // Mock the Application's documents
+        appLogic.documents.documents = new DocumentCollection(documents);
+        jest
+          .spyOn(appLogic.documents, "hasLoadedClaimDocuments")
+          .mockReturnValue(true);
+
+        if (appErrors) {
+          // Rather than mutating the appErrors, we set them as they would
+          // when the API request completes. This fixes an issue where mutating
+          // appLogic.appErrors was causing an infinite loop in our tests.
+          // eslint-disable-next-line react-hooks/rules-of-hooks
+          useEffect(() => {
+            appLogic.setAppErrors(appErrors);
+          });
+        }
+      },
+    },
+    { query: { claim_id: claim.application_id } }
+  );
+
+  return { completeSpy, submitSpy, ...utils };
 };
 
 describe("Review Page", () => {
-  beforeAll(() => {
-    // Mock app logic to avoid cognito errors but use the real
-    // usePortalFlow() hook so that the URLs rendered on the page are correct
-    const appLogic = useAppLogic();
-    useAppLogic.mockImplementation(() => ({
-      ...appLogic,
-      portalFlow: usePortalFlow(),
-    }));
+  it("renders Review page with Part 1 content and edit links when application hasn't been submitted yet", () => {
+    const { container } = setup({
+      claim: new MockBenefitsApplicationBuilder()
+        .part1Complete()
+        .mailingAddress()
+        .fixedWorkPattern()
+        .previousLeavesSameReason()
+        .previousLeavesOtherReason()
+        .concurrentLeave()
+        .otherIncome()
+        .employerBenefit()
+        .create(),
+    });
+
+    expect(container).toMatchSnapshot();
+
+    // Safeguard to ensure we're passing in all the required data into our test.
+    // There shouldn't be any missing content strings.
+    expect(screen.queryByText(/pages\.claimsReview/i)).not.toBeInTheDocument();
   });
 
-  describe("Part 1 Review Page", () => {
-    describe("when all data is present", () => {
-      it("renders Review page with Part 1 content and edit links", () => {
-        const { wrapper } = setup({
-          claimAttrs: new MockBenefitsApplicationBuilder()
-            .part1Complete()
-            .mailingAddress()
-            .fixedWorkPattern()
-            .previousLeavesSameReason()
-            .previousLeavesOtherReason()
-            .concurrentLeave()
-            .otherIncome()
-            .employerBenefit()
-            .create(),
-        });
-
-        expect(wrapper).toMatchSnapshot();
-      });
+  it("renders Review page with all sections and only edit links for Part 3 sections when Part 1 has already been submitted", () => {
+    const { container } = setup({
+      claim: new MockBenefitsApplicationBuilder().complete().create(),
     });
 
-    it("does not render strings 'null', 'undefined', or missing translations", () => {
-      const { wrapper } = setup();
+    expect(container).toMatchSnapshot();
 
-      const html = wrapper.html();
+    // Safeguard to ensure we're passing in all the required data into our test.
+    // There shouldn't be any missing content strings.
+    expect(screen.queryByText(/pages\.claimsReview/i)).not.toBeInTheDocument();
+  });
 
-      expect(html).not.toMatch("null");
-      expect(html).not.toMatch("undefined");
-      expect(html).not.toMatch("pages.claimsReview");
+  it("submits the application when the user clicks Submit for a Part 1 review", async () => {
+    const { completeSpy, submitSpy } = setup();
+
+    userEvent.click(screen.getByRole("button", { name: /submit/i }));
+
+    await waitFor(() => {
+      expect(submitSpy).toHaveBeenCalledWith("mock_application_id");
     });
 
-    it("submits the application when the user clicks Submit", () => {
-      const { appLogic, claim, wrapper } = setup();
-      const submitSpy = jest.spyOn(appLogic.benefitsApplications, "submit");
-      const completeSpy = jest.spyOn(appLogic.benefitsApplications, "complete");
-      wrapper.find("Button").simulate("click");
+    expect(completeSpy).not.toHaveBeenCalled();
+  });
 
-      expect(submitSpy).toHaveBeenCalledWith(claim.application_id);
-      expect(completeSpy).not.toHaveBeenCalled();
+  it("completes the application when the user clicks Submit for a Part 3 review", async () => {
+    const { completeSpy, submitSpy } = setup({
+      claim: new MockBenefitsApplicationBuilder().complete().create(),
     });
 
-    it("renders a custom Alert when there are required field errors for specific fields", () => {
-      const appErrors = new AppErrorInfoCollection([
-        new AppErrorInfo({ type: "required", field: "someField" }),
-      ]);
-      const root = setup({ render: "mount", diveLevels: 0 }).wrapper;
-      expect(root.exists("[data-test='missing-required-fields-alert']")).toBe(
-        false
-      );
+    userEvent.click(screen.getByRole("button", { name: /submit/i }));
 
-      act(() => {
-        // Simulate missing required field errors
-        const appLogic = root.props().appLogic;
-        root.setProps({
-          appLogic: {
-            ...appLogic,
-            appErrors,
-          },
-        });
-      });
-      root.update();
-      const alert = root.find("[data-test='missing-required-fields-alert']");
-
-      expect(alert).toMatchSnapshot();
+    await waitFor(() => {
+      expect(completeSpy).toHaveBeenCalledWith("mock_application_id");
     });
 
-    it("does not render a custom Alert when there are required errors not associated to a specific field", () => {
-      const appErrors = new AppErrorInfoCollection([
+    expect(submitSpy).not.toHaveBeenCalled();
+  });
+
+  it("renders a Alert when there are required field errors", () => {
+    const appErrors = new AppErrorInfoCollection([
+      new AppErrorInfo({ type: "required", field: "someField" }),
+    ]);
+
+    setup({ appErrors });
+
+    expect(
+      screen.getByText(/We’ve added some new questions/i).parentNode
+    ).toMatchSnapshot();
+  });
+
+  it("does not render a custom Alert when there are required errors not associated to a specific field", () => {
+    const appErrors = new AppErrorInfoCollection([
+      new AppErrorInfo({
+        type: "required",
+        field: null,
+        rule: "require_employer_notified",
+        message:
+          "employer_notified must be True if employment_status is Employed",
+      }),
+    ]);
+
+    setup({ appErrors });
+
+    expect(
+      screen.queryByText(/We’ve added some new questions/i)
+    ).not.toBeInTheDocument();
+  });
+
+  it("renders Alert when there is an error for loading documents", () => {
+    const claim = new MockBenefitsApplicationBuilder().complete().create();
+
+    setup({
+      appErrors: new AppErrorInfoCollection([
         new AppErrorInfo({
-          type: "required",
-          field: null,
-          rule: "require_employer_notified",
-          message:
-            "employer_notified must be True if employment_status is Employed",
-        }),
-      ]);
-      const root = setup({ render: "mount", diveLevels: 0 }).wrapper;
-      expect(root.exists("[data-test='missing-required-fields-alert']")).toBe(
-        false
-      );
-      act(() => {
-        // Simulate missing required field errors
-        const appLogic = root.props().appLogic;
-        root.setProps({
-          appLogic: {
-            ...appLogic,
-            appErrors,
+          name: "DocumentsLoadError",
+          meta: {
+            application_id: claim.application_id,
           },
-        });
-      });
-      root.update();
-
-      expect(root.exists("[data-test='missing-required-fields-alert']")).toBe(
-        false
-      );
+        }),
+      ]),
+      claim,
     });
+
+    expect(
+      screen.getByText(
+        /error was encountered while checking your application for documents/i
+      )
+    ).toBeInTheDocument();
   });
 
-  describe("Final Review Page", () => {
-    describe("when the claim is complete", () => {
-      const claimAttrs = new MockBenefitsApplicationBuilder()
-        .complete()
-        .create();
+  it("renders the number of uploaded documents, filtering by document type and leave reason", () => {
+    const claim = new MockBenefitsApplicationBuilder()
+      .complete()
+      .pregnancyLeaveReason()
+      .create();
 
-      it("renders Review page with final review page content and only edit links for Part 2/3 sections", () => {
-        const { wrapper } = setup({ claimAttrs });
-        expect(wrapper).toMatchSnapshot();
-        expect(
-          wrapper
-            .find("Trans[i18nKey='pages.claimsReview.partDescription']")
-            .dive()
-        ).toMatchSnapshot();
-      });
-
-      it("completes the application when the user clicks Submit", () => {
-        const { appLogic, claim, wrapper } = setup({ claimAttrs });
-        const submitSpy = jest.spyOn(appLogic.benefitsApplications, "submit");
-        const completeSpy = jest.spyOn(
-          appLogic.benefitsApplications,
-          "complete"
-        );
-        wrapper.find("Button").simulate("click");
-
-        expect(submitSpy).not.toHaveBeenCalled();
-        expect(completeSpy).toHaveBeenCalledWith(claim.application_id);
-      });
-
-      it("renders a spinner for loading documents", () => {
-        const { wrapper } = setup({ claimAttrs });
-        expect(wrapper.find("Spinner")).toHaveLength(1);
-        expect(wrapper.exists({ label: "Number of files uploaded" })).toBe(
-          false
-        );
-      });
+    setup({
+      claim,
+      documents: [
+        new BenefitsApplicationDocument({
+          application_id: claim.application_id,
+          document_type: DocumentType.certification[claim.leave_details.reason],
+        }),
+        new BenefitsApplicationDocument({
+          application_id: claim.application_id,
+          document_type: DocumentType.certification[claim.leave_details.reason],
+        }),
+        new BenefitsApplicationDocument({
+          application_id: claim.application_id,
+          document_type: DocumentType.identityVerification,
+        }),
+      ],
     });
 
-    it("conditionally renders Other Leave section based on presence of Yes/No fields", () => {
-      const claimAttrs = new MockBenefitsApplicationBuilder()
+    expect(
+      screen.getByRole("heading", { name: /Upload identity document/i })
+        .parentNode.nextElementSibling
+    ).toMatchSnapshot();
+    expect(
+      screen.getByRole("heading", { name: /Upload certification document/i })
+        .parentNode.nextElementSibling
+    ).toMatchSnapshot();
+  });
+
+  it("does not render certification document row when claim is for future bonding leave", () => {
+    const futureDate = DateTime.local().plus({ months: 1 }).toISODate();
+
+    setup({
+      claim: new MockBenefitsApplicationBuilder()
         .complete()
-        .create();
-      claimAttrs.has_other_incomes = false;
-      claimAttrs.has_employer_benefits = false;
-      let wrapper;
-
-      // Renders when false
-      ({ wrapper } = setup({
-        claimAttrs,
-      }));
-
-      expect(wrapper.exists("[data-test='other-leave']")).toBe(true);
-
-      // But doesn't render when null
-      delete claimAttrs.has_other_incomes;
-      delete claimAttrs.has_employer_benefits;
-      delete claimAttrs.has_previous_leaves_same_reason;
-      delete claimAttrs.has_previous_leaves_other_reason;
-      delete claimAttrs.has_concurrent_leave;
-
-      ({ wrapper } = setup({
-        claimAttrs,
-      }));
-
-      expect(wrapper.exists("[data-test='other-leave']")).toBe(false);
+        .bondingBirthLeaveReason(futureDate)
+        .hasFutureChild()
+        .create(),
     });
+
+    expect(screen.queryByText(/Upload certification/i)).not.toBeInTheDocument();
+  });
+
+  it("renders Other Leave section when the application has answers for that section", () => {
+    const headingTextMatch = /Other leave, benefits, and income/i;
+    const claim = new MockBenefitsApplicationBuilder().complete().create();
+    claim.has_other_incomes = false;
+    claim.has_employer_benefits = false;
+
+    // Renders when falsy
+    setup({ claim });
+
+    expect(
+      screen.getByRole("heading", { name: headingTextMatch })
+    ).toBeInTheDocument();
+
+    // But doesn't render when null
+    cleanup();
+    claim.has_other_incomes = null;
+    claim.has_employer_benefits = null;
+    claim.has_previous_leaves_same_reason = null;
+    claim.has_previous_leaves_other_reason = null;
+    claim.has_concurrent_leave = null;
+    setup({ claim });
+
+    expect(
+      screen.queryByRole("heading", { name: headingTextMatch })
+    ).not.toBeInTheDocument();
   });
 
   describe("Work patterns", () => {
-    it("has internationalized strings for each work pattern type", () => {
-      expect.assertions();
-
-      ["Fixed", "Variable"].forEach((work_pattern_type) => {
-        const { wrapper } = setup({
-          claimAttrs: new MockBenefitsApplicationBuilder()
-            .part1Complete()
-            .workPattern({ work_pattern_type })
-            .create(),
-        });
-
-        expect(
-          wrapper.find({ label: "Work schedule type" }).prop("children")
-        ).toMatchSnapshot();
-      });
-    });
-
-    it("shows work pattern days if work pattern type is fixed", () => {
-      const { wrapper } = setup({
-        claimAttrs: new MockBenefitsApplicationBuilder()
+    it("displays correct work pattern details when pattern type is Fixed", () => {
+      setup({
+        claim: new MockBenefitsApplicationBuilder()
           .part1Complete()
           .fixedWorkPattern()
           .create(),
       });
 
       expect(
-        wrapper.find({ label: "Weekly work hours" }).prop("children")
+        screen.getByText(/Each week I work the same number/i)
+      ).toBeInTheDocument();
+
+      expect(
+        screen.getByText(/Weekly work hours/i).nextElementSibling
       ).toMatchSnapshot();
-      expect(wrapper.find({ label: "Average weekly hours" }).exists()).toBe(
-        false
-      );
     });
 
-    it("shows average weekly hours if work pattern type is variable", () => {
-      const { wrapper } = setup({
-        claimAttrs: new MockBenefitsApplicationBuilder()
+    it("displays correct work pattern details when pattern type is Variable", () => {
+      setup({
+        claim: new MockBenefitsApplicationBuilder()
           .part1Complete()
           .variableWorkPattern()
           .create(),
       });
 
       expect(
-        wrapper.find({ label: "Average weekly hours" }).prop("children")
-      ).toMatchSnapshot();
-      expect(wrapper.find({ label: "Weekly work hours" }).exists()).toBe(false);
+        screen.getByText(/My schedule is not consistent from week to week/i)
+      ).toBeInTheDocument();
+
+      expect(
+        screen.getByText(/Average weekly hours/i).nextSibling
+      ).toHaveTextContent("40h");
     });
   });
 
-  describe("Payment Information", () => {
-    describe("When payment method is paper", () => {
-      it("does not render 'Payment details' row", () => {
-        const { wrapper } = setup({
-          claimAttrs: new MockBenefitsApplicationBuilder()
-            .complete()
-            .check()
-            .create(),
-        });
-        expect(wrapper.find({ label: "Payment details" })).toHaveLength(0);
-      });
+  it("does not render ACH content when payment method is Check", () => {
+    const textMatch = /Routing number/i;
+
+    setup({
+      claim: new MockBenefitsApplicationBuilder().complete().check().create(),
     });
+
+    expect(screen.queryByText(textMatch)).not.toBeInTheDocument();
+
+    cleanup();
+    setup({
+      claim: new MockBenefitsApplicationBuilder()
+        .complete()
+        .directDeposit()
+        .create(),
+    });
+
+    expect(screen.queryByText(textMatch)).toBeInTheDocument();
   });
 
-  describe("Upload Document", () => {
-    it("renders the correct number of certification documents when there are no documents", () => {
-      const { wrapper } = setup({
-        claimAttrs: new MockBenefitsApplicationBuilder().complete().create(),
-        hasLoadedClaimDocuments: true,
-      });
+  it("does not render Employer rows when Claimant is unemployed", () => {
+    const einTextMatch = "Employer’s EIN";
+    const notifyTextMatch = "Notified employer";
+    const claim = new MockBenefitsApplicationBuilder()
+      .complete()
+      .employed()
+      .create();
 
-      expect(wrapper.exists("Spinner")).toBe(false);
-      expect(wrapper.find("[data-test='certification-doc-count']"))
-        .toMatchInlineSnapshot(`
-      <ReviewRow
-        data-test="certification-doc-count"
-        label="Number of files uploaded"
-        level="3"
-      >
-        0
-      </ReviewRow>
-    `);
-    });
+    setup({ claim });
+    expect(screen.queryByText(einTextMatch)).toBeInTheDocument();
+    expect(screen.queryByText(notifyTextMatch)).toBeInTheDocument();
 
-    it("renders filtered documents when the document type matches the leave reason", () => {
-      const { wrapper } = setup({
-        claimAttrs: new MockBenefitsApplicationBuilder()
-          .medicalLeaveReason()
-          .complete()
-          .create(),
-        hasLoadedClaimDocuments: true,
-        hasUploadedCertificationDocuments: {
-          document_type: DocumentType.certification[LeaveReason.medical],
-          numberOfDocs: 3,
-        },
-      });
+    cleanup();
+    claim.employment_status = EmploymentStatus.unemployed;
+    setup({ claim });
 
-      expect(wrapper.exists("Spinner")).toBe(false);
-      expect(wrapper.find("[data-test='certification-doc-count']"))
-        .toMatchInlineSnapshot(`
-      <ReviewRow
-        data-test="certification-doc-count"
-        label="Number of files uploaded"
-        level="3"
-      >
-        3
-      </ReviewRow>
-    `);
-    });
-
-    it("renders filtered documents when the document type doesn't match the leave reason", () => {
-      // create a claim with mismatched leave reason and doc types
-      const { wrapper } = setup({
-        claimAttrs: new MockBenefitsApplicationBuilder()
-          .medicalLeaveReason()
-          .complete()
-          .create(),
-        hasLoadedClaimDocuments: true,
-        hasUploadedCertificationDocuments: {
-          document_type: DocumentType.certification[LeaveReason.bonding],
-          numberOfDocs: 2,
-        },
-      });
-
-      expect(wrapper.exists("Spinner")).toBe(false);
-      expect(wrapper.find("[data-test='certification-doc-count']"))
-        .toMatchInlineSnapshot(`
-      <ReviewRow
-        data-test="certification-doc-count"
-        label="Number of files uploaded"
-        level="3"
-      >
-        3
-      </ReviewRow>
-    `);
-    });
-
-    it("renders Alert when there is an error for loading documents", () => {
-      const { wrapper } = setup({
-        claimAttrs: new MockBenefitsApplicationBuilder().complete().create(),
-        hasLoadingDocumentsError: true,
-      });
-
-      expect(wrapper.exists("Alert")).toBe(true);
-      expect(wrapper.exists({ label: "Number of files uploaded" })).toBe(false);
-    });
-
-    it("does not render certification document for bonding leave in advance", () => {
-      const futureDate = DateTime.local().plus({ months: 1 }).toISODate();
-      const { wrapper } = setup({
-        claimAttrs: new MockBenefitsApplicationBuilder()
-          .complete()
-          .bondingBirthLeaveReason(futureDate)
-          .hasFutureChild()
-          .create(),
-        hasLoadedClaimDocuments: true,
-      });
-      expect(wrapper.find({ label: "Number of files uploaded" })).toHaveLength(
-        1
-      );
-    });
+    expect(screen.queryByText(einTextMatch)).not.toBeInTheDocument();
+    expect(screen.queryByText(notifyTextMatch)).not.toBeInTheDocument();
   });
 
-  describe("Employer info", () => {
-    describe("when claimant is not Employed", () => {
-      it("does not render 'Notified employer' row or FEIN row", () => {
-        const { wrapper } = setup({
-          claimAttrs: new MockBenefitsApplicationBuilder().complete().create(),
-        });
-
-        expect(wrapper.text()).not.toContain("Notified employer");
-        expect(wrapper.text()).not.toContain("Employer's FEIN");
-      });
-    });
-  });
-
-  describe("Leave reason", () => {
-    const pregnancyOrRecentBirthLabel = "Medical leave for pregnancy or birth";
-    const familyLeaveTypeLabel = "Family leave type";
-
-    describe("When the reason is medical leave", () => {
-      it("renders pregnancyOrRecentBirthLabel row", () => {
-        const claim = new MockBenefitsApplicationBuilder().completed().create();
-        const { wrapper } = setup({
-          claimAttrs: claim,
-        });
-        expect(
-          wrapper.find({ label: pregnancyOrRecentBirthLabel }).exists()
-        ).toBe(true);
-        expect(wrapper.find({ label: familyLeaveTypeLabel }).exists()).toBe(
-          false
-        );
-      });
-    });
-
-    describe("When the reason is bonding leave", () => {
-      it("renders family leave type row", () => {
-        const claim = new MockBenefitsApplicationBuilder()
-          .completed()
-          .bondingBirthLeaveReason()
-          .create();
-        const { wrapper } = setup({
-          claimAttrs: claim,
-        });
-        expect(
-          wrapper.find({ label: pregnancyOrRecentBirthLabel }).exists()
-        ).toBe(false);
-        expect(wrapper.find({ label: familyLeaveTypeLabel }).exists()).toBe(
-          true
-        );
-      });
-    });
-
-    describe("When the reason is caring leave", () => {
-      it("renders caring leave details", () => {
-        const claim = new MockBenefitsApplicationBuilder()
-          .completed()
-          .caringLeaveReason()
-          .create();
-        const { wrapper } = setup({
-          claimAttrs: claim,
-        });
-        expect(wrapper).toMatchSnapshot();
-      });
-    });
-  });
-
-  describe("Reduced leave", () => {
-    it("renders WeeklyTimeTable for the reduced leave period when work pattern is Fixed", () => {
-      const claim = new MockBenefitsApplicationBuilder()
+  it.each([
+    [
+      "medical",
+      new MockBenefitsApplicationBuilder().part1Complete().medicalLeaveReason(),
+    ],
+    [
+      "family",
+      new MockBenefitsApplicationBuilder()
         .part1Complete()
-        .fixedWorkPattern()
-        .reducedSchedule()
-        .create();
+        .bondingBirthLeaveReason(),
+    ],
+    [
+      "caring",
+      new MockBenefitsApplicationBuilder().part1Complete().caringLeaveReason(),
+    ],
+  ])("renders expected review row for %s leave reason", (reason, claim) => {
+    const textMatch = {
+      medical: "Medical leave for pregnancy or birth",
+      family: "Family leave type",
+      caring: "Family member's relationship",
+    }[reason];
 
-      const { wrapper } = setup({
-        claimAttrs: claim,
-      });
+    setup({ claim: claim.create() });
 
-      expect(wrapper.find({ label: "Hours off per week" })).toMatchSnapshot();
-    });
-
-    it("renders total time for the reduced leave period when work pattern is Variable", () => {
-      const claim = new MockBenefitsApplicationBuilder()
-        .part1Complete()
-        .variableWorkPattern()
-        .reducedSchedule()
-        .create();
-
-      const { wrapper } = setup({
-        claimAttrs: claim,
-      });
-
-      expect(wrapper.find({ label: "Hours off per week" })).toMatchSnapshot();
-    });
+    expect(screen.queryByText(textMatch)).toBeInTheDocument();
   });
 
-  describe("Intermittent leave frequency", () => {
+  it("renders WeeklyTimeTable for the reduced leave period when work pattern is Fixed", () => {
+    const claim = new MockBenefitsApplicationBuilder()
+      .part1Complete()
+      .fixedWorkPattern()
+      .reducedSchedule()
+      .create();
+
+    setup({ claim });
+
+    expect(
+      screen.queryByText("Hours off per week").parentNode
+    ).toMatchSnapshot();
+  });
+
+  it("renders total time for the reduced leave period when work pattern is Variable", () => {
+    const claim = new MockBenefitsApplicationBuilder()
+      .part1Complete()
+      .variableWorkPattern()
+      .reducedSchedule()
+      .create();
+
+    setup({ claim });
+
+    expect(
+      screen.queryByText("Hours off per week").parentNode
+    ).toMatchSnapshot();
+  });
+
+  it("renders the leave frequency and duration in plain language", () => {
     // Generate all possible combinations of Duration/Frequency for an Intermittent Leave Period:
     const durations = Object.values(DurationBasis);
     const frequencyIntervals = Object.values(FrequencyIntervalBasis);
@@ -517,41 +424,21 @@ describe("Review Page", () => {
       );
     });
 
-    it("renders the leave frequency and duration in plain language", () => {
-      expect.assertions();
-
-      intermittentLeavePeriodPermutations.forEach((intermittentLeavePeriod) => {
-        const claim = new MockBenefitsApplicationBuilder()
-          .part1Complete()
-          .create();
-        claim.leave_details.intermittent_leave_periods = [
-          intermittentLeavePeriod,
-        ];
-
-        const { wrapper } = setup({
-          claimAttrs: claim,
-        });
-        const contentElement = wrapper.find({
-          i18nKey: "pages.claimsReview.intermittentFrequencyDuration",
-        });
-
-        expect(contentElement.dive()).toMatchSnapshot();
-      });
-    });
-
-    it("does not render the intermittent leave frequency when a claim has no intermittent leave", () => {
+    intermittentLeavePeriodPermutations.forEach((intermittentLeavePeriod) => {
       const claim = new MockBenefitsApplicationBuilder()
-        .part1Complete({ excludeLeavePeriod: true })
+        .part1Complete()
         .create();
+      claim.leave_details.intermittent_leave_periods = [
+        intermittentLeavePeriod,
+      ];
 
-      const { wrapper } = renderWithAppLogic(Review, {
-        claimAttrs: claim,
-      });
-      const contentElement = wrapper.find({
-        i18nKey: "pages.claimsReview.intermittentFrequencyDuration",
-      });
+      setup({ claim });
 
-      expect(contentElement.exists()).toBe(false);
+      expect(
+        screen.queryByText(/Estimated [0-9]+ absences/i)
+      ).toMatchSnapshot();
+
+      cleanup();
     });
   });
 
@@ -591,31 +478,27 @@ describe("Review Page", () => {
       }),
     ];
 
-    describe("when all data are present", () => {
-      it("renders all data fields", () => {
-        const wrapper = shallow(
-          <EmployerBenefitList entries={entries} reviewRowLevel="4" />
-        );
+    it("renders all data fields when all data are present", () => {
+      const { container } = render(
+        <EmployerBenefitList entries={entries} reviewRowLevel="4" />
+      );
 
-        expect(wrapper).toMatchSnapshot();
-      });
+      expect(container).toMatchSnapshot();
     });
 
-    describe("when amount fields are missing", () => {
-      it("doesn't render missing data", () => {
-        const entries = [
-          new EmployerBenefit({
-            benefit_end_date: "2021-12-30",
-            benefit_start_date: "2021-08-12",
-            benefit_type: EmployerBenefitType.permanentDisability,
-          }),
-        ];
-        const wrapper = shallow(
-          <EmployerBenefitList entries={entries} reviewRowLevel="4" />
-        );
+    it("doesn't render missing data when amount fields are missing", () => {
+      const entries = [
+        new EmployerBenefit({
+          benefit_end_date: "2021-12-30",
+          benefit_start_date: "2021-08-12",
+          benefit_type: EmployerBenefitType.permanentDisability,
+        }),
+      ];
+      const { container } = render(
+        <EmployerBenefitList entries={entries} reviewRowLevel="4" />
+      );
 
-        expect(wrapper).toMatchSnapshot();
-      });
+      expect(container).toMatchSnapshot();
     });
   });
 
@@ -640,7 +523,7 @@ describe("Review Page", () => {
         }),
       ];
 
-      const wrapper = shallow(
+      const { container } = render(
         <PreviousLeaveList
           entries={entries}
           type="otherReason"
@@ -649,7 +532,7 @@ describe("Review Page", () => {
         />
       );
 
-      expect(wrapper).toMatchSnapshot();
+      expect(container).toMatchSnapshot();
     });
 
     it("renders same reason list", () => {
@@ -672,7 +555,7 @@ describe("Review Page", () => {
         }),
       ];
 
-      const wrapper = shallow(
+      const { container } = render(
         <PreviousLeaveList
           entries={entries}
           type="sameReason"
@@ -681,145 +564,120 @@ describe("Review Page", () => {
         />
       );
 
-      expect(wrapper).toMatchSnapshot();
+      expect(container).toMatchSnapshot();
     });
   });
 
   describe("OtherIncomeList", () => {
-    describe("when all data are present", () => {
-      it("renders all data fields", () => {
-        const entries = [
-          new OtherIncome({
-            income_amount_dollars: "250",
-            income_amount_frequency: OtherIncomeFrequency.monthly,
-            income_end_date: "2021-12-30",
-            income_start_date: "2021-08-12",
-            income_type: OtherIncomeType.workersCompensation,
-          }),
-          new OtherIncome({
-            income_amount_dollars: "250",
-            income_amount_frequency: OtherIncomeFrequency.monthly,
-            income_end_date: "2021-12-30",
-            income_start_date: "2021-08-12",
-            income_type: OtherIncomeType.unemployment,
-          }),
-          new OtherIncome({
-            income_amount_dollars: "250",
-            income_amount_frequency: OtherIncomeFrequency.monthly,
-            income_end_date: "2021-12-30",
-            income_start_date: "2021-08-12",
-            income_type: OtherIncomeType.ssdi,
-          }),
-          new OtherIncome({
-            income_amount_dollars: "250",
-            income_amount_frequency: OtherIncomeFrequency.monthly,
-            income_end_date: "2021-12-30",
-            income_start_date: "2021-08-12",
-            income_type: OtherIncomeType.retirementDisability,
-          }),
-          new OtherIncome({
-            income_amount_dollars: "250",
-            income_amount_frequency: OtherIncomeFrequency.monthly,
-            income_end_date: "2021-12-30",
-            income_start_date: "2021-08-12",
-            income_type: OtherIncomeType.jonesAct,
-          }),
-          new OtherIncome({
-            income_amount_dollars: "250",
-            income_amount_frequency: OtherIncomeFrequency.monthly,
-            income_end_date: "2021-12-30",
-            income_start_date: "2021-08-12",
-            income_type: OtherIncomeType.railroadRetirement,
-          }),
-          new OtherIncome({
-            income_amount_dollars: "250",
-            income_amount_frequency: OtherIncomeFrequency.monthly,
-            income_end_date: "2021-12-30",
-            income_start_date: "2021-08-12",
-            income_type: OtherIncomeType.otherEmployer,
-          }),
-        ];
-        const wrapper = shallow(
-          <OtherIncomeList entries={entries} reviewRowLevel="4" />
-        );
+    it("renders all data fields when all data are present", () => {
+      const entries = [
+        new OtherIncome({
+          income_amount_dollars: "250",
+          income_amount_frequency: OtherIncomeFrequency.monthly,
+          income_end_date: "2021-12-30",
+          income_start_date: "2021-08-12",
+          income_type: OtherIncomeType.workersCompensation,
+        }),
+        new OtherIncome({
+          income_amount_dollars: "250",
+          income_amount_frequency: OtherIncomeFrequency.monthly,
+          income_end_date: "2021-12-30",
+          income_start_date: "2021-08-12",
+          income_type: OtherIncomeType.unemployment,
+        }),
+        new OtherIncome({
+          income_amount_dollars: "250",
+          income_amount_frequency: OtherIncomeFrequency.monthly,
+          income_end_date: "2021-12-30",
+          income_start_date: "2021-08-12",
+          income_type: OtherIncomeType.ssdi,
+        }),
+        new OtherIncome({
+          income_amount_dollars: "250",
+          income_amount_frequency: OtherIncomeFrequency.monthly,
+          income_end_date: "2021-12-30",
+          income_start_date: "2021-08-12",
+          income_type: OtherIncomeType.retirementDisability,
+        }),
+        new OtherIncome({
+          income_amount_dollars: "250",
+          income_amount_frequency: OtherIncomeFrequency.monthly,
+          income_end_date: "2021-12-30",
+          income_start_date: "2021-08-12",
+          income_type: OtherIncomeType.jonesAct,
+        }),
+        new OtherIncome({
+          income_amount_dollars: "250",
+          income_amount_frequency: OtherIncomeFrequency.monthly,
+          income_end_date: "2021-12-30",
+          income_start_date: "2021-08-12",
+          income_type: OtherIncomeType.railroadRetirement,
+        }),
+        new OtherIncome({
+          income_amount_dollars: "250",
+          income_amount_frequency: OtherIncomeFrequency.monthly,
+          income_end_date: "2021-12-30",
+          income_start_date: "2021-08-12",
+          income_type: OtherIncomeType.otherEmployer,
+        }),
+      ];
+      const { container } = render(
+        <OtherIncomeList entries={entries} reviewRowLevel="4" />
+      );
 
-        expect(wrapper).toMatchSnapshot();
-      });
+      expect(container).toMatchSnapshot();
     });
 
-    describe("when amount fields are missing", () => {
-      it("doesn't render missing data", () => {
-        const entries = [
-          new OtherIncome({
-            income_end_date: "2021-12-30",
-            income_start_date: "2021-08-12",
-            income_type: OtherIncomeType.otherEmployer,
-          }),
-        ];
-        const wrapper = shallow(
-          <OtherIncomeList entries={entries} reviewRowLevel="4" />
-        );
+    it("doesn't render missing data when amount fields are missing", () => {
+      const entries = [
+        new OtherIncome({
+          income_end_date: "2021-12-30",
+          income_start_date: "2021-08-12",
+          income_type: OtherIncomeType.otherEmployer,
+        }),
+      ];
+      const { container } = render(
+        <OtherIncomeList entries={entries} reviewRowLevel="4" />
+      );
 
-        expect(wrapper).toMatchSnapshot();
-      });
+      expect(container).toMatchSnapshot();
     });
   });
 
   describe("OtherLeaveEntry", () => {
-    describe("when all data are present", () => {
-      it("renders all data fields", () => {
-        const label = "Benefit 1";
-        const type = "Medical or family leave";
-        const dates = "07-22-2020 - 09-22-2020";
-        const amount = "$250 per month";
-        const wrapper = shallow(
-          <OtherLeaveEntry
-            label={label}
-            type={type}
-            dates={dates}
-            amount={amount}
-            reviewRowLevel="4"
-          />
-        );
+    it("renders all data fields when all data are present", () => {
+      const label = "Benefit 1";
+      const type = "Medical or family leave";
+      const dates = "07-22-2020 - 09-22-2020";
+      const amount = "$250 per month";
+      const { container } = render(
+        <OtherLeaveEntry
+          label={label}
+          type={type}
+          dates={dates}
+          amount={amount}
+          reviewRowLevel="4"
+        />
+      );
 
-        expect(wrapper).toMatchSnapshot();
-      });
+      expect(container).toMatchSnapshot();
     });
 
-    describe("when amount is missing", () => {
-      it("doesn't render missing data", () => {
-        const label = "Benefit 1";
-        const type = "Medical or family leave";
-        const dates = "07-22-2020 - 09-22-2020";
-        const wrapper = shallow(
-          <OtherLeaveEntry
-            label={label}
-            type={type}
-            dates={dates}
-            amount={null}
-            reviewRowLevel="4"
-          />
-        );
+    it("doesn't render missing data when amount is missing", () => {
+      const label = "Benefit 1";
+      const type = "Medical or family leave";
+      const dates = "07-22-2020 - 09-22-2020";
+      const { container } = render(
+        <OtherLeaveEntry
+          label={label}
+          type={type}
+          dates={dates}
+          amount={null}
+          reviewRowLevel="4"
+        />
+      );
 
-        expect(wrapper).toMatchSnapshot();
-      });
-    });
-  });
-
-  describe("CaringLeave", () => {
-    it("renders family member's relationship", () => {
-      const claim = new MockBenefitsApplicationBuilder()
-        .part1Complete()
-        .caringLeaveReason()
-        .create();
-
-      const { wrapper } = setup({
-        claimAttrs: claim,
-      });
-
-      expect(
-        wrapper.find({ label: "Family member's relationship" })
-      ).toMatchSnapshot();
+      expect(container).toMatchSnapshot();
     });
   });
 });

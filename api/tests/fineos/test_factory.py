@@ -5,8 +5,6 @@
 import requests_oauthlib
 
 import massgov.pfml.fineos.factory
-import massgov.pfml.fineos.fineos_client
-import massgov.pfml.fineos.mock_client
 
 
 def test_fineos_client_config_from_env_default():

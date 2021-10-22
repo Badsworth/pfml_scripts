@@ -18,6 +18,7 @@ export const Page = (args) => {
   const appLogic = {
     auth: { login: () => {} },
     appErrors: new AppErrorInfoCollection(),
+    portalFlow: { goTo: () => {} },
   };
 
   return <Login appLogic={appLogic} query={query} />;

@@ -5,9 +5,6 @@ from massgov.pfml.db.create_api_user import create_fineos_user_helper
 from massgov.pfml.db.models.employees import Role, User
 from massgov.pfml.db.models.factories import UserFactory
 
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
-
 
 def test_create_fineos_user_helper(test_db_session, monkeypatch):
     monkeypatch.setenv("COGNITO_FINEOS_APP_CLIENT_ID", "123abc")

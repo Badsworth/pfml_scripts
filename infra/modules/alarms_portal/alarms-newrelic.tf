@@ -336,13 +336,13 @@ resource "newrelic_nrql_alert_condition" "javascripterror_surge" {
             AND errorMessage != 'cancelled'
             AND errorMessage != 'Network error'
             AND errorMessage NOT LIKE '%network connection%'
-            AND environment != 'development'
         ) / ${local.js_error_total_count}
       ) * clamp_max(floor(${local.js_error_uniq_count} / ${local.js_error_min_uniq_per_window}), 1)
       FROM JavaScriptError, BrowserInteraction
       WHERE appName = 'PFML-Portal-${upper(var.environment_name)}'
         AND pageUrl NOT LIKE '%localhost%'
         AND targetUrl NOT LIKE '%localhost%'
+        AND errorMessage != 'Cannot set property \'status\' of undefined'
     NRQL
 
     evaluation_offset = 1
@@ -415,4 +415,17 @@ module "portal_synthetic_ping_failure" {
   fill_option = "none"
 
   nrql = "SELECT filter(count(*), WHERE result = 'FAILED') FROM SyntheticCheck WHERE monitorName = 'portal_ping--${var.environment_name}'"
+}
+
+module "portal_scripted_synthetic_failure" {
+  source = "../newrelic_single_error_alarm"
+
+  # ignore performance and training environments
+  enabled     = contains(["prod", "stage", "test"], var.environment_name)
+  name        = "Portal usability check failed"
+  description = "Checks if Portal is loading and not behind a maintenance page"
+  policy_id   = (var.environment_name == "prod") ? newrelic_alert_policy.low_priority_portal_alerts.id : newrelic_alert_policy.portal_alerts.id
+  fill_option = "none"
+
+  nrql = "SELECT filter(count(*), WHERE result = 'FAILED') FROM SyntheticCheck WHERE monitorName = 'portal_scripted_synthetic--${var.environment_name}'"
 }

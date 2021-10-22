@@ -24,12 +24,10 @@ import OtherIncome, {
   OtherIncomeFrequency,
   OtherIncomeType,
 } from "../../src/models/OtherIncome";
-
 import PreviousLeave, {
   PreviousLeaveReason,
   PreviousLeaveType,
 } from "../../src/models/PreviousLeave";
-
 import Address from "../../src/models/Address";
 import ConcurrentLeave from "../../src/models/ConcurrentLeave";
 import EmployerClaim from "../../src/models/EmployerClaim";
@@ -52,8 +50,8 @@ export class BaseMockBenefitsApplicationBuilder {
   /**
    * @returns {BaseMockBenefitsApplicationBuilder}
    */
-  absenceId() {
-    set(this.claimAttrs, "fineos_absence_id", "NTN-111-ABS-01");
+  absenceId(absenceId = "NTN-111-ABS-01") {
+    set(this.claimAttrs, "fineos_absence_id", absenceId);
     return this;
   }
 
@@ -607,7 +605,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
    *
    * @returns {MockClaimBuilder}
    */
-  previousLeavesOtherReason(attrs = [{}]) {
+  previousLeavesOtherReason(attrs) {
     set(this.claimAttrs, "has_previous_leaves_other_reason", true);
     set(
       this.claimAttrs,

@@ -1,40 +1,37 @@
+import { mockAuth, renderPage } from "../test-utils";
+import { screen, waitFor } from "@testing-library/react";
 import CreateAccount from "../../src/pages/create-account";
-import React from "react";
-import { act } from "react-dom/test-utils";
-import { shallow } from "enzyme";
-import { simulateEvents } from "../test-utils";
-import useAppLogic from "../../src/hooks/useAppLogic";
-
-jest.mock("../../src/hooks/useAppLogic");
+import userEvent from "@testing-library/user-event";
 
 describe("CreateAccount", () => {
-  let appLogic, changeField, submitForm, wrapper;
-
   beforeEach(() => {
-    appLogic = useAppLogic();
-
-    act(() => {
-      wrapper = shallow(<CreateAccount appLogic={appLogic} />);
-    });
-    ({ changeField, submitForm } = simulateEvents(wrapper));
+    mockAuth(false);
   });
 
   it("renders the empty page", () => {
-    expect(wrapper).toMatchSnapshot();
-    wrapper.find("Trans").forEach((trans) => {
-      expect(trans.dive()).toMatchSnapshot();
-    });
+    const { container } = renderPage(CreateAccount, { isLoggedIn: false });
+    expect(container.firstChild).toMatchSnapshot();
   });
 
-  describe("when the form is submitted", () => {
-    it("calls createAccount", async () => {
-      const email = "email@test.com";
-      const password = "TestP@ssw0rd!";
-
-      changeField("username", email);
-      changeField("password", password);
-      await submitForm();
-      expect(appLogic.auth.createAccount).toHaveBeenCalledWith(email, password);
+  it("calls createAccount when the form is submitted", async () => {
+    const email = "email@test.com";
+    const password = "TestP@ssw0rd!";
+    const createAccount = jest.fn();
+    const options = {
+      isLoggedIn: false,
+      addCustomSetup: (appLogicHook) => {
+        appLogicHook.auth.createAccount = createAccount;
+      },
+    };
+    renderPage(CreateAccount, options);
+    userEvent.type(
+      screen.getByRole("textbox", { name: "Email address" }),
+      email
+    );
+    userEvent.type(screen.getByLabelText("Password"), password);
+    userEvent.click(screen.getByRole("button", { name: "Create account" }));
+    await waitFor(() => {
+      expect(createAccount).toHaveBeenCalledWith(email, password);
     });
   });
 });

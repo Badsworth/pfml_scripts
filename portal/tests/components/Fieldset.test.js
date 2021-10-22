@@ -1,21 +1,21 @@
 import Fieldset from "../../src/components/Fieldset";
 import React from "react";
-import { shallow } from "enzyme";
+import { render } from "@testing-library/react";
+
+const renderComponent = (customProps) => {
+  return render(<Fieldset {...customProps} />);
+};
 
 describe("Fieldset", () => {
   it("renders Fieldset component with children", () => {
-    const wrapper = shallow(<Fieldset>child</Fieldset>);
+    const { container } = renderComponent({ children: "child" });
 
-    expect(wrapper).toMatchSnapshot();
+    expect(container).toMatchSnapshot();
   });
 
-  describe("when className prop is set", () => {
-    it("appends classname to fieldset classnames", () => {
-      const wrapper = shallow(<Fieldset className="a-class" />);
+  it("appends classname to fieldset classnames when className prop is set", () => {
+    const { container } = renderComponent({ className: "a-class" });
 
-      expect(wrapper.find("fieldset").prop("className")).toEqual(
-        "usa-fieldset a-class"
-      );
-    });
+    expect(container.firstChild).toHaveClass("usa-fieldset a-class");
   });
 });

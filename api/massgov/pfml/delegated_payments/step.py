@@ -1,11 +1,19 @@
 import abc
 import collections
 import enum
-from typing import Any, Dict, Optional
+import uuid
+from typing import Any, Dict, Optional, Set
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml import db
+from massgov.pfml.db.models.employees import (
+    Employee,
+    EmployeeReferenceFile,
+    Payment,
+    PaymentReferenceFile,
+    ReferenceFile,
+)
 from massgov.pfml.util.batch.log import LogEntry
 
 logger = logging.get_logger(__name__)
@@ -16,12 +24,17 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
     db_session: db.Session
     log_entry_db_session: db.Session
 
+    payments_in_reference_file: Set[uuid.UUID]
+    employees_in_reference_file: Set[uuid.UUID]
+
     class Metrics(str, enum.Enum):
         pass
 
     def __init__(self, db_session: db.Session, log_entry_db_session: db.Session) -> None:
         self.db_session = db_session
         self.log_entry_db_session = log_entry_db_session
+        self.payments_in_reference_file = set()
+        self.employees_in_reference_file = set()
 
     def run(self) -> None:
         with LogEntry(self.log_entry_db_session, self.__class__.__name__) as log_entry:
@@ -87,6 +100,32 @@ class Step(abc.ABC, metaclass=abc.ABCMeta):
         if not self.log_entry:
             return
         self.log_entry.increment(name, increment)
+
+    def add_payment_reference_file(self, payment: Payment, reference_file: ReferenceFile) -> None:
+        # Add a payment reference file. If a particular job finds a payment
+        # multiple times in a reference file, don't readd it to avoid primary key conflicts
+        if payment.payment_id in self.payments_in_reference_file:
+            return
+        self.payments_in_reference_file.add(payment.payment_id)
+
+        payment_reference_file = PaymentReferenceFile(
+            payment=payment, reference_file=reference_file,
+        )
+        self.db_session.add(payment_reference_file)
+
+    def add_employee_reference_file(
+        self, employee: Employee, reference_file: ReferenceFile
+    ) -> None:
+        # Add an employee reference file. If a particular job finds an employee
+        # multiple times in a reference file, don't readd it to avoid primary key conflicts
+        if employee.employee_id in self.employees_in_reference_file:
+            return
+        self.employees_in_reference_file.add(employee.employee_id)
+
+        employee_reference_file = EmployeeReferenceFile(
+            employee=employee, reference_file=reference_file,
+        )
+        self.db_session.add(employee_reference_file)
 
 
 def calculate_state_log_count_diff(

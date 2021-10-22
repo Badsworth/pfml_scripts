@@ -34,7 +34,7 @@
   align-items: flex-start;
   border-bottom: 1px solid $Color-GraniteGray-50;
   display: flex;
-  padding: 1.16em 1.58em 1em 1.71em;
+  padding: 1.857em 1.714em;
 }
 
 .slide-out__content {
@@ -57,19 +57,25 @@
   padding-right: 1.71em;
 }
 
+.slide-out__btn-close {
+  align-items: center;
+  background-color: #fff;
+  border: 0;
+  cursor: pointer;
+  display: flex;
+  flex: none;
+  height: 24px;
+  justify-content: center;
+  margin-top: 0.35em;
+  width: 24px;
+}
+
 .slide-out__btn-close::before {
   @include IconFontProps;
   color: $Color-GraniteGray-300;
   content: $IconX;
   font-weight: 700;
-}
-
-.slide-out__btn-close {
-  background-color: #fff;
-  flex: none;
-  height: 24px;
-  margin-top: 0.35em;
-  width: 24px;
+  line-height: 1;
 }
 
 .slide-out__body {
@@ -77,6 +83,19 @@
   line-height: 1.33em;
   padding-top: 1.86em;
 }
+
+
+.slide-out__paragraph:nth-of-type(n+1) {
+  color: $Color-GraniteGray-700;
+  margin: 1.714em 0 0;
+}
+
+.slide-out__menu-icon {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
 
 @keyframes animateSlideOutPanelIn {
   from {
@@ -87,6 +106,8 @@
     transform: translateX(0);
   }
 }
+
+
 @keyframes animateSlideOutBackgroundIn {
   from {
     opacity: 0;

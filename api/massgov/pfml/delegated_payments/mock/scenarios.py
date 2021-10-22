@@ -20,8 +20,8 @@ class ScenarioName(Enum):
     HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN = (
         "HAPPY_PATH_ACH_PAYMENT_ADDRESS_NO_MATCHES_FROM_EXPERIAN"
     )
-    HAPPY_PENDING_LEAVE_REQUEST_DECISION = "HAPPY_PENDING_LEAVE_REQUEST_DECISION"
-    HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION = "HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION"
+    UNKNOWN_LEAVE_REQUEST_DECISION = "UNKNOWN_LEAVE_REQUEST_DECISION"
+    IN_REVIEW_LEAVE_REQUEST_DECISION = "IN_REVIEW_LEAVE_REQUEST_DECISION"
 
     HAPPY_PATH_FAMILY_CHECK_PRENOTED = "HAPPY_PATH_FAMILY_CHECK_PRENOTED"
 
@@ -147,7 +147,7 @@ class ScenarioDescriptor:
     payment_close_to_cap: bool = False
     is_adhoc_payment: bool = False
 
-    include_non_vpei_records: bool = True
+    include_claim_details: bool = True
 
     # ACH Returns
     # https://lwd.atlassian.net/wiki/spaces/API/pages/1333364105/PUB+ACH+Return+File+Format
@@ -202,7 +202,7 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
     ScenarioDescriptor(
         scenario_name=ScenarioName.OVERPAYMENT_MISSING_NON_VPEI_RECORDS,
         payment_transaction_type=PaymentTransactionType.OVERPAYMENT,
-        include_non_vpei_records=False,
+        include_claim_details=False,
     ),
     ScenarioDescriptor(
         scenario_name=ScenarioName.EMPLOYER_REIMBURSEMENT_PAYMENT,
@@ -241,11 +241,10 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         employee_in_payment_extract_missing_in_db=True,
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_PENDING_LEAVE_REQUEST_DECISION,
-        leave_request_decision="Pending",
+        scenario_name=ScenarioName.UNKNOWN_LEAVE_REQUEST_DECISION, leave_request_decision="Pending",
     ),
     ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_IN_REVIEW_LEAVE_REQUEST_DECISION,
+        scenario_name=ScenarioName.IN_REVIEW_LEAVE_REQUEST_DECISION,
         leave_request_decision="In Review",
     ),
     ScenarioDescriptor(

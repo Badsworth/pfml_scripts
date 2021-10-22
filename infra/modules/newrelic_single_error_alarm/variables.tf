@@ -7,6 +7,11 @@ variable "name" {
   description = "Name of the alarm"
 }
 
+variable "description" {
+  description = "Description of the alarm"
+  default     = null
+}
+
 variable "nrql" {
   description = "NRQL query to trigger an alarm on"
 }

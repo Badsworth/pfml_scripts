@@ -1,11 +1,6 @@
-import pytest
-
 import massgov.pfml.reductions.common as reductions_common
 from massgov.pfml.db.models.employees import AbsenceStatus
 from massgov.pfml.db.models.factories import ClaimFactory, EmployeeFactory
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 
 def test_get_claims_for_outbound(test_db_session, initialize_factories_session):

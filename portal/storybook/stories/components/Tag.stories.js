@@ -10,7 +10,7 @@ export default {
       defaultValue: "success",
       control: {
         type: "radio",
-        options: ["success", "error", "warning", "inactive"],
+        options: ["success", "error", "warning", "inactive", "pending"],
       },
     },
   },

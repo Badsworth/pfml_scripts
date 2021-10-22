@@ -532,8 +532,8 @@ describe("Claim Generator", () => {
     expect(claim.employerResponse?.previous_leaves).toHaveLength(2);
     claim.employerResponse?.previous_leaves.forEach((previous_leave) => {
       expect(previous_leave).toMatchObject({
-        leave_start_date: expect.stringMatching(/\d{4}\-\d{2}\-\d{2}/),
-        leave_end_date: expect.stringMatching(/\d{4}\-\d{2}\-\d{2}/),
+        leave_start_date: expect.stringMatching(/\d{4}-\d{2}-\d{2}/),
+        leave_end_date: expect.stringMatching(/\d{4}-\d{2}-\d{2}/),
       });
     });
   });
@@ -554,8 +554,8 @@ describe("Claim Generator", () => {
     expect(claim.employerResponse?.employer_benefits).toHaveLength(2);
     claim.employerResponse?.employer_benefits.forEach((benefit) => {
       expect(benefit).toMatchObject({
-        benefit_start_date: expect.stringMatching(/\d{4}\-\d{2}\-\d{2}/),
-        benefit_end_date: expect.stringMatching(/\d{4}\-\d{2}\-\d{2}/),
+        benefit_start_date: expect.stringMatching(/\d{4}-\d{2}-\d{2}/),
+        benefit_end_date: expect.stringMatching(/\d{4}-\d{2}-\d{2}/),
       });
     });
   });
@@ -575,8 +575,8 @@ describe("Claim Generator", () => {
     );
     expect(claim.employerResponse?.concurrent_leave).toMatchObject({
       is_for_current_employer: true,
-      leave_start_date: expect.stringMatching(/\d{4}\-\d{2}\-\d{2}/),
-      leave_end_date: expect.stringMatching(/\d{4}\-\d{2}\-\d{2}/),
+      leave_start_date: expect.stringMatching(/\d{4}-\d{2}-\d{2}/),
+      leave_end_date: expect.stringMatching(/\d{4}-\d{2}-\d{2}/),
     });
   });
 
@@ -827,9 +827,7 @@ describe("ClaimPool", () => {
     }
   });
 
-  const collect = async function <T extends unknown>(
-    iter: AsyncIterable<T>
-  ): Promise<T[]> {
+  const collect = async function <T>(iter: AsyncIterable<T>): Promise<T[]> {
     const items = [];
     for await (const item of iter) {
       items.push(item);

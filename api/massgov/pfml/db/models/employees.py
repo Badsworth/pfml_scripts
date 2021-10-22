@@ -8,10 +8,11 @@
 # This allows us to build mock data and insert them easily in the database for tests
 # and seeding.
 #
-import uuid
+import re
 from datetime import date
 from typing import TYPE_CHECKING, List, Optional, cast
 
+from bouncer.constants import EDIT, READ  # noqa: F401 F403
 from dateutil.relativedelta import relativedelta
 from sqlalchemy import (
     TIMESTAMP,
@@ -24,16 +25,19 @@ from sqlalchemy import (
     Numeric,
     Text,
     UniqueConstraint,
+    and_,
+    select,
 )
-from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.ext.hybrid import hybrid_method
-from sqlalchemy.orm import Query, deferred, dynamic_loader, relationship
+from sqlalchemy.orm import Query, aliased, dynamic_loader, relationship, validates
 from sqlalchemy.schema import Sequence
 from sqlalchemy.sql.expression import func
-from sqlalchemy.types import JSON, TypeEngine
+from sqlalchemy.types import JSON
 
 from ..lookup import LookupTable
 from .base import Base, TimestampMixin, utc_timestamp_gen, uuid_gen
+from .common import PostgreSQLUUID
+from .industry_codes import LkIndustryCode
 from .verifications import Verification
 
 # (typed_hybrid_property) https://github.com/dropbox/sqlalchemy-stubs/issues/98
@@ -43,18 +47,53 @@ if TYPE_CHECKING:
 else:
     from sqlalchemy.ext.hybrid import hybrid_property as typed_hybrid_property
 
-# (PostgreSQLUUID) https://github.com/dropbox/sqlalchemy-stubs/issues/94
-if TYPE_CHECKING:
-    PostgreSQLUUID = TypeEngine[uuid.UUID]
-else:
-    PostgreSQLUUID = UUID(as_uuid=True)
+
+class LkAbsencePeriodType(Base):
+    __tablename__ = "lk_absence_period_type"
+    absence_period_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    absence_period_type_description = Column(Text, nullable=False)
+
+    def __init__(self, absence_period_type_id, absence_period_type_description):
+        self.absence_period_type_id = absence_period_type_id
+        self.absence_period_type_description = absence_period_type_description
+
+
+class LkAbsenceReason(Base):
+    __tablename__ = "lk_absence_reason"
+    absence_reason_id = Column(Integer, primary_key=True, autoincrement=True)
+    absence_reason_description = Column(Text, nullable=False)
+
+    def __init__(self, absence_reason_id, absence_reason_description):
+        self.absence_reason_id = absence_reason_id
+        self.absence_reason_description = absence_reason_description
+
+
+class LkAbsenceReasonQualifierOne(Base):
+    __tablename__ = "lk_absence_reason_qualifier_one"
+    absence_reason_qualifier_one_id = Column(Integer, primary_key=True, autoincrement=True)
+    absence_reason_qualifier_one_description = Column(Text, nullable=False)
+
+    def __init__(self, absence_reason_qualifier_one_id, absence_reason_qualifier_one_description):
+        self.absence_reason_qualifier_one_id = absence_reason_qualifier_one_id
+        self.absence_reason_qualifier_one_description = absence_reason_qualifier_one_description
+
+
+class LkAbsenceReasonQualifierTwo(Base):
+    __tablename__ = "lk_absence_reason_qualifier_two"
+    absence_reason_qualifier_two_id = Column(Integer, primary_key=True, autoincrement=True)
+    absence_reason_qualifier_two_description = Column(Text, nullable=False)
+
+    def __init__(self, absence_reason_qualifier_two_id, absence_reason_qualifier_two_description):
+        self.absence_reason_qualifier_two_id = absence_reason_qualifier_two_id
+        self.absence_reason_qualifier_two_description = absence_reason_qualifier_two_description
 
 
 class LkAbsenceStatus(Base):
     __tablename__ = "lk_absence_status"
     absence_status_id = Column(Integer, primary_key=True, autoincrement=True)
-    absence_status_description = Column(Text)
+    absence_status_description = Column(Text, nullable=False)
     sort_order = Column(Integer, default=0, nullable=False)
+
     # use to set order when sorting (non alphabetic) by absence status
 
     def __init__(self, absence_status_id, absence_status_description, sort_order):
@@ -66,7 +105,7 @@ class LkAbsenceStatus(Base):
 class LkAddressType(Base):
     __tablename__ = "lk_address_type"
     address_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    address_description = Column(Text)
+    address_description = Column(Text, nullable=False)
 
     def __init__(self, address_type_id, address_description):
         self.address_type_id = address_type_id
@@ -76,7 +115,7 @@ class LkAddressType(Base):
 class LkGeoState(Base):
     __tablename__ = "lk_geo_state"
     geo_state_id = Column(Integer, primary_key=True, autoincrement=True)
-    geo_state_description = Column(Text)
+    geo_state_description = Column(Text, nullable=False)
 
     def __init__(self, geo_state_id, geo_state_description):
         self.geo_state_id = geo_state_id
@@ -86,7 +125,7 @@ class LkGeoState(Base):
 class LkCountry(Base):
     __tablename__ = "lk_country"
     country_id = Column(Integer, primary_key=True, autoincrement=True)
-    country_description = Column(Text)
+    country_description = Column(Text, nullable=False)
 
     def __init__(self, country_id, country_description):
         self.country_id = country_id
@@ -96,7 +135,7 @@ class LkCountry(Base):
 class LkClaimType(Base):
     __tablename__ = "lk_claim_type"
     claim_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    claim_type_description = Column(Text)
+    claim_type_description = Column(Text, nullable=False)
 
     def __init__(self, claim_type_id, claim_type_description):
         self.claim_type_id = claim_type_id
@@ -106,7 +145,7 @@ class LkClaimType(Base):
 class LkRace(Base):
     __tablename__ = "lk_race"
     race_id = Column(Integer, primary_key=True)
-    race_description = Column(Text)
+    race_description = Column(Text, nullable=False)
 
     def __init__(self, race_id, race_description):
         self.race_id = race_id
@@ -116,7 +155,7 @@ class LkRace(Base):
 class LkMaritalStatus(Base):
     __tablename__ = "lk_marital_status"
     marital_status_id = Column(Integer, primary_key=True, autoincrement=True)
-    marital_status_description = Column(Text)
+    marital_status_description = Column(Text, nullable=False)
 
     def __init__(self, marital_status_id, marital_status_description):
         self.marital_status_id = marital_status_id
@@ -126,7 +165,7 @@ class LkMaritalStatus(Base):
 class LkGender(Base):
     __tablename__ = "lk_gender"
     gender_id = Column(Integer, primary_key=True, autoincrement=True)
-    gender_description = Column(Text)
+    gender_description = Column(Text, nullable=False)
     fineos_gender_description = Column(Text, nullable=True)
 
     def __init__(self, gender_id, gender_description, fineos_gender_description):
@@ -138,7 +177,7 @@ class LkGender(Base):
 class LkOccupation(Base):
     __tablename__ = "lk_occupation"
     occupation_id = Column(Integer, primary_key=True)
-    occupation_description = Column(Text)
+    occupation_description = Column(Text, nullable=False)
 
     def __init__(self, occupation_id, occupation_description):
         self.occupation_id = occupation_id
@@ -148,7 +187,7 @@ class LkOccupation(Base):
 class LkEducationLevel(Base):
     __tablename__ = "lk_education_level"
     education_level_id = Column(Integer, primary_key=True, autoincrement=True)
-    education_level_description = Column(Text)
+    education_level_description = Column(Text, nullable=False)
 
     def __init__(self, education_level_id, education_level_description):
         self.education_level_id = education_level_id
@@ -158,7 +197,7 @@ class LkEducationLevel(Base):
 class LkRole(Base):
     __tablename__ = "lk_role"
     role_id = Column(Integer, primary_key=True, autoincrement=True)
-    role_description = Column(Text)
+    role_description = Column(Text, nullable=False)
 
     def __init__(self, role_id, role_description):
         self.role_id = role_id
@@ -168,7 +207,7 @@ class LkRole(Base):
 class LkPaymentMethod(Base):
     __tablename__ = "lk_payment_method"
     payment_method_id = Column(Integer, primary_key=True, autoincrement=True)
-    payment_method_description = Column(Text)
+    payment_method_description = Column(Text, nullable=False)
 
     def __init__(self, payment_method_id, payment_method_description):
         self.payment_method_id = payment_method_id
@@ -178,7 +217,7 @@ class LkPaymentMethod(Base):
 class LkBankAccountType(Base):
     __tablename__ = "lk_bank_account_type"
     bank_account_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    bank_account_type_description = Column(Text)
+    bank_account_type_description = Column(Text, nullable=False)
 
     def __init__(self, bank_account_type_id, bank_account_type_description):
         self.bank_account_type_id = bank_account_type_id
@@ -188,7 +227,7 @@ class LkBankAccountType(Base):
 class LkPrenoteState(Base):
     __tablename__ = "lk_prenote_state"
     prenote_state_id = Column(Integer, primary_key=True, autoincrement=True)
-    prenote_state_description = Column(Text)
+    prenote_state_description = Column(Text, nullable=False)
 
     def __init__(self, prenote_state_id, prenote_state_description):
         self.prenote_state_id = prenote_state_id
@@ -198,7 +237,7 @@ class LkPrenoteState(Base):
 class LkFlow(Base):
     __tablename__ = "lk_flow"
     flow_id = Column(Integer, primary_key=True, autoincrement=True)
-    flow_description = Column(Text)
+    flow_description = Column(Text, nullable=False)
 
     def __init__(self, flow_id, flow_description):
         self.flow_id = flow_id
@@ -208,7 +247,7 @@ class LkFlow(Base):
 class LkState(Base):
     __tablename__ = "lk_state"
     state_id = Column(Integer, primary_key=True, autoincrement=True)
-    state_description = Column(Text)
+    state_description = Column(Text, nullable=False)
     flow_id = Column(Integer, ForeignKey("lk_flow.flow_id"))
 
     def __init__(self, state_id, state_description, flow_id):
@@ -220,7 +259,7 @@ class LkState(Base):
 class LkPaymentTransactionType(Base):
     __tablename__ = "lk_payment_transaction_type"
     payment_transaction_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    payment_transaction_type_description = Column(Text)
+    payment_transaction_type_description = Column(Text, nullable=False)
 
     def __init__(self, payment_transaction_type_id, payment_transaction_type_description):
         self.payment_transaction_type_id = payment_transaction_type_id
@@ -230,7 +269,7 @@ class LkPaymentTransactionType(Base):
 class LkPaymentCheckStatus(Base):
     __tablename__ = "lk_payment_check_status"
     payment_check_status_id = Column(Integer, primary_key=True, autoincrement=True)
-    payment_check_status_description = Column(Text)
+    payment_check_status_description = Column(Text, nullable=False)
 
     def __init__(self, payment_check_status_id, payment_check_status_description):
         self.payment_check_status_id = payment_check_status_id
@@ -240,7 +279,7 @@ class LkPaymentCheckStatus(Base):
 class LkReferenceFileType(Base):
     __tablename__ = "lk_reference_file_type"
     reference_file_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    reference_file_type_description = Column(Text)
+    reference_file_type_description = Column(Text, nullable=False)
     num_files_in_set = Column(Integer)
 
     def __init__(self, reference_file_type_id, reference_file_type_description, num_files_in_set):
@@ -252,7 +291,7 @@ class LkReferenceFileType(Base):
 class LkTitle(Base):
     __tablename__ = "lk_title"
     title_id = Column(Integer, primary_key=True, autoincrement=True)
-    title_description = Column(Text)
+    title_description = Column(Text, nullable=False)
 
     def __init__(self, title_id, title_description):
         self.title_id = title_id
@@ -262,7 +301,7 @@ class LkTitle(Base):
 class LkLeaveRequestDecision(Base):
     __tablename__ = "lk_leave_request_decision"
     leave_request_decision_id = Column(Integer, primary_key=True, autoincrement=True)
-    leave_request_decision_description = Column(Text)
+    leave_request_decision_description = Column(Text, nullable=False)
 
     def __init__(self, leave_request_decision_id, leave_request_decision_description):
         self.leave_request_decision_id = leave_request_decision_id
@@ -279,36 +318,48 @@ class AbsencePeriod(Base, TimestampMixin):
         ),
     )
 
-    absence_period_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True, nullable=False)
+    absence_period_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    absence_period_start_date = Column(Date)
+    absence_period_end_date = Column(Date)
+    absence_period_type_id = Column(
+        Integer, ForeignKey("lk_absence_period_type.absence_period_type_id")
+    )
+    absence_reason_qualifier_one_id = Column(
+        Integer, ForeignKey("lk_absence_reason_qualifier_one.absence_reason_qualifier_one_id")
+    )
+    absence_reason_qualifier_two_id = Column(
+        Integer, ForeignKey("lk_absence_reason_qualifier_two.absence_reason_qualifier_two_id")
+    )
+    absence_reason_id = Column(Integer, ForeignKey("lk_absence_reason.absence_reason_id"))
+    claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=False)
     fineos_absence_period_class_id = Column(Integer, nullable=False, index=True)
     fineos_absence_period_index_id = Column(Integer, nullable=False, index=True)
     fineos_leave_request_id = Column(Integer)
-    absence_period_start_date = Column(Date)
-    absence_period_end_date = Column(Date)
     leave_request_decision_id = Column(
-        Integer, ForeignKey("lk_leave_request_decision.leave_request_decision_id"), nullable=False
+        Integer, ForeignKey("lk_leave_request_decision.leave_request_decision_id")
     )
     is_id_proofed = Column(Boolean)
-    claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"), nullable=False)
 
     claim = relationship("Claim")
-    claim_type = relationship(LkClaimType)
+    absence_period_type = relationship(LkAbsencePeriodType)
+    absence_reason = relationship(LkAbsenceReason)
+    absence_reason_qualifier_one = relationship(LkAbsenceReasonQualifierOne)
+    absence_reason_qualifier_two = relationship(LkAbsenceReasonQualifierTwo)
     leave_request_decision = relationship(LkLeaveRequestDecision)
 
 
-class AuthorizedRepresentative(Base):
+class AuthorizedRepresentative(Base, TimestampMixin):
     __tablename__ = "authorized_representative"
-    authorized_representative_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    authorized_representative_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     first_name = Column(Text)
     last_name = Column(Text)
 
     employees = relationship("AuthorizedRepEmployee", back_populates="authorized_rep")
 
 
-class HealthCareProvider(Base):
+class HealthCareProvider(Base, TimestampMixin):
     __tablename__ = "health_care_provider"
-    health_care_provider_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    health_care_provider_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     provider_name = Column(Text)
 
     addresses = relationship("HealthCareProviderAddress", back_populates="health_care_provider")
@@ -316,7 +367,7 @@ class HealthCareProvider(Base):
 
 class Employer(Base, TimestampMixin):
     __tablename__ = "employer"
-    employer_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    employer_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     account_key = Column(Text, index=True)
     employer_fein = Column(Text, nullable=False, index=True)
     employer_name = Column(Text)
@@ -328,6 +379,7 @@ class Employer(Base, TimestampMixin):
     dor_updated_date = Column(TIMESTAMP(timezone=True))
     latest_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
     fineos_employer_id = Column(Integer, index=True, unique=True)
+    industry_code_id = Column(Integer, ForeignKey("lk_industry_code.industry_code_id"))
 
     claims = cast(Optional[List["Claim"]], relationship("Claim", back_populates="employer"))
     wages_and_contributions: "Query[WagesAndContributions]" = dynamic_loader(
@@ -342,6 +394,11 @@ class Employer(Base, TimestampMixin):
     employer_quarterly_contribution: "Query[EmployerQuarterlyContribution]" = dynamic_loader(
         "EmployerQuarterlyContribution", back_populates="employer"
     )
+    organization_units: "Query[OrganizationUnit]" = dynamic_loader(
+        "OrganizationUnit", back_populates="employer"
+    )
+
+    lk_industry_code = relationship(LkIndustryCode)
 
     @typed_hybrid_property
     def has_verification_data(self) -> bool:
@@ -354,8 +411,44 @@ class Employer(Base, TimestampMixin):
             for quarter in self.employer_quarterly_contribution
         )
 
+    @validates("employer_fein")
+    def validate_employer_fein(self, key: str, employer_fein: str) -> str:
+        fein = str(employer_fein)
+        error = re.match(r"^[0-9]{9}$", fein) is None
+        if error:
+            raise ValueError(f"Invalid FEIN: {employer_fein}. Expected a 9-digit integer value")
+        return employer_fein
 
-class EmployerQuarterlyContribution(Base):
+
+class OrganizationUnit(Base, TimestampMixin):
+    __tablename__ = "organization_unit"
+    organization_unit_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    fineos_id = Column(Text, nullable=True, unique=True)
+    name = Column(Text, unique=True, nullable=False)
+    employer_id = Column(PostgreSQLUUID, ForeignKey("employer.employer_id"), index=True)
+
+    employer = relationship("Employer", back_populates="organization_units")
+    dua_reporting_units: "Query[DuaReportingUnit]" = dynamic_loader(
+        "DuaReportingUnit", back_populates="organization_unit"
+    )
+
+
+class DuaReportingUnit(Base, TimestampMixin):
+    __tablename__ = "dua_reporting_unit"
+    dua_reporting_unit_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    dua_id = Column(Text, unique=True, nullable=False)  # The Reporting Unit Number from DUA
+    dba = Column(Text, nullable=True)
+    organization_unit_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("organization_unit.organization_unit_id"),
+        nullable=True,
+        index=True,
+    )
+
+    organization_unit = relationship("OrganizationUnit", back_populates="dua_reporting_units")
+
+
+class EmployerQuarterlyContribution(Base, TimestampMixin):
     __tablename__ = "employer_quarterly_contribution"
     employer_id = Column(
         PostgreSQLUUID, ForeignKey("employer.employer_id"), index=True, primary_key=True
@@ -370,16 +463,20 @@ class EmployerQuarterlyContribution(Base):
     employer = relationship("Employer", back_populates="employer_quarterly_contribution")
 
 
-class EmployerLog(Base):
-    __tablename__ = "employer_log"
-    employer_log_id = Column(UUID(as_uuid=True), primary_key=True)
-    employer_id = Column(UUID(as_uuid=True), index=True)
+class EmployerPushToFineosQueue(Base, TimestampMixin):
+    __tablename__ = "employer_push_to_fineos_queue"
+    employer_push_to_fineos_queue_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    employer_id = Column(PostgreSQLUUID, index=True)
     action = Column(Text, index=True)
     modified_at = Column(TIMESTAMP(timezone=True), default=utc_timestamp_gen)
     process_id = Column(Integer, index=True)
+    family_exemption = Column(Boolean)
+    medical_exemption = Column(Boolean)
+    exemption_commence_date = Column(Date)
+    exemption_cease_date = Column(Date)
 
 
-class EFT(Base):
+class EFT(Base, TimestampMixin):
     __tablename__ = "eft"
     eft_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     routing_nbr = Column(Text, nullable=False)
@@ -387,7 +484,7 @@ class EFT(Base):
     bank_account_type_id = Column(
         Integer, ForeignKey("lk_bank_account_type.bank_account_type_id"), nullable=False
     )
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
+    employee_id = Column(PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True)
 
     bank_account_type = relationship(LkBankAccountType)
     employee = relationship("Employee", back_populates="eft")
@@ -416,15 +513,19 @@ class PubEft(Base, TimestampMixin):
         server_default=pub_eft_individual_id_seq.next_value(),
     )
 
+    fineos_employee_first_name = Column(Text)
+    fineos_employee_middle_name = Column(Text)
+    fineos_employee_last_name = Column(Text)
+
     bank_account_type = relationship(LkBankAccountType)
     prenote_state = relationship(LkPrenoteState)
 
     employees = relationship("EmployeePubEftPair", back_populates="pub_eft")
 
 
-class TaxIdentifier(Base):
+class TaxIdentifier(Base, TimestampMixin):
     __tablename__ = "tax_identifier"
-    tax_identifier_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    tax_identifier_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     tax_identifier = Column(Text, nullable=False, unique=True)
 
     employee = relationship("Employee", back_populates="tax_identifier")
@@ -438,26 +539,26 @@ class TaxIdentifier(Base):
         return func.right(TaxIdentifier.tax_identifier, 4)
 
 
-class CtrAddressPair(Base):
+class CtrAddressPair(Base, TimestampMixin):
     __tablename__ = "link_ctr_address_pair"
     fineos_address_id = Column(
-        UUID(as_uuid=True), ForeignKey("address.address_id"), primary_key=True, unique=True
+        PostgreSQLUUID, ForeignKey("address.address_id"), primary_key=True, unique=True
     )
     ctr_address_id = Column(
-        UUID(as_uuid=True), ForeignKey("address.address_id"), nullable=True, index=True
+        PostgreSQLUUID, ForeignKey("address.address_id"), nullable=True, index=True
     )
 
     fineos_address = relationship("Address", foreign_keys=fineos_address_id)
     ctr_address = cast("Optional[Address]", relationship("Address", foreign_keys=ctr_address_id))
 
 
-class ExperianAddressPair(Base):
+class ExperianAddressPair(Base, TimestampMixin):
     __tablename__ = "link_experian_address_pair"
     fineos_address_id = Column(
-        UUID(as_uuid=True), ForeignKey("address.address_id"), primary_key=True, unique=True
+        PostgreSQLUUID, ForeignKey("address.address_id"), primary_key=True, unique=True
     )
     experian_address_id = Column(
-        UUID(as_uuid=True), ForeignKey("address.address_id"), nullable=True, index=True
+        PostgreSQLUUID, ForeignKey("address.address_id"), nullable=True, index=True
     )
 
     fineos_address = relationship("Address", foreign_keys=fineos_address_id)
@@ -468,9 +569,9 @@ class ExperianAddressPair(Base):
 
 class Employee(Base, TimestampMixin):
     __tablename__ = "employee"
-    employee_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    employee_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     tax_identifier_id = Column(
-        UUID(as_uuid=True), ForeignKey("tax_identifier.tax_identifier_id"), index=True, unique=True,
+        PostgreSQLUUID, ForeignKey("tax_identifier.tax_identifier_id"), index=True, unique=True,
     )
     title_id = Column(Integer, ForeignKey("lk_title.title_id"))
     first_name = Column(Text, nullable=False)
@@ -493,15 +594,12 @@ class Employee(Base, TimestampMixin):
     payment_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
     ctr_vendor_customer_code = Column(Text)
     ctr_address_pair_id = Column(
-        UUID(as_uuid=True), ForeignKey("link_ctr_address_pair.fineos_address_id"), index=True
+        PostgreSQLUUID, ForeignKey("link_ctr_address_pair.fineos_address_id"), index=True
     )
-    experian_address_pair_id = deferred(
-        Column(
-            UUID(as_uuid=True).evaluates_none(),
-            ForeignKey("link_experian_address_pair.fineos_address_id"),
-            index=True,
-        )
-    )
+
+    fineos_employee_first_name = Column(Text)
+    fineos_employee_middle_name = Column(Text)
+    fineos_employee_last_name = Column(Text)
 
     title = relationship(LkTitle)
     race = relationship(LkRace)
@@ -541,19 +639,19 @@ class Employee(Base, TimestampMixin):
     )
 
 
-class EmployeeLog(Base):
-    __tablename__ = "employee_log"
-    employee_log_id = Column(UUID(as_uuid=True), primary_key=True)
-    employee_id = Column(UUID(as_uuid=True), index=True)
+class EmployeePushToFineosQueue(Base, TimestampMixin):
+    __tablename__ = "employee_push_to_fineos_queue"
+    employee_push_to_fineos_queue_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    employee_id = Column(PostgreSQLUUID, index=True)
     action = Column(Text, index=True)
     modified_at = Column(TIMESTAMP(timezone=True), default=utc_timestamp_gen)
     process_id = Column(Integer, index=True)
-    employer_id = Column(UUID(as_uuid=True), index=True)
+    employer_id = Column(PostgreSQLUUID, index=True)
 
 
-class EmployeePubEftPair(Base):
+class EmployeePubEftPair(Base, TimestampMixin):
     __tablename__ = "link_employee_pub_eft_pair"
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), primary_key=True)
+    employee_id = Column(PostgreSQLUUID, ForeignKey("employee.employee_id"), primary_key=True)
     pub_eft_id = Column(PostgreSQLUUID, ForeignKey("pub_eft.pub_eft_id"), primary_key=True)
 
     employee = relationship("Employee", back_populates="pub_efts")
@@ -564,8 +662,8 @@ class Claim(Base, TimestampMixin):
     __tablename__ = "claim"
     claim_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"))
-    employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"), index=True)
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
+    employer_id = Column(PostgreSQLUUID, ForeignKey("employer.employer_id"), index=True)
+    employee_id = Column(PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True)
     fineos_absence_id = Column(Text, index=True, unique=True)
     fineos_absence_status_id = Column(Integer, ForeignKey("lk_absence_status.absence_status_id"))
     absence_period_start_date = Column(Date)
@@ -574,7 +672,7 @@ class Claim(Base, TimestampMixin):
     is_id_proofed = Column(Boolean)
 
     # Not sure if these are currently used.
-    authorized_representative_id = Column(UUID(as_uuid=True))
+    authorized_representative_id = Column(PostgreSQLUUID)
     benefit_amount = Column(Numeric(asdecimal=True))
     benefit_days = Column(Integer)
 
@@ -588,12 +686,77 @@ class Claim(Base, TimestampMixin):
         Optional[List["ManagedRequirement"]],
         relationship("ManagedRequirement", back_populates="claim"),
     )
+    absence_periods = cast(
+        Optional[List["AbsencePeriod"]], relationship("AbsencePeriod", back_populates="claim"),
+    )
+
+    @typed_hybrid_property
+    def soonest_open_requirement_date(self) -> Optional[date]:
+        def _filter(requirement: ManagedRequirement) -> bool:
+            valid_status = (
+                requirement.managed_requirement_status_id
+                == ManagedRequirementStatus.OPEN.managed_requirement_status_id
+            )
+            valid_type = (
+                requirement.managed_requirement_type_id
+                == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id
+            )
+            not_expired = (
+                requirement.follow_up_date is not None
+                and requirement.follow_up_date >= date.today()
+            )
+            return valid_status and valid_type and not_expired
+
+        if not self.managed_requirements:
+            return None
+        filtered_requirements = filter(_filter, self.managed_requirements)
+        requirements = sorted(filtered_requirements, key=lambda x: x.follow_up_date)  # type: ignore
+        if len(requirements):
+            return requirements[0].follow_up_date
+        return None
+
+    @soonest_open_requirement_date.expression
+    def soonest_open_requirement_date(cls):  # noqa: B902
+        aliasManagedRequirement = aliased(ManagedRequirement)
+
+        status_id = aliasManagedRequirement.managed_requirement_status_id
+        type_id = aliasManagedRequirement.managed_requirement_type_id
+        filters = and_(
+            aliasManagedRequirement.claim_id == cls.claim_id,
+            status_id == ManagedRequirementStatus.OPEN.managed_requirement_status_id,
+            type_id == ManagedRequirementType.EMPLOYER_CONFIRMATION.managed_requirement_type_id,
+            aliasManagedRequirement.follow_up_date >= date.today(),
+        )
+        return (
+            select([func.min(aliasManagedRequirement.follow_up_date)])
+            .where(filters)
+            .label("follow_up_date")
+        )
+
+    @typed_hybrid_property
+    def employee_tax_identifier(self) -> Optional[str]:
+        if not self.employee:
+            return None
+
+        if self.employee.tax_identifier is None:
+            return None
+
+        return self.employee.tax_identifier.tax_identifier
+
+    @typed_hybrid_property
+    def employer_fein(self) -> Optional[str]:
+        if not self.employer:
+            return None
+
+        return self.employer.employer_fein
 
 
 class Payment(Base, TimestampMixin):
     __tablename__ = "payment"
     payment_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
-    claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True)
+    claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True)
+    # Attach the employee ID as well as some payments aren't associated with a claim
+    employee_id = Column(PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True)
     payment_transaction_type_id = Column(
         Integer, ForeignKey("lk_payment_transaction_type.payment_transaction_type_id")
     )
@@ -612,14 +775,14 @@ class Payment(Base, TimestampMixin):
     disb_amount = Column(Numeric(asdecimal=True))
     leave_request_decision = Column(Text)
     experian_address_pair_id = Column(
-        UUID(as_uuid=True), ForeignKey("link_experian_address_pair.fineos_address_id"), index=True
+        PostgreSQLUUID, ForeignKey("link_experian_address_pair.fineos_address_id"), index=True
     )
     has_address_update = Column(Boolean, default=False, server_default="FALSE", nullable=False)
     has_eft_update = Column(Boolean, default=False, server_default="FALSE", nullable=False)
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
     )
-    pub_eft_id = Column(UUID(as_uuid=True), ForeignKey("pub_eft.pub_eft_id"))
+    pub_eft_id = Column(PostgreSQLUUID, ForeignKey("pub_eft.pub_eft_id"))
     payment_individual_id_seq: Sequence = Sequence("payment_individual_id_seq")
     pub_individual_id = Column(
         Integer,
@@ -628,9 +791,16 @@ class Payment(Base, TimestampMixin):
         server_default=payment_individual_id_seq.next_value(),
     )
     claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"))
-    leave_request_id = Column(UUID(as_uuid=True), ForeignKey("absence_period.absence_period_id"))
+    leave_request_id = Column(PostgreSQLUUID, ForeignKey("absence_period.absence_period_id"))
+
+    vpei_id = Column(PostgreSQLUUID, ForeignKey("fineos_extract_vpei.vpei_id"))
+
+    fineos_employee_first_name = Column(Text)
+    fineos_employee_middle_name = Column(Text)
+    fineos_employee_last_name = Column(Text)
 
     claim = relationship("Claim", back_populates="payments")
+    employee = relationship("Employee")
     claim_type = relationship(LkClaimType)
     payment_transaction_type = relationship(LkPaymentTransactionType)
     disb_method = relationship(LkPaymentMethod, foreign_keys=disb_method_id)
@@ -639,9 +809,24 @@ class Payment(Base, TimestampMixin):
     fineos_extract_import_log = relationship("ImportLog")
     reference_files = relationship("PaymentReferenceFile", back_populates="payment")
     state_logs = relationship("StateLog", back_populates="payment")
-    # fineos_writeback_details = relationship("FineosWritebackDetails", back_populates="payment", uselist=False)
+    payment_details = cast(
+        List["PaymentDetails"], relationship("PaymentDetails", back_populates="payment")
+    )
+    leave_request = relationship(AbsencePeriod)
 
     check = relationship("PaymentCheck", backref="payment", uselist=False)
+
+
+class PaymentDetails(Base, TimestampMixin):
+    __tablename__ = "payment_details"
+    payment_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    payment_id = Column(PostgreSQLUUID, ForeignKey(Payment.payment_id), nullable=False)
+
+    period_start_date = Column(Date)
+    period_end_date = Column(Date)
+    amount = Column(Numeric(asdecimal=True), nullable=False)
+
+    payment = relationship(Payment)
 
 
 class PaymentCheck(Base, TimestampMixin):
@@ -656,20 +841,20 @@ class PaymentCheck(Base, TimestampMixin):
     payment_check_status = relationship(LkPaymentCheckStatus)
 
 
-class AuthorizedRepEmployee(Base):
+class AuthorizedRepEmployee(Base, TimestampMixin):
     __tablename__ = "link_authorized_rep_employee"
     authorized_representative_id = Column(
-        UUID(as_uuid=True),
+        PostgreSQLUUID,
         ForeignKey("authorized_representative.authorized_representative_id"),
         primary_key=True,
     )
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), primary_key=True)
+    employee_id = Column(PostgreSQLUUID, ForeignKey("employee.employee_id"), primary_key=True)
 
     authorized_rep = relationship("AuthorizedRepresentative", back_populates="employees")
     employee = relationship("Employee", back_populates="authorized_reps")
 
 
-class Address(Base):
+class Address(Base, TimestampMixin):
     __tablename__ = "address"
     address_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     address_type_id = Column(Integer, ForeignKey("lk_address_type.address_type_id"))
@@ -695,7 +880,7 @@ class Address(Base):
     )
 
 
-class CtrDocumentIdentifier(Base):
+class CtrDocumentIdentifier(Base, TimestampMixin):
     __tablename__ = "ctr_document_identifier"
     ctr_document_identifier_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     ctr_document_identifier = Column(Text, unique=True, index=True)
@@ -710,7 +895,7 @@ class CtrDocumentIdentifier(Base):
     )
 
 
-class CtrBatchIdentifier(Base):
+class CtrBatchIdentifier(Base, TimestampMixin):
     __tablename__ = "ctr_batch_identifier"
     ctr_batch_identifier_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     ctr_batch_identifier = Column(Text, nullable=False)
@@ -724,49 +909,65 @@ class CtrBatchIdentifier(Base):
     reference_files = relationship("ReferenceFile", back_populates="ctr_batch_identifier")
 
 
-class EmployeeAddress(Base):
+class EmployeeAddress(Base, TimestampMixin):
     __tablename__ = "link_employee_address"
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), primary_key=True)
-    address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), primary_key=True)
+    employee_id = Column(PostgreSQLUUID, ForeignKey("employee.employee_id"), primary_key=True)
+    address_id = Column(PostgreSQLUUID, ForeignKey("address.address_id"), primary_key=True)
 
     employee = relationship("Employee", back_populates="addresses")
     address = relationship("Address", back_populates="employees")
 
 
-class EmployerAddress(Base):
+class EmployerAddress(Base, TimestampMixin):
     __tablename__ = "link_employer_address"
     employer_id = Column(
-        UUID(as_uuid=True), ForeignKey("employer.employer_id"), primary_key=True, unique=True
+        PostgreSQLUUID, ForeignKey("employer.employer_id"), primary_key=True, unique=True
     )
     address_id = Column(
-        UUID(as_uuid=True), ForeignKey("address.address_id"), primary_key=True, unique=True
+        PostgreSQLUUID, ForeignKey("address.address_id"), primary_key=True, unique=True
     )
 
     employer = relationship("Employer", back_populates="addresses")
     address = relationship("Address", back_populates="employers")
 
 
-class HealthCareProviderAddress(Base):
+class HealthCareProviderAddress(Base, TimestampMixin):
     __tablename__ = "link_health_care_provider_address"
     health_care_provider_id = Column(
-        UUID(as_uuid=True),
+        PostgreSQLUUID,
         ForeignKey("health_care_provider.health_care_provider_id"),
         primary_key=True,
     )
-    address_id = Column(UUID(as_uuid=True), ForeignKey("address.address_id"), primary_key=True)
+    address_id = Column(PostgreSQLUUID, ForeignKey("address.address_id"), primary_key=True)
 
     health_care_provider = relationship("HealthCareProvider", back_populates="addresses")
     address = relationship("Address", back_populates="health_care_providers")
 
 
+class AzureUser:
+    """ Not a database table but necessary for type-checking """
+
+    sub_id: str
+    first_name: str
+    last_name: str
+    email_address: str
+    groups: List[str]
+    permissions: List[int]
+
+    def __init__(self, sub_id, first_name, last_name, email_address, groups, permissions):
+        self.sub_id = sub_id
+        self.first_name = first_name
+        self.last_name = last_name
+        self.email_address = email_address
+        self.groups = groups
+        self.permissions = permissions
+
+
 class User(Base, TimestampMixin):
     __tablename__ = "user"
-    user_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    active_directory_id = deferred(
-        Column(Text().evaluates_none(), index=True, unique=True)
-    )  # renaming to sub_id
+    user_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     sub_id = Column(Text, index=True, unique=True)
-    email_address = Column(Text)
+    email_address = Column(Text, unique=True)
     consented_to_data_sharing = Column(Boolean, default=False, nullable=False)
 
     roles = relationship("LkRole", secondary="link_user_role", uselist=True)
@@ -794,7 +995,7 @@ class User(Base, TimestampMixin):
 
 class UserRole(Base, TimestampMixin):
     __tablename__ = "link_user_role"
-    user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), primary_key=True)
+    user_id = Column(PostgreSQLUUID, ForeignKey("user.user_id"), primary_key=True)
     role_id = Column(Integer, ForeignKey("lk_role.role_id"), primary_key=True)
 
     user = relationship(User)
@@ -804,12 +1005,12 @@ class UserRole(Base, TimestampMixin):
 class UserLeaveAdministrator(Base, TimestampMixin):
     __tablename__ = "link_user_leave_administrator"
     __table_args__ = (UniqueConstraint("user_id", "employer_id"),)
-    user_leave_administrator_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
-    user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"), nullable=False)
-    employer_id = Column(UUID(as_uuid=True), ForeignKey("employer.employer_id"), nullable=False)
+    user_leave_administrator_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    user_id = Column(PostgreSQLUUID, ForeignKey("user.user_id"), nullable=False)
+    employer_id = Column(PostgreSQLUUID, ForeignKey("employer.employer_id"), nullable=False)
     fineos_web_id = Column(Text)
     verification_id = Column(
-        UUID(as_uuid=True), ForeignKey("verification.verification_id"), nullable=True
+        PostgreSQLUUID, ForeignKey("verification.verification_id"), nullable=True
     )
 
     user = relationship(User)
@@ -827,10 +1028,58 @@ class UserLeaveAdministrator(Base, TimestampMixin):
         return bool(self.verification_id)
 
 
+class LkAzurePermission(Base):
+    __tablename__ = "lk_azure_permission"
+    azure_permission_id = Column(Integer, primary_key=True, autoincrement=True)
+    azure_permission_resource = Column(Text, nullable=False)
+    azure_permission_action = Column(Text, nullable=False)
+
+    def __init__(self, azure_permission_id, azure_permission_resource, azure_permission_action):
+        self.azure_permission_id = azure_permission_id
+        self.azure_permission_resource = azure_permission_resource
+        self.azure_permission_action = azure_permission_action
+
+
+class AzureGroupPermission(Base):
+    __tablename__ = "link_azure_group_permission"
+    __table_args__ = (UniqueConstraint("azure_permission_id", "azure_group_id"),)
+    azure_permission_id = Column(
+        Integer, ForeignKey("lk_azure_permission.azure_permission_id"), primary_key=True
+    )
+    azure_group_id = Column(Integer, ForeignKey("lk_azure_group.azure_group_id"), primary_key=True)
+
+
+class LkAzureGroup(Base):
+    __tablename__ = "lk_azure_group"
+    azure_group_id = Column(Integer, primary_key=True, autoincrement=True)
+    azure_group_name = Column(Text, nullable=False)
+    azure_group_guid = Column(Text, nullable=False)
+    azure_group_parent_id = Column(Integer, nullable=True)
+    permissions = relationship(AzureGroupPermission, uselist=True)
+
+    def __init__(self, azure_group_id, azure_group_name, azure_group_guid, azure_group_parent_id):
+        self.azure_group_id = azure_group_id
+        self.azure_group_name = azure_group_name
+        self.azure_group_guid = azure_group_guid
+        self.azure_group_parent_id = azure_group_parent_id
+
+
+class UserAzurePermissionLog(Base, TimestampMixin):
+    __tablename__ = "user_azure_permission_log"
+    user_azure_permission_log_id = Column(Integer, primary_key=True, autoincrement=True)
+    email_address = Column(Text, nullable=False)
+    sub_id = Column(Text, nullable=False)
+    family_name = Column(Text, nullable=False)
+    given_name = Column(Text, nullable=False)
+    azure_permission_id = Column(Integer, ForeignKey("lk_azure_permission.azure_permission_id"))
+    azure_group_id = Column(Integer, ForeignKey("lk_azure_group.azure_group_id"))
+    action = Column(Text, nullable=False)
+
+
 class LkManagedRequirementStatus(Base):
     __tablename__ = "lk_managed_requirement_status"
     managed_requirement_status_id = Column(Integer, primary_key=True, autoincrement=True)
-    managed_requirement_status_description = Column(Text)
+    managed_requirement_status_description = Column(Text, nullable=False)
 
     def __init__(self, managed_requirement_status_id, managed_requirement_status_description):
         self.managed_requirement_status_id = managed_requirement_status_id
@@ -840,7 +1089,7 @@ class LkManagedRequirementStatus(Base):
 class LkManagedRequirementCategory(Base):
     __tablename__ = "lk_managed_requirement_category"
     managed_requirement_category_id = Column(Integer, primary_key=True, autoincrement=True)
-    managed_requirement_category_description = Column(Text)
+    managed_requirement_category_description = Column(Text, nullable=False)
 
     def __init__(self, managed_requirement_category_id, managed_requirement_category_description):
         self.managed_requirement_category_id = managed_requirement_category_id
@@ -850,7 +1099,7 @@ class LkManagedRequirementCategory(Base):
 class LkManagedRequirementType(Base):
     __tablename__ = "lk_managed_requirement_type"
     managed_requirement_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    managed_requirement_type_description = Column(Text)
+    managed_requirement_type_description = Column(Text, nullable=False)
 
     def __init__(self, managed_requirement_type_id, managed_requirement_type_description):
         self.managed_requirement_type_id = managed_requirement_type_id
@@ -862,8 +1111,8 @@ class ManagedRequirement(Base, TimestampMixin):
 
     __tablename__ = "managed_requirement"
     managed_requirement_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
-    claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True, nullable=False)
-    respondent_user_id = Column(UUID(as_uuid=True), ForeignKey("user.user_id"))
+    claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True, nullable=False)
+    respondent_user_id = Column(PostgreSQLUUID, ForeignKey("user.user_id"))
     fineos_managed_requirement_id = Column(Text, unique=True, nullable=False)
     follow_up_date = Column(Date)
     responded_at = Column(TIMESTAMP(timezone=True))
@@ -891,16 +1140,16 @@ class ManagedRequirement(Base, TimestampMixin):
     respondent_user = relationship(User)
 
 
-class WagesAndContributions(Base):
+class WagesAndContributions(Base, TimestampMixin):
     __tablename__ = "wages_and_contributions"
-    wage_and_contribution_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    wage_and_contribution_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     account_key = Column(Text, nullable=False)
     filing_period = Column(Date, nullable=False, index=True)
     employee_id = Column(
-        UUID(as_uuid=True), ForeignKey("employee.employee_id"), nullable=False, index=True
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), nullable=False, index=True
     )
     employer_id = Column(
-        UUID(as_uuid=True), ForeignKey("employer.employer_id"), nullable=False, index=True
+        PostgreSQLUUID, ForeignKey("employer.employer_id"), nullable=False, index=True
     )
     is_independent_contractor = Column(Boolean, nullable=False)
     is_opted_in = Column(Boolean, nullable=False)
@@ -916,14 +1165,45 @@ class WagesAndContributions(Base):
     employer = relationship("Employer", back_populates="wages_and_contributions")
 
 
-class EmployeeOccupation(Base):
+class WagesAndContributionsHistory(Base, TimestampMixin):
+    __tablename__ = "wages_and_contributions_history"
+    wages_and_contributions_history_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    is_independent_contractor = Column(Boolean, nullable=False)
+    is_opted_in = Column(Boolean, nullable=False)
+    employee_ytd_wages = Column(Numeric(asdecimal=True), nullable=False)
+    employee_qtr_wages = Column(Numeric(asdecimal=True), nullable=False)
+    employee_med_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    employer_med_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    employee_fam_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    employer_fam_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True, nullable=True
+    )
+    wage_and_contribution_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("wages_and_contributions.wage_and_contribution_id"),
+        index=True,
+        nullable=False,
+    )
+
+    wage_and_contribution = relationship("WagesAndContributions")
+
+
+class EmployeeOccupation(Base, TimestampMixin):
     __tablename__ = "employee_occupation"
-    employee_occupation_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+
+    employee_occupation_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     employee_id = Column(
-        UUID(as_uuid=True), ForeignKey("employee.employee_id"), nullable=False, index=True
+        PostgreSQLUUID, ForeignKey("employee.employee_id"), nullable=False, index=True
     )
     employer_id = Column(
-        UUID(as_uuid=True), ForeignKey("employer.employer_id"), nullable=False, index=True
+        PostgreSQLUUID, ForeignKey("employer.employer_id"), nullable=False, index=True
+    )
+    organization_unit_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("organization_unit.organization_unit_id"),
+        nullable=True,
+        index=True,
     )
     job_title = Column(Text)
     date_of_hire = Column(Date)
@@ -936,11 +1216,14 @@ class EmployeeOccupation(Base):
     worksite_id = Column(Text)
     occupation_qualifier = Column(Text)
 
+    Index("ix_employee_occupation_employee_id_employer_id", employee_id, employer_id, unique=True)
+
     employee = relationship("Employee", back_populates="employee_occupations")
     employer = relationship("Employer", back_populates="employer_occupations")
+    organization_unit = relationship("OrganizationUnit")
 
 
-class ImportLog(Base):
+class ImportLog(Base, TimestampMixin):
     __tablename__ = "import_log"
     import_log_id = Column(Integer, primary_key=True)
     source = Column(Text, index=True)
@@ -959,11 +1242,13 @@ class ReferenceFile(Base, TimestampMixin):
         Integer, ForeignKey("lk_reference_file_type.reference_file_type_id"), nullable=True
     )
     ctr_batch_identifier_id = Column(
-        UUID(as_uuid=True),
+        PostgreSQLUUID,
         ForeignKey("ctr_batch_identifier.ctr_batch_identifier_id"),
         nullable=True,
         index=True,
     )
+    # When the data within the files was processed (as determined by the particular process)
+    processed_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
 
     reference_file_type = relationship(LkReferenceFileType)
     payments = relationship("PaymentReferenceFile", back_populates="reference_file")
@@ -978,14 +1263,14 @@ class ReferenceFile(Base, TimestampMixin):
     )
 
 
-class PaymentReferenceFile(Base):
+class PaymentReferenceFile(Base, TimestampMixin):
     __tablename__ = "link_payment_reference_file"
-    payment_id = Column(UUID(as_uuid=True), ForeignKey("payment.payment_id"), primary_key=True)
+    payment_id = Column(PostgreSQLUUID, ForeignKey("payment.payment_id"), primary_key=True)
     reference_file_id = Column(
-        UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), primary_key=True
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), primary_key=True
     )
     ctr_document_identifier_id = Column(
-        UUID(as_uuid=True),
+        PostgreSQLUUID,
         ForeignKey("ctr_document_identifier.ctr_document_identifier_id"),
         index=True,
     )
@@ -997,14 +1282,14 @@ class PaymentReferenceFile(Base):
     )
 
 
-class EmployeeReferenceFile(Base):
+class EmployeeReferenceFile(Base, TimestampMixin):
     __tablename__ = "link_employee_reference_file"
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), primary_key=True)
+    employee_id = Column(PostgreSQLUUID, ForeignKey("employee.employee_id"), primary_key=True)
     reference_file_id = Column(
         PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), primary_key=True
     )
     ctr_document_identifier_id = Column(
-        UUID(as_uuid=True),
+        PostgreSQLUUID,
         ForeignKey("ctr_document_identifier.ctr_document_identifier_id"),
         index=True,
     )
@@ -1019,50 +1304,50 @@ class EmployeeReferenceFile(Base):
         return self
 
 
-class DuaReductionPaymentReferenceFile(Base):
+class DuaReductionPaymentReferenceFile(Base, TimestampMixin):
     __tablename__ = "link_dua_reduction_payment_reference_file"
     dua_reduction_payment_id = Column(
-        UUID(as_uuid=True),
+        PostgreSQLUUID,
         ForeignKey("dua_reduction_payment.dua_reduction_payment_id"),
         primary_key=True,
     )
     reference_file_id = Column(
-        UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), primary_key=True
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), primary_key=True
     )
 
     dua_reduction_payment = relationship("DuaReductionPayment")
     reference_file = relationship("ReferenceFile")
 
 
-class DiaReductionPaymentReferenceFile(Base):
+class DiaReductionPaymentReferenceFile(Base, TimestampMixin):
     __tablename__ = "link_dia_reduction_payment_reference_file"
     dia_reduction_payment_id = Column(
-        UUID(as_uuid=True),
+        PostgreSQLUUID,
         ForeignKey("dia_reduction_payment.dia_reduction_payment_id"),
         primary_key=True,
     )
     reference_file_id = Column(
-        UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), primary_key=True
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), primary_key=True
     )
 
     dia_reduction_payment = relationship("DiaReductionPayment")
     reference_file = relationship("ReferenceFile")
 
 
-class StateLog(Base):
+class StateLog(Base, TimestampMixin):
     __tablename__ = "state_log"
-    state_log_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    state_log_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     end_state_id = Column(Integer, ForeignKey("lk_state.state_id"))
     started_at = Column(TIMESTAMP(timezone=True))
     ended_at = Column(TIMESTAMP(timezone=True), index=True)
     outcome = Column(JSON)
-    payment_id = Column(UUID(as_uuid=True), ForeignKey("payment.payment_id"), index=True)
+    payment_id = Column(PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True)
     reference_file_id = Column(
-        UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
     )
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
-    claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True)
-    prev_state_log_id = Column(UUID(as_uuid=True), ForeignKey("state_log.state_log_id"))
+    employee_id = Column(PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True)
+    claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True)
+    prev_state_log_id = Column(PostgreSQLUUID, ForeignKey("state_log.state_log_id"))
     associated_type = Column(Text, index=True)
 
     import_log_id = Column(
@@ -1077,18 +1362,18 @@ class StateLog(Base):
     import_log = cast("Optional[ImportLog]", relationship(ImportLog, foreign_keys=[import_log_id]))
 
 
-class LatestStateLog(Base):
+class LatestStateLog(Base, TimestampMixin):
     __tablename__ = "latest_state_log"
-    latest_state_log_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    latest_state_log_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
 
     state_log_id = Column(
-        UUID(as_uuid=True), ForeignKey("state_log.state_log_id"), index=True, nullable=False
+        PostgreSQLUUID, ForeignKey("state_log.state_log_id"), index=True, nullable=False
     )
-    payment_id = Column(UUID(as_uuid=True), ForeignKey("payment.payment_id"), index=True)
-    employee_id = Column(UUID(as_uuid=True), ForeignKey("employee.employee_id"), index=True)
-    claim_id = Column(UUID(as_uuid=True), ForeignKey("claim.claim_id"), index=True)
+    payment_id = Column(PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True)
+    employee_id = Column(PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True)
+    claim_id = Column(PostgreSQLUUID, ForeignKey("claim.claim_id"), index=True)
     reference_file_id = Column(
-        UUID(as_uuid=True), ForeignKey("reference_file.reference_file_id"), index=True
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
     )
 
     state_log = relationship("StateLog")
@@ -1100,7 +1385,7 @@ class LatestStateLog(Base):
 
 class DuaReductionPayment(Base, TimestampMixin):
     __tablename__ = "dua_reduction_payment"
-    dua_reduction_payment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    dua_reduction_payment_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
 
     fineos_customer_number = Column(Text, nullable=False)
     employer_fein = Column(Text)
@@ -1121,7 +1406,7 @@ class DuaReductionPayment(Base, TimestampMixin):
 
 class DiaReductionPayment(Base, TimestampMixin):
     __tablename__ = "dia_reduction_payment"
-    dia_reduction_payment_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    dia_reduction_payment_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
 
     fineos_customer_number = Column(Text, nullable=False)
     board_no = Column(Text)
@@ -1141,10 +1426,50 @@ class DiaReductionPayment(Base, TimestampMixin):
 
     # Each row should be unique.
 
+    Index(
+        "ix_dia_reduction_payment_fineos_customer_number_board_no",
+        fineos_customer_number,
+        board_no,
+        unique=False,
+    )
+
+
+class DuaEmployeeDemographics(Base, TimestampMixin):
+    __tablename__ = "dua_employee_demographics"
+    dua_employee_demographics_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    fineos_customer_number = Column(Text, nullable=True)
+    date_of_birth = Column(Date, nullable=True)
+    gender_code = Column(Text, nullable=True)
+    occupation_code = Column(Text, nullable=True)
+    occupation_description = Column(Text, nullable=True)
+    employer_fein = Column(Text, nullable=True)
+    employer_reporting_unit_number = Column(Text, nullable=True)
+
+    # this Unique index is required since our test framework does not run migrations
+    # it is excluded from migrations. see api/massgov/pfml/db/migrations/env.py
+    Index(
+        "dua_employee_demographics_unique_import_data_idx",
+        fineos_customer_number,
+        date_of_birth,
+        gender_code,
+        occupation_code,
+        occupation_description,
+        employer_fein,
+        employer_reporting_unit_number,
+        unique=True,
+    )
+
+    # Each row should be unique. This enables us to load only new rows from a CSV and ensures that
+    # we don't include demographics twice as two different rows. Almost all fields are nullable so we
+    # have to coalesce those null values to empty strings. We've manually adjusted the migration
+    # that adds this unique constraint to coalesce those nullable fields.
+    # See: 2021_10_04_13_30_03_95d3e464a5b2_add_dua_employee_demographics_table.py
+
 
 class PubError(Base, TimestampMixin):
     __tablename__ = "pub_error"
-    pub_error_id = Column(UUID(as_uuid=True), primary_key=True, default=uuid_gen)
+    pub_error_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
 
     pub_error_type_id = Column(
         Integer, ForeignKey("lk_pub_error_type.pub_error_type_id"), nullable=False
@@ -1179,7 +1504,7 @@ class PubError(Base, TimestampMixin):
 class LkPubErrorType(Base):
     __tablename__ = "lk_pub_error_type"
     pub_error_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    pub_error_type_description = Column(Text)
+    pub_error_type_description = Column(Text, nullable=False)
 
     def __init__(self, pub_error_type_id, pub_error_type_description):
         self.pub_error_type_id = pub_error_type_id
@@ -1221,6 +1546,103 @@ class AddressType(LookupTable):
     BUSINESS = LkAddressType(2, "Business")
     MAILING = LkAddressType(3, "Mailing")
     RESIDENTIAL = LkAddressType(4, "Residential")
+
+
+class AbsencePeriodType(LookupTable):
+    model = LkAbsencePeriodType
+    column_names = ("absence_period_type_id", "absence_period_type_description")
+
+    TIME_OFF_PERIOD = LkAbsencePeriodType(1, "Time off period")
+    REDUCED_SCHEDULE = LkAbsencePeriodType(2, "Reduced Schedule")
+    EPISODIC = LkAbsencePeriodType(3, "Episodic")
+    OFFICE_VISIT = LkAbsencePeriodType(4, "Office Visit")
+    INCAPACITY = LkAbsencePeriodType(5, "Incapacity")
+    OFFICE_VISIT_EPISODIC = LkAbsencePeriodType(6, "Office Visit Episodic")
+    INCAPACITY_EPISODIC = LkAbsencePeriodType(7, "Incapacity Episodic")
+    BLACKOUT_PERIOD = LkAbsencePeriodType(8, "Blackout Period")
+    UNSPECIFIED = LkAbsencePeriodType(9, "Unspecified")
+    CONTINUOUS = LkAbsencePeriodType(10, "Continuous")
+    INTERMITTENT = LkAbsencePeriodType(11, "Intermittent")
+
+
+class AbsenceReason(LookupTable):
+    model = LkAbsenceReason
+    column_names = ("absence_reason_id", "absence_reason_description")
+
+    SERIOUS_HEALTH_CONDITION_EMPLOYEE = LkAbsenceReason(1, "Serious Health Condition - Employee")
+    MEDICAL_DONATION_EMPLOYEE = LkAbsenceReason(2, "Medical Donation - Employee")
+    PREVENTATIVE_CARE_EMPLOYEE = LkAbsenceReason(3, "Preventative Care - Employee")
+    SICKENESS_NON_SERIOUS_HEALTH_CONDITION_EMPLOYEE = LkAbsenceReason(
+        4, "Sickness - Non-Serious Health Condition - Employee"
+    )
+    PREGNANCY_MATERNITY = LkAbsenceReason(5, "Pregnancy/Maternity")
+    CHILD_BONDING = LkAbsenceReason(6, "Child Bonding")
+    CARE_OF_A_FAMILY_MEMBER = LkAbsenceReason(7, "Care for a Family Member")
+    BEREAVEMENT = LkAbsenceReason(8, "Bereavement")
+    EDUCATIONAL_ACTIVITY_FAMILY = LkAbsenceReason(9, "Educational Activity - Family")
+    MEDICAL_DONATION_FAMILY = LkAbsenceReason(10, "Medical Donation - Family")
+    MILITARY_CAREGIVER = LkAbsenceReason(11, "Military Caregiver")
+    MILITARY_EXIGENCY_FAMILY = LkAbsenceReason(12, "Military Exigency Family")
+    PREVENTATIVE_CARE_FAMILY_MEMBER = LkAbsenceReason(13, "Preventative Care - Family Member")
+    PUBLIC_HEALTH_EMERGENCY_FAMILY = LkAbsenceReason(14, "Public Health Emergency - Family")
+
+
+class AbsenceReasonQualifierOne(LookupTable):
+    model = LkAbsenceReasonQualifierOne
+    column_names = ("absence_reason_qualifier_one_id", "absence_reason_qualifier_one_description")
+
+    NOT_WORK_RELATED = LkAbsenceReasonQualifierOne(1, "Not Work Related")
+    WORK_RELATED = LkAbsenceReasonQualifierOne(2, "Work Related")
+    BLOOD = LkAbsenceReasonQualifierOne(3, "Blood")
+    BLOOD_STEM_CELL = LkAbsenceReasonQualifierOne(4, "Blood Stem Cell")
+    BONE_MARROW = LkAbsenceReasonQualifierOne(5, "Bone Marrow")
+    ORGAN = LkAbsenceReasonQualifierOne(6, "Organ")
+    OTHER = LkAbsenceReasonQualifierOne(7, "Other")
+    POSTNATAL_DISABILITY = LkAbsenceReasonQualifierOne(8, "Postnatal Disability")
+    PRENATAL_CARE = LkAbsenceReasonQualifierOne(9, "Prenatal Care")
+    PRENATAL_DISABILITY = LkAbsenceReasonQualifierOne(10, "Prenatal Disability")
+    ADOPTION = LkAbsenceReasonQualifierOne(11, "Adoption")
+    FOSTER_CARE = LkAbsenceReasonQualifierOne(12, "Foster Care")
+    NEWBORN = LkAbsenceReasonQualifierOne(13, "Newborn")
+    PREGNANCY_RELATED = LkAbsenceReasonQualifierOne(14, "Pregnancy Related")
+    RIGHT_TO_LEAVE = LkAbsenceReasonQualifierOne(15, "Right to Leave")
+    SERIOUS_HEALTH_CONDITION = LkAbsenceReasonQualifierOne(16, "Serious Health Condition")
+    SICKNESS_NON_SERIOUS_HEALTH_CONDITION = LkAbsenceReasonQualifierOne(
+        17, "Sickness - Non-Serious Health Condition"
+    )
+    CHILDCARE = LkAbsenceReasonQualifierOne(18, "Childcare")
+    COUNSELING = LkAbsenceReasonQualifierOne(19, "Counseling")
+    FINANCIAL_AND_LEGAL_ARRANGEMENTS = LkAbsenceReasonQualifierOne(
+        20, "Financial & Legal Arrangements"
+    )
+    MILITARY_EVENTS_AND_RELATED_ACTIVITIES = LkAbsenceReasonQualifierOne(
+        21, "Military Events & Related Activities"
+    )
+    OTHER_ADDITIONAL_ACTIVITIES = LkAbsenceReasonQualifierOne(22, "Other Additional Activities")
+    PRENATAL_CARE = LkAbsenceReasonQualifierOne(23, "Prenatal Care")
+    POST_DEPLOYMENT_ACTIVITES_INCLUDING_BEREAVEMENT = LkAbsenceReasonQualifierOne(
+        24, "Post Deployment Activities - Including Bereavement"
+    )
+    REST_AND_RECUPERATION = LkAbsenceReasonQualifierOne(25, "Rest & Recuperation")
+    SHORT_NOTICE_DEPLOYMENT = LkAbsenceReasonQualifierOne(26, "Short Notice Deployment")
+    CLOSURE_OF_SCHOOL_CHILDCARE = LkAbsenceReasonQualifierOne(27, "Closure of School/Childcare")
+    QUARANTINE_ISOLATION_NON_SICK = LkAbsenceReasonQualifierOne(
+        28, "Quarantine/Isolation - Not Sick"
+    )
+    BIRTH_DISABILITY = LkAbsenceReasonQualifierOne(29, "Birth Disability")
+    CHILDCARE_AND_SCHOOL_ACTIVITIES = LkAbsenceReasonQualifierOne(
+        30, "Childcare and School Activities"
+    )
+
+
+class AbsenceReasonQualifierTwo(LookupTable):
+    model = LkAbsenceReasonQualifierTwo
+    column_names = ("absence_reason_qualifier_two_id", "absence_reason_qualifier_two_description")
+
+    ACCIDENT_INJURY = LkAbsenceReasonQualifierTwo(1, "Accident / Injury")
+    MEDICAL_RELATED = LkAbsenceReasonQualifierTwo(2, "Medical Related")
+    NON_MEDICAL = LkAbsenceReasonQualifierTwo(3, "Non Medical")
+    SICKNESS = LkAbsenceReasonQualifierTwo(4, "Sickness")
 
 
 class GeoState(LookupTable):
@@ -2130,6 +2552,50 @@ class State(LookupTable):
         187, "Error saving new DUA payments in database", Flow.DUA_PAYMENT_LIST.flow_id
     )
 
+    DIA_CONSOLIDATED_REPORT_CREATED = LkState(
+        188, "Create consolidated report for DFML", Flow.DFML_DIA_REDUCTION_REPORT.flow_id
+    )
+    DIA_CONSOLIDATED_REPORT_SENT = LkState(
+        189, "Send consolidated DIA report for DFML", Flow.DFML_DIA_REDUCTION_REPORT.flow_id
+    )
+
+    DIA_CONSOLIDATED_REPORT_ERROR = LkState(
+        190, "Consolidated DIA report for DFML error", Flow.DFML_DIA_REDUCTION_REPORT.flow_id
+    )
+
+    # Tax Withholding States
+    STATE_WITHHOLDING_READY_FOR_PROCESSING = LkState(
+        191, "State Withholding ready for processing", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    STATE_WITHHOLDING_PENDING_AUDIT = LkState(
+        192, "State Withholding awaiting Audit Report", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    STATE_WITHHOLDING_ERROR = LkState(
+        193, "State Withholding Rejected", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    STATE_WITHHOLDING_SEND_FUNDS = LkState(
+        194, "State Withholding send funds to DOR", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_READY_FOR_PROCESSING = LkState(
+        195, "Federal Withholding ready for processing", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_PENDING_AUDIT = LkState(
+        196, "Federal Withholding awaiting Audit Report", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_ERROR = LkState(
+        197, "Federal Withholding Rejected", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
+    FEDERAL_WITHHOLDING_SEND_FUNDS = LkState(
+        198, "Federal Withholding send funds to IRS", Flow.DELEGATED_PAYMENT.flow_id
+    )
+
 
 class PaymentTransactionType(LookupTable):
     model = LkPaymentTransactionType
@@ -2197,6 +2663,18 @@ class ReferenceFileType(LookupTable):
     PUB_POSITIVE_PAYMENT = LkReferenceFileType(27, "PUB positive pay file", 1)
 
     DELEGATED_PAYMENT_REPORT_FILE = LkReferenceFileType(28, "SQL Report", 1)
+    DIA_CONSOLIDATED_REDUCTION_REPORT = LkReferenceFileType(
+        29, "Consolidated DIA payments for DFML reduction report", 1
+    )
+    DIA_CONSOLIDATED_REDUCTION_REPORT_ERRORS = LkReferenceFileType(
+        30, "Consolidated DIA payments for DFML reduction report", 1
+    )
+
+    FINEOS_PAYMENT_RECONCILIATION_EXTRACT = LkReferenceFileType(
+        31, "Payment reconciliation extract", 3
+    )
+
+    DUA_DEMOGRAPHICS_FILE = LkReferenceFileType(32, "DUA demographics", 1)
 
 
 class Title(LookupTable):
@@ -2221,16 +2699,86 @@ class LeaveRequestDecision(LookupTable):
     IN_REVIEW = LkLeaveRequestDecision(2, "In Review")
     APPROVED = LkLeaveRequestDecision(3, "Approved")
     DENIED = LkLeaveRequestDecision(4, "Denied")
+    CANCELLED = LkLeaveRequestDecision(5, "Cancelled")
+    WITHDRAWN = LkLeaveRequestDecision(6, "Withdrawn")
+    PROJECTED = LkLeaveRequestDecision(7, "Projected")
+    VOIDED = LkLeaveRequestDecision(8, "Voided")
+
+
+class AzureGroup(LookupTable):
+    model = LkAzureGroup
+    column_names = (
+        "azure_group_id",
+        "azure_group_name",
+        "azure_group_guid",
+        "azure_group_parent_id",
+    )
+
+    NON_PROD = LkAzureGroup(
+        1, "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD", "67f909a7-049b-4844-98eb-beec1bd35fc0", None
+    )
+    NON_PROD_ADMIN = LkAzureGroup(
+        2, "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD_ADMIN", "1af1bd6d-2a32-405d-9d90-7b126be8b9fa", 1
+    )
+    NON_PROD_DEV = LkAzureGroup(
+        3, "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD_DEV", "d268edaa-4c0e-48ff-82c0-012e224ddda3", 1
+    )
+    NON_PROD_CONTACT_CENTER = LkAzureGroup(
+        4,
+        "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD_CONTACT_CENTER",
+        "13d579da-bb84-4c5f-a382-93584fc9e91f",
+        1,
+    )
+    NON_PROD_SERVICE_DESK = LkAzureGroup(
+        5,
+        "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD_SERVICE_DESK",
+        "e483a1df-5ce4-4e94-a9bc-48dacf4a14f4",
+        1,
+    )
+    NON_PROD_DFML_OPS = LkAzureGroup(
+        6, "TSS-SG-PFML_ADMIN_PORTAL_NON_PROD_DFML_OPS", "be96c3c2-5d2b-4845-9ed5-bb0aa109009e", 1
+    )
+    PROD = LkAzureGroup(7, "TSS-SG-PFML_ADMIN_PORTAL_PROD", "7", None)
+    PROD_ADMIN = LkAzureGroup(8, "TSS-SG-PFML_ADMIN_PORTAL_PROD_ADMIN", "8", 7)
+    PROD_DEV = LkAzureGroup(9, "TSS-SG-PFML_ADMIN_PORTAL_PROD_DEV", "9", 7)
+    PROD_CONTACT_CENTER = LkAzureGroup(10, "TSS-SG-PFML_ADMIN_PORTAL_PROD_CONTACT_CENTER", "10", 7)
+    PROD_SERVICE_DESK = LkAzureGroup(11, "TSS-SG-PFML_ADMIN_PORTAL_PROD_SERVICE_DESK", "11", 7)
+    PROD_DFML_OPS = LkAzureGroup(12, "TSS-SG-PFML_ADMIN_PORTAL_PROD_DFML_OPS", "12", 7)
+
+
+class AzurePermission(LookupTable):
+    model = LkAzurePermission
+    column_names = ("azure_permission_id", "azure_permission_resource", "azure_permission_action")
+
+    USER_READ = LkAzurePermission(1, "USER", READ)
+    USER_EDIT = LkAzurePermission(2, "USER", EDIT)
+    LOG_READ = LkAzurePermission(3, "LOG", READ)
+    DASHBOARD_READ = LkAzurePermission(4, "DASHBOARD", READ)
+    SETTINGS_READ = LkAzurePermission(5, "SETTINGS", READ)
+    SETTINGS_EDIT = LkAzurePermission(6, "SETTINGS", EDIT)
+    MAINTENANCE_READ = LkAzurePermission(7, "MAINTENANCE", READ)
+    MAINTENANCE_EDIT = LkAzurePermission(8, "MAINTENANCE", EDIT)
+    FEATURES_READ = LkAzurePermission(9, "FEATURES", READ)
+    FEATURES_EDIT = LkAzurePermission(10, "FEATURES", EDIT)
+
+    @classmethod
+    def get_all(cls):
+        return [p for p in vars(cls).values() if isinstance(p, cls.model)]
 
 
 def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
+    AbsencePeriodType.sync_to_database(db_session)
+    AbsenceReason.sync_to_database(db_session)
+    AbsenceReasonQualifierOne.sync_to_database(db_session)
+    AbsenceReasonQualifierTwo.sync_to_database(db_session)
     AbsenceStatus.sync_to_database(db_session)
     AddressType.sync_to_database(db_session)
     GeoState.sync_to_database(db_session)
     Country.sync_to_database(db_session)
     ClaimType.sync_to_database(db_session)
     Race.sync_to_database(db_session)
+    LeaveRequestDecision.sync_to_database(db_session)
     MaritalStatus.sync_to_database(db_session)
     Gender.sync_to_database(db_session)
     Occupation.sync_to_database(db_session)
@@ -2251,4 +2799,6 @@ def sync_lookup_tables(db_session):
     ManagedRequirementStatus.sync_to_database(db_session)
     ManagedRequirementCategory.sync_to_database(db_session)
     ManagedRequirementType.sync_to_database(db_session)
+    AzureGroup.sync_to_database(db_session)
+    AzurePermission.sync_to_database(db_session)
     db_session.commit()

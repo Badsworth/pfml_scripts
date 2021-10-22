@@ -16,16 +16,19 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.payments.payments_util import get_now, move_file_and_update_ref_file
-from massgov.pfml.payments.sftp_s3_transfer import (
-    SftpS3TransferConfig,
-    copy_from_sftp_to_s3_and_archive_files,
-    copy_to_sftp_and_archive_s3_files,
+from massgov.pfml.delegated_payments.delegated_payments_util import (
+    get_now,
+    move_file_and_update_ref_file,
 )
 from massgov.pfml.reductions.common import AgencyLoadResult, get_claimants_for_outbound
 from massgov.pfml.reductions.config import get_moveit_config, get_s3_config
 from massgov.pfml.util.batch.log import LogEntry
 from massgov.pfml.util.files import upload_to_s3
+from massgov.pfml.util.sftp_s3_transfer import (
+    SftpS3TransferConfig,
+    copy_from_sftp_to_s3_and_archive_files,
+    copy_to_sftp_and_archive_s3_files,
+)
 
 logger = logging.get_logger(__name__)
 
@@ -73,6 +76,10 @@ class Constants:
     WEEKLY_AMOUNT_FIELD = "WEEKLY_AMOUNT"
     AWARD_CREATED_DATE_FIELD = "AWARD_CREATED_DATE"
     TERMINATION_DATE_FIELD = "TERMINATION_DATE"
+    ABSENCE_CASE_ID = "ABSENCE_CASE_ID"
+    ABSENCE_PERIOD_START_DATE = "ABSENCE_PERIOD_START_DATE"
+    ABSENCE_PERIOD_END_DATE = "ABSENCE_PERIOD_END_DATE"
+    ABSENCE_CASE_STATUS = "ABSENCE_CASE_STATUS"
 
     CLAIMAINT_LIST_FIELDS = [
         CUSTOMER_NUMBER_FIELD,

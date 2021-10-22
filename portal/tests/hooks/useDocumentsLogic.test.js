@@ -1,15 +1,15 @@
 import { BadRequestError, ValidationError } from "../../src/errors";
+import { act, renderHook } from "@testing-library/react-hooks";
 import {
   attachDocumentMock,
   downloadDocumentMock,
   getDocumentsMock,
 } from "../../src/api/DocumentsApi";
-import { makeFile, testHook } from "../test-utils";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
-import Document from "../../src/models/Document";
+import BenefitsApplicationDocument from "../../src/models/BenefitsApplicationDocument";
 import DocumentCollection from "../../src/models/DocumentCollection";
-import { act } from "react-dom/test-utils";
+import { makeFile } from "../test-utils";
 import { uniqueId } from "lodash";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useDocumentsLogic from "../../src/hooks/useDocumentsLogic";
@@ -25,8 +25,8 @@ describe("useDocumentsLogic", () => {
   const mockFilename = "test_file.png";
   let appErrorsLogic, documentsLogic;
 
-  function renderHook() {
-    testHook(() => {
+  function setup() {
+    renderHook(() => {
       const portalFlow = usePortalFlow();
       appErrorsLogic = useAppErrorsLogic({ portalFlow });
       documentsLogic = useDocumentsLogic({ appErrorsLogic });
@@ -34,7 +34,7 @@ describe("useDocumentsLogic", () => {
   }
 
   beforeEach(() => {
-    renderHook();
+    setup();
   });
 
   afterEach(() => {
@@ -159,9 +159,18 @@ describe("useDocumentsLogic", () => {
 
       beforeEach(async () => {
         previouslyLoadedDocuments = new DocumentCollection([
-          new Document({ application_id, fineos_document_id: 1 }),
-          new Document({ application_id, fineos_document_id: 2 }),
-          new Document({ application_id, fineos_document_id: 3 }),
+          new BenefitsApplicationDocument({
+            application_id,
+            fineos_document_id: 1,
+          }),
+          new BenefitsApplicationDocument({
+            application_id,
+            fineos_document_id: 2,
+          }),
+          new BenefitsApplicationDocument({
+            application_id,
+            fineos_document_id: 3,
+          }),
         ]);
 
         getDocumentsMock.mockImplementationOnce(() => {
@@ -179,7 +188,7 @@ describe("useDocumentsLogic", () => {
         // reset the call count
         getDocumentsMock.mockClear();
 
-        newDocument = new Document({
+        newDocument = new BenefitsApplicationDocument({
           application_id,
           document_type: mockDocumentType,
           fineos_document_id: 5,
@@ -244,19 +253,20 @@ describe("useDocumentsLogic", () => {
 
     it("throws ValidationError when no files are included in the request", async () => {
       const files = [];
-      await documentsLogic.attach(
-        application_id,
-        files,
-        mockDocumentType,
-        false
-      );
+      await act(async () => {
+        await documentsLogic.attach(
+          application_id,
+          files,
+          mockDocumentType,
+          false
+        );
+      });
       expect(appErrorsLogic.appErrors.items[0]).toEqual(
         expect.objectContaining({
           field: "file",
           message: "Upload at least one file to continue.",
           meta: null,
           name: "ValidationError",
-          rule: null,
           type: "required",
         })
       );
@@ -267,7 +277,9 @@ describe("useDocumentsLogic", () => {
         // file1 - success:
         .mockResolvedValueOnce({
           success: true,
-          document: new Document({ fineos_document_id: uniqueId() }),
+          document: new BenefitsApplicationDocument({
+            fineos_document_id: uniqueId(),
+          }),
         })
         // file2 - JS exception
         .mockRejectedValueOnce(new Error("File 2 failed"))
@@ -323,7 +335,9 @@ describe("useDocumentsLogic", () => {
 
     attachDocumentMock.mockResolvedValueOnce({
       success: true,
-      document: new Document({ fineos_document_id: uniqueId() }),
+      document: new BenefitsApplicationDocument({
+        fineos_document_id: uniqueId(),
+      }),
     }); // file1 - success
 
     const files = [{ id: "1", file: makeFile({ name: "file1" }) }];
@@ -351,9 +365,18 @@ describe("useDocumentsLogic", () => {
         let loadedDocuments;
         beforeEach(async () => {
           loadedDocuments = new DocumentCollection([
-            new Document({ application_id, fineos_document_id: 1 }),
-            new Document({ application_id, fineos_document_id: 2 }),
-            new Document({ application_id, fineos_document_id: 3 }),
+            new BenefitsApplicationDocument({
+              application_id,
+              fineos_document_id: 1,
+            }),
+            new BenefitsApplicationDocument({
+              application_id,
+              fineos_document_id: 2,
+            }),
+            new BenefitsApplicationDocument({
+              application_id,
+              fineos_document_id: 3,
+            }),
           ]);
 
           getDocumentsMock.mockResolvedValueOnce({
@@ -388,15 +411,15 @@ describe("useDocumentsLogic", () => {
         it("merges previously loaded documents with newly loaded documents", async () => {
           const newApplicationId = "mock-application-id-2";
           const newDocuments = new DocumentCollection([
-            new Document({
+            new BenefitsApplicationDocument({
               application_id: newApplicationId,
               fineos_document_id: 4,
             }),
-            new Document({
+            new BenefitsApplicationDocument({
               application_id: newApplicationId,
               fineos_document_id: 5,
             }),
-            new Document({
+            new BenefitsApplicationDocument({
               application_id: newApplicationId,
               fineos_document_id: 6,
             }),
@@ -480,21 +503,30 @@ describe("useDocumentsLogic", () => {
       let resolveFirstLoad, resolveSecondLoad;
 
       const documentSet1 = new DocumentCollection([
-        new Document({ application_id, fineos_document_id: 1 }),
-        new Document({ application_id, fineos_document_id: 2 }),
-        new Document({ application_id, fineos_document_id: 3 }),
+        new BenefitsApplicationDocument({
+          application_id,
+          fineos_document_id: 1,
+        }),
+        new BenefitsApplicationDocument({
+          application_id,
+          fineos_document_id: 2,
+        }),
+        new BenefitsApplicationDocument({
+          application_id,
+          fineos_document_id: 3,
+        }),
       ]);
 
       const documentSet2 = new DocumentCollection([
-        new Document({
+        new BenefitsApplicationDocument({
           application_id: application_id2,
           fineos_document_id: 4,
         }),
-        new Document({
+        new BenefitsApplicationDocument({
           application_id: application_id2,
           fineos_document_id: 5,
         }),
-        new Document({
+        new BenefitsApplicationDocument({
           application_id: application_id2,
           fineos_document_id: 6,
         }),
@@ -550,7 +582,10 @@ describe("useDocumentsLogic", () => {
         status: 200,
         success: true,
         documents: new DocumentCollection([
-          new Document({ application_id, fineos_document_id: 1 }),
+          new BenefitsApplicationDocument({
+            application_id,
+            fineos_document_id: 1,
+          }),
         ]),
       });
 
@@ -584,7 +619,7 @@ describe("useDocumentsLogic", () => {
         );
       });
 
-      const document = new Document({
+      const document = new BenefitsApplicationDocument({
         application_id,
         content_type: "image/png",
         fineos_document_id: uniqueId(),
@@ -598,7 +633,7 @@ describe("useDocumentsLogic", () => {
     });
 
     it("makes a request to the API", () => {
-      const document = new Document({
+      const document = new BenefitsApplicationDocument({
         application_id,
         content_type: "image/png",
         fineos_document_id: uniqueId(),
@@ -612,7 +647,7 @@ describe("useDocumentsLogic", () => {
     });
 
     it("returns a blob", async () => {
-      const document = new Document({
+      const document = new BenefitsApplicationDocument({
         application_id,
         content_type: "image/png",
         fineos_document_id: uniqueId(),

@@ -16,7 +16,6 @@ module.exports = {
     "\\.(css|scss)$": "<rootDir>/__mocks__/styleMock.js",
   },
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
-  snapshotSerializers: ["enzyme-to-json/serializer"],
   testEnvironment: "jsdom",
   testPathIgnorePatterns: [
     "<rootDir>/.next/",
@@ -25,7 +24,7 @@ module.exports = {
     "<rootDir>/tests/lib/",
     "<rootDir>/tests/test-utils/",
   ],
-  testRegex: "(/tests/.*|(\\.|/)(test|spec))\\.[jt]sx?$",
+  testRegex: "(/(tests)/.*|(\\.|/)(test|spec))\\.[jt]sx?$",
   coverageThreshold: {
     global: {
       branches: 90,

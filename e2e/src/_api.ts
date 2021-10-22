@@ -156,7 +156,12 @@ export const http = {
     url: string,
     req?: FetchRequestOptions
   ): Promise<ApiResponse<string | undefined>> {
-    const { baseUrl, headers, fetch: customFetch, ...init } = {
+    const {
+      baseUrl,
+      headers,
+      fetch: customFetch,
+      ...init
+    } = {
       ...defaults,
       ...req,
     };
@@ -739,6 +744,7 @@ export interface ApplicationResponse {
   employer_benefits?: EmployerBenefit[] | null;
   other_incomes?: OtherIncome[] | null;
   updated_time?: string;
+  updated_at?: string;
   status?: "Started" | "Submitted" | "Completed";
   phone?: MaskedPhone;
   has_previous_leaves_other_reason?: boolean | null;
@@ -865,7 +871,8 @@ export interface DocumentUploadRequest {
     | "Child bonding evidence form"
     | "Care for a family member form"
     | "Military exigency form"
-    | "Certification Form";
+    | "Certification Form"
+    | "Appeal Notice - Claim Decision Changed";
   name?: string;
   description?: string;
   mark_evidence_received?: boolean;

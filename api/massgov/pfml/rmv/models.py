@@ -1,6 +1,6 @@
 from datetime import date
 from enum import Enum
-from typing import Optional
+from typing import Optional, Union
 
 from pydantic import Field, validator
 
@@ -33,6 +33,12 @@ class VendorLicenseInquiryRequest(PydanticBaseModel):
         allow_population_by_field_name = True
 
 
+class RMVSex(str, Enum):
+    M = "MALE"
+    F = "FEMALE"
+    X = "X"
+
+
 class VendorLicenseInquiryResponse(PydanticBaseModel):
     customer_key: str
     license_id: str = Field(..., alias="LicenseID")
@@ -45,13 +51,14 @@ class VendorLicenseInquiryResponse(PydanticBaseModel):
     street2: Optional[str]
     city: str
     zip: str
+    sex: Union[RMVSex, str, None]
 
-    _parse_license1 = validator("license1_expiration_date", pre=True, allow_reuse=True)(
-        parse_date_YMD
-    )
-    _parse_license2 = validator("license2_expiration_date", pre=True, allow_reuse=True)(
-        parse_date_YMD
-    )
+    _parse_license1: classmethod = validator(
+        "license1_expiration_date", pre=True, allow_reuse=True
+    )(parse_date_YMD)
+    _parse_license2: classmethod = validator(
+        "license2_expiration_date", pre=True, allow_reuse=True
+    )(parse_date_YMD)
 
     class Config:
         alias_generator = snake_to_camel

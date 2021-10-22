@@ -86,20 +86,6 @@ def test_request_response_validation():
     ).get_json()
     assert request_validation_error_response_no_warnings.get("warnings", None) is None
 
-    request_validation_success_response_with_warnings = client.post(
-        "/user", headers={"X-PFML-Warn-On-Missing-Required-Fields": "true"}, json=MISSING_DATA_USER
-    ).get_json()
-
-    assert request_validation_success_response_with_warnings.get("warnings", None) is not None
-    assert request_validation_success_response_with_warnings["status_code"] == 200
-
-    request_validation_error_response_with_warnings = client.post(
-        "/user", headers={"X-PFML-Warn-On-Missing-Required-Fields": "true"}, json=INVALID_USER
-    ).get_json()
-
-    assert request_validation_error_response_with_warnings.get("warnings", None) is not None
-    assert request_validation_error_response_with_warnings["status_code"] == 400
-
     assert success_response["message"] == "Success"
     assert success_response["data"] is not None
     assert success_response.get("data") is not None
