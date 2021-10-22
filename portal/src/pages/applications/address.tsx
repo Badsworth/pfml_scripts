@@ -1,13 +1,26 @@
-import React, { useEffect } from "react";
+import {
+  AddressSuggestion,
+  format,
+  search,
+  searchAddress,
+} from "../../services/experian";
+import React, { useEffect, useState } from "react";
+import { keyBy, pick } from "lodash";
 import AddressModel from "../../models/Address";
+import Autocomplete from "accessible-autocomplete/react";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import FieldsetAddress from "../../components/FieldsetAddress";
+import FormLabel from "../../components/FormLabel";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
+import Modal from "../../components/Modal";
 import QuestionPage from "../../components/QuestionPage";
-import { pick } from "lodash";
+import Spinner from "../../components/Spinner";
+import ThrottledButton from "../../components/ThrottledButton";
+
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
+import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
@@ -43,6 +56,12 @@ export const Address = (props: AddressProps) => {
   const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
   );
+
+  const [addressSuggestions, setAddressSuggestions] = useState<
+    AddressSuggestion[]
+  >([]);
+  const [isModalVisible, setIsModalVisible] = useState<boolean>(false);
+  const [choices, setChoices] = useState<Record<string, AddressSuggestion>>({});
 
   const { has_mailing_address } = formState;
 
@@ -80,48 +99,118 @@ export const Address = (props: AddressProps) => {
     mailingAddressProps.value = new AddressModel();
   }
 
+  const handleValidateClick = async () => {
+    const suggestions = await searchAddress(
+      new AddressModel(residentialAddressProps.value)
+    );
+    setAddressSuggestions(suggestions);
+    setIsModalVisible(true);
+  };
+
+  const handleAddressSuggestionClick = useThrottledHandler<string>(
+    async (addressKey) => {
+      const validatedAddress = await format(addressKey);
+
+      updateFields({ residential_address: validatedAddress });
+      setAddressSuggestions([]);
+      setIsModalVisible(false);
+    }
+  );
+
+  const handleAutocompleteChange = useThrottledHandler(
+    async (
+      searchString: string,
+      populateResults: (results: string[]) => void
+    ) => {
+      const suggestions = await search(searchString);
+      const results = suggestions.map((choice) => choice.address);
+      setChoices(keyBy(suggestions, (suggestion) => suggestion.address));
+      populateResults(results);
+    }
+  );
+
+  const handleConfirm = async (confirmed: string) => {
+    const validatedAddress = await format(choices[confirmed].addressKey);
+
+    updateFields({ mailing_address: validatedAddress });
+  };
+
   return (
-    <QuestionPage title={t("pages.claimsAddress.title")} onSave={handleSave}>
-      <FieldsetAddress
-        appErrors={appLogic.appErrors}
-        label={t("pages.claimsAddress.sectionLabel")}
-        hint={t("pages.claimsAddress.hint")}
-        {...residentialAddressProps}
-      />
-      <InputChoiceGroup
-        {...getFunctionalInputProps("has_mailing_address")}
-        choices={[
-          {
-            checked: has_mailing_address === false,
-            label: t("pages.claimsAddress.choiceYes"),
-            value: "false",
-          },
-          {
-            checked: has_mailing_address === true,
-            label: t("pages.claimsAddress.choiceNo"),
-            value: "true",
-          },
-        ]}
-        label={t("pages.claimsAddress.hasMailingAddressLabel")}
-        hint={t("pages.claimsAddress.hasMailingAddressHint")}
-        type="radio"
-      />
-      <ConditionalContent
-        fieldNamesClearedWhenHidden={["mailing_address"]}
-        getField={getField}
-        clearField={clearField}
-        updateFields={updateFields}
-        visible={has_mailing_address}
-      >
+    <React.Fragment>
+      <QuestionPage title={t("pages.claimsAddress.title")} onSave={handleSave}>
         <FieldsetAddress
           appErrors={appLogic.appErrors}
-          label={t("pages.claimsAddress.mailingAddressLabel")}
-          hint={t("pages.claimsAddress.mailingAddressHint")}
-          addressType="mailing"
-          {...mailingAddressProps}
+          label={t("pages.claimsAddress.sectionLabel")}
+          hint={t("pages.claimsAddress.hint")}
+          {...residentialAddressProps}
         />
-      </ConditionalContent>
-    </QuestionPage>
+        <ThrottledButton onClick={handleValidateClick}>
+          Validate
+        </ThrottledButton>
+        <InputChoiceGroup
+          {...getFunctionalInputProps("has_mailing_address")}
+          choices={[
+            {
+              checked: has_mailing_address === false,
+              label: t("pages.claimsAddress.choiceYes"),
+              value: "false",
+            },
+            {
+              checked: has_mailing_address === true,
+              label: t("pages.claimsAddress.choiceNo"),
+              value: "true",
+            },
+          ]}
+          label={t("pages.claimsAddress.hasMailingAddressLabel")}
+          hint={t("pages.claimsAddress.hasMailingAddressHint")}
+          type="radio"
+        />
+
+        <ConditionalContent
+          fieldNamesClearedWhenHidden={["mailing_address"]}
+          getField={getField}
+          clearField={clearField}
+          updateFields={updateFields}
+          visible={has_mailing_address}
+        >
+          <div className="usa-form-group">
+            <FormLabel>Residential address</FormLabel>
+            <Autocomplete
+              defaultValue={
+                new AddressModel(mailingAddressProps.value).toString
+              }
+              source={handleAutocompleteChange}
+              onConfirm={handleConfirm}
+              confirmOnBlur={false}
+            />
+          </div>
+        </ConditionalContent>
+      </QuestionPage>
+      <Modal
+        isVisible={isModalVisible}
+        headingText="Do any of these addresses look right?"
+        onCloseButtonClick={() => setIsModalVisible(false)}
+      >
+        <ul>
+          {addressSuggestions.map((suggestion: AddressSuggestion) => (
+            <li
+              key={suggestion.addressKey}
+              className="hover:bg-base-lightest cursor-pointer"
+              onKeyDown={() => null}
+              role="option"
+              onClick={() =>
+                handleAddressSuggestionClick(suggestion.addressKey)
+              }
+            >
+              {suggestion.address}
+            </li>
+          ))}
+        </ul>
+        {handleAddressSuggestionClick.isThrottled && (
+          <Spinner aria-valuetext="Loading..." />
+        )}
+      </Modal>
+    </React.Fragment>
   );
 };
 

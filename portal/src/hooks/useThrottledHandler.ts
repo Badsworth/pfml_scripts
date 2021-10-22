@@ -1,19 +1,19 @@
-import { SyntheticEvent, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 /**
  * Hook that prevents simultaneous calls for react event handlers
  */
-const useThrottledHandler = <TEvent extends SyntheticEvent>(
-  asyncHandler: (event: TEvent) => Promise<void>
+const useThrottledHandler = <T>(
+  asyncHandler: (...args: T[]) => Promise<void>
 ) => {
   const [isThrottled, setIsThrottled] = useState(false);
   const hasCanceled = useRef(false);
 
-  const throttledHandler = async (event: TEvent) => {
+  const throttledHandler = async (...args: T[]) => {
     if (isThrottled) return;
 
     setIsThrottled(true);
-    await asyncHandler(event);
+    await asyncHandler(...args);
 
     if (!hasCanceled.current) {
       setIsThrottled(false);
