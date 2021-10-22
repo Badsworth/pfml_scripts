@@ -9,7 +9,6 @@ from sqlalchemy.ext.hybrid import hybrid_property
 from sqlalchemy.orm import backref, relationship
 
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.base import deprecated_column
 from massgov.pfml.db.models.employees import (
     Address,
     Claim,
@@ -697,16 +696,6 @@ class LkDocumentType(Base):
         self.document_type_description = document_type_description
 
 
-class LkContentType(Base):
-    __tablename__ = "lk_content_type"
-    content_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    content_type_description = Column(Text, nullable=False)
-
-    def __init__(self, content_type_id, content_type_description):
-        self.content_type_id = content_type_id
-        self.content_type_description = content_type_description
-
-
 class DocumentType(LookupTable):
     model = LkDocumentType
     column_names = ("document_type_id", "document_type_description")
@@ -730,17 +719,6 @@ class DocumentType(LookupTable):
     APPEAL_ACKNOWLEDGMENT = LkDocumentType(15, "Appeal Acknowledgment")
 
 
-class ContentType(LookupTable):
-    model = LkContentType
-    column_names = ("content_type_id", "content_type_description")
-
-    PDF = LkContentType(1, "application/pdf")
-    JPEG = LkContentType(2, "image/jpeg")
-    PNG = LkContentType(3, "image/png")
-    TIFF = LkContentType(4, "image/tiff")
-    HEIC = LkContentType(5, "image/heic")
-
-
 class Document(Base, TimestampMixin):
     __tablename__ = "document"
     document_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -750,9 +728,6 @@ class Document(Base, TimestampMixin):
     )
     document_type_id = Column(
         Integer, ForeignKey("lk_document_type.document_type_id"), nullable=False
-    )
-    content_type_id = deprecated_column(
-        Column(Integer, ForeignKey("lk_content_type.content_type_id"), nullable=True)
     )
     size_bytes = Column(Integer, nullable=False)
     fineos_id = Column(Text, nullable=True)
@@ -929,7 +904,6 @@ def sync_lookup_tables(db_session):
     EmployerBenefitType.sync_to_database(db_session)
     OtherIncomeType.sync_to_database(db_session)
     DocumentType.sync_to_database(db_session)
-    ContentType.sync_to_database(db_session)
     DayOfWeek.sync_to_database(db_session)
     WorkPatternType.sync_to_database(db_session)
     PhoneType.sync_to_database(db_session)
