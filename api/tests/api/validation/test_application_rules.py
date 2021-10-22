@@ -1721,7 +1721,9 @@ def test_has_employer_benefits_true_zero_benefit():
 
     benefits = [
         EmployerBenefitFactory.build(
-            application_id=application.application_id, benefit_amount_dollars=0
+            application_id=application.application_id,
+            benefit_amount_dollars=0,
+            is_full_salary_continuous=False,
         )
     ]
     application.employer_benefits = benefits
@@ -1734,6 +1736,11 @@ def test_has_employer_benefits_true_zero_benefit():
             field="employer_benefits[0].benefit_amount_dollars",
         )
     ] == issues
+
+    application.employer_benefits[0].is_full_salary_continuous = True
+    issues = get_conditional_issues(application)
+
+    assert len(issues) == 0
 
 
 def test_employer_benefit_no_issues():
@@ -1764,6 +1771,21 @@ def test_employer_benefit_missing_fields():
             message="employer_benefits[0].is_full_salary_continuous is required",
             field="employer_benefits[0].is_full_salary_continuous",
         ),
+    ] == issues
+
+
+def test_benefit_amount_and_frequency_required():
+    test_app = ApplicationFactory.build(
+        employer_benefits=[
+            EmployerBenefit(
+                is_full_salary_continuous=False,
+                benefit_start_date=date(2021, 1, 3),
+                benefit_type_id=0,
+            )
+        ]
+    )
+    issues = get_conditional_issues(test_app)
+    assert [
         ValidationErrorDetail(
             type=IssueType.required,
             message="employer_benefits[0].benefit_amount_dollars is required",
