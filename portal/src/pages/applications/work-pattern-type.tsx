@@ -3,7 +3,6 @@ import BenefitsApplication, {
 } from "../../models/BenefitsApplication";
 import { get, pick, set } from "lodash";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";
@@ -13,11 +12,15 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.work_pattern.work_pattern_type"];
 
-export const WorkPatternType = (props) => {
+interface WorkPatternTypeProps {
+  appLogic: any;
+  claim: BenefitsApplication;
+}
+
+export const WorkPatternType = (props: WorkPatternTypeProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const work_pattern_type = get(formState, "work_pattern.work_pattern_type");
 
@@ -63,11 +66,6 @@ export const WorkPatternType = (props) => {
       />
     </QuestionPage>
   );
-};
-
-WorkPatternType.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
 export default withBenefitsApplication(WorkPatternType);

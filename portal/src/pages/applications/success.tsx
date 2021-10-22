@@ -11,7 +11,6 @@ import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import Heading from "../../components/Heading";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
@@ -22,10 +21,17 @@ import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
+interface SuccessProps {
+  claim?: BenefitsApplication;
+  query?: {
+    claim_id?: string;
+  };
+}
+
 /**
  * Success page, shown when an application is successfully submitted.
  */
-export const Success = (props) => {
+export const Success = (props: SuccessProps) => {
   const { claim } = props;
   const { t } = useTranslation();
   const iconProps = {
@@ -104,7 +110,6 @@ export const Success = (props) => {
         {!["leaveNotInFuture", "medicalPregnantFuture", "caringLeave"].includes(
           claimContext
         ) && (
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; autoWidt... Remove this comment to see the full error message
           <Alert state="warning" autoWidth>
             <Trans
               i18nKey="pages.claimsSuccess.proofRequired"
@@ -174,6 +179,17 @@ export const Success = (props) => {
             context: claimContext,
           }}
         />
+
+        <div className="add-aspect-16x9">
+          <iframe
+            className="pin-left pin-y width-full height-full"
+            title="DFML - What comes between \“submit\” and receiving payments"
+            src="https://player.vimeo.com/video/609976204?h=902acebe39"
+            allowFullScreen
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          />
+        </div>
 
         <Heading level="2">{t("pages.claimsSuccess.learnMoreHeading")}</Heading>
 
@@ -274,13 +290,6 @@ export const Success = (props) => {
       </div>
     </React.Fragment>
   );
-};
-
-Success.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(Success);

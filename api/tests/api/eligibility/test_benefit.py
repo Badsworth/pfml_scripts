@@ -2,7 +2,6 @@
 # Tests for massgov.pfml.api.eligibility.benefit.
 #
 
-import datetime
 import decimal
 
 import pytest
@@ -47,9 +46,10 @@ from massgov.pfml.api.eligibility import benefit
 )
 def test_calculate_weekly_benefit_amount(individual_aww, expected_benefit):
     state_aww = decimal.Decimal("1000")
+    maximum_weekly_benefit_amount = round(state_aww * decimal.Decimal(0.64), 2)
     assert (
         benefit.calculate_weekly_benefit_amount(
-            individual_aww, state_aww, datetime.date(2022, 1, 1)
+            individual_aww, state_aww, maximum_weekly_benefit_amount
         )
         == expected_benefit
     )
@@ -58,9 +58,10 @@ def test_calculate_weekly_benefit_amount(individual_aww, expected_benefit):
 def test_calculate_weekly_benefit_amount_realistic():
     individual_aww = 1538
     state_aww = decimal.Decimal("1431.66")
+    maximum_weekly_benefit_amount = round(state_aww * decimal.Decimal(0.64), 2)
     assert benefit.calculate_weekly_benefit_amount(
-        individual_aww, state_aww, datetime.date(2022, 1, 1)
-    ) == decimal.Decimal("916.2624")
+        individual_aww, state_aww, maximum_weekly_benefit_amount
+    ) == decimal.Decimal("916.26")
 
 
 @pytest.mark.parametrize(
@@ -98,9 +99,10 @@ def test_calculate_weekly_benefit_amount_realistic():
 )
 def test_calculate_weekly_benefit_amount_2021(individual_aww, expected_benefit):
     state_aww = decimal.Decimal("1000")
+    maximum_weekly_benefit_amount = 850
     assert (
         benefit.calculate_weekly_benefit_amount(
-            individual_aww, state_aww, datetime.date(2021, 1, 1)
+            individual_aww, state_aww, maximum_weekly_benefit_amount
         )
         == expected_benefit
     )
@@ -109,18 +111,20 @@ def test_calculate_weekly_benefit_amount_2021(individual_aww, expected_benefit):
 def test_calculate_weekly_benefit_amount_realistic_2021():
     individual_aww = 1538
     state_aww = decimal.Decimal("1431.66")
+    maximum_weekly_benefit_amount = 850
 
     assert benefit.calculate_weekly_benefit_amount(
-        individual_aww, state_aww, datetime.date(2021, 1, 1)
+        individual_aww, state_aww, maximum_weekly_benefit_amount
     ) == decimal.Decimal("850")
 
 
 def test_calculate_weekly_benefit_amount_realistic_low():
     individual_aww = 240
     state_aww = decimal.Decimal("1431.66")
+    maximum_weekly_benefit_amount = 850
     assert (
         benefit.calculate_weekly_benefit_amount(
-            individual_aww, state_aww, datetime.date(2022, 1, 1)
+            individual_aww, state_aww, maximum_weekly_benefit_amount
         )
         == 192
     )
@@ -129,6 +133,7 @@ def test_calculate_weekly_benefit_amount_realistic_low():
 def test_calculate_weekly_benefit_amount_realistic_on_50_percent_boundary():
     individual_aww = decimal.Decimal("715.84")
     state_aww = decimal.Decimal("1431.66")
+    maximum_weekly_benefit_amount = 850
     assert benefit.calculate_weekly_benefit_amount(
-        individual_aww, state_aww, datetime.date(2022, 1, 1)
+        individual_aww, state_aww, maximum_weekly_benefit_amount
     ) == decimal.Decimal("572.6690")

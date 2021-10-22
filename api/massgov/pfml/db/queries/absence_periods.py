@@ -74,6 +74,8 @@ def parse_fineos_period_leave_request(
     db_absence_period.leave_request_decision_id = LeaveRequestDecision.get_id(
         leave_request.decisionStatus
     )
+    if leave_request.id:
+        db_absence_period.fineos_leave_request_id = int(leave_request.id)
     return db_absence_period
 
 

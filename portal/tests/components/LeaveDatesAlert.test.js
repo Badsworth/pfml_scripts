@@ -23,7 +23,7 @@ describe("LeaveDatesAlert", () => {
       <h3
         class="usa-alert__heading font-heading-md text-bold"
       >
-        Your leave dates for paid leave
+        Your leave dates for paid leave from PFML
       </h3>
     `);
   });
@@ -32,5 +32,20 @@ describe("LeaveDatesAlert", () => {
     const { container } = render(<LeaveDatesAlert startDate="2021-01-01" />);
 
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it("renders 7 day waiting period when showWaitingDayPeriod is true", () => {
+    render(
+      <LeaveDatesAlert
+        startDate="2021-01-31"
+        endDate="2021-02-28"
+        showWaitingDayPeriod
+      />
+    );
+
+    expect(screen.getAllByRole("heading")).toHaveLength(2);
+    expect(
+      screen.getByText("Your 7-day waiting period dates").parentElement
+    ).toMatchSnapshot();
   });
 });

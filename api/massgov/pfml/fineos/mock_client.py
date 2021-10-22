@@ -17,6 +17,7 @@ import faker
 import requests
 
 import massgov.pfml.util.logging
+import massgov.pfml.util.logging.wrapper
 from massgov.pfml.fineos.transforms.to_fineos.base import EFormBody
 from massgov.pfml.util.converters.json_to_obj import set_empty_dates_to_none
 
@@ -312,13 +313,6 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
             startDate=start_date,
             endDate=end_date,
         )
-        logger.info(
-            "mock: %r %r => %r %r",
-            user_id,
-            absence_case.additionalComments,
-            absence_case_summary.absenceId,
-            absence_case_summary.notificationCaseId,
-        )
         return absence_case_summary
 
     def complete_intake(
@@ -328,12 +322,6 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
 
         notification_case_summary = models.customer_api.NotificationCaseSummary(
             notificationCaseId=notification_case_id
-        )
-        logger.info(
-            "mock: %r %r => %r",
-            user_id,
-            notification_case_id,
-            notification_case_summary.notificationCaseId,
         )
         return notification_case_summary
 
@@ -727,6 +715,9 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         )
 
         return "SA-123"
+
+
+massgov.pfml.util.logging.wrapper.log_all_method_calls(MockFINEOSClient, logger)
 
 
 def start_capture():

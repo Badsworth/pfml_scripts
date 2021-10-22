@@ -11,7 +11,6 @@ import PaginationMeta from "../../models/PaginationMeta";
 import { uniqueId } from "lodash";
 
 export default jest.fn(() => ({
-  // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
   appErrors: new AppErrorInfoCollection(),
   auth: {
     createAccount: jest.fn(),
@@ -28,7 +27,6 @@ export default jest.fn(() => ({
   },
   catchError: jest.fn(),
   benefitsApplications: {
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     benefitsApplications: new BenefitsApplicationCollection(),
     complete: jest.fn(),
     create: jest.fn(
@@ -46,9 +44,7 @@ export default jest.fn(() => ({
   },
   claims: {
     activeFilters: {},
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     claimDetail: new ClaimDetail(),
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     claims: new ClaimCollection(),
     clearClaims: jest.fn(),
     isLoadingClaims: null,
@@ -68,7 +64,6 @@ export default jest.fn(() => ({
       return uploadPromises;
     }),
     hasLoadedClaimDocuments: jest.fn(),
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     documents: new DocumentCollection(),
     download: jest.fn(),
     loadAll: jest.fn(),
@@ -79,7 +74,6 @@ export default jest.fn(() => ({
     loadClaim: jest.fn(
       () => new EmployerClaim({ fineos_absence_id: "NTN-111-ABS-01" })
     ),
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     loadDocuments: jest.fn(() => new DocumentCollection()),
     loadWithholding: jest.fn(() => ({ filing_period: "2011-11-20" })),
     submitClaimReview: jest.fn(),
@@ -99,7 +93,14 @@ export default jest.fn(() => ({
   },
   setAppErrors: jest.fn(),
   updateUser: jest.fn(),
-  user: new User({ user_id: "mock_user_id", consented_to_data_sharing: true }),
+  user: new User({
+    user_id: "mock_user_id",
+    consented_to_data_sharing: true,
+    email_address: "ali@miau.com",
+    auth_id: "cognito_123",
+    roles: [],
+    user_leave_administrators: [],
+  }),
   users: {
     loadUser: jest.fn(),
     requireUserConsentToDataAgreement: jest.fn(),

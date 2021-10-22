@@ -1,5 +1,6 @@
-import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
+import { createMockBenefitsApplication, renderPage } from "../../test-utils";
 import { screen, waitFor } from "@testing-library/react";
+
 import ConcurrentLeaves from "../../../src/pages/applications/concurrent-leaves";
 import { setupBenefitsApplications } from "../../test-utils/helpers";
 import userEvent from "@testing-library/user-event";
@@ -8,24 +9,20 @@ const updateClaim = jest.fn(() => {
   return Promise.resolve();
 });
 
-const setup = (options = { hasConcurrentLeave: true }) => {
-  const claim = options.hasConcurrentLeave
-    ? new MockBenefitsApplicationBuilder()
-        .continuous()
-        .concurrentLeave()
-        .employed()
-        .create()
-    : new MockBenefitsApplicationBuilder().continuous().employed().create();
-
-  const claims = [claim];
+const setup = (...types) => {
   const cb = (appLogic) => {
     appLogic.benefitsApplications.update = updateClaim;
   };
+
   return renderPage(
     ConcurrentLeaves,
     {
       addCustomSetup: (hook) => {
-        setupBenefitsApplications(hook, claims, cb);
+        setupBenefitsApplications(
+          hook,
+          [createMockBenefitsApplication(...types)],
+          cb
+        );
       },
     },
     { query: { claim_id: "mock_application_id" } }
@@ -34,12 +31,27 @@ const setup = (options = { hasConcurrentLeave: true }) => {
 
 describe("ConcurrentLeaves", () => {
   it("renders the page", () => {
-    const { container } = setup();
+    const { container } = setup("continuous", "concurrentLeave", "employed");
+    expect(container).toMatchSnapshot();
+  });
+
+  it("renders the continuous page content", () => {
+    const { container } = setup("continuous");
+    expect(container).toMatchSnapshot();
+  });
+
+  it("renders the reduced page content", () => {
+    const { container } = setup("reducedSchedule");
+    expect(container).toMatchSnapshot();
+  });
+
+  it("renders the intermittent reduced page content", () => {
+    const { container } = setup("intermittent");
     expect(container).toMatchSnapshot();
   });
 
   it("calls claims.update when user clicks continue", async () => {
-    setup();
+    setup("continuous", "concurrentLeave", "employed");
 
     userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
 
@@ -51,9 +63,11 @@ describe("ConcurrentLeaves", () => {
   });
 
   it("sends concurrent_leave as null to the API if has_concurrent_leave changes to no", async () => {
-    setup();
+    setup("continuous", "concurrentLeave", "employed");
 
-    userEvent.click(screen.getByRole("radio", { name: "No" }));
+    userEvent.click(
+      screen.getByRole("radio", { name: /no i don't need to report/i })
+    );
     userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
     await waitFor(() => {
       expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
@@ -64,14 +78,16 @@ describe("ConcurrentLeaves", () => {
   });
 
   it("renders the page when the claim does not contain concurrent leave data", () => {
-    const { container } = setup({ hasConcurrentLeave: false });
+    const { container } = setup("continuous", "employed");
     expect(container).toMatchSnapshot();
   });
 
   it("with no concurrent leave data, user can click no and expected info is sent to API", async () => {
-    setup({ hasConcurrentLeave: false });
+    setup("continuous", "employed");
 
-    userEvent.click(screen.getByRole("radio", { name: "No" }));
+    userEvent.click(
+      screen.getByRole("radio", { name: /no i don't need to report/i })
+    );
 
     userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
 
@@ -83,9 +99,11 @@ describe("ConcurrentLeaves", () => {
   });
 
   it("with no concurrent leave data, user can click yes and expected info is sent to API", async () => {
-    setup({ hasConcurrentLeave: false });
+    setup("continuous", "employed");
 
-    userEvent.click(screen.getByRole("radio", { name: "Yes" }));
+    userEvent.click(
+      screen.getByRole("radio", { name: /yes i need to report/i })
+    );
 
     userEvent.click(screen.getByRole("button", { name: "Save and continue" }));
 

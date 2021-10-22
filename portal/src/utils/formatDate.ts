@@ -2,16 +2,11 @@ import { DateTime } from "luxon";
 
 /**
  * Format the given date as an internationalized, human-readable string
- * @param {string} isoDate - ISO 8601 date string
- * @returns {{ full: Function, short: Function }}
  */
-export default function formatDate(isoDate) {
+export default function formatDate(isoDate: string) {
   const dateTime = DateTime.fromISO(isoDate);
 
   return {
-    /**
-     * @returns {string} date formatted as January 1, 2000
-     */
     full: () => {
       if (dateTime.isValid) {
         return dateTime.toLocaleString(DateTime.DATE_FULL);
@@ -19,9 +14,7 @@ export default function formatDate(isoDate) {
 
       return "";
     },
-    /**
-     * @returns {string} date formatted as 1/1/2000
-     */
+
     short: () => {
       if (dateTime.isValid) {
         return dateTime.toLocaleString();

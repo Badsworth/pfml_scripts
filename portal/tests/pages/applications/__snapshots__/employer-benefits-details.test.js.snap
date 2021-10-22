@@ -28,7 +28,7 @@ exports[`EmployerBenefitsDetails when the user's claim has employer benefits ren
         <h3
           class="usa-alert__heading font-heading-md text-bold"
         >
-          Your leave dates for paid leave
+          Your leave dates for paid leave from PFML
         </h3>
         <div
           class="usa-alert__text"
@@ -817,7 +817,7 @@ exports[`EmployerBenefitsDetails when the user's claim has no employer benefits 
         <h3
           class="usa-alert__heading font-heading-md text-bold"
         >
-          Your leave dates for paid leave
+          Your leave dates for paid leave from PFML
         </h3>
         <div
           class="usa-alert__text"

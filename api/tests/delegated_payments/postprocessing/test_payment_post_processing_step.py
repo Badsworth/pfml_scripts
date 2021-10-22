@@ -23,7 +23,7 @@ from . import _create_payment_container
 
 ###
 # Note that the maximum weekly benefit cap for these tests is set to $850.00 in:
-# api/massgov/pfml/db/models/payments.py::sync_maximum_weekly_benefit_amount
+# api/massgov/pfml/db/models/applications.py::sync_state_metrics
 ###
 
 

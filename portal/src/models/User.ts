@@ -1,22 +1,18 @@
 /* eslint sort-keys: ["error", "asc"] */
-import BaseModel from "./BaseModel";
 
-class User extends BaseModel {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'User' is not assignab... Remove this comment to see the full error message
-  get defaults() {
-    return {
-      auth_id: null,
-      consented_to_data_sharing: null,
-      email_address: null,
-      roles: [], // array of UserRole
-      status: null,
-      user_id: null,
-      user_leave_administrators: [], // array of UserLeaveAdministrator
-    };
+class User {
+  auth_id: string;
+  consented_to_data_sharing: boolean;
+  email_address: string;
+  roles: UserRole[] = [];
+  user_id: string;
+  user_leave_administrators: UserLeaveAdministrator[] = [];
+
+  constructor(attrs: Partial<User>) {
+    Object.assign(this, attrs);
   }
 
   get hasEmployerRole() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'roles' does not exist on type 'User'.
     return this.roles.some(
       (userRole) => userRole.role_description === RoleDescription.employer
     );
@@ -24,18 +20,15 @@ class User extends BaseModel {
 
   /**
    * Determines whether user_leave_administrators has only unverified employers
-   * @returns {boolean}
    */
-  get hasOnlyUnverifiedEmployers() {
+  get hasOnlyUnverifiedEmployers(): boolean {
     return this.verifiedEmployers.length === 0;
   }
 
   /**
    * Determines whether user_leave_administrators has a verifiable employer
-   * @returns {boolean}
    */
-  get hasVerifiableEmployer() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'user_leave_administrators' does not exis... Remove this comment to see the full error message
+  get hasVerifiableEmployer(): boolean {
     return this.user_leave_administrators.some(
       (employer) => employer && this.isVerifiableEmployer(employer)
     );
@@ -43,11 +36,8 @@ class User extends BaseModel {
 
   /**
    * Returns an unverifiable employer by employer id
-   * @param {string} employerId
-   * @returns {UserLeaveAdministrator}
    */
-  getUnverifiableEmployerById(employerId) {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'user_leave_administrators' does not exis... Remove this comment to see the full error message
+  getUnverifiableEmployerById(employerId: string): UserLeaveAdministrator {
     return this.user_leave_administrators.find((employer) => {
       return (
         employerId === employer.employer_id &&
@@ -58,11 +48,8 @@ class User extends BaseModel {
 
   /**
    * Returns a verifiable employer by employer id
-   * @param {string} employerId
-   * @returns {UserLeaveAdministrator}
    */
-  getVerifiableEmployerById(employerId) {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'user_leave_administrators' does not exis... Remove this comment to see the full error message
+  getVerifiableEmployerById(employerId: string): UserLeaveAdministrator {
     return this.user_leave_administrators.find((employer) => {
       return (
         employerId === employer.employer_id &&
@@ -73,10 +60,8 @@ class User extends BaseModel {
 
   /**
    * Returns list of verified employers
-   * @returns {UserLeaveAdministrator[]}
    */
-  get verifiedEmployers() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'user_leave_administrators' does not exis... Remove this comment to see the full error message
+  get verifiedEmployers(): UserLeaveAdministrator[] {
     return this.user_leave_administrators.filter(
       (employer) => employer.verified === true
     );
@@ -84,29 +69,22 @@ class User extends BaseModel {
 
   /**
    * Determines whether an employer is NOT verifiable (unverified and lacks verification data)
-   * @param {UserLeaveAdministrator} employer
-   * @returns {boolean}
    */
-  isUnverifiableEmployer(employer) {
+  isUnverifiableEmployer(employer: UserLeaveAdministrator): boolean {
     return !employer.verified && !employer.has_verification_data;
   }
 
   /**
    * Determines whether an employer is verifiable (unverified and has verification data)
-   * @param {UserLeaveAdministrator} employer
-   * @returns {boolean}
    */
-  isVerifiableEmployer(employer) {
+  isVerifiableEmployer(employer: UserLeaveAdministrator): boolean {
     return !employer.verified && employer.has_verification_data;
   }
 
   /**
    * Determines whether an employer is registered in FINEOS
-   * @param {string} employerId
-   * @returns {boolean}
    */
-  isEmployerIdRegisteredInFineos(employerId) {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'user_leave_administrators' does not exis... Remove this comment to see the full error message
+  isEmployerIdRegisteredInFineos(employerId: string | null): boolean {
     return this.user_leave_administrators.some(
       (employer) =>
         employerId === employer.employer_id && employer.has_fineos_registration
@@ -114,13 +92,15 @@ class User extends BaseModel {
   }
 }
 
-export class UserRole extends BaseModel {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'UserRole' is not assi... Remove this comment to see the full error message
-  get defaults() {
-    return {
-      role_description: null,
-      role_id: null,
-    };
+export class UserRole {
+  role_description:
+    | typeof RoleDescription[keyof typeof RoleDescription]
+    | null = null;
+
+  role_id: string | null = null;
+
+  constructor(attrs: Partial<UserRole>) {
+    Object.assign(this, attrs);
   }
 }
 
@@ -133,17 +113,16 @@ export const RoleDescription = {
   employer: "Employer",
 } as const;
 
-export class UserLeaveAdministrator extends BaseModel {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'UserLeaveAdministrato... Remove this comment to see the full error message
-  get defaults() {
-    return {
-      employer_dba: null,
-      employer_fein: null,
-      employer_id: null,
-      has_fineos_registration: null,
-      has_verification_data: null,
-      verified: null,
-    };
+export class UserLeaveAdministrator {
+  employer_dba: string | null = null;
+  employer_fein: string | null = null;
+  employer_id: string | null = null;
+  has_fineos_registration: boolean | null = null;
+  has_verification_data: boolean | null = null;
+  verified: boolean | null = null;
+
+  constructor(attrs: Partial<UserLeaveAdministrator>) {
+    Object.assign(this, attrs);
   }
 }
 

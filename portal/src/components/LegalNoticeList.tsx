@@ -1,15 +1,20 @@
-import Document from "../models/Document";
+import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
+import ClaimDocument from "../models/ClaimDocument";
 import DownloadableDocument from "./DownloadableDocument";
 import Icon from "./Icon";
-import PropTypes from "prop-types";
 import React from "react";
 import getLegalNotices from "../utils/getLegalNotices";
 import { useTranslation } from "../locales/i18n";
 
+interface LegalNoticeListProps {
+  documents?: Array<BenefitsApplicationDocument | ClaimDocument>;
+  onDownloadClick?: (...args: any[]) => any;
+}
+
 /**
  * Legal notices list and content
  */
-export default function LegalNoticeList(props) {
+export default function LegalNoticeList(props: LegalNoticeListProps) {
   const { t } = useTranslation();
   const { documents, onDownloadClick } = props;
 
@@ -33,8 +38,6 @@ export default function LegalNoticeList(props) {
       />
       <div>
         <DownloadableDocument
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ className: string; document: any; onDownlo... Remove this comment to see the full error message
-          className="margin-left-2"
           document={document}
           onDownloadClick={onDownloadClick}
           showCreatedAt
@@ -52,11 +55,3 @@ export default function LegalNoticeList(props) {
     </React.Fragment>
   );
 }
-
-LegalNoticeList.propTypes = {
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-  /** 
-    The function called when the document's link is clicked. It will receive an instance of the document as an argument.
-   */
-  onDownloadClick: PropTypes.func,
-};

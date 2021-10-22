@@ -1,9 +1,17 @@
 import React, { useEffect } from "react";
-import DocumentCollection from "../models/DocumentCollection";
-import PropTypes from "prop-types";
-import User from "../models/User";
+import { AppLogic } from "../hooks/useAppLogic";
 import assert from "assert";
 import withUser from "./withUser";
+
+interface ComponentWithDocumentsProps {
+  appLogic: AppLogic;
+  claim: {
+    application_id: string;
+  };
+  query: {
+    claim_id: string;
+  };
+}
 
 /**
  * Higher order component that loads documents based on query parameters if they are not yet loaded
@@ -11,7 +19,7 @@ import withUser from "./withUser";
  * @returns {React.Component} - Component with documents prop
  */
 const withClaimDocuments = (Component) => {
-  const ComponentWithDocuments = (props) => {
+  const ComponentWithDocuments = (props: ComponentWithDocumentsProps) => {
     const { appLogic, claim, query } = props;
     const {
       documents: { loadAll, documents, hasLoadedClaimDocuments },
@@ -40,26 +48,6 @@ const withClaimDocuments = (Component) => {
         isLoadingDocuments={shouldLoad}
       />
     );
-  };
-
-  ComponentWithDocuments.propTypes = {
-    appLogic: PropTypes.shape({
-      users: PropTypes.shape({
-        user: PropTypes.instanceOf(User).isRequired,
-      }).isRequired,
-      documents: PropTypes.shape({
-        hasLoadedClaimDocuments: PropTypes.func.isRequired,
-        documents: PropTypes.instanceOf(DocumentCollection).isRequired,
-        loadAll: PropTypes.func.isRequired,
-      }).isRequired,
-      appErrors: PropTypes.object.isRequired,
-    }).isRequired,
-    claim: PropTypes.shape({
-      application_id: PropTypes.string.isRequired,
-    }),
-    query: PropTypes.shape({
-      claim_id: PropTypes.string.isRequired,
-    }),
   };
 
   return withUser(ComponentWithDocuments);

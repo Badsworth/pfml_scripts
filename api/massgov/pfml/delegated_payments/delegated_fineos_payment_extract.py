@@ -1,11 +1,5 @@
-import csv
 import enum
-import os
-import pathlib
-import tempfile
 import uuid
-from collections import OrderedDict
-from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Callable, Dict, List, Optional, Tuple, cast
@@ -13,9 +7,7 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, cast
 from sqlalchemy.exc import SQLAlchemyError
 
 import massgov.pfml.api.util.state_log_util as state_log_util
-import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
-import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     Address,
@@ -90,68 +82,6 @@ AUTO_ALT_EVENT_REASON = "Automatic Alternate Payment"
 TAX_IDENTIFICATION_NUMBER = "Tax Identification Number"
 
 
-@dataclass(frozen=True, eq=True)
-class CiIndex:
-    c: str
-    i: str
-
-
-@dataclass
-class Extract:
-    file_location: str
-    indexed_data: Dict[CiIndex, Dict[str, str]] = field(default_factory=dict)
-
-
-@dataclass
-class ExtractMultiple:
-    """A extract that has multiple rows per key CiIndex."""
-
-    file_location: str
-    # Mapping from a CiIndex to a list of CSV rows that contain data for that record. Each CSV row
-    # is a raw dict from field name to value, as returned by csv.DictReader().
-    indexed_data: Dict[CiIndex, List[Dict[str, str]]] = field(default_factory=dict)
-
-
-class ExtractData:
-    pei: Extract
-    payment_details: ExtractMultiple
-    claim_details: Extract
-    requested_absence: Extract
-
-    date_str: str
-
-    reference_file: ReferenceFile
-
-    def __init__(self, s3_locations: List[str], date_str: str):
-        for s3_location in s3_locations:
-            if s3_location.endswith(payments_util.FineosExtractConstants.VPEI.file_name):
-                self.pei = Extract(s3_location)
-            elif s3_location.endswith(
-                payments_util.FineosExtractConstants.PAYMENT_DETAILS.file_name
-            ):
-                self.payment_details = ExtractMultiple(s3_location)
-            elif s3_location.endswith(payments_util.FineosExtractConstants.CLAIM_DETAILS.file_name):
-                self.claim_details = Extract(s3_location)
-            elif s3_location.endswith(
-                payments_util.FineosExtractConstants.VBI_REQUESTED_ABSENCE.file_name
-            ):
-                self.requested_absence = Extract(s3_location)
-
-        self.date_str = date_str
-
-        file_location = os.path.join(
-            payments_config.get_s3_config().pfml_fineos_extract_archive_path,
-            RECEIVED_FOLDER,
-            self.date_str,
-        )
-        self.reference_file = ReferenceFile(
-            file_location=file_location,
-            reference_file_type_id=ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id,
-            reference_file_id=uuid.uuid4(),
-        )
-        logger.debug("Initialized extract data: %s", self.reference_file.file_location)
-
-
 class PaymentData:
     """A class for containing any and all payment data. Handles validation and
        pulling values out of the various types
@@ -161,6 +91,8 @@ class PaymentData:
     """
 
     validation_container: payments_util.ValidationContainer
+
+    pei_record: FineosExtractVpei
 
     c_value: str
     i_value: str
@@ -203,43 +135,49 @@ class PaymentData:
 
     def __init__(
         self,
-        extract_data: ExtractData,
-        index: CiIndex,
-        pei_record: Dict[str, str],
+        c_value: str,
+        i_value: str,
+        pei_record: FineosExtractVpei,
+        payment_details: List[FineosExtractVpeiPaymentDetails],
+        claim_details: Optional[FineosExtractVpeiClaimDetails],
+        requested_absence_record: Optional[FineosExtractVbiRequestedAbsence],
         count_incrementer: Optional[Callable[[str], None]] = None,
     ):
-        self.validation_container = payments_util.ValidationContainer(str(index))
-        self.c_value = index.c
-        self.i_value = index.i
+        self.validation_container = payments_util.ValidationContainer(
+            str(f"C={c_value},I={i_value}")
+        )
+        self.c_value = c_value
+        self.i_value = i_value
+        self.pei_record = pei_record
 
         #######################################
         # BEGIN - VALIDATION OF PARAMETERS ALWAYS REQUIRED FOR ALL PAYMENTS
         #######################################
 
         # Grab every value we might need out of the datasets
-        self.tin = payments_util.validate_csv_input(
+        self.tin = payments_util.validate_db_input(
             "PAYEESOCNUMBE", pei_record, self.validation_container, True
         )
 
-        self.payee_identifier = payments_util.validate_csv_input(
+        self.payee_identifier = payments_util.validate_db_input(
             "PAYEEIDENTIFI", pei_record, self.validation_container, True
         )
 
-        self.event_type = payments_util.validate_csv_input(
+        self.event_type = payments_util.validate_db_input(
             "EVENTTYPE", pei_record, self.validation_container, True
         )
 
         # Not required as some valid scenarios won't set this (Overpayments)
-        self.event_reason = payments_util.validate_csv_input(
+        self.event_reason = payments_util.validate_db_input(
             "EVENTREASON", pei_record, self.validation_container, False
         )
 
         # Not required, only care if it's set and a specific value
-        self.amalgamation_c = payments_util.validate_csv_input(
+        self.amalgamation_c = payments_util.validate_db_input(
             "AMALGAMATIONC", pei_record, self.validation_container, False
         )
 
-        self.payment_date = payments_util.validate_csv_input(
+        self.payment_date = payments_util.validate_db_input(
             "PAYMENTDATE",
             pei_record,
             self.validation_container,
@@ -254,7 +192,6 @@ class PaymentData:
         # Process the payment details records in order to get specific
         # pay-period information for payments. Note that some non-standard payments
         # like overpayment recoveries will never have payment details.
-        payment_details = extract_data.payment_details.indexed_data.get(index)
         if (
             not payment_details
             and self.payment_transaction_type.payment_transaction_type_id
@@ -280,16 +217,13 @@ class PaymentData:
         #######################################
 
         # Find the record in the other datasets.
-
-        claim_details = extract_data.claim_details.indexed_data.get(index)
-
         if not claim_details and self.is_standard_payment:
             self.validation_container.add_validation_issue(
                 payments_util.ValidationReason.MISSING_DATASET, "claim_details"
             )
 
         if claim_details:
-            self.process_claim_details(claim_details, extract_data, count_incrementer)
+            self.process_claim_details(claim_details, requested_absence_record, count_incrementer)
         elif self.is_standard_payment:
             # We require the absence case number, if claim details doesn't exist
             # we want to set the validation issue manually here
@@ -297,7 +231,7 @@ class PaymentData:
                 payments_util.ValidationReason.MISSING_FIELD, "ABSENCECASENU"
             )
 
-        self.raw_payment_method = payments_util.validate_csv_input(
+        self.raw_payment_method = payments_util.validate_db_input(
             "PAYMENTMETHOD",
             pei_record,
             self.validation_container,
@@ -317,19 +251,19 @@ class PaymentData:
             self.raw_payment_method == PaymentMethod.CHECK.payment_method_description
             and self.is_standard_payment
         )
-        self.address_line_one = payments_util.validate_csv_input(
+        self.address_line_one = payments_util.validate_db_input(
             "PAYMENTADD1", pei_record, self.validation_container, address_required
         )
-        self.address_line_two = payments_util.validate_csv_input(
+        self.address_line_two = payments_util.validate_db_input(
             "PAYMENTADD2",
             pei_record,
             self.validation_container,
             False,  # Address line two always optional
         )
-        self.city = payments_util.validate_csv_input(
+        self.city = payments_util.validate_db_input(
             "PAYMENTADD4", pei_record, self.validation_container, address_required
         )
-        self.state = payments_util.validate_csv_input(
+        self.state = payments_util.validate_db_input(
             "PAYMENTADD6",
             pei_record,
             self.validation_container,
@@ -337,7 +271,7 @@ class PaymentData:
             custom_validator_func=payments_util.lookup_validator(GeoState),
         )
 
-        self.zip_code = payments_util.validate_csv_input(
+        self.zip_code = payments_util.validate_db_input(
             "PAYMENTPOSTCO",
             pei_record,
             self.validation_container,
@@ -356,7 +290,7 @@ class PaymentData:
             self.raw_payment_method == PaymentMethod.ACH.payment_method_description
             and self.is_standard_payment
         )
-        self.routing_nbr = payments_util.validate_csv_input(
+        self.routing_nbr = payments_util.validate_db_input(
             "PAYEEBANKSORT",
             pei_record,
             self.validation_container,
@@ -365,10 +299,10 @@ class PaymentData:
             max_length=9,
             custom_validator_func=payments_util.routing_number_validator,
         )
-        self.account_nbr = payments_util.validate_csv_input(
+        self.account_nbr = payments_util.validate_db_input(
             "PAYEEACCOUNTN", pei_record, self.validation_container, eft_required, max_length=17
         )
-        self.raw_account_type = payments_util.validate_csv_input(
+        self.raw_account_type = payments_util.validate_db_input(
             "PAYEEACCOUNTT",
             pei_record,
             self.validation_container,
@@ -376,8 +310,8 @@ class PaymentData:
             custom_validator_func=payments_util.lookup_validator(BankAccountType),
         )
 
-    def get_payment_amount(self, pei_record: Dict[str, str]) -> Optional[Decimal]:
-        raw_payment_amount = payments_util.validate_csv_input(
+    def get_payment_amount(self, pei_record: FineosExtractVpei) -> Optional[Decimal]:
+        raw_payment_amount = payments_util.validate_db_input(
             "AMOUNT_MONAMT",
             pei_record,
             self.validation_container,
@@ -436,22 +370,17 @@ class PaymentData:
 
     def process_claim_details(
         self,
-        claim_details: Dict[str, str],
-        extract_data: ExtractData,
+        claim_details: FineosExtractVpeiClaimDetails,
+        requested_absence: Optional[FineosExtractVbiRequestedAbsence],
         count_incrementer: Optional[Callable[[str], None]] = None,
     ) -> None:
-        self.absence_case_number = payments_util.validate_csv_input(
+        self.absence_case_number = payments_util.validate_db_input(
             "ABSENCECASENU", claim_details, self.validation_container, self.is_standard_payment
         )
-        self.leave_request_id = payments_util.validate_csv_input(
+        self.leave_request_id = payments_util.validate_db_input(
             "LEAVEREQUESTI", claim_details, self.validation_container, self.is_standard_payment
         )
 
-        requested_absence = None
-        if self.leave_request_id:
-            requested_absence = extract_data.requested_absence.indexed_data.get(
-                CiIndex(c=self.leave_request_id, i="")
-            )
         if requested_absence:
 
             def leave_request_decision_validator(
@@ -470,7 +399,7 @@ class PaymentData:
                     return payments_util.ValidationReason.INVALID_VALUE
                 return None
 
-            self.leave_request_decision = payments_util.validate_csv_input(
+            self.leave_request_decision = payments_util.validate_db_input(
                 "LEAVEREQUEST_DECISION",
                 requested_absence,
                 self.validation_container,
@@ -478,11 +407,11 @@ class PaymentData:
                 custom_validator_func=leave_request_decision_validator,
             )
 
-            self.claim_type_raw = payments_util.validate_csv_input(
+            self.claim_type_raw = payments_util.validate_db_input(
                 "ABSENCEREASON_COVERAGE", requested_absence, self.validation_container, True
             )
 
-            self.absence_case_creation_date = payments_util.validate_csv_input(
+            self.absence_case_creation_date = payments_util.validate_db_input(
                 "ABSENCE_CASECREATIONDATE",
                 requested_absence,
                 self.validation_container,
@@ -496,7 +425,9 @@ class PaymentData:
                 f"Payment leave request ID not found in requested absence file: {self.leave_request_id}",
             )
 
-    def aggregate_payment_details(self, payment_details):
+    def aggregate_payment_details(
+        self, payment_details: List[FineosExtractVpeiPaymentDetails]
+    ) -> None:
         """Aggregate payment period dates across all the payment details for this payment.
 
         Pseudocode:
@@ -507,21 +438,21 @@ class PaymentData:
         end_periods = []
         self.payment_detail_records = []
         for payment_detail_row in payment_details:
-            row_start_period = payments_util.validate_csv_input(
+            row_start_period = payments_util.validate_db_input(
                 "PAYMENTSTARTP",
                 payment_detail_row,
                 self.validation_container,
                 True,
                 custom_validator_func=self.payment_period_date_validator,
             )
-            row_end_period = payments_util.validate_csv_input(
+            row_end_period = payments_util.validate_db_input(
                 "PAYMENTENDPER",
                 payment_detail_row,
                 self.validation_container,
                 True,
                 custom_validator_func=self.payment_period_date_validator,
             )
-            row_amount = payments_util.validate_csv_input(
+            row_amount = payments_util.validate_db_input(
                 "BALANCINGAMOU_MONAMT",
                 payment_detail_row,
                 self.validation_container,
@@ -598,10 +529,21 @@ class PaymentExtractStep(Step):
         TAX_IDENTIFIER_MISSING_IN_DB_COUNT = "tax_identifier_missing_in_db_count"
         ZERO_DOLLAR_PAYMENT_COUNT = "zero_dollar_payment_count"
         ADHOC_PAYMENT_COUNT = "adhoc_payment_count"
+        MULTIPLE_CLAIM_DETAILS_ERROR_COUNT = "multiple_claim_details_error_count"
 
     def run_step(self):
-        with tempfile.TemporaryDirectory() as download_directory:
-            self.process_extract_data(pathlib.Path(download_directory))
+        logger.info("Processing payment extract data")
+
+        try:
+            self.process_records()
+            self.db_session.commit()
+
+        except Exception:
+            self.db_session.rollback()
+            logger.exception("Error processing payment extract data")
+            raise
+
+        logger.info("Successfully processed payment extract data")
 
     def get_active_payment_state(self, payment: Payment) -> Optional[LkState]:
         """ For the given payment, determine if the payment is being processed or complete
@@ -645,171 +587,6 @@ class PaymentExtractStep(Step):
             return active_state.end_state
 
         return None
-
-    def download_and_extract_data(
-        self, extract_data: ExtractData, download_directory: pathlib.Path
-    ) -> None:
-        logger.info(
-            "Downloading and indexing payment extract data files.",
-            extra={
-                "pei_file": extract_data.pei.file_location,
-                "payment_details_file": extract_data.payment_details.file_location,
-                "claim_details_file": extract_data.claim_details.file_location,
-                "requested_absence_file": extract_data.requested_absence.file_location,
-            },
-        )
-        # To make processing simpler elsewhere, we index each extract file object on a key
-        # that will let us join it with the PEI file later.
-        ref_file = extract_data.reference_file
-
-        # VPEI file
-        pei_data = self.download_and_parse_data(extract_data.pei.file_location, download_directory)
-
-        # This doesn't specifically need to be indexed, but it lets us be consistent
-        logger.info("Indexing VPEI records")
-        for i, record in enumerate(pei_data):
-            if i == 0:
-                payments_util.validate_columns_present(
-                    record, payments_util.FineosExtractConstants.VPEI
-                )
-            extract_data.pei.indexed_data[CiIndex(record["C"], record["I"])] = record
-
-            lower_key_record = payments_util.make_keys_lowercase(record)
-            vpei_record = payments_util.create_staging_table_instance(
-                lower_key_record, FineosExtractVpei, ref_file, self.get_import_log_id()
-            )
-            self.db_session.add(vpei_record)
-            self.increment(self.Metrics.PEI_RECORD_COUNT)
-
-            logger.debug("indexed pei file row with CI: %s, %s", record["C"], record["I"])
-
-        # Payment details file
-        payment_details = self.download_and_parse_data(
-            extract_data.payment_details.file_location, download_directory
-        )
-        # payment details needs to be indexed on PECLASSID and PEINDEXID
-        # which point to the vpei.C and vpei.I columns
-        logger.info("Indexing payment_details records")
-        for i, record in enumerate(payment_details):
-            if i == 0:
-                payments_util.validate_columns_present(
-                    record, payments_util.FineosExtractConstants.PAYMENT_DETAILS
-                )
-            index = CiIndex(record["PECLASSID"], record["PEINDEXID"])
-            if index not in extract_data.payment_details.indexed_data:
-                extract_data.payment_details.indexed_data[index] = []
-            extract_data.payment_details.indexed_data[index].append(record)
-
-            lower_key_record = payments_util.make_keys_lowercase(record)
-            payment_details_record = payments_util.create_staging_table_instance(
-                lower_key_record,
-                FineosExtractVpeiPaymentDetails,
-                ref_file,
-                self.get_import_log_id(),
-            )
-            self.db_session.add(payment_details_record)
-            self.increment(self.Metrics.PAYMENT_DETAILS_RECORD_COUNT)
-            logger.debug(
-                "indexed payment details file row with CI: %s, %s",
-                record["PECLASSID"],
-                record["PEINDEXID"],
-            )
-
-        # Claim details file
-        claim_details = self.download_and_parse_data(
-            extract_data.claim_details.file_location, download_directory
-        )
-        # claim details needs to be indexed on PECLASSID and PEINDEXID
-        # which point to the vpei.C and vpei.I columns
-        logger.info("Indexing claim details records")
-        for i, record in enumerate(claim_details):
-            if i == 0:
-                payments_util.validate_columns_present(
-                    record, payments_util.FineosExtractConstants.CLAIM_DETAILS
-                )
-            extract_data.claim_details.indexed_data[
-                CiIndex(record["PECLASSID"], record["PEINDEXID"])
-            ] = record
-
-            lower_key_record = payments_util.make_keys_lowercase(record)
-            claim_details_record = payments_util.create_staging_table_instance(
-                lower_key_record, FineosExtractVpeiClaimDetails, ref_file, self.get_import_log_id(),
-            )
-            self.db_session.add(claim_details_record)
-            self.increment(self.Metrics.CLAIM_DETAILS_RECORD_COUNT)
-            logger.debug(
-                "indexed claim details file row with CI: %s, %s",
-                record["PECLASSID"],
-                record["PEINDEXID"],
-            )
-
-        # Requested absence file
-        requested_absences = self.download_and_parse_data(
-            extract_data.requested_absence.file_location, download_directory
-        )
-        logger.info("Indexing requested absence records")
-        for i, record in enumerate(requested_absences):
-            if i == 0:
-                payments_util.validate_columns_present(
-                    record, payments_util.FineosExtractConstants.VBI_REQUESTED_ABSENCE
-                )
-            leave_request_id = str(record.get("LEAVEREQUEST_ID"))
-            extract_data.requested_absence.indexed_data[CiIndex(c=leave_request_id, i="")] = record
-
-            lower_key_record = payments_util.make_keys_lowercase(record)
-            requested_absence_record = payments_util.create_staging_table_instance(
-                lower_key_record,
-                FineosExtractVbiRequestedAbsence,
-                ref_file,
-                self.get_import_log_id(),
-            )
-            self.db_session.add(requested_absence_record)
-            self.increment(self.Metrics.REQUESTED_ABSENCE_RECORD_COUNT)
-
-        logger.info("Successfully downloaded and indexed payment extract data files.")
-
-    def determine_field_names(self, download_location: pathlib.Path) -> List[str]:
-        field_names: Dict[str, int] = OrderedDict()
-        # Read the first line of the file and handle duplicate field names.
-        with open(download_location) as extract_file:
-            reader = csv.reader(extract_file, delimiter=",")
-
-            # If duplicates are found, they'll be named
-            # field_name_1, field_name_2,..
-            for field_name in next(reader):
-                if field_name in field_names:
-                    new_field_name = f"{field_name}_{field_names[field_name]}"
-                    field_names[field_name] += 1
-                    field_names[new_field_name] = 1
-                else:
-                    field_names[field_name] = 1
-
-        return list(field_names.keys())
-
-    def download_and_parse_data(
-        self, s3_path: str, download_directory: pathlib.Path
-    ) -> List[Dict[str, str]]:
-        file_name = s3_path.split("/")[-1]
-        download_location = download_directory / file_name
-        logger.info("download %s to %s", s3_path, download_location)
-        if s3_path.startswith("s3:/"):
-            file_util.download_from_s3(s3_path, str(download_location))
-        else:
-            file_util.copy_file(s3_path, str(download_location))
-
-        raw_extract_data = []
-
-        field_names = self.determine_field_names(download_location)
-        with open(download_location) as extract_file:
-            dict_reader = csv.DictReader(extract_file, delimiter=",", fieldnames=field_names)
-            # Each data object represents a row from the CSV as a dictionary
-            # The keys are column headers
-            # The rows are the corresponding value in the row
-            next(dict_reader)  # Because we specify the fieldnames, skip the header row
-            raw_extract_data = list(dict_reader)
-
-        logger.info("read %s: %i records", download_location, len(raw_extract_data))
-        return raw_extract_data
 
     def get_employee_and_claim(
         self, payment_data: PaymentData
@@ -961,7 +738,7 @@ class PaymentExtractStep(Step):
             payment_data.get_payment_message_str(),
             extra=payment_data.get_traceable_details(),
         )
-        payment = Payment(payment_id=uuid.uuid4())
+        payment = Payment(payment_id=uuid.uuid4(), vpei_id=payment_data.pei_record.vpei_id)
 
         # set the payment method
         if payment_data.raw_payment_method:
@@ -1423,343 +1200,165 @@ class PaymentExtractStep(Step):
             % (payment_data.get_payment_message_str(), validation_reasons)
         )
 
-    def process_records_to_db(self, extract_data: ExtractData) -> None:
-        logger.info("Processing payment extract data into db: %s", extract_data.date_str)
+    def process_payment_record(
+        self, raw_payment_record: FineosExtractVpei, reference_file: ReferenceFile
+    ) -> None:
+        self.increment(self.Metrics.PROCESSED_PAYMENT_COUNT)
 
-        # Add the files to the DB
-        # Note a single payment reference file is used for all files collectively
-        self.db_session.add(extract_data.reference_file)
+        try:
+            c_value, i_value = cast(str, raw_payment_record.c), cast(str, raw_payment_record.i)
 
-        for index, record in extract_data.pei.indexed_data.items():
-            try:
-                self.increment(self.Metrics.PROCESSED_PAYMENT_COUNT)
-                # Construct a payment data object for easier organization of the many params
-                payment_data = PaymentData(
-                    extract_data, index, record, count_incrementer=self.increment
+            # Fetch the records associated with the payment from other tables
+            # We fetch all records even when we expect only one. The PaymentData
+            # validation will handle cases where that's unexpected
+
+            # We expect multiple payment detail records
+            # joined on the C/I value. Each of these represents
+            # a pay period within a payment (although most payments will have exactly 1)
+            payment_details_records = (
+                self.db_session.query(FineosExtractVpeiPaymentDetails)
+                .filter(
+                    FineosExtractVpeiPaymentDetails.peclassid == c_value,
+                    FineosExtractVpeiPaymentDetails.peindexid == i_value,
+                    FineosExtractVpeiPaymentDetails.reference_file_id
+                    == reference_file.reference_file_id,
                 )
-                logger.debug(
-                    "Constructed payment data for extract with CI: %s, %s", index.c, index.i
+                .all()
+            )
+            self.increment(self.Metrics.PAYMENT_DETAILS_RECORD_COUNT, len(payment_details_records))
+
+            # We expect only one claim details record
+            # joined on the C/I value
+            claim_details_records = (
+                self.db_session.query(FineosExtractVpeiClaimDetails)
+                .filter(
+                    FineosExtractVpeiClaimDetails.peclassid == c_value,
+                    FineosExtractVpeiClaimDetails.peindexid == i_value,
+                    FineosExtractVpeiClaimDetails.reference_file_id
+                    == reference_file.reference_file_id,
                 )
+                .all()
+            )
+            self.increment(self.Metrics.CLAIM_DETAILS_RECORD_COUNT, len(claim_details_records))
 
-                logger.info(
-                    f"Processing payment record {payment_data.get_payment_message_str()}",
-                    extra=payment_data.get_traceable_details(),
+            claim_details_record = None
+            if len(claim_details_records) > 0:
+                claim_details_record = claim_details_records[0]
+                # From testing and validation, we shouldn't ever get more than
+                # a single claim details record. If we do, log an error, but continue
+                if len(claim_details_records) > 1:
+                    # If you are seeing this error, please investigate and check with FINEOS
+                    # We should also verify that there is nothing different between the claim details records
+                    logger.error(
+                        "Payment with C/I value %s/%s has multiple claim details records present."
+                    )
+                    self.increment(self.Metrics.MULTIPLE_CLAIM_DETAILS_ERROR_COUNT)
+
+            # To get the requested absence record, we need
+            # to use a claim detail record to know the leave request ID.
+            requested_absence_record = None
+            if claim_details_record:
+                leave_request_id = claim_details_record.leaverequesti
+
+                # Realistically, we can get more than one of these
+                # as multiple absence periods within a claim can cause
+                # multiple records. However, the only fields that differ
+                # are the absence period start/end dates (which we do not use)
+                # Fetch all of them, we'll filter it to one and log a message
+                # just in case it ever matters.
+                requested_absence_records = (
+                    self.db_session.query(FineosExtractVbiRequestedAbsence)
+                    .filter(
+                        FineosExtractVbiRequestedAbsence.leaverequest_id == leave_request_id,
+                        FineosExtractVbiRequestedAbsence.reference_file_id
+                        == reference_file.reference_file_id,
+                    )
+                    .all()
                 )
-
-                payment = self.process_payment_data_record(
-                    payment_data, extract_data.reference_file
+                self.increment(
+                    self.Metrics.REQUESTED_ABSENCE_RECORD_COUNT, len(requested_absence_records)
                 )
+                if len(requested_absence_records) > 0:
+                    if len(requested_absence_records) > 1:
+                        logger.info(
+                            "Found more than one requested absence record for payment with C/I %s/%s and leave request ID %s",
+                            c_value,
+                            i_value,
+                            leave_request_id,
+                        )
+                    requested_absence_record = requested_absence_records[0]
 
-                # Create and finish the state log. If there were any issues, this'll set the
-                # record to an error state which'll send out a report to address it, otherwise
-                # it will move onto the next step in processing
-                self._setup_state_log(
-                    payment, payment_data,
-                )
-
-                logger.info(
-                    "Done processing payment record %s",
-                    payment_data.get_payment_message_str(),
-                    extra=payment_data.get_traceable_details(),
-                )
-            except Exception:
-                # An exception during processing would indicate
-                # either a bug or a scenario that we believe invalidates
-                # an entire file and warrants investigating
-                logger.exception(
-                    "An error occurred while processing payment for CI: %s, %s", index.c, index.i,
-                )
-                raise
-
-        logger.info("Successfully processed payment extract into db: %s", extract_data.date_str)
-        return None
-
-    # TODO move to payments_util
-    def move_files_from_received_to_processed(self, extract_data: ExtractData) -> None:
-        # Effectively, this method will move a file of path:
-        # s3://bucket/path/to/received/2020-01-01-11-30-00-file.csv
-        # to
-        # s3://bucket/path/to/processed/2020-01-01-11-30-00-payment-export/2020-01-01-11-30-00-file.csv
-        date_group_folder = payments_util.get_date_group_folder_name(
-            extract_data.date_str, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
-        )
-        new_pei_s3_path = extract_data.pei.file_location.replace(
-            RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
-        )
-        file_util.rename_file(extract_data.pei.file_location, new_pei_s3_path)
-        logger.debug(
-            "Moved PEI file to processed folder.",
-            extra={"source": extract_data.pei.file_location, "destination": new_pei_s3_path},
-        )
-
-        new_payment_s3_path = extract_data.payment_details.file_location.replace(
-            RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
-        )
-        file_util.rename_file(extract_data.payment_details.file_location, new_payment_s3_path)
-        logger.debug(
-            "Moved payments details file to processed folder.",
-            extra={
-                "source": extract_data.payment_details.file_location,
-                "destination": new_payment_s3_path,
-            },
-        )
-
-        new_claim_s3_path = extract_data.claim_details.file_location.replace(
-            RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
-        )
-        file_util.rename_file(extract_data.claim_details.file_location, new_claim_s3_path)
-        logger.debug(
-            "Moved claim details file to processed folder.",
-            extra={
-                "source": extract_data.claim_details.file_location,
-                "destination": new_claim_s3_path,
-            },
-        )
-
-        new_requested_absence_s3_path = extract_data.requested_absence.file_location.replace(
-            RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
-        )
-        file_util.rename_file(
-            extract_data.requested_absence.file_location, new_requested_absence_s3_path
-        )
-        logger.debug(
-            "Moved requested absence file to processed folder.",
-            extra={
-                "source": extract_data.requested_absence.file_location,
-                "destination": new_requested_absence_s3_path,
-            },
-        )
-
-        # Update the reference file DB record to point to the new folder for these files
-        extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
-            RECEIVED_FOLDER, f"{PROCESSED_FOLDER}"
-        )
-        extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
-            extract_data.date_str, date_group_folder
-        )
-        self.db_session.add(extract_data.reference_file)
-        logger.debug(
-            "Updated reference file location for payment extract data.",
-            extra={"reference_file_location": extract_data.reference_file.file_location},
-        )
-
-        logger.info("Successfully moved payments files to processed folder.")
-        self.set_metrics({self.Metrics.EXTRACT_PATH: extract_data.reference_file.file_location})
-
-    # TODO move to payments_util
-    def move_files_from_received_to_skipped(self, extract_data: ExtractData) -> None:
-        # Effectively, this method will move a file of path:
-        # s3://bucket/path/to/received/2020-01-01-11-30-00-file.csv
-        # to
-        # s3://bucket/path/to/processed/2020-01-01-11-30-00-payment-export/2020-01-01-11-30-00-file.csv
-        date_group_folder = payments_util.get_date_group_folder_name(
-            extract_data.date_str, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
-        )
-        new_pei_s3_path = extract_data.pei.file_location.replace(
-            RECEIVED_FOLDER, f"{SKIPPED_FOLDER}/{date_group_folder}"
-        )
-        file_util.rename_file(extract_data.pei.file_location, new_pei_s3_path)
-        logger.debug(
-            "Moved PEI file to skipped folder.",
-            extra={"source": extract_data.pei.file_location, "destination": new_pei_s3_path},
-        )
-
-        new_payment_s3_path = extract_data.payment_details.file_location.replace(
-            RECEIVED_FOLDER, f"{SKIPPED_FOLDER}/{date_group_folder}"
-        )
-        file_util.rename_file(extract_data.payment_details.file_location, new_payment_s3_path)
-        logger.debug(
-            "Moved payments details file to skipped folder.",
-            extra={
-                "source": extract_data.payment_details.file_location,
-                "destination": new_payment_s3_path,
-            },
-        )
-
-        new_claim_s3_path = extract_data.claim_details.file_location.replace(
-            RECEIVED_FOLDER, f"{SKIPPED_FOLDER}/{date_group_folder}"
-        )
-        file_util.rename_file(extract_data.claim_details.file_location, new_claim_s3_path)
-        logger.debug(
-            "Moved claim details file to skipped folder.",
-            extra={
-                "source": extract_data.claim_details.file_location,
-                "destination": new_claim_s3_path,
-            },
-        )
-
-        new_requested_absence_s3_path = extract_data.requested_absence.file_location.replace(
-            RECEIVED_FOLDER, f"{SKIPPED_FOLDER}/{date_group_folder}"
-        )
-        file_util.rename_file(
-            extract_data.requested_absence.file_location, new_requested_absence_s3_path
-        )
-        logger.debug(
-            "Moved requested absence file to processed folder.",
-            extra={
-                "source": extract_data.requested_absence.file_location,
-                "destination": new_requested_absence_s3_path,
-            },
-        )
-
-        # Update the reference file DB record to point to the new folder for these files
-        extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
-            RECEIVED_FOLDER, f"{SKIPPED_FOLDER}"
-        )
-        extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
-            extract_data.date_str, date_group_folder
-        )
-        self.db_session.add(extract_data.reference_file)
-        logger.debug(
-            "Updated reference file location for payment extract data.",
-            extra={"reference_file_location": extract_data.reference_file.file_location},
-        )
-
-        logger.info("Successfully moved payments files to skipped folder.")
-
-    # TODO move to payments_util
-    def move_files_from_received_to_error(self, extract_data: Optional[ExtractData]) -> None:
-        if not extract_data:
-            logger.error("Cannot move files to error directory, as path is not known")
-            return
-        # Effectively, this method will move a file of path:
-        # s3://bucket/path/to/received/2020-01-01-11-30-00-file.csv
-        # to
-        # s3://bucket/path/to/error/2020-01-01-11-30-00-payment-export/2020-01-01-file.csv
-        date_group_folder = payments_util.get_date_group_folder_name(
-            extract_data.date_str, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
-        )
-        new_pei_s3_path = extract_data.pei.file_location.replace(
-            RECEIVED_FOLDER, f"error/{date_group_folder}"
-        )
-        file_util.rename_file(extract_data.pei.file_location, new_pei_s3_path)
-        logger.debug(
-            "Moved PEI file to error folder.",
-            extra={"source": extract_data.pei.file_location, "destination": new_pei_s3_path},
-        )
-
-        new_payment_s3_path = extract_data.payment_details.file_location.replace(
-            RECEIVED_FOLDER, f"error/{date_group_folder}"
-        )
-        file_util.rename_file(extract_data.payment_details.file_location, new_payment_s3_path)
-        logger.debug(
-            "Moved payments details file to error folder.",
-            extra={
-                "source": extract_data.payment_details.file_location,
-                "destination": new_payment_s3_path,
-            },
-        )
-
-        new_claim_s3_path = extract_data.claim_details.file_location.replace(
-            RECEIVED_FOLDER, f"error/{date_group_folder}"
-        )
-        file_util.rename_file(extract_data.claim_details.file_location, new_claim_s3_path)
-        logger.debug(
-            "Moved claim details file to error folder.",
-            extra={
-                "source": extract_data.claim_details.file_location,
-                "destination": new_claim_s3_path,
-            },
-        )
-
-        new_requested_absence_s3_path = extract_data.requested_absence.file_location.replace(
-            RECEIVED_FOLDER, f"error/{date_group_folder}"
-        )
-        file_util.rename_file(
-            extract_data.requested_absence.file_location, new_requested_absence_s3_path
-        )
-        logger.debug(
-            "Moved requested absence file to error folder.",
-            extra={
-                "source": extract_data.requested_absence.file_location,
-                "destination": new_requested_absence_s3_path,
-            },
-        )
-
-        # We still want to create the reference file, just use the one that is
-        # created in the __init__ of the extract data object and set the path.
-        # Note that this will not be attached to a payment
-        extract_data.reference_file.file_location = file_util.get_directory(new_pei_s3_path)
-        self.db_session.add(extract_data.reference_file)
-        logger.debug(
-            "Updated reference file location for payment extract data.",
-            extra={"reference_file_location": extract_data.reference_file.file_location},
-        )
-
-        logger.info("Successfully moved payments files to error folder.")
-        self.set_metrics({self.Metrics.EXTRACT_PATH: extract_data.reference_file.file_location})
-
-    def process_extract_data(self, download_directory: pathlib.Path) -> None:
-
-        logger.info("Processing payment extract files")
-
-        payments_util.copy_fineos_data_to_archival_bucket(
-            self.db_session,
-            payments_util.PAYMENT_EXTRACT_FILE_NAMES,
-            ReferenceFileType.FINEOS_PAYMENT_EXTRACT,
-        )
-        data_by_date = payments_util.group_s3_files_by_date(
-            payments_util.PAYMENT_EXTRACT_FILE_NAMES
-        )
-
-        previously_processed_date = set()
-
-        logger.info("Dates in /received folder: %s", ", ".join(data_by_date.keys()))
-
-        if bool(data_by_date):
-            latest_date_str = sorted(data_by_date.keys())[-1]
-
-        for date_str, s3_file_locations in data_by_date.items():
-
-            logger.debug(
-                "Processing files in date group: %s", date_str, extra={"date_group": date_str}
+            # Construct a payment data object for easier organization of the many params
+            payment_data = PaymentData(
+                c_value,
+                i_value,
+                raw_payment_record,
+                payment_details_records,
+                claim_details_record,
+                requested_absence_record,
+                count_incrementer=self.increment,
             )
 
-            try:
-                extract_data = ExtractData(s3_file_locations, date_str)
+            logger.info(
+                f"Processing payment record {payment_data.get_payment_message_str()}",
+                extra=payment_data.get_traceable_details(),
+            )
 
-                if date_str != latest_date_str:
-                    self.move_files_from_received_to_skipped(extract_data)
-                    logger.info(
-                        "Successfully skipped claimant extract files in date group: %s",
-                        date_str,
-                        extra={"date_group": date_str},
-                    )
-                    continue
+            payment = self.process_payment_data_record(payment_data, reference_file)
 
-                if (
-                    date_str in previously_processed_date
-                    or payments_util.payment_extract_reference_file_exists_by_date_group(
-                        self.db_session, date_str, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
-                    )
-                ):
-                    logger.warning(
-                        "Found existing ReferenceFile record for date group in /processed folder: %s",
-                        date_str,
-                        extra={"date_group": date_str},
-                    )
-                    previously_processed_date.add(date_str)
-                    continue
+            # Create and finish the state log. If there were any issues, this'll set the
+            # record to an error state which'll send out a report to address it, otherwise
+            # it will move onto the next step in processing
+            self._setup_state_log(
+                payment, payment_data,
+            )
 
-                self.download_and_extract_data(extract_data, download_directory)
+            logger.info(
+                "Done processing payment record %s",
+                payment_data.get_payment_message_str(),
+                extra=payment_data.get_traceable_details(),
+            )
+        except Exception:
+            # An exception during processing would indicate
+            # either a bug or a scenario that we believe invalidates
+            # an entire file and warrants investigating
+            logger.exception(
+                "An error occurred while processing payment for CI: %s, %s", c_value, i_value,
+            )
+            raise
 
-                self.process_records_to_db(extract_data)
-                self.move_files_from_received_to_processed(extract_data)
+        return None
 
-                logger.info(
-                    "Successfully processed payment extract files in date group: %s",
-                    date_str,
-                    extra={"date_group": date_str},
-                )
-                self.db_session.commit()
-            except Exception:
-                self.db_session.rollback()
-                logger.exception(
-                    "Error processing payment extract files in date_group: %s",
-                    date_str,
-                    extra={"date_group": date_str},
-                )
-                self.move_files_from_received_to_error(extract_data)
-                raise
+    def process_records(self) -> None:
+        # Grab the latest payment extract reference file
+        reference_file = (
+            self.db_session.query(ReferenceFile)
+            .filter(
+                ReferenceFile.reference_file_type_id
+                == ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id
+            )
+            .order_by(ReferenceFile.created_at.desc())
+            .first()
+        )
+        if not reference_file:
+            raise Exception(
+                "This would only happen the first time you run in an env and have no extracts, make sure FINEOS has created extracts"
+            )
+        if reference_file.processed_import_log_id:
+            logger.warning(
+                "Already processed the most recent extracts for %s in import run %s",
+                reference_file.file_location,
+                reference_file.processed_import_log_id,
+            )
+            return
 
-        logger.info("Successfully processed payment extract files")
+        raw_payment_records = (
+            self.db_session.query(FineosExtractVpei)
+            .filter(FineosExtractVpei.reference_file_id == reference_file.reference_file_id)
+            .all()
+        )
+        for raw_payment_record in raw_payment_records:
+            self.increment(self.Metrics.PEI_RECORD_COUNT)
+            self.process_payment_record(raw_payment_record, reference_file)
+
+        reference_file.processed_import_log_id = self.get_import_log_id()

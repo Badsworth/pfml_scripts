@@ -34,7 +34,10 @@ from massgov.pfml.db.models.employees import (
     State,
 )
 from massgov.pfml.db.models.payments import (
+    FineosExtractCancelledPayments,
     FineosExtractEmployeeFeed,
+    FineosExtractPaymentFullSnapshot,
+    FineosExtractReplacedPayments,
     FineosExtractVbiRequestedAbsence,
     FineosExtractVbiRequestedAbsenceSom,
     FineosExtractVpei,
@@ -47,10 +50,24 @@ from massgov.pfml.util.routing_number_validation import validate_routing_number
 
 logger = logging.get_logger(__package__)
 
+ExtractTable = Union[
+    Type[FineosExtractVpei],
+    Type[FineosExtractVpeiClaimDetails],
+    Type[FineosExtractVpeiPaymentDetails],
+    Type[FineosExtractVbiRequestedAbsenceSom],
+    Type[FineosExtractEmployeeFeed],
+    Type[FineosExtractVbiRequestedAbsence],
+    Type[FineosExtractCancelledPayments],
+    Type[FineosExtractPaymentFullSnapshot],
+    Type[FineosExtractReplacedPayments],
+]
+
 
 @dataclass(frozen=True, eq=True)
 class FineosExtract:
     file_name: str
+
+    table: ExtractTable = field(compare=False, repr=False)
 
     # Note field names is simply a list
     # of fields we care about. Extracts
@@ -73,6 +90,14 @@ class Constants:
     FILE_NAME_PUB_POSITIVE_PAY = "EOLWD-DFML-POSITIVE-PAY"
     FILE_NAME_PAYMENT_AUDIT_REPORT = "Payment-Audit-Report"
     FILE_NAME_RAW_PUB_ACH_FILE = "ACD9T136-DFML"
+
+    REQUESTED_ABSENCE_SOM_FILE_NAME = "VBI_REQUESTEDABSENCE_SOM.csv"
+    EMPLOYEE_FEED_FILE_NAME = "Employee_feed.csv"
+
+    PEI_EXPECTED_FILE_NAME = "vpei.csv"
+    PAYMENT_DETAILS_EXPECTED_FILE_NAME = "vpeipaymentdetails.csv"
+    CLAIM_DETAILS_EXPECTED_FILE_NAME = "vpeiclaimdetails.csv"
+    REQUESTED_ABSENCE_FILE_NAME = "VBI_REQUESTEDABSENCE.csv"
 
     NACHA_FILE_FORMAT = f"%Y-%m-%d-%H-%M-%S-{FILE_NAME_PUB_NACHA}"
 
@@ -137,11 +162,29 @@ class Constants:
     )
 
 
+CANCELLED_OR_REPLACED_EXTRACT_FIELD_NAMES = [
+    "C",
+    "I",
+    "STATUSREASON",
+    "GROSSAMOUNT",
+    "ADDEDBY",
+    "ISSUEDATE",
+    "CANCELLATIONDATE",
+    "TRANSACTIONSTATUSDATE",
+    "TRANSACTIONSTATUS",
+    "EXTRACTIONDATE",
+    "STOCKNUMBER",
+    "CLAIMNUMBER",
+    "BENEFITCASENUMBER",
+]
+
+
 @dataclass
 class FineosExtractConstants:
     # FINEOS Claimant Extract Files
     VBI_REQUESTED_ABSENCE_SOM = FineosExtract(
         file_name="VBI_REQUESTEDABSENCE_SOM.csv",
+        table=FineosExtractVbiRequestedAbsenceSom,
         field_names=[
             "ABSENCEPERIOD_CLASSID",
             "ABSENCEPERIOD_INDEXID",
@@ -160,6 +203,7 @@ class FineosExtractConstants:
 
     EMPLOYEE_FEED = FineosExtract(
         file_name="Employee_feed.csv",
+        table=FineosExtractEmployeeFeed,
         field_names=[
             "C",
             "I",
@@ -184,6 +228,7 @@ class FineosExtractConstants:
 
     VPEI = FineosExtract(
         file_name="vpei.csv",
+        table=FineosExtractVpei,
         field_names=[
             "C",
             "I",
@@ -208,6 +253,7 @@ class FineosExtractConstants:
 
     PAYMENT_DETAILS = FineosExtract(
         file_name="vpeipaymentdetails.csv",
+        table=FineosExtractVpeiPaymentDetails,
         field_names=[
             "PECLASSID",
             "PEINDEXID",
@@ -219,6 +265,7 @@ class FineosExtractConstants:
 
     CLAIM_DETAILS = FineosExtract(
         file_name="vpeiclaimdetails.csv",
+        table=FineosExtractVpeiClaimDetails,
         field_names=["PECLASSID", "PEINDEXID", "ABSENCECASENU", "LEAVEREQUESTI"],
     )
 
@@ -226,12 +273,124 @@ class FineosExtractConstants:
     # do not confuse it with the similar _SOM one in the claimant extract
     VBI_REQUESTED_ABSENCE = FineosExtract(
         file_name="VBI_REQUESTEDABSENCE.csv",
+        table=FineosExtractVbiRequestedAbsence,
         field_names=[
             "LEAVEREQUEST_DECISION",
             "LEAVEREQUEST_ID",
             "ABSENCEREASON_COVERAGE",
             "ABSENCE_CASECREATIONDATE",
         ],
+    )
+
+    PAYMENT_FULL_SNAPSHOT = FineosExtract(
+        file_name="SOM_PEI_Fullextract.csv",
+        table=FineosExtractPaymentFullSnapshot,
+        field_names=[
+            "C",
+            "I",
+            "FLAGS",
+            "PARTITIONID",
+            "LASTUPDATEDATE",
+            "BOEVERSION",
+            "C_OSUSER_UPDATEDBY",
+            "I_OSUSER_UPDATEDBY",
+            "ADDRESSLINE1",
+            "ADDRESSLINE2",
+            "ADDRESSLINE3",
+            "ADDRESSLINE4",
+            "ADDRESSLINE5",
+            "ADDRESSLINE6",
+            "ADDRESSLINE7",
+            "ADVICETOPAY",
+            "ADVICETOPAYOV",
+            "AMALGAMATIONC",
+            "AMOUNT_MONAMT",
+            "AMOUNT_MONCUR",
+            "CHECKCUTTING",
+            "CONFIRMEDBYUS",
+            "CONFIRMEDUID",
+            "CONTRACTREF",
+            "CORRESPCOUNTR",
+            "CURRENCY",
+            "DATEINTERFACE",
+            "DATELASTPROCE",
+            "DESCRIPTION",
+            "EMPLOYEECONTR",
+            "EVENTEFFECTIV",
+            "EVENTREASON",
+            "EVENTTYPE",
+            "EXTRACTIONDAT",
+            "GROSSPAYMENTA_MONAMT",
+            "GROSSPAYMENTA_MONCUR",
+            "INSUREDRESIDE",
+            "NAMETOPRINTON",
+            "NOMINATEDPAYE",
+            "NOMPAYEECUSTO",
+            "NOMPAYEEDOB",
+            "NOMPAYEEFULLN",
+            "NOMPAYEESOCNU",
+            "NOTES",
+            "PAYEEACCOUNTN",
+            "PAYEEACCOUNTT",
+            "PAYEEADDRESS",
+            "PAYEEBANKBRAN",
+            "PAYEEBANKCODE",
+            "PAYEEBANKINST",
+            "PAYEEBANKSORT",
+            "PAYEECORRESPO",
+            "PAYEECUSTOMER",
+            "PAYEEDOB",
+            "PAYEEFULLNAME",
+            "PAYEEIDENTIFI",
+            "PAYEESOCNUMBE",
+            "PAYMENTADD",
+            "PAYMENTADD1",
+            "PAYMENTADD2",
+            "PAYMENTADD3",
+            "PAYMENTADD4",
+            "PAYMENTADD5",
+            "PAYMENTADD6",
+            "PAYMENTADD7",
+            "PAYMENTADDCOU",
+            "PAYMENTCORRST",
+            "PAYMENTDATE",
+            "PAYMENTFREQUE",
+            "PAYMENTMETHOD",
+            "PAYMENTPOSTCO",
+            "PAYMENTPREMIS",
+            "PAYMENTTRIGGE",
+            "PAYMENTTYPE",
+            "PAYMETHCURREN",
+            "PERCENTTAXABL",
+            "POSTCODE",
+            "PREMISESNO",
+            "SETUPBYUSERID",
+            "SETUPBYUSERNA",
+            "STATUS",
+            "STATUSEFFECTI",
+            "STATUSREASON",
+            "STOCKNO",
+            "SUMMARYEFFECT",
+            "SUMMARYSTATUS",
+            "TAXOVERRIDE",
+            "TAXWAGEAMOUNT_MONAMT",
+            "TAXWAGEAMOUNT_MONCUR",
+            "TRANSACTIONNO",
+            "TRANSACTIONST",
+            "TRANSSTATUSDA",
+        ],
+    )
+
+    CANCELLED_PAYMENTS_EXTRACT = FineosExtract(
+        file_name="SOM_PEI_CancelledRecords.csv",
+        table=FineosExtractCancelledPayments,
+        field_names=CANCELLED_OR_REPLACED_EXTRACT_FIELD_NAMES,
+    )
+
+    REPLACED_PAYMENTS_EXTRACT = FineosExtract(
+        file_name="SOM_PEI_ReplacedRecords.csv",
+        table=FineosExtractReplacedPayments,
+        field_names=CANCELLED_OR_REPLACED_EXTRACT_FIELD_NAMES,
     )
 
 
@@ -250,6 +409,15 @@ PAYMENT_EXTRACT_FILES = [
 ]
 PAYMENT_EXTRACT_FILE_NAMES = [extract_file.file_name for extract_file in PAYMENT_EXTRACT_FILES]
 
+PAYMENT_RECONCILIATION_EXTRACT_FILES = [
+    FineosExtractConstants.PAYMENT_FULL_SNAPSHOT,
+    FineosExtractConstants.CANCELLED_PAYMENTS_EXTRACT,
+    FineosExtractConstants.REPLACED_PAYMENTS_EXTRACT,
+]
+PAYMENT_RECONCILIATION_EXTRACT_FILE_NAMES = [
+    extract_file.file_name for extract_file in PAYMENT_RECONCILIATION_EXTRACT_FILES
+]
+
 
 class Regexes:
     MONETARY_AMOUNT = (
@@ -265,6 +433,7 @@ class Regexes:
 class ValidationReason(str, Enum):
     MISSING_FIELD = "MissingField"
     MISSING_DATASET = "MissingDataset"
+    TOO_MANY_DATASETS = "TooManyDatasets"
     MISSING_IN_DB = "MissingInDB"
     MISSING_FINEOS_NAME = "MissingFineosName"
     FIELD_TOO_SHORT = "FieldTooShort"
@@ -438,6 +607,52 @@ def validate_csv_input(
     return value
 
 
+def validate_db_input(
+    key: str,
+    data: Any,
+    errors: ValidationContainer,
+    required: Optional[bool] = False,
+    min_length: Optional[int] = None,
+    max_length: Optional[int] = None,
+    custom_validator_func: Optional[Callable[[str], Optional[ValidationReason]]] = None,
+) -> Optional[str]:
+    value = getattr(data, key.lower(), None)
+    if value == "Unknown":
+        value = None  # Effectively treating "" and "Unknown" the same
+
+    if required and not value:
+        errors.add_validation_issue(ValidationReason.MISSING_FIELD, key)
+        return None
+
+    validation_issues = []
+    # Check the length only if it is defined/not empty
+    if value:
+        if min_length and len(value) < min_length:
+            validation_issues.append(ValidationReason.FIELD_TOO_SHORT)
+        if max_length and len(value) > max_length:
+            validation_issues.append(ValidationReason.FIELD_TOO_LONG)
+
+        # Also only bother with custom validation if the value exists
+        if custom_validator_func:
+            reason = custom_validator_func(value)
+            if reason:
+                validation_issues.append(reason)
+
+    if required:
+
+        for validation_issue in validation_issues:
+            # Any non-missing error types add the value to the error details
+            # Note that this means these reports will contain PII data
+            errors.add_validation_issue(validation_issue, f"{key}: {value}")
+
+    # If any of the specific validations hit an error, don't return the value
+    # This is true even if the field is not required as we may still use the field.
+    if len(validation_issues) > 0:
+        return None
+
+    return value
+
+
 def get_date_group_str_from_path(path: str) -> Optional[str]:
     # E.g. For a file path s3://bucket/folder/2020-12-01-file-name.csv return 2020-12-01
     match = re.search("\\d{4}-\\d{2}-\\d{2}-\\d{2}-\\d{2}-\\d{2}", path)
@@ -492,6 +707,7 @@ def get_fineos_max_history_date(export_type: LkReferenceFileType) -> datetime:
     Only accepts:
         - ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
         - ReferenceFileType.FINEOS_PAYMENT_EXTRACT
+        - ReferenceFileType.FINEOS_PAYMENT_RECONCILIATION_EXTRACT
 
     Raises:
         ValueError: An unacceptable ReferenceFileType or a bad datestring was
@@ -510,6 +726,11 @@ def get_fineos_max_history_date(export_type: LkReferenceFileType) -> datetime:
         == ReferenceFileType.FINEOS_PAYMENT_EXTRACT.reference_file_type_id
     ):
         datestring = date_config.fineos_payment_extract_max_history_date
+    elif (
+        export_type.reference_file_type_id
+        == ReferenceFileType.FINEOS_PAYMENT_RECONCILIATION_EXTRACT.reference_file_type_id
+    ):
+        datestring = date_config.fineos_payment_reconciliation_extract_max_history_date
 
     else:
         raise ValueError(f"Incorrect export_type {export_type} provided")
@@ -519,11 +740,14 @@ def get_fineos_max_history_date(export_type: LkReferenceFileType) -> datetime:
 
 # TODO: This function should probably get broken down into smaller functions
 def copy_fineos_data_to_archival_bucket(
-    db_session: db.Session, expected_file_names: List[str], export_type: LkReferenceFileType
+    db_session: db.Session,
+    expected_file_names: List[str],
+    export_type: LkReferenceFileType,
+    source_folder_s3_config_key: str = "fineos_data_export_path",
 ) -> Dict[str, Dict[str, str]]:
     # stage source and destination folders
     s3_config = payments_config.get_s3_config()
-    source_folder = s3_config.fineos_data_export_path
+    source_folder = getattr(s3_config, source_folder_s3_config_key)
     destination_folder = os.path.join(
         s3_config.pfml_fineos_extract_archive_path, Constants.S3_INBOUND_RECEIVED_DIR
     )
@@ -950,14 +1174,7 @@ def get_attribute_names(cls):
 
 def create_staging_table_instance(
     data: Dict,
-    db_cls: Union[
-        Type[FineosExtractVpei],
-        Type[FineosExtractVpeiClaimDetails],
-        Type[FineosExtractVpeiPaymentDetails],
-        Type[FineosExtractVbiRequestedAbsenceSom],
-        Type[FineosExtractEmployeeFeed],
-        Type[FineosExtractVbiRequestedAbsence],
-    ],
+    db_cls: ExtractTable,
     ref_file: ReferenceFile,
     fineos_extract_import_log_id: Optional[int],
 ) -> base.Base:
@@ -977,18 +1194,20 @@ def create_staging_table_instance(
         absence_casestatus. We will log a warning stating property new_column is not included in model
         class VbiRequestedAbsenceSom.
     """
-
+    lower_data = make_keys_lowercase(data)
     # check if extracted data types match our db model properties
     known_properties = set(get_attribute_names(db_cls))
-    extracted_properties = set(data.keys())
+    extracted_properties = set(lower_data.keys())
     difference = [prop for prop in extracted_properties if prop not in known_properties]
 
     if len(difference) > 0:
         logger.warning(f"{db_cls.__name__} does not include properties: {','.join(difference)}")
-        [data.pop(diff) for diff in difference]
+        [lower_data.pop(diff) for diff in difference]
 
     return db_cls(
-        **data, reference_file=ref_file, fineos_extract_import_log_id=fineos_extract_import_log_id,
+        **lower_data,
+        reference_file=ref_file,
+        fineos_extract_import_log_id=fineos_extract_import_log_id,
     )
 
 

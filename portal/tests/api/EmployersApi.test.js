@@ -1,5 +1,5 @@
 import Address from "../../src/models/Address";
-import Document from "../../src/models/Document";
+import ClaimDocument from "../../src/models/ClaimDocument";
 import DocumentCollection from "../../src/models/DocumentCollection";
 import EmployerClaim from "../../src/models/EmployerClaim";
 import EmployersApi from "../../src/api/EmployersApi";
@@ -176,7 +176,7 @@ describe("EmployersApi", () => {
       });
 
       it("sends GET request to /employers/claims/{absence_id}/documents/{document_id}", async () => {
-        const document = new Document({
+        const document = new ClaimDocument({
           fineos_document_id: 1234,
           content_type: "image/png",
         });
@@ -193,7 +193,7 @@ describe("EmployersApi", () => {
       });
 
       it("returns a Blob object", async () => {
-        const document = new Document({
+        const document = new ClaimDocument({
           fineos_document_id: 1234,
           content_type: "image/png",
         });
@@ -233,7 +233,7 @@ describe("EmployersApi", () => {
 
       it("resolves with documents", async () => {
         const expectedDocuments = mockDocumentCollection.map(
-          (documentInfo) => new Document(documentInfo)
+          (documentInfo) => new ClaimDocument(documentInfo)
         );
 
         const response = await employersApi.getDocuments(absenceId);

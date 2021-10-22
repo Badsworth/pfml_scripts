@@ -4,7 +4,7 @@ import os
 from collections import OrderedDict
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import List, cast
+from typing import Dict, List, cast
 
 import faker
 
@@ -12,7 +12,7 @@ import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import PaymentMethod, PaymentTransactionType
-from massgov.pfml.delegated_payments.mock.mock_util import generate_routing_nbr_from_ssn
+from massgov.pfml.delegated_payments.mock.mock_util import MockData, generate_routing_nbr_from_ssn
 from massgov.pfml.delegated_payments.mock.scenario_data_generator import (
     INVALID_ADDRESS,
     MATCH_ADDRESS,
@@ -43,24 +43,7 @@ REQUESTED_ABSENCE_FIELD_NAMES = (
 )
 
 
-class FineosData:
-    def __init__(self, generate_defaults, **kwargs):
-        self.generate_defaults = generate_defaults
-        self.kwargs = kwargs
-
-    def get_value(self, key, default):
-        # We want to support setting values as None
-        contains_value = key in self.kwargs
-
-        if not contains_value:
-            if self.generate_defaults:
-                return default
-            return ""
-
-        return self.kwargs.get(key)
-
-
-class FineosClaimantData(FineosData):
+class FineosClaimantData(MockData):
     def __init__(
         self,
         generate_defaults=True,
@@ -164,7 +147,7 @@ class FineosClaimantData(FineosData):
         return requested_absence_record
 
 
-class FineosPaymentData(FineosData):
+class FineosPaymentData(MockData):
     """
     FINEOS Data contains all data we care about for processing a FINEOS extract
     With no parameters,, will generate a valid, mostly-random valid standard payment
@@ -625,3 +608,30 @@ def generate_claimant_data_files(
         fineos_claimant_dataset.append(fineos_claimant_data)
     # create the files
     create_fineos_claimant_extract_files(fineos_claimant_dataset, folder_path, date_of_extract)
+
+
+def generate_payment_reconciliation_extract_files(
+    folder_path: str, date_prefix: str, row_count: int
+) -> Dict[str, List[Dict]]:
+    extract_records = {}
+    for extract_file in payments_util.PAYMENT_RECONCILIATION_EXTRACT_FILES:
+        csv_handle = _create_file(
+            folder_path, date_prefix, extract_file.file_name, extract_file.field_names
+        )
+
+        # write the respective rows
+        records = []
+        for i in range(row_count):
+            row = {}
+            for field_name in extract_file.field_names:
+                row[field_name] = "test"
+            row["C"] = "1"
+            row["I"] = str(i)
+
+            csv_handle.csv_writer.writerow(row)
+            records.append(row)
+
+        csv_handle.file.close()
+        extract_records[extract_file.file_name] = records
+
+    return extract_records

@@ -1,6 +1,7 @@
-import Document, { DocumentType } from "../../../src/models/Document";
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
+import BenefitsApplicationDocument from "../../../src/models/BenefitsApplicationDocument";
 import { Checklist } from "../../../src/pages/applications/checklist";
+import { DocumentType } from "../../../src/models/Document";
 import LeaveReason from "../../../src/models/LeaveReason";
 import { mockRouter } from "next/router";
 import { screen } from "@testing-library/react";
@@ -43,7 +44,7 @@ describe("Checklist", () => {
     const { container } = renderChecklist();
     expect(container).toMatchSnapshot();
     expect(screen.getByText("Part 1")).toBeInTheDocument();
-    expect(screen.getByText("Part 1")).toBeInTheDocument();
+    expect(screen.getByText("Part 2")).toBeInTheDocument();
     expect(screen.getByText("Part 3")).toBeInTheDocument();
   });
 
@@ -159,7 +160,7 @@ describe("Checklist", () => {
 
     it("renders alert", () => {
       expect(
-        screen.getByText(/Part 1 of your application was confirmed./)
+        screen.getByText(/You successfully submitted Part 1./)
       ).toBeInTheDocument();
       expect(screen.getByText(/Your application ID is/)).toBeInTheDocument();
     });
@@ -216,11 +217,8 @@ describe("Checklist", () => {
 
     it("renders alert that Part 2 is confirmed", () => {
       expect(
-        screen.getByText(/Part 2 of your application was confirmed./)
-      ).toBeInTheDocument();
-      expect(
         screen.getByText(
-          /Now, you can work on Part 3, and submit your application./
+          /You successfully submitted Part 2. Submit Part 3 so that we can review your application./
         )
       ).toBeInTheDocument();
     });
@@ -386,11 +384,11 @@ describe("Checklist", () => {
       const warnings = [];
       const customProps = {
         documents: [
-          new Document({
+          new BenefitsApplicationDocument({
             application_id: "mock-claim-id",
             document_type: DocumentType.certification[LeaveReason.pregnancy],
           }),
-          new Document({
+          new BenefitsApplicationDocument({
             application_id: "mock-claim-id",
             document_type: DocumentType.identityVerification,
           }),
@@ -419,11 +417,11 @@ describe("Checklist", () => {
       const warnings = [];
       const customProps = {
         documents: [
-          new Document({
+          new BenefitsApplicationDocument({
             application_id: "mock-claim-id",
             document_type: DocumentType.certification[LeaveReason.pregnancy],
           }),
-          new Document({
+          new BenefitsApplicationDocument({
             application_id: "mock-claim-id",
             document_type: DocumentType.identityVerification,
           }),

@@ -7,55 +7,47 @@ import faker
 import pytest
 import sqlalchemy
 
-import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
 import massgov.pfml.experian.address_validate_soap.client as soap_api
 import massgov.pfml.experian.address_validate_soap.models as sm
-from massgov.pfml.db.models.employees import LkState, Payment, PaymentMethod, State, StateLog
-from massgov.pfml.db.models.factories import (
-    AddressFactory,
-    ClaimFactory,
-    EmployeeFactory,
-    ExperianAddressPairFactory,
-    PaymentFactory,
+from massgov.pfml.db.models.employees import (
+    LkPaymentMethod,
+    LkState,
+    Payment,
+    PaymentMethod,
+    State,
+    StateLog,
 )
+from massgov.pfml.db.models.factories import AddressFactory, ExperianAddressPairFactory
 from massgov.pfml.db.models.payments import FineosWritebackDetails, FineosWritebackTransactionStatus
 from massgov.pfml.delegated_payments.address_validation import AddressValidationStep, Constants
+from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.experian.address_validate_soap.mock_caller import MockVerificationZeepCaller
 
 fake = faker.Faker()
 
 
-def _random_valid_payment_with_state_log(db_session: db.Session, payment_method_id: int) -> Payment:
+def _random_valid_payment_with_state_log(
+    db_session: db.Session, payment_method: LkPaymentMethod
+) -> Payment:
     # Create the employee and claim ourselves so the payment has an associated address.
     address_pair = ExperianAddressPairFactory(experian_address=AddressFactory())
-    employee = EmployeeFactory()
-    claim = ClaimFactory(employee=employee)
 
     # Set the dates to some reasonably recent dates in the past.
     start_date = fake.date_between("-10w", "-2w")
     end_date = start_date + timedelta(days=6)
     payment_date = end_date + timedelta(days=1)
 
-    payment = PaymentFactory(
-        claim=claim,
+    return DelegatedPaymentFactory(
+        db_session,
+        experian_address_pair=address_pair,
         period_start_date=start_date,
         period_end_date=end_date,
         payment_date=payment_date,
         amount=Decimal(fake.random_int(min=10, max=9_999)),
-        disb_method_id=payment_method_id,
-        experian_address_pair=address_pair,
-    )
-
-    state_log_util.create_finished_state_log(
-        end_state=State.PAYMENT_READY_FOR_ADDRESS_VALIDATION,
-        outcome=state_log_util.build_outcome("Payment ready for address validation"),
-        associated_model=payment,
-        db_session=db_session,
-    )
-    db_session.commit()
-
-    return payment
+        payment_method=payment_method,
+        payment_end_state_message="Payment ready for address validation",
+    ).get_or_create_payment_with_state(State.PAYMENT_READY_FOR_ADDRESS_VALIDATION)
 
 
 def _setup_soap_payments(
@@ -63,11 +55,11 @@ def _setup_soap_payments(
     db_session: db.Session,
     payment_count: int,
     verify_level: Optional[sm.VerifyLevel] = None,
-    payment_method_id: int = PaymentMethod.CHECK.payment_method_id,
+    payment_method: LkPaymentMethod = PaymentMethod.CHECK,
 ) -> List[Payment]:
     payments = []
     for _ in range(payment_count):
-        payment = _random_valid_payment_with_state_log(db_session, payment_method_id)
+        payment = _random_valid_payment_with_state_log(db_session, payment_method)
 
         if verify_level is not None:
             # Unset the experian_address_pair.experian_address so _address_has_been_validated()
@@ -164,7 +156,7 @@ def test_run_step_state_transitions_soap(
         local_test_db_session,
         fake.random_int(min=2, max=4),
         sm.VerifyLevel.NONE,
-        PaymentMethod.ACH.payment_method_id,
+        PaymentMethod.ACH,
     )
     # Commit the various experian_address_pair.experian_address = None changes to the database.
     local_test_db_session.commit()
@@ -251,15 +243,11 @@ def test_run_step_state_transitions_malformed_address(
     # state and that Experian will not be called at all.
     mock_caller = MockVerificationZeepCaller()
 
-    check_payment = _random_valid_payment_with_state_log(
-        local_test_db_session, PaymentMethod.CHECK.payment_method_id
-    )
+    check_payment = _random_valid_payment_with_state_log(local_test_db_session, PaymentMethod.CHECK)
     check_payment.experian_address_pair.experian_address = None
     check_payment.experian_address_pair.fineos_address.address_line_one = ""
 
-    eft_payment = _random_valid_payment_with_state_log(
-        local_test_db_session, PaymentMethod.ACH.payment_method_id
-    )
+    eft_payment = _random_valid_payment_with_state_log(local_test_db_session, PaymentMethod.ACH)
     eft_payment.experian_address_pair.experian_address = None
     eft_payment.experian_address_pair.fineos_address.address_line_one = None
 
@@ -356,7 +344,7 @@ def test_run_step_experian_soap_exception(
         local_test_db_session,
         fake.random_int(min=2, max=4),
         sm.VerifyLevel.NONE,
-        PaymentMethod.ACH.payment_method_id,
+        PaymentMethod.ACH,
     )
 
     local_test_db_session.commit()
@@ -426,7 +414,7 @@ def test_run_step_state_log_outcome_field_soap(
         local_test_db_session,
         fake.random_int(min=2, max=4),
         sm.VerifyLevel.NONE,
-        PaymentMethod.ACH.payment_method_id,
+        PaymentMethod.ACH,
     )
     # Commit the various experian_address_pair.experian_address = None changes to the database.
     local_test_db_session.commit()

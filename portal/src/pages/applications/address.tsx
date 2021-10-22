@@ -4,7 +4,6 @@ import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import FieldsetAddress from "../../components/FieldsetAddress";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
@@ -29,10 +28,18 @@ export const fields = [
   "claim.mailing_address.zip",
 ];
 
-export const Address = (props) => {
+interface AddressProps {
+  claim?: BenefitsApplication;
+  appLogic: any;
+  query?: {
+    claim_id?: string;
+  };
+}
+
+export const Address = (props: AddressProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
   );
@@ -63,14 +70,12 @@ export const Address = (props) => {
     "residential_address"
   );
   if (!residentialAddressProps.value) {
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-    residentialAddressProps.value = new AddressModel();
+    residentialAddressProps.value = new AddressModel({});
   }
 
   const mailingAddressProps = getFunctionalInputProps("mailing_address");
   if (!mailingAddressProps.value) {
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-    mailingAddressProps.value = new AddressModel();
+    mailingAddressProps.value = new AddressModel({});
   }
 
   return (
@@ -116,14 +121,6 @@ export const Address = (props) => {
       </ConditionalContent>
     </QuestionPage>
   );
-};
-
-Address.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(Address);

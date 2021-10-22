@@ -1,6 +1,5 @@
 import BenefitsApplication from "../../models/BenefitsApplication";
 import InputText from "../../components/InputText";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { pick } from "lodash";
@@ -11,14 +10,18 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.tax_identifier"];
 
+interface SsnProps {
+  claim: BenefitsApplication;
+  appLogic: any;
+}
+
 /**
  * A form page to capture the worker's SSN or ITIN.
  */
-export const Ssn = (props) => {
+export const Ssn = (props: SsnProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
 
   const handleSave = () =>
@@ -41,11 +44,6 @@ export const Ssn = (props) => {
       />
     </QuestionPage>
   );
-};
-
-Ssn.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(Ssn);

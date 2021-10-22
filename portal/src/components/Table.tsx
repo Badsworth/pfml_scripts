@@ -1,13 +1,31 @@
-import PropTypes from "prop-types";
 import React from "react";
 import classnames from "classnames";
+
+interface TableProps {
+  /**
+   * `caption`, `thead`, and `tbody` contents
+   */
+  children?: React.ReactNode;
+  /** Additional classNames to add */
+  className?: string;
+  /**
+   * Apply responsive styling, stacking the table for small screens.
+   * If you use this variant, you must ensure there is a `data-label`
+   * attribute on each cell of the table that matches the column header.
+   */
+  responsive?: boolean;
+  /**
+   * Apply a horizontal scrollbar if the columns exceed the available width.
+   */
+  scrollable?: boolean;
+}
 
 /**
  * A table shows tabular data in columns and rows.
  *
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/table/)
  */
-export const Table = (props) => {
+export const Table = (props: TableProps) => {
   const tableClasses = classnames(
     "usa-table usa-table--borderless c-table",
     props.className,
@@ -23,25 +41,6 @@ export const Table = (props) => {
   }
 
   return table;
-};
-
-Table.propTypes = {
-  /**
-   * `caption`, `thead`, and `tbody` contents
-   */
-  children: PropTypes.node,
-  /** Additional classNames to add */
-  className: PropTypes.string,
-  /**
-   * Apply responsive styling, stacking the table for small screens.
-   * If you use this variant, you must ensure there is a `data-label`
-   * attribute on each cell of the table that matches the column header.
-   */
-  responsive: PropTypes.bool,
-  /**
-   * Apply a horizontal scrollbar if the columns exceed the available width.
-   */
-  scrollable: PropTypes.bool,
 };
 
 export default Table;

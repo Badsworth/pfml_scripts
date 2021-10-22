@@ -65,6 +65,7 @@ describe("LeavePeriodContinuous", () => {
 
   it("submits form successfully with pre-filled data", async () => {
     const claim = new MockBenefitsApplicationBuilder().continuous().create();
+
     const { end_date, start_date, leave_period_id } =
       claim.leave_details.continuous_leave_periods[0];
 
@@ -100,7 +101,9 @@ describe("LeavePeriodContinuous", () => {
   });
 
   it("sends continuous leave dates and ID to the api when the user enters leave data", async () => {
-    const claim = new MockBenefitsApplicationBuilder().create();
+    const claim = new MockBenefitsApplicationBuilder()
+      .pregnancyLeaveReason()
+      .create();
     const { updateSpy } = setup({ claim });
 
     userEvent.click(screen.getByRole("radio", { name: /yes/i }));

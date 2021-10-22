@@ -12,7 +12,6 @@ import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputNumber from "../../components/InputNumber";
 import Lead from "../../components/Lead";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import findKeyByValue from "../../utils/findKeyByValue";
@@ -45,11 +44,18 @@ export const fields = [
  */
 export const irregularOver6MonthsId = "irregularOver6Months";
 
-export const IntermittentFrequency = (props) => {
+interface IntermittentFrequencyProps {
+  claim?: BenefitsApplication;
+  appLogic: any;
+  query?: {
+    claim_id?: string;
+  };
+}
+
+export const IntermittentFrequency = (props: IntermittentFrequencyProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const leavePeriod = new IntermittentLeavePeriod(
     get(formState, leavePeriodPath)
@@ -63,9 +69,10 @@ export const IntermittentFrequency = (props) => {
    * e.g 6 (frequency interval) months (frequency interval basis)
    * This callback determines whether the frequency interval should be set
    * by the id of the choice input.
-   * @param {SyntheticEvent} event - Change event
    */
-  const handleFrequencyIntervalBasisChange = (event) => {
+  const handleFrequencyIntervalBasisChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const frequency_interval =
       event.target.id === irregularOver6MonthsId ? 6 : 1;
 
@@ -97,7 +104,6 @@ export const IntermittentFrequency = (props) => {
       onSave={handleSave}
     >
       {(claim.isMedicalOrPregnancyLeave || claim.isCaringLeave) && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; neutral:... Remove this comment to see the full error message
         <Alert state="info" neutral>
           <Trans
             i18nKey="pages.claimsIntermittentFrequency.needDocumentAlert"
@@ -148,7 +154,6 @@ export const IntermittentFrequency = (props) => {
         choices={[
           {
             checked:
-              // @ts-expect-error ts-migrate(2339) FIXME: Property 'frequency_interval_basis' does not exist... Remove this comment to see the full error message
               leavePeriod.frequency_interval_basis ===
               FrequencyIntervalBasis.weeks,
             label: t("pages.claimsIntermittentFrequency.frequencyBasisChoice", {
@@ -158,10 +163,8 @@ export const IntermittentFrequency = (props) => {
           },
           {
             checked:
-              // @ts-expect-error ts-migrate(2339) FIXME: Property 'frequency_interval_basis' does not exist... Remove this comment to see the full error message
               leavePeriod.frequency_interval_basis ===
                 FrequencyIntervalBasis.months &&
-              // @ts-expect-error ts-migrate(2339) FIXME: Property 'frequency_interval' does not exist on ty... Remove this comment to see the full error message
               leavePeriod.frequency_interval === 1,
             label: t("pages.claimsIntermittentFrequency.frequencyBasisChoice", {
               context: "months",
@@ -170,10 +173,8 @@ export const IntermittentFrequency = (props) => {
           },
           {
             checked:
-              // @ts-expect-error ts-migrate(2339) FIXME: Property 'frequency_interval_basis' does not exist... Remove this comment to see the full error message
               leavePeriod.frequency_interval_basis ===
                 FrequencyIntervalBasis.months &&
-              // @ts-expect-error ts-migrate(2339) FIXME: Property 'frequency_interval' does not exist on ty... Remove this comment to see the full error message
               leavePeriod.frequency_interval === 6,
             label: t("pages.claimsIntermittentFrequency.frequencyBasisChoice", {
               context: "irregular",
@@ -191,10 +192,8 @@ export const IntermittentFrequency = (props) => {
         smallLabel
       />
 
-      {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'frequency_interval_basis' does not exist... Remove this comment to see the full error message */}
       <ConditionalContent visible={!!leavePeriod.frequency_interval_basis}>
         {/* Wrapped in this condition to avoid triggering a missing i18n key event */}
-        {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'frequency_interval_basis' does not exist... Remove this comment to see the full error message */}
         {!!leavePeriod.frequency_interval_basis && (
           <InputNumber
             {...getFunctionalInputProps(`${leavePeriodPath}.frequency`)}
@@ -202,12 +201,10 @@ export const IntermittentFrequency = (props) => {
             allowNegative={false}
             label={t("pages.claimsIntermittentFrequency.frequencyLabel", {
               context:
-                // @ts-expect-error ts-migrate(2339) FIXME: Property 'frequency_interval' does not exist on ty... Remove this comment to see the full error message
                 leavePeriod.frequency_interval === 6
                   ? "irregular"
                   : findKeyByValue(
                       FrequencyIntervalBasis,
-                      // @ts-expect-error ts-migrate(2339) FIXME: Property 'frequency_interval_basis' does not exist... Remove this comment to see the full error message
                       leavePeriod.frequency_interval_basis
                     ),
             })}
@@ -220,7 +217,6 @@ export const IntermittentFrequency = (props) => {
           {...getFunctionalInputProps(`${leavePeriodPath}.duration_basis`)}
           choices={[
             {
-              // @ts-expect-error ts-migrate(2339) FIXME: Property 'duration_basis' does not exist on type '... Remove this comment to see the full error message
               checked: leavePeriod.duration_basis === DurationBasis.days,
               label: t(
                 "pages.claimsIntermittentFrequency.durationBasisChoice",
@@ -229,7 +225,6 @@ export const IntermittentFrequency = (props) => {
               value: DurationBasis.days,
             },
             {
-              // @ts-expect-error ts-migrate(2339) FIXME: Property 'duration_basis' does not exist on type '... Remove this comment to see the full error message
               checked: leavePeriod.duration_basis === DurationBasis.hours,
               label: t(
                 "pages.claimsIntermittentFrequency.durationBasisChoice",
@@ -244,14 +239,12 @@ export const IntermittentFrequency = (props) => {
         />
       </ConditionalContent>
 
-      {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'duration_basis' does not exist on type '... Remove this comment to see the full error message */}
       {!!leavePeriod.duration_basis && (
         <InputNumber
           {...getFunctionalInputProps(`${leavePeriodPath}.duration`)}
           valueType="integer"
           allowNegative={false}
           label={t("pages.claimsIntermittentFrequency.durationLabel", {
-            // @ts-expect-error ts-migrate(2339) FIXME: Property 'duration_basis' does not exist on type '... Remove this comment to see the full error message
             context: findKeyByValue(DurationBasis, leavePeriod.duration_basis),
           })}
           width="small"
@@ -260,14 +253,6 @@ export const IntermittentFrequency = (props) => {
       )}
     </QuestionPage>
   );
-};
-
-IntermittentFrequency.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(IntermittentFrequency);

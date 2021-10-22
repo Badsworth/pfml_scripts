@@ -5,7 +5,6 @@ import {
 import { cloneDeep, get, pick, set } from "lodash";
 import BackButton from "../../components/BackButton";
 import BenefitsApplication from "../../models/BenefitsApplication";
-import Button from "../../components/Button";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import Fieldset from "../../components/Fieldset";
@@ -13,14 +12,13 @@ import FormLabel from "../../components/FormLabel";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputText from "../../components/InputText";
 import Lead from "../../components/Lead";
-import PropTypes from "prop-types";
 import React from "react";
+import ThrottledButton from "../../components/ThrottledButton";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
-import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
@@ -36,11 +34,18 @@ export const fields = [
   `claim.${routingNumberField}`,
 ];
 
-export const PaymentMethod = (props) => {
+interface PaymentMethodProps {
+  claim?: BenefitsApplication;
+  query?: {
+    claim_id?: string;
+  };
+  appLogic: any;
+}
+
+export const PaymentMethod = (props: PaymentMethodProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
   );
@@ -49,8 +54,7 @@ export const PaymentMethod = (props) => {
   const payment_method = get(formState, paymentMethodField);
   const requestData = cloneDeep(formState);
 
-  const handleSubmit = useThrottledHandler(async (event) => {
-    event.preventDefault();
+  const handleSubmit = async () => {
     if (payment_method !== PaymentPreferenceMethod.ach) {
       set(requestData, routingNumberField, null);
       set(requestData, bankAccountTypeField, null);
@@ -60,7 +64,7 @@ export const PaymentMethod = (props) => {
       claim.application_id,
       requestData
     );
-  });
+  };
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -179,25 +183,16 @@ export const PaymentMethod = (props) => {
             }}
           />
         </div>
-        <Button
+        <ThrottledButton
           className="margin-top-4"
           onClick={handleSubmit}
           type="submit"
-          loading={handleSubmit.isThrottled}
         >
           {t("pages.claimsPaymentMethod.submitPart2Button")}
-        </Button>
+        </ThrottledButton>
       </form>
     </React.Fragment>
   );
-};
-
-PaymentMethod.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(PaymentMethod);

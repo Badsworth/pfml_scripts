@@ -1,18 +1,16 @@
-// @ts-nocheck https://lwd.atlassian.net/browse/PORTAL-427
 import routeWithParams, {
   createRouteWithQuery,
 } from "../utils/routeWithParams";
-
+import { AppLogic } from "../hooks/useAppLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
+import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import ButtonLink from "./ButtonLink";
-import Document from "../models/Document";
 import Heading from "./Heading";
-import Icon from "./Icon";
 import LeaveReason from "../models/LeaveReason";
 import LegalNoticeList from "./LegalNoticeList";
-import PropTypes from "prop-types";
 import React from "react";
 import Spinner from "./Spinner";
+import Tag from "./Tag";
 import ThrottledButton from "./ThrottledButton";
 import findKeyByValue from "../utils/findKeyByValue";
 import getLegalNotices from "../utils/getLegalNotices";
@@ -34,42 +32,49 @@ const navigateToPage = async (claim, appLogic, href) => {
   if (isValidClaim) appLogic.portalFlow.goTo(href);
 };
 
+interface HeaderSectionProps {
+  title: string;
+}
+
 /**
  * Main header for the top of status cards
  */
-const HeaderSection = ({ title }) => (
-  <Heading
-    className="margin-bottom-1 padding-2 padding-top-3"
-    level="3"
-    size="2"
-  >
+const HeaderSection = ({ title }: HeaderSectionProps) => (
+  <Heading className="padding-top-3" level="3" size="2">
     {title}
   </Heading>
 );
 
-HeaderSection.propTypes = {
-  title: PropTypes.string.isRequired,
-};
+interface TitleAndDetailSectionItemProps {
+  details: string;
+  title: string;
+}
 
 /**
  * Group together details for status cards
  */
-const TitleAndDetailSectionItem = ({ details, title }) => (
-  <div className="padding-2 padding-bottom-1 padding-top-0 margin-top-0">
+const TitleAndDetailSectionItem = ({
+  details,
+  title,
+}: TitleAndDetailSectionItemProps) => (
+  <div className="padding-y-1">
     <p>{title}</p>
-    <p className="margin-bottom-05 margin-top-05 text-bold">{details}</p>
+    <p className="margin-top-05 text-bold">{details}</p>
   </div>
 );
 
-TitleAndDetailSectionItem.propTypes = {
-  details: PropTypes.string.isRequired,
-  title: PropTypes.string.isRequired,
-};
+interface ManageDocumentSectionProps {
+  appLogic: AppLogic;
+  claim: BenefitsApplication;
+}
 
 /**
  * Section to view notices and upload documents
  */
-const ManageDocumentSection = ({ appLogic, claim }) => {
+const ManageDocumentSection = ({
+  appLogic,
+  claim,
+}: ManageDocumentSectionProps) => {
   const { t } = useTranslation();
   const { fineos_absence_id: absence_case_id } = claim;
 
@@ -90,7 +95,7 @@ const ManageDocumentSection = ({ appLogic, claim }) => {
   );
 
   return (
-    <div className="border-top border-base-lighter margin-2 margin-top-0 padding-bottom-1">
+    <div className="border-top border-base-lighter">
       <Heading className="padding-y-3" level="4">
         {t("components.applicationCardV2.otherActions")}
       </Heading>
@@ -113,23 +118,17 @@ const ManageDocumentSection = ({ appLogic, claim }) => {
   );
 };
 
-ManageDocumentSection.propTypes = {
-  appLogic: PropTypes.shape({
-    claims: PropTypes.shape({
-      isLoadingClaimDetail: PropTypes.bool,
-      loadClaimDetail: PropTypes.func.isRequired,
-    }).isRequired,
-    portalFlow: PropTypes.shape({
-      goTo: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-};
+interface LegalNoticeSectionProps {
+  appLogic: AppLogic;
+  claim: BenefitsApplication;
+  documents?: BenefitsApplicationDocument[];
+  isLoadingDocuments: boolean;
+}
 
 /**
  * Section to view legal notices for in-progress applications
  */
-const LegalNoticeSection = (props) => {
+const LegalNoticeSection = (props: LegalNoticeSectionProps) => {
   const { t } = useTranslation();
   const isSubmitted = props.claim.status === "Submitted";
   const legalNotices = getLegalNotices(props.documents);
@@ -161,10 +160,7 @@ const LegalNoticeSection = (props) => {
   if (!legalNotices.length) return null;
 
   return (
-    <div
-      className="margin-2 margin-top-0 padding-bottom-1"
-      style={{ maxWidth: 385 }}
-    >
+    <div className="margin-top-2 padding-bottom-1" style={{ maxWidth: 385 }}>
       <Heading level="3">
         {t("components.applicationCardV2.viewNotices")}
       </Heading>
@@ -176,26 +172,17 @@ const LegalNoticeSection = (props) => {
   );
 };
 
-LegalNoticeSection.defaultProps = {
-  documents: [],
-};
-
-LegalNoticeSection.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    documents: PropTypes.shape({
-      download: PropTypes.func.isRequired,
-    }),
-  }).isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-  isLoadingDocuments: PropTypes.bool.isRequired,
-};
+interface InProgressStatusCardProps {
+  claim: BenefitsApplication;
+  isLoadingDocuments: boolean;
+  number: number;
+  appLogic: any;
+}
 
 /**
  * Status card for claim.status != "Completed" (In Progress)
  */
-const InProgressStatusCard = (props) => {
+const InProgressStatusCard = (props: InProgressStatusCardProps) => {
   const { claim, number } = props;
   const { t } = useTranslation();
 
@@ -206,6 +193,12 @@ const InProgressStatusCard = (props) => {
           number,
         })}
       />
+      <Tag
+        className="text-no-wrap"
+        state="warning"
+        label={t("components.applicationCardV2.inProgressTag")}
+      />
+      <p>{t("components.applicationCardV2.inProgressText")}</p>
       {claim.employer_fein && (
         <TitleAndDetailSectionItem
           title={t("components.applicationCardV2.employerEIN")}
@@ -213,7 +206,7 @@ const InProgressStatusCard = (props) => {
         />
       )}
       <LegalNoticeSection {...props} />
-      <div className="border-top border-base-lighter padding-y-2 margin-2 margin-bottom-0">
+      <div className="border-top border-base-lighter padding-top-2">
         <ButtonLink
           className="display-flex flex-align-center flex-justify-center flex-column margin-right-0"
           href={routeWithParams("applications.checklist", {
@@ -227,31 +220,20 @@ const InProgressStatusCard = (props) => {
   );
 };
 
-InProgressStatusCard.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  isLoadingDocuments: PropTypes.bool.isRequired,
-  /**  The 1-based index of the application card */
-  number: PropTypes.number.isRequired,
-};
+interface CompletedStatusCardProps {
+  claim: BenefitsApplication;
+  appLogic: AppLogic;
+}
 
 /**
  * Status card for claim.status = "Completed"
  */
-const CompletedStatusCard = ({ appLogic, claim }) => {
+const CompletedStatusCard = ({ appLogic, claim }: CompletedStatusCardProps) => {
   const { t } = useTranslation();
 
   const leaveReasonText = t("components.applicationCardV2.leaveReasonValue", {
     context: findKeyByValue(LeaveReason, claim.leave_details?.reason),
   });
-
-  const iconComponent = (
-    <Icon
-      className="position-absolute flex-align-self-end margin-right-neg-105"
-      fill="white"
-      name="arrow_forward"
-      size={3}
-    />
-  );
 
   const statusPage = routeWithParams("applications.status", {
     absence_case_id: claim.fineos_absence_id,
@@ -273,13 +255,12 @@ const CompletedStatusCard = ({ appLogic, claim }) => {
         details={claim.employer_fein}
       />
 
-      <div className="border-top border-base-lighter padding-y-2 margin-2 margin-bottom-0">
+      <div className="border-top border-base-lighter padding-y-2 margin-y-2 margin-bottom-0">
         <ThrottledButton
           className="width-full display-flex flex-align-center flex-justify-center flex-column margin-right-0"
           onClick={onClickHandler}
         >
           {t("components.applicationCardV2.viewStatusUpdatesAndDetails")}
-          {iconComponent}
         </ThrottledButton>
       </div>
       <ManageDocumentSection appLogic={appLogic} claim={claim} />
@@ -287,18 +268,12 @@ const CompletedStatusCard = ({ appLogic, claim }) => {
   );
 };
 
-CompletedStatusCard.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  appLogic: PropTypes.shape({
-    claims: PropTypes.shape({
-      isLoadingClaimDetail: PropTypes.bool,
-      loadClaimDetail: PropTypes.func.isRequired,
-    }).isRequired,
-    portalFlow: PropTypes.shape({
-      goTo: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-};
+interface ApplicationCardV2Props {
+  claim: BenefitsApplication;
+  appLogic: AppLogic;
+  isLoadingDocuments: boolean;
+  number: number;
+}
 
 /**
  * Main entry point for an existing benefits Application, allowing
@@ -306,15 +281,19 @@ CompletedStatusCard.propTypes = {
  * they've submitted, view notices and instructions, or upload
  * additional docs.
  */
-export const ApplicationCardV2 = (props) => {
+export const ApplicationCardV2 = (props: ApplicationCardV2Props) => {
   const {
     claim: { status },
   } = props;
 
   return (
     <div className="maxw-mobile-lg margin-bottom-3">
-      <aside className="border-top-1 border-primary" />
-      <article className="border-x border-bottom border-base-lighter">
+      <aside
+        className={`border-top-1 ${
+          status === "Completed" ? "border-primary" : "border-gold"
+        }`}
+      />
+      <article className="border-x border-bottom border-base-lighter padding-2 padding-top-0">
         {status === "Completed" ? (
           <CompletedStatusCard {...props} />
         ) : (
@@ -323,24 +302,6 @@ export const ApplicationCardV2 = (props) => {
       </article>
     </div>
   );
-};
-
-ApplicationCardV2.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    claims: PropTypes.shape({
-      isLoadingClaimDetail: PropTypes.bool,
-      loadClaimDetail: PropTypes.func.isRequired,
-    }).isRequired,
-    documents: PropTypes.shape({
-      download: PropTypes.func.isRequired,
-    }),
-    portalFlow: PropTypes.shape({
-      goTo: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-  isLoadingDocuments: PropTypes.bool.isRequired,
 };
 
 export default withClaimDocuments(ApplicationCardV2);

@@ -217,7 +217,7 @@ export default function (
 
   // Add dynamic options for the New Relic reporter.
   let reporterOptions = cypressConfig.reporterOptions ?? {};
-  if (cypressConfig.reporter?.match(/new\-relic/)) {
+  if (cypressConfig.reporter?.match(/new-relic/)) {
     // Add metadata collection for the New Relic runner.
     on("before:run", beforeRunCollectMetadata);
 

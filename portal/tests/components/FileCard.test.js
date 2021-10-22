@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import Document from "../../src/models/Document";
+import BenefitsApplicationDocument from "../../src/models/BenefitsApplicationDocument";
 import FileCard from "../../src/components/FileCard";
 import React from "react";
 import userEvent from "@testing-library/user-event";
@@ -36,12 +36,16 @@ describe("FileCard", () => {
   });
 
   it("with a document, no button is rendered", () => {
-    renderFile({ document: new Document({ created_at: "2021-11-11" }) });
+    renderFile({
+      document: new BenefitsApplicationDocument({ created_at: "2021-11-11" }),
+    });
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
   it("with a document, displays the date uploaded", () => {
-    renderFile({ document: new Document({ created_at: "2021-11-11" }) });
+    renderFile({
+      document: new BenefitsApplicationDocument({ created_at: "2021-11-11" }),
+    });
     expect(screen.getByText("Date of upload: 11/11/2021")).toBeInTheDocument();
   });
 });

@@ -1,12 +1,16 @@
 import React, { useState } from "react";
-import PropTypes from "prop-types";
 import useUniqueId from "../hooks/useUniqueId";
+
+interface AccordionItemProps {
+  children: React.ReactNode;
+  heading: string;
+}
 
 /**
  * An accordion is a list of headers that hide or reveal additional content when selected.
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/accordion/)
  */
-function AccordionItem(props) {
+function AccordionItem(props: AccordionItemProps) {
   const id = useUniqueId("accordion");
   const [isExpanded, setExpanded] = useState(false);
 
@@ -38,10 +42,5 @@ function AccordionItem(props) {
     </React.Fragment>
   );
 }
-
-AccordionItem.propTypes = {
-  children: PropTypes.node.isRequired,
-  heading: PropTypes.string.isRequired,
-};
 
 export default AccordionItem;

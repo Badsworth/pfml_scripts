@@ -1,46 +1,27 @@
-/* eslint sort-keys: ["error", "asc"] */
 import { compact, get, map } from "lodash";
-
-import Address from "./Address";
-import BaseModel from "./BaseModel";
 import LeaveReason from "./LeaveReason";
 import formatDateRange from "../utils/formatDateRange";
 
+export interface BaseLeavePeriod {
+  start_date: string;
+  end_date: string;
+}
+
 /**
  * The API's Applications table and the data we return for the Leave Admin
- * info request flow share a common set of fields, which this model represents.
- * Separate models then extend this.
+ * info request flow share a few common fields, which this model includes
+ * helper methods for. Separate models then extend this.
  */
-class BaseBenefitsApplication extends BaseModel {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'BaseBenefitsApplicati... Remove this comment to see the full error message
-  get defaults() {
-    return {
-      application_id: null,
-      concurrent_leave: null,
-      created_at: null,
-      date_of_birth: null,
-      // array of EmployerBenefit objects. See the EmployerBenefit model
-      employer_benefits: [],
-      employer_fein: null,
-      fineos_absence_id: null,
-      first_name: null,
-      gender: null,
-      hours_worked_per_week: null,
-      last_name: null,
-      leave_details: {
-        continuous_leave_periods: null,
-        employer_notification_date: null,
-        intermittent_leave_periods: null,
-        reason: null,
-        reduced_schedule_leave_periods: null,
-      },
-      middle_name: null,
-      // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-      residential_address: new Address(),
-      status: null,
-      tax_identifier: null,
-    };
-  }
+abstract class BaseBenefitsApplication {
+  abstract first_name: string | null;
+  abstract middle_name: string | null;
+  abstract last_name: string | null;
+  abstract leave_details: {
+    continuous_leave_periods: BaseLeavePeriod[];
+    intermittent_leave_periods: BaseLeavePeriod[];
+    reduced_schedule_leave_periods: BaseLeavePeriod[];
+    reason: string;
+  };
 
   /**
    * Determine if claim is a Bonding Leave claim
@@ -68,13 +49,11 @@ class BaseBenefitsApplication extends BaseModel {
       this,
       `leave_details.continuous_leave_periods[0]`
     );
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     return formatDateRange(start_date, end_date);
   }
 
   /**
    * Determine if claim is an intermittent leave claim
-   * @returns {boolean}
    */
   get isIntermittent() {
     return !!get(this, "leave_details.intermittent_leave_periods[0]");
@@ -90,13 +69,11 @@ class BaseBenefitsApplication extends BaseModel {
       this,
       `leave_details.intermittent_leave_periods[0]`
     );
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     return formatDateRange(start_date, end_date);
   }
 
   /**
    * Determine if claim is a reduced schedule leave claim
-   * @returns {boolean}
    */
   get isReducedSchedule() {
     return !!get(this, "leave_details.reduced_schedule_leave_periods[0]");
@@ -112,16 +89,13 @@ class BaseBenefitsApplication extends BaseModel {
       this,
       `leave_details.reduced_schedule_leave_periods[0]`
     );
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     return formatDateRange(start_date, end_date);
   }
 
   /**
    * Returns full name accounting for any false values
-   * @returns {string}
    */
   get fullName() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'first_name' does not exist on type 'Base... Remove this comment to see the full error message
     return compact([this.first_name, this.middle_name, this.last_name]).join(
       " "
     );

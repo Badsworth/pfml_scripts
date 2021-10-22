@@ -2,7 +2,6 @@ import AlertBar from "./AlertBar";
 import AuthNav from "./AuthNav";
 import BetaBanner from "./BetaBanner";
 import HeaderSlim from "@massds/mayflower-react/dist/HeaderSlim";
-import PropTypes from "prop-types";
 import React from "react";
 import SiteLogo from "@massds/mayflower-react/dist/SiteLogo";
 import { Trans } from "react-i18next";
@@ -11,10 +10,18 @@ import logo from "@massds/mayflower-assets/static/images/logo/stateseal.png";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 
+interface HeaderProps {
+  user?: User;
+  onLogout: React.MouseEventHandler<HTMLButtonElement>;
+  showUpcomingMaintenanceAlertBar?: boolean;
+  maintenanceStartTime?: string;
+  maintenanceEndTime?: string;
+}
+
 /**
  * Global page header, displayed at the top of every page.
  */
-const Header = (props) => {
+const Header = (props: HeaderProps) => {
   const { t } = useTranslation();
   const isLoggedIn = props.user;
   const feedbackUrl =
@@ -67,14 +74,6 @@ const Header = (props) => {
       <HeaderSlim {...headerProps} />
     </React.Fragment>
   );
-};
-
-Header.propTypes = {
-  user: PropTypes.instanceOf(User),
-  onLogout: PropTypes.func.isRequired,
-  showUpcomingMaintenanceAlertBar: PropTypes.bool,
-  maintenanceStartTime: PropTypes.string,
-  maintenanceEndTime: PropTypes.string,
 };
 
 export default Header;

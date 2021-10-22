@@ -487,6 +487,72 @@ data "aws_iam_policy_document" "pub_payments_process_fineos_task_role_extras" {
 }
 
 # ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for pub-payments-process-snapshot
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "pub_payments_process_fineos_reconciliation_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-snapshot"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+# We may not always have a value for `fineos_aws_iam_role_arn` and a policy has
+# to list a resource, so make this part conditional with the count hack
+resource "aws_iam_role_policy" "pub_payments_process_fineos_reconciliation_task_fineos_role_policy" {
+  count = var.fineos_aws_iam_role_arn == "" ? 0 : 1
+
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-snapshot-fineos-assume-policy"
+  role   = aws_iam_role.pub_payments_process_fineos_reconciliation_task_role.id
+  policy = data.aws_iam_policy_document.fineos_feeds_role_policy[0].json
+}
+
+resource "aws_iam_role_policy" "pub_payments_process_fineos_reconciliation_task_role_extras" {
+  name   = "${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-snapshot-extras"
+  role   = aws_iam_role.pub_payments_process_fineos_reconciliation_task_role.id
+  policy = data.aws_iam_policy_document.pub_payments_process_fineos_reconciliation_task_role_extras.json
+}
+
+data "aws_iam_policy_document" "pub_payments_process_fineos_reconciliation_task_role_extras" {
+  statement {
+    sid = "AllowListingOfBucket"
+    actions = [
+      "s3:ListBucket"
+    ]
+
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*",
+      data.aws_s3_bucket.reports.arn,
+      "${data.aws_s3_bucket.reports.arn}/*"
+    ]
+
+    effect = "Allow"
+  }
+
+  statement {
+    sid = "ReadWriteAccessToAgencyTransferBucket"
+    actions = [
+      "s3:ListBucket",
+      "s3:Get*",
+      "s3:List*",
+      "s3:PutObject",
+      "s3:DeleteObject",
+      "s3:AbortMultipartUpload"
+    ]
+
+    resources = [
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps",
+      "${data.aws_s3_bucket.agency_transfer.arn}/cps/*",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports",
+      "${data.aws_s3_bucket.agency_transfer.arn}/reports/*",
+      "${data.aws_s3_bucket.reports.arn}/dfml-reports",
+      "${data.aws_s3_bucket.reports.arn}/dfml-reports/*"
+    ]
+
+    effect = "Allow"
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
 # IAM role and policies for pub-payments-create-pub-files
 # (Use default task_executor execution role)
 # ----------------------------------------------------------------------------------------------------------------------
@@ -1063,6 +1129,38 @@ data "aws_iam_policy_document" "evaluate_new_financial_eligibility" {
     ]
     resources = [
       "*",
+    ]
+  }
+}
+
+# ----------------------------------------------------------------------------------------------------------------------
+# IAM role and policies for dua-import-employee-demographics
+# ----------------------------------------------------------------------------------------------------------------------
+
+resource "aws_iam_role" "dua_import_employee_demographics_task_role" {
+  name               = "${local.app_name}-${var.environment_name}-dua-import-employee-demographics-task-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_tasks_assume_role_policy.json
+}
+
+resource "aws_iam_role_policy" "dua_import_employee_demographics_role_policy" {
+  name   = "${local.app_name}-${var.environment_name}-dua-import-employee-demographics-task-role-policy"
+  role   = aws_iam_role.dua_import_employee_demographics_task_role.id
+  policy = data.aws_iam_policy_document.dua_import_employee_demographics.json
+}
+
+data "aws_iam_policy_document" "dua_import_employee_demographics" {
+  # Allow writing results to S3.
+  statement {
+    effect = "Allow"
+    actions = [
+      "s3:PutObject",
+      "s3:GetObject",
+      "s3:ListBucket",
+      "s3:DeleteObject"
+    ]
+    resources = [
+      data.aws_s3_bucket.agency_transfer.arn,
+      "${data.aws_s3_bucket.agency_transfer.arn}/*"
     ]
   }
 }

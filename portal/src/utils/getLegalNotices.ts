@@ -1,14 +1,14 @@
+import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
+import ClaimDocument from "../models/ClaimDocument";
 import { DocumentType } from "../models/Document";
 import findDocumentsByTypes from "./findDocumentsByTypes";
 
-/** @typedef {import('../models/Document').default} Document */
-
 /**
  * Get only documents that are legal notices.
- * @param {Document[]} documents
- * @returns {Document[]}
  */
-const getLegalNotices = (documents) => {
+const getLegalNotices = (
+  documents: Array<BenefitsApplicationDocument | ClaimDocument>
+) => {
   return findDocumentsByTypes(documents, [
     DocumentType.appealAcknowledgment,
     DocumentType.approvalNotice,

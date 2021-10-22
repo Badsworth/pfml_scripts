@@ -1,58 +1,87 @@
-/* eslint sort-keys: ["error", "asc"] */
 /**
  * @file Benefits application model and enum values
  */
 import { compact, get, isNil, merge, sum, sumBy, zip } from "lodash";
-
+import Address from "./Address";
 import BaseBenefitsApplication from "./BaseBenefitsApplication";
-import BaseModel from "./BaseModel";
+import ConcurrentLeave from "./ConcurrentLeave";
 import { DateTime } from "luxon";
+import EmployerBenefit from "./EmployerBenefit";
 import LeaveReason from "./LeaveReason";
+import OtherIncome from "./OtherIncome";
+import PaymentPreference from "./PaymentPreference";
+import PreviousLeave from "./PreviousLeave";
 import assert from "assert";
 import spreadMinutesOverWeek from "../utils/spreadMinutesOverWeek";
 
 class BenefitsApplication extends BaseBenefitsApplication {
-  get defaults() {
-    return merge({
-      // @ts-expect-error ts-migrate(2340) FIXME: Only public and protected methods of the base clas... Remove this comment to see the full error message
-      ...super.defaults,
-      employment_status: null,
-      has_concurrent_leave: null,
-      has_continuous_leave_periods: null,
-      has_employer_benefits: null,
-      has_intermittent_leave_periods: null,
-      has_mailing_address: null,
-      has_other_incomes: null,
-      has_previous_leaves_other_reason: null,
-      has_previous_leaves_same_reason: null,
-      has_reduced_schedule_leave_periods: null,
-      has_state_id: null,
-      has_submitted_payment_preference: null,
-      leave_details: {
-        caring_leave_metadata: null,
-        child_birth_date: null,
-        child_placement_date: null,
-        employer_notified: null,
-        has_future_child_date: null,
-        pregnant_or_recent_birth: null,
-        reason_qualifier: null,
-      },
-      // address object. See Address model
-      mailing_address: null, // default value to null
-      mass_id: null,
-      // array of OtherIncome objects. See the OtherIncome model
-      other_incomes: [],
-      // See PaymentPreference model
-      payment_preference: null,
-      phone: {
-        int_code: null,
-        phone_number: null,
-        phone_type: null, // PhoneType
-      },
-      previous_leaves_other_reason: [],
-      previous_leaves_same_reason: [],
-      work_pattern: null,
-    });
+  application_id: string;
+  fineos_absence_id: string | null = null;
+  created_at: string;
+
+  first_name: string | null = null;
+  middle_name: string | null = null;
+  last_name: string | null = null;
+  concurrent_leave: ConcurrentLeave | null = null;
+  employer_benefits: EmployerBenefit[] = [];
+  date_of_birth: string | null = null;
+  employer_fein: string | null = null;
+  gender: typeof Gender[keyof typeof Gender] | null = null;
+  has_concurrent_leave: boolean | null = null;
+  has_continuous_leave_periods: boolean | null = null;
+  has_employer_benefits: boolean | null = null;
+  has_intermittent_leave_periods: boolean | null = null;
+  has_mailing_address: boolean | null = null;
+  has_other_incomes: boolean | null = null;
+  has_previous_leaves_other_reason: boolean | null = null;
+  has_previous_leaves_same_reason: boolean | null = null;
+  has_reduced_schedule_leave_periods: boolean | null = null;
+  has_state_id: boolean | null = null;
+  has_submitted_payment_preference: boolean | null = null;
+  hours_worked_per_week: number | null = null;
+  mass_id: string | null = null;
+  mailing_address: Address | null = null;
+  other_incomes: OtherIncome[] = [];
+  payment_preference: PaymentPreference | null = null;
+  previous_leaves_other_reason: PreviousLeave[] = [];
+  previous_leaves_same_reason: PreviousLeave[] = [];
+  residential_address: Address = new Address({});
+  tax_identifier: string | null = null;
+  work_pattern: WorkPattern | null = null;
+
+  employment_status:
+    | typeof EmploymentStatus[keyof typeof EmploymentStatus]
+    | null = null;
+
+  leave_details: {
+    continuous_leave_periods: ContinuousLeavePeriod[];
+    intermittent_leave_periods: IntermittentLeavePeriod[];
+    reduced_schedule_leave_periods: ReducedScheduleLeavePeriod[];
+    employer_notified: boolean | null;
+    employer_notification_date: string | null;
+    caring_leave_metadata: CaringLeaveMetadata | null;
+    child_birth_date: string | null;
+    child_placement_date: string | null;
+    has_future_child_date: boolean | null;
+    pregnant_or_recent_birth: boolean | null;
+    reason: typeof LeaveReason[keyof typeof LeaveReason] | null;
+    reason_qualifier: string | null;
+  };
+
+  phone: {
+    int_code: string | null;
+    phone_number: string | null;
+    phone_type: typeof PhoneType[keyof typeof PhoneType] | null;
+  };
+
+  status:
+    | typeof BenefitsApplicationStatus[keyof typeof BenefitsApplicationStatus]
+    | null = null;
+
+  constructor(attrs: Partial<BenefitsApplication>) {
+    super();
+    // Recursively merge with the defaults
+    merge(this, attrs);
   }
 
   /**
@@ -78,16 +107,13 @@ class BenefitsApplication extends BaseBenefitsApplication {
 
   /**
    * Check if Claim has been marked as completed yet.
-   * @returns {boolean}
    */
   get isCompleted() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'status' does not exist on type 'Benefits... Remove this comment to see the full error message
     return this.status === BenefitsApplicationStatus.completed;
   }
 
   /**
    * Determine if claim is a Medical or Pregnancy leave claim
-   * @returns {boolean}
    */
   get isMedicalOrPregnancyLeave() {
     const reason = get(this, "leave_details.reason");
@@ -96,7 +122,6 @@ class BenefitsApplication extends BaseBenefitsApplication {
 
   /**
    * Determine if claim is a Caring Leave claim
-   * @returns {boolean}
    */
   get isCaringLeave() {
     return get(this, "leave_details.reason") === LeaveReason.care;
@@ -105,10 +130,8 @@ class BenefitsApplication extends BaseBenefitsApplication {
   /**
    * Check if Claim has been submitted yet. This affects the editability
    * of some fields, and as a result, the user experience.
-   * @returns {boolean}
    */
   get isSubmitted() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'status' does not exist on type 'Benefits... Remove this comment to see the full error message
     return this.status === BenefitsApplicationStatus.submitted;
   }
 }
@@ -146,79 +169,74 @@ export const ReasonQualifier = {
   newBorn: "Newborn",
 } as const;
 
-export class ContinuousLeavePeriod extends BaseModel {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'ContinuousLeavePeriod... Remove this comment to see the full error message
-  get defaults() {
-    return {
-      end_date: null,
-      leave_period_id: null,
-      start_date: null,
-    };
+export class ContinuousLeavePeriod {
+  leave_period_id: string | null = null;
+  end_date: string | null = null;
+  start_date: string | null = null;
+
+  constructor(attrs: Partial<ContinuousLeavePeriod>) {
+    Object.assign(this, attrs);
   }
 }
 
-export class IntermittentLeavePeriod extends BaseModel {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'IntermittentLeavePeri... Remove this comment to see the full error message
-  get defaults() {
-    return {
-      // How many {days|hours} of work will you miss per absence?
-      duration: null,
-      // How long will an absence typically last?
-      duration_basis: null,
-      end_date: null,
-      // Estimate how many absences {per week|per month|over the next 6 months}
-      frequency: null,
-      // Implied by input selection of "over the next 6 months"
-      // and can only ever be equal to 6
-      frequency_interval: null,
-      // How often might you need to be absent from work?
-      frequency_interval_basis: null,
-      leave_period_id: null,
-      start_date: null,
-    };
+export class IntermittentLeavePeriod {
+  leave_period_id: string | null = null;
+  start_date: string | null = null;
+  end_date: string | null = null;
+  // How many {days|hours} of work will you miss per absence?
+  duration: number | null = null;
+  // How long will an absence typically last?
+  duration_basis: typeof DurationBasis[keyof typeof DurationBasis] | null =
+    null;
+
+  // Estimate how many absences {per week|per month|over the next 6 months}
+  frequency: number | null = null;
+  // Implied by input selection of "over the next 6 months"
+  // and can only ever be equal to 6
+  frequency_interval: number | null = null;
+  // How often might you need to be absent from work?
+  frequency_interval_basis:
+    | typeof FrequencyIntervalBasis[keyof typeof FrequencyIntervalBasis]
+    | null = null;
+
+  constructor(attrs: Partial<IntermittentLeavePeriod>) {
+    Object.assign(this, attrs);
   }
 }
 
-export class CaringLeaveMetadata extends BaseModel {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'CaringLeaveMetadata' ... Remove this comment to see the full error message
-  get defaults() {
-    return {
-      family_member_date_of_birth: null,
-      family_member_first_name: null,
-      family_member_last_name: null,
-      family_member_middle_name: null,
-      relationship_to_caregiver: null,
-    };
+export class CaringLeaveMetadata {
+  family_member_date_of_birth: string | null = null;
+  family_member_first_name: string | null = null;
+  family_member_last_name: string | null = null;
+  family_member_middle_name: string | null = null;
+  relationship_to_caregiver:
+    | typeof RelationshipToCaregiver[keyof typeof RelationshipToCaregiver]
+    | null = null;
+
+  constructor(attrs: Partial<CaringLeaveMetadata>) {
+    Object.assign(this, attrs);
   }
 }
 
-export class WorkPattern extends BaseModel {
-  constructor(attrs) {
-    super(attrs);
-    const work_pattern_days = get(attrs, "work_pattern_days");
+export class WorkPattern {
+  work_pattern_days: WorkPatternDay[] = [];
+  work_pattern_type:
+    | typeof WorkPatternType[keyof typeof WorkPatternType]
+    | null = null;
 
-    if (work_pattern_days) {
-      // Defaults only override null or undefined values
-      // We should also use defaults for empty work_pattern_days
-      if (work_pattern_days.length === 0) {
-        merge(this, { work_pattern_days: this.defaults.work_pattern_days });
-      } else {
-        assert(
-          work_pattern_days.length === 7,
-          `${work_pattern_days.length} work_pattern_days length must be 7. Consider using WorkPattern's static createWithWeek.`
-        );
-      }
-    }
-  }
+  constructor(attrs: Partial<WorkPattern>) {
+    Object.assign(this, attrs);
 
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'WorkPattern' is not a... Remove this comment to see the full error message
-  get defaults() {
-    return {
-      work_pattern_days: OrderedDaysOfWeek.map(
+    if (!this.work_pattern_days || !this.work_pattern_days.length) {
+      this.work_pattern_days = OrderedDaysOfWeek.map(
         (day_of_week) => new WorkPatternDay({ day_of_week, minutes: null })
-      ),
-      work_pattern_type: null,
-    };
+      );
+    }
+
+    assert(
+      this.work_pattern_days.length === 7,
+      `${this.work_pattern_days.length} work_pattern_days length must be 7. Consider using WorkPattern's static createWithWeek.`
+    );
   }
 
   /**
@@ -226,7 +244,6 @@ export class WorkPattern extends BaseModel {
    * @returns {(number|null)}
    */
   get minutesWorkedPerWeek() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_days' does not exist on typ... Remove this comment to see the full error message
     const hasNoMinutes = this.work_pattern_days.every(
       (day) => day.minutes === null
     );
@@ -234,17 +251,18 @@ export class WorkPattern extends BaseModel {
       return null;
     }
 
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_days' does not exist on typ... Remove this comment to see the full error message
     return sumBy(this.work_pattern_days, "minutes");
   }
 
   /**
    * Create a WorkPattern with a week, splitting provided minutes across 7 work_pattern_days.
-   * @param {number} minutesWorkedPerWeek - average minutes worked per week. Must be an integer. Will split minutes evenly across 7 day week
-   * @param {WorkPattern} [workPattern] - optional, work pattern attributes to apply to new WorkPattern
-   * @returns {WorkPattern}
+   * @param minutesWorkedPerWeek - average minutes worked per week. Must be an integer. Will split minutes evenly across 7 day week
+   * @param workPattern - work pattern attributes to apply to new WorkPattern
    */
-  static createWithWeek(minutesWorkedPerWeek, workPattern = {}) {
+  static createWithWeek(
+    minutesWorkedPerWeek: number,
+    workPattern: WorkPattern | Record<string, never> = {}
+  ) {
     assert(!isNil(minutesWorkedPerWeek));
     const minutesOverWeek = spreadMinutesOverWeek(minutesWorkedPerWeek);
 
@@ -263,14 +281,13 @@ export class WorkPattern extends BaseModel {
   }
 }
 
-export class WorkPatternDay extends BaseModel {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'WorkPatternDay' is no... Remove this comment to see the full error message
-  get defaults() {
-    return {
-      day_of_week: null,
-      // API represents hours in minutes
-      minutes: null,
-    };
+export class WorkPatternDay {
+  day_of_week: typeof OrderedDaysOfWeek[number] | null = null;
+  // API represents hours in minutes
+  minutes: number | null = null;
+
+  constructor(attrs: Partial<WorkPatternDay>) {
+    Object.assign(this, attrs);
   }
 }
 
@@ -298,61 +315,50 @@ export const DurationBasis = {
   // minutes: "Minutes",
 } as const;
 
-export class ReducedScheduleLeavePeriod extends BaseModel {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'ReducedScheduleLeaveP... Remove this comment to see the full error message
-  get defaults() {
-    return {
-      end_date: null,
-      friday_off_minutes: null,
-      leave_period_id: null,
-      monday_off_minutes: null,
-      saturday_off_minutes: null,
-      start_date: null,
-      sunday_off_minutes: null,
-      thursday_off_minutes: null,
-      tuesday_off_minutes: null,
-      wednesday_off_minutes: null,
-    };
+export class ReducedScheduleLeavePeriod {
+  leave_period_id: string | null = null;
+  start_date: string | null = null;
+  end_date: string | null = null;
+  sunday_off_minutes: number | null = null;
+  monday_off_minutes: number | null = null;
+  tuesday_off_minutes: number | null = null;
+  wednesday_off_minutes: number | null = null;
+  thursday_off_minutes: number | null = null;
+  friday_off_minutes: number | null = null;
+  saturday_off_minutes: number | null = null;
+
+  constructor(attrs: Partial<ReducedScheduleLeavePeriod>) {
+    Object.assign(this, attrs);
   }
 
-  /**
-   * @returns {{ minutes: number, day_of_week: string }[]}
-   */
   get days() {
     return [
       {
         day_of_week: DayOfWeek.sunday,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'sunday_off_minutes' does not exist on ty... Remove this comment to see the full error message
         minutes: this.sunday_off_minutes,
       },
       {
         day_of_week: DayOfWeek.monday,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'monday_off_minutes' does not exist on ty... Remove this comment to see the full error message
         minutes: this.monday_off_minutes,
       },
       {
         day_of_week: DayOfWeek.tuesday,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'tuesday_off_minutes' does not exist on t... Remove this comment to see the full error message
         minutes: this.tuesday_off_minutes,
       },
       {
         day_of_week: DayOfWeek.wednesday,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'wednesday_off_minutes' does not exist on... Remove this comment to see the full error message
         minutes: this.wednesday_off_minutes,
       },
       {
         day_of_week: DayOfWeek.thursday,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'thursday_off_minutes' does not exist on ... Remove this comment to see the full error message
         minutes: this.thursday_off_minutes,
       },
       {
         day_of_week: DayOfWeek.friday,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'friday_off_minutes' does not exist on ty... Remove this comment to see the full error message
         minutes: this.friday_off_minutes,
       },
       {
         day_of_week: DayOfWeek.saturday,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'saturday_off_minutes' does not exist on ... Remove this comment to see the full error message
         minutes: this.saturday_off_minutes,
       },
     ];
@@ -363,19 +369,12 @@ export class ReducedScheduleLeavePeriod extends BaseModel {
    */
   get totalMinutesOff() {
     const fieldsWithMinutes = compact([
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'friday_off_minutes' does not exist on ty... Remove this comment to see the full error message
       this.friday_off_minutes,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'monday_off_minutes' does not exist on ty... Remove this comment to see the full error message
       this.monday_off_minutes,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'saturday_off_minutes' does not exist on ... Remove this comment to see the full error message
       this.saturday_off_minutes,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'sunday_off_minutes' does not exist on ty... Remove this comment to see the full error message
       this.sunday_off_minutes,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'thursday_off_minutes' does not exist on ... Remove this comment to see the full error message
       this.thursday_off_minutes,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'tuesday_off_minutes' does not exist on t... Remove this comment to see the full error message
       this.tuesday_off_minutes,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'wednesday_off_minutes' does not exist on... Remove this comment to see the full error message
       this.wednesday_off_minutes,
     ]);
 
@@ -444,7 +443,7 @@ export const OrderedDaysOfWeek = [
   "Thursday",
   "Friday",
   "Saturday",
-];
+] as const;
 
 /**
  * Enums for the Application's `work_pattern.work_pattern_days[].day_of_week` fields

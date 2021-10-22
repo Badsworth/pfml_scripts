@@ -20,6 +20,9 @@ const flagsConfig = {
     // When this flag is enabled, the claim status page for claimants will show
     claimantShowStatusPage: false,
 
+    // When this flag is enabled, the claim payments section for claimants will show
+    claimantShowPayments: false,
+
     // When this flag is enabled, the "Previous leaves" section on Review page is visible
     // TODO (EMPLOYER-718): Remove flag
     employerShowPreviousLeaves: false,

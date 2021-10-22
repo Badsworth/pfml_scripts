@@ -1,16 +1,12 @@
-/* eslint sort-keys: ["error", "asc"] */
-import BaseModel from "./BaseModel";
+class Address {
+  city: string | null = null;
+  line_1: string | null = null;
+  line_2: string | null = null;
+  state: string | null = null;
+  zip: string | null = null;
 
-class Address extends BaseModel {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'Address' is not assig... Remove this comment to see the full error message
-  get defaults() {
-    return {
-      city: null,
-      line_1: null,
-      line_2: null,
-      state: null,
-      zip: null,
-    };
+  constructor(attrs: Partial<Address>) {
+    Object.assign(this, attrs);
   }
 }
 

@@ -1,5 +1,4 @@
-import EmployerClaim from "../../../models/EmployerClaim";
-import PropTypes from "prop-types";
+import { AppLogic } from "../../../hooks/useAppLogic";
 import React from "react";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
@@ -9,7 +8,14 @@ import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
-export const Confirmation = (props) => {
+interface ConfirmationProps {
+  appLogic: AppLogic;
+  query: {
+    absence_id: string;
+  };
+}
+
+export const Confirmation = (props: ConfirmationProps) => {
   const { t } = useTranslation();
   const {
     appLogic: {
@@ -27,7 +33,6 @@ export const Confirmation = (props) => {
       />
       <Trans
         i18nKey="pages.employersClaimsConfirmation.instructionsFollowUpDateLabel"
-        // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
         values={{ date: formatDateRange(claim.follow_up_date) }}
         components={{
           div: <div />,
@@ -52,17 +57,6 @@ export const Confirmation = (props) => {
       <UserFeedback url={routes.external.massgov.feedbackEmployer} />
     </React.Fragment>
   );
-};
-
-Confirmation.propTypes = {
-  appLogic: PropTypes.shape({
-    employers: PropTypes.shape({
-      claim: PropTypes.instanceOf(EmployerClaim),
-    }).isRequired,
-  }).isRequired,
-  query: PropTypes.shape({
-    absence_id: PropTypes.string.isRequired,
-  }).isRequired,
 };
 
 export default withEmployerClaim(Confirmation);

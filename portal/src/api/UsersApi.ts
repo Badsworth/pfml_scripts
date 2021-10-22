@@ -1,13 +1,6 @@
-/* eslint-disable jsdoc/require-returns */
 import User, { UserLeaveAdministrator, UserRole } from "../models/User";
-
 import BaseApi from "./BaseApi";
 import routes from "../routes";
-
-/**
- * @typedef {{ user: User }} UsersApiResult
- * @property {User} [user] - If the request succeeded, this will contain the created user
- */
 
 export default class UsersApi extends BaseApi {
   get basePath() {
@@ -20,11 +13,10 @@ export default class UsersApi extends BaseApi {
 
   /**
    * Register a new user
-   * @param {object} requestData - Registration fields
-   * @returns {Promise<UsersApiResult>}
+   * @param requestData - Registration fields
    */
-  createUser = async (requestData) => {
-    const { data } = await this.request(
+  createUser = async (requestData: Record<string, unknown>) => {
+    const { data } = await this.request<User>(
       "POST",
       "",
       requestData,
@@ -39,10 +31,9 @@ export default class UsersApi extends BaseApi {
 
   /**
    * Get the currently authenticated user
-   * @returns {Promise<UsersApiResult>}
    */
   getCurrentUser = async () => {
-    const { data } = await this.request("GET", "current", null);
+    const { data } = await this.request<User>("GET", "current");
     const roles = this.createUserRoles(data.roles);
     const user_leave_administrators = this.createUserLeaveAdministrators(
       data.user_leave_administrators
@@ -53,14 +44,8 @@ export default class UsersApi extends BaseApi {
     });
   };
 
-  /**
-   * Update a user
-   * @param {object} user_id - ID of user being updated
-   * @param {object} patchData - User fields to update
-   * @returns {Promise<UsersApiResult>}
-   */
-  updateUser = async (user_id, patchData) => {
-    const { data } = await this.request("PATCH", user_id, patchData);
+  updateUser = async (user_id: string, patchData: Record<string, unknown>) => {
+    const { data } = await this.request<User>("PATCH", user_id, patchData);
     const roles = this.createUserRoles(data.roles);
     const user_leave_administrators = this.createUserLeaveAdministrators(
       data.user_leave_administrators
@@ -77,13 +62,13 @@ export default class UsersApi extends BaseApi {
   };
 
   /**
-   * Convert a user role to another
-   * @param {string} user_id - ID of user being converted
-   * @param {object} postData - User fields to update - role and leave admin
-   * @returns {Promise<UsersApiResult>}
+   * Convert a user to an employer
    */
-  convertUser = async (user_id, postData) => {
-    const { data } = await this.request(
+  convertUser = async (
+    user_id: string,
+    postData: { employer_fein: string }
+  ) => {
+    const { data } = await this.request<User>(
       "POST",
       `${user_id}/convert_employer`,
       postData
@@ -102,13 +87,13 @@ export default class UsersApi extends BaseApi {
     };
   };
 
-  createUserLeaveAdministrators = (leaveAdmins) => {
+  createUserLeaveAdministrators = (leaveAdmins: UserLeaveAdministrator[]) => {
     return (leaveAdmins || []).map(
       (leaveAdmin) => new UserLeaveAdministrator(leaveAdmin)
     );
   };
 
-  createUserRoles = (roles) => {
+  createUserRoles = (roles: UserRole[]) => {
     return (roles || []).map((role) => new UserRole(role));
   };
 }

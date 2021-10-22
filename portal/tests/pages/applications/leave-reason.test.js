@@ -82,7 +82,11 @@ describe("LeaveReason", () => {
       process.env.featureFlags = {
         claimantShowMilitaryLeaveTypes: true,
       };
-      const { updateSpy } = setup();
+      const { updateSpy } = setup({
+        claim: new MockBenefitsApplicationBuilder()
+          .bondingBirthLeaveReason()
+          .create(),
+      });
 
       userEvent.click(screen.getByRole("radio", { name: radioName }));
       userEvent.click(screen.getByRole("button", { name: /save/i }));

@@ -160,6 +160,8 @@ const routes = {
       intermittentLeaveGuide:
         "https://www.mass.gov/intermittent-leave-instructions",
       mailFaxInstructions: "https://www.mass.gov/pfmlsubmitinfo",
+      manageApprovedApplication:
+        "https://www.mass.gov/info-details/managing-your-approved-paid-family-or-medical-leave-claim",
       medicalBonding: "https://www.mass.gov/pfml-medical-bonding",
       multipleBirths: "https://www.mass.gov/pfml-multiple-births",
       onlineAppealsForm:
@@ -183,6 +185,8 @@ const routes = {
       taxLiability: "https://www.mass.gov/pfml-tax-liability",
       timeline:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-application-approval-timeline",
+      usingAccruedPaidLeave:
+        "https://www.mass.gov/info-details/how-other-leave-and-benefits-can-affect-your-paid-family-and-medical-leave#paid-time-off-through-your-employer-",
       verifyEmployer: "https://www.mass.gov/pfml-verify-employer",
       whenCanIUsePFML:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-fact-sheet#when-can-i-use-pfml?-",

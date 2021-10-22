@@ -124,7 +124,11 @@ describe("Approval (notifications/notices)", () => {
           ad.acceptLeavePlan();
         })
         .outstandingRequirements((outstandingRequirement) =>
-          outstandingRequirement.complete("Received", "Complete Employer Confirmation", true)
+          outstandingRequirement.complete(
+            "Received",
+            "Complete Employer Confirmation",
+            true
+          )
         )
         .approve()
         .triggerNotice("Review Approval Notice")

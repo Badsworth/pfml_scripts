@@ -6,7 +6,6 @@ import { get, pick, round } from "lodash";
 import Heading from "../../components/Heading";
 import InputHours from "../../components/InputHours";
 import Lead from "../../components/Lead";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";
@@ -20,12 +19,17 @@ export const fields = [
   "claim.work_pattern.work_pattern_days[*].minutes",
 ];
 
-export const ScheduleFixed = (props) => {
+interface ScheduleFixedProps {
+  claim: BenefitsApplication;
+  appLogic: any;
+}
+
+export const ScheduleFixed = (props: ScheduleFixedProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
   const initialEntries = pick(props, fields).claim;
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState(
     Object.assign(
       initialEntries,
@@ -43,7 +47,6 @@ export const ScheduleFixed = (props) => {
 
   const handleSave = async () => {
     const workPattern = new WorkPattern(formState.work_pattern);
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_days' does not exist on typ... Remove this comment to see the full error message
     const { work_pattern_days } = workPattern;
     // TODO (CP-1262): refactor calculating hours worked per week to WorkPattern model
     const minutes = workPattern.minutesWorkedPerWeek;
@@ -83,11 +86,6 @@ export const ScheduleFixed = (props) => {
       ))}
     </QuestionPage>
   );
-};
-
-ScheduleFixed.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(ScheduleFixed);
