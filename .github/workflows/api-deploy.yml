@@ -766,31 +766,3 @@ jobs:
               "color": "danger"
             }]
           }' https://slack.com/api/chat.postMessage)
-
-  update-erd:
-    runs-on: ubuntu-latest
-    needs: [update-the-deploy-branch, api-release, deploy-info]
-    steps:
-      - name: Checkout
-        # Checkout is required before did-files-change
-        uses: actions/checkout@v2
-        with:
-          fetch-depth: 0
-          # be sure to override the default value (1) for fetch-depth
-      
-      - name: Check changes
-        id: check-changes
-        uses: rdietrick/did-files-change@v1.2
-        with:
-          pathspec: './api/massgov/pfml/db/models/'
-
-      - name: "Create ERDs"
-        run: make create-erds
-
-      - uses: EndBug/add-and-commit@v6
-        with:
-          add: './api/erds'
-          message: 'ERD generation auto-commit'
-        env:
-          # This is necessary in order to push a commit to the repo
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
