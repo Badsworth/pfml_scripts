@@ -116,3 +116,9 @@ Other ECS tasks are in
 are not a part of an ECS service, the tasks are launched/started on demand
 (either by an automated process like a scheduled AWS EventBridge event, Step
 Function, or manually through the [/bin/run-ecs-task](/bin/run-ecs-task/) tool).
+
+### Database diagram
+![applications erd diagram](./assets/api/applications.png "application erd")
+![employees erd diagram](./assets/api/employees.png "employees erd")
+![payments erd diagram](./assets/api/payments.png "payments erd")
+![verifications erd diagram](./assets/api/verifications.png "verifications erd")

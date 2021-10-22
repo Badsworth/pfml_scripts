@@ -16,11 +16,6 @@ env:
   working-dir: ./api
   python-version: 3.9
 
-  # Set a timeout of two minutes for all terraform commands in the workflow
-  # to account for parallel jobs working in the same environment with the same
-  # terraform state files.
-  TF_CLI_ARGS: '-lock-timeout=120s'
-
 jobs:
   update-erds:
     runs-on: ubuntu-latest
