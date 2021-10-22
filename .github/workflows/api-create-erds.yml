@@ -22,17 +22,17 @@ env:
   TF_CLI_ARGS: '-lock-timeout=120s'
 
 jobs:
-  update-erd:
+  update-erds:
     runs-on: ubuntu-latest
-    needs: [update-the-deploy-branch, api-release, deploy-info]
+    needs: [update-erds]
     steps:
       - name: "Create ERDs"
         run: make create-erds
 
       - uses: EndBug/add-and-commit@v6
-        with:
-          add: '../docs/assets/api/erds
-          message: 'ERD generation auto-commit'
-        env:
-          # This is necessary in order to push a commit to the repo
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          with:
+            add: '../docs/assets/api/erds
+            message: 'ERD generation auto-commit'
+          env:
+            # This is necessary in order to push a commit to the repo
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
