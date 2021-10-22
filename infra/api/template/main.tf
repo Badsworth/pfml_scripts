@@ -33,10 +33,6 @@ module "constants" {
   source = "../../constants"
 }
 
-module "iam" {
-  source = "../../iam"
-}
-
 provider "newrelic" {
   version       = "~> 2.15.0"
   region        = "US"
