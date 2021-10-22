@@ -1,8 +1,8 @@
 """Admin Portal SSO authorization
 
-Revision ID: 3c663e18d674
-Revises: 175e38fc50d0
-Create Date: 2021-10-21 14:56:39.825098
+Revision ID: 4f2601f5848b
+Revises: efbf721141cb
+Create Date: 2021-10-22 15:48:02.298968
 
 """
 import sqlalchemy as sa
@@ -12,8 +12,8 @@ from sqlalchemy.orm.session import Session
 from massgov.pfml.db.models.employees import AzureGroup, AzureGroupPermission, AzurePermission
 
 # revision identifiers, used by Alembic.
-revision = "3c663e18d674"
-down_revision = "175e38fc50d0"
+revision = "4f2601f5848b"
+down_revision = "efbf721141cb"
 branch_labels = None
 depends_on = None
 
