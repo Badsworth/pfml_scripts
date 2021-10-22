@@ -58,7 +58,9 @@ function ErrorsSummary(props: ErrorsSummaryProps) {
     return (
       <ul className="usa-list">
         {visibleErrorMessages.map((message) => (
-          <li key={message.type ? message.props.i18nKey : message}>
+          <li
+            key={typeof message === "string" ? message : message.props.i18nKey}
+          >
             {message}
           </li>
         ))}

@@ -159,7 +159,7 @@ const useBenefitsApplicationsLogic = ({
       }
 
       const params = { claim_id: claim.application_id };
-      portalFlow.goToNextPage({ claim, user }, params);
+      portalFlow.goToNextPage({ claim }, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }

@@ -3,6 +3,7 @@ import {
   createRouteWithQuery,
 } from "../utils/routeWithParams";
 import machineConfigs, { guards } from "../flows";
+import { ClaimantFlowContext } from "../flows/claimant";
 import { RouteTransitionError } from "../errors";
 import { createMachine } from "xstate";
 import { useMemo } from "react";
@@ -69,7 +70,7 @@ const usePortalFlow = () => {
    */
   const getNextPageRoute = (
     event: string,
-    context: Record<string, unknown> = {},
+    context?: ClaimantFlowContext,
     params?: NullableQueryParams
   ) => {
     const nextRoutingMachine = routingMachine.withContext(context);
@@ -93,7 +94,7 @@ const usePortalFlow = () => {
    */
   const goToPageFor = (
     event: string,
-    context?: Record<string, unknown>,
+    context?: ClaimantFlowContext,
     params?: NullableQueryParams,
     options: {
       redirect?: boolean;
@@ -109,7 +110,7 @@ const usePortalFlow = () => {
    * @param params - query parameters to append to page route
    */
   const goToNextPage = (
-    context: Record<string, unknown>,
+    context: ClaimantFlowContext,
     params: NullableQueryParams = {},
     event = "CONTINUE"
   ) => {

@@ -62,7 +62,7 @@ function renderDocumentFileCard(
 interface FileCardListProps {
   tempFiles: TempFileCollection;
   fileErrors: AppErrorInfo[];
-  onChange: (files: Blob[]) => Promise<void>;
+  onChange: (files: File[]) => Promise<void>;
   onRemoveTempFile: (id: string) => void;
   fileHeadingPrefix: string;
   addFirstFileButtonText: string;

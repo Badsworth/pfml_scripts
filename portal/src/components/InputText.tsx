@@ -133,7 +133,13 @@ function InputText({ type = "text", ...props }: InputTextProps) {
     }
   );
 
-  const { handleFocus, handleBlur } = usePiiHandlers(props);
+  const { handleFocus, handleBlur } = usePiiHandlers({
+    name: props.name,
+    value: props.value,
+    onChange: props.onChange,
+    onBlur: props.onBlur,
+    onFocus: props.onFocus,
+  });
 
   const field = (
     <input

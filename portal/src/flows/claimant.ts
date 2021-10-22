@@ -11,7 +11,7 @@
  * is complete, in progress, or not started
  * @see ../models/Step
  */
-import {
+import BenefitsApplication, {
   EmploymentStatus,
   WorkPatternType,
 } from "../models/BenefitsApplication";
@@ -55,10 +55,18 @@ import { fields as ssnFields } from "../pages/applications/ssn";
 import { fields as stateIdFields } from "../pages/applications/state-id";
 import { fields as workPatternTypeFields } from "../pages/applications/work-pattern-type";
 
+export interface ClaimantFlowContext {
+  claim?: BenefitsApplication;
+  isAdditionalDoc?: boolean;
+}
+
+type ClaimFlowGuardFn = (context: ClaimantFlowContext) => boolean;
+
 /**
  * @see https://xstate.js.org/docs/guides/guards.html
+ *
  */
-export const guards = {
+export const guards: Record<string, ClaimFlowGuardFn> = {
   // claimants upload additional docs after the claim is completed.
   // claimants will either be routed to the status page vs. the checklist
   // if they are uploading an additional doc.
