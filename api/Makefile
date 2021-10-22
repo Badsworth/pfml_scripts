@@ -116,7 +116,7 @@ build-app: ## Build app container
 		.
 
 create-erds:
-	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-erds.py; rm *.dot; mv *.png ./erds
+	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-erds.py; rm *.dot; mv *.png ../docs/assets/api/erds
 
 create-leave-admin-and-claims: ## Create local API Leave Admin user and claims
 	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-leave-admin-and-claims.py $(args)
