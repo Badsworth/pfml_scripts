@@ -55,4 +55,4 @@ jobs:
           route: GET /repos/EOLWD/pfml/actions/runs/${{github.run_id}}/jobs
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      - run: ${{ steps.get_jobs_for_run.outputs.data }}
+      - run: "echo ${{ steps.get_jobs_for_run.outputs.data }}""
