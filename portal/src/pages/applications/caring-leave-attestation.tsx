@@ -17,7 +17,7 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 interface Props {
   appLogic: AppLogic;
   claim: BenefitsApplication;
-  query: any;
+  query: Record<string, string>;
 }
 
 export const CaringLeaveAttestation = (props: Props) => {

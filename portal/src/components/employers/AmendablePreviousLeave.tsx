@@ -19,8 +19,11 @@ import { useTranslation } from "../../locales/i18n";
 interface AmendablePreviousLeaveProps {
   appErrors: AppErrorInfoCollection;
   isAddedByLeaveAdmin: boolean;
-  onChange: (...args: any[]) => any;
-  onRemove: (...args: any[]) => any;
+  onChange: (
+    arg: PreviousLeave | Record<string, unknown>,
+    arg2: string
+  ) => void;
+  onRemove: (arg: PreviousLeave) => void;
   previousLeave: PreviousLeave;
   shouldShowV2: boolean;
 }

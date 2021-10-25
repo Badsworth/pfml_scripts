@@ -2,6 +2,7 @@ import BenefitsApplication, {
   CaringLeaveMetadata,
 } from "../../models/BenefitsApplication";
 import { get, pick } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import Fieldset from "../../components/Fieldset";
 import FormLabel from "../../components/FormLabel";
 import InputText from "../../components/InputText";
@@ -21,7 +22,7 @@ export const fields = [
 ];
 
 interface FamilyMemberNameProps {
-  appLogic: any;
+  appLogic: AppLogic;
   claim: BenefitsApplication;
 }
 

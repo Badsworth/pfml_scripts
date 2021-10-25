@@ -1,4 +1,5 @@
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import Heading from "../../components/Heading";
@@ -20,7 +21,7 @@ interface OtherIncomesProps {
   query: {
     claim_id?: string;
   };
-  appLogic: any;
+  appLogic: AppLogic;
 }
 
 export const OtherIncomes = (props: OtherIncomesProps) => {

@@ -14,7 +14,7 @@ interface StepListProps {
   /**
    * A single Step element or an array of Step elements
    */
-  children: any;
+  children: JSX.Element | JSX.Element[];
   /**
    * Localized text for each step's start button.
    */

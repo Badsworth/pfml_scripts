@@ -17,7 +17,7 @@ interface ErrorsSummaryProps {
  */
 function ErrorsSummary(props: ErrorsSummaryProps) {
   const { errors } = props;
-  const alertRef = useRef<HTMLElement>();
+  const alertRef = useRef<HTMLDivElement>();
   const { t } = useTranslation();
 
   /**

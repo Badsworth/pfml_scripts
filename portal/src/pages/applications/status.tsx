@@ -1,11 +1,12 @@
 import React, { useEffect } from "react";
 import { find, get, has, map } from "lodash";
-
 import { AbsencePeriod } from "../../models/ClaimDetail";
 import Alert from "../../components/Alert";
 import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
+import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import ButtonLink from "../../components/ButtonLink";
+import ClaimDocument from "../../models/ClaimDocument";
 import { DocumentType } from "../../models/Document";
 import Heading from "../../components/Heading";
 import LeaveReason from "../../models/LeaveReason";
@@ -421,10 +422,10 @@ export const StatusTagMap = {
   Pending: "pending",
   Withdrawn: "inactive",
   Cancelled: "inactive",
-};
+} as const;
 
 interface LeaveDetailsProps {
-  absenceDetails?: any;
+  absenceDetails?: Record<string, AbsencePeriod[]>;
 }
 
 export const LeaveDetails = ({ absenceDetails = {} }: LeaveDetailsProps) => {
@@ -504,13 +505,9 @@ interface TimelineProps {
   absencePeriods: AbsencePeriod[];
   applicationId?: string;
   employerFollowUpDate?: string;
-  docList: any[];
+  docList: ClaimDocument[] | BenefitsApplicationDocument[];
   absenceCaseId: string;
-  appLogic: {
-    portalFlow?: {
-      getNextPageRoute: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
 }
 
 export const Timeline = ({
@@ -533,7 +530,7 @@ export const Timeline = ({
     (absencePeriod) => absencePeriod.reason === LeaveReason.bonding
   );
   interface FollowUpStepsProps {
-    bondingAbsencePeriod: any;
+    bondingAbsencePeriod: AbsencePeriod;
   }
   const FollowUpSteps = ({ bondingAbsencePeriod }: FollowUpStepsProps) => {
     let typeOfProof;

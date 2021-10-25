@@ -137,8 +137,8 @@ describe("Status", () => {
     userEvent.click(screen.getByRole("button", { name: /approval/i }));
 
     expect(downloadDocumentSpy).toHaveBeenCalledWith(
-      "NTN-111-ABS-01",
-      document
+      document,
+      "NTN-111-ABS-01"
     );
   });
 });

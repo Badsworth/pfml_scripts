@@ -5,7 +5,7 @@ import useUniqueId from "../hooks/useUniqueId";
 interface RepeatableFieldsetCardProps {
   children: React.ReactNode;
   className?: string;
-  entry: any;
+  entry: Record<string, unknown>;
   heading: string;
   index: number;
   removeButtonLabel: string;

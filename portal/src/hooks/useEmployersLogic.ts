@@ -105,8 +105,8 @@ const useEmployersLogic = ({
    * Download document from the API and set app errors if any.
    */
   const downloadDocument = async (
-    absenceId: string,
-    document: ClaimDocument
+    document: ClaimDocument,
+    absenceId: string
   ) => {
     appErrorsLogic.clearErrors();
     try {

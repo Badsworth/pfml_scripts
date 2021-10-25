@@ -22,8 +22,11 @@ interface LeaveDetailsProps {
   believeRelationshipAccurate?: "Yes" | "Unknown" | "No";
   claim: EmployerClaim;
   documents: ClaimDocument[];
-  downloadDocument: (...args: any[]) => any;
-  onChangeBelieveRelationshipAccurate: (arg: string) => void;
+  downloadDocument: (
+    document: ClaimDocument,
+    absenceId: string
+  ) => Promise<Blob>;
+  onChangeBelieveRelationshipAccurate?: (arg: string) => void;
   relationshipInaccurateReason?: string;
   onChangeRelationshipInaccurateReason: (arg: string) => void;
 }
@@ -133,7 +136,7 @@ const LeaveDetails = (props: LeaveDetailsProps) => {
             {documents.map((document) => (
               <li key={document.fineos_document_id}>
                 <DownloadableDocument
-                  onDownloadClick={downloadDocument}
+                  downloadClaimDocument={downloadDocument}
                   absenceId={absenceId}
                   document={document}
                   displayDocumentName={t(

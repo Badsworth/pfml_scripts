@@ -11,7 +11,7 @@ interface RepeatableFieldsetProps {
    */
   addButtonLabel: string;
   /** Array of entries, each of which will have the content repeated for. */
-  entries: any[];
+  entries: Array<Record<string, unknown>>;
   /**
    * Displayed as the heading for each card, followed by the card's position. For example
    * if you specify "Person", headings will be "Person 1", "Person 2", etc.
@@ -138,7 +138,7 @@ function useEntryIds(entries: unknown[]) {
  */
 function createEntryIdMap(
   entries: unknown[],
-  prevEntryIdMap: Map<any, string> = new Map()
+  prevEntryIdMap: Map<unknown, string> = new Map()
 ) {
   const entryIdMap = new Map();
   for (const entry of entries) {

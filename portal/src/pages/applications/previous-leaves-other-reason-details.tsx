@@ -1,5 +1,6 @@
 import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import { get, pick } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Details from "../../components/Details";
 import Heading from "../../components/Heading";
@@ -30,7 +31,7 @@ export const fields = [
 ];
 
 interface PreviousLeavesOtherReasonDetailsProps {
-  appLogic: any;
+  appLogic: AppLogic;
   claim: BenefitsApplication;
 }
 
@@ -145,7 +146,7 @@ export const PreviousLeavesOtherReasonDetails = (
 interface PreviousLeavesOtherReasonDetailsCardProps {
   claim: BenefitsApplication;
   entry: PreviousLeave;
-  getFunctionalInputProps: (...args: any[]) => any;
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
   index: number;
 }
 

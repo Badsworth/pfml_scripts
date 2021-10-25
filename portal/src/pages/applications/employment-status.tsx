@@ -3,6 +3,7 @@ import BenefitsApplication, {
 } from "../../models/BenefitsApplication";
 import { get, pick } from "lodash";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -19,7 +20,7 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 export const fields = ["claim.employment_status", "claim.employer_fein"];
 
 interface EmploymentStatusProps {
-  appLogic: any;
+  appLogic: AppLogic;
   claim: BenefitsApplication;
 }
 

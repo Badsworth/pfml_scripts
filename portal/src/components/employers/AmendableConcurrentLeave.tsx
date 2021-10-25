@@ -14,8 +14,11 @@ interface AmendableConcurrentLeaveProps {
   appErrors: AppErrorInfoCollection;
   concurrentLeave: ConcurrentLeave;
   isAddedByLeaveAdmin: boolean;
-  onChange: (...args: any[]) => any;
-  onRemove: (...args: any[]) => any;
+  onChange: (
+    arg: ConcurrentLeave | Record<string, unknown>,
+    arg2?: string
+  ) => void;
+  onRemove: (arg: ConcurrentLeave) => void;
 }
 
 /**

@@ -3,6 +3,7 @@ import BenefitsApplication, {
 } from "../../models/BenefitsApplication";
 import { get, pick, set } from "lodash";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -24,7 +25,7 @@ export const fields = [
 
 interface LeaveReasonProps {
   claim: BenefitsApplication;
-  appLogic: any;
+  appLogic: AppLogic;
 }
 
 export const LeaveReason = (props: LeaveReasonProps) => {

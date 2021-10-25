@@ -36,7 +36,7 @@ interface InputCurrencyProps {
   /**
    * Add a `ref` to the input element
    */
-  inputRef?: any;
+  inputRef?: React.MutableRefObject<HTMLInputElement>;
   /**
    * Localized field label
    */
@@ -54,7 +54,7 @@ interface InputCurrencyProps {
   /**
    * HTML input `maxlength` attribute
    */
-  maxLength?: string;
+  maxLength?: number;
   /**
    * HTML input `name` attribute
    */

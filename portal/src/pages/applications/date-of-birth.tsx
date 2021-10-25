@@ -1,3 +1,5 @@
+import { AppLogic } from "../../hooks/useAppLogic";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import InputDate from "../../components/InputDate";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -10,8 +12,8 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 export const fields = ["claim.date_of_birth"];
 
 interface DateOfBirthProps {
-  appLogic: any;
-  claim: any;
+  appLogic: AppLogic;
+  claim: BenefitsApplication;
   query: {
     claim_id?: string;
   };

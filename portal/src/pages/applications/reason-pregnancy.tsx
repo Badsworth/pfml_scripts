@@ -1,4 +1,5 @@
 import { get, pick } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import LeaveReason from "../../models/LeaveReason";
@@ -13,7 +14,7 @@ export const fields = ["claim.leave_details.pregnant_or_recent_birth"];
 
 interface ReasonPregnancyProps {
   claim: BenefitsApplication;
-  appLogic: any;
+  appLogic: AppLogic;
   query: {
     claim_id?: string;
   };

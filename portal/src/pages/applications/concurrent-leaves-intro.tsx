@@ -1,3 +1,4 @@
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Heading from "../../components/Heading";
 import Hint from "../../components/Hint";
@@ -10,9 +11,9 @@ import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 interface ConcurrentLeavesIntroProps {
-  appLogic: any;
+  appLogic: AppLogic;
   claim: BenefitsApplication;
-  query: any;
+  query: Record<string, string>;
 }
 
 export const ConcurrentLeavesIntro = (props: ConcurrentLeavesIntroProps) => {
@@ -22,8 +23,8 @@ export const ConcurrentLeavesIntro = (props: ConcurrentLeavesIntroProps) => {
   const startDate = formatDate(claim.leaveStartDate).full();
   const endDate = formatDate(claim.leaveEndDate).full();
 
-  const handleSave = () => {
-    return appLogic.portalFlow.goToNextPage({ claim }, query);
+  const handleSave = async () => {
+    return await appLogic.portalFlow.goToNextPage({ claim }, query);
   };
 
   return (

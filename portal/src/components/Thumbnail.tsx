@@ -25,7 +25,7 @@ const loadImagePreview = (
 };
 
 interface ThumbnailProps {
-  file?: any;
+  file?: File;
 }
 
 /**

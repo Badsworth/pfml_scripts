@@ -3,6 +3,7 @@ import usePreviousValue from "../hooks/usePreviousValue";
 import { zipObject } from "lodash";
 
 interface ConditionalContentProps {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   children: any;
   /**
    * Field names, individually passed into `clearField` when the
@@ -17,7 +18,7 @@ interface ConditionalContentProps {
   /**
    * Method called to cache the value of each field listed in `fieldNamesClearedWhenHidden`
    */
-  getField?: (arg: string) => any;
+  getField?: (fieldName: string) => unknown;
   /**
    * Method called to restore the previous values of all fields listed in `fieldNamesClearedWhenHidden`
    */

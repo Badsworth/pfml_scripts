@@ -10,7 +10,7 @@ if (typeof window !== "undefined") {
 }
 
 interface TooltipIconProps {
-  children: any;
+  children: string;
   position?: "top" | "bottom" | "left" | "right";
 }
 

@@ -6,6 +6,7 @@ import BenefitsApplication, {
 } from "../../models/BenefitsApplication";
 import { get, pick, set, zip } from "lodash";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import Details from "../../components/Details";
 import Heading from "../../components/Heading";
 import InputHours from "../../components/InputHours";
@@ -45,7 +46,7 @@ export const fields = [
 
 interface ReducedLeaveScheduleProps {
   claim: BenefitsApplication;
-  appLogic: any;
+  appLogic: AppLogic;
   query: {
     claim_id?: string;
   };

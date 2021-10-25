@@ -255,7 +255,7 @@ function InputDate(props: InputDateProps) {
           inputRef={inputTextRefs.month}
           label={props.monthLabel}
           labelClassName="text-normal margin-top-05"
-          maxLength="2"
+          maxLength={2}
           name={`${props.name}_month`}
           onBlur={handleBlur}
           onChange={handleChange}
@@ -270,7 +270,7 @@ function InputDate(props: InputDateProps) {
           inputRef={inputTextRefs.day}
           label={props.dayLabel}
           labelClassName="text-normal margin-top-05"
-          maxLength="2"
+          maxLength={2}
           name={`${props.name}_day`}
           onBlur={handleBlur}
           onChange={handleChange}
@@ -285,7 +285,7 @@ function InputDate(props: InputDateProps) {
           inputRef={inputTextRefs.year}
           label={props.yearLabel}
           labelClassName="text-normal margin-top-05"
-          maxLength="4"
+          maxLength={4}
           name={`${props.name}_year`}
           onBlur={handleBlur}
           onChange={handleChange}

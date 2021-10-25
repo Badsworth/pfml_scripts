@@ -3,6 +3,7 @@ import BenefitsApplication, {
 } from "../../models/BenefitsApplication";
 import React, { useState } from "react";
 import { pick, round } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import Heading from "../../components/Heading";
 import InputHours from "../../components/InputHours";
 import Lead from "../../components/Lead";
@@ -25,7 +26,7 @@ export const fields = [
 
 interface ScheduleVariableProps {
   claim: BenefitsApplication;
-  appLogic: any;
+  appLogic: AppLogic;
 }
 
 export const ScheduleVariable = (props: ScheduleVariableProps) => {
@@ -71,7 +72,9 @@ export const ScheduleVariable = (props: ScheduleVariableProps) => {
 
     await appLogic.benefitsApplications.update(claim.application_id, {
       hours_worked_per_week,
-      work_pattern: { work_pattern_days },
+      work_pattern: {
+        work_pattern_days,
+      },
     });
   };
 

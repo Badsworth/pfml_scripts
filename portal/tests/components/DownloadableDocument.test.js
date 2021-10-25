@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import BenefitsApplicationDocument from "../../src/models/BenefitsApplicationDocument";
+import ClaimDocument from "../../src/models/ClaimDocument";
 import { DocumentType } from "../../src/models/Document";
 import DownloadableDocument from "../../src/components/DownloadableDocument";
 import Icon from "../../src/components/Icon";
@@ -22,10 +23,19 @@ const LEGAL_NOTICE = new BenefitsApplicationDocument({
   name: "legal notice",
 });
 
+const CLAIM_DOCUMENT = new ClaimDocument({
+  content_type: "image/png",
+  created_at: "2020-04-05",
+  document_type: DocumentType.certification.medicalCertification,
+  fineos_document_id: "fineos-id-4",
+  name: "Medical cert doc",
+});
+
 function renderComponent(customProps = {}) {
   const props = {
     document: DOCUMENT,
-    onDownloadClick: jest.fn(),
+    downloadClaimDocument: jest.fn(),
+    downloadBenefitsApplicationDocument: jest.fn(),
     ...customProps,
   };
 
@@ -60,7 +70,9 @@ describe("DownloadableDocument", () => {
 
   it("calls download function without absence id when there isn't an absence id", () => {
     const mockDownloadDocument = jest.fn();
-    renderComponent({ onDownloadClick: mockDownloadDocument });
+    renderComponent({
+      downloadBenefitsApplicationDocument: mockDownloadDocument,
+    });
 
     userEvent.click(screen.getByRole("button"));
     expect(mockDownloadDocument).toHaveBeenCalledWith(DOCUMENT);
@@ -69,14 +81,15 @@ describe("DownloadableDocument", () => {
   it("calls download function with absence id when there is an absence id", () => {
     const mockDownloadDocument = jest.fn();
     renderComponent({
-      onDownloadClick: mockDownloadDocument,
+      downloadClaimDocument: mockDownloadDocument,
       absenceId: "mock-absence-id",
+      document: CLAIM_DOCUMENT,
     });
 
     userEvent.click(screen.getByRole("button"));
     expect(mockDownloadDocument).toHaveBeenCalledWith(
-      "mock-absence-id",
-      DOCUMENT
+      DOCUMENT,
+      "mock-absence-id"
     );
   });
 

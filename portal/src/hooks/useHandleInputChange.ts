@@ -18,7 +18,7 @@ const useHandleInputChange = (
    * Event callback function that when listening for input change events will update form state appropriately based on the input name and value
    */
   const handleInputChange: ChangeEventHandler<
-    HTMLInputElement | HTMLSelectElement
+    HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
   > = (event) => {
     const { name, type } = event.target;
     const value = getInputValueFromEvent(event);

@@ -133,7 +133,7 @@ export const Status = (props: StatusProps) => {
               <li key={document.fineos_document_id} className="margin-bottom-2">
                 <DownloadableDocument
                   absenceId={absenceId}
-                  onDownloadClick={downloadDocument}
+                  downloadClaimDocument={downloadDocument}
                   document={document}
                   showCreatedAt
                 />

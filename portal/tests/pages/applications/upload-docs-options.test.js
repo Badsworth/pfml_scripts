@@ -72,7 +72,7 @@ describe("UploadDocsOptions", () => {
     await waitFor(() => {
       expect(goToNextPage).toHaveBeenCalledWith(
         { claim },
-        { claim_id, showStateId: true, additionalDoc: "true" },
+        { claim_id, showStateId: "true", additionalDoc: "true" },
         "UPLOAD_MASS_ID"
       );
     });
@@ -93,7 +93,7 @@ describe("UploadDocsOptions", () => {
     await waitFor(() => {
       expect(goToNextPage).toHaveBeenCalledWith(
         { claim },
-        { claim_id, showStateId: false, additionalDoc: "true" },
+        { claim_id, showStateId: "false", additionalDoc: "true" },
         "UPLOAD_ID"
       );
     });
@@ -118,7 +118,7 @@ describe("UploadDocsOptions", () => {
     await waitFor(() => {
       expect(goToNextPage).toHaveBeenCalledWith(
         { claim },
-        { claim_id, additionalDoc: "true" },
+        { claim_id, additionalDoc: "true", showStateId: undefined },
         "UPLOAD_CERTIFICATION"
       );
     });

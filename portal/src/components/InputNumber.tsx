@@ -43,7 +43,7 @@ interface InputNumberProps {
   /**
    * Add a `ref` to the input element
    */
-  inputRef?: HTMLDivElement;
+  inputRef?: React.MutableRefObject<HTMLInputElement>;
   /**
    * Localized field label
    */
@@ -67,7 +67,7 @@ interface InputNumberProps {
   /**
    * HTML input `maxlength` attribute
    */
-  maxLength?: string;
+  maxLength?: number;
   /**
    * HTML input `name` attribute
    */

@@ -3,6 +3,7 @@ import OtherIncome, {
   OtherIncomeType,
 } from "../../models/OtherIncome";
 import { get, pick } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Dropdown from "../../components/Dropdown";
 import Fieldset from "../../components/Fieldset";
@@ -31,7 +32,7 @@ export const fields = [
 
 interface OtherIncomesDetailsProps {
   claim: BenefitsApplication;
-  appLogic: any;
+  appLogic: AppLogic;
 }
 
 export const OtherIncomesDetails = (props: OtherIncomesDetailsProps) => {
@@ -114,8 +115,8 @@ export const OtherIncomesDetails = (props: OtherIncomesDetailsProps) => {
 
 interface OtherIncomeCardProps {
   index: number;
-  entry: any;
-  getFunctionalInputProps: (...args: any[]) => any;
+  entry: Record<string, unknown>;
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
 }
 
 /**

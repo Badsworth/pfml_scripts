@@ -6,7 +6,7 @@ import { withTranslation } from "../locales/i18n";
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
-  t: (...args: any[]) => any;
+  t: (arg: string) => string;
 }
 
 /**

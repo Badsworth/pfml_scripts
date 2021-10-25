@@ -93,7 +93,7 @@ export function maskValue(
 }
 
 interface MaskProps {
-  children: any;
+  children: JSX.Element; // it is an input
   mask?: "currency" | "fein" | "hours" | "phone" | "ssn" | "zip";
 }
 

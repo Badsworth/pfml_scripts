@@ -3,6 +3,7 @@ import BenefitsApplication, {
   RelationshipToCaregiver,
 } from "../../models/BenefitsApplication";
 import { get, pick } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
@@ -21,9 +22,9 @@ export const fields = [
 ];
 
 interface FamilyMemberRelationshipProps {
-  appLogic: any;
+  appLogic: AppLogic;
   claim: BenefitsApplication;
-  query: any;
+  query: Record<string, string>;
 }
 
 export const FamilyMemberRelationship = (

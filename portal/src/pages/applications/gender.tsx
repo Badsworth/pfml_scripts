@@ -1,7 +1,7 @@
 import BenefitsApplication, {
   Gender as GenderDescription,
 } from "../../models/BenefitsApplication";
-
+import { AppLogic } from "../../hooks/useAppLogic";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -14,7 +14,7 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 export const fields = ["claim.gender"];
 
 interface GenderProps {
-  appLogic: any;
+  appLogic: AppLogic;
   claim: BenefitsApplication;
 }
 

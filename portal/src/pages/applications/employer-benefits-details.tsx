@@ -3,6 +3,7 @@ import EmployerBenefit, {
   EmployerBenefitType,
 } from "../../models/EmployerBenefit";
 import { get, pick } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import Dropdown from "../../components/Dropdown";
@@ -33,7 +34,7 @@ export const fields = [
 
 interface EmployerBenefitsDetailsProps {
   claim: BenefitsApplication;
-  appLogic: any;
+  appLogic: AppLogic;
 }
 
 export const EmployerBenefitsDetails = (
@@ -123,9 +124,9 @@ export const EmployerBenefitsDetails = (
 
 interface EmployerBenefitCardProps {
   index: number;
-  entry: any;
-  getFunctionalInputProps: (...args: any[]) => any;
-  updateFields: (...args: any[]) => any;
+  entry: Record<string, string | boolean>;
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
+  updateFields: (arg: Record<string, unknown>) => void;
 }
 
 /**
@@ -135,10 +136,16 @@ export const EmployerBenefitCard = (props: EmployerBenefitCardProps) => {
   const { t } = useTranslation();
   const { entry, getFunctionalInputProps, index, updateFields } = props;
   const clearField = (fieldName) => updateFields({ [fieldName]: null });
+
   // Since we are not passing the formState to the benefit card,
   // get the field value from the entry by removing the field path
-  const getEntryField = (fieldName) =>
-    get(entry, fieldName.replace(`employer_benefits[${index}].`, ""));
+  const getEntryField = (fieldName: string) => {
+    return get(
+      entry,
+      fieldName.replace(`employer_benefits[${index}].`, ""),
+      ""
+    );
+  };
   const selectedType = entry.benefit_type;
 
   const benefitFrequencyChoices = ["daily", "weekly", "monthly", "inTotal"].map(

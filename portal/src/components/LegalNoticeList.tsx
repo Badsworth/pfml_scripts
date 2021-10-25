@@ -8,7 +8,7 @@ import { useTranslation } from "../locales/i18n";
 
 interface LegalNoticeListProps {
   documents: Array<BenefitsApplicationDocument | ClaimDocument>;
-  onDownloadClick?: (...args: any[]) => any;
+  onDownloadClick: (document: BenefitsApplicationDocument) => Promise<Blob>;
 }
 
 /**
@@ -39,7 +39,7 @@ export default function LegalNoticeList(props: LegalNoticeListProps) {
       <div>
         <DownloadableDocument
           document={document}
-          onDownloadClick={onDownloadClick}
+          downloadBenefitsApplicationDocument={onDownloadClick}
           showCreatedAt
         />
       </div>

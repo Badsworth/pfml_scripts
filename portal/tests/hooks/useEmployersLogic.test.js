@@ -296,7 +296,7 @@ describe("useEmployersLogic", () => {
       });
 
       act(() => {
-        employersLogic.downloadDocument(absenceId, document);
+        employersLogic.downloadDocument(document, absenceId);
       });
 
       expect(downloadDocumentMock).toHaveBeenCalledWith(absenceId, document);

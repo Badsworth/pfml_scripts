@@ -177,7 +177,7 @@ interface InProgressStatusCardProps {
   documents: BenefitsApplicationDocument[];
   isLoadingDocuments: boolean;
   number: number;
-  appLogic: any;
+  appLogic: AppLogic;
 }
 
 /**

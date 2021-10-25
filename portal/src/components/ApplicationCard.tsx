@@ -243,7 +243,9 @@ function LegalNotices(props: LegalNoticesProps) {
                 <DownloadableDocument
                   document={notice}
                   showCreatedAt
-                  onDownloadClick={appLogic.documents.download}
+                  downloadBenefitsApplicationDocument={
+                    appLogic.documents.download
+                  }
                 />
               </li>
             ))}

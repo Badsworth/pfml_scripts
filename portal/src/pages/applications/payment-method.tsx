@@ -3,6 +3,7 @@ import {
   PaymentPreferenceMethod,
 } from "../../models/PaymentPreference";
 import { cloneDeep, get, pick, set } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
@@ -39,7 +40,7 @@ interface PaymentMethodProps {
   query: {
     claim_id?: string;
   };
-  appLogic: any;
+  appLogic: AppLogic;
 }
 
 export const PaymentMethod = (props: PaymentMethodProps) => {

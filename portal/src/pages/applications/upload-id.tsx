@@ -2,6 +2,7 @@ import Accordion from "../../components/Accordion";
 import AccordionItem from "../../components/AccordionItem";
 import Alert from "../../components/Alert";
 import { AppLogic } from "../../hooks/useAppLogic";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import DocumentRequirements from "../../components/DocumentRequirements";
 import { DocumentType } from "../../models/Document";
@@ -24,7 +25,7 @@ import withClaimDocuments from "../../hoc/withClaimDocuments";
 
 interface UploadIdProps {
   appLogic: AppLogic;
-  claim: any;
+  claim: BenefitsApplication;
   documents: BenefitsApplicationDocument[];
   isLoadingDocuments: boolean;
   query: {

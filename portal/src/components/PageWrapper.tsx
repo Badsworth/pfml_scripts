@@ -4,8 +4,10 @@ import {
   isMaintenancePageRoute,
   maintenanceTime,
 } from "../utils/maintenance";
+import { AppLogic } from "../hooks/useAppLogic";
 import ErrorBoundary from "./ErrorBoundary";
 import ErrorsSummary from "./ErrorsSummary";
+import Flag from "../models/Flag";
 import Header from "./Header";
 import { Helmet } from "react-helmet";
 import React from "react";
@@ -21,10 +23,10 @@ const Footer = dynamic(() => import("./Footer"));
 const MaintenanceTakeover = dynamic(() => import("./MaintenanceTakeover"));
 
 interface PageWrapperProps {
-  appLogic: any;
+  appLogic: AppLogic;
   children: React.ReactNode;
   isLoading?: boolean;
-  maintenance?: any;
+  maintenance?: Flag;
 }
 
 /**
@@ -117,7 +119,7 @@ const PageWrapper = (props: PageWrapperProps) => {
           {/* Wrap header children in a div because its parent is a flex container */}
           <Header
             user={appLogic.users.user}
-            onLogout={appLogic.auth.logout}
+            onLogout={() => appLogic.auth.logout()}
             showUpcomingMaintenanceAlertBar={showUpcomingMaintenanceAlertBar}
             maintenanceStartTime={maintenanceStartTime}
             maintenanceEndTime={maintenanceEndTime}

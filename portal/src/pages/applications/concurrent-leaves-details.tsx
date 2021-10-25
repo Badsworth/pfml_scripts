@@ -1,3 +1,4 @@
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ConcurrentLeave from "../../models/ConcurrentLeave";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -19,9 +20,9 @@ export const fields = [
 ];
 
 interface ConcurrentLeavesDetailsProps {
-  appLogic: any;
+  appLogic: AppLogic;
   claim: BenefitsApplication;
-  query: any;
+  query: Record<string, string>;
 }
 
 export const ConcurrentLeavesDetails = (

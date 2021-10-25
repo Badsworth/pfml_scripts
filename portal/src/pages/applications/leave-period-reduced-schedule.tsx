@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import { cloneDeep, get, pick, set } from "lodash";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import Heading from "../../components/Heading";
@@ -32,7 +33,7 @@ export const fields = [
 ];
 
 interface LeavePeriodReducedScheduleProps {
-  appLogic: any;
+  appLogic: AppLogic;
   claim: BenefitsApplication;
   query: {
     claim_id?: string;

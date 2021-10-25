@@ -198,7 +198,9 @@ interface PaginatedClaimsTableProps {
   appLogic: AppLogic;
   claims: ClaimCollection;
   paginationMeta: PaginationMeta;
-  updatePageQuery: (...args: any[]) => any;
+  updatePageQuery: (
+    arg: Array<{ name: string; value: number | string | string[] }>
+  ) => void;
   /** Pass in the SortDropdown so it can be rendered in the expected inline UI position */
   sort: React.ReactNode;
   user: User;
@@ -308,7 +310,7 @@ const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
 };
 
 interface ClaimTableRowsProps {
-  appLogic: any;
+  appLogic: AppLogic;
   claims: ClaimCollection;
   tableColumnKeys: string[];
   user: User;
@@ -447,7 +449,9 @@ interface FiltersProps {
     claim_status?: string;
     employer_id?: string;
   };
-  updatePageQuery: (...args: any[]) => any;
+  updatePageQuery: (
+    arg: Array<{ name: string; value: number | string | string[] }>
+  ) => void;
   user: User;
 }
 
@@ -725,7 +729,9 @@ const FilterMenuButton = (props: FilterMenuButtonProps) => {
 interface SearchProps {
   /** The current search value */
   initialValue?: string;
-  updatePageQuery: (...args: any[]) => any;
+  updatePageQuery: (
+    arg: Array<{ name: string; value: number | string | string[] }>
+  ) => void;
 }
 
 const Search = (props: SearchProps) => {
@@ -777,7 +783,9 @@ const Search = (props: SearchProps) => {
 interface SortDropdownProps {
   order_by?: "absence_status" | "created_at" | "employee";
   order_direction?: "ascending" | "descending";
-  updatePageQuery: (...args: any[]) => any;
+  updatePageQuery: (
+    arg: Array<{ name: string; value: number | string | string[] }>
+  ) => void;
 }
 
 const SortDropdown = (props: SortDropdownProps) => {
