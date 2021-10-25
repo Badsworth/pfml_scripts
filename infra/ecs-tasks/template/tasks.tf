@@ -286,15 +286,15 @@ locals {
     "dua-import-employee-demographics" = {
       command   = ["dua-import-employee-demographics"]
       task_role = aws_iam_role.dua_import_employee_demographics_task_role.arn
-      cpu            = 2048,
-      memory         = 4096,
+      cpu       = 2048,
+      memory    = 4096,
       env = [
         local.db_access,
         local.eolwd_moveit_access,
         local.reductions_folders
       ]
     }
-    
+
     "report-sequential-employment" = {
       command   = ["report-sequential-employment"]
       task_role = aws_iam_role.task_execute_sql_task_role.arn
@@ -358,7 +358,7 @@ resource "aws_ecs_task_definition" "ecs_tasks" {
       # silently cause env vars to go missing which would definitely confuse someone for a day or two.
       #
       environment = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if contains(keys(val), "value")]
-      secrets     = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if !contains(keys(val), "value")]
+      secrets     = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if ! contains(keys(val), "value")]
     }
   ])
 }

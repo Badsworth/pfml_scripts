@@ -22,7 +22,9 @@ const useEmployersLogic = ({
   setUser: UsersLogic["setUser"];
 }) => {
   const [claim, setEmployerClaim] = useState<EmployerClaim | null>(null);
-  const [documents, setDocuments] = useState<DocumentCollection | null>(null);
+  const [claimDocumentsMap, setClaimDocumentsMap] = useState<
+    Map<string, DocumentCollection>
+  >(new Map());
   const employersApi = useMemo(() => new EmployersApi(), []);
 
   /**
@@ -78,13 +80,15 @@ const useEmployersLogic = ({
    * Retrieve documents from the API and set application errors if any
    */
   const loadDocuments = async (absenceId: string) => {
-    if (documents) return;
+    if (claimDocumentsMap.has(absenceId)) return;
     appErrorsLogic.clearErrors();
 
     try {
       const { documents } = await employersApi.getDocuments(absenceId);
+      const loadedClaimDocumentsMap = new Map(claimDocumentsMap.entries());
+      loadedClaimDocumentsMap.set(absenceId, documents);
 
-      setDocuments(documents);
+      setClaimDocumentsMap(loadedClaimDocumentsMap);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -168,7 +172,7 @@ const useEmployersLogic = ({
   return {
     addEmployer,
     claim,
-    documents,
+    claimDocumentsMap,
     downloadDocument,
     loadClaim,
     loadDocuments,

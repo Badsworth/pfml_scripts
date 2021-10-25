@@ -36,19 +36,17 @@ export const Status = (props: StatusProps) => {
     query: { absence_id: absenceId },
   } = props;
   const {
-    employers: { documents, downloadDocument },
+    employers: { claimDocumentsMap, downloadDocument },
   } = appLogic;
   const { isContinuous, isIntermittent, isReducedSchedule } = claim;
   const { t } = useTranslation();
 
   useEffect(() => {
-    if (!documents) {
-      appLogic.employers.loadDocuments(absenceId);
-    }
+    appLogic.employers.loadDocuments(absenceId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [documents, absenceId]);
+  }, [absenceId]);
 
-  const allDocuments = documents ? documents.items : [];
+  const allDocuments = claimDocumentsMap.get(absenceId)?.items || [];
   const legalNotices = findDocumentsByTypes(allDocuments, [
     DocumentType.approvalNotice,
     DocumentType.denialNotice,

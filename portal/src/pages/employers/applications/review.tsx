@@ -55,7 +55,7 @@ export const Review = (props: ReviewProps) => {
   } = props;
   const {
     appErrors,
-    employers: { documents, downloadDocument, loadDocuments },
+    employers: { claimDocumentsMap, downloadDocument, loadDocuments },
   } = appLogic;
   const { t } = useTranslation();
 
@@ -175,14 +175,12 @@ export const Review = (props: ReviewProps) => {
   const isCaringLeave = get(claim, "leave_details.reason") === LeaveReason.care;
 
   useEffect(() => {
-    if (!documents) {
-      loadDocuments(absenceId);
-    }
+    loadDocuments(absenceId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [documents, absenceId]);
+  }, [absenceId]);
 
   // only cert forms should be shown
-  const allDocuments = documents ? documents.items : [];
+  const allDocuments = claimDocumentsMap.get(absenceId)?.items || [];
 
   // TODO (CP-1983): Remove caring leave feature flag check
   // after turning on caring leave feature flag, use `findDocumentsByLeaveReason`
