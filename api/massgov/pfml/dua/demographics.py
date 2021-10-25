@@ -1,7 +1,8 @@
 import csv
 import os
 import re
-from typing import Any, Dict, List, Tuple
+from datetime import datetime
+from typing import Any, Dict, List, Optional, Tuple
 
 from sqlalchemy.dialects.postgresql import insert
 
@@ -11,6 +12,10 @@ import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.db.models.employees import (
     DuaEmployeeDemographics,
+    DuaReportingUnit,
+    Employee,
+    EmployeeOccupation,
+    Employer,
     ReferenceFile,
     ReferenceFileType,
 )
@@ -37,6 +42,10 @@ class Metrics:
         "unsuccessful_dua_demographics_reference_files_count"
     )
     INSERTED_DUA_DEMOGRAPHICS_ROW_COUNT = "inserted_dua_demographics_row_count"
+    DUA_ORG_UNIT_SET_COUNT = "dua_org_unit_set_count"
+    DUA_ORG_UNIT_SKIPPED_COUNT = "dua_org_unit_skipped_count"
+    MISSING_DUA_ORG_UNIT_COUNT = "missing_dua_org_unit_count"
+    CREATED_EMPLOYEE_OCCUPATION_COUNT = "created_employee_occupation_count"
 
 
 class Constants:
@@ -150,6 +159,92 @@ def load_demographics_file(
         )
 
     return total_row_count, inserted_row_count
+
+
+def set_employee_occupation_from_demographic_data(
+    db_session: db.Session,
+    log_entry: batch_log.LogEntry,
+    after_created_at: Optional[datetime] = None,
+) -> None:
+    if not after_created_at:
+        after_created_at = datetime.min
+
+    # Load records, optionally filtered by records after created_at
+    demographic_data = (
+        db_session.query(DuaEmployeeDemographics).filter(
+            DuaEmployeeDemographics.created_at > after_created_at
+        )
+    ).all()
+
+    for row in demographic_data:
+        fineos_customer_number = row.fineos_customer_number
+        employer_reporting_unit_number = row.employer_reporting_unit_number
+        employer_fein = row.employer_fein
+
+        existing_employee = (
+            db_session.query(Employee).filter(
+                Employee.fineos_customer_number == fineos_customer_number
+            )
+        ).one_or_none()
+
+        existing_employer = (
+            db_session.query(Employer).filter(Employer.employer_fein == employer_fein)
+        ).one_or_none()
+
+        if not existing_employee:
+            logger.warning(
+                "No matching employee found",
+                extra={"fineos_customer_number": fineos_customer_number,},
+            )
+            continue
+
+        if not existing_employer:
+            logger.warning(
+                "No matching employer found for employee",
+                extra={"fineos_customer_number": fineos_customer_number,},
+            )
+            continue
+
+        employee_occupations = (
+            db_session.query(EmployeeOccupation).filter(
+                EmployeeOccupation.employee_id == existing_employee.employee_id,
+                EmployeeOccupation.employer_id == existing_employer.employer_id,
+            )
+        ).all()
+
+        found_reporting_unit = (
+            db_session.query(DuaReportingUnit).filter(
+                DuaReportingUnit.dua_id == employer_reporting_unit_number
+            )
+        ).one_or_none()
+
+        if not found_reporting_unit:
+            logger.warning(
+                "No matching FINEOS Org Unit found",
+                extra={"employer_reporting_unit_number": employer_reporting_unit_number,},
+            )
+            log_entry.increment(Metrics.MISSING_DUA_ORG_UNIT_COUNT)
+            continue
+
+        # Create an EmployeeOccupation if it doesn't exist
+        if len(employee_occupations) == 0:
+            employee_occupation = EmployeeOccupation()
+            employee_occupation.employee_id = existing_employee.employee_id
+            employee_occupation.organization_unit_id = found_reporting_unit.organization_unit_id
+            employee_occupation.employer_id = existing_employer.employer_id
+
+            log_entry.increment(Metrics.CREATED_EMPLOYEE_OCCUPATION_COUNT)
+
+        # this should only ever be 1, although multiple are technically supported
+        for occupation in employee_occupations:
+            # do not act on records with an organization_unit_id already set
+            if not occupation.organization_unit_id:
+                log_entry.increment(Metrics.DUA_ORG_UNIT_SET_COUNT)
+                occupation.organization_unit_id = found_reporting_unit.organization_unit_id
+            else:
+                log_entry.increment(Metrics.DUA_ORG_UNIT_SKIPPED_COUNT)
+
+    db_session.commit()
 
 
 def _convert_dict_with_csv_keys_to_db_keys(csv_data: Dict[str, Any]) -> Dict[str, Any]:
