@@ -1480,9 +1480,22 @@ export function fillDateFieldset(caption: string, date: string): void {
     cy.contains("Year").type(year);
   });
 }
+
+export function uploadBirthProofDocument(
+  type: "Proof of birth",
+): void {
+  cy.contains("Upload proof of birth").click();
+  cy.contains("label", type).click();
+  cy.contains("button", "Save and continue").click();
+  cy.wait("@documentUpload", { timeout: 30000 })
+    .its("response.statusCode")
+    .should("eq", 200);
+}
+
 type UploadAdditonalDocumentOptions =
   | "Massachusetts driver’s license or ID"
   | "Different identification documentation"
+  | "Proof of birth"
   | "Certification";
 
 export function uploadAdditionalDocument(
