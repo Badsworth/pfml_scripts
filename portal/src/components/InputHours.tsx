@@ -67,7 +67,7 @@ interface InputHoursProps {
   /**
    * Hours value represented in minutes. Must be a whole number.
    */
-  value?: number | string;
+  value?: null | number | string;
 }
 
 const InputHours = (props: InputHoursProps) => {

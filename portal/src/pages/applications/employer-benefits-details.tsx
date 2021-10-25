@@ -44,7 +44,7 @@ export const EmployerBenefitsDetails = (
   const { t } = useTranslation();
   const limit = 6;
 
-  const initialEntries = pick(props, fields).claim;
+  const initialEntries = pick(props, fields).claim || { employer_benefits: [] };
   // If the claim doesn't have any employer benefits pre-populate the first one so that
   // it renders in the RepeatableFieldset below
   if (initialEntries.employer_benefits.length === 0) {

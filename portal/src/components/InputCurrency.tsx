@@ -92,7 +92,9 @@ const InputCurrency = (props: InputCurrencyProps) => {
     // getInputValueFromEvent will strip comma masks from value
     // store masked value to be displayed to user
     setMaskedValue(maskedValue);
-    props.onChange(event);
+    if (props.onChange) {
+      props.onChange(event);
+    }
   };
 
   return (

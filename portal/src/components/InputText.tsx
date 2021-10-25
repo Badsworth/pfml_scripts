@@ -43,7 +43,7 @@ interface InputTextProps {
   /**
    * Add a `ref` to the input element
    */
-  inputRef?: React.MutableRefObject<HTMLInputElement>;
+  inputRef?: React.MutableRefObject<HTMLInputElement | null>;
   /**
    * Localized field label
    */

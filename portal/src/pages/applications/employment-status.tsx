@@ -31,7 +31,9 @@ export const EmploymentStatus = (props: EmploymentStatusProps) => {
   // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
   const showEmploymentStatus = isFeatureEnabled("claimantShowEmploymentStatus");
 
-  const initialFormState = pick(props, fields).claim;
+  const initialFormState = pick(props, fields).claim || {
+    employment_status: undefined,
+  };
 
   if (!showEmploymentStatus) {
     // If the radio buttons are disabled, hard-code the field so that validations pass

@@ -31,7 +31,7 @@ const usePiiHandlers = (inputProps: {
   };
 
   const handleBlur = (event: FocusEvent<HTMLInputElement>) => {
-    if (!inputProps.value) {
+    if (!inputProps.value && initialValue.current) {
       shouldClearValue.current = true;
       dispatchChange(initialValue.current, event);
     }
@@ -54,7 +54,9 @@ const usePiiHandlers = (inputProps: {
     const target = originalEvent.target.cloneNode(true) as HTMLInputElement; // https://github.com/microsoft/TypeScript/issues/283
     target.value = value.toString();
 
-    inputProps.onChange({ ...originalEvent, target });
+    if (inputProps.onChange) {
+      inputProps.onChange({ ...originalEvent, target });
+    }
   };
 
   return { handleBlur, handleFocus };

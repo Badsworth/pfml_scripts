@@ -59,7 +59,9 @@ export const Status = ({ appLogic, query }: StatusProps) => {
   }, [portalFlow]);
 
   useEffect(() => {
-    loadClaimDetail(absence_case_id);
+    if (absence_case_id) {
+      loadClaimDetail(absence_case_id);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [absence_case_id]);
 
@@ -504,7 +506,7 @@ export const LeaveDetails = ({ absenceDetails = {} }: LeaveDetailsProps) => {
 interface TimelineProps {
   absencePeriods: AbsencePeriod[];
   applicationId?: string;
-  employerFollowUpDate?: string;
+  employerFollowUpDate: string | null;
   docList: ClaimDocument[] | BenefitsApplicationDocument[];
   absenceCaseId: string;
   appLogic: AppLogic;

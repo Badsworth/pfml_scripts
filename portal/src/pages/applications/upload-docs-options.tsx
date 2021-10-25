@@ -61,8 +61,8 @@ export const UploadDocsOptions = (props: UploadDocsOptionsProps) => {
       await appLogic.setAppErrors(new AppErrorInfoCollection([appErrorInfo]));
 
       tracker.trackEvent("ValidationError", {
-        issueField: appErrorInfo.field,
-        issueType: appErrorInfo.type,
+        issueField: appErrorInfo.field || "",
+        issueType: appErrorInfo.type || "",
       });
 
       return Promise.resolve();

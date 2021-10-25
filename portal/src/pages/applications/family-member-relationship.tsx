@@ -46,7 +46,7 @@ export const FamilyMemberRelationship = (
     `${caringLeaveMetadataKey}.relationship_to_caregiver`
   );
   const handleSave = async () => {
-    const updatedData = pick({ claim: formState }, fields).claim;
+    const updatedData = pick({ claim: formState }, fields).claim || {};
     await appLogic.benefitsApplications.update(
       claim.application_id,
       updatedData

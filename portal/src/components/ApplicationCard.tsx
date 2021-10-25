@@ -305,7 +305,7 @@ function ApplicationActions(props: ApplicationActionsProps) {
     get(claim, "has_previous_leaves_other_reason") !== null ||
     get(claim, "has_concurrent_leave") !== null;
   // Show no instructions by default
-  let reductionsI18nKey = null;
+  let reductionsI18nKey = "";
   // Show new other leave instructions on completed claims
   if (claim.isCompleted) {
     reductionsI18nKey = "components.applicationCard.reductionsInstructions";
@@ -355,7 +355,7 @@ function ApplicationActions(props: ApplicationActionsProps) {
           href={routeWithParams("applications.uploadDocsOptions", {
             claim_id: claim.application_id,
           })}
-          variation={showResumeButton ? "outline" : null}
+          variation={showResumeButton ? "outline" : undefined}
         >
           {t("components.applicationCard.uploadDocsButton")}
         </ButtonLink>

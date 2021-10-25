@@ -110,7 +110,9 @@ export const Review = (props: ReviewProps) => {
     updateFields,
   });
 
-  const [allPreviousLeaves, setAllPreviousLeaves] = useState([]);
+  const [allPreviousLeaves, setAllPreviousLeaves] = useState<PreviousLeave[]>(
+    []
+  );
   useEffect(() => {
     setAllPreviousLeaves([
       ...formState.amendedPreviousLeaves,
@@ -118,7 +120,9 @@ export const Review = (props: ReviewProps) => {
     ]);
   }, [formState.amendedPreviousLeaves, formState.addedPreviousLeaves]);
 
-  const [allEmployerBenefits, setAllEmployerBenefits] = useState([]);
+  const [allEmployerBenefits, setAllEmployerBenefits] = useState<
+    EmployerBenefit[]
+  >([]);
   useEffect(() => {
     setAllEmployerBenefits([
       ...formState.amendedBenefits,

@@ -17,7 +17,7 @@ interface SupportingWorkDetailsProps {
   clearField: (arg: string) => void;
   getField: (arg: string) => string;
   getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
-  initialHoursWorkedPerWeek: number;
+  initialHoursWorkedPerWeek: number | null;
   updateFields: (arg: Record<string, unknown>) => void;
 }
 

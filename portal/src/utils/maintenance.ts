@@ -2,8 +2,8 @@ import { DateTime } from "luxon";
 import { ISO8601Timestamp } from "../../types/common";
 
 export const isInMaintenanceWindow = (
-  start?: ISO8601Timestamp,
-  end?: ISO8601Timestamp
+  start?: ISO8601Timestamp | null,
+  end?: ISO8601Timestamp | null
 ) => {
   // If no time frame is set, the maintenance window is considered
   // always open (when maintenance mode is On)
@@ -16,7 +16,9 @@ export const isInMaintenanceWindow = (
   return isAfterStart && isBeforeEnd;
 };
 
-export const isMaintenanceOneDayInFuture = (start?: ISO8601Timestamp) => {
+export const isMaintenanceOneDayInFuture = (
+  start?: ISO8601Timestamp | null
+) => {
   if (!start) return false;
 
   const now = DateTime.local();
@@ -54,7 +56,7 @@ export const isMaintenancePageRoute = (
 /**
  * Returns formatted maintenance time
  */
-export const maintenanceTime = (mTime: ISO8601Timestamp) => {
+export const maintenanceTime = (mTime?: ISO8601Timestamp | null) => {
   return mTime
     ? DateTime.fromISO(mTime).toLocaleString(DateTime.DATETIME_FULL)
     : null;

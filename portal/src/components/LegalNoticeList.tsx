@@ -8,7 +8,9 @@ import { useTranslation } from "../locales/i18n";
 
 interface LegalNoticeListProps {
   documents: Array<BenefitsApplicationDocument | ClaimDocument>;
-  onDownloadClick: (document: BenefitsApplicationDocument) => Promise<Blob>;
+  onDownloadClick: (
+    document: BenefitsApplicationDocument
+  ) => Promise<Blob | undefined>;
 }
 
 /**

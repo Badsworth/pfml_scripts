@@ -44,7 +44,13 @@ const ConditionalContent = (props: ConditionalContentProps) => {
   const [hiddenFieldsValues, setHiddenFieldsValues] = useState({});
 
   useEffect(() => {
-    if (!fieldNamesClearedWhenHidden) return;
+    if (
+      !fieldNamesClearedWhenHidden ||
+      !getField ||
+      !clearField ||
+      !updateFields
+    )
+      return;
 
     // Component changes from visible to hidden
     if (previouslyVisible && visible === false) {

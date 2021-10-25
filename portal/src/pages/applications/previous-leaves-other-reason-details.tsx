@@ -42,7 +42,10 @@ export const PreviousLeavesOtherReasonDetails = (
   const { appLogic, claim } = props;
   const limit = 6;
 
-  const initialEntries = pick(props, fields).claim;
+  const initialEntries = pick(props, fields).claim || {
+    previous_leaves_other_reason: [],
+  };
+
   if (initialEntries.previous_leaves_other_reason.length === 0) {
     initialEntries.previous_leaves_other_reason = [new PreviousLeave({})];
   }

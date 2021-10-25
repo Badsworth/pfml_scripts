@@ -40,9 +40,9 @@ const PageWrapper = (props: PageWrapperProps) => {
 
   // If no page routes are specified, the entire site should be under maintenance.
   const maintenancePageRoutes = get(maintenance, "options.page_routes", ["/*"]);
-  const maintenanceStart = maintenance.start;
-  const maintenanceEnd = maintenance.end;
-  const maintenanceEnabled = !!maintenance.enabled;
+  const maintenanceStart = maintenance?.start;
+  const maintenanceEnd = maintenance?.end;
+  const maintenanceEnabled = !!maintenance?.enabled;
 
   /**
    * What to show to the user within our page wrapper. Depends on

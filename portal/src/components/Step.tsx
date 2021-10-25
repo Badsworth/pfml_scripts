@@ -10,7 +10,7 @@ interface StepProps {
   /**
    * Href to question page.
    */
-  stepHref?: string;
+  stepHref: string;
   /**
    * Status of step.
    */
@@ -185,10 +185,10 @@ const Step = (props: StepProps) => {
   return (
     <div className={classes}>
       <StepNumber
-        screenReaderPrefix={props.screenReaderNumberPrefix}
+        screenReaderPrefix={props.screenReaderNumberPrefix || ""}
         state={props.status}
       >
-        {props.number}
+        {props.number || ""}
       </StepNumber>
       <div className={collapsibleColumnClasses}>
         <div className={titleDescriptionColumnClasses}>

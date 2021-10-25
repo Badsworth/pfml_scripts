@@ -23,7 +23,7 @@ import OtherIncome, {
 import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import React, { useEffect, useState } from "react";
 import Step, { ClaimSteps } from "../../models/Step";
-import { compact, get, isUndefined } from "lodash";
+import { compact, get, isNil } from "lodash";
 
 import Alert from "../../components/Alert";
 import { AppLogic } from "../../hooks/useAppLogic";
@@ -110,16 +110,12 @@ export const Review = (props: ReviewProps) => {
   const reducedLeavePeriod = new ReducedScheduleLeavePeriod(
     get(claim, "leave_details.reduced_schedule_leave_periods[0]")
   );
-  const workPattern = new WorkPattern(get(claim, "work_pattern"));
+  const workPattern = new WorkPattern(get(claim, "work_pattern") || {});
   const gender = get(claim, "gender");
 
-  const steps = Step.createClaimStepsFromMachine(
-    claimantConfigs,
-    {
-      claim: props.claim,
-    },
-    null
-  );
+  const steps = Step.createClaimStepsFromMachine(claimantConfigs, {
+    claim: props.claim,
+  });
 
   const usePartOneReview = !claim.isSubmitted;
 
@@ -390,7 +386,7 @@ export const Review = (props: ReviewProps) => {
           level={reviewRowLevel}
           label={t("pages.claimsReview.workPatternDaysVariableLabel")}
         >
-          {!isUndefined(workPattern.minutesWorkedPerWeek) &&
+          {!isNil(workPattern.minutesWorkedPerWeek) &&
             t("pages.claimsReview.workPatternVariableTime", {
               context:
                 convertMinutesToHours(workPattern.minutesWorkedPerWeek)
@@ -1029,7 +1025,7 @@ export const OtherIncomeList = (props: OtherIncomeListProps) => {
 };
 
 interface OtherLeaveEntryProps {
-  amount?: string;
+  amount?: string | null;
   dates: string;
   label: string;
   reviewRowLevel: "2" | "3" | "4" | "5" | "6";

@@ -17,7 +17,7 @@ interface ErrorsSummaryProps {
  */
 function ErrorsSummary(props: ErrorsSummaryProps) {
   const { errors } = props;
-  const alertRef = useRef<HTMLDivElement>();
+  const alertRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
 
   /**
@@ -27,7 +27,7 @@ function ErrorsSummary(props: ErrorsSummaryProps) {
     if (!errors.isEmpty) {
       window.scrollTo(0, 0);
       // Move focus to the alert so screen readers immediately announce that there are errors
-      alertRef.current.focus();
+      alertRef.current?.focus();
     }
   }, [errors]);
 
@@ -59,7 +59,7 @@ function ErrorsSummary(props: ErrorsSummaryProps) {
       <ul className="usa-list">
         {visibleErrorMessages.map((message) => (
           <li
-            key={typeof message === "string" ? message : message.props.i18nKey}
+            key={typeof message === "string" ? message : message?.props.i18nKey}
           >
             {message}
           </li>

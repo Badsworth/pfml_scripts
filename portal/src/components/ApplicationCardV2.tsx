@@ -249,11 +249,11 @@ const CompletedStatusCard = ({ appLogic, claim }: CompletedStatusCardProps) => {
       <HeaderSection title={leaveReasonText} />
       <TitleAndDetailSectionItem
         title={t("components.applicationCardV2.applicationID")}
-        details={claim.fineos_absence_id}
+        details={claim.fineos_absence_id || ""}
       />
       <TitleAndDetailSectionItem
         title={t("components.applicationCardV2.employerEIN")}
-        details={claim.employer_fein}
+        details={claim.employer_fein || ""}
       />
 
       <div className="border-top border-base-lighter padding-y-2 margin-y-2 margin-bottom-0">

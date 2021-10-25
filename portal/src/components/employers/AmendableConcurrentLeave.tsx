@@ -37,7 +37,7 @@ const AmendableConcurrentLeave = ({
   const [amendment, setAmendment] = useState(concurrentLeave);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
     useState(isAddedByLeaveAdmin);
-  const containerRef = useRef<HTMLTableRowElement>();
+  const containerRef = useRef<HTMLTableRowElement>(null);
   useAutoFocusEffect({ containerRef, isAmendmentFormDisplayed });
 
   const getFormattedValue = (field, value) => {
@@ -134,7 +134,7 @@ const AmendableConcurrentLeave = ({
               </p>
               <InputDate
                 onChange={(e) => amendLeave("leave_start_date", e.target.value)}
-                value={amendment.leave_start_date}
+                value={amendment.leave_start_date || ""}
                 label={t(
                   "components.employersAmendableConcurrentLeave.leaveStartDateLabel"
                 )}
@@ -147,7 +147,7 @@ const AmendableConcurrentLeave = ({
               />
               <InputDate
                 onChange={(e) => amendLeave("leave_end_date", e.target.value)}
-                value={amendment.leave_end_date}
+                value={amendment.leave_end_date || ""}
                 label={t(
                   "components.employersAmendableConcurrentLeave.leaveEndDateLabel"
                 )}

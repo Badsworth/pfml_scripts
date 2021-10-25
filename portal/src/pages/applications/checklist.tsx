@@ -188,7 +188,7 @@ export const Checklist = (props: ChecklistProps) => {
           })}
           status={step.status}
           stepHref={stepHref}
-          editable={step.editable}
+          editable={!!step.editable}
           submittedContent={getStepSubmittedContent(step)}
         >
           <Trans

@@ -52,20 +52,19 @@ interface RepeatableFieldsetProps {
  */
 const RepeatableFieldset = (props: RepeatableFieldsetProps) => {
   const { entries } = props;
-  const containerRef = useRef<HTMLElement>();
+  const containerRef = useRef<HTMLElement>(null);
   const entriesAndIds = useEntryIds(entries);
   const previousEntriesLength = usePreviousValue(entriesAndIds.length);
   const limitReached = props.limit ? entries.length >= props.limit : false;
 
   useEffect(() => {
-    if (entriesAndIds.length > previousEntriesLength) {
+    if (entriesAndIds.length > previousEntriesLength && containerRef.current) {
       // When a new entry is added to the list, focus and scroll it into view.
       const lastEntry = containerRef.current.querySelector(
         ".js-repeated-fieldset-card:last-of-type"
       );
-      const focusableElement = lastEntry.querySelector(
-        "[tabIndex]:first-child, label"
-      );
+      const focusableElement =
+        lastEntry && lastEntry.querySelector("[tabIndex]:first-child, label");
 
       if (focusableElement instanceof HTMLElement) focusableElement.focus();
     }

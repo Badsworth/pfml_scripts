@@ -25,7 +25,7 @@ interface LeaveDetailsProps {
   downloadDocument: (
     document: ClaimDocument,
     absenceId: string
-  ) => Promise<Blob>;
+  ) => Promise<Blob | undefined>;
   onChangeBelieveRelationshipAccurate?: (arg: string) => void;
   relationshipInaccurateReason?: string;
   onChangeRelationshipInaccurateReason: (arg: string) => void;
@@ -90,7 +90,11 @@ const LeaveDetails = (props: LeaveDetailsProps) => {
             context: findKeyByValue(LeaveReason, reason),
           })
         ) : (
-          <a target="_blank" rel="noopener" href={benefitsGuideLink[reason]}>
+          <a
+            target="_blank"
+            rel="noopener"
+            href={reason && benefitsGuideLink[reason]}
+          >
             {t("components.employersLeaveDetails.leaveReasonValue", {
               context: findKeyByValue(LeaveReason, reason),
             })}
@@ -154,7 +158,8 @@ const LeaveDetails = (props: LeaveDetailsProps) => {
             smallLabel
             name="believeRelationshipAccurate"
             onChange={(e) => {
-              onChangeBelieveRelationshipAccurate(e.target.value);
+              if (onChangeBelieveRelationshipAccurate)
+                onChangeBelieveRelationshipAccurate(e.target.value);
             }}
             choices={[
               {

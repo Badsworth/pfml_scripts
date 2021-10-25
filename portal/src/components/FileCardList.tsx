@@ -87,7 +87,7 @@ const FileCardList = (props: FileCardListProps) => {
   } = props;
 
   let documentFileCount = 0;
-  let documentFileCards = [];
+  let documentFileCards: JSX.Element[] = [];
 
   if (documents) {
     documentFileCount = documents.length;
@@ -98,7 +98,7 @@ const FileCardList = (props: FileCardListProps) => {
 
   const fileCards = tempFiles.items.map((file, index) => {
     const fileError = fileErrors.find(
-      (appErrorInfo) => appErrorInfo.meta.file_id === file.id
+      (appErrorInfo) => appErrorInfo.meta?.file_id === file.id
     );
     const errorMsg = fileError ? fileError.message : null;
     return renderFileCard(
@@ -118,7 +118,7 @@ const FileCardList = (props: FileCardListProps) => {
     // This will only have files selected this time, not previously selected files
     // e.target.files is a FileList type which isn't an array, but we can turn it into one
     // @see https://developer.mozilla.org/en-US/docs/Web/API/FileList
-    const files = Array.from(event.target.files);
+    const files = event.target.files ? Array.from(event.target.files) : [];
 
     // Reset the input element's value. When a user selects a file which was already
     // selected it normally won't trigger the onChange event, but that's not what we want.
