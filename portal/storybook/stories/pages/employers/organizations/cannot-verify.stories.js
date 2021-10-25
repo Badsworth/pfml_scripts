@@ -24,5 +24,11 @@ export const Default = () => {
       }),
     },
   };
-  return <CannotVerify query={query} appLogic={appLogic} />;
+  return (
+    <CannotVerify
+      query={query}
+      appLogic={appLogic}
+      user={appLogic.users.user}
+    />
+  );
 };

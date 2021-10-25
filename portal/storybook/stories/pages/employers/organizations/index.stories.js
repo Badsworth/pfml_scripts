@@ -72,5 +72,5 @@ export const Default = (args) => {
       getNextPageRoute: () => "",
     },
   };
-  return <Index appLogic={appLogic} />;
+  return <Index appLogic={appLogic} user={appLogic.users.user} />;
 };

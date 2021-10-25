@@ -46,6 +46,7 @@ export const Default = () => {
       query={query}
       appLogic={appLogic}
       withholding={withholding}
+      employer={user.user_leave_administrators[0]}
     />
   );
 };
