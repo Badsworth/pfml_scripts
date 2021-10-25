@@ -5,9 +5,22 @@ import DOR from "../generation/writers/DOR";
 import EmployeeIndex from "../generation/writers/EmployeeIndex";
 import EmployerIndex from "../generation/writers/EmployerIndex";
 import { format } from "date-fns";
+import { transform } from "streaming-iterables";
+import InfraClient from "../InfraClient";
+import { Environment } from "../types";
+import AuthManger from "../submission/AuthenticationManager";
+import configs from "../../config.json";
+import { CognitoUserPool } from "amazon-cognito-identity-js";
+import TestMailVerificationFetcher from "../submission/TestMailVerificationFetcher";
+import { getLeaveAdminCredentials } from "../util/credentials";
+import dotenv from "dotenv";
+import { endOfQuarter, formatISO, subQuarters } from "date-fns";
+import chalk from "chalk";
+dotenv.config();
 
 (async () => {
   const date = format(new Date(), "yyyy-MM-dd");
+  const rawConfig = { ...configs };
 
   // Prepare a "data directory" to save the generated data to disk.
   const storage = dataDirectory(`e2e-${date}`);
@@ -67,6 +80,70 @@ import { format } from "date-fns";
   // Additionally save the JSON files to the employers/employees directory at the top level.
   await employeePool.save(`employees/e2e-${date}.json`);
   await employerPool.save(`employers/e2e-${date}.json`);
+
+  const envs: Environment[] = [
+    "test",
+    "stage",
+    "training",
+    "performance",
+    "uat",
+    "cps-preview",
+  ];
+
+  const DORUploadRequest = transform(envs.length, async (env: Environment) => {
+    const infra = new InfraClient(env);
+    try {
+      await infra.uploadDORFiles([
+        storage.dorFile("DORDFMLEMP"),
+        storage.dorFile("DORDFML"),
+      ]);
+      await infra.runDorEtl();
+    } catch (e) {
+      console.log(`${env.toUpperCase()} - failed to load EE's/ER's`);
+      console.error(e);
+    }
+    const authManager = new AuthManger(
+      new CognitoUserPool({
+        UserPoolId: rawConfig[env].COGNITO_POOL,
+        ClientId: rawConfig[env].COGNITO_CLIENTID,
+      }),
+      rawConfig[env].API_BASEURL,
+      new TestMailVerificationFetcher(
+        process.env.E2E_TESTMAIL_APIKEY as string,
+        rawConfig[env].TESTMAIL_NAMESPACE
+      )
+    );
+
+    const leaveAdminVerifications = transform(3, async (employer: Employer) => {
+      try {
+        if (employer.withholdings.some((val) => val === 0)) return;
+        const quarter = formatISO(endOfQuarter(subQuarters(new Date(), 1)), {
+          representation: "date",
+        });
+        const { username, password } = getLeaveAdminCredentials(employer.fein);
+        await authManager.registerLeaveAdmin(username, password, employer.fein);
+        console.log(
+          `${chalk.blue(env.toUpperCase())} -  ${username} registered`
+        );
+        await authManager.verifyLeaveAdmin(
+          username,
+          password,
+          employer.withholdings.pop() as number,
+          quarter
+        );
+        console.log(`${chalk.blue(env.toUpperCase())} -  ${username} verified`);
+      } catch (e) {
+        console.error(
+          `${env.toUpperCase()} - Failed to register and verify employer ${
+            employer.fein
+          }\n${e.message}`
+        );
+      }
+    });
+    for await (const _ of leaveAdminVerifications([...employerPool])) continue;
+  });
+
+  for await (const _ of DORUploadRequest(envs)) continue;
 })().catch((e) => {
   console.error(e);
   process.exit(1);

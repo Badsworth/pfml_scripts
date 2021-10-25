@@ -3,7 +3,18 @@ import dataclasses
 import datetime
 from decimal import Decimal
 from enum import Enum
-from typing import Any, Callable, Dict, Generator, Iterable, Mapping, Optional, Type, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    Iterable,
+    Mapping,
+    Optional,
+    Sequence,
+    Type,
+    Union,
+)
 from uuid import UUID
 
 import smart_open
@@ -78,7 +89,7 @@ class EncodingDictWriter(csv.DictWriter):
     def __init__(
         self,
         f: Any,
-        fieldnames: Iterable[str],
+        fieldnames: Sequence[str],
         restval: Optional[Any] = "",
         extrasaction: str = "raise",
         dialect: _DialectLike = "excel",

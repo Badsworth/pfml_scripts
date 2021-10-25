@@ -166,6 +166,7 @@ Object {
   "No continuous leave needed": false,
   "No pregnancy": true,
   "No reduced leave schedule needed": true,
+  "No – Childbirth or recovery": true,
   "Occupation": undefined,
   "Office Phone 1": "555",
   "Office Phone 2": "555",
@@ -205,6 +206,7 @@ Object {
   "Weeks of continuous leave": "4",
   "Yes": undefined,
   "Yes Pregnancy": false,
+  "Yes – Childbirth or post birth recovery": false,
   "no reduced leave schedule needed": true,
 }
 `;
@@ -390,6 +392,7 @@ Object {
   "No continuous leave needed": false,
   "No pregnancy": true,
   "No reduced leave schedule needed": true,
+  "No – Childbirth or recovery": true,
   "Occupation": undefined,
   "Office Phone 1": "555",
   "Office Phone 2": "555",
@@ -429,6 +432,7 @@ Object {
   "Weeks of continuous leave": "4",
   "Yes": undefined,
   "Yes Pregnancy": false,
+  "Yes – Childbirth or post birth recovery": false,
   "no reduced leave schedule needed": true,
 }
 `;

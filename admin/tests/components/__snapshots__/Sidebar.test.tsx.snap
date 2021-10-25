@@ -1,0 +1,118 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Sidebar renders the default component 1`] = `
+<aside
+  className="page__sidebar"
+  tabIndex={0}
+>
+  <nav
+    className="menu"
+  >
+    <ul
+      className="menu__list"
+    >
+      <li
+        className="menu__list-item"
+      >
+        <a
+          className="menu__link menu__link--dashboard"
+          data-testid="dashboard-navigation-link"
+          href="/"
+          onClick={[Function]}
+          onMouseEnter={[Function]}
+        >
+          Dashboard
+        </a>
+      </li>
+      <li
+        className="menu__list-item"
+      >
+        <a
+          className="menu__link menu__link--user-lookup"
+          data-testid="users-navigation-link"
+          href="/users"
+          onClick={[Function]}
+          onMouseEnter={[Function]}
+        >
+          User Lookup
+        </a>
+      </li>
+      <li
+        className="menu__list-item"
+      >
+        <a
+          className="menu__link menu__link--maintenance"
+          data-testid="maintenance-navigation-link"
+          href="/maintenance"
+          onClick={[Function]}
+          onMouseEnter={[Function]}
+        >
+          Maintenance
+        </a>
+      </li>
+      <li
+        className="menu__list-item"
+      >
+        <a
+          className="menu__link menu__link--features"
+          data-testid="features-navigation-link"
+          href="/features"
+          onClick={[Function]}
+          onMouseEnter={[Function]}
+        >
+          Features
+        </a>
+      </li>
+    </ul>
+  </nav>
+  <div
+    className="settings"
+  >
+    <ul
+      className="settings__list"
+    >
+      <li
+        className="settings__list-item"
+      >
+        <a
+          className="settings__link settings__link--settings"
+          data-testid="settings-navigation-link"
+          href="/settings"
+          onClick={[Function]}
+          onMouseEnter={[Function]}
+        >
+          Settings
+        </a>
+      </li>
+      <li
+        className="settings__list-item"
+      >
+        <a
+          className="settings__link settings__link--help"
+          data-testid="help-navigation-link"
+          href="/help"
+          onClick={[Function]}
+          onMouseEnter={[Function]}
+        >
+          Help
+        </a>
+      </li>
+    </ul>
+  </div>
+  <div
+    className="environment"
+  >
+    <div
+      className="environment__label"
+    >
+      Environment
+    </div>
+    <div
+      className="environment__flag"
+      data-testid="environment-flag"
+    >
+      Production
+    </div>
+  </div>
+</aside>
+`;

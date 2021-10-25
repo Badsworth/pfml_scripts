@@ -1,0 +1,32 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`ReviewHeading renders a Heading, no link if editHref not defined 1`] = `
+<div
+  class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+>
+  <h2
+    class="flex-fill margin-right-1 font-heading-md text-bold"
+  >
+    Who is taking leave?
+  </h2>
+</div>
+`;
+
+exports[`ReviewHeading when editHref is defined renders with an edit link 1`] = `
+<div
+  class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+>
+  <h2
+    class="flex-fill margin-right-1 font-heading-md text-bold"
+  >
+    Who is taking leave?
+  </h2>
+  <a
+    aria-label="Edit: Who is taking leave?"
+    class="usa-link margin-0"
+    href="/name"
+  >
+    Edit
+  </a>
+</div>
+`;

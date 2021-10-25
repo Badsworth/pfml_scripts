@@ -44,6 +44,7 @@ import pRetry from "p-retry";
 import { chooseRolePreset } from "../../src/util/fineosRoleSwitching";
 import { FineosSecurityGroups } from "../../src/submission/fineos.pages";
 import { Fineos } from "../../src/submission/fineos.pages";
+import { beforeRunCollectMetadata } from "../reporters/new-relic-collect-metadata";
 
 export default function (
   on: Cypress.PluginEvents,
@@ -56,9 +57,6 @@ export default function (
     config("API_BASEURL"),
     authenticator
   );
-  // Keep a static cache of the SSO login cookies. This allows us to skip double-logins
-  // in envrionments that use SSO. Double logins are a side effect of changing the baseUrl.
-  let ssoCookies: string;
 
   // Declare tasks here.
   on("task", {
@@ -69,9 +67,11 @@ export default function (
     async chooseFineosRole({
       userId,
       preset,
+      debug = false,
     }: {
       userId: string;
       preset: FineosSecurityGroups;
+      debug: boolean;
     }) {
       await Fineos.withBrowser(
         async (page) => {
@@ -83,7 +83,7 @@ export default function (
             preset
           );
         },
-        { debug: true }
+        { debug }
       );
       return null;
     },
@@ -141,18 +141,16 @@ export default function (
     },
 
     async completeSSOLoginFineos(credentials?: Credentials): Promise<string> {
-      if (ssoCookies === undefined) {
-        ssoCookies = await Fineos.withBrowser(
-          async (page) => {
-            return JSON.stringify(await page.context().cookies());
-          },
-          {
-            debug: false,
-            screenshots: path.join(__dirname, "..", "screenshots"),
-            credentials,
-          }
-        );
-      }
+      const ssoCookies = await Fineos.withBrowser(
+        async (page) => {
+          return JSON.stringify(await page.context().cookies());
+        },
+        {
+          debug: false,
+          screenshots: path.join(__dirname, "..", "screenshots"),
+          credentials,
+        }
+      );
       return ssoCookies;
     },
 
@@ -219,7 +217,10 @@ export default function (
 
   // Add dynamic options for the New Relic reporter.
   let reporterOptions = cypressConfig.reporterOptions ?? {};
-  if (cypressConfig.reporter?.match(/new\-relic/)) {
+  if (cypressConfig.reporter?.match(/new-relic/)) {
+    // Add metadata collection for the New Relic runner.
+    on("before:run", beforeRunCollectMetadata);
+
     // Add dynamic reporter options based on config values.
     reporterOptions = {
       accountId: config("NEWRELIC_ACCOUNTID"),

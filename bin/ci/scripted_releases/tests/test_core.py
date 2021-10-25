@@ -97,6 +97,21 @@ def test_update_release_arg_handling():
         release.main(["--app", "api", "-i", "update-release", "-r", "release/api/v1.2.0"])
         release.main(["--app", "api", "-i", "update-release", "-c", "abc123"])
 
+    # A release branch can be updated with EITHER arbitrary commits OR an arbitrary branch, not both.
+    with pytest.raises(SystemExit):
+        release.main(
+            ["--app", "api", "update-release",
+             "-r", "release/api/v1.2.0",
+             "-c", "a1b2c3d4",
+             "--with-branch", "main"]
+        )
+        release.main(
+            ["--app", "portal", "update-release",
+             "-r", "release/portal/v4.0",
+             "-c", "a1b2c3d4",
+             "--with-branch", "main"]
+        )
+
     release.main(["--app", "api", "-i", "update-release"])
 
 
@@ -130,6 +145,9 @@ def test_hotfix_arg_handling():
         release.main(["--app", "api", "hotfix", "-r", "release/api/v1.2.0"])
         release.main(["--app", "api", "hotfix", "-c", "abc123"])
 
+        # Ensure only commits or a branch is provided when applying a hotfix
+        release.main(["--app", "api", "hotfix", "-r" "release/api/v1.2.0", "-c", "abc123", "--with-branch", "main"])
+
     # If -i IS present, neither -r nor -c should be given at all.
     with pytest.raises(RuntimeError, match=guardrails.CLI_ARGS_WHEN_INTERACTIVE):
         release.main(["--app", "api", "-i", "hotfix", "-r", "release/api/v1.2.0"])
@@ -137,6 +155,7 @@ def test_hotfix_arg_handling():
 
     release.main(["--app", "api", "-i", "hotfix"])
     release.main(["--app", "api", "hotfix", "-r", "release/api/v1.2.0", "-c", "a1b2c3d4e"])
+    release.main(["--app", "api", "hotfix", "-r", "release/api/v1.2.0", "--with-branch", "main"])
 
 
 def test_major_release_arg_handling():

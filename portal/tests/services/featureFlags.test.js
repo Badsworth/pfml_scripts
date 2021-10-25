@@ -135,7 +135,7 @@ describe("storeFeatureFlagsFromQuery", () => {
       storeFeatureFlagsFromQuery(searchParams);
 
       expect(tracker.trackEvent).toHaveBeenCalledWith("manual_feature_flags", {
-        flags: [["flagA", "true"]],
+        flags: '[["flagA","true"]]',
       });
     });
   });

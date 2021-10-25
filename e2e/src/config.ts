@@ -26,7 +26,6 @@ function getRawEnvironment() {
     PORTAL_PASSWORD: process.env.E2E_PORTAL_PASSWORD,
     PORTAL_USERNAME: process.env.E2E_PORTAL_USERNAME,
     EMPLOYER_PORTAL_PASSWORD: process.env.E2E_EMPLOYER_PORTAL_PASSWORD,
-    PORTAL_HAS_LA_STATUS_UPDATES: process.env.E2E_PORTAL_HAS_LA_STATUS_UPDATES,
 
     COGNITO_POOL: process.env.E2E_COGNITO_POOL,
     COGNITO_CLIENTID: process.env.E2E_COGNITO_CLIENTID,
@@ -59,7 +58,8 @@ function getRawEnvironment() {
     NEWRELIC_ACCOUNTID: process.env.E2E_NEWRELIC_ACCOUNTID,
     NEWRELIC_INGEST_KEY: process.env.E2E_NEWRELIC_INGEST_KEY,
 
-    HAS_CLAIMANT_STATUS_PAGE: process.env.HAS_CLAIMANT_STATUS_PAGE,
+    DOR_IMPORT_URI: process.env.E2E_DOR_IMPORT_URI,
+    DOR_ETL_ARN: process.env.E2E_DOR_ETL_ARN,
   };
 }
 
@@ -83,9 +83,10 @@ const file: Partial<Configuration> =
 
 // The default layer is a set of default values which will be used if nothing is set.
 const defaults: Partial<Configuration> = {
-  PORTAL_HAS_LA_STATUS_UPDATES: "false",
   NEWRELIC_ACCOUNTID: "2837112",
-  HAS_CLAIMANT_STATUS_PAGE: "false",
+  DOR_IMPORT_URI: "s3://massgov-pfml-TARGET_ENV-agency-transfer/dor/received/",
+  DOR_ETL_ARN:
+    "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-TARGET_ENV-dor-fineos-etl",
 };
 export const merged = {
   ...defaults,

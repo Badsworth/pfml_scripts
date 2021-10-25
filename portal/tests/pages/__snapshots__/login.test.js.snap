@@ -1,0 +1,112 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Login renders the page 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+    tabindex="-1"
+  >
+    Log in to your paid leave account
+  </h1>
+  <div
+    class="usa-form-group"
+  >
+    <label
+      class="usa-label text-bold font-heading-xs measure-5"
+      for="InputText1"
+      id="InputText1_label"
+    >
+      Email address
+    </label>
+    <input
+      aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+      class="usa-input maxw-mobile-lg"
+      id="InputText1"
+      name="username"
+      type="email"
+      value=""
+    />
+  </div>
+  <div
+    class="usa-form-group"
+  >
+    <label
+      class="usa-label text-bold font-heading-xs measure-5"
+      for="InputPassword2"
+      id="InputPassword2_label"
+    >
+      Password
+    </label>
+    <input
+      aria-labelledby="InputPassword2_label InputPassword2_hint InputPassword2_error"
+      class="usa-input maxw-mobile-lg"
+      id="InputPassword2"
+      name="password"
+      type="password"
+      value=""
+    />
+  </div>
+  <div
+    class="usa-checkbox measure-5 bg-transparent"
+  >
+    <input
+      aria-controls="InputPassword2"
+      class="usa-checkbox__input"
+      id="InputChoice4"
+      name="InputPassword2-toggle"
+      type="checkbox"
+      value="password"
+    />
+    <label
+      class="usa-checkbox__label"
+      for="InputChoice4"
+    >
+      Show password
+    </label>
+  </div>
+  <p>
+    <a
+      href="/forgot-password"
+    >
+      Forgot your password?
+    </a>
+  </p>
+  <button
+    class="usa-button position-relative"
+    type="submit"
+  >
+    Log in
+  </button>
+  <div
+    class="border-top-2px border-base-lighter margin-top-4 padding-top-4 text-base-dark"
+  >
+    <div>
+      <p>
+        <strong>
+          Need to apply for paid leave? 
+          <a
+            class="display-inline-block"
+            href="/create-account"
+          >
+            Create an account
+          </a>
+        </strong>
+      </p>
+    </div>
+    <p>
+      <strong>
+        Are you a Massachusetts employer? 
+        <a
+          class="display-inline-block"
+          href="/employers/create-account"
+        >
+          Create an employer account
+        </a>
+      </strong>
+    </p>
+  </div>
+</form>
+`;

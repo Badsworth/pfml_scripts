@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import List, Optional
+from typing import Any, Dict, Optional
 from uuid import UUID
 
 import connexion
@@ -21,24 +21,15 @@ from massgov.pfml.api.services.managed_requirements import (
 )
 from massgov.pfml.api.services.service_now_actions import send_notification_to_service_now
 from massgov.pfml.db.models.applications import Notification
-from massgov.pfml.db.models.employees import (
-    AbsencePeriod,
-    AbsencePeriodType,
-    AbsenceReason,
-    AbsenceReasonQualifierOne,
-    AbsenceReasonQualifierTwo,
-    Claim,
-    Employee,
-    Employer,
-    LeaveRequestDecision,
-    ManagedRequirementType,
-)
+from massgov.pfml.db.models.employees import Claim, Employee, Employer, ManagedRequirementType
+from massgov.pfml.db.queries.absence_periods import upsert_absence_period_from_fineos_period
 from massgov.pfml.db.queries.managed_requirements import (
     create_managed_requirement_from_fineos,
     create_or_update_managed_requirement_from_fineos,
     get_managed_requirement_by_fineos_managed_requirement_id,
 )
 from massgov.pfml.fineos import AbstractFINEOSClient, FINEOSClientError
+from massgov.pfml.fineos.models.customer_api import AbsenceDetails
 from massgov.pfml.util.logging.managed_requirements import (
     get_fineos_managed_requirement_log_attributes,
 )
@@ -164,7 +155,7 @@ def notifications_post():
         # Update absence period table
         try:
             if not employee or not employee.tax_identifier:
-                logger.info(
+                logger.warning(
                     "Unable to find Employee or Employee has no tax_identifier, can't get absence periods"
                 )
             else:
@@ -380,69 +371,46 @@ def update_absence_period(
         if absence_periods is None:
             logger.info("No absence periods returned by Fineos", extra=log_attributes)
             return
-
-        # update absence period table
-        populate_absence_period_table(absence_periods, claim, db_session, log_attributes)
     except FINEOSClientError:
         logger.exception(
             "Failed to get absence detail from FINEOS", extra=log_attributes,
         )
         return
 
-
-def populate_absence_period_table(
-    absence_periods: List[massgov.pfml.fineos.models.customer_api.AbsencePeriod],
-    claim: Claim,
-    db_session: Session,
-    log_attributes: dict,
-) -> None:
-    """ Update AbsencePeriod Table with given list of absence periods"""
-
-    for absence_period in absence_periods:
-        # get class and index id
-        if absence_period.id:
-            period_id = absence_period.id.split("-")
-            class_id = int(period_id[1])
-            index_id = int(period_id[2])
-        else:
-            logger.error(
-                "Failed to extract class and index id.", extra=log_attributes,
+    # add/update absence period table
+    try:
+        for absence_period in absence_periods:
+            upsert_absence_period_from_fineos_period(
+                db_session, claim.claim_id, absence_period, log_attributes
             )
-            return
-
-        # check if absence period is present
-        db_absence_period = (
-            db_session.query(AbsencePeriod)
-            .filter(
-                AbsencePeriod.claim_id == claim.claim_id,
-                AbsencePeriod.fineos_absence_period_class_id == class_id,
-                AbsencePeriod.fineos_absence_period_index_id == index_id,
-            )
-            .one_or_none()
+    except Exception as error:
+        logger.exception(
+            "Failed while populating AbsencePeriod Table",
+            extra={**log_attributes, **_absence_detail_for_log(absence_detail)},
         )
-
-        if db_absence_period is None:
-            db_absence_period = AbsencePeriod()
-            db_absence_period.fineos_absence_period_class_id = class_id
-            db_absence_period.fineos_absence_period_index_id = index_id
-            db_session.add(db_absence_period)
-
-        db_absence_period.absence_period_start_date = absence_period.startDate
-        db_absence_period.absence_period_end_date = absence_period.endDate
-        db_absence_period.absence_period_type_id = AbsencePeriodType.get_id(
-            absence_period.absenceType
-        )
-        db_absence_period.absence_reason_qualifier_one_id = AbsenceReasonQualifierOne.get_id(
-            absence_period.reasonQualifier1
-        )
-        db_absence_period.absence_reason_qualifier_two_id = AbsenceReasonQualifierTwo.get_id(
-            absence_period.reasonQualifier2
-        )
-        db_absence_period.absence_reason_id = AbsenceReason.get_id(absence_period.reason)
-        db_absence_period.leave_request_decision_id = LeaveRequestDecision.get_id(
-            absence_period.requestStatus
-        )
-        db_absence_period.claim_id = claim.claim_id
-
-    # save to db
+        raise error
+    # only commit if there were no errors
     db_session.commit()
+
+
+def _absence_detail_for_log(absence_detail: AbsenceDetails) -> Dict[str, Any]:
+    # Don't want to log "notifiedBy"
+    keys_to_log = {
+        "absenceId",
+        "creationDate",
+        "lastUpdatedDate",
+        "status",
+        "notificationDate",
+        "absencePeriods",
+        "absenceDays",
+        "reportedTimeOff",
+        "reportedReducedSchedule",
+        "selectedLeavePlans",
+        "financialCaseIds",
+    }
+
+    return {
+        f"absence_detail.{key}": value
+        for key, value in absence_detail.dict().items()
+        if key in keys_to_log
+    }

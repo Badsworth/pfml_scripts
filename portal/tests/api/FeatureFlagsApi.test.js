@@ -55,8 +55,6 @@ describe("FeatureFlagsAPI", () => {
       });
 
       it("resolves with the flag in the response", async () => {
-        expect.assertions();
-
         const response = await adminApi.getFlags();
 
         expect(response[0]).toBeInstanceOf(Flag);

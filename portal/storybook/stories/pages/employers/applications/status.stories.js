@@ -1,6 +1,7 @@
-import Document, { DocumentType } from "src/models/Document";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
+import ClaimDocument from "src/models/ClaimDocument";
 import DocumentCollection from "src/models/DocumentCollection";
+import { DocumentType } from "src/models/Document";
 import { MockEmployerClaimBuilder } from "tests/test-utils";
 import React from "react";
 import { Status } from "src/pages/employers/applications/status";
@@ -87,14 +88,16 @@ export const Default = ({ status, document, leaveDurationType }) => {
     documents = new DocumentCollection();
   } else if (document === "Multiple") {
     documents = new DocumentCollection([
-      new Document({ ...documentData }),
-      new Document({
+      new ClaimDocument({ ...documentData }),
+      new ClaimDocument({
         ...documentData,
         document_type: DocumentType.requestForInfoNotice,
       }),
     ]);
   } else {
-    documents = new DocumentCollection([new Document({ ...documentData })]);
+    documents = new DocumentCollection([
+      new ClaimDocument({ ...documentData }),
+    ]);
   }
 
   const appLogic = {

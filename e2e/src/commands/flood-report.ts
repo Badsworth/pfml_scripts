@@ -3,7 +3,8 @@ import { SystemWideArgs } from "../cli";
 import { CommandModule } from "yargs";
 import config from "../config";
 import parse from "csv-parse";
-import { format, add } from "date-fns";
+import { format } from "date-fns";
+import { generateNRAPMLink } from "../util/urls";
 
 type CommandArgs = {
   ids: string;
@@ -60,21 +61,9 @@ async function buildReport(ids: string[]): Promise<string[]> {
     const start = new Date(flood.started);
     const end = new Date(flood.stopped);
 
-    const params = new URLSearchParams({
-      "platform[accountId]": "2837112",
-      "platform[timeRange][begin_time]": add(start, { minutes: -3 })
-        .getTime()
-        .toString(),
-      "platform[timeRange][end_time]": add(end, { minutes: 3 })
-        .getTime()
-        .toString(),
-      "platform[$isFallbackTimeRange]": "false",
-      // This is a base64 encoded string. I think it should be basically static?
-      pane: "eyJuZXJkbGV0SWQiOiJhcG0tbmVyZGxldHMub3ZlcnZpZXciLCJlbnRpdHlHdWlkIjoiTWpnek56RXhNbnhCVUUxOFFWQlFURWxEUVZSSlQwNThPVGd3TmpJeU9EWXoiLCJpc092ZXJ2aWV3Ijp0cnVlLCJyZWZlcnJlcnMiOnsibGF1bmNoZXJJZCI6Im5yMS1jb3JlLmV4cGxvcmVyIiwibmVyZGxldElkIjoibnIxLWNvcmUubGlzdGluZyJ9fQ==&sidebars[0]=eyJuZXJkbGV0SWQiOiJucjEtY29yZS5hY3Rpb25zIiwic2VsZWN0ZWROZXJkbGV0Ijp7Im5lcmRsZXRJZCI6ImFwbS1uZXJkbGV0cy5vdmVydmlldyIsImlzT3ZlcnZpZXciOnRydWV9LCJlbnRpdHlHdWlkIjoiTWpnek56RXhNbnhCVUUxOFFWQlFURWxEUVZSSlQwNThPVGd3TmpJeU9EWXoifQ==",
-    });
-    const newrelic = `https://one.newrelic.com/launcher/nr1-core.explorer?${params.toString()}`;
+    const newrelic = generateNRAPMLink(start, end, "performance");
     const runtime = `${format(start, "p")}-${format(end, "p")}`;
-    const name = flood.name.replace(/.* Preset \- /, "");
+    const name = flood.name.replace(/.* Preset - /, "");
     return {
       total,
       failed,
@@ -112,6 +101,7 @@ async function parseFailures(data: NodeJS.ReadableStream): Promise<StepCounts> {
           counts[row.Label] = { passed: 0, failed: 0 };
         }
         counts[row.Label].failed += parseInt(row.Value);
+        break;
       case "passed":
         if (!(row.Label in counts)) {
           counts[row.Label] = { passed: 0, failed: 0 };

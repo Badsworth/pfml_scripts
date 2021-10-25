@@ -1,54 +1,72 @@
 import { portal } from "../../../actions";
-import { getLeaveAdminCredentials } from "../../../config";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
-import { DashboardClaimStatus } from "../../../actions/portal";
-import { config } from "../../../actions/common";
+import {
+  DashboardClaimStatus,
+  FilterOptionsFlags,
+} from "../../../actions/portal";
 
 describe("Employer dashboard", () => {
   after(() => {
     portal.deleteDownloadsFolder();
   });
-  const submit = it("Given a fully denied claim", () => {
+  const submit = it("Given a claim", () => {
     cy.task("generateClaim", "MED_INTER_INEL").then((claim) => {
       cy.stash("claim", claim.claim);
     });
   });
-  it("LA should be able to view, filter, and sort claims", () => {
+  it("LA should be able to view, filter, sort claims and search by name", () => {
     cy.dependsOnPreviousPass([submit]);
     portal.before();
     cy.visit("/");
     cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
       assertValidClaim(claim);
-      portal.login(getLeaveAdminCredentials(claim.employer_fein));
+      portal.loginLeaveAdmin(claim.employer_fein);
       portal.goToEmployerDashboard();
-      const statuses: DashboardClaimStatus[] =
-        config("PORTAL_HAS_LA_STATUS_UPDATES") === "true"
-          ? [
-              "Review by",
-              "No action required",
-              "Closed",
-              "Denied",
-              // Leaving this out, as currently Leave Admins are not able to respond to subsequent leave requests, which causes some "Approved" claims to show up as "Review by"
-              // @see PFMLPB-1558
-              // "Approved"
-            ]
-          : ["--", "Approved", "Closed", "Denied"];
+      const filter_checks: FilterOptionsFlags = {
+        "Review by": true,
+        "No action required": true,
+        Closed: true,
+        Denied: true,
+        Approved: true,
+      };
       cy.wait("@dashboardClaimQueries");
-      statuses.forEach((status) => {
+      Object.entries(filter_checks).forEach(([key, value]) => {
         portal.filterLADashboardBy({
           status: {
-            [status]: true,
+            [key]: value,
           },
         });
-        portal.assertClaimsHaveStatus(status);
-        portal.clearFilters();
+        if (value) {
+          portal.assertClaimsHaveStatus(key as DashboardClaimStatus);
+          portal.clearFilters();
+        }
       });
       portal.sortClaims("name_asc");
       portal.sortClaims("name_desc");
       portal.sortClaims("old");
       portal.sortClaims("new");
-      if (config("PORTAL_HAS_LA_STATUS_UPDATES") === "true")
-        portal.sortClaims("status");
+      portal.sortClaims("status");
+      // Test search by claim ID
+      cy.get("table tbody")
+        .should(($table) => {
+          expect($table.children().length).to.be.gt(0);
+        })
+        .find('td[data-label="Application ID"]')
+        .first()
+        .then(($td) => {
+          portal.searchClaims($td.text());
+          portal.clearSearch();
+        });
+      cy.get("table tbody")
+        .should(($table) => {
+          expect($table.children().length).to.be.gt(0);
+        })
+        .find('th[data-label="Employee name"]')
+        .first()
+        .then(($th) => {
+          portal.searchClaims($th.text(), false);
+          portal.clearSearch();
+        });
     });
   });
 });

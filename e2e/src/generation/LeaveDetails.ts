@@ -28,12 +28,15 @@ export default function generateLeaveDetails(
   const has_continuous_leave_periods =
     config.has_continuous_leave_periods ??
     (!config.reduced_leave_spec && !config.intermittent_leave_spec);
+
   const details: ApplicationLeaveDetails = {
     continuous_leave_periods: has_continuous_leave_periods
       ? generateContinuousLeavePeriods(
           !!config.shortClaim,
           work_pattern,
-          config.leave_dates
+          config.leave_dates instanceof Function
+            ? config.leave_dates()
+            : config.leave_dates
         )
       : [],
     reduced_schedule_leave_periods: config.reduced_leave_spec
@@ -41,7 +44,9 @@ export default function generateLeaveDetails(
           !!config.shortClaim,
           work_pattern,
           config.reduced_leave_spec,
-          config.leave_dates
+          config.leave_dates instanceof Function
+            ? config.leave_dates()
+            : config.leave_dates
         )
       : [],
     intermittent_leave_periods: config.intermittent_leave_spec
@@ -49,7 +54,9 @@ export default function generateLeaveDetails(
           !!config.shortClaim,
           work_pattern,
           config.intermittent_leave_spec,
-          config.leave_dates
+          config.leave_dates instanceof Function
+            ? config.leave_dates()
+            : config.leave_dates
         )
       : [],
     pregnant_or_recent_birth: !!config.pregnant_or_recent_birth,

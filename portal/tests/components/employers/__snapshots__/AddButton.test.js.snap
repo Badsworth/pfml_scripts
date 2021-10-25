@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AddButton renders the component 1`] = `
+<button
+  class="usa-button position-relative usa-button--outline bg-white"
+  name="add-entry-button"
+  type="button"
+>
+  Add new benefit
+</button>
+`;

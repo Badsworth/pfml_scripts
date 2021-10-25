@@ -1,16 +1,11 @@
 import uuid
 
-import pytest
-
 from massgov.pfml.db.models.applications import (
     Application,
     ApplicationPaymentPreference,
     ConcurrentLeave,
 )
 from massgov.pfml.db.models.employees import BankAccountType, PaymentMethod
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 
 def test_application(test_db_session, user):

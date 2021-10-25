@@ -1,5 +1,3 @@
-import pytest
-
 from massgov.pfml.db.models.applications import Application
 from massgov.pfml.db.models.employees import Claim, UserLeaveAdministrator
 from massgov.pfml.db.models.factories import (
@@ -11,7 +9,6 @@ from massgov.pfml.db.models.factories import (
 from massgov.pfml.util.paginate.paginator import Paginator
 
 
-@pytest.mark.integration
 class TestPaginator:
     def test_pagination_entity(self, user, test_db_session):
         created_count = 0

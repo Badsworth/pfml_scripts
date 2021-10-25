@@ -1,0 +1,36 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DocumentRequirements renders Certification Document Requirements content 1`] = `
+<ul
+  class="usa-list"
+>
+  <li>
+    The text must be clear and readable
+  </li>
+  <li>
+    Upload every page of the document where you or your health care provider have entered information
+  </li>
+  <li>
+    Each file you upload must be smaller than 4.5 MB
+  </li>
+</ul>
+`;
+
+exports[`DocumentRequirements renders ID Document Requirements content 1`] = `
+<ul
+  class="usa-list"
+>
+  <li>
+    The image of the card must be in full color
+  </li>
+  <li>
+    The text must be clear and readable
+  </li>
+  <li>
+    The front and back can be in one file, or in two separate files
+  </li>
+  <li>
+    Each file must be smaller than 4.5 MB
+  </li>
+</ul>
+`;

@@ -2,7 +2,7 @@ locals {
   # This ARN describes a 3rd-party lambda layer sourced directly from New Relic. It is not managed with Terraform.
   # This layer causes telemetry data to be generated and logged to CloudWatch as a side effect of lambda invocation.
   # Lambda layers are also available for runtimes other than Python 3.8: see https://nr-layers.iopipe.com/.
-  newrelic_log_ingestion_layer = "arn:aws:lambda:us-east-1:451483290750:layer:NewRelicPython38:16"
+  newrelic_log_ingestion_layer = "arn:aws:lambda:us-east-1:451483290750:layer:NewRelicPython39:1"
 }
 data "aws_iam_policy_document" "iam_policy_lambda_assumed_role" {
   statement {

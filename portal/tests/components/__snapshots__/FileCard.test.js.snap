@@ -1,0 +1,37 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FileCard renders a file 1`] = `
+<div
+  class="c-file-card padding-2 margin-bottom-3 display-flex flex-wrap border-1px border-base-lighter"
+  data-test="file-card"
+>
+  <div
+    class="c-thumbnail margin-right-2 display-flex"
+  >
+    <img
+      alt=""
+      src="image.png"
+    />
+  </div>
+  <div
+    class="c-file-card__content"
+  >
+    <h3
+      class="margin-bottom-1 margin-top-1 font-heading-xs text-bold"
+    >
+      Document 1
+    </h3>
+    <div
+      class="c-file-card__name padding-bottom-1 margin-bottom-1 margin-top-0 border-bottom-2px border-base-lighter font-heading-xs"
+    >
+      foo.png
+    </div>
+    <button
+      class="usa-button position-relative text-error hover:text-error-dark active:text-error-darker margin-top-0 usa-button--unstyled"
+      type="button"
+    >
+      Remove file
+    </button>
+  </div>
+</div>
+`;

@@ -40,8 +40,8 @@ def update_xsds():
     for service in services:
         [_name, _type, _ext] = service.split(".")
         query = {"config": _name}
-        query[f"{_type}-{_ext.upper()}"] = None
-        response = cps._wscomposer_request("GET", "webservice", "", query, "")
+        query[f"{_type}-{_ext.upper()}"] = None  # type: ignore
+        response = cps._wscomposer_request("GET", "webservice", "", query, "")  # type: ignore
 
         file_xml = defusedxml.minidom.parseString(response.text)
         pretty_xml = file_xml.toprettyxml(indent="  ")

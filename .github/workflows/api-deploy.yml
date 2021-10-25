@@ -22,25 +22,21 @@ on:
         default: "main"
         description: |
           --------------------------------------
-
-                    ⬇️ Tag or branch to be deployed.
-      extraUatDeploy:
+          ⬇️ Tag or branch to be deployed.
+      envs_for_autodeploy:
         required: false
-        default: "true"
+        default: "uat, performance, cps-preview"
         description: |
           --------------------------------------
-          ⬇️ (For staging deploys only) Also deploy the above version to UAT?
-      extraPerformanceDeploy:
-        required: false
-        default: "true"
-        description: |
-          --------------------------------------
-          ⬇️ (Also for staging deploys only) Also deploy the above version to Performance?
+          ⬇️ [Staging only] Comma-separated list
+          of additional environments to automatically deploy to.
+          Valid options are 'uat', 'performance', 'cps-preview'.
       performLoadTest:
         required: false
         default: "true"
         description: |
-          ⬇️ (For performance deploys only, including extra deploys from staging) Perform a small-scale load test in performance after deployment?
+          ⬇️ (For performance deploys only, including extra deploys from staging)
+          Perform a small-scale load test in performance after deployment?
   push:
     branches:
       - main
@@ -61,7 +57,7 @@ env:
   terraform-env-shared-dir: ./infra/env-shared/environments
   terraform-ecs-tasks-dir: ./infra/ecs-tasks/environments
   terraform-version: 0.14.7
-  python-version: 3.8
+  python-version: 3.9
 
   # Set a timeout of two minutes for all terraform commands in the workflow
   # to account for parallel jobs working in the same environment with the same
@@ -174,7 +170,6 @@ jobs:
             echo "::set-output name=message::${{ env.just_the_deploy }}"
           fi
 
-
   start-comms-github:
     name: Start deploy comms (GitHub)
     needs: [update-the-deploy-branch, deploy-info]
@@ -248,53 +243,33 @@ jobs:
             }]
           }' https://slack.com/api/chat.postMessage)
 
-
-  extra-uat-deploy:
-    if: contains(github.event.inputs.deployment_env, 'stage') && github.event.inputs.extraUatDeploy == 'true'
-    name: (Stage) Extra UAT deploy
-    needs: update-the-deploy-branch
+  extra-env-deploy:
+    if: github.event.inputs.deployment_env == 'stage'
+    name: Extra Environment deploy
+    strategy:
+      fail-fast: false
+      matrix:
+        env: [cps-preview, performance, uat]
+    needs: [update-the-deploy-branch]
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
+        if: github.event.inputs.deployment_env != matrix.env && contains(github.event.inputs.envs_for_autodeploy, matrix.env)
         with:
           ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-      - name: Start a UAT deploy
+      - name: Start a deployment
+        if: github.event.inputs.deployment_env != matrix.env && contains(github.event.inputs.envs_for_autodeploy, matrix.env)
         env:
           GITHUB_API: "https://api.github.com/repos/EOLWD/pfml"
           GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
           WORKFLOW_NAME: "api-deploy.yml"
         run: |
-          echo "*** An API staging deploy is now in progress. Enqueuing an extra deployment to UAT... ***"
+          echo "*** Enqueuing an extra deployment to ${{matrix.env}} ... ***"
           curl -fLS -X POST "$GITHUB_API/actions/workflows/$WORKFLOW_NAME/dispatches" \
                         -H "Authorization: Bearer $GITHUB_TOKEN" \
                         -H "Accept: application/vnd.github.v3+json" \
-                        -d '{ "ref": "${{ github.ref }}", "inputs": { "deployment_env": "uat", "version": "${{ env.version }}" } }'
-          echo "Done."
-
-  extra-performance-deploy:
-    if: contains(github.event.inputs.deployment_env, 'stage') && github.event.inputs.extraPerformanceDeploy == 'true'
-    name: (Stage) Extra Performance deploy
-    needs: update-the-deploy-branch
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: ${{ needs.update-the-deploy-branch.outputs.commit_hash }}
-      - name: Start a Perf deploy
-        env:
-          GITHUB_API: "https://api.github.com/repos/EOLWD/pfml"
-          GITHUB_TOKEN: ${{ secrets.PFML_DEVOPS_TOKEN }}
-          WORKFLOW_NAME: "api-deploy.yml"
-        run: |
-          echo "*** An API staging deploy is now in progress. Enqueuing an extra deployment to Performance... ***"
-          curl -fLS -X POST "$GITHUB_API/actions/workflows/$WORKFLOW_NAME/dispatches" \
-                        -H "Authorization: Bearer $GITHUB_TOKEN" \
-                        -H "Accept: application/vnd.github.v3+json" \
-                        -d '{ "ref": "${{ github.ref }}", "inputs": { "deployment_env": "performance", "version": "${{ env.version }}", "performLoadTest": "${{ github.event.inputs.performLoadTest }}" } }'
-          echo "Done."
-
+                        -d '{ "ref": "${{ github.ref }}", "inputs": { "deployment_env": "${{matrix.env}}", "version": "${{ env.version }}", "performLoadTest": "${{ github.event.inputs.performLoadTest }}"} }'
   api-build:
     name: Build docker image
     needs: update-the-deploy-branch
@@ -507,6 +482,7 @@ jobs:
     needs: [update-the-deploy-branch, api-release, deploy-info]
 
     steps:
+      - uses: actions/checkout@v2
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -516,14 +492,11 @@ jobs:
           role-to-assume: ci-run-deploys
           role-duration-seconds: 3600
 
-      - name: Pull the newrelic API key from parameter store
-        uses: "marvinpinto/action-inject-ssm-secrets@latest"
-        with:
-          ssm_parameter: "/admin/pfml-api/newrelic-api-key"
-          env_variable_name: "newrelic_api_key"
+      - name: Setup & Configure New Relic CLI
+        uses: ./.github/actions/setup-nr-cli
 
       - name: Create a deployment marker
-        uses: newrelic/deployment-marker-action@v1
+        run: newrelic apm deployment create --applicationId "${{ env[needs.deploy-info.outputs.api-env] }}" --revision "${{ env.version || needs.update-the-deploy-branch.outputs.commit_hash }}"
         env:
           prod: "868501894"
           performance: "980622863"
@@ -533,11 +506,10 @@ jobs:
           training: "980608199"
           breakfix: "1298450359"
           cps-preview: "1386420590"
-        with:
-          apiKey: ${{ env.NEWRELIC_API_KEY }}
-          accountId: "2837112"
-          applicationId: ${{ env[needs.deploy-info.outputs.api-env] }}
-          revision: ${{ env.version || needs.update-the-deploy-branch.outputs.commit_hash }}
+      - name: Create a custom deployment record
+        run: |
+          newrelic events post --event "{ \"eventType\": \"CustomDeploymentMarker\", \"component\": \"api\", \"environment\":\"${{ needs.deploy-info.outputs.api-env }}\", \"version\": \"${{ env.version || needs.update-the-deploy-branch.outputs.commit_hash }}\" }"
+
 
   api-gateway-release:
     name: API Gateway Release
@@ -719,7 +691,7 @@ jobs:
     name: End-to-End Test Deployment
     runs-on: ubuntu-latest
     needs: [update-the-deploy-branch, api-release, api-gateway-release]
-    if: github.event.inputs.deployment_env != 'prod' && github.event.inputs.deployment_env != 'uat'
+    if: github.event.inputs.deployment_env != 'prod'
     steps:
       - name: Trigger E2E Workflow
         uses: aurelien-baudet/workflow-dispatch@v2
@@ -754,7 +726,7 @@ jobs:
           inputs: |
             {
               "target_environment": "performance",
-              "preset": "base",
+              "preset": "base"
             }
 
   post-e2e-failures-to-slack:

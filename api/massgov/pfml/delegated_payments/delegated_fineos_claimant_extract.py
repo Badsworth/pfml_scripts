@@ -1,25 +1,20 @@
 import enum
-import os
-import tempfile
 import uuid
-from dataclasses import dataclass, field
+from datetime import date
 from typing import Any, Callable, Dict, List, Optional, cast
 
 from sqlalchemy.exc import SQLAlchemyError
 
-import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
-import massgov.pfml.fineos.util.log_tables as fineos_log_tables_util
-import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.api.util import state_log_util
 from massgov.pfml.db.models.employees import (
+    AbsencePeriod,
     AbsenceStatus,
     BankAccountType,
     Claim,
     Employee,
     EmployeePubEftPair,
-    EmployeeReferenceFile,
     Employer,
     PaymentMethod,
     PrenoteState,
@@ -43,48 +38,30 @@ PROCESSED_FOLDER = "processed"
 SKIPPED_FOLDER = "skipped"
 ERRORED_FOLDER = "errored"
 
-REQUESTED_ABSENCES_FILE_NAME = "VBI_REQUESTEDABSENCE_SOM.csv"
-EMPLOYEE_FEED_FILE_NAME = "Employee_feed.csv"
 
-expected_file_names = [
-    REQUESTED_ABSENCES_FILE_NAME,
-    EMPLOYEE_FEED_FILE_NAME,
-]
+class AbsencePeriodContainer:
+    class_id: int
+    index_id: int
+    leave_request_id: Optional[int]
+    is_id_proofed: Optional[bool]
+    start_date: Optional[date]
+    end_date: Optional[date]
 
-
-@dataclass
-class ExtractMultiple:
-    file_location: str
-    indexed_data: Dict[str, List[Dict[str, str]]] = field(default_factory=dict)
-
-
-class ExtractData:
-    requested_absence_info: ExtractMultiple
-    employee_feed: ExtractMultiple
-
-    date_str: str
-
-    reference_file: ReferenceFile
-
-    def __init__(self, s3_locations: List[str], date_str: str):
-        for s3_location in s3_locations:
-            if s3_location.endswith(REQUESTED_ABSENCES_FILE_NAME):
-                self.requested_absence_info = ExtractMultiple(s3_location)
-            elif s3_location.endswith(EMPLOYEE_FEED_FILE_NAME):
-                self.employee_feed = ExtractMultiple(s3_location)
-
-        self.date_str = date_str
-
-        self.reference_file = ReferenceFile(
-            file_location=os.path.join(
-                payments_config.get_s3_config().pfml_fineos_extract_archive_path,
-                "received",
-                self.date_str,
-            ),
-            reference_file_type_id=ReferenceFileType.FINEOS_CLAIMANT_EXTRACT.reference_file_type_id,
-            reference_file_id=uuid.uuid4(),
-        )
-        logger.debug("Intialized extract data: %s", self.reference_file.file_location)
+    def __init__(
+        self,
+        start_date: Optional[str],
+        end_date: Optional[str],
+        class_id: str,
+        index_id: str,
+        is_id_proofed: Optional[bool],
+        leave_request_id: Optional[str],
+    ):
+        self.start_date = payments_util.datetime_str_to_date(start_date)
+        self.end_date = payments_util.datetime_str_to_date(end_date)
+        self.class_id = int(class_id)
+        self.index_id = int(index_id)
+        self.is_id_proofed = is_id_proofed
+        self.leave_request_id = int(leave_request_id) if leave_request_id else None
 
 
 class ClaimantData:
@@ -98,7 +75,7 @@ class ClaimantData:
     count_incrementer: Optional[Callable[[str], None]]
 
     absence_case_id: str
-    is_id_proofed: bool = False
+    is_claim_id_proofed: bool = False
 
     fineos_notification_id: Optional[str] = None
     claim_type_raw: Optional[str] = None
@@ -120,29 +97,84 @@ class ClaimantData:
     account_type: Optional[str] = None
     should_do_eft_operations: bool = False
 
+    absence_period_data: List[AbsencePeriodContainer]
+
     def __init__(
         self,
-        extract_data: ExtractData,
         absence_case_id: str,
-        requested_absences: List[Dict[str, str]],
+        requested_absences: List[FineosExtractVbiRequestedAbsenceSom],
+        employee_record: Optional[FineosExtractEmployeeFeed],
         count_incrementer: Optional[Callable[[str], None]] = None,
     ):
+        self.absence_period_data = []
         self.absence_case_id = absence_case_id
         self.validation_container = payments_util.ValidationContainer(self.absence_case_id)
 
         self.count_incrementer = count_incrementer
 
         self._process_requested_absences(requested_absences)
-        self._process_employee_feed(extract_data)
+        self._process_employee_feed(employee_record)
 
-    def _process_requested_absences(self, requested_absences: List[Dict[str, str]]) -> None:
+    def _process_requested_absences(
+        self, requested_absences: List[FineosExtractVbiRequestedAbsenceSom]
+    ) -> None:
         for requested_absence in requested_absences:
             # If any of the requested absence records are ID proofed, then
             # we consider the entire claim valid
-            evidence_result_type = requested_absence.get("LEAVEREQUEST_EVIDENCERESULTTYPE")
+            evidence_result_type = requested_absence.leaverequest_evidenceresulttype
+            is_absence_period_id_proofed: Optional[bool]
+
             if evidence_result_type == "Satisfied":
-                self.is_id_proofed = True
-                break
+                self.is_claim_id_proofed = True
+                is_absence_period_id_proofed = True
+            elif evidence_result_type is not None and evidence_result_type.strip() == "":
+                is_absence_period_id_proofed = None
+            else:
+                is_absence_period_id_proofed = False
+
+            start_date = payments_util.validate_db_input(
+                "ABSENCEPERIOD_START", requested_absence, self.validation_container, True
+            )
+            end_date = payments_util.validate_db_input(
+                "ABSENCEPERIOD_END", requested_absence, self.validation_container, True
+            )
+            class_id = payments_util.validate_db_input(
+                "ABSENCEPERIOD_CLASSID", requested_absence, self.validation_container, True
+            )
+            index_id = payments_util.validate_db_input(
+                "ABSENCEPERIOD_INDEXID", requested_absence, self.validation_container, True
+            )
+            fineos_leave_request_id = payments_util.validate_db_input(
+                "LEAVEREQUEST_ID", requested_absence, self.validation_container, True
+            )
+
+            if class_id is None or index_id is None:
+                log_attributes = {
+                    "absence_period_class_id": requested_absence.absenceperiod_classid,
+                    "absence_period_index_id": requested_absence.absenceperiod_indexid,
+                }
+                logger.warning(
+                    "Unable to extract class_id and/or index_id from requested_absence.",
+                    extra=log_attributes,
+                )
+
+                if self.count_incrementer:
+                    self.count_incrementer(
+                        ClaimantExtractStep.Metrics.ABSENCE_PERIOD_CLASS_ID_OR_INDEX_ID_NOT_FOUND_COUNT
+                    )
+
+                continue
+
+            absence_period = AbsencePeriodContainer(
+                start_date=start_date,
+                end_date=end_date,
+                class_id=class_id,
+                index_id=index_id,
+                is_id_proofed=is_absence_period_id_proofed,
+                leave_request_id=fineos_leave_request_id,
+            )
+
+            self.absence_period_data.append(absence_period)
 
         # Ideally, we would be able to distinguish and separate out the
         # various leave requests that make up a claim, but we don't
@@ -152,14 +184,14 @@ class ClaimantData:
         requested_absence = requested_absences[-1]
 
         # Note this should be identical regardless of absence case
-        self.fineos_notification_id = payments_util.validate_csv_input(
+        self.fineos_notification_id = payments_util.validate_db_input(
             "NOTIFICATION_CASENUMBER", requested_absence, self.validation_container, True
         )
-        self.claim_type_raw = payments_util.validate_csv_input(
+        self.claim_type_raw = payments_util.validate_db_input(
             "ABSENCEREASON_COVERAGE", requested_absence, self.validation_container, True
         )
 
-        self.absence_case_status = payments_util.validate_csv_input(
+        self.absence_case_status = payments_util.validate_db_input(
             "ABSENCE_CASESTATUS",
             requested_absence,
             self.validation_container,
@@ -167,25 +199,27 @@ class ClaimantData:
             custom_validator_func=payments_util.lookup_validator(AbsenceStatus),
         )
 
-        self.absence_start_date = payments_util.validate_csv_input(
+        self.absence_start_date = payments_util.validate_db_input(
             "ABSENCEPERIOD_START", requested_absence, self.validation_container, True
         )
 
-        self.absence_end_date = payments_util.validate_csv_input(
+        self.absence_end_date = payments_util.validate_db_input(
             "ABSENCEPERIOD_END", requested_absence, self.validation_container, True
         )
 
         # Note this should be identical regardless of absence case
-        self.fineos_customer_number = payments_util.validate_csv_input(
+        self.fineos_customer_number = payments_util.validate_db_input(
             "EMPLOYEE_CUSTOMERNO", requested_absence, self.validation_container, True
         )
 
         # Note this should be identical regardless of absence case
-        self.employer_customer_number = payments_util.validate_csv_input(
+        self.employer_customer_number = payments_util.validate_db_input(
             "EMPLOYER_CUSTOMERNO", requested_absence, self.validation_container, True
         )
 
-    def _process_employee_feed(self, extract_data: ExtractData) -> None:
+    def _process_employee_feed(
+        self, employee_feed_record: Optional[FineosExtractEmployeeFeed]
+    ) -> None:
         # If there isn't a FINEOS Customer Number, we can't lookup the employee record
         if not self.fineos_customer_number:
             return
@@ -194,10 +228,7 @@ class ClaimantData:
         # with the employee feed. There will be a mix of records with
         # DEFPAYMENTPREF set to Y/N. Y indicating that it's the default payment
         # preference. We always prefer the default, but there can be many of each.
-        employee_feed_records = extract_data.employee_feed.indexed_data.get(
-            self.fineos_customer_number
-        )
-        if employee_feed_records is None:
+        if not employee_feed_record:
             error_msg = (
                 f"Employee in VBI_REQUESTEDABSENCE_SOM with absence id {self.absence_case_id} and customer nbr {self.fineos_customer_number} "
                 "not found in employee feed file"
@@ -216,34 +247,34 @@ class ClaimantData:
             # Can't process subsequent records as they pull from employee_feed
             return
 
-        employee_feed = self._determine_employee_feed_info(employee_feed_records)
+        # Shouldn't be possible, but making the linter happy
+        if employee_feed_record:
+            self.employee_tax_identifier = payments_util.validate_db_input(
+                "NATINSNO", employee_feed_record, self.validation_container, True
+            )
 
-        self.employee_tax_identifier = payments_util.validate_csv_input(
-            "NATINSNO", employee_feed, self.validation_container, True
-        )
+            self.date_of_birth = payments_util.validate_db_input(
+                "DATEOFBIRTH", employee_feed_record, self.validation_container, True
+            )
 
-        self.date_of_birth = payments_util.validate_csv_input(
-            "DATEOFBIRTH", employee_feed, self.validation_container, True
-        )
+            self.employee_first_name = payments_util.validate_db_input(
+                "FIRSTNAMES", employee_feed_record, self.validation_container, True
+            )
 
-        self.employee_first_name = payments_util.validate_csv_input(
-            "FIRSTNAMES", employee_feed, self.validation_container, True
-        )
+            self.employee_middle_name = payments_util.validate_db_input(
+                "INITIALS", employee_feed_record, self.validation_container, False
+            )
 
-        self.employee_middle_name = payments_util.validate_csv_input(
-            "INITIALS", employee_feed, self.validation_container, False
-        )
+            self.employee_last_name = payments_util.validate_db_input(
+                "LASTNAME", employee_feed_record, self.validation_container, True
+            )
 
-        self.employee_last_name = payments_util.validate_csv_input(
-            "LASTNAME", employee_feed, self.validation_container, True
-        )
+            self._process_payment_preferences(employee_feed_record)
 
-        self._process_payment_preferences(employee_feed)
-
-    def _process_payment_preferences(self, employee_feed: Dict[str, str]) -> None:
+    def _process_payment_preferences(self, employee_feed: FineosExtractEmployeeFeed) -> None:
         # We only care about the payment preference fields if it is the default payment
         # preference record, otherwise we can't set these fields
-        is_default_payment_pref = employee_feed.get("DEFPAYMENTPREF") == "Y"
+        is_default_payment_pref = employee_feed.defpaymentpref == "Y"
         if not is_default_payment_pref:
             message = f"No default payment preference set for FINEOS customer number {self.fineos_customer_number}"
             logger.warning(message, extra=self.get_traceable_details())
@@ -256,7 +287,7 @@ class ClaimantData:
                 )
             return
 
-        self.payment_method = payments_util.validate_csv_input(
+        self.payment_method = payments_util.validate_db_input(
             "PAYMENTMETHOD",
             employee_feed,
             self.validation_container,
@@ -271,7 +302,7 @@ class ClaimantData:
         if eft_required:
             nbr_of_validation_issues = len(self.validation_container.validation_issues)
 
-            self.routing_nbr = payments_util.validate_csv_input(
+            self.routing_nbr = payments_util.validate_db_input(
                 "SORTCODE",
                 employee_feed,
                 self.validation_container,
@@ -281,11 +312,11 @@ class ClaimantData:
                 custom_validator_func=payments_util.routing_number_validator,
             )
 
-            self.account_nbr = payments_util.validate_csv_input(
+            self.account_nbr = payments_util.validate_db_input(
                 "ACCOUNTNO", employee_feed, self.validation_container, eft_required, max_length=17,
             )
 
-            self.account_type = payments_util.validate_csv_input(
+            self.account_type = payments_util.validate_db_input(
                 "ACCOUNTTYPE",
                 employee_feed,
                 self.validation_container,
@@ -296,32 +327,6 @@ class ClaimantData:
             if nbr_of_validation_issues == len(self.validation_container.validation_issues):
                 self.should_do_eft_operations = True
 
-    def _determine_employee_feed_info(
-        self, employee_feed_records: List[Dict[str, str]]
-    ) -> Dict[str, str]:
-        # No records shouldn't be possible
-        # based on the calling logic, but this
-        # makes the linter happy
-        if len(employee_feed_records) == 0:
-            return {}
-
-        # If there is only one record, just use it
-        if len(employee_feed_records) == 1:
-            return employee_feed_records[0]
-
-        # Try filtering to just DEFPAYMENTPREF = 'Y'
-        defpaymentpref_records = list(
-            filter(lambda record: record.get("DEFPAYMENTPREF") == "Y", employee_feed_records)
-        )
-
-        # If there are any default payment preference records
-        # Just use one of them, they should all be identical
-        if len(defpaymentpref_records) > 0:
-            return defpaymentpref_records[0]
-
-        # Otherwise, we're fine with any DEFPAYMENTPREF value here
-        return employee_feed_records[0]
-
     def get_traceable_details(self) -> Dict[str, Optional[Any]]:
         return {
             "absence_case_id": self.absence_case_id,
@@ -330,9 +335,8 @@ class ClaimantData:
 
 
 class ClaimantExtractStep(Step):
-    skip_prenoting: bool = False
-
     class Metrics(str, enum.Enum):
+        EXTRACT_PATH = "extract_path"
         CLAIM_NOT_FOUND_COUNT = "claim_not_found_count"
         CLAIM_PROCESSED_COUNT = "claim_processed_count"
         EFT_FOUND_COUNT = "eft_found_count"
@@ -355,222 +359,223 @@ class ClaimantExtractStep(Step):
         NO_DEFAULT_PAYMENT_PREFERENCE_COUNT = "no_default_payment_preference_count"
         EMPLOYER_NOT_FOUND_COUNT = "employer_not_found_count"
         EMPLOYER_FOUND_COUNT = "employer_found_count"
+        ABSENCE_PERIOD_CLASS_ID_OR_INDEX_ID_NOT_FOUND_COUNT = (
+            "absence_period_class_id_or_index_id_not_found_count"
+        )
 
     def run_step(self) -> None:
-        self.skip_prenoting = os.environ.get("SKIP_PRENOTING", "0") == "1"
         self.process_claimant_extract_data()
 
     def process_claimant_extract_data(self) -> None:
 
-        logger.info("Processing claimant extract files")
+        logger.info("Processing claimant extract data")
 
-        payments_util.copy_fineos_data_to_archival_bucket(
-            self.db_session, expected_file_names, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
-        )
-        data_by_date = payments_util.group_s3_files_by_date(expected_file_names)
-        download_directory = tempfile.mkdtemp().__str__()
+        try:
+            self.process_records_to_db()
+            self.db_session.commit()
+        except Exception:
+            # If there was a file-level exception anywhere in the processing,
+            # we move the file from received to error
+            # Add this function:
+            self.db_session.rollback()
+            logger.exception("Error processing claimant extract data")
+            raise
 
-        previously_processed_date = set()
+        logger.info("Done processing claimant extract data")
 
-        logger.info("Dates in /received folder: %s", ", ".join(data_by_date.keys()))
-
-        if bool(data_by_date):
-            latest_date_str = sorted(data_by_date.keys())[-1]
-
-        for date_str, s3_file_locations in data_by_date.items():
-
-            logger.info(
-                "Processing files in date group: %s", date_str, extra={"date_group": date_str}
-            )
-
-            try:
-                extract_data = ExtractData(s3_file_locations, date_str)
-
-                if date_str != latest_date_str:
-                    self.move_files_from_received_to_skipped(extract_data)
-                    logger.info(
-                        "Successfully skipped claimant extract files in date group: %s",
-                        date_str,
-                        extra={"date_group": date_str},
-                    )
-                    continue
-
-                if (
-                    date_str in previously_processed_date
-                    or payments_util.payment_extract_reference_file_exists_by_date_group(
-                        self.db_session, date_str, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
-                    )
-                ):
-                    logger.warning(
-                        "Found existing ReferenceFile record for date group in /processed folder: %s",
-                        date_str,
-                        extra={"date_group": date_str},
-                    )
-                    previously_processed_date.add(date_str)
-                    continue
-
-                extract_data = ExtractData(s3_file_locations, date_str)
-                self.download_and_index_data(extract_data, download_directory)
-
-                self.process_records_to_db(extract_data)
-                self.move_files_from_received_to_processed(extract_data)
-                logger.info(
-                    "Successfully processed claimant extract files in date group: %s",
-                    date_str,
-                    extra={"date_group": date_str},
-                )
-                self.db_session.commit()
-            except Exception:
-                # If there was a file-level exception anywhere in the processing,
-                # we move the file from received to error
-                # Add this function:
-                self.db_session.rollback()
-                logger.exception(
-                    "Error processing claimant extract files in date_group: %s",
-                    date_str,
-                    extra={"date_group": date_str},
-                )
-                self.move_files_from_received_to_error(extract_data)
-                raise
-
-        logger.info("Done processing claimant extract files")
-
-    def download_and_index_data(self, extract_data: ExtractData, download_directory: str) -> None:
-        logger.info(
-            "Downloading and indexing claimant extract data files.",
-            extra={
-                "employee_feed_file": extract_data.employee_feed.file_location,
-                "requested_absence_file": extract_data.requested_absence_info.file_location,
-            },
-        )
-        ref_file = extract_data.reference_file
-
-        # Index employee file for easy search.
-        employee_indexed_data: Dict[str, List[Dict[str, str]]] = {}
-        employee_rows = payments_util.download_and_parse_csv(
-            extract_data.employee_feed.file_location, download_directory
+    def get_employee_feed_map(
+        self, reference_file: ReferenceFile
+    ) -> Dict[str, FineosExtractEmployeeFeed]:
+        """
+        Querying the DB to cache all of the employee feed info
+        that is from the same batch as the requested absence data
+        we are processing.
+        """
+        employee_feed_records = (
+            self.db_session.query(FineosExtractEmployeeFeed)
+            .filter(FineosExtractEmployeeFeed.reference_file_id == reference_file.reference_file_id)
+            .all()
         )
 
-        for row in employee_rows:
-            # We want to cache all of the employee records for a customer number
-            # We will filter this down later.
-            index = str(row.get("CUSTOMERNO"))
-            if index not in employee_indexed_data:
-                employee_indexed_data[index] = []
-
-            employee_indexed_data[index].append(row)
-            logger.debug(
-                "indexed employee feed file row with Customer NO: %s", index,
-            )
-
-            lower_key_record = payments_util.make_keys_lowercase(row)
-            employee_feed_record = payments_util.create_staging_table_instance(
-                lower_key_record, FineosExtractEmployeeFeed, ref_file, self.get_import_log_id()
-            )
-            self.db_session.add(employee_feed_record)
+        # The same customerno can appear many times in the employee feed.
+        # We want to prefer using a record with the default payment pref
+        # set to true, but are fine if it's not, just can't do EFT processing later.
+        employee_feed_mapping: Dict[str, FineosExtractEmployeeFeed] = {}
+        for employee_feed_record in employee_feed_records:
             self.increment(self.Metrics.EMPLOYEE_FEED_RECORD_COUNT)
+            customerno = employee_feed_record.customerno
 
-        extract_data.employee_feed.indexed_data = employee_indexed_data
-
-        requested_absence_indexed_data: Dict[str, List[Dict[str, str]]] = {}
-        requested_absence_rows = payments_util.download_and_parse_csv(
-            extract_data.requested_absence_info.file_location, download_directory
-        )
-        for row in requested_absence_rows:
-            # Multiple leaves can be associated with the same absence case number
-            index = str(row.get("ABSENCE_CASENUMBER"))
-            if index not in requested_absence_indexed_data:
-                requested_absence_indexed_data[index] = []
-
-            requested_absence_indexed_data[index].append(row)
-            logger.debug("indexed requested absence file row with Absence case no: %s", index)
-
-            lower_key_record = payments_util.make_keys_lowercase(row)
-            vbi_requested_absence_som_record = payments_util.create_staging_table_instance(
-                lower_key_record,
-                FineosExtractVbiRequestedAbsenceSom,
-                ref_file,
-                self.get_import_log_id(),
-            )
-            self.db_session.add(vbi_requested_absence_som_record)
-            self.increment(self.Metrics.VBI_REQUESTED_ABSENCE_SOM_RECORD_COUNT)
-
-        extract_data.requested_absence_info.indexed_data = requested_absence_indexed_data
-
-        logger.info("Successfully downloaded and indexed claimant extract data files.")
-
-    def process_records_to_db(self, extract_data: ExtractData) -> None:
-        logger.info("Processing claimant extract data into db: %s", extract_data.date_str)
-
-        updated_employee_ids = set()
-        for (
-            absence_case_id,
-            requested_absences,
-        ) in extract_data.requested_absence_info.indexed_data.items():
-            if not absence_case_id:
-                logger.error(
-                    "Rows in the requested absence SOM file were missing ABSENCE_CASENUMBER"
+            # Adding to make the type checker happy
+            if not customerno:
+                logger.warning(
+                    "Customer number not set for employee feed record %s",
+                    employee_feed_record.employee_feed_id,
                 )
                 continue
 
-            self.increment(self.Metrics.PROCESSED_REQUESTED_ABSENCE_COUNT)
-            claimant_data = ClaimantData(
-                extract_data, absence_case_id, requested_absences, self.increment
+            # Associate the first record we come across with the customerno
+            # regardless of default payment preference status
+            existing_record = employee_feed_mapping.get(customerno)
+            if not existing_record:
+                employee_feed_mapping[customerno] = employee_feed_record
+                continue
+
+            # All default payment preferences are the same for
+            # the records we care about, so if the record is already
+            # set as such, just continue and don't update
+            if existing_record.defpaymentpref == "Y":
+                continue
+
+            # The record being processed is a defpaymentpref, use it
+            # over whatever we previously found
+            if employee_feed_record.defpaymentpref == "Y":
+                employee_feed_mapping[customerno] = employee_feed_record
+
+        return employee_feed_mapping
+
+    def process_records_to_db(self) -> None:
+        reference_file = (
+            self.db_session.query(ReferenceFile)
+            .filter(
+                ReferenceFile.reference_file_type_id
+                == ReferenceFileType.FINEOS_CLAIMANT_EXTRACT.reference_file_type_id
+            )
+            .order_by(ReferenceFile.created_at.desc())
+            .first()
+        )
+        if not reference_file:
+            raise Exception(
+                "This would only happen the first time you run in an env and have no extracts, make sure FINEOS has created extracts"
+            )
+        if reference_file.processed_import_log_id:
+            logger.warning(
+                "Already processed the most recent extracts for %s in import run %s",
+                reference_file.file_location,
+                reference_file.processed_import_log_id,
+            )
+            return
+        records = (
+            self.db_session.query(FineosExtractVbiRequestedAbsenceSom)
+            .filter(
+                FineosExtractVbiRequestedAbsenceSom.reference_file_id
+                == reference_file.reference_file_id
+            )
+            .order_by(FineosExtractVbiRequestedAbsenceSom.absence_casenumber)
+            .all()
+        )
+
+        employee_feed_map = self.get_employee_feed_map(reference_file)
+
+        # We grab the first record from the list so we
+        # can setup the grouping logic without dealing with nulls
+        record_iter = iter(records)
+        record = next(record_iter, None)
+        if record:
+            records_in_same_absence_case = [record]
+            curr_absence_case_number = record.absence_casenumber
+            self.increment(self.Metrics.VBI_REQUESTED_ABSENCE_SOM_RECORD_COUNT)
+
+            # We want to group all records from the same absence case
+            # We know they are adjacent because the query sorted them
+            for record in record_iter:
+                self.increment(self.Metrics.VBI_REQUESTED_ABSENCE_SOM_RECORD_COUNT)
+                if curr_absence_case_number != record.absence_casenumber:
+                    # We've reached the end of a chunk of absence cases,
+                    # and need to process them + setup the next chunk
+                    self.process_absence_case(
+                        cast(str, curr_absence_case_number),
+                        records_in_same_absence_case,
+                        employee_feed_map,
+                        reference_file,
+                    )
+
+                    # Setup the next pass
+                    records_in_same_absence_case = [record]
+                    curr_absence_case_number = record.absence_casenumber
+
+                else:
+                    # The absence case matches and belongs to the current set
+                    records_in_same_absence_case.append(record)
+
+            # Process the last record
+            self.process_absence_case(
+                cast(str, curr_absence_case_number),
+                records_in_same_absence_case,
+                employee_feed_map,
+                reference_file,
+            )
+            reference_file.processed_import_log_id = self.get_import_log_id()
+
+    def process_absence_case(
+        self,
+        absence_case_id: str,
+        requested_absences: List[FineosExtractVbiRequestedAbsenceSom],
+        employee_feed_map: Dict[str, FineosExtractEmployeeFeed],
+        reference_file: ReferenceFile,
+    ) -> None:
+        self.increment(self.Metrics.PROCESSED_REQUESTED_ABSENCE_COUNT)
+        customerno = requested_absences[0].employee_customerno
+
+        # Just here to make type checker happy, shouldn't realistically happen
+        # But if the customer number isn't set, the error log will let us know
+        if customerno:
+            employee_record = employee_feed_map.get(customerno)
+        else:
+            employee_record = None
+            logger.error(
+                "No employee customer number found for requested absence record %s",
+                requested_absences[0].vbi_requested_absence_som_id,
             )
 
-            logger.info(
-                "Processing absence_case_id %s",
+        claimant_data = ClaimantData(
+            absence_case_id, requested_absences, employee_record, self.increment
+        )
+
+        logger.info(
+            "Processing absence_case_id %s",
+            absence_case_id,
+            extra=claimant_data.get_traceable_details(),
+        )
+
+        employee_pfml_entry = None
+        try:
+            # Add / update entry on claim table
+            claim = self.create_or_update_claim(claimant_data)
+        except Exception as e:
+            logger.exception(
+                "Unexpected error %s while processing claim: %s",
+                type(e),
                 absence_case_id,
                 extra=claimant_data.get_traceable_details(),
             )
+            self.increment(self.Metrics.CLAIM_UPDATE_EXCEPTION_COUNT)
+            return
 
-            employee_pfml_entry = None
-            try:
-                # Add / update entry on claim table
-                claim = self.create_or_update_claim(claimant_data)
-            except Exception as e:
-                logger.exception(
-                    "Unexpected error %s while processing claim: %s",
-                    type(e),
-                    absence_case_id,
-                    extra=claimant_data.get_traceable_details(),
-                )
-                self.increment(self.Metrics.CLAIM_UPDATE_EXCEPTION_COUNT)
-                continue
-
-            try:
-                # Update employee info
-                if claim is not None:
-                    employee_pfml_entry = self.update_employee_info(claimant_data, claim)
-                    self.attach_employer_to_claim(claimant_data, claim)
-            except Exception as e:
-                logger.exception(
-                    "Unexpected error %s while processing claimant: %s",
-                    type(e),
-                    absence_case_id,
-                    extra=claimant_data.get_traceable_details(),
-                )
-                self.increment(self.Metrics.ERRORED_CLAIMANT_COUNT)
-                continue
-
-            if employee_pfml_entry is not None:
-                if employee_pfml_entry.employee_id not in updated_employee_ids:
-                    self.generate_employee_reference_file(extract_data, employee_pfml_entry)
-
-                    updated_employee_ids.add(employee_pfml_entry.employee_id)
-                else:
-                    logger.info(
-                        "Skipping adding a reference file and state_log for employee %s",
-                        employee_pfml_entry.employee_id,
-                    )
-                    self.increment(self.Metrics.EMPLOYEE_PROCESSED_MULTIPLE_TIMES)
-
+        try:
+            # Update employee info
             if claim is not None:
-                self.manage_state_log(extract_data, claim, claimant_data)
+                employee_pfml_entry = self.update_employee_info(claimant_data, claim)
+                self.attach_employer_to_claim(claimant_data, claim)
 
-        logger.info(
-            "Successfully processed claimant extract data into db: %s", extract_data.date_str
-        )
+                # Add / update entry on absence period table
+                for absence_period_info in claimant_data.absence_period_data:
+                    self.create_or_update_absence_period(absence_period_info, claim, claimant_data)
+        except Exception as e:
+            logger.exception(
+                "Unexpected error %s while processing claimant: %s",
+                type(e),
+                absence_case_id,
+                extra=claimant_data.get_traceable_details(),
+            )
+            self.increment(self.Metrics.ERRORED_CLAIMANT_COUNT)
+            return
+
+        if employee_pfml_entry is not None:
+            self.add_employee_reference_file(employee_pfml_entry, reference_file)
+
+        if claim is not None:
+            self.manage_state_log(claim, claimant_data)
+
         return None
 
     def create_or_update_claim(self, claimant_data: ClaimantData) -> Claim:
@@ -624,7 +629,7 @@ class ClaimantExtractStep(Step):
                 claimant_data.absence_end_date
             )
 
-        if not claimant_data.is_id_proofed:
+        if not claimant_data.is_claim_id_proofed:
             logger.info(
                 "Absence_case_id %s is not id proofed yet",
                 claimant_data.absence_case_id,
@@ -637,7 +642,7 @@ class ClaimantExtractStep(Step):
                 "Claim has not been ID proofed, LEAVEREQUEST_EVIDENCERESULTTYPE is not Satisfied",
             )
 
-        claim_pfml.is_id_proofed = claimant_data.is_id_proofed
+        claim_pfml.is_id_proofed = claimant_data.is_claim_id_proofed
 
         # Return claim, we want to create this even if the employee
         # has issues or there were some validation issues
@@ -645,6 +650,65 @@ class ClaimantExtractStep(Step):
         self.increment(self.Metrics.CLAIM_PROCESSED_COUNT)
 
         return claim_pfml
+
+    def create_or_update_absence_period(
+        self, absence_period_info: AbsencePeriodContainer, claim: Claim, claimant_data: ClaimantData
+    ) -> Optional[AbsencePeriod]:
+
+        log_attributes = claimant_data.get_traceable_details()
+
+        # Add / update entry on absence period table
+        logger.info("Updating Absence Period Table", extra=log_attributes)
+
+        # check if absence period is present
+        db_absence_period = (
+            self.db_session.query(AbsencePeriod)
+            .filter(
+                AbsencePeriod.fineos_absence_period_class_id == absence_period_info.class_id,
+                AbsencePeriod.fineos_absence_period_index_id == absence_period_info.index_id,
+            )
+            .one_or_none()
+        )
+
+        if db_absence_period and db_absence_period.claim_id != claim.claim_id:
+            logger.error(
+                "Found absence period with claim_id different from claim associated with the absence period received.",
+                extra={
+                    **log_attributes,
+                    "claim.claim_id": claim.claim_id,
+                    "db_absence_period.claim_id": db_absence_period.claim_id,
+                    "absence_period_class_id": absence_period_info.class_id,
+                    "absence_period_index_id": absence_period_info.index_id,
+                },
+            )
+
+            claimant_data.validation_container.add_validation_issue(
+                payments_util.ValidationReason.CLAIMANT_MISMATCH,
+                "Claim.claim_id does not match db_absence_period.claim_id",
+            )
+
+            return None
+
+        if db_absence_period is None:
+            db_absence_period = AbsencePeriod()
+            db_absence_period.claim_id = claim.claim_id
+            db_absence_period.fineos_absence_period_class_id = absence_period_info.class_id
+            db_absence_period.fineos_absence_period_index_id = absence_period_info.index_id
+            self.db_session.add(db_absence_period)
+
+        if absence_period_info.is_id_proofed is not None:
+            db_absence_period.is_id_proofed = absence_period_info.is_id_proofed
+
+        if absence_period_info.start_date is not None:
+            db_absence_period.absence_period_start_date = absence_period_info.start_date
+
+        if absence_period_info.end_date is not None:
+            db_absence_period.absence_period_end_date = absence_period_info.end_date
+
+        if absence_period_info.leave_request_id is not None:
+            db_absence_period.fineos_leave_request_id = absence_period_info.leave_request_id
+
+        return db_absence_period
 
     def update_employee_info(self, claimant_data: ClaimantData, claim: Claim) -> Optional[Employee]:
         """Returns the employee if found and updates its info"""
@@ -696,45 +760,37 @@ class ClaimantExtractStep(Step):
             )
             return None
 
-        with fineos_log_tables_util.update_entity_and_remove_log_entry(
-            self.db_session, employee_pfml_entry, commit=False
-        ):
-            # Use employee feed entry to update PFML DB
-            if claimant_data.date_of_birth is not None:
-                employee_pfml_entry.date_of_birth = payments_util.datetime_str_to_date(
-                    claimant_data.date_of_birth
-                )
+        # Use employee feed entry to update PFML DB
+        if claimant_data.date_of_birth is not None:
+            employee_pfml_entry.date_of_birth = payments_util.datetime_str_to_date(
+                claimant_data.date_of_birth
+            )
 
-            if claimant_data.fineos_customer_number is not None:
-                employee_pfml_entry.fineos_customer_number = claimant_data.fineos_customer_number
+        if claimant_data.fineos_customer_number is not None:
+            employee_pfml_entry.fineos_customer_number = claimant_data.fineos_customer_number
 
-            if claimant_data.employee_first_name is not None:
-                employee_pfml_entry.fineos_employee_first_name = claimant_data.employee_first_name
-                employee_pfml_entry.fineos_employee_middle_name = claimant_data.employee_middle_name
+        if claimant_data.employee_first_name is not None:
+            employee_pfml_entry.fineos_employee_first_name = claimant_data.employee_first_name
+            employee_pfml_entry.fineos_employee_middle_name = claimant_data.employee_middle_name
 
-            if claimant_data.employee_last_name is not None:
-                employee_pfml_entry.fineos_employee_last_name = claimant_data.employee_last_name
+        if claimant_data.employee_last_name is not None:
+            employee_pfml_entry.fineos_employee_last_name = claimant_data.employee_last_name
 
-            self.update_eft_info(claimant_data, employee_pfml_entry)
+        self.update_eft_info(claimant_data, employee_pfml_entry)
 
-            # Associate claim with employee in case it is a new claim.
-            claim.employee_id = employee_pfml_entry.employee_id
-            # NOTE: fix to address test issues with query cache using a claim with the employee_id not set in other steps
-            # This will make the employee object available in memory for the same transaction
-            # TODO settle on approach after further investigation
-            claim.employee = employee_pfml_entry
+        # Associate claim with employee in case it is a new claim.
+        claim.employee_id = employee_pfml_entry.employee_id
+        # NOTE: fix to address test issues with query cache using a claim with the employee_id not set in other steps
+        # This will make the employee object available in memory for the same transaction
+        # TODO settle on approach after further investigation
+        claim.employee = employee_pfml_entry
 
-            self.db_session.add(employee_pfml_entry)
+        self.db_session.add(employee_pfml_entry)
 
         return employee_pfml_entry
 
     def update_eft_info(self, claimant_data: ClaimantData, employee_pfml_entry: Employee,) -> None:
         """Updates EFT info and starts prenoting process if necessary"""
-        if self.skip_prenoting:
-            # This is temporary prior to launch in case we need to run
-            # the claimant extract on its own to fetch claim information.
-            # Once we've launched, this can be removed as it's unused.
-            return
 
         if claimant_data.should_do_eft_operations:
             # Always create an EFT object, we'll use this
@@ -833,60 +889,7 @@ class ClaimantExtractStep(Step):
             extra=claimant_data.get_traceable_details(),
         )
 
-    def generate_employee_reference_file(
-        self, extract_data: ExtractData, employee_pfml_entry: Employee
-    ) -> None:
-        """Create an EmployeeReferenceFile record if none already exists
-
-        This will not create duplicate records if the employee appears multiple
-        times in the same claimant extract.
-        """
-
-        # Check to see if an EmployeeReferenceFile record already exists
-        # TODO -- We should eliminate this db query by tracking employees that
-        #         have already appeared in this file, but beware of memory issues
-        #         in case the number is too big to store in a list
-        employee_reference_file = (
-            self.db_session.query(EmployeeReferenceFile)
-            .filter(
-                EmployeeReferenceFile.employee_id == employee_pfml_entry.employee_id,
-                EmployeeReferenceFile.reference_file_id
-                == extract_data.reference_file.reference_file_id,
-            )
-            .first()
-        )
-
-        # If none exists, create one
-        if employee_reference_file is None:
-            logger.info(
-                "Creating an EmployeeReferenceFile for employee with customer nbr %s and reference file with reference_file_id %s",
-                employee_pfml_entry.fineos_customer_number,
-                extract_data.reference_file.reference_file_id,
-                extra={
-                    "fineos_customer_number": employee_pfml_entry.fineos_customer_number,
-                    "reference_file_id": extract_data.reference_file.reference_file_id,
-                },
-            )
-            employee_reference_file = EmployeeReferenceFile(
-                employee=employee_pfml_entry, reference_file=extract_data.reference_file,
-            )
-            self.db_session.add(employee_reference_file)
-
-        # If one exists, skip
-        else:
-            logger.info(
-                "An EmployeeReferenceFile already exists for employee with customer nbr %s and reference file with reference_file_id %s",
-                employee_pfml_entry.fineos_customer_number,
-                extract_data.reference_file.reference_file_id,
-                extra={
-                    "fineos_customer_number": employee_pfml_entry.fineos_customer_number,
-                    "reference_file_id": extract_data.reference_file.reference_file_id,
-                },
-            )
-
-    def manage_state_log(
-        self, extract_data: ExtractData, claim: Claim, claimant_data: ClaimantData
-    ) -> None:
+    def manage_state_log(self, claim: Claim, claimant_data: ClaimantData) -> None:
         """Manages the DELEGATED_CLAIMANT states"""
         validation_container = claimant_data.validation_container
 
@@ -897,7 +900,7 @@ class ClaimantExtractStep(Step):
                 associated_model=claim,
                 import_log_id=self.get_import_log_id(),
                 outcome=state_log_util.build_outcome(
-                    f"Claim {claim.fineos_absence_id} had validation issues in FINEOS claimant extract {extract_data.date_str}",
+                    f"Claim {claim.fineos_absence_id} had validation issues in FINEOS claimant extract",
                     validation_container,
                 ),
                 db_session=self.db_session,
@@ -910,157 +913,8 @@ class ClaimantExtractStep(Step):
                 associated_model=claim,
                 import_log_id=self.get_import_log_id(),
                 outcome=state_log_util.build_outcome(
-                    f"Claim {claim.fineos_absence_id} successfully extracted from FINEOS claimant extract {extract_data.date_str}"
+                    f"Claim {claim.fineos_absence_id} successfully extracted from FINEOS claimant extract"
                 ),
                 db_session=self.db_session,
             )
             self.increment(self.Metrics.VALID_CLAIM_COUNT)
-
-    # TODO move to payments_util
-    def move_files_from_received_to_processed(self, extract_data: ExtractData) -> None:
-        # Effectively, this method will move a file of path:
-        # s3://bucket/path/to/received/2020-01-01-11-30-00-file.csv
-        # to
-        # s3://bucket/path/to/processed/2020-01-01-11-30-00-payment-extract/2020-01-01-11-30-00-file.csv
-        date_group_folder = payments_util.get_date_group_folder_name(
-            extract_data.date_str, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
-        )
-        new_requested_absence_info_s3_path = extract_data.requested_absence_info.file_location.replace(
-            RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
-        )
-        file_util.rename_file(
-            extract_data.requested_absence_info.file_location, new_requested_absence_info_s3_path
-        )
-        logger.debug(
-            "Moved requested absence info file to processed folder.",
-            extra={
-                "source": extract_data.requested_absence_info.file_location,
-                "destination": new_requested_absence_info_s3_path,
-            },
-        )
-
-        new_employee_feed_s3_path = extract_data.employee_feed.file_location.replace(
-            RECEIVED_FOLDER, f"{PROCESSED_FOLDER}/{date_group_folder}"
-        )
-        file_util.rename_file(extract_data.employee_feed.file_location, new_employee_feed_s3_path)
-        logger.debug(
-            "Moved employee feed file to processed folder.",
-            extra={
-                "source": extract_data.employee_feed.file_location,
-                "destination": new_employee_feed_s3_path,
-            },
-        )
-
-        # Update the reference file DB record to point to the new folder for these files
-        extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
-            RECEIVED_FOLDER, PROCESSED_FOLDER
-        )
-        extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
-            extract_data.date_str, date_group_folder
-        )
-        self.db_session.add(extract_data.reference_file)
-        logger.debug(
-            "Updated reference file location for claimant extract data.",
-            extra={"reference_file_location": extract_data.reference_file.file_location},
-        )
-
-        logger.info("Successfully moved claimant files to processed folder.")
-
-    # TODO move to payments_util
-    def move_files_from_received_to_skipped(self, extract_data: ExtractData) -> None:
-        # Effectively, this method will move a file of path:
-        # s3://bucket/path/to/received/2020-01-01-11-30-00-file.csv
-        # to
-        # s3://bucket/path/to/skipped/2020-01-01-11-30-00-payment-extract/2020-01-01-11-30-00-file.csv
-        date_group_folder = payments_util.get_date_group_folder_name(
-            extract_data.date_str, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
-        )
-        new_requested_absence_info_s3_path = extract_data.requested_absence_info.file_location.replace(
-            RECEIVED_FOLDER, f"{SKIPPED_FOLDER}/{date_group_folder}"
-        )
-        file_util.rename_file(
-            extract_data.requested_absence_info.file_location, new_requested_absence_info_s3_path
-        )
-        logger.debug(
-            "Moved requested absence info file to skipped folder.",
-            extra={
-                "source": extract_data.requested_absence_info.file_location,
-                "destination": new_requested_absence_info_s3_path,
-            },
-        )
-
-        new_employee_feed_s3_path = extract_data.employee_feed.file_location.replace(
-            RECEIVED_FOLDER, f"{SKIPPED_FOLDER}/{date_group_folder}"
-        )
-        file_util.rename_file(extract_data.employee_feed.file_location, new_employee_feed_s3_path)
-        logger.debug(
-            "Moved employee feed file to skipped folder.",
-            extra={
-                "source": extract_data.employee_feed.file_location,
-                "destination": new_employee_feed_s3_path,
-            },
-        )
-
-        # Update the reference file DB record to point to the new folder for these files
-        extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
-            RECEIVED_FOLDER, SKIPPED_FOLDER
-        )
-        extract_data.reference_file.file_location = extract_data.reference_file.file_location.replace(
-            extract_data.date_str, date_group_folder
-        )
-        self.db_session.add(extract_data.reference_file)
-        logger.debug(
-            "Updated reference file location for claimant extract data.",
-            extra={"reference_file_location": extract_data.reference_file.file_location},
-        )
-
-        logger.info("Successfully moved claimant files to skipped folder.")
-
-    # TODO move to payments_util
-    def move_files_from_received_to_error(self, extract_data: ExtractData) -> None:
-        # Effectively, this method will move a file of path:
-        # s3://bucket/path/to/received/2020-01-01-file.csv
-        # to
-        # s3://bucket/path/to/errored/2020-01-01/2020-01-01-file.csv
-        date_group_folder = payments_util.get_date_group_folder_name(
-            extract_data.date_str, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
-        )
-        new_requested_absence_info_s3_path = extract_data.requested_absence_info.file_location.replace(
-            RECEIVED_FOLDER, f"{ERRORED_FOLDER}/{date_group_folder}"
-        )
-        file_util.rename_file(
-            extract_data.requested_absence_info.file_location, new_requested_absence_info_s3_path
-        )
-        logger.debug(
-            "Moved requested absence info file to error folder.",
-            extra={
-                "source": extract_data.requested_absence_info.file_location,
-                "destination": new_requested_absence_info_s3_path,
-            },
-        )
-
-        new_employee_feed_s3_path = extract_data.employee_feed.file_location.replace(
-            RECEIVED_FOLDER, f"{ERRORED_FOLDER}/{date_group_folder}"
-        )
-        file_util.rename_file(extract_data.employee_feed.file_location, new_employee_feed_s3_path)
-        logger.debug(
-            "Moved employee feed file to error folder.",
-            extra={
-                "source": extract_data.employee_feed.file_location,
-                "destination": new_employee_feed_s3_path,
-            },
-        )
-
-        # We still want to create the reference file, just use the one that is
-        # created in the __init__ of the extract data object and set the path.
-        # Note that this will not be attached to a payment
-        extract_data.reference_file.file_location = file_util.get_directory(
-            new_requested_absence_info_s3_path
-        )
-        self.db_session.add(extract_data.reference_file)
-        logger.debug(
-            "Updated reference file location for claimant extract data.",
-            extra={"reference_file_location": extract_data.reference_file.file_location},
-        )
-
-        logger.info("Successfully moved claimant files to error folder.")

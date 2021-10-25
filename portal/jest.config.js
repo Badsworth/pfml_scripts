@@ -6,7 +6,6 @@ module.exports = {
   clearMocks: true,
   coveragePathIgnorePatterns: [
     "/node_modules/",
-    "<rootDir>/tests-old/test-utils/",
     "<rootDir>/tests/lib/",
     "<rootDir>/tests/test-utils/",
   ],
@@ -17,17 +16,15 @@ module.exports = {
     "\\.(css|scss)$": "<rootDir>/__mocks__/styleMock.js",
   },
   setupFilesAfterEnv: ["<rootDir>/jest.setup.js"],
-  snapshotSerializers: ["enzyme-to-json/serializer"],
   testEnvironment: "jsdom",
   testPathIgnorePatterns: [
     "<rootDir>/.next/",
     "<rootDir>/node_modules/",
     "<rootDir>/config",
-    "<rootDir>/tests-old/test-utils/",
     "<rootDir>/tests/lib/",
     "<rootDir>/tests/test-utils/",
   ],
-  testRegex: "(/(tests-old|tests)/.*|(\\.|/)(test|spec))\\.[jt]sx?$",
+  testRegex: "(/(tests)/.*|(\\.|/)(test|spec))\\.[jt]sx?$",
   coverageThreshold: {
     global: {
       branches: 90,

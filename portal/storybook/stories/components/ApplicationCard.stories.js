@@ -1,8 +1,9 @@
-import Document, { DocumentType } from "src/models/Document";
 import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import { ApplicationCard } from "src/components/ApplicationCard";
 import BenefitsApplication from "src/models/BenefitsApplication";
+import BenefitsApplicationDocument from "src/models/BenefitsApplicationDocument";
+import { DocumentType } from "src/models/Document";
 import { MockBenefitsApplicationBuilder } from "tests/test-utils";
 import React from "react";
 
@@ -69,7 +70,7 @@ export const Story = ({ claim, documents, ...args }) => {
   } else if (claim === "Submitted + Denial notice") {
     claimAttrs = new MockBenefitsApplicationBuilder().submitted().create();
     attachedDocuments = [
-      new Document({
+      new BenefitsApplicationDocument({
         created_at: "2021-01-15",
         document_type: DocumentType.denialNotice,
         fineos_document_id: "a",
@@ -84,7 +85,7 @@ export const Story = ({ claim, documents, ...args }) => {
       .hasFutureChild()
       .create();
     attachedDocuments = [
-      new Document({
+      new BenefitsApplicationDocument({
         created_at: "2021-01-15",
         document_type: DocumentType.identityVerification,
         fineos_document_id: "a",
@@ -97,7 +98,7 @@ export const Story = ({ claim, documents, ...args }) => {
       .hasFutureChild()
       .create();
     attachedDocuments = [
-      new Document({
+      new BenefitsApplicationDocument({
         created_at: "2021-01-15",
         document_type: DocumentType.identityVerification,
         fineos_document_id: "a",
@@ -109,7 +110,7 @@ export const Story = ({ claim, documents, ...args }) => {
       .caringLeaveReason()
       .create();
     attachedDocuments = [
-      new Document({
+      new BenefitsApplicationDocument({
         created_at: "2021-01-15",
         document_type: DocumentType.identityVerification,
         fineos_document_id: "a",
@@ -118,12 +119,12 @@ export const Story = ({ claim, documents, ...args }) => {
   } else if (claim === "Approved") {
     claimAttrs = new MockBenefitsApplicationBuilder().completed().create();
     attachedDocuments = [
-      new Document({
+      new BenefitsApplicationDocument({
         created_at: "2021-01-15",
         document_type: DocumentType.requestForInfoNotice,
         fineos_document_id: "a",
       }),
-      new Document({
+      new BenefitsApplicationDocument({
         created_at: "2021-01-30",
         document_type: DocumentType.approvalNotice,
         fineos_document_id: "b",
@@ -132,12 +133,12 @@ export const Story = ({ claim, documents, ...args }) => {
   } else if (claim === "Denied") {
     claimAttrs = new MockBenefitsApplicationBuilder().completed().create();
     attachedDocuments = [
-      new Document({
+      new BenefitsApplicationDocument({
         created_at: "2021-01-15",
         document_type: DocumentType.requestForInfoNotice,
         fineos_document_id: "a",
       }),
-      new Document({
+      new BenefitsApplicationDocument({
         created_at: "2021-01-30",
         document_type: DocumentType.denialNotice,
         fineos_document_id: "b",

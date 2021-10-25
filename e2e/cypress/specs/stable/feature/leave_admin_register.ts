@@ -33,8 +33,8 @@ describe("Leave Admin Self-Registration", () => {
   it("Leave administrators should be able to register for a second organization", () => {
     cy.dependsOnPreviousPass([register]);
     portal.before();
-    cy.unstash<Credentials>("credentials").then((credentials) => {
-      cy.unstash<string>("employer").then((fein) => {
+    cy.unstash<string>("employer").then((fein) => {
+      cy.unstash<Credentials>("credentials").then((credentials) => {
         portal.login(credentials);
         cy.contains("Your organizations").click();
         // Pick a second employer from the dataset to register as an additional organization.
@@ -47,6 +47,11 @@ describe("Leave Admin Self-Registration", () => {
             secondary.withholdings[secondary.withholdings.length - 1];
           portal.addOrganization(secondary.fein, secondaryWithholding);
         });
+        // Test that we can filter claims by organization.
+        // This is currently the only place where we can test it.
+        cy.findByText("Back to Dashboard").click();
+        // Select the second option, as we only care we can filter at all.
+        portal.filterLADashboardBy({ organization: 1 });
       });
     });
   });
@@ -54,8 +59,8 @@ describe("Leave Admin Self-Registration", () => {
   it("Leave administrators cannot verify with an organization whose withholding amounts equal 0", () => {
     cy.dependsOnPreviousPass([register]);
     portal.before();
-    cy.unstash<Credentials>("credentials").then((credentials) => {
-      cy.unstash<string>("employer").then(() => {
+    cy.unstash<string>("employer").then(() => {
+      cy.unstash<Credentials>("credentials").then((credentials) => {
         portal.login(credentials);
         cy.contains("Your organizations").click();
         cy.task("pickEmployer", {

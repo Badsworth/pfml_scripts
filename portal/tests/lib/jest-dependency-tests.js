@@ -50,14 +50,14 @@ export const testDependencies = (dependencyRules, rootDir) => {
     moduleOrDirRelPath,
     description,
   } of dependencyRules) {
-    const moduleOrDirName = basename(moduleOrDirRelPath, ".js");
+    const moduleOrDirName = basename(moduleOrDirRelPath);
     describe(`${moduleOrDirName} dependencies`, () => {
       beforeEach(() => {
         mockForbiddenDependenciesToThrow(forbiddenDependencies, rootDir);
       });
 
       for (const modulePath of getModulePaths(moduleOrDirRelPath, rootDir)) {
-        const moduleName = basename(modulePath, ".js");
+        const moduleName = basename(modulePath);
         it(`${moduleName} ${description}`, () => {
           const importModule = () => require(modulePath);
           expect(importModule).not.toThrow();
@@ -87,7 +87,12 @@ function getModulePaths(moduleOrDirRelPath, rootDir) {
     const dirPath = moduleOrDirPath;
     const modulePaths = listFilesRecursive(dirPath);
     // only return js modules (ignore files like .eslintrc)
-    return modulePaths.filter((modulePath) => extname(modulePath) === ".js");
+    return modulePaths.filter(
+      (modulePath) =>
+        extname(modulePath) === ".js" ||
+        extname(modulePath) === ".ts" ||
+        extname(modulePath) === ".tsx"
+    );
   } else {
     const modulePath = moduleOrDirPath;
     return [modulePath];

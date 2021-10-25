@@ -1,0 +1,183 @@
+import {
+  Canvas,
+  Description,
+  Meta,
+  Story,
+  Preview,
+  Props,
+  Title as StoryTitle,
+} from "@storybook/addon-docs/blocks";
+import Alert from "src/components/Alert";
+import BackButton from "src/components/BackButton";
+import Step from "src/components/Step";
+import StepList from "src/components/StepList";
+import FormLabel from "src/components/FormLabel";
+import Table from "src/components/Table";
+import Title from "src/components/Title";
+
+<Meta title="Guidance/Responsive Design" parameters={{ viewMode: "docs" }} />
+
+<StoryTitle />
+<Description>Guidance on responsive design patterns.</Description>
+
+## Responsive design principles
+
+In alignment with the [USWDS' "Promote continuity" design principle](https://designsystem.digital.gov/design-principles/#promote-continuity), we always strive to provide critical functionality and minimize disruption regardless of the devices used. To accomplish this goal, for new designs, we ask ourselves the following questions:
+
+1. Is the design responsive to effectively and efficiently be accessed on various device sizes?
+1. Is the experience consistent on any browser and device? If not, is there strong rationale to support that decision?
+
+## Examples
+
+_Resize your window to see the responsiveness in the examples._
+
+**Is the design responsive to effectively and efficiently be accessed on various device sizes?**
+Regardless of the device size, users are able to access key functionality.
+
+<Canvas>
+  <Story name="Responsive Content">
+    <BackButton />
+    <StepList
+      title="Let's get started"
+      startText="Start"
+      resumeText="Resume"
+      editText="Edit"
+    >
+      <Step
+        title="Provide employer details"
+        status="not_started"
+        stepHref="#"
+        completedText="Completed"
+      >
+        To expedite the process, have the following information within easy
+        access.
+        <ul className="usa-list">
+          <li>Employer Identification Number</li>
+          <li>Physical address</li>
+          <li>Primary phone number</li>
+        </ul>
+      </Step>
+      <Step
+        title="Verify your identification"
+        status="disabled"
+        stepHref="#"
+        completedText="Completed"
+      >
+        This is the step instructions and should not be visible.
+      </Step>
+      <Step
+        title="Review and confirm"
+        status="disabled"
+        stepHref="#"
+        completedText="Completed"
+      >
+        This is the step instructions and should not be visible.
+      </Step>
+    </StepList>
+  </Story>
+</Canvas>
+
+**Is the experience consistent on any browser and device? If not, is there strong rationale to support that decision?**
+
+Note that the table appears different on mobile since it's the [USWDS Responsive Stacked Table](https://designsystem.digital.gov/components/table/#responsive-stacked-table), but the content is still the same.
+
+<Canvas>
+  <Story name="Responsive Table">
+    <h1>Dashboard</h1>
+    <Alert
+      heading="We're making it easier to manage paid leave applications"
+      state="info"
+    >
+      You can now see all the applications you need to review using our new
+      dashboard. Over the next few months, we'll be adding more features to the
+      dashboard so you can easily find and manage paid leave applications.
+    </Alert>
+    <Table className="width-full" responsive>
+      <thead>
+        <tr>
+          <th scope="col" key="Employee name">
+            Employee name
+          </th>
+          <th scope="col" key="Application start date">
+            Application start date
+          </th>
+          <th scope="col" key="Application ID">
+            Application ID
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <th data-label="Employee name" scope="row">
+            Mai Kim Giang
+          </th>
+          <td data-label="Application start date">7/20/2021</td>
+          <td data-label="Application ID">NTN-101-ABS-01</td>
+        </tr>
+        <tr>
+          <th data-label="Employee name" scope="row">
+            Derek Channing
+          </th>
+          <td data-label="Application start date">7/24/2021</td>
+          <td data-label="Application ID">NTN-101-ABS-02</td>
+        </tr>
+        <tr>
+          <th data-label="Employee name" scope="row">
+            Mohamed Kaya
+          </th>
+          <td data-label="Application start date">7/24/2021</td>
+          <td data-label="Application ID">NTN-101-ABS-03</td>
+        </tr>
+        <tr>
+          <th data-label="Employee name" scope="row">
+            Evelyn Medina
+          </th>
+          <td data-label="Application start date">7/29/2021</td>
+          <td data-label="Application ID">NTN-101-ABS-04</td>
+        </tr>
+        <tr>
+          <th data-label="Employee name" scope="row">
+            Fatemah Bülbül
+          </th>
+          <td data-label="Application start date">8/3/2021</td>
+          <td data-label="Application ID">NTN-101-ABS-05</td>
+        </tr>
+        <tr>
+          <th data-label="Employee name" scope="row">
+            Amina Carter
+          </th>
+          <td data-label="Application start date">8/3/2021</td>
+          <td data-label="Application ID">NTN-101-ABS-06</td>
+        </tr>
+        <tr>
+          <th data-label="Employee name" scope="row">
+            Noel Foster
+          </th>
+          <td data-label="Application start date">8/11/2021</td>
+          <td data-label="Application ID">NTN-101-ABS-07</td>
+        </tr>
+        <tr>
+          <th data-label="Employee name" scope="row">
+            Payton Foster
+          </th>
+          <td data-label="Application start date">8/12/2021</td>
+          <td data-label="Application ID">NTN-101-ABS-08</td>
+        </tr>
+        <tr>
+          <th data-label="Employee name" scope="row">
+            Ida Del Rio
+          </th>
+          <td data-label="Application start date">8/19/2021</td>
+          <td data-label="Application ID">NTN-101-ABS-09</td>
+        </tr>
+        <tr>
+          <th data-label="Employee name" scope="row">
+            Youssef Tezel
+          </th>
+          <td data-label="Application start date">8/21/2021</td>
+          <td data-label="Application ID">NTN-101-ABS-10</td>
+        </tr>
+      </tbody>
+    </Table>
+  </Story>
+</Canvas>

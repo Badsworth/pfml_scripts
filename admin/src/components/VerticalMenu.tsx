@@ -1,7 +1,7 @@
 import { useState, isValidElement } from "react";
 import Link from "next/link";
 
-type option = {
+export type Option = {
   enabled: boolean;
   text: string;
   type: "button" | "link";
@@ -9,8 +9,8 @@ type option = {
   href?: string;
 };
 
-type Props = {
-  options: option[];
+export type Props = {
+  options: Option[];
 };
 
 export default function VerticalMenu({ options }: Props) {
@@ -26,7 +26,7 @@ export default function VerticalMenu({ options }: Props) {
     onClick && onClick(event);
   };
 
-  const listItems = options.map((option: option) => {
+  const listItems = options.map((option: Option) => {
     if (!option.enabled) {
       return (
         <span className="vertical-menu__item vertical-menu__item--disabled">
@@ -65,6 +65,7 @@ export default function VerticalMenu({ options }: Props) {
         className="vertical-menu__icon pfml-icon--vmenu"
         onClick={toggleOpen}
         type="button"
+        data-testid="vertical-menu-trigger"
       ></button>
 
       {open && (

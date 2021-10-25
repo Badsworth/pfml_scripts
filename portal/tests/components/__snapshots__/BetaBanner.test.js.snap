@@ -1,0 +1,26 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`BetaBanner renders message with given feedbackUrl 1`] = `
+<div
+  class="bg-base-lightest"
+>
+  <div
+    class="c-beta-banner"
+  >
+    <span
+      class="display-inline-block bg-secondary margin-right-1 padding-x-2 text-bold text-white"
+    >
+      Beta
+    </span>
+    This is a new service. Help us improve it with 
+    <a
+      href="http://example.com"
+      rel="noopener"
+      target="_blank"
+    >
+      your feedback
+    </a>
+    .
+  </div>
+</div>
+`;

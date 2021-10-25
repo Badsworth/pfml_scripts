@@ -1715,24 +1715,37 @@ def test_has_employer_benefits_true_no_benefit():
     ] == issues
 
 
-def test_employer_benefit_no_issues():
+def test_has_employer_benefits_true_zero_benefit():
     application = ApplicationFactory.build()
-    benefits = [EmployerBenefitFactory.build(application_id=application.application_id)]
-    application.employer_benefits = benefits
+    application.has_employer_benefits = True
 
-    issues = get_conditional_issues(application)
-    assert [] == issues
-
-
-def test_employer_benefit_amount_fields_are_optional():
-    application = ApplicationFactory.build()
     benefits = [
         EmployerBenefitFactory.build(
             application_id=application.application_id,
-            benefit_amount_dollars=None,
-            benefit_amount_frequency_id=None,
+            benefit_amount_dollars=0,
+            is_full_salary_continuous=False,
         )
     ]
+    application.employer_benefits = benefits
+    issues = get_conditional_issues(application)
+
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.minimum,
+            message="benefit_amount_dollars must be greater than zero",
+            field="employer_benefits[0].benefit_amount_dollars",
+        )
+    ] == issues
+
+    application.employer_benefits[0].is_full_salary_continuous = True
+    issues = get_conditional_issues(application)
+
+    assert len(issues) == 0
+
+
+def test_employer_benefit_no_issues():
+    application = ApplicationFactory.build()
+    benefits = [EmployerBenefitFactory.build(application_id=application.application_id)]
     application.employer_benefits = benefits
 
     issues = get_conditional_issues(application)
@@ -1761,41 +1774,26 @@ def test_employer_benefit_missing_fields():
     ] == issues
 
 
-def test_employer_benefit_amount_dollars_required():
-    application = ApplicationFactory.build()
-    benefits = [
-        EmployerBenefitFactory.build(
-            application_id=application.application_id, benefit_amount_dollars=None,
-        )
-    ]
-    application.employer_benefits = benefits
-
-    issues = get_conditional_issues(application)
+def test_benefit_amount_and_frequency_required():
+    test_app = ApplicationFactory.build(
+        employer_benefits=[
+            EmployerBenefit(
+                is_full_salary_continuous=False,
+                benefit_start_date=date(2021, 1, 3),
+                benefit_type_id=0,
+            )
+        ]
+    )
+    issues = get_conditional_issues(test_app)
     assert [
         ValidationErrorDetail(
             type=IssueType.required,
-            rule=IssueRule.conditional,
-            message="employer_benefits[0].benefit_amount_dollars is required if employer_benefits[0].benefit_amount_frequency is set",
+            message="employer_benefits[0].benefit_amount_dollars is required",
             field="employer_benefits[0].benefit_amount_dollars",
         ),
-    ] == issues
-
-
-def test_employer_benefit_amount_frequency_required():
-    application = ApplicationFactory.build()
-    benefits = [
-        EmployerBenefitFactory.build(
-            application_id=application.application_id, benefit_amount_frequency_id=None,
-        )
-    ]
-    application.employer_benefits = benefits
-
-    issues = get_conditional_issues(application)
-    assert [
         ValidationErrorDetail(
             type=IssueType.required,
-            rule=IssueRule.conditional,
-            message="employer_benefits[0].benefit_amount_frequency is required if employer_benefits[0].benefit_amount_dollars is set",
+            message="employer_benefits[0].benefit_amount_frequency is required",
             field="employer_benefits[0].benefit_amount_frequency",
         ),
     ] == issues
@@ -1966,24 +1964,30 @@ def test_has_other_incomes_true_no_income():
     ] == issues
 
 
-def test_other_income_no_issues():
+def test_has_other_incomes_true_zero_income():
     application = ApplicationFactory.build()
-    incomes = [OtherIncomeFactory.build(application_id=application.application_id,)]
+    application.has_other_incomes = True
+
+    incomes = [
+        OtherIncomeFactory.build(
+            application_id=application.application_id, income_amount_dollars=0,
+        )
+    ]
     application.other_incomes = incomes
 
     issues = get_conditional_issues(application)
-    assert [] == issues
-
-
-def test_other_income_amount_fields_are_optional():
-    application = ApplicationFactory.build()
-    incomes = [
-        OtherIncomeFactory.build(
-            application_id=application.application_id,
-            income_amount_dollars=None,
-            income_amount_frequency_id=None,
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.minimum,
+            message="income_amount_dollars must be greater than zero",
+            field="other_incomes[0].income_amount_dollars",
         )
-    ]
+    ] == issues
+
+
+def test_other_income_no_issues():
+    application = ApplicationFactory.build()
+    incomes = [OtherIncomeFactory.build(application_id=application.application_id,)]
     application.other_incomes = incomes
 
     issues = get_conditional_issues(application)
@@ -2009,44 +2013,14 @@ def test_other_income_missing_fields():
             message="other_incomes[0].income_type is required",
             field="other_incomes[0].income_type",
         ),
-    ] == issues
-
-
-def test_other_income_amount_dollars_required():
-    application = ApplicationFactory.build()
-    incomes = [
-        OtherIncomeFactory.build(
-            application_id=application.application_id, income_amount_dollars=None,
-        )
-    ]
-    application.other_incomes = incomes
-
-    issues = get_conditional_issues(application)
-    assert [
         ValidationErrorDetail(
             type=IssueType.required,
-            rule=IssueRule.conditional,
-            message="other_incomes[0].income_amount_dollars is required if other_incomes[0].income_amount_frequency is set",
+            message="other_incomes[0].income_amount_dollars is required",
             field="other_incomes[0].income_amount_dollars",
         ),
-    ] == issues
-
-
-def test_other_income_amount_frequency_required():
-    application = ApplicationFactory.build()
-    incomes = [
-        OtherIncomeFactory.build(
-            application_id=application.application_id, income_amount_frequency_id=None,
-        )
-    ]
-    application.other_incomes = incomes
-
-    issues = get_conditional_issues(application)
-    assert [
         ValidationErrorDetail(
             type=IssueType.required,
-            rule=IssueRule.conditional,
-            message="other_incomes[0].income_amount_frequency is required if other_incomes[0].income_amount_dollars is set",
+            message="other_incomes[0].income_amount_frequency is required",
             field="other_incomes[0].income_amount_frequency",
         ),
     ] == issues
@@ -2385,4 +2359,120 @@ def test_previous_leave_worked_per_week_minutes_must_be_less_than_10080():
             message="Minutes worked per week cannot exceed 10080",
             field="previous_leaves_same_reason[0].worked_per_week_minutes",
         )
+    ] == issues
+
+
+def test_previous_leaves_cannot_overlap_leave_periods():
+    application = ApplicationFactory.build()
+
+    # Previous leaves for the same reason; continuous leave; previous leave overlapping with the tail of the leave period
+    leave_periods = [
+        ContinuousLeavePeriodFactory.build(
+            application_id=application.application_id,
+            start_date=date(2021, 1, 1),
+            end_date=date(2021, 2, 28),
+        )
+    ]
+    previous_leaves = [
+        PreviousLeaveSameReasonFactory.build(
+            application_id=application.application_id,
+            leave_start_date=date(2021, 2, 28),
+            leave_end_date=date(2021, 3, 12),
+        )
+    ]
+    application.has_continuous_leave_periods = True
+    application.continuous_leave_periods = leave_periods
+    application.previous_leaves_same_reason = previous_leaves
+    issues = get_conditional_issues(application)
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.conflicting,
+            rule=IssueRule.disallow_overlapping_leave_period_with_previous_leave,
+            message="Previous leaves cannot overlap with leave periods. Received leave period 2021-01-01 – 2021-02-28 and previous leave 2021-02-28 – 2021-03-12.",
+        ),
+    ] == issues
+
+    # Previous leaves for the same reason; reduced leave; previous leave overlapping with the beginning of the leave period
+    leave_periods = [
+        ReducedScheduleLeavePeriodFactory.build(
+            application_id=application.application_id,
+            start_date=date(2021, 1, 5),
+            end_date=date(2021, 2, 28),
+        )
+    ]
+    previous_leaves = [
+        PreviousLeaveSameReasonFactory.build(
+            application_id=application.application_id,
+            leave_start_date=date(2021, 1, 1),
+            leave_end_date=date(2021, 1, 5),
+        )
+    ]
+    application.has_continuous_leave_periods = False
+    application.continuous_leave_periods = []
+    application.has_reduced_schedule_leave_periods = True
+    application.reduced_schedule_leave_periods = leave_periods
+    application.previous_leaves_same_reason = previous_leaves
+    issues = get_conditional_issues(application)
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.conflicting,
+            rule=IssueRule.disallow_overlapping_leave_period_with_previous_leave,
+            message="Previous leaves cannot overlap with leave periods. Received leave period 2021-01-05 – 2021-02-28 and previous leave 2021-01-01 – 2021-01-05.",
+        ),
+    ] == issues
+
+    # Previous leaves for another reason; reduced leave; previous leave contained within the leave period
+    leave_periods = [
+        ReducedScheduleLeavePeriodFactory.build(
+            application_id=application.application_id,
+            start_date=date(2021, 1, 5),
+            end_date=date(2021, 2, 28),
+        )
+    ]
+    previous_leaves = [
+        PreviousLeaveOtherReasonFactory.build(
+            application_id=application.application_id,
+            leave_start_date=date(2021, 1, 7),
+            leave_end_date=date(2021, 1, 24),
+        )
+    ]
+    application.reduced_schedule_leave_periods = leave_periods
+    application.previous_leaves_same_reason = []
+    application.previous_leaves_other_reason = previous_leaves
+    issues = get_conditional_issues(application)
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.conflicting,
+            rule=IssueRule.disallow_overlapping_leave_period_with_previous_leave,
+            message="Previous leaves cannot overlap with leave periods. Received leave period 2021-01-05 – 2021-02-28 and previous leave 2021-01-07 – 2021-01-24.",
+        ),
+    ] == issues
+
+    # Previous leaves for another reason; intermittent leave; previous leave contain the entire leave period
+    leave_periods = [
+        IntermittentLeavePeriodFactory.build(
+            application_id=application.application_id,
+            start_date=date(2021, 1, 5),
+            end_date=date(2021, 2, 28),
+        )
+    ]
+    previous_leaves = [
+        PreviousLeaveOtherReasonFactory.build(
+            application_id=application.application_id,
+            leave_start_date=date(2021, 1, 3),
+            leave_end_date=date(2021, 3, 1),
+        )
+    ]
+    application.has_reduced_schedule_leave_periods = False
+    application.has_intermittent_leave_periods = True
+    application.reduced_schedule_leave_periods = []
+    application.intermittent_leave_periods = leave_periods
+    application.previous_leaves_other_reason = previous_leaves
+    issues = get_conditional_issues(application)
+    assert [
+        ValidationErrorDetail(
+            type=IssueType.conflicting,
+            rule=IssueRule.disallow_overlapping_leave_period_with_previous_leave,
+            message="Previous leaves cannot overlap with leave periods. Received leave period 2021-01-05 – 2021-02-28 and previous leave 2021-01-03 – 2021-03-01.",
+        ),
     ] == issues

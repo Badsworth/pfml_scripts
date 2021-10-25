@@ -396,6 +396,29 @@ describe("Documents", function () {
     });
   });
 
+  it("Should generate a valid HCP form for a medical pregnancy claim", async function () {
+    const document = await generate(
+      {
+        ...claim,
+        leave_details: {
+          ...claim.leave_details,
+          pregnant_or_recent_birth: true,
+        },
+      },
+      { HCP: {} }
+    );
+    const values = await parsePDF(document);
+    expect(values).toMatchObject({
+      "No – Childbirth or recovery": true,
+      "Yes – Childbirth or post birth recovery": false,
+      "Yes Pregnancy": true,
+      "No pregnancy": false,
+      "Delivery mm": expect.stringMatching(/\d{2}/),
+      "Delivery dd": expect.stringMatching(/\d{2}/),
+      "Delivery yyyy": expect.stringMatching(/\d{4}/),
+    });
+  });
+
   it("Should generate an ID front", async function () {
     const document = await generate(claim, { MASSID: {} });
     const values = await parsePDF(document);

@@ -1,0 +1,11 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Fieldset renders Fieldset component with children 1`] = `
+<div>
+  <fieldset
+    class="usa-fieldset margin-top-3"
+  >
+    child
+  </fieldset>
+</div>
+`;

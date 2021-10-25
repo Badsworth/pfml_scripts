@@ -1,10 +1,11 @@
-import Document, { DocumentType } from "src/models/Document";
 import {
   claimArgTypes,
   createClaimFromArgs,
 } from "storybook/utils/claimArgTypes";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
+import BenefitsApplicationDocument from "src/models/BenefitsApplicationDocument";
 import DocumentCollection from "src/models/DocumentCollection";
+import { DocumentType } from "src/models/Document";
 import React from "react";
 import { Review } from "src/pages/applications/review";
 
@@ -30,10 +31,10 @@ export const DefaultStory = (args) => {
     benefitsApplications: {},
     documents: {
       documents: new DocumentCollection([
-        new Document({
+        new BenefitsApplicationDocument({
           document_type: DocumentType.identityVerification,
         }),
-        new Document({
+        new BenefitsApplicationDocument({
           document_type: DocumentType.certification.medicalCertification,
         }),
       ]),

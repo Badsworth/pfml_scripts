@@ -1,6 +1,7 @@
 import datetime
 from decimal import Decimal
 from enum import Enum
+from typing import Optional
 
 from sqlalchemy import TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text, case
 from sqlalchemy.dialects.postgresql import JSONB
@@ -20,6 +21,7 @@ from massgov.pfml.db.models.employees import (
     User,
 )
 from massgov.pfml.rmv.models import RmvAcknowledgement
+from massgov.pfml.util.decimals import round_nearest_hundredth
 
 from ..lookup import LookupTable
 from .base import Base, TimestampMixin, uuid_gen
@@ -196,7 +198,7 @@ class LkPhoneType(Base):
         self.phone_type_description = phone_type_description
 
 
-class Phone(Base):
+class Phone(Base, TimestampMixin):
     __tablename__ = "phone"
     application = relationship("Application", back_populates="phone")
     fineos_phone_id = Column(Integer)
@@ -206,7 +208,7 @@ class Phone(Base):
     phone_type_instance = relationship(LkPhoneType)
 
 
-class ConcurrentLeave(Base):
+class ConcurrentLeave(Base, TimestampMixin):
     __tablename__ = "concurrent_leave"
     concurrent_leave_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     application_id = Column(
@@ -218,7 +220,7 @@ class ConcurrentLeave(Base):
     application = relationship("Application")
 
 
-class PreviousLeave(Base):
+class PreviousLeave(Base, TimestampMixin):
     # Caution: records of this model get recreated frequently as part of the PATCH /applications/:id endpoint.
     # Only the Application model should hold foreign keys to these records to avoid referenced objects being unexpectedly deleted.
     __tablename__ = "previous_leave"
@@ -254,7 +256,7 @@ class PreviousLeaveSameReason(PreviousLeave):
     __mapper_args__ = {"polymorphic_identity": "same_reason"}
 
 
-class Application(Base):
+class Application(Base, TimestampMixin):
     __tablename__ = "application"
     application_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     user_id = Column(PostgreSQLUUID, ForeignKey("user.user_id"), nullable=False, index=True)
@@ -371,7 +373,7 @@ class Application(Base):
     concurrent_leave = relationship("ConcurrentLeave", back_populates="application", uselist=False,)
 
 
-class CaringLeaveMetadata(Base):
+class CaringLeaveMetadata(Base, TimestampMixin):
     __tablename__ = "caring_leave_metadata"
     caring_leave_metadata_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     family_member_first_name = Column(Text)
@@ -386,7 +388,7 @@ class CaringLeaveMetadata(Base):
     application = relationship("Application", back_populates="caring_leave_metadata", uselist=False)
 
 
-class ApplicationPaymentPreference(Base):
+class ApplicationPaymentPreference(Base, TimestampMixin):
     __tablename__ = "application_payment_preference"
     payment_pref_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     payment_method_id = Column(Integer, ForeignKey("lk_payment_method.payment_method_id"))
@@ -401,7 +403,7 @@ class ApplicationPaymentPreference(Base):
     bank_account_type = relationship(LkBankAccountType)
 
 
-class ContinuousLeavePeriod(Base):
+class ContinuousLeavePeriod(Base, TimestampMixin):
     __tablename__ = "continuous_leave_period"
     leave_period_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     application_id = Column(PostgreSQLUUID, ForeignKey("application.application_id"), index=True)
@@ -420,7 +422,7 @@ class ContinuousLeavePeriod(Base):
     application = relationship(Application, back_populates="continuous_leave_periods")
 
 
-class IntermittentLeavePeriod(Base):
+class IntermittentLeavePeriod(Base, TimestampMixin):
     __tablename__ = "intermittent_leave_period"
     leave_period_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     application_id = Column(PostgreSQLUUID, ForeignKey("application.application_id"), index=True)
@@ -435,7 +437,7 @@ class IntermittentLeavePeriod(Base):
     application = relationship(Application, back_populates="intermittent_leave_periods")
 
 
-class ReducedScheduleLeavePeriod(Base):
+class ReducedScheduleLeavePeriod(Base, TimestampMixin):
     __tablename__ = "reduced_schedule_leave_period"
     leave_period_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     application_id = Column(PostgreSQLUUID, ForeignKey("application.application_id"), index=True)
@@ -453,7 +455,7 @@ class ReducedScheduleLeavePeriod(Base):
     application = relationship(Application, back_populates="reduced_schedule_leave_periods")
 
 
-class EmployerBenefit(Base):
+class EmployerBenefit(Base, TimestampMixin):
     # Caution: records of this model get recreated frequently as part of the PATCH /applications/:id endpoint.
     # Only the Application model should hold foreign keys to these records to avoid referenced objects being unexpectedly deleted.
     __tablename__ = "employer_benefit"
@@ -477,7 +479,7 @@ class EmployerBenefit(Base):
     benefit_amount_frequency = relationship(LkAmountFrequency)
 
 
-class OtherIncome(Base):
+class OtherIncome(Base, TimestampMixin):
     # Caution: records of this model get recreated frequently as part of the PATCH /applications/:id endpoint.
     # Only the Application model should hold foreign keys to these records to avoid referenced objects being unexpectedly deleted.
     __tablename__ = "other_income"
@@ -498,7 +500,7 @@ class OtherIncome(Base):
     income_amount_frequency = relationship(LkAmountFrequency)
 
 
-class WorkPattern(Base):
+class WorkPattern(Base, TimestampMixin):
     __tablename__ = "work_pattern"
     work_pattern_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     work_pattern_type_id = Column(Integer, ForeignKey("lk_work_pattern_type.work_pattern_type_id"))
@@ -513,7 +515,7 @@ class WorkPattern(Base):
     )
 
 
-class WorkPatternDay(Base):
+class WorkPatternDay(Base, TimestampMixin):
     __tablename__ = "work_pattern_day"
     work_pattern_id = Column(
         PostgreSQLUUID, ForeignKey("work_pattern.work_pattern_id"), primary_key=True
@@ -677,7 +679,7 @@ class OtherIncomeType(LookupTable):
     OTHER_EMPLOYER = LkOtherIncomeType(7, "Earnings from another employment/self-employment")
 
 
-class FINEOSWebIdExt(Base):
+class FINEOSWebIdExt(Base, TimestampMixin):
     __tablename__ = "link_fineos_web_id_ext"
     employee_tax_identifier = Column(Text, primary_key=True)
     employer_fein = Column(Text, primary_key=True)
@@ -692,16 +694,6 @@ class LkDocumentType(Base):
     def __init__(self, document_type_id, document_type_description):
         self.document_type_id = document_type_id
         self.document_type_description = document_type_description
-
-
-class LkContentType(Base):
-    __tablename__ = "lk_content_type"
-    content_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    content_type_description = Column(Text, nullable=False)
-
-    def __init__(self, content_type_id, content_type_description):
-        self.content_type_id = content_type_id
-        self.content_type_description = content_type_description
 
 
 class DocumentType(LookupTable):
@@ -723,17 +715,8 @@ class DocumentType(LookupTable):
     CHILD_BONDING_EVIDENCE_FORM = LkDocumentType(11, "Child bonding evidence form")
     CARE_FOR_A_FAMILY_MEMBER_FORM = LkDocumentType(12, "Care for a family member form")
     MILITARY_EXIGENCY_FORM = LkDocumentType(13, "Military exigency form")
-
-
-class ContentType(LookupTable):
-    model = LkContentType
-    column_names = ("content_type_id", "content_type_description")
-
-    PDF = LkContentType(1, "application/pdf")
-    JPEG = LkContentType(2, "image/jpeg")
-    PNG = LkContentType(3, "image/png")
-    TIFF = LkContentType(4, "image/tiff")
-    HEIC = LkContentType(5, "image/heic")
+    WITHDRAWAL_NOTICE = LkDocumentType(14, "Pending Application Withdrawn")
+    APPEAL_ACKNOWLEDGMENT = LkDocumentType(15, "Appeal Acknowledgment")
 
 
 class Document(Base, TimestampMixin):
@@ -746,7 +729,6 @@ class Document(Base, TimestampMixin):
     document_type_id = Column(
         Integer, ForeignKey("lk_document_type.document_type_id"), nullable=False
     )
-    content_type_id = Column(Integer, ForeignKey("lk_content_type.content_type_id"), nullable=False)
     size_bytes = Column(Integer, nullable=False)
     fineos_id = Column(Text, nullable=True)
     is_stored_in_s3 = Column(Boolean, nullable=False)
@@ -754,7 +736,6 @@ class Document(Base, TimestampMixin):
     description = Column(Text, nullable=False)
 
     document_type_instance = relationship(LkDocumentType)
-    content_type_instance = relationship(LkContentType)
 
 
 class RMVCheckApiErrorCode(Enum):
@@ -799,17 +780,19 @@ class RMVCheck(Base, TimestampMixin):
     rmv_customer_key = Column(Text, nullable=True)
 
 
-class StateMetric(Base):
+class StateMetric(Base, TimestampMixin):
     __tablename__ = "state_metric"
     effective_date = Column(Date, primary_key=True, nullable=False)
     unemployment_minimum_earnings = Column(Numeric, nullable=False)
     average_weekly_wage = Column(Numeric, nullable=False)
+    maximum_weekly_benefit_amount = Column(Numeric, nullable=False)
 
     def __init__(
         self,
         effective_date: datetime.date,
         unemployment_minimum_earnings: str,
         average_weekly_wage: str,
+        maximum_weekly_benefit_amount: Optional[str] = None,
     ):
         """Constructor that takes metric values as strings.
 
@@ -820,25 +803,43 @@ class StateMetric(Base):
         self.unemployment_minimum_earnings = Decimal(unemployment_minimum_earnings)
         self.average_weekly_wage = Decimal(average_weekly_wage)
 
+        # When the maximum weekly benefit is not manually set, it will be calculated based on
+        # the average weekly wage, as per the regulation:
+        # https://malegislature.gov/Laws/GeneralLaws/PartI/TitleXXII/Chapter175M/Section3
+        if maximum_weekly_benefit_amount is None:
+            self.maximum_weekly_benefit_amount = round_nearest_hundredth(
+                self.average_weekly_wage * Decimal(".64")
+            )
+        else:
+            self.maximum_weekly_benefit_amount = Decimal(maximum_weekly_benefit_amount)
+
     def __repr__(self):
-        return "StateMetric(%s, %s, %s)" % (
+        return "StateMetric(%s, %s, %s, %s)" % (
             self.effective_date,
             self.unemployment_minimum_earnings,
             self.average_weekly_wage,
+            self.maximum_weekly_benefit_amount,
         )
 
 
 def sync_state_metrics(db_session):
+    # For the first year of the program, the maximum weekly benefit is $850, which needs to
+    # be set directly. Beyond that, we should only directly set the unempleoyment minimum
+    # earnings and the average weekly wage. The maximum weekly benefit amount will then be
+    # calculated based on the average weekly wage.
+
     state_metrics = [
         StateMetric(
             effective_date=datetime.date(2020, 10, 1),
             unemployment_minimum_earnings="5100.00",
             average_weekly_wage="1431.66",
+            maximum_weekly_benefit_amount="850.00",
         ),
         StateMetric(
             effective_date=datetime.date(2021, 1, 1),
             unemployment_minimum_earnings="5400.00",
             average_weekly_wage="1487.78",
+            maximum_weekly_benefit_amount="850.00",
         ),
     ]
 
@@ -903,7 +904,6 @@ def sync_lookup_tables(db_session):
     EmployerBenefitType.sync_to_database(db_session)
     OtherIncomeType.sync_to_database(db_session)
     DocumentType.sync_to_database(db_session)
-    ContentType.sync_to_database(db_session)
     DayOfWeek.sync_to_database(db_session)
     WorkPatternType.sync_to_database(db_session)
     PhoneType.sync_to_database(db_session)

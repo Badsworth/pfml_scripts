@@ -86,6 +86,10 @@ Any time `enabled: 0` is set for maintenance, the maintenance status is disabled
 
 ## Testing
 
+To manually change the maintenance schedule without making a change to the YAML file in the repo, you can edit the file directly in the S3 bucket: `massgov-pfml-{ environment }-feature-gate`. There will be up to a 20 minute delay before your change is recognized by the API. 
+
+This will cause the repo file and the S3 file to be out of sync, so you should revert your changes to the S3 file after you're done testing.
+
 If you are testing the configuration locally, just note that you need to restart the local development server in order for new environment variables to kick in.
 
 ## Bypassing maintenance pages

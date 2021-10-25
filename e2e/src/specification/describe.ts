@@ -24,11 +24,19 @@ function describeClaimLeaveType(claimSpec: ScenarioSpecification["claim"]) {
 }
 
 function describeClaimLeaveDates(claimSpec: ScenarioSpecification["claim"]) {
-  if (claimSpec.leave_dates) {
+  if (Array.isArray(claimSpec.leave_dates)) {
     return claimSpec.leave_dates
       .map((date) => formatISO(date, { representation: "date" }))
       .join(" - ");
   }
+  if (claimSpec.leave_dates instanceof Function) {
+    if (!claimSpec?.metadata?.leaveDescription)
+      throw new Error(
+        "Missing 'leaveDescription' property in the scenario metadata\nProviding a function to the 'leave_dates' property requires a description of dates that will be generated"
+      );
+    return claimSpec.metadata.leaveDescription as string;
+  }
+
   if (claimSpec.shortClaim) {
     return "Random (short leave)";
   }

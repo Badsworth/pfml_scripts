@@ -1,0 +1,80 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`InputHours renders component 1`] = `
+<fieldset
+  class="usa-fieldset margin-top-3 usa-form-group"
+>
+  <legend
+    class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+  >
+    Work hours
+  </legend>
+  <div
+    class="usa-form-group display-inline-block margin-right-3"
+  >
+    <label
+      class="usa-label text-normal font-heading-xs measure-5"
+      for="InputText1"
+      id="InputText1_label"
+    >
+      Hours Label
+    </label>
+    <input
+      aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+      class="usa-input usa-input--small"
+      data-value-type="integer"
+      id="InputText1"
+      inputmode="numeric"
+      name="hours"
+      type="text"
+      value="40"
+    />
+  </div>
+  <div
+    class="usa-form-group display-inline-block"
+  >
+    <label
+      class="usa-label text-normal font-heading-xs measure-5"
+      for="Dropdown2"
+      id="Dropdown2_label"
+    >
+      Minutes Label
+    </label>
+    <div
+      class=""
+      data-default-value="15"
+    >
+      <select
+        aria-labelledby="Dropdown2_label Dropdown2_hint Dropdown2_error"
+        class="usa-select maxw-mobile-lg width-15"
+        id="Dropdown2"
+        name="minutes"
+      >
+        <option
+          value=""
+        />
+        <option
+          value="0"
+        >
+          0
+        </option>
+        <option
+          value="15"
+        >
+          15
+        </option>
+        <option
+          value="30"
+        >
+          30
+        </option>
+        <option
+          value="45"
+        >
+          45
+        </option>
+      </select>
+    </div>
+  </div>
+</fieldset>
+`;

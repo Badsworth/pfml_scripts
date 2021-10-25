@@ -20,8 +20,8 @@ from massgov.pfml.api.validation.user_rules import (
     get_users_post_employer_issues,
     get_users_post_required_fields_issues,
 )
+from massgov.pfml.cognito.exceptions import CognitoValidationError
 from massgov.pfml.db.models.employees import Employer, Role, User
-from massgov.pfml.util.aws.cognito import CognitoValidationError
 from massgov.pfml.util.sqlalchemy import get_or_404
 from massgov.pfml.util.users import add_leave_admin_and_role, register_user
 

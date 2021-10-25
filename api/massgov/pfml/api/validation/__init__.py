@@ -107,7 +107,7 @@ def internal_server_error_handler(error: InternalServerError) -> Response:
     #
     # see: https://github.com/python/typeshed/pull/4210
     #
-    exception = error.original_exception or error  # type: ignore
+    exception = error.original_exception or error
 
     logger.exception(str(exception), extra={"error.class": type(exception).__name__})
 

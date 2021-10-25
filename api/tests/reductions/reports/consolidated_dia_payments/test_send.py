@@ -8,8 +8,6 @@ from massgov.pfml.db.models.employees import ReferenceFileType, State
 from massgov.pfml.db.models.factories import ReferenceFileFactory
 from massgov.pfml.util.aws.ses import send_email
 
-pytestmark = pytest.mark.integration
-
 
 def _setup_reductions_reporting(mock_s3_bucket, monkeypatch, file_name="test_file.csv"):
     monkeypatch.setenv(

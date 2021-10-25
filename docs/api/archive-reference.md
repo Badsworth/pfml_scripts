@@ -20,3 +20,9 @@ https://github.com/EOLWD/pfml/tree/archive/bulk-user-import
 Before Leave Admins could self-register and verify, we had two manual processes for reaching out to leave admins and importing them into the system: one using a Formstack survey, and another was a tool that supported importing Leave Admin users from one or more CSV files stored locally or in S3.
 
 The Formstack importer was related to the leave admin outreach work, and while it did get deployed, it was sidestepped with the bulk imports instead. After self-registration/verification launched, the bulk-imports process was discontinued as well. Bulk import data was duplicated to Sharepoint at `EOL-PFMLPROJECT > Shared Documents > General > Service Desk > POC Loads`.
+
+## MMARS integration
+
+https://github.com/EOLWD/pfml/tree/archive/mmars-integration
+
+Manual/MMARS/payment voucher was the original payment processing approach/integration for PFML, but PUB payments took over in late June/early July 2021.

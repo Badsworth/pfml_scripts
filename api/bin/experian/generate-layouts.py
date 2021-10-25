@@ -10,7 +10,7 @@ def mk_valid_python_id(string):
 
 experian_caller = soap_caller.LazyZeepApiCaller().get()
 
-layouts = experian_caller.DoGetLayouts(Country="USA")["body"]["Layout"]
+layouts = experian_caller.DoGetLayouts(Country="USA")["body"]["Layout"]  # type: ignore
 
 layout_props = [
     f'    {mk_valid_python_id(layout["Name"])} = "{layout["Name"]}"' for layout in layouts

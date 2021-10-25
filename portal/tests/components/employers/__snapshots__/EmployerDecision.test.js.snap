@@ -1,0 +1,72 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`EmployerDecision renders the component 1`] = `
+<fieldset
+  class="usa-fieldset margin-top-3 usa-form-group"
+>
+  <legend
+    class="usa-label text-bold usa-legend font-heading-xs measure-5"
+  >
+    <div
+      class="display-flex flex-align-end margin-top-6 margin-bottom-3"
+    >
+      <h2
+        class="flex-fill margin-right-1 font-heading-md text-bold"
+      >
+        Have you approved or denied this leave request?
+      </h2>
+    </div>
+  </legend>
+  <span
+    class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+  >
+    Answer based on your company policies and our 
+    <a
+      href="https://www.mass.gov/info-details/employer-paid-leave-application-review-guide"
+      rel="noreferrer noopener"
+      target="_blank"
+    >
+      guidelines for employers
+    </a>
+    . Your recommendation is helpful to the Department in making its determination.
+  </span>
+  <div
+    class=""
+  >
+    <div
+      class="usa-radio measure-5 bg-transparent"
+    >
+      <input
+        class="usa-radio__input"
+        id="InputChoice1"
+        name="employer_decision"
+        type="radio"
+        value="Approve"
+      />
+      <label
+        class="usa-radio__label"
+        for="InputChoice1"
+      >
+        Approve
+      </label>
+    </div>
+    <div
+      class="usa-radio measure-5 bg-transparent"
+    >
+      <input
+        class="usa-radio__input"
+        id="InputChoice2"
+        name="employer_decision"
+        type="radio"
+        value="Deny"
+      />
+      <label
+        class="usa-radio__label"
+        for="InputChoice2"
+      >
+        Deny (explain below)
+      </label>
+    </div>
+  </div>
+</fieldset>
+`;

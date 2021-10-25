@@ -1,0 +1,184 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`VerifyContributions renders the page 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+    tabindex="-1"
+  >
+    Verify your paid leave contributions from MassTaxConnect
+  </h1>
+  <p
+    class="usa-intro"
+  >
+    <strong>
+      Organization:
+    </strong>
+     Company Name
+    <br />
+    <strong>
+      Employer ID number (EIN):
+    </strong>
+     12-3456789
+  </p>
+  <p
+    class="usa-intro"
+  >
+    We need more information to verify your identity. We require every employer to verify recent 
+    <a
+      href="https://mtc.dor.state.ma.us/mtc/_/"
+      rel="noreferrer noopener"
+      target="_blank"
+    >
+      MassTaxConnect
+    </a>
+     data when creating an account. This helps protect your employees and your company information.
+  </p>
+  <details
+    class="c-details"
+  >
+    <summary
+      class="margin-bottom-2 text-primary text-underline font-ui-xs"
+    >
+      Where to find your paid leave contributions
+    </summary>
+    <div
+      class="margin-bottom-2"
+    >
+      Log into 
+      <a
+        href="https://mtc.dor.state.ma.us/mtc/_/"
+        rel="noreferrer noopener"
+        target="_blank"
+      >
+        MassTaxConnect
+      </a>
+       or contact your payroll department to complete these steps:
+      <ol
+        class="usa-list"
+      >
+        <li>
+          On the 
+          <strong>
+            Summary
+          </strong>
+           page, scroll down to the 
+          <strong>
+            Paid Family and Medical Leave
+          </strong>
+           section on the left. In the 
+          <strong>
+            Account
+          </strong>
+           portion, select 
+          <strong>
+            Returns
+          </strong>
+          .
+        </li>
+        <li>
+          Choose 
+          <strong>
+            the last period
+          </strong>
+           for which a return has been 
+          <strong>
+            received
+          </strong>
+          . For example, if you remitted your contributions for 3-31-2021, and the return has been processed and designated as ‘received’, you can use the amount from that period to verify your account. If you have not yet remitted your contributions or it is still being processed, use the amount from the most recent period for which you filed that has been processed.
+        </li>
+        <li>
+          Go into the return. Click 
+          <strong>
+            View or Amend Return
+          </strong>
+          . Then select 
+          <strong>
+            Next
+          </strong>
+           at the bottom. Look to 
+          <strong>
+            line 6
+          </strong>
+           and you will find the 
+          <strong>
+            Total Contributions Due
+          </strong>
+          .
+        </li>
+        <li>
+          Copy the 
+          <strong>
+            Total Contributions Due
+          </strong>
+           amount for verification.
+        </li>
+      </ol>
+      If you have any questions about your paid leave contributions, please contact the Department of Revenue at 
+      <a
+        href="tel:(617) 466‑3950"
+      >
+        <strong>
+          (617) 466‑3950
+        </strong>
+      </a>
+       from 9am-4pm ET.
+    </div>
+  </details>
+  <div
+    class="usa-form-group"
+  >
+    <label
+      class="usa-label text-bold font-heading-xs measure-5"
+      for="InputText1"
+      id="InputText1_label"
+    >
+      Paid leave contributions from 11/20/2011
+    </label>
+    <span
+      class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
+      id="InputText1_hint"
+    >
+      Include the full amount with dollars and cents.
+    </span>
+    <div
+      class="usa-input-group"
+    >
+      <div
+        aria-hidden="true"
+        class="usa-input-prefix"
+      >
+        <svg
+          aria-hidden="true"
+          class="usa-icon"
+          focusable="false"
+          role="img"
+        >
+          <use
+            xlink:href="/img/sprite.svg#attach_money"
+          />
+        </svg>
+      </div>
+      <input
+        aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+        class="usa-input maxw-mobile-lg padding-left-0"
+        data-value-type="float"
+        id="InputText1"
+        inputmode="decimal"
+        name="withholdingAmount"
+        type="text"
+        value=""
+      />
+    </div>
+  </div>
+  <button
+    class="usa-button position-relative"
+    type="submit"
+  >
+    Submit
+  </button>
+</form>
+`;

@@ -57,6 +57,12 @@ create_or_update_leave_admin_request_schema = xmlschema.XMLSchema(
     )
 )
 
+create_or_update_leave_admin_response_schema = xmlschema.XMLSchema(
+    os.path.join(
+        os.path.dirname(__file__), "leave_admin_creation", "CreateOrUpdateLeaveAdmin.Response.xsd"
+    )
+)
+
 service_agreement_service_request_schema = xmlschema.XMLSchema(
     os.path.join(os.path.dirname(__file__), "wscomposer", "ServiceAgreementService.Request.xsd")
 )
@@ -273,10 +279,14 @@ class FINEOSClient(client.AbstractFINEOSClient):
             elif response.status_code in (
                 requests.codes.UNPROCESSABLE_ENTITY,
                 requests.codes.NOT_FOUND,
-                requests.codes.FORBIDDEN,
             ):
-                # Ideally we'd raise exceptions that distinguish between 403/404/422 but we'll leave that for another time.
+                # Ideally we'd raise exceptions that distinguish between 404/422 but we'll leave that for another time.
                 err = exception.FINEOSClientBadResponse(
+                    method_name, requests.codes.ok, response.status_code, message=response.text,
+                )
+                log_fn = logger.warning
+            elif response.status_code == requests.codes.FORBIDDEN:
+                err = exception.FINEOSForbidden(
                     method_name, requests.codes.ok, response.status_code, message=response.text,
                 )
                 log_fn = logger.warning
@@ -973,7 +983,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         try:
             response = self._customer_api(
                 "GET",
-                f"customer/cases/{absence_id}/documents",
+                f"customer/cases/{absence_id}/documents?includeChildCases=True",
                 user_id,
                 "get_documents",
                 header_content_type=header_content_type,
@@ -1112,16 +1122,18 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
     def create_or_update_leave_admin(
         self, leave_admin_create_or_update: models.CreateOrUpdateLeaveAdmin
-    ) -> None:
+    ) -> Tuple[Optional[str], Optional[str]]:
         """Create or update a leave admin in FINEOS."""
         xml_body = self._create_or_update_leave_admin_payload(leave_admin_create_or_update)
-        self._integration_services_api(
+        response = self._integration_services_api(
             "POST",
             "rest/externalUserProvisioningService/createOrUpdateEmployerViewpointUser",
             self.wscomposer_user_id,
             "create_or_update_leave_admin",
             data=xml_body.encode("utf-8"),
         )
+        response_decoded = create_or_update_leave_admin_response_schema.decode(response.text)
+        return response_decoded["ns2:errorCode"], response_decoded["ns2:errorMessage"]
 
     def create_or_update_employer(
         self,
@@ -1288,6 +1300,22 @@ class FINEOSClient(client.AbstractFINEOSClient):
         employer_create_payload.update_data = models.UpdateData(PartyIntegrationDTO=[party_dto])
 
         payload_as_dict = employer_create_payload.dict(by_alias=True)
+
+        """
+        Relevant tickets: EDM-291, CPS-2703
+        After updating the OCOrganisation model to include the organisationUnits field for the ReadEmployer.Response, it did not match the previous OCOrganisation schema used for UpdateOrCreateParty.Request.
+        TODO Once FINEOS adds the organisationUnits field in the UpdateOrCreateParty.Request to allow creation of employers with a predefined list of org. units, the code deleting the organisationUnits key needs to be removed.
+        TODO The XSDS and the test file of expected XML will also need to be regenerated.
+        """
+        del payload_as_dict["update-data"]["PartyIntegrationDTO"][0]["organisation"][
+            "OCOrganisation"
+        ][0]["organisationUnits"]
+        del payload_as_dict["update-data"]["PartyIntegrationDTO"][0]["organisation"][
+            "OCOrganisation"
+        ][0]["names"]["OCOrganisationName"][0]["organisationWithDefault"]["OCOrganisation"][0][
+            "organisationUnits"
+        ]
+
         xml_element = update_or_create_party_request_schema.encode(payload_as_dict)
         return xml.etree.ElementTree.tostring(xml_element, encoding="unicode", xml_declaration=True)
 
@@ -1340,24 +1368,40 @@ class FINEOSClient(client.AbstractFINEOSClient):
         fineos_employer_id_data = models.AdditionalData(
             name="CustomerNumber", value=str(fineos_employer_id)
         )
-        absence_management_data = models.AdditionalData(
-            name="AbsenceManagement", value=str(service_agreement_inputs.absence_management_flag)
-        )
-        leave_plans_data = models.AdditionalData(
-            name="LeavePlans", value=service_agreement_inputs.leave_plans
-        )
         unlink_leave_plans_data = models.AdditionalData(
-            name="UnlinkAllExistingLeavePlans", value=str(True)
+            name="UnlinkAllExistingLeavePlans",
+            value=str(service_agreement_inputs.unlink_leave_plans),
         )
 
         additional_data_set = models.AdditionalDataSet()
         additional_data_set.additional_data.append(fineos_employer_id_data)
-        if service_agreement_inputs.absence_management_flag:
-            additional_data_set.additional_data.append(leave_plans_data)
-        else:
-            additional_data_set.additional_data.append(absence_management_data)
-
         additional_data_set.additional_data.append(unlink_leave_plans_data)
+
+        if service_agreement_inputs.absence_management_flag is not None:
+            additional_data_set.additional_data.append(
+                models.AdditionalData(
+                    name="AbsenceManagement",
+                    value=str(service_agreement_inputs.absence_management_flag),
+                )
+            )
+        if service_agreement_inputs.leave_plans is not None:
+            leave_plans_data = models.AdditionalData(
+                name="LeavePlans", value=service_agreement_inputs.leave_plans
+            )
+            additional_data_set.additional_data.append(leave_plans_data)
+
+        if service_agreement_inputs.start_date:
+            additional_data_set.additional_data.append(
+                models.AdditionalData(
+                    name="StartDate", value=service_agreement_inputs.start_date.isoformat()
+                )
+            )
+        if service_agreement_inputs.end_date:
+            additional_data_set.additional_data.append(
+                models.AdditionalData(
+                    name="EndDate", value=service_agreement_inputs.end_date.isoformat()
+                )
+            )
 
         service_data = models.ServiceAgreementData()
         service_data.additional_data_set = additional_data_set

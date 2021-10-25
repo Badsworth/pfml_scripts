@@ -13,7 +13,7 @@ export type FeatureFlags = {
   noMaintenance: boolean;
   claimantShowStatusPage: boolean;
   employerShowReviewByStatus: boolean;
-  employerShowDashboardSearch?: boolean;
+  employerShowDashboardSearch: boolean;
 };
 
 export type Credentials = {
@@ -58,7 +58,9 @@ export type SubjectOptions =
   | "denial (employer)"
   | "approval (employer)"
   | "denial (claimant)"
+  | "appeal (employer)"
   | "approval (claimant)"
+  | "appeal (claimant)"
   | "review leave hours"
   | "request for additional info"
   | "extension of benefits";
@@ -119,11 +121,16 @@ export type OtherTasks =
   | "Manual Intervention required to Approve Periods"
   | "Review Appeal "
   | "Schedule Hearing"
+  | "Send Decision Notice"
   | "Conduct Hearing";
 /**Tasks avalable in fineos */
 export type FineosTasks = DocumentReviewTasks | ERTasks | OtherTasks;
 
-export type ClaimStatus = "Adjudication" | "Approved" | "Completed";
+export type ClaimStatus =
+  | "Adjudication"
+  | "Approved"
+  | "Completed"
+  | "Declined";
 
 /**
  * @note UTILITY TYPES
@@ -202,3 +209,11 @@ export type ValidClaim = RequireNotNull<
   | "date_of_birth"
   | "leave_details"
 >;
+
+export type Environment =
+  | "test"
+  | "stage"
+  | "training"
+  | "performance"
+  | "uat"
+  | "cps-preview";

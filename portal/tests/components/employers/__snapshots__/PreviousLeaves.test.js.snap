@@ -1,0 +1,129 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PreviousLeaves when there are claimant-reported leaves shows a row for each leave 1`] = `
+<div>
+  <h3
+    class="font-heading-sm text-bold"
+  >
+    Previous leave
+  </h3>
+  <p>
+    Your employee has listed leave they have taken for a qualified reason. Only leave since January 1, 2021 is included. This includes both paid leave, such as paid vacation or sick days, and unpaid leave, such as FMLA leave. When possible, verify that a previous leave was for a reason that qualifies for paid leave under PFML.
+  </p>
+  <details
+    class="c-details"
+  >
+    <summary
+      class="margin-bottom-2 text-primary text-underline font-ui-xs"
+    >
+      What counts as a qualifying reason?
+    </summary>
+    <div
+      class="margin-bottom-2"
+    >
+      <p>
+        An employee or contractor can take paid or unpaid leave to:
+      </p>
+      <ul
+        class="usa-list"
+      >
+        <li>
+          Manage a 
+          <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-"
+            rel="noopener"
+            target="_blank"
+          >
+            serious health condition
+          </a>
+          , including illness, injury, or pregnancy
+        </li>
+        <li>
+          Bond with a child after birth or placement
+        </li>
+        <li>
+          Manage family affairs when a family member is on active duty in the armed forces
+        </li>
+        <li>
+          Care for a family member who serves in the armed forces
+        </li>
+        <li>
+          Care for a family member with a 
+          <a
+            href="https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-benefits-guide#what-is-a-serious-health-condition?-"
+            rel="noopener"
+            target="_blank"
+          >
+            serious health condition
+          </a>
+           since July 1, 2021
+        </li>
+      </ul>
+    </div>
+  </details>
+  <table
+    class="usa-table usa-table--borderless c-table width-full"
+  >
+    <thead>
+      <tr>
+        <th
+          scope="col"
+        >
+          Date range
+        </th>
+        <th
+          scope="col"
+        >
+          Leave type
+        </th>
+        <th />
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <th
+          scope="row"
+        >
+          3/1/2020 to 3/6/2020
+        </th>
+        <td>
+          Caring for a family member who served in the armed forces
+        </td>
+        <td>
+          <button
+            class="usa-button position-relative text-no-wrap usa-button--unstyled"
+            type="button"
+          >
+            <svg
+              aria-hidden="true"
+              class="usa-icon text-middle margin-right-05 margin-top-neg-05"
+              focusable="false"
+              role="img"
+            >
+              <use
+                xlink:href="/img/sprite.svg#edit"
+              />
+            </svg>
+            Amend
+          </button>
+        </td>
+      </tr>
+      <tr>
+        <td
+          class="padding-y-2 padding-left-0"
+        >
+          <button
+            class="usa-button position-relative usa-button--outline bg-white"
+            name="add-entry-button"
+            type="button"
+          >
+            Add a previous leave
+          </button>
+        </td>
+        <td />
+        <td />
+      </tr>
+    </tbody>
+  </table>
+</div>
+`;

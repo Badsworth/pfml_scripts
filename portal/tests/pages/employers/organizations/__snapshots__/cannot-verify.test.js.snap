@@ -1,0 +1,42 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`CannotVerify renders the page 1`] = `
+<div>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+    tabindex="-1"
+  >
+    We can't verify this organization
+  </h1>
+  <p
+    class="usa-intro"
+  >
+    <strong>
+      Organization:
+    </strong>
+     Company Name
+    <br />
+    <strong>
+      Employer ID number (EIN):
+    </strong>
+     12-3456789
+  </p>
+  <p>
+    We can't verify this account because this organization hasn't submitted contributions through MassTaxConnect. Call the Department of Revenue at 
+    <a
+      href="tel:(617) 466‑3950"
+    >
+      (617) 466‑3950
+    </a>
+     to make arrangements to submit contributions. Once you do that, you'll be able to review leave applications on the next business day. Learn more about 
+    <a
+      href="https://www.mass.gov/pfml-verify-employer"
+      rel="noopener"
+      target="_blank"
+    >
+      verifying your account
+    </a>
+     on Mass.gov.
+  </p>
+</div>
+`;

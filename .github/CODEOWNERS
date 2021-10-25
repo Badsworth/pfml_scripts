@@ -31,7 +31,6 @@
 /api/**/delegated_payments/                            @chouinar @antxaddis
 /api/**/dor/                                           @antxaddis @mhuneke
 /api/**/fineos/                                        @doshitan @oscarAtNava
-/api/**/payments/                                      @chouinar @antxaddis
 /api/**/reductions/                                    @mhuneke @doshitan
 /api/**/rmv/                                           @doshitan @kyeah
 /api/**/servicenow/                                    @sharonwarner

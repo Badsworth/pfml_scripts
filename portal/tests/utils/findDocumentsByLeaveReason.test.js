@@ -1,13 +1,14 @@
-import Document, { DocumentType } from "../../src/models/Document";
+import BenefitsApplicationDocument from "../../src/models/BenefitsApplicationDocument";
+import { DocumentType } from "../../src/models/Document";
 import LeaveReason from "../../src/models/LeaveReason";
 import findDocumentsByLeaveReason from "../../src/utils/findDocumentsByLeaveReason";
 
 describe("findDocumentsByLeaveReason", () => {
   const documentsList = [
-    new Document({
+    new BenefitsApplicationDocument({
       document_type: DocumentType.certification[LeaveReason.medical],
     }),
-    new Document({
+    new BenefitsApplicationDocument({
       document_type: DocumentType.certification[LeaveReason.medical],
     }),
   ];
@@ -22,8 +23,12 @@ describe("findDocumentsByLeaveReason", () => {
 
   it("returns an array with all of the matching documents when the leave reason matches the doc type", () => {
     const testDocs = [
-      new Document({ document_type: DocumentType.identityVerification }),
-      new Document({ document_type: DocumentType.identityVerification }),
+      new BenefitsApplicationDocument({
+        document_type: DocumentType.identityVerification,
+      }),
+      new BenefitsApplicationDocument({
+        document_type: DocumentType.identityVerification,
+      }),
     ];
     const documents = findDocumentsByLeaveReason(
       [...documentsList, ...testDocs],

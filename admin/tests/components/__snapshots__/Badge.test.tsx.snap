@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Badge default component renders correctly 1`] = `
+<span
+  className="features-badge features-badge--employee"
+  data-testid="badge"
+>
+  Employee
+</span>
+`;

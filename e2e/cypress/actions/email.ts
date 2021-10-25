@@ -10,7 +10,7 @@ import { Email, GetEmailsOpts } from "../../src/submission/TestMailClient";
 export function getEmails(
   opts: GetEmailsOpts,
   timeout = 30000
-): Cypress.Chainable<JQuery<Document>> {
+): Cypress.Chainable<Document> {
   return cy
     .task<Email[]>(
       "getEmails",
@@ -22,28 +22,33 @@ export function getEmails(
     )
     .then(([email]) => {
       if (!email) cy.log("No email found");
-
       cy.reload();
-      // check with Armando about this line
-      // cy.document().invoke("write", email.html);
-      // if no email is found write empty string to the document
-      // this will cause failures for assertions in the emails
-      return cy.document().invoke("write", email.html);
+      cy.document().invoke("write", email.html);
+      // Appending the subject to the email as a hidden HTML element for assertions
+      // No longer needed if EDM-198 is verified
+      const subject = document.createElement("span");
+      subject.innerText = email.subject;
+      subject.id = "emailSubject";
+      subject.hidden = true;
+      cy.get("body").then((el) => el.append(subject));
+      return cy.document();
     });
 }
 
 export const getNotificationSubject = function (
-  employeeName: string,
   notificationType: SubjectOptions,
-  caseNumber?: string
+  caseNumber?: string,
+  employeeName = "*"
 ): string {
   const notificationSubjects: { [key: string]: string } = {
     "application started": `${employeeName} started a paid leave application with the Commonwealth of Massachusetts`,
     "employer response": `Action required: Respond to ${employeeName}'s paid leave application`,
     "denial (employer)": `${employeeName}'s paid leave application was Denied`,
     "approval (employer)": `${employeeName}'s paid leave application was Approved`,
+    "appeal (employer)": `An application update notice from the Department of Family and Medical Leave`,
     "denial (claimant)": "Your paid leave application was Denied",
     "approval (claimant)": "Your paid leave application was Approved",
+    "appeal (claimant)": `Application update notice from the Department of Family and Medical Leave`,
     "request for additional info": `Action required: Provide additional information for your paid leave application ${caseNumber}`,
     "review leave hours": `${employeeName} reported their intermittent leave hours`,
     "extension of benefits": `${employeeName} requested to extend their paid leave application with the Commonwealth of MA`,

@@ -1,4 +1,4 @@
-import Claim, { ClaimEmployee, ClaimEmployer } from "src/models/Claim";
+import Claim, { ClaimEmployee } from "src/models/Claim";
 import React, { useState } from "react";
 import User, { UserLeaveAdministrator } from "src/models/User";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
@@ -161,11 +161,13 @@ export const Default = (args) => {
                 first_name: faker.name.firstName(),
                 last_name: faker.name.lastName(),
               }),
-              employer: new ClaimEmployer(
-                faker.helpers.randomize(
-                  user.user_leave_administrators.filter((la) => la.verified)
-                )
-              ),
+              employer: {
+                employer_id: faker.datatype.uuid(),
+                employer_dba: faker.company.companyName(),
+                employer_fein: `${faker.finance.account(
+                  2
+                )}-${faker.finance.account(7)}`,
+              },
             })
         );
 

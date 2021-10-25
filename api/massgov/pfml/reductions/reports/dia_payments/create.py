@@ -17,7 +17,7 @@ from massgov.pfml.db.models.employees import (
     ReferenceFileType,
     State,
 )
-from massgov.pfml.payments.payments_util import get_now
+from massgov.pfml.delegated_payments.delegated_payments_util import get_now
 from massgov.pfml.reductions.config import get_s3_config
 from massgov.pfml.reductions.dia import Metrics
 from massgov.pfml.reductions.reports.models.dia import (

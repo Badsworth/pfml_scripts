@@ -1,0 +1,24 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`QuestionPage renders the form 1`] = `
+<form
+  class="usa-form"
+  method="post"
+>
+  <h1
+    class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+    tabindex="-1"
+  >
+    This is a question page
+  </h1>
+  <div>
+    Some stuff here
+  </div>
+  <button
+    class="usa-button position-relative margin-top-4"
+    type="submit"
+  >
+    Save and continue
+  </button>
+</form>
+`;

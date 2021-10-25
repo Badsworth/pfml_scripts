@@ -3,11 +3,11 @@ import moto
 import pydantic
 import pytest
 
-from massgov.pfml.db.models.employees import EmployeeLog
-from massgov.pfml.db.models.factories import WagesAndContributionsFactory
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
+from massgov.pfml.db.models.employees import EmployeePushToFineosQueue
+from massgov.pfml.db.models.factories import (
+    EmployeePushToFineosQueueFactory,
+    WagesAndContributionsFactory,
+)
 
 
 @moto.mock_ssm()
@@ -114,13 +114,16 @@ def test_main_success_non_fineos_location_updates(
     logging_fix,
     reset_aws_env_vars,
     tmp_path,
-    local_create_triggers,
 ):
     import massgov.pfml.fineos.eligibility_feed_export.eligibility_export as main
 
     monkeypatch.setattr(main, "make_db_session", lambda: local_test_db_session)
 
-    WagesAndContributionsFactory.create_batch(size=10)
+    wages = WagesAndContributionsFactory.create_batch(size=10)
+    for wage in wages:
+        EmployeePushToFineosQueueFactory.create(
+            employee_id=wage.employee_id, employer_id=wage.employer_id, action="INSERT"
+        )
 
     batch_output_dir = tmp_path / "absence-eligibility" / "upload"
     batch_output_dir.mkdir(parents=True)
@@ -135,11 +138,11 @@ def test_main_success_non_fineos_location_updates(
     monkeypatch.setenv("ELIGIBILITY_FEED_MODE", "updates")
     monkeypatch.delenv("ELIGIBILITY_FEED_EXPORT_FILE_NUMBER_LIMIT", raising=False)
 
-    assert local_test_db_session.query(EmployeeLog).count() == 10
+    assert local_test_db_session.query(EmployeePushToFineosQueue).count() == 10
 
     response = main.main_with_return()
 
-    assert local_test_db_session.query(EmployeeLog).count() == 0
+    assert local_test_db_session.query(EmployeePushToFineosQueue).count() == 0
 
     assert response["start"]
     assert response["end"]
@@ -158,13 +161,16 @@ def test_main_success_non_fineos_location_updates_with_limit(
     logging_fix,
     reset_aws_env_vars,
     tmp_path,
-    local_create_triggers,
 ):
     import massgov.pfml.fineos.eligibility_feed_export.eligibility_export as main
 
     monkeypatch.setattr(main, "make_db_session", lambda: local_test_db_session)
 
-    WagesAndContributionsFactory.create_batch(size=10)
+    wages = WagesAndContributionsFactory.create_batch(size=10)
+    for wage in wages:
+        EmployeePushToFineosQueueFactory.create(
+            employee_id=wage.employee_id, employer_id=wage.employer_id, action="INSERT"
+        )
 
     batch_output_dir = tmp_path / "absence-eligibility" / "upload"
     batch_output_dir.mkdir(parents=True)
@@ -179,11 +185,11 @@ def test_main_success_non_fineos_location_updates_with_limit(
     monkeypatch.setenv("ELIGIBILITY_FEED_MODE", "updates")
     monkeypatch.setenv("ELIGIBILITY_FEED_EXPORT_FILE_NUMBER_LIMIT", "5")
 
-    assert local_test_db_session.query(EmployeeLog).count() == 10
+    assert local_test_db_session.query(EmployeePushToFineosQueue).count() == 10
 
     response = main.main_with_return()
 
-    assert local_test_db_session.query(EmployeeLog).count() == 5
+    assert local_test_db_session.query(EmployeePushToFineosQueue).count() == 5
 
     assert response["start"]
     assert response["end"]

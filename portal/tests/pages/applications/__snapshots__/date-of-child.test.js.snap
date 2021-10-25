@@ -1,0 +1,104 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`DateOfChild renders the page 1`] = `
+<div>
+  <form
+    class="usa-form"
+    method="post"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3"
+      tabindex="-1"
+    >
+      Leave details
+    </h1>
+    <fieldset
+      class="usa-fieldset margin-top-3 usa-form-group"
+    >
+      <legend
+        class="usa-label text-bold usa-legend font-heading-lg line-height-sans-3 margin-bottom-1 maxw-tablet"
+      >
+        pages.claimsBondingDateOfChild.sectionLabel
+      </legend>
+      <span
+        class="display-block line-height-sans-5 usa-hint text-base-dark measure-5"
+      >
+        MM / DD / YYYY
+      </span>
+      <div
+        class="usa-memorable-date"
+      >
+        <div
+          class="usa-form-group usa-form-group--month"
+        >
+          <label
+            class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+            for="InputText1"
+            id="InputText1_label"
+          >
+            Month
+          </label>
+          <input
+            aria-labelledby="InputText1_label InputText1_hint InputText1_error"
+            class="usa-input usa-input--inline maxw-mobile-lg"
+            id="InputText1"
+            inputmode="numeric"
+            maxlength="2"
+            name="leave_details.child_placement_date_month"
+            type="text"
+            value=""
+          />
+        </div>
+        <div
+          class="usa-form-group usa-form-group--day"
+        >
+          <label
+            class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+            for="InputText2"
+            id="InputText2_label"
+          >
+            Day
+          </label>
+          <input
+            aria-labelledby="InputText2_label InputText2_hint InputText2_error"
+            class="usa-input usa-input--inline maxw-mobile-lg"
+            id="InputText2"
+            inputmode="numeric"
+            maxlength="2"
+            name="leave_details.child_placement_date_day"
+            type="text"
+            value=""
+          />
+        </div>
+        <div
+          class="usa-form-group usa-form-group--year"
+        >
+          <label
+            class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+            for="InputText3"
+            id="InputText3_label"
+          >
+            Year
+          </label>
+          <input
+            aria-labelledby="InputText3_label InputText3_hint InputText3_error"
+            class="usa-input usa-input--inline maxw-mobile-lg"
+            id="InputText3"
+            inputmode="numeric"
+            maxlength="4"
+            name="leave_details.child_placement_date_year"
+            type="text"
+            value=""
+          />
+        </div>
+      </div>
+    </fieldset>
+    <button
+      class="usa-button position-relative margin-top-4"
+      type="submit"
+    >
+      Save and continue
+    </button>
+  </form>
+</div>
+`;

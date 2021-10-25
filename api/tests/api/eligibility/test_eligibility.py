@@ -17,7 +17,6 @@ from massgov.pfml.db.models.factories import (
 )
 
 
-@pytest.mark.integration
 def test_compute_financial_eligibility_no_data(test_db_session):
     result = eligibility.compute_financial_eligibility(
         test_db_session,

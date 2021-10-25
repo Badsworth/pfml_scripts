@@ -1,0 +1,61 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AbsenceCaseStatusTag renders the component with 'No Action Required' when managedRequirements is empty and has a pending-line status value 1`] = `
+<div>
+  <span
+    class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-base-darker bg-base-lightest padding-x-205"
+  >
+    No action required
+  </span>
+</div>
+`;
+
+exports[`AbsenceCaseStatusTag renders the component with 'Review By {{date}}' when managedRequirements is not empty 1`] = `
+<div>
+  <span
+    class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-base-darkest bg-warning-lighter padding-x-205"
+  >
+    Review by 7/22/2021
+  </span>
+</div>
+`;
+
+exports[`AbsenceCaseStatusTag renders the component with error state and mapped status for 'Declined' 1`] = `
+<div>
+  <span
+    class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-error-darker bg-error-lighter padding-x-205"
+  >
+    Denied
+  </span>
+</div>
+`;
+
+exports[`AbsenceCaseStatusTag renders the component with inactive state and mapped status for 'Completed' 1`] = `
+<div>
+  <span
+    class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-base-darker bg-base-lightest padding-x-205"
+  >
+    Closed
+  </span>
+</div>
+`;
+
+exports[`AbsenceCaseStatusTag renders the component with inactive state for 'Closed' 1`] = `
+<div>
+  <span
+    class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-base-darker bg-base-lightest padding-x-205"
+  >
+    Closed
+  </span>
+</div>
+`;
+
+exports[`AbsenceCaseStatusTag renders the component with success state for 'Approved' 1`] = `
+<div>
+  <span
+    class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-success-dark bg-success-lighter padding-x-205"
+  >
+    Approved
+  </span>
+</div>
+`;

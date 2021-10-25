@@ -26,7 +26,7 @@ def upgrade():
     )
     op.add_column(
         "verification",
-        sa.Column("verification_metadata", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
+        sa.Column("verification_metadata", postgresql.JSONB(astext_type=sa.Text()), nullable=True),  # type: ignore
     )
     op.drop_column("verification", "email_address")
     op.drop_column("verification", "verified_at")

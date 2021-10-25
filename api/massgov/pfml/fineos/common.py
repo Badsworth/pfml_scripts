@@ -11,4 +11,6 @@ DOWNLOADABLE_DOC_TYPES = [
     "pregnancy/maternity form",
     "child bonding evidence form",
     "military exigency form",
+    "pending application withdrawn",
+    "appeal acknowledgment",
 ]

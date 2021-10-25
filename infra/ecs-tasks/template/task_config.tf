@@ -23,6 +23,15 @@ locals {
     { name : "DB_PASSWORD", valueFrom : "/service/${local.app_name}/${var.environment_name}/db-password" }
   ]
 
+  # Readonly DB Access
+
+  db_read_only_access = [
+    { name : "DB_HOST", value : data.aws_db_instance.default.address },
+    { name : "DB_NAME", value : data.aws_db_instance.default.db_name },
+    { name : "DB_USERNAME", value : "pfml_svc_readonly" },
+    { name : "DB_PASSWORD", valueFrom : "/service/${local.app_name}/${var.environment_name}/db-password-readonly" }
+  ]
+
   # Provides access to the FINEOS APIs
   fineos_api_access = [
     { name : "FINEOS_CLIENT_CUSTOMER_API_URL", value : var.fineos_client_customer_api_url },
@@ -41,6 +50,7 @@ locals {
     { name : "FINEOS_AWS_IAM_ROLE_EXTERNAL_ID", value : var.fineos_aws_iam_role_external_id },
     { name : "FINEOS_DATA_IMPORT_PATH", value : var.fineos_data_import_path },
     { name : "FINEOS_DATA_EXPORT_PATH", value : var.fineos_data_export_path },
+    { name : "FINEOS_ADHOC_DATA_EXPORT_PATH", value : var.fineos_adhoc_data_export_path },
     # This should just be fineos_data_export_path but we'll roll with this for now
     # to avoid breaking the camel's back
     { name : "FINEOS_FOLDER_PATH", value : var.fineos_import_employee_updates_input_directory_path }
@@ -49,19 +59,10 @@ locals {
   # Provides access to EOLWD's SFTP server (MoveIT)
   eolwd_moveit_access = [
     { name : "EOLWD_MOVEIT_SFTP_URI", value : var.eolwd_moveit_sftp_uri },
-    { name : "CTR_MOVEIT_SSH_KEY", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key" },
-    { name : "CTR_MOVEIT_SSH_KEY_PASSWORD", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key-password" },
     # Duplicate this for now since reductions has a different name
     { name : "MOVEIT_SFTP_URI", value : var.eolwd_moveit_sftp_uri },
     { name : "MOVEIT_SSH_KEY", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key" },
     { name : "MOVEIT_SSH_KEY_PASSWORD", valueFrom : "/service/${local.app_name}-comptroller/${var.environment_name}/eolwd-moveit-ssh-key-password" }
-  ]
-
-  # Provides access to CTR datamart
-  datamart_access = [
-    { name : "CTR_DATA_MART_HOST", value : var.ctr_data_mart_host },
-    { name : "CTR_DATA_MART_USERNAME", value : var.ctr_data_mart_username },
-    { name : "CTR_DATA_MART_PASSWORD", valueFrom : "/service/${local.app_name}/${var.environment_name}/ctr-data-mart-password" }
   ]
 
   # S3 path configurations for PUB
@@ -97,8 +98,6 @@ locals {
 
   # Configuration for email sending + destinations required for payments
   emails_ctr = concat(local.emails, [
-    { name : "CTR_GAX_BIEVNT_EMAIL_ADDRESS", value : var.ctr_gax_bievnt_email_address },
-    { name : "CTR_VCC_BIEVNT_EMAIL_ADDRESS", value : var.ctr_vcc_bievnt_email_address },
     { name : "DFML_PROJECT_MANAGER_EMAIL_ADDRESS", value : var.dfml_project_manager_email_address },
     { name : "DFML_BUSINESS_OPERATIONS_EMAIL_ADDRESS", value : var.dfml_business_operations_email_address },
   ])

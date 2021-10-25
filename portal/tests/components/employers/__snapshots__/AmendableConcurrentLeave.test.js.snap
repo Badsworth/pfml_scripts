@@ -1,0 +1,229 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`AmendableConcurrentLeave renders expected ui for admin added leaves 1`] = `
+<table>
+  <tbody>
+    <tr>
+      <td
+        class="padding-top-2 padding-bottom-2 padding-left-0"
+        colspan="3"
+      >
+        <div
+          class="usa-alert usa-alert--info usa-alert--no-icon usa-form c-amendment-form border-y border-y-width-1px border-right border-right-width-1px bg-white"
+        >
+          <div
+            class="usa-alert__body"
+          >
+            <div
+              class="usa-alert__text"
+            >
+              <h4
+                class="font-heading-sm text-bold"
+              >
+                Add an accrued paid leave
+              </h4>
+              <p>
+                This addition will get saved when you submit your review at the end of this page.
+              </p>
+              <fieldset
+                class="usa-fieldset margin-top-3 usa-form-group"
+              >
+                <legend
+                  class="usa-label text-bold usa-legend font-heading-xs measure-5"
+                >
+                  When did the leave begin?
+                </legend>
+                <div
+                  class="usa-memorable-date"
+                >
+                  <div
+                    class="usa-form-group usa-form-group--month"
+                  >
+                    <label
+                      class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                      for="InputText61"
+                      id="InputText61_label"
+                    >
+                      Month
+                    </label>
+                    <input
+                      aria-labelledby="InputText61_label InputText61_hint InputText61_error"
+                      class="usa-input usa-input--inline maxw-mobile-lg"
+                      id="InputText61"
+                      inputmode="numeric"
+                      maxlength="2"
+                      name="concurrent_leave.leave_start_date_month"
+                      type="text"
+                      value="03"
+                    />
+                  </div>
+                  <div
+                    class="usa-form-group usa-form-group--day"
+                  >
+                    <label
+                      class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                      for="InputText62"
+                      id="InputText62_label"
+                    >
+                      Day
+                    </label>
+                    <input
+                      aria-labelledby="InputText62_label InputText62_hint InputText62_error"
+                      class="usa-input usa-input--inline maxw-mobile-lg"
+                      id="InputText62"
+                      inputmode="numeric"
+                      maxlength="2"
+                      name="concurrent_leave.leave_start_date_day"
+                      type="text"
+                      value="01"
+                    />
+                  </div>
+                  <div
+                    class="usa-form-group usa-form-group--year"
+                  >
+                    <label
+                      class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                      for="InputText63"
+                      id="InputText63_label"
+                    >
+                      Year
+                    </label>
+                    <input
+                      aria-labelledby="InputText63_label InputText63_hint InputText63_error"
+                      class="usa-input usa-input--inline maxw-mobile-lg"
+                      id="InputText63"
+                      inputmode="numeric"
+                      maxlength="4"
+                      name="concurrent_leave.leave_start_date_year"
+                      type="text"
+                      value="2020"
+                    />
+                  </div>
+                </div>
+              </fieldset>
+              <fieldset
+                class="usa-fieldset margin-top-3 usa-form-group"
+              >
+                <legend
+                  class="usa-label text-bold usa-legend font-heading-xs measure-5"
+                >
+                  When did the leave end?
+                </legend>
+                <div
+                  class="usa-memorable-date"
+                >
+                  <div
+                    class="usa-form-group usa-form-group--month"
+                  >
+                    <label
+                      class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                      for="InputText64"
+                      id="InputText64_label"
+                    >
+                      Month
+                    </label>
+                    <input
+                      aria-labelledby="InputText64_label InputText64_hint InputText64_error"
+                      class="usa-input usa-input--inline maxw-mobile-lg"
+                      id="InputText64"
+                      inputmode="numeric"
+                      maxlength="2"
+                      name="concurrent_leave.leave_end_date_month"
+                      type="text"
+                      value="03"
+                    />
+                  </div>
+                  <div
+                    class="usa-form-group usa-form-group--day"
+                  >
+                    <label
+                      class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                      for="InputText65"
+                      id="InputText65_label"
+                    >
+                      Day
+                    </label>
+                    <input
+                      aria-labelledby="InputText65_label InputText65_hint InputText65_error"
+                      class="usa-input usa-input--inline maxw-mobile-lg"
+                      id="InputText65"
+                      inputmode="numeric"
+                      maxlength="2"
+                      name="concurrent_leave.leave_end_date_day"
+                      type="text"
+                      value="06"
+                    />
+                  </div>
+                  <div
+                    class="usa-form-group usa-form-group--year"
+                  >
+                    <label
+                      class="usa-label text-normal margin-top-05 font-heading-xs measure-5"
+                      for="InputText66"
+                      id="InputText66_label"
+                    >
+                      Year
+                    </label>
+                    <input
+                      aria-labelledby="InputText66_label InputText66_hint InputText66_error"
+                      class="usa-input usa-input--inline maxw-mobile-lg"
+                      id="InputText66"
+                      inputmode="numeric"
+                      maxlength="4"
+                      name="concurrent_leave.leave_end_date_year"
+                      type="text"
+                      value="2020"
+                    />
+                  </div>
+                </div>
+              </fieldset>
+            </div>
+            <div
+              class="border-top border-width-1px margin-top-4 margin-bottom-1 border-base-light"
+            >
+              <button
+                class="usa-button position-relative margin-top-3 text-red usa-button--unstyled"
+                type="button"
+              >
+                Cancel addition
+              </button>
+            </div>
+          </div>
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</table>
+`;
+
+exports[`AmendableConcurrentLeave renders the component with initial leave details row 1`] = `
+<table>
+  <tbody>
+    <tr>
+      <th
+        scope="row"
+      >
+        3/1/2020 to 3/6/2020
+      </th>
+      <td>
+        <button
+          class="usa-button position-relative text-no-wrap usa-button--unstyled"
+          type="button"
+        >
+          <svg
+            aria-hidden="true"
+            class="usa-icon text-middle margin-right-05 margin-top-neg-05"
+            focusable="false"
+            role="img"
+          >
+            <use
+              xlink:href="/img/sprite.svg#edit"
+            />
+          </svg>
+          Amend
+        </button>
+      </td>
+    </tr>
+  </tbody>
+</table>
+`;

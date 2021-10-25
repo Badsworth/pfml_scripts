@@ -19,14 +19,16 @@ terraform {
 module "tasks" {
   source = "../../template"
 
-  environment_name         = "training"
-  st_use_mock_dor_data     = false
-  st_decrypt_dor_data      = false
-  st_file_limit_specified  = false
-  st_employer_update_limit = 1500
-  service_docker_tag       = local.service_docker_tag
-  vpc_id                   = data.aws_vpc.vpc.id
-  app_subnet_ids           = data.aws_subnet_ids.vpc_app.ids
+  environment_name              = "training"
+  st_use_mock_dor_data          = false
+  st_decrypt_dor_data           = false
+  st_file_limit_specified       = false
+  st_employer_update_limit      = 1500
+  service_docker_tag            = local.service_docker_tag
+  vpc_id                        = data.aws_vpc.vpc.id
+  app_subnet_ids                = data.aws_subnet_ids.vpc_app.ids
+  enforce_execute_sql_read_only = false
+
 
   cognito_user_pool_id                       = "us-east-1_gHLjkp4A8"
   fineos_client_integration_services_api_url = "https://trn-api.masspfml.fineos.com/integration-services/"
@@ -42,7 +44,7 @@ module "tasks" {
   fineos_eligibility_feed_output_directory_path       = "s3://fin-somdev-data-import/TRN"
   fineos_import_employee_updates_input_directory_path = "s3://fin-somdev-data-export/TRN/dataexports"
   fineos_error_export_path                            = "s3://fin-somdev-data-export/TRN/errorExtracts"
-  fineos_report_export_path                           = "s3://fin-somdev-data-export/TRN/reportExtracts"
+  fineos_report_export_path                           = "s3://fin-somdev-data-export/TRN/reportExtract"
 
   rmv_client_base_url               = "https://atlas-staging-gateway.massdot.state.ma.us/vs"
   rmv_client_certificate_binary_arn = "arn:aws:secretsmanager:us-east-1:498823821309:secret:/service/pfml-api-training/rmv_client_certificate-uUtNEp"

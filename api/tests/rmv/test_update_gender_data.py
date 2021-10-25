@@ -1,6 +1,5 @@
 from typing import NoReturn
 
-import pytest
 import requests
 
 from massgov.pfml.api.config import RMVAPIBehavior
@@ -13,9 +12,6 @@ from massgov.pfml.db.models.factories import (
 from massgov.pfml.rmv.caller import ApiCaller, LazyApiCaller, MockZeepCaller
 from massgov.pfml.rmv.client import RmvClient
 from massgov.pfml.rmv.update_gender_data import get_claimants_to_scrape, update_gender_data
-
-# every test in here requires real resources
-pytestmark = pytest.mark.integration
 
 
 class TimeoutZeepCaller(LazyApiCaller[None], ApiCaller[None]):
@@ -77,7 +73,7 @@ def test_update_gender_data_successfully(test_db_session, initialize_factories_s
     )
     claimants = [employee]
 
-    caller = MockZeepCaller({"Sex": "M"})
+    caller = MockZeepCaller({"Sex": "MALE"})
     rmv_client = RmvClient(caller)
     report = update_gender_data(test_db_session, rmv_client, RMVAPIBehavior.NO_MOCK, claimants)
 

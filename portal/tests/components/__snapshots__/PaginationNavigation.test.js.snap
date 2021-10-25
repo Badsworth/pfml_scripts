@@ -1,0 +1,129 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`PaginationNavigation renders the component with a truncated pagination range 1`] = `
+<div
+  aria-label="Pagination Navigation"
+  class="ma__pagination js-pagination"
+  role="navigation"
+>
+  <nav
+    class="ma__pagination__container"
+  >
+    <a
+      aria-disabled="false"
+      aria-label="Go to Previous page"
+      class="ma__pagination__prev false"
+      href="#"
+      role="button"
+      tabindex="0"
+    >
+      Previous
+    </a>
+    <a
+      aria-label="Go to Page 1"
+      class="ma__pagination__page"
+      data-page="1"
+      href="#"
+      role="button"
+      tabindex="0"
+    >
+      1
+    </a>
+    <a
+      aria-label="Go to Page 2"
+      class="ma__pagination__page is-active"
+      data-page="2"
+      href="#"
+      role="button"
+      tabindex="0"
+    >
+      2
+    </a>
+    <a
+      aria-label="Go to Page 3"
+      class="ma__pagination__page"
+      data-page="3"
+      href="#"
+      role="button"
+      tabindex="0"
+    >
+      3
+    </a>
+    <a
+      aria-label="Go to Page 4"
+      class="ma__pagination__page"
+      data-page="4"
+      href="#"
+      role="button"
+      tabindex="0"
+    >
+      4
+    </a>
+    <a
+      aria-label="Go to Page 5"
+      class="ma__pagination__page"
+      data-page="5"
+      href="#"
+      role="button"
+      tabindex="0"
+    >
+      5
+    </a>
+    <a
+      aria-label="Go to Page 6"
+      class="ma__pagination__page"
+      data-page="6"
+      href="#"
+      role="button"
+      tabindex="0"
+    >
+      6
+    </a>
+    <a
+      aria-label="Go to Page 7"
+      class="ma__pagination__page"
+      data-page="7"
+      href="#"
+      role="button"
+      tabindex="0"
+    >
+      7
+    </a>
+    <a
+      aria-label="Go to Page 8"
+      class="ma__pagination__page"
+      data-page="8"
+      href="#"
+      role="button"
+      tabindex="0"
+    >
+      8
+    </a>
+    <span
+      class="ma__pagination__spacer"
+    >
+      …
+    </span>
+    <a
+      aria-label="Go to Page 10"
+      class="ma__pagination__page"
+      data-page="10"
+      href="#"
+      role="button"
+      tabindex="0"
+    >
+      10
+    </a>
+    <a
+      aria-disabled="false"
+      aria-label="Go to Next page"
+      class="ma__pagination__next false"
+      href="#"
+      role="button"
+      tabindex="0"
+    >
+      Next
+    </a>
+  </nav>
+</div>
+`;

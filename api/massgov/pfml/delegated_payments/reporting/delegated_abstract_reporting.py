@@ -73,7 +73,7 @@ class Report:
         # https://docs.python.org/3/library/csv.html#csv.DictWriter
         with open(report_file_path, "w", newline="") as csvfile:
             writer = csv.DictWriter(
-                csvfile, fieldnames=asdict(self.header_record).keys(), quoting=csv.QUOTE_ALL
+                csvfile, fieldnames=list(asdict(self.header_record).keys()), quoting=csv.QUOTE_ALL
             )
             writer.writerow(asdict(self.header_record))  # Add the static header
             for record in self.records:

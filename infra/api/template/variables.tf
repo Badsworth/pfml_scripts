@@ -123,7 +123,7 @@ variable "cors_origins" {
 variable "runtime_py" {
   description = "Pointer to the Python runtime used by the PFML API lambdas"
   type        = string
-  default     = "python3.8"
+  default     = "python3.9"
 }
 
 variable "cognito_user_pool_arn" {
@@ -287,4 +287,10 @@ variable "new_plan_proofs_active_at" {
   description = "ISO 8601 formatted date string, should explicitly set UTC offset (+00:00)"
   type        = string
   default     = "2021-06-21 00:00:00+00:00"
+}
+
+variable "use_claim_status_url" {
+  description = "Whether or not to direct claimants to the claim status page. Can enable this when Claim Status is launched."
+  type        = bool
+  default     = true
 }

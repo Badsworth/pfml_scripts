@@ -1,0 +1,40 @@
+###
+# Note: This is a Github action. It can be re-used from any workflow.
+#
+# It depends on AWS already having been configured in order to fetch credentials.
+# This is used during the deployment process, so you should take care when modifying it.
+#
+# Example:
+# - name: Configure AWS Credentials
+#   uses: aws-actions/configure-aws-credentials@v1
+#   with: ...
+# - name: Setup & Configure New Relic CLI
+#   uses: ./.github/actions/setup-nr-cli
+# - run: newrelic --version
+#
+###
+name: "Setup New Relic CLI"
+description: "Installs and configures the New Relic CLI tooling"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Pull the newrelic API key from parameter store
+      uses: "marvinpinto/action-inject-ssm-secrets@latest"
+      with:
+        ssm_parameter: "/admin/pfml-api/newrelic-api-key"
+        env_variable_name: "NEW_RELIC_API_KEY"
+    - name: Pull the newrelic Insights key from parameter store
+      uses: "marvinpinto/action-inject-ssm-secrets@latest"
+      with:
+        ssm_parameter: "/admin/pfml-api/newrelic-insert-api-key"
+        env_variable_name: "NEW_RELIC_INSIGHTS_INSERT_KEY"
+    - name: "Set account ID"
+      run: echo "NEW_RELIC_ACCOUNT_ID=2837112" >> $GITHUB_ENV
+      shell: bash
+    - name: Install New Relic CLI
+      run: |
+        sudo snap install --classic newrelic-cli
+        sudo snap alias newrelic-cli.newrelic newrelic
+        which newrelic
+      shell: bash

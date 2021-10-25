@@ -18,20 +18,25 @@ const securityGroups: [FineosSecurityGroups, boolean][] = [
   ["SaviLinx Supervisors(sec)", true],
   ["DFML IT(sec)", false],
 ];
+
+const ssoAccount2Credentials: Credentials = {
+  username: config("SSO2_USERNAME"),
+  password: config("SSO2_PASSWORD"),
+};
+
 securityGroups.forEach(([group, canChangeDocType]) => {
   describe(`${group} ${
     canChangeDocType ? "can" : "can't"
   } change the document type for`, () => {
-    before((done) => {
-      cy.task("chooseFineosRole", {
-        userId: config("SSO2_USERNAME"),
-        preset: group,
-      }).then(done);
-    });
     describe("Documents uploaded manually through Fineos UI", () => {
       const submit = it("Given a submitted claim", () => {
         fineos.before();
-        //Submit a claim via the API, including Employer Response.
+        cy.task("chooseFineosRole", {
+          userId: ssoAccount2Credentials.username,
+          preset: group,
+          debug: false,
+        });
+        //Submit a claim via the Fineos.
         cy.task("generateClaim", "CHAP_ER").then((claim) => {
           assertValidClaim(claim.claim);
           cy.stash("claim", claim);
@@ -52,12 +57,9 @@ securityGroups.forEach(([group, canChangeDocType]) => {
       it(`${group} ${
         canChangeDocType ? "can" : "can't"
       } change the document type`, () => {
-        // Login as a second account and try to change the doc type
-        fineos.before({
-          username: config("SSO2_USERNAME"),
-          password: config("SSO2_PASSWORD"),
-        });
         cy.dependsOnPreviousPass([submit]);
+        // Login as a second account and try to change the doc type
+        fineos.before(ssoAccount2Credentials);
         cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
           fineosPages.ClaimPage.visit(fineos_absence_id).documents(
             (docPage) => {
@@ -86,12 +88,9 @@ securityGroups.forEach(([group, canChangeDocType]) => {
       it(`${group} ${
         canChangeDocType ? "can" : "can't"
       } change the document type`, () => {
-        // Login as a second account and try to change the doc type
-        fineos.before({
-          username: config("SSO2_USERNAME"),
-          password: config("SSO2_PASSWORD"),
-        });
         cy.dependsOnPreviousPass([apiSubmit]);
+        // Login as a second account and try to change the doc type
+        fineos.before(ssoAccount2Credentials);
         cy.unstash<DehydratedClaim>("claim").then(() => {
           cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
             fineosPages.ClaimPage.visit(fineos_absence_id).documents((docs) => {

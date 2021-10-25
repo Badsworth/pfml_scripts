@@ -1,0 +1,67 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`FileUploadDetails renders the details with text 1`] = `
+<details
+  class="c-details"
+>
+  <summary
+    class="margin-bottom-2 text-primary text-underline font-ui-xs"
+  >
+    Tips for uploading images or PDFs
+  </summary>
+  <div
+    class="margin-bottom-2"
+  >
+    <div>
+      <h2
+        class="font-heading-xs text-bold"
+      >
+        This website only accepts:
+      </h2>
+      <ul
+        class="usa-list"
+      >
+        <li>
+          PDF documents
+        </li>
+        <li>
+          Images (.jpg, .jpeg, .png)
+        </li>
+      </ul>
+      <h2
+        class="font-heading-xs text-bold"
+      >
+        If your file is not in one of these formats, try one of the following:
+      </h2>
+      <ul
+        class="usa-list"
+      >
+        <li>
+          Take a picture of the document
+        </li>
+        <li>
+          Take a screenshot of the document
+        </li>
+        <li>
+          Save the document as a PDF or image, and try uploading again
+        </li>
+      </ul>
+      <h2
+        class="font-heading-xs text-bold"
+      >
+        If your document is attached to an email:
+      </h2>
+      <ul
+        class="usa-list"
+      >
+        <li>
+          Open the file on your computer or phone
+        </li>
+        <li>
+          Save it as a PDF or image, and try uploading again
+        </li>
+      </ul>
+    </div>
+  </div>
+</details>
+`;

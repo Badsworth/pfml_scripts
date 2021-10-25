@@ -10,17 +10,19 @@ from datetime import date, datetime, timedelta
 from decimal import Decimal
 
 import factory  # this is from the factory_boy package
+import faker
 import pytz
 from sqlalchemy.orm import scoped_session
 
 import massgov.pfml.db as db
 import massgov.pfml.db.models.applications as application_models
 import massgov.pfml.db.models.employees as employee_models
-import massgov.pfml.db.models.payments as payment_models
 import massgov.pfml.db.models.verifications as verification_models
 import massgov.pfml.util.datetime as datetime_util
 
 db_session = None
+
+fake = faker.Faker()
 
 
 def get_db_session():
@@ -56,7 +58,7 @@ Session = scoped_session(lambda: get_db_session(), scopefunc=lambda: get_db_sess
 
 class Generators:
     AccountKey = factory.Sequence(lambda n: "%011d" % n)
-    Tin = factory.LazyFunction(lambda: factory.Faker("ssn").generate().replace("-", ""))
+    Tin = factory.LazyFunction(lambda: fake.ssn().replace("-", ""))
     Fein = Tin
     Money = factory.LazyFunction(lambda: Decimal(round(random.uniform(0, 50000), 2)))
     Now = factory.LazyFunction(datetime.now)
@@ -151,7 +153,7 @@ class EmployerOnlyDORDataFactory(EmployerOnlyRequiredFactory):
 
 
 class EmployerFactory(EmployerOnlyDORDataFactory):
-    fineos_employer_id = factory.Sequence(lambda n: n)
+    fineos_employer_id = factory.Sequence(lambda n: n + 1)
 
 
 class TaxIdentifierFactory(BaseFactory):
@@ -315,16 +317,31 @@ class EmployerQuarterlyContributionFactory(BaseFactory):
     pfm_account_id = factory.Faker("random_int")
 
 
-class EmployeeLogFactory(BaseFactory):
+class EmployeePushToFineosQueueFactory(BaseFactory):
     class Meta:
-        model = employee_models.EmployeeLog
+        model = employee_models.EmployeePushToFineosQueue
 
-    employee_log_id = Generators.UuidObj
-    employee_id = Generators.UuidObj
-    employer_id = Generators.UuidObj
+    employee_push_to_fineos_queue_id = Generators.UuidObj
+    employee_id = None
+    employer_id = None
     action = "UPDATE_NEW_EMPLOYER"
     modified_at = Generators.UtcNow
     process_id = 1
+
+
+class EmployerPushToFineosQueueFactoryFactory(BaseFactory):
+    class Meta:
+        model = employee_models.EmployerPushToFineosQueue
+
+    employer_push_to_fineos_queue_id = Generators.UuidObj
+    employer_id = None
+    action = "INSERT"
+    modified_at = Generators.UtcNow
+    process_id = 1
+    family_exemption = None
+    medical_exemption = None
+    exemption_commence_date = None
+    exemption_cease_date = None
 
 
 class WagesAndContributionsFactory(BaseFactory):
@@ -386,6 +403,7 @@ class AbsencePeriodFactory(BaseFactory):
     absence_period_type_id = 1
     absence_reason_id = 1
     absence_reason_qualifier_one_id = 1
+    absence_reason_qualifier_two_id = 1
     is_id_proofed = False
     created_at = datetime.now()
     updated_at = datetime.now()
@@ -441,6 +459,28 @@ class PaymentFactory(BaseFactory):
 
     claim = factory.SubFactory(ClaimFactory)
     claim_id = factory.LazyAttribute(lambda a: a.claim.claim_id)
+
+    fineos_employee_first_name = factory.Faker("first_name")
+    fineos_employee_last_name = factory.Faker("last_name")
+
+
+class PaymentDetailsFactory(BaseFactory):
+    class Meta:
+        model = employee_models.PaymentDetails
+
+    payment_details_id = Generators.UuidObj
+
+    payment = factory.SubFactory(PaymentFactory)
+    payment_id = factory.LazyAttribute(lambda a: a.payment.payment_id)
+
+    period_start_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 1, 1), date_end=date(2021, 1, 15)
+    )
+    period_end_date = factory.Faker(
+        "date_between_dates", date_start=date(2021, 1, 16), date_end=date(2021, 1, 28)
+    )
+
+    amount = Generators.Money
 
 
 class PaymentReferenceFileFactory(BaseFactory):
@@ -536,8 +576,8 @@ class ApplicationFactory(BaseFactory):
     )
     leave_reason_qualifier_id = None
 
-    start_time = Generators.TransactionDateTime
-    updated_time = factory.LazyAttribute(lambda a: a.start_time + timedelta(days=1))
+    created_at = Generators.TransactionDateTime
+    updated_at = factory.LazyAttribute(lambda a: a.created_at + timedelta(days=1))
 
 
 class AddressFactory(BaseFactory):
@@ -725,13 +765,6 @@ class StateMetricFactory(BaseFactory):
     effective_date = datetime(2019, 10, 1)
     unemployment_minimum_earnings = Decimal("5000")
     average_weekly_wage = Decimal("1331.66")
-
-
-class MaximumWeeklyBenefitAmountFactory(BaseFactory):
-    class Meta:
-        model = payment_models.MaximumWeeklyBenefitAmount
-
-    effective_date = datetime(2019, 10, 1)
     maximum_weekly_benefit_amount = Decimal("1000.00")
 
 
@@ -760,7 +793,6 @@ class DocumentFactory(BaseFactory):
     document_type_id = random.randint(
         1, application_models.DocumentType.STATE_MANAGED_PAID_LEAVE_CONFIRMATION.document_type_id
     )
-    content_type_id = random.randint(1, application_models.ContentType.HEIC.content_type_id)
 
     # These values have no special meaning, just bounds so we get some variation.
     size_bytes = random.randint(1989, 24_072_020)

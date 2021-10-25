@@ -13,6 +13,7 @@ export const Default = () => {
     auth: {
       createEmployerAccount: () => {},
     },
+    portalFlow: { goTo: () => {} },
   };
   return <CreateAccount appLogic={appLogic} />;
 };

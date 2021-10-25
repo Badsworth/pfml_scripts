@@ -1,8 +1,8 @@
-import { generateClaim, generateNotice } from "tests/test-utils";
-
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import { ApplicationCardV2 } from "src/components/ApplicationCardV2";
 import React from "react";
+import { generateClaim } from "storybook/utils/generateClaim";
+import { generateNotice } from "storybook/utils/generateNotice";
 
 export default {
   title: "Components/ApplicationCardV2",
@@ -12,13 +12,16 @@ export default {
   },
   argTypes: {
     claim: {
-      defaultValue: "Completed",
+      defaultValue: "Bonding",
       control: {
         type: "radio",
         options: [
-          "Completed",
+          "Bonding",
+          "Caring",
+          "Medical",
+          "Pregnancy",
           "In Progress",
-          "In Progress + No EIN",
+          "In Progress + EIN",
           "In Progress + Notices",
         ],
       },
@@ -30,6 +33,11 @@ export const Story = ({ claim, ...args }) => {
   // Fake appLogic for stories
   const appLogic = {
     appErrors: new AppErrorInfoCollection([]),
+    claims: {
+      claimDetail: args,
+      isLoadingClaimDetail: false,
+      loadClaimDetail: () => {},
+    },
     documents: {
       download: () => {},
     },
@@ -38,16 +46,27 @@ export const Story = ({ claim, ...args }) => {
   // Configuration for ApplicationCard props
   const cardProps = Object.assign(
     {
-      Completed: {
-        claim: generateClaim("completed"),
+      Bonding: {
+        claim: generateClaim("completed", "bonding"),
+      },
+      Caring: {
+        claim: generateClaim("completed", "caring"),
+      },
+      Medical: {
+        claim: generateClaim("completed", "medical"),
+      },
+      Pregnancy: {
+        claim: generateClaim("completed", "pregnancy"),
       },
 
       "In Progress": {
-        claim: generateClaim("employed"),
+        claim: generateClaim("address"),
+        documents: [],
       },
 
-      "In Progress + No EIN": {
-        claim: generateClaim("address"),
+      "In Progress + EIN": {
+        claim: generateClaim("employed"),
+        documents: [],
       },
 
       "In Progress + Notices": {

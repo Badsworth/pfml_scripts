@@ -1,0 +1,10 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Toggle renders the default component 1`] = `
+<span
+  className="toggle toggle--off"
+  data-testid="toggle"
+>
+  OFF
+</span>
+`;

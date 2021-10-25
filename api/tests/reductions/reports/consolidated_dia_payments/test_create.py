@@ -13,8 +13,6 @@ from massgov.pfml.db.models.factories import (
     EmployeeWithFineosNumberFactory,
 )
 
-pytestmark = pytest.mark.integration
-
 
 def test_get_distinct_grouping_keys_returns_distinct_fineos_customer_id_and_board_no_tuples(
     test_db_session, initialize_factories_session

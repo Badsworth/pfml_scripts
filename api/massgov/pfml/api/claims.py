@@ -14,9 +14,9 @@ import massgov.pfml.api.validation.claim_rules as claim_rules
 import massgov.pfml.util.logging
 from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.authorization.flask import READ, can, requires
-from massgov.pfml.api.exceptions import ObjectNotFound
+from massgov.pfml.api.exceptions import ClaimWithdrawn, ObjectNotFound
 from massgov.pfml.api.models.claims.common import EmployerClaimReview
-from massgov.pfml.api.models.claims.responses import ClaimResponse, DetailedClaimResponse
+from massgov.pfml.api.models.claims.responses import ClaimResponse
 from massgov.pfml.api.services.administrator_fineos_actions import (
     awaiting_leave_info,
     complete_claim_review,
@@ -25,8 +25,9 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     get_claim_as_leave_admin,
     get_documents_as_leave_admin,
 )
-from massgov.pfml.api.services.fineos_actions import get_absence_periods
+from massgov.pfml.api.services.claims import ClaimWithdrawnError, get_claim_detail
 from massgov.pfml.api.services.managed_requirements import update_employer_confirmation_requirements
+from massgov.pfml.api.util.response import error_response
 from massgov.pfml.api.validation.exceptions import (
     ContainsV1AndV2Eforms,
     IssueType,
@@ -40,6 +41,7 @@ from massgov.pfml.db.models.employees import (
     User,
     UserLeaveAdministrator,
 )
+from massgov.pfml.db.queries.absence_periods import upsert_absence_period_from_fineos_period
 from massgov.pfml.db.queries.get_claims_query import ActionRequiredStatusFilter, GetClaimsQuery
 from massgov.pfml.db.queries.managed_requirements import (
     create_managed_requirement_from_fineos,
@@ -49,6 +51,7 @@ from massgov.pfml.db.queries.managed_requirements import (
 from massgov.pfml.fineos.models.group_client_api import (
     Base64EncodedFileData,
     ManagedRequirementDetails,
+    PeriodDecisions,
 )
 from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
     EmployerClaimReviewEFormBuilder,
@@ -57,6 +60,7 @@ from massgov.pfml.fineos.transforms.to_fineos.eforms.employer import (
 from massgov.pfml.util.logging.claims import (
     get_claim_log_attributes,
     get_claim_review_log_attributes,
+    log_get_claim_metrics,
 )
 from massgov.pfml.util.logging.employers import get_employer_log_attributes
 from massgov.pfml.util.logging.managed_requirements import (
@@ -64,7 +68,6 @@ from massgov.pfml.util.logging.managed_requirements import (
 )
 from massgov.pfml.util.paginate.paginator import PaginationAPIContext
 from massgov.pfml.util.sqlalchemy import get_or_404
-from massgov.pfml.util.strings import sanitize_fein
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 # HRD Employer FEIN. See https://lwd.atlassian.net/browse/EMPLOYER-1317
@@ -255,6 +258,7 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
         return error.to_api_response()
 
     log_attributes = get_employer_log_attributes(user_leave_admin.user)
+    log_attributes = {"absence_case_id": fineos_absence_id, **log_attributes}
 
     if not user_leave_admin.fineos_web_id:
         logger.error(
@@ -269,7 +273,11 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
         employer = get_or_404(db_session, Employer, user_leave_admin.employer_id)
 
         try:
-            claim_review_response, managed_requirements = get_claim_as_leave_admin(
+            (
+                claim_review_response,
+                managed_requirements,
+                absence_period_decisions,
+            ) = get_claim_as_leave_admin(
                 user_leave_admin.fineos_web_id, fineos_absence_id, employer,
             )
         except (ContainsV1AndV2Eforms) as error:
@@ -284,17 +292,8 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
                 ],
                 data={},
             ).to_api_response()
-
-        if claim_review_response is None:
-            logger.error(
-                "employer_get_claim_review failure - could not get claim for absence id",
-                extra={**log_attributes},
-            )
-            raise NotFound(
-                description="Could not fetch Claim from FINEOS with given absence ID {}".format(
-                    fineos_absence_id
-                )
-            )
+        except ClaimWithdrawn as error:
+            return error.to_api_response()
 
         claim_from_db = (
             db_session.query(Claim)
@@ -310,19 +309,25 @@ def employer_get_claim_review(fineos_absence_id: str) -> flask.Response:
         if claim_from_db:
             log_attributes.update(get_claim_log_attributes(claim_from_db))
 
-        logger.info(
-            "employer_get_claim_review success", extra={**log_attributes},
-        )
+        if claim_from_db:
+            sync_absence_periods(
+                db_session, claim_from_db, absence_period_decisions, log_attributes
+            )
+
         try:
             handle_managed_requirements(
                 db_session, claim_from_db, managed_requirements, log_attributes,
             )
         except Exception as error:  # catch all exception handler
+            db_session.rollback()
             logger.error(
                 "Failed to handle the claim's managed requirements in employer claim review call",
                 extra=log_attributes,
                 exc_info=error,
             )
+        logger.info(
+            "employer_get_claim_review success", extra=log_attributes,
+        )
         return response_util.success_response(
             message="Successfully retrieved claim",
             data=claim_review_response.dict(),
@@ -434,8 +439,13 @@ def user_has_access_to_claim(claim: Claim) -> bool:
 
 
 def get_claim(fineos_absence_id: str) -> flask.Response:
-    current_user = app.current_user()
     is_employer = can(READ, "EMPLOYER_API")
+    if is_employer:
+        error = error_response(
+            Forbidden, "Employers are not allowed to access claimant claim info", errors=[],
+        )
+        return error.to_api_response()
+
     claim = get_claim_from_db(fineos_absence_id)
 
     if claim is None:
@@ -443,45 +453,32 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
             "get_claim failure - Claim not in PFML database.",
             extra={"absence_case_id": fineos_absence_id},
         )
-        return response_util.error_response(
-            status_code=BadRequest, message="Claim not in PFML database.", errors=[], data={},
-        ).to_api_response()
+        error = error_response(NotFound, "Claim not in PFML database.", errors=[])
+        return error.to_api_response()
 
     if not user_has_access_to_claim(claim):
         logger.warning(
             "get_claim failure - User does not have access to claim.",
             extra={"absence_case_id": fineos_absence_id},
         )
-        return response_util.error_response(
-            status_code=Forbidden,
-            message="User does not have access to claim.",
-            errors=[],
-            data={},
-        ).to_api_response()
+        error = error_response(Forbidden, "User does not have access to claim.", errors=[])
+        return error.to_api_response()
 
-    detailed_claim = DetailedClaimResponse.from_orm(claim)
+    try:
+        detailed_claim = get_claim_detail(claim)
+    except ClaimWithdrawnError:
+        logger.warning(
+            "get_claim failure - Claim has been withdrawn. Unable to display claim status.",
+            extra={"absence_id": claim.fineos_absence_id},
+        )
+        return ClaimWithdrawn().to_api_response()
+    except Exception as ex:
+        logger.warning(
+            f"get_claim failure - {str(ex)}", extra={"absence_id": claim.fineos_absence_id}
+        )
+        raise ex  # handled by catch-all error handler in validation/__init__.py
 
-    # Expectation this endpoint is for the claimant dashboard only as it uses
-    # the FINEOS customer API.
-    if not (is_employer and current_user and current_user.employers):
-        with app.db_session() as db_session:
-            if (claim.employee and claim.employee.tax_identifier) and (
-                claim.employer and claim.employer.employer_fein
-            ):
-                employee_tax_identifier = claim.employee.tax_identifier.tax_identifier
-                employer_fein = claim.employer.employer_fein
-                detailed_claim.absence_periods = get_absence_periods(
-                    employee_tax_identifier, employer_fein, fineos_absence_id, db_session
-                )
-            else:
-                logger.info(
-                    "get_claim info - No employee or employer tied to this claim. Cannot retrieve absence periods from FINEOS.",
-                    extra={"absence_case_id": fineos_absence_id, "claim_id": claim.claim_id},
-                )
-                detailed_claim.absence_periods = []
-
-            if claim.application:  # type: ignore
-                detailed_claim.application_id = claim.application.application_id  # type: ignore
+    log_get_claim_metrics(detailed_claim)
 
     return response_util.success_response(
         message="Successfully retrieved claim", data=detailed_claim.dict(), status_code=200,
@@ -519,20 +516,26 @@ def get_claims() -> flask.Response:
             # The logic here is similar to that in user_has_access_to_claim (except it is applied to multiple claims)
             # so if something changes there it probably needs to be changed here
             if is_employer and current_user and current_user.employers:
-                if employer_id:
-                    employers_list = (
-                        db_session.query(Employer).filter(Employer.employer_id == employer_id).all()
-                    )
-                else:
-                    employers_list = list(current_user.employers)
-
-                employer_ids_list = [
-                    e.employer_id
-                    for e in employers_list
-                    if sanitize_fein(e.employer_fein or "") not in CLAIMS_DASHBOARD_BLOCKED_FEINS
-                    and current_user.verified_employer(e)
+                filters = [
+                    Employer.employer_fein.notin_(CLAIMS_DASHBOARD_BLOCKED_FEINS),
+                    UserLeaveAdministrator.verification_id.isnot(None),
+                    User.user_id == current_user.user_id,
                 ]
+                if employer_id:
+                    filters.append(Employer.employer_id == employer_id)
 
+                employer_ids_list = (
+                    db_session.query(Employer.employer_id)
+                    .join(
+                        UserLeaveAdministrator,
+                        Employer.employer_id == UserLeaveAdministrator.employer_id,
+                    )
+                    .join(User, User.user_id == UserLeaveAdministrator.user_id)
+                    .filter(*filters)
+                    .all()
+                )
+
+                # Get list of employers with non-blocked feins with left join for verified
                 query.add_employer_ids_filter(employer_ids_list)
             else:
                 query.add_user_owns_claim_filter(current_user)
@@ -625,3 +628,27 @@ def handle_managed_requirements(
             create_managed_requirement_from_fineos(
                 db_session, claim.claim_id, mr, log_attributes.copy()
             )
+
+
+def sync_absence_periods(
+    db_session: Session, claim: Claim, decisions: PeriodDecisions, log_attributes: dict
+) -> None:
+    if not decisions.decisions:
+        return
+    try:
+        absence_periods = [
+            decision.period for decision in decisions.decisions if decision.period is not None
+        ]
+        for absence_period in absence_periods:
+            upsert_absence_period_from_fineos_period(
+                db_session, claim.claim_id, absence_period, log_attributes
+            )
+        # only commit to db when every absence period has been succesfully synced
+        # otherwise rollback changes if any absence period upsert throws an exception
+        db_session.commit()
+    except Exception:
+        db_session.rollback()
+        logger.exception(
+            "Failed to update fineos absence periods",
+            extra={"fineos_absence_id": claim.fineos_absence_id, **log_attributes},
+        )

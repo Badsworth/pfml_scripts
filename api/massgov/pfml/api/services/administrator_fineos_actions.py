@@ -7,7 +7,7 @@ import massgov.pfml.db
 import massgov.pfml.fineos.models
 import massgov.pfml.util.logging as logging
 from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
-from massgov.pfml.api.exceptions import ObjectNotFound
+from massgov.pfml.api.exceptions import ClaimWithdrawn, ObjectNotFound
 from massgov.pfml.api.models.claims.common import (
     Address,
     IntermittentLeavePeriod,
@@ -18,14 +18,14 @@ from massgov.pfml.api.models.claims.common import (
 from massgov.pfml.api.models.claims.responses import ClaimReviewResponse, DocumentResponse
 from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
-from massgov.pfml.db.models.employees import Employer, User, UserLeaveAdministrator
+from massgov.pfml.db.models.employees import Employer
 from massgov.pfml.fineos.common import DOWNLOADABLE_DOC_TYPES
 from massgov.pfml.fineos.models.group_client_api import (
     Base64EncodedFileData,
     GroupClientDocument,
     ManagedRequirementDetails,
+    PeriodDecisions,
 )
-from massgov.pfml.fineos.models.leave_admin_creation import CreateOrUpdateLeaveAdmin
 from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformConcurrentLeaveFromOtherLeaveEform,
     TransformEmployerBenefitsFromOtherIncomeEform,
@@ -83,11 +83,11 @@ def get_leave_details(absence_periods: Dict) -> LeaveDetails:
                 reduced_end_date = end_date
 
         elif decision["period"]["type"] == "Episodic":
-            # FINEOS has yet to implement data for Episodic (intermittent) leaves
-            # TODO when this info is available https://lwd.atlassian.net/browse/EMPLOYER-448
-            # Send a static fake start and end date for recognition from the front end
-            intermittent_start_date = datetime(2021, 1, 1, 0, 0)
-            intermittent_end_date = datetime(2021, 2, 1, 0, 0)
+            if intermittent_start_date is None or start_date < reduced_start_date:
+                intermittent_start_date = start_date
+
+            if intermittent_end_date is None or end_date > reduced_end_date:
+                intermittent_end_date = end_date
 
     if continuous_start_date is not None and continuous_end_date is not None:
         leave_details["continuous_leave_periods"] = [
@@ -186,17 +186,18 @@ def get_claim_as_leave_admin(
     absence_id: str,
     employer: Employer,
     fineos_client: Optional[massgov.pfml.fineos.AbstractFINEOSClient] = None,
-) -> Tuple[Optional[ClaimReviewResponse], List[ManagedRequirementDetails]]:
+) -> Tuple[ClaimReviewResponse, List[ManagedRequirementDetails], PeriodDecisions]:
     """
     Given an absence ID, gets a full claim for the claim review page by calling multiple endpoints from FINEOS
     """
     if not fineos_client:
         fineos_client = massgov.pfml.fineos.create_client()
 
-    absence_periods = fineos_client.get_absence_period_decisions(fineos_user_id, absence_id).dict()
-    set_empty_dates_to_none(absence_periods, ["startDate", "endDate"])
+    absence_periods = fineos_client.get_absence_period_decisions(fineos_user_id, absence_id)
+    absence_periods_dict = absence_periods.dict()
+    set_empty_dates_to_none(absence_periods_dict, ["startDate", "endDate"])
 
-    if not absence_periods.get("decisions", []):
+    if not absence_periods_dict.get("decisions", []):
         logger.error(
             "Did not receive leave period decisions for absence periods",
             extra={
@@ -205,10 +206,10 @@ def get_claim_as_leave_admin(
                 "employer_id": employer.employer_id,
             },
         )
-        return None, []
+        raise ClaimWithdrawn()
 
-    customer_id = absence_periods["decisions"][0]["employee"]["id"]
-    status = absence_periods["decisions"][0]["period"]["status"] or "Unknown"
+    customer_id = absence_periods_dict["decisions"][0]["employee"]["id"]
+    status = absence_periods_dict["decisions"][0]["period"]["status"] or "Unknown"
     customer_info = fineos_client.get_customer_info(fineos_user_id, customer_id).dict()
     customer_occupations = fineos_client.get_customer_occupations(
         fineos_user_id, customer_id
@@ -307,7 +308,7 @@ def get_claim_as_leave_admin(
     # Default to version two eforms unless this is a legacy case containing version one eforms
     uses_second_eform_version = not contains_version_one_eforms
 
-    leave_details = get_leave_details(absence_periods)
+    leave_details = get_leave_details(absence_periods_dict)
 
     logger.info("Count of info request employer benefits:", extra={"count": len(employer_benefits)})
 
@@ -336,68 +337,12 @@ def get_claim_as_leave_admin(
             uses_second_eform_version=uses_second_eform_version,
         ),
         managed_reqs,
+        absence_periods,
     )
 
 
-def register_leave_admin_with_fineos(
-    admin_full_name: str,
-    admin_email: str,
-    admin_area_code: Optional[str],
-    admin_phone_number: Optional[str],
-    employer: Employer,
-    user: User,
-    db_session: massgov.pfml.db.Session,
-    fineos_client: Optional[massgov.pfml.fineos.AbstractFINEOSClient],
-    force_register: Optional[bool] = False,
-) -> UserLeaveAdministrator:
-    """
-    Given information about a Leave administrator, create a FINEOS user for that leave admin
-    and associate that user to the leave admin within the PFML DB
-    """
-    leave_admin_record = (
-        db_session.query(UserLeaveAdministrator)
-        .filter(
-            UserLeaveAdministrator.user_id == user.user_id,
-            UserLeaveAdministrator.employer_id == employer.employer_id,
-        )
-        .one_or_none()
-    )
-
-    if leave_admin_record and leave_admin_record.fineos_web_id is not None:
-        if not force_register:
-            logger.info(
-                "User previously registered in FINEOS and force_register off",
-                extra={"email": admin_email, "fineos_web_id": leave_admin_record.fineos_web_id},
-            )
-            return leave_admin_record
-
-    fineos = fineos_client if fineos_client else massgov.pfml.fineos.create_client()
-    fineos_web_id = f"pfml_leave_admin_{str(uuid.uuid4())}"
-    logger.info(
-        "Calling FINEOS to Create Leave Admin",
-        extra={"email": admin_email, "fineos_web_id": fineos_web_id},
-    )
-    if not employer.fineos_employer_id:
-        raise ValueError("Employer must have a Fineos employer ID to register a leave admin.")
-    leave_admin_create_payload = CreateOrUpdateLeaveAdmin(
-        fineos_web_id=fineos_web_id,
-        fineos_employer_id=employer.fineos_employer_id,
-        admin_full_name=admin_full_name,
-        admin_area_code=admin_area_code,
-        admin_phone_number=admin_phone_number,
-        admin_email=admin_email,
-    )
-    fineos.create_or_update_leave_admin(leave_admin_create_payload)
-
-    if leave_admin_record:
-        leave_admin_record.fineos_web_id = fineos_web_id
-    else:
-        leave_admin_record = UserLeaveAdministrator(
-            user=user, employer=employer, fineos_web_id=fineos_web_id
-        )
-    db_session.add(leave_admin_record)
-    db_session.commit()
-    return leave_admin_record
+def generate_fineos_web_id() -> str:
+    return f"pfml_leave_admin_{str(uuid.uuid4())}"
 
 
 def create_eform(user_id: str, absence_id: str, eform: EFormBody) -> None:

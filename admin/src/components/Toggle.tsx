@@ -1,6 +1,6 @@
 import classNames from "classnames";
 
-type Props = {
+export type Props = {
   status: boolean;
 };
 
@@ -11,5 +11,9 @@ export default function Toggle({ status }: Props) {
     "toggle--off": !status,
   });
 
-  return <span className={toggleClasses}>{status ? "ON" : "OFF"}</span>;
+  return (
+    <span className={toggleClasses} data-testid="toggle">
+      {status ? "ON" : "OFF"}
+    </span>
+  );
 }
