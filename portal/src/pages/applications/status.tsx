@@ -10,7 +10,7 @@ import { DocumentType } from "../../models/Document";
 import Heading from "../../components/Heading";
 import LeaveReason from "../../models/LeaveReason";
 import LegalNoticeList from "../../components/LegalNoticeList";
-import PageNotFound from "../404";
+import PageNotFound from "../../components/PageNotFound";
 import Spinner from "../../components/Spinner";
 import Tag from "../../components/Tag";
 import Title from "../../components/Title";

@@ -150,7 +150,7 @@ const useEmployersLogic = ({
       withholding_amount: number;
       withholding_quarter: string;
     },
-    next: string
+    next?: string
   ) => {
     appErrorsLogic.clearErrors();
 

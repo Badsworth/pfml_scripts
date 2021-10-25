@@ -916,11 +916,6 @@ const shared = {
 };
 
 const pages = {
-  404: {
-    body: "<p>The page you’re looking for might have been removed, have a new name, or is otherwise unavailable.</p><p>If you typed the URL directly, check your spelling and capitalization. Our URLs look like this: <url-example>{{ url }}</url-example></p>",
-    homepageButton: "Visit homepage",
-    title: "Page not found",
-  },
   app: {
     seoDescription: "$t(shared.siteDescription)",
   },
@@ -3024,6 +3019,11 @@ const components = {
     title: "We’re undergoing maintenance",
   },
   newTag: "New",
+  pageNotFound: {
+    body: "<p>The page you’re looking for might have been removed, have a new name, or is otherwise unavailable.</p><p>If you typed the URL directly, check your spelling and capitalization. Our URLs look like this: <url-example>{{ url }}</url-example></p>",
+    homepageButton: "Visit homepage",
+    title: "Page not found",
+  },
   pagination: {
     nextLabel: "Next",
     previousLabel: "Previous",

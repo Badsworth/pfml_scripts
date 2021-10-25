@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { AppLogic } from "../hooks/useAppLogic";
+import PageNotFound from "../components/PageNotFound";
 import { Spinner } from "../components/Spinner";
 import User from "../models/User";
 import routes from "../routes";
@@ -9,7 +10,7 @@ import withUser from "./withUser";
 interface ComponentWithClaimProps {
   appLogic: AppLogic;
   query: {
-    absence_id: string;
+    absence_id?: string;
   };
   user: User;
 }
@@ -32,7 +33,7 @@ const withEmployerClaim = (Component) => {
         : null;
 
     useEffect(() => {
-      if (!claim) {
+      if (!claim && absenceId) {
         appLogic.employers.loadClaim(absenceId);
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -74,7 +75,9 @@ const withEmployerClaim = (Component) => {
       });
     };
 
-    if (!claim && appLogic.appErrors.isEmpty) {
+    if (!absenceId) {
+      return <PageNotFound />;
+    } else if (!claim && appLogic.appErrors.isEmpty) {
       return (
         <div className="margin-top-8 text-center">
           <Spinner

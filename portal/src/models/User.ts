@@ -37,7 +37,7 @@ class User {
   /**
    * Returns an unverifiable employer by employer id
    */
-  getUnverifiableEmployerById(employerId: string): UserLeaveAdministrator {
+  getUnverifiableEmployerById(employerId: string) {
     return this.user_leave_administrators.find((employer) => {
       return (
         employerId === employer.employer_id &&
@@ -49,7 +49,7 @@ class User {
   /**
    * Returns a verifiable employer by employer id
    */
-  getVerifiableEmployerById(employerId: string): UserLeaveAdministrator {
+  getVerifiableEmployerById(employerId: string) {
     return this.user_leave_administrators.find((employer) => {
       return (
         employerId === employer.employer_id &&

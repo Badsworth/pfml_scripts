@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { AppLogic } from "../hooks/useAppLogic";
+import PageNotFound from "../components/PageNotFound";
 import Spinner from "../components/Spinner";
 import User from "../models/User";
 import Withholding from "../models/Withholding";
@@ -10,7 +11,7 @@ import withUser from "./withUser";
 interface ComponentWithWithholdingProps {
   appLogic: AppLogic;
   query: {
-    employer_id: string;
+    employer_id?: string;
   };
   user: User;
 }
@@ -34,6 +35,8 @@ const withWithholding = (Component) => {
     });
 
     useEffect(() => {
+      if (!employer) return;
+
       if (employer.verified) {
         appLogic.portalFlow.goTo(routes.employers.verificationSuccess, {
           employer_id: query.employer_id,
@@ -54,6 +57,10 @@ const withWithholding = (Component) => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [withholding, employer]);
 
+    if (!employer) {
+      return <PageNotFound />;
+    }
+
     return (
       <React.Fragment>
         {!withholding && shouldLoadWithholding && (
@@ -61,7 +68,9 @@ const withWithholding = (Component) => {
             <Spinner aria-valuetext={t("components.spinner.label")} />
           </div>
         )}
-        {withholding && <Component {...props} withholding={withholding} />}
+        {withholding && (
+          <Component {...props} employer={employer} withholding={withholding} />
+        )}
       </React.Fragment>
     );
   };

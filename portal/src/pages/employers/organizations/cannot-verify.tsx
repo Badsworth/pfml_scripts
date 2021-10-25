@@ -1,6 +1,7 @@
 import { Trans, useTranslation } from "react-i18next";
 import BackButton from "../../../components/BackButton";
 import Lead from "../../../components/Lead";
+import PageNotFound from "../../../components/PageNotFound";
 import React from "react";
 import Title from "../../../components/Title";
 import User from "../../../models/User";
@@ -20,6 +21,10 @@ export const CannotVerify = (props: CannotVerifyProps) => {
     return employer.employer_id === query.employer_id;
   });
   const { t } = useTranslation();
+
+  if (!employer) {
+    return <PageNotFound />;
+  }
 
   const employerDba = employer.employer_dba;
   const employerFein = employer.employer_fein;

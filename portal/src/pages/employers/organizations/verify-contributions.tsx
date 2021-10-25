@@ -6,7 +6,7 @@ import Lead from "../../../components/Lead";
 import React from "react";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
-import User from "../../../models/User";
+import { UserLeaveAdministrator } from "../../../models/User";
 import Withholding from "../../../models/Withholding";
 import formatDateRange from "../../../utils/formatDateRange";
 import routes from "../../../routes";
@@ -18,20 +18,17 @@ import withWithholding from "../../../hoc/withWithholding";
 
 interface VerifyContributionsProps {
   appLogic: AppLogic;
+  employer: UserLeaveAdministrator;
   query: {
     employer_id: string;
     next?: string;
   };
-  user: User;
   withholding: Withholding;
 }
 
 export const VerifyContributions = (props: VerifyContributionsProps) => {
-  const { appLogic, query, user, withholding } = props;
+  const { appLogic, employer, query, withholding } = props;
   const { t } = useTranslation();
-  const employer = user.user_leave_administrators.find((employer) => {
-    return employer.employer_id === query.employer_id;
-  });
 
   const { formState, updateFields } = useFormState({
     withholdingAmount: 0,

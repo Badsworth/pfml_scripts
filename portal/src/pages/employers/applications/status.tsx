@@ -25,7 +25,7 @@ interface StatusProps {
   appLogic: AppLogic;
   claim: EmployerClaim;
   query: {
-    absence_id?: string;
+    absence_id: string;
   };
 }
 
