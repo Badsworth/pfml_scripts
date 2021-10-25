@@ -1,7 +1,7 @@
 """drop_content_type_table
 
 Revision ID: ad96057b62c9
-Revises: 458af2d103eb
+Revises: efbf721141cb
 Create Date: 2021-10-21 17:04:47.365015
 
 """
@@ -10,7 +10,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision = "ad96057b62c9"
-down_revision = "458af2d103eb"
+down_revision = "efbf721141cb"
 branch_labels = None
 depends_on = None
 
