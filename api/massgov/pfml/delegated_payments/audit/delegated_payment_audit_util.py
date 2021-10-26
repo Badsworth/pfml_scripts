@@ -55,7 +55,7 @@ class PaymentAuditData:
     previously_errored_payment_count: int
     previously_rejected_payment_count: int
     previously_skipped_payment_count: int
-
+    gross_payment_amount : str
 
 def write_audit_report(
     payment_audit_data_set: Iterable[PaymentAuditData],
@@ -162,6 +162,7 @@ def build_audit_report_row(
         payment_period_end_date=payment_period_end_date,
         payment_period_weeks=str(payment_period_weeks),
         payment_amount=str(payment.amount),
+        gross_payment_amount=str(payment.amount) if payment.amount else None,
         absence_case_number=claim.fineos_absence_id,
         c_value=payment.fineos_pei_c_value,
         i_value=payment.fineos_pei_i_value,

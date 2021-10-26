@@ -609,20 +609,12 @@ class PaymentExtractStep(Step):
         employee, claim = None, None
         try:
             logger.info("BM: Entered into get_employee_and_claim")
-            # If the payment transaction type is for the employer
-            # We know we aren't going to find an employee, so don't look
-            # if (
-            #     payment_data.payment_transaction_type.payment_transaction_type_id
-            #     != PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
-            #     or
-            #     payment_data.payment_transaction_type.payment_transaction_type_id
-            #     != PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
-            #     or
-            #     payment_data.payment_transaction_type.payment_transaction_type_id
-            #     != PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
-            # ):
             if(
-               payment_data.payment_transaction_type.payment_transaction_type_id not in [6,12,13] 
+               payment_data.payment_transaction_type.payment_transaction_type_id 
+               not in 
+               [PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id,
+                PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
+                PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id] 
             ):
                 logger.info("BM :PaymentTransactionType %s",payment_data.payment_transaction_type.payment_transaction_type_id)
                 tax_identifier = (
@@ -1112,6 +1104,22 @@ class PaymentExtractStep(Step):
             )
             self.increment(self.Metrics.CANCELLATION_COUNT)
 
+        #set staus FEDERAL_WITHHOLDING_READY_FOR_PROCESSING
+        elif (
+            payment.payment_transaction_type_id
+            == PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
+        ):
+            end_state = State.FEDERAL_WITHHOLDING_READY_FOR_PROCESSING
+            message = "Federal Withholding payment processed"
+            self.increment(self.Metrics.STANDARD_VALID_PAYMENT_COUNT)
+        #set status  STATE_WITHHOLDING_READY_FOR_PROCESSING
+        elif (
+            payment.payment_transaction_type_id
+            == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+        ):
+            end_state = State.STATE_WITHHOLDING_READY_FOR_PROCESSING
+            message = "State Withholding payment processed"
+            self.increment(self.Metrics.STANDARD_VALID_PAYMENT_COUNT)
         else:
             end_state = State.PAYMENT_READY_FOR_ADDRESS_VALIDATION
             message = "Success"

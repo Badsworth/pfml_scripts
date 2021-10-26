@@ -20,6 +20,7 @@ from massgov.pfml.delegated_payments.fineos_extract_step import (
 from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_step import (
     PaymentPostProcessingStep,
 )
+from massgov.pfml.delegated_payments.delegated_fineos_related_payment_processing import RelatedPaymentsProcessingStep
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_report_step import ReportStep
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
     PROCESS_FINEOS_EXTRACT_REPORTS,
@@ -38,6 +39,7 @@ CONSUME_FINEOS_PAYMENT = "consume-fineos-payment"
 PAYMENT_EXTRACT = "payment-extract"
 VALIDATE_ADDRESSES = "validate-addresses"
 PAYMENT_POST_PROCESSING = "payment-post-processing"
+RELATED_PAYMENT_PROCESSING = "related-payment-processing"
 CREATE_AUDIT_REPORT = "audit-report"
 CREATE_PEI_WRITEBACK = "initial-writeback"
 REPORT = "report"
@@ -50,6 +52,7 @@ ALLOWED_VALUES = [
     PAYMENT_EXTRACT,
     VALIDATE_ADDRESSES,
     PAYMENT_POST_PROCESSING,
+    RELATED_PAYMENT_PROCESSING,
     CREATE_AUDIT_REPORT,
     CREATE_PEI_WRITEBACK,
     REPORT,
@@ -64,6 +67,7 @@ class Configuration:
     do_payment_extract: bool
     validate_addresses: bool
     do_payment_post_processing: bool
+    do_related_payment_Processing : bool
     make_audit_report: bool
     create_pei_writeback: bool
     make_reports: bool
@@ -91,6 +95,7 @@ class Configuration:
             self.do_payment_extract = True
             self.validate_addresses = True
             self.do_payment_post_processing = True
+            self.do_related_payment_Processing = True
             self.make_audit_report = True
             self.create_pei_writeback = True
             self.make_reports = True
@@ -102,6 +107,7 @@ class Configuration:
             self.do_payment_extract = PAYMENT_EXTRACT in steps
             self.validate_addresses = VALIDATE_ADDRESSES in steps
             self.do_payment_post_processing = PAYMENT_POST_PROCESSING in steps
+            self.do_related_payment_Processing = RELATED_PAYMENT_PROCESSING in steps
             self.make_audit_report = CREATE_AUDIT_REPORT in steps
             self.create_pei_writeback = CREATE_PEI_WRITEBACK in steps
             self.make_reports = REPORT in steps
@@ -128,7 +134,7 @@ def _process_fineos_extracts(
     """Process FINEOS Payments Extracts"""
     logger.info("Start - FINEOS Payment+Claimant Extract ECS Task")
     start_time = payments_util.get_now()
-
+    
     if config.do_audit_cleanup:
         StateCleanupStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
 
@@ -152,11 +158,20 @@ def _process_fineos_extracts(
     if config.do_payment_extract:
         PaymentExtractStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
 
+    logger.info("End - PaymentExtractStep")
+    
+    if config.do_related_payment_Processing:
+        RelatedPaymentsProcessingStep(
+            db_session=db_session, log_entry_db_session=log_entry_db_session
+        ).run()
+
+    logger.info("End - RelatedPaymentsProcessingStep")
+    
     if config.validate_addresses:
         AddressValidationStep(
             db_session=db_session, log_entry_db_session=log_entry_db_session
         ).run()
-
+    
     if config.do_payment_post_processing:
         PaymentPostProcessingStep(
             db_session=db_session, log_entry_db_session=log_entry_db_session
@@ -178,6 +193,7 @@ def _process_fineos_extracts(
             log_entry_db_session=log_entry_db_session,
             report_names=PROCESS_FINEOS_EXTRACT_REPORTS,
         ).run()
-
+    
     payments_util.create_success_file(start_time, "pub-payments-process-fineos")
     logger.info("End - FINEOS Payment+Claimant Extract ECS Task")
+    

@@ -19,6 +19,11 @@ class ReportName(str, Enum):
     PAYMENT_RECONCILIATION_SUMMARY_REPORT = "payment-reconciliation-summary-report"
     PAYMENT_REJECT_REPORT = "payment-reject-report"
     PROCCESS_1099_DOCUMENT_REPORTS = "irs-1099-document-report"
+    FEDERAL_WITHHOLDING_PROCESSED_REPORT = "federal-withholding-processed-report"
+    STATE_WITHHOLDING_PROCESSED_REPORT = "state-withholding-processed-report"
+
+
+
 
 
 # Reports grouped by processing tasks
@@ -37,6 +42,8 @@ CREATE_PUB_FILES_REPORTS: List[ReportName] = [
     ReportName.DAILY_CASH_REPORT,
     ReportName.PAYMENT_REJECT_REPORT,
     ReportName.PAYMENT_RECONCILIATION_SUMMARY_REPORT,
+    ReportName.FEDERAL_WITHHOLDING_PROCESSED_REPORT,
+    ReportName.STATE_WITHHOLDING_PROCESSED_REPORT,
 ]
 PROCESS_PUB_RESPONSES_REPORTS: List[ReportName] = [ReportName.PUB_ERROR_REPORT]
 
@@ -114,6 +121,15 @@ REPORTS: List[Report] = [
     Report(
         sql_command=_get_report_sql_command_from_file(ReportName.PROCCESS_1099_DOCUMENT_REPORTS),
         report_name=ReportName.PROCCESS_1099_DOCUMENT_REPORTS,
+    ),
+    #add reports for withholding records
+        Report(
+        sql_command=_get_report_sql_command_from_file(ReportName.STATE_WITHHOLDING_PROCESSED_REPORT),
+        report_name=ReportName.STATE_WITHHOLDING_PROCESSED_REPORT,
+    ),
+    Report(
+        sql_command=_get_report_sql_command_from_file(ReportName.FEDERAL_WITHHOLDING_PROCESSED_REPORT),
+        report_name=ReportName.FEDERAL_WITHHOLDING_PROCESSED_REPORT,
     ),
 ]
 

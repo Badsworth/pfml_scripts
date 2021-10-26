@@ -43,18 +43,42 @@ class PaymentAuditReportStep(Step):
     def sample_payments_for_audit_report(self) -> Iterable[Payment]:
         logger.info("Start sampling payments for audit report")
 
+        state_logs_containers: StateLog =[]
+
         state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
             state_log_util.AssociatedClass.PAYMENT,
             State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
             self.db_session,
         )
-        state_log_count = len(state_logs)
+
+        if len(state_logs)>0:
+            state_logs_containers.append(state_logs)
+        federal_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+            state_log_util.AssociatedClass.PAYMENT,
+            State.FEDERAL_WITHHOLDING_PENDING_AUDIT,
+            self.db_session,
+        )
+        if len(federal_withholding_state_logs)>0:
+            state_logs_containers.append(federal_withholding_state_logs)
+        state_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+            state_log_util.AssociatedClass.PAYMENT,
+            State.STATE_WITHHOLDING_PENDING_AUDIT,
+            self.db_session,
+        )
+        if len(state_withholding_state_logs)>0:
+            state_logs_containers.append(state_withholding_state_logs)
+
+
+        state_log_count = len(state_logs_containers)
         self.set_metrics({self.Metrics.SAMPLED_PAYMENT_COUNT: state_log_count})
 
         payments: List[Payment] = []
-        for state_log in state_logs:
-            payment = state_log.payment
 
+        for state_log in state_logs_containers:
+        
+            payment = state_log[0].payment
+
+            logger.info(state_log[0].payment)
             # Shouldn't happen as they should always have a payment attached
             # but due to our unassociated state log logic, it technically can happen
             # elsewhere in the code and we want to be certain it isn't happening here
@@ -144,6 +168,19 @@ class PaymentAuditReportStep(Step):
         ]
         return _get_state_log_count_in_state(other_claim_payments, previous_states, self.db_session)
 
+    def calculate_gross_payment_amount(self,  payment: Payment) -> str:
+        other_claim_payments = _get_other_claim_payments_for_payment(
+            payment, same_payment_period=True
+        )
+
+        gross_payment_amount  = payment.amount
+
+        for payment in other_claim_payments:
+            gross_payment_amount += (payment.amount) 
+
+        return str(gross_payment_amount)
+
+
     def build_payment_audit_data_set(
         self, payments: Iterable[Payment]
     ) -> Iterable[PaymentAuditData]:
@@ -164,6 +201,7 @@ class PaymentAuditReportStep(Step):
                 previously_errored_payment_count=self.previously_errored_payment_count(payment),
                 previously_rejected_payment_count=self.previously_rejected_payment_count(payment),
                 previously_skipped_payment_count=self.previously_skipped_payment_count(payment),
+                gross_payment_amount=self.calculate_gross_payment_amount(payment),
             )
             payment_audit_data_set.append(payment_audit_data)
 

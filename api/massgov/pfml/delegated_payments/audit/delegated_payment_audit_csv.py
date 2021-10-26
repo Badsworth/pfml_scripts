@@ -28,7 +28,12 @@ class PaymentAuditCSV(AbstractRecord):
     payment_period_start_date: Optional[str]
     payment_period_end_date: Optional[str]
     payment_period_weeks: Optional[str]
+    gross_payment_amount : Optional[str]
     payment_amount: Optional[str]
+    #federal withholding amount
+    #state withholding amount
+    #employer reimbursement amount  null
+    #child support amount null
     absence_case_number: Optional[str]
     c_value: Optional[str]
     i_value: Optional[str]
@@ -82,6 +87,7 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     payment_period_end_date="Payment Period End",
     payment_period_weeks="Payment Period Weeks",
     payment_amount="Payment Amount",
+    gross_payment_amount = "Gross Payment Amount",
     absence_case_number="Absence Case Number",
     c_value="C Value",
     i_value="I Value",
