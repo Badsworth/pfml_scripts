@@ -43,10 +43,11 @@ function BackButton(props: BackButtonProps) {
     }
   };
 
-  let Component, componentProps;
+  let Component;
+  let linkProps = { href: "" };
   if (props.href) {
     Component = ButtonLink;
-    componentProps = {
+    linkProps = {
       href: props.href,
     };
   } else {
@@ -55,7 +56,7 @@ function BackButton(props: BackButtonProps) {
 
   return (
     <Component
-      {...componentProps}
+      {...linkProps}
       onClick={handleClick}
       className="margin-bottom-5"
       variation="unstyled"

@@ -1,5 +1,6 @@
 import BenefitsApplication, {
   WorkPattern,
+  WorkPatternDay,
 } from "../../models/BenefitsApplication";
 import React, { useState } from "react";
 import { pick, round } from "lodash";
@@ -59,7 +60,7 @@ export const ScheduleVariable = (props: ScheduleVariableProps) => {
   };
 
   const handleSave = async () => {
-    let work_pattern_days;
+    let work_pattern_days: WorkPatternDay[];
     let hours_worked_per_week: null | number = null;
 
     if (!minutesWorkedPerWeek) {

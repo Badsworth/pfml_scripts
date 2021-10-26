@@ -160,7 +160,7 @@ function InputText({ type = "text", ...props }: InputTextProps) {
     />
   );
 
-  const fieldAndMask = (field) => {
+  const fieldAndMask = (field: React.ReactElement) => {
     return props.mask ? <Mask mask={props.mask}>{field}</Mask> : field;
   };
 

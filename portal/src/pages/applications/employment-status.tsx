@@ -53,6 +53,12 @@ export const EmploymentStatus = (props: EmploymentStatusProps) => {
     updateFields,
   });
 
+  const choiceKeys: Array<keyof typeof EmploymentStatusEnum> = [
+    "employed",
+    "unemployed",
+    "selfEmployed",
+  ];
+
   return (
     <QuestionPage
       title={t("pages.claimsEmploymentStatus.title")}
@@ -75,7 +81,7 @@ export const EmploymentStatus = (props: EmploymentStatusProps) => {
       {showEmploymentStatus && (
         <InputChoiceGroup
           {...getFunctionalInputProps("employment_status")}
-          choices={["employed", "unemployed", "selfEmployed"].map((key) => ({
+          choices={choiceKeys.map((key) => ({
             checked: employment_status === EmploymentStatusEnum[key],
             label: t("pages.claimsEmploymentStatus.choiceLabel", {
               context: key,

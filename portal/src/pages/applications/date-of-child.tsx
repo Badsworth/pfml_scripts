@@ -1,5 +1,6 @@
 import BenefitsApplication, {
   ReasonQualifier,
+  ReasonQualifierEnum,
 } from "../../models/BenefitsApplication";
 import { get, pick, set } from "lodash";
 import { AppLogic } from "../../hooks/useAppLogic";
@@ -38,7 +39,10 @@ export const DateOfChild = (props: DateOfChildProps) => {
     pick(props, fields).claim
   );
 
-  const reason_qualifier = get(claim, reasonQualifierField);
+  const reason_qualifier: ReasonQualifierEnum = get(
+    claim,
+    reasonQualifierField
+  );
   const dateFieldName =
     reason_qualifier === ReasonQualifier.newBorn
       ? childBirthDateField

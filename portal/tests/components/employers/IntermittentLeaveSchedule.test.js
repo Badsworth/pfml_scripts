@@ -48,6 +48,20 @@ describe("IntermittentLeaveSchedule", () => {
     expect(screen.getByText(/Contact us at/)).toBeInTheDocument();
   });
 
+  it("renders the date range of intermittent leave period", () => {
+    render(
+      <table>
+        <tbody>
+          <IntermittentLeaveSchedule
+            intermittentLeavePeriods={regularIntermittentLeavePeriods}
+          />
+        </tbody>
+      </table>
+    );
+
+    expect(screen.getByText(/2\/1\/2021 to 7\/1\/2021/)).toBeInTheDocument();
+  });
+
   it("renders a regular intermittent leave period", () => {
     render(
       <table>

@@ -2,14 +2,14 @@ import Button from "./Button";
 import React from "react";
 import useUniqueId from "../hooks/useUniqueId";
 
-interface RepeatableFieldsetCardProps {
+interface RepeatableFieldsetCardProps<TEntry> {
   children: React.ReactNode;
   className?: string;
-  entry: Record<string, unknown>;
+  entry: TEntry;
   heading: string;
   index: number;
   removeButtonLabel: string;
-  onRemoveClick: (entry: Record<string, unknown>, index: number) => void;
+  onRemoveClick: (entry: TEntry, index: number) => void;
   showRemoveButton?: boolean;
 }
 
@@ -18,7 +18,9 @@ interface RepeatableFieldsetCardProps {
  * for each entry, and is responsible for rendering the
  * fieldset content.
  */
-const RepeatableFieldsetCard = (props: RepeatableFieldsetCardProps) => {
+function RepeatableFieldsetCard<TEntry>(
+  props: RepeatableFieldsetCardProps<TEntry>
+) {
   const id = useUniqueId("RepeatableFieldsetCard");
 
   const handleRemoveClick = async () => {
@@ -54,6 +56,6 @@ const RepeatableFieldsetCard = (props: RepeatableFieldsetCardProps) => {
       </fieldset>
     </div>
   );
-};
+}
 
 export default RepeatableFieldsetCard;

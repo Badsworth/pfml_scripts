@@ -19,6 +19,7 @@ interface ComponentWithDocumentsProps {
  * @param {React.Component} Component - Component to receive documents prop
  * @returns {React.Component} - Component with documents prop
  */
+// @ts-expect-error TODO (PORTAL-966) Fix HOC typing
 const withClaimDocuments = (Component) => {
   const ComponentWithDocuments = (props: ComponentWithDocumentsProps) => {
     const { appLogic, claim, query } = props;

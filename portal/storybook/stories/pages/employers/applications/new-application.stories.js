@@ -15,10 +15,6 @@ export const Default = () => {
   const appLogic = {
     appErrors: new AppErrorInfoCollection(),
     employers: {
-      claim: new MockEmployerClaimBuilder()
-        .completed()
-        .reviewable(true)
-        .create(),
       loadClaim: () => {},
     },
     portalFlow: {
@@ -27,5 +23,15 @@ export const Default = () => {
     },
     setAppErrors: () => {},
   };
-  return <NewApplication appLogic={appLogic} query={query} user={user} />;
+  return (
+    <NewApplication
+      appLogic={appLogic}
+      query={query}
+      user={user}
+      claim={new MockEmployerClaimBuilder()
+        .completed()
+        .reviewable(true)
+        .create()}
+    />
+  );
 };

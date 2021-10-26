@@ -52,7 +52,10 @@ export const EmployerBenefitsDetails = (
   }
 
   const { formState, updateFields } = useFormState(initialEntries);
-  const employer_benefits = get(formState, "employer_benefits");
+  const employer_benefits: EmployerBenefit[] = get(
+    formState,
+    "employer_benefits"
+  );
 
   const handleSave = () =>
     appLogic.benefitsApplications.update(claim.application_id, formState);
@@ -63,7 +66,7 @@ export const EmployerBenefitsDetails = (
     updateFields({ employer_benefits: updatedEntries });
   };
 
-  const handleRemoveClick = (entry, index) => {
+  const handleRemoveClick = (entry: EmployerBenefit, index: number) => {
     const updatedBenefits = [...employer_benefits];
     updatedBenefits.splice(index, 1);
     updateFields({ employer_benefits: updatedBenefits });
@@ -75,7 +78,7 @@ export const EmployerBenefitsDetails = (
     updateFields,
   });
 
-  const render = (entry, index) => {
+  const render = (entry: EmployerBenefit, index: number) => {
     return (
       <EmployerBenefitCard
         entry={entry}
@@ -124,7 +127,7 @@ export const EmployerBenefitsDetails = (
 
 interface EmployerBenefitCardProps {
   index: number;
-  entry: Record<string, string | boolean>;
+  entry: EmployerBenefit;
   getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
   updateFields: (arg: Record<string, unknown>) => void;
 }
@@ -135,7 +138,7 @@ interface EmployerBenefitCardProps {
 export const EmployerBenefitCard = (props: EmployerBenefitCardProps) => {
   const { t } = useTranslation();
   const { entry, getFunctionalInputProps, index, updateFields } = props;
-  const clearField = (fieldName) => updateFields({ [fieldName]: null });
+  const clearField = (fieldName: string) => updateFields({ [fieldName]: null });
 
   // Since we are not passing the formState to the benefit card,
   // get the field value from the entry by removing the field path
@@ -148,7 +151,17 @@ export const EmployerBenefitCard = (props: EmployerBenefitCardProps) => {
   };
   const selectedType = entry.benefit_type;
 
-  const benefitFrequencyChoices = ["daily", "weekly", "monthly", "inTotal"].map(
+  const benefitFrequencyChoiceKeys: Array<
+    keyof typeof EmployerBenefitFrequency
+  > = ["daily", "weekly", "monthly", "inTotal"];
+
+  const benefitTypeChoiceKeys: Array<keyof typeof EmployerBenefitType> = [
+    "shortTermDisability",
+    "permanentDisability",
+    "familyOrMedicalLeave",
+  ];
+
+  const benefitFrequencyChoices = benefitFrequencyChoiceKeys.map(
     (frequencyKey) => {
       return {
         label: t("pages.claimsEmployerBenefitsDetails.amountFrequency", {
@@ -163,11 +176,7 @@ export const EmployerBenefitCard = (props: EmployerBenefitCardProps) => {
     <React.Fragment>
       <InputChoiceGroup
         {...getFunctionalInputProps(`employer_benefits[${index}].benefit_type`)}
-        choices={[
-          "shortTermDisability",
-          "permanentDisability",
-          "familyOrMedicalLeave",
-        ].map((benefitTypeKey) => {
+        choices={benefitTypeChoiceKeys.map((benefitTypeKey) => {
           return {
             checked: selectedType === EmployerBenefitType[benefitTypeKey],
             label: t("pages.claimsEmployerBenefitsDetails.choiceLabel", {

@@ -376,8 +376,8 @@ paths:
             pattern: '[a-zA-Z0-9 ,]+'
           description: > 
             claim status used to filter the request,
-            single claim status or a comma seperated list of claim status (i.e claim_status="Pending,Closed"),
-            the valid status are "Approved", "Closed", "Completed", "Declined" and "Pending".
+            single claim status or a comma seperated list of claim status (i.e claim_status="Approved,Closed"),
+            the valid status are "Approved", "Closed", "Completed", "Declined", "Open requirement" and "Pending - no action".
           required: false
         - name: "search"
           in: query

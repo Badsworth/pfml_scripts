@@ -45,6 +45,11 @@ export const WorkPatternType = (props: WorkPatternTypeProps) => {
     updateFields,
   });
 
+  const choiceKeys: Array<keyof typeof WorkPatternTypeEnum> = [
+    "fixed",
+    "variable",
+  ];
+
   return (
     <QuestionPage
       title={t("pages.claimsWorkPatternType.title")}
@@ -52,7 +57,7 @@ export const WorkPatternType = (props: WorkPatternTypeProps) => {
     >
       <InputChoiceGroup
         {...getFunctionalInputProps("work_pattern.work_pattern_type")}
-        choices={["fixed", "variable"].map((key) => ({
+        choices={choiceKeys.map((key) => ({
           checked: work_pattern_type === WorkPatternTypeEnum[key],
           hint: t("pages.claimsWorkPatternType.choiceHint", {
             context: key,

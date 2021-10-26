@@ -59,7 +59,7 @@ export const OtherIncomesDetails = (props: OtherIncomesDetailsProps) => {
     updateFields({ other_incomes: updatedEntries });
   };
 
-  const handleRemoveClick = (entry, index) => {
+  const handleRemoveClick = (entry: OtherIncome, index: number) => {
     const updatedIncomes = [...other_incomes];
     updatedIncomes.splice(index, 1);
     updateFields({ other_incomes: updatedIncomes });
@@ -71,7 +71,7 @@ export const OtherIncomesDetails = (props: OtherIncomesDetailsProps) => {
     updateFields,
   });
 
-  const render = (entry, index) => {
+  const render = (entry: OtherIncome, index: number) => {
     return (
       <OtherIncomeCard
         entry={entry}
@@ -115,7 +115,7 @@ export const OtherIncomesDetails = (props: OtherIncomesDetailsProps) => {
 
 interface OtherIncomeCardProps {
   index: number;
-  entry: Record<string, unknown>;
+  entry: OtherIncome;
   getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
 }
 
@@ -137,19 +137,21 @@ export const OtherIncomeCard = (props: OtherIncomeCardProps) => {
     }
   );
 
+  const choiceKeys: Array<keyof typeof OtherIncomeType> = [
+    "workersCompensation",
+    "unemployment",
+    "ssdi",
+    "retirementDisability",
+    "jonesAct",
+    "railroadRetirement",
+    "otherEmployer",
+  ];
+
   return (
     <React.Fragment>
       <InputChoiceGroup
         {...getFunctionalInputProps(`other_incomes[${index}].income_type`)}
-        choices={[
-          "workersCompensation",
-          "unemployment",
-          "ssdi",
-          "retirementDisability",
-          "jonesAct",
-          "railroadRetirement",
-          "otherEmployer",
-        ].map((otherIncomeTypeKey) => {
+        choices={choiceKeys.map((otherIncomeTypeKey) => {
           return {
             checked: entry.income_type === OtherIncomeType[otherIncomeTypeKey],
             label: t("pages.claimsOtherIncomesDetails.typeChoiceLabel", {

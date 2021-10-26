@@ -2,16 +2,18 @@ import Link from "next/link";
 import React from "react";
 import classNames from "classnames";
 
+interface Tab {
+  label: string;
+  href: string;
+}
+
 interface NavigationTabsProps {
   activePath: string;
-  tabs: Array<{
-    label: string;
-    href: string;
-  }>;
+  tabs: Tab[];
 }
 
 const NavigationTabs = ({ activePath, tabs }: NavigationTabsProps) => {
-  const isActive = (tab) => tab.href === activePath;
+  const isActive = (tab: Tab) => tab.href === activePath;
 
   return (
     <nav className="border-bottom border-base-lighter margin-bottom-5 display-flex width-full">

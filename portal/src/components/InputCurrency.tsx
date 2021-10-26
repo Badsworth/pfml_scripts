@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import InputNumber from "./InputNumber";
 import { maskValue } from "./Mask";
 
-const maskCurrency = (value) => maskValue(String(value || ""), "currency");
-
 interface InputCurrencyProps {
   /**
    * HTML input `autocomplete` attribute
@@ -80,6 +78,9 @@ interface InputCurrencyProps {
    */
   value?: number;
 }
+
+const maskCurrency = (value: InputCurrencyProps["value"]) =>
+  maskValue(String(value || ""), "currency");
 
 /**
  * Input field that displays number values to users as en-us currency

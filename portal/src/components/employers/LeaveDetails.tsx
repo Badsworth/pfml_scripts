@@ -67,7 +67,7 @@ const LeaveDetails = (props: LeaveDetailsProps) => {
     "usa-input--error": !!errorMsg,
   });
 
-  const benefitsGuideLink = {
+  const benefitsGuideLink: { [reason: string]: string } = {
     [LeaveReason.care]: routes.external.massgov.benefitsGuide_aboutCaringLeave,
     [LeaveReason.bonding]:
       routes.external.massgov.benefitsGuide_aboutBondingLeave,
@@ -93,7 +93,7 @@ const LeaveDetails = (props: LeaveDetailsProps) => {
           <a
             target="_blank"
             rel="noopener"
-            href={reason && benefitsGuideLink[reason]}
+            href={reason ? benefitsGuideLink[reason] : undefined}
           >
             {t("components.employersLeaveDetails.leaveReasonValue", {
               context: findKeyByValue(LeaveReason, reason),

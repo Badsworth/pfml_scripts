@@ -5,13 +5,13 @@ import classnames from "classnames";
 import { uniqueId } from "lodash";
 import usePreviousValue from "../hooks/usePreviousValue";
 
-interface RepeatableFieldsetProps {
+interface RepeatableFieldsetProps<TEntry> {
   /**
    * Localized text used in the "Add" button
    */
   addButtonLabel: string;
   /** Array of entries, each of which will have the content repeated for. */
-  entries: Array<Record<string, unknown>>;
+  entries: TEntry[];
   /**
    * Displayed as the heading for each card, followed by the card's position. For example
    * if you specify "Person", headings will be "Person 1", "Person 2", etc.
@@ -29,7 +29,7 @@ interface RepeatableFieldsetProps {
    * Function used for rendering the fields
    * @see https://reactjs.org/docs/render-props.html
    */
-  render: (entry: Record<string, unknown>, index: number) => React.ReactNode;
+  render: (entry: TEntry, index: number) => React.ReactNode;
   /**
    * Localized text used in the "Remove" buttons.
    * A "Remove" button isn't rendered when the
@@ -43,14 +43,14 @@ interface RepeatableFieldsetProps {
   /**
    * Event handler responsible for removing an entry
    */
-  onRemoveClick: (entry: Record<string, unknown>, index: number) => void;
+  onRemoveClick: (entry: TEntry, index: number) => void;
 }
 
 /**
  * Used for rendering the same set of content and fields for each
  * item in the "entries" prop.
  */
-const RepeatableFieldset = (props: RepeatableFieldsetProps) => {
+function RepeatableFieldset<TEntry>(props: RepeatableFieldsetProps<TEntry>) {
   const { entries } = props;
   const containerRef = useRef<HTMLElement>(null);
   const entriesAndIds = useEntryIds(entries);
@@ -111,7 +111,7 @@ const RepeatableFieldset = (props: RepeatableFieldsetProps) => {
       )}
     </section>
   );
-};
+}
 
 /**
  * Takes an array of entries, and pair each entry with a unique id.

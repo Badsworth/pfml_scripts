@@ -53,17 +53,20 @@ const AmendableEmployerBenefit = ({
   const containerRef = useRef<HTMLTableRowElement>(null);
   useAutoFocusEffect({ containerRef, isAmendmentFormDisplayed });
 
-  const getFieldPath = (field) =>
+  const getFieldPath = (field: string) =>
     `employer_benefits[${amendment.employer_benefit_id}].${field}`;
 
-  const getErrorMessage = (field) =>
+  const getErrorMessage = (field: string) =>
     appErrors.fieldErrorMessage(getFieldPath(field));
 
   /**
    * Update amendment state and sends to `review.js` (dates, dollars, frequency)
    * For benefit amount dollars, sets invalid input to 0
    */
-  const amendBenefit = (field, event) => {
+  const amendBenefit = (
+    field: string,
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const formStateField = isAddedByLeaveAdmin
       ? "addedBenefits"
       : "amendedBenefits";
@@ -167,6 +170,12 @@ const AmendableEmployerBenefit = ({
     </tr>
   );
 
+  const benefitTypeKeys: Array<keyof typeof EmployerBenefitType> = [
+    "shortTermDisability",
+    "permanentDisability",
+    "familyOrMedicalLeave",
+  ];
+
   return (
     <React.Fragment>
       {!isAddedByLeaveAdmin && <BenefitDetailsRow />}
@@ -200,11 +209,7 @@ const AmendableEmployerBenefit = ({
                     "components.employersAmendableEmployerBenefit.benefitTypeLabel"
                   )}
                   type="radio"
-                  choices={[
-                    "shortTermDisability",
-                    "permanentDisability",
-                    "familyOrMedicalLeave",
-                  ].map((benefitTypeKey) => {
+                  choices={benefitTypeKeys.map((benefitTypeKey) => {
                     return {
                       label: t(
                         "components.employersAmendableEmployerBenefit.choiceLabel",

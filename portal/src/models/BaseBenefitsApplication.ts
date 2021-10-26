@@ -25,24 +25,22 @@ abstract class BaseBenefitsApplication {
 
   /**
    * Determine if claim is a Bonding Leave claim
-   * @returns {boolean}
    */
-  get isBondingLeave() {
+  get isBondingLeave(): boolean {
     return get(this, "leave_details.reason") === LeaveReason.bonding;
   }
 
   /**
    * Determine if claim is a continuous leave claim
-   * @returns {boolean}
    */
-  get isContinuous() {
+  get isContinuous(): boolean {
     return !!get(this, "leave_details.continuous_leave_periods[0]");
   }
 
   /**
    * Returns the start and end dates of the specific continuous leave period in a
    * human-readable format. Ex: "1/1/2021 - 6/1/2021".
-   * @returns {string} a representation of the leave period
+   * @returns a representation of the leave period
    */
   continuousLeaveDateRange() {
     const { start_date, end_date } = get(
@@ -55,14 +53,14 @@ abstract class BaseBenefitsApplication {
   /**
    * Determine if claim is an intermittent leave claim
    */
-  get isIntermittent() {
+  get isIntermittent(): boolean {
     return !!get(this, "leave_details.intermittent_leave_periods[0]");
   }
 
   /**
    * Returns the start and end dates of the specific intermittent leave period in a
    * human-readable format. Ex: "1/1/2021 - 6/1/2021".
-   * @returns {string} a representation of the leave period
+   * @returns a representation of the leave period
    */
   intermittentLeaveDateRange() {
     const { start_date, end_date } = get(
@@ -75,14 +73,14 @@ abstract class BaseBenefitsApplication {
   /**
    * Determine if claim is a reduced schedule leave claim
    */
-  get isReducedSchedule() {
+  get isReducedSchedule(): boolean {
     return !!get(this, "leave_details.reduced_schedule_leave_periods[0]");
   }
 
   /**
    * Returns the start and end dates of the specific reduced schedule leave period in a
    * human-readable format. Ex: "1/1/2021 - 6/1/2021".
-   * @returns {string} a representation of the leave period
+   * @returns a representation of the leave period
    */
   reducedLeaveDateRange() {
     const { start_date, end_date } = get(
@@ -103,7 +101,6 @@ abstract class BaseBenefitsApplication {
 
   /**
    * Returns earliest start date across all leave periods
-   * @returns {string}
    */
   get leaveStartDate() {
     const periods = [
@@ -112,7 +109,7 @@ abstract class BaseBenefitsApplication {
       get(this, "leave_details.reduced_schedule_leave_periods"),
     ].flat();
 
-    const startDates = map(compact(periods), "start_date").sort();
+    const startDates: string[] = map(compact(periods), "start_date").sort();
 
     if (!startDates.length) return null;
 
@@ -121,7 +118,6 @@ abstract class BaseBenefitsApplication {
 
   /**
    * Returns latest end date across all leave periods
-   * @returns {string}
    */
   get leaveEndDate() {
     const periods = [
@@ -130,7 +126,7 @@ abstract class BaseBenefitsApplication {
       get(this, "leave_details.reduced_schedule_leave_periods"),
     ].flat();
 
-    const endDates = map(compact(periods), "end_date").sort();
+    const endDates: string[] = map(compact(periods), "end_date").sort();
 
     if (!endDates.length) return null;
 

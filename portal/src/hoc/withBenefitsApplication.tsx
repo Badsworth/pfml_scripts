@@ -18,6 +18,7 @@ interface ComponentWithClaimProps {
  * @param {React.Component} Component - Component to receive claim prop
  * @returns {React.Component} - Component with claim prop
  */
+// @ts-expect-error TODO (PORTAL-966) Fix HOC typing
 const withBenefitsApplication = (Component) => {
   const ComponentWithClaim = (props: ComponentWithClaimProps) => {
     const { appLogic, query } = props;

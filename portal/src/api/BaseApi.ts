@@ -67,7 +67,7 @@ export default abstract class BaseApi {
   ) {
     const url = createRequestUrl(method, this.basePath, subPath, body);
     const authHeader = excludeAuthHeader ? {} : await getAuthorizationHeader();
-    const headers = {
+    const headers: Record<string, string> = {
       ...authHeader,
       ...additionalHeaders,
     };
@@ -152,7 +152,7 @@ export function createRequestUrl(
 
   if (method === "GET" && body && !(body instanceof FormData)) {
     // Append query string to URL
-    const searchBody = {};
+    const searchBody: Record<string, string> = {};
     Object.entries(body).forEach(([key, value]) => {
       const stringValue =
         typeof value === "string" ? value : JSON.stringify(value);
@@ -177,7 +177,7 @@ export async function getAuthorizationHeader() {
   } catch (error) {
     // Amplify returns a string for the error...
     const message = error instanceof Error ? error.message : error;
-    throw new AuthSessionMissingError(message);
+    throw new AuthSessionMissingError(message as string);
   }
 }
 

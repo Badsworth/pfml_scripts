@@ -7,7 +7,7 @@ import { extractLeavePeriod } from "../../../../src/util/claims";
 import { DehydratedClaim } from "generation/Claim";
 
 describe("Request for More Information (notifications/notices)", () => {
-  after(() => {
+  before(() => {
     portal.deleteDownloadsFolder();
   });
   const submission = it("Generates and submits a caring leave claim", () => {
