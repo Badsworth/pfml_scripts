@@ -3,6 +3,7 @@ import BenefitsApplication, {
 } from "../../models/BenefitsApplication";
 import AppErrorInfo from "../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
+import { AppLogic } from "../../hooks/useAppLogic";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import LeaveReason from "../../models/LeaveReason";
 import QuestionPage from "../../components/QuestionPage";
@@ -21,8 +22,8 @@ export const UploadType = {
 };
 
 interface UploadDocsOptionsProps {
-  claim?: BenefitsApplication;
-  appLogic: any;
+  claim: BenefitsApplication;
+  appLogic: AppLogic;
 }
 
 export const UploadDocsOptions = (props: UploadDocsOptionsProps) => {
@@ -49,7 +50,7 @@ export const UploadDocsOptions = (props: UploadDocsOptionsProps) => {
       ? contentContext[leaveReason][reasonQualifier]
       : contentContext[leaveReason];
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!upload_docs_options) {
       const appErrorInfo = new AppErrorInfo({
         field: "upload_docs_options",
@@ -57,11 +58,11 @@ export const UploadDocsOptions = (props: UploadDocsOptionsProps) => {
         type: "required",
       });
 
-      appLogic.setAppErrors(new AppErrorInfoCollection([appErrorInfo]));
+      await appLogic.setAppErrors(new AppErrorInfoCollection([appErrorInfo]));
 
       tracker.trackEvent("ValidationError", {
-        issueField: appErrorInfo.field,
-        issueType: appErrorInfo.type,
+        issueField: appErrorInfo.field || "",
+        issueType: appErrorInfo.type || "",
       });
 
       return Promise.resolve();
@@ -73,7 +74,14 @@ export const UploadDocsOptions = (props: UploadDocsOptionsProps) => {
         : upload_docs_options === UploadType.mass_id;
     return appLogic.portalFlow.goToNextPage(
       { claim },
-      { claim_id: claim.application_id, showStateId, additionalDoc: "true" },
+      {
+        claim_id: claim.application_id,
+        showStateId:
+          typeof showStateId !== "undefined"
+            ? showStateId.toString()
+            : undefined,
+        additionalDoc: "true",
+      },
       upload_docs_options
     );
   };

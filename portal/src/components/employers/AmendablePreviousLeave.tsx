@@ -19,8 +19,11 @@ import { useTranslation } from "../../locales/i18n";
 interface AmendablePreviousLeaveProps {
   appErrors: AppErrorInfoCollection;
   isAddedByLeaveAdmin: boolean;
-  onChange: (...args: any[]) => any;
-  onRemove: (...args: any[]) => any;
+  onChange: (
+    arg: PreviousLeave | Record<string, unknown>,
+    arg2: string
+  ) => void;
+  onRemove: (arg: PreviousLeave) => void;
   previousLeave: PreviousLeave;
   shouldShowV2: boolean;
 }
@@ -42,7 +45,7 @@ const AmendablePreviousLeave = ({
   const [amendment, setAmendment] = useState(previousLeave);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
     useState(isAddedByLeaveAdmin);
-  const containerRef = useRef<HTMLTableRowElement>();
+  const containerRef = useRef<HTMLTableRowElement>(null);
   useAutoFocusEffect({ containerRef, isAmendmentFormDisplayed });
 
   const getFieldPath = (field) =>
@@ -280,7 +283,7 @@ const AmendablePreviousLeave = ({
               </ConditionalContent>
               <InputDate
                 onChange={(e) => amendLeave("leave_start_date", e.target.value)}
-                value={amendment.leave_start_date}
+                value={amendment.leave_start_date || ""}
                 label={t(
                   "components.employersAmendablePreviousLeave.leaveStartDateLabel"
                 )}
@@ -293,7 +296,7 @@ const AmendablePreviousLeave = ({
               />
               <InputDate
                 onChange={(e) => amendLeave("leave_end_date", e.target.value)}
-                value={amendment.leave_end_date}
+                value={amendment.leave_end_date || ""}
                 label={t(
                   "components.employersAmendablePreviousLeave.leaveEndDateLabel"
                 )}

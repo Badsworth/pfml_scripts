@@ -12,6 +12,9 @@ const flagsConfig = {
     // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
     claimantShowEmploymentStatus: false,
 
+    // When this flag is enabled optional MFA will be enabled for claimant users.
+    claimantShowMFA: false,
+
     // When this flag is enabled, the military leave options are selectable on
     // the Leave Reason page in the claimant flow (CP-1145)
     // TODO (CP-534): Show all options when portal supports activeDutyFamily, serviceMemberFamily
@@ -20,9 +23,8 @@ const flagsConfig = {
     // When this flag is enabled, the claim status page for claimants will show
     claimantShowStatusPage: false,
 
-    // When this flag is enabled, the "Previous leaves" section on Review page is visible
-    // TODO (EMPLOYER-718): Remove flag
-    employerShowPreviousLeaves: false,
+    // When this flag is enabled, the claim payments section for claimants will show
+    claimantShowPayments: false,
 
     // When this flag is enabled, the status column's current value of -- inside of the dashboard page will be replaced with either:
     // Review by {date}

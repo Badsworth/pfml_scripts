@@ -11,7 +11,7 @@ interface RepeatableFieldsetProps {
    */
   addButtonLabel: string;
   /** Array of entries, each of which will have the content repeated for. */
-  entries: any[];
+  entries: Array<Record<string, unknown>>;
   /**
    * Displayed as the heading for each card, followed by the card's position. For example
    * if you specify "Person", headings will be "Person 1", "Person 2", etc.
@@ -39,7 +39,7 @@ interface RepeatableFieldsetProps {
   /**
    * Event handler responsible for adding a new entry
    */
-  onAddClick: (...args: any[]) => any;
+  onAddClick: React.MouseEventHandler<HTMLButtonElement>;
   /**
    * Event handler responsible for removing an entry
    */
@@ -52,20 +52,19 @@ interface RepeatableFieldsetProps {
  */
 const RepeatableFieldset = (props: RepeatableFieldsetProps) => {
   const { entries } = props;
-  const containerRef = useRef<HTMLElement>();
+  const containerRef = useRef<HTMLElement>(null);
   const entriesAndIds = useEntryIds(entries);
   const previousEntriesLength = usePreviousValue(entriesAndIds.length);
   const limitReached = props.limit ? entries.length >= props.limit : false;
 
   useEffect(() => {
-    if (entriesAndIds.length > previousEntriesLength) {
+    if (entriesAndIds.length > previousEntriesLength && containerRef.current) {
       // When a new entry is added to the list, focus and scroll it into view.
       const lastEntry = containerRef.current.querySelector(
         ".js-repeated-fieldset-card:last-of-type"
       );
-      const focusableElement = lastEntry.querySelector(
-        "[tabIndex]:first-child, label"
-      );
+      const focusableElement =
+        lastEntry && lastEntry.querySelector("[tabIndex]:first-child, label");
 
       if (focusableElement instanceof HTMLElement) focusableElement.focus();
     }
@@ -138,7 +137,7 @@ function useEntryIds(entries: unknown[]) {
  */
 function createEntryIdMap(
   entries: unknown[],
-  prevEntryIdMap: Map<any, string> = new Map()
+  prevEntryIdMap: Map<unknown, string> = new Map()
 ) {
   const entryIdMap = new Map();
   for (const entry of entries) {

@@ -6,6 +6,7 @@ import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import { DocumentType } from "../../../models/Document";
 import DownloadableDocument from "../../../components/DownloadableDocument";
+import EmployerClaim from "../../../models/EmployerClaim";
 import Heading from "../../../components/Heading";
 import Lead from "../../../components/Lead";
 import LeaveReason from "../../../models/LeaveReason";
@@ -22,30 +23,30 @@ import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
 interface StatusProps {
   appLogic: AppLogic;
+  claim: EmployerClaim;
   query: {
-    absence_id?: string;
+    absence_id: string;
   };
 }
 
 export const Status = (props: StatusProps) => {
   const {
     appLogic,
+    claim,
     query: { absence_id: absenceId },
   } = props;
   const {
-    employers: { claim, documents, downloadDocument },
+    employers: { claimDocumentsMap, downloadDocument },
   } = appLogic;
   const { isContinuous, isIntermittent, isReducedSchedule } = claim;
   const { t } = useTranslation();
 
   useEffect(() => {
-    if (!documents) {
-      appLogic.employers.loadDocuments(absenceId);
-    }
+    appLogic.employers.loadDocuments(absenceId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [documents, absenceId]);
+  }, [absenceId]);
 
-  const allDocuments = documents ? documents.items : [];
+  const allDocuments = claimDocumentsMap.get(absenceId)?.items || [];
   const legalNotices = findDocumentsByTypes(allDocuments, [
     DocumentType.approvalNotice,
     DocumentType.denialNotice,
@@ -130,7 +131,7 @@ export const Status = (props: StatusProps) => {
               <li key={document.fineos_document_id} className="margin-bottom-2">
                 <DownloadableDocument
                   absenceId={absenceId}
-                  onDownloadClick={downloadDocument}
+                  downloadClaimDocument={downloadDocument}
                   document={document}
                   showCreatedAt
                 />

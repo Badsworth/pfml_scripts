@@ -6,7 +6,7 @@ type InferCollectionItem<TCollection> = TCollection extends BaseCollection<
   infer K
 >
   ? K
-  : any;
+  : unknown;
 
 /**
  * React hook for creating a state for a Collection of objects
@@ -15,7 +15,7 @@ const useCollectionState = <
   TCollection extends BaseCollection<TItem>,
   TItem = InferCollectionItem<TCollection>
 >(
-  initialCollection?: TCollection
+  initialCollection: TCollection
 ) => {
   const [collection, setCollection] = useState(initialCollection);
 

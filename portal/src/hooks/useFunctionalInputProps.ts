@@ -12,7 +12,7 @@ function useFunctionalInputProps({
   formState,
   updateFields,
 }: {
-  appErrors: AppErrorInfoCollection;
+  appErrors?: AppErrorInfoCollection;
   formState: FormState["formState"];
   updateFields: FormState["updateFields"];
 }) {
@@ -20,7 +20,7 @@ function useFunctionalInputProps({
 
   return function getFunctionalInputProps(
     fieldName: string,
-    config = { fallbackValue: "" }
+    config: { fallbackValue: unknown } = { fallbackValue: "" }
   ) {
     const errorMsg = appErrors
       ? appErrors.fieldErrorMessage(fieldName)

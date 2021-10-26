@@ -18,7 +18,7 @@ const useBenefitsApplicationsLogic = ({
 }: {
   appErrorsLogic: AppErrorsLogic;
   portalFlow: PortalFlow;
-  user: User;
+  user?: User;
 }) => {
   // State representing the collection of applications for the current user.
   // Initialize to empty collection, but will eventually store the applications
@@ -159,7 +159,7 @@ const useBenefitsApplicationsLogic = ({
       }
 
       const params = { claim_id: claim.application_id };
-      portalFlow.goToNextPage({ claim, user }, params);
+      portalFlow.goToNextPage({ claim }, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }

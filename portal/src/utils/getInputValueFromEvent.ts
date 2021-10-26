@@ -4,7 +4,9 @@
  * @see https://github.com/navahq/archive-vermont-customer-portal-apps/blob/27b66dd7bf37671a6e33a8d2c51a82c7bd9daa41/online-application-app/src/client/actions/index.js#L150
  */
 export default function getInputValueFromEvent(
-  event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  event: React.ChangeEvent<
+    HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+  >
 ) {
   if (!event || !event.target) {
     return undefined;
@@ -18,7 +20,7 @@ export default function getInputValueFromEvent(
 
   const valueType = event.target.getAttribute("data-value-type");
 
-  let result: any = value;
+  let result: number | string | boolean | null = value;
   if (type === "checkbox" || type === "radio") {
     // Convert boolean input string values into an actual boolean
     switch (value) {

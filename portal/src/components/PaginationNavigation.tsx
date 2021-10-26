@@ -1,6 +1,6 @@
-import { Machine } from "xstate";
 import Pagination from "@massds/mayflower-react/dist/Pagination";
 import React from "react";
+import { createMachine } from "xstate";
 import { times } from "lodash";
 import { useTranslation } from "../locales/i18n";
 
@@ -62,12 +62,12 @@ export const truncationStates = {
 /**
  * State machine representing the truncation states and their conditions (guards)
  */
-const truncationMachine = Machine(
+const truncationMachine = createMachine(
   {
     context: {
       // These should be defined when starting the machine, using withContext
-      pageOffset: null,
-      totalPages: null,
+      pageOffset: 0,
+      totalPages: 0,
     },
     initial: "unknown",
     states: { ...truncationStates }, // using destructuring to avoid a weird TS build error in Storybook

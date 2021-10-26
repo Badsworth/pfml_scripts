@@ -6,7 +6,7 @@ import { Trans } from "react-i18next";
 import { useTranslation } from "../locales/i18n";
 
 interface ErrorsSummaryProps {
-  errors?: AppErrorInfoCollection;
+  errors: AppErrorInfoCollection;
 }
 
 /**
@@ -17,7 +17,7 @@ interface ErrorsSummaryProps {
  */
 function ErrorsSummary(props: ErrorsSummaryProps) {
   const { errors } = props;
-  const alertRef = useRef<HTMLElement>();
+  const alertRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
 
   /**
@@ -27,7 +27,7 @@ function ErrorsSummary(props: ErrorsSummaryProps) {
     if (!errors.isEmpty) {
       window.scrollTo(0, 0);
       // Move focus to the alert so screen readers immediately announce that there are errors
-      alertRef.current.focus();
+      alertRef.current?.focus();
     }
   }, [errors]);
 
@@ -58,7 +58,9 @@ function ErrorsSummary(props: ErrorsSummaryProps) {
     return (
       <ul className="usa-list">
         {visibleErrorMessages.map((message) => (
-          <li key={message.type ? message.props.i18nKey : message}>
+          <li
+            key={typeof message === "string" ? message : message?.props.i18nKey}
+          >
             {message}
           </li>
         ))}

@@ -1,15 +1,19 @@
 import React, { useEffect, useState } from "react";
 import { AppLogic } from "../hooks/useAppLogic";
+import PageNotFound from "../components/PageNotFound";
 import Spinner from "../components/Spinner";
+import User from "../models/User";
 import Withholding from "../models/Withholding";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
+import withUser from "./withUser";
 
 interface ComponentWithWithholdingProps {
   appLogic: AppLogic;
   query: {
-    employer_id: string;
+    employer_id?: string;
   };
+  user: User;
 }
 
 /**
@@ -21,10 +25,7 @@ interface ComponentWithWithholdingProps {
  */
 const withWithholding = (Component) => {
   const ComponentWithWithholding = (props: ComponentWithWithholdingProps) => {
-    const { appLogic, query } = props;
-    const {
-      users: { user },
-    } = appLogic;
+    const { appLogic, query, user } = props;
     const { t } = useTranslation();
     const [shouldLoadWithholding, setShouldLoadWithholding] = useState(true);
     const [withholding, setWithholding] = useState<Withholding>();
@@ -34,6 +35,8 @@ const withWithholding = (Component) => {
     });
 
     useEffect(() => {
+      if (!employer) return;
+
       if (employer.verified) {
         appLogic.portalFlow.goTo(routes.employers.verificationSuccess, {
           employer_id: query.employer_id,
@@ -54,6 +57,10 @@ const withWithholding = (Component) => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [withholding, employer]);
 
+    if (!employer) {
+      return <PageNotFound />;
+    }
+
     return (
       <React.Fragment>
         {!withholding && shouldLoadWithholding && (
@@ -61,12 +68,14 @@ const withWithholding = (Component) => {
             <Spinner aria-valuetext={t("components.spinner.label")} />
           </div>
         )}
-        {withholding && <Component {...props} withholding={withholding} />}
+        {withholding && (
+          <Component {...props} employer={employer} withholding={withholding} />
+        )}
       </React.Fragment>
     );
   };
 
-  return ComponentWithWithholding;
+  return withUser(ComponentWithWithholding);
 };
 
 export default withWithholding;

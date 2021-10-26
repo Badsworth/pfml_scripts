@@ -13,6 +13,8 @@ interface InputChoiceGroupProps {
     className?: string;
     disabled?: boolean;
     hint?: React.ReactNode;
+    id?: string;
+    key?: string;
     label: React.ReactNode;
     value: number | string;
   }>;

@@ -1,4 +1,5 @@
 import { get, pick } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Details from "../../components/Details";
 import Heading from "../../components/Heading";
@@ -28,7 +29,7 @@ export const fields = [
 ];
 
 interface PreviousLeavesSameReasonDetailsProps {
-  appLogic: any;
+  appLogic: AppLogic;
   claim: BenefitsApplication;
 }
 
@@ -39,10 +40,12 @@ export const PreviousLeavesSameReasonDetails = (
   const { appLogic, claim } = props;
   const limit = 6;
 
-  const initialEntries = pick(props, fields).claim;
+  const initialEntries = pick(props, fields).claim || {
+    previous_leaves_same_reason: [],
+  };
+
   if (initialEntries.previous_leaves_same_reason.length === 0) {
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-    initialEntries.previous_leaves_same_reason = [new PreviousLeave()];
+    initialEntries.previous_leaves_same_reason = [new PreviousLeave({})];
   }
 
   // default to one existing previous leave.
@@ -71,8 +74,7 @@ export const PreviousLeavesSameReasonDetails = (
     updateFields({
       previous_leaves_same_reason: [
         ...previous_leaves_same_reason,
-        // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-        new PreviousLeave(),
+        new PreviousLeave({}),
       ],
     });
   };
@@ -145,7 +147,7 @@ export const PreviousLeavesSameReasonDetails = (
 interface PreviousLeaveSameReasonDetailsCardProps {
   claim: BenefitsApplication;
   entry: PreviousLeave;
-  getFunctionalInputProps: (...args: any[]) => any;
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
   index: number;
 }
 

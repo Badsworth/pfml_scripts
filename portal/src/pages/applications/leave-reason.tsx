@@ -3,6 +3,7 @@ import BenefitsApplication, {
 } from "../../models/BenefitsApplication";
 import { get, pick, set } from "lodash";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -23,8 +24,8 @@ export const fields = [
 ];
 
 interface LeaveReasonProps {
-  claim?: BenefitsApplication;
-  appLogic: any;
+  claim: BenefitsApplication;
+  appLogic: AppLogic;
 }
 
 export const LeaveReason = (props: LeaveReasonProps) => {
@@ -101,7 +102,11 @@ export const LeaveReason = (props: LeaveReasonProps) => {
   );
 
   const getChoices = () => {
-    const choices = [];
+    const choices: Array<{
+      checked: boolean;
+      label: string;
+      value: string;
+    }> = [];
     choices.push(choiceMedical, choiceBonding, choiceCaringLeave);
 
     showMilitaryLeaveTypes &&

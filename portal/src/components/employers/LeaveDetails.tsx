@@ -21,11 +21,14 @@ interface LeaveDetailsProps {
   appErrors: AppErrorInfoCollection;
   believeRelationshipAccurate?: "Yes" | "Unknown" | "No";
   claim: EmployerClaim;
-  documents?: ClaimDocument[];
-  downloadDocument: (...args: any[]) => any;
+  documents: ClaimDocument[];
+  downloadDocument: (
+    document: ClaimDocument,
+    absenceId: string
+  ) => Promise<Blob | undefined>;
   onChangeBelieveRelationshipAccurate?: (arg: string) => void;
   relationshipInaccurateReason?: string;
-  onChangeRelationshipInaccurateReason?: (arg: string) => void;
+  onChangeRelationshipInaccurateReason: (arg: string) => void;
 }
 
 /**
@@ -87,7 +90,11 @@ const LeaveDetails = (props: LeaveDetailsProps) => {
             context: findKeyByValue(LeaveReason, reason),
           })
         ) : (
-          <a target="_blank" rel="noopener" href={benefitsGuideLink[reason]}>
+          <a
+            target="_blank"
+            rel="noopener"
+            href={reason && benefitsGuideLink[reason]}
+          >
             {t("components.employersLeaveDetails.leaveReasonValue", {
               context: findKeyByValue(LeaveReason, reason),
             })}
@@ -133,7 +140,7 @@ const LeaveDetails = (props: LeaveDetailsProps) => {
             {documents.map((document) => (
               <li key={document.fineos_document_id}>
                 <DownloadableDocument
-                  onDownloadClick={downloadDocument}
+                  downloadClaimDocument={downloadDocument}
                   absenceId={absenceId}
                   document={document}
                   displayDocumentName={t(
@@ -151,7 +158,8 @@ const LeaveDetails = (props: LeaveDetailsProps) => {
             smallLabel
             name="believeRelationshipAccurate"
             onChange={(e) => {
-              onChangeBelieveRelationshipAccurate(e.target.value);
+              if (onChangeBelieveRelationshipAccurate)
+                onChangeBelieveRelationshipAccurate(e.target.value);
             }}
             choices={[
               {
@@ -198,7 +206,8 @@ const LeaveDetails = (props: LeaveDetailsProps) => {
             getField={() => relationshipInaccurateReason}
             clearField={() => onChangeRelationshipInaccurateReason("")}
             updateFields={(e) =>
-              // @ts-expect-error ts-migrate(2339) FIXME: Property 'value' does not exist on type 'unknown'.
+              // TODO (PORTAL-921): Fix or remove these props. This callback is never called currently.
+              // @ts-expect-error updateFields doesn't receive an event!!
               onChangeRelationshipInaccurateReason(e.target.value)
             }
             visible={believeRelationshipAccurate === "No"}

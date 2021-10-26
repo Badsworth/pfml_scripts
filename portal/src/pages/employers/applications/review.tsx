@@ -14,6 +14,7 @@ import EmployeeInformation from "../../../components/employers/EmployeeInformati
 import EmployeeNotice from "../../../components/employers/EmployeeNotice";
 import EmployerBenefit from "../../../models/EmployerBenefit";
 import EmployerBenefits from "../../../components/employers/EmployerBenefits";
+import EmployerClaim from "../../../models/EmployerClaim";
 import EmployerDecision from "../../../components/employers/EmployerDecision";
 import Feedback from "../../../components/employers/Feedback";
 import FraudReport from "../../../components/employers/FraudReport";
@@ -40,6 +41,7 @@ import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
 interface ReviewProps {
   appLogic: AppLogic;
+  claim: EmployerClaim;
   query: {
     absence_id: string;
   };
@@ -48,11 +50,12 @@ interface ReviewProps {
 export const Review = (props: ReviewProps) => {
   const {
     appLogic,
+    claim,
     query: { absence_id: absenceId },
   } = props;
   const {
     appErrors,
-    employers: { claim, documents, downloadDocument, loadDocuments },
+    employers: { claimDocumentsMap, downloadDocument, loadDocuments },
   } = appLogic;
   const { t } = useTranslation();
 
@@ -72,12 +75,11 @@ export const Review = (props: ReviewProps) => {
   // the functionality described above will need to be reimplemented.
   const indexedEmployerBenefits = claim.employer_benefits.map(
     (benefit, index) =>
-      // @ts-expect-error ts-migrate(2322) FIXME: Type 'number' is not assignable to type 'string'.
-      new EmployerBenefit({ ...benefit, employer_benefit_id: index })
+      new EmployerBenefit({ ...benefit, employer_benefit_id: index.toString() })
   );
   const indexedPreviousLeaves = claim.previous_leaves.map(
-    // @ts-expect-error ts-migrate(2322) FIXME: Type 'number' is not assignable to type 'string'.
-    (leave, index) => new PreviousLeave({ ...leave, previous_leave_id: index })
+    (leave, index) =>
+      new PreviousLeave({ ...leave, previous_leave_id: index.toString() })
   );
 
   const { clearField, getField, formState, updateFields } = useFormState({
@@ -108,7 +110,9 @@ export const Review = (props: ReviewProps) => {
     updateFields,
   });
 
-  const [allPreviousLeaves, setAllPreviousLeaves] = useState([]);
+  const [allPreviousLeaves, setAllPreviousLeaves] = useState<PreviousLeave[]>(
+    []
+  );
   useEffect(() => {
     setAllPreviousLeaves([
       ...formState.amendedPreviousLeaves,
@@ -116,7 +120,9 @@ export const Review = (props: ReviewProps) => {
     ]);
   }, [formState.amendedPreviousLeaves, formState.addedPreviousLeaves]);
 
-  const [allEmployerBenefits, setAllEmployerBenefits] = useState([]);
+  const [allEmployerBenefits, setAllEmployerBenefits] = useState<
+    EmployerBenefit[]
+  >([]);
   useEffect(() => {
     setAllEmployerBenefits([
       ...formState.amendedBenefits,
@@ -169,14 +175,12 @@ export const Review = (props: ReviewProps) => {
   const isCaringLeave = get(claim, "leave_details.reason") === LeaveReason.care;
 
   useEffect(() => {
-    if (!documents) {
-      loadDocuments(absenceId);
-    }
+    loadDocuments(absenceId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [documents, absenceId]);
+  }, [absenceId]);
 
   // only cert forms should be shown
-  const allDocuments = documents ? documents.items : [];
+  const allDocuments = claimDocumentsMap.get(absenceId)?.items || [];
 
   // TODO (CP-1983): Remove caring leave feature flag check
   // after turning on caring leave feature flag, use `findDocumentsByLeaveReason`
@@ -338,6 +342,7 @@ export const Review = (props: ReviewProps) => {
       : formState.hours_worked_per_week;
 
     const payload = {
+      believe_relationship_accurate: undefined,
       comment: formState.comment || "",
       concurrent_leave,
       employer_benefits,
@@ -351,6 +356,7 @@ export const Review = (props: ReviewProps) => {
         !isEqual(concurrent_leave, formState.concurrentLeave) ||
         !isEqual(claim.hours_worked_per_week, hours_worked_per_week),
       leave_reason: leaveReason,
+      relationship_inaccurate_reason: undefined,
       uses_second_eform_version: !!claim.uses_second_eform_version,
     };
 
@@ -359,10 +365,10 @@ export const Review = (props: ReviewProps) => {
         formState.believeRelationshipAccurate === "No"
           ? formState.relationshipInaccurateReason
           : "";
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'believe_relationship_accurate' does not ... Remove this comment to see the full error message
+
       payload.believe_relationship_accurate =
         formState.believeRelationshipAccurate;
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'relationship_inaccurate_reason' does not... Remove this comment to see the full error message
+
       payload.relationship_inaccurate_reason = parsedRelationshipComment;
     }
 
@@ -432,8 +438,6 @@ export const Review = (props: ReviewProps) => {
         }
       />
       <LeaveSchedule
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ appLogic: AppLogic; appErrors: any; employers: { c... Remove this comment to see the full error message
-        appLogic={appLogic}
         claim={claim}
         hasDocuments={!!certificationDocuments.length}
       />
@@ -504,8 +508,6 @@ export const Review = (props: ReviewProps) => {
               onAdd={handleConcurrentLeaveAdd}
               onChange={handleConcurrentLeaveInputChange}
               onRemove={handleConcurrentLeaveRemove}
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ appErrors: any; addedConcurrentLeave: any;... Remove this comment to see the full error message
-              shouldShowV2={shouldShowV2}
             />
           </React.Fragment>
         )}

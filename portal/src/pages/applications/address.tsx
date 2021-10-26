@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import AddressModel from "../../models/Address";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import FieldsetAddress from "../../components/FieldsetAddress";
@@ -24,14 +25,14 @@ export const fields = [
   "claim.mailing_address.line_1",
   "claim.mailing_address.line_2",
   "claim.mailing_address.city",
-  "claim.mailing_address.state",
+  "claim.mailing_address.sate",
   "claim.mailing_address.zip",
 ];
 
 interface AddressProps {
-  claim?: BenefitsApplication;
-  appLogic: any;
-  query?: {
+  claim: BenefitsApplication;
+  appLogic: AppLogic;
+  query: {
     claim_id?: string;
   };
 }
@@ -70,14 +71,12 @@ export const Address = (props: AddressProps) => {
     "residential_address"
   );
   if (!residentialAddressProps.value) {
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-    residentialAddressProps.value = new AddressModel();
+    residentialAddressProps.value = new AddressModel({});
   }
 
   const mailingAddressProps = getFunctionalInputProps("mailing_address");
   if (!mailingAddressProps.value) {
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-    mailingAddressProps.value = new AddressModel();
+    mailingAddressProps.value = new AddressModel({});
   }
 
   return (

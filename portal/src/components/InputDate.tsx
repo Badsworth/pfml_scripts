@@ -24,9 +24,9 @@ export function formatFieldsAsISO8601(
     day,
     year,
   }: {
-    day: number | string;
-    month: number | string;
-    year: number | string;
+    day?: number | string;
+    month?: number | string;
+    year?: number | string;
   },
   options: {
     skipLeadingZeros?: boolean;
@@ -54,7 +54,7 @@ export function formatFieldsAsISO8601(
  * Break apart the ISO 8601 date string into month/day/year parts, for UI rendering
  * @param value - ISO 8601 date string
  */
-export function parseDateParts(value: string) {
+export function parseDateParts(value?: string) {
   if (value) {
     const parts = value.split("-"); // "YYYY-MM-DD" => ["YYYY", "MM", "DD"]
     return {
@@ -113,7 +113,7 @@ interface InputDateProps {
    * Called when any of the fields' value changes. The event `target` will
    * include the formatted ISO 8601 date as its `value`
    */
-  onChange?: (...args: any[]) => any;
+  onChange?: React.ChangeEventHandler<HTMLInputElement>;
   /**
    * Localized text indicating this field is optional
    */
@@ -162,9 +162,9 @@ function InputDate(props: InputDateProps) {
   // We need refs in order to access the individual field values
   // and return the formatted date string back to our parent
   const inputTextRefs = {
-    month: useRef<HTMLInputElement>(),
-    day: useRef<HTMLInputElement>(),
-    year: useRef<HTMLInputElement>(),
+    month: useRef<HTMLInputElement>(null),
+    day: useRef<HTMLInputElement>(null),
+    year: useRef<HTMLInputElement>(null),
   };
 
   const formGroupClasses = classnames("usa-form-group", {
@@ -179,9 +179,9 @@ function InputDate(props: InputDateProps) {
    */
   const handleBlur = (evt: React.FocusEvent<HTMLInputElement>) => {
     const isoDate = formatFieldsAsISO8601({
-      month: inputTextRefs.month.current.value,
-      day: inputTextRefs.day.current.value,
-      year: inputTextRefs.year.current.value,
+      month: inputTextRefs.month.current?.value,
+      day: inputTextRefs.day.current?.value,
+      year: inputTextRefs.year.current?.value,
     });
 
     dispatchChange(isoDate, evt);
@@ -196,9 +196,9 @@ function InputDate(props: InputDateProps) {
   const handleChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const date = formatFieldsAsISO8601(
       {
-        month: inputTextRefs.month.current.value,
-        day: inputTextRefs.day.current.value,
-        year: inputTextRefs.year.current.value,
+        month: inputTextRefs.month.current?.value,
+        day: inputTextRefs.day.current?.value,
+        year: inputTextRefs.year.current?.value,
       },
       // We skip adding leading zeros onChange so that we don't prevent
       // a user from entering numbers with more than 1 digit. For instance,
@@ -228,9 +228,12 @@ function InputDate(props: InputDateProps) {
     target.name = props.name;
     target.value = value;
 
-    props.onChange({
-      target,
-    });
+    if (props.onChange) {
+      props.onChange({
+        ...originalEvent,
+        target,
+      });
+    }
   }
 
   return (
@@ -254,7 +257,7 @@ function InputDate(props: InputDateProps) {
           inputRef={inputTextRefs.month}
           label={props.monthLabel}
           labelClassName="text-normal margin-top-05"
-          maxLength="2"
+          maxLength={2}
           name={`${props.name}_month`}
           onBlur={handleBlur}
           onChange={handleChange}
@@ -269,7 +272,7 @@ function InputDate(props: InputDateProps) {
           inputRef={inputTextRefs.day}
           label={props.dayLabel}
           labelClassName="text-normal margin-top-05"
-          maxLength="2"
+          maxLength={2}
           name={`${props.name}_day`}
           onBlur={handleBlur}
           onChange={handleChange}
@@ -284,7 +287,7 @@ function InputDate(props: InputDateProps) {
           inputRef={inputTextRefs.year}
           label={props.yearLabel}
           labelClassName="text-normal margin-top-05"
-          maxLength="4"
+          maxLength={4}
           name={`${props.name}_year`}
           onBlur={handleBlur}
           onChange={handleChange}

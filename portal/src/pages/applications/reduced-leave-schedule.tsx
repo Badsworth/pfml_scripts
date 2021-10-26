@@ -6,6 +6,7 @@ import BenefitsApplication, {
 } from "../../models/BenefitsApplication";
 import { get, pick, set, zip } from "lodash";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import Details from "../../components/Details";
 import Heading from "../../components/Heading";
 import InputHours from "../../components/InputHours";
@@ -44,9 +45,9 @@ export const fields = [
 ];
 
 interface ReducedLeaveScheduleProps {
-  claim?: BenefitsApplication;
-  appLogic: any;
-  query?: {
+  claim: BenefitsApplication;
+  appLogic: AppLogic;
+  query: {
     claim_id?: string;
   };
 }
@@ -59,7 +60,7 @@ export const ReducedLeaveSchedule = (props: ReducedLeaveScheduleProps) => {
   const initialLeavePeriod = new ReducedScheduleLeavePeriod(
     get(claim, leavePeriodPath)
   );
-  const workPattern = new WorkPattern(claim.work_pattern);
+  const workPattern = new WorkPattern(claim.work_pattern || {});
   const gatherMinutesAsWeeklyAverage =
     workPattern.work_pattern_type === WorkPatternType.variable;
 
@@ -90,7 +91,9 @@ export const ReducedLeaveSchedule = (props: ReducedLeaveScheduleProps) => {
       ];
 
       zip(minuteFields, dailyMinutes).forEach(([field, minutes]) => {
-        set(requestData, field, minutes);
+        if (field) {
+          set(requestData, field, minutes);
+        }
       });
     }
 

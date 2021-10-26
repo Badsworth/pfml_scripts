@@ -7,7 +7,7 @@ import Withholding from "../../models/Withholding";
 import { uniqueId } from "lodash";
 
 const documentData = {
-  content_type: null,
+  content_type: "",
   created_at: "2021-1-1",
   description: "",
   name: "mock doc",

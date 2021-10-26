@@ -1,6 +1,6 @@
 class Flag {
   enabled = false;
-  name: string | null = null;
+  name: string;
   options: Record<string, unknown> = {};
   start: string | null = null;
   end: string | null = null;

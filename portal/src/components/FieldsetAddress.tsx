@@ -32,7 +32,7 @@ interface FieldsetAddressProps {
    * Called when any of the fields' value changes. The event `target` will
    * include the formatted ISO 8601 date as its `value`
    */
-  onChange: (...args: any[]) => any;
+  onChange: React.ChangeEventHandler<HTMLSelectElement | HTMLInputElement>;
   /**
    * Whether or not to use a small label. Default is false.
    */

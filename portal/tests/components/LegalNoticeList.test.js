@@ -46,7 +46,9 @@ describe("LegalNoticeList", () => {
   });
 
   it("calls download function on click", () => {
-    const onDownloadClick = jest.fn();
+    const onDownloadClick = jest.fn(() => {
+      return Promise.resolve();
+    });
 
     renderComponent({
       documents: [LEGAL_NOTICE],

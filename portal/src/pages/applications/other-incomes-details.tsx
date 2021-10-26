@@ -3,6 +3,7 @@ import OtherIncome, {
   OtherIncomeType,
 } from "../../models/OtherIncome";
 import { get, pick } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Dropdown from "../../components/Dropdown";
 import Fieldset from "../../components/Fieldset";
@@ -30,8 +31,8 @@ export const fields = [
 ];
 
 interface OtherIncomesDetailsProps {
-  claim?: BenefitsApplication;
-  appLogic: any;
+  claim: BenefitsApplication;
+  appLogic: AppLogic;
 }
 
 export const OtherIncomesDetails = (props: OtherIncomesDetailsProps) => {
@@ -39,7 +40,7 @@ export const OtherIncomesDetails = (props: OtherIncomesDetailsProps) => {
   const { t } = useTranslation();
   const limit = 6;
 
-  const initialEntries = pick(props, fields).claim;
+  const initialEntries = pick(props, fields).claim || { other_incomes: [] };
   // If the claim doesn't have any relevant entries, pre-populate the first one
   // so that it renders in the RepeatableFieldset below
   if (initialEntries.other_incomes.length === 0) {
@@ -114,8 +115,8 @@ export const OtherIncomesDetails = (props: OtherIncomesDetailsProps) => {
 
 interface OtherIncomeCardProps {
   index: number;
-  entry: any;
-  getFunctionalInputProps: (...args: any[]) => any;
+  entry: Record<string, unknown>;
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
 }
 
 /**

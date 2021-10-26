@@ -5,9 +5,11 @@ import findKeyByValue from "./findKeyByValue";
 /**
  * Converts a LeaveReason to its corresponding PreviousLeaveReason.
  */
-const leaveReasonToPreviousLeaveReason = (leaveReason: string) => {
+const leaveReasonToPreviousLeaveReason = (leaveReason: string | null) => {
   const previousLeaveReasonKey = findKeyByValue(LeaveReason, leaveReason);
-  return PreviousLeaveReason[previousLeaveReasonKey];
+  return previousLeaveReasonKey
+    ? PreviousLeaveReason[previousLeaveReasonKey]
+    : undefined;
 };
 
 export default leaveReasonToPreviousLeaveReason;

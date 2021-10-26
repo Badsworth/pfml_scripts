@@ -33,9 +33,9 @@ import withClaimDocuments from "../../hoc/withClaimDocuments";
 interface ChecklistProps {
   appLogic: AppLogic;
   claim: BenefitsApplication;
-  documents?: BenefitsApplicationDocument[];
-  isLoadingDocuments?: boolean;
-  query?: {
+  documents: BenefitsApplicationDocument[];
+  isLoadingDocuments: boolean;
+  query: {
     "part-one-submitted"?: string;
     "payment-pref-submitted"?: string;
   };
@@ -188,7 +188,7 @@ export const Checklist = (props: ChecklistProps) => {
           })}
           status={step.status}
           stepHref={stepHref}
-          editable={step.editable}
+          editable={!!step.editable}
           submittedContent={getStepSubmittedContent(step)}
         >
           <Trans
@@ -328,31 +328,12 @@ export const Checklist = (props: ChecklistProps) => {
   return (
     <div className="measure-6">
       {partOneSubmitted && (
-        <Alert
-          className="margin-bottom-3"
-          heading={t("pages.claimsChecklist.partOneSubmittedHeading")}
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; head... Remove this comment to see the full error message
-          name="part-one-submitted-message"
-          state="success"
-        >
-          <Trans
-            i18nKey="pages.claimsChecklist.partOneSubmittedDescription"
-            components={{
-              "contact-center-phone-link": (
-                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-              ),
-            }}
-          />
+        <Alert className="margin-bottom-3" state="warning">
+          {t("pages.claimsChecklist.partOneSubmittedDescription")}
         </Alert>
       )}
       {paymentPrefSubmitted && (
-        <Alert
-          className="margin-bottom-3"
-          heading={t("pages.claimsChecklist.partTwoSubmittedHeading")}
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: TFunctionResult; className: stri... Remove this comment to see the full error message
-          name="part-two-submitted-message"
-          state="success"
-        >
+        <Alert className="margin-bottom-3" state="warning">
           {t("pages.claimsChecklist.partTwoSubmittedDescription")}
         </Alert>
       )}
@@ -360,7 +341,11 @@ export const Checklist = (props: ChecklistProps) => {
         label={t("pages.claimsChecklist.backButtonLabel")}
         href={routes.applications.index}
       />
-      <Title hidden>{t("pages.claimsChecklist.title")}</Title>
+
+      <div className="margin-bottom-5">
+        <Title>{t("pages.claimsChecklist.title")}</Title>
+        <p> {t("pages.claimsChecklist.titleBody")} </p>
+      </div>
 
       {stepGroups.map((stepGroup) => (
         <StepList
@@ -398,7 +383,6 @@ export const Checklist = (props: ChecklistProps) => {
           )}
         </StepList>
       ))}
-
       <ButtonLink
         href={routeWithParams("applications.review", {
           claim_id: claim.application_id,

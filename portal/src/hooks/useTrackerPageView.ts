@@ -55,8 +55,7 @@ function getPageAttributesFromQueryString(
 ): Record<string, string> {
   const pageAttributes = {};
   // note that URLSearchParams accepts null/undefined in its constructor
-  // @ts-expect-error ts-migrate(2569) FIXME: Type 'URLSearchParams' is not an array type or a s... Remove this comment to see the full error message
-  for (const [key, value] of new URLSearchParams(queryString)) {
+  for (const [key, value] of Array.from(new URLSearchParams(queryString))) {
     pageAttributes[`query_${snakeCase(key)}`] = value;
   }
   return pageAttributes;

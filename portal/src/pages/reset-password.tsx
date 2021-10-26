@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Alert from "../components/Alert";
+import { AppLogic } from "../hooks/useAppLogic";
 import BackButton from "../components/BackButton";
 import Button from "../components/Button";
 import InputPassword from "../components/InputPassword";
@@ -16,7 +17,7 @@ import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
 interface ResetPasswordProps {
-  appLogic: any;
+  appLogic: AppLogic;
 }
 
 export const ResetPassword = (props: ResetPasswordProps) => {
@@ -65,8 +66,6 @@ export const ResetPassword = (props: ResetPasswordProps) => {
         <Alert
           className="margin-bottom-3 margin-top-0"
           heading={t("pages.authResetPassword.codeResentHeading")}
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; head... Remove this comment to see the full error message
-          name="code-resent-message"
           role="alert"
           state="warning"
         >

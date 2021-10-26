@@ -1,6 +1,6 @@
 import User, { UserLeaveAdministrator } from "../../../../src/models/User";
 import { screen, waitFor } from "@testing-library/react";
-import { VerifyContributions } from "../../../../src/pages/employers/organizations/verify-contributions";
+import VerifyContributions from "../../../../src/pages/employers/organizations/verify-contributions";
 import Withholding from "../../../../src/models/Withholding";
 import { renderPage } from "../../../test-utils";
 import userEvent from "@testing-library/user-event";
@@ -27,6 +27,11 @@ const setup = (props = {}) => {
             }),
           ],
         });
+        appLogic.employers.loadWithholding = jest.fn().mockResolvedValue(
+          new Withholding({
+            filing_period: "2011-11-20",
+          })
+        );
         submitWithholdingSpy = jest.spyOn(
           appLogic.employers,
           "submitWithholding"
@@ -35,9 +40,6 @@ const setup = (props = {}) => {
     },
     {
       query,
-      withholding: new Withholding({
-        filing_period: "2011-11-20",
-      }),
       ...props,
     }
   );
@@ -45,15 +47,22 @@ const setup = (props = {}) => {
 };
 
 describe("VerifyContributions", () => {
-  it("renders the page", () => {
+  it("renders the page", async () => {
     const { container } = setup();
+
+    await waitFor(() => {
+      expect(
+        screen.getByText(/Verify your paid leave contributions/)
+      ).toBeInTheDocument();
+    });
+
     expect(container.firstChild).toMatchSnapshot();
   });
 
   it("submits withholding data with correct values", async () => {
     const { submitWithholdingSpy } = setup();
-    userEvent.type(screen.getByRole("textbox"), "1,234.560");
-    userEvent.click(screen.getByRole("button", { name: "Submit" }));
+    userEvent.type(await screen.findByRole("textbox"), "1,234.560");
+    userEvent.click(await screen.findByRole("button", { name: "Submit" }));
 
     await waitFor(() => {
       expect(submitWithholdingSpy).toHaveBeenCalledWith(
@@ -69,8 +78,8 @@ describe("VerifyContributions", () => {
 
   it("submits withholding data as 0 if input is invalid", async () => {
     const { submitWithholdingSpy } = setup();
-    userEvent.type(screen.getByRole("textbox"), "invalid");
-    userEvent.click(screen.getByRole("button", { name: "Submit" }));
+    userEvent.type(await screen.findByRole("textbox"), "invalid");
+    userEvent.click(await screen.findByRole("button", { name: "Submit" }));
 
     await waitFor(() => {
       expect(submitWithholdingSpy).toHaveBeenCalledWith(

@@ -17,9 +17,11 @@ describe("formatDate", () => {
     it("return empty string when date is invalid", () => {
       const date1 = formatDate().full();
       const date2 = formatDate("this is not a date").full();
+      const date3 = formatDate(null).full();
 
       expect(date1).toEqual("");
       expect(date2).toEqual("");
+      expect(date3).toEqual("");
     });
   });
 
@@ -33,9 +35,11 @@ describe("formatDate", () => {
     it("return empty string when date is invalid", () => {
       const date1 = formatDate().short();
       const date2 = formatDate("this is not a date").short();
+      const date3 = formatDate(null).short();
 
       expect(date1).toEqual("");
       expect(date2).toEqual("");
+      expect(date3).toEqual("");
     });
 
     it("returns short date with masked values when date is masked", () => {

@@ -3,8 +3,8 @@ import LeaveReason from "./LeaveReason";
 import formatDateRange from "../utils/formatDateRange";
 
 export interface BaseLeavePeriod {
-  start_date: string;
-  end_date: string;
+  start_date: string | null;
+  end_date: string | null;
 }
 
 /**
@@ -20,7 +20,7 @@ abstract class BaseBenefitsApplication {
     continuous_leave_periods: BaseLeavePeriod[];
     intermittent_leave_periods: BaseLeavePeriod[];
     reduced_schedule_leave_periods: BaseLeavePeriod[];
-    reason: string;
+    reason: string | null;
   };
 
   /**

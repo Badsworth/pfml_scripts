@@ -6,7 +6,7 @@ import { withTranslation } from "../locales/i18n";
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
-  t: (...args: any[]) => any;
+  t: (arg: string) => string;
 }
 
 /**
@@ -18,6 +18,8 @@ interface ErrorBoundaryProps {
  * @see https://reactjs.org/docs/error-boundaries.html
  */
 export class ErrorBoundary extends React.Component<ErrorBoundaryProps> {
+  state: { hasError: boolean };
+
   constructor(props) {
     super(props);
     this.state = { hasError: false };
@@ -54,7 +56,6 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps> {
   render() {
     const { t } = this.props;
 
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'hasError' does not exist on type 'Readon... Remove this comment to see the full error message
     if (this.state.hasError) {
       return (
         <Alert state="error">

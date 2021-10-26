@@ -1,15 +1,16 @@
 import React, { useEffect } from "react";
 import { AppLogic } from "../hooks/useAppLogic";
+import PageNotFound from "../components/PageNotFound";
 import assert from "assert";
 import withUser from "./withUser";
 
 interface ComponentWithDocumentsProps {
   appLogic: AppLogic;
-  claim: {
+  claim?: {
     application_id: string;
   };
   query: {
-    claim_id: string;
+    claim_id?: string;
   };
 }
 
@@ -29,7 +30,8 @@ const withClaimDocuments = (Component) => {
     // TODO (CP-2589): Clean up once application flow uses the same document upload components
     const application_id = claim ? claim.application_id : query.claim_id;
 
-    const shouldLoad = !hasLoadedClaimDocuments(application_id);
+    const shouldLoad =
+      application_id && !hasLoadedClaimDocuments(application_id);
     assert(documents);
     // Since we are within a withUser higher order component, user should always be set
     assert(users.user);
@@ -40,6 +42,10 @@ const withClaimDocuments = (Component) => {
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [shouldLoad]);
+
+    if (!application_id) {
+      return <PageNotFound />;
+    }
 
     return (
       <Component

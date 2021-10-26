@@ -36,6 +36,11 @@ import { useTranslation } from "../../locales/i18n";
 import withClaims from "../../hoc/withClaims";
 import withUser from "../../hoc/withUser";
 
+interface PageQueryParam {
+  name: string;
+  value: number | string | string[];
+}
+
 interface DashboardProps {
   appLogic: AppLogic;
   query: {
@@ -52,7 +57,7 @@ interface DashboardProps {
 export const Dashboard = (props: DashboardProps) => {
   const showReviewByStatus = isFeatureEnabled("employerShowReviewByStatus");
   const { t } = useTranslation();
-  const introElementRef = useRef(null);
+  const introElementRef = useRef<HTMLElement>(null);
   const apiParams = {
     // Default the dashboard to show claims requiring action first
     order_by: showReviewByStatus ? "absence_status" : "created_at",
@@ -65,9 +70,7 @@ export const Dashboard = (props: DashboardProps) => {
    * or change the filter/sort of the loaded claims. The name/value
    * are merged with the existing query string.
    */
-  const updatePageQuery = (
-    paramsToUpdate: Array<{ name: string; value: number | string | string[] }>
-  ) => {
+  const updatePageQuery = (paramsToUpdate: PageQueryParam[]) => {
     const params = new URLSearchParams(window.location.search);
 
     paramsToUpdate.forEach(({ name, value }) => {
@@ -80,8 +83,7 @@ export const Dashboard = (props: DashboardProps) => {
     });
 
     const paramsObj = {};
-    // @ts-expect-error ts-migrate(2569) FIXME: Type 'IterableIterator<[string, string]>' is not a... Remove this comment to see the full error message
-    for (const [paramKey, paramValue] of params.entries()) {
+    for (const [paramKey, paramValue] of Array.from(params.entries())) {
       paramsObj[paramKey] = paramValue;
     }
 
@@ -196,10 +198,10 @@ export const Dashboard = (props: DashboardProps) => {
 };
 
 interface PaginatedClaimsTableProps {
-  appLogic?: AppLogic;
-  claims?: ClaimCollection;
-  paginationMeta?: PaginationMeta;
-  updatePageQuery: (...args: any[]) => any;
+  appLogic: AppLogic;
+  claims: ClaimCollection;
+  paginationMeta: PaginationMeta;
+  updatePageQuery: (params: PageQueryParam[]) => void;
   /** Pass in the SortDropdown so it can be rendered in the expected inline UI position */
   sort: React.ReactNode;
   user: User;
@@ -309,8 +311,8 @@ const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
 };
 
 interface ClaimTableRowsProps {
-  appLogic?: any;
-  claims?: ClaimCollection;
+  appLogic: AppLogic;
+  claims: ClaimCollection;
   tableColumnKeys: string[];
   user: User;
 }
@@ -386,7 +388,7 @@ const ClaimTableRows = (props: ClaimTableRowsProps) => {
   };
 
   const renderClaimItems = () => {
-    const claimItemsJSX = [];
+    const claimItemsJSX: JSX.Element[] = [];
 
     claims.items.forEach((claim) => {
       claimItemsJSX.push(
@@ -448,7 +450,7 @@ interface FiltersProps {
     claim_status?: string;
     employer_id?: string;
   };
-  updatePageQuery: (...args: any[]) => any;
+  updatePageQuery: (params: PageQueryParam[]) => void;
   user: User;
 }
 
@@ -476,7 +478,6 @@ const Filters = (props: FiltersProps) => {
   const [showFilters, setShowFilters] = useState(false);
 
   const { formState, updateFields } = useFormState(activeFilters);
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ formState: any; updateFields: ... Remove this comment to see the full error message
   const getFunctionalInputProps = useFunctionalInputProps({
     formState,
     updateFields,
@@ -506,7 +507,7 @@ const Filters = (props: FiltersProps) => {
    */
   const handleSubmit = (evt: FormEvent) => {
     evt.preventDefault();
-    const params = [];
+    const params: PageQueryParam[] = [];
 
     Object.entries(formState).forEach(([name, value]) => {
       params.push({ name, value });
@@ -528,7 +529,7 @@ const Filters = (props: FiltersProps) => {
    * Event handler for the "Reset filters" action
    */
   const handleFilterReset = () => {
-    const params = [];
+    const params: PageQueryParam[] = [];
 
     Object.keys(activeFilters).forEach((name) => {
       // Reset by setting to an empty string
@@ -668,7 +669,7 @@ const Filters = (props: FiltersProps) => {
               {
                 find(user.verifiedEmployers, {
                   employer_id: activeFilters.employer_id,
-                }).employer_dba
+                })?.employer_dba
               }
             </FilterMenuButton>
           )}
@@ -697,7 +698,7 @@ const Filters = (props: FiltersProps) => {
 
 interface FilterMenuButtonProps {
   children: React.ReactNode;
-  onClick: (...args: any[]) => any;
+  onClick: React.MouseEventHandler<HTMLButtonElement>;
 }
 
 const FilterMenuButton = (props: FilterMenuButtonProps) => {
@@ -727,7 +728,7 @@ const FilterMenuButton = (props: FilterMenuButtonProps) => {
 interface SearchProps {
   /** The current search value */
   initialValue?: string;
-  updatePageQuery: (...args: any[]) => any;
+  updatePageQuery: (params: PageQueryParam[]) => void;
 }
 
 const Search = (props: SearchProps) => {
@@ -735,7 +736,6 @@ const Search = (props: SearchProps) => {
   const { t } = useTranslation();
 
   const { formState, updateFields } = useFormState({ search: initialValue });
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ formState: any; updateFields: ... Remove this comment to see the full error message
   const getFunctionalInputProps = useFunctionalInputProps({
     formState,
     updateFields,
@@ -780,7 +780,7 @@ const Search = (props: SearchProps) => {
 interface SortDropdownProps {
   order_by?: "absence_status" | "created_at" | "employee";
   order_direction?: "ascending" | "descending";
-  updatePageQuery: (...args: any[]) => any;
+  updatePageQuery: (params: PageQueryParam[]) => void;
 }
 
 const SortDropdown = (props: SortDropdownProps) => {
@@ -802,7 +802,6 @@ const SortDropdown = (props: SortDropdownProps) => {
   const { formState, updateFields } = useFormState({
     orderAndDirection: compact([order_by, order_direction]).join(","),
   });
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ formState: any; updateFields: ... Remove this comment to see the full error message
   const getFunctionalInputProps = useFunctionalInputProps({
     formState,
     updateFields,
@@ -827,7 +826,7 @@ const SortDropdown = (props: SortDropdownProps) => {
     ];
   };
 
-  const handleChange = (evt) => {
+  const handleChange = (evt: React.ChangeEvent<HTMLSelectElement>) => {
     updatePageQuery([
       ...getParamsFromOrderAndDirection(evt.target.value),
       {
@@ -842,9 +841,10 @@ const SortDropdown = (props: SortDropdownProps) => {
     <Dropdown
       {...getFunctionalInputProps("orderAndDirection")}
       onChange={handleChange}
-      // @ts-expect-error ts-migrate(2322) FIXME: Type '{ label: TFunctionResult; value: string; }[]... Remove this comment to see the full error message
       choices={Array.from(choices).map(([key, value]) => ({
-        label: t("pages.employersDashboard.sortChoice", { context: key }),
+        label: t<string>("pages.employersDashboard.sortChoice", {
+          context: key,
+        }),
         value,
       }))}
       label={t("pages.employersDashboard.sortLabel")}

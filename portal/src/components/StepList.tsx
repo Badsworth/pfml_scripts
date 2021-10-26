@@ -14,7 +14,7 @@ interface StepListProps {
   /**
    * A single Step element or an array of Step elements
    */
-  children: any;
+  children: JSX.Element | JSX.Element[];
   /**
    * Localized text for each step's start button.
    */
@@ -55,7 +55,7 @@ const StepList = (props: StepListProps) => {
 
   return (
     <div className="margin-bottom-8">
-      <Heading level="2" size="1">
+      <Heading level="2" size="2">
         {title}
       </Heading>
       {description && <p>{description}</p>}

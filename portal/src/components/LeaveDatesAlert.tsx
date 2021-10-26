@@ -21,6 +21,8 @@ function LeaveDatesAlert(props: LeaveDatesAlertProps) {
   // Don't render if leave dates aren't present yet
   if (!props.startDate || !props.endDate) return null;
 
+  const waitingPeriodDays = 7;
+
   return (
     <React.Fragment>
       <Alert
@@ -48,7 +50,11 @@ function LeaveDatesAlert(props: LeaveDatesAlertProps) {
         >
           {formatDateRange(
             props.startDate,
-            `${DateTime.fromISO(props.startDate).plus({ days: 7 }).toISO()}`
+
+            // Start date is day 1, so it's subtracted from waiting period days
+            `${DateTime.fromISO(props.startDate)
+              .plus({ days: waitingPeriodDays - 1 })
+              .toISO()}`
           )}
         </Alert>
       )}

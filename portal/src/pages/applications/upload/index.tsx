@@ -3,6 +3,7 @@ import { TFunction, useTranslation } from "react-i18next";
 import { AbsencePeriod } from "../../../models/ClaimDetail";
 import AppErrorInfo from "../../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../models/AppErrorInfoCollection";
+import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import InputChoiceGroup from "../../../components/InputChoiceGroup";
 import LeaveReason from "../../../models/LeaveReason";
@@ -23,8 +24,8 @@ export const UploadType = {
 };
 
 interface Props {
-  appLogic: any;
-  query?: {
+  appLogic: AppLogic;
+  query: {
     absence_case_id: string;
   };
 }
@@ -86,8 +87,8 @@ export const UploadDocsOptions = (props: Props) => {
       appLogic.setAppErrors(new AppErrorInfoCollection([appErrorInfo]));
 
       tracker.trackEvent("ValidationError", {
-        issueField: appErrorInfo.field,
-        issueType: appErrorInfo.type,
+        issueField: appErrorInfo.field || "",
+        issueType: appErrorInfo.type || "",
       });
 
       return;

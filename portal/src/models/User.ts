@@ -37,7 +37,7 @@ class User {
   /**
    * Returns an unverifiable employer by employer id
    */
-  getUnverifiableEmployerById(employerId: string): UserLeaveAdministrator {
+  getUnverifiableEmployerById(employerId: string) {
     return this.user_leave_administrators.find((employer) => {
       return (
         employerId === employer.employer_id &&
@@ -49,7 +49,7 @@ class User {
   /**
    * Returns a verifiable employer by employer id
    */
-  getVerifiableEmployerById(employerId: string): UserLeaveAdministrator {
+  getVerifiableEmployerById(employerId: string) {
     return this.user_leave_administrators.find((employer) => {
       return (
         employerId === employer.employer_id &&
@@ -93,11 +93,8 @@ class User {
 }
 
 export class UserRole {
-  role_description:
-    | typeof RoleDescription[keyof typeof RoleDescription]
-    | null = null;
-
-  role_id: string | null = null;
+  role_description: typeof RoleDescription[keyof typeof RoleDescription];
+  role_id: number;
 
   constructor(attrs: Partial<UserRole>) {
     Object.assign(this, attrs);
@@ -114,12 +111,12 @@ export const RoleDescription = {
 } as const;
 
 export class UserLeaveAdministrator {
-  employer_dba: string | null = null;
-  employer_fein: string | null = null;
-  employer_id: string | null = null;
-  has_fineos_registration: boolean | null = null;
-  has_verification_data: boolean | null = null;
-  verified: boolean | null = null;
+  employer_dba: string;
+  employer_fein: string;
+  employer_id: string;
+  has_fineos_registration: boolean;
+  has_verification_data: boolean;
+  verified: boolean;
 
   constructor(attrs: Partial<UserLeaveAdministrator>) {
     Object.assign(this, attrs);
