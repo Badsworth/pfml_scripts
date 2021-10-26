@@ -22,6 +22,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: python
         run: |
+          import json
           import os
           import re
           import sys
@@ -41,10 +42,11 @@ jobs:
                     "for example \"AAA-123: /summary/\"")
               problem_count += 1
 
+              comment = {"body": "Please start the PR title with a JIRA ticket"}
               req = urllib.request.Request(comments_url)
               req.add_header("Accept", "application/vnd.github.v3+json")
               req.add_header("Authorization", "Bearer " + github_token)
-              r = urllib.request.urlopen(req, data='{"body": "Please start the PR title with a JIRA ticket"}')
+              r = urllib.request.urlopen(req, data=json.dumps(comment).encode("utf-8"))
               print("response status %i", r.status)
 
           if not re.search(r"https://lwd.atlassian.net/browse/[A-Z]+-\d+", body):
