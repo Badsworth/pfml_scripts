@@ -219,10 +219,11 @@ resource "aws_api_gateway_method" "pfmldata_list_objects_method" {
   api_key_required = true
 
   request_parameters = {
-    "method.request.path.bucket"             = true
-    "method.request.path.key"                = true
-    "method.request.querystring.max_keys"    = false
-    "method.request.querystring.start_after" = false
+    "method.request.path.bucket"              = true
+    "method.request.path.key"                 = true
+    "method.request.querystring.max_keys"     = false
+    "method.request.querystring.start_after"  = false
+    "method.request.querystring.no_slash_fix" = false
   }
 }
 
@@ -271,9 +272,12 @@ resource "aws_api_gateway_integration" "pfmldata_list_objects_s3_integration" {
 
   request_templates = {
     "application/json" : <<EOD
-{
-  #set($context.requestOverride.querystring.prefix="$input.params('key')/")
-}
+#set($bucketKey="$util.urlDecode($input.params('key'))")
+#set($shouldFixSlash= !$bucketKey.endsWith('/') && "$input.params('no_slash_fix')" == "" )
+#if( $shouldFixSlash )
+  #set($bucketKey="$bucketKey/")
+#end
+#set($context.requestOverride.querystring.prefix="$bucketKey")
 EOD
   }
 }

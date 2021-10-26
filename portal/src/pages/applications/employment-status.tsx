@@ -3,11 +3,11 @@ import BenefitsApplication, {
 } from "../../models/BenefitsApplication";
 import { get, pick } from "lodash";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputText from "../../components/InputText";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
@@ -19,19 +19,21 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.employment_status", "claim.employer_fein"];
 
-interface Props {
-  appLogic: any;
+interface EmploymentStatusProps {
+  appLogic: AppLogic;
   claim: BenefitsApplication;
 }
 
-export const EmploymentStatus = (props: Props) => {
+export const EmploymentStatus = (props: EmploymentStatusProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
   // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
   const showEmploymentStatus = isFeatureEnabled("claimantShowEmploymentStatus");
 
-  const initialFormState = pick(props, fields).claim;
+  const initialFormState = pick(props, fields).claim || {
+    employment_status: undefined,
+  };
 
   if (!showEmploymentStatus) {
     // If the radio buttons are disabled, hard-code the field so that validations pass
@@ -92,7 +94,6 @@ export const EmploymentStatus = (props: Props) => {
 
       <ConditionalContent
         fieldNamesClearedWhenHidden={["employer_fein"]}
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '(name: any) => any' is not assignable to typ... Remove this comment to see the full error message
         getField={getField}
         clearField={clearField}
         updateFields={updateFields}
@@ -108,11 +109,6 @@ export const EmploymentStatus = (props: Props) => {
       </ConditionalContent>
     </QuestionPage>
   );
-};
-
-EmploymentStatus.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
 export default withBenefitsApplication(EmploymentStatus);

@@ -1,7 +1,7 @@
 import BaseApi, {
   createRequestUrl,
+  fetchErrorToNetworkError,
   getAuthorizationHeader,
-  handleError,
   handleNotOkResponse,
 } from "./BaseApi";
 import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
@@ -42,15 +42,16 @@ export default class DocumentsApi extends BaseApi {
     // https://developer.mozilla.org/en-US/docs/Web/API/FormData/append#append_parameters
     formData.append("file", file, file.name);
     formData.append("name", file.name);
-    // @ts-expect-error ts(2345): Argument of type 'boolean' is not assignable to parameter of type 'string | Blob'.
-    // Resolving this TypeScript error **might** require a corresponding change to the OpenAPI schema and API logic.
-    formData.append("mark_evidence_received", mark_evidence_received);
+    formData.append(
+      "mark_evidence_received",
+      mark_evidence_received.toString()
+    );
 
     const { data } = await this.request<BenefitsApplicationDocument>(
       "POST",
       `${application_id}/documents`,
       formData,
-      null,
+      undefined,
       { multipartForm: true }
     );
 
@@ -89,7 +90,7 @@ export default class DocumentsApi extends BaseApi {
 
     const headers = {
       ...authHeader,
-      "Content-Type": content_type,
+      "Content-Type": content_type || "",
     };
 
     let blob: Blob, response: Response;
@@ -97,12 +98,11 @@ export default class DocumentsApi extends BaseApi {
       response = await fetch(url, { headers, method });
       blob = await response.blob();
     } catch (error) {
-      handleError(error);
+      throw fetchErrorToNetworkError(error);
     }
 
     if (!response.ok) {
-      // @ts-expect-error ts-migrate(2554) FIXME: Expected 5 arguments, but got 2.
-      handleNotOkResponse(url, response);
+      handleNotOkResponse(response, [], this.i18nPrefix);
     }
 
     return blob;

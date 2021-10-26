@@ -464,7 +464,7 @@ def make_claimant_data_from_fineos_data(fineos_data):
     )
 
     return claimant_extract.ClaimantData(
-        fineos_data.absence_case_number, [requested_absence], [employee_feed]
+        fineos_data.absence_case_number, [requested_absence], employee_feed
     )
 
 
@@ -483,7 +483,7 @@ def make_claimant_data_with_incorrect_request_absence(fineos_data):
     )
 
     return claimant_extract.ClaimantData(
-        fineos_data.absence_case_number, [requested_absence], [employee_feed]
+        fineos_data.absence_case_number, [requested_absence], employee_feed
     )
 
 

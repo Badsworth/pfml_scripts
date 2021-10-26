@@ -11,7 +11,6 @@ import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import Heading from "../../components/Heading";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
@@ -22,9 +21,9 @@ import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
-interface Props {
-  claim?: BenefitsApplication;
-  query?: {
+interface SuccessProps {
+  claim: BenefitsApplication;
+  query: {
     claim_id?: string;
   };
 }
@@ -32,7 +31,7 @@ interface Props {
 /**
  * Success page, shown when an application is successfully submitted.
  */
-export const Success = (props: Props) => {
+export const Success = (props: SuccessProps) => {
   const { claim } = props;
   const { t } = useTranslation();
   const iconProps = {
@@ -181,6 +180,17 @@ export const Success = (props: Props) => {
           }}
         />
 
+        <div className="add-aspect-16x9">
+          <iframe
+            className="pin-left pin-y width-full height-full"
+            title="DFML - What comes between \“submit\” and receiving payments"
+            src="https://player.vimeo.com/video/609976204?h=902acebe39"
+            allowFullScreen
+            frameBorder="0"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          />
+        </div>
+
         <Heading level="2">{t("pages.claimsSuccess.learnMoreHeading")}</Heading>
 
         <Trans
@@ -280,13 +290,6 @@ export const Success = (props: Props) => {
       </div>
     </React.Fragment>
   );
-};
-
-Success.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(Success);

@@ -5,7 +5,7 @@ import { useTranslation } from "../locales/i18n";
 import useUniqueId from "../hooks/useUniqueId";
 
 /**
- * This component supports most (not all) InputText.propTypes and passes those
+ * This component supports most (not all) InputText props and passes those
  * props directly to InputText. It should not be passed props such as `type`.
  */
 interface InputPasswordProps {
@@ -44,7 +44,7 @@ interface InputPasswordProps {
   /**
    * HTML input `maxlength` attribute
    */
-  maxLength?: string;
+  maxLength?: number;
   /**
    * HTML input `name` attribute
    */

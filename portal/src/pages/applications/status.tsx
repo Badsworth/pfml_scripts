@@ -1,18 +1,17 @@
-// @ts-nocheck https://lwd.atlassian.net/browse/PORTAL-427
-import ClaimDetail, { AbsencePeriod } from "../../models/ClaimDetail";
 import React, { useEffect } from "react";
 import { find, get, has, map } from "lodash";
-
+import { AbsencePeriod } from "../../models/ClaimDetail";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
+import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import ButtonLink from "../../components/ButtonLink";
-import DocumentCollection from "../../models/DocumentCollection";
+import ClaimDocument from "../../models/ClaimDocument";
 import { DocumentType } from "../../models/Document";
 import Heading from "../../components/Heading";
 import LeaveReason from "../../models/LeaveReason";
 import LegalNoticeList from "../../components/LegalNoticeList";
-import PageNotFound from "../404";
-import PropTypes from "prop-types";
+import PageNotFound from "../../components/PageNotFound";
 import Spinner from "../../components/Spinner";
 import Tag from "../../components/Tag";
 import Title from "../../components/Title";
@@ -28,30 +27,16 @@ import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
 
 interface StatusProps {
-  appLogic: {
-    appErrors: any;
-    claims: {
-      claimDetail?: ClaimDetail;
-      isLoadingClaimDetail?: boolean;
-      loadClaimDetail: (...args: any[]) => any;
-    };
-    documents?: {
-      documents: DocumentCollection;
-      download: (...args: any[]) => any;
-      hasLoadedClaimDocuments: (...args: any[]) => any;
-      loadAll: (...args: any[]) => any;
-    };
-    portalFlow: {
-      goTo: (...args: any[]) => any;
-      getNextPageRoute: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
   query: {
     absence_case_id?: string;
     claim_id?: string;
     uploaded_document_type?: string;
   };
 }
+
+const containerClassName =
+  "border-bottom border-base-lighter measure-6 padding-y-4";
 
 export const Status = ({ appLogic, query }: StatusProps) => {
   const { t } = useTranslation();
@@ -66,6 +51,7 @@ export const Status = ({ appLogic, query }: StatusProps) => {
     portalFlow,
   } = appLogic;
   const { absence_case_id, uploaded_document_type } = query;
+
   useEffect(() => {
     if (!isFeatureEnabled("claimantShowStatusPage")) {
       portalFlow.goTo(routes.applications.index);
@@ -73,7 +59,9 @@ export const Status = ({ appLogic, query }: StatusProps) => {
   }, [portalFlow]);
 
   useEffect(() => {
-    loadClaimDetail(absence_case_id);
+    if (absence_case_id) {
+      loadClaimDetail(absence_case_id);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [absence_case_id]);
 
@@ -104,8 +92,11 @@ export const Status = ({ appLogic, query }: StatusProps) => {
   const isAbsenceCaseId = Boolean(query.absence_case_id?.length);
   if (!isAbsenceCaseId) return <PageNotFound />;
 
-  // If the claim has an error, include the back button w/error
-  if (appLogic.appErrors.items.length) {
+  // only hide page content if there is an error that's not DocumentsLoadError.
+  const hasNonDocumentsLoadError: boolean = appLogic.appErrors.items.some(
+    (error) => error.name !== "DocumentsLoadError"
+  );
+  if (hasNonDocumentsLoadError) {
     return (
       <BackButton
         label={t("pages.claimsStatus.backButtonLabel")}
@@ -117,7 +108,7 @@ export const Status = ({ appLogic, query }: StatusProps) => {
   // Check both because claimDetail could be cached from a different status page.
   if (isLoadingClaimDetail || !claimDetail) {
     return (
-      <div className="margin-top-8 text-center">
+      <div className="text-center">
         <Spinner
           aria-valuetext={t("pages.claimsStatus.loadingClaimDetailLabel")}
         />
@@ -136,8 +127,6 @@ export const Status = ({ appLogic, query }: StatusProps) => {
     claimDetail.application_id
   );
 
-  const containerClassName = "border-top border-base-lighter padding-y-4";
-
   const ViewYourNotices = () => {
     const legalNotices = getLegalNotices(documentsForApplication);
 
@@ -148,16 +137,12 @@ export const Status = ({ appLogic, query }: StatusProps) => {
       hasDocumentsLoadError(appLogic.appErrors, claimDetail.application_id) ||
       legalNotices.length === 0;
 
-    const SectionWrapper = ({ children }) => (
+    interface SectionWrapperProps {
+      children: React.ReactNode;
+    }
+    const SectionWrapper = ({ children }: SectionWrapperProps) => (
       <div className={containerClassName}>{children}</div>
     );
-
-    SectionWrapper.propTypes = {
-      children: PropTypes.oneOfType([
-        PropTypes.arrayOf(PropTypes.node),
-        PropTypes.node,
-      ]).isRequired,
-    };
 
     if (shouldShowSpinner) {
       // claim documents are loading.
@@ -179,7 +164,7 @@ export const Status = ({ appLogic, query }: StatusProps) => {
       />
     );
 
-    // How many notices a user should have, based on claim decisions
+    // How many claim decisions
     const expectedNoticeCount = claimDetail.absence_periods.reduce(
       (acc, { request_decision }) => {
         const shouldHaveNotice =
@@ -205,12 +190,14 @@ export const Status = ({ appLogic, query }: StatusProps) => {
       return noticeTypes[legalNotice.document_type];
     });
 
-    // Determines whether or not to show timeline for notice
-    const isStatusTimelineNotice = expectedNoticeCount > decisionNotices.length;
+    // Show timeline for notice if there are no notices and expectedNotices > amount of Notices
+    const isStatusTimelineNotice = !decisionNotices.length
+      ? expectedNoticeCount > decisionNotices.length
+      : null;
 
     return (
       <SectionWrapper>
-        <Heading className="margin-bottom-1" level="2" id="view_notices">
+        <Heading level="2" id="view_notices">
           {t("pages.claimsStatus.viewNoticesHeading")}
         </Heading>
         {sectionBody}
@@ -248,13 +235,11 @@ export const Status = ({ appLogic, query }: StatusProps) => {
     <React.Fragment>
       {uploaded_document_type && (
         <Alert
-          className="margin-bottom-3"
           heading={t("pages.claimsStatus.uploadSuccessHeading", {
             document: t("pages.claimsStatus.uploadSuccessHeadingDocumentName", {
               context: uploaded_document_type,
             }),
           })}
-          name="upload-success-message"
           state="success"
         >
           {t("pages.applications.uploadSuccessMessage", {
@@ -297,19 +282,19 @@ export const Status = ({ appLogic, query }: StatusProps) => {
         label={t("pages.claimsStatus.backButtonLabel")}
         href={routes.applications.index}
       />
-      <div className="measure-6">
-        <Title weight="normal" small marginBottom="3">
+      <div>
+        <Title weight="normal" small>
           {t("pages.claimsStatus.applicationDetails")}
         </Title>
 
         {/* Heading section */}
 
-        <Heading level="2" size="1" className="margin-bottom-3">
+        <Heading level="2" size="1">
           {t("pages.claimsStatus.leaveReasonValueHeader", {
             context: findKeyByValue(LeaveReason, firstAbsenceDetail),
           })}
         </Heading>
-        <div className="display-flex border-base-lighter margin-bottom-4 bg-base-lightest padding-2">
+        <div className="display-flex bg-base-lightest padding-2">
           <div className="padding-right-10">
             <Heading weight="normal" level="2" size="4">
               {t("pages.claimsStatus.applicationID")}
@@ -329,7 +314,6 @@ export const Status = ({ appLogic, query }: StatusProps) => {
             employerFollowUpDate={
               claimDetail.managedRequirementByFollowUpDate[0]?.follow_up_date
             }
-            absenceDetails={absenceDetails}
             applicationId={claimDetail.application_id}
             docList={documentsForApplication}
             absenceCaseId={claimDetail.fineos_absence_id}
@@ -375,13 +359,16 @@ export const Status = ({ appLogic, query }: StatusProps) => {
         </div>
 
         {/* Manage applications section */}
-        <div className={containerClassName}>
-          {(hasPendingStatus || hasApprovedStatus) && (
-            <div data-testid="manageApplication">
+        {(hasPendingStatus || hasApprovedStatus) && (
+          <div
+            className="measure-6 padding-y-4"
+            data-testid="manageApplication"
+          >
+            <div>
               <Heading level="2">
                 {t("pages.claimsStatus.manageApplicationHeading")}
               </Heading>
-              <Heading level="3" className="margin-top-4">
+              <Heading level="3" className="margin-top-3">
                 {t("pages.claimsStatus.makeChangesHeading")}
               </Heading>
               <Trans
@@ -408,51 +395,25 @@ export const Status = ({ appLogic, query }: StatusProps) => {
                 />
               )}
             </div>
-          )}
 
-          <Heading level="3">
-            {t("pages.claimsStatus.reportOtherBenefitsHeading")}
-          </Heading>
-          <Trans
-            i18nKey="pages.claimsStatus.reportOtherBenefitsBody"
-            components={{
-              "contact-center-phone-link": (
-                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-              ),
-              ul: <ul className="usa-list" />,
-              li: <li />,
-            }}
-          />
-        </div>
+            <Heading level="3">
+              {t("pages.claimsStatus.reportOtherBenefitsHeading")}
+            </Heading>
+            <Trans
+              i18nKey="pages.claimsStatus.reportOtherBenefitsBody"
+              components={{
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
+                ul: <ul className="usa-list" />,
+                li: <li />,
+              }}
+            />
+          </div>
+        )}
       </div>
     </React.Fragment>
   );
-};
-
-Status.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    claims: PropTypes.shape({
-      claimDetail: PropTypes.instanceOf(ClaimDetail),
-      isLoadingClaimDetail: PropTypes.bool,
-      loadClaimDetail: PropTypes.func.isRequired,
-    }).isRequired,
-    documents: PropTypes.shape({
-      documents: PropTypes.instanceOf(DocumentCollection).isRequired,
-      download: PropTypes.func.isRequired,
-      hasLoadedClaimDocuments: PropTypes.func.isRequired,
-      loadAll: PropTypes.func.isRequired,
-    }),
-    portalFlow: PropTypes.shape({
-      goTo: PropTypes.func.isRequired,
-      getNextPageRoute: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-  query: PropTypes.shape({
-    absence_case_id: PropTypes.string,
-    claim_id: PropTypes.string,
-    uploaded_document_type: PropTypes.string,
-  }).isRequired,
 };
 
 export default withUser(Status);
@@ -463,103 +424,92 @@ export const StatusTagMap = {
   Pending: "pending",
   Withdrawn: "inactive",
   Cancelled: "inactive",
-};
+} as const;
 
 interface LeaveDetailsProps {
-  absenceDetails?: any;
+  absenceDetails?: Record<string, AbsencePeriod[]>;
 }
 
 export const LeaveDetails = ({ absenceDetails = {} }: LeaveDetailsProps) => {
   const { t } = useTranslation();
-  return map(absenceDetails, (absenceItem, absenceItemName) => (
-    <div
-      key={absenceItemName}
-      className="border-base-lighter margin-bottom-4 padding-top-4 border-top"
-    >
-      <Heading level="2">
-        {t("pages.claimsStatus.leaveReasonValue", {
-          context: findKeyByValue(LeaveReason, absenceItemName),
-        })}
-      </Heading>
-      {absenceItem.length
-        ? absenceItem.map(
-            (
-              {
-                period_type,
-                absence_period_start_date,
-                absence_period_end_date,
-                request_decision,
-                fineos_leave_request_id,
-              },
-              ind
-            ) => (
-              <div
-                key={fineos_leave_request_id}
-                className={`margin-top-${ind > 0 ? "5" : "4"}`}
-              >
-                <Heading className="margin-bottom-1" level="3">
-                  {t("pages.claimsStatus.leavePeriodLabel", {
-                    context: period_type.split(" ")[0].toLowerCase(),
-                  })}
-                </Heading>
-                <p className="margin-top-0 margin-bottom-1">
-                  {`From ${formatDate(
-                    absence_period_start_date
-                  ).full()} to ${formatDate(absence_period_end_date).full()}`}
-                </p>
-                <Tag
-                  className="padding-x-1 margin-top-0 margin-bottom-05"
-                  label={request_decision}
-                  state={StatusTagMap[request_decision]}
-                />
-                <Trans
-                  i18nKey="pages.claimsStatus.leaveStatusMessage"
-                  tOptions={{ context: request_decision }}
-                  components={{
-                    "application-link": (
-                      <a
-                        href={routes.applications.getReady}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      />
-                    ),
-                    p: <p className="margin-top-1"></p>,
-                    "request-appeal-link": (
-                      <a
-                        href={routes.external.massgov.requestAnAppealForPFML}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      />
-                    ),
-                    "request-decision-info": <p className="margin-0"></p>,
-                  }}
-                />
-              </div>
-            )
-          )
-        : null}
-    </div>
-  ));
-};
 
-LeaveDetails.propTypes = {
-  absenceDetails: PropTypes.object,
+  return (
+    <React.Fragment>
+      {map(absenceDetails, (absenceItem, absenceItemName) => (
+        <div key={absenceItemName} className={containerClassName}>
+          <Heading level="2">
+            {t("pages.claimsStatus.leaveReasonValue", {
+              context: findKeyByValue(LeaveReason, absenceItemName),
+            })}
+          </Heading>
+          {absenceItem.length &&
+            absenceItem.map(
+              (
+                {
+                  period_type,
+                  absence_period_start_date,
+                  absence_period_end_date,
+                  request_decision,
+                  fineos_leave_request_id,
+                },
+                ind
+              ) => (
+                <div
+                  key={fineos_leave_request_id}
+                  className={`margin-top-${ind ? "6" : "4"}`}
+                >
+                  <Heading level="3">
+                    {t("pages.claimsStatus.leavePeriodLabel", {
+                      context: period_type.split(" ")[0].toLowerCase(),
+                    })}
+                  </Heading>
+                  <p>
+                    {`From ${formatDate(
+                      absence_period_start_date
+                    ).full()} to ${formatDate(absence_period_end_date).full()}`}
+                  </p>
+                  <Tag
+                    label={request_decision}
+                    state={StatusTagMap[request_decision]}
+                  />
+                  <Trans
+                    i18nKey="pages.claimsStatus.leaveStatusMessage"
+                    tOptions={{ context: request_decision }}
+                    components={{
+                      "application-link": (
+                        <a
+                          href={routes.applications.getReady}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        />
+                      ),
+                      p: <p></p>,
+                      "request-appeal-link": (
+                        <a
+                          href={routes.external.massgov.requestAnAppealForPFML}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        />
+                      ),
+                      "request-decision-info": <p></p>,
+                    }}
+                  />
+                </div>
+              )
+            )}
+        </div>
+      ))}
+    </React.Fragment>
+  );
 };
 
 interface TimelineProps {
   absencePeriods: AbsencePeriod[];
   applicationId?: string;
-  bondingAbsencePeriod?: {
-    reason_qualifier_one?: string;
-  };
-  employerFollowUpDate?: string;
-  docList: any[];
+  employerFollowUpDate: string | null;
+  docList: ClaimDocument[] | BenefitsApplicationDocument[];
   absenceCaseId: string;
-  appLogic?: {
-    portalFlow?: {
-      getNextPageRoute: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
 }
 
 export const Timeline = ({
@@ -581,8 +531,10 @@ export const Timeline = ({
     absencePeriods,
     (absencePeriod) => absencePeriod.reason === LeaveReason.bonding
   );
-
-  const FollowUpSteps = ({ bondingAbsencePeriod }) => {
+  interface FollowUpStepsProps {
+    bondingAbsencePeriod: AbsencePeriod;
+  }
+  const FollowUpSteps = ({ bondingAbsencePeriod }: FollowUpStepsProps) => {
     let typeOfProof;
     if (bondingAbsencePeriod.reason_qualifier_one === "Adoption") {
       typeOfProof = "adoption";
@@ -665,7 +617,7 @@ export const Timeline = ({
     </React.Fragment>
   );
   return (
-    <div data-testid="timeline" className="border-base-lighter margin-bottom-4">
+    <div data-testid="timeline" className={containerClassName}>
       {!bondingAbsencePeriod ||
       // eslint-disable-next-line react/prop-types
       !shouldRenderCertificationButton(bondingAbsencePeriod.reason, docList) ? (
@@ -675,21 +627,4 @@ export const Timeline = ({
       )}
     </div>
   );
-};
-
-Timeline.propTypes = {
-  absencePeriods: PropTypes.arrayOf(PropTypes.instanceOf(AbsencePeriod))
-    .isRequired,
-  applicationId: PropTypes.string,
-  bondingAbsencePeriod: PropTypes.shape({
-    reason_qualifier_one: PropTypes.string,
-  }),
-  employerFollowUpDate: PropTypes.string,
-  docList: PropTypes.array.isRequired,
-  absenceCaseId: PropTypes.string.isRequired,
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      getNextPageRoute: PropTypes.func.isRequired,
-    }),
-  }),
 };

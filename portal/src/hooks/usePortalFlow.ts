@@ -1,7 +1,11 @@
+import {
+  NullableQueryParams,
+  createRouteWithQuery,
+} from "../utils/routeWithParams";
 import machineConfigs, { guards } from "../flows";
-import { Machine } from "xstate";
+import { ClaimantFlowContext } from "../flows/claimant";
 import { RouteTransitionError } from "../errors";
-import { createRouteWithQuery } from "../utils/routeWithParams";
+import { createMachine } from "xstate";
 import { useMemo } from "react";
 import { useRouter } from "next/router";
 
@@ -12,8 +16,10 @@ const usePortalFlow = () => {
   /**
    * @see https://xstate.js.org/docs/guides/machines.html
    */
-  // @ts-expect-error ts-migrate(2769) FIXME: No overload matches this call.
-  const routingMachine = useMemo(() => Machine(machineConfigs, { guards }), []);
+  const routingMachine = useMemo(
+    () => createMachine(machineConfigs, { guards }),
+    []
+  );
 
   // TODO (CP-732) use custom useRouter
   const router = useRouter();
@@ -41,7 +47,7 @@ const usePortalFlow = () => {
    */
   const goTo = (
     route: string,
-    params?: Record<string, unknown>,
+    params?: NullableQueryParams,
     options: {
       redirect?: boolean;
     } = {}
@@ -64,10 +70,9 @@ const usePortalFlow = () => {
    */
   const getNextPageRoute = (
     event: string,
-    context?: Record<string, unknown>,
-    params?: Record<string, unknown>
+    context: ClaimantFlowContext = {},
+    params?: NullableQueryParams
   ) => {
-    // @ts-expect-error FIXME: Property 'isAdditionalDoc' is missing in type 'Record<string, unknown>'
     const nextRoutingMachine = routingMachine.withContext(context);
     const nextPageRoute = nextRoutingMachine.transition(
       pageRoute || pathname,
@@ -76,7 +81,7 @@ const usePortalFlow = () => {
     if (!nextPageRoute) {
       throw new RouteTransitionError(`Next page not found for: ${event}`);
     }
-    return createRouteWithQuery(nextPageRoute.value, params);
+    return createRouteWithQuery(nextPageRoute.value.toString(), params);
   };
 
   /**
@@ -89,8 +94,8 @@ const usePortalFlow = () => {
    */
   const goToPageFor = (
     event: string,
-    context?: Record<string, unknown>,
-    params?: Record<string, unknown>,
+    context?: ClaimantFlowContext,
+    params?: NullableQueryParams,
     options: {
       redirect?: boolean;
     } = {}
@@ -105,8 +110,8 @@ const usePortalFlow = () => {
    * @param params - query parameters to append to page route
    */
   const goToNextPage = (
-    context: Record<string, unknown>,
-    params: Record<string, unknown> = {},
+    context: ClaimantFlowContext,
+    params: NullableQueryParams = {},
     event = "CONTINUE"
   ) => {
     goToPageFor(event, context, params);
@@ -116,7 +121,7 @@ const usePortalFlow = () => {
    * Change the query params of the current page
    * @param params - query parameters to append to page route
    */
-  const updateQuery = (params: Record<string, unknown>) => {
+  const updateQuery = (params: NullableQueryParams) => {
     const url = createRouteWithQuery(pathname, params);
     router.push(url, undefined, {
       // Prevent unnecessary scroll position changes or other
@@ -158,3 +163,4 @@ export function getRouteFromPathWithParams(pathWithParams: string) {
 }
 
 export default usePortalFlow;
+export type PortalFlow = ReturnType<typeof usePortalFlow>;

@@ -1,5 +1,6 @@
 import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import { get, pick } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Details from "../../components/Details";
 import Heading from "../../components/Heading";
@@ -8,7 +9,6 @@ import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
 import InputHours from "../../components/InputHours";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
@@ -31,7 +31,7 @@ export const fields = [
 ];
 
 interface PreviousLeavesOtherReasonDetailsProps {
-  appLogic: any;
+  appLogic: AppLogic;
   claim: BenefitsApplication;
 }
 
@@ -42,10 +42,12 @@ export const PreviousLeavesOtherReasonDetails = (
   const { appLogic, claim } = props;
   const limit = 6;
 
-  const initialEntries = pick(props, fields).claim;
+  const initialEntries = pick(props, fields).claim || {
+    previous_leaves_other_reason: [],
+  };
+
   if (initialEntries.previous_leaves_other_reason.length === 0) {
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-    initialEntries.previous_leaves_other_reason = [new PreviousLeave()];
+    initialEntries.previous_leaves_other_reason = [new PreviousLeave({})];
   }
 
   // default to one existing previous leave.
@@ -74,8 +76,7 @@ export const PreviousLeavesOtherReasonDetails = (
     updateFields({
       previous_leaves_other_reason: [
         ...previous_leaves_other_reason,
-        // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-        new PreviousLeave(),
+        new PreviousLeave({}),
       ],
     });
   };
@@ -145,15 +146,10 @@ export const PreviousLeavesOtherReasonDetails = (
   );
 };
 
-PreviousLeavesOtherReasonDetails.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-};
-
 interface PreviousLeavesOtherReasonDetailsCardProps {
   claim: BenefitsApplication;
   entry: PreviousLeave;
-  getFunctionalInputProps: (...args: any[]) => any;
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
   index: number;
 }
 
@@ -332,13 +328,6 @@ export const PreviousLeavesOtherReasonDetailsCard = (
       />
     </React.Fragment>
   );
-};
-
-PreviousLeavesOtherReasonDetailsCard.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  entry: PropTypes.instanceOf(PreviousLeave).isRequired,
-  getFunctionalInputProps: PropTypes.func.isRequired,
-  index: PropTypes.number.isRequired,
 };
 
 export default withBenefitsApplication(PreviousLeavesOtherReasonDetails);

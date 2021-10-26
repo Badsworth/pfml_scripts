@@ -3,10 +3,10 @@ import BenefitsApplication, {
   WorkPattern,
 } from "../../models/BenefitsApplication";
 import { get, pick, round } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import Heading from "../../components/Heading";
 import InputHours from "../../components/InputHours";
 import Lead from "../../components/Lead";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";
@@ -20,12 +20,12 @@ export const fields = [
   "claim.work_pattern.work_pattern_days[*].minutes",
 ];
 
-interface Props {
+interface ScheduleFixedProps {
   claim: BenefitsApplication;
-  appLogic: any;
+  appLogic: AppLogic;
 }
 
-export const ScheduleFixed = (props: Props) => {
+export const ScheduleFixed = (props: ScheduleFixedProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -36,7 +36,7 @@ export const ScheduleFixed = (props: Props) => {
       initialEntries,
       // Ensure initial work_pattern has 7 empty days by using
       // the WorkPattern model which defaults empty work_pattern_days to 7 empty days
-      { work_pattern: new WorkPattern(initialEntries.work_pattern) }
+      { work_pattern: new WorkPattern(initialEntries?.work_pattern || {}) }
     )
   );
 
@@ -51,11 +51,13 @@ export const ScheduleFixed = (props: Props) => {
     const { work_pattern_days } = workPattern;
     // TODO (CP-1262): refactor calculating hours worked per week to WorkPattern model
     const minutes = workPattern.minutesWorkedPerWeek;
-    const hours_worked_per_week = round(minutes / 60, 2);
+    const hours_worked_per_week = minutes ? round(minutes / 60, 2) : null;
 
     await appLogic.benefitsApplications.update(claim.application_id, {
       hours_worked_per_week,
-      work_pattern: { work_pattern_days },
+      work_pattern: {
+        work_pattern_days,
+      },
     });
   };
 
@@ -87,11 +89,6 @@ export const ScheduleFixed = (props: Props) => {
       ))}
     </QuestionPage>
   );
-};
-
-ScheduleFixed.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(ScheduleFixed);

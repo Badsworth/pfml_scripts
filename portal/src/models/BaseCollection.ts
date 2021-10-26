@@ -62,7 +62,7 @@ abstract class BaseCollection<T> {
     }
     return items.reduce((collection, item) => {
       return collection.addItem(item);
-    }, this);
+    }, this as BaseCollection<T>);
   }
 
   /**

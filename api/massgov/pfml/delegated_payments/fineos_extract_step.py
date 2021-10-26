@@ -21,14 +21,25 @@ logger = logging.get_logger(__name__)
 class ExtractConfig:
     extracts: List[payments_util.FineosExtract]
     reference_file_type: LkReferenceFileType
+    source_folder_s3_config_key: str
 
 
 CLAIMANT_EXTRACT_CONFIG = ExtractConfig(
-    payments_util.CLAIMANT_EXTRACT_FILES, ReferenceFileType.FINEOS_CLAIMANT_EXTRACT
+    payments_util.CLAIMANT_EXTRACT_FILES,
+    ReferenceFileType.FINEOS_CLAIMANT_EXTRACT,
+    "fineos_data_export_path",
 )
 
 PAYMENT_EXTRACT_CONFIG = ExtractConfig(
-    payments_util.PAYMENT_EXTRACT_FILES, ReferenceFileType.FINEOS_PAYMENT_EXTRACT
+    payments_util.PAYMENT_EXTRACT_FILES,
+    ReferenceFileType.FINEOS_PAYMENT_EXTRACT,
+    "fineos_data_export_path",
+)
+
+PAYMENT_RECONCILIATION_EXTRACT_CONFIG = ExtractConfig(
+    payments_util.PAYMENT_RECONCILIATION_EXTRACT_FILES,
+    ReferenceFileType.FINEOS_PAYMENT_RECONCILIATION_EXTRACT,
+    "fineos_adhoc_data_export_path",
 )
 
 
@@ -91,6 +102,7 @@ class FineosExtractStep(Step):
             self.process_extracts(pathlib.Path(download_directory))
 
         self.db_session.commit()
+
         logger.info(
             "Successfully consumed FINEOS extract data for %s",
             self.extract_config.reference_file_type.reference_file_type_description,
@@ -166,7 +178,10 @@ class FineosExtractStep(Step):
         expected_file_names = [extract.file_name for extract in self.extract_config.extracts]
 
         payments_util.copy_fineos_data_to_archival_bucket(
-            self.db_session, expected_file_names, self.extract_config.reference_file_type
+            self.db_session,
+            expected_file_names,
+            self.extract_config.reference_file_type,
+            self.extract_config.source_folder_s3_config_key,
         )
         data_by_date = payments_util.group_s3_files_by_date(expected_file_names)
 
@@ -207,7 +222,7 @@ class FineosExtractStep(Step):
         self.db_session.add(extract_data.reference_file)
 
         logger.info("Successfully moved files to %s folder", directory_name)
-        self.set_metrics({self.Metrics.ARCHIVE_PATH: directory_name})
+        self.set_metrics({self.Metrics.ARCHIVE_PATH: new_file_location})
 
     def _download_and_index_data(self, extract_data: ExtractData, download_directory: str) -> None:
         for file_location, extract in extract_data.extract_path_mapping.items():

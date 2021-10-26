@@ -357,28 +357,5 @@ describe("useClaimsLogic", () => {
       );
       expect(appLogic.current.claims.isLoadingClaimDetail).toBe(false);
     });
-
-    it("triggers a ClaimDetailLoadError if the request fails", async () => {
-      jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
-      mockFetch({
-        status: 400,
-      });
-
-      const { appLogic } = setup();
-
-      let claimDetail;
-      await act(async () => {
-        claimDetail = await appLogic.current.claims.loadClaimDetail(
-          "absence_id_1"
-        );
-      });
-
-      expect(claimDetail).toBeUndefined();
-      expect(appLogic.current.appErrors.items).toHaveLength(1);
-      expect(appLogic.current.appErrors.items[0].name).toEqual(
-        "ClaimDetailLoadError"
-      );
-      expect(appLogic.current.claims.isLoadingClaimDetail).toBe(false);
-    });
   });
 });

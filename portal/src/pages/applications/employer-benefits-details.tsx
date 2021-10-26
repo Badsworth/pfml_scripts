@@ -3,6 +3,7 @@ import EmployerBenefit, {
   EmployerBenefitType,
 } from "../../models/EmployerBenefit";
 import { get, pick } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import Dropdown from "../../components/Dropdown";
@@ -13,7 +14,6 @@ import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputCurrency from "../../components/InputCurrency";
 import InputDate from "../../components/InputDate";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
@@ -33,11 +33,8 @@ export const fields = [
 ];
 
 interface EmployerBenefitsDetailsProps {
-  claim?: BenefitsApplication;
-  appLogic: any;
-  query?: {
-    claim_id?: string;
-  };
+  claim: BenefitsApplication;
+  appLogic: AppLogic;
 }
 
 export const EmployerBenefitsDetails = (
@@ -47,7 +44,7 @@ export const EmployerBenefitsDetails = (
   const { t } = useTranslation();
   const limit = 6;
 
-  const initialEntries = pick(props, fields).claim;
+  const initialEntries = pick(props, fields).claim || { employer_benefits: [] };
   // If the claim doesn't have any employer benefits pre-populate the first one so that
   // it renders in the RepeatableFieldset below
   if (initialEntries.employer_benefits.length === 0) {
@@ -125,19 +122,11 @@ export const EmployerBenefitsDetails = (
   );
 };
 
-EmployerBenefitsDetails.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
-};
-
 interface EmployerBenefitCardProps {
   index: number;
-  entry: any;
-  getFunctionalInputProps: (...args: any[]) => any;
-  updateFields: (...args: any[]) => any;
+  entry: Record<string, string | boolean>;
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
+  updateFields: (arg: Record<string, unknown>) => void;
 }
 
 /**
@@ -147,10 +136,16 @@ export const EmployerBenefitCard = (props: EmployerBenefitCardProps) => {
   const { t } = useTranslation();
   const { entry, getFunctionalInputProps, index, updateFields } = props;
   const clearField = (fieldName) => updateFields({ [fieldName]: null });
+
   // Since we are not passing the formState to the benefit card,
   // get the field value from the entry by removing the field path
-  const getEntryField = (fieldName) =>
-    get(entry, fieldName.replace(`employer_benefits[${index}].`, ""));
+  const getEntryField = (fieldName: string) => {
+    return get(
+      entry,
+      fieldName.replace(`employer_benefits[${index}].`, ""),
+      ""
+    );
+  };
   const selectedType = entry.benefit_type;
 
   const benefitFrequencyChoices = ["daily", "weekly", "monthly", "inTotal"].map(
@@ -245,7 +240,6 @@ export const EmployerBenefitCard = (props: EmployerBenefitCardProps) => {
           `employer_benefits[${index}].benefit_amount_dollars`,
         ]}
         clearField={clearField}
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '(fieldName: any) => any' is not assignable t... Remove this comment to see the full error message
         getField={getEntryField}
         updateFields={updateFields}
         visible={get(entry, "is_full_salary_continuous") === false}
@@ -279,13 +273,6 @@ export const EmployerBenefitCard = (props: EmployerBenefitCardProps) => {
       </ConditionalContent>
     </React.Fragment>
   );
-};
-
-EmployerBenefitCard.propTypes = {
-  index: PropTypes.number.isRequired,
-  entry: PropTypes.object.isRequired,
-  getFunctionalInputProps: PropTypes.func.isRequired,
-  updateFields: PropTypes.func.isRequired,
 };
 
 export default withBenefitsApplication(EmployerBenefitsDetails);

@@ -47,7 +47,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
   previous_leaves_same_reason: PreviousLeave[] = [];
   residential_address: Address = new Address({});
   tax_identifier: string | null = null;
-  work_pattern: WorkPattern | null = null;
+  work_pattern: Partial<WorkPattern> | null = null;
 
   employment_status:
     | typeof EmploymentStatus[keyof typeof EmploymentStatus]

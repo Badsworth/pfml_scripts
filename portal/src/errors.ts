@@ -34,9 +34,13 @@ class BasePortalError extends Error {
  */
 export class CognitoAuthError extends BasePortalError {
   cognitoError: CognitoError;
-  issue: Issue;
+  issue: Issue | null;
 
-  constructor(cognitoError: CognitoError, issue: Issue = null, ...params) {
+  constructor(
+    cognitoError: CognitoError,
+    issue: Issue | null = null,
+    ...params
+  ) {
     super(...params);
     this.name = "CognitoAuthError";
     this.cognitoError = cognitoError;
@@ -154,16 +158,6 @@ export class RequestTimeoutError extends ApiRequestError {
 }
 
 /**
- * A GET request to the `/claims` endpoint for claim detail failed.
- */
-export class ClaimDetailLoadError extends BasePortalError {
-  constructor(...params) {
-    super(...params);
-    this.name = "ClaimDetailLoadError";
-  }
-}
-
-/**
  * A GET request to an Application's `/documents` endpoint failed
  * @example new DocumentsLoadError('mock_application_id')
  */
@@ -193,7 +187,7 @@ export class DocumentsUploadError extends BasePortalError {
   constructor(
     application_id: string,
     file_id: string,
-    issue: Issue = null,
+    issue: Issue | null = null,
     ...params
   ) {
     super(...params);

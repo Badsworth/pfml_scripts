@@ -1,8 +1,7 @@
-// @ts-nocheck https://lwd.atlassian.net/browse/PORTAL-427
 import routeWithParams, {
   createRouteWithQuery,
 } from "../utils/routeWithParams";
-
+import { AppLogic } from "../hooks/useAppLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
 import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import ButtonLink from "./ButtonLink";
@@ -65,15 +64,7 @@ const TitleAndDetailSectionItem = ({
 );
 
 interface ManageDocumentSectionProps {
-  appLogic: {
-    claims: {
-      isLoadingClaimDetail?: boolean;
-      loadClaimDetail: (...args: any[]) => any;
-    };
-    portalFlow: {
-      goTo: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
   claim: BenefitsApplication;
 }
 
@@ -128,14 +119,9 @@ const ManageDocumentSection = ({
 };
 
 interface LegalNoticeSectionProps {
-  appLogic: {
-    appErrors: any;
-    documents?: {
-      download: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
   claim: BenefitsApplication;
-  documents?: BenefitsApplicationDocument[];
+  documents: BenefitsApplicationDocument[];
   isLoadingDocuments: boolean;
 }
 
@@ -188,9 +174,10 @@ const LegalNoticeSection = (props: LegalNoticeSectionProps) => {
 
 interface InProgressStatusCardProps {
   claim: BenefitsApplication;
+  documents: BenefitsApplicationDocument[];
   isLoadingDocuments: boolean;
   number: number;
-  appLogic: any;
+  appLogic: AppLogic;
 }
 
 /**
@@ -236,15 +223,7 @@ const InProgressStatusCard = (props: InProgressStatusCardProps) => {
 
 interface CompletedStatusCardProps {
   claim: BenefitsApplication;
-  appLogic: {
-    claims: {
-      isLoadingClaimDetail?: boolean;
-      loadClaimDetail: (...args: any[]) => any;
-    };
-    portalFlow: {
-      goTo: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
 }
 
 /**
@@ -270,11 +249,11 @@ const CompletedStatusCard = ({ appLogic, claim }: CompletedStatusCardProps) => {
       <HeaderSection title={leaveReasonText} />
       <TitleAndDetailSectionItem
         title={t("components.applicationCardV2.applicationID")}
-        details={claim.fineos_absence_id}
+        details={claim.fineos_absence_id || ""}
       />
       <TitleAndDetailSectionItem
         title={t("components.applicationCardV2.employerEIN")}
-        details={claim.employer_fein}
+        details={claim.employer_fein || ""}
       />
 
       <div className="border-top border-base-lighter padding-y-2 margin-y-2 margin-bottom-0">
@@ -292,19 +271,8 @@ const CompletedStatusCard = ({ appLogic, claim }: CompletedStatusCardProps) => {
 
 interface ApplicationCardV2Props {
   claim: BenefitsApplication;
-  appLogic: {
-    appErrors: any;
-    claims: {
-      isLoadingClaimDetail?: boolean;
-      loadClaimDetail: (...args: any[]) => any;
-    };
-    documents?: {
-      download: (...args: any[]) => any;
-    };
-    portalFlow: {
-      goTo: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
+  documents: BenefitsApplicationDocument[];
   isLoadingDocuments: boolean;
   number: number;
 }

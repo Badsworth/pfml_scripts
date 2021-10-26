@@ -4,7 +4,7 @@ import React from "react";
 import { useTranslation } from "../../locales/i18n";
 
 interface AmendButtonProps {
-  onClick?: (...args: any[]) => any;
+  onClick?: React.MouseEventHandler<HTMLButtonElement>;
 }
 
 /**

@@ -4,24 +4,39 @@ import {
   Issue,
   ValidationError,
 } from "../errors";
+import {
+  NullableQueryParams,
+  createRouteWithQuery,
+} from "../utils/routeWithParams";
 import { compact, trim } from "lodash";
 import { useMemo, useState } from "react";
+import { AppErrorsLogic } from "./useAppErrorsLogic";
 import { Auth } from "@aws-amplify/auth";
+import { PortalFlow } from "./usePortalFlow";
 import { RoleDescription } from "../models/User";
 import UsersApi from "../api/UsersApi";
 import assert from "assert";
-import { createRouteWithQuery } from "../utils/routeWithParams";
 import routes from "../routes";
 import tracker from "../services/tracker";
-import useAppErrorsLogic from "./useAppErrorsLogic";
-import usePortalFlow from "./usePortalFlow";
+
+function isCognitoError(error: unknown): error is CognitoError {
+  if (
+    error &&
+    typeof error === "object" &&
+    error.hasOwnProperty("code") !== undefined
+  ) {
+    return true;
+  }
+
+  return false;
+}
 
 const useAuthLogic = ({
   appErrorsLogic,
   portalFlow,
 }: {
-  appErrorsLogic: ReturnType<typeof useAppErrorsLogic>;
-  portalFlow: ReturnType<typeof usePortalFlow>;
+  appErrorsLogic: AppErrorsLogic;
+  portalFlow: PortalFlow;
 }) => {
   const usersApi = useMemo(() => new UsersApi(), []);
 
@@ -32,16 +47,14 @@ const useAuthLogic = ({
    * Sometimes we need to persist information the user entered on
    * one auth screen so it can be reused on a subsequent auth screen.
    * For these cases we need to store this data in memory.
-   * @property {object} authData - data to store between page transitions
-   * @property {Function} setAuthData - updated the cached authentication info
+   * @property authData - data to store between page transitions
    */
   const [authData, setAuthData] = useState({});
 
   /**
-   * @property {?boolean} isLoggedIn - Whether the user is logged in or not, or null if logged in status has not been checked yet
-   * @property {Function} setIsLoggedIn - Set whether the user is logged in or not after the logged in status has been checked
+   * @property isLoggedIn - Whether the user is logged in or not, or null if logged in status has not been checked yet
    */
-  const [isLoggedIn, setIsLoggedIn] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   /**
    * Initiate the Forgot Password flow, sending a verification code when user exists.
@@ -88,6 +101,11 @@ const useAuthLogic = ({
 
       return true;
     } catch (error) {
+      if (!isCognitoError(error)) {
+        appErrorsLogic.catchError(error);
+        return false;
+      }
+
       const authError = getForgotPasswordError(error);
       appErrorsLogic.catchError(authError);
       return false;
@@ -127,6 +145,11 @@ const useAuthLogic = ({
         portalFlow.goToPageFor("LOG_IN");
       }
     } catch (error) {
+      if (!isCognitoError(error)) {
+        appErrorsLogic.catchError(error);
+        return;
+      }
+
       if (error.code === "UserNotConfirmedException") {
         portalFlow.goToPageFor("UNCONFIRMED_ACCOUNT");
         return;
@@ -161,7 +184,7 @@ const useAuthLogic = ({
       tracker.noticeError(error);
     }
     setIsLoggedIn(false);
-    const params = {};
+    const params: NullableQueryParams = {};
     if (sessionTimedOut) {
       params["session-timed-out"] = "true";
     }
@@ -186,11 +209,11 @@ const useAuthLogic = ({
     const requestData = {
       email_address,
       password,
+      user_leave_administrator: {},
       role: { role_description },
     };
 
     if (role_description === RoleDescription.employer) {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'user_leave_administrator' does not exist... Remove this comment to see the full error message
       requestData.user_leave_administrator = { employer_fein };
     }
 
@@ -284,6 +307,11 @@ const useAuthLogic = ({
 
       // TODO (CP-600): Show success message
     } catch (error) {
+      if (!isCognitoError(error)) {
+        appErrorsLogic.catchError(error);
+        return;
+      }
+
       appErrorsLogic.catchError(new CognitoAuthError(error));
     }
   };
@@ -329,6 +357,11 @@ const useAuthLogic = ({
 
       portalFlow.goToPageFor("SET_NEW_PASSWORD");
     } catch (error) {
+      if (!isCognitoError(error)) {
+        appErrorsLogic.catchError(error);
+        return;
+      }
+
       const authError = getResetPasswordError(error);
       appErrorsLogic.catchError(authError);
     }
@@ -348,10 +381,15 @@ const useAuthLogic = ({
         "SUBMIT",
         {},
         {
-          "account-verified": true,
+          "account-verified": "true",
         }
       );
     } catch (error) {
+      if (!isCognitoError(error)) {
+        appErrorsLogic.catchError(error);
+        return;
+      }
+
       // If the error is the user trying to re-verified an already-verified account then we can redirect
       // them to the login page. This only occurs if the user's account is already verified and the
       // verification code they use is valid.
@@ -364,7 +402,7 @@ const useAuthLogic = ({
           "SUBMIT",
           {},
           {
-            "account-verified": true,
+            "account-verified": "true",
           }
         );
       }
@@ -414,7 +452,7 @@ const useAuthLogic = ({
   };
 };
 
-function combineValidationIssues(...issues: Issue[]) {
+function combineValidationIssues(...issues: Array<Issue | undefined>) {
   const combinedIssues = compact(issues);
   if (combinedIssues.length === 0) return;
   return combinedIssues;
@@ -640,3 +678,4 @@ function trackAuthRequest(action: string) {
 }
 
 export default useAuthLogic;
+export type AuthLogic = ReturnType<typeof useAuthLogic>;

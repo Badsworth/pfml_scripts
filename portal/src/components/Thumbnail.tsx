@@ -2,14 +2,14 @@ import React, { useEffect, useState } from "react";
 
 /**
  * Create a URL for an image preview of image files and then trigger the component to render.
- * @param {File} file File whose preview we should load
- * @param {Function} setPreviewLoading State-setter to cause the component to render
- * @param {Function} setImageSrc State-setter to set the preview URL
- * @returns {undefined|Function} If a preview URL is loaded we'll return a function to clean up
- * the URL resource.
+ * @returns If a preview URL is loaded we'll return a function to clean up the URL resource.
  */
-const loadImagePreview = (file, setPreviewLoading, setImageSrc) => {
-  if (file && file.type.startsWith("image/")) {
+const loadImagePreview = (
+  file: File,
+  setPreviewLoading: (loading: boolean) => void,
+  setImageSrc: (src: string) => void
+) => {
+  if (file.type.startsWith("image/")) {
     const imageUrl = URL.createObjectURL(file);
     setImageSrc(imageUrl);
     setPreviewLoading(false);
@@ -25,7 +25,7 @@ const loadImagePreview = (file, setPreviewLoading, setImageSrc) => {
 };
 
 interface ThumbnailProps {
-  file?: any;
+  file?: File;
 }
 
 /**
@@ -34,11 +34,13 @@ interface ThumbnailProps {
 const Thumbnail = (props: ThumbnailProps) => {
   const { file } = props;
   const [previewLoading, setPreviewLoading] = useState(true);
-  const [imageSrc, setImageSrc] = useState();
+  const [imageSrc, setImageSrc] = useState<string>();
 
   // Asynchronously load a preview of the file the first time this component is rendered.
   useEffect(() => {
-    return loadImagePreview(file, setPreviewLoading, setImageSrc);
+    if (file) {
+      return loadImagePreview(file, setPreviewLoading, setImageSrc);
+    }
   }, [file]);
 
   if (previewLoading) {

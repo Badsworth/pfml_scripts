@@ -1,4 +1,5 @@
 import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
+import ClaimDocument from "../models/ClaimDocument";
 import DownloadableDocument from "./DownloadableDocument";
 import Icon from "./Icon";
 import React from "react";
@@ -6,8 +7,10 @@ import getLegalNotices from "../utils/getLegalNotices";
 import { useTranslation } from "../locales/i18n";
 
 interface LegalNoticeListProps {
-  documents?: BenefitsApplicationDocument[];
-  onDownloadClick?: (...args: any[]) => any;
+  documents: Array<BenefitsApplicationDocument | ClaimDocument>;
+  onDownloadClick: (
+    document: BenefitsApplicationDocument
+  ) => Promise<Blob | undefined>;
 }
 
 /**
@@ -38,7 +41,7 @@ export default function LegalNoticeList(props: LegalNoticeListProps) {
       <div>
         <DownloadableDocument
           document={document}
-          onDownloadClick={onDownloadClick}
+          downloadBenefitsApplicationDocument={onDownloadClick}
           showCreatedAt
         />
       </div>

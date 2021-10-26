@@ -61,12 +61,17 @@ const renderWithClaimDocuments = (appLogicHook, documents = []) => {
 };
 
 const setupHelper =
-  (claimDetailAttrs, documents = []) =>
+  (
+    claimDetailAttrs,
+    documents = [],
+    appErrors = new AppErrorInfoCollection()
+  ) =>
   (appLogicHook) => {
     appLogicHook.claims.claimDetail = claimDetailAttrs
       ? new ClaimDetail(claimDetailAttrs)
       : null;
     appLogicHook.claims.loadClaimDetail = jest.fn();
+    appLogicHook.appErrors = appErrors;
     renderWithClaimDocuments(appLogicHook, documents);
   };
 
@@ -122,7 +127,26 @@ describe("Status", () => {
     expect(pageNotFoundHeading).toBeInTheDocument();
   });
 
-  it("renders the page with back button if error exists", () => {
+  it("renders the page if the only errors are DocumentsLoadError", () => {
+    const errors = new AppErrorInfoCollection([
+      new AppErrorInfo({
+        meta: { application_id: "mock_application_id" },
+        name: "DocumentsLoadError",
+      }),
+    ]);
+
+    const { container } = renderPage(
+      Status,
+      {
+        addCustomSetup: setupHelper({ ...defaultClaimDetail }, [], errors),
+      },
+      props
+    );
+
+    expect(container).toMatchSnapshot();
+  });
+
+  it("renders the page with only a back button if non-DocumentsLoadErrors exists", () => {
     renderPage(
       Status,
       {

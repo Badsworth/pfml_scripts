@@ -18,7 +18,7 @@ export default class FeatureFlagApi extends BaseApi {
     const { data } = await this.request<Flag[]>(
       "GET",
       "flags",
-      null,
+      undefined,
       {},
       { excludeAuthHeader: true }
     );

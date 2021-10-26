@@ -6,13 +6,13 @@ import BenefitsApplication, {
 import { Trans, useTranslation } from "react-i18next";
 import { get, pick } from "lodash";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import ConditionalContent from "../../components/ConditionalContent";
 import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputNumber from "../../components/InputNumber";
 import Lead from "../../components/Lead";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import findKeyByValue from "../../utils/findKeyByValue";
@@ -45,15 +45,15 @@ export const fields = [
  */
 export const irregularOver6MonthsId = "irregularOver6Months";
 
-interface Props {
-  claim?: BenefitsApplication;
-  appLogic: any;
-  query?: {
+interface IntermittentFrequencyProps {
+  claim: BenefitsApplication;
+  appLogic: AppLogic;
+  query: {
     claim_id?: string;
   };
 }
 
-export const IntermittentFrequency = (props: Props) => {
+export const IntermittentFrequency = (props: IntermittentFrequencyProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -70,9 +70,10 @@ export const IntermittentFrequency = (props: Props) => {
    * e.g 6 (frequency interval) months (frequency interval basis)
    * This callback determines whether the frequency interval should be set
    * by the id of the choice input.
-   * @param {SyntheticEvent} event - Change event
    */
-  const handleFrequencyIntervalBasisChange = (event) => {
+  const handleFrequencyIntervalBasisChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const frequency_interval =
       event.target.id === irregularOver6MonthsId ? 6 : 1;
 
@@ -179,7 +180,6 @@ export const IntermittentFrequency = (props: Props) => {
             label: t("pages.claimsIntermittentFrequency.frequencyBasisChoice", {
               context: "irregular",
             }),
-            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ checked: boolean; label: TFunctionResult; ... Remove this comment to see the full error message
             id: irregularOver6MonthsId,
             // This choice shares the same value as another choice, which the
             // component uses as its key by default, so we override that here
@@ -254,14 +254,6 @@ export const IntermittentFrequency = (props: Props) => {
       )}
     </QuestionPage>
   );
-};
-
-IntermittentFrequency.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(IntermittentFrequency);

@@ -3,6 +3,7 @@ import OtherIncome, {
   OtherIncomeType,
 } from "../../models/OtherIncome";
 import { get, pick } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Dropdown from "../../components/Dropdown";
 import Fieldset from "../../components/Fieldset";
@@ -12,7 +13,6 @@ import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputCurrency from "../../components/InputCurrency";
 import InputDate from "../../components/InputDate";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
@@ -31,11 +31,8 @@ export const fields = [
 ];
 
 interface OtherIncomesDetailsProps {
-  claim?: BenefitsApplication;
-  appLogic: any;
-  query?: {
-    claim_id?: string;
-  };
+  claim: BenefitsApplication;
+  appLogic: AppLogic;
 }
 
 export const OtherIncomesDetails = (props: OtherIncomesDetailsProps) => {
@@ -43,7 +40,7 @@ export const OtherIncomesDetails = (props: OtherIncomesDetailsProps) => {
   const { t } = useTranslation();
   const limit = 6;
 
-  const initialEntries = pick(props, fields).claim;
+  const initialEntries = pick(props, fields).claim || { other_incomes: [] };
   // If the claim doesn't have any relevant entries, pre-populate the first one
   // so that it renders in the RepeatableFieldset below
   if (initialEntries.other_incomes.length === 0) {
@@ -116,18 +113,10 @@ export const OtherIncomesDetails = (props: OtherIncomesDetailsProps) => {
   );
 };
 
-OtherIncomesDetails.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
-};
-
 interface OtherIncomeCardProps {
   index: number;
-  entry: any;
-  getFunctionalInputProps: (...args: any[]) => any;
+  entry: Record<string, unknown>;
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
 }
 
 /**
@@ -221,12 +210,6 @@ export const OtherIncomeCard = (props: OtherIncomeCardProps) => {
       </Fieldset>
     </React.Fragment>
   );
-};
-
-OtherIncomeCard.propTypes = {
-  index: PropTypes.number.isRequired,
-  entry: PropTypes.object.isRequired,
-  getFunctionalInputProps: PropTypes.func.isRequired,
 };
 
 export default withBenefitsApplication(OtherIncomesDetails);

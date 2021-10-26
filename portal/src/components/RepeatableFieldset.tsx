@@ -11,7 +11,7 @@ interface RepeatableFieldsetProps {
    */
   addButtonLabel: string;
   /** Array of entries, each of which will have the content repeated for. */
-  entries: any[];
+  entries: Array<Record<string, unknown>>;
   /**
    * Displayed as the heading for each card, followed by the card's position. For example
    * if you specify "Person", headings will be "Person 1", "Person 2", etc.
@@ -39,11 +39,9 @@ interface RepeatableFieldsetProps {
   /**
    * Event handler responsible for adding a new entry
    */
-  onAddClick: (...args: any[]) => any;
+  onAddClick: React.MouseEventHandler<HTMLButtonElement>;
   /**
    * Event handler responsible for removing an entry
-   * @param {object} entry
-   * @param {number} index
    */
   onRemoveClick: (entry: Record<string, unknown>, index: number) => void;
 }
@@ -54,20 +52,19 @@ interface RepeatableFieldsetProps {
  */
 const RepeatableFieldset = (props: RepeatableFieldsetProps) => {
   const { entries } = props;
-  const containerRef = useRef<HTMLElement>();
+  const containerRef = useRef<HTMLElement>(null);
   const entriesAndIds = useEntryIds(entries);
   const previousEntriesLength = usePreviousValue(entriesAndIds.length);
   const limitReached = props.limit ? entries.length >= props.limit : false;
 
   useEffect(() => {
-    if (entriesAndIds.length > previousEntriesLength) {
+    if (entriesAndIds.length > previousEntriesLength && containerRef.current) {
       // When a new entry is added to the list, focus and scroll it into view.
       const lastEntry = containerRef.current.querySelector(
         ".js-repeated-fieldset-card:last-of-type"
       );
-      const focusableElement = lastEntry.querySelector(
-        "[tabIndex]:first-child, label"
-      );
+      const focusableElement =
+        lastEntry && lastEntry.querySelector("[tabIndex]:first-child, label");
 
       if (focusableElement instanceof HTMLElement) focusableElement.focus();
     }
@@ -119,11 +116,9 @@ const RepeatableFieldset = (props: RepeatableFieldsetProps) => {
 /**
  * Takes an array of entries, and pair each entry with a unique id.
  * The entry-id mapping remains stable across re-renders.
- * Returns an array of [entry, id] pairs.
- * @param {Array} entries List of entries
- * @returns {[*,string][]} List of entry, id pairs
+ * @returns List of [entry, id] pairs
  */
-function useEntryIds(entries) {
+function useEntryIds(entries: unknown[]) {
   const [entryIdMap, setEntryIdMap] = useState(createEntryIdMap(entries));
   useEffect(() => {
     setEntryIdMap(createEntryIdMap(entries, entryIdMap));
@@ -139,10 +134,11 @@ function useEntryIds(entries) {
  * Create a map from entries to ids.
  * If the entry already existed previously, use the same id.
  * Otherwise, create a new id.
- * @param {Array} entries List of entries
- * @param {Map<*,string>} [prevEntryIdMap] Previous map from entries to ids
  */
-function createEntryIdMap(entries, prevEntryIdMap = new Map()) {
+function createEntryIdMap(
+  entries: unknown[],
+  prevEntryIdMap: Map<unknown, string> = new Map()
+) {
   const entryIdMap = new Map();
   for (const entry of entries) {
     const entryId = prevEntryIdMap.get(entry);

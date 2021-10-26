@@ -1,5 +1,5 @@
+import { AuthLogic } from "./useAuthLogic";
 import tracker from "../services/tracker";
-import useAuthLogic from "./useAuthLogic";
 import { useEffect } from "react";
 // Reference the module directly to fix an IE11 bug:
 // https://github.com/streamich/react-use/issues/1189
@@ -10,7 +10,7 @@ import useIdle from "react-use/lib/useIdle";
  */
 const useSessionTimeout = (
   secondsOfInactivityUntilLogout: number,
-  authLogic: ReturnType<typeof useAuthLogic>
+  authLogic: AuthLogic
 ) => {
   const { isLoggedIn, logout } = authLogic;
   const idleMilliseconds = secondsOfInactivityUntilLogout * 1000; // 30 minutes

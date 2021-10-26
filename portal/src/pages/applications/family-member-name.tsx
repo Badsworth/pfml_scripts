@@ -2,10 +2,10 @@ import BenefitsApplication, {
   CaringLeaveMetadata,
 } from "../../models/BenefitsApplication";
 import { get, pick } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import Fieldset from "../../components/Fieldset";
 import FormLabel from "../../components/FormLabel";
 import InputText from "../../components/InputText";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";
@@ -21,12 +21,12 @@ export const fields = [
   `claim.${caringLeavePath}.family_member_last_name`,
 ];
 
-interface Props {
-  appLogic: any;
+interface FamilyMemberNameProps {
+  appLogic: AppLogic;
   claim: BenefitsApplication;
 }
 
-export const FamilyMemberName = (props: Props) => {
+export const FamilyMemberName = (props: FamilyMemberNameProps) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
 
@@ -42,7 +42,7 @@ export const FamilyMemberName = (props: Props) => {
     // only send fields for this page
     appLogic.benefitsApplications.update(
       claim.application_id,
-      pick({ claim: formState }, fields).claim
+      pick({ claim: formState }, fields).claim || {}
     );
 
   const getFunctionalInputProps = useFunctionalInputProps({
@@ -88,11 +88,6 @@ export const FamilyMemberName = (props: Props) => {
       </Fieldset>
     </QuestionPage>
   );
-};
-
-FamilyMemberName.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
 export default withBenefitsApplication(FamilyMemberName);

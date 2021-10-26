@@ -1,15 +1,20 @@
-import { ChangeEvent, FocusEvent, FocusEventHandler, useRef } from "react";
+import {
+  ChangeEvent,
+  ChangeEventHandler,
+  FocusEvent,
+  FocusEventHandler,
+  useRef,
+} from "react";
 
 /**
  * Create onFocus and onBlur event handlers for PII inputs
  */
 const usePiiHandlers = (inputProps: {
   name: string;
-  type: string;
-  value: string;
-  onChange: (event: { target: Node }) => void;
-  onBlur: FocusEventHandler<HTMLInputElement>;
-  onFocus: FocusEventHandler<HTMLInputElement>;
+  value?: string | number;
+  onChange?: ChangeEventHandler<HTMLInputElement>;
+  onBlur?: FocusEventHandler<HTMLInputElement>;
+  onFocus?: FocusEventHandler<HTMLInputElement>;
 }) => {
   const initialValue = useRef(inputProps.value);
   const shouldClearValue = useRef(!!inputProps.value);
@@ -26,7 +31,7 @@ const usePiiHandlers = (inputProps: {
   };
 
   const handleBlur = (event: FocusEvent<HTMLInputElement>) => {
-    if (!inputProps.value) {
+    if (!inputProps.value && initialValue.current) {
       shouldClearValue.current = true;
       dispatchChange(initialValue.current, event);
     }
@@ -43,13 +48,15 @@ const usePiiHandlers = (inputProps: {
    * @param originalEvent - Original event that triggered this change
    */
   const dispatchChange = (
-    value: string,
+    value: string | number,
     originalEvent: ChangeEvent<HTMLInputElement> | FocusEvent<HTMLInputElement>
   ) => {
     const target = originalEvent.target.cloneNode(true) as HTMLInputElement; // https://github.com/microsoft/TypeScript/issues/283
-    target.value = value;
+    target.value = value.toString();
 
-    inputProps.onChange({ target });
+    if (inputProps.onChange) {
+      inputProps.onChange({ ...originalEvent, target });
+    }
   };
 
   return { handleBlur, handleFocus };

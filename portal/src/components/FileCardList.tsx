@@ -3,27 +3,24 @@ import AppErrorInfo from "../models/AppErrorInfo";
 import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import FileCard from "./FileCard";
 import Spinner from "./Spinner";
+import TempFile from "../models/TempFile";
 import TempFileCollection from "../models/TempFileCollection";
 import { useTranslation } from "../locales/i18n";
 
 /**
  * Render a FileCard. This handles some busy work such as creating a onRemove handler and
  * interpolating a heading string for the file. Renders the FileCard inside of a <li> element.
- * @param {TempFile} tempFile The file to render as a FileCard
- * @param {integer} index The zero-based index of the file in the list. This is used to
+ * @param index The zero-based index of the file in the list. This is used to
  * to interpolate a heading for the file.
- * @param {Function} onRemoveTempFile Handler for removing a single file.
- * @param {string} fileHeadingPrefix A string prefix we'll use as a heading in each FileCard. We
+ * @param fileHeadingPrefix A string prefix we'll use as a heading in each FileCard. We
  * will use the index param to interpolate the heading.
- * @param {string} [errorMsg]
- * @returns {React.Component} A <li> element containing the rendered FileCard.
  */
 function renderFileCard(
-  tempFile,
-  index,
-  onRemoveTempFile,
-  fileHeadingPrefix,
-  errorMsg = null
+  tempFile: TempFile,
+  index: number,
+  onRemoveTempFile: (id: string) => void,
+  fileHeadingPrefix: string,
+  errorMsg: React.ReactNode = null
 ) {
   const handleRemoveClick = () => onRemoveTempFile(tempFile.id);
   const heading = `${fileHeadingPrefix} ${index + 1}`;
@@ -43,14 +40,16 @@ function renderFileCard(
 /**
  * Render a read-only FileCard for a document. These represent documents that have already been uploaded,
  * and can no longer be removed from the application. Renders the FileCard inside of a <li> element.
- * @param {BenefitsApplicationDocument} document The document to render as a FileCard
- * @param {integer} index The zero-based index of the file in the list. This is used to
+ * @param index The zero-based index of the file in the list. This is used to
  * to interpolate a heading for the file.
- * @param {string} fileHeadingPrefix A string prefix we'll use as a heading in each FileCard. We
+ * @param fileHeadingPrefix A string prefix we'll use as a heading in each FileCard. We
  * will use the index param to interpolate the heading.
- * @returns {React.Component} A <li> element containing the rendered FileCard.
  */
-function renderDocumentFileCard(document, index, fileHeadingPrefix) {
+function renderDocumentFileCard(
+  document: BenefitsApplicationDocument,
+  index: number,
+  fileHeadingPrefix: string
+) {
   const heading = `${fileHeadingPrefix} ${index + 1}`;
 
   return (
@@ -62,13 +61,13 @@ function renderDocumentFileCard(document, index, fileHeadingPrefix) {
 
 interface FileCardListProps {
   tempFiles: TempFileCollection;
-  fileErrors?: AppErrorInfo[];
-  onChange: (...args: any[]) => any;
-  onRemoveTempFile: (...args: any[]) => any;
+  fileErrors: AppErrorInfo[];
+  onChange: (files: File[]) => Promise<void>;
+  onRemoveTempFile: (id: string) => void;
   fileHeadingPrefix: string;
   addFirstFileButtonText: string;
   addAnotherFileButtonText: string;
-  documents?: BenefitsApplicationDocument[];
+  documents: BenefitsApplicationDocument[];
 }
 /**
  * A list of previously uploaded files and a button to upload additional files. This component
@@ -88,7 +87,7 @@ const FileCardList = (props: FileCardListProps) => {
   } = props;
 
   let documentFileCount = 0;
-  let documentFileCards = [];
+  let documentFileCards: JSX.Element[] = [];
 
   if (documents) {
     documentFileCount = documents.length;
@@ -99,7 +98,7 @@ const FileCardList = (props: FileCardListProps) => {
 
   const fileCards = tempFiles.items.map((file, index) => {
     const fileError = fileErrors.find(
-      (appErrorInfo) => appErrorInfo.meta.file_id === file.id
+      (appErrorInfo) => appErrorInfo.meta?.file_id === file.id
     );
     const errorMsg = fileError ? fileError.message : null;
     return renderFileCard(
@@ -115,11 +114,11 @@ const FileCardList = (props: FileCardListProps) => {
     ? props.addFirstFileButtonText
     : props.addAnotherFileButtonText;
 
-  const handleChange = async (event) => {
+  const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     // This will only have files selected this time, not previously selected files
     // e.target.files is a FileList type which isn't an array, but we can turn it into one
     // @see https://developer.mozilla.org/en-US/docs/Web/API/FileList
-    const files = Array.from(event.target.files);
+    const files = event.target.files ? Array.from(event.target.files) : [];
 
     // Reset the input element's value. When a user selects a file which was already
     // selected it normally won't trigger the onChange event, but that's not what we want.

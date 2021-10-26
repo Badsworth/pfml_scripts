@@ -99,8 +99,7 @@ export const Default = (args) => {
   const appLogic = {
     appErrors: getAppErrorInfoCollection(errorTypes),
     employers: {
-      claim: claim.create(),
-      documents: getDocuments(
+      claimDocumentsMap: getDocumentsMap(
         documentationOption,
         claim.create().leave_details.reason
       ),
@@ -112,10 +111,17 @@ export const Default = (args) => {
     setAppErrors: () => {},
   };
 
-  return <Review appLogic={appLogic} query={query} user={user} />;
+  return (
+    <Review
+      appLogic={appLogic}
+      query={query}
+      user={user}
+      claim={claim.create()}
+    />
+  );
 };
 
-function getDocuments(documentation, leaveReason) {
+function getDocumentsMap(documentation, leaveReason) {
   const isWithoutDocumentation = documentation.includes(
     "without documentation"
   );
@@ -129,8 +135,13 @@ function getDocuments(documentation, leaveReason) {
   };
 
   return isWithoutDocumentation
-    ? new DocumentCollection()
-    : new DocumentCollection([new ClaimDocument(documentData)]);
+    ? new Map([["mock-absence-id", new DocumentCollection()]])
+    : new Map([
+        [
+          "mock-absence-id",
+          new DocumentCollection([new ClaimDocument(documentData)]),
+        ],
+      ]);
 }
 
 function getAppErrorInfoCollection(errorTypes = []) {

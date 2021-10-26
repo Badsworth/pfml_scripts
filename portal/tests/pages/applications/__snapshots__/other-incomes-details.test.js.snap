@@ -28,7 +28,7 @@ exports[`OtherIncomesDetails when the user's claim has no other incomes renders 
         <h3
           class="usa-alert__heading font-heading-md text-bold"
         >
-          Your leave dates for paid leave
+          Your leave dates for paid leave from PFML
         </h3>
         <div
           class="usa-alert__text"
@@ -490,7 +490,7 @@ exports[`OtherIncomesDetails when the user's claim has other incomes renders the
         <h3
           class="usa-alert__heading font-heading-md text-bold"
         >
-          Your leave dates for paid leave
+          Your leave dates for paid leave from PFML
         </h3>
         <div
           class="usa-alert__text"

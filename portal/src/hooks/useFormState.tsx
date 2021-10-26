@@ -10,7 +10,7 @@ export class FormState {
   private setState: SetFormState;
 
   constructor(setState: SetFormState) {
-    this.formState = null;
+    this.formState = {};
     this.setState = setState;
   }
 

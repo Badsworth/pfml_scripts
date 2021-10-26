@@ -1,11 +1,11 @@
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import Heading from "../../components/Heading";
 import Icon from "../../components/Icon";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { pick } from "lodash";
@@ -16,15 +16,15 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_other_incomes"];
 
-interface Props {
-  claim?: BenefitsApplication;
-  query?: {
+interface OtherIncomesProps {
+  claim: BenefitsApplication;
+  query: {
     claim_id?: string;
   };
-  appLogic: any;
+  appLogic: AppLogic;
 }
 
-export const OtherIncomes = (props: Props) => {
+export const OtherIncomes = (props: OtherIncomesProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -125,14 +125,6 @@ export const OtherIncomes = (props: Props) => {
       </ConditionalContent>
     </QuestionPage>
   );
-};
-
-OtherIncomes.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(OtherIncomes);

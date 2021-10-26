@@ -1,8 +1,8 @@
 import BenefitsApplication, {
   ReasonQualifier,
 } from "../models/BenefitsApplication";
-
 import Alert from "./Alert";
+import { AppLogic } from "../hooks/useAppLogic";
 import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import ButtonLink from "./ButtonLink";
 import { DocumentType } from "../models/Document";
@@ -22,12 +22,7 @@ import { useTranslation } from "../locales/i18n";
 import withClaimDocuments from "../hoc/withClaimDocuments";
 
 interface ApplicationCardProps {
-  appLogic: {
-    appErrors: any;
-    documents?: {
-      download: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
   claim: BenefitsApplication;
   documents: BenefitsApplicationDocument[];
   /**
@@ -186,7 +181,7 @@ function ApplicationDetails(props: ApplicationDetailsProps) {
 }
 
 interface LegalNoticesProps {
-  appLogic: any;
+  appLogic: AppLogic;
   claim: BenefitsApplication;
   documents: BenefitsApplicationDocument[];
 }
@@ -248,7 +243,9 @@ function LegalNotices(props: LegalNoticesProps) {
                 <DownloadableDocument
                   document={notice}
                   showCreatedAt
-                  onDownloadClick={appLogic.documents.download}
+                  downloadBenefitsApplicationDocument={
+                    appLogic.documents.download
+                  }
                 />
               </li>
             ))}
@@ -308,7 +305,7 @@ function ApplicationActions(props: ApplicationActionsProps) {
     get(claim, "has_previous_leaves_other_reason") !== null ||
     get(claim, "has_concurrent_leave") !== null;
   // Show no instructions by default
-  let reductionsI18nKey = null;
+  let reductionsI18nKey = "";
   // Show new other leave instructions on completed claims
   if (claim.isCompleted) {
     reductionsI18nKey = "components.applicationCard.reductionsInstructions";
@@ -358,7 +355,7 @@ function ApplicationActions(props: ApplicationActionsProps) {
           href={routeWithParams("applications.uploadDocsOptions", {
             claim_id: claim.application_id,
           })}
-          variation={showResumeButton ? "outline" : null}
+          variation={showResumeButton ? "outline" : undefined}
         >
           {t("components.applicationCard.uploadDocsButton")}
         </ButtonLink>

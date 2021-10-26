@@ -108,7 +108,7 @@ export default class AuthenticationManager {
       Username: username,
       Pool: this.pool,
     });
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
       cognitoUser.forgotPassword({
         onSuccess: () => console.log("Success was called"),
         onFailure: () => console.log("Failure was called"),

@@ -4,12 +4,11 @@ import PreviousLeave from "../models/PreviousLeave";
 
 /**
  * Returns an updated array (for employer benefits or previous leaves) with amended data
- *
- * @param {Array} amendments
- * @param {object} updatedValue
- * @returns {Array}
  */
-const updateAmendment = (amendments, updatedValue) => {
+const updateAmendments = (
+  amendments: EmployerBenefit[] | PreviousLeave[],
+  updatedValue: Record<string, unknown>
+) => {
   return amendments.map((amendment) => {
     const idKey = getIdKey(amendment);
 
@@ -34,4 +33,4 @@ const getIdKey = (amendment) => {
   }
 };
 
-export default updateAmendment;
+export default updateAmendments;

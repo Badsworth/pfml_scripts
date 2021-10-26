@@ -8,8 +8,6 @@ import withWithholding from "../../src/hoc/withWithholding";
 const mockEmployerId = "mock-employer-id";
 const mockPageContent = "Claim is loaded. This is the page.";
 
-jest.mock("../../src/hooks/useAppLogic");
-
 function setupUser(verified = false) {
   return new User({
     consented_to_data_sharing: true,
@@ -23,11 +21,12 @@ function setupUser(verified = false) {
   });
 }
 
-function setup({ addCustomSetup } = {}) {
+function setup({ addCustomSetup, query } = { query: {} }) {
   const PageComponent = (props) => (
     <div>
       {mockPageContent}
       filing_period: {props.withholding.filing_period}
+      employer_id: {props.employer.employer_id}
     </div>
   );
   const WrappedComponent = withWithholding(PageComponent);
@@ -40,6 +39,7 @@ function setup({ addCustomSetup } = {}) {
     {
       query: {
         employer_id: mockEmployerId,
+        ...query,
       },
     }
   );
@@ -58,8 +58,20 @@ describe("withWithholding", () => {
     });
   });
 
-  it("renders the page when witholding state is loaded", async () => {
-    const mockWitholding = new Withholding({
+  it("shows Page Not Found when employer isn't found", () => {
+    setup({
+      query: {
+        employer_id: "",
+      },
+    });
+
+    expect(
+      screen.getByRole("heading", { name: "Page not found" })
+    ).toBeInTheDocument();
+  });
+
+  it("renders the with withholding and employer whens when data is loaded", async () => {
+    const mockWithholding = new Withholding({
       filing_period: "2020-01-01",
     });
 
@@ -68,7 +80,7 @@ describe("withWithholding", () => {
         appLogic.users.user = setupUser();
         appLogic.employers.loadWithholding = jest
           .fn()
-          .mockResolvedValue(mockWitholding);
+          .mockResolvedValue(mockWithholding);
       },
     });
 
@@ -76,9 +88,12 @@ describe("withWithholding", () => {
       await screen.findByText(mockPageContent, { exact: false })
     ).toBeInTheDocument();
 
-    // Assert that the HOC is passing in the withholding as a prop to our page component:
+    // Assert that the HOC is passing in the employer and withholding as a prop to our page component:
     expect(
-      await screen.findByText(mockWitholding.filing_period, { exact: false })
+      await screen.findByText(mockWithholding.filing_period, { exact: false })
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByText(mockEmployerId, { exact: false })
     ).toBeInTheDocument();
   });
 

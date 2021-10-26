@@ -1,14 +1,14 @@
 import { Issue, NotFoundError, ValidationError } from "../errors";
+import { AppErrorsLogic } from "./useAppErrorsLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
 import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
 import BenefitsApplicationsApi from "../api/BenefitsApplicationsApi";
 import PaymentPreference from "../models/PaymentPreference";
+import { PortalFlow } from "./usePortalFlow";
 import User from "../models/User";
 import getRelevantIssues from "../utils/getRelevantIssues";
 import routes from "../routes";
-import useAppErrorsLogic from "./useAppErrorsLogic";
 import useCollectionState from "./useCollectionState";
-import usePortalFlow from "./usePortalFlow";
 import { useState } from "react";
 
 const useBenefitsApplicationsLogic = ({
@@ -16,9 +16,9 @@ const useBenefitsApplicationsLogic = ({
   portalFlow,
   user,
 }: {
-  appErrorsLogic: ReturnType<typeof useAppErrorsLogic>;
-  portalFlow: ReturnType<typeof usePortalFlow>;
-  user: User;
+  appErrorsLogic: AppErrorsLogic;
+  portalFlow: PortalFlow;
+  user?: User;
 }) => {
   // State representing the collection of applications for the current user.
   // Initialize to empty collection, but will eventually store the applications
@@ -159,7 +159,7 @@ const useBenefitsApplicationsLogic = ({
       }
 
       const params = { claim_id: claim.application_id };
-      portalFlow.goToNextPage({ claim, user }, params);
+      portalFlow.goToNextPage({ claim }, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }

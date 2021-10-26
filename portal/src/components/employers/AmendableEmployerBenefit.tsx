@@ -25,8 +25,11 @@ interface AmendableEmployerBenefitProps {
   appErrors: AppErrorInfoCollection;
   employerBenefit: EmployerBenefit;
   isAddedByLeaveAdmin: boolean;
-  onChange: (...args: any[]) => any;
-  onRemove: (...args: any[]) => any;
+  onChange: (
+    arg: EmployerBenefit | Record<string, unknown>,
+    arg2: string
+  ) => void;
+  onRemove: (arg: EmployerBenefit) => void;
   shouldShowV2: boolean;
 }
 
@@ -47,7 +50,7 @@ const AmendableEmployerBenefit = ({
   const [amendment, setAmendment] = useState(employerBenefit);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
     useState(isAddedByLeaveAdmin);
-  const containerRef = useRef<HTMLTableRowElement>();
+  const containerRef = useRef<HTMLTableRowElement>(null);
   useAutoFocusEffect({ containerRef, isAmendmentFormDisplayed });
 
   const getFieldPath = (field) =>
@@ -233,7 +236,7 @@ const AmendableEmployerBenefit = ({
                 label={t(
                   "components.employersAmendableEmployerBenefit.benefitStartDateLabel"
                 )}
-                value={get(amendment, "benefit_start_date")}
+                value={get(amendment, "benefit_start_date") || ""}
                 dayLabel={t("components.form.dateInputDayLabel")}
                 monthLabel={t("components.form.dateInputMonthLabel")}
                 yearLabel={t("components.form.dateInputYearLabel")}
@@ -251,7 +254,7 @@ const AmendableEmployerBenefit = ({
                 errorMsg={getErrorMessage("benefit_end_date")}
                 name={getFieldPath("benefit_end_date")}
                 data-test="benefit-end-date-input"
-                value={get(amendment, "benefit_end_date")}
+                value={get(amendment, "benefit_end_date") || ""}
                 onChange={(e) => {
                   amendBenefit("benefit_end_date", e);
                 }}
@@ -322,7 +325,9 @@ const AmendableEmployerBenefit = ({
                     labelClassName="text-normal"
                     width="small"
                     errorMsg={getErrorMessage("benefit_amount_dollars")}
-                    value={get(amendment, "benefit_amount_dollars")}
+                    value={
+                      get(amendment, "benefit_amount_dollars") || undefined
+                    }
                     onChange={(e) => {
                       amendBenefit("benefit_amount_dollars", e);
                     }}
@@ -337,7 +342,7 @@ const AmendableEmployerBenefit = ({
                     labelClassName="text-normal"
                     choices={getAllBenefitFrequencies()}
                     errorMsg={getErrorMessage("benefit_amount_frequency")}
-                    value={get(amendment, "benefit_amount_frequency")}
+                    value={get(amendment, "benefit_amount_frequency") || ""}
                     onChange={(e) => {
                       amendBenefit("benefit_amount_frequency", e);
                     }}

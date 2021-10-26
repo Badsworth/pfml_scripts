@@ -378,5 +378,26 @@ module "weekend-pub-payments-process-fineos" {
   JSON
 }
 
+# TODO uncomment when ready
+# Run pub-payments-process-snapshot at 4am EST (5am EDT) Monday through Friday
+# The output files will be available early in the day Mon-Fri
+# module "pub-payments-process-snapshot" {
+#   source     = "../../modules/ecs_task_scheduler"
+#   is_enabled = var.enable_pub_automation_fineos
+
+#   task_name           = "pub-payments-process-snapshot"
+#   schedule_expression = "cron(0 9 ? * MON-FRI *)"
+#   environment_name    = var.environment_name
+
+#   cluster_arn        = data.aws_ecs_cluster.cluster.arn
+#   app_subnet_ids     = var.app_subnet_ids
+#   security_group_ids = [aws_security_group.tasks.id]
+
+#   ecs_task_definition_arn    = aws_ecs_task_definition.ecs_tasks["pub-payments-process-snapshot"].arn
+#   ecs_task_definition_family = aws_ecs_task_definition.ecs_tasks["pub-payments-process-snapshot"].family
+#   ecs_task_executor_role     = aws_iam_role.task_executor.arn
+#   ecs_task_role              = aws_iam_role.pub_payments_process_fineos_task_role.arn
+# }
+
 ## NOTE: If you are adding a new scheduled event here, please add monitoring by including it
 #        in the list in infra/modules/alarms_api/alarms-aws.tf.

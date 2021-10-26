@@ -10,7 +10,7 @@ const mockPageContent = "Application is loaded. This is the page.";
 
 jest.mock("../../src/hooks/useAppLogic");
 
-function setup({ addCustomSetup } = {}) {
+function setup({ addCustomSetup, query } = {}) {
   const PageComponent = (props) => (
     <div>
       {mockPageContent}
@@ -27,6 +27,7 @@ function setup({ addCustomSetup } = {}) {
     {
       query: {
         claim_id: mockApplicationId,
+        ...query,
       },
     }
   );
@@ -46,6 +47,18 @@ describe("withBenefitsApplication", () => {
     });
 
     expect(await screen.findByRole("progressbar")).toBeInTheDocument();
+  });
+
+  it("shows Page Not Found when application ID isn't found", () => {
+    setup({
+      query: {
+        claim_id: "",
+      },
+    });
+
+    expect(
+      screen.getByRole("heading", { name: "Page not found" })
+    ).toBeInTheDocument();
   });
 
   it("requires user to be logged in", async () => {

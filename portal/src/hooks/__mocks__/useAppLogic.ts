@@ -44,7 +44,6 @@ export default jest.fn(() => ({
   },
   claims: {
     activeFilters: {},
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     claimDetail: new ClaimDetail(),
     claims: new ClaimCollection(),
     clearClaims: jest.fn(),
@@ -58,7 +57,7 @@ export default jest.fn(() => ({
   clearRequiredFieldErrors: jest.fn(),
   documents: {
     attach: jest.fn((application_id, files) => {
-      const uploadPromises = [];
+      const uploadPromises: Array<Promise<{ success: boolean }>> = [];
       for (let i = 0; i < files.length; i++) {
         uploadPromises.push(Promise.resolve({ success: true }));
       }

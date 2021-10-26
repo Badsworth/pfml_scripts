@@ -1,9 +1,9 @@
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ConcurrentLeave from "../../models/ConcurrentLeave";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { get } from "lodash";
@@ -19,19 +19,21 @@ export const fields = [
   "claim.concurrent_leave.leave_end_date",
 ];
 
-interface Props {
-  appLogic: any;
+interface ConcurrentLeavesDetailsProps {
+  appLogic: AppLogic;
   claim: BenefitsApplication;
-  query: any;
+  query: Record<string, string>;
 }
 
-export const ConcurrentLeavesDetails = (props: Props) => {
+export const ConcurrentLeavesDetails = (
+  props: ConcurrentLeavesDetailsProps
+) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
   const employer_fein = claim.employer_fein;
 
   const { formState, updateFields } = useFormState({
-    concurrent_leave: new ConcurrentLeave(get(claim, "concurrent_leave")),
+    concurrent_leave: new ConcurrentLeave(get(claim, "concurrent_leave") || {}),
   });
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -76,6 +78,7 @@ export const ConcurrentLeavesDetails = (props: Props) => {
         hint={
           <React.Fragment>
             <LeaveDatesAlert
+              showWaitingDayPeriod
               startDate={claim.leaveStartDate}
               endDate={claim.leaveEndDate}
             />
@@ -101,12 +104,6 @@ export const ConcurrentLeavesDetails = (props: Props) => {
       />
     </QuestionPage>
   );
-};
-
-ConcurrentLeavesDetails.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  query: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(ConcurrentLeavesDetails);

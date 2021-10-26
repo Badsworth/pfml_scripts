@@ -1,8 +1,8 @@
 import { get, pick } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";
@@ -12,15 +12,15 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.leave_details.pregnant_or_recent_birth"];
 
-interface Props {
+interface ReasonPregnancyProps {
   claim: BenefitsApplication;
-  appLogic: any;
-  query?: {
+  appLogic: AppLogic;
+  query: {
     claim_id?: string;
   };
 }
 
-export const ReasonPregnancy = (props: Props) => {
+export const ReasonPregnancy = (props: ReasonPregnancyProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -72,14 +72,6 @@ export const ReasonPregnancy = (props: Props) => {
       />
     </QuestionPage>
   );
-};
-
-ReasonPregnancy.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(ReasonPregnancy);

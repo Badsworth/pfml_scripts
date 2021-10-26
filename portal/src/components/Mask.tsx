@@ -3,20 +3,18 @@ import React from "react";
 import classnames from "classnames";
 
 // Deliminate chunks of integers
-const maskDeliminatedRegex = {
+const MaskDeliminatedRegex = {
   ssn: /([*\d]{3})([*\d]{1,2})?([*\d]+)?/,
   fein: /([*\d]{2})([*\d]+)?/,
   phone: /([*\d]{3})([*\d]{1,3})?([*\d]+)?/,
   zip: /([*\d]{5})([*\d]+)?/,
-};
+} as const;
 
 /**
  * Split value into groups and insert a hyphen deliminator between each
- * @param {string} value
- * @param {RegExp} rx - Regular expression with capturing groups
  * @returns {string}
  */
-function deliminateRegexGroups(value, rx) {
+function deliminateRegexGroups(value: string, rx: RegExp) {
   const matches = toDigits(value).match(rx);
   if (matches && matches.length > 1) {
     value = matches
@@ -30,31 +28,31 @@ function deliminateRegexGroups(value, rx) {
 
 /**
  * Remove all non-digits, except masking character (*)
- * @param {string} value
- * @returns {string}
  */
-function toDigits(value) {
+function toDigits(value: string) {
   return value.replace(/[^\d*]/g, "");
 }
 
 /**
  * Format a string using fixed-point notation, similar to Number.prototype.toFixed
  * though a decimal is only fixed if the string included a decimal already
- * @param {string} value - A stringified number (i.e. "1234")
- * @param {number} digits - The number of digits to appear after the decimal point
- * @returns {string}
+ * @param value - A stringified number (i.e. "1234")
+ * @param digits - The number of digits to appear after the decimal point
  */
-function stringWithFixedDigits(value, digits = 2) {
+function stringWithFixedDigits(value: string, digits = 2) {
   const decimalRegex = /\.[\d]+$/;
-  // Check for existing decimal
-  const decimal = value.match(decimalRegex);
+  if (decimalRegex.test(value)) {
+    const decimalMatch = value.match(decimalRegex);
+    if (decimalMatch && decimalMatch.length > 0) {
+      const decimal = decimalMatch[0];
+      const fixedDecimalMatch = parseFloat(decimal)
+        .toFixed(digits)
+        .match(decimalRegex);
 
-  if (decimal) {
-    const fixedDecimal = parseFloat(decimal)
-      .toFixed(digits)
-      .match(decimalRegex)[0];
-
-    return value.replace(decimal, fixedDecimal);
+      if (fixedDecimalMatch && fixedDecimalMatch.length > 0) {
+        return value.replace(decimal, fixedDecimalMatch[0]);
+      }
+    }
   }
 
   return value;
@@ -62,10 +60,8 @@ function stringWithFixedDigits(value, digits = 2) {
 
 /**
  * Convert string into a number (positive or negative float or integer)
- * @param {string} value
- * @returns {number}
  */
-function toNumber(value) {
+function toNumber(value: string) {
   const sign = value.charAt(0) === "-" ? -1 : 1;
   const parts = value.split(".");
   // This assumes if the user adds a "." it should be a float. If we want it to
@@ -83,10 +79,11 @@ function toNumber(value) {
 
 /**
  * Returns the value with additional masking characters
- * @param {string} value
- * @returns {string}
  */
-export function maskValue(value, mask) {
+export function maskValue(
+  value: string,
+  mask: "currency" | "hours" | keyof typeof MaskDeliminatedRegex
+) {
   if (mask === "currency" || mask === "hours") {
     // Format number with commas. If the number includes a decimal,
     // ensure it includes two decimal points
@@ -94,15 +91,15 @@ export function maskValue(value, mask) {
     if (number !== undefined && !Number.isNaN(number)) {
       value = stringWithFixedDigits(number.toLocaleString("en-US"));
     }
-  } else if (maskDeliminatedRegex[mask]) {
-    value = deliminateRegexGroups(value, maskDeliminatedRegex[mask]);
+  } else if (MaskDeliminatedRegex[mask]) {
+    value = deliminateRegexGroups(value, MaskDeliminatedRegex[mask]);
   }
   return value;
 }
 
 interface MaskProps {
-  children: any;
-  mask?: "currency" | "fein" | "hours" | "phone" | "ssn" | "zip";
+  children: JSX.Element; // it is an input
+  mask: "currency" | "fein" | "hours" | "phone" | "ssn" | "zip";
 }
 
 /**
@@ -117,9 +114,8 @@ function Mask(props: MaskProps) {
    * To avoid a jarring experience for screen readers, we only
    * add/remove characters after the field has been blurred,
    * rather than when the user is typing in the field
-   * @param {object} event
    */
-  const handleBlur = (event) => {
+  const handleBlur = (event: React.FocusEvent<HTMLInputElement>) => {
     maskAndDispatchChangeFromEvent(event);
 
     if (field.props.onBlur) {
@@ -130,9 +126,8 @@ function Mask(props: MaskProps) {
   /**
    * To ensure we only submit the masked value, we need to
    * mask the input when the Enter key is pressed
-   * @param {object} event
    */
-  const handleKeyDown = (event) => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
     if (event.key === "Enter") {
       maskAndDispatchChangeFromEvent(event);
     }
@@ -147,24 +142,36 @@ function Mask(props: MaskProps) {
    * that our form event handlers can manage this field's state just like
    * it does with other InputText fields. We also include the original event
    * for debugging purposes.
-   * @param {string} value - the masked SSN string
-   * @param {SyntheticEvent} originalEvent - Original event that triggered this change
    */
-  const dispatchChange = (value, originalEvent) => {
-    const target = originalEvent.target.cloneNode(true);
+  const dispatchChange = (
+    value: string,
+    originalEvent:
+      | React.ChangeEvent<HTMLInputElement>
+      | React.FocusEvent<HTMLInputElement>
+      | React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    const target = (originalEvent.target as HTMLInputElement).cloneNode(
+      true
+    ) as HTMLInputElement; // https://github.com/microsoft/TypeScript/issues/283
     target.value = value;
     field.props.onChange({
-      _originalEvent: originalEvent,
       target,
     });
   };
 
   /**
    * Apply the mask and update the field state
-   * @param {object} event
    */
-  const maskAndDispatchChangeFromEvent = (event) => {
-    const maskedValue = maskValue(event.target.value, props.mask);
+  const maskAndDispatchChangeFromEvent = (
+    event:
+      | React.ChangeEvent<HTMLInputElement>
+      | React.FocusEvent<HTMLInputElement>
+      | React.KeyboardEvent<HTMLInputElement>
+  ) => {
+    const maskedValue = maskValue(
+      (event.target as HTMLInputElement).value,
+      props.mask
+    );
     dispatchChange(maskedValue, event);
   };
 

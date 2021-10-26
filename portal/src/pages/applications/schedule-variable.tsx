@@ -3,10 +3,10 @@ import BenefitsApplication, {
 } from "../../models/BenefitsApplication";
 import React, { useState } from "react";
 import { pick, round } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import Heading from "../../components/Heading";
 import InputHours from "../../components/InputHours";
 import Lead from "../../components/Lead";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
 import routes from "../../routes";
@@ -24,16 +24,16 @@ export const fields = [
   "claim.work_pattern.work_pattern_days[0].minutes",
 ];
 
-interface Props {
+interface ScheduleVariableProps {
   claim: BenefitsApplication;
-  appLogic: any;
+  appLogic: AppLogic;
 }
 
-export const ScheduleVariable = (props: Props) => {
+export const ScheduleVariable = (props: ScheduleVariableProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  const workPattern = new WorkPattern(claim.work_pattern);
+  const workPattern = new WorkPattern(claim.work_pattern || {});
 
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   // minutesWorkedPerWeek will be spread across
@@ -48,7 +48,7 @@ export const ScheduleVariable = (props: Props) => {
     updateFields,
   });
 
-  const handleHoursChange = (event) => {
+  const handleHoursChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const minutesStr = event.target.value;
 
     // The input is coerced into a string by InputHours.js
@@ -60,7 +60,7 @@ export const ScheduleVariable = (props: Props) => {
 
   const handleSave = async () => {
     let work_pattern_days;
-    let hours_worked_per_week = null;
+    let hours_worked_per_week: null | number = null;
 
     if (!minutesWorkedPerWeek) {
       work_pattern_days = [];
@@ -72,7 +72,9 @@ export const ScheduleVariable = (props: Props) => {
 
     await appLogic.benefitsApplications.update(claim.application_id, {
       hours_worked_per_week,
-      work_pattern: { work_pattern_days },
+      work_pattern: {
+        work_pattern_days,
+      },
     });
   };
 
@@ -113,11 +115,6 @@ export const ScheduleVariable = (props: Props) => {
       />
     </QuestionPage>
   );
-};
-
-ScheduleVariable.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(ScheduleVariable);

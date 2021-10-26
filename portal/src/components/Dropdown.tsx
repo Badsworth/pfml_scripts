@@ -6,7 +6,10 @@ import useUniqueId from "../hooks/useUniqueId";
 // Only load USWDS comboBox JS on client-side since it
 // references `window`, which isn't available during
 // the Node.js-based build process ("server-side")
-let comboBox = null;
+let comboBox: {
+  on: () => void;
+  off: () => void;
+} | null = null;
 if (typeof window !== "undefined") {
   comboBox = require("uswds/src/js/components/combo-box");
 }
@@ -63,7 +66,7 @@ interface DropdownProps {
   /**
    * HTML input `onChange` attribute
    */
-  onChange?: (...args: any[]) => any;
+  onChange?: React.ChangeEventHandler<HTMLSelectElement>;
   /**
    * Enable the smaller label variant
    */
@@ -98,7 +101,9 @@ function Dropdown(props: DropdownProps) {
       comboBox.on();
 
       return () => {
-        comboBox.off();
+        if (comboBox) {
+          comboBox.off();
+        }
       };
     }
     // see reasoning for `key` above. We include props.value here

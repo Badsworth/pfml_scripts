@@ -52,6 +52,21 @@ describe("withClaimDocuments", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows Page Not Found when application ID isn't found", () => {
+    setup(
+      {},
+      {
+        query: {
+          claim_id: "",
+        },
+      }
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Page not found" })
+    ).toBeInTheDocument();
+  });
+
   it("requires user to be logged in", async () => {
     let spy;
 

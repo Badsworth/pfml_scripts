@@ -193,7 +193,13 @@ export default function (
     },
 
     async deleteDownloadFolder(folderName): Promise<true> {
-      await fs.promises.rmdir(folderName, { maxRetries: 5, recursive: true });
+      try {
+        await fs.promises.rmdir(folderName, { maxRetries: 5, recursive: true });
+      } catch (error) {
+        // Ignore the error if download folder doesn't exist.
+        if (error.code === "ENOENT") return true;
+        throw error;
+      }
       return true;
     },
 
@@ -217,7 +223,7 @@ export default function (
 
   // Add dynamic options for the New Relic reporter.
   let reporterOptions = cypressConfig.reporterOptions ?? {};
-  if (cypressConfig.reporter?.match(/new\-relic/)) {
+  if (cypressConfig.reporter?.match(/new-relic/)) {
     // Add metadata collection for the New Relic runner.
     on("before:run", beforeRunCollectMetadata);
 

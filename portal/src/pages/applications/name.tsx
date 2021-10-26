@@ -1,8 +1,8 @@
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Fieldset from "../../components/Fieldset";
 import FormLabel from "../../components/FormLabel";
 import InputText from "../../components/InputText";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { pick } from "lodash";
@@ -17,12 +17,12 @@ export const fields = [
   "claim.last_name",
 ];
 
-interface Props {
-  appLogic: any;
+interface NameProps {
+  appLogic: AppLogic;
   claim: BenefitsApplication;
 }
 
-export const Name = (props: Props) => {
+export const Name = (props: NameProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -62,11 +62,6 @@ export const Name = (props: Props) => {
       </Fieldset>
     </QuestionPage>
   );
-};
-
-Name.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
 export default withBenefitsApplication(Name);

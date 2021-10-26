@@ -1,13 +1,14 @@
 import { get, isNil } from "lodash";
 import { useMemo, useState } from "react";
+import { AppErrorsLogic } from "./useAppErrorsLogic";
 import ClaimDocument from "../models/ClaimDocument";
+import { ClaimsLogic } from "./useClaimsLogic";
+import DocumentCollection from "../models/DocumentCollection";
 import EmployerClaim from "../models/EmployerClaim";
 import EmployersApi from "../api/EmployersApi";
 import { LeaveAdminForbiddenError } from "../errors";
-import useAppErrorsLogic from "./useAppErrorsLogic";
-import useClaimsLogic from "./useClaimsLogic";
-import usePortalFlow from "./usePortalFlow";
-import useUsersLogic from "./useUsersLogic";
+import { PortalFlow } from "./usePortalFlow";
+import { UsersLogic } from "./useUsersLogic";
 
 const useEmployersLogic = ({
   appErrorsLogic,
@@ -15,13 +16,15 @@ const useEmployersLogic = ({
   portalFlow,
   setUser,
 }: {
-  appErrorsLogic: ReturnType<typeof useAppErrorsLogic>;
-  clearClaims: ReturnType<typeof useClaimsLogic>["clearClaims"];
-  portalFlow: ReturnType<typeof usePortalFlow>;
-  setUser: ReturnType<typeof useUsersLogic>["setUser"];
+  appErrorsLogic: AppErrorsLogic;
+  clearClaims: ClaimsLogic["clearClaims"];
+  portalFlow: PortalFlow;
+  setUser: UsersLogic["setUser"];
 }) => {
   const [claim, setEmployerClaim] = useState<EmployerClaim | null>(null);
-  const [documents, setDocuments] = useState(null);
+  const [claimDocumentsMap, setClaimDocumentsMap] = useState<
+    Map<string, DocumentCollection>
+  >(new Map());
   const employersApi = useMemo(() => new EmployersApi(), []);
 
   /**
@@ -64,7 +67,7 @@ const useEmployersLogic = ({
           new LeaveAdminForbiddenError(
             employer_id,
             has_verification_data,
-            error.message
+            error instanceof Error ? error.message : ""
           )
         );
       } else {
@@ -77,13 +80,15 @@ const useEmployersLogic = ({
    * Retrieve documents from the API and set application errors if any
    */
   const loadDocuments = async (absenceId: string) => {
-    if (documents) return;
+    if (claimDocumentsMap.has(absenceId)) return;
     appErrorsLogic.clearErrors();
 
     try {
       const { documents } = await employersApi.getDocuments(absenceId);
+      const loadedClaimDocumentsMap = new Map(claimDocumentsMap.entries());
+      loadedClaimDocumentsMap.set(absenceId, documents);
 
-      setDocuments(documents);
+      setClaimDocumentsMap(loadedClaimDocumentsMap);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -104,8 +109,8 @@ const useEmployersLogic = ({
    * Download document from the API and set app errors if any.
    */
   const downloadDocument = async (
-    absenceId: string,
-    document: ClaimDocument
+    document: ClaimDocument,
+    absenceId: string
   ) => {
     appErrorsLogic.clearErrors();
     try {
@@ -149,7 +154,7 @@ const useEmployersLogic = ({
       withholding_amount: number;
       withholding_quarter: string;
     },
-    next: string
+    next?: string
   ) => {
     appErrorsLogic.clearErrors();
 
@@ -167,7 +172,7 @@ const useEmployersLogic = ({
   return {
     addEmployer,
     claim,
-    documents,
+    claimDocumentsMap,
     downloadDocument,
     loadClaim,
     loadDocuments,

@@ -44,6 +44,12 @@ target_metadata = Base.metadata
 
 
 def include_object(object, name, type_, reflected, compare_to):
+    # skip this index because we need it on the DuaEmployeeDemographics model for testing
+    # but we created this index in a previous migration to take advantage of the `coalesce` keyword
+    # see: 2021_10_04_13_30_03_95d3e464a5b2_add_dua_employee_demographics_table
+    if type_ == "index" and name == "dua_employee_demographics_unique_import_data_idx":
+        return False
+
     if type_ == "schema" and object.schema is not None:
         return False
     else:

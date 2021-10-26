@@ -27,6 +27,7 @@ from massgov.pfml.db.models.employees import (
     EmployerPushToFineosQueue,
     ImportLog,
     WagesAndContributions,
+    WagesAndContributionsHistory,
 )
 from massgov.pfml.dor.importer.dor_file_formats import (
     EMPLOYEE_FILE_ROW_LENGTH,
@@ -1162,6 +1163,7 @@ def import_wage_data(
     count = 0
     updated_count = 0
     unmodified_count = 0
+    wage_history_records: List[WagesAndContributionsHistory] = []
 
     for wage_info in wage_info_list_to_create_or_update:
         count += 1
@@ -1202,7 +1204,7 @@ def import_wage_data(
             wages_contributions_models_existing_employees_to_create.append(wage_model)
         else:
             is_updated = dor_persistence_util.check_and_update_wages_and_contributions(
-                db_session, existing_wage, wage_info, import_log_entry_id
+                db_session, existing_wage, wage_info, import_log_entry_id, wage_history_records
             )
 
             if is_updated:
@@ -1227,6 +1229,17 @@ def import_wage_data(
         logger.info(
             "Batch committing wage updates: %i, unmodified: %i", updated_count, unmodified_count
         )
+
+        db_session.commit()
+
+        logger.info(
+            "Batch saving wages and contribution history",
+            extra={"record_count": len(wage_history_records)},
+        )
+        bulk_save(
+            db_session, wage_history_records, "Batch creating WagesAndContributionsHistory records",
+        )
+
         db_session.commit()
 
     logger.info(

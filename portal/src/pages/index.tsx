@@ -1,22 +1,19 @@
+import { AppLogic } from "../hooks/useAppLogic";
 import ButtonLink from "../components/ButtonLink";
 import Heading from "../components/Heading";
 import Link from "next/link";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../components/Title";
 import { Trans } from "react-i18next";
 import routes from "../routes";
 import useLoggedInRedirect from "../hooks/useLoggedInRedirect";
-import usePortalFlow from "../hooks/usePortalFlow";
 import { useTranslation } from "../locales/i18n";
 
-interface Props {
-  appLogic: {
-    portalFlow: ReturnType<typeof usePortalFlow>;
-  };
+interface IndexProps {
+  appLogic: AppLogic;
 }
 
-export const Index = (props: Props) => {
+export const Index = (props: IndexProps) => {
   const { appLogic } = props;
   const { t } = useTranslation();
 
@@ -89,14 +86,6 @@ export const Index = (props: Props) => {
       </div>
     </React.Fragment>
   );
-};
-
-Index.propTypes = {
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      goTo: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
 };
 
 export default Index;

@@ -1,13 +1,13 @@
+import { Integer } from "../../types/common";
 import assert from "assert";
 import { isNil } from "lodash";
+
 /**
  * Split provided minutes across a 7 day week
- * @param {number} minutesWorkedPerWeek - average minutes worked per week. Must be an integer.
- * @returns {number[]} dailyMinutes
  */
-function spreadMinutesOverWeek(minutesWorkedPerWeek) {
+function spreadMinutesOverWeek(minutesWorkedPerWeek: Integer) {
   assert(!isNil(minutesWorkedPerWeek));
-  const dailyMinutes = [];
+  const dailyMinutes: Integer[] = [];
   const incrementMinutes = 15;
 
   // API-1611 - minimum of 15-minute increments for the smallest split so we can't just divide evenly by 7 days

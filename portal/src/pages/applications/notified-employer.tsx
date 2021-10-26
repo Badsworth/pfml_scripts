@@ -1,10 +1,10 @@
 import { get, pick } from "lodash";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";
@@ -17,10 +17,10 @@ export const fields = [
   "claim.leave_details.employer_notification_date",
 ];
 
-interface Props {
-  claim?: BenefitsApplication;
-  appLogic: any;
-  query?: {
+interface NotifiedEmployerProps {
+  claim: BenefitsApplication;
+  appLogic: AppLogic;
+  query: {
     claim_id?: string;
   };
 }
@@ -28,7 +28,7 @@ interface Props {
 /**
  * A form page to capture a user's attestation of having notified their employer.
  */
-export const NotifiedEmployer = (props: Props) => {
+export const NotifiedEmployer = (props: NotifiedEmployerProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -72,7 +72,6 @@ export const NotifiedEmployer = (props: Props) => {
         fieldNamesClearedWhenHidden={[
           "leave_details.employer_notification_date",
         ]}
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '(name: any) => any' is not assignable to typ... Remove this comment to see the full error message
         getField={getField}
         updateFields={updateFields}
         clearField={clearField}
@@ -97,14 +96,6 @@ export const NotifiedEmployer = (props: Props) => {
       </ConditionalContent>
     </QuestionPage>
   );
-};
-
-NotifiedEmployer.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(NotifiedEmployer);

@@ -11,8 +11,7 @@
     "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
     "LST_EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
-    "LST_EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
-    "HAS_WITHDRAWN_NOTICE": "true"
+    "LST_EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json"
   },
   "stage": {
     "PORTAL_BASEURL": "https://paidleave-stage.mass.gov",
@@ -24,8 +23,7 @@
     "FINEOS_USERNAME": "CONTENT",
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
-    "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
-    "HAS_WITHDRAWN_NOTICE": "false"
+    "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json"
   },
   "training": {
     "PORTAL_BASEURL": "https://paidleave-training.mass.gov",
@@ -37,8 +35,7 @@
     "COGNITO_CLIENTID": "2hr6bckdopamvq92jahr542p5p",
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
-    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
-    "HAS_WITHDRAWN_NOTICE": "false"
+    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json"
   },
   "performance": {
     "PORTAL_BASEURL": "https://paidleave-performance.mass.gov",
@@ -52,8 +49,7 @@
     "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
     "LST_EMPLOYEES_FILE": "./employees/lst-2021-08-18.employees.json",
-    "LST_EMPLOYERS_FILE": "./employers/lst-2021-08-18.json",
-    "HAS_WITHDRAWN_NOTICE": "false"
+    "LST_EMPLOYERS_FILE": "./employers/lst-2021-08-18.json"
   },
   "uat": {
     "PORTAL_BASEURL": "https://paidleave-uat.mass.gov",
@@ -66,8 +62,7 @@
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
-    "HAS_FINEOS_SP": "true",
-    "HAS_WITHDRAWN_NOTICE": "false"
+    "HAS_FINEOS_SP": "true"
   },
   "cps-preview": {
     "PORTAL_BASEURL": "https://paidleave-cps-preview.eol.mass.gov",
@@ -79,8 +74,7 @@
     "COGNITO_CLIENTID": "59oeobfn0759c8166pjh381joc",
     "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
-    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
-    "HAS_WITHDRAWN_NOTICE": "false"
+    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json"
   },
   "local": {
     "PORTAL_BASEURL": "http://localhost:3000",
@@ -92,7 +86,6 @@
     "FINEOS_USERNAME": "CONTENT",
     "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
-    "TESTMAIL_NAMESPACE": "gqzap",
-    "HAS_WITHDRAWN_NOTICE": "false"
+    "TESTMAIL_NAMESPACE": "gqzap"
   }
 }

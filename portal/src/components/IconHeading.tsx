@@ -13,10 +13,12 @@ const IconHeading = ({ children, name }: IconHeadingProps) => {
    * Using name to determine correct flex
    * and color settings
    */
-  const { color, flexAlign } = {
+  const styles = {
     check_circle: { color: "text-green", flexAlign: "flex-align-start" },
     cancel: { color: "text-red", flexAlign: "flex-align-center" },
-  }[name];
+  };
+
+  const { color, flexAlign } = styles[name];
 
   return (
     <Heading

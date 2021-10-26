@@ -1,9 +1,8 @@
 import { get, pick } from "lodash";
-
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import IconHeading from "../../components/IconHeading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import formatDate from "../../utils/formatDate";
@@ -14,12 +13,14 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_previous_leaves_other_reason"];
 
-interface Props {
-  appLogic: any;
+interface PreviousLeavesOtherReasonProps {
+  appLogic: AppLogic;
   claim: BenefitsApplication;
 }
 
-export const PreviousLeavesOtherReason = (props: Props) => {
+export const PreviousLeavesOtherReason = (
+  props: PreviousLeavesOtherReasonProps
+) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
 
@@ -103,11 +104,6 @@ export const PreviousLeavesOtherReason = (props: Props) => {
       />
     </QuestionPage>
   );
-};
-
-PreviousLeavesOtherReason.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
 export default withBenefitsApplication(PreviousLeavesOtherReason);

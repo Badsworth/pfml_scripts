@@ -1,5 +1,4 @@
 import EmployerClaim from "../../../models/EmployerClaim";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
@@ -9,23 +8,17 @@ import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
-interface Props {
-  appLogic: {
-    employers: {
-      claim?: EmployerClaim;
-    };
-  };
+interface ConfirmationProps {
+  claim: EmployerClaim;
   query: {
     absence_id: string;
   };
 }
 
-export const Confirmation = (props: Props) => {
+export const Confirmation = (props: ConfirmationProps) => {
   const { t } = useTranslation();
   const {
-    appLogic: {
-      employers: { claim },
-    },
+    claim,
     query: { absence_id },
   } = props;
 
@@ -62,17 +55,6 @@ export const Confirmation = (props: Props) => {
       <UserFeedback url={routes.external.massgov.feedbackEmployer} />
     </React.Fragment>
   );
-};
-
-Confirmation.propTypes = {
-  appLogic: PropTypes.shape({
-    employers: PropTypes.shape({
-      claim: PropTypes.instanceOf(EmployerClaim),
-    }).isRequired,
-  }).isRequired,
-  query: PropTypes.shape({
-    absence_id: PropTypes.string.isRequired,
-  }).isRequired,
 };
 
 export default withEmployerClaim(Confirmation);

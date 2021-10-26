@@ -3,11 +3,11 @@ import BenefitsApplication, {
 } from "../../models/BenefitsApplication";
 import { get, pick, set } from "lodash";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import LeaveReasonEnum from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
@@ -23,12 +23,12 @@ export const fields = [
   "claim.leave_details.reason_qualifier",
 ];
 
-interface Props {
-  claim?: BenefitsApplication;
-  appLogic: any;
+interface LeaveReasonProps {
+  claim: BenefitsApplication;
+  appLogic: AppLogic;
 }
 
-export const LeaveReason = (props: Props) => {
+export const LeaveReason = (props: LeaveReasonProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -102,7 +102,11 @@ export const LeaveReason = (props: Props) => {
   );
 
   const getChoices = () => {
-    const choices = [];
+    const choices: Array<{
+      checked: boolean;
+      label: string;
+      value: string;
+    }> = [];
     choices.push(choiceMedical, choiceBonding, choiceCaringLeave);
 
     showMilitaryLeaveTypes &&
@@ -163,7 +167,6 @@ export const LeaveReason = (props: Props) => {
 
       <ConditionalContent
         fieldNamesClearedWhenHidden={["leave_details.reason_qualifier"]}
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '(name: any) => any' is not assignable to typ... Remove this comment to see the full error message
         getField={getField}
         clearField={clearField}
         updateFields={updateFields}
@@ -214,11 +217,6 @@ export const LeaveReason = (props: Props) => {
       </ConditionalContent>
     </QuestionPage>
   );
-};
-
-LeaveReason.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(LeaveReason);
