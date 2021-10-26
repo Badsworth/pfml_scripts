@@ -24,7 +24,7 @@ import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import React, { useEffect, useState } from "react";
 import Step, { ClaimSteps } from "../../models/Step";
 import { compact, get, isNil } from "lodash";
-
+import Address from "../../models/Address";
 import Alert from "../../components/Alert";
 import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
@@ -61,7 +61,7 @@ import withClaimDocuments from "../../hoc/withClaimDocuments";
  * Format an address onto a single line, or return undefined if the address
  * is empty.
  */
-function formatAddress(address) {
+function formatAddress(address: Partial<Address> | null) {
   let formatted = compact([
     get(address, "line_1"),
     get(address, "line_2"),
@@ -119,7 +119,7 @@ export const Review = (props: ReviewProps) => {
 
   const usePartOneReview = !claim.isSubmitted;
 
-  const getStepEditHref = (name) => {
+  const getStepEditHref = (name: string) => {
     const step = steps.find((s) => s.name === name);
 
     if (step && step.editable) {

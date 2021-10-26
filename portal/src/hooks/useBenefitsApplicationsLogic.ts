@@ -40,7 +40,9 @@ const useBenefitsApplicationsLogic = ({
 
   // Cache the validation warnings associated with each claim. Primarily
   // used for controlling the status of Checklist steps.
-  const [warningsLists, setWarningsLists] = useState({});
+  const [warningsLists, setWarningsLists] = useState<{
+    [application_id: string]: Issue[];
+  }>({});
 
   /**
    * Store warnings for a specific claim

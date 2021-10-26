@@ -21,14 +21,16 @@ const AbsenceCaseStatusTag = ({
   const { t } = useTranslation();
   const mappedStatus = findKeyByValue(AbsenceCaseStatus, status);
 
-  const getTagState = (status) => {
+  const getTagState = (status?: string | null) => {
     const successState = ["Approved"];
     const errorState = ["Declined"];
     const inactiveState = ["Closed", "Completed"];
 
-    if (successState.includes(status)) return "success";
-    if (errorState.includes(status)) return "error";
-    if (inactiveState.includes(status)) return "inactive";
+    if (status) {
+      if (successState.includes(status)) return "success";
+      if (errorState.includes(status)) return "error";
+      if (inactiveState.includes(status)) return "inactive";
+    }
     return "pending";
   };
 

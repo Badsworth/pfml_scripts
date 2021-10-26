@@ -37,6 +37,7 @@ abstract class BaseCollection<T> {
    * Does not modify the original collection.
    */
   addItem(item: T) {
+    // @ts-expect-error TODO (PORTAL-265) Redesign BaseCollection
     const itemId = item[this.idProperty];
     if (!itemId) {
       throw new Error(`Item ${this.idProperty} is null or undefined`);
@@ -71,6 +72,7 @@ abstract class BaseCollection<T> {
    */
   updateItem(item: T) {
     const items = this.items;
+    // @ts-expect-error TODO (PORTAL-265) Redesign BaseCollection
     const itemId = item[this.idProperty];
     if (!itemId) {
       throw new Error(`Item ${this.idProperty} is null or undefined`);

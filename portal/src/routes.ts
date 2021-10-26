@@ -205,26 +205,23 @@ const routes = {
 };
 
 /**
- * @param {string} url - path, with or without query param
- * @returns {boolean}
+ * @param url - path, with or without query param
  */
-export const isEmployersRoute = (url) => {
+export const isEmployersRoute = (url: string) => {
   return Object.values(routes.employers).includes(getRouteFromUrl(url));
 };
 
 /**
- * @param {string} url - path, with or without query param
- * @returns {boolean}
+ * @param url - path, with or without query param
  */
-export const isApplicationsRoute = (url) => {
+export const isApplicationsRoute = (url: string) => {
   return Object.values(routes.applications).includes(getRouteFromUrl(url));
 };
 
 /**
- * @param {string} url - path, with or without query param
- * @returns {string}
+ * @param url - path, with or without query param
  */
-const getRouteFromUrl = (url) => {
+const getRouteFromUrl = (url: string) => {
   let route = url;
   const queryStringIndex = route.indexOf("?");
 

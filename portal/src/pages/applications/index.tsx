@@ -126,6 +126,7 @@ export const Index = (props: IndexProps) => {
 /**
  * Allowing claimantShowStatusPage feature flag
  */
+// @ts-expect-error TODO (PORTAL-287) Remove v1 application card
 function ApplicationCard(props) {
   return isFeatureEnabled("claimantShowStatusPage") ? (
     <ApplicationCardV2 {...props} />

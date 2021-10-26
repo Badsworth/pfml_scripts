@@ -23,6 +23,7 @@ interface ComponentWithWithholdingProps {
  * @param {React.Component} Component - Component to receive withholding data prop
  * @returns {React.Component} - Component with withholding data
  */
+// @ts-expect-error TODO (PORTAL-966) Fix HOC typing
 const withWithholding = (Component) => {
   const ComponentWithWithholding = (props: ComponentWithWithholdingProps) => {
     const { appLogic, query, user } = props;

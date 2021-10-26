@@ -81,7 +81,7 @@ export const PreviousLeavesOtherReasonDetails = (
     });
   };
 
-  const handleRemoveClick = (_entry, index) => {
+  const handleRemoveClick = (_entry: PreviousLeave, index: number) => {
     const updatedLeaves = [...previous_leaves_other_reason];
     updatedLeaves.splice(index, 1);
     updateFields({ previous_leaves_other_reason: updatedLeaves });
@@ -93,7 +93,7 @@ export const PreviousLeavesOtherReasonDetails = (
     updateFields,
   });
 
-  const render = (entry, index) => {
+  const render = (entry: PreviousLeave, index: number) => {
     return (
       <PreviousLeavesOtherReasonDetailsCard
         claim={claim}

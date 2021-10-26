@@ -1,3 +1,4 @@
+import { DocumentType, DocumentTypeEnum } from "../../models/Document";
 import React, { useEffect } from "react";
 import { find, get, has, map } from "lodash";
 import { AbsencePeriod } from "../../models/ClaimDetail";
@@ -7,7 +8,6 @@ import BackButton from "../../components/BackButton";
 import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import ButtonLink from "../../components/ButtonLink";
 import ClaimDocument from "../../models/ClaimDocument";
-import { DocumentType } from "../../models/Document";
 import Heading from "../../components/Heading";
 import LeaveReason from "../../models/LeaveReason";
 import LegalNoticeList from "../../components/LegalNoticeList";
@@ -178,16 +178,15 @@ export const Status = ({ appLogic, query }: StatusProps) => {
       0
     );
 
-    // Types of notices we want to watch out for
-    const noticeTypes = {
-      [DocumentType.approvalNotice]: true,
-      [DocumentType.denialNotice]: true,
-      [DocumentType.withdrawalNotice]: true,
-    };
-
     // Legal notices which match notice types above
+    const noticeTypes: DocumentTypeEnum[] = [
+      DocumentType.approvalNotice,
+      DocumentType.denialNotice,
+      DocumentType.withdrawalNotice,
+    ];
+
     const decisionNotices = legalNotices.filter((legalNotice) => {
-      return noticeTypes[legalNotice.document_type];
+      return noticeTypes.includes(legalNotice.document_type);
     });
 
     // Show timeline for notice if there are no notices and expectedNotices > amount of Notices
@@ -210,7 +209,9 @@ export const Status = ({ appLogic, query }: StatusProps) => {
     );
   };
 
-  const getInfoAlertContext = (absenceDetails) => {
+  const getInfoAlertContext = (
+    absenceDetails: Record<string, AbsencePeriod[]>
+  ) => {
     const hasBondingReason = has(absenceDetails, LeaveReason.bonding);
     const hasPregnancyReason = has(absenceDetails, LeaveReason.pregnancy);
     const hasNewBorn = claimDetail.absence_periods.some(
@@ -522,7 +523,10 @@ export const Timeline = ({
 }: TimelineProps) => {
   const { t } = useTranslation();
 
-  const shouldRenderCertificationButton = (absencePeriodReason, docList) =>
+  const shouldRenderCertificationButton = (
+    absencePeriodReason: keyof typeof DocumentType.certification,
+    docList: BenefitsApplicationDocument[] | ClaimDocument[]
+  ) =>
     !findDocumentsByTypes(docList, [
       DocumentType.certification[absencePeriodReason],
     ]).length;

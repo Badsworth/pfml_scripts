@@ -59,7 +59,7 @@ export const FamilyMemberRelationship = (
     updateFields,
   });
 
-  const relationshipList = [
+  const relationshipList: Array<keyof typeof RelationshipToCaregiver> = [
     "child",
     "spouse",
     "parent",

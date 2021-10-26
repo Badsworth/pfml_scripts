@@ -42,7 +42,7 @@ export const NewApplication = (props: NewApplicationProps) => {
     );
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
     if (formState.hasReviewerVerified === "true") {
@@ -52,7 +52,7 @@ export const NewApplication = (props: NewApplicationProps) => {
     }
   };
 
-  const handleOnChange = (event) => {
+  const handleOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     updateFields({
       hasReviewerVerified: event.target.value,
     });
@@ -62,7 +62,7 @@ export const NewApplication = (props: NewApplicationProps) => {
     hasReviewerVerified: "",
   });
 
-  const updateFields = (fields) => {
+  const updateFields = (fields: Record<string, unknown>) => {
     setFormState({ ...formState, ...fields });
   };
 

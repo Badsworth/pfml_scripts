@@ -72,8 +72,9 @@ export const guards: Record<string, ClaimFlowGuardFn> = {
   // if they are uploading an additional doc.
   isAdditionalDoc: ({ isAdditionalDoc }) => isAdditionalDoc === true,
   isCaringLeave: ({ claim }) => claim?.isCaringLeave === true,
-  isMedicalOrPregnancyLeave: ({ claim }) => claim?.isMedicalOrPregnancyLeave,
-  isBondingLeave: ({ claim }) => claim?.isBondingLeave,
+  isMedicalOrPregnancyLeave: ({ claim }) =>
+    claim?.isMedicalOrPregnancyLeave === true,
+  isBondingLeave: ({ claim }) => claim?.isBondingLeave === true,
   isEmployed: ({ claim }) =>
     get(claim, "employment_status") === EmploymentStatus.employed,
   isCompleted: ({ claim }) => claim?.isCompleted === true,

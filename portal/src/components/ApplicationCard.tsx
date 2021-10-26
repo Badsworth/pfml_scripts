@@ -283,7 +283,7 @@ function ApplicationActions(props: ApplicationActionsProps) {
   const hasFutureChildDate = get(claim, "leave_details.has_future_child_date");
   const leaveReasonQualifier = get(claim, "leave_details.reason_qualifier");
 
-  const bondingContentContext = {
+  const bondingContentContext: { [reason: string]: string } = {
     [ReasonQualifier.adoption]: "adopt_foster",
     [ReasonQualifier.fosterCare]: "adopt_foster",
     [ReasonQualifier.newBorn]: "newborn",

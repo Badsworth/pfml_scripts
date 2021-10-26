@@ -16,6 +16,7 @@ export function isFeatureEnabled(name: string) {
 
   // https://nextjs.org/docs/api-reference/next.config.js/environment-variables
   const environmentFlags = process.env.featureFlags;
+  // @ts-expect-error TODO (PORTAL-353): Environment variables should be strings
   return environmentFlags && environmentFlags[name];
 }
 

@@ -1,11 +1,12 @@
 import BenefitsApplication, {
   ReasonQualifier,
+  ReasonQualifierEnum,
 } from "../../models/BenefitsApplication";
+import LeaveReason, { LeaveReasonType } from "../../models/LeaveReason";
 import AppErrorInfo from "../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import { AppLogic } from "../../hooks/useAppLogic";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
-import LeaveReason from "../../models/LeaveReason";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { get } from "lodash";
@@ -33,8 +34,12 @@ export const UploadDocsOptions = (props: UploadDocsOptionsProps) => {
   const { formState, updateFields } = useFormState();
   const upload_docs_options = formState.upload_docs_options;
 
-  const leaveReason = get(claim, "leave_details.reason");
-  const reasonQualifier = get(claim, "leave_details.reason_qualifier");
+  const leaveReason = get(claim, "leave_details.reason") as LeaveReasonType;
+  const reasonQualifier = get(
+    claim,
+    "leave_details.reason_qualifier"
+  ) as ReasonQualifierEnum;
+
   const contentContext = {
     [LeaveReason.bonding]: {
       [ReasonQualifier.newBorn]: "bonding_newborn",
@@ -48,7 +53,7 @@ export const UploadDocsOptions = (props: UploadDocsOptionsProps) => {
   const certChoiceLabel =
     leaveReason === LeaveReason.bonding
       ? contentContext[leaveReason][reasonQualifier]
-      : contentContext[leaveReason];
+      : get(contentContext, leaveReason, "");
 
   const handleSave = async () => {
     if (!upload_docs_options) {

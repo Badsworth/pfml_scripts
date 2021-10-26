@@ -34,7 +34,7 @@ export const VerifyContributions = (props: VerifyContributionsProps) => {
     withholdingAmount: 0,
   });
 
-  const handleAmountChange = (event) => {
+  const handleAmountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     const amount = value ? Number(value.replace(/,/g, "")) : 0;
     updateFields({ withholdingAmount: amount });
