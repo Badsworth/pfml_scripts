@@ -73,7 +73,7 @@ describe("Status", () => {
     expect(container).toMatchSnapshot();
   });
 
-  it("does not show intermittent leave dates", () => {
+  it("shows intermittent leave dates", () => {
     setup({
       claim: new MockEmployerClaimBuilder()
         .completed()
@@ -83,8 +83,8 @@ describe("Status", () => {
         .create(),
     });
 
-    expect(screen.queryByText(/intermittent/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/2019/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/intermittent/i)).toBeInTheDocument();
+    expect(screen.queryAllByText(/2019/).length).toBe(2);
   });
 
   it("loads the documents when they're not yet loaded", async () => {
