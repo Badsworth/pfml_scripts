@@ -18,15 +18,20 @@ jobs:
           TITLE: ${{ github.event.pull_request.title }}
           BODY: ${{ github.event.pull_request.body }}
           STATE: ${{ github.event.pull_request.state }}
+          COMMENTS_URL: ${{ github.events.pull_request.comments_url }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         shell: python
         run: |
           import os
           import re
           import sys
+          import urllib.request
 
           title = os.environ["TITLE"]
           body = os.environ["BODY"]
           state = os.environ["STATE"]
+          comments_url = os.environ["COMMENTS_URL"]
+          github_token = os.environ["GITHUB_TOKEN"]
 
           problem_count = 0
 
@@ -35,6 +40,12 @@ jobs:
                     "Please start the PR title with a JIRA ticket, "
                     "for example \"AAA-123: /summary/\"")
               problem_count += 1
+
+              req = urllib.request.Request(comments_url)
+              req.add_header("Accept", "application/vnd.github.v3+json")
+              req.add_header("Authorization", "Bearer " + github_token)
+              r = urllib.request.urlopen(req, data='{"body": "Please start the PR title with a JIRA ticket"}')
+              print("response status %i", r.status)
 
           if not re.search(r"https://lwd.atlassian.net/browse/[A-Z]+-\d+", body):
               print("::error title=PR description doesn't link to a ticket::"
