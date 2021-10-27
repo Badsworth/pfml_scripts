@@ -4,9 +4,6 @@ name: Update API ERD Diagrams
 
 on:
   workflow_dispatch:
-    inputs:
-    tags:
-      description: 'Generate ERD'  
   push:
     branches:
       - main
