@@ -205,11 +205,12 @@ export const BIAP60: ScenarioSpecification = {
   claim: {
     label: "BIAP60",
     reason: "Child Bonding",
-    reason_qualifier: "Foster Care",
+    reason_qualifier: "Newborn",
+    bondingDate: "future",
     work_pattern_spec: "0,240,240,240,240,240,0",
     docs: {
       MASSID: {},
-      FOSTERPLACEMENT: {},
+      BIRTHCERTIFICATE: {},
     },
     intermittent_leave_spec: {
       duration: 5,
@@ -389,10 +390,11 @@ export const BHAP1_OLB: ScenarioSpecification = {
   claim: {
     label: "BHAP1_OLB",
     reason: "Child Bonding",
-    reason_qualifier: "Foster Care",
+    reason_qualifier: "Newborn",
+    bondingDate: "future",
     docs: {
       MASSID: {},
-      FOSTERPLACEMENT: {},
+      BIRTHCERTIFICATE: {},
     },
     // Create a leave in progress, so we can check adjustments for both made and future payments.
     leave_dates: [subWeeks(mostRecentSunday, 2), addWeeks(mostRecentSunday, 2)],
