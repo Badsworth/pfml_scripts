@@ -118,7 +118,11 @@ are not a part of an ECS service, the tasks are launched/started on demand
 Function, or manually through the [/bin/run-ecs-task](/bin/run-ecs-task/) tool).
 
 ### Database diagram
-[![applications erd diagram](../assets/api/erds/applications.png "application erd")](../assets/api/erds/applications.png)
-![employees erd diagram](./assets/api/employees.png "employees erd")
-![payments erd diagram](./assets/api/payments.png "payments erd")
-![verifications erd diagram](./assets/api/verifications.png "verifications erd")
+#### Applications
+[![applications erd diagram](./assets/api/erds/applications.png "application erd")](./assets/api/erds/applications.png)
+#### Employees
+[![employees erd diagram](./assets/api/employees.png "employees erd")](./assets/api/employees.png)
+#### Payments
+[![payments erd diagram](./assets/api/payments.png "payments erd")](./assets/api/payments.png)
+#### Verifications
+[![verifications erd diagram](./assets/api/verifications.png "verifications erd")](./assets/api/verifications.png)

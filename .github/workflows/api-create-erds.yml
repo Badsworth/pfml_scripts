@@ -3,18 +3,19 @@
 name: API ERD Create
 
 on:
+  workflow_dispatch:
+    tags:
+      description: 'Generate ERD'  
   push:
     branches:
       - main
     paths:
       - api/massgov/pfml/db/models/**
+      - api/bin/create-erds.py
 
-env:
-  github_api: "https://api.github.com/repos/EOLWD/pfml"
-  workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
-  version: ${{ github.event.inputs.version || 'main' }}
-  working-dir: ./api
-  python-version: 3.9
+defaults:
+  run:
+    working-directory: ./api
 
 jobs:
   update-erds:
