@@ -862,7 +862,55 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
-
+  
+  /applications/{application_id}/submit_tax_withholding_preference:
+    post: 
+      summary: Submit Tax Withholding Preference
+      operationId: massgov.pfml.api.applications.submit_tax_withholding_preference
+      tags:
+        - Applications
+        - TaxPreference
+      parameters:
+        - name: application_id
+          in: path
+          schema:
+            type: string
+            format: uuid
+            example: 5f91c12b-4d49-4eb0-b5d9-7fa0ce13eb32
+          description: ID of the application to update
+          required: true
+      requestBody: 
+        $ref: "#/components/requestBodies/TaxWithholdingPreferenceRequestBody"
+      responses:
+        "201":
+          description: Successful submission of tax withholding preference returns a 201
+          content: 
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/ApplicationResponse'
+        "400":
+          description: Error when attempting to submit tax withholding preference to FINEOS
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "404":
+          description: Application with requested application_id was not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "503":
+          description: Tax withholding preference failed to save.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  
   /financial-eligibility:
     post:
       security:
@@ -1111,6 +1159,11 @@ components:
           schema:
             $ref: "#/components/schemas/PaymentPreferenceRequestBody"
       required: true
+    TaxWithholdingPreferenceRequestBody:
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/TaxWithholdingPreferenceRequestBody"
     EmployerAddFeinRequestBody:
       content:
         application/json:
@@ -2027,6 +2080,9 @@ components:
         concurrent_leave:
           $ref: "#/components/schemas/ConcurrentLeave"
           nullable: true
+        is_withholding_tax:
+          type: boolean
+          nullable: true
 
     DocumentUploadRequest:
       type: object
@@ -2422,6 +2478,13 @@ components:
         payment_preference:
           nullable: false
           $ref: "#/components/schemas/PaymentPreference"
+    
+    TaxWithholdingPreferenceRequestBody:
+      type: object
+      properties:
+        withhold_taxes:
+          type: boolean
+          nullable: false
 
     EmployerAddFeinRequestBody:
       type: object
