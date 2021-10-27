@@ -22,8 +22,8 @@ import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 interface SuccessProps {
-  claim?: BenefitsApplication;
-  query?: {
+  claim: BenefitsApplication;
+  query: {
     claim_id?: string;
   };
 }

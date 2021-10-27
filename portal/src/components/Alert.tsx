@@ -26,7 +26,7 @@ interface AlertProps {
  *
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/alert/)
  */
-const Alert = React.forwardRef<any, AlertProps>(
+const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
   (
     {
       headingLevel = "2",

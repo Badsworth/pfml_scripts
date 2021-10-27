@@ -792,17 +792,6 @@ class MmarsPaymentRefunds(Base, TimestampMixin):
     payment = relationship(Payment)
 
 
-# TO-DO: this has been consolidated into the applications.state_metric table and can be removed
-# after the app code (including the initial migration) has been deployed
-class MaximumWeeklyBenefitAmount(Base):
-    # See regulations for how this is calculated:
-    # https://malegislature.gov/Laws/GeneralLaws/PartI/TitleXXII/Chapter175M/Section3
-    __tablename__ = "maximum_weekly_benefit_amount"
-
-    effective_date = Column(Date, primary_key=True, nullable=False)
-    maximum_weekly_benefit_amount = Column(Numeric, nullable=False)
-
-
 class FineosWritebackDetails(Base, TimestampMixin):
     __tablename__ = "fineos_writeback_details"
     fineos_writeback_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -1105,6 +1094,7 @@ class Pfml1099Batch(Base, TimestampMixin):
     tax_year = Column(Integer, nullable=False)
     batch_run_date = Column(Date, nullable=False)
     correction_ind = Column(Boolean, nullable=False)
+    batch_status = Column(Text)
 
 
 class Pfml1099Withholding(Base, TimestampMixin):

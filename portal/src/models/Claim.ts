@@ -7,13 +7,13 @@ import { compact, get } from "lodash";
 class Claim {
   absence_period_end_date: string | null = null;
   absence_period_start_date: string | null = null;
-  claim_status: AbsenceCaseStatusType;
+  claim_status: AbsenceCaseStatusType | null;
   claim_type_description: string | null = null;
-  created_at: string | null = null;
-  employee: ClaimEmployee;
+  created_at: string;
+  employee: ClaimEmployee | null;
   employer: ClaimEmployer;
-  fineos_absence_id: string | null = null;
-  fineos_notification_id: string | null = null;
+  fineos_absence_id: string;
+  fineos_notification_id: string;
   managed_requirements: ManagedRequirement[];
 
   constructor(attrs: Claim) {
@@ -50,21 +50,21 @@ export class ClaimEmployee {
  * Employer record associated to the Claim
  */
 export interface ClaimEmployer {
-  employer_dba: string | null;
-  employer_fein: string | null;
-  employer_id: string | null;
+  employer_dba: string;
+  employer_fein: string;
+  employer_id: string;
 }
 
 /**
  * Managed requirements associated to the Claim
  */
 export interface ManagedRequirement {
-  category: string | null;
-  created_at: string | null;
+  category: string;
+  created_at: string;
   follow_up_date: string | null;
   responded_at: string | null;
-  status: "Open" | "Complete" | "Suppressed" | null;
-  type: string | null;
+  status: "Open" | "Complete" | "Suppressed";
+  type: string;
 }
 
 /**

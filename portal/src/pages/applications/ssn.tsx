@@ -1,3 +1,4 @@
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import InputText from "../../components/InputText";
 import QuestionPage from "../../components/QuestionPage";
@@ -12,7 +13,7 @@ export const fields = ["claim.tax_identifier"];
 
 interface SsnProps {
   claim: BenefitsApplication;
-  appLogic: any;
+  appLogic: AppLogic;
 }
 
 /**

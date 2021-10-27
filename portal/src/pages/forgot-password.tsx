@@ -1,3 +1,4 @@
+import { AppLogic } from "../hooks/useAppLogic";
 import BackButton from "../components/BackButton";
 import Button from "../components/Button";
 import InputText from "../components/InputText";
@@ -11,7 +12,7 @@ import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
 interface ForgotPasswordProps {
-  appLogic: any;
+  appLogic: AppLogic;
 }
 
 export const ForgotPassword = (props: ForgotPasswordProps) => {

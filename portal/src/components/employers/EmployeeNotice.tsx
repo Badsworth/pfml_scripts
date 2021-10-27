@@ -1,14 +1,15 @@
 import React, { useEffect } from "react";
 import InputChoiceGroup from "../InputChoiceGroup";
 import ReviewHeading from "../ReviewHeading";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import usePreviousValue from "../../hooks/usePreviousValue";
 import { useTranslation } from "react-i18next";
 
 interface EmployeeNoticeProps {
   employeeNoticeInput?: "Yes" | "No";
   fraudInput?: string;
-  getFunctionalInputProps: (...args: any[]) => any;
-  updateFields: (...args: any[]) => any;
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
+  updateFields: (arg: Record<string, unknown>) => void;
 }
 
 const EmployeeNotice = ({

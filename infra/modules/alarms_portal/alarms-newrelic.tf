@@ -312,7 +312,7 @@ locals {
   # to prevent noisy false positives.
   #
   js_error_min_uniq_per_window = 5
-  js_error_uniq_count          = "filter(count(session), WHERE browserInteractionName NOT LIKE 'fetch:%')"
+  js_error_uniq_count          = "filter(uniqueCount(session), WHERE browserInteractionName NOT LIKE 'fetch:%')"
   js_error_total_count         = "filter(count(browserInteractionName), WHERE browserInteractionName NOT LIKE 'fetch:%')"
 }
 

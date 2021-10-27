@@ -7,7 +7,7 @@ import Withholding from "../../models/Withholding";
 import { uniqueId } from "lodash";
 
 const documentData = {
-  content_type: null,
+  content_type: "",
   created_at: "2021-1-1",
   description: "",
   name: "mock doc",
@@ -23,7 +23,7 @@ export const addEmployerMock = jest.fn().mockResolvedValue(() => {
   };
 });
 
-export const getClaimMock = jest.fn().mockResolvedValue((absenceId) => {
+export const getClaimMock = jest.fn().mockResolvedValue((absenceId: string) => {
   return {
     claim: new EmployerClaim({
       fineos_absence_id: absenceId,

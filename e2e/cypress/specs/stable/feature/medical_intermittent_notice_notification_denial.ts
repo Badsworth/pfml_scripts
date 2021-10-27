@@ -4,7 +4,7 @@ import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { getClaimantCredentials } from "../../../config";
 
 describe("Denial Notification and Notice", () => {
-  after(() => {
+  before(() => {
     portal.deleteDownloadsFolder();
   });
 

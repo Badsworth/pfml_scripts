@@ -1,17 +1,17 @@
-// @ts-nocheck https://lwd.atlassian.net/browse/PORTAL-427
+import { DocumentType, DocumentTypeEnum } from "../../models/Document";
 import React, { useEffect } from "react";
 import { find, get, has, map } from "lodash";
-
 import { AbsencePeriod } from "../../models/ClaimDetail";
 import Alert from "../../components/Alert";
 import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
+import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import ButtonLink from "../../components/ButtonLink";
-import { DocumentType } from "../../models/Document";
+import ClaimDocument from "../../models/ClaimDocument";
 import Heading from "../../components/Heading";
 import LeaveReason from "../../models/LeaveReason";
 import LegalNoticeList from "../../components/LegalNoticeList";
-import PageNotFound from "../404";
+import PageNotFound from "../../components/PageNotFound";
 import Spinner from "../../components/Spinner";
 import Tag from "../../components/Tag";
 import Title from "../../components/Title";
@@ -25,6 +25,7 @@ import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
+
 interface StatusProps {
   appLogic: AppLogic;
   query: {
@@ -58,7 +59,9 @@ export const Status = ({ appLogic, query }: StatusProps) => {
   }, [portalFlow]);
 
   useEffect(() => {
-    loadClaimDetail(absence_case_id);
+    if (absence_case_id) {
+      loadClaimDetail(absence_case_id);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [absence_case_id]);
 
@@ -175,16 +178,15 @@ export const Status = ({ appLogic, query }: StatusProps) => {
       0
     );
 
-    // Types of notices we want to watch out for
-    const noticeTypes = {
-      [DocumentType.approvalNotice]: true,
-      [DocumentType.denialNotice]: true,
-      [DocumentType.withdrawalNotice]: true,
-    };
-
     // Legal notices which match notice types above
+    const noticeTypes: DocumentTypeEnum[] = [
+      DocumentType.approvalNotice,
+      DocumentType.denialNotice,
+      DocumentType.withdrawalNotice,
+    ];
+
     const decisionNotices = legalNotices.filter((legalNotice) => {
-      return noticeTypes[legalNotice.document_type];
+      return noticeTypes.includes(legalNotice.document_type);
     });
 
     // Show timeline for notice if there are no notices and expectedNotices > amount of Notices
@@ -207,7 +209,9 @@ export const Status = ({ appLogic, query }: StatusProps) => {
     );
   };
 
-  const getInfoAlertContext = (absenceDetails) => {
+  const getInfoAlertContext = (
+    absenceDetails: Record<string, AbsencePeriod[]>
+  ) => {
     const hasBondingReason = has(absenceDetails, LeaveReason.bonding);
     const hasPregnancyReason = has(absenceDetails, LeaveReason.pregnancy);
     const hasNewBorn = claimDetail.absence_periods.some(
@@ -237,7 +241,6 @@ export const Status = ({ appLogic, query }: StatusProps) => {
               context: uploaded_document_type,
             }),
           })}
-          name="upload-success-message"
           state="success"
         >
           {t("pages.applications.uploadSuccessMessage", {
@@ -312,7 +315,6 @@ export const Status = ({ appLogic, query }: StatusProps) => {
             employerFollowUpDate={
               claimDetail.managedRequirementByFollowUpDate[0]?.follow_up_date
             }
-            absenceDetails={absenceDetails}
             applicationId={claimDetail.application_id}
             docList={documentsForApplication}
             absenceCaseId={claimDetail.fineos_absence_id}
@@ -423,92 +425,92 @@ export const StatusTagMap = {
   Pending: "pending",
   Withdrawn: "inactive",
   Cancelled: "inactive",
-};
+} as const;
 
 interface LeaveDetailsProps {
-  absenceDetails?: any;
+  absenceDetails?: Record<string, AbsencePeriod[]>;
 }
 
 export const LeaveDetails = ({ absenceDetails = {} }: LeaveDetailsProps) => {
   const { t } = useTranslation();
-  return map(absenceDetails, (absenceItem, absenceItemName) => (
-    <div key={absenceItemName} className={containerClassName}>
-      <Heading level="2">
-        {t("pages.claimsStatus.leaveReasonValue", {
-          context: findKeyByValue(LeaveReason, absenceItemName),
-        })}
-      </Heading>
-      {absenceItem.length
-        ? absenceItem.map(
-            (
-              {
-                period_type,
-                absence_period_start_date,
-                absence_period_end_date,
-                request_decision,
-                fineos_leave_request_id,
-              },
-              ind
-            ) => (
-              <div
-                key={fineos_leave_request_id}
-                className={`margin-top-${ind ? "6" : "4"}`}
-              >
-                <Heading level="3">
-                  {t("pages.claimsStatus.leavePeriodLabel", {
-                    context: period_type.split(" ")[0].toLowerCase(),
-                  })}
-                </Heading>
-                <p>
-                  {`From ${formatDate(
-                    absence_period_start_date
-                  ).full()} to ${formatDate(absence_period_end_date).full()}`}
-                </p>
-                <Tag
-                  label={request_decision}
-                  state={StatusTagMap[request_decision]}
-                />
-                <Trans
-                  i18nKey="pages.claimsStatus.leaveStatusMessage"
-                  tOptions={{ context: request_decision }}
-                  components={{
-                    "application-link": (
-                      <a
-                        href={routes.applications.getReady}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      />
-                    ),
-                    p: <p></p>,
-                    "request-appeal-link": (
-                      <a
-                        href={routes.external.massgov.requestAnAppealForPFML}
-                        rel="noopener noreferrer"
-                        target="_blank"
-                      />
-                    ),
-                    "request-decision-info": <p></p>,
-                  }}
-                />
-              </div>
-            )
-          )
-        : null}
-    </div>
-  ));
+
+  return (
+    <React.Fragment>
+      {map(absenceDetails, (absenceItem, absenceItemName) => (
+        <div key={absenceItemName} className={containerClassName}>
+          <Heading level="2">
+            {t("pages.claimsStatus.leaveReasonValue", {
+              context: findKeyByValue(LeaveReason, absenceItemName),
+            })}
+          </Heading>
+          {absenceItem.length &&
+            absenceItem.map(
+              (
+                {
+                  period_type,
+                  absence_period_start_date,
+                  absence_period_end_date,
+                  request_decision,
+                  fineos_leave_request_id,
+                },
+                ind
+              ) => (
+                <div
+                  key={fineos_leave_request_id}
+                  className={`margin-top-${ind ? "6" : "4"}`}
+                >
+                  <Heading level="3">
+                    {t("pages.claimsStatus.leavePeriodLabel", {
+                      context: period_type.split(" ")[0].toLowerCase(),
+                    })}
+                  </Heading>
+                  <p>
+                    {`From ${formatDate(
+                      absence_period_start_date
+                    ).full()} to ${formatDate(absence_period_end_date).full()}`}
+                  </p>
+                  <Tag
+                    label={request_decision}
+                    state={StatusTagMap[request_decision]}
+                  />
+                  <Trans
+                    i18nKey="pages.claimsStatus.leaveStatusMessage"
+                    tOptions={{ context: request_decision }}
+                    components={{
+                      "application-link": (
+                        <a
+                          href={routes.applications.getReady}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        />
+                      ),
+                      p: <p></p>,
+                      "request-appeal-link": (
+                        <a
+                          href={routes.external.massgov.requestAnAppealForPFML}
+                          rel="noopener noreferrer"
+                          target="_blank"
+                        />
+                      ),
+                      "request-decision-info": <p></p>,
+                    }}
+                  />
+                </div>
+              )
+            )}
+        </div>
+      ))}
+    </React.Fragment>
+  );
 };
 
 interface TimelineProps {
   absencePeriods: AbsencePeriod[];
   applicationId?: string;
-  employerFollowUpDate?: string;
-  docList: any[];
+  employerFollowUpDate: string | null;
+  docList: ClaimDocument[] | BenefitsApplicationDocument[];
   absenceCaseId: string;
-  appLogic?: {
-    portalFlow?: {
-      getNextPageRoute: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
 }
 
 export const Timeline = ({
@@ -521,7 +523,10 @@ export const Timeline = ({
 }: TimelineProps) => {
   const { t } = useTranslation();
 
-  const shouldRenderCertificationButton = (absencePeriodReason, docList) =>
+  const shouldRenderCertificationButton = (
+    absencePeriodReason: keyof typeof DocumentType.certification,
+    docList: BenefitsApplicationDocument[] | ClaimDocument[]
+  ) =>
     !findDocumentsByTypes(docList, [
       DocumentType.certification[absencePeriodReason],
     ]).length;
@@ -531,7 +536,7 @@ export const Timeline = ({
     (absencePeriod) => absencePeriod.reason === LeaveReason.bonding
   );
   interface FollowUpStepsProps {
-    bondingAbsencePeriod: any;
+    bondingAbsencePeriod: AbsencePeriod;
   }
   const FollowUpSteps = ({ bondingAbsencePeriod }: FollowUpStepsProps) => {
     let typeOfProof;

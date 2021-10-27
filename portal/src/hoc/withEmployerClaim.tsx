@@ -1,5 +1,7 @@
 import React, { useEffect } from "react";
+import User, { UserLeaveAdministrator } from "../models/User";
 import { AppLogic } from "../hooks/useAppLogic";
+import PageNotFound from "../components/PageNotFound";
 import { Spinner } from "../components/Spinner";
 import routes from "../routes";
 import { useTranslation } from "react-i18next";
@@ -8,8 +10,9 @@ import withUser from "./withUser";
 interface ComponentWithClaimProps {
   appLogic: AppLogic;
   query: {
-    absence_id: string;
+    absence_id?: string;
   };
+  user: User;
 }
 
 /**
@@ -19,19 +22,19 @@ interface ComponentWithClaimProps {
  * @param {React.Component} Component - Component to receive claim prop
  * @returns {React.Component} component with claim prop
  */
+// @ts-expect-error TODO (PORTAL-966) Fix HOC typing
 const withEmployerClaim = (Component) => {
   const ComponentWithClaim = (props: ComponentWithClaimProps) => {
-    const { appLogic, query } = props;
+    const { appLogic, query, user } = props;
     const { t } = useTranslation();
     const absenceId = query.absence_id;
     const claim =
       appLogic.employers.claim?.fineos_absence_id === absenceId
         ? appLogic.employers.claim
         : null;
-    const user = appLogic.users.user;
 
     useEffect(() => {
-      if (!claim) {
+      if (!claim && absenceId) {
         appLogic.employers.loadClaim(absenceId);
       }
       // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -58,7 +61,7 @@ const withEmployerClaim = (Component) => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [appLogic.portalFlow, claim, user]);
 
-    const redirectToVerifyPage = (employer) => {
+    const redirectToVerifyPage = (employer: UserLeaveAdministrator) => {
       // the current employer can and should be verified; the page is blocked.
       appLogic.portalFlow.goTo(routes.employers.verifyContributions, {
         employer_id: employer.employer_id,
@@ -66,14 +69,16 @@ const withEmployerClaim = (Component) => {
       });
     };
 
-    const redirectToCannotVerifyPage = (employer) => {
+    const redirectToCannotVerifyPage = (employer: UserLeaveAdministrator) => {
       // the current employer cannot be verified; the page is blocked.
       appLogic.portalFlow.goTo(routes.employers.cannotVerify, {
         employer_id: employer.employer_id,
       });
     };
 
-    if (!claim && appLogic.appErrors.isEmpty) {
+    if (!absenceId) {
+      return <PageNotFound />;
+    } else if (!claim && appLogic.appErrors.isEmpty) {
       return (
         <div className="margin-top-8 text-center">
           <Spinner

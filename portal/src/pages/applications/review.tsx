@@ -23,8 +23,8 @@ import OtherIncome, {
 import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import React, { useEffect, useState } from "react";
 import Step, { ClaimSteps } from "../../models/Step";
-import { compact, get, isUndefined } from "lodash";
-
+import { compact, get, isNil } from "lodash";
+import Address from "../../models/Address";
 import Alert from "../../components/Alert";
 import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
@@ -61,7 +61,7 @@ import withClaimDocuments from "../../hoc/withClaimDocuments";
  * Format an address onto a single line, or return undefined if the address
  * is empty.
  */
-function formatAddress(address) {
+function formatAddress(address: Partial<Address> | null) {
   let formatted = compact([
     get(address, "line_1"),
     get(address, "line_2"),
@@ -77,9 +77,9 @@ function formatAddress(address) {
 
 interface ReviewProps {
   appLogic: AppLogic;
-  claim?: BenefitsApplication;
-  documents?: BenefitsApplicationDocument[];
-  isLoadingDocuments?: boolean;
+  claim: BenefitsApplication;
+  documents: BenefitsApplicationDocument[];
+  isLoadingDocuments: boolean;
 }
 
 /**
@@ -110,20 +110,16 @@ export const Review = (props: ReviewProps) => {
   const reducedLeavePeriod = new ReducedScheduleLeavePeriod(
     get(claim, "leave_details.reduced_schedule_leave_periods[0]")
   );
-  const workPattern = new WorkPattern(get(claim, "work_pattern"));
+  const workPattern = new WorkPattern(get(claim, "work_pattern") || {});
   const gender = get(claim, "gender");
 
-  const steps = Step.createClaimStepsFromMachine(
-    claimantConfigs,
-    {
-      claim: props.claim,
-    },
-    null
-  );
+  const steps = Step.createClaimStepsFromMachine(claimantConfigs, {
+    claim: props.claim,
+  });
 
   const usePartOneReview = !claim.isSubmitted;
 
-  const getStepEditHref = (name) => {
+  const getStepEditHref = (name: string) => {
     const step = steps.find((s) => s.name === name);
 
     if (step && step.editable) {
@@ -390,7 +386,7 @@ export const Review = (props: ReviewProps) => {
           level={reviewRowLevel}
           label={t("pages.claimsReview.workPatternDaysVariableLabel")}
         >
-          {!isUndefined(workPattern.minutesWorkedPerWeek) &&
+          {!isNil(workPattern.minutesWorkedPerWeek) &&
             t("pages.claimsReview.workPatternVariableTime", {
               context:
                 convertMinutesToHours(workPattern.minutesWorkedPerWeek)
@@ -1029,7 +1025,7 @@ export const OtherIncomeList = (props: OtherIncomeListProps) => {
 };
 
 interface OtherLeaveEntryProps {
-  amount?: string;
+  amount?: string | null;
   dates: string;
   label: string;
   reviewRowLevel: "2" | "3" | "4" | "5" | "6";

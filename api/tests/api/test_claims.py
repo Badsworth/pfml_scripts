@@ -2987,15 +2987,6 @@ class TestGetClaimsEndpoint:
             )
             self._perform_assertions(resp, status_code=200, expected_claims=expected_claims)
 
-        def test_get_claims_with_status_filter_pending(
-            self, client, employer_auth_token, pending_claims, review_by_claim
-        ):
-            expected_claims = pending_claims + [review_by_claim]
-            resp = self._perform_api_call(
-                "/v1/claims?claim_status=Pending", client, employer_auth_token
-            )
-            self._perform_assertions(resp, status_code=200, expected_claims=expected_claims)
-
         def test_get_claims_with_status_filter_multiple_statuses(
             self,
             client,
@@ -3009,28 +3000,6 @@ class TestGetClaimsEndpoint:
             ) + [no_action_claim, expired_requirements_claim]
             resp = self._perform_api_call(
                 "/v1/claims?claim_status=Approved,Closed", client, employer_auth_token
-            )
-            self._perform_assertions(resp, status_code=200, expected_claims=expected_claims)
-
-        def test_get_claims_with_status_filter_multiple_statuses_pending(
-            self,
-            client,
-            employer_auth_token,
-            no_open_requirement_claims,
-            pending_claims,
-            review_by_claim,
-        ):
-            valid_statuses = [
-                AbsenceStatus.CLOSED,
-                AbsenceStatus.COMPLETED,
-            ]
-            expected_claims = (
-                self.filter_claims_by_status(no_open_requirement_claims, valid_statuses)
-                + pending_claims
-                + [review_by_claim]
-            )
-            resp = self._perform_api_call(
-                "/v1/claims?claim_status=Pending,Closed,Completed", client, employer_auth_token
             )
             self._perform_assertions(resp, status_code=200, expected_claims=expected_claims)
 

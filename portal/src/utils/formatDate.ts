@@ -3,11 +3,12 @@ import { DateTime } from "luxon";
 /**
  * Format the given date as an internationalized, human-readable string
  */
-export default function formatDate(isoDate: string) {
-  const dateTime = DateTime.fromISO(isoDate);
-
+export default function formatDate(isoDate: string | null) {
   return {
     full: () => {
+      if (!isoDate) return "";
+
+      const dateTime = DateTime.fromISO(isoDate);
       if (dateTime.isValid) {
         return dateTime.toLocaleString(DateTime.DATE_FULL);
       }
@@ -16,6 +17,9 @@ export default function formatDate(isoDate: string) {
     },
 
     short: () => {
+      if (!isoDate) return "";
+
+      const dateTime = DateTime.fromISO(isoDate);
       if (dateTime.isValid) {
         return dateTime.toLocaleString();
       }

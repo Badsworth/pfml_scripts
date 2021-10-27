@@ -11,7 +11,7 @@
  * is complete, in progress, or not started
  * @see ../models/Step
  */
-import {
+import BenefitsApplication, {
   EmploymentStatus,
   WorkPatternType,
 } from "../models/BenefitsApplication";
@@ -55,32 +55,41 @@ import { fields as ssnFields } from "../pages/applications/ssn";
 import { fields as stateIdFields } from "../pages/applications/state-id";
 import { fields as workPatternTypeFields } from "../pages/applications/work-pattern-type";
 
+export interface ClaimantFlowContext {
+  claim?: BenefitsApplication;
+  isAdditionalDoc?: boolean;
+}
+
+type ClaimFlowGuardFn = (context: ClaimantFlowContext) => boolean;
+
 /**
  * @see https://xstate.js.org/docs/guides/guards.html
+ *
  */
-export const guards = {
+export const guards: Record<string, ClaimFlowGuardFn> = {
   // claimants upload additional docs after the claim is completed.
   // claimants will either be routed to the status page vs. the checklist
   // if they are uploading an additional doc.
   isAdditionalDoc: ({ isAdditionalDoc }) => isAdditionalDoc === true,
-  isCaringLeave: ({ claim }) => claim.isCaringLeave,
-  isMedicalOrPregnancyLeave: ({ claim }) => claim.isMedicalOrPregnancyLeave,
-  isBondingLeave: ({ claim }) => claim.isBondingLeave,
+  isCaringLeave: ({ claim }) => claim?.isCaringLeave === true,
+  isMedicalOrPregnancyLeave: ({ claim }) =>
+    claim?.isMedicalOrPregnancyLeave === true,
+  isBondingLeave: ({ claim }) => claim?.isBondingLeave === true,
   isEmployed: ({ claim }) =>
     get(claim, "employment_status") === EmploymentStatus.employed,
-  isCompleted: ({ claim }) => claim.isCompleted,
-  hasStateId: ({ claim }) => claim.has_state_id === true,
-  hasConcurrentLeave: ({ claim }) => claim.has_concurrent_leave === true,
-  hasEmployerBenefits: ({ claim }) => claim.has_employer_benefits === true,
+  isCompleted: ({ claim }) => claim?.isCompleted === true,
+  hasStateId: ({ claim }) => claim?.has_state_id === true,
+  hasConcurrentLeave: ({ claim }) => claim?.has_concurrent_leave === true,
+  hasEmployerBenefits: ({ claim }) => claim?.has_employer_benefits === true,
   hasIntermittentLeavePeriods: ({ claim }) =>
-    claim.has_intermittent_leave_periods === true,
+    claim?.has_intermittent_leave_periods === true,
   hasPreviousLeavesOtherReason: ({ claim }) =>
-    claim.has_previous_leaves_other_reason === true,
+    claim?.has_previous_leaves_other_reason === true,
   hasPreviousLeavesSameReason: ({ claim }) =>
-    claim.has_previous_leaves_same_reason === true,
+    claim?.has_previous_leaves_same_reason === true,
   hasReducedScheduleLeavePeriods: ({ claim }) =>
-    claim.has_reduced_schedule_leave_periods === true,
-  hasOtherIncomes: ({ claim }) => claim.has_other_incomes === true,
+    claim?.has_reduced_schedule_leave_periods === true,
+  hasOtherIncomes: ({ claim }) => claim?.has_other_incomes === true,
   isFixedWorkPattern: ({ claim }) =>
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.fixed,
   isVariableWorkPattern: ({ claim }) =>

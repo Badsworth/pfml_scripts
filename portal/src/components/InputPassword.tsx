@@ -44,7 +44,7 @@ interface InputPasswordProps {
   /**
    * HTML input `maxlength` attribute
    */
-  maxLength?: string;
+  maxLength?: number;
   /**
    * HTML input `name` attribute
    */

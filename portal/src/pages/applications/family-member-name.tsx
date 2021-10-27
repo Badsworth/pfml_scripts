@@ -2,6 +2,7 @@ import BenefitsApplication, {
   CaringLeaveMetadata,
 } from "../../models/BenefitsApplication";
 import { get, pick } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import Fieldset from "../../components/Fieldset";
 import FormLabel from "../../components/FormLabel";
 import InputText from "../../components/InputText";
@@ -21,7 +22,7 @@ export const fields = [
 ];
 
 interface FamilyMemberNameProps {
-  appLogic: any;
+  appLogic: AppLogic;
   claim: BenefitsApplication;
 }
 
@@ -41,7 +42,7 @@ export const FamilyMemberName = (props: FamilyMemberNameProps) => {
     // only send fields for this page
     appLogic.benefitsApplications.update(
       claim.application_id,
-      pick({ claim: formState }, fields).claim
+      pick({ claim: formState }, fields).claim || {}
     );
 
   const getFunctionalInputProps = useFunctionalInputProps({

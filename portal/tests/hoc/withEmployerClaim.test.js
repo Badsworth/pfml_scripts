@@ -12,7 +12,7 @@ const mockPageContent = "Claim is loaded. This is the page.";
 
 jest.mock("../../src/hooks/useAppLogic");
 
-function setup({ addCustomSetup } = {}) {
+function setup({ addCustomSetup, query } = {}) {
   const PageComponent = (props) => (
     <div>
       {mockPageContent}
@@ -29,6 +29,7 @@ function setup({ addCustomSetup } = {}) {
     {
       query: {
         absence_id: mockAbsenceId,
+        ...query,
       },
     }
   );
@@ -49,6 +50,18 @@ describe("withEmployerClaim", () => {
     });
 
     expect(container).toBeEmptyDOMElement();
+  });
+
+  it("shows Page Not Found when absence ID isn't found", () => {
+    setup({
+      query: {
+        absence_id: "",
+      },
+    });
+
+    expect(
+      screen.getByRole("heading", { name: "Page not found" })
+    ).toBeInTheDocument();
   });
 
   it("requires user to be logged in", async () => {

@@ -11,11 +11,7 @@ interface FileCardProps {
     created_at: string;
   };
   heading: string;
-  file?: {
-    dateUploaded?: string;
-    name: string;
-    type: string;
-  };
+  file?: File;
   /** Event handler for when the "Remove" button is clicked. We'll pass it the `id` prop above. */
   onRemoveClick?: React.MouseEventHandler<HTMLButtonElement>;
   errorMsg?: React.ReactNode;
@@ -63,7 +59,7 @@ const FileCard = (props: FileCardProps) => {
           </React.Fragment>
         ) : (
           <React.Fragment>
-            <div className={filenameClasses}>{file.name}</div>
+            <div className={filenameClasses}>{file?.name}</div>
             <Button
               className="text-error hover:text-error-dark active:text-error-darker margin-top-0"
               onClick={props.onRemoveClick}

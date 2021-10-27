@@ -4,7 +4,7 @@ import { DocumentType } from "../../models/Document";
 import { uniqueId } from "xstate/lib/utils";
 
 const documentData = {
-  content_type: null,
+  content_type: "",
   created_at: "2021-1-1",
   description: "",
   name: "mock doc",

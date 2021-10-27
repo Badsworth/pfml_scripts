@@ -43,7 +43,7 @@ interface InputTextProps {
   /**
    * Add a `ref` to the input element
    */
-  inputRef?: any;
+  inputRef?: React.MutableRefObject<HTMLInputElement | null>;
   /**
    * Localized field label
    */
@@ -67,7 +67,7 @@ interface InputTextProps {
   /**
    * HTML input `maxlength` attribute
    */
-  maxLength?: any;
+  maxLength?: number;
   /**
    * HTML input `name` attribute
    */
@@ -133,7 +133,13 @@ function InputText({ type = "text", ...props }: InputTextProps) {
     }
   );
 
-  const { handleFocus, handleBlur } = usePiiHandlers(props);
+  const { handleFocus, handleBlur } = usePiiHandlers({
+    name: props.name,
+    value: props.value,
+    onChange: props.onChange,
+    onBlur: props.onBlur,
+    onFocus: props.onFocus,
+  });
 
   const field = (
     <input
@@ -154,7 +160,7 @@ function InputText({ type = "text", ...props }: InputTextProps) {
     />
   );
 
-  const fieldAndMask = (field) => {
+  const fieldAndMask = (field: React.ReactElement) => {
     return props.mask ? <Mask mask={props.mask}>{field}</Mask> : field;
   };
 

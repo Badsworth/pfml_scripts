@@ -16,7 +16,8 @@ export function isFeatureEnabled(name: string) {
 
   // https://nextjs.org/docs/api-reference/next.config.js/environment-variables
   const environmentFlags = process.env.featureFlags;
-  return environmentFlags[name];
+  // @ts-expect-error TODO (PORTAL-353): Environment variables should be strings
+  return environmentFlags && environmentFlags[name];
 }
 
 /**
@@ -39,7 +40,8 @@ function flagExistsInEnvironment(flagName: string) {
   // https://nextjs.org/docs/api-reference/next.config.js/environment-variables
   const environmentFlags = process.env.featureFlags;
 
-  if (environmentFlags.hasOwnProperty(flagName)) return true;
+  if (environmentFlags && environmentFlags.hasOwnProperty(flagName))
+    return true;
 
   // eslint-disable-next-line no-console
   console.warn(`${flagName} ignored`);

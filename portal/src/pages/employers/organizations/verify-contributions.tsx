@@ -6,6 +6,7 @@ import Lead from "../../../components/Lead";
 import React from "react";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
+import { UserLeaveAdministrator } from "../../../models/User";
 import Withholding from "../../../models/Withholding";
 import formatDateRange from "../../../utils/formatDateRange";
 import routes from "../../../routes";
@@ -13,11 +14,11 @@ import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../../../hooks/useThrottledHandler";
 import { useTranslation } from "../../../locales/i18n";
-import withUser from "../../../hoc/withUser";
 import withWithholding from "../../../hoc/withWithholding";
 
 interface VerifyContributionsProps {
   appLogic: AppLogic;
+  employer: UserLeaveAdministrator;
   query: {
     employer_id: string;
     next?: string;
@@ -26,20 +27,14 @@ interface VerifyContributionsProps {
 }
 
 export const VerifyContributions = (props: VerifyContributionsProps) => {
-  const { appLogic, query, withholding } = props;
-  const {
-    users: { user },
-  } = appLogic;
+  const { appLogic, employer, query, withholding } = props;
   const { t } = useTranslation();
-  const employer = user.user_leave_administrators.find((employer) => {
-    return employer.employer_id === query.employer_id;
-  });
 
   const { formState, updateFields } = useFormState({
     withholdingAmount: 0,
   });
 
-  const handleAmountChange = (event) => {
+  const handleAmountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     const amount = value ? Number(value.replace(/,/g, "")) : 0;
     updateFields({ withholdingAmount: amount });
@@ -147,4 +142,4 @@ export const VerifyContributions = (props: VerifyContributionsProps) => {
   );
 };
 
-export default withUser(withWithholding(VerifyContributions));
+export default withWithholding(VerifyContributions);

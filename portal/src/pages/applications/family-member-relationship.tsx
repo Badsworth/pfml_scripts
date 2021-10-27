@@ -3,6 +3,7 @@ import BenefitsApplication, {
   RelationshipToCaregiver,
 } from "../../models/BenefitsApplication";
 import { get, pick } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
@@ -21,9 +22,9 @@ export const fields = [
 ];
 
 interface FamilyMemberRelationshipProps {
-  appLogic: any;
+  appLogic: AppLogic;
   claim: BenefitsApplication;
-  query: any;
+  query: Record<string, string>;
 }
 
 export const FamilyMemberRelationship = (
@@ -45,7 +46,7 @@ export const FamilyMemberRelationship = (
     `${caringLeaveMetadataKey}.relationship_to_caregiver`
   );
   const handleSave = async () => {
-    const updatedData = pick({ claim: formState }, fields).claim;
+    const updatedData = pick({ claim: formState }, fields).claim || {};
     await appLogic.benefitsApplications.update(
       claim.application_id,
       updatedData
@@ -58,7 +59,7 @@ export const FamilyMemberRelationship = (
     updateFields,
   });
 
-  const relationshipList = [
+  const relationshipList: Array<keyof typeof RelationshipToCaregiver> = [
     "child",
     "spouse",
     "parent",

@@ -3,6 +3,7 @@ import BenefitsApplication, {
 } from "../../models/BenefitsApplication";
 import { get, pick } from "lodash";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -19,7 +20,7 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 export const fields = ["claim.employment_status", "claim.employer_fein"];
 
 interface EmploymentStatusProps {
-  appLogic: any;
+  appLogic: AppLogic;
   claim: BenefitsApplication;
 }
 
@@ -30,7 +31,9 @@ export const EmploymentStatus = (props: EmploymentStatusProps) => {
   // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
   const showEmploymentStatus = isFeatureEnabled("claimantShowEmploymentStatus");
 
-  const initialFormState = pick(props, fields).claim;
+  const initialFormState = pick(props, fields).claim || {
+    employment_status: undefined,
+  };
 
   if (!showEmploymentStatus) {
     // If the radio buttons are disabled, hard-code the field so that validations pass
@@ -49,6 +52,12 @@ export const EmploymentStatus = (props: EmploymentStatusProps) => {
     formState,
     updateFields,
   });
+
+  const choiceKeys: Array<keyof typeof EmploymentStatusEnum> = [
+    "employed",
+    "unemployed",
+    "selfEmployed",
+  ];
 
   return (
     <QuestionPage
@@ -72,7 +81,7 @@ export const EmploymentStatus = (props: EmploymentStatusProps) => {
       {showEmploymentStatus && (
         <InputChoiceGroup
           {...getFunctionalInputProps("employment_status")}
-          choices={["employed", "unemployed", "selfEmployed"].map((key) => ({
+          choices={choiceKeys.map((key) => ({
             checked: employment_status === EmploymentStatusEnum[key],
             label: t("pages.claimsEmploymentStatus.choiceLabel", {
               context: key,

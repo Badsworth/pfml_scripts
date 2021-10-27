@@ -1,3 +1,5 @@
+import { AppLogic } from "../../hooks/useAppLogic";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputText from "../../components/InputText";
@@ -12,9 +14,9 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 export const fields = ["claim.has_state_id", "claim.mass_id"];
 
 interface StateIdProps {
-  appLogic: any;
-  claim: any;
-  query?: {
+  appLogic: AppLogic;
+  claim: BenefitsApplication;
+  query: {
     claim_id?: string;
   };
 }

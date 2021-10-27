@@ -10,7 +10,7 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 interface BondingLeaveAttestationProps {
   appLogic: AppLogic;
-  query: any;
+  query: Record<string, string>;
 }
 
 export const BondingLeaveAttestation = (

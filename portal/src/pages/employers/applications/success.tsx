@@ -9,7 +9,7 @@ import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
 
 interface SuccessProps {
-  appLogic?: AppLogic;
+  appLogic: AppLogic;
   query: {
     absence_id: string;
   };

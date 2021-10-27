@@ -1,5 +1,6 @@
 import { AppLogic } from "../../../hooks/useAppLogic";
 import Button from "../../../components/Button";
+import PageNotFound from "../../../components/PageNotFound";
 import React from "react";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
@@ -14,7 +15,7 @@ interface SuccessProps {
     employer_id: string;
     next: string;
   };
-  user?: User;
+  user: User;
 }
 
 export const Success = (props: SuccessProps) => {
@@ -28,6 +29,10 @@ export const Success = (props: SuccessProps) => {
     const route = query.next || routes.employers.organizations;
     appLogic.portalFlow.goTo(route);
   };
+
+  if (!employer) {
+    return <PageNotFound />;
+  }
 
   return (
     <React.Fragment>

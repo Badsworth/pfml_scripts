@@ -9,7 +9,7 @@ const loadImagePreview = (
   setPreviewLoading: (loading: boolean) => void,
   setImageSrc: (src: string) => void
 ) => {
-  if (file && file.type.startsWith("image/")) {
+  if (file.type.startsWith("image/")) {
     const imageUrl = URL.createObjectURL(file);
     setImageSrc(imageUrl);
     setPreviewLoading(false);
@@ -25,7 +25,7 @@ const loadImagePreview = (
 };
 
 interface ThumbnailProps {
-  file?: any;
+  file?: File;
 }
 
 /**
@@ -38,7 +38,9 @@ const Thumbnail = (props: ThumbnailProps) => {
 
   // Asynchronously load a preview of the file the first time this component is rendered.
   useEffect(() => {
-    return loadImagePreview(file, setPreviewLoading, setImageSrc);
+    if (file) {
+      return loadImagePreview(file, setPreviewLoading, setImageSrc);
+    }
   }, [file]);
 
   if (previewLoading) {

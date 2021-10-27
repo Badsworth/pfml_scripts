@@ -2,6 +2,7 @@ import BenefitsApplication, {
   PhoneType,
 } from "../../models/BenefitsApplication";
 import { cloneDeep, get, pick, set } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputText from "../../components/InputText";
@@ -16,7 +17,7 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 export const fields = ["claim.phone.phone_number", "claim.phone.phone_type"];
 
 interface Props {
-  appLogic: any;
+  appLogic: AppLogic;
   claim: BenefitsApplication;
 }
 

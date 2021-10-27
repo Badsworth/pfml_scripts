@@ -23,7 +23,8 @@ interface StepNumberProps {
 }
 
 const StepNumber = (props: StepNumberProps) => {
-  const active = ["in_progress", "not_started"].includes(props.state);
+  const active =
+    props.state && ["in_progress", "not_started"].includes(props.state);
   const completed = props.state === "completed";
   const filled = active || completed;
 

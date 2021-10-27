@@ -4,7 +4,7 @@ import { renderPage } from "../../../test-utils";
 import { screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 
-const setup = (props = {}) => {
+const setup = (props = {}, query = {}) => {
   let goToSpy;
   const utils = renderPage(
     Success,
@@ -25,16 +25,25 @@ const setup = (props = {}) => {
       },
     },
     {
-      query: { employer_id: "mock_employer_id", next: "" },
+      query: { employer_id: "mock_employer_id", next: "", ...query },
       ...props,
     }
   );
   return { goToSpy, ...utils };
 };
+
 describe("Success", () => {
   it("renders the page", () => {
     const { container } = setup();
     expect(container).toMatchSnapshot();
+  });
+
+  it("renders page not found when employer isn't found", () => {
+    setup({}, { employer_id: "" });
+
+    expect(
+      screen.getByRole("heading", { name: "Page not found" })
+    ).toBeInTheDocument();
   });
 
   it("navigates to Organizations page when clicking 'Continue' button", () => {

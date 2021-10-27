@@ -3,6 +3,7 @@ import OtherIncome, {
   OtherIncomeType,
 } from "../../models/OtherIncome";
 import { get, pick } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Dropdown from "../../components/Dropdown";
 import Fieldset from "../../components/Fieldset";
@@ -30,8 +31,8 @@ export const fields = [
 ];
 
 interface OtherIncomesDetailsProps {
-  claim?: BenefitsApplication;
-  appLogic: any;
+  claim: BenefitsApplication;
+  appLogic: AppLogic;
 }
 
 export const OtherIncomesDetails = (props: OtherIncomesDetailsProps) => {
@@ -39,7 +40,7 @@ export const OtherIncomesDetails = (props: OtherIncomesDetailsProps) => {
   const { t } = useTranslation();
   const limit = 6;
 
-  const initialEntries = pick(props, fields).claim;
+  const initialEntries = pick(props, fields).claim || { other_incomes: [] };
   // If the claim doesn't have any relevant entries, pre-populate the first one
   // so that it renders in the RepeatableFieldset below
   if (initialEntries.other_incomes.length === 0) {
@@ -58,7 +59,7 @@ export const OtherIncomesDetails = (props: OtherIncomesDetailsProps) => {
     updateFields({ other_incomes: updatedEntries });
   };
 
-  const handleRemoveClick = (entry, index) => {
+  const handleRemoveClick = (entry: OtherIncome, index: number) => {
     const updatedIncomes = [...other_incomes];
     updatedIncomes.splice(index, 1);
     updateFields({ other_incomes: updatedIncomes });
@@ -70,7 +71,7 @@ export const OtherIncomesDetails = (props: OtherIncomesDetailsProps) => {
     updateFields,
   });
 
-  const render = (entry, index) => {
+  const render = (entry: OtherIncome, index: number) => {
     return (
       <OtherIncomeCard
         entry={entry}
@@ -114,8 +115,8 @@ export const OtherIncomesDetails = (props: OtherIncomesDetailsProps) => {
 
 interface OtherIncomeCardProps {
   index: number;
-  entry: any;
-  getFunctionalInputProps: (...args: any[]) => any;
+  entry: OtherIncome;
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
 }
 
 /**
@@ -136,19 +137,21 @@ export const OtherIncomeCard = (props: OtherIncomeCardProps) => {
     }
   );
 
+  const choiceKeys: Array<keyof typeof OtherIncomeType> = [
+    "workersCompensation",
+    "unemployment",
+    "ssdi",
+    "retirementDisability",
+    "jonesAct",
+    "railroadRetirement",
+    "otherEmployer",
+  ];
+
   return (
     <React.Fragment>
       <InputChoiceGroup
         {...getFunctionalInputProps(`other_incomes[${index}].income_type`)}
-        choices={[
-          "workersCompensation",
-          "unemployment",
-          "ssdi",
-          "retirementDisability",
-          "jonesAct",
-          "railroadRetirement",
-          "otherEmployer",
-        ].map((otherIncomeTypeKey) => {
+        choices={choiceKeys.map((otherIncomeTypeKey) => {
           return {
             checked: entry.income_type === OtherIncomeType[otherIncomeTypeKey],
             label: t("pages.claimsOtherIncomesDetails.typeChoiceLabel", {

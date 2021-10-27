@@ -12,12 +12,12 @@ import { uniqueId } from "lodash";
  */
 class AppErrorInfo {
   key: string = uniqueId("AppErrorInfo");
-  message: string | JSX.Element | null = null;
-  name: string | null = null;
-  field: string | null = null;
-  meta: Record<string, unknown> | null = null;
-  rule: string | null = null;
-  type: string | null = null;
+  message?: string | JSX.Element;
+  name?: string;
+  field?: string;
+  meta?: Record<string, unknown>;
+  rule?: string;
+  type?: string;
 
   constructor(attrs: Partial<AppErrorInfo>) {
     Object.assign(this, attrs);

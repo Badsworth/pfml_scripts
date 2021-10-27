@@ -53,7 +53,7 @@ export default useTrackerPageView;
 function getPageAttributesFromQueryString(
   queryString?: string
 ): Record<string, string> {
-  const pageAttributes = {};
+  const pageAttributes: Record<string, string> = {};
   // note that URLSearchParams accepts null/undefined in its constructor
   for (const [key, value] of Array.from(new URLSearchParams(queryString))) {
     pageAttributes[`query_${snakeCase(key)}`] = value;

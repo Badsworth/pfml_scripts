@@ -6,7 +6,7 @@ import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
 interface LeaveAdministratorRowProps {
-  leaveAdmin?: UserLeaveAdministrator;
+  leaveAdmin: UserLeaveAdministrator;
 }
 
 export const LeaveAdministratorRow = ({
