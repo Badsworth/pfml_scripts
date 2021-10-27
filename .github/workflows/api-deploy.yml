@@ -340,12 +340,12 @@ jobs:
 
       - name: Terraform Plan with new docker image
         id: terraform_plan
-        run: terraform plan -out=plan.tfplan
+        run: TF_LOG=DEBUG terraform plan -out=plan.tfplan
         working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
       - name: Terraform Apply from execution plan
         id: terraform_apply
-        run: terraform apply plan.tfplan
+        run: TF_LOG=DEBUG terraform apply plan.tfplan
         working-directory: ${{ env.terraform-ecs-tasks-dir }}/${{ needs.deploy-info.outputs.api-env }}
 
       - name: Start migration ECS task
