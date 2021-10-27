@@ -1,6 +1,6 @@
 # This workflow generates database erds files for the api schema
 
-name: API ERD Create
+name: Update API ERD Diagrams
 
 on:
   workflow_dispatch:
