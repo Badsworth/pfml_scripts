@@ -271,9 +271,9 @@ export const Review = (props: ReviewProps) => {
         {get(claim, "phone.phone_number")}
       </ReviewRow>
 
-      {get(claim, "org_unit") && (
+      {get(claim, "organization_unit") && (
         <ReviewRow level={reviewRowLevel} label="Department">
-          {get(claim, "org_unit")}
+          {get(claim, "organization_unit")}
         </ReviewRow>
       )}
 

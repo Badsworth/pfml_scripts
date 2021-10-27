@@ -1,4 +1,4 @@
-import EmployeesApi from "../api/EmployeesApi";
+import EmployeesApi from "../api/EmployeesApi.ts";
 import { useMemo } from "react";
 
 const useEmployeesLogic = ({ appErrorsLogic, portalFlow }) => {
@@ -10,27 +10,20 @@ const useEmployeesLogic = ({ appErrorsLogic, portalFlow }) => {
    * @param {object} data - First, middle, last name, tax_identifier_last4
    * @returns {object} Employee
    */
-  const search = async (data) => {
+  const search = async (data, applicationId) => {
     appErrorsLogic.clearErrors();
 
     try {
-      return await employeesApi.search(data);
+      const employee = await employeesApi.search(data);
+      if (!employee.organization_units.length) {
+        portalFlow.goToNextPage({}, { claim_id: applicationId });
+      }
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
   };
-
-  const employerHasOrgUnits = async (employer_fein) => {
-    try {
-      return await employeesApi.employerHasOrgUnits(employer_fein)
-    } catch (error) {
-      appErrorsLogic.catchError(error);
-    }
-  }
-
   return {
     search,
-    employerHasOrgUnits,
   };
 };
 

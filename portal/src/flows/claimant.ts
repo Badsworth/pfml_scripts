@@ -17,13 +17,13 @@ import BenefitsApplication, {
 } from "../models/BenefitsApplication";
 
 import { ClaimSteps } from "../models/Step";
-// import EmployeesApi from "../api/EmployeesApi";
 import { UploadType } from "../pages/applications/upload/index";
 import { fields as addressFields } from "../pages/applications/address";
 import { fields as concurrentLeavesDetailsFields } from "../pages/applications/concurrent-leaves-details";
 import { fields as concurrentLeavesFields } from "../pages/applications/concurrent-leaves";
 import { fields as dateOfBirthFields } from "../pages/applications/date-of-birth";
 import { fields as dateOfChildFields } from "../pages/applications/date-of-child";
+import { fields as departmentFields } from "../pages/applications/department";
 import { fields as employerBenefitsDetailsFields } from "../pages/applications/employer-benefits-details";
 import { fields as employerBenefitsFields } from "../pages/applications/employer-benefits";
 import { fields as employmentStatusFields } from "../pages/applications/employment-status";
@@ -33,7 +33,7 @@ import { fields as familyMemberRelationshipFields } from "../pages/applications/
 import { fields as genderFields } from "../pages/applications/gender";
 import { get } from "lodash";
 import { fields as intermittentFrequencyFields } from "../pages/applications/intermittent-frequency";
-// import { isFeatureEnabled } from "../services/featureFlags";
+import { isFeatureEnabled } from "../services/featureFlags";
 import { fields as leavePeriodContinuousFields } from "../pages/applications/leave-period-continuous";
 import { fields as leavePeriodIntermittentFields } from "../pages/applications/leave-period-intermittent";
 import { fields as leavePeriodReducedScheduleFields } from "../pages/applications/leave-period-reduced-schedule";
@@ -78,15 +78,12 @@ export const guards: Record<string, ClaimFlowGuardFn> = {
   isBondingLeave: ({ claim }) => claim.isBondingLeave,
   isEmployed: ({ claim }) =>
     get(claim, "employment_status") === EmploymentStatus.employed,  
-  // isEmployedAndPickDeparment: async ({ claim }) => {
-  //   const employeesApi = new EmployeesApi();
-  //   const employerHasDepartments = await employeesApi.employerHasOrgUnits(claim.employer_fein);
-  //   return (
-  //     get(claim, "employment_status") === EmploymentStatus.employed 
-  //     && employerHasDepartments
-  //     && isFeatureEnabled("claimantShowDepartments")
-  //   )
-  // },
+  isEmployedAndPickDeparment: ({ claim }) => {
+    return (
+      get(claim, "employment_status") === EmploymentStatus.employed 
+      && isFeatureEnabled("claimantShowDepartments")
+    )
+  },
   isCompleted: ({ claim }) => claim.isCompleted,
   hasStateId: ({ claim }) => claim.has_state_id === true,
   hasConcurrentLeave: ({ claim }) => claim.has_concurrent_leave === true,
@@ -640,10 +637,10 @@ const claimantFlow: {
       },
       on: {
         CONTINUE: [
-          // {
-          //   target: routes.applications.department,
-          //   cond: "isEmployedAndPickDeparment",
-          // },
+          {
+            target: routes.applications.department,
+            cond: "isEmployedAndPickDeparment",
+          },
           {
             target: routes.applications.notifiedEmployer,
             cond: "isEmployed",
@@ -657,7 +654,7 @@ const claimantFlow: {
     [routes.applications.department]: {
       meta: {
         step: ClaimSteps.employerInformation,
-        fields: employmentStatusFields,
+        fields: departmentFields, // @todo real fields here
       },
       on: {
         CONTINUE: [

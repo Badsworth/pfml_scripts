@@ -20,24 +20,11 @@ export default class EmployeesApi extends BaseApi {
    * Search
    *
    * @param {object} postData - POST data (SSN/ITIN, name)
-   * @returns {Promise}
+   * @returns {Promise} Employee: Promise<Employee>
    */
   search = async (postData) => {
-    const { data } = await this.request("POST", "search", postData);
-    return new Employee(data);
+    const { data } = await this.request<Employee>("POST", "search", postData);
+    console.log({postData}, data)
+    return data;
   };
-
-  /**
-   * Determine whether the employee's employer services org units
-   * 
-   * @param {string} employer_fein
-   * @returns {Promise}
-   */
-   employerHasOrgUnits = async (employer_fein) => {
-    const { data } = await this.request(
-      "GET",
-      "employer-organization-unit-status/"+employer_fein,
-    );
-    return data.services_org_units;
-  }
 }
