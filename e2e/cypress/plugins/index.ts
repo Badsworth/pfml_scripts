@@ -9,7 +9,7 @@
 // https://on.cypress.io/plugins-guide
 // ***********************************************************
 
-import config, { merged } from "../../src/config";
+import config, { configuration } from "../../src/config";
 import path from "path";
 import webpackPreprocessor from "@cypress/webpack-preprocessor";
 import {
@@ -219,7 +219,10 @@ export default function (
   on("file:preprocessor", webpackPreprocessor(options));
 
   // Pass config values through as environment variables, which we will access via Cypress.env() in actions/common.ts.
-  const configEntries = Object.entries(merged).map(([k, v]) => [`E2E_${k}`, v]);
+  const configEntries = Object.entries(configuration).map(([k, v]) => [
+    `E2E_${k}`,
+    v,
+  ]);
 
   // Add dynamic options for the New Relic reporter.
   let reporterOptions = cypressConfig.reporterOptions ?? {};

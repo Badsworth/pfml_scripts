@@ -16,11 +16,31 @@ import {
   postUsers,
   UserCreateRequest,
 } from "../api";
+import { ConfigFunction } from "../config";
 
 export default class AuthenticationManager {
   pool: CognitoUserPool;
   apiBaseUrl?: string;
   verificationFetcher?: TestMailVerificationFetcher;
+
+  /**
+   * Creates a new instance based on configuration.
+   *
+   * @param config
+   */
+  static create(config: ConfigFunction) {
+    return new AuthenticationManager(
+      new CognitoUserPool({
+        UserPoolId: config("COGNITO_POOL"),
+        ClientId: config("COGNITO_CLIENTID"),
+      }),
+      config("API_BASEURL"),
+      new TestMailVerificationFetcher(
+        config("TESTMAIL_APIKEY"),
+        config("TESTMAIL_NAMESPACE")
+      )
+    );
+  }
 
   constructor(
     pool: CognitoUserPool,
