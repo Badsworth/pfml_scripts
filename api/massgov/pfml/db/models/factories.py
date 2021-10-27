@@ -540,6 +540,7 @@ class ApplicationFactory(BaseFactory):
     completed_time = None
     submitted_time = None
     hours_worked_per_week = None
+    is_withholding_tax = None
 
     # Leave Periods
     has_continuous_leave_periods = False

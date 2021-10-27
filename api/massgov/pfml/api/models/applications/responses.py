@@ -75,6 +75,7 @@ class ApplicationResponse(PydanticBaseModel):
     has_previous_leaves_other_reason: Optional[bool]
     has_previous_leaves_same_reason: Optional[bool]
     has_concurrent_leave: Optional[bool]
+    is_withholding_tax: Optional[bool]
     updated_at: datetime
 
     @classmethod

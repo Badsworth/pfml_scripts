@@ -4,7 +4,7 @@ import CopyPlugin from "copy-webpack-plugin";
 import ZipPlugin from "zip-webpack-plugin";
 import dataDirectory from "../../generation/DataDirectory";
 import generateLSTData from "../../scripts/generateLSTData";
-import { merged } from "../../config";
+import { configuration as merged } from "../../config";
 import winston from "winston";
 import * as fs from "fs";
 

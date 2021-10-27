@@ -1,5 +1,6 @@
 import { fineos, fineosPages, portal } from "../../../actions";
 import { Submission } from "../../../../src/types";
+import { config } from "../../../actions/common";
 
 describe("Create a new caring leave claim in FINEOS and add Historical Absence case. Then withdraw the Absence Case", () => {
   after(() => {
@@ -39,6 +40,8 @@ describe("Create a new caring leave claim in FINEOS and add Historical Absence c
     });
 
   it("Produces a withdrawn notice, available for download", () => {
+    // Skip this part in stage. @todo remove once stage has withdraw statuses.
+    if (config("ENVIRONMENT") === "stage") return;
     cy.dependsOnPreviousPass([withdraw]);
     portal.before();
     cy.visit("/");

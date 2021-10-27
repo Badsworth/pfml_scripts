@@ -75,7 +75,7 @@ describe("dor_upload", () => {
 
     const storage = dataDirectory(`dor_upload_test`, tempDir);
     await storage.prepare();
-    const infra = new InfraClient(config("ENVIRONMENT"));
+    const infra = InfraClient.create(config);
 
     const employerPool = EmployerPool.generate(1, {});
     employerPool.pick().fein = employerFeinAsDate();
