@@ -15,6 +15,9 @@ const flagsConfig = {
     // When this flag is enabled optional MFA will be enabled for claimant users.
     claimantShowMFA: false,
 
+    // When this flag is enabled, tax withholding option will be displayed to claimaints.
+    claimantShowTaxWithholding: false,
+
     // When this flag is enabled, the military leave options are selectable on
     // the Leave Reason page in the claimant flow (CP-1145)
     // TODO (CP-534): Show all options when portal supports activeDutyFamily, serviceMemberFamily
