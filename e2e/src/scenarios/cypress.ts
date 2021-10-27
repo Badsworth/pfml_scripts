@@ -100,21 +100,6 @@ export const BHAP1INEL: ScenarioSpecification = {
   },
 };
 
-export const BHAP9: ScenarioSpecification = {
-  employee: { mass_id: true, wages: "eligible" },
-  claim: {
-    label: "BHAP9",
-    shortClaim: true,
-    reason: "Child Bonding",
-    reason_qualifier: "Foster Care",
-    docs: {
-      MASSID: {},
-      FOSTERPLACEMENT: {},
-    },
-    intermittent_leave_spec: true,
-  },
-};
-
 export const MED_INTER_INEL: ScenarioSpecification = {
   employee: { mass_id: true, wages: "ineligible" },
   claim: {
@@ -156,18 +141,7 @@ export const MHAP1: ScenarioSpecification = {
   },
 };
 
-export const MHAP1ER: ScenarioSpecification = {
-  ...MHAP1,
-  claim: {
-    ...MHAP1.claim,
-    employerResponse: {
-      hours_worked_per_week: 40,
-      employer_decision: "Approve",
-      fraud: "No",
-    },
-  },
-};
-
+// Only used in *ignored* spec MHAP4.ts
 export const MHAP4: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
@@ -202,6 +176,7 @@ export const MRAP30: ScenarioSpecification = {
   },
 };
 
+// Only used in ignored `bond_continuous_approval_payment_90K.ts` spec
 export const BCAP90: ScenarioSpecification = {
   employee: {
     wages: 90000,
@@ -292,6 +267,7 @@ export const CDENY2: ScenarioSpecification = {
   },
 };
 
+// only used in ignored `reductions.ts` spec
 export const MED_OLB: ScenarioSpecification = {
   employee: { mass_id: true, wages: 90000 },
   claim: {
@@ -335,12 +311,12 @@ export const MED_OLB: ScenarioSpecification = {
   },
 };
 
-export const MED_PRE: ScenarioSpecification = {
+export const PREBIRTH: ScenarioSpecification = {
   employee: { mass_id: true, wages: "eligible" },
   claim: {
-    label: "MED_PRE",
-    reason: "Serious Health Condition - Employee",
-    pregnant_or_recent_birth: true,
+    label: "PREBIRTH",
+    reason: "Pregnancy/Maternity",
+    pregnant_or_recent_birth: undefined,
     shortClaim: true,
     docs: {
       MASSID: {},
@@ -350,18 +326,6 @@ export const MED_PRE: ScenarioSpecification = {
       hours_worked_per_week: 40,
       employer_decision: "Approve",
     },
-  },
-};
-
-// @todo: PREGNANCY_AND_MATERNITY_FORM document is unable to be submitted when using reason: "Serious Health Condition - Employee"
-// with the most recent deployment. (https://github.com/EOLWD/pfml/pull/5359) Once change has been deployed to all envs, remove MED_PRE scenario above.
-export const PREBIRTH: ScenarioSpecification = {
-  ...MED_PRE,
-  claim: {
-    ...MED_PRE.claim,
-    label: "PREBIRTH",
-    reason: "Pregnancy/Maternity",
-    pregnant_or_recent_birth: undefined,
   },
 };
 
@@ -562,10 +526,15 @@ export const HIST_CASE: ScenarioSpecification = {
 
 // Leave start date change request
 export const MED_LSDCR: ScenarioSpecification = {
-  ...MHAP1ER,
+  ...MHAP1,
   claim: {
-    ...MHAP1ER.claim,
+    ...MHAP1.claim,
     label: "MED_LSDCR",
     leave_dates: [addWeeks(new Date(), 2), addWeeks(new Date(), 6)],
+    employerResponse: {
+      hours_worked_per_week: 40,
+      employer_decision: "Approve",
+      fraud: "No",
+    },
   },
 };
