@@ -101,8 +101,6 @@ class FineosExtractStep(Step):
         with tempfile.TemporaryDirectory() as download_directory:
             self.process_extracts(pathlib.Path(download_directory))
 
-        self.db_session.commit()
-
         logger.info(
             "Successfully consumed FINEOS extract data for %s",
             self.extract_config.reference_file_type.reference_file_type_description,
@@ -160,6 +158,8 @@ class FineosExtractStep(Step):
                     self.extract_config.reference_file_type.reference_file_type_description,
                     extract_data.reference_file.file_location,
                 )
+
+                self.db_session.commit()
 
             except Exception:
                 self.db_session.rollback()

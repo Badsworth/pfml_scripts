@@ -243,7 +243,7 @@ locals {
         local.db_access,
         local.fineos_s3_access,
         local.pub_s3_folders,
-        { name : "FINEOS_PAYMENT_RECONCILIATION_EXTRACT_MAX_HISTORY_DATE", value : "2021-10-01" }
+        { name : "FINEOS_PAYMENT_RECONCILIATION_EXTRACT_MAX_HISTORY_DATE", value : "2021-10-26" }
       ]
     },
 
