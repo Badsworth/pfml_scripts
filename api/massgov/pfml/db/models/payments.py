@@ -343,7 +343,7 @@ class FineosExtractVbiRequestedAbsence(Base, TimestampMixin):
     reference_file = relationship(ReferenceFile)
 
 
-class FineosExtractEmployeeFeed(Base, TimestampMixin):
+class FineosExtractEmployeeFeed(Base):
     __tablename__ = "fineos_extract_employee_feed"
 
     employee_feed_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -406,15 +406,14 @@ class FineosExtractEmployeeFeed(Base, TimestampMixin):
     sortcode = Column(Text)
     accounttype = Column(Text)
     active_absence_flag = Column(Text)
-    created_at = Column(TIMESTAMP, nullable=False)
-    updated_at = Column(TIMESTAMP, nullable=False)
     reference_file_id = Column(
         PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
     )
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
     )
-
+    created_at = Column(TIMESTAMP(timezone=True))
+    updated_at = Column(TIMESTAMP(timezone=True))
     reference_file = relationship(ReferenceFile)
 
 
