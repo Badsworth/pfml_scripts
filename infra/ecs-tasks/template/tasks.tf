@@ -249,16 +249,6 @@ locals {
 
     "pub-payments-process-1099-documents" = {
       command   = ["pub-payments-process-1099-documents"]
-      task_role = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-pub-payments-process-1099"
-      env = [
-        local.db_access,
-        local.fineos_s3_access,
-        local.pub_s3_folders
-      ]
-    },
-
-    "pub-payments-process-1099-documents" = {
-      command   = ["pub-payments-process-1099-documents"]
       task_role = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-1099"
       env = [
         local.db_access,
