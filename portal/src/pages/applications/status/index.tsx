@@ -1,30 +1,31 @@
-import { DocumentType, DocumentTypeEnum } from "../../models/Document";
+import { DocumentType, DocumentTypeEnum } from "../../../models/Document";
 import React, { useEffect } from "react";
 import { find, get, has, map } from "lodash";
-import { AbsencePeriod } from "../../models/ClaimDetail";
-import Alert from "../../components/Alert";
-import { AppLogic } from "../../hooks/useAppLogic";
-import BackButton from "../../components/BackButton";
-import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
-import ButtonLink from "../../components/ButtonLink";
-import ClaimDocument from "../../models/ClaimDocument";
-import Heading from "../../components/Heading";
-import LeaveReason from "../../models/LeaveReason";
-import LegalNoticeList from "../../components/LegalNoticeList";
-import PageNotFound from "../../components/PageNotFound";
-import Spinner from "../../components/Spinner";
-import Tag from "../../components/Tag";
-import Title from "../../components/Title";
+import { AbsencePeriod } from "../../../models/ClaimDetail";
+import Alert from "../../../components/Alert";
+import { AppLogic } from "../../../hooks/useAppLogic";
+import BackButton from "../../../components/BackButton";
+import BenefitsApplicationDocument from "../../../models/BenefitsApplicationDocument";
+import ButtonLink from "../../../components/ButtonLink";
+import ClaimDocument from "../../../models/ClaimDocument";
+import Heading from "../../../components/Heading";
+import LeaveReason from "../../../models/LeaveReason";
+import LegalNoticeList from "../../../components/LegalNoticeList";
+import PageNotFound from "../../../components/PageNotFound";
+import Spinner from "../../../components/Spinner";
+import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
+import Tag from "../../../components/Tag";
+import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
-import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
-import findKeyByValue from "../../utils/findKeyByValue";
-import formatDate from "../../utils/formatDate";
-import getLegalNotices from "../../utils/getLegalNotices";
-import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
-import { isFeatureEnabled } from "../../services/featureFlags";
-import routes from "../../routes";
-import { useTranslation } from "../../locales/i18n";
-import withUser from "../../hoc/withUser";
+import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
+import findKeyByValue from "../../../utils/findKeyByValue";
+import formatDate from "../../../utils/formatDate";
+import getLegalNotices from "../../../utils/getLegalNotices";
+import hasDocumentsLoadError from "../../../utils/hasDocumentsLoadError";
+import { isFeatureEnabled } from "../../../services/featureFlags";
+import routes from "../../../routes";
+import { useTranslation } from "../../../locales/i18n";
+import withUser from "../../../hoc/withUser";
 
 interface StatusProps {
   appLogic: AppLogic;
@@ -309,6 +310,14 @@ export const Status = ({ appLogic, query }: StatusProps) => {
             <p className="text-bold">{claimDetail.employer.employer_fein}</p>
           </div>
         </div>
+
+        {isFeatureEnabled("claimantShowPayments") && (
+          <StatusNavigationTabs
+            activePath={appLogic.portalFlow.pathname}
+            absence_case_id={absence_case_id}
+          />
+        )}
+
         {hasPendingStatus && (
           <Timeline
             absencePeriods={claimDetail.absence_periods}

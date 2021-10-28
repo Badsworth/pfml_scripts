@@ -350,7 +350,12 @@ const machineTests = {
       test: () => {},
     },
   },
-  [routes.applications.status]: {
+  [routes.applications.status.claim]: {
+    meta: {
+      test: () => {},
+    },
+  },
+  [routes.applications.status.payments]: {
     meta: {
       test: () => {},
     },

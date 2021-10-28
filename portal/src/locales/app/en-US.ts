@@ -3047,6 +3047,10 @@ const components = {
   spinner: {
     label: "Loading",
   },
+  statusNavigationTabs: {
+    payments: "Payments",
+    statusDetails: "Application",
+  },
   tag: {
     state_approved: "Approved",
   },

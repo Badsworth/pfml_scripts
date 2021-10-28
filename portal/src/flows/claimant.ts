@@ -115,7 +115,7 @@ const checklistEvents = {
 const uploadDocEvents = {
   CONTINUE: [
     {
-      target: routes.applications.status,
+      target: routes.applications.status.claim,
       cond: "isAdditionalDoc",
     },
     {
@@ -185,7 +185,8 @@ const claimantFlow: {
       meta: {},
       on: {
         CONTINUE: routes.applications.uploadDocsOptions,
-        STATUS: routes.applications.status,
+        PAYMENT: routes.applications.status.payments,
+        STATUS: routes.applications.status.claim,
       },
     },
     [routes.applications.checklist]: {
@@ -766,12 +767,18 @@ const claimantFlow: {
         CONTINUE: routes.applications.review,
       },
     },
-    [routes.applications.status]: {
+    [routes.applications.status.claim]: {
       on: {
         UPLOAD_PROOF_OF_BIRTH: routes.applications.upload.bondingProofOfBirth,
         UPLOAD_PROOF_OF_PLACEMENT:
           routes.applications.upload.bondingProofOfPlacement,
         UPLOAD_DOC_OPTIONS: routes.applications.upload.index,
+        VIEW_PAYMENTS: routes.applications.status.payments,
+      },
+    },
+    [routes.applications.status.payments]: {
+      on: {
+        STATUS: routes.applications.status.claim,
       },
     },
   },
