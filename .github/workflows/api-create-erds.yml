@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - main
+      - kev/portal-169-testing
     paths:
       - api/massgov/pfml/db/models/**
       - api/bin/create-erds.py
