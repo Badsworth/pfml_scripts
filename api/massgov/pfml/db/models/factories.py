@@ -929,6 +929,9 @@ class ImportLogFactory(BaseFactory):
 
 
 class FineosExtractEmployeeFeedFactory(BaseFactory):
+    class Meta:
+        model = payment_models.FineosExtractEmployeeFeed
+
     c = 11536
     i = 77164
     lastupdatedate = "2021-08-18 06:30:01"
