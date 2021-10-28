@@ -4,7 +4,7 @@ import pathlib
 import tempfile
 import uuid
 from dataclasses import dataclass
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import massgov.pfml.delegated_payments.delegated_config as payments_config
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
@@ -78,6 +78,8 @@ class ExtractData:
 
 class FineosExtractStep(Step):
     extract_config: ExtractConfig
+    active_extract_data: Optional[ExtractData]
+    active_extract_data_date_str: Optional[str]
 
     class Metrics(str, enum.Enum):
         FINEOS_PREFIX = "fineos_prefix"
@@ -92,6 +94,8 @@ class FineosExtractStep(Step):
     ) -> None:
         super().__init__(db_session=db_session, log_entry_db_session=log_entry_db_session)
         self.extract_config = extract_config
+        self.active_extract_data = None
+        self.active_extract_data_date_str = None
 
     def run_step(self) -> None:
         logger.info(
@@ -105,6 +109,20 @@ class FineosExtractStep(Step):
             "Successfully consumed FINEOS extract data for %s",
             self.extract_config.reference_file_type.reference_file_type_description,
         )
+
+    def cleanup_on_failure(self) -> None:
+        logger.exception(
+            "Error processing %s extract files in date_group: %s",
+            self.extract_config.reference_file_type.reference_file_type_description,
+            self.active_extract_data_date_str,
+            extra={"date_group": self.active_extract_data_date_str},
+        )
+        if self.active_extract_data:
+            self.move_files_from_received_to_out_dir(
+                self.active_extract_data, payments_util.Constants.S3_INBOUND_ERROR_DIR
+            )
+            self.db_session.commit()
+            self.active_extract_data = None
 
     def process_extracts(self, download_directory: pathlib.Path) -> None:
         data_by_date = self._move_files_from_fineos_to_received()
@@ -120,59 +138,48 @@ class FineosExtractStep(Step):
                 "Processing files in date group: %s", date_str, extra={"date_group": date_str}
             )
 
-            try:
-                extract_data = ExtractData(s3_file_locations, date_str, self.extract_config)
+            extract_data = ExtractData(s3_file_locations, date_str, self.extract_config)
+            self.active_extract_data = extract_data
+            self.active_extract_data_date_str = date_str
 
-                if date_str != latest_date_str:
-                    self.move_files_from_received_to_out_dir(
-                        extract_data, payments_util.Constants.S3_INBOUND_SKIPPED_DIR
-                    )
-                    logger.info(
-                        "Successfully skipped claimant extract files in date group: %s",
-                        date_str,
-                        extra={"date_group": date_str},
-                    )
-                    continue
-
-                if (
-                    date_str in previously_processed_date
-                    or payments_util.payment_extract_reference_file_exists_by_date_group(
-                        self.db_session, date_str, self.extract_config.reference_file_type
-                    )
-                ):
-                    logger.warning(
-                        "Found existing ReferenceFile record for date group in /processed folder: %s",
-                        date_str,
-                        extra={"date_group": date_str},
-                    )
-                    previously_processed_date.add(date_str)
-                    continue
-
-                self.set_metrics({self.Metrics.FINEOS_PREFIX: date_str})
-                self._download_and_index_data(extract_data, str(download_directory))
+            if date_str != latest_date_str:
                 self.move_files_from_received_to_out_dir(
-                    extract_data, payments_util.Constants.S3_INBOUND_PROCESSED_DIR
+                    extract_data, payments_util.Constants.S3_INBOUND_SKIPPED_DIR
                 )
                 logger.info(
-                    "Processed extract files for %s now in %s",
-                    self.extract_config.reference_file_type.reference_file_type_description,
-                    extract_data.reference_file.file_location,
-                )
-
-                self.db_session.commit()
-
-            except Exception:
-                self.db_session.rollback()
-                logger.exception(
-                    "Error processing %s extract files in date_group: %s",
-                    self.extract_config.reference_file_type.reference_file_type_description,
+                    "Successfully skipped claimant extract files in date group: %s",
                     date_str,
                     extra={"date_group": date_str},
                 )
-                self.move_files_from_received_to_out_dir(
-                    extract_data, payments_util.Constants.S3_INBOUND_ERROR_DIR
+                continue
+
+            if (
+                date_str in previously_processed_date
+                or payments_util.payment_extract_reference_file_exists_by_date_group(
+                    self.db_session, date_str, self.extract_config.reference_file_type
                 )
-                raise
+            ):
+                logger.warning(
+                    "Found existing ReferenceFile record for date group in /processed folder: %s",
+                    date_str,
+                    extra={"date_group": date_str},
+                )
+                previously_processed_date.add(date_str)
+                continue
+
+            self.set_metrics({self.Metrics.FINEOS_PREFIX: date_str})
+            self._download_and_index_data(extract_data, str(download_directory))
+            self.move_files_from_received_to_out_dir(
+                extract_data, payments_util.Constants.S3_INBOUND_PROCESSED_DIR
+            )
+            logger.info(
+                "Processed extract files for %s now in %s",
+                self.extract_config.reference_file_type.reference_file_type_description,
+                extract_data.reference_file.file_location,
+            )
+
+            self.active_extract_data = None
+            self.active_extract_data_date_str = None
 
     def _move_files_from_fineos_to_received(self) -> Dict[str, List[str]]:
         expected_file_names = [extract.file_name for extract in self.extract_config.extracts]

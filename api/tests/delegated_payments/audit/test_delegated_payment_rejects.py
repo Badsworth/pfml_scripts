@@ -645,7 +645,7 @@ def test_process_rejects_error(
         PaymentRejectsException,
         match=f"Too many Payment Rejects files found: {rejects_file_name_1}, {rejects_file_name_2}",
     ):
-        payment_rejects_step.process_rejects()
+        payment_rejects_step.run()
 
     # check rejects file was moved to processed folder
     expected_errored_folder_path = os.path.join(

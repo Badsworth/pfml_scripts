@@ -385,18 +385,7 @@ class ClaimantExtractStep(Step):
     def process_claimant_extract_data(self) -> None:
 
         logger.info("Processing claimant extract data")
-
-        try:
-            self.process_records_to_db()
-            self.db_session.commit()
-        except Exception:
-            # If there was a file-level exception anywhere in the processing,
-            # we move the file from received to error
-            # Add this function:
-            self.db_session.rollback()
-            logger.exception("Error processing claimant extract data")
-            raise
-
+        self.process_records_to_db()
         logger.info("Done processing claimant extract data")
 
     def get_employee_feed_map(
