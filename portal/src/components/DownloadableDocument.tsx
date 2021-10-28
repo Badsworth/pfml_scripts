@@ -18,10 +18,10 @@ interface DownloadableDocumentProps {
   downloadClaimDocument?: (
     document: ClaimDocument,
     absenceId: string
-  ) => Promise<Blob>;
+  ) => Promise<Blob | undefined>;
   downloadBenefitsApplicationDocument?: (
     document: BenefitsApplicationDocument
-  ) => Promise<Blob>;
+  ) => Promise<Blob | undefined>;
   showCreatedAt?: boolean;
   icon?: React.ReactNode;
 }
@@ -50,9 +50,16 @@ const DownloadableDocument = (props: DownloadableDocumentProps) => {
   const handleClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     let documentData;
-    if (document instanceof ClaimDocument) {
+    if (
+      document instanceof ClaimDocument &&
+      downloadClaimDocument &&
+      absenceId
+    ) {
       documentData = await downloadClaimDocument(document, absenceId);
-    } else {
+    } else if (
+      downloadBenefitsApplicationDocument &&
+      document instanceof BenefitsApplicationDocument
+    ) {
       documentData = await downloadBenefitsApplicationDocument(document);
     }
     if (documentData) {
@@ -99,7 +106,7 @@ function getDocumentName(
   ];
   if (docTypes.includes(document.document_type)) {
     return t("components.downloadableDocument.noticeName", {
-      context: findKeyByValue(DocumentType, document.document_type),
+      context: findKeyByValue(DocumentType, document.document_type) || "",
     });
   } else {
     tracker.trackEvent(

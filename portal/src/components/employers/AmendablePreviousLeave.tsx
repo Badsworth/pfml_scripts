@@ -45,16 +45,16 @@ const AmendablePreviousLeave = ({
   const [amendment, setAmendment] = useState(previousLeave);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
     useState(isAddedByLeaveAdmin);
-  const containerRef = useRef<HTMLTableRowElement>();
+  const containerRef = useRef<HTMLTableRowElement>(null);
   useAutoFocusEffect({ containerRef, isAmendmentFormDisplayed });
 
-  const getFieldPath = (field) =>
+  const getFieldPath = (field: string) =>
     `previous_leaves[${amendment.previous_leave_id}].${field}`;
 
-  const getErrorMessage = (field) =>
+  const getErrorMessage = (field: string) =>
     appErrors.fieldErrorMessage(getFieldPath(field));
 
-  const getFormattedValue = (field, value) => {
+  const getFormattedValue = (field: string, value: string) => {
     if (field === "leave_start_date" || field === "leave_end_date") {
       // happens if a user starts typing a date, then removes it
       // these fields aren't required, and sending an empty string returns an "invalid date" error
@@ -68,7 +68,7 @@ const AmendablePreviousLeave = ({
     return value;
   };
 
-  const amendLeave = (field, value) => {
+  const amendLeave = (field: string, value: string) => {
     const formStateField = isAddedByLeaveAdmin
       ? "addedPreviousLeaves"
       : "amendedPreviousLeaves";
@@ -283,7 +283,7 @@ const AmendablePreviousLeave = ({
               </ConditionalContent>
               <InputDate
                 onChange={(e) => amendLeave("leave_start_date", e.target.value)}
-                value={amendment.leave_start_date}
+                value={amendment.leave_start_date || ""}
                 label={t(
                   "components.employersAmendablePreviousLeave.leaveStartDateLabel"
                 )}
@@ -296,7 +296,7 @@ const AmendablePreviousLeave = ({
               />
               <InputDate
                 onChange={(e) => amendLeave("leave_end_date", e.target.value)}
-                value={amendment.leave_end_date}
+                value={amendment.leave_end_date || ""}
                 label={t(
                   "components.employersAmendablePreviousLeave.leaveEndDateLabel"
                 )}

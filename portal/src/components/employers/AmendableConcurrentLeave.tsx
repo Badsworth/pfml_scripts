@@ -37,10 +37,10 @@ const AmendableConcurrentLeave = ({
   const [amendment, setAmendment] = useState(concurrentLeave);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
     useState(isAddedByLeaveAdmin);
-  const containerRef = useRef<HTMLTableRowElement>();
+  const containerRef = useRef<HTMLTableRowElement>(null);
   useAutoFocusEffect({ containerRef, isAmendmentFormDisplayed });
 
-  const getFormattedValue = (field, value) => {
+  const getFormattedValue = (field: string, value: string) => {
     if (field === "leave_start_date" || field === "leave_end_date") {
       // happens if a user starts typing a date, then removes it
       // these fields aren't required, and sending an empty string returns an "invalid date" error
@@ -50,7 +50,7 @@ const AmendableConcurrentLeave = ({
     return value;
   };
 
-  const amendLeave = (field, value) => {
+  const amendLeave = (field: string, value: string) => {
     const formStateField = isAddedByLeaveAdmin
       ? "addedConcurrentLeave"
       : "amendedConcurrentLeave";
@@ -134,7 +134,7 @@ const AmendableConcurrentLeave = ({
               </p>
               <InputDate
                 onChange={(e) => amendLeave("leave_start_date", e.target.value)}
-                value={amendment.leave_start_date}
+                value={amendment.leave_start_date || ""}
                 label={t(
                   "components.employersAmendableConcurrentLeave.leaveStartDateLabel"
                 )}
@@ -147,7 +147,7 @@ const AmendableConcurrentLeave = ({
               />
               <InputDate
                 onChange={(e) => amendLeave("leave_end_date", e.target.value)}
-                value={amendment.leave_end_date}
+                value={amendment.leave_end_date || ""}
                 label={t(
                   "components.employersAmendableConcurrentLeave.leaveEndDateLabel"
                 )}

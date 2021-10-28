@@ -36,19 +36,17 @@ export const Status = (props: StatusProps) => {
     query: { absence_id: absenceId },
   } = props;
   const {
-    employers: { documents, downloadDocument },
+    employers: { claimDocumentsMap, downloadDocument },
   } = appLogic;
   const { isContinuous, isIntermittent, isReducedSchedule } = claim;
   const { t } = useTranslation();
 
   useEffect(() => {
-    if (!documents) {
-      appLogic.employers.loadDocuments(absenceId);
-    }
+    appLogic.employers.loadDocuments(absenceId);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [documents, absenceId]);
+  }, [absenceId]);
 
-  const allDocuments = documents ? documents.items : [];
+  const allDocuments = claimDocumentsMap.get(absenceId)?.items || [];
   const legalNotices = findDocumentsByTypes(allDocuments, [
     DocumentType.approvalNotice,
     DocumentType.denialNotice,
@@ -100,12 +98,9 @@ export const Status = (props: StatusProps) => {
           ),
         })}
       </StatusRow>
-      {/* TODO (EMPLOYER-448): Show leave duration and the intermittent leave period dates when API returns them to Portal */}
-      {!isIntermittent && (
-        <StatusRow label={t("pages.employersClaimsStatus.leaveDurationLabel")}>
-          {formatDateRange(claim.leaveStartDate, claim.leaveEndDate)}
-        </StatusRow>
-      )}
+      <StatusRow label={t("pages.employersClaimsStatus.leaveDurationLabel")}>
+        {formatDateRange(claim.leaveStartDate, claim.leaveEndDate)}
+      </StatusRow>
       {isContinuous && (
         <StatusRow
           label={t("pages.employersClaimsStatus.leaveDurationLabel_continuous")}
@@ -118,6 +113,15 @@ export const Status = (props: StatusProps) => {
           label={t("pages.employersClaimsStatus.leaveDurationLabel_reduced")}
         >
           {claim.reducedLeaveDateRange()}
+        </StatusRow>
+      )}
+      {isIntermittent && (
+        <StatusRow
+          label={t(
+            "pages.employersClaimsStatus.leaveDurationLabel_intermittent"
+          )}
+        >
+          {claim.intermittentLeaveDateRange()}
         </StatusRow>
       )}
       {legalNotices.length > 0 && (

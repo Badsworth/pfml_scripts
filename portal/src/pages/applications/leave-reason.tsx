@@ -102,7 +102,11 @@ export const LeaveReason = (props: LeaveReasonProps) => {
   );
 
   const getChoices = () => {
-    const choices = [];
+    const choices: Array<{
+      checked: boolean;
+      label: string;
+      value: string;
+    }> = [];
     choices.push(choiceMedical, choiceBonding, choiceCaringLeave);
 
     showMilitaryLeaveTypes &&

@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import InputNumber from "./InputNumber";
 import { maskValue } from "./Mask";
 
-const maskCurrency = (value) => maskValue(String(value || ""), "currency");
-
 interface InputCurrencyProps {
   /**
    * HTML input `autocomplete` attribute
@@ -81,6 +79,9 @@ interface InputCurrencyProps {
   value?: number;
 }
 
+const maskCurrency = (value: InputCurrencyProps["value"]) =>
+  maskValue(String(value || ""), "currency");
+
 /**
  * Input field that displays number values to users as en-us currency
  */
@@ -92,7 +93,9 @@ const InputCurrency = (props: InputCurrencyProps) => {
     // getInputValueFromEvent will strip comma masks from value
     // store masked value to be displayed to user
     setMaskedValue(maskedValue);
-    props.onChange(event);
+    if (props.onChange) {
+      props.onChange(event);
+    }
   };
 
   return (

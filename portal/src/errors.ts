@@ -19,8 +19,8 @@ export interface Issue {
 }
 
 class BasePortalError extends Error {
-  constructor(...params) {
-    super(...params);
+  constructor(message?: string) {
+    super(message);
 
     // Maintains proper stack trace for where our error was thrown in modern browsers
     if (Error.captureStackTrace) {
@@ -36,12 +36,8 @@ export class CognitoAuthError extends BasePortalError {
   cognitoError: CognitoError;
   issue: Issue | null;
 
-  constructor(
-    cognitoError: CognitoError,
-    issue: Issue | null = null,
-    ...params
-  ) {
-    super(...params);
+  constructor(cognitoError: CognitoError, issue: Issue | null = null) {
+    super();
     this.name = "CognitoAuthError";
     this.cognitoError = cognitoError;
     this.issue = issue;
@@ -52,8 +48,8 @@ export class CognitoAuthError extends BasePortalError {
  * The authenticated user's session expired or couldn't be found.
  */
 export class AuthSessionMissingError extends BasePortalError {
-  constructor(...params) {
-    super(...params);
+  constructor(message?: string) {
+    super(message);
     this.name = "AuthSessionMissingError";
   }
 }
@@ -65,8 +61,8 @@ export class AuthSessionMissingError extends BasePortalError {
  * or a malformed request.
  */
 export class NetworkError extends BasePortalError {
-  constructor(...params) {
-    super(...params);
+  constructor(message?: string) {
+    super(message);
     this.name = "NetworkError";
   }
 }
@@ -76,8 +72,8 @@ export class NetworkError extends BasePortalError {
  * a CONTINUE transition was not defined for the current route.
  */
 export class RouteTransitionError extends BasePortalError {
-  constructor(...params) {
-    super(...params);
+  constructor(message?: string) {
+    super(message);
     this.name = "RouteTransitionError";
   }
 }
@@ -86,8 +82,8 @@ export class RouteTransitionError extends BasePortalError {
  * users/current api resource did not return a user in its response
  */
 export class UserNotReceivedError extends BasePortalError {
-  constructor(...params) {
-    super(...params);
+  constructor(message?: string) {
+    super(message);
     this.name = "UserNotReceivedError";
   }
 }
@@ -98,8 +94,8 @@ export class UserNotReceivedError extends BasePortalError {
 export class ApiRequestError extends BasePortalError {
   responseData?: unknown;
 
-  constructor(responseData?: unknown, ...params) {
-    super(...params);
+  constructor(responseData?: unknown, message?: string) {
+    super(message);
     this.responseData = responseData;
     this.name = "ApiRequestError";
   }
@@ -109,8 +105,8 @@ export class ApiRequestError extends BasePortalError {
  * A fetch request failed due to a 404 error
  */
 export class NotFoundError extends ApiRequestError {
-  constructor(...params) {
-    super(...params);
+  constructor(responseData?: unknown, message?: string) {
+    super(responseData, message);
     this.name = "NotFoundError";
   }
 }
@@ -119,8 +115,8 @@ export class NotFoundError extends ApiRequestError {
  * An API response returned a 400 status code and its JSON body didn't include any `errors`
  */
 export class BadRequestError extends ApiRequestError {
-  constructor(...params) {
-    super(...params);
+  constructor(responseData?: unknown, message?: string) {
+    super(responseData, message);
     this.name = "BadRequestError";
   }
 }
@@ -131,8 +127,8 @@ export class BadRequestError extends ApiRequestError {
  * being created, or the user hasn't consented to the data sharing agreement.
  */
 export class ForbiddenError extends ApiRequestError {
-  constructor(...params) {
-    super(...params);
+  constructor(responseData?: unknown, message?: string) {
+    super(responseData, message);
     this.name = "ForbiddenError";
   }
 }
@@ -141,8 +137,8 @@ export class ForbiddenError extends ApiRequestError {
  * An API response returned a 500 status code
  */
 export class InternalServerError extends ApiRequestError {
-  constructor(...params) {
-    super(...params);
+  constructor(responseData?: unknown, message?: string) {
+    super(responseData, message);
     this.name = "InternalServerError";
   }
 }
@@ -151,8 +147,8 @@ export class InternalServerError extends ApiRequestError {
  * An API response returned a 408 status code
  */
 export class RequestTimeoutError extends ApiRequestError {
-  constructor(...params) {
-    super(...params);
+  constructor(responseData?: unknown, message?: string) {
+    super(responseData, message);
     this.name = "RequestTimeoutError";
   }
 }
@@ -165,8 +161,8 @@ export class DocumentsLoadError extends BasePortalError {
   // ID of the Claim the documents are associated with
   application_id: string;
 
-  constructor(application_id: string, ...params) {
-    super(...params);
+  constructor(application_id: string, message?: string) {
+    super(message);
     this.application_id = application_id;
     this.name = "DocumentsLoadError";
   }
@@ -188,9 +184,9 @@ export class DocumentsUploadError extends BasePortalError {
     application_id: string,
     file_id: string,
     issue: Issue | null = null,
-    ...params
+    message?: string
   ) {
-    super(...params);
+    super(message);
     this.application_id = application_id;
     this.file_id = file_id;
     this.issue = issue;
@@ -206,8 +202,8 @@ export class ClaimWithdrawnError extends BasePortalError {
   fineos_absence_id: string;
   issue: Issue;
 
-  constructor(fineos_absence_id: string, issue: Issue, ...params) {
-    super(...params);
+  constructor(fineos_absence_id: string, issue: Issue, message?: string) {
+    super(message);
     this.fineos_absence_id = fineos_absence_id;
     this.issue = issue;
     this.name = "ClaimWithdrawnError";
@@ -218,8 +214,8 @@ export class ClaimWithdrawnError extends BasePortalError {
  *  An API response returned a 503 status code
  */
 export class ServiceUnavailableError extends ApiRequestError {
-  constructor(...params) {
-    super(...params);
+  constructor(responseData?: unknown, message?: string) {
+    super(responseData, message);
     this.name = "ServiceUnavailableError";
   }
 }
@@ -228,8 +224,8 @@ export class ServiceUnavailableError extends ApiRequestError {
  * An API response returned a 401 status code
  */
 export class UnauthorizedError extends ApiRequestError {
-  constructor(...params) {
-    super(...params);
+  constructor(responseData?: unknown, message?: string) {
+    super(responseData, message);
     this.name = "UnauthorizedError";
   }
 }
@@ -244,8 +240,8 @@ export class ValidationError extends BasePortalError {
   // Used in the i18n message keys, prefixed to the field name (e.g. `prefix.field_name`)
   i18nPrefix: string;
 
-  constructor(issues: Issue[], i18nPrefix: string, ...params) {
-    super(...params);
+  constructor(issues: Issue[], i18nPrefix: string) {
+    super();
     this.issues = issues;
     this.i18nPrefix = i18nPrefix;
     this.name = "ValidationError";
@@ -263,10 +259,9 @@ export class LeaveAdminForbiddenError extends ForbiddenError {
   constructor(
     employer_id: string,
     has_verification_data: boolean,
-    message: string,
-    ...params
+    message: string
   ) {
-    super(...params);
+    super(message);
     this.employer_id = employer_id;
     this.has_verification_data = has_verification_data;
     this.message = message;

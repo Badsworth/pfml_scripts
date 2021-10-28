@@ -59,7 +59,7 @@ const FileCard = (props: FileCardProps) => {
           </React.Fragment>
         ) : (
           <React.Fragment>
-            <div className={filenameClasses}>{file.name}</div>
+            <div className={filenameClasses}>{file?.name}</div>
             <Button
               className="text-error hover:text-error-dark active:text-error-darker margin-top-0"
               onClick={props.onRemoveClick}

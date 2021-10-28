@@ -20,6 +20,7 @@ interface ComponentWithUserProps {
  * @param {React.Component} Component - Component to receive user prop
  * @returns {React.Component} - Component with user prop
  */
+// @ts-expect-error TODO (PORTAL-966) Fix HOC typing
 const withUser = (Component) => {
   const ComponentWithUser = (props: ComponentWithUserProps) => {
     const { appLogic } = props;

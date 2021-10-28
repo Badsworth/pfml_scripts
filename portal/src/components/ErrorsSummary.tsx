@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { groupBy, map } from "lodash";
 import Alert from "./Alert";
+import AppErrorInfo from "../models/AppErrorInfo";
 import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import { Trans } from "react-i18next";
 import { useTranslation } from "../locales/i18n";
@@ -17,7 +18,7 @@ interface ErrorsSummaryProps {
  */
 function ErrorsSummary(props: ErrorsSummaryProps) {
   const { errors } = props;
-  const alertRef = useRef<HTMLDivElement>();
+  const alertRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
 
   /**
@@ -27,7 +28,7 @@ function ErrorsSummary(props: ErrorsSummaryProps) {
     if (!errors.isEmpty) {
       window.scrollTo(0, 0);
       // Move focus to the alert so screen readers immediately announce that there are errors
-      alertRef.current.focus();
+      alertRef.current?.focus();
     }
   }, [errors]);
 
@@ -37,8 +38,8 @@ function ErrorsSummary(props: ErrorsSummaryProps) {
   }
 
   // TODO (CP-1532): Remove once links in error messages are fully supported
-  const getUniqueMessageKey = (error) => {
-    if (error.message.type === Trans) {
+  const getUniqueMessageKey = (error: AppErrorInfo) => {
+    if (typeof error.message !== "string" && error.message?.type === Trans) {
       return error.message.props.i18nKey;
     }
 
@@ -59,7 +60,7 @@ function ErrorsSummary(props: ErrorsSummaryProps) {
       <ul className="usa-list">
         {visibleErrorMessages.map((message) => (
           <li
-            key={typeof message === "string" ? message : message.props.i18nKey}
+            key={typeof message === "string" ? message : message?.props.i18nKey}
           >
             {message}
           </li>

@@ -23,20 +23,6 @@ locals {
       alarm_name        = "High FINEOS API error rate"
       where_span_filter = "name LIKE 'External/%-api.masspfml.fineos.com/requests/'"
     }
-    "fineos_claim_submission" = {
-      alarm_name        = "High FINEOS Claim Submission error rate"
-      where_span_filter = <<-NRQL
-        http.url LIKE 'https://%-api.masspfml.fineos.com/integration-services/wscomposer/ReadEmployer'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/integration-services/wscomposer/webservice'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/updateCustomerDetails'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/absence/startAbsence'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/updateCustomerContactDetails'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/absence/%/reflexive-questions'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/cases/%/occupations'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/occupations/%/week-based-work-pattern%'
-        OR http.url LIKE 'https://%-api.masspfml.fineos.com/customerapi/customer/absence/notifications/%/complete-intake'
-      NRQL
-    }
   }
 }
 

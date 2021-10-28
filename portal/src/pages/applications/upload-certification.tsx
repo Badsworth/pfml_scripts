@@ -73,7 +73,9 @@ export const UploadCertification = (props: UploadCertificationProps) => {
       leadTextContext = conditionalContext[claimReason];
       break;
     case LeaveReason.bonding:
-      leadTextContext = conditionalContext[claimReason][claimReasonQualifier];
+      leadTextContext = claimReasonQualifier
+        ? conditionalContext[claimReason][claimReasonQualifier]
+        : undefined;
       break;
   }
 

@@ -107,7 +107,7 @@ const useDocumentsLogic = ({
           "documents"
         )
       );
-      return;
+      return [];
     }
 
     const uploadPromises = filesWithUniqueId.map(async (fileWithUniqueId) => {

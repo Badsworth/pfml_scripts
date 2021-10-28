@@ -12,10 +12,12 @@ from massgov.pfml.delegated_payments.irs_1099.generate_pub_1220_filing import (
 )
 from massgov.pfml.delegated_payments.irs_1099.merge_documents import Merge1099Step
 from massgov.pfml.delegated_payments.irs_1099.populate_1099 import Populate1099Step
-from massgov.pfml.delegated_payments.irs_1099.populate_mmars import PopulateMmarsStep
-from massgov.pfml.delegated_payments.irs_1099.populate_pub import PopulatePubStep
+from massgov.pfml.delegated_payments.irs_1099.populate_mmars_payments import (
+    PopulateMmarsPaymentsStep,
+)
+from massgov.pfml.delegated_payments.irs_1099.populate_payments import PopulatePaymentsStep
 from massgov.pfml.delegated_payments.irs_1099.populate_refunds import PopulateRefundsStep
-from massgov.pfml.delegated_payments.irs_1099.populate_withholding import PopulateWithholdingStep
+from massgov.pfml.delegated_payments.irs_1099.populate_withholdings import PopulateWithholdingsStep
 from massgov.pfml.delegated_payments.irs_1099.upload_documents import Upload1099DocumentsStep
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_report_step import ReportStep
 from massgov.pfml.delegated_payments.reporting.delegated_payment_sql_reports import (
@@ -27,9 +29,9 @@ logger = logging.get_logger(__name__)
 
 ALL = "ALL"
 AUDIT_BATCH = "audit-batch"
-POPULATE_MMARS = "populate-mmars"
-POPULATE_PUB = "populate-pub"
-POPULATE_WITHHOLDINGS = "populate-withholding"
+POPULATE_MMARS_PAYMENTS = "populate-mmars-payments"
+POPULATE_PAYMENTS = "populate-payments"
+POPULATE_WITHHOLDINGS = "populate-withholdings"
 POPULATE_REFUNDS = "populate-refunds"
 POPULATE_1099 = "populate-1099"
 GENERATE_1099_DOCUMENTS = "generate-1099-documents"
@@ -40,8 +42,8 @@ REPORT = "report"
 ALLOWED_VALUES = [
     ALL,
     AUDIT_BATCH,
-    POPULATE_MMARS,
-    POPULATE_PUB,
+    POPULATE_MMARS_PAYMENTS,
+    POPULATE_PAYMENTS,
     POPULATE_WITHHOLDINGS,
     POPULATE_REFUNDS,
     POPULATE_1099,
@@ -55,9 +57,9 @@ ALLOWED_VALUES = [
 
 class Configuration:
     db_audit_batch: bool
-    do_populate_mmars: bool
-    do_populate_pub: bool
-    db_populate_withholding: bool
+    do_populate_mmars_payments: bool
+    do_populate_payments: bool
+    db_populate_withholdings: bool
     db_populate_refunds: bool
     db_populate_1099: bool
     generate_1099_documents: bool
@@ -83,9 +85,9 @@ class Configuration:
 
         if ALL in steps:
             self.db_audit_batch = True
-            self.do_populate_mmars = True
-            self.do_populate_pub = True
-            self.db_populate_withholding = True
+            self.do_populate_mmars_payments = True
+            self.do_populate_payments = True
+            self.db_populate_withholdings = True
             self.db_populate_refunds = True
             self.db_populate_1099 = True
             self.generate_1099_documents = True
@@ -95,9 +97,9 @@ class Configuration:
             self.make_reports = True
         else:
             self.db_audit_batch = AUDIT_BATCH in steps
-            self.do_populate_mmars = POPULATE_MMARS in steps
-            self.do_populate_pub = POPULATE_PUB in steps
-            self.db_populate_withholding = POPULATE_WITHHOLDINGS in steps
+            self.do_populate_mmars_payments = POPULATE_MMARS_PAYMENTS in steps
+            self.do_populate_payments = POPULATE_PAYMENTS in steps
+            self.db_populate_withholdings = POPULATE_WITHHOLDINGS in steps
             self.db_populate_refunds = POPULATE_REFUNDS in steps
             self.db_populate_1099 = POPULATE_1099 in steps
             self.generate_1099_documents = GENERATE_1099_DOCUMENTS in steps
@@ -131,14 +133,16 @@ def _process_1099_documents(
     if config.db_audit_batch:
         AuditBatchStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
 
-    if config.do_populate_mmars:
-        PopulateMmarsStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
+    if config.do_populate_mmars_payments:
+        PopulateMmarsPaymentsStep(
+            db_session=db_session, log_entry_db_session=log_entry_db_session
+        ).run()
 
-    if config.do_populate_pub:
-        PopulatePubStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
+    if config.do_populate_payments:
+        PopulatePaymentsStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
 
-    if config.db_populate_withholding:
-        PopulateWithholdingStep(
+    if config.db_populate_withholdings:
+        PopulateWithholdingsStep(
             db_session=db_session, log_entry_db_session=log_entry_db_session
         ).run()
 

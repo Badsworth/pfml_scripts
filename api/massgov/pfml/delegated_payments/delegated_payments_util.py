@@ -160,6 +160,14 @@ class Constants:
         ]
     )
 
+    PAYMENT_SENT_STATES = frozenset(
+        [
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
+        ]
+    )
+    PAYMENT_SENT_STATE_IDS = frozenset([state.state_id for state in PAYMENT_SENT_STATES])
+
 
 CANCELLED_OR_REPLACED_EXTRACT_FIELD_NAMES = [
     "C",

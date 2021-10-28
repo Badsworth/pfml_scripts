@@ -60,7 +60,7 @@ export const ReducedLeaveSchedule = (props: ReducedLeaveScheduleProps) => {
   const initialLeavePeriod = new ReducedScheduleLeavePeriod(
     get(claim, leavePeriodPath)
   );
-  const workPattern = new WorkPattern(claim.work_pattern);
+  const workPattern = new WorkPattern(claim.work_pattern || {});
   const gatherMinutesAsWeeklyAverage =
     workPattern.work_pattern_type === WorkPatternType.variable;
 
@@ -91,7 +91,9 @@ export const ReducedLeaveSchedule = (props: ReducedLeaveScheduleProps) => {
       ];
 
       zip(minuteFields, dailyMinutes).forEach(([field, minutes]) => {
-        set(requestData, field, minutes);
+        if (field) {
+          set(requestData, field, minutes);
+        }
       });
     }
 

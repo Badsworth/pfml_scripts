@@ -1,5 +1,6 @@
 import BenefitsApplication, {
   WorkPattern,
+  WorkPatternDay,
 } from "../../models/BenefitsApplication";
 import React, { useState } from "react";
 import { pick, round } from "lodash";
@@ -33,7 +34,7 @@ export const ScheduleVariable = (props: ScheduleVariableProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  const workPattern = new WorkPattern(claim.work_pattern);
+  const workPattern = new WorkPattern(claim.work_pattern || {});
 
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   // minutesWorkedPerWeek will be spread across
@@ -59,8 +60,8 @@ export const ScheduleVariable = (props: ScheduleVariableProps) => {
   };
 
   const handleSave = async () => {
-    let work_pattern_days;
-    let hours_worked_per_week = null;
+    let work_pattern_days: WorkPatternDay[];
+    let hours_worked_per_week: null | number = null;
 
     if (!minutesWorkedPerWeek) {
       work_pattern_days = [];

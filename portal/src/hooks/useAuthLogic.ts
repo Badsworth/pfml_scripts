@@ -19,6 +19,10 @@ import assert from "assert";
 import routes from "../routes";
 import tracker from "../services/tracker";
 
+interface ErrorCodeMap {
+  [code: string]: { field?: string; type: string };
+}
+
 function isCognitoError(error: unknown): error is CognitoError {
   if (
     error &&
@@ -498,7 +502,7 @@ function validatePassword(password?: string) {
  */
 function getForgotPasswordError(error: CognitoError) {
   let issue;
-  const errorCodeToIssueMap = {
+  const errorCodeToIssueMap: ErrorCodeMap = {
     CodeDeliveryFailureException: { field: "code", type: "deliveryFailure" },
     InvalidParameterException: { type: "invalidParametersFallback" },
     UserNotFoundException: { type: "userNotFound" },
@@ -548,7 +552,7 @@ function getLoginError(error: CognitoError) {
  */
 function getResetPasswordError(error: CognitoError) {
   let issue;
-  const errorCodeToIssueMap = {
+  const errorCodeToIssueMap: ErrorCodeMap = {
     CodeMismatchException: { field: "code", type: "mismatchException" },
     ExpiredCodeException: { field: "code", type: "expired" },
     InvalidParameterException: {
@@ -575,7 +579,7 @@ function getResetPasswordError(error: CognitoError) {
  */
 function getVerifyAccountError(error: CognitoError) {
   let issue;
-  const errorCodeToIssueMap = {
+  const errorCodeToIssueMap: ErrorCodeMap = {
     CodeMismatchException: { field: "code", type: "mismatchException" },
     ExpiredCodeException: { field: "code", type: "expired" },
   };

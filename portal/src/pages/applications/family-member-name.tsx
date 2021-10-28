@@ -42,7 +42,7 @@ export const FamilyMemberName = (props: FamilyMemberNameProps) => {
     // only send fields for this page
     appLogic.benefitsApplications.update(
       claim.application_id,
-      pick({ claim: formState }, fields).claim
+      pick({ claim: formState }, fields).claim || {}
     );
 
   const getFunctionalInputProps = useFunctionalInputProps({

@@ -33,7 +33,7 @@ export const ConcurrentLeavesDetails = (
   const employer_fein = claim.employer_fein;
 
   const { formState, updateFields } = useFormState({
-    concurrent_leave: new ConcurrentLeave(get(claim, "concurrent_leave")),
+    concurrent_leave: new ConcurrentLeave(get(claim, "concurrent_leave") || {}),
   });
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,

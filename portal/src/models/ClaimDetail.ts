@@ -1,5 +1,6 @@
 import { ClaimEmployee, ClaimEmployer, ManagedRequirement } from "./Claim";
 import { groupBy, orderBy } from "lodash";
+import { LeaveReasonType } from "./LeaveReason";
 
 class ClaimDetail {
   absence_periods: AbsencePeriod[] = [];
@@ -78,7 +79,7 @@ export class AbsencePeriod {
   evidence_status: string | null = null;
   fineos_leave_request_id: string | null = null;
   period_type: "Continuous" | "Intermittent" | "Reduced Schedule";
-  reason: string;
+  reason: LeaveReasonType;
   reason_qualifier_one = "";
   reason_qualifier_two = "";
   request_decision: "Pending" | "Approved" | "Denied" | "Withdrawn";

@@ -71,24 +71,25 @@ export const guards: Record<string, ClaimFlowGuardFn> = {
   // claimants will either be routed to the status page vs. the checklist
   // if they are uploading an additional doc.
   isAdditionalDoc: ({ isAdditionalDoc }) => isAdditionalDoc === true,
-  isCaringLeave: ({ claim }) => claim.isCaringLeave,
-  isMedicalOrPregnancyLeave: ({ claim }) => claim.isMedicalOrPregnancyLeave,
-  isBondingLeave: ({ claim }) => claim.isBondingLeave,
+  isCaringLeave: ({ claim }) => claim?.isCaringLeave === true,
+  isMedicalOrPregnancyLeave: ({ claim }) =>
+    claim?.isMedicalOrPregnancyLeave === true,
+  isBondingLeave: ({ claim }) => claim?.isBondingLeave === true,
   isEmployed: ({ claim }) =>
     get(claim, "employment_status") === EmploymentStatus.employed,
-  isCompleted: ({ claim }) => claim.isCompleted,
-  hasStateId: ({ claim }) => claim.has_state_id === true,
-  hasConcurrentLeave: ({ claim }) => claim.has_concurrent_leave === true,
-  hasEmployerBenefits: ({ claim }) => claim.has_employer_benefits === true,
+  isCompleted: ({ claim }) => claim?.isCompleted === true,
+  hasStateId: ({ claim }) => claim?.has_state_id === true,
+  hasConcurrentLeave: ({ claim }) => claim?.has_concurrent_leave === true,
+  hasEmployerBenefits: ({ claim }) => claim?.has_employer_benefits === true,
   hasIntermittentLeavePeriods: ({ claim }) =>
-    claim.has_intermittent_leave_periods === true,
+    claim?.has_intermittent_leave_periods === true,
   hasPreviousLeavesOtherReason: ({ claim }) =>
-    claim.has_previous_leaves_other_reason === true,
+    claim?.has_previous_leaves_other_reason === true,
   hasPreviousLeavesSameReason: ({ claim }) =>
-    claim.has_previous_leaves_same_reason === true,
+    claim?.has_previous_leaves_same_reason === true,
   hasReducedScheduleLeavePeriods: ({ claim }) =>
-    claim.has_reduced_schedule_leave_periods === true,
-  hasOtherIncomes: ({ claim }) => claim.has_other_incomes === true,
+    claim?.has_reduced_schedule_leave_periods === true,
+  hasOtherIncomes: ({ claim }) => claim?.has_other_incomes === true,
   isFixedWorkPattern: ({ claim }) =>
     get(claim, "work_pattern.work_pattern_type") === WorkPatternType.fixed,
   isVariableWorkPattern: ({ claim }) =>

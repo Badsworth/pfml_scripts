@@ -70,7 +70,7 @@ const usePortalFlow = () => {
    */
   const getNextPageRoute = (
     event: string,
-    context?: ClaimantFlowContext,
+    context: ClaimantFlowContext = {},
     params?: NullableQueryParams
   ) => {
     const nextRoutingMachine = routingMachine.withContext(context);

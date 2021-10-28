@@ -10,7 +10,7 @@ import { useTranslation } from "../locales/i18n";
 interface AbsenceCaseStatusTagProps {
   status?: string | null;
   managedRequirements?: Array<{
-    follow_up_date: string;
+    follow_up_date: string | null;
   }>;
 }
 
@@ -21,26 +21,35 @@ const AbsenceCaseStatusTag = ({
   const { t } = useTranslation();
   const mappedStatus = findKeyByValue(AbsenceCaseStatus, status);
 
-  const getTagState = (status) => {
+  const getTagState = (status?: string | null) => {
     const successState = ["Approved"];
     const errorState = ["Declined"];
     const inactiveState = ["Closed", "Completed"];
 
-    if (successState.includes(status)) return "success";
-    if (errorState.includes(status)) return "error";
-    if (inactiveState.includes(status)) return "inactive";
+    if (status) {
+      if (successState.includes(status)) return "success";
+      if (errorState.includes(status)) return "error";
+      if (inactiveState.includes(status)) return "inactive";
+    }
+    return "pending";
   };
 
   const findClosestFollowupDate = () => {
+    const managedRequirementsWithFollowUpDate = managedRequirements?.filter(
+      (requirement) => requirement.follow_up_date
+    );
     const sortedDates = orderBy(
-      managedRequirements,
-      [(managedRequirement) => new Date(managedRequirement.follow_up_date)],
+      managedRequirementsWithFollowUpDate,
+      [
+        (managedRequirement) =>
+          new Date(managedRequirement.follow_up_date as string),
+      ],
       ["asc"]
     );
     return formatDate(sortedDates[0].follow_up_date).short();
   };
 
-  if (managedRequirements?.length > 0) {
+  if (managedRequirements && managedRequirements.length > 0) {
     // TODO (EMPLOYER-1542): Remove feature condition
     if (isFeatureEnabled("employerShowReviewByStatus")) {
       return (

@@ -58,7 +58,7 @@ resource "pagerduty_schedule" "mass_pfml_api_primary" {
   // Ignore changes to users and start times, which we expect to be adjusted
   // through the UI by delivery managers and other team members.
   lifecycle {
-    ignore_changes = [layer[0].users, layer[0].rotation_virtual_start, layer[0].start]
+    ignore_changes = [teams, layer[0].users, layer[0].rotation_virtual_start, layer[0].start]
   }
 
   layer {
@@ -77,7 +77,7 @@ resource "pagerduty_schedule" "mass_pfml_api_secondary" {
   // Ignore changes to users and start times, which we expect to be adjusted
   // through the UI by delivery managers and other team members.
   lifecycle {
-    ignore_changes = [layer[0].users, layer[0].rotation_virtual_start, layer[0].start]
+    ignore_changes = [teams, layer[0].users, layer[0].rotation_virtual_start, layer[0].start]
   }
 
   layer {
@@ -96,7 +96,7 @@ resource "pagerduty_schedule" "mass_pfml_api_delivery" {
   // Ignore changes to users and start times, which we expect to be adjusted
   // through the UI by delivery managers and other team members.
   lifecycle {
-    ignore_changes = [layer[0].users, layer[0].rotation_virtual_start, layer[0].start]
+    ignore_changes = [teams, layer[0].users, layer[0].rotation_virtual_start, layer[0].start]
   }
 
   layer {
@@ -127,7 +127,7 @@ resource "pagerduty_schedule" "mass_pfml_api_primary_shadow" {
   // Ignore changes to users and start times, which we expect to be adjusted
   // through the UI by delivery managers and other team members.
   lifecycle {
-    ignore_changes = [layer[0].users, layer[0].rotation_virtual_start, layer[0].start]
+    ignore_changes = [teams, layer[0].users, layer[0].rotation_virtual_start, layer[0].start]
   }
 
   layer {

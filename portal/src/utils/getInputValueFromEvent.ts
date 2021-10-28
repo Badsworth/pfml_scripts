@@ -13,15 +13,14 @@ export default function getInputValueFromEvent(
   }
 
   const { type, value } = event.target;
-  let checked;
-  if (event.target instanceof HTMLInputElement) {
-    checked = event.target.checked;
-  }
-
   const valueType = event.target.getAttribute("data-value-type");
 
   let result: number | string | boolean | null = value;
-  if (type === "checkbox" || type === "radio") {
+  if (
+    event.target instanceof HTMLInputElement &&
+    (type === "checkbox" || type === "radio")
+  ) {
+    const checked = event.target.checked;
     // Convert boolean input string values into an actual boolean
     switch (value) {
       case "true":

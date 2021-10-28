@@ -33,7 +33,7 @@ const Hint = (props: HintProps) => {
       "usa-intro": !props.small,
     }
   );
-  const id = props.inputId ? `${props.inputId}_hint` : null;
+  const id = props.inputId ? `${props.inputId}_hint` : undefined;
 
   return (
     <span className={hintClasses} id={id}>

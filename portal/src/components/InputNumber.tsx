@@ -139,7 +139,7 @@ function InputNumber(props: InputNumberProps) {
 export function isAllowedValue(
   value: string,
   allowDecimals: boolean,
-  allowNegative: boolean
+  allowNegative?: boolean
 ) {
   if (!isNumber(value, allowDecimals)) {
     return false;

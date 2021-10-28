@@ -15,6 +15,8 @@ import {
 } from "../../src/api/EmployersApi";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
+import ClaimDocument from "../../src/models/ClaimDocument";
+import DocumentCollection from "../../src/models/DocumentCollection";
 import { uniqueId } from "lodash";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useEmployersLogic from "../../src/hooks/useEmployersLogic";
@@ -200,6 +202,98 @@ describe("useEmployersLogic", () => {
       });
 
       expect(getDocumentsMock).toHaveBeenCalledWith(absenceId);
+    });
+
+    describe("when the API returns documents", () => {
+      const denialNotice = new ClaimDocument({
+        name: "Denial notice",
+        fineos_document_id: "67899",
+      });
+      const approvalNotice = new ClaimDocument({
+        name: "Approval notice",
+        fineos_document_id: "78789",
+      });
+
+      it("fetches all documents for an application and adds to the claimDocumentsMap", async () => {
+        const absenceCaseId = "NTN-323-ABS-01";
+        const expectedDocumentsMap = new Map([
+          [absenceCaseId, new DocumentCollection([approvalNotice])],
+        ]);
+        let { claimDocumentsMap } = employersLogic;
+
+        getDocumentsMock.mockImplementationOnce(() => {
+          return {
+            success: true,
+            status: 200,
+            documents: new DocumentCollection([approvalNotice]),
+          };
+        });
+
+        await act(async () => {
+          await employersLogic.loadDocuments(absenceCaseId);
+        });
+        ({ claimDocumentsMap } = employersLogic);
+        expect(claimDocumentsMap).toEqual(expectedDocumentsMap);
+      });
+
+      it("fetches documents for two absence cases and saves them to the claimDocumentsMap", async () => {
+        const absenceCaseId_first = "NTN-323-ABS-01";
+        const absenceCaseId_second = "NTN-423-ABS-01";
+        const expectedDocumentsMap = new Map([
+          [absenceCaseId_first, new DocumentCollection([approvalNotice])],
+          [absenceCaseId_second, new DocumentCollection([denialNotice])],
+        ]);
+        let { claimDocumentsMap } = employersLogic;
+
+        getDocumentsMock
+          .mockImplementationOnce(() => {
+            return {
+              success: true,
+              status: 200,
+              documents: new DocumentCollection([approvalNotice]),
+            };
+          })
+          .mockImplementationOnce(() => {
+            return {
+              success: true,
+              status: 200,
+              documents: new DocumentCollection([denialNotice]),
+            };
+          });
+
+        await act(async () => {
+          await employersLogic.loadDocuments(absenceCaseId_first);
+          await employersLogic.loadDocuments(absenceCaseId_second);
+        });
+
+        ({ claimDocumentsMap } = employersLogic);
+        expect(claimDocumentsMap).toEqual(expectedDocumentsMap);
+      });
+
+      it("fetches documents for the same absence case twice and only calls the API once", async () => {
+        const absenceCaseId = "NTN-323-ABS-01";
+        const expectedDocumentsMap = new Map([
+          [absenceCaseId, new DocumentCollection([approvalNotice])],
+        ]);
+        let { claimDocumentsMap } = employersLogic;
+
+        getDocumentsMock.mockImplementationOnce(() => {
+          return {
+            success: true,
+            status: 200,
+            documents: new DocumentCollection([approvalNotice]),
+          };
+        });
+
+        await act(async () => {
+          await employersLogic.loadDocuments(absenceCaseId);
+          await employersLogic.loadDocuments(absenceCaseId);
+        });
+
+        ({ claimDocumentsMap } = employersLogic);
+        expect(getDocumentsMock).toHaveBeenCalledTimes(1);
+        expect(claimDocumentsMap).toEqual(expectedDocumentsMap);
+      });
     });
 
     describe("errors", () => {

@@ -320,6 +320,7 @@ class Application(Base, TimestampMixin):
     has_previous_leaves_same_reason = Column(Boolean)
     has_previous_leaves_other_reason = Column(Boolean)
     has_concurrent_leave = Column(Boolean)
+    is_withholding_tax = Column(Boolean, nullable=True)
 
     user = relationship(User)
     caring_leave_metadata = relationship("CaringLeaveMetadata", back_populates="application")

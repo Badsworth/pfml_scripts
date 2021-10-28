@@ -5,9 +5,9 @@ import formatDateRange from "../utils/formatDateRange";
 import { useTranslation } from "react-i18next";
 
 interface LeaveDatesAlertProps {
-  endDate?: string;
+  endDate: string | null;
   headingLevel?: "2" | "3";
-  startDate?: string;
+  startDate: string | null;
   showWaitingDayPeriod?: boolean;
 }
 
