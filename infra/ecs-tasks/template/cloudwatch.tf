@@ -386,7 +386,7 @@ module "fineos_snapshot_extract_scheduler" {
   is_enabled = true
 
   task_name           = "fineos-snapshot-extracts-tool"
-  schedule_expression = "cron(0 0 7 ? * 4 *)"
+  schedule_expression = "cron(0 7 ? * 4 *)"
   environment_name    = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
@@ -425,7 +425,7 @@ module "pub-payments-process-snapshot" {
   is_enabled = var.enable_pub_automation_fineos
 
   task_name           = "pub-payments-process-snapshot"
-  schedule_expression = "cron(0 0 10 ? * 4 *)"
+  schedule_expression = "cron(0 10 ? * 4 *)"
   environment_name    = var.environment_name
 
   cluster_arn        = data.aws_ecs_cluster.cluster.arn
