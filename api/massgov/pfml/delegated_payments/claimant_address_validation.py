@@ -1,7 +1,7 @@
 import os
 import pathlib
 import uuid
-from typing import Any, Dict, List, Optional, Tuple, cast
+from typing import Any, Dict, List, Optional
 
 from sqlalchemy.sql.functions import func
 
@@ -16,7 +16,6 @@ from massgov.pfml.db.models.employees import (
     Address,
     AddressType,
     Employee,
-    EmployeeAddress,
     ExperianAddressPair,
     GeoState,
     ReferenceFile,
@@ -39,8 +38,6 @@ logger = logging.get_logger(__name__)
 
 
 class ClaimantAddressValidationStep(AddressValidationStep):
-    # use_experian_soap_client: bool = False
-
     def run_step(self) -> None:
 
         self.process_address_data()
@@ -48,7 +45,8 @@ class ClaimantAddressValidationStep(AddressValidationStep):
         return
 
     # Query the database table and get latest customer records
-    def get_fineos_employee_feed(self) -> List[FineosExtractEmployeeFeed]:
+    def get_fineos_employee_feed(self) -> List[Any]:
+        employee_feed_data = [Any]
         try:
             subquery = self.db_session.query(
                 FineosExtractEmployeeFeed,
@@ -60,16 +58,21 @@ class ClaimantAddressValidationStep(AddressValidationStep):
                 .label("R"),
             ).subquery()
             logger.debug("Subquery for employee feed %s", subquery)
-            employee_feed_data = self.db_session.query(subquery).filter(subquery.c.R == 1)
+            employee_feed_data = list(self.db_session.query(subquery).filter(subquery.c.R == 1))
+            logger.debug(employee_feed_data)
+
         except Exception:
             self.db_session.rollback()
             logger.exception("Error processing addresses")
             raise
 
-        return cast(List[FineosExtractEmployeeFeed], employee_feed_data)
+        return employee_feed_data
 
-    # Query the employee table and return employee record that
-    # matches the customer number given
+    """Query the employee table and return employee record that
+    matches the customer number given. Will query the existing
+    payments associated with this employee in the next steps.
+    """
+
     def get_employee_record(self, customerno: Optional[str]) -> Optional[Employee]:
         if customerno:
             employee = (
@@ -83,37 +86,58 @@ class ClaimantAddressValidationStep(AddressValidationStep):
     # create a report that is uploaded to S3 bucket
     def process_address_data(self) -> None:
         address_pair = None
-        has_address_update = False
         addressResults = []
         try:
             experian_soap_client = _get_experian_soap_client()
             fin_employee_feed_data = self.get_fineos_employee_feed()
 
             for f_employee_data in fin_employee_feed_data:
-                logger.info("Customer number from fineos %s", f_employee_data.customerno)
+                logger.debug("Customer number from fineos %s", f_employee_data.customerno)
                 employee = self.get_employee_record(f_employee_data.customerno)
                 if employee:
-                    logger.info("There is an employee match %s", employee.employee_id)
+                    logger.debug("There is an employee match %s", employee.employee_id)
                     employee_feed_address_data = self.construct_address_data(f_employee_data)
-                    logger.info(
-                        "Constructed address object from fineos employee feed %s",
+                    logger.debug(
+                        "Check if there is an existing address pair for this address %s",
                         employee_feed_address_data.address_line_one,
                     )
-                    address_pair, has_address_update = self.is_address_new_or_updated(
-                        employee_feed_address_data, employee
+                    address_pair = payments_util.find_existing_address_pair(
+                        employee, employee_feed_address_data, self.db_session
                     )
-                    logger.debug("Is address new or updated", has_address_update)
-                    # Call validation on this address
-                    result = self.validate_claimant_address(
-                        employee_feed_address_data, address_pair, experian_soap_client
-                    )
-                    self.increment(self.Metrics.VALIDATED_ADDRESS_COUNT)
-                    addressResults.append(result.get("experian_result"))
-
+                    if address_pair and address_pair.experian_address is not None:
+                        logger.debug("Address has been previously validated")
+                        self.increment(self.Metrics.PREVIOUSLY_VALIDATED_MATCH_COUNT)
+                    # Does it have all the address lines
+                    elif not self._does_address_have_all_parts(employee_feed_address_data):
+                        self.increment(self.Metrics.ADDRESS_MISSING_COMPONENT_COUNT)
+                        result = self._build_experian_outcome(
+                            Constants.MESSAGE_ADDRESS_MISSING_PART,
+                            employee_feed_address_data,
+                            Constants.MESSAGE_ADDRESS_MISSING_PART,
+                        )
+                        addressResults.append(result.get("experian_result"))
+                    else:
+                        if not address_pair:
+                            logger.debug("Address is new or updated")
+                            address_pair = ExperianAddressPair(
+                                fineos_address=employee_feed_address_data
+                            )
+                            new_address = True
+                        else:
+                            new_address = False
+                        # Call validation if new address or address not validated
+                        result_soap = self.process_address_via_soap_api(
+                            experian_soap_client,
+                            employee_feed_address_data,
+                            address_pair,
+                            new_address,
+                        )
+                        self.increment(self.Metrics.VALIDATED_ADDRESS_COUNT)
+                        if result_soap:
+                            addressResults.append(result_soap.get("experian_result"))
             ref_file = self.upload_results_s3(addressResults)
             self.increment(Constants.TRANSACTION_FILES_SENT_COUNT)
             self.db_session.add(ref_file)
-
         except Exception:
             self.db_session.rollback()
             logger.exception("Error processing addresses")
@@ -122,7 +146,6 @@ class ClaimantAddressValidationStep(AddressValidationStep):
 
     # Constructs an address object from the FineosExtractEmployeeFeed address lines
     def construct_address_data(self, employee_data: FineosExtractEmployeeFeed) -> Address:
-        # Construct an Address from the employee_feed_data
         logger.debug("Constructing an address object from fineos employee address lines")
         employee_feed_data_address = Address(
             address_id=uuid.uuid4(),
@@ -138,86 +161,6 @@ class ClaimantAddressValidationStep(AddressValidationStep):
         logger.debug("Constructed an address object from finoes employee address lines")
         return employee_feed_data_address
 
-    """Checks if the address is in employee fineos table, if not add the address
-        Returns:
-            bool: True if address_data has address updates; False otherwise
-        """
-
-    def is_address_new_or_updated(
-        self, employee_feed_address_data: Address, employee: Employee
-    ) -> Tuple[ExperianAddressPair, bool]:
-
-        # If existing_address_pair exists, compare the existing fineos_address with the employee_feed_data address
-        #  If they're the same, nothing needs to be done, so we can return the address
-        logger.info("check to see if the address exists in previous claims %s", employee)
-        existing_address_pair = payments_util.find_existing_address_pair(
-            employee, employee_feed_address_data, self.db_session
-        )
-        logger.info("Is there an address pair %s", existing_address_pair)
-        if existing_address_pair:
-            return existing_address_pair, False
-        """Checks if this process has already validated the address before
-        by checking the employee address table.
-        """
-        logger.info("check to see if the address exists in employee address")
-        existing_address_pair = payments_util.find_existing_address_pair_in_employee_address(
-            employee, employee_feed_address_data, self.db_session
-        )
-
-        if existing_address_pair:
-            logger.info(
-                "There is an existing address pair in employee address %s", existing_address_pair
-            )
-            return existing_address_pair, False
-
-        # We need to add the address to the employee.
-        new_experian_address_pair = ExperianAddressPair(fineos_address=employee_feed_address_data)
-        logger.info(
-            "Going to add the address to Employee fineos Address %s",
-            new_experian_address_pair.fineos_address,
-        )
-        logger.info("The uuid is %s", employee_feed_address_data.address_id)
-        self.db_session.add(employee_feed_address_data)
-        self.db_session.add(new_experian_address_pair)
-
-        # We also want to make sure the address is linked in the EmployeeAddress table
-        employee_address = EmployeeAddress(employee=employee, address=employee_feed_address_data)
-        self.db_session.add(employee_address)
-        return new_experian_address_pair, True
-
-    """ Checks if address has already been validated,missing address lines
-        and calls the function to validate address using Experian
-    """
-
-    def validate_claimant_address(
-        self,
-        address: Address,
-        address_pair: ExperianAddressPair,
-        experian_soap_client: soap_api.Client,
-    ) -> Dict[str, Any]:
-
-        # already validated
-        if address_pair and address_pair.experian_address is not None:
-            logger.info("Address in experian address pair %s", address_pair.experian_address)
-            self.increment(self.Metrics.PREVIOUSLY_VALIDATED_MATCH_COUNT)
-            addr_result = self._build_experian_outcome(
-                Constants.MESSAGE_ALREADY_VALIDATED,
-                address_pair.experian_address,
-                Constants.PREVIOUSLY_VERIFIED,
-            )
-            return addr_result
-        # Does it have all the address lines
-        if not self._does_address_have_all_parts(address):
-            self.increment(self.Metrics.ADDRESS_MISSING_COMPONENT_COUNT)
-            addr_result = self._build_experian_outcome(
-                Constants.MESSAGE_ADDRESS_MISSING_PART,
-                address,
-                Constants.MESSAGE_ADDRESS_MISSING_PART,
-            )
-            return addr_result
-        addr_result = self.process_address_via_soap_api(experian_soap_client, address, address_pair)
-        return addr_result
-
     """Calls experian using SOAP call to validate address
         Returns the result of the call as a dictionary object"""
 
@@ -226,13 +169,14 @@ class ClaimantAddressValidationStep(AddressValidationStep):
         experian_soap_client: soap_api.Client,
         address: Address,
         address_pair: ExperianAddressPair,
-    ) -> Dict[str, Any]:
+        new_address: bool,
+    ) -> Optional[Dict[str, Any]]:
         try:
-            logger.info("Calling experian on the address %s", address.address_line_one)
+            logger.debug("Calling experian on the address %s", address.address_line_one)
             response = self._experian_soap_response_for_address(experian_soap_client, address)
             logger.debug("Response from experian %s", response)
             if response:
-                logger.info("Response %s", response.verify_level)
+                logger.debug("Response %s", response.verify_level)
         except Exception as e:
             logger.exception(
                 "An exception occurred when querying the address for address ID %s: %s"
@@ -254,36 +198,31 @@ class ClaimantAddressValidationStep(AddressValidationStep):
                     outcome = self._outcome_for_search_result(
                         response, Constants.MESSAGE_INVALID_EXPERIAN_FORMAT_RESPONSE, address,
                     )
-                    logger.info(
+                    logger.debug(
                         "Experian return address has missing parts, wasnt supposed to occur"
                     )
                 else:
-                    # formatted_address.address_id = uuid.uuid4()
-                    formatted_address.address_type_id = AddressType.MAILING.address_type_id
-                    address_pair.experian_address = formatted_address
-                    # new_experian_address_pair = ExperianAddressPair(
-                    # experian_address=formatted_address
-                    # )
-                    logger.info(
-                        "Going to add the addrss to Employee experian Address %s",
-                        address_pair.fineos_address,
-                    )
-                    self.db_session.add(formatted_address)
-                    # self.db_session.add(new_experian_address_pair)
-                    outcome = self._outcome_for_search_result(
-                        response, Constants.MESSAGE_VALID_ADDRESS, address,
-                    )
+                    if not new_address:
+                        formatted_address.address_type_id = AddressType.MAILING.address_type_id
+                        address_pair.experian_address = formatted_address
+                        logger.debug(
+                            "Adding the experian address to db since there was an existing fineos address %s",
+                            address_pair.experian_address,
+                        )
+
+                        self.db_session.add(formatted_address)
                     self.increment(self.Metrics.VALID_EXPERIAN_FORMAT)
-                    logger.info("Valid verified experian address was returned")
-                return outcome
+                    logger.debug("Valid verified experian address was returned")
+                    return None
 
         # Experian returned a non-verified scenario, all of these
         # are cases that are considered errors
+
         self.increment(self.Metrics.NO_EXPERIAN_MATCH_COUNT)
         outcome = self._outcome_for_search_result(
             response, Constants.MESSAGE_INVALID_ADDRESS, address,
         )
-        logger.info("No matches for the search address%s", address)
+        logger.debug("No matches for the search address%s", address)
         return outcome
 
     """Checks if all required address lines exist
@@ -323,7 +262,7 @@ class ClaimantAddressValidationStep(AddressValidationStep):
 
         # The address passed into this is the incoming address validated.
         outcome = self._build_experian_outcome(msg, address, verify_level)
-
+        logger.debug("Result Address is %s", result)
         # Right now we only have the one result.
         response_address = experian_verification_response_to_address(result)
         if response_address:
@@ -331,7 +270,6 @@ class ClaimantAddressValidationStep(AddressValidationStep):
             outcome[Constants.EXPERIAN_RESULT_KEY][
                 label
             ] = address_to_experian_suggestion_text_format(response_address)
-        # logger.info("In %s", type(outcome))
         return outcome
 
     """Builds a dicitonary object of messages and/or address returned from
@@ -341,7 +279,7 @@ class ClaimantAddressValidationStep(AddressValidationStep):
         self, msg: str, address: Address, confidence: str
     ) -> Dict[str, Any]:
         # print(address, msg)
-        logger.info("Building experian address outcome...")
+        logger.debug("Building experian address outcome...")
         exp_outcome: Dict[str, Any] = {
             Constants.EXPERIAN_RESULT_KEY: {
                 Constants.INPUT_ADDRESS_KEY: address_to_experian_suggestion_text_format(address),
@@ -361,7 +299,6 @@ class ClaimantAddressValidationStep(AddressValidationStep):
         return file_util.create_csv_from_list(
             addr_reports, Constants.CLAIMANT_ADDRESS_VALIDATION_FIELDS, file_name, pathName
         )
-        # return file_util.create_csv_from_list(claimants, Constants.CLAIMANT_ADDRESS_VALIDATION_FIELDS, file_name,s3_config.pfml_error_reports_archive_path)
 
     """Calls the create file function and uploads the created
         file to S3 location specified"""
@@ -379,12 +316,12 @@ class ClaimantAddressValidationStep(AddressValidationStep):
         address_report_csv_path = self.create_address_report(
             addr_reports, file_name, address_report_source_path
         )
-        logger.info("File path is %s", address_report_csv_path)
+        logger.debug("File path is %s", address_report_csv_path)
         outgoing_s3_path = os.path.join(
             dfml_sharepoint_outgoing_path, Constants.CLAIMANT_ADDRESS_VALIDATION_FILENAME
         )
         file_util.copy_file(str(address_report_csv_path), outgoing_s3_path)
-        logger.info("Wrote address validation report file to s3 path %s", outgoing_s3_path)
+        logger.debug("Copied address validation report file to s3 path %s", outgoing_s3_path)
         return ReferenceFile(
             file_location=os.path.join(address_report_source_path, file_name),
             reference_file_type_id=ReferenceFileType.CLAIMANT_ADDRESS_VALIDATION_REPORT.reference_file_type_id,
