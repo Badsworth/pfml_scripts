@@ -1,8 +1,6 @@
 import React, { useRef, useState } from "react";
-
 import Fieldset from "./Fieldset";
 import FormLabel from "./FormLabel";
-import PropTypes from "prop-types";
 import classnames from "classnames";
 import useUniqueId from "../hooks/useUniqueId";
 
@@ -12,7 +10,27 @@ import useUniqueId from "../hooks/useUniqueId";
  *
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/combo-box/)
  */
-function ComboBox(props) {
+interface Choice {
+  label: string | number;
+  value: string | number;
+}
+interface ComboBoxProps {
+  choices: Choice[];
+  emptyChoiceLabel?: string;
+  errorMsg?: React.ReactNode;
+  hint?: React.ReactNode;
+  labelClassName?: string;
+  formGroupClassName?: string;
+  label: React.ReactNode;
+  name: string;
+  optionalText?: React.ReactNode;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => null;
+  smallLabel?: boolean;
+  value?: number | string;
+  required?: boolean;
+}
+
+function ComboBox(props: ComboBoxProps) {
   const hasError = !!props.errorMsg;
   const inputId = useUniqueId("ComboBox");
   const listRef = useRef(null);
@@ -38,12 +56,12 @@ function ComboBox(props) {
     }
   );
 
-  const onClickToggleChoices = (e) => {
+  const onClickToggleChoices = (e: React.MouseEvent<HTMLButtonElement>) => {
     if (listRef.current.getAttribute("hidden")) {
       listRef.current.removeAttribute("hidden");
     } else {
       hideOptionsList();
-      e.target.blur();
+      (e.target as HTMLButtonElement).blur();
     }
     inputRef.current.focus();
   };
@@ -62,13 +80,13 @@ function ComboBox(props) {
     if (!props.value && !isMouseSelectingOption) hideOptionsList();
   };
 
-  const onChoiceFocus = (e) => {
+  const onChoiceFocus = (e: React.FocusEvent<HTMLLIElement>) => {
     e.target.setAttribute("tabindex", "0");
     e.target.classList.add("usa-combo-box__list-option--focused");
     inputRef.current.setAttribute("aria-activedescendant", e.target.id);
   };
 
-  const onChoiceBlur = (e) => {
+  const onChoiceBlur = (e: React.FocusEvent<HTMLLIElement>) => {
     if (!e.target.classList.contains("usa-combo-box__list-option--selected")) {
       e.target.setAttribute("tabindex", "-1");
       e.target.classList.remove("usa-combo-box__list-option--focused");
@@ -76,20 +94,26 @@ function ComboBox(props) {
       hideOptionsList();
     }
   };
-  const onChoiceMouseOver = onChoiceFocus;
-  const onChoiceMouseOut = onChoiceBlur;
+
+  const onChoiceMouseOver = (e: React.MouseEvent<HTMLLIElement>) =>
+    onChoiceFocus(e as unknown as React.FocusEvent<HTMLLIElement>);
+  const onChoiceMouseOut = (e: React.MouseEvent<HTMLLIElement>) =>
+    onChoiceBlur(e as unknown as React.FocusEvent<HTMLLIElement>);
 
   const onKeyDown = (e) => {
     if (["ArrowUp", "ArrowDown"].includes(e.key)) {
       e.preventDefault();
-      const listElement = document.querySelector(".usa-combo-box__list-option");
+      const listElement = document.querySelector(
+        ".usa-combo-box__list-option"
+      ) as HTMLLIElement;
       listElement.focus();
       listElement.click();
     }
   };
-  const onChoiceKeyDown = (e) => {
+
+  const onChoiceKeyDown = (e: React.KeyboardEvent<HTMLLIElement>) => {
     e.preventDefault();
-    let { target } = e;
+    let target = e.target as HTMLLIElement;
 
     switch (e.key) {
       case "ArrowUp":
@@ -107,25 +131,32 @@ function ComboBox(props) {
     target.click();
   };
 
-  const onChoiceChange = (e) => {
-    const targetValue = e.target.getAttribute("data-value");
+  const onChoiceChange = (e: React.MouseEvent<HTMLLIElement>) => {
+    const targetValue = (e.target as HTMLLIElement).getAttribute("data-value");
     const selectedOption = props.choices.find(
       (c) => c.value.toString() === targetValue
     );
     if (selectedOption) {
       // <li> tags don't have a value, so we simulate an input onchange event
-      const onChangeEvent = new Event("onchange");
+      const setValue = Object.getOwnPropertyDescriptor(
+        inputRef.current,
+        "value"
+      ).set;
+      const onChangeEvent = new Event("onchange", { bubbles: true });
+      setValue.call(inputRef.current, selectedOption.label);
       inputRef.current.dispatchEvent(onChangeEvent);
-      onChangeEvent.target.value = selectedOption.label;
       hideOptionsList();
-      props.onChange(onChangeEvent);
+      props.onChange(
+        onChangeEvent as unknown as React.ChangeEvent<HTMLInputElement>
+      );
     }
   };
 
-  const onComboBoxMouseEnter = (e) => {
+  const onComboBoxMouseEnter = () => {
     setIsMouseSelectingOption(true);
   };
-  const onComboBoxMouseLeave = (e) => {
+
+  const onComboBoxMouseLeave = () => {
     setIsMouseSelectingOption(false);
   };
 
@@ -146,6 +177,7 @@ function ComboBox(props) {
     const isSelected = choice.label === props.value;
     if (
       choice.label
+        .toString()
         .toLowerCase()
         .includes(props.value.toString().toLowerCase()) ||
       isPristine
@@ -164,15 +196,15 @@ function ComboBox(props) {
           data-value={choice.value}
           aria-selected={isSelected}
           role="option"
-          aria-setsize="64"
-          aria-posinset="1"
+          aria-setsize={64}
+          aria-posinset={1}
           onMouseOver={onChoiceMouseOver}
           onMouseOut={onChoiceMouseOut}
           onFocus={onChoiceFocus}
           onBlur={onChoiceBlur}
           onClick={onChoiceChange}
           onKeyDown={onChoiceKeyDown}
-          tabIndex={isSelected ? "0" : "-1"}
+          tabIndex={isSelected ? 0 : -1}
         >
           {choice.label}
         </li>
@@ -182,11 +214,11 @@ function ComboBox(props) {
   }, []);
 
   if (!searchResults.length) {
-    searchResults = (
-      <li className="usa-combo-box__list-option--no-results">
+    searchResults = [
+      <li key={0} className="usa-combo-box__list-option--no-results">
         {props.emptyChoiceLabel || "No matches"}
-      </li>
-    );
+      </li>,
+    ];
   }
 
   return (
@@ -209,6 +241,12 @@ function ComboBox(props) {
       >
         {/* "usa-select" class to use the "<select>" chevron */}
         <input
+          name={props.name + "_id"}
+          type="text"
+          className="hidden"
+          value={props.choices.find((c) => c.label === props.value)?.value}
+        />
+        <input
           id={props.name}
           name={props.name}
           type="text"
@@ -228,11 +266,12 @@ function ComboBox(props) {
           onChange={props.onChange}
           onKeyDown={onKeyDown}
           value={props.value}
+          required={props.required}
         />
-        <span className="usa-combo-box__toggle-list__wrapper" tabIndex="-1">
+        <span className="usa-combo-box__toggle-list__wrapper" tabIndex={-1}>
           <button
             type="button"
-            tabIndex="-1"
+            tabIndex={-1}
             className="usa-combo-box__toggle-list"
             aria-label="Toggle the dropdown list"
             onClick={onClickToggleChoices}
@@ -247,7 +286,7 @@ function ComboBox(props) {
           className="usa-combo-box__list"
           aria-labelledby={inputId}
           role="listbox"
-          tabIndex="-1"
+          tabIndex={-1}
           hidden
         >
           {searchResults}
@@ -256,61 +295,5 @@ function ComboBox(props) {
     </Fieldset>
   );
 }
-
-ComboBox.propTypes = {
-  /**
-   * List of choices to be rendered in the dropdown
-   */
-  choices: PropTypes.arrayOf(
-    PropTypes.shape({
-      label: PropTypes.oneOfType([PropTypes.number, PropTypes.string])
-        .isRequired,
-      value: PropTypes.oneOfType([PropTypes.number, PropTypes.string])
-        .isRequired,
-    })
-  ).isRequired,
-  /**
-   * Localized label for the initially selected option when no value is set
-   */
-  emptyChoiceLabel: PropTypes.string,
-  /**
-   * Localized error message. Setting this enables the error state styling.
-   */
-  errorMsg: PropTypes.node,
-  /**
-   * Localized hint text
-   */
-  hint: PropTypes.node,
-  /**
-   * Override the label's default text-bold class
-   */
-  labelClassName: PropTypes.string,
-  /**
-   * Additional classes to include on the containing form group element
-   */
-  formGroupClassName: PropTypes.string,
-  /**
-   * Localized label
-   */
-  label: PropTypes.node.isRequired,
-  /**
-   * HTML input `name` attribute
-   */
-  name: PropTypes.string.isRequired,
-  /**
-   * Localized text indicating this field is optional
-   */
-  optionalText: PropTypes.node,
-  /**
-   * HTML input `onChange` attribute
-   */
-  onChange: PropTypes.func,
-  /**
-   * Enable the smaller label variant
-   */
-  smallLabel: PropTypes.bool,
-  /** The `value` of the selected choice */
-  value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-};
 
 export default ComboBox;

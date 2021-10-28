@@ -1,16 +1,15 @@
-import EmployeesApi from "../api/EmployeesApi.ts";
+import { Employee } from "../models/User";
+import EmployeesApi, { EmployeeSearchRequest } from "../api/EmployeesApi";
 import { useMemo } from "react";
+
 
 const useEmployeesLogic = ({ appErrorsLogic, portalFlow }) => {
   const employeesApi = useMemo(() => new EmployeesApi(), []);
 
   /**
    * Search for employee
-   *
-   * @param {object} data - First, middle, last name, tax_identifier_last4
-   * @returns {object} Employee
    */
-  const search = async (data, applicationId) => {
+  const search = async (data: EmployeeSearchRequest, applicationId: string): Promise<Employee> => {
     appErrorsLogic.clearErrors();
 
     try {
@@ -18,6 +17,7 @@ const useEmployeesLogic = ({ appErrorsLogic, portalFlow }) => {
       if (!employee.organization_units.length) {
         portalFlow.goToNextPage({}, { claim_id: applicationId });
       }
+      return employee
     } catch (error) {
       appErrorsLogic.catchError(error);
     }

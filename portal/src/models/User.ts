@@ -123,4 +123,31 @@ export class UserLeaveAdministrator {
   }
 }
 
+export interface OrganizationUnit {
+    organization_unit_id: string;
+    fineos_id: string;
+    name: string;
+    employer_id: string;
+}
+
+export interface DuaReportingUnit {
+    dua_reporting_unit_id: string;
+    dua_id?: string;
+    dba?: string;
+    organization_unit_id: string;
+}
+
+export interface Employee {
+  employee_id: string;
+  tax_identifier_last4?: string;
+  first_name?: string;
+  middle_name?: string;
+  last_name?: string;
+  other_name?: string;
+  email_address?: string;
+  phone_number?: string;
+  organization_units?: OrganizationUnit[]
+  connected_reporting_units?: DuaReportingUnit[]
+}
+
 export default User;

@@ -7,6 +7,14 @@ import routes from "../routes";
  * @property {Employee} [reporting_units] - If the request succeeded, this will contain employee's reporting units.
  */
 
+export interface EmployeeSearchRequest {
+  first_name: string;
+  last_name: string;
+  middle_name?: string;
+  tax_identifier_last4: string;
+  employer_fein?: string;
+}
+
 export default class EmployeesApi extends BaseApi {
   get basePath() {
     return routes.api.employees;
@@ -22,9 +30,8 @@ export default class EmployeesApi extends BaseApi {
    * @param {object} postData - POST data (SSN/ITIN, name)
    * @returns {Promise} Employee: Promise<Employee>
    */
-  search = async (postData) => {
-    const { data } = await this.request<Employee>("POST", "search", postData);
-    console.log({postData}, data)
+  search = async (postData: EmployeeSearchRequest): Promise<Employee> => {
+    const { data } = await this.request<Employee>("POST", "search", postData as unknown as Record<string, unknown>);
     return data;
   };
 }

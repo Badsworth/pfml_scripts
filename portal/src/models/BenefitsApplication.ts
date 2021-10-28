@@ -17,7 +17,7 @@ import spreadMinutesOverWeek from "../utils/spreadMinutesOverWeek";
 class BenefitsApplication extends BaseBenefitsApplication {
   application_id: string;
   fineos_absence_id: string | null = null;
-  organization_unit: string | null = null;
+  organization_unit_id: string | null = null;
   created_at: string;
 
   first_name: string | null = null;
