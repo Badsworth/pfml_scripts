@@ -11,11 +11,19 @@ export const ENVS = [
   "test",
 ];
 
-export function labelComponent(name) {
+export const extractGroup = (item, name) => {
+  const group = item.metadata.groups.find((g) => g.name === name);
+  if (group) {
+    return group.value;
+  }
+  throw new Error(`Unable to determine ${name}`);
+};
+
+export const labelComponent = (name) => {
   switch (name) {
     case "api":
       return "API";
     default:
       return name[0].toUpperCase() + name.substring(1);
   }
-}
+};

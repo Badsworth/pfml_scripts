@@ -302,6 +302,7 @@ class GridRow extends React.Component {
                     }`}</td>
                     <td>
                       <div className={"display-linebreak"}>
+                        {result.errorClass}:&nbsp;
                         {result.errorMessage}
                       </div>
                     </td>

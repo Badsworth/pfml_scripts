@@ -610,7 +610,11 @@ class OutstandingRequirementsPage {
     } else {
       cy.wait("@ajaxRender");
       cy.wait(200);
-      cy.get("input[value='Complete']").should("be.disabled");
+      cy.get("input[value='Complete']").click();
+      cy.get(`span[id^="PageMessage1"]`).should(
+        "contain.text",
+        "You do not have the required secured action to mark all of the selected Outstanding Requirements as Complete."
+      );
     }
     return this;
   }
@@ -626,10 +630,15 @@ class OutstandingRequirementsPage {
         );
         cy.findByText("Ok").click({ force: true });
       });
+      cy.wait(200);
     } else {
       cy.wait("@ajaxRender");
       cy.wait(200);
-      cy.get("input[value='Suppress']").should("be.disabled");
+      cy.get("input[value='Suppress']").click();
+      cy.get(`span[id^="PageMessage1"]`).should(
+        "contain.text",
+        "You do not have the required secured action to mark all of the selected Outstanding Requirements as Suppressed."
+      );
     }
     return this;
   }
@@ -642,7 +651,11 @@ class OutstandingRequirementsPage {
     } else {
       cy.wait("@ajaxRender");
       cy.wait(200);
-      cy.get("input[value='Remove']").should("be.disabled");
+      cy.get("input[value='Remove']").click();
+      cy.get(`span[id^="PageMessage1"]`).should(
+        "contain.text",
+        "You do not have the required secured action to remove all of the selected Outstanding Requirements"
+      );
     }
     return this;
   }
@@ -654,7 +667,6 @@ class OutstandingRequirementsPage {
     } else {
       cy.wait("@ajaxRender");
       cy.wait(200);
-      cy.get("input[value='Reopen']").should("be.disabled");
     }
     return this;
   }
