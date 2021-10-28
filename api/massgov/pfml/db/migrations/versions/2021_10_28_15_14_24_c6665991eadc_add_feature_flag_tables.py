@@ -1,8 +1,8 @@
 """Add feature flag tables
 
-Revision ID: 6eaa55a1015a
+Revision ID: c6665991eadc
 Revises: 4f2601f5848b
-Create Date: 2021-10-27 13:23:47.654411
+Create Date: 2021-10-28 15:14:24.471308
 
 """
 import sqlalchemy as sa
@@ -10,7 +10,7 @@ from alembic import op
 from sqlalchemy.dialects import postgresql
 
 # revision identifiers, used by Alembic.
-revision = "6eaa55a1015a"
+revision = "c6665991eadc"
 down_revision = "4f2601f5848b"
 branch_labels = None
 depends_on = None
@@ -40,9 +40,9 @@ def upgrade():
             nullable=False,
         ),
         sa.Column("feature_flag_value_id", sa.Integer(), autoincrement=True, nullable=False),
-        sa.Column("feature_flag_id", sa.Integer(), nullable=True),
+        sa.Column("feature_flag_id", sa.Integer(), nullable=False),
         sa.Column("enabled", sa.Boolean(), nullable=False),
-        sa.Column("options", postgresql.JSONB(), nullable=True),
+        sa.Column("options", postgresql.JSONB(astext_type=sa.Text()), nullable=True),
         sa.Column("start", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.Column("end", sa.TIMESTAMP(timezone=True), nullable=True),
         sa.ForeignKeyConstraint(["feature_flag_id"], ["lk_feature_flag.feature_flag_id"],),

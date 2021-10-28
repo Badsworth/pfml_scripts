@@ -71,13 +71,13 @@ paths:
                 $ref: "#/components/schemas/Flag"
         "503":
           $ref: "#/components/responses/ServiceUnavailableError"
-    patch:
+    post:
       security:
         - {} # no authentication option
       tags:
         - Feature Flags
       summary: Update a feature flag
-      operationId: massgov.pfml.api.flags.flags_patch
+      operationId: massgov.pfml.api.flags.flags_post
       parameters:
         - name: name
           in: path
@@ -97,7 +97,7 @@ paths:
       requestBody:
         $ref: "#/components/requestBodies/FlagUpdateRequest"
 
-  /flags/{name}/logs:
+  /flags/logs/{name}:
     get:
       security:
         - {} # no authentication option

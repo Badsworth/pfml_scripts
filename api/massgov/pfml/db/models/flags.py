@@ -21,7 +21,7 @@ logger = massgov.pfml.util.logging.get_logger(__name__)
 class FeatureFlagValue(Base, TimestampMixin):
     __tablename__ = "feature_flag_value"
     feature_flag_value_id = Column(Integer, primary_key=True, autoincrement=True)
-    feature_flag_id = Column(Integer, ForeignKey("lk_feature_flag.feature_flag_id"))
+    feature_flag_id = Column(Integer, ForeignKey("lk_feature_flag.feature_flag_id"), nullable=False)
     enabled = Column(Boolean(), nullable=False)
     options = Column(JSONB, nullable=True)
     start = Column(TIMESTAMP(timezone=True), nullable=True)
@@ -69,6 +69,27 @@ class LkFeatureFlag(Base):
         if latest_value is None:
             return self.default_enabled
         return latest_value.enabled
+
+    @property
+    def start(self) -> bool:
+        latest_value = self._get_latest_feature_flag_value()
+        if latest_value is None:
+            return None
+        return latest_value.start
+
+    @property
+    def end(self) -> bool:
+        latest_value = self._get_latest_feature_flag_value()
+        if latest_value is None:
+            return None
+        return latest_value.end
+
+    @property
+    def options(self) -> bool:
+        latest_value = self._get_latest_feature_flag_value()
+        if latest_value is None:
+            return None
+        return latest_value.options
 
     def __init__(self, feature_flag_id, name, default_enabled):
         self.feature_flag_id = feature_flag_id
