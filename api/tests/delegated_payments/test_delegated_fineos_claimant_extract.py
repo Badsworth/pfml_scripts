@@ -993,7 +993,9 @@ def test_run_step_validation_issues(
         == payments_util.get_mapped_claim_type(fineos_data.leave_type).claim_type_id
     )
     assert claim.fineos_absence_status_id == AbsenceStatus.get_id(fineos_data.absence_case_status)
-    assert claim.absence_period_start_date is not None
+
+    # Start Date is not set because of logic changes. If either start_date or end_date is not set, ignore both.
+    assert claim.absence_period_start_date is None
     assert claim.absence_period_end_date is None  # Due to being empty
     assert claim.is_id_proofed
     assert claim.employer.fineos_employer_id == int(fineos_data.employer_customer_num)
@@ -1005,12 +1007,10 @@ def test_run_step_validation_issues(
         state_log.end_state_id == State.DELEGATED_CLAIM_ADD_TO_CLAIM_EXTRACT_ERROR_REPORT.state_id
     )
     validation_issues = state_log.outcome["validation_container"]["validation_issues"]
+    # AbsencePeriod Start is not included in validation issues because it is technically a valid field.
+    # Even though it is technically valid, it should not be set on the claim unless both start_date and end_date are present.
     assert validation_issues == [
         {"reason": "MissingField", "details": "ABSENCEPERIOD_END"},
-        {
-            "reason": "MissingField",
-            "details": "ABSENCEPERIOD_END",
-        },  # ABSENCEPERIOD_END is processed twice
         {"reason": "MissingField", "details": "DATEOFBIRTH"},
         {"reason": "MissingField", "details": "FIRSTNAMES"},
         {"reason": "MissingField", "details": "LASTNAME"},
@@ -1061,14 +1061,6 @@ def test_run_step_minimal_viable_claim(
         {"reason": "MissingField", "details": "NOTIFICATION_CASENUMBER"},
         {"reason": "MissingField", "details": "ABSENCEREASON_COVERAGE"},
         {"reason": "MissingField", "details": "ABSENCE_CASESTATUS"},
-        {
-            "reason": "MissingField",
-            "details": "ABSENCEPERIOD_START",
-        },  # ABSENCEPERIOD_START is processed twice
-        {
-            "reason": "MissingField",
-            "details": "ABSENCEPERIOD_END",
-        },  # ABSENCEPERIOD_END is processed twice
         {"reason": "MissingField", "details": "EMPLOYEE_CUSTOMERNO"},
         {"reason": "MissingField", "details": "EMPLOYER_CUSTOMERNO"},
         {
@@ -1210,3 +1202,99 @@ def test_run_step_mix_of_payment_prefs(
     claim = employee.claims[0]
     assert claim.fineos_absence_id == default_fineos_data.absence_case_number
     assert claim.employee_id == employee.employee_id
+
+
+def test_run_step_uses_correct_start_and_end_dates(
+    claimant_extract_step, test_db_session,
+):
+    not_default_fineos_data = FineosClaimantData(
+        leave_request_start="2021-01-01 12:00:00", leave_request_end="2021-04-01 12:00:00"
+    )
+
+    default_fineos_data = copy.deepcopy(not_default_fineos_data)
+
+    default_fineos_data.leave_request_start = "2021-02-01 12:00:00"
+    default_fineos_data.leave_request_end = "2021-05-01 12:00:00"
+
+    # Create the employee record
+    employee_before, _ = add_db_records_from_fineos_data(
+        test_db_session, default_fineos_data, add_eft=False
+    )
+
+    stage_data(
+        [default_fineos_data],
+        test_db_session,
+        additional_requested_absence_som_records=[not_default_fineos_data],
+    )
+
+    # Run the process
+    claimant_extract_step.run_step()
+
+    # Verify the Employee was updated
+    employee = (
+        test_db_session.query(Employee)
+        .filter(Employee.employee_id == employee_before.employee_id)
+        .one_or_none()
+    )
+    assert employee
+    assert employee.fineos_customer_number == default_fineos_data.customer_number
+
+    # The claim was attached to the employee
+    assert len(employee.claims) == 1
+    claim = employee.claims[0]
+    assert claim.fineos_absence_id == default_fineos_data.absence_case_number
+    assert claim.employee_id == employee.employee_id
+
+    # The earliest start date and latest end date of the requested_absences were used
+    assert claim.absence_period_start_date == datetime.date(2021, 1, 1)
+    assert claim.absence_period_end_date == datetime.date(2021, 5, 1)
+
+
+def test_run_step_with_missing_start_and_end_dates(
+    claimant_extract_step, test_db_session,
+):
+    not_default_fineos_data = FineosClaimantData(
+        leave_request_start="2021-01-01 12:00:00", leave_request_end=""
+    )
+
+    default_fineos_data = copy.deepcopy(not_default_fineos_data)
+
+    default_fineos_data.leave_request_start = "2021-02-01 12:00:00"
+    default_fineos_data.leave_request_end = "2021-05-01 12:00:00"
+
+    # Create the employee record
+    employee_before, _ = add_db_records_from_fineos_data(
+        test_db_session, default_fineos_data, add_eft=False
+    )
+
+    stage_data(
+        [default_fineos_data],
+        test_db_session,
+        additional_requested_absence_som_records=[not_default_fineos_data],
+    )
+
+    # Run the process
+    claimant_extract_step.run_step()
+
+    # Verify the Employee was updated
+    employee = (
+        test_db_session.query(Employee)
+        .filter(Employee.employee_id == employee_before.employee_id)
+        .one_or_none()
+    )
+    assert employee
+    assert employee.fineos_customer_number == default_fineos_data.customer_number
+
+    # The claim was attached to the employee
+    assert len(employee.claims) == 1
+    claim = employee.claims[0]
+    assert claim.fineos_absence_id == default_fineos_data.absence_case_number
+    assert claim.employee_id == employee.employee_id
+
+    # Since one of start_date or end_date was missing or invalid, nothing is set on the claim.
+    assert claim.absence_period_start_date is None
+    assert claim.absence_period_end_date is None
+
+    assert claim.state_logs[0].outcome["validation_container"]["validation_issues"] == [
+        {"reason": "MissingField", "details": "ABSENCEPERIOD_END"}
+    ]

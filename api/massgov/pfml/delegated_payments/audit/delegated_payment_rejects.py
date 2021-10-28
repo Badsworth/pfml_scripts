@@ -180,6 +180,8 @@ class PaymentRejectsStep(Step):
                     absence_case_creation_date=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.absence_case_creation_date
                     ),
+                    absence_start_date=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.absence_start_date),
+                    absence_end_date=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.absence_end_date),
                     case_status=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.case_status),
                     leave_request_decision=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.leave_request_decision
