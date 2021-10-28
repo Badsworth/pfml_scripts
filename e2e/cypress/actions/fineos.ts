@@ -58,13 +58,15 @@ export function before(credentials?: Credentials): void {
         ""
       );
       const doc = new DOMParser().parseFromString(body, "text/html");
-      const debugInfo = doc.getElementById("ErrorString")?.innerText || ""; //  Out Of Date Data error pages won't contain a stack trace
+      const debugInfo =
+        doc.getElementById("ErrorString")?.innerText ||
+        doc.querySelector("html")?.innerHTML;
       res.send(body);
-      cy.wait(1000); // allow page to display before throwing error
-      console.log(debugInfo);
-      throw new Error(
-        `A FINEOS error page was detected during this test. An error is being thrown in order to prevent Cypress from crashing.\n\nDebug Information:\n----------\n${debugInfo})`
-      );
+      setTimeout(() => {
+        throw new Error(
+          `A FINEOS error page was detected during this test. An error is being thrown in order to prevent Cypress from crashing.\n\nDebug Information:\n----------\n${debugInfo}`
+        );
+      }, 1000);
     });
   });
 
