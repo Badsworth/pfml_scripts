@@ -1546,6 +1546,11 @@ components:
           type: string
           example: "maintenance"
           readOnly: true
+        updated_at:
+          type: string
+          nullable: true
+          format: date-time
+          example: "2020-06-26T01:02:03.967736+00:00"
         options:
           type: object
           example:
