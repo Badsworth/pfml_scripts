@@ -17,6 +17,7 @@ jobs:
   update-erds:
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
       - name: "Create ERDs"
         run: make create-erds
 
