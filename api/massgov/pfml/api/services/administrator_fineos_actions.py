@@ -83,10 +83,10 @@ def get_leave_details(absence_periods: Dict) -> LeaveDetails:
                 reduced_end_date = end_date
 
         elif decision["period"]["type"] == "Episodic":
-            if intermittent_start_date is None or start_date < reduced_start_date:
+            if intermittent_start_date is None or start_date < intermittent_start_date:
                 intermittent_start_date = start_date
 
-            if intermittent_end_date is None or end_date > reduced_end_date:
+            if intermittent_end_date is None or end_date > intermittent_end_date:
                 intermittent_end_date = end_date
 
     if continuous_start_date is not None and continuous_end_date is not None:
