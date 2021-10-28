@@ -5,6 +5,7 @@ version: '3.4'
 services:
   pfmlpdfapi:
     image: pfmlpdfapi
+    container_name: mass-pfml-api
     build:
       context: .
       dockerfile: ./Dockerfile

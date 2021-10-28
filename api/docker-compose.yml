@@ -112,6 +112,18 @@ services:
     depends_on:
       - "mass-pfml-db"
 
+  mass-pfml-pdf-api:
+    build:
+      context: .
+      target: pdfdev
+    image: mass-pfml-pdf-api:build-env
+    container_name: mass-pfml-pdf-api
+    platform: linux/amd64
+    ports:
+      - 5001:5001
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+
 networks:
   main:
 

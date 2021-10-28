@@ -4,6 +4,9 @@
 
 FROM python:3.9-slim-buster as build
 
+#jpp
+RUN echo "FROM python:3.9-slim-buster as build"
+
 # core project tools
 RUN pip install poetry
 RUN apt-get update \
@@ -111,3 +114,29 @@ ENV PATH="/app/.venv/bin:$PATH"
 
 # run the application
 CMD ["massgov-pfml-api"]
+
+####################################
+#####pdf api########################
+####################################
+FROM mcr.microsoft.com/dotnet/aspnet:5.0 AS base
+WORKDIR /app/pdf
+EXPOSE 5001
+
+ENV ASPNETCORE_URLS=http://+:5001
+
+FROM mcr.microsoft.com/dotnet/sdk:5.0 AS build-env
+WORKDIR /src
+COPY ["./pdf_api/PfmlPdfApi.csproj", "./pdf_api/"]
+RUN dotnet restore "./pdf_api/PfmlPdfApi.csproj"
+COPY ./pdf_api/ .
+WORKDIR "/src/."
+RUN dotnet build "PfmlPdfApi.csproj" -c Release -o /app/build
+
+FROM build-env AS publish
+RUN dotnet publish "PfmlPdfApi.csproj" -c Release -o /app/publish
+
+FROM base AS pdfdev
+WORKDIR /app/pdf
+COPY --from=publish /app/publish .
+ENTRYPOINT ["dotnet", "PfmlPdfApi.dll"]
+
