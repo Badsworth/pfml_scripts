@@ -97,24 +97,21 @@ const ssoAccount2Credentials: Credentials = {
   password: config("SSO2_PASSWORD"),
 };
 
-//`${userPermission.security_group}:`
-
 describe("Check the O/R is accessible to modify with secure actions", () => {
   userPermissions.forEach((userPermission) => {
-    it(`${userPermission.security_group} checking the outstanding requirement access`, () => {
+    const user = it(`${userPermission.security_group} checking the outstanding requirement access`, () => {
       describe(`${userPermission.security_group}:`, () => {
-        before((done) => {
-          cy.task("chooseFineosRole", {
-            userId: ssoAccount2Credentials.username,
-            preset: userPermission.security_group,
-            debug: false,
-          }).then(done);
+        cy.task("chooseFineosRole", {
+          userId: ssoAccount2Credentials.username,
+          preset: userPermission.security_group,
+          debug: false,
         });
       });
     });
     it(`${userPermission.security_group} ${
       userPermission.employer_complete ? "can" : "can't"
     } complete, remove, or suppress available in O/R`, () => {
+      cy.dependsOnPreviousPass([user]);
       fineos.before(ssoAccount2Credentials);
       cy.task("generateClaim", "WDCLAIM").then((claim) => {
         cy.task("submitClaimToAPI", claim).then((response) => {
