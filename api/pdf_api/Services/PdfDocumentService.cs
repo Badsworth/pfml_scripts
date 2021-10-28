@@ -123,7 +123,7 @@ namespace PfmlPdfApi.Services
             template = template.Replace("[CORRECTED]", dto.Corrected ? "checked" : string.Empty);
             template = template.Replace("[PAY_AMOUNT]", dto.PaymentAmount.ToString());
             template = template.Replace("[YEAR]", dto.Year.ToString());
-            template = template.Replace("[SSN]", dto.SocialNumber.ToString());
+            template = template.Replace("[SSN]", dto.SocialNumber);
             template = template.Replace("[FED_TAX_WITHHELD]", dto.FederalTaxesWithheld.ToString());
             template = template.Replace("[NAME]", dto.Name);
             template = template.Replace("[ADDRESS]", dto.Address);

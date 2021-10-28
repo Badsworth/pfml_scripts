@@ -138,5 +138,6 @@ RUN dotnet publish "PfmlPdfApi.csproj" -c Release -o /app/publish
 FROM base AS pdfdev
 WORKDIR /app/pdf
 COPY --from=publish /app/publish .
+COPY ./pdf_api/Assets ./Assets
 ENTRYPOINT ["dotnet", "PfmlPdfApi.dll"]
 

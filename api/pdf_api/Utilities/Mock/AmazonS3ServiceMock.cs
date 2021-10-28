@@ -16,7 +16,7 @@ namespace PfmlPdfApi.Utilities.Mock
     public class AmazonS3ServiceMock : IAmazonS3Service
     {
         private readonly AmazonS3Setting _amazonS3Setting;
-        private string BASEFOLDER = @"C:\Temp\PFML";
+        private string BASEFOLDER = @"Assets";
         public AmazonS3ServiceMock(IConfiguration configuration)
         {
             _amazonS3Setting = configuration.GetSection("AmazonS3").Get<AmazonS3Setting>();
@@ -24,7 +24,7 @@ namespace PfmlPdfApi.Utilities.Mock
 
         public async Task<bool> CreateFolderAsync(string folderName)
         {
-            Directory.CreateDirectory($"{BASEFOLDER}\\{folderName}");
+            Directory.CreateDirectory($"{BASEFOLDER}//{folderName}");
 
             return true;
         }
@@ -34,7 +34,7 @@ namespace PfmlPdfApi.Utilities.Mock
             var lstream = new MemoryStream(stream.ToArray());
             lstream.Seek(0, SeekOrigin.Begin);
             
-            var fileStream = File.Create($"{BASEFOLDER}\\{fileName}");
+            var fileStream = File.Create($"{BASEFOLDER}//{fileName}");
             lstream.CopyTo(fileStream);
             
             return true;
@@ -42,13 +42,13 @@ namespace PfmlPdfApi.Utilities.Mock
 
         public async Task<Stream> GetFileAsync(string fileName)
         {
-            return File.OpenRead($"{BASEFOLDER}\\{fileName}");
+            return File.OpenRead($"{BASEFOLDER}//{fileName}");
         }
 
         public async Task<IList<Stream>> GetFilesAsync(string folderName)
         {
             List<Stream> streamList = new List<Stream>();
-            string[] files = Directory.GetFiles($"{BASEFOLDER}\\{folderName}");
+            string[] files = Directory.GetFiles($"{BASEFOLDER}//{folderName}");
 
             foreach (var file in files)
             {
