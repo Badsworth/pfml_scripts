@@ -23,7 +23,7 @@ jobs:
 
       - uses: EndBug/add-and-commit@v6
         with:
-          add: '../docs/assets/api/erds'
+          add: './docs/assets/api/erds'
           message: 'ERD generation auto-commit'
         env:
           # This is necessary in order to push a commit to the repo
