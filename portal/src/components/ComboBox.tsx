@@ -24,7 +24,7 @@ interface ComboBoxProps {
   label: React.ReactNode;
   name: string;
   optionalText?: React.ReactNode;
-  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => null;
+  onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   smallLabel?: boolean;
   value?: number | string;
   required?: boolean;
@@ -240,12 +240,12 @@ function ComboBox(props: ComboBoxProps) {
         onMouseLeave={onComboBoxMouseLeave}
       >
         {/* "usa-select" class to use the "<select>" chevron */}
-        <input
+        {/* <input
           name={props.name + "_id"}
           type="text"
           className="hidden"
           value={props.choices.find((c) => c.label === props.value)?.value}
-        />
+        /> */}
         <input
           id={props.name}
           name={props.name}
