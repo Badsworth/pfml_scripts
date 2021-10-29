@@ -59,11 +59,11 @@ describe("createRouteWithQuery", () => {
     };
 
     expect(createRouteWithQuery(route, params, "hash")).toEqual(
-      route + "?param1=value1&param2=value2#hash"
+      route + "?param1=value1&param2=value2/#hash"
     );
 
     expect(createRouteWithQuery(route, undefined, "hash")).toEqual(
-      route + "#hash"
+      route + "/#hash"
     );
   });
 });

@@ -143,10 +143,10 @@ describe("ApplicationCardV2", () => {
     };
 
     await expectButtonToRedirect(/View status updates and details/);
-    await expectButtonToRedirect(/View your notices/, "#view_notices");
+    await expectButtonToRedirect(/View your notices/, "/#view_notices");
     await expectButtonToRedirect(
       /Respond to a request for information/,
-      "#upload_documents"
+      "/#upload_documents"
     );
   });
 

@@ -24,7 +24,7 @@ export const createRouteWithQuery = (
 
   // Include prefixes (e.g., ?, #) if args/values exist
   if (queryString) queryString = `?${queryString}`;
-  if (hash) hash = `#${hash}`;
+  if (hash) hash = `/#${hash}`;
 
   return `${route}${queryString}${hash}`;
 };
