@@ -12,7 +12,6 @@ describe("Approval (notifications/notices)", () => {
 
   it("Given a fully approved claim", () => {
     fineos.before();
-    cy.visit("/");
     // Submit a claim via the API, including Employer Response.
     cy.task("generateClaim", "REDUCED_ER").then((claim) => {
       cy.task("submitClaimToAPI", claim).then((response) => {
@@ -58,7 +57,6 @@ describe("Approval (notifications/notices)", () => {
   it("Records Cancellation", () => {
     cy.dependsOnPreviousPass();
     fineos.before();
-    cy.visit("/");
     cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
       fineosPages.ClaimPage.visit(fineos_absence_id)
         .recordCancellation()

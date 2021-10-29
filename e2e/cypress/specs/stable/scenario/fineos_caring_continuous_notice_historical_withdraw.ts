@@ -44,7 +44,6 @@ describe("Create a new caring leave claim in FINEOS and add Historical Absence c
     if (config("ENVIRONMENT") === "stage") return;
     cy.dependsOnPreviousPass([withdraw]);
     portal.before();
-    cy.visit("/");
     portal.loginClaimant();
     cy.unstash<Submission>("submission").then((submission) => {
       portal.claimantGoToClaimStatus(submission.fineos_absence_id);
