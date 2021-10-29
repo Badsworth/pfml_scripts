@@ -2104,6 +2104,18 @@ const pages = {
     title: "You submitted your application",
     viewStatus: "View status and details for your application",
   },
+  claimsTaxWithholding: {
+    choiceNo: "No, don’t withhold taxes",
+    choiceYes: "Yes, withhold state and federal taxes",
+    explanation:
+      "<p>We want to give you the option to have state and federal taxes withheld from your paid leave benefits. If you choose to have taxes withheld, we will withhold 5% for state taxes and 10% for federal taxes. These percentages can’t be adjusted.</p> <p>The IRS hasn’t decided if paid leave benefits are considered taxable income. When the IRS makes a decision for federal taxes, Massachusetts will follow the same guidance for state taxes.</p> <p>If you're unsure whether you want to withhold taxes, we recommend speaking with a <tax-professional-link>tax professional</tax-professional-link> about how IRS decisions could affect your personal tax liability. We cannot offer guidance or advice for individual tax situations.</p>",
+    sectionLabel:
+      "Do you want us to withhold state and federal taxes from your paid leave benefits?",
+    submit: "Submit tax withholding preference",
+    title: "Tax withholding",
+    warning:
+      "After you submit your tax withholding preference, it can’t be edited on this website. To change it, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>",
+  },
   claimsUploadCertification: {
     addAnotherFileButton: "Choose another file",
     addFirstFileButton: "Choose files",

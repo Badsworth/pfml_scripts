@@ -2,6 +2,7 @@ import BaseApi, { ApiMethod, ApiRequestBody } from "./BaseApi";
 import BenefitsApplication from "../models/BenefitsApplication";
 import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
 import PaymentPreference from "../models/PaymentPreference";
+import TaxWithholdingPreference from "../models/TaxWithholdingPreference";
 import routes from "../routes";
 
 export default class BenefitsApplicationsApi extends BaseApi {
@@ -131,6 +132,22 @@ export default class BenefitsApplicationsApi extends BaseApi {
       "POST",
       `${application_id}/submit_payment_preference`,
       paymentPreferenceData
+    );
+
+    return {
+      claim: new BenefitsApplication(data),
+      warnings,
+    };
+  };
+
+  submitTaxWithholdingPreference = async (
+    application_id: string,
+    preferenceData: Partial<TaxWithholdingPreference>
+  ) => {
+    const { data, warnings } = await this.request<BenefitsApplication>(
+      "POST",
+      `${application_id}/submit_tax_withholding_preference`,
+      preferenceData
     );
 
     return {

@@ -185,6 +185,8 @@ const routes = {
         "https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim",
       schedulingLeaveGuide:
         "https://www.mass.gov/info-details/intermittent-and-reduced-leave-schedules",
+      taxGuide:
+        "https://www.mass.gov/service-details/find-a-tax-professional-to-help-with-your-taxes",
       taxLiability: "https://www.mass.gov/pfml-tax-liability",
       timeline:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-application-approval-timeline",
