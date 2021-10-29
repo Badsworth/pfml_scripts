@@ -247,7 +247,7 @@ const CompletedStatusCard = ({ appLogic, claim }: CompletedStatusCardProps) => {
     context: findKeyByValue(LeaveReason, claim.leave_details?.reason),
   });
 
-  const statusPage = routeWithParams("applications.status", {
+  const statusPage = routeWithParams("applications.status.claim", {
     absence_case_id: claim.fineos_absence_id,
   });
 

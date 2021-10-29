@@ -67,7 +67,7 @@ def test_ach_file_creation(
         create_payment_for_pub_transaction(test_db_session, PaymentMethod.ACH)
 
     # generate the ach file
-    transaction_file_step.run_step()
+    transaction_file_step.run()
 
     # check that ach archive file was generated
     now = payments_util.get_now()
@@ -161,7 +161,7 @@ def test_check_file_creation(
     transaction_file_step = TransactionFileCreatorStep(
         db_session=local_test_db_session, log_entry_db_session=local_test_db_other_session
     )
-    transaction_file_step.run_step()
+    transaction_file_step.run()
 
     # Validate the EZ Check File was created properly
     ez_check_file = transaction_file_step.check_file

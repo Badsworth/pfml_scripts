@@ -43,46 +43,39 @@ class ReportStep(Step):
         expected_reports_count = len(list(self.report_names))
         self.set_metrics({self.Metrics.PROCESSED_REPORT_COUNT: expected_reports_count})
 
-        try:
-            logger.info("Start generating %i reports: %s", expected_reports_count, report_names_str)
+        logger.info("Start generating %i reports: %s", expected_reports_count, report_names_str)
 
-            s3_config = payments_config.get_s3_config()
-            outbound_path = s3_config.dfml_report_outbound_path
-            archive_path = s3_config.pfml_error_reports_archive_path
+        s3_config = payments_config.get_s3_config()
+        outbound_path = s3_config.dfml_report_outbound_path
+        archive_path = s3_config.pfml_error_reports_archive_path
 
-            generated_reports: List[str] = []
+        generated_reports: List[str] = []
 
-            for report_name in self.report_names:
-                report: Optional[Report] = get_report_by_name(report_name)
+        for report_name in self.report_names:
+            report: Optional[Report] = get_report_by_name(report_name)
 
-                if report is None:
-                    self.increment(self.Metrics.REPORT_ERROR_COUNT)
-                    logger.error("Could not find configuration for report: %s", report_name.value)
-                    continue
+            if report is None:
+                self.increment(self.Metrics.REPORT_ERROR_COUNT)
+                logger.error("Could not find configuration for report: %s", report_name.value)
+                continue
 
-                try:
-                    self.generate_report(
-                        outbound_path, archive_path, report.report_name.value, report.sql_command,
-                    )
-                    generated_reports.append(report.report_name.value)
-                    self.increment(self.Metrics.REPORT_GENERATED_COUNT)
-                except Exception:
-                    self.increment(self.Metrics.REPORT_ERROR_COUNT)
-                    logger.exception("Error generating report: %s", report_name.value)
-                    self.db_session.rollback()
-
-            logger.info("Done generating %i reports: %s", len(generated_reports), generated_reports)
-
-            if expected_reports_count != len(generated_reports):
-                raise Exception(
-                    f"Expected reports do not match generated reports - expected: {expected_reports_count}, generated: {len(generated_reports)}"
+            try:
+                self.generate_report(
+                    outbound_path, archive_path, report.report_name.value, report.sql_command,
                 )
+                generated_reports.append(report.report_name.value)
+                self.increment(self.Metrics.REPORT_GENERATED_COUNT)
+            except Exception:
+                self.increment(self.Metrics.REPORT_ERROR_COUNT)
+                logger.exception("Error generating report: %s", report_name.value)
+                self.db_session.rollback()
 
-        except Exception:
-            logger.exception("Error generating reports: %s", report_names_str)
+        logger.info("Done generating %i reports: %s", len(generated_reports), generated_reports)
 
-            # We do not want to run any subsequent steps if this fails
-            raise
+        if expected_reports_count != len(generated_reports):
+            raise Exception(
+                f"Expected reports do not match generated reports - expected: {expected_reports_count}, generated: {len(generated_reports)}"
+            )
 
     def generate_report(
         self, outbound_path: str, archive_path: str, report_name: str, sql_command: str,

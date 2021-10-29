@@ -18,11 +18,11 @@ on:
         required: true
         default: 'training'
   # scheduled to run every 30 minutes on Fridays
-  # Start: 4PM EST (5PM EDT) (21 UTC)
-  # End: 12AM EST (1AM EDT Saturday) (5 UTC Saturday)
+  # INFRA-764 adjusted cron schedule
+  # Start: Mondays at 10:00-14:00 ET, every half hour
+
   schedule:
-    - cron: '0,30 21-23 * * FRI'
-    - cron: '0,30 0-5 * * SAT'
+    - cron: '0,30 10-14 * * MON'
 
 env:
   working-directory: ./infra/api/environments/

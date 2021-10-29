@@ -65,6 +65,7 @@ class ErrorCategory {
             .addRule(`CypressError`, `*cy.task('waitForClaimDocuments')*timed out*`)
             .addRule(`CypressError`, `*cy.visit()*failed trying to load:*fineos.com*`)
             .addRule(`CypressError`, `*Timed out after waiting*`)
+            .addRule(`CypressError`, `*cy.task('submitClaimToAPI')*timed out*`)
 
           .setSubCategory(this.SUB_CATEGORY.INFRASTRUCTURE_CONNECTION.AUTH)
             .addRule(`CypressError`, `*cy.task('The application redirected * more than * times*`)

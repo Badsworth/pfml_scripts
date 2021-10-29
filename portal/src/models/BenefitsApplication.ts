@@ -39,6 +39,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
   has_state_id: boolean | null = null;
   has_submitted_payment_preference: boolean | null = null;
   hours_worked_per_week: number | null = null;
+  is_withholding_tax: boolean | null = null;
   mass_id: string | null = null;
   mailing_address: Address | null = null;
   other_incomes: OtherIncome[] = [];

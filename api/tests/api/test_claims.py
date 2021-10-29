@@ -814,7 +814,7 @@ class TestGetClaimReview:
                         "type": "Time off period",
                         "status": "Known",
                         "leaveRequest": {
-                            "id": "2",
+                            "id": "PL-14432-00001",
                             "reasonName": "Child Bonding",
                             "qualifier1": "Newborn",
                             "qualifier2": "",
@@ -842,7 +842,7 @@ class TestGetClaimReview:
                         "type": "Time off period",
                         "status": "Known",
                         "leaveRequest": {
-                            "id": "1",
+                            "id": "PL-14432-00002",
                             "reasonName": "Child Bonding",
                             "qualifier1": "Newborn",
                             "qualifier2": "",
@@ -875,6 +875,13 @@ class TestGetClaimReview:
             decision["period"]["status"] = "Pending"
             decisions.append(decision)
         absence_details["decisions"] = decisions
+        return PeriodDecisions.parse_obj(absence_details)
+
+    @pytest.fixture
+    def mock_absence_details_invalid_leave_request_id(self, absence_details_data):
+        absence_details = absence_details_data.copy()
+        absence_details["decisions"][0]["period"]["leaveRequest"]["id"] = "PL0000100001"
+        absence_details["decisions"][1]["period"]["leaveRequest"]["id"] = "PL-00001-one"
         return PeriodDecisions.parse_obj(absence_details)
 
     @pytest.fixture
@@ -1024,6 +1031,26 @@ class TestGetClaimReview:
             f"/v1/employers/claims/{claim.fineos_absence_id}/review",
             headers={"Authorization": f"Bearer {employer_auth_token}"},
         )
+        assert response.status_code == 200
+        self._assert_no_absence_period_data_for_claim(test_db_session, claim)
+
+    @mock.patch("massgov.pfml.fineos.mock_client.MockFINEOSClient.get_absence_period_decisions")
+    def test_employer_get_claim_review_creates_absence_period_invalid_leave_request_id(
+        self,
+        mock_get_absence,
+        test_db_session,
+        client,
+        employer_auth_token,
+        mock_absence_details_invalid_leave_request_id,
+        claim,
+    ):
+        self._assert_no_absence_period_data_for_claim(test_db_session, claim)
+        mock_get_absence.return_value = mock_absence_details_invalid_leave_request_id
+        response = client.get(
+            f"/v1/employers/claims/{claim.fineos_absence_id}/review",
+            headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
         assert response.status_code == 200
         self._assert_no_absence_period_data_for_claim(test_db_session, claim)
 

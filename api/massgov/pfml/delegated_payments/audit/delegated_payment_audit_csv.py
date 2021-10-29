@@ -34,6 +34,8 @@ class PaymentAuditCSV(AbstractRecord):
     i_value: Optional[str]
     employer_id: Optional[str]
     absence_case_creation_date: Optional[str]
+    absence_start_date: Optional[str]
+    absence_end_date: Optional[str]
     case_status: Optional[str]
     leave_request_decision: Optional[str]
     check_description: Optional[str]
@@ -87,6 +89,8 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     i_value="I Value",
     employer_id="Employer ID",
     absence_case_creation_date="Absence Case Creation Date",
+    absence_start_date="Absence Case Start Date",
+    absence_end_date="Absence Case End Date",
     case_status="Case Status",
     leave_request_decision="Leave Request Decision",
     check_description="Check Memo",

@@ -79,10 +79,7 @@ describe("Post-approval (notifications/notices)", () => {
 
   it("Displays proper statuses in the claimant portal", () => {
     cy.dependsOnPreviousPass([denyModification]);
-    portal.before({
-      claimantShowStatusPage: true,
-    });
-    cy.visit("/");
+    portal.before();
     portal.loginClaimant();
     cy.unstash<Submission>("submission").then((submission) => {
       // Wait for the legal document to arrive.

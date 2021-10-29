@@ -150,6 +150,8 @@ class IssueType(str, Enum):
     # this moving forward.
     # TODO (EMPLOYER-1643): Remove this once the errors the reference it no longer use IssueRule
     pfml = ""
+    # Generic value error
+    value_error = "value_error"
 
 
 @dataclass

@@ -1,22 +1,24 @@
-import Status, { LeaveDetails } from "../../../src/pages/applications/status";
+import Status, {
+  LeaveDetails,
+} from "../../../../src/pages/applications/status/index";
 import { cleanup, render, screen } from "@testing-library/react";
 
-import AppErrorInfo from "../../../src/models/AppErrorInfo";
-import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
-import BenefitsApplicationDocument from "../../../src/models/BenefitsApplicationDocument";
-import ClaimDetail from "../../../src/models/ClaimDetail";
-import DocumentCollection from "../../../src/models/DocumentCollection";
-import { DocumentType } from "../../../src/models/Document";
-import LeaveReason from "../../../src/models/LeaveReason";
+import AppErrorInfo from "../../../../src/models/AppErrorInfo";
+import AppErrorInfoCollection from "../../../../src/models/AppErrorInfoCollection";
+import BenefitsApplicationDocument from "../../../../src/models/BenefitsApplicationDocument";
+import ClaimDetail from "../../../../src/models/ClaimDetail";
+import DocumentCollection from "../../../../src/models/DocumentCollection";
+import { DocumentType } from "../../../../src/models/Document";
+import LeaveReason from "../../../../src/models/LeaveReason";
 import React from "react";
-import { ReasonQualifier } from "../../../src/models/BenefitsApplication";
+import { ReasonQualifier } from "../../../../src/models/BenefitsApplication";
 import { mockRouter } from "next/router";
-import { renderPage } from "../../test-utils";
-import routes from "../../../src/routes";
+import { renderPage } from "../../../test-utils";
+import routes from "../../../../src/routes";
 
 jest.mock("next/router");
 
-mockRouter.asPath = routes.applications.status;
+mockRouter.asPath = routes.applications.status.claim;
 
 const DOCUMENTS = [
   new BenefitsApplicationDocument({
@@ -92,7 +94,7 @@ describe("Status", () => {
     };
   });
 
-  it("redirects page if feature flag is not enabled", () => {
+  it("redirects page if claimantShowStatusPage feature flag is not enabled", () => {
     process.env.featureFlags = {
       claimantShowStatusPage: false,
     };
@@ -202,6 +204,24 @@ describe("Status", () => {
     );
 
     expect(container).toMatchSnapshot();
+  });
+
+  it("shows StatusNavigationTabs if claimantShowPayments feature flag is enabled", () => {
+    process.env.featureFlags = {
+      claimantShowPayments: true,
+    };
+    renderPage(
+      Status,
+      {
+        addCustomSetup: setupHelper({ ...defaultClaimDetail }),
+      },
+      props
+    );
+
+    expect(screen.getByRole("link", { name: "Payments" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Application" })
+    ).toBeInTheDocument();
   });
 
   describe("success alert", () => {

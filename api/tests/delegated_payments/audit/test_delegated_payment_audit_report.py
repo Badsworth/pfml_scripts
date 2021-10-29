@@ -487,6 +487,14 @@ def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Pay
         == payment.absence_case_creation_date.isoformat()
     )
     assert (
+        row[PAYMENT_AUDIT_CSV_HEADERS.absence_start_date]
+        == payment.claim.absence_period_start_date.isoformat()
+    )
+    assert (
+        row[PAYMENT_AUDIT_CSV_HEADERS.absence_end_date]
+        == payment.claim.absence_period_end_date.isoformat()
+    )
+    assert (
         row[PAYMENT_AUDIT_CSV_HEADERS.case_status]
         == payment.claim.fineos_absence_status.absence_status_description
     )

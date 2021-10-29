@@ -1,38 +1,33 @@
 import { portal, fineos, email, fineosPages } from "../../actions";
-import { getFineosBaseUrl, getLeaveAdminCredentials } from "../../config";
+import { getLeaveAdminCredentials } from "../../config";
 import { assertValidClaim } from "../../../src/util/typeUtils";
 import { Submission } from "../../../src/types";
 describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
-  const fineosSubmission = it(
-    "Should be able to create a claim",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      fineos.before();
-      cy.visit("/");
-      cy.task("generateClaim", "CDENY2").then((claim) => {
-        cy.stash("claim", claim);
-        assertValidClaim(claim.claim);
-        fineosPages.ClaimantPage.visit(claim.claim.tax_identifier)
-          .createNotification(claim.claim)
-          .then((fineos_absence_id) => {
-            cy.log(fineos_absence_id);
-            cy.stash("submission", {
-              fineos_absence_id: fineos_absence_id,
-              timestamp_from: Date.now(),
-            });
-            fineosPages.ClaimPage.visit(fineos_absence_id).adjudicate(
-              (adjudication) => {
-                adjudication.evidence((evidence) =>
-                  claim.documents.forEach(({ document_type }) =>
-                    evidence.receive(document_type)
-                  )
-                );
-              }
-            );
+  const fineosSubmission = it("Should be able to create a claim", () => {
+    fineos.before();
+    cy.task("generateClaim", "CDENY2").then((claim) => {
+      cy.stash("claim", claim);
+      assertValidClaim(claim.claim);
+      fineosPages.ClaimantPage.visit(claim.claim.tax_identifier)
+        .createNotification(claim.claim)
+        .then((fineos_absence_id) => {
+          cy.log(fineos_absence_id);
+          cy.stash("submission", {
+            fineos_absence_id: fineos_absence_id,
+            timestamp_from: Date.now(),
           });
-      });
-    }
-  );
+          fineosPages.ClaimPage.visit(fineos_absence_id).adjudicate(
+            (adjudication) => {
+              adjudication.evidence((evidence) =>
+                claim.documents.forEach(({ document_type }) =>
+                  evidence.receive(document_type)
+                )
+              );
+            }
+          );
+        });
+    });
+  });
 
   const employerDenial =
     it("Leave admin will submit ER denial for employee", () => {
@@ -49,10 +44,9 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
       });
     });
 
-  it("CSR will deny claim", { baseUrl: getFineosBaseUrl() }, () => {
+  it("CSR will deny claim", () => {
     cy.dependsOnPreviousPass([fineosSubmission, employerDenial]);
     fineos.before();
-    cy.visit("/");
     cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
       fineosPages.ClaimPage.visit(fineos_absence_id).deny(
         "Covered family relationship not established"
@@ -60,36 +54,29 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
     });
   });
 
-  it(
-    "CSR will process a decision change",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      cy.dependsOnPreviousPass([fineosSubmission, employerDenial]);
-      fineos.before();
-      cy.visit("/");
-      cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
-        const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id);
-        claimPage.addAppeal();
-        claimPage.triggerNotice("SOM Generate Appeals Notice");
-        claimPage.appealDocuments((docPage) => {
-          docPage.assertDocumentExists("Appeal Acknowledgment");
-        });
-        claimPage.appealTasks((tasks) => {
-          tasks.closeAppealReview();
-          tasks.close("Schedule Hearing");
-          tasks.close("Conduct Hearing");
-          tasks.closeConductHearing();
-          tasks.assertTaskExists("Send Decision Notice");
-        });
-        claimPage.appealDocuments((docPage) => {
-          docPage.uploadDocument("Appeal Notice - Claim Decision Changed");
-          docPage.assertDocumentUploads(
-            "Appeal Notice - Claim Decision Changed"
-          );
-        });
+  it("CSR will process a decision change", () => {
+    cy.dependsOnPreviousPass([fineosSubmission, employerDenial]);
+    fineos.before();
+    cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
+      const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id);
+      claimPage.addAppeal();
+      claimPage.triggerNotice("SOM Generate Appeals Notice");
+      claimPage.appealDocuments((docPage) => {
+        docPage.assertDocumentExists("Appeal Acknowledgment");
       });
-    }
-  );
+      claimPage.appealTasks((tasks) => {
+        tasks.closeAppealReview();
+        tasks.close("Schedule Hearing");
+        tasks.close("Conduct Hearing");
+        tasks.closeConductHearing();
+        tasks.assertTaskExists("Send Decision Notice");
+      });
+      claimPage.appealDocuments((docPage) => {
+        docPage.uploadDocument("Appeal Notice - Claim Decision Changed");
+        docPage.assertDocumentUploads("Appeal Notice - Claim Decision Changed");
+      });
+    });
+  });
 
   it(
     "Check the Leave Admin email for the appeal notification.",

@@ -4,6 +4,7 @@ from uuid import UUID
 
 import connexion
 import flask
+import newrelic.agent
 from sqlalchemy.orm.session import Session
 from sqlalchemy_utils import escape_like
 from werkzeug.exceptions import BadRequest, Forbidden, NotFound, Unauthorized
@@ -646,9 +647,14 @@ def sync_absence_periods(
         # only commit to db when every absence period has been succesfully synced
         # otherwise rollback changes if any absence period upsert throws an exception
         db_session.commit()
-    except Exception:
+    except Exception as e:
         db_session.rollback()
+        message = "Failed to update fineos absence periods"
         logger.exception(
-            "Failed to update fineos absence periods",
-            extra={"fineos_absence_id": claim.fineos_absence_id, **log_attributes},
+            message, extra={"fineos_absence_id": claim.fineos_absence_id, **log_attributes},
+        )
+        newrelic.agent.record_exception(
+            exc=e,
+            value=message,
+            params={"fineos_absence_id": claim.fineos_absence_id, **log_attributes},
         )

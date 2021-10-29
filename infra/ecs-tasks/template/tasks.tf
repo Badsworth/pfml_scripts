@@ -243,7 +243,17 @@ locals {
         local.db_access,
         local.fineos_s3_access,
         local.pub_s3_folders,
-        { name : "FINEOS_PAYMENT_RECONCILIATION_EXTRACT_MAX_HISTORY_DATE", value : "2021-10-01" }
+        { name : "FINEOS_PAYMENT_RECONCILIATION_EXTRACT_MAX_HISTORY_DATE", value : "2021-10-26" }
+      ]
+    },
+
+    "pub-payments-process-1099-documents" = {
+      command   = ["pub-payments-process-1099-documents"]
+      task_role = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-1099"
+      env = [
+        local.db_access,
+        local.fineos_s3_access,
+        local.pub_s3_folders
       ]
     },
 
