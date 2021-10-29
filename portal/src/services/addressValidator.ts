@@ -1,7 +1,8 @@
 import Address from "../models/Address";
 import { AddressValidationError } from "../errors";
 
-const authToken: string = process.env.experianApiKey || "";
+const authToken: string =
+  process.env.experianApiKey || process.env.NEXT_PUBLIC_experianApiKey || "";
 
 interface ExperianSuggestion {
   global_address_key: string;
