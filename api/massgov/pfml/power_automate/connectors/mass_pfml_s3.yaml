@@ -1,9 +1,7 @@
 swagger: "2.0"
-info:
-  title: Mass PFML S3 [test]
-  description: Provides authorized access to AWS S3 resources for the Massachusetts Paid Family & Medical Leave Program.
-  version: "1.2"
-host: paidleave-api-test.mass.gov
+info: { title: "Mass PFML S3", description: Provides authorized access to AWS
+      S3 resources for the Massachusetts Paid Family & Medical Leave Program., version: 1.2.1 }
+host: paidleave-api.mass.gov
 basePath: /pfmldata
 schemes: [https]
 consumes: []
@@ -14,164 +12,144 @@ paths:
       operationId: ListObjects
       summary: List S3 Objects
       description: List S3 objects in a bucket using the S3 action [ListObjectsV2](https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html).
-      tags:
-        - Bucket
+      tags: [Bucket]
       parameters:
-        - $ref: "#/parameters/Bucket"
-        - $ref: "#/parameters/Key"
-        - $ref: "#/parameters/MaxKeys"
-        - $ref: "#/parameters/StartAfter"
-        - $ref: "#/parameters/NoSlashfix"
+        - { $ref: "#/parameters/Bucket" }
+        - { $ref: "#/parameters/Key" }
+        - { $ref: "#/parameters/MaxKeys" }
+        - { $ref: "#/parameters/StartAfter" }
+        - { $ref: "#/parameters/NoSlashfix" }
       produces: [application/xml, application/json]
       responses:
         "200":
           description: A successful ListObjectsV2 XML response.
-          schema:
-            $ref: "#/definitions/XMLResponse"
+          schema: { $ref: "#/definitions/XMLResponse" }
           headers:
             Date: { description: "Tue, 19 Oct 2021 19:29:57 GMT", type: string }
             Content-Type:
               { description: Content-Type of response body., type: string }
             Content-Length:
               { description: Length of response body, type: integer }
-        "403":
-          $ref: "#/responses/Unauthorized"
-        "500":
-          $ref: "#/responses/Error"
+        "403": { $ref: "#/responses/Unauthorized" }
+        "500": { $ref: "#/responses/Error" }
   /{bucket}/{key}:
     get:
       operationId: GetObject
       summary: Get S3 Object
       description: Retrieves S3 object in a bucket using the S3 action [GetObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_GetObject.html).
-      tags:
-        - Object
+      tags: [Object]
       parameters:
-        - $ref: "#/parameters/Bucket"
-        - $ref: "#/parameters/Key"
+        - { $ref: "#/parameters/Bucket" }
+        - { $ref: "#/parameters/Key" }
       produces:
-        - application/pdf
-        - image/jpg
-        - image/jpeg
-        - image/png
-        - image/tiff
-        - image/heic
-        - application/xml
-        - application/json
+        [
+          application/pdf,
+          image/jpg,
+          image/jpeg,
+          image/png,
+          image/tiff,
+          image/heic,
+          application/xml,
+          application/json,
+        ]
       responses:
         "200":
           description: A successful GetObject File response.
           schema:
-            title: File Body
-            description: Raw file contents response body.
-            type: string
-            format: binary
+            {
+              title: File Body,
+              description: Raw file contents response body.,
+              type: string,
+              format: binary,
+            }
           headers:
             Date: { description: "Tue, 19 Oct 2021 19:29:57 GMT", type: string }
             Content-Type:
               { description: Content-Type of response body., type: string }
             Content-Length:
               { description: Length of response body, type: integer }
-        "403":
-          $ref: "#/responses/Unauthorized"
-        "404":
-          $ref: "#/responses/NotFound"
-        "500":
-          $ref: "#/responses/Error"
+        "403": { $ref: "#/responses/Unauthorized" }
+        "404": { $ref: "#/responses/NotFound" }
+        "500": { $ref: "#/responses/Error" }
     delete:
       operationId: DeleteObject
       summary: Delete S3 Object
       description: Removes S3 object in a bucket using the S3 action [DeleteObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_DeleteObject.html).
-      tags:
-        - Object
+      tags: [Object]
       parameters:
-        - $ref: "#/parameters/Bucket"
-        - $ref: "#/parameters/Key"
+        - { $ref: "#/parameters/Bucket" }
+        - { $ref: "#/parameters/Key" }
       responses:
         "204":
           description: A successful DeleteObject empty response.
           headers:
             Date: { description: "Tue, 19 Oct 2021 19:29:57 GMT", type: string }
-        "403":
-          $ref: "#/responses/Unauthorized"
-        "500":
-          $ref: "#/responses/Error"
+        "403": { $ref: "#/responses/Unauthorized" }
+        "500": { $ref: "#/responses/Error" }
     put:
       operationId: CopyObject
       summary: Copy S3 Object.
-      description: Copies S3 object in a bucket to another location in same bucket using S3 action [CopyObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html).
-      tags:
-        - Object
+      description:
+        Copies S3 object in a bucket to another location in same bucket
+        using S3 action [CopyObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html).
+      tags: [Object]
       parameters:
-        - $ref: "#/parameters/Bucket"
-        - $ref: "#/parameters/Key"
-        - $ref: "#/parameters/Src"
+        - { $ref: "#/parameters/Bucket" }
+        - { $ref: "#/parameters/Key" }
+        - { $ref: "#/parameters/Src" }
       produces: [application/xml, application/json]
       responses:
         "200":
           description: A successful CopyObject XML response.
-          schema:
-            $ref: "#/definitions/XMLResponse"
+          schema: { $ref: "#/definitions/XMLResponse" }
           headers:
             Date: { description: "Tue, 19 Oct 2021 19:29:57 GMT", type: string }
             Content-Type:
               { description: Content-Type of response body., type: string }
             Content-Length:
               { description: Length of response body, type: integer }
-        "400":
-          $ref: "#/responses/InvalidArgument"
-        "403":
-          $ref: "#/responses/Unauthorized"
-        "404":
-          $ref: "#/responses/NotFound"
-        "500":
-          $ref: "#/responses/Error"
+        "400": { $ref: "#/responses/InvalidArgument" }
+        "403": { $ref: "#/responses/Unauthorized" }
+        "404": { $ref: "#/responses/NotFound" }
+        "500": { $ref: "#/responses/Error" }
 parameters:
   Bucket:
-    name: bucket
-    x-ms-summary: Bucket
-    description: S3 Bucket name
-    in: path
-    required: true
-    type: string
+    {
+      name: bucket,
+      x-ms-summary: Bucket,
+      description: S3 Bucket name,
+      in: path,
+      required: true,
+      type: string,
+    }
   Key:
-    name: key
-    x-ms-summary: Key
-    description: S3 Key
-    in: path
-    required: true
-    type: string
+    {
+      name: key,
+      x-ms-summary: Key,
+      description: S3 Key,
+      in: path,
+      required: true,
+      type: string,
+    }
   Src:
-    name: src
-    x-ms-summary: Source
-    description: S3 Source Key
-    in: query
-    required: true
-    type: string
-    format: html
+    {
+      name: src,
+      x-ms-summary: Source,
+      description: S3 Source Key,
+      in: query,
+      required: true,
+      type: string,
+    }
   MaxKeys:
-    name: max_keys
-    x-ms-summary: Max Response Keys
-    description: Maximum number of keys returned in response.
-    in: query
-    required: false
-    type: string
-    default: 1
+    { name: max_keys, x-ms-summary: Max Response Keys, description: Maximum
+        number of keys returned in response., in: query, required: false, type: string, default: "1" }
   StartAfter:
-    name: start_after
-    x-ms-summary: Start After Key
-    description: Start listing results lexicographically after this key.
-    in: query
-    required: false
-    type: string
-    format: ""
+    { name: start_after, x-ms-summary: Start After Key, description: Start
+        listing results lexicographically after this key., in: query, required: false, type: string }
   NoSlashfix:
-    name: no_slash_fix
-    x-ms-summary: Prevent forward slash from appending to path.
-    description: Any value supplied to this function will prevent the key in the path parameter from automatically having a forward slash at the end.
-    in: query
-    required: false
-    type: string
-    x-ms-visibility: internal
+    { name: no_slash_fix, x-ms-summary: Prevent forward slash from appending
+        to path., description: Any value supplied to this function will prevent the
+        key in the path parameter from automatically having a forward slash at the end., in: query, required: false, type: string, x-ms-visibility: advanced }
 responses:
   InvalidArgument:
     description: An invalid argument response.
@@ -180,8 +158,7 @@ responses:
       Content-Type:
         { description: Content-Type of response body., type: string }
       Content-Length: { description: Length of response body, type: integer }
-    schema:
-      $ref: "#/definitions/XMLResponse"
+    schema: { $ref: "#/definitions/XMLResponse" }
   Unauthorized:
     description: A forbidden response.
     headers:
@@ -189,8 +166,7 @@ responses:
       Content-Type:
         { description: Content-Type of response body., type: string }
       Content-Length: { description: Length of response body, type: integer }
-    schema:
-      $ref: "#/definitions/XMLResponse"
+    schema: { $ref: "#/definitions/XMLResponse" }
   NotFound:
     description: A content not found response.
     headers:
@@ -198,8 +174,7 @@ responses:
       Content-Type:
         { description: Content-Type of response body., type: string }
       Content-Length: { description: Length of response body, type: integer }
-    schema:
-      $ref: "#/definitions/XMLResponse"
+    schema: { $ref: "#/definitions/XMLResponse" }
   Error:
     description: An internal server error JSON response.
     headers:
@@ -207,51 +182,48 @@ responses:
       Content-Type:
         { description: Content-Type of response body., type: string }
       Content-Length: { description: Length of response body, type: integer }
-    schema:
-      $ref: "#/definitions/APIGatewayErrorResponse"
+    schema: { $ref: "#/definitions/APIGatewayErrorResponse" }
 definitions:
   XMLResponse:
     title: XML Response
     description: An application/xml response string.
-    xml: { name: XML }
-    type: string
+    type: object
+    xml: { name: xml }
   ListObjects:
     title: List ObjectsV2 Response
-    description: A [ListObjectsV2](https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html) response body.
-    xml:
-      name: ListBucketResult
+    description:
+      A [ListObjectsV2](https://docs.aws.amazon.com/AmazonS3/latest/API/API_ListObjectsV2.html)
+      response body.
+    xml: { name: ListBucketResult }
     type: object
     properties:
-      Name:
-        title: Name
-        description: The bucket name.
-        type: string
+      Name: { title: Name, description: The bucket name., type: string }
       Prefix:
-        title: Prefix
-        description: Keys that begin with the indicated prefix.
-        type: string
+        {
+          title: Prefix,
+          description: Keys that begin with the indicated prefix.,
+          type: string,
+        }
       Delimiter:
-        title: Delimiter
-        description: Causes keys that contain the same string between the prefix and the first occurrence of the delimiter to be rolled up into a single result element.
-        type: string
+        { title: Delimiter, description: Causes keys that contain the same
+            string between the prefix and the first occurrence of the delimiter to be
+            rolled up into a single result element., type: string }
       KeyCount:
-        title: KeyCount
-        description: The number of keys returned with this request. KeyCount will always be less than or equals to MaxKeys field.
-        type: string
+        { title: KeyCount, description: The number of keys returned with this
+            request. KeyCount will always be less than or equals to MaxKeys field., type: string }
       MaxKeys: { title: MaxKeys, type: number }
       StartAfter: { title: StartAfter, type: string }
       IsTruncated:
-        {
-          title: IsTruncated,
-          description: Set to false if all of the results were returned.,
-          type: boolean,
-        }
+        { title: IsTruncated, description: Set to false if all of the results
+            were returned., type: boolean }
       EncodingType: { title: EncodingType, type: string }
       ContinuationToken: { title: ContinuationToken, type: string }
       NextContinuationToken: { title: NextContinuationToken, type: string }
       CommonPrefixes:
         type: array
-        description: All of the keys (up to 1,000) rolled up into a common prefix count as a single return when calculating the number of returns.
+        description:
+          All of the keys (up to 1,000) rolled up into a common prefix
+          count as a single return when calculating the number of returns.
         items:
           type: object
           properties:
@@ -274,22 +246,22 @@ definitions:
                 ID: { type: string }
   CopyObject:
     title: Copy Object Response
-    description: A [CopyObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html) response body.
-    xml:
-      name: CopyObjectResult
+    description:
+      A [CopyObject](https://docs.aws.amazon.com/AmazonS3/latest/API/API_CopyObject.html)
+      response body.
+    xml: { name: CopyObjectResult }
     type: object
     properties:
       ETag:
-        title: ETag
-        type: string
-        description: "Returns the ETag of the new object. The ETag reflects only changes to the contents of an object,not its metadata."
+        { title: ETag, type: string, description: "Returns the ETag of the new
+            object. The ETag reflects only changes to the contents of an object,not
+            its metadata." }
       LastModified: { type: string, description: Creation date of the object. }
   S3ErrorResponse:
     title: S3 Error Response
     description: S3 Error response body.
     type: object
-    xml:
-      name: Error
+    xml: { name: Error }
     properties:
       Code: { title: Code, type: string }
       Message: { title: Message, type: string }
@@ -299,8 +271,7 @@ definitions:
     title: Error Response
     description: Error response body.
     type: object
-    xml:
-      name: Error
+    xml: { name: Error }
     properties:
       message: { type: string, description: API Error message. }
 securityDefinitions:
