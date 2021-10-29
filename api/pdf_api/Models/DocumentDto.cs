@@ -22,6 +22,10 @@ namespace PfmlPdfApi.Models
 
         [Required]
         public double FederalTaxesWithheld { get; set; }
+        [Required]
+        public double StateTaxesWithheld { get; set; }
+        [Required]
+        public double Repayments { get; set; }
 
         [Required]
         public string Name { get; set; }

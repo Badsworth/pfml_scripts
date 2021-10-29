@@ -129,9 +129,9 @@ namespace PfmlPdfApi.Services
             template = template.Replace("[ADDRESS]", dto.Address);
             template = template.Replace("[ZIP]", dto.ZipCode);
             template = template.Replace("[ACCOUNT]", dto.AccountNumber.HasValue ? dto.AccountNumber.ToString() : string.Empty);
-            template = template.Replace("[STATE_TAX_WITHHELD]", "0.00");
-            template = template.Replace("[REPAYMENTS]", "0.00");
-            template = template.Replace("[VERSION]", "123");
+            template = template.Replace("[STATE_TAX_WITHHELD]", dto.StateTaxesWithheld.ToString());
+            template = template.Replace("[REPAYMENTS]", dto.Repayments.ToString());
+            template = template.Replace("[VERSION]", "1.0");
 
             return template;
         }

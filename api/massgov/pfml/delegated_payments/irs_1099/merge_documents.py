@@ -26,7 +26,7 @@ class Merge1099Step(Step):
         try:
             mergeDto = {
                 "batchId": str(record.pfml_1099_batch_id),
-                "numOfRecords" : 10
+                "numOfRecords" : 250
             }
 
             response = requests.post(
