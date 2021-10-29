@@ -12,12 +12,12 @@ class Generate1099DocumentsStep(Step):
 
     def _generate_1099_documents(self) -> None:
         logger.info("1099 Documents - Generate 1099 Documents Step")
-        records = self.get_records()
+        records = self.get_payment_records()
 
         for record in records:
             self.generate_document(record)
 
-    def get_records(self):
+    def get_payment_records(self):
         return self.db_session.query(Pfml1099).all()
 
     def generate_document(self, record) -> None:

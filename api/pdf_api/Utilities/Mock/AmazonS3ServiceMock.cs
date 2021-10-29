@@ -36,6 +36,7 @@ namespace PfmlPdfApi.Utilities.Mock
             
             var fileStream = File.Create($"{BASEFOLDER}//{fileName}");
             lstream.CopyTo(fileStream);
+            fileStream.Close();
             
             return true;
         }
