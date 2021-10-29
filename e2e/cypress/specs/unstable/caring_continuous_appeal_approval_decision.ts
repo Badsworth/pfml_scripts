@@ -112,7 +112,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
-              30000
+              60000
             );
             cy.contains(submission.fineos_absence_id);
           });
