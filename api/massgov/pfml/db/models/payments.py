@@ -5,6 +5,7 @@ from typing import Optional, cast
 
 from sqlalchemy import JSON, TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql.functions import func
 
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import Claim, Employee, ImportLog, Payment, ReferenceFile
@@ -412,8 +413,8 @@ class FineosExtractEmployeeFeed(Base):
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
     )
-    created_at = Column(TIMESTAMP(timezone=True))
-    updated_at = Column(TIMESTAMP(timezone=True))
+    created_at = Column(TIMESTAMP(timezone=True), default=func.now())
+    updated_at = Column(TIMESTAMP(timezone=True), default=func.now())
     reference_file = relationship(ReferenceFile)
 
 
