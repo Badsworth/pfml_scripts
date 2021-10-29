@@ -1,12 +1,19 @@
-import React, { useEffect } from "react";
+import {
+  AddressSuggestion,
+  findAddress,
+  formatAddress,
+} from "../../services/addressValidator";
+import React, { useEffect, useState } from "react";
+import { pick, uniqueId } from "lodash";
 import AddressModel from "../../models/Address";
+import { AddressValidationError } from "../../errors";
 import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
+import Button from "../../components/Button";
 import ConditionalContent from "../../components/ConditionalContent";
 import FieldsetAddress from "../../components/FieldsetAddress";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
-import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -37,6 +44,163 @@ interface AddressProps {
   };
 }
 
+interface AddressFormatter {
+  address: AddressModel;
+  selectedAddressKey?: string | null;
+  selectSuggestionAddressKey: (suggestionAddressKey: string) => void;
+  couldBeFormatted?: boolean | null;
+  format: () => Promise<AddressModel | undefined>;
+  reset: () => void;
+  suggestions: AddressSuggestion[];
+}
+
+/**
+ * Manage state and actions around formatting an Address into a valid postal address. If an address can be formatted multiple ways,
+ * it provides a list of AddressSuggestions that the user can select from. If no valid address
+ * is found, a user can skip formatting.
+ * @param address Address to be formatted
+ * @param onError Error handler
+ * @returns
+ */
+const useAddressFormatter = (
+  address: AddressModel,
+  onError: (error: unknown) => void
+): AddressFormatter => {
+  const [couldBeFormatted, setCouldBeFormatted] = useState<boolean | null>();
+  const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
+  const [addressKey, setAddressKey] = useState<"none" | string | null>();
+
+  const shouldSkipFormatting = addressKey === "none";
+  const addressIsMasked = address.line_1 === "*******";
+
+  const format = async (): Promise<AddressModel | undefined> => {
+    if (shouldSkipFormatting || addressIsMasked) {
+      setCouldBeFormatted(true);
+      return address;
+    }
+
+    if (addressKey) {
+      try {
+        setAddressKey(null);
+        setSuggestions([]);
+        setCouldBeFormatted(true);
+        return await formatAddress(addressKey);
+      } catch (error: unknown) {
+        onError(error);
+        return;
+      }
+    }
+
+    try {
+      const addressSuggestion = await findAddress(address);
+      setSuggestions([]);
+      setCouldBeFormatted(true);
+      return await formatAddress(addressSuggestion.addressKey);
+    } catch (error: AddressValidationError | unknown) {
+      if (error instanceof AddressValidationError) {
+        setSuggestions(error.suggestions);
+        setCouldBeFormatted(false);
+      }
+      onError(error);
+    }
+  };
+
+  const reset = () => {
+    setSuggestions([]);
+    setCouldBeFormatted(null);
+    setAddressKey(null);
+  };
+
+  const selectSuggestionAddressKey = (suggestionAddressKey: string) => {
+    setAddressKey(suggestionAddressKey);
+  };
+
+  return {
+    address,
+    selectedAddressKey: addressKey,
+    selectSuggestionAddressKey,
+    couldBeFormatted,
+    format,
+    reset,
+    suggestions,
+  };
+};
+
+interface AddressFormattingErrorProps {
+  addressFormatter: AddressFormatter;
+}
+
+const AddressFormattingError = (props: AddressFormattingErrorProps) => {
+  const { addressFormatter } = props;
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    addressFormatter.selectSuggestionAddressKey(event.target.value);
+  };
+
+  if (addressFormatter.suggestions.length === 0) {
+    return (
+      <div className="border-left-05 padding-left-2">
+        <InputChoiceGroup
+          smallLabel
+          label="Verify address"
+          hint={"We could not verify your address as entered"}
+          type="radio"
+          name={uniqueId("address-formatting-error")}
+          onChange={handleChange}
+          choices={[
+            {
+              checked: addressFormatter.selectedAddressKey === "none",
+              label: "Use address as entered:",
+              hint: addressFormatter.address.toString(),
+              value: "none",
+            },
+          ]}
+        />
+        <Button onClick={addressFormatter.reset} variation="unstyled">
+          Edit address
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border-left-05 padding-left-2">
+      <InputChoiceGroup
+        smallLabel
+        label="Verify your address"
+        hint="Suggested:"
+        type="radio"
+        name={uniqueId("address-formatting-error")}
+        onChange={handleChange}
+        choices={addressFormatter.suggestions.map((suggestion) => ({
+          checked:
+            addressFormatter.selectedAddressKey === suggestion.addressKey,
+          label: suggestion.address,
+          value: suggestion.addressKey,
+        }))}
+      />
+      <InputChoiceGroup
+        smallLabel
+        label=""
+        hint="Entered:"
+        type="radio"
+        name={uniqueId("address-formatting-error")}
+        onChange={handleChange}
+        choices={[
+          {
+            checked: addressFormatter.selectedAddressKey === "none",
+            label: addressFormatter.address.toString(),
+            value: "none",
+          },
+        ]}
+      />
+      <Button onClick={addressFormatter.reset} variation="unstyled">
+        Edit address
+      </Button>
+    </div>
+  );
+};
+
 export const Address = (props: AddressProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
@@ -46,6 +210,15 @@ export const Address = (props: AddressProps) => {
   );
 
   const { has_mailing_address } = formState;
+
+  const residentialAddressFormatter = useAddressFormatter(
+    new AddressModel(formState.residential_address),
+    appLogic.catchError
+  );
+  const mailingAddressFormatter = useAddressFormatter(
+    new AddressModel(formState.mailing_address),
+    appLogic.catchError
+  );
 
   /**
    * When user indicates they have a mailing address,
@@ -58,8 +231,19 @@ export const Address = (props: AddressProps) => {
     }
   }, [formState, updateFields]);
 
-  const handleSave = () =>
-    appLogic.benefitsApplications.update(claim.application_id, formState);
+  const handleSave = async () => {
+    const formData = { ...formState };
+    formData.residential_address = await residentialAddressFormatter.format();
+
+    if (has_mailing_address) {
+      formData.mailing_address = await mailingAddressFormatter.format();
+      if (!formData.mailing_address) return;
+    }
+
+    if (!formData.residential_address) return;
+
+    await appLogic.benefitsApplications.update(claim.application_id, formData);
+  };
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -86,6 +270,13 @@ export const Address = (props: AddressProps) => {
         label={t("pages.claimsAddress.sectionLabel")}
         hint={t("pages.claimsAddress.hint")}
         {...residentialAddressProps}
+        errorMsg={
+          residentialAddressFormatter.couldBeFormatted === false && (
+            <AddressFormattingError
+              addressFormatter={residentialAddressFormatter}
+            />
+          )
+        }
       />
       <InputChoiceGroup
         {...getFunctionalInputProps("has_mailing_address")}
@@ -118,6 +309,13 @@ export const Address = (props: AddressProps) => {
           hint={t("pages.claimsAddress.mailingAddressHint")}
           addressType="mailing"
           {...mailingAddressProps}
+          errorMsg={
+            mailingAddressFormatter.couldBeFormatted === false && (
+              <AddressFormattingError
+                addressFormatter={mailingAddressFormatter}
+              />
+            )
+          }
         />
       </ConditionalContent>
     </QuestionPage>

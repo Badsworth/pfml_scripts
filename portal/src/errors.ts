@@ -2,6 +2,8 @@
  * @file Custom Error classes. Useful as a way to see all potential errors that our system may throw/catch
  */
 
+import { AddressSuggestion } from "./services/addressValidator";
+
 export interface CognitoError {
   code: string;
   name: string;
@@ -245,6 +247,20 @@ export class ValidationError extends BasePortalError {
     this.issues = issues;
     this.i18nPrefix = i18nPrefix;
     this.name = "ValidationError";
+  }
+}
+
+/**
+ * Address search returned more than one possible addresses.
+ */
+export class AddressValidationError extends BasePortalError {
+  // List of possible valid addresses
+  suggestions: AddressSuggestion[];
+
+  constructor(suggestions: AddressSuggestion[]) {
+    super();
+    this.suggestions = suggestions;
+    this.name = "AddressValidationError";
   }
 }
 

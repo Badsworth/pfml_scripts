@@ -15,4 +15,5 @@ module.exports = {
   domain: "paidleave-cps-preview.eol.mass.gov",
   gtmConfig: {},
   newRelicAppId: "1275659093",
+  experianApiKey: "961b1b04-80cc-4ad5-85e3-4409430a1d6d",
 };

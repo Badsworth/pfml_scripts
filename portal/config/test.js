@@ -19,4 +19,5 @@ module.exports = {
     // TODO (CP-1362): Revert temporary switch to Test environment
     cognitoUserPoolWebClientId: "7sjb96tvg8251lrq5vdk7de9",
   },
+  experianApiKey: "961b1b04-80cc-4ad5-85e3-4409430a1d6d",
 };

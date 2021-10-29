@@ -15,4 +15,5 @@ module.exports = {
   domain: "paidleave-uat.mass.gov",
   gtmConfig: {},
   newRelicAppId: "1062794160",
+  experianApiKey: "961b1b04-80cc-4ad5-85e3-4409430a1d6d",
 };

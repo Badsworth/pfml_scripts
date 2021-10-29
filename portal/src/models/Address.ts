@@ -8,6 +8,14 @@ class Address {
   constructor(attrs: Partial<Address>) {
     Object.assign(this, attrs);
   }
+
+  toString(): string {
+    return `${this.line_1 || ""} ${this.line_2 || ""}, ${this.city || ""} ${
+      this.state || ""
+    } ${this.zip || ""}`
+      .replace("  ", " ")
+      .trim();
+  }
 }
 
 export default Address;
