@@ -43,7 +43,7 @@ class PaymentAuditReportStep(Step):
     def sample_payments_for_audit_report(self) -> Iterable[Payment]:
         logger.info("Start sampling payments for audit report")
 
-        state_logs_containers: StateLog =[]
+        state_logs_containers: List[StateLog]
 
         state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
             state_log_util.AssociatedClass.PAYMENT,
@@ -51,34 +51,51 @@ class PaymentAuditReportStep(Step):
             self.db_session,
         )
 
+        logger.info("state_logs %s",state_logs)
+
         if len(state_logs)>0:
-            state_logs_containers.append(state_logs)
+            for item in state_logs:
+                state_logs_containers.append(item)
+
+
         federal_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
             state_log_util.AssociatedClass.PAYMENT,
             State.FEDERAL_WITHHOLDING_PENDING_AUDIT,
             self.db_session,
         )
+
+        logger.info("federal_withholding_state_logs %s",federal_withholding_state_logs)
+
         if len(federal_withholding_state_logs)>0:
-            state_logs_containers.append(federal_withholding_state_logs)
+            for item in federal_withholding_state_logs:
+                state_logs_containers.append(item)
+
         state_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
             state_log_util.AssociatedClass.PAYMENT,
             State.STATE_WITHHOLDING_PENDING_AUDIT,
             self.db_session,
         )
+
+        logger.info("state_withholding_state_logs %s",state_withholding_state_logs)
+
         if len(state_withholding_state_logs)>0:
-            state_logs_containers.append(state_withholding_state_logs)
+            for item in state_withholding_state_logs:
+                state_logs_containers.append(item)
 
 
         state_log_count = len(state_logs_containers)
         self.set_metrics({self.Metrics.SAMPLED_PAYMENT_COUNT: state_log_count})
 
+        logger.info("state_logs_containers %s",state_logs_containers)
+
         payments: List[Payment] = []
 
         for state_log in state_logs_containers:
         
-            payment = state_log[0].payment
+            payment = state_log.payment
 
-            logger.info(state_log[0].payment)
+            logger.info(state_log.payment)
+            logger.info(state_log.payment.payment_id)
             # Shouldn't happen as they should always have a payment attached
             # but due to our unassociated state log logic, it technically can happen
             # elsewhere in the code and we want to be certain it isn't happening here
@@ -86,7 +103,7 @@ class PaymentAuditReportStep(Step):
                 raise PaymentAuditError(
                     f"A state log was found without a payment in while trying to sample payments for audit report: {state_log.state_log_id}"
                 )
-
+            logger.info("BM :BEGIN create_finished_state_log %s",payment)
             # transition the state sampling state
             # NOTE: we currently sample 100% of all available payments for audit.
             # In the future this will be based on a number of criteria
@@ -97,6 +114,8 @@ class PaymentAuditReportStep(Step):
                 state_log_util.build_outcome("Add to Payment Audit Report"),
                 self.db_session,
             )
+
+            logger.info("BM :END create_finished_state_log %s",payment)
 
             payments.append(payment)
             self.increment(self.Metrics.PAYMENT_SAMPLED_FOR_AUDIT_COUNT)
@@ -190,7 +209,9 @@ class PaymentAuditReportStep(Step):
 
         for payment in payments:
             self.increment(self.Metrics.PAYMENT_COUNT)
+            logger.info("BM : Start building PaymentAuditData")
 
+            logger.info("BM : Start building PaymentAuditData for %s", payment.payment_id)
             # populate payment audit data by inspecting the currently sampled payment's history
             previously_audit_sent_count = self.previously_audit_sent_count(payment)
             is_first_time_payment = previously_audit_sent_count == 0
@@ -203,6 +224,7 @@ class PaymentAuditReportStep(Step):
                 previously_skipped_payment_count=self.previously_skipped_payment_count(payment),
                 gross_payment_amount=self.calculate_gross_payment_amount(payment),
             )
+            logger.info("BM : End building PaymentAuditData for %s", payment.payment_id)
             payment_audit_data_set.append(payment_audit_data)
 
         logger.info(
@@ -223,10 +245,13 @@ class PaymentAuditReportStep(Step):
             # sample files
             payments: Iterable[Payment] = self.sample_payments_for_audit_report()
 
+            logger.info("BM : Start build_payment_audit_data_set")
             # generate payment audit data
             payment_audit_data_set: Iterable[PaymentAuditData] = self.build_payment_audit_data_set(
                 payments
             )
+            logger.info("BM : END build_payment_audit_data_set")
+
 
             # write the report to the archive directory
             archive_folder_path = write_audit_report(

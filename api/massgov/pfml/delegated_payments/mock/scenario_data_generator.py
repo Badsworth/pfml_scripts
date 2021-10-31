@@ -240,7 +240,7 @@ def generate_scenario_data_in_db(
     fineos_customer_number: str,
     db_session: db.Session,
 ) -> ScenarioData:
-
+    logger.info("BM : generate_scenario_data_in_db %s and ssn %s and fein %s",scenario_descriptor,ssn, fein)
     employer = create_employer(fein, fineos_employer_id, db_session)
 
     employee = create_employee(ssn, fineos_customer_number, db_session)
@@ -327,7 +327,7 @@ def generate_scenario_dataset(
         for scenario_with_count in config.scenarios_with_count:
             scenario_name = scenario_with_count.scenario_name
             scenario_count = scenario_with_count.count
-
+            logger.info("BM :generate_scenario_dataset :scenario_with_count %s scenario_name %s scenario_count  %s", config.scenarios_with_count,scenario_name,scenario_count)
             scenario_descriptor = get_scenario_by_name(scenario_name)
 
             if scenario_descriptor is None:
@@ -340,7 +340,7 @@ def generate_scenario_dataset(
                 fineos_employer_id = fein_part_str.rjust(9, "3")
                 fineos_notification_id = f"NTN-{ssn_part_str}"
                 fineos_customer_number = ssn_part_str.rjust(9, "5")
-
+                logger.info("BM : start generate_scenario_data_in_db")
                 scenario_data = generate_scenario_data_in_db(
                     scenario_descriptor,
                     ssn=str(ssn),
@@ -350,10 +350,10 @@ def generate_scenario_dataset(
                     fineos_customer_number=fineos_customer_number,
                     db_session=db_session,
                 )
-
+                logger.info("BM : END return generate_scenario_data_in_db")
                 scenario_data.payment_c_value = "7326"
                 scenario_data.payment_i_value = str(fake.unique.random_int())
-
+                logger.info("BM : has_additional_payment_in_period %s",scenario_descriptor.has_additional_payment_in_period)
                 if scenario_descriptor.has_additional_payment_in_period:
                     scenario_data.additional_payment_c_value = "7326"
                     scenario_data.additional_payment_i_value = str(fake.unique.random_int())

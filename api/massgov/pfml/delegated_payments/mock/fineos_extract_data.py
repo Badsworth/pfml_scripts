@@ -19,7 +19,7 @@ from massgov.pfml.delegated_payments.mock.scenario_data_generator import (
     NO_MATCH_ADDRESS,
     ScenarioData,
 )
-
+from massgov.pfml.delegated_payments.mock.scenarios import ScenarioName
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 fake = faker.Faker()
@@ -323,6 +323,7 @@ def create_fineos_payment_extract_files(
     # write the respective rows
     for fineos_payments_data in fineos_payments_dataset:
         pei_writer.csv_writer.writerow(fineos_payments_data.get_vpei_record())
+        
         pei_payment_details_writer.csv_writer.writerow(
             fineos_payments_data.get_payment_details_record()
         )
@@ -370,7 +371,15 @@ def generate_payment_extract_files(
         payment_method = scenario_descriptor.payment_method.payment_method_description
 
         payment_date = payments_util.get_now()
+        logger.info("BM : rouscenario_name  %s",scenario_descriptor.scenario_name )
+        logger.info("BM : scenario_name  %s",ScenarioName.FEDERAL_TAX_WITHHOLDING )
+        if(scenario_descriptor.scenario_name == ScenarioName.FEDERAL_TAX_WITHHOLDING):
+             logger.info("BM : round %s",ScenarioName.FEDERAL_TAX_WITHHOLDING)       
 
+
+        logger.info("BM : round %s",round)
+        logger.info("BM : prior_payment %s",prior_payment)
+        logger.info("BM : scenario_descriptor.has_additional_payment_in_period %s",scenario_descriptor.has_additional_payment_in_period)
         # This'll be a new payment based on different C/I values
         if round > 1 and scenario_descriptor.has_additional_payment_in_period and prior_payment:
             payment_start_period = cast(date, prior_payment.period_start_date)
@@ -426,7 +435,12 @@ def generate_payment_extract_files(
         elif scenario_descriptor.payment_transaction_type == PaymentTransactionType.CANCELLATION:
             event_type = "PaymentOut Cancellation"
         # TODO Unknown
-
+        elif scenario_descriptor.payment_transaction_type == PaymentTransactionType.FEDERAL_TAX_WITHHOLDING:
+            event_reason = "Automatic Alternate Payment"
+            payee_identifier = "ID"
+            amalgamationc = "ScheduledAlternate65424"
+            ssn="FICAMEDICAREPAYEE001"
+            
         if scenario_descriptor.fineos_extract_address_valid:
             mock_address = MATCH_ADDRESS
         else:
@@ -469,6 +483,40 @@ def generate_payment_extract_files(
             amalgamationc=amalgamationc,
             claim_type=claim_type,
         )
+
+        if(scenario_descriptor.scenario_name == ScenarioName.FEDERAL_TAX_WITHHOLDING):
+            logger.info("BM : round %s",ScenarioName.FEDERAL_TAX_WITHHOLDING)       
+                    # Auto generated: c_value, i_value, leave_request_id
+            fineos_payments_withholding_data = FineosPaymentData(
+                generate_defaults=True,
+                c_value=c_value,
+                i_value= "878787",
+                include_claim_details=scenario_descriptor.include_claim_details,
+                include_payment_details=True,
+                include_requested_absence=True,
+                tin="FICAMEDICAREPAYEE001",
+                absence_case_number=absence_case_id,
+                payment_address_1=mock_address["line_1"],
+                payment_address_2=mock_address["line_2"],
+                city=mock_address["city"],
+                state=mock_address["state"],
+                zip_code=mock_address["zip"],
+                payment_method=payment_method,
+                payment_date=payment_date.strftime("%Y-%m-%d %H:%M:%S"),
+                payment_amount=payment_amount,
+                routing_nbr=routing_nbr,
+                account_nbr=account_nbr,
+                account_type=account_type,
+                payment_start_period=payment_start_period.strftime("%Y-%m-%d %H:%M:%S"),
+                payment_end_period=payment_end_period.strftime("%Y-%m-%d %H:%M:%S"),
+                leave_request_decision=scenario_descriptor.leave_request_decision,
+                event_type=event_type,
+                event_reason=event_reason,
+                payee_identifier=payee_identifier,
+                amalgamationc=amalgamationc,
+                claim_type=claim_type,
+            )
+        fineos_payments_dataset.append(fineos_payments_withholding_data)
 
         fineos_payments_dataset.append(fineos_payments_data)
 

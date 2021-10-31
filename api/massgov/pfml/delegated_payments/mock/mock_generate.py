@@ -13,6 +13,9 @@ from massgov.pfml.delegated_payments.mock import (
     scenarios,
 )
 
+import massgov.pfml.util.logging as logging
+logger = logging.get_logger(__name__)
+
 
 def main():
     massgov.pfml.util.logging.init("pub-payments-mock-generate")
@@ -30,7 +33,8 @@ def main():
     scenario_dataset = scenario_data_generator.generate_scenario_dataset(
         config=config, db_session=db_session
     )
-
+    logger.info("BM : scenarios_with_count %s",config.scenarios_with_count)
+    
     s3_config = delegated_config.get_s3_config()
     fineos_data_export_path = s3_config.fineos_data_export_path
 
@@ -41,7 +45,7 @@ def main():
 
     # payment extract
     fineos_extract_data.generate_payment_extract_files(
-        scenario_dataset, fineos_data_export_path, payments_util.get_now(), round=1
+        scenario_dataset, fineos_data_export_path, payments_util.get_now(), round=3
     )
 
 

@@ -1,3 +1,4 @@
+import os
 import argparse
 import sys
 from typing import List
@@ -120,6 +121,16 @@ def make_db_session() -> db.Session:
 @background_task("pub-payments-process-fineos")
 def main():
     """Entry point for PUB Payment Processing"""
+
+    # if os.getenv("ENABLE_WITHHOLDING_PAYMENTS"):
+    #     logger.info(os.getenv("ENABLE_WITHHOLDING_PAYMENTS"))
+    #     logger.info("1")
+    #     return 1
+    # else:
+    #     logger.info(os.getenv("ENABLE_WITHHOLDING_PAYMENTS"))
+    #     logger.info("0")
+    #     return 0
+
     config = Configuration(sys.argv[1:])
 
     with db.session_scope(make_db_session(), close=True) as db_session, db.session_scope(
@@ -134,7 +145,7 @@ def _process_fineos_extracts(
     """Process FINEOS Payments Extracts"""
     logger.info("Start - FINEOS Payment+Claimant Extract ECS Task")
     start_time = payments_util.get_now()
-    
+
     if config.do_audit_cleanup:
         StateCleanupStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
 
@@ -157,9 +168,8 @@ def _process_fineos_extracts(
 
     if config.do_payment_extract:
         PaymentExtractStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
-
+    # if os.getenv("ENABLE_WITHHOLDING_PAYMENTS"):
     logger.info("End - PaymentExtractStep")
-    
     if config.do_related_payment_Processing:
         RelatedPaymentsProcessingStep(
             db_session=db_session, log_entry_db_session=log_entry_db_session
@@ -172,6 +182,7 @@ def _process_fineos_extracts(
             db_session=db_session, log_entry_db_session=log_entry_db_session
         ).run()
     
+
     if config.do_payment_post_processing:
         PaymentPostProcessingStep(
             db_session=db_session, log_entry_db_session=log_entry_db_session

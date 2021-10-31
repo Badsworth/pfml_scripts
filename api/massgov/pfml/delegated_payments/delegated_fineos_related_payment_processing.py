@@ -14,7 +14,7 @@ from massgov.pfml.delegated_payments.delegated_fineos_payment_extract import Pay
 from massgov.pfml.db.models.payments import LinkSplitPayment
 from massgov.pfml.delegated_payments.step import Step
 import massgov.pfml.api.util.state_log_util as state_log_util
-from massgov.pfml.db.models.employees import Claim, Payment, State, StateLog
+from massgov.pfml.db.models.employees import Claim, Payment, State, StateLog,LatestStateLog,LkState,Flow
 # import massgov.pfml.db as db
 # import massgov.pfml.db
 from massgov.pfml import db
@@ -51,14 +51,21 @@ class RelatedPaymentsProcessingStep(Step):
 		for payment in payments:
 			#get absense id for this payment
 			
+				# fineos_absence_id = (
+				# self.db_session.query(distinct(Claim.fineos_absence_id))
+				# .filter(Claim.claim_id == payment.claim_id)
+				# .filter(Payment.payment_id == payment.payment_id)
+				# .filter(Payment.period_start_date == payment.period_start_date)
+				# .filter(Payment.period_end_date== payment.period_end_date)
+				# .filter(Payment.payment_date == payment.payment_date)
+				# .filter(Payment.fineos_extraction_date == payment.fineos_extraction_date)
+				# .first()
+				# )
+
 				fineos_absence_id = (
 				self.db_session.query(distinct(Claim.fineos_absence_id))
 				.filter(Claim.claim_id == payment.claim_id)
 				.filter(Payment.payment_id == payment.payment_id)
-				.filter(Payment.period_start_date == payment.period_start_date)
-				.filter(Payment.period_end_date== payment.period_end_date)
-				.filter(Payment.payment_date == payment.payment_date)
-				.filter(Payment.fineos_extraction_date == payment.fineos_extraction_date)
 				.first()
 				)
 				logger.info(fineos_absence_id)
@@ -69,19 +76,35 @@ class RelatedPaymentsProcessingStep(Step):
 				)
 
 				if(is_duplicate_records_exists):
-						logger.info("Duplicate records exists for %s",payment,fineos_absence_id[0])
+						logger.info("Duplicate records exists for %s",fineos_absence_id[0])
 					# to update status we need payment so getting all the payment details from above query
 
 					#query the state_log table for this payment id , get latest record and check the end state 
-						payment_end_state_id = (
-						self.db_session.query(StateLog.end_state_id,StateLog)
-						.filter(StateLog.payment_id == payment.payment_id)
-						.filter(StateLog.started_at == payment.fineos_extraction_date)
-						).order_by(StateLog.created_at.desc()).first()
 						
-						logger.info("payment_end_state_id %s",payment_end_state_id)
+						# payment_end_state_id = (
+						# self.db_session.query(StateLog.end_state_id,StateLog)
+						# .filter(StateLog.payment_id == payment.payment_id)
+						# .filter(StateLog.started_at == payment.fineos_extraction_date)
+						# ).order_by(StateLog.created_at.desc()).first()
+						
+						payment_end_state_id = (
+						self.db_session.query(StateLog.end_state_id)
+						.join(LatestStateLog)
+						.join(Payment)
+						.join(LkState, StateLog.end_state_id == LkState.state_id)
+						.filter(
+							Payment.payment_id ==payment.payment_id,
+							StateLog.end_state_id.in_([191,195]),
+							LkState.flow_id == Flow.DELEGATED_PAYMENT.flow_id,
+						)
+						.first()
+						)
+
+
+						logger.info("payment_end_state_id %s",payment_end_state_id[0])
 						#how to differentiate  fed vs state :write new function to get state log (191, 195)
-						end_state =State.STATE_WITHHOLDING_PENDING_AUDIT if(payment_end_state_id in [State.STATE_WITHHOLDING_READY_FOR_PROCESSING]) else  State.FEDERAL_WITHHOLDING_PENDING_AUDIT
+						end_state =State.STATE_WITHHOLDING_PENDING_AUDIT if(payment_end_state_id[0] in [191]) else  State.FEDERAL_WITHHOLDING_PENDING_AUDIT
+						logger.info("end_state_id %s",end_state)
 						message = "Duplicate records found for the payment."
 						state_log_util.create_finished_state_log(
 						end_state=end_state,
@@ -90,8 +113,7 @@ class RelatedPaymentsProcessingStep(Step):
 						db_session=self.db_session,
 						)
 						logger.info(
-						"Payment %s added to state %s",
-						PaymentData.get_payment_message_str(),
+						"Payment added to state %s",
 						end_state.state_description,
 						)
 				else:
@@ -167,6 +189,7 @@ class RelatedPaymentsProcessingStep(Step):
 				Payment.fineos_extraction_date,
 				func.count(Payment.amount).label("records_count")
 			)
+				.join(Claim, Payment.claim_id == Claim.claim_id)
 				.filter(Claim.claim_id == payment.claim_id)
 				.filter(Claim.fineos_absence_id == fineos_absence_id)
 				# .filter(Payment.fineos_extraction_date == payment.fineos_extraction_date)
