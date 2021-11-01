@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { AppLogic } from "../hooks/useAppLogic";
 import PageNotFound from "../components/PageNotFound";
 import Spinner from "../components/Spinner";
+import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 import withUser from "./withUser";
 
@@ -43,6 +44,17 @@ const withBenefitsApplication = (Component) => {
 
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [shouldLoad]);
+
+    useEffect(() => {
+      const { goTo, pathname } = appLogic.portalFlow;
+      if (
+        claim?.isCompleted &&
+        (pathname === routes.applications.checklist ||
+          pathname === routes.applications.review)
+      ) {
+        goTo(routes.applications.index);
+      }
+    }, [claim, appLogic.portalFlow]);
 
     if (!application_id) {
       return <PageNotFound />;
