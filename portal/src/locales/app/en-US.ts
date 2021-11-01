@@ -715,6 +715,7 @@ const shared = {
     passwordError_invalid:
       "Your password does not meet the requirements. Please check the requirements and try again.",
     passwordError_required: "Enter your password",
+    skip: "Skip this step",
   },
   backToLoginLink: "Back to log in",
   certificationFormCare:
@@ -904,6 +905,7 @@ const shared = {
   reducedLeaveScheduleLeadCertGuidanceMedicalOrPregnancy:
     "The total number of hours you enter must match the reduced leave schedule section in the $t(shared.certificationFormMedical).",
   resendVerificationCodeLink: "Resend the code",
+  saveAndContinue: "Save and continue",
   siteDescription:
     "Apply for this Commonwealth-offered benefit here, or log in to review your applications.",
   submitApplicationButton: "I understand and agree",
@@ -992,6 +994,13 @@ const pages = {
     submitButton: "Set new password",
     title: "Create a new password",
     usernameLabel: "$t(shared.usernameLabel)",
+  },
+  authTwoFactorSmsSetup: {
+    lead: "We’ll send a 6-digit code by text message (SMS) to secure your account. This step is optional, but we can only show personal information like tax documents if you set this up.<br><br>If you skip this step now, you can secure your account later by going to the “Setting: Security” page.",
+    phoneNumberLabel: "Phone number",
+    saveButton: "$t(shared.saveAndContinue)",
+    skipButton: "$t(shared.auth.skip)",
+    title: "Make your account more secure",
   },
   authVerifyAccount: {
     backToLoginLink: "$t(shared.backToLoginLink)",
@@ -3001,7 +3010,7 @@ const components = {
     title: "Paid Family and Medical Leave (PFML)",
   },
   form: {
-    continueButton: "Save and continue",
+    continueButton: "$t(shared.saveAndContinue)",
     dateInputDayLabel: "Day",
     dateInputExample: "MM / DD / YYYY",
     dateInputMonthLabel: "Month",
