@@ -28,7 +28,6 @@ import TooltipIcon from "../../components/TooltipIcon";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
 import formatDateRange from "../../utils/formatDateRange";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -55,13 +54,12 @@ interface DashboardProps {
 }
 
 export const Dashboard = (props: DashboardProps) => {
-  const showReviewByStatus = isFeatureEnabled("employerShowReviewByStatus");
   const { t } = useTranslation();
   const introElementRef = useRef<HTMLElement>(null);
   const apiParams = {
     // Default the dashboard to show claims requiring action first
-    order_by: showReviewByStatus ? "absence_status" : "created_at",
-    order_direction: showReviewByStatus ? "ascending" : "descending",
+    order_by: "absence_status",
+    order_direction: "ascending",
     ...props.query,
   } as const;
 
@@ -137,45 +135,25 @@ export const Dashboard = (props: DashboardProps) => {
         <DashboardInfoAlert />
       </div>
 
-      <section className="margin-bottom-4" ref={introElementRef}>
-        <p className="margin-y-2">
-          {!showReviewByStatus && t("pages.employersDashboard.instructions")}
-        </p>
+      <section className="margin-bottom-4 margin-top-2" ref={introElementRef}>
         <Details label={t("pages.employersDashboard.statusDescriptionsLabel")}>
-          {showReviewByStatus ? (
-            <ul className="usa-list">
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_reviewBy" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_noAction" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_denied" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_approved" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_closed" />
-              </li>
-            </ul>
-          ) : (
-            <ul className="usa-list">
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_none" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_approved" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_closed" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_denied" />
-              </li>
-            </ul>
-          )}
+          <ul className="usa-list">
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_reviewBy" />
+            </li>
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_noAction" />
+            </li>
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_denied" />
+            </li>
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_approved" />
+            </li>
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_closed" />
+            </li>
+          </ul>
         </Details>
       </section>
 
@@ -573,12 +551,6 @@ const Filters = (props: FiltersProps) => {
     setShowFilters(!showFilters);
   };
 
-  // TODO (EMPLOYER-1587): Remove variable
-  const pendingStatusChoices = isFeatureEnabled("employerShowReviewByStatus")
-    ? ["Pending - no action", "Open requirement"]
-    : // API filtering uses this as a catchall for several pending-like statuses
-      ["Pending"];
-
   const expandAria = showFilters ? "true" : "false";
 
   return (
@@ -613,8 +585,8 @@ const Filters = (props: FiltersProps) => {
             AbsenceCaseStatus.approved,
             AbsenceCaseStatus.closed,
             AbsenceCaseStatus.declined,
-            // TODO (EMPLOYER-1587): replace with the two new AbsenceCaseStatus values
-            ...pendingStatusChoices,
+            "Pending - no action",
+            "Open requirement",
           ].map((value) => ({
             checked: get(formState, "claim_status", []).includes(value),
             label: t("pages.employersDashboard.filterStatusChoice", {
@@ -786,16 +758,12 @@ interface SortDropdownProps {
 const SortDropdown = (props: SortDropdownProps) => {
   const { order_by, order_direction, updatePageQuery } = props;
   const choices = new Map([
+    ["status", "absence_status,ascending"],
     ["newest", "created_at,descending"],
     ["oldest", "created_at,ascending"],
     ["employee_az", "employee,ascending"],
     ["employee_za", "employee,descending"],
   ]);
-
-  // TODO (EMPLOYER-1587): Move the choice directly into the choices object definition
-  if (isFeatureEnabled("employerShowReviewByStatus")) {
-    choices.set("status", "absence_status,ascending");
-  }
 
   const { t } = useTranslation();
 

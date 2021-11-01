@@ -2359,8 +2359,6 @@ const pages = {
     filterStatusChoice_Closed: "$t(shared.absenceCaseStatus_closed)",
     filterStatusChoice_Declined: "$t(shared.absenceCaseStatus_denied)",
     filterStatusChoice_OpenRequirement: "Review by",
-    // TODO (EMPLOYER-1587): Remove unused field
-    filterStatusChoice_Pending: "--",
     filterStatusChoice_PendingNoAction: "$t(shared.absenceCaseStatus_noAction)",
     filterStatusLabel: "Status",
     filtersApply: "Apply filters",
@@ -2368,8 +2366,6 @@ const pages = {
     filtersShowWithCount: "Show filters ({{count}})",
     filtersToggle: "Show filters",
     filtersToggle_expanded: "Hide filters",
-    instructions:
-      "Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.",
     noClaimResults: "No applications on file",
     searchLabel: "Search for employee name or application ID",
     searchSubmit: "Search",
@@ -2388,8 +2384,6 @@ const pages = {
       "<strong>Denied:</strong> DFML has denied this leave request.",
     statusDescription_noAction:
       "<strong>No action required:</strong> This leave request is awaiting a decision from DFML.",
-    statusDescription_none:
-      "<strong>“--” or no status:</strong> This leave request may require action from you; otherwise, it is awaiting a decision from DFML.",
     statusDescription_reviewBy:
       "<strong>Review by:</strong> Review this application by this date to provide DFML with your input.",
     statusDescriptionsLabel: "Status descriptions",
