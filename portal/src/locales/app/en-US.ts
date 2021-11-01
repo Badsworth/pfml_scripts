@@ -1095,8 +1095,12 @@ const pages = {
       "You will need to know:<ul><li>If you will use any benefits from your employer because you are taking leave.</li><li>If you will receive income from any other sources during your leave.</li><li>The dates for any leave you’ve taken since January 1, 2021 for a condition that is covered by Paid Family and Medical Leave.</li></ul>",
     stepHTMLDescription_payment:
       "<p>Tell us how you want to receive payment.</p><p>If you want to receive payment by direct deposit, you will need to provide your bank account information, including a routing number and account number.</p>",
+    stepHTMLDescription_payment_tax:
+      "<p>If you want to receive payment by direct deposit, you will need to provide your bank account information, including a routing number and account number.</p>",
     stepHTMLDescription_reviewAndConfirm:
       "<p>Once you confirm your leave information, we’ll notify your employer. Your job will be protected. To complete your application, you will need to finish the following three steps and submit.</p><p>If you need to edit your information in Part 1 after completing this step, you’ll need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
+    stepHTMLDescription_taxWithholding:
+      "<p>Tell us if you want to withhold state and federal taxes from your paid leave benefits. If you're unsure, we recommend speaking with a tax professional.</p>",
     stepHTMLDescription_uploadId:
       "<p>Upload proof of identity. If you entered a Massachusetts driver’s license or Mass ID number in step 1, upload the same$t(chars.nbsp)ID.</p><p>For other IDs, follow the instructions for acceptable proof of identity on the upload page.</p>",
     stepHTMLDescription_verifyId:
@@ -1114,12 +1118,15 @@ const pages = {
     stepListTitlePrefix: "Part {{number}}",
     stepListTitle_1: "Tell us about yourself and your leave",
     stepListTitle_2: "Enter your payment information",
+    stepListTitle_2_tax: "Tell us how you want to receive your payment",
     stepListTitle_3: "Upload your documents",
     stepTitle_employerInformation: "Enter employment information",
     stepTitle_leaveDetails: "Enter leave details",
     stepTitle_otherLeave: "Report other leave, benefits, and income",
     stepTitle_payment: "Add payment information",
+    stepTitle_payment_tax: "Enter payment information",
     stepTitle_reviewAndConfirm: "Review and confirm",
+    stepTitle_taxWithholding: "Enter tax withholding preference",
     stepTitle_uploadCertification: "Upload leave certification documents",
     stepTitle_uploadId: "Upload identification document",
     stepTitle_verifyId: "Verify your identification",
@@ -1565,7 +1572,10 @@ const pages = {
     sectionLabelHint:
       "Your choice will be applied to any previous applications you have submitted.",
     submitPart2Button: "Submit Part 2",
+    submitPayment: "Submit payment method",
     title: "Payment method",
+    warning:
+      "After you submit your payment method, it can’t be edited on this website. To change it, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
     whenWillIGetPaidDetails:
       "<p>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started.</p><p>If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts.</p><p>After that, you will receive your payments every week.</p>",
     whenWillIGetPaidLabel: "When will I get paid?",

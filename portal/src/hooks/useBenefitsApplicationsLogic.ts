@@ -255,10 +255,11 @@ const useBenefitsApplicationsLogic = ({
       }
 
       const context = { claim, user };
-      const params = {
+      const params: NullableQueryParams = {
         claim_id: claim.application_id,
         "payment-pref-submitted": "true",
       };
+
       portalFlow.goToNextPage(context, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
@@ -290,7 +291,7 @@ const useBenefitsApplicationsLogic = ({
       const context = { claim, user };
       const params: NullableQueryParams = {
         claim_id: claim.application_id,
-        "tax-preference-submitted": "true",
+        "tax-pref-submitted": "true",
       };
       portalFlow.goToNextPage(context, params);
     } catch (err) {
