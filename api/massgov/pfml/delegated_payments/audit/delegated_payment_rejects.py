@@ -24,6 +24,7 @@ from massgov.pfml.db.models.payments import (
     FineosWritebackTransactionStatus,
     LkFineosWritebackTransactionStatus,
     PaymentAuditReportType,
+    LinkSplitPayment,
 )
 from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
     PAYMENT_AUDIT_CSV_HEADERS,
@@ -236,6 +237,12 @@ class PaymentRejectsStep(Step):
             payment, Flow.DELEGATED_PAYMENT, self.db_session
         )
 
+        #get withholding payment records for this payment
+        withholding_records = (
+        self.db_session.query(LinkSplitPayment)
+        .filter(LinkSplitPayment.payment_id == payment.payment_id)
+        )
+
         if payment_state_log is None:
             self.increment(self.Metrics.PAYMENT_STATE_LOG_MISSING_COUNT)
             raise PaymentRejectsException(
@@ -286,6 +293,9 @@ class PaymentRejectsStep(Step):
                 import_log_id=self.get_import_log_id(),
             )
             self.db_session.add(writeback_details)
+
+            if(len(withholding_records) > 0):
+                self.set_state_for_withholding_records(self,payment,withholding_records,writeback_transaction_status.transaction_status_description)
         elif is_skipped_payment:
             self.increment(self.Metrics.SKIPPED_PAYMENT_COUNT)
             state_log_util.create_finished_state_log(
@@ -312,10 +322,30 @@ class PaymentRejectsStep(Step):
                 import_log_id=self.get_import_log_id(),
             )
             self.db_session.add(writeback_details)
+
+            if(len(withholding_records) > 0):
+                self.set_state_for_withholding_records(self,payment,withholding_records,writeback_transaction_status.transaction_status_description)
         else:
             self.increment(self.Metrics.ACCEPTED_PAYMENT_COUNT)
             state_log_util.create_finished_state_log(
                 payment, ACCEPTED_STATE, ACCEPTED_OUTCOME, self.db_session
+            )
+
+    def set_state_for_withholding_records(self,payment: Payment,withholding_records: List(LinkSplitPayment),outcome: str)-> None:
+        for payment_withholding_record in withholding_records:
+            payment_end_state_id = (
+            self.db_session.query(StateLog.end_state_id,StateLog)
+            .filter(StateLog.payment_id == payment.payment_id)
+            .filter(StateLog.started_at == payment.fineos_extraction_date)
+            ).order_by(StateLog.created_at.desc()).first()
+
+            state_log_util.create_finished_state_log(
+            payment_withholding_record,
+            State.STATE_WITHHOLDING_ERROR if(payment_end_state_id in [State.STATE_WITHHOLDING_READY_FOR_PROCESSING]) else  State.FEDERAL_WITHHOLDING_ERROR,
+            state_log_util.build_outcome(
+                outcome
+            ),
+            self.db_session,
             )
 
     def convert_reject_notes_to_writeback_status(
