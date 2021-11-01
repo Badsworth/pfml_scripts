@@ -310,7 +310,10 @@ class ClaimantAddressValidationStep(AddressValidationStep):
         file_name = now.strftime(Constants.CLAIMANT_ADDRESS_VALIDATION_FILENAME_FORMAT)
         address_report_source_path = s3_config.pfml_error_reports_archive_path
         dfml_sharepoint_outgoing_path = s3_config.dfml_report_outbound_path
-        address_report_source_path = payments_util.build_archive_path(address_report_source_path, payments_util.Constants.S3_OUTBOUND_SENT_DIR, now.strftime("%Y-%m-%d")
+        address_report_source_path = payments_util.build_archive_path(
+            address_report_source_path,
+            payments_util.Constants.S3_OUTBOUND_SENT_DIR,
+            now.strftime("%Y-%m-%d"),
         )
         address_report_csv_path = self.create_address_report(
             addr_reports, file_name, address_report_source_path
