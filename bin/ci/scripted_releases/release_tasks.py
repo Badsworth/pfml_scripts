@@ -69,7 +69,9 @@ def update(args):
             git_utils.merge(args.source_branch)
 
         logger.info("Done.")
-        git_utils.tag_and_push(args.release_version, f"{args.app}/v{v.bump_prerelease()}")
+
+        new_rc = git_utils.from_semver(v.bump_prerelease(), args.app)
+        git_utils.tag_and_push(args.release_version, f"{args.app}/v{new_rc}")
 
 
 # ----------------------------------------------------------------------------------------------------
@@ -138,7 +140,9 @@ def hotfix(args):  # production hotfix, args are a branch name and a list of com
             git_utils.merge(args.source_branch)
 
         logger.info("Done.")
-        git_utils.tag_and_push(args.release_version, f"{args.app}/v{v.bump_patch()}")
+
+        new_hotfix = git_utils.from_semver(v.bump_patch(), args.app)
+        git_utils.tag_and_push(args.release_version, f"{args.app}/v{new_hotfix}")
 
 
 # ----------------------------------------------------------------------------------------------------
