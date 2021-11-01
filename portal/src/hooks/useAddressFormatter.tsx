@@ -31,9 +31,11 @@ const useAddressFormatter = (
 ): AddressFormatter => {
   const [couldBeFormatted, setCouldBeFormatted] = useState<boolean | null>();
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
-  const [addressKey, setAddressKey] = useState<"none" | string | null>();
+  const [selectedAddressKey, setSelectedAddressKey] = useState<
+    AddressSuggestion["addressKey"] | "none" | null
+  >();
 
-  const shouldSkipFormatting = addressKey === "none";
+  const shouldSkipFormatting = selectedAddressKey === "none";
   const addressIsMasked = address.line_1 === "*******";
 
   const format = async (): Promise<Address | undefined> => {
@@ -42,12 +44,12 @@ const useAddressFormatter = (
       return address;
     }
 
-    if (addressKey) {
+    if (selectedAddressKey) {
       try {
-        setAddressKey(null);
+        setSelectedAddressKey(null);
         setSuggestions([]);
         setCouldBeFormatted(true);
-        return await formatAddress(addressKey);
+        return await formatAddress(selectedAddressKey);
       } catch (error: unknown) {
         onError(error);
         return;
@@ -71,16 +73,16 @@ const useAddressFormatter = (
   const reset = () => {
     setSuggestions([]);
     setCouldBeFormatted(null);
-    setAddressKey(null);
+    setSelectedAddressKey(null);
   };
 
   const selectSuggestionAddressKey = (suggestionAddressKey: string) => {
-    setAddressKey(suggestionAddressKey);
+    setSelectedAddressKey(suggestionAddressKey);
   };
 
   return {
     address,
-    selectedAddressKey: addressKey,
+    selectedAddressKey,
     selectSuggestionAddressKey,
     couldBeFormatted,
     format,

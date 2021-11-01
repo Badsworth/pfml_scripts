@@ -29,6 +29,9 @@ const flagsConfig = {
     // When this flag is enabled, the claim payments section for claimants will show
     claimantShowPayments: false,
 
+    // validate addresses on address page
+    claimantValidateAddress: false,
+
     // When this flag is enabled, the status column's current value of -- inside of the dashboard page will be replaced with either:
     // Review by {date}
     // No action required
