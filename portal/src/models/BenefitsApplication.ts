@@ -131,7 +131,10 @@ class BenefitsApplication extends BaseBenefitsApplication {
    * of some fields, and as a result, the user experience.
    */
   get isSubmitted() {
-    return this.status === BenefitsApplicationStatus.submitted;
+    return (
+      this.status === BenefitsApplicationStatus.submitted ||
+      this.status === BenefitsApplicationStatus.completed
+    );
   }
 }
 

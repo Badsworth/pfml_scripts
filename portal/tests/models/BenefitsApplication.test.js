@@ -33,6 +33,15 @@ describe("Claim", () => {
       expect(emptyClaim.isSubmitted).toBe(false);
       expect(submittedClaim.isSubmitted).toBe(true);
     });
+
+    it("returns true when the Claim status is 'completed'", () => {
+      const completedClaim = new MockBenefitsApplicationBuilder()
+        .completed()
+        .create();
+
+      expect(emptyClaim.isSubmitted).toBe(false);
+      expect(completedClaim.isSubmitted).toBe(true);
+    });
   });
 
   describe("#isLeaveStartDateInFuture", () => {

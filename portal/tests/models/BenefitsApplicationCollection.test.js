@@ -24,7 +24,7 @@ describe("BenefitsApplicationCollection", () => {
   });
 
   describe("#submitted", () => {
-    it("returns 'Completed' and 'Submitted' claims", () => {
+    it("returns 'Submitted' claims", () => {
       expect(collection.submitted).toHaveLength(1);
       expect(collection.submitted).toEqual([submittedClaim]);
     });
