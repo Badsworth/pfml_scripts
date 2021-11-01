@@ -410,11 +410,11 @@ class FineosExtractEmployeeFeed(Base):
     reference_file_id = Column(
         PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
     )
+    created_at = Column(TIMESTAMP(timezone=True), default=func.now())
+    updated_at = Column(TIMESTAMP(timezone=True), default=func.now())
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
     )
-    created_at = Column(TIMESTAMP(timezone=True), default=func.now())
-    updated_at = Column(TIMESTAMP(timezone=True), default=func.now())
     reference_file = relationship(ReferenceFile)
 
 
