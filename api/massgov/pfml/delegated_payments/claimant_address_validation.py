@@ -131,6 +131,9 @@ class ClaimantAddressValidationStep(AddressValidationStep):
                             employee_feed_address_data,
                             address_pair,
                             new_address,
+                            f_employee_data.customerno,
+                            f_employee_data.firstnames,
+                            f_employee_data.lastname,
                         )
                         self.increment(self.Metrics.VALIDATED_ADDRESS_COUNT)
                         if result_soap:
@@ -170,6 +173,9 @@ class ClaimantAddressValidationStep(AddressValidationStep):
         address: Address,
         address_pair: ExperianAddressPair,
         new_address: bool,
+        customer_number: str,
+        first_name: str,
+        last_name: str,
     ) -> Optional[Dict[str, Any]]:
         try:
             logger.debug("Calling experian on the address %s", address.address_line_one)
@@ -183,7 +189,7 @@ class ClaimantAddressValidationStep(AddressValidationStep):
                 % (address.address_id, type(e).__name__)
             )
             outcome = self._outcome_for_search_result(
-                None, Constants.MESSAGE_EXPERIAN_EXCEPTION_FORMAT, address,
+                None, Constants.MESSAGE_EXPERIAN_EXCEPTION_FORMAT, address, None, None, None,
             )
             self.increment(self.Metrics.EXPERIAN_SEARCH_EXCEPTION_COUNT)
             return outcome
@@ -196,7 +202,12 @@ class ClaimantAddressValidationStep(AddressValidationStep):
                 if not self._does_address_have_all_parts(formatted_address):
                     self.increment(self.Metrics.INVALID_EXPERIAN_FORMAT)
                     outcome = self._outcome_for_search_result(
-                        response, Constants.MESSAGE_INVALID_EXPERIAN_FORMAT_RESPONSE, address,
+                        response,
+                        Constants.MESSAGE_INVALID_EXPERIAN_FORMAT_RESPONSE,
+                        address,
+                        None,
+                        None,
+                        None,
                     )
                     logger.debug(
                         "Experian return address has missing parts, wasnt supposed to occur"
@@ -220,8 +231,14 @@ class ClaimantAddressValidationStep(AddressValidationStep):
 
         self.increment(self.Metrics.NO_EXPERIAN_MATCH_COUNT)
         outcome = self._outcome_for_search_result(
-            response, Constants.MESSAGE_INVALID_ADDRESS, address,
+            response,
+            Constants.MESSAGE_INVALID_ADDRESS,
+            address,
+            customer_number,
+            first_name,
+            last_name,
         )
+        logger.debug("Outcome for search %s", outcome)
         logger.debug("No matches for the search address%s", address)
         return outcome
 
@@ -240,7 +257,8 @@ class ClaimantAddressValidationStep(AddressValidationStep):
         return True
 
     """Formats the address lines to
-        one suitable for experian call and then makes the soap call
+        one suitable for experian cal
+        self, experian_soap_client: soap_api.Cll and then makes the soap call
     """
 
     def _experian_soap_response_for_address(
@@ -254,19 +272,48 @@ class ClaimantAddressValidationStep(AddressValidationStep):
         Returns dict object"""
 
     def _outcome_for_search_result(
-        self, result: Optional[sm.SearchResponse], msg: str, address: Address,
+        self,
+        result: Optional[sm.SearchResponse],
+        msg: str,
+        address: Address,
+        customer_no: Optional[str],
+        first_name: Optional[str],
+        last_name: Optional[str],
     ) -> Dict[str, Any]:
         verify_level = (
             result.verify_level.value if result and result.verify_level else Constants.UNKNOWN
         )
+        outcome: Dict[str, Any] = self._build_experian_outcome(msg, address, verify_level)
 
-        # The address passed into this is the incoming address validated.
-        outcome = self._build_experian_outcome(msg, address, verify_level)
-        logger.debug("Result Address is %s", result)
+        if result:
+            logger.debug("Result Address is %s", result)
+            if result.picklist and result.picklist.picklist_entries is not None:
+                pList = list(result.picklist.picklist_entries)
+                for i, pickList in enumerate(pList):
+                    if pickList.partial_address is not None:
+                        logger.debug(pickList.partial_address)
+                        logger.debug(pickList.score)
+                        label = Constants.OUTPUT_ADDRESS_KEY_PREFIX + str(1 + i)
+                        outcome[Constants.EXPERIAN_RESULT_KEY][label] = pickList.partial_address
+                        label = Constants.CUSTOMER_NUMBER
+                        outcome[Constants.EXPERIAN_RESULT_KEY][label] = customer_no
+                        label = Constants.FIRST_NAME
+                        outcome[Constants.EXPERIAN_RESULT_KEY][label] = first_name
+                        label = Constants.LAST_NAME
+                        outcome[Constants.EXPERIAN_RESULT_KEY][label] = last_name
+                    else:
+                        label = Constants.CUSTOMER_NUMBER
+                        outcome[Constants.EXPERIAN_RESULT_KEY][label] = customer_no
+                        label = Constants.FIRST_NAME
+                        outcome[Constants.EXPERIAN_RESULT_KEY][label] = first_name
+                        label = Constants.LAST_NAME
+                        outcome[Constants.EXPERIAN_RESULT_KEY][label] = last_name
+                return outcome
+
         # Right now we only have the one result.
         response_address = experian_verification_response_to_address(result)
         if response_address:
-            label = Constants.OUTPUT_ADDRESS_KEY_PREFIX
+            label = Constants.OUTPUT_ADDRESS_KEY_PREFIX + "1"
             outcome[Constants.EXPERIAN_RESULT_KEY][
                 label
             ] = address_to_experian_suggestion_text_format(response_address)
