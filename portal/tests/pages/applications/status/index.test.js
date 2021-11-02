@@ -554,7 +554,7 @@ describe("Status", () => {
     expect(screen.getByRole("link", { name: "Upload additional documents" }))
       .toMatchInlineSnapshot(`
       <a
-        class="usa-button measure-6 margin-top-3"
+        class="usa-button margin-top-3"
         href="/applications/upload?absence_case_id=mock-absence-case-id"
       >
         Upload additional documents
@@ -912,7 +912,7 @@ describe("Status", () => {
         expect(screen.getByRole("link", { name: /Upload proof of birth/ }))
           .toMatchInlineSnapshot(`
           <a
-            class="usa-button measure-12"
+            class="usa-button"
             href="/applications/upload/proof-of-birth?claim_id=mock-application-id&absence_case_id=mock-absence-case-id"
           >
             Upload proof of birth
@@ -942,7 +942,7 @@ describe("Status", () => {
         expect(screen.getByRole("link", { name: /Upload proof of placement/ }))
           .toMatchInlineSnapshot(`
           <a
-            class="usa-button measure-12"
+            class="usa-button"
             href="/applications/upload/proof-of-placement?claim_id=mock-application-id&absence_case_id=mock-absence-case-id"
           >
             Upload proof of placement
@@ -972,7 +972,7 @@ describe("Status", () => {
         expect(screen.getByRole("link", { name: /Upload proof of adoption/ }))
           .toMatchInlineSnapshot(`
           <a
-            class="usa-button measure-12"
+            class="usa-button"
             href="/applications/upload/proof-of-placement?claim_id=mock-application-id&absence_case_id=mock-absence-case-id"
           >
             Upload proof of adoption
