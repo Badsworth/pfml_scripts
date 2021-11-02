@@ -23,7 +23,7 @@ import OtherIncome, {
 import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import React, { useEffect, useState } from "react";
 import Step, { ClaimSteps } from "../../models/Step";
-import { compact, get, isNil } from "lodash";
+import { compact, get, isBoolean, isNil } from "lodash";
 import Address from "../../models/Address";
 import Alert from "../../components/Alert";
 import { AppLogic } from "../../hooks/useAppLogic";
@@ -213,7 +213,10 @@ export const Review = (props: ReviewProps) => {
       {!usePartOneReview && (
         <Lead>
           <Trans
-            i18nKey="pages.claimsReview.partDescription"
+            i18nKey={t("pages.claimsReview.partDescription", {
+              step: 1,
+              absence_id: claim.fineos_absence_id,
+            })}
             tOptions={{ context: "1" }}
             values={{ absence_id: claim.fineos_absence_id }}
             components={{
@@ -720,6 +723,21 @@ export const Review = (props: ReviewProps) => {
               context: "2",
             })}
           </Heading>
+          <Lead>
+            <Trans
+              i18nKey={t("pages.claimsReview.partDescription", {
+                step: 2,
+                absence_id: claim.fineos_absence_id,
+              })}
+              tOptions={{ context: "2" }}
+              values={{ absence_id: claim.fineos_absence_id }}
+              components={{
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
+              }}
+            />
+          </Lead>
 
           {/* PAYMENT METHOD */}
           <ReviewHeading level={reviewHeadingLevel}>
@@ -763,6 +781,21 @@ export const Review = (props: ReviewProps) => {
                     get(claim, "payment_preference.bank_account_type")
                   ),
                 })}
+              </ReviewRow>
+            </React.Fragment>
+          )}
+          {isBoolean(claim.is_withholding_tax) && (
+            <React.Fragment>
+              <ReviewHeading level={reviewHeadingLevel}>
+                {t("pages.claimsReview.stepHeading", { context: "tax" })}
+              </ReviewHeading>
+              <ReviewRow
+                label={t("pages.claimsReview.taxLabel")}
+                level={reviewRowLevel}
+              >
+                {claim.is_withholding_tax === true
+                  ? t("pages.claimsReview.taxYesWithhold")
+                  : t("pages.claimsReview.taxNoWithhold")}
               </ReviewRow>
             </React.Fragment>
           )}

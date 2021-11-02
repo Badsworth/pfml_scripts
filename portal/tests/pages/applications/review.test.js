@@ -123,6 +123,50 @@ describe("Review Page", () => {
     expect(completeSpy).not.toHaveBeenCalled();
   });
 
+  it("doesn't display tax information for review when boolean is not set", () => {
+    setup({
+      claim: new MockBenefitsApplicationBuilder()
+        .submitted()
+        .paymentPrefSubmitted()
+        .create(),
+    });
+
+    expect(screen.queryByText(/Tax withholding/)).not.toBeInTheDocument();
+  });
+
+  it("displays tax information for review when tax Pref is set", () => {
+    process.env.featureFlags = {
+      claimantShowTaxWithholding: true,
+    };
+    setup({
+      claim: new MockBenefitsApplicationBuilder()
+        .complete()
+        .taxPrefSubmitted(true)
+        .create(),
+    });
+
+    const label = screen.getByRole("heading", {
+      name: "Withhold state and federal taxes?",
+    });
+    expect(label.nextSibling).toHaveTextContent(/Yes/);
+    expect(screen.getAllByText("No")).toHaveLength(7);
+  });
+
+  it("displays tax information for review, including No if no selected", () => {
+    process.env.featureFlags = {
+      claimantShowTaxWithholding: true,
+    };
+    setup({
+      claim: new MockBenefitsApplicationBuilder()
+        .complete()
+        .taxPrefSubmitted(false)
+        .create(),
+    });
+    expect(screen.getByText(/Tax withholding/)).toBeInTheDocument();
+    expect(screen.queryByText("Yes")).not.toBeInTheDocument();
+    expect(screen.getAllByText("No")).toHaveLength(8);
+  });
+
   it("completes the application when the user clicks Submit for a Part 3 review", async () => {
     const { completeSpy, submitSpy } = setup({
       claim: new MockBenefitsApplicationBuilder().complete().create(),
