@@ -15,7 +15,7 @@ class AppErrorInfo {
   message?: string | JSX.Element;
   name?: string;
   field?: string;
-  meta?: Record<string, unknown>;
+  meta?: { [key: string]: unknown };
   rule?: string;
   type?: string;
 

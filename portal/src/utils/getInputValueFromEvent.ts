@@ -8,7 +8,7 @@ export default function getInputValueFromEvent(
     | React.ChangeEvent<
         HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
       >
-    | Record<string, undefined>
+    | { [key: string]: undefined }
 ) {
   if (!event || !event.target) {
     return undefined;

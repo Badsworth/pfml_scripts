@@ -62,7 +62,7 @@ export const NewApplication = (props: NewApplicationProps) => {
     hasReviewerVerified: "",
   });
 
-  const updateFields = (fields: Record<string, unknown>) => {
+  const updateFields = (fields: { [fieldName: string]: unknown }) => {
     setFormState({ ...formState, ...fields });
   };
 

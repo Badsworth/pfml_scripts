@@ -18,7 +18,7 @@ export const fields = ["claim.has_concurrent_leave"];
 interface ConcurrentLeavesProps {
   appLogic: AppLogic;
   claim: BenefitsApplication;
-  query: Record<string, string>;
+  query: { [key: string]: string };
 }
 
 export const ConcurrentLeaves = (props: ConcurrentLeavesProps) => {

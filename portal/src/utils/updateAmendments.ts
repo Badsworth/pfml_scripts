@@ -7,7 +7,7 @@ import PreviousLeave from "../models/PreviousLeave";
  */
 const updateAmendments = (
   amendments: EmployerBenefit[] | PreviousLeave[],
-  updatedValue: Record<string, unknown> | EmployerBenefit | PreviousLeave
+  updatedValue: { [key: string]: unknown } | EmployerBenefit | PreviousLeave
 ) => {
   return amendments.map((amendment) => {
     const idKey = getIdKey(amendment);

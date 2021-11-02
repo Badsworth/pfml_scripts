@@ -266,7 +266,7 @@ export class WorkPattern {
    */
   static createWithWeek(
     minutesWorkedPerWeek: number,
-    workPattern: WorkPattern | Record<string, never> = {}
+    workPattern: WorkPattern | { [key: string]: never } = {}
   ) {
     assert(!isNil(minutesWorkedPerWeek));
     const minutesOverWeek = spreadMinutesOverWeek(minutesWorkedPerWeek);

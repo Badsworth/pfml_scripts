@@ -26,7 +26,7 @@ interface AmendableEmployerBenefitProps {
   employerBenefit: EmployerBenefit;
   isAddedByLeaveAdmin: boolean;
   onChange: (
-    arg: EmployerBenefit | Record<string, unknown>,
+    arg: EmployerBenefit | { [key: string]: unknown },
     arg2: string
   ) => void;
   onRemove: (arg: EmployerBenefit) => void;

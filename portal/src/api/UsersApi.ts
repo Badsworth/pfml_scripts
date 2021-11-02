@@ -15,7 +15,7 @@ export default class UsersApi extends BaseApi {
    * Register a new user
    * @param requestData - Registration fields
    */
-  createUser = async (requestData: Record<string, unknown>) => {
+  createUser = async (requestData: { [key: string]: unknown }) => {
     const { data } = await this.request<User>(
       "POST",
       "",
@@ -44,7 +44,10 @@ export default class UsersApi extends BaseApi {
     });
   };
 
-  updateUser = async (user_id: string, patchData: Record<string, unknown>) => {
+  updateUser = async (
+    user_id: string,
+    patchData: { [key: string]: unknown }
+  ) => {
     const { data } = await this.request<User>("PATCH", user_id, patchData);
     const roles = this.createUserRoles(data.roles);
     const user_leave_administrators = this.createUserLeaveAdministrators(

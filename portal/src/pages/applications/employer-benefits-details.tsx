@@ -129,7 +129,7 @@ interface EmployerBenefitCardProps {
   index: number;
   entry: EmployerBenefit;
   getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
-  updateFields: (arg: Record<string, unknown>) => void;
+  updateFields: (fields: { [fieldName: string]: unknown }) => void;
 }
 
 /**

@@ -104,7 +104,7 @@ export default class EmployersApi extends BaseApi {
 
   submitClaimReview = async (
     absenceId: string,
-    patchData: Record<string, unknown>
+    patchData: { [key: string]: unknown }
   ) => {
     await this.request("PATCH", `claims/${absenceId}/review`, patchData);
   };
@@ -112,7 +112,7 @@ export default class EmployersApi extends BaseApi {
   /**
    * Submit withholding data for validation
    */
-  submitWithholding = async (postData: Record<string, unknown>) => {
+  submitWithholding = async (postData: { [key: string]: unknown }) => {
     await this.request("POST", "verifications", postData);
   };
 }

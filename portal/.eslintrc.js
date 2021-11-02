@@ -54,6 +54,12 @@ module.exports = {
         ],
         // conflicts with @typescript-eslint/no-use-before-define:
         "no-use-before-define": "off",
+        "@typescript-eslint/consistent-indexed-object-style": [
+          "error",
+          // Index signature allows us to be more expressive than Record.
+          // For example { [claim_id: string]: Claim }, compared to Record<string, Claim>
+          "index-signature",
+        ],
         // suppress noisy errors that didn't exist prior to TS migration:
         "@typescript-eslint/no-use-before-define": "off",
         "@typescript-eslint/array-type": ["error", { default: "array-simple" }],

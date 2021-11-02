@@ -91,7 +91,7 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
   const getMessageFromIssue = (
     issue: Issue,
     i18nPrefix: string,
-    tOptions?: Record<string, unknown>
+    tOptions?: { [key: string]: unknown }
   ) => {
     const { field, message, rule, type } = issue;
     let issueMessageKey;
@@ -144,7 +144,7 @@ const useAppErrorsLogic = ({ portalFlow }: { portalFlow: PortalFlow }) => {
   const maybeGetHtmlErrorMessage = (
     type?: string,
     issueMessageKey?: string,
-    tOptions?: Record<string, unknown>
+    tOptions?: { [key: string]: unknown }
   ) => {
     if (!type || !issueMessageKey || !i18n.exists(issueMessageKey)) return;
 

@@ -80,7 +80,7 @@ export const Dashboard = (props: DashboardProps) => {
       }
     });
 
-    const paramsObj: Record<string, string> = {};
+    const paramsObj: { [key: string]: string } = {};
     for (const [paramKey, paramValue] of Array.from(params.entries())) {
       paramsObj[paramKey] = paramValue;
     }

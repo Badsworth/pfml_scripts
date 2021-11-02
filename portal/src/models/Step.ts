@@ -7,7 +7,9 @@ import { Issue } from "../errors";
 import getRelevantIssues from "../utils/getRelevantIssues";
 import { isFeatureEnabled } from "../services/featureFlags";
 
-type Context = Record<string, unknown>;
+interface Context {
+  [key: string]: unknown;
+}
 
 /**
  * Unique identifiers for steps in the portal application. The values
@@ -163,7 +165,7 @@ export default class Step {
   static createClaimStepsFromMachine = (
     machineConfigs: typeof claimantFlow,
     context: {
-      claim: BenefitsApplication | Record<string, never>;
+      claim: BenefitsApplication | { [key: string]: never };
       certificationDocuments?: BenefitsApplicationDocument[] | ClaimDocument[];
       idDocuments?: BenefitsApplicationDocument[] | ClaimDocument[];
     } = {

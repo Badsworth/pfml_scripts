@@ -210,9 +210,9 @@ export const Status = ({ appLogic, query }: StatusProps) => {
     );
   };
 
-  const getInfoAlertContext = (
-    absenceDetails: Record<string, AbsencePeriod[]>
-  ) => {
+  const getInfoAlertContext = (absenceDetails: {
+    [key: string]: AbsencePeriod[];
+  }) => {
     const hasBondingReason = has(absenceDetails, LeaveReason.bonding);
     const hasPregnancyReason = has(absenceDetails, LeaveReason.pregnancy);
     const hasNewBorn = claimDetail.absence_periods.some(
@@ -439,7 +439,7 @@ export const StatusTagMap = {
 } as const;
 
 interface LeaveDetailsProps {
-  absenceDetails?: Record<string, AbsencePeriod[]>;
+  absenceDetails?: { [key: string]: AbsencePeriod[] };
 }
 
 export const LeaveDetails = ({ absenceDetails = {} }: LeaveDetailsProps) => {

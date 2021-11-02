@@ -125,7 +125,7 @@ const useEmployersLogic = ({
    */
   const submitClaimReview = async (
     absenceId: string,
-    data: Record<string, unknown>
+    data: { [key: string]: unknown }
   ) => {
     appErrorsLogic.clearErrors();
 

@@ -13,7 +13,7 @@ interface ConcurrentLeaveProps {
   concurrentLeave?: ConcurrentLeaveModel;
   onAdd: React.MouseEventHandler<HTMLButtonElement>;
   onChange: (
-    arg: ConcurrentLeaveModel | Record<string, unknown>,
+    arg: ConcurrentLeaveModel | { [key: string]: unknown },
     arg2?: string
   ) => void;
   onRemove: (arg: ConcurrentLeaveModel) => void;
