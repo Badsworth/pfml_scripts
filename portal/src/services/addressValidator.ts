@@ -2,8 +2,11 @@ import { AddressValidationError, ExperianApiError } from "../errors";
 import Address from "../models/Address";
 
 const authToken: string =
-  process.env.experianApiKey || process.env.NEXT_PUBLIC_experianApiKey || "";
+  process.env.NEXT_PUBLIC_experianApiKey || process.env.experianApiKey || "";
 
+/**
+ * @see https://docs.experianaperture.io/address-validation/experian-address-validation/api-reference/api-specification/
+ */
 interface ExperianSuggestion {
   global_address_key: string;
   text: string;
@@ -79,7 +82,7 @@ export const formatAddress = async (addressKey: string): Promise<Address> => {
     line_2: address.address_line_2,
     state: address.region,
     city: address.locality,
-    zip: address.postal_code?.split("-")[0],
+    zip: address.postal_code.split("-")[0],
   });
 };
 
