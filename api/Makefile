@@ -173,7 +173,7 @@ pub-payments-mock-generate:
 	$(PY_RUN_CMD)  pub-payments-mock-generate $(DECODE_LOG)
 
 pub-payments-process-1099-documents:
-	$(PY_RUN_CMD) pub-payments-process-1099-documents --steps merge-1099-documents $(DECODE_LOG)
+	$(PY_RUN_CMD) pub-payments-process-1099-documents --steps ALL $(DECODE_LOG)
 
 delegated-payment-audit-rejects-generate:
 	mkdir -p mock_payment_rejects_files

@@ -127,6 +127,8 @@ namespace PfmlPdfApi.Services
             template = template.Replace("[FED_TAX_WITHHELD]", dto.FederalTaxesWithheld.ToString());
             template = template.Replace("[NAME]", dto.Name);
             template = template.Replace("[ADDRESS]", dto.Address);
+            template = template.Replace("[CITY]", dto.City);
+            template = template.Replace("[STATE]", dto.State);
             template = template.Replace("[ZIP]", dto.ZipCode);
             template = template.Replace("[ACCOUNT]", dto.AccountNumber.HasValue ? dto.AccountNumber.ToString() : string.Empty);
             template = template.Replace("[STATE_TAX_WITHHELD]", dto.StateTaxesWithheld.ToString());

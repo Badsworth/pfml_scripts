@@ -35,7 +35,7 @@ namespace PfmlPdfApi.Controllers
             var response = await _pdfDocumentService.Generate(dto);
 
             if (response.Status == MessageConstants.MsgStatusSuccess)
-                return Ok(response.Payload);
+                return Ok();
 
             return StatusCode((int)HttpStatusCode.InternalServerError, response.ErrorMessage);
         }
@@ -47,7 +47,7 @@ namespace PfmlPdfApi.Controllers
             var response = await _pdfDocumentService.Merge(dto);
 
             if (response.Status == MessageConstants.MsgStatusSuccess)
-                return Ok(response.Payload);
+                return Ok();
 
             return StatusCode((int)HttpStatusCode.InternalServerError, response.ErrorMessage);
         }

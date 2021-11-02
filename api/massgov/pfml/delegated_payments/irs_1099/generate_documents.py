@@ -35,8 +35,10 @@ class Generate1099DocumentsStep(Step):
                 "repayments": str(record.overpayment_repayments),
                 "name": f"{record.first_name} {record.last_name}" ,
                 "address": record.address_line_1,
-                "ZipCode": record.zip,
-                "AccountNumber": None
+                "city": record.city,
+                "state": record.state,
+                "zipCode": record.zip,
+                "accountNumber": None
             }
 
             response = requests.post(
