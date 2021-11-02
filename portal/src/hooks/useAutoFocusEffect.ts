@@ -14,7 +14,7 @@ const useAutoFocusEffect = ({
   isAmendmentFormDisplayed: boolean;
 }) => {
   useEffect(() => {
-    if (containerRef && isAmendmentFormDisplayed && containerRef.current) {
+    if (isAmendmentFormDisplayed && containerRef.current) {
       const amendmentForm =
         containerRef.current.querySelector(".c-amendment-form");
       const focusableElement = amendmentForm

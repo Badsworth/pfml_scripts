@@ -5,8 +5,8 @@ import { Integer } from "../../types/common";
  */
 const convertMinutesToHours = (minutes: Integer | null) => {
   return {
-    hours: minutes ? Math.floor(minutes / 60) : 0,
-    minutes: minutes ? minutes % 60 : 0,
+    hours: minutes === null ? 0 : Math.floor(minutes / 60),
+    minutes: minutes === null ? 0 : minutes % 60,
   };
 };
 

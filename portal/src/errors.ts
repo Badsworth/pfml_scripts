@@ -23,7 +23,7 @@ class BasePortalError extends Error {
     super(message);
 
     // Maintains proper stack trace for where our error was thrown in modern browsers
-    if (Error.captureStackTrace) {
+    if (typeof Error.captureStackTrace === "function") {
       Error.captureStackTrace(this, BasePortalError);
     }
   }
@@ -64,27 +64,6 @@ export class NetworkError extends BasePortalError {
   constructor(message?: string) {
     super(message);
     this.name = "NetworkError";
-  }
-}
-
-/**
- * A transition between the current route state to the next route failed most likely because
- * a CONTINUE transition was not defined for the current route.
- */
-export class RouteTransitionError extends BasePortalError {
-  constructor(message?: string) {
-    super(message);
-    this.name = "RouteTransitionError";
-  }
-}
-
-/**
- * users/current api resource did not return a user in its response
- */
-export class UserNotReceivedError extends BasePortalError {
-  constructor(message?: string) {
-    super(message);
-    this.name = "UserNotReceivedError";
   }
 }
 

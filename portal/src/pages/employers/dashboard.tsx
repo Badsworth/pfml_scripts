@@ -72,7 +72,7 @@ export const Dashboard = (props: DashboardProps) => {
     const params = new URLSearchParams(window.location.search);
 
     paramsToUpdate.forEach(({ name, value }) => {
-      if (!value || (typeof value !== "number" && value.length === 0)) {
+      if (typeof value !== "number" && value.length === 0) {
         // Remove param if its value is null, undefined, empty string, or empty array
         params.delete(name);
       } else {
@@ -645,7 +645,7 @@ const Filters = (props: FiltersProps) => {
               }
             </FilterMenuButton>
           )}
-          {activeFilters.claim_status &&
+          {activeFilters.claim_status.length &&
             activeFilters.claim_status.map((status) => (
               <FilterMenuButton
                 data-test={`claim_status_${status}`}

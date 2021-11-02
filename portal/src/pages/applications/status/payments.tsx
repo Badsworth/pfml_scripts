@@ -66,7 +66,7 @@ export const Payments = ({ appLogic, query }: PaymentsProps) => {
             <Heading weight="normal" level="2" size="4">
               {t("pages.claimsStatus.employerEIN")}
             </Heading>
-            <p className="text-bold">{claimDetail?.employer.employer_fein}</p>
+            <p className="text-bold">{claimDetail?.employer?.employer_fein}</p>
           </div>
         </div>
 

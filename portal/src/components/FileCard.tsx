@@ -4,6 +4,7 @@ import React from "react";
 import Thumbnail from "./Thumbnail";
 import classnames from "classnames";
 import formatDateRange from "../utils/formatDateRange";
+import isBlank from "../utils/isBlank";
 import { useTranslation } from "../locales/i18n";
 
 interface FileCardProps {
@@ -24,12 +25,13 @@ const FileCard = (props: FileCardProps) => {
   const { t } = useTranslation();
   const { document, file, heading, errorMsg } = props;
   const removeButton = t("components.fileCard.removeButton");
+  const hasError = !isBlank(props.errorMsg);
 
   const cardClasses = classnames(
     "c-file-card padding-2 margin-bottom-3 display-flex flex-wrap",
     {
-      "border-1px border-base-lighter": !errorMsg,
-      "border-2px border-red": errorMsg,
+      "border-1px border-base-lighter": !hasError,
+      "border-2px border-red": hasError,
     }
   );
 
@@ -44,7 +46,7 @@ const FileCard = (props: FileCardProps) => {
       <div className="c-file-card__content">
         <Heading level="3" className="margin-bottom-1 margin-top-1" size="4">
           {heading}
-          {errorMsg && <p className="text-error">{errorMsg}</p>}
+          {hasError && <p className="text-error">{errorMsg}</p>}
         </Heading>
         {readOnly ? (
           <React.Fragment>

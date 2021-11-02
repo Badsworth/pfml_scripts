@@ -20,7 +20,7 @@ import routes from "../routes";
 import tracker from "../services/tracker";
 
 interface ErrorCodeMap {
-  [code: string]: { field?: string; type: string };
+  [code: string]: { field?: string; type: string } | undefined;
 }
 
 function isCognitoError(error: unknown): error is CognitoError {

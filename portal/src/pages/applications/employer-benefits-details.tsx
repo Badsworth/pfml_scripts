@@ -183,10 +183,11 @@ export const EmployerBenefitCard = (props: EmployerBenefitCardProps) => {
               context: benefitTypeKey,
             }),
             hint:
-              benefitTypeKey !== "permanentDisability" &&
-              t("pages.claimsEmployerBenefitsDetails.choiceHint", {
-                context: benefitTypeKey,
-              }),
+              benefitTypeKey !== "permanentDisability"
+                ? t("pages.claimsEmployerBenefitsDetails.choiceHint", {
+                    context: benefitTypeKey,
+                  })
+                : null,
             value: EmployerBenefitType[benefitTypeKey],
           };
         })}

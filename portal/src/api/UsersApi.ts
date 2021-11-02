@@ -87,13 +87,15 @@ export default class UsersApi extends BaseApi {
     };
   };
 
-  createUserLeaveAdministrators = (leaveAdmins: UserLeaveAdministrator[]) => {
-    return (leaveAdmins || []).map(
+  createUserLeaveAdministrators = (
+    leaveAdmins: UserLeaveAdministrator[] = []
+  ) => {
+    return leaveAdmins.map(
       (leaveAdmin) => new UserLeaveAdministrator(leaveAdmin)
     );
   };
 
-  createUserRoles = (roles: UserRole[]) => {
-    return (roles || []).map((role) => new UserRole(role));
+  createUserRoles = (roles: UserRole[] = []) => {
+    return roles.map((role) => new UserRole(role));
   };
 }

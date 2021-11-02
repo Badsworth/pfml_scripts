@@ -10,6 +10,7 @@ import InputHours from "../../components/InputHours";
 import Lead from "../../components/Lead";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
+import isBlank from "../../utils/isBlank";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -60,10 +61,10 @@ export const ScheduleVariable = (props: ScheduleVariableProps) => {
   };
 
   const handleSave = async () => {
-    let work_pattern_days: WorkPatternDay[];
+    let work_pattern_days: WorkPatternDay[] | null = null;
     let hours_worked_per_week: null | number = null;
 
-    if (!minutesWorkedPerWeek) {
+    if (isBlank(minutesWorkedPerWeek)) {
       work_pattern_days = [];
     } else {
       ({ work_pattern_days } =

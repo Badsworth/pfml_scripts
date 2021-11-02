@@ -89,12 +89,13 @@ export function maskValue(
     // ensure it includes two decimal points
     const number = toNumber(value);
     if (number !== undefined && !Number.isNaN(number)) {
-      value = stringWithFixedDigits(number.toLocaleString("en-US"));
+      return stringWithFixedDigits(number.toLocaleString("en-US"));
     }
-  } else if (MaskDeliminatedRegex[mask]) {
-    value = deliminateRegexGroups(value, MaskDeliminatedRegex[mask]);
+
+    return value;
   }
-  return value;
+
+  return deliminateRegexGroups(value, MaskDeliminatedRegex[mask]);
 }
 
 interface MaskProps {

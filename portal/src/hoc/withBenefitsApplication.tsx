@@ -31,11 +31,12 @@ const withBenefitsApplication = (Component) => {
     const claim = application_id
       ? benefitsApplications.getItem(application_id)
       : undefined;
-    const shouldLoad =
+    const shouldLoad = !!(
       application_id &&
       !appLogic.benefitsApplications.hasLoadedBenefitsApplicationAndWarnings(
         application_id
-      );
+      )
+    );
 
     useEffect(() => {
       if (shouldLoad) {

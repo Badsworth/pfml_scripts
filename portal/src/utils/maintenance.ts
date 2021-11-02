@@ -41,15 +41,14 @@ export const isMaintenancePageRoute = (
   pathname: string
 ) => {
   return (
-    maintenancePageRoutes &&
     // includes specific page? (pathname doesn't include a trailing slash):
-    (maintenancePageRoutes.includes(pathname) ||
-      // or pages matching a wildcard? (e.g /applications/* or /* for site-wide):
-      maintenancePageRoutes.some(
-        (maintenancePageRoute) =>
-          maintenancePageRoute.endsWith("*") &&
-          pathname.startsWith(maintenancePageRoute.split("*")[0])
-      ))
+    maintenancePageRoutes.includes(pathname) ||
+    // or pages matching a wildcard? (e.g /applications/* or /* for site-wide):
+    maintenancePageRoutes.some(
+      (maintenancePageRoute) =>
+        maintenancePageRoute.endsWith("*") &&
+        pathname.startsWith(maintenancePageRoute.split("*")[0])
+    )
   );
 };
 

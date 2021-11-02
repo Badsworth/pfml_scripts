@@ -51,6 +51,7 @@ import formatDateRange from "../../utils/formatDateRange";
 import getI18nContextForIntermittentFrequencyDuration from "../../utils/getI18nContextForIntermittentFrequencyDuration";
 import getMissingRequiredFields from "../../utils/getMissingRequiredFields";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
+import isBlank from "../../utils/isBlank";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import tracker from "../../services/tracker";
 import { useTranslation } from "../../locales/i18n";
@@ -373,7 +374,8 @@ export const Review = (props: ReviewProps) => {
         })}
       </ReviewRow>
 
-      {workPattern.work_pattern_type === WorkPatternType.fixed &&
+      {workPattern.work_pattern_days &&
+        workPattern.work_pattern_type === WorkPatternType.fixed &&
         workPattern.minutesWorkedPerWeek !== null && (
           <ReviewRow
             level={reviewRowLevel}
@@ -888,7 +890,7 @@ interface PreviousLeaveListProps {
 
 export const PreviousLeaveList = (props: PreviousLeaveListProps) => {
   const { t } = useTranslation();
-  if (!props.entries) return null;
+  if (!props.entries.length) return null;
 
   const rows = props.entries.map((entry, index) => (
     <ReviewRow
@@ -979,7 +981,7 @@ export const EmployerBenefitList = (props: EmployerBenefitListProps) => {
     if (entry.is_full_salary_continuous) {
       amount = t("pages.claimsReview.employerBenefitIsFullSalaryContinuous");
     } else {
-      amount = entry.benefit_amount_dollars
+      amount = !isBlank(entry.benefit_amount_dollars)
         ? t("pages.claimsReview.amountPerFrequency", {
             context: findKeyByValue(
               EmployerBenefitFrequency,
@@ -1032,7 +1034,7 @@ export const OtherIncomeList = (props: OtherIncomeListProps) => {
       entry.income_end_date
     );
 
-    const amount = entry.income_amount_dollars
+    const amount = !isBlank(entry.income_amount_dollars)
       ? t("pages.claimsReview.amountPerFrequency", {
           context: findKeyByValue(
             OtherIncomeFrequency,

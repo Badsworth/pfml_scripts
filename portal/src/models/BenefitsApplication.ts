@@ -225,7 +225,7 @@ export class CaringLeaveMetadata {
 }
 
 export class WorkPattern {
-  work_pattern_days: WorkPatternDay[] = [];
+  work_pattern_days: WorkPatternDay[] | null = [];
   work_pattern_type:
     | typeof WorkPatternType[keyof typeof WorkPatternType]
     | null = null;
@@ -249,9 +249,9 @@ export class WorkPattern {
    * Return total minutes worked for work pattern days. Returns null if no minutes are defined for work pattern days
    */
   get minutesWorkedPerWeek() {
-    const hasNoMinutes = this.work_pattern_days.every(
-      (day) => day.minutes === null
-    );
+    const hasNoMinutes =
+      this.work_pattern_days &&
+      this.work_pattern_days.every((day) => day.minutes === null);
     if (hasNoMinutes) {
       return null;
     }

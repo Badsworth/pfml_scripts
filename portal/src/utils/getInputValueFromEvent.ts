@@ -4,9 +4,11 @@
  * @see https://github.com/navahq/archive-vermont-customer-portal-apps/blob/27b66dd7bf37671a6e33a8d2c51a82c7bd9daa41/online-application-app/src/client/actions/index.js#L150
  */
 export default function getInputValueFromEvent(
-  event: React.ChangeEvent<
-    HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-  >
+  event?:
+    | React.ChangeEvent<
+        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+      >
+    | Record<string, undefined>
 ) {
   if (!event || !event.target) {
     return undefined;
