@@ -1,12 +1,17 @@
 import React, { useEffect } from "react";
+import { pick, uniqueId } from "lodash";
+import useAddressFormatter, {
+  AddressFormatter,
+} from "../../hooks/useAddressFormatter";
 import AddressModel from "../../models/Address";
 import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
+import Button from "../../components/Button";
 import ConditionalContent from "../../components/ConditionalContent";
 import FieldsetAddress from "../../components/FieldsetAddress";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
-import { pick } from "lodash";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -47,6 +52,17 @@ export const Address = (props: AddressProps) => {
 
   const { has_mailing_address } = formState;
 
+  const residentialAddressFormatter = useAddressFormatter(
+    new AddressModel(formState.residential_address),
+    appLogic.catchError,
+    1
+  );
+  const mailingAddressFormatter = useAddressFormatter(
+    new AddressModel(formState.mailing_address),
+    appLogic.catchError,
+    2
+  );
+
   /**
    * When user indicates they have a mailing address,
    * add a blank mailing address so validations are ran against it
@@ -58,8 +74,22 @@ export const Address = (props: AddressProps) => {
     }
   }, [formState, updateFields]);
 
-  const handleSave = () =>
-    appLogic.benefitsApplications.update(claim.application_id, formState);
+  const handleSave = async () => {
+    const formData = { ...formState };
+
+    if (isFeatureEnabled("claimantValidateAddress")) {
+      formData.residential_address = await residentialAddressFormatter.format();
+
+      if (formData.has_mailing_address) {
+        formData.mailing_address = await mailingAddressFormatter.format();
+        if (!formData.mailing_address) return;
+      }
+
+      if (!formData.residential_address) return;
+    }
+
+    await appLogic.benefitsApplications.update(claim.application_id, formData);
+  };
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -86,6 +116,14 @@ export const Address = (props: AddressProps) => {
         label={t("pages.claimsAddress.sectionLabel")}
         hint={t("pages.claimsAddress.hint")}
         {...residentialAddressProps}
+        errorMsg={
+          residentialAddressFormatter.couldBeFormatted === false && (
+            <AddressFormattingError
+              addressFormatter={residentialAddressFormatter}
+              data-testid="residential-address-error"
+            />
+          )
+        }
       />
       <InputChoiceGroup
         {...getFunctionalInputProps("has_mailing_address")}
@@ -118,6 +156,14 @@ export const Address = (props: AddressProps) => {
           hint={t("pages.claimsAddress.mailingAddressHint")}
           addressType="mailing"
           {...mailingAddressProps}
+          errorMsg={
+            mailingAddressFormatter.couldBeFormatted === false && (
+              <AddressFormattingError
+                addressFormatter={mailingAddressFormatter}
+                data-testid="mailing-address-error"
+              />
+            )
+          }
         />
       </ConditionalContent>
     </QuestionPage>
@@ -125,3 +171,79 @@ export const Address = (props: AddressProps) => {
 };
 
 export default withBenefitsApplication(Address);
+
+interface AddressFormattingErrorProps {
+  addressFormatter: AddressFormatter;
+  "data-testid"?: string;
+}
+
+const AddressFormattingError = (props: AddressFormattingErrorProps) => {
+  const { addressFormatter, "data-testid": dataTestId } = props;
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    addressFormatter.selectSuggestionAddressKey(event.target.value);
+  };
+
+  if (addressFormatter.suggestions.length === 0) {
+    return (
+      <div className="border-left-05 padding-left-2" data-testid={dataTestId}>
+        <InputChoiceGroup
+          smallLabel
+          label="Verify address"
+          hint={"We could not verify your address as entered"}
+          type="radio"
+          name={uniqueId("address-formatting-error")}
+          onChange={handleChange}
+          choices={[
+            {
+              checked: addressFormatter.selectedAddressKey === "none",
+              label: "Use address as entered:",
+              hint: addressFormatter.address.toString(),
+              value: "none",
+            },
+          ]}
+        />
+        <Button onClick={addressFormatter.reset} variation="unstyled">
+          Edit address
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="border-left-05 padding-left-2" data-testid={dataTestId}>
+      <InputChoiceGroup
+        smallLabel
+        label="Verify your address"
+        hint="Suggested:"
+        type="radio"
+        name={uniqueId("address-formatting-error")}
+        onChange={handleChange}
+        choices={addressFormatter.suggestions.map((suggestion) => ({
+          checked:
+            addressFormatter.selectedAddressKey === suggestion.addressKey,
+          label: suggestion.address,
+          value: suggestion.addressKey,
+        }))}
+      />
+      <InputChoiceGroup
+        smallLabel
+        label=""
+        hint="Entered:"
+        type="radio"
+        name={uniqueId("address-formatting-error")}
+        onChange={handleChange}
+        choices={[
+          {
+            checked: addressFormatter.selectedAddressKey === "none",
+            label: addressFormatter.address.toString(),
+            value: "none",
+          },
+        ]}
+      />
+      <Button onClick={addressFormatter.reset} variation="unstyled">
+        Edit address
+      </Button>
+    </div>
+  );
+};
