@@ -242,7 +242,7 @@ else
 endif
 
 lint: ## Run linting
-lint: lint-spectral lint-py
+lint: lint-spectral lint-py db-check-model-parity
 
 lint-py: ## Run python linting
 lint-py: lint-flake lint-mypy
@@ -343,6 +343,9 @@ run: start logs
 run-native: ## Start API server directly
 run-native: jwks.json
 	poetry run python -m massgov.pfml.api $(DECODE_LOG)
+
+db-check-model-parity: ## Ensure application models are in sync with the database
+	$(PY_RUN_CMD) db-check-model-parity
 
 db-create-users: ## Create database users
 	$(PY_RUN_CMD) db-admin-create-db-users $(DECODE_LOG)
