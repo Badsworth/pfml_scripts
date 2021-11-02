@@ -3,7 +3,7 @@ import BenefitsApplication, {
   ReasonQualifier,
 } from "../../models/BenefitsApplication";
 import StepModel, { ClaimSteps } from "../../models/Step";
-import { camelCase, filter, findIndex, get } from "lodash";
+import { camelCase, filter, findIndex, get, isBoolean } from "lodash";
 import Alert from "../../components/Alert";
 import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
@@ -312,7 +312,8 @@ export const Checklist = (props: ChecklistProps) => {
 
     if (
       stepGroup.number === 2 &&
-      claim.has_submitted_payment_preference === true
+      (claim.has_submitted_payment_preference === true ||
+        isBoolean(claim.is_withholding_tax))
     ) {
       // Description for the second part changes after it's been submitted
       context += "_submitted";

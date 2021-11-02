@@ -288,6 +288,43 @@ describe("Checklist", () => {
         name: "Start: Enter tax withholding preference",
       })
     ).toBeEnabled();
+    // custom description
+    expect(
+      screen.getByText(
+        /If you need to edit your information in Part 2, you’ll need to call the Contact Center/
+      )
+    ).toBeInTheDocument();
+    // upload option is disabled
+    expect(
+      screen.getByRole("button", {
+        name: "Start: Upload identification document",
+      })
+    ).toBeDisabled();
+  });
+
+  it("with tax withholding done & payment not done, submitted description displays", () => {
+    process.env.featureFlags = {
+      claimantShowTaxWithholding: true,
+    };
+    renderChecklist(
+      new MockBenefitsApplicationBuilder()
+        .part1Complete()
+        .taxPrefSubmitted()
+        .create(),
+      [],
+      {
+        query: {
+          claim_id: "mock_application_id",
+          "payment-pref-submitted": "true",
+        },
+      }
+    );
+    // custom description
+    expect(
+      screen.getByText(
+        /If you need to edit your information in Part 2, you’ll need to call the Contact Center/
+      )
+    ).toBeInTheDocument();
     // upload option is disabled
     expect(
       screen.getByRole("button", {
