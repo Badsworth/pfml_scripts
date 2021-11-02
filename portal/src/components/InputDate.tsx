@@ -21,11 +21,7 @@ function addLeadingZero(value: string | number) {
  * @returns ISO 8601 date string (YYYY-MM-DD)
  */
 export function formatFieldsAsISO8601(
-  {
-    month,
-    day,
-    year,
-  }: {
+  fields: {
     day?: number | string;
     month?: number | string;
     year?: number | string;
@@ -35,9 +31,13 @@ export function formatFieldsAsISO8601(
   } = {}
 ) {
   // Disallow anything other than numbers, and restrict invalid lengths
-  month = isBlank(month) ? "" : month.toString().replace(/\D/g, ""); // "abc" => ""
-  day = isBlank(day) ? "" : day.toString().replace(/\D/g, "");
-  year = isBlank(year) ? "" : year.toString().replace(/\D/g, "");
+  let month = isBlank(fields.month)
+    ? ""
+    : fields.month.toString().replace(/\D/g, ""); // "abc" => ""
+  let day = isBlank(fields.day) ? "" : fields.day.toString().replace(/\D/g, "");
+  const year = isBlank(fields.year)
+    ? ""
+    : fields.year.toString().replace(/\D/g, "");
 
   if (!options.skipLeadingZeros) {
     month = addLeadingZero(month);

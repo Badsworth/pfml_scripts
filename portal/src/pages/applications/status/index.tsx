@@ -167,14 +167,14 @@ export const Status = ({ appLogic, query }: StatusProps) => {
 
     // How many claim decisions
     const expectedNoticeCount = claimDetail.absence_periods.reduce(
-      (acc, { request_decision }) => {
+      (previousValue, { request_decision }) => {
         const shouldHaveNotice =
           request_decision === "Approved" ||
           request_decision === "Denied" ||
           request_decision === "Withdrawn";
 
-        if (shouldHaveNotice) acc += 1;
-        return acc;
+        if (shouldHaveNotice) return previousValue + 1;
+        return previousValue;
       },
       0
     );

@@ -186,6 +186,7 @@ module.exports = {
     "lodash/path-style": ["error", "string"],
     "no-console": ["error", { allow: ["error"] }],
     "no-irregular-whitespace": ["error", { skipTemplates: true }],
+    "no-param-reassign": "error",
     "no-prototype-builtins": "off",
     "object-shorthand": ["error", "properties", { avoidQuotes: true }],
     "promise/no-native": "off",

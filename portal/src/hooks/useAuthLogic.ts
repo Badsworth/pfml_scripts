@@ -87,10 +87,10 @@ const useAuthLogic = ({
    */
   const sendForgotPasswordConfirmation = async (username = "") => {
     appErrorsLogic.clearErrors();
-    username = trim(username);
+    const trimmedUsername = trim(username);
 
     const validationIssues = combineValidationIssues(
-      validateUsername(username)
+      validateUsername(trimmedUsername)
     );
 
     if (validationIssues) {
@@ -100,7 +100,7 @@ const useAuthLogic = ({
 
     try {
       trackAuthRequest("forgotPassword");
-      await Auth.forgotPassword(username);
+      await Auth.forgotPassword(trimmedUsername);
       tracker.markFetchRequestEnd();
 
       return true;
@@ -124,10 +124,10 @@ const useAuthLogic = ({
    */
   const login = async (username = "", password: string, next?: string) => {
     appErrorsLogic.clearErrors();
-    username = trim(username);
+    const trimmedUsername = trim(username);
 
     const validationIssues = combineValidationIssues(
-      validateUsername(username),
+      validateUsername(trimmedUsername),
       validatePassword(password)
     );
 
@@ -138,7 +138,7 @@ const useAuthLogic = ({
 
     try {
       trackAuthRequest("signIn");
-      await Auth.signIn(username, password);
+      await Auth.signIn(trimmedUsername, password);
       tracker.markFetchRequestEnd();
 
       setIsLoggedIn(true);
@@ -208,10 +208,10 @@ const useAuthLogic = ({
     employer_fein?: string
   ) => {
     appErrorsLogic.clearErrors();
-    email_address = trim(email_address);
+    const trimmedEmail = trim(email_address);
 
     const requestData = {
-      email_address,
+      email_address: trimmedEmail,
       password,
       user_leave_administrator: {},
       role: { role_description },
@@ -230,7 +230,7 @@ const useAuthLogic = ({
 
     // Store the username so the user doesn't need to reenter it on the Verify page
     setAuthData({
-      createAccountUsername: email_address,
+      createAccountUsername: trimmedEmail,
       createAccountFlow:
         role_description === RoleDescription.employer ? "employer" : "claimant",
     });
@@ -293,10 +293,10 @@ const useAuthLogic = ({
 
   const resendVerifyAccountCode = async (username = "") => {
     appErrorsLogic.clearErrors();
-    username = trim(username);
+    const trimmedUsername = trim(username);
 
     const validationIssues = combineValidationIssues(
-      validateUsername(username)
+      validateUsername(trimmedUsername)
     );
 
     if (validationIssues) {
@@ -306,7 +306,7 @@ const useAuthLogic = ({
 
     try {
       trackAuthRequest("resendSignUp");
-      await Auth.resendSignUp(username);
+      await Auth.resendSignUp(trimmedUsername);
       tracker.markFetchRequestEnd();
 
       // TODO (CP-600): Show success message
@@ -327,12 +327,12 @@ const useAuthLogic = ({
   const resetPassword = async (username = "", code = "", password = "") => {
     appErrorsLogic.clearErrors();
 
-    username = trim(username);
-    code = trim(code);
+    const trimmedUsername = trim(username);
+    const trimmedCode = trim(code);
 
     const validationIssues = combineValidationIssues(
-      validateCode(code),
-      validateUsername(username),
+      validateCode(trimmedCode),
+      validateUsername(trimmedUsername),
       validatePassword(password)
     );
 
@@ -341,7 +341,7 @@ const useAuthLogic = ({
       return;
     }
 
-    await resetPasswordInCognito(username, code, password);
+    await resetPasswordInCognito(trimmedUsername, trimmedCode, password);
   };
 
   /**
@@ -424,12 +424,12 @@ const useAuthLogic = ({
   const verifyAccount = async (username = "", code = "") => {
     appErrorsLogic.clearErrors();
 
-    username = trim(username);
-    code = trim(code);
+    const trimmedUsername = trim(username);
+    const trimmedCode = trim(code);
 
     const validationIssues = combineValidationIssues(
-      validateCode(code),
-      validateUsername(username)
+      validateCode(trimmedCode),
+      validateUsername(trimmedUsername)
     );
 
     if (validationIssues) {
@@ -437,7 +437,7 @@ const useAuthLogic = ({
       return;
     }
 
-    await verifyAccountInCognito(username, code);
+    await verifyAccountInCognito(trimmedUsername, trimmedCode);
   };
 
   return {

@@ -16,14 +16,16 @@ const MaskDeliminatedRegex = {
  */
 function deliminateRegexGroups(value: string, rx: RegExp) {
   const matches = toDigits(value).match(rx);
+  let formattedValue = value;
+
   if (matches && matches.length > 1) {
-    value = matches
+    formattedValue = matches
       .slice(1)
       .filter((a) => !!a) // remove undefined groups
       .join("-");
   }
 
-  return value;
+  return formattedValue;
 }
 
 /**
