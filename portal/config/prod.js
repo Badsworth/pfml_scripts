@@ -12,7 +12,6 @@ module.exports = {
     cognitoUserPoolId: "us-east-1_UwxnhD1cG",
     cognitoUserPoolWebClientId: "64p5sdtqul5a4pn3ikbscjhujn",
   },
-  experianApiKey: "961b1b04-80cc-4ad5-85e3-4409430a1d6d",
   domain: "paidleave.mass.gov",
   // Google Tag Manager Prod environment
   gtmConfig: {
