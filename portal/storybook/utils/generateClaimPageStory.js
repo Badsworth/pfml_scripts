@@ -1,11 +1,12 @@
 import { chain, find, first, get, map, upperFirst } from "lodash";
+
 import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import BenefitsApplication from "src/models/BenefitsApplication";
 import DocumentCollection from "src/models/DocumentCollection";
-import { MockBenefitsApplicationBuilder } from "tests/test-utils";
 import React from "react";
 import User from "../../src/models/User";
+import { createMockBenefitsApplication } from "tests/test-utils";
 import englishLocale from "src/locales/app/en-US";
 import { useTranslation } from "src/locales/i18n";
 
@@ -72,21 +73,36 @@ function generateConfig(claimsPageSubpath, Component) {
  * @returns {React.Component} Storybook story component
  */
 function generateDefaultStory(Component, mockClaims, possibleErrors) {
-  if (!mockClaims) {
-    mockClaims = {
-      empty: new BenefitsApplication(),
-      "continuous leave": new MockBenefitsApplicationBuilder()
-        .continuous()
-        .create(),
-    };
+  let claims = mockClaims;
+
+  if (!claims) {
+    // Customize mock claims for different stories
+    switch (Component.displayName) {
+      case "ConcurrentLeaves":
+        claims = {
+          "continuous leave": createMockBenefitsApplication("continuous"),
+          "continuous reduced leave": createMockBenefitsApplication(
+            "continuous",
+            "reducedSchedule"
+          ),
+          "intermittent leave": createMockBenefitsApplication("intermittent"),
+          "reduced leave": createMockBenefitsApplication("reducedSchedule"),
+        };
+        break;
+
+      default:
+        claims = {
+          empty: new BenefitsApplication(),
+        };
+    }
   }
 
-  // Just take the first claim in the list of mockClaims as the defaultClaim
-  const defaultClaim = first(Object.entries(mockClaims))[0];
+  // Just take the first claim in the list of claims as the defaultClaim
+  const defaultClaim = first(Object.entries(claims))[0];
 
   const DefaultStory = (args) => {
     const errorDisplayStrs = args.errors || [];
-    const claim = mockClaims[args.claim || defaultClaim];
+    const claim = claims[args.claim || defaultClaim];
     const user = new User();
     const { t } = useTranslation();
     const appErrors = new AppErrorInfoCollection(
@@ -130,7 +146,7 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
       defaultValue: defaultClaim,
       control: {
         type: "radio",
-        options: Object.keys(mockClaims),
+        options: Object.keys(claims),
       },
     },
     errors: {

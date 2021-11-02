@@ -244,7 +244,10 @@ export class ClaimPage {
   // No assert ClaimStatus for Declined for the absence case
   // won't say "Declined".
   denyExtendedTime(reason: string): this {
-    cy.get("tr.ListRowSelected").click();
+    waitForAjaxComplete();
+    cy.get("table[id$='leaveRequestListviewWidget']").within(() => {
+      cy.get("tr.ListRowSelected").click();
+    });
     cy.get('a[title="Deny the Pending Leave Request"]').click({
       force: true,
     });
@@ -602,12 +605,16 @@ class OutstandingRequirementsPage {
         cy.findByLabelText("Completion Notes").type(
           `{selectall}{backspace}${reason}`
         );
-        cy.findByText("Ok").click({force: true});
+        cy.findByText("Ok").click({ force: true });
       });
     } else {
       cy.wait("@ajaxRender");
       cy.wait(200);
-      cy.get("input[value='Complete']").should('be.disabled');
+      cy.get("input[value='Complete']").click();
+      cy.get(`span[id^="PageMessage1"]`).should(
+        "contain.text",
+        "You do not have the required secured action to mark all of the selected Outstanding Requirements as Complete."
+      );
     }
     return this;
   }
@@ -621,12 +628,17 @@ class OutstandingRequirementsPage {
         cy.findByLabelText("Suppression Notes").type(
           `{selectall}{backspace}${notes}`
         );
-        cy.findByText("Ok").click({force: true});
+        cy.findByText("Ok").click({ force: true });
       });
+      cy.wait(200);
     } else {
       cy.wait("@ajaxRender");
       cy.wait(200);
-      cy.get("input[value='Suppress']").should('be.disabled');
+      cy.get("input[value='Suppress']").click();
+      cy.get(`span[id^="PageMessage1"]`).should(
+        "contain.text",
+        "You do not have the required secured action to mark all of the selected Outstanding Requirements as Suppressed."
+      );
     }
     return this;
   }
@@ -639,7 +651,11 @@ class OutstandingRequirementsPage {
     } else {
       cy.wait("@ajaxRender");
       cy.wait(200);
-      cy.get("input[value='Remove']").should('be.disabled');
+      cy.get("input[value='Remove']").click();
+      cy.get(`span[id^="PageMessage1"]`).should(
+        "contain.text",
+        "You do not have the required secured action to remove all of the selected Outstanding Requirements"
+      );
     }
     return this;
   }
@@ -651,7 +667,6 @@ class OutstandingRequirementsPage {
     } else {
       cy.wait("@ajaxRender");
       cy.wait(200);
-      cy.get("input[value='Reopen']").should('be.disabled');
     }
     return this;
   }

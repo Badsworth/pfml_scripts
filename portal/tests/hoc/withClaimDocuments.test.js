@@ -1,6 +1,6 @@
 import { screen, waitFor } from "@testing-library/react";
 import BenefitsApplication from "../../src/models/BenefitsApplication";
-import Document from "../../src/models/Document";
+import BenefitsApplicationDocument from "../../src/models/BenefitsApplicationDocument";
 import DocumentCollection from "../../src/models/DocumentCollection";
 import React from "react";
 import { renderPage } from "../test-utils";
@@ -52,6 +52,21 @@ describe("withClaimDocuments", () => {
     ).toBeInTheDocument();
   });
 
+  it("shows Page Not Found when application ID isn't found", () => {
+    setup(
+      {},
+      {
+        query: {
+          claim_id: "",
+        },
+      }
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Page not found" })
+    ).toBeInTheDocument();
+  });
+
   it("requires user to be logged in", async () => {
     let spy;
 
@@ -68,10 +83,19 @@ describe("withClaimDocuments", () => {
 
   it("renders the page with Claim documents when document state is loaded", async () => {
     const mockDocuments = new DocumentCollection([
-      new Document({ application_id: mockClaimId, fineos_document_id: 1 }),
-      new Document({ application_id: mockClaimId, fineos_document_id: 2 }),
-      new Document({ application_id: mockClaimId, fineos_document_id: 3 }),
-      new Document({
+      new BenefitsApplicationDocument({
+        application_id: mockClaimId,
+        fineos_document_id: 1,
+      }),
+      new BenefitsApplicationDocument({
+        application_id: mockClaimId,
+        fineos_document_id: 2,
+      }),
+      new BenefitsApplicationDocument({
+        application_id: mockClaimId,
+        fineos_document_id: 3,
+      }),
+      new BenefitsApplicationDocument({
         // Helps assert the filtering logic within the HOC.
         application_id: "something different",
         fineos_document_id: 4,
@@ -119,7 +143,10 @@ describe("withClaimDocuments", () => {
   // instead of the query param
   it("renders the page with Application documents when document state is loaded", async () => {
     const mockDocuments = new DocumentCollection([
-      new Document({ application_id: mockClaimId, fineos_document_id: 1 }),
+      new BenefitsApplicationDocument({
+        application_id: mockClaimId,
+        fineos_document_id: 1,
+      }),
     ]);
     const mockApplication = new BenefitsApplication({
       application_id: mockClaimId,

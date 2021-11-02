@@ -1,52 +1,46 @@
+import BaseCollection from "../models/BaseCollection";
 import { useState } from "react";
 
-/** @typedef {import('../models/BaseCollection').default} BaseCollection */
+// Gets the typeof for the class we're storing in the collection
+type InferCollectionItem<TCollection> = TCollection extends BaseCollection<
+  infer K
+>
+  ? K
+  : unknown;
 
 /**
  * React hook for creating a state for a Collection of objects
- * @param {BaseCollection} [initialCollection] - initial collection state
- * @returns {{addItem: addItemFunction, collection: BaseCollection, removeItem: removeItemFunction, setCollection: Function, updateItem: updateItemFunction}}
  */
-const useCollectionState = (initialCollection) => {
-  /**
-   * @type {[BaseCollection, Function]}
-   */
+const useCollectionState = <
+  TCollection extends BaseCollection<TItem>,
+  TItem = InferCollectionItem<TCollection>
+>(
+  initialCollection: TCollection
+) => {
   const [collection, setCollection] = useState(initialCollection);
 
-  /**
-   * Function that adds an item to the collection
-   * @callback addItemFunction
-   * @param {BaseModel} item The item to add to the collection
-   */
-  const addItem = (item) => {
-    setCollection((prevCollection) => prevCollection.addItem(item));
+  const addItem = (item: TItem) => {
+    setCollection(
+      (prevCollection) => prevCollection.addItem(item) as TCollection
+    );
   };
 
-  /**
-   * Function that adds an item to the collection
-   * @callback addItemsFunction
-   * @param {BaseModel} items The items to add to the collection
-   */
-  const addItems = (items) => {
-    setCollection((prevCollection) => prevCollection.addItems(items));
+  const addItems = (items: TItem[]) => {
+    setCollection(
+      (prevCollection) => prevCollection.addItems(items) as TCollection
+    );
   };
 
-  /**
-   * Function that updates an item within the collection
-   * @callback updateItemFunction
-   * @param {BaseModel} item The item to update
-   */
-  const updateItem = (item) => {
-    setCollection((prevCollection) => prevCollection.updateItem(item));
+  const updateItem = (item: TItem) => {
+    setCollection(
+      (prevCollection) => prevCollection.updateItem(item) as TCollection
+    );
   };
 
-  /**
-   * Function that removes an item within the collection
-   * @callback removeItemFunction
-   * @param {string} itemId The id of the item to remove
-   */
-  const removeItem = (itemId) => {
-    setCollection((prevCollection) => prevCollection.removeItem(itemId));
+  const removeItem = (itemId: string) => {
+    setCollection(
+      (prevCollection) => prevCollection.removeItem(itemId) as TCollection
+    );
   };
 
   return {

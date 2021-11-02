@@ -221,3 +221,7 @@ class DocumentRequestBody(PydanticBaseModel):
 
 class PaymentPreferenceRequestBody(PydanticBaseModel):
     payment_preference: Optional[PaymentPreference]
+
+
+class TaxWithholdingPreferenceRequestBody(PydanticBaseModel):
+    withhold_taxes: bool

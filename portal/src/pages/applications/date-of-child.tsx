@@ -1,10 +1,13 @@
+import BenefitsApplication, {
+  ReasonQualifier,
+  ReasonQualifierEnum,
+} from "../../models/BenefitsApplication";
 import { get, pick, set } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import { DateTime } from "luxon";
 import InputDate from "../../components/InputDate";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import { ReasonQualifier } from "../../models/BenefitsApplication";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -20,15 +23,26 @@ export const fields = [
   `claim.${hasFutureChildDateField}`,
 ];
 
-export const DateOfChild = (props) => {
+interface DateOfChildProps {
+  appLogic: AppLogic;
+  claim: BenefitsApplication;
+  query: {
+    claim_id?: string;
+  };
+}
+
+export const DateOfChild = (props: DateOfChildProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, getField, updateFields } = useFormState(
     pick(props, fields).claim
   );
 
-  const reason_qualifier = get(claim, reasonQualifierField);
+  const reason_qualifier: ReasonQualifierEnum = get(
+    claim,
+    reasonQualifierField
+  );
   const dateFieldName =
     reason_qualifier === ReasonQualifier.newBorn
       ? childBirthDateField
@@ -81,14 +95,6 @@ export const DateOfChild = (props) => {
       />
     </QuestionPage>
   );
-};
-
-DateOfChild.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(DateOfChild);

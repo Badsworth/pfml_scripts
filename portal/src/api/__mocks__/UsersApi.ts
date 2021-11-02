@@ -16,13 +16,13 @@ const createMockUser = () =>
     consented_to_data_sharing: true,
     email_address: "mock-user@example.com",
     user_id: "api-123",
+    roles: [],
+    user_leave_administrators: [],
   });
 
 const createMockEmployer = () => {
   const user = createMockUser();
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'roles' does not exist on type 'User'.
   user.roles.push(new UserRole({ role_description: RoleDescription.employer }));
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'user_leave_administrators' does not exis... Remove this comment to see the full error message
   user.user_leave_administrators.push(
     new UserLeaveAdministrator({
       employer_dba: "Test Company",

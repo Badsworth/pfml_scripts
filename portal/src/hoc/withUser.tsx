@@ -1,9 +1,14 @@
 import React, { useEffect } from "react";
-import PropTypes from "prop-types";
+import { AppLogic } from "../hooks/useAppLogic";
 import Spinner from "../components/Spinner";
 import User from "../models/User";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
+
+interface ComponentWithUserProps {
+  appLogic: AppLogic;
+  user: User;
+}
 
 /**
  * Higher order component that provides the current logged in Portal user object
@@ -15,8 +20,9 @@ import { useTranslation } from "../locales/i18n";
  * @param {React.Component} Component - Component to receive user prop
  * @returns {React.Component} - Component with user prop
  */
+// @ts-expect-error TODO (PORTAL-966) Fix HOC typing
 const withUser = (Component) => {
-  const ComponentWithUser = (props) => {
+  const ComponentWithUser = (props: ComponentWithUserProps) => {
     const { appLogic } = props;
     const { auth, portalFlow, users } = appLogic;
     const { t } = useTranslation();
@@ -59,25 +65,6 @@ const withUser = (Component) => {
       return null;
 
     return <Component {...props} user={users.user} />;
-  };
-
-  ComponentWithUser.propTypes = {
-    appLogic: PropTypes.shape({
-      auth: PropTypes.shape({
-        isLoggedIn: PropTypes.bool,
-        requireLogin: PropTypes.func.isRequired,
-      }),
-      portalFlow: PropTypes.shape({
-        pathname: PropTypes.string.isRequired,
-      }),
-      users: PropTypes.shape({
-        loadUser: PropTypes.func.isRequired,
-        requireUserConsentToDataAgreement: PropTypes.func.isRequired,
-        requireUserRole: PropTypes.func.isRequired,
-        user: PropTypes.instanceOf(User),
-      }).isRequired,
-      appErrors: PropTypes.object.isRequired,
-    }).isRequired,
   };
 
   return ComponentWithUser;

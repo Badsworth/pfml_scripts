@@ -35,12 +35,13 @@ def test_wages_gte_thirty_times_wba_true():
     total_wages = 40000
     state_average_weekly_wage = decimal.Decimal("1431.66")
     individual_average_weekly_wage = 1538
+    maximum_weekly_benefit_amount = 850
 
     is_eligible = eligibility_util.wages_gte_thirty_times_wba(
         total_wages,
         individual_average_weekly_wage,
         state_average_weekly_wage,
-        datetime.date(2021, 1, 1),
+        maximum_weekly_benefit_amount,
     )
 
     assert is_eligible is True
@@ -50,12 +51,13 @@ def test_wages_gte_thirty_times_wba_false():
     total_wages = 1100
     state_average_weekly_wage = decimal.Decimal("1431.66")
     individual_average_weekly_wage = 423
+    maximum_weekly_benefit_amount = 850
 
     is_eligible = eligibility_util.wages_gte_thirty_times_wba(
         total_wages,
         individual_average_weekly_wage,
         state_average_weekly_wage,
-        datetime.date(2021, 1, 1),
+        maximum_weekly_benefit_amount,
     )
 
     assert is_eligible is False
@@ -65,12 +67,13 @@ def test_wages_gte_thirty_times_wba_mid():
     total_wages = 20000
     state_average_weekly_wage = decimal.Decimal("1431.66")
     individual_average_weekly_wage = 769
+    maximum_weekly_benefit_amount = 850
 
     is_eligible = eligibility_util.wages_gte_thirty_times_wba(
         total_wages,
         individual_average_weekly_wage,
         state_average_weekly_wage,
-        datetime.date(2021, 1, 1),
+        maximum_weekly_benefit_amount,
     )
 
     assert is_eligible is True
@@ -82,6 +85,7 @@ def test_fetch_state_metric(test_db_session):
 
     assert state_metric.unemployment_minimum_earnings == 5100
     assert state_metric.average_weekly_wage == decimal.Decimal("1431.66")
+    assert state_metric.maximum_weekly_benefit_amount == 850
 
 
 def test_fetch_state_metric_multiple_yrs(initialize_factories_session, test_db_session):
@@ -113,3 +117,7 @@ def test_fetch_state_metric_multiple_yrs(initialize_factories_session, test_db_s
         == state_metric_2019.unemployment_minimum_earnings
     )
     assert state_metric.average_weekly_wage == state_metric_2019.average_weekly_wage
+    assert (
+        state_metric.maximum_weekly_benefit_amount
+        == state_metric_2019.maximum_weekly_benefit_amount
+    )

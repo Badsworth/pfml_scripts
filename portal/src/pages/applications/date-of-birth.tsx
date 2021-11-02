@@ -1,5 +1,6 @@
+import { AppLogic } from "../../hooks/useAppLogic";
+import BenefitsApplication from "../../models/BenefitsApplication";
 import InputDate from "../../components/InputDate";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { pick } from "lodash";
@@ -10,11 +11,18 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.date_of_birth"];
 
-export const DateOfBirth = (props) => {
+interface DateOfBirthProps {
+  appLogic: AppLogic;
+  claim: BenefitsApplication;
+  query: {
+    claim_id?: string;
+  };
+}
+
+export const DateOfBirth = (props: DateOfBirthProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
 
   const handleSave = () =>
@@ -41,14 +49,6 @@ export const DateOfBirth = (props) => {
       />
     </QuestionPage>
   );
-};
-
-DateOfBirth.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(DateOfBirth);

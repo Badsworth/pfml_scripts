@@ -1,6 +1,5 @@
-import { act, render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import React from "react";
-import { renderHook } from "@testing-library/react-hooks";
 import useThrottledHandler from "../../src/hooks/useThrottledHandler";
 import userEvent from "@testing-library/user-event";
 
@@ -62,15 +61,5 @@ describe("useThrottledHandler", () => {
     await waitFor(() => {
       expect(throttleHandler.isThrottled).toBe(true);
     });
-  });
-
-  it("rejects handlers that do no return a promise", () => {
-    let handler;
-    renderHook(() => {
-      const nonAsyncHandler = () => {};
-      handler = useThrottledHandler(nonAsyncHandler);
-    });
-
-    return expect(act(handler)).rejects.toThrow();
   });
 });

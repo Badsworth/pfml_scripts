@@ -1,6 +1,6 @@
+/* eslint-disable react/prop-types */
 import React, { useEffect, useState } from "react";
 import { camelCase, get, uniqueId } from "lodash";
-import PropTypes from "prop-types";
 import mermaid from "mermaid";
 
 /**
@@ -36,12 +36,6 @@ const FlowDiagram = ({ direction = "TB", ...props }) => {
       />
     </React.Fragment>
   );
-};
-
-FlowDiagram.propTypes = {
-  direction: PropTypes.oneOf(["TB", "LR"]),
-  maxWidth: PropTypes.string,
-  states: PropTypes.object.isRequired,
 };
 
 export default FlowDiagram;
@@ -192,12 +186,12 @@ function mermaidTransitionGroup(states, fill) {
  * @param {string} fill - HEX color
  * @param {string} from
  * @param {string} to
- * @param {string} event
+ * @param {string} eventName
  * @param {string} [condition]
  * @returns {string}
  */
-function mermaidTransition(fill, from, to, event, condition) {
-  event = condition ? `"${event}\n${condition}"` : event;
+function mermaidTransition(fill, from, to, eventName, condition) {
+  const event = condition ? `"${eventName}\n${condition}"` : eventName;
 
   // Use dotted arrows for specific transitions
   const arrow = to === "/applications/checklist" ? "-.->" : "-->";

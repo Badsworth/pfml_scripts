@@ -1,14 +1,14 @@
 import BenefitsApplication, {
   ReasonQualifier,
 } from "../models/BenefitsApplication";
-import Document, { DocumentType } from "../models/Document";
-
 import Alert from "./Alert";
+import { AppLogic } from "../hooks/useAppLogic";
+import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import ButtonLink from "./ButtonLink";
+import { DocumentType } from "../models/Document";
 import DownloadableDocument from "./DownloadableDocument";
 import Heading from "./Heading";
 import LeaveReason from "../models/LeaveReason";
-import PropTypes from "prop-types";
 import React from "react";
 import { Trans } from "react-i18next";
 import findDocumentsByTypes from "../utils/findDocumentsByTypes";
@@ -21,13 +21,23 @@ import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 import withClaimDocuments from "../hoc/withClaimDocuments";
 
+interface ApplicationCardProps {
+  appLogic: AppLogic;
+  claim: BenefitsApplication;
+  documents: BenefitsApplicationDocument[];
+  /**
+   * Cards are displayed in a list. What position is this card?
+   */
+  number: number;
+}
+
 /**
  * Main entry point for an existing benefits Application, allowing
  * claimants to continue an in progress application, view what
  * they've submitted, view notices and instructions, or upload
  * additional docs.
  */
-export const ApplicationCard = (props) => {
+export const ApplicationCard = (props: ApplicationCardProps) => {
   const { claim, number } = props;
   const { t } = useTranslation();
 
@@ -64,34 +74,18 @@ export const ApplicationCard = (props) => {
   );
 };
 
-ApplicationCard.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    documents: PropTypes.shape({
-      download: PropTypes.func.isRequired,
-    }),
-  }).isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-  /**
-   * Cards are displayed in a list. What position is this card?
-   */
-  number: PropTypes.number.isRequired,
-};
+interface ApplicationDetailsProps {
+  claim: BenefitsApplication;
+}
 
 /**
  * Details about the application, entered by the Claimant,
  * like Employer EIN and leave periods
  */
-function ApplicationDetails(props) {
+function ApplicationDetails(props: ApplicationDetailsProps) {
   const { t } = useTranslation();
   const { claim } = props;
 
-  const headingProps = {
-    className: "margin-top-0 margin-bottom-05 text-base-dark",
-    level: "4",
-    size: "6",
-  };
   const valueProps = {
     className: "margin-top-0 margin-bottom-2 font-body-2xs text-medium",
   };
@@ -106,7 +100,11 @@ function ApplicationDetails(props) {
     <div className={containerClassName}>
       {claim.employer_fein && (
         <React.Fragment>
-          <Heading {...headingProps}>
+          <Heading
+            className="margin-top-0 margin-bottom-05 text-base-dark"
+            level="4"
+            size="6"
+          >
             {t("components.applicationCard.feinHeading")}
           </Heading>
           <p {...valueProps}>{claim.employer_fein}</p>
@@ -115,11 +113,14 @@ function ApplicationDetails(props) {
 
       {claim.isContinuous && (
         <React.Fragment>
-          <Heading {...headingProps}>
+          <Heading
+            className="margin-top-0 margin-bottom-05 text-base-dark"
+            level="4"
+            size="6"
+          >
             {t("components.applicationCard.leavePeriodLabel_continuous")}
           </Heading>
           <p {...valueProps}>
-            {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
             {formatDateRange(
               get(
                 claim,
@@ -133,11 +134,14 @@ function ApplicationDetails(props) {
 
       {claim.isReducedSchedule && (
         <React.Fragment>
-          <Heading {...headingProps}>
+          <Heading
+            className="margin-top-0 margin-bottom-05 text-base-dark"
+            level="4"
+            size="6"
+          >
             {t("components.applicationCard.leavePeriodLabel_reduced")}
           </Heading>
           <p {...valueProps}>
-            {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
             {formatDateRange(
               get(
                 claim,
@@ -154,11 +158,14 @@ function ApplicationDetails(props) {
 
       {claim.isIntermittent && (
         <React.Fragment>
-          <Heading {...headingProps}>
+          <Heading
+            className="margin-top-0 margin-bottom-05 text-base-dark"
+            level="4"
+            size="6"
+          >
             {t("components.applicationCard.leavePeriodLabel_intermittent")}
           </Heading>
           <p {...valueProps}>
-            {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
             {formatDateRange(
               get(
                 claim,
@@ -173,14 +180,16 @@ function ApplicationDetails(props) {
   );
 }
 
-ApplicationDetails.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-};
+interface LegalNoticesProps {
+  appLogic: AppLogic;
+  claim: BenefitsApplication;
+  documents: BenefitsApplicationDocument[];
+}
 
 /**
  * Legal notices list and content
  */
-function LegalNotices(props) {
+function LegalNotices(props: LegalNoticesProps) {
   const { t } = useTranslation();
   const { appLogic, claim, documents } = props;
 
@@ -209,7 +218,6 @@ function LegalNotices(props) {
       </Heading>
 
       {hasLoadingDocumentsError && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; noIcon: true; }' is not... Remove this comment to see the full error message
         <Alert noIcon>
           <Trans
             i18nKey="components.applicationCard.documentsLoadError"
@@ -235,7 +243,9 @@ function LegalNotices(props) {
                 <DownloadableDocument
                   document={notice}
                   showCreatedAt
-                  onDownloadClick={appLogic.documents.download}
+                  downloadBenefitsApplicationDocument={
+                    appLogic.documents.download
+                  }
                 />
               </li>
             ))}
@@ -246,22 +256,16 @@ function LegalNotices(props) {
   );
 }
 
-LegalNotices.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    documents: PropTypes.shape({
-      download: PropTypes.func.isRequired,
-    }),
-  }).isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-};
+interface ApplicationActionsProps {
+  claim: BenefitsApplication;
+  documents: BenefitsApplicationDocument[];
+}
 
 /**
  * Actions the user can take or will need to take, like calling for
  * reductions, uploading docs, or completing their claim.
  */
-function ApplicationActions(props) {
+function ApplicationActions(props: ApplicationActionsProps) {
   const { t } = useTranslation();
   const { claim, documents } = props;
 
@@ -279,7 +283,7 @@ function ApplicationActions(props) {
   const hasFutureChildDate = get(claim, "leave_details.has_future_child_date");
   const leaveReasonQualifier = get(claim, "leave_details.reason_qualifier");
 
-  const bondingContentContext = {
+  const bondingContentContext: { [reason: string]: string } = {
     [ReasonQualifier.adoption]: "adopt_foster",
     [ReasonQualifier.fosterCare]: "adopt_foster",
     [ReasonQualifier.newBorn]: "newborn",
@@ -301,7 +305,7 @@ function ApplicationActions(props) {
     get(claim, "has_previous_leaves_other_reason") !== null ||
     get(claim, "has_concurrent_leave") !== null;
   // Show no instructions by default
-  let reductionsI18nKey = null;
+  let reductionsI18nKey = "";
   // Show new other leave instructions on completed claims
   if (claim.isCompleted) {
     reductionsI18nKey = "components.applicationCard.reductionsInstructions";
@@ -351,7 +355,7 @@ function ApplicationActions(props) {
           href={routeWithParams("applications.uploadDocsOptions", {
             claim_id: claim.application_id,
           })}
-          variation={showResumeButton ? "outline" : null}
+          variation={showResumeButton ? "outline" : undefined}
         >
           {t("components.applicationCard.uploadDocsButton")}
         </ButtonLink>
@@ -371,10 +375,5 @@ function ApplicationActions(props) {
     </div>
   );
 }
-
-ApplicationActions.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-};
 
 export default withClaimDocuments(ApplicationCard);

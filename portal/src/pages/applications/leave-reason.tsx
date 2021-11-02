@@ -3,11 +3,11 @@ import BenefitsApplication, {
 } from "../../models/BenefitsApplication";
 import { get, pick, set } from "lodash";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import LeaveReasonEnum from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
@@ -23,10 +23,15 @@ export const fields = [
   "claim.leave_details.reason_qualifier",
 ];
 
-export const LeaveReason = (props) => {
+interface LeaveReasonProps {
+  claim: BenefitsApplication;
+  appLogic: AppLogic;
+}
+
+export const LeaveReason = (props: LeaveReasonProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
   );
@@ -97,7 +102,11 @@ export const LeaveReason = (props) => {
   );
 
   const getChoices = () => {
-    const choices = [];
+    const choices: Array<{
+      checked: boolean;
+      label: string;
+      value: string;
+    }> = [];
     choices.push(choiceMedical, choiceBonding, choiceCaringLeave);
 
     showMilitaryLeaveTypes &&
@@ -111,7 +120,6 @@ export const LeaveReason = (props) => {
       title={t("pages.claimsLeaveReason.title")}
       onSave={handleSave}
     >
-      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; neutral:... Remove this comment to see the full error message */}
       <Alert state="info" neutral>
         <Trans
           i18nKey="pages.claimsLeaveReason.alertBody"
@@ -149,7 +157,6 @@ export const LeaveReason = (props) => {
           claim.leave_details.reason !== reason
         }
       >
-        {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; heading:... Remove this comment to see the full error message */}
         <Alert
           state="warning"
           heading={t("pages.claimsLeaveReason.leaveReasonChangedAlertTitle")}
@@ -210,11 +217,6 @@ export const LeaveReason = (props) => {
       </ConditionalContent>
     </QuestionPage>
   );
-};
-
-LeaveReason.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(LeaveReason);

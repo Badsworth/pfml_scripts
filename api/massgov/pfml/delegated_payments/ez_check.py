@@ -7,9 +7,9 @@ from itertools import chain
 from typing import Any, List, Optional, TextIO, Tuple, Type
 
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
+from massgov.pfml.util.decimals import round_nearest_hundredth
 
 DATE_FORMAT = "%m/%d/%Y"
-TWOPLACES = Decimal(10) ** -2
 
 
 class EzCheckField:
@@ -86,7 +86,7 @@ class EzCheckDecimalField(EzCheckField):
 
     def format_value(self) -> str:
         # Force the value to have a two digit decimal part.
-        return str(self.value.quantize(TWOPLACES))
+        return str(round_nearest_hundredth(self.value))
 
 
 class EzCheckDateField(EzCheckField):

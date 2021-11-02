@@ -1,0 +1,112 @@
+# This workflow automatically deploys changes to the pfml-aws module whenever the main branch is updated
+#
+#
+name: pfml-aws deploy
+
+on:
+  push:
+    branches:
+      # - main
+      - Paz/INFRA-735-Automatically-deploy-pfml-aws-module-on-merge
+    paths:
+      - infra/pfml-aws/**
+      - infra/constants/**
+     
+env: 
+  deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
+  workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+
+jobs:
+  pfml-aws-deploy:
+    runs-on: ubuntu-latest
+    env:
+      TF_CLI_ARGS: '-lock-timeout=120s'
+      
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Terraform Init
+        id: terraform_init
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: "0.14.7"
+          tf_actions_subcommand: init
+          tf_actions_comment: false
+          tf_actions_working_dir: infra/pfml-aws
+
+      - name: Terraform Plan
+        id: terraform_plan
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: "0.14.7"
+          tf_actions_subcommand: plan
+          tf_actions_comment: false
+          tf_actions_working_dir: infra/pfml-aws
+          args: "-out=plan.tfplan"
+
+      - name: Terraform Apply from execution plan
+        id: terraform_apply
+        uses: hashicorp/terraform-github-actions@master
+        with:
+          tf_actions_version: "0.14.7"
+          tf_actions_subcommand: apply
+          tf_actions_comment: false
+          tf_actions_working_dir: infra/pfml-aws
+          args: "plan.tfplan"
+
+  get-deploy-state:
+    name: Finalize deployment state
+    needs: [pfml-aws-deploy]
+    if: always()
+    runs-on: ubuntu-latest
+    outputs:
+      deploy-state: ${{ steps.deploy-state.outputs.deploy-state }}
+    steps:
+        # https://github.com/technote-space/workflow-conclusion-action
+        # this action takes the "conclusion" status from jobs and compiles them together into an env variable with a rolled up status
+      - uses: technote-space/workflow-conclusion-action@v2
+      - name: Set deploy-state value
+        id: deploy-state
+        run: echo "::set-output name=deploy-state::${{ env.WORKFLOW_CONCLUSION }}"
+
+  post-to-slack:
+    name: post failures to slack
+    needs: [get-deploy-state]
+    if: always() && (needs.get-deploy-state.outputs.deploy-state == 'failure' || needs.get-deploy-state.outputs.deploy-state == 'timed_out')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+          role-to-assume: ci-run-deploys
+          role-duration-seconds: 3600
+
+      - name: Pull slackbot API token from SSM
+        uses: "marvinpinto/action-inject-ssm-secrets@latest"
+        with:
+          ssm_parameter: "/admin/common/nava-slackbot-api-key"
+          env_variable_name: "slackbot_token"
+
+      - name: Post to Slack
+        run: |
+          SLACKBOT_RESPONSE=$(curl -fsLS -X POST -H "Authorization: Bearer ${{ env.SLACKBOT_TOKEN }}" \
+          -H 'Content-Type: application/json;charset=utf-8' \
+          --data '{
+            "channel": "${{ env.deploys_channel }}",
+            "attachments": [{
+              "title": "Failed to deploy pfml-aws changes (<${{ env.workflow_self_link }}|build logs>)",
+              "color": "danger"
+            }]
+          }' https://slack.com/api/chat.postMessage)

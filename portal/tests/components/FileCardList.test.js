@@ -1,6 +1,7 @@
-import Document, { DocumentType } from "../../src/models/Document";
 import { fireEvent, render, screen, within } from "@testing-library/react";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
+import BenefitsApplicationDocument from "../../src/models/BenefitsApplicationDocument";
+import { DocumentType } from "../../src/models/Document";
 import FileCardList from "../../src/components/FileCardList";
 import React from "react";
 import TempFile from "../../src/models/TempFile";
@@ -20,6 +21,7 @@ const onRemoveTempFile = jest.fn();
 
 const renderComponent = (customProps) => {
   const defaultProps = {
+    documents: [],
     tempFiles: new TempFileCollection(),
     onChange,
     fileErrors: [],
@@ -149,13 +151,13 @@ describe("FileCardList", () => {
   });
 
   it("renders file cards for documents", () => {
-    const newDoc1 = new Document({
+    const newDoc1 = new BenefitsApplicationDocument({
       document_type: DocumentType.certification.medicalCertification,
       application_id: "mock_application_id",
       fineos_document_id: "testId1",
       created_at: "2020-11-26",
     });
-    const newDoc2 = new Document({
+    const newDoc2 = new BenefitsApplicationDocument({
       document_type: DocumentType.certification.medicalCertification,
       application_id: "mock_application_id",
       fineos_document_id: "testId2",

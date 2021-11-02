@@ -1,17 +1,25 @@
-import PropTypes from "prop-types";
+import { IntermittentLeavePeriod } from "../../models/BenefitsApplication";
 import React from "react";
 import { Trans } from "react-i18next";
+import formatDateRange from "../../utils/formatDateRange";
 import { useTranslation } from "../../locales/i18n";
+
+interface IntermittentLeaveScheduleProps {
+  intermittentLeavePeriods: IntermittentLeavePeriod[];
+  hasDocuments?: boolean;
+}
 
 /**
  * Display intermittent leave schedule
  * in the Leave Admin claim review page.
  */
-const IntermittentLeaveSchedule = ({ hasDocuments }) => {
-  // TODO (EMPLOYER-655): Update intermittent leave details
-  // const leavePeriod = props.intermittentLeavePeriods[0];
+const IntermittentLeaveSchedule = ({
+  hasDocuments,
+  intermittentLeavePeriods,
+}: IntermittentLeaveScheduleProps) => {
+  const leavePeriod = intermittentLeavePeriods[0];
   const { t } = useTranslation();
-  // TODO (EMPLOYER-655): Update intermittent leave details
+  // TODO (PORTAL-968): Update intermittent leave details
   // const getFormattedFrequencyBasis = () => {
   //   if (
   //     leavePeriod.frequency_interval_basis === FrequencyIntervalBasis.months &&
@@ -29,9 +37,7 @@ const IntermittentLeaveSchedule = ({ hasDocuments }) => {
   return (
     <tr>
       <th scope="row">
-        {/* TODO (EMPLOYER-448): Support intermittent leave
-        TODO (EMPLOYER-655): Update intermittent leave details */}
-        {/* {formatDateRange(leavePeriod.start_date, leavePeriod.end_date)} */}
+        {formatDateRange(leavePeriod.start_date, leavePeriod.end_date)}
       </th>
       <td>
         {t(
@@ -39,16 +45,13 @@ const IntermittentLeaveSchedule = ({ hasDocuments }) => {
         )}
       </td>
       <td>
-        {/* TODO (EMPLOYER-448): Support intermittent leave
-        TODO (EMPLOYER-655): Update intermittent leave details */}
+        {/* TODO (PORTAL-968): Update intermittent leave details */}
         {/* <div className="text-bold">
           {t("components.employersIntermittentLeaveSchedule.frequencyBasis", {
             context: getFormattedFrequencyBasis(),
           })}
         </div> */}
         <div>
-          {/* TODO (EMPLOYER-448): Support intermittent leave
-          TODO (EMPLOYER-655): Update intermittent leave details */}
           <Trans
             i18nKey="components.employersIntermittentLeaveSchedule.lead"
             components={{
@@ -60,6 +63,7 @@ const IntermittentLeaveSchedule = ({ hasDocuments }) => {
               context: hasDocuments ? "hasDocs" : "noDocs",
             }}
           />
+          {/* TODO (PORTAL-968): Update intermittent leave details */}
           {/* <Trans
             i18nKey="components.employersIntermittentLeaveSchedule.intermittentFrequencyDuration"
             tOptions={{
@@ -74,14 +78,6 @@ const IntermittentLeaveSchedule = ({ hasDocuments }) => {
       </td>
     </tr>
   );
-};
-
-IntermittentLeaveSchedule.propTypes = {
-  // TODO (EMPLOYER-655): Update intermittent leave details
-  // intermittentLeavePeriods: PropTypes.arrayOf(
-  //   PropTypes.instanceOf(IntermittentLeavePeriod)
-  // ).isRequired,
-  hasDocuments: PropTypes.bool,
 };
 
 export default IntermittentLeaveSchedule;

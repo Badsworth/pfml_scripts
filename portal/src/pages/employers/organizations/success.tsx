@@ -1,5 +1,6 @@
+import { AppLogic } from "../../../hooks/useAppLogic";
 import Button from "../../../components/Button";
-import PropTypes from "prop-types";
+import PageNotFound from "../../../components/PageNotFound";
 import React from "react";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
@@ -8,7 +9,16 @@ import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
 
-export const Success = (props) => {
+interface SuccessProps {
+  appLogic: AppLogic;
+  query: {
+    employer_id: string;
+    next: string;
+  };
+  user: User;
+}
+
+export const Success = (props: SuccessProps) => {
   const { appLogic, query, user } = props;
   const { t } = useTranslation();
 
@@ -19,6 +29,10 @@ export const Success = (props) => {
     const route = query.next || routes.employers.organizations;
     appLogic.portalFlow.goTo(route);
   };
+
+  if (!employer) {
+    return <PageNotFound />;
+  }
 
   return (
     <React.Fragment>
@@ -53,19 +67,6 @@ export const Success = (props) => {
       </Button>
     </React.Fragment>
   );
-};
-
-Success.propTypes = {
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      goTo: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-  query: PropTypes.shape({
-    employer_id: PropTypes.string.isRequired,
-    next: PropTypes.string.isRequired,
-  }).isRequired,
-  user: PropTypes.instanceOf(User),
 };
 
 export default withUser(Success);

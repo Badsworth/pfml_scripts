@@ -14,7 +14,7 @@ const useAppLogic = () => {
   const portalFlow = usePortalFlow();
 
   // State representing currently visible errors and warnings
-  const { appErrors, ...appErrorsLogic } = useAppErrorsLogic({ portalFlow });
+  const appErrorsLogic = useAppErrorsLogic({ portalFlow });
   const auth = useAuthLogic({ appErrorsLogic, portalFlow });
 
   // State representing the Portal's user object.
@@ -22,7 +22,7 @@ const useAppLogic = () => {
   // to fetch the user (or create the user on their first login)
   const users = useUsersLogic({
     appErrorsLogic,
-    isLoggedIn: auth.isLoggedIn,
+    isLoggedIn: !!auth.isLoggedIn,
     portalFlow,
   });
 
@@ -55,7 +55,7 @@ const useAppLogic = () => {
   return {
     // `_appErrorsLogic` should not be used except for testing
     _appErrorsLogic: appErrorsLogic,
-    appErrors,
+    appErrors: appErrorsLogic.appErrors,
     auth,
     benefitsApplications,
     catchError: appErrorsLogic.catchError,
@@ -73,3 +73,4 @@ const useAppLogic = () => {
 };
 
 export default useAppLogic;
+export type AppLogic = ReturnType<typeof useAppLogic>;

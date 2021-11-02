@@ -4,11 +4,12 @@ import {
   isMaintenancePageRoute,
   maintenanceTime,
 } from "../utils/maintenance";
+import { AppLogic } from "../hooks/useAppLogic";
 import ErrorBoundary from "./ErrorBoundary";
 import ErrorsSummary from "./ErrorsSummary";
+import Flag from "../models/Flag";
 import Header from "./Header";
 import { Helmet } from "react-helmet";
-import PropTypes from "prop-types";
 import React from "react";
 import Spinner from "./Spinner";
 import dynamic from "next/dynamic";
@@ -21,20 +22,27 @@ import { useTranslation } from "../locales/i18n";
 const Footer = dynamic(() => import("./Footer"));
 const MaintenanceTakeover = dynamic(() => import("./MaintenanceTakeover"));
 
+interface PageWrapperProps {
+  appLogic: AppLogic;
+  children: React.ReactNode;
+  isLoading?: boolean;
+  maintenance?: Flag;
+}
+
 /**
  * This component renders the global page elements, such as header/footer, site-level
  * error alert, and maintenance page when enabled. Every page on the site is rendered
  * with this component as its parent.
  */
-const PageWrapper = (props) => {
+const PageWrapper = (props: PageWrapperProps) => {
   const { appLogic, isLoading, maintenance } = props;
   const { t } = useTranslation();
 
   // If no page routes are specified, the entire site should be under maintenance.
   const maintenancePageRoutes = get(maintenance, "options.page_routes", ["/*"]);
-  const maintenanceStart = maintenance.start;
-  const maintenanceEnd = maintenance.end;
-  const maintenanceEnabled = !!maintenance.enabled;
+  const maintenanceStart = maintenance?.start;
+  const maintenanceEnd = maintenance?.end;
+  const maintenanceEnabled = !!maintenance?.enabled;
 
   /**
    * What to show to the user within our page wrapper. Depends on
@@ -60,7 +68,6 @@ const PageWrapper = (props) => {
 
   /**
    * Should this page display a maintenance message instead of its normal content?
-   * @type {boolean}
    */
   const showMaintenancePageBody =
     maintenanceEnabled &&
@@ -111,7 +118,7 @@ const PageWrapper = (props) => {
           {/* Wrap header children in a div because its parent is a flex container */}
           <Header
             user={appLogic.users.user}
-            onLogout={appLogic.auth.logout}
+            onLogout={() => appLogic.auth.logout()}
             showUpcomingMaintenanceAlertBar={showUpcomingMaintenanceAlertBar}
             maintenanceStartTime={maintenanceStartTime}
             maintenanceEndTime={maintenanceEndTime}
@@ -135,16 +142,6 @@ const PageWrapper = (props) => {
       </div>
     </ErrorBoundary>
   );
-};
-
-PageWrapper.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  /** Page body */
-  children: PropTypes.node.isRequired,
-  /** Is this page changing or in process of loading? */
-  isLoading: PropTypes.bool,
-  /** Maintenance feature flag data */
-  maintenance: PropTypes.object,
 };
 
 export default PageWrapper;

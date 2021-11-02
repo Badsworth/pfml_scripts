@@ -273,6 +273,7 @@ Array [
   "OTHER_LEAVE",
   "REVIEW_AND_CONFIRM",
   "PAYMENT",
+  "TAX_WITHHOLDING",
   "UPLOAD_ID",
   "UPLOAD_CERTIFICATION",
 ]
@@ -312,12 +313,13 @@ Array [
       });
     });
 
-    it("marks group 2 steps as uneditable when payment is submitted", () => {
+    it("marks group 2 steps as uneditable when payment and tax are submitted", () => {
       const steps = Step.createClaimStepsFromMachine(
         claimantConfig,
         {
           claim: new MockBenefitsApplicationBuilder()
             .paymentPrefSubmitted()
+            .taxPrefSubmitted()
             .create(),
         },
         []

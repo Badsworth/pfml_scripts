@@ -1,11 +1,18 @@
 import FormLabel from "../FormLabel";
 import InputChoiceGroup from "../InputChoiceGroup";
-import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import { Trans } from "react-i18next";
 import classnames from "classnames";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
+
+interface FeedbackProps {
+  context: string;
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
+  shouldDisableNoOption: boolean;
+  shouldShowCommentBox: boolean;
+}
 
 /**
  * Display language and form for Leave Admin to include comment
@@ -17,7 +24,7 @@ const Feedback = ({
   getFunctionalInputProps,
   shouldDisableNoOption,
   shouldShowCommentBox,
-}) => {
+}: FeedbackProps) => {
   const { t } = useTranslation();
   const { errorMsg, name, onChange, value } =
     getFunctionalInputProps("comment");
@@ -56,12 +63,7 @@ const Feedback = ({
       />
       {shouldShowCommentBox && (
         <div className={commentClasses}>
-          <FormLabel
-            className="usa-label"
-            inputId={name}
-            small
-            errorMsg={errorMsg}
-          >
+          <FormLabel inputId={name} small errorMsg={errorMsg}>
             <Trans
               data-test="feedback-comment-solicitation"
               i18nKey="components.employersFeedback.commentSolicitation"
@@ -80,13 +82,6 @@ const Feedback = ({
       )}
     </React.Fragment>
   );
-};
-
-Feedback.propTypes = {
-  context: PropTypes.string.isRequired,
-  getFunctionalInputProps: PropTypes.func.isRequired,
-  shouldDisableNoOption: PropTypes.bool.isRequired,
-  shouldShowCommentBox: PropTypes.bool.isRequired,
 };
 
 export default Feedback;

@@ -698,6 +698,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
   complete() {
     this.submitted();
     this.paymentPrefSubmitted();
+    this.taxPrefSubmitted();
     return this;
   }
 
@@ -744,13 +745,24 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
   }
 
   /**
-   * Part 2 step is completed and submitted to API
+   * Part 2 payment step is completed and submitted to API
    * @returns {MockBenefitsApplicationBuilder}
    */
   paymentPrefSubmitted() {
     this.submitted();
     this.directDeposit();
     set(this.claimAttrs, "has_submitted_payment_preference", true);
+
+    return this;
+  }
+
+  /**
+   * Part 2 tax preference step is completed and submitted to API
+   * @returns {MockBenefitsApplicationBuilder}
+   */
+  taxPrefSubmitted(selection = false) {
+    this.submitted();
+    set(this.claimAttrs, "is_withholding_tax", selection);
 
     return this;
   }

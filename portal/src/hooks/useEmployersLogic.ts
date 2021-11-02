@@ -1,33 +1,44 @@
 import { get, isNil } from "lodash";
 import { useMemo, useState } from "react";
+import { AppErrorsLogic } from "./useAppErrorsLogic";
+import ClaimDocument from "../models/ClaimDocument";
+import { ClaimsLogic } from "./useClaimsLogic";
+import DocumentCollection from "../models/DocumentCollection";
+import EmployerClaim from "../models/EmployerClaim";
 import EmployersApi from "../api/EmployersApi";
 import { LeaveAdminForbiddenError } from "../errors";
+import { PortalFlow } from "./usePortalFlow";
+import { UsersLogic } from "./useUsersLogic";
 
 const useEmployersLogic = ({
   appErrorsLogic,
   clearClaims,
   portalFlow,
   setUser,
+}: {
+  appErrorsLogic: AppErrorsLogic;
+  clearClaims: ClaimsLogic["clearClaims"];
+  portalFlow: PortalFlow;
+  setUser: UsersLogic["setUser"];
 }) => {
-  const [claim, setEmployerClaim] = useState(null);
-  const [documents, setDocuments] = useState(null);
+  const [claim, setEmployerClaim] = useState<EmployerClaim | null>(null);
+  const [claimDocumentsMap, setClaimDocumentsMap] = useState<
+    Map<string, DocumentCollection>
+  >(new Map());
   const employersApi = useMemo(() => new EmployersApi(), []);
 
   /**
    * Associate employer FEIN with logged in user
-   * @param {object} data - employer's FEIN
-   * @param {string} next - query param to navigate to next page
    */
-  const addEmployer = async (data, next) => {
+  const addEmployer = async (data: { employer_fein: string }, next: string) => {
     appErrorsLogic.clearErrors();
 
     try {
       const employer = await employersApi.addEmployer(data);
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'employer_id' does not exist on type 'Use... Remove this comment to see the full error message
       const params = { employer_id: employer.employer_id, next };
       // Setting user to undefined to require fetching updated user_leave_administrators before navigating to Verify Contributions
       setUser(undefined);
-      if (employer) portalFlow.goToNextPage({}, params);
+      portalFlow.goToNextPage({}, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -35,9 +46,8 @@ const useEmployersLogic = ({
 
   /**
    * Retrieve claim from the API and set application errors if any
-   * @param {string} absenceId - FINEOS absence id
    */
-  const loadClaim = async (absenceId) => {
+  const loadClaim = async (absenceId: string) => {
     if (claim && claim.fineos_absence_id === absenceId) return;
     appErrorsLogic.clearErrors();
 
@@ -57,7 +67,7 @@ const useEmployersLogic = ({
           new LeaveAdminForbiddenError(
             employer_id,
             has_verification_data,
-            error.message
+            error instanceof Error ? error.message : ""
           )
         );
       } else {
@@ -68,16 +78,17 @@ const useEmployersLogic = ({
 
   /**
    * Retrieve documents from the API and set application errors if any
-   * @param {string} absenceId - FINEOS absence id
    */
-  const loadDocuments = async (absenceId) => {
-    if (documents) return;
+  const loadDocuments = async (absenceId: string) => {
+    if (claimDocumentsMap.has(absenceId)) return;
     appErrorsLogic.clearErrors();
 
     try {
       const { documents } = await employersApi.getDocuments(absenceId);
+      const loadedClaimDocumentsMap = new Map(claimDocumentsMap.entries());
+      loadedClaimDocumentsMap.set(absenceId, documents);
 
-      setDocuments(documents);
+      setClaimDocumentsMap(loadedClaimDocumentsMap);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -85,10 +96,8 @@ const useEmployersLogic = ({
 
   /**
    * Load withholding data from the API and set app errors if any.
-   * @param {string} employerId ID of the employer
-   * @returns {Object} withholding data
    */
-  const loadWithholding = async (employerId) => {
+  const loadWithholding = async (employerId: string) => {
     try {
       return await employersApi.getWithholding(employerId);
     } catch (error) {
@@ -98,12 +107,11 @@ const useEmployersLogic = ({
 
   /**
    * Download document from the API and set app errors if any.
-   *
-   * @param {string} absenceId ID of the Claim
-   * @param {Document} document - Document instasnce to download
-   * @returns {Blob} file data
    */
-  const downloadDocument = async (absenceId, document) => {
+  const downloadDocument = async (
+    document: ClaimDocument,
+    absenceId: string
+  ) => {
     appErrorsLogic.clearErrors();
     try {
       return await employersApi.downloadDocument(absenceId, document);
@@ -114,10 +122,11 @@ const useEmployersLogic = ({
 
   /**
    * Submit claim review to the API and set application errors if any
-   * @param {string} absenceId - FINEOS absence id
-   * @param {object} data - claim review data
    */
-  const submitClaimReview = async (absenceId, data) => {
+  const submitClaimReview = async (
+    absenceId: string,
+    data: { [key: string]: unknown }
+  ) => {
     appErrorsLogic.clearErrors();
 
     try {
@@ -138,10 +147,15 @@ const useEmployersLogic = ({
 
   /**
    * Submit withholding data to the API for verification
-   * @param {object} data - user info and employer data
-   * @param {string} next - query param to navigate to next page
    */
-  const submitWithholding = async (data, next) => {
+  const submitWithholding = async (
+    data: {
+      employer_id: string;
+      withholding_amount: number;
+      withholding_quarter: string;
+    },
+    next?: string
+  ) => {
     appErrorsLogic.clearErrors();
 
     try {
@@ -158,7 +172,7 @@ const useEmployersLogic = ({
   return {
     addEmployer,
     claim,
-    documents,
+    claimDocumentsMap,
     downloadDocument,
     loadClaim,
     loadDocuments,

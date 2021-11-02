@@ -1,4 +1,5 @@
 import { get, pick } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Details from "../../components/Details";
 import Heading from "../../components/Heading";
@@ -8,7 +9,6 @@ import InputDate from "../../components/InputDate";
 import InputHours from "../../components/InputHours";
 import LeaveReason from "../../models/LeaveReason";
 import PreviousLeave from "../../models/PreviousLeave";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
@@ -28,19 +28,28 @@ export const fields = [
   "claim.previous_leaves_same_reason[*].worked_per_week_minutes",
 ];
 
-export const PreviousLeavesSameReasonDetails = (props) => {
+interface PreviousLeavesSameReasonDetailsProps {
+  appLogic: AppLogic;
+  claim: BenefitsApplication;
+}
+
+export const PreviousLeavesSameReasonDetails = (
+  props: PreviousLeavesSameReasonDetailsProps
+) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
   const limit = 6;
 
-  const initialEntries = pick(props, fields).claim;
+  const initialEntries = pick(props, fields).claim || {
+    previous_leaves_same_reason: [],
+  };
+
   if (initialEntries.previous_leaves_same_reason.length === 0) {
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-    initialEntries.previous_leaves_same_reason = [new PreviousLeave()];
+    initialEntries.previous_leaves_same_reason = [new PreviousLeave({})];
   }
 
   // default to one existing previous leave.
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState(initialEntries);
   const previous_leaves_same_reason = get(
     formState,
@@ -65,13 +74,12 @@ export const PreviousLeavesSameReasonDetails = (props) => {
     updateFields({
       previous_leaves_same_reason: [
         ...previous_leaves_same_reason,
-        // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-        new PreviousLeave(),
+        new PreviousLeave({}),
       ],
     });
   };
 
-  const handleRemoveClick = (_entry, index) => {
+  const handleRemoveClick = (_entry: PreviousLeave, index: number) => {
     const updatedLeaves = [...previous_leaves_same_reason];
     updatedLeaves.splice(index, 1);
     updateFields({ previous_leaves_same_reason: updatedLeaves });
@@ -83,7 +91,7 @@ export const PreviousLeavesSameReasonDetails = (props) => {
     updateFields,
   });
 
-  const render = (entry, index) => {
+  const render = (entry: PreviousLeave, index: number) => {
     return (
       <PreviousLeaveSameReasonDetailsCard
         claim={claim}
@@ -136,12 +144,16 @@ export const PreviousLeavesSameReasonDetails = (props) => {
   );
 };
 
-PreviousLeavesSameReasonDetails.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-};
+interface PreviousLeaveSameReasonDetailsCardProps {
+  claim: BenefitsApplication;
+  entry: PreviousLeave;
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
+  index: number;
+}
 
-export const PreviousLeaveSameReasonDetailsCard = (props) => {
+export const PreviousLeaveSameReasonDetailsCard = (
+  props: PreviousLeaveSameReasonDetailsCardProps
+) => {
   const { t } = useTranslation();
   const {
     claim: { employer_fein },
@@ -251,13 +263,6 @@ export const PreviousLeaveSameReasonDetailsCard = (props) => {
       />
     </React.Fragment>
   );
-};
-
-PreviousLeaveSameReasonDetailsCard.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  entry: PropTypes.instanceOf(PreviousLeave).isRequired,
-  getFunctionalInputProps: PropTypes.func.isRequired,
-  index: PropTypes.number.isRequired,
 };
 
 export default withBenefitsApplication(PreviousLeavesSameReasonDetails);

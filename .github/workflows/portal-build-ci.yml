@@ -7,13 +7,19 @@ on:
     paths:
       - portal/**
 
+concurrency:
+  group: ${{ github.head_ref }}-build-check
+  cancel-in-progress: true
+
 env:
   nodeVersion: 15.x
   deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
+  working-dir: ./portal
+  cache-package-lock: ./portal/package-lock.json
   workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
 jobs:
-  build_test:
+  portal:
     name: Check Portal builds successfully
     strategy:
       matrix:
@@ -24,37 +30,45 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: Use Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
+          cache: 'npm'
+          cache-dependency-path: ${{ env.cache-package-lock }}
           node-version: ${{ env.nodeVersion }}
 
       - name: install
-        run: npm ci --prefix portal
+        run: npm ci --audit false
+        working-directory: ${{ env.working-dir }}
 
       - name: build
-        run: npm run build:${{ matrix.env }} --prefix portal
+        run: npm run build:${{ matrix.env }}
+        working-directory: ${{ env.working-dir }}
 
   storybook:
-    name: Build Storybook
+    name: Check Storybook builds successfully
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
 
       - name: Use Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
+          cache: 'npm'
+          cache-dependency-path: ${{ env.cache-package-lock }}
           node-version: ${{ env.nodeVersion }}
 
       - name: install
-        run: npm ci --prefix portal
+        run: npm ci --audit false
+        working-directory: ${{ env.working-dir }}
 
       - name: Smoke test Storybook
-        run: npm run docs:smoke-test --prefix portal
+        run: npm run docs:smoke-test
+        working-directory: ${{ env.working-dir }}
 
   get-build-state:
     name: Finalize build state
-    needs: [storybook]
+    needs: [portal, storybook]
     if: always() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:

@@ -2,12 +2,80 @@ import Button from "./Button";
 import ButtonLink from "./ButtonLink";
 import Heading from "./Heading";
 import Link from "next/link";
-import PropTypes from "prop-types";
 import React from "react";
 import StepNumber from "./StepNumber";
 import classnames from "classnames";
 
-const Step = (props) => {
+interface StepProps {
+  /**
+   * Href to question page.
+   */
+  stepHref: string;
+  /**
+   * Status of step.
+   */
+  status:
+    | "disabled"
+    | "not_applicable"
+    | "not_started"
+    | "in_progress"
+    | "completed";
+  /**
+   * Title for the step.
+   */
+  title: string;
+  /**
+   * Description of the step
+   */
+  children?: React.ReactNode;
+  /**
+   * Content to display if step is submitted (completed && !editable)
+   * TODO (PORTAL-62) Remove this once there are no submitted claims with null Other Leave data
+   */
+  submittedContent?: React.ReactNode;
+  /**
+   * Whether or not the step is editable by the user
+   */
+  editable: boolean;
+  /**
+   * Localized text for the start button.
+   * This can also be passed by parent StepList component.
+   */
+  startText?: string;
+  /**
+   * Localized text for the resume button.
+   * This can also be passed by parent StepList component.
+   */
+  resumeText?: string;
+  /**
+   * Localized text for the resume button's aria-label,
+   * needed for screen readers, since VoiceOver reads "résumé".
+   * This can also be passed by parent StepList component.
+   */
+  resumeScreenReaderText?: string;
+  /**
+   * Localized text for the edit link.
+   * This can also be passed by parent StepList component.
+   */
+  editText?: string;
+  /**
+   * Localized text for the completed button.
+   */
+  completedText: string;
+  /**
+   * The number of the step in the step list.
+   * This can also be passed by parent StepList component.
+   */
+  number?: string | number;
+  /**
+   * Prefix for the number announced to screen reader
+   * e.g instead of announcing "1", provide a value to announce "Step 1"
+   * This can also be passed by parent StepList component.
+   */
+  screenReaderNumberPrefix?: string;
+}
+
+const Step = (props: StepProps) => {
   const disabled = props.status === "disabled";
   const notStarted = props.status === "not_started";
   const inProgress = props.status === "in_progress";
@@ -117,10 +185,10 @@ const Step = (props) => {
   return (
     <div className={classes}>
       <StepNumber
-        screenReaderPrefix={props.screenReaderNumberPrefix}
+        screenReaderPrefix={props.screenReaderNumberPrefix || ""}
         state={props.status}
       >
-        {props.number}
+        {props.number ?? ""}
       </StepNumber>
       <div className={collapsibleColumnClasses}>
         <div className={titleDescriptionColumnClasses}>
@@ -139,76 +207,6 @@ const Step = (props) => {
       </div>
     </div>
   );
-};
-
-Step.propTypes = {
-  /**
-   * Href to question page.
-   */
-  stepHref: PropTypes.string,
-  /**
-   * Status of step.
-   */
-  status: PropTypes.oneOf([
-    "disabled",
-    "not_applicable",
-    "not_started",
-    "in_progress",
-    "completed",
-  ]).isRequired,
-  /**
-   * Title for the step.
-   */
-  title: PropTypes.string.isRequired,
-  /**
-   * Description of the step
-   */
-  children: PropTypes.node,
-  /**
-   * Content to display if step is submitted (completed && !editable)
-   * TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
-   */
-  submittedContent: PropTypes.node,
-  /**
-   * Whether or not the step is editable by the user
-   */
-  editable: PropTypes.bool.isRequired,
-  /**
-   * Localized text for the start button.
-   * This can also be passed by parent StepList component.
-   */
-  startText: PropTypes.string,
-  /**
-   * Localized text for the resume button.
-   * This can also be passed by parent StepList component.
-   */
-  resumeText: PropTypes.string,
-  /**
-   * Localized text for the resume button's aria-label,
-   * needed for screen readers, since VoiceOver reads "résumé".
-   * This can also be passed by parent StepList component.
-   */
-  resumeScreenReaderText: PropTypes.string,
-  /**
-   * Localized text for the edit link.
-   * This can also be passed by parent StepList component.
-   */
-  editText: PropTypes.string,
-  /**
-   * Localized text for the completed button.
-   */
-  completedText: PropTypes.string.isRequired,
-  /**
-   * The number of the step in the step list.
-   * This can also be passed by parent StepList component.
-   */
-  number: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  /**
-   * Prefix for the number announced to screen reader
-   * e.g instead of announcing "1", provide a value to announce "Step 1"
-   * This can also be passed by parent StepList component.
-   */
-  screenReaderNumberPrefix: PropTypes.string,
 };
 
 export default Step;

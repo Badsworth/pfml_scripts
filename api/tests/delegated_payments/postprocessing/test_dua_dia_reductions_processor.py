@@ -11,6 +11,7 @@ from massgov.pfml.db.models.factories import (
     PaymentFactory,
 )
 from massgov.pfml.db.models.payments import PaymentAuditReportDetails
+from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.delegated_payments.postprocessing.dua_dia_reductions_processor import (
     DuaDiaReductionsProcessor,
 )
@@ -36,16 +37,16 @@ def dua_dia_reductions_processor(payment_post_processing_step):
     return DuaDiaReductionsProcessor(payment_post_processing_step)
 
 
-# TODO Use delagated payment factory PUB-277
 def test_processor_mixed(dua_dia_reductions_processor, local_test_db_session):
     fineos_customer_number_1 = "1"
     fineos_customer_number_2 = "2"
 
-    employee = EmployeeFactory.create(fineos_customer_number=fineos_customer_number_1)
-    claim = ClaimFactory.create(employee=employee)
-    payment = PaymentFactory.create(
-        claim=claim, period_start_date=date(2021, 9, 20), period_end_date=date(2021, 9, 26)
-    )
+    payment = DelegatedPaymentFactory(
+        local_test_db_session,
+        fineos_customer_number=fineos_customer_number_1,
+        period_start_date=date(2021, 9, 20),
+        period_end_date=date(2021, 9, 26),
+    ).get_or_create_payment()
 
     message = dua_dia_reductions_processor.process(payment)
 
@@ -123,7 +124,6 @@ def test_processor_mixed(dua_dia_reductions_processor, local_test_db_session):
     )
 
 
-# TODO Use delagated payment factory PUB-277
 def test_multiple_payments(dua_dia_reductions_processor, local_test_db_session):
     fineos_customer_number_1 = "1"
     fineos_customer_number_2 = "2"
@@ -133,6 +133,13 @@ def test_multiple_payments(dua_dia_reductions_processor, local_test_db_session):
     payment_1 = PaymentFactory.create(
         claim=claim, period_start_date=date(2021, 1, 16), period_end_date=date(2021, 1, 28)
     )
+
+    DelegatedPaymentFactory(
+        local_test_db_session,
+        fineos_customer_number=fineos_customer_number_1,
+        period_start_date=date(2021, 9, 20),
+        period_end_date=date(2021, 9, 26),
+    ).get_or_create_payment()
 
     payment_2 = PaymentFactory.create(
         claim=claim, period_start_date=date(2021, 2, 1), period_end_date=date(2021, 2, 8)

@@ -1,26 +1,34 @@
-import Document, { DocumentType } from "../../../../src/models/Document";
 import { MockEmployerClaimBuilder, renderPage } from "../../../test-utils";
 import { screen, waitFor } from "@testing-library/react";
 import { AbsenceCaseStatus } from "../../../../src/models/Claim";
+import ClaimDocument from "../../../../src/models/ClaimDocument";
 import DocumentCollection from "../../../../src/models/DocumentCollection";
+import { DocumentType } from "../../../../src/models/Document";
 import Status from "../../../../src/pages/employers/applications/status";
 import userEvent from "@testing-library/user-event";
 
 function setup(models = {}) {
   const spys = {};
-  const { claim, documents } = {
+  const absence_id = "NTN-111-ABS-01";
+  const { claim, claimDocumentsMap } = {
     claim: new MockEmployerClaimBuilder()
       .status(AbsenceCaseStatus.approved)
       .completed()
+      .absenceId(absence_id)
       .create(),
-    documents: new DocumentCollection([
-      new Document({
-        content_type: "application/pdf",
-        created_at: "2021-01-02",
-        document_type: DocumentType.approvalNotice,
-        fineos_document_id: "fineos-id-1",
-        name: "Approval.pdf",
-      }),
+    claimDocumentsMap: new Map([
+      [
+        absence_id,
+        new DocumentCollection([
+          new ClaimDocument({
+            content_type: "application/pdf",
+            created_at: "2021-01-02",
+            document_type: DocumentType.approvalNotice,
+            fineos_document_id: "fineos-id-1",
+            name: "Approval.pdf",
+          }),
+        ]),
+      ],
     ]),
     ...models,
   };
@@ -30,7 +38,7 @@ function setup(models = {}) {
     {
       addCustomSetup: (appLogic) => {
         appLogic.employers.claim = claim;
-        appLogic.employers.documents = documents;
+        appLogic.employers.claimDocumentsMap = claimDocumentsMap;
         spys.loadDocumentsSpy = jest
           .spyOn(appLogic.employers, "loadDocuments")
           .mockResolvedValue();
@@ -40,7 +48,7 @@ function setup(models = {}) {
       },
     },
     {
-      query: { absence_id: "NTN-111-ABS-01" },
+      query: { absence_id },
     }
   );
 
@@ -50,13 +58,12 @@ function setup(models = {}) {
 describe("Status", () => {
   it("renders the page for a completed claim", () => {
     const { container } = setup();
-
     expect(container).toMatchSnapshot();
   });
 
   it("renders the page for a claim without documents or a status", () => {
     const { container } = setup({
-      documents: null,
+      claimDocumentsMap: new Map(),
       claim: new MockEmployerClaimBuilder().completed().create(),
     });
 
@@ -66,7 +73,7 @@ describe("Status", () => {
     expect(container).toMatchSnapshot();
   });
 
-  it("does not show intermittent leave dates", () => {
+  it("shows intermittent leave dates", () => {
     setup({
       claim: new MockEmployerClaimBuilder()
         .completed()
@@ -76,13 +83,13 @@ describe("Status", () => {
         .create(),
     });
 
-    expect(screen.queryByText(/intermittent/i)).not.toBeInTheDocument();
-    expect(screen.queryByText(/2019/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/intermittent/i)).toBeInTheDocument();
+    expect(screen.queryAllByText(/2019/).length).toBe(2);
   });
 
   it("loads the documents when they're not yet loaded", async () => {
     const { loadDocumentsSpy } = setup({
-      documents: null,
+      claimDocumentsMap: new Map(),
     });
 
     await waitFor(() => {
@@ -97,7 +104,7 @@ describe("Status", () => {
       const num = (documents.length + 1).toString().padStart(2, "0");
 
       documents.push(
-        new Document({
+        new ClaimDocument({
           document_type,
           content_type: "application/pdf",
           created_at: `2021-01-${num}`,
@@ -114,30 +121,32 @@ describe("Status", () => {
         );
       }
     });
+    const newMap = new Map([
+      ["NTN-111-ABS-01", new DocumentCollection(documents)],
+    ]);
 
-    setup({ documents: new DocumentCollection(documents) });
-
+    setup({ claimDocumentsMap: newMap });
     expect(screen.getByTestId("documents")).toMatchSnapshot();
   });
 
   it("download documents on click", () => {
-    const document = new Document({
+    const document = new ClaimDocument({
       content_type: "application/pdf",
       created_at: "2021-01-02",
       document_type: DocumentType.approvalNotice,
       fineos_document_id: "fineos-id-1",
       name: "Approval.pdf",
     });
+    const absence_id = "NTN-111-ABS-01";
 
     const { downloadDocumentSpy } = setup({
-      documents: new DocumentCollection([document]),
+      claimDocumentsMap: new Map([
+        [absence_id, new DocumentCollection([document])],
+      ]),
     });
 
     userEvent.click(screen.getByRole("button", { name: /approval/i }));
 
-    expect(downloadDocumentSpy).toHaveBeenCalledWith(
-      "NTN-111-ABS-01",
-      document
-    );
+    expect(downloadDocumentSpy).toHaveBeenCalledWith(document, absence_id);
   });
 });

@@ -1,13 +1,12 @@
 import Alert from "../Alert";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
+import ClaimDocument from "../../models/ClaimDocument";
 import ConditionalContent from "../ConditionalContent";
-import Document from "../../models/Document";
 import DownloadableDocument from "../DownloadableDocument";
 import EmployerClaim from "../../models/EmployerClaim";
 import FormLabel from "../FormLabel";
 import InputChoiceGroup from "../InputChoiceGroup";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
@@ -18,12 +17,26 @@ import formatDateRange from "../../utils/formatDateRange";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
 
+interface LeaveDetailsProps {
+  appErrors: AppErrorInfoCollection;
+  believeRelationshipAccurate?: "Yes" | "Unknown" | "No";
+  claim: EmployerClaim;
+  documents: ClaimDocument[];
+  downloadDocument: (
+    document: ClaimDocument,
+    absenceId: string
+  ) => Promise<Blob | undefined>;
+  onChangeBelieveRelationshipAccurate?: (arg: string) => void;
+  relationshipInaccurateReason?: string;
+  onChangeRelationshipInaccurateReason: (arg: string) => void;
+}
+
 /**
  * Display overview of a leave request
  * in the Leave Admin claim review page.
  */
 
-const LeaveDetails = (props) => {
+const LeaveDetails = (props: LeaveDetailsProps) => {
   const { t } = useTranslation();
   const {
     appErrors,
@@ -54,7 +67,7 @@ const LeaveDetails = (props) => {
     "usa-input--error": !!errorMsg,
   });
 
-  const benefitsGuideLink = {
+  const benefitsGuideLink: { [reason: string]: string } = {
     [LeaveReason.care]: routes.external.massgov.benefitsGuide_aboutCaringLeave,
     [LeaveReason.bonding]:
       routes.external.massgov.benefitsGuide_aboutBondingLeave,
@@ -77,7 +90,11 @@ const LeaveDetails = (props) => {
             context: findKeyByValue(LeaveReason, reason),
           })
         ) : (
-          <a target="_blank" rel="noopener" href={benefitsGuideLink[reason]}>
+          <a
+            target="_blank"
+            rel="noopener"
+            href={reason ? benefitsGuideLink[reason] : undefined}
+          >
             {t("components.employersLeaveDetails.leaveReasonValue", {
               context: findKeyByValue(LeaveReason, reason),
             })}
@@ -96,8 +113,7 @@ const LeaveDetails = (props) => {
       >
         {isIntermittent
           ? "—"
-          : // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
-            formatDateRange(
+          : formatDateRange(
               props.claim.leaveStartDate,
               props.claim.leaveEndDate
             )}
@@ -124,7 +140,7 @@ const LeaveDetails = (props) => {
             {documents.map((document) => (
               <li key={document.fineos_document_id}>
                 <DownloadableDocument
-                  onDownloadClick={downloadDocument}
+                  downloadClaimDocument={downloadDocument}
                   absenceId={absenceId}
                   document={document}
                   displayDocumentName={t(
@@ -142,7 +158,8 @@ const LeaveDetails = (props) => {
             smallLabel
             name="believeRelationshipAccurate"
             onChange={(e) => {
-              onChangeBelieveRelationshipAccurate(e.target.value);
+              if (onChangeBelieveRelationshipAccurate)
+                onChangeBelieveRelationshipAccurate(e.target.value);
             }}
             choices={[
               {
@@ -188,12 +205,13 @@ const LeaveDetails = (props) => {
           <ConditionalContent
             getField={() => relationshipInaccurateReason}
             clearField={() => onChangeRelationshipInaccurateReason("")}
-            updateFields={(event) =>
-              onChangeRelationshipInaccurateReason(event.target.value)
+            updateFields={(e) =>
+              // TODO (PORTAL-921): Fix or remove these props. This callback is never called currently.
+              // @ts-expect-error updateFields doesn't receive an event!!
+              onChangeRelationshipInaccurateReason(e.target.value)
             }
             visible={believeRelationshipAccurate === "No"}
           >
-            {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; state: string; heading: ... Remove this comment to see the full error message */}
             <Alert
               state="warning"
               heading={t(
@@ -208,7 +226,6 @@ const LeaveDetails = (props) => {
             </Alert>
             <div className={inaccurateReasonClasses}>
               <FormLabel
-                className="usa-label"
                 inputId="relationshipInaccurateReason"
                 small
                 errorMsg={errorMsg}
@@ -229,7 +246,6 @@ const LeaveDetails = (props) => {
           <ConditionalContent
             visible={believeRelationshipAccurate === "Unknown"}
           >
-            {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; state: string; className... Remove this comment to see the full error message */}
             <Alert state="info" className="measure-5 margin-y-3">
               {t(
                 "components.employersLeaveDetails.unknownRelationshipAlertLead"
@@ -240,17 +256,6 @@ const LeaveDetails = (props) => {
       )}
     </React.Fragment>
   );
-};
-
-LeaveDetails.propTypes = {
-  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
-  believeRelationshipAccurate: PropTypes.oneOf(["Yes", "Unknown", "No"]),
-  claim: PropTypes.instanceOf(EmployerClaim).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-  downloadDocument: PropTypes.func.isRequired,
-  onChangeBelieveRelationshipAccurate: PropTypes.func,
-  relationshipInaccurateReason: PropTypes.string,
-  onChangeRelationshipInaccurateReason: PropTypes.func,
 };
 
 export default LeaveDetails;

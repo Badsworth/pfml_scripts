@@ -270,7 +270,7 @@ export const steps: Cfg.StoredStep[] = [
       }
       if (work_pattern?.work_pattern_days?.length) {
         let dayIdx = 0;
-        for (const day of work_pattern?.work_pattern_days) {
+        for (const day of work_pattern?.work_pattern_days ?? []) {
           dayIdx++;
           if (!day.minutes || day.minutes === 0) continue;
           const hoursInput = await Util.waitForElement(

@@ -3,6 +3,7 @@ import EmployerBenefit, {
   EmployerBenefitType,
 } from "../../models/EmployerBenefit";
 import { get, pick } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import Dropdown from "../../components/Dropdown";
@@ -13,7 +14,6 @@ import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputCurrency from "../../components/InputCurrency";
 import InputDate from "../../components/InputDate";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import RepeatableFieldset from "../../components/RepeatableFieldset";
@@ -32,20 +32,30 @@ export const fields = [
   "claim.employer_benefits[*].is_full_salary_continuous",
 ];
 
-export const EmployerBenefitsDetails = (props) => {
+interface EmployerBenefitsDetailsProps {
+  claim: BenefitsApplication;
+  appLogic: AppLogic;
+}
+
+export const EmployerBenefitsDetails = (
+  props: EmployerBenefitsDetailsProps
+) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
   const limit = 6;
 
-  const initialEntries = pick(props, fields).claim;
+  const initialEntries = pick(props, fields).claim || { employer_benefits: [] };
   // If the claim doesn't have any employer benefits pre-populate the first one so that
   // it renders in the RepeatableFieldset below
   if (initialEntries.employer_benefits.length === 0) {
     initialEntries.employer_benefits = [new EmployerBenefit()];
   }
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState(initialEntries);
-  const employer_benefits = get(formState, "employer_benefits");
+  const employer_benefits: EmployerBenefit[] = get(
+    formState,
+    "employer_benefits"
+  );
 
   const handleSave = () =>
     appLogic.benefitsApplications.update(claim.application_id, formState);
@@ -56,7 +66,7 @@ export const EmployerBenefitsDetails = (props) => {
     updateFields({ employer_benefits: updatedEntries });
   };
 
-  const handleRemoveClick = (entry, index) => {
+  const handleRemoveClick = (entry: EmployerBenefit, index: number) => {
     const updatedBenefits = [...employer_benefits];
     updatedBenefits.splice(index, 1);
     updateFields({ employer_benefits: updatedBenefits });
@@ -68,7 +78,7 @@ export const EmployerBenefitsDetails = (props) => {
     updateFields,
   });
 
-  const render = (entry, index) => {
+  const render = (entry: EmployerBenefit, index: number) => {
     return (
       <EmployerBenefitCard
         entry={entry}
@@ -115,28 +125,43 @@ export const EmployerBenefitsDetails = (props) => {
   );
 };
 
-EmployerBenefitsDetails.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
-};
+interface EmployerBenefitCardProps {
+  index: number;
+  entry: EmployerBenefit;
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
+  updateFields: (fields: { [fieldName: string]: unknown }) => void;
+}
 
 /**
  * Helper component for rendering employer benefit cards
  */
-export const EmployerBenefitCard = (props) => {
+export const EmployerBenefitCard = (props: EmployerBenefitCardProps) => {
   const { t } = useTranslation();
   const { entry, getFunctionalInputProps, index, updateFields } = props;
-  const clearField = (fieldName) => updateFields({ [fieldName]: null });
+  const clearField = (fieldName: string) => updateFields({ [fieldName]: null });
+
   // Since we are not passing the formState to the benefit card,
   // get the field value from the entry by removing the field path
-  const getEntryField = (fieldName) =>
-    get(entry, fieldName.replace(`employer_benefits[${index}].`, ""));
+  const getEntryField = (fieldName: string) => {
+    return get(
+      entry,
+      fieldName.replace(`employer_benefits[${index}].`, ""),
+      ""
+    );
+  };
   const selectedType = entry.benefit_type;
 
-  const benefitFrequencyChoices = ["daily", "weekly", "monthly", "inTotal"].map(
+  const benefitFrequencyChoiceKeys: Array<
+    keyof typeof EmployerBenefitFrequency
+  > = ["daily", "weekly", "monthly", "inTotal"];
+
+  const benefitTypeChoiceKeys: Array<keyof typeof EmployerBenefitType> = [
+    "shortTermDisability",
+    "permanentDisability",
+    "familyOrMedicalLeave",
+  ];
+
+  const benefitFrequencyChoices = benefitFrequencyChoiceKeys.map(
     (frequencyKey) => {
       return {
         label: t("pages.claimsEmployerBenefitsDetails.amountFrequency", {
@@ -151,21 +176,18 @@ export const EmployerBenefitCard = (props) => {
     <React.Fragment>
       <InputChoiceGroup
         {...getFunctionalInputProps(`employer_benefits[${index}].benefit_type`)}
-        choices={[
-          "shortTermDisability",
-          "permanentDisability",
-          "familyOrMedicalLeave",
-        ].map((benefitTypeKey) => {
+        choices={benefitTypeChoiceKeys.map((benefitTypeKey) => {
           return {
             checked: selectedType === EmployerBenefitType[benefitTypeKey],
             label: t("pages.claimsEmployerBenefitsDetails.choiceLabel", {
               context: benefitTypeKey,
             }),
             hint:
-              benefitTypeKey !== "permanentDisability" &&
-              t("pages.claimsEmployerBenefitsDetails.choiceHint", {
-                context: benefitTypeKey,
-              }),
+              benefitTypeKey !== "permanentDisability"
+                ? t("pages.claimsEmployerBenefitsDetails.choiceHint", {
+                    context: benefitTypeKey,
+                  })
+                : null,
             value: EmployerBenefitType[benefitTypeKey],
           };
         })}
@@ -261,13 +283,6 @@ export const EmployerBenefitCard = (props) => {
       </ConditionalContent>
     </React.Fragment>
   );
-};
-
-EmployerBenefitCard.propTypes = {
-  index: PropTypes.number.isRequired,
-  entry: PropTypes.object.isRequired,
-  getFunctionalInputProps: PropTypes.func.isRequired,
-  updateFields: PropTypes.func.isRequired,
 };
 
 export default withBenefitsApplication(EmployerBenefitsDetails);

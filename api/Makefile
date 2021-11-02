@@ -1,6 +1,7 @@
 .DEFAULT_GOAL := help
 
 APP_NAME := mass-pfml-api
+SHELL = /bin/bash -o pipefail
 
 export AWS_DEFAULT_REGION := us-east-1
 
@@ -169,6 +170,9 @@ pub-payments-create-pub-files:
 pub-payments-process-pub-returns:
 	$(PY_RUN_CMD) pub-payments-process-pub-returns --steps ALL $(DECODE_LOG)
 
+pub-payments-process-snapshot:
+	$(PY_RUN_CMD) pub-payments-process-snapshot --steps ALL $(DECODE_LOG)
+
 pub-payments-mock-generate:
 	$(PY_RUN_CMD)  pub-payments-mock-generate $(DECODE_LOG)
 
@@ -234,12 +238,14 @@ jwt: jwks.json
 # See https://help.github.com/en/actions/reference/workflow-commands-for-github-actions
 ifdef CI
  FLAKE8_FORMAT := '::warning file=api/%(path)s,line=%(row)d,col=%(col)d::%(path)s:%(row)d:%(col)d: %(code)s %(text)s'
+ MYPY_FLAGS := --no-pretty
+ MYPY_POSTPROC := | perl -pe "s/^(.+):(\d+):(\d+): error: (.*)/::warning file=api\/\1,line=\2,col=\3::\4/"
 else
  FLAKE8_FORMAT := default
 endif
 
 lint: ## Run linting
-lint: lint-spectral lint-py
+lint: lint-spectral lint-py db-check-model-parity
 
 lint-py: ## Run python linting
 lint-py: lint-flake lint-mypy
@@ -248,7 +254,7 @@ lint-flake: ## Run flake8
 	$(PY_RUN_CMD) flake8 --format=$(FLAKE8_FORMAT) massgov tests bin
 
 lint-mypy: ## Run mypy
-	$(PY_RUN_CMD) mypy massgov bin
+	$(PY_RUN_CMD) mypy $(MYPY_FLAGS) massgov bin $(MYPY_POSTPROC)
 
 lint-security: ## Run security linting
 	$(PY_RUN_CMD) bandit -r . --number 3 --skip B101 -ll
@@ -340,6 +346,9 @@ run: start logs
 run-native: ## Start API server directly
 run-native: jwks.json
 	poetry run python -m massgov.pfml.api $(DECODE_LOG)
+
+db-check-model-parity: ## Ensure application models are in sync with the database
+	$(PY_RUN_CMD) db-check-model-parity
 
 db-create-users: ## Create database users
 	$(PY_RUN_CMD) db-admin-create-db-users $(DECODE_LOG)
@@ -439,6 +448,21 @@ test-watch-changed: ## Watch and run `make test-changed` on file changes
 test-watch-focus: ## Watch and run tests decorated with `@pytest.mark.dev_focus` on file changes
 	$(call run_test_watch,-m dev_focus $(args))
 
+start-release: ## Creates a new release series. Increments the API's minor version number.
+	pushd ../bin/ci && poetry run scripted-releases --app api start-release $(args) && popd
+
+update-release: ## Updates an in-progress release series. Increments the API's RC number.
+	pushd ../bin/ci && poetry run scripted-releases --app api update-release $(args) && popd
+
+finalize-release: ## Marks a release series as approved to go to prod. Enables hotfixes; disables updates.
+	pushd ../bin/ci && poetry run scripted-releases --app api finalize-release $(args) && popd
+
+hotfix: ## Alters a release series that already went to prod. Increments the API's patch version number.
+	pushd ../bin/ci && poetry run scripted-releases --app api hotfix $(args) && popd
+
+major-release: ## Creates a new release series. Increments the API's MAJOR version number.
+	pushd ../bin/ci && poetry run scripted-releases --app api major-release $(args) && popd
+
 API_PATHS := . ../infra/api ../infra/ecs-tasks ../infra/env-shared ../infra/modules/ecs_task_scheduler ../infra/modules/s3_ecs_trigger
 release-notes: refs=origin/deploy/api/stage..origin/main
 release-notes: ## Generate API release notes for $refs (defaults between stage and test)
@@ -490,3 +514,5 @@ help: ## Displays this help screen
 	@echo "IMAGE_TAG=$(IMAGE_TAG)"
 	@echo "RUN_UID=$(RUN_UID)"
 	@echo "RUN_USER=$(RUN_USER)"
+	@echo "SHELL=$(SHELL)"
+	@echo "MAKE_VERSION=$(MAKE_VERSION)"

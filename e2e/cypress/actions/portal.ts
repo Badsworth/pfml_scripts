@@ -918,7 +918,6 @@ export function confirmEligibleClaimant(): void {
 
 export function submitClaimPartOne(application: ApplicationRequestBody): void {
   const reason = application.leave_details?.reason;
-  const reasonQualifier = application?.leave_details?.reason_qualifier;
 
   clickChecklistButton("Verify your identification");
   verifyIdentity(application);
@@ -943,8 +942,6 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
       enterBondingDateInfo(application);
       break;
   }
-
-  if (reasonQualifier === "Newborn") answerPregnancyQuestion(application);
 
   answerContinuousLeaveQuestion(application);
   answerReducedLeaveQuestion(application);
@@ -1032,7 +1029,9 @@ export function verifyLeaveAdmin(withholding: number): void {
     .click();
   cy.get('input[id="InputText1"]').type(withholding.toString());
   cy.get('button[type="submit"').click();
-  cy.contains("h1", "Thanks for verifying your paid leave contributions");
+  cy.contains("h1", "Thanks for verifying your paid leave contributions", {
+    timeout: 30000,
+  });
   cy.contains("p", "Your account has been verified");
   cy.contains("button", "Continue").click();
   cy.get('a[href^="/employers/organizations/verify-contributions"]').should(
@@ -1052,7 +1051,9 @@ export function addOrganization(fein: string, withholding: number): void {
       withholding.toString()
     );
     cy.get('button[type="submit"]').click();
-    cy.contains("h1", "Thanks for verifying your paid leave contributions");
+    cy.contains("h1", "Thanks for verifying your paid leave contributions", {
+      timeout: 30000,
+    });
     cy.contains("p", "Your account has been verified");
     cy.contains("button", "Continue").click();
     cy.get('a[href^="/employers/organizations/verify-contributions"]').should(
@@ -1427,7 +1428,7 @@ function reportOtherLeavesAndBenefits(claim: ApplicationRequestBody): void {
 
   cy.contains(
     "form",
-    /(Will you use any employer\-sponsored benefits from this employer during your paid leave from PFML\?|Will you use any employer\-sponsored benefits from this employer during your paid leave from PFML\?)/
+    /(Will you use any employer-sponsored benefits from this employer during your paid leave from PFML\?|Will you use any employer-sponsored benefits from this employer during your paid leave from PFML\?)/
   ).within(() => {
     const labelSelector = (content: string) =>
       content.startsWith(claim.employer_benefits ? "Yes" : "No");

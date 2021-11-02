@@ -12,7 +12,6 @@ import BenefitsApplication, {
   WorkPattern,
   WorkPatternType,
 } from "../../models/BenefitsApplication";
-import Document, { DocumentType } from "../../models/Document";
 import EmployerBenefit, {
   EmployerBenefitFrequency,
   EmployerBenefitType,
@@ -24,20 +23,22 @@ import OtherIncome, {
 import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import React, { useEffect, useState } from "react";
 import Step, { ClaimSteps } from "../../models/Step";
-import { compact, get, isUndefined } from "lodash";
-
+import { compact, get, isBoolean, isNil } from "lodash";
+import Address from "../../models/Address";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
-import Button from "../../components/Button";
+import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import { DateTime } from "luxon";
+import { DocumentType } from "../../models/Document";
 import Heading from "../../components/Heading";
 import HeadingPrefix from "../../components/HeadingPrefix";
 import Lead from "../../components/Lead";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import ReviewHeading from "../../components/ReviewHeading";
 import ReviewRow from "../../components/ReviewRow";
 import Spinner from "../../components/Spinner";
+import ThrottledButton from "../../components/ThrottledButton";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import WeeklyTimeTable from "../../components/WeeklyTimeTable";
@@ -50,9 +51,9 @@ import formatDateRange from "../../utils/formatDateRange";
 import getI18nContextForIntermittentFrequencyDuration from "../../utils/getI18nContextForIntermittentFrequencyDuration";
 import getMissingRequiredFields from "../../utils/getMissingRequiredFields";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
+import isBlank from "../../utils/isBlank";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import tracker from "../../services/tracker";
-import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 import withClaimDocuments from "../../hoc/withClaimDocuments";
@@ -61,7 +62,7 @@ import withClaimDocuments from "../../hoc/withClaimDocuments";
  * Format an address onto a single line, or return undefined if the address
  * is empty.
  */
-function formatAddress(address) {
+function formatAddress(address: Partial<Address> | null) {
   let formatted = compact([
     get(address, "line_1"),
     get(address, "line_2"),
@@ -75,11 +76,18 @@ function formatAddress(address) {
   return formatted;
 }
 
+interface ReviewProps {
+  appLogic: AppLogic;
+  claim: BenefitsApplication;
+  documents: BenefitsApplicationDocument[];
+  isLoadingDocuments: boolean;
+}
+
 /**
  * Application review page, allowing a user to review the info
  * they've entered before they submit it.
  */
-export const Review = (props) => {
+export const Review = (props: ReviewProps) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments } = props;
 
@@ -103,21 +111,16 @@ export const Review = (props) => {
   const reducedLeavePeriod = new ReducedScheduleLeavePeriod(
     get(claim, "leave_details.reduced_schedule_leave_periods[0]")
   );
-  const workPattern = new WorkPattern(get(claim, "work_pattern"));
+  const workPattern = new WorkPattern(get(claim, "work_pattern") || {});
   const gender = get(claim, "gender");
 
-  const steps = Step.createClaimStepsFromMachine(
-    claimantConfigs,
-    // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ claim: any; }' is not assignab... Remove this comment to see the full error message
-    {
-      claim: props.claim,
-    },
-    null
-  );
+  const steps = Step.createClaimStepsFromMachine(claimantConfigs, {
+    claim: props.claim,
+  });
 
   const usePartOneReview = !claim.isSubmitted;
 
-  const getStepEditHref = (name) => {
+  const getStepEditHref = (name: string) => {
     const step = steps.find((s) => s.name === name);
 
     if (step && step.editable) {
@@ -131,7 +134,7 @@ export const Review = (props) => {
     }
   };
 
-  const handleSubmit = useThrottledHandler(async () => {
+  const handleSubmit = async () => {
     setShowNewFieldError(false);
     if (usePartOneReview) {
       await appLogic.benefitsApplications.submit(claim.application_id);
@@ -139,9 +142,8 @@ export const Review = (props) => {
     }
 
     await appLogic.benefitsApplications.complete(claim.application_id);
-  });
+  };
 
-  const contentContext = usePartOneReview ? "part1" : "final";
   // Adjust heading levels depending on if there's a "Part 1" heading at the top of the page or not
   const reviewHeadingLevel = usePartOneReview ? "3" : "2";
   const reviewRowLevel = usePartOneReview ? "4" : "3";
@@ -154,7 +156,9 @@ export const Review = (props) => {
   useEffect(() => {
     const missingFields = getMissingRequiredFields(appErrors.items);
     if (missingFields.length) {
-      tracker.trackEvent("Missing required fields", { missingFields });
+      tracker.trackEvent("Missing required fields", {
+        missingFields: JSON.stringify(missingFields),
+      });
 
       clearRequiredFieldErrors();
       if (!showNewFieldError) {
@@ -172,7 +176,6 @@ export const Review = (props) => {
   return (
     <div className="measure-6">
       {showNewFieldError && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; }' i... Remove this comment to see the full error message
         <Alert className="margin-bottom-3">
           <Trans
             i18nKey="pages.claimsReview.missingRequiredFieldError"
@@ -194,21 +197,27 @@ export const Review = (props) => {
       )}
       <BackButton />
 
-      <Title hidden>{t("pages.claimsReview.title")}</Title>
+      {usePartOneReview && (
+        <Title hidden>{t("pages.claimsReview.title_part1")}</Title>
+      )}
+      {!usePartOneReview && (
+        <Title marginBottom="6">{t("pages.claimsReview.title_final")}</Title>
+      )}
 
-      <Heading className="margin-top-0" level="2" size="1">
+      <Heading className="margin-top-0" level="2">
         <HeadingPrefix>
           {t("pages.claimsReview.partHeadingPrefix", { number: 1 })}
         </HeadingPrefix>
-        {t("pages.claimsReview.partHeading", {
-          context: `${1}_${contentContext}`,
-        })}
+        {t("pages.claimsReview.partHeading_1")}
       </Heading>
 
       {!usePartOneReview && (
         <Lead>
           <Trans
-            i18nKey="pages.claimsReview.partDescription"
+            i18nKey={t("pages.claimsReview.partDescription", {
+              step: 1,
+              absence_id: claim.fineos_absence_id,
+            })}
             tOptions={{ context: "1" }}
             values={{ absence_id: claim.fineos_absence_id }}
             components={{
@@ -298,7 +307,6 @@ export const Review = (props) => {
         level={reviewRowLevel}
         label={t("pages.claimsReview.userDateOfBirthLabel")}
       >
-        {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1. */}
         {formatDateRange(get(claim, "date_of_birth"))}
       </ReviewRow>
 
@@ -366,26 +374,24 @@ export const Review = (props) => {
         })}
       </ReviewRow>
 
-      {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_type' does not exist on typ... Remove this comment to see the full error message */}
-      {workPattern.work_pattern_type === WorkPatternType.fixed &&
+      {workPattern.work_pattern_days &&
+        workPattern.work_pattern_type === WorkPatternType.fixed &&
         workPattern.minutesWorkedPerWeek !== null && (
           <ReviewRow
             level={reviewRowLevel}
             label={t("pages.claimsReview.workPatternDaysFixedLabel")}
             noBorder
           >
-            {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_days' does not exist on typ... Remove this comment to see the full error message */}
             <WeeklyTimeTable days={workPattern.work_pattern_days} />
           </ReviewRow>
         )}
 
-      {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_type' does not exist on typ... Remove this comment to see the full error message */}
       {workPattern.work_pattern_type === WorkPatternType.variable && (
         <ReviewRow
           level={reviewRowLevel}
           label={t("pages.claimsReview.workPatternDaysVariableLabel")}
         >
-          {!isUndefined(workPattern.minutesWorkedPerWeek) &&
+          {!isNil(workPattern.minutesWorkedPerWeek) &&
             t("pages.claimsReview.workPatternVariableTime", {
               context:
                 convertMinutesToHours(workPattern.minutesWorkedPerWeek)
@@ -447,7 +453,6 @@ export const Review = (props) => {
           level={reviewRowLevel}
           label={t("pages.claimsReview.childBirthDateLabel")}
         >
-          {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1. */}
           {formatDateRange(get(claim, "leave_details.child_birth_date"))}
         </ReviewRow>
       )}
@@ -460,7 +465,6 @@ export const Review = (props) => {
             level={reviewRowLevel}
             label={t("pages.claimsReview.childPlacementDateLabel")}
           >
-            {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1. */}
             {formatDateRange(get(claim, "leave_details.child_placement_date"))}
           </ReviewRow>
         )}
@@ -504,7 +508,6 @@ export const Review = (props) => {
             level={reviewRowLevel}
             label={t("pages.claimsReview.familyMemberDateOfBirthLabel")}
           >
-            {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1. */}
             {formatDateRange(
               get(
                 claim,
@@ -541,17 +544,14 @@ export const Review = (props) => {
         <ReviewRow
           level={reviewRowLevel}
           label={t("pages.claimsReview.reducedLeaveScheduleLabel")}
-          // @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_type' does not exist on typ... Remove this comment to see the full error message
           noBorder={workPattern.work_pattern_type === WorkPatternType.fixed}
         >
-          {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_type' does not exist on typ... Remove this comment to see the full error message */}
           {workPattern.work_pattern_type === WorkPatternType.fixed && (
             <WeeklyTimeTable
               className="margin-bottom-0"
               days={reducedLeavePeriod.days}
             />
           )}
-          {/* @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_type' does not exist on typ... Remove this comment to see the full error message */}
           {workPattern.work_pattern_type === WorkPatternType.variable &&
             t("pages.claimsReview.reducedLeaveScheduleWeeklyTotal", {
               context:
@@ -652,7 +652,6 @@ export const Review = (props) => {
               label={t("pages.claimsReview.concurrentLeaveLabel")}
             >
               <p className="text-base-darker margin-top-1">
-                {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
                 {formatDateRange(
                   get(claim, "concurrent_leave.leave_start_date"),
                   get(claim, "concurrent_leave.leave_end_date")
@@ -718,7 +717,7 @@ export const Review = (props) => {
         </div>
       ) : (
         <React.Fragment>
-          <Heading level="2" size="1">
+          <Heading level="2">
             <HeadingPrefix>
               {t("pages.claimsReview.partHeadingPrefix", { number: 2 })}
             </HeadingPrefix>
@@ -726,6 +725,21 @@ export const Review = (props) => {
               context: "2",
             })}
           </Heading>
+          <Lead>
+            <Trans
+              i18nKey={t("pages.claimsReview.partDescription", {
+                step: 2,
+                absence_id: claim.fineos_absence_id,
+              })}
+              tOptions={{ context: "2" }}
+              values={{ absence_id: claim.fineos_absence_id }}
+              components={{
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
+              }}
+            />
+          </Lead>
 
           {/* PAYMENT METHOD */}
           <ReviewHeading level={reviewHeadingLevel}>
@@ -772,7 +786,22 @@ export const Review = (props) => {
               </ReviewRow>
             </React.Fragment>
           )}
-          <Heading level="2" size="1">
+          {isBoolean(claim.is_withholding_tax) && (
+            <React.Fragment>
+              <ReviewHeading level={reviewHeadingLevel}>
+                {t("pages.claimsReview.stepHeading", { context: "tax" })}
+              </ReviewHeading>
+              <ReviewRow
+                label={t("pages.claimsReview.taxLabel")}
+                level={reviewRowLevel}
+              >
+                {claim.is_withholding_tax === true
+                  ? t("pages.claimsReview.taxYesWithhold")
+                  : t("pages.claimsReview.taxNoWithhold")}
+              </ReviewRow>
+            </React.Fragment>
+          )}
+          <Heading level="2">
             <HeadingPrefix>
               {t("pages.claimsReview.partHeadingPrefix", { number: 3 })}
             </HeadingPrefix>
@@ -781,7 +810,6 @@ export const Review = (props) => {
             })}
           </Heading>
           {hasLoadingDocumentsError && (
-            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; noIc... Remove this comment to see the full error message
             <Alert className="margin-bottom-3" noIcon>
               <Trans
                 i18nKey="pages.claimsReview.documentsLoadError"
@@ -838,43 +866,33 @@ export const Review = (props) => {
         </React.Fragment>
       )}
 
-      <Button
+      <ThrottledButton
         className="margin-top-3"
         onClick={handleSubmit}
         type="button"
-        loading={handleSubmit.isThrottled}
         loadingMessage={t("pages.claimsReview.submitLoadingMessage")}
       >
         {t("pages.claimsReview.submitAction", {
           context: usePartOneReview ? "part1" : "final",
         })}
-      </Button>
+      </ThrottledButton>
     </div>
   );
 };
 
-Review.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    benefitsApplications: PropTypes.object.isRequired,
-    clearRequiredFieldErrors: PropTypes.func.isRequired,
-    portalFlow: PropTypes.shape({
-      getNextPageRoute: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-  isLoadingDocuments: PropTypes.bool,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
-};
+interface PreviousLeaveListProps {
+  type: "sameReason" | "otherReason";
+  entries: PreviousLeave[];
+  /** start index for previous leave label */
+  startIndex: number;
+  reviewRowLevel: "2" | "3" | "4" | "5" | "6";
+}
 
-export const PreviousLeaveList = (props) => {
+export const PreviousLeaveList = (props: PreviousLeaveListProps) => {
   const { t } = useTranslation();
-  if (!props.entries) return null;
+  if (!props.entries.length) return null;
 
-  return props.entries.map((entry, index) => (
+  const rows = props.entries.map((entry, index) => (
     <ReviewRow
       level={props.reviewRowLevel}
       key={`${props.type}-${index}`}
@@ -883,7 +901,6 @@ export const PreviousLeaveList = (props) => {
       })}
     >
       <p className="text-base-darker margin-top-1">
-        {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
         {formatDateRange(entry.leave_start_date, entry.leave_end_date)}
       </p>
       <ul className="usa-list margin-top-1">
@@ -928,26 +945,24 @@ export const PreviousLeaveList = (props) => {
       </ul>
     </ReviewRow>
   ));
+
+  return <React.Fragment>{rows}</React.Fragment>;
 };
 
-PreviousLeaveList.propTypes = {
-  /** Previous leave type */
-  type: PropTypes.oneOf(["sameReason", "otherReason"]).isRequired,
-  entries: PropTypes.arrayOf(PropTypes.instanceOf(PreviousLeave)).isRequired,
-  /** start index for previous leave label */
-  startIndex: PropTypes.number.isRequired,
-  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
-};
+interface EmployerBenefitListProps {
+  entries: EmployerBenefit[];
+  reviewRowLevel: "2" | "3" | "4" | "5" | "6";
+}
 
 /*
  * Helper component for rendering an array of EmployerBenefit
  * objects.
  */
-export const EmployerBenefitList = (props) => {
+export const EmployerBenefitList = (props: EmployerBenefitListProps) => {
   const { t } = useTranslation();
   const { entries, reviewRowLevel } = props;
 
-  return entries.map((entry, index) => {
+  const rows = entries.map((entry, index) => {
     const label = t("pages.claimsReview.employerBenefitEntryLabel", {
       count: index + 1,
     });
@@ -956,7 +971,6 @@ export const EmployerBenefitList = (props) => {
       context: findKeyByValue(EmployerBenefitType, entry.benefit_type),
     });
 
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     const dates = formatDateRange(
       entry.benefit_start_date,
       entry.benefit_end_date
@@ -967,7 +981,7 @@ export const EmployerBenefitList = (props) => {
     if (entry.is_full_salary_continuous) {
       amount = t("pages.claimsReview.employerBenefitIsFullSalaryContinuous");
     } else {
-      amount = entry.benefit_amount_dollars
+      amount = !isBlank(entry.benefit_amount_dollars)
         ? t("pages.claimsReview.amountPerFrequency", {
             context: findKeyByValue(
               EmployerBenefitFrequency,
@@ -989,22 +1003,24 @@ export const EmployerBenefitList = (props) => {
       />
     );
   });
+
+  return <React.Fragment>{rows}</React.Fragment>;
 };
 
-EmployerBenefitList.propTypes = {
-  entries: PropTypes.arrayOf(PropTypes.instanceOf(EmployerBenefit)).isRequired,
-  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
-};
+interface OtherIncomeListProps {
+  entries: OtherIncome[];
+  reviewRowLevel: "2" | "3" | "4" | "5" | "6";
+}
 
 /*
  * Helper component for rendering an array of OtherIncome
  * objects.
  */
-export const OtherIncomeList = (props) => {
+export const OtherIncomeList = (props: OtherIncomeListProps) => {
   const { t } = useTranslation();
   const { entries, reviewRowLevel } = props;
 
-  return entries.map((entry, index) => {
+  const rows = entries.map((entry, index) => {
     const label = t("pages.claimsReview.otherIncomeEntryLabel", {
       count: index + 1,
     });
@@ -1013,13 +1029,12 @@ export const OtherIncomeList = (props) => {
       context: findKeyByValue(OtherIncomeType, entry.income_type),
     });
 
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     const dates = formatDateRange(
       entry.income_start_date,
       entry.income_end_date
     );
 
-    const amount = entry.income_amount_dollars
+    const amount = !isBlank(entry.income_amount_dollars)
       ? t("pages.claimsReview.amountPerFrequency", {
           context: findKeyByValue(
             OtherIncomeFrequency,
@@ -1040,19 +1055,24 @@ export const OtherIncomeList = (props) => {
       />
     );
   });
+
+  return <React.Fragment>{rows}</React.Fragment>;
 };
 
-OtherIncomeList.propTypes = {
-  entries: PropTypes.arrayOf(PropTypes.instanceOf(OtherIncome)).isRequired,
-  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
-};
+interface OtherLeaveEntryProps {
+  amount?: string | null;
+  dates: string;
+  label: string;
+  reviewRowLevel: "2" | "3" | "4" | "5" | "6";
+  type?: string;
+}
 
 /*
  * Helper component for rendering a single other leave entry. This will
  * render a ReviewRow with the specified label, date string,
  * and an optional type string and amount string
  */
-export const OtherLeaveEntry = (props) => {
+export const OtherLeaveEntry = (props: OtherLeaveEntryProps) => {
   const { amount, dates, label, reviewRowLevel, type } = props;
 
   return (
@@ -1064,14 +1084,6 @@ export const OtherLeaveEntry = (props) => {
       </ul>
     </ReviewRow>
   );
-};
-
-OtherLeaveEntry.propTypes = {
-  amount: PropTypes.string,
-  dates: PropTypes.string.isRequired,
-  label: PropTypes.string.isRequired,
-  reviewRowLevel: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
-  type: PropTypes.string,
 };
 
 export default withBenefitsApplication(withClaimDocuments(Review));

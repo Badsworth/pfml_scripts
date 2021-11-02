@@ -1,9 +1,14 @@
 import React, { useEffect, useRef } from "react";
 import { groupBy, map } from "lodash";
 import Alert from "./Alert";
-import PropTypes from "prop-types";
+import AppErrorInfo from "../models/AppErrorInfo";
+import AppErrorInfoCollection from "../models/AppErrorInfoCollection";
 import { Trans } from "react-i18next";
 import { useTranslation } from "../locales/i18n";
+
+interface ErrorsSummaryProps {
+  errors: AppErrorInfoCollection;
+}
 
 /**
  * Use this component at the top of a page to summarize any errors a user has encountered.
@@ -11,9 +16,9 @@ import { useTranslation } from "../locales/i18n";
  *
  * [GOV.UK Reference ↗](https://design-system.service.gov.uk/components/error-summary/)
  */
-function ErrorsSummary(props) {
+function ErrorsSummary(props: ErrorsSummaryProps) {
   const { errors } = props;
-  const alertRef = useRef<HTMLElement>();
+  const alertRef = useRef<HTMLDivElement>(null);
   const { t } = useTranslation();
 
   /**
@@ -23,18 +28,18 @@ function ErrorsSummary(props) {
     if (!errors.isEmpty) {
       window.scrollTo(0, 0);
       // Move focus to the alert so screen readers immediately announce that there are errors
-      alertRef.current.focus();
+      alertRef.current?.focus();
     }
   }, [errors]);
 
   // Don't render anything if there are no errors present
-  if (!errors || errors.items.length <= 0) {
+  if (errors.isEmpty) {
     return null;
   }
 
   // TODO (CP-1532): Remove once links in error messages are fully supported
-  const getUniqueMessageKey = (error) => {
-    if (error.message.type === Trans) {
+  const getUniqueMessageKey = (error: AppErrorInfo) => {
+    if (typeof error.message !== "string" && error.message?.type === Trans) {
       return error.message.props.i18nKey;
     }
 
@@ -54,7 +59,9 @@ function ErrorsSummary(props) {
     return (
       <ul className="usa-list">
         {visibleErrorMessages.map((message) => (
-          <li key={message.type ? message.props.i18nKey : message}>
+          <li
+            key={typeof message === "string" ? message : message?.props.i18nKey}
+          >
             {message}
           </li>
         ))}
@@ -63,7 +70,6 @@ function ErrorsSummary(props) {
   };
 
   return (
-    // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; head... Remove this comment to see the full error message
     <Alert
       className="margin-bottom-3"
       heading={t("components.errorsSummary.genericHeading", {
@@ -76,13 +82,5 @@ function ErrorsSummary(props) {
     </Alert>
   );
 }
-
-ErrorsSummary.propTypes = {
-  errors: PropTypes.shape({
-    isEmpty: PropTypes.bool,
-    items: PropTypes.array,
-    itemsById: PropTypes.object,
-  }),
-};
 
 export default ErrorsSummary;

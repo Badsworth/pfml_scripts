@@ -2,38 +2,43 @@ import React, { useRef } from "react";
 import Fieldset from "./Fieldset";
 import FormLabel from "./FormLabel";
 import InputText from "./InputText";
-import PropTypes from "prop-types";
 import classnames from "classnames";
+import isBlank from "../utils/isBlank";
 
 /**
  * Add leading zeros if the numbers are less than 10
  * @example addLeadingZero(1) => "01"
- * @param {string|number} value
- * @returns {string}
  */
-function addLeadingZero(value) {
-  if (!value || value.match(/^0/)) return value;
+function addLeadingZero(value: string | number) {
+  if (isBlank(value) || (typeof value === "string" && value.match(/^0/)))
+    return value;
 
-  return value.toString().padStart(2, 0);
+  return value.toString().padStart(2, "0");
 }
 
 /**
  * Format the month/day/year fields as a single ISO 8601 date string
- * @param {object} date
- * @param {number|string} date.day
- * @param {number|string} date.month
- * @param {number|string} date.year
- * @param {object} [options]
- * @param {boolean} [options.skipLeadingZeros]
- * @returns {string} ISO 8601 date string (YYYY-MM-DD)
+ * @returns ISO 8601 date string (YYYY-MM-DD)
  */
-export function formatFieldsAsISO8601({ month, day, year }, options = {}) {
+export function formatFieldsAsISO8601(
+  fields: {
+    day?: number | string;
+    month?: number | string;
+    year?: number | string;
+  },
+  options: {
+    skipLeadingZeros?: boolean;
+  } = {}
+) {
   // Disallow anything other than numbers, and restrict invalid lengths
-  month = month ? month.replace(/\D/g, "") : ""; // "abc" => ""
-  day = day ? day.replace(/\D/g, "") : "";
-  year = year ? year.replace(/\D/g, "") : "";
+  let month = isBlank(fields.month)
+    ? ""
+    : fields.month.toString().replace(/\D/g, ""); // "abc" => ""
+  let day = isBlank(fields.day) ? "" : fields.day.toString().replace(/\D/g, "");
+  const year = isBlank(fields.year)
+    ? ""
+    : fields.year.toString().replace(/\D/g, "");
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'skipLeadingZeros' does not exist on type... Remove this comment to see the full error message
   if (!options.skipLeadingZeros) {
     month = addLeadingZero(month);
     day = addLeadingZero(day);
@@ -49,10 +54,9 @@ export function formatFieldsAsISO8601({ month, day, year }, options = {}) {
 
 /**
  * Break apart the ISO 8601 date string into month/day/year parts, for UI rendering
- * @param {string} value - ISO 8601 date string
- * @returns {{ month: string, day: string, year: string }}
+ * @param value - ISO 8601 date string
  */
-export function parseDateParts(value) {
+export function parseDateParts(value?: string) {
   if (value) {
     const parts = value.split("-"); // "YYYY-MM-DD" => ["YYYY", "MM", "DD"]
     return {
@@ -69,6 +73,73 @@ export function parseDateParts(value) {
   };
 }
 
+interface InputDateProps {
+  /**
+   * Localized label for the day field
+   */
+  dayLabel: React.ReactNode;
+  /**
+   * Apply error styling to the day `input`
+   */
+  dayInvalid?: boolean;
+  /**
+   * Localized error message. Setting this enables the error state styling.
+   */
+  errorMsg?: React.ReactNode;
+  /**
+   * Localized example text for the entire fieldset
+   */
+  example?: string;
+  /**
+   * Localized hint text for the entire fieldset
+   */
+  hint?: React.ReactNode;
+  /**
+   * Localized label for the entire fieldset
+   */
+  label: React.ReactNode;
+  /**
+   * Localized label for the month field
+   */
+  monthLabel: React.ReactNode;
+  /**
+   * Apply error styling to the month `input`
+   */
+  monthInvalid?: boolean;
+  /**
+   * A name for the full date string. This is used for generating the individual field names
+   * and is the name used as the onChange event's `target.name`
+   */
+  name: string;
+  /**
+   * Called when any of the fields' value changes. The event `target` will
+   * include the formatted ISO 8601 date as its `value`
+   */
+  onChange?: React.ChangeEventHandler<HTMLInputElement>;
+  /**
+   * Localized text indicating this field is optional
+   */
+  optionalText?: React.ReactNode;
+  /**
+   * Enable the smaller label variant
+   */
+  smallLabel?: boolean;
+  /**
+   * The full ISO 8601 date (`YYYY-MM-DD`). If a date part is not yet set, leave
+   * it blank (i.e `2019--10`). Use this prop in combination with `onChange`
+   * for a controlled component.
+   */
+  value?: string;
+  /**
+   * Apply error styling to the year `input`
+   */
+  yearInvalid?: boolean;
+  /**
+   * Localized label for the year `input` field
+   */
+  yearLabel: React.ReactNode;
+}
+
 /**
  * Date text fields (month, day, year). Also renders supporting UI elements like label,
  * hint text, and error message. The expected and returned value of this component is an
@@ -76,8 +147,8 @@ export function parseDateParts(value) {
  *
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/form-controls)
  */
-function InputDate(props) {
-  const hasError = !!props.errorMsg;
+function InputDate(props: InputDateProps) {
+  const hasError = !isBlank(props.errorMsg);
   const values = parseDateParts(props.value);
   const inputClassNames = {
     month: classnames("usa-input--inline", {
@@ -93,9 +164,9 @@ function InputDate(props) {
   // We need refs in order to access the individual field values
   // and return the formatted date string back to our parent
   const inputTextRefs = {
-    month: useRef<HTMLInputElement>(),
-    day: useRef<HTMLInputElement>(),
-    year: useRef<HTMLInputElement>(),
+    month: useRef<HTMLInputElement>(null),
+    day: useRef<HTMLInputElement>(null),
+    year: useRef<HTMLInputElement>(null),
   };
 
   const formGroupClasses = classnames("usa-form-group", {
@@ -107,13 +178,12 @@ function InputDate(props) {
    * This is responsible for formatting the full date and sending
    * it back to our parent component via the function passed to
    * us in the *onChange* prop.
-   * @param {React.SyntheticEvent} evt
    */
-  const handleBlur = (evt) => {
+  const handleBlur = (evt: React.FocusEvent<HTMLInputElement>) => {
     const isoDate = formatFieldsAsISO8601({
-      month: inputTextRefs.month.current.value,
-      day: inputTextRefs.day.current.value,
-      year: inputTextRefs.year.current.value,
+      month: inputTextRefs.month.current?.value,
+      day: inputTextRefs.day.current?.value,
+      year: inputTextRefs.year.current?.value,
     });
 
     dispatchChange(isoDate, evt);
@@ -124,14 +194,13 @@ function InputDate(props) {
    * This is responsible for formatting the full date and sending
    * it back to our parent component via the function passed to
    * us in the onChange prop.
-   * @param {React.SyntheticEvent} evt
    */
-  const handleChange = (evt) => {
+  const handleChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const date = formatFieldsAsISO8601(
       {
-        month: inputTextRefs.month.current.value,
-        day: inputTextRefs.day.current.value,
-        year: inputTextRefs.year.current.value,
+        month: inputTextRefs.month.current?.value,
+        day: inputTextRefs.day.current?.value,
+        year: inputTextRefs.year.current?.value,
       },
       // We skip adding leading zeros onChange so that we don't prevent
       // a user from entering numbers with more than 1 digit. For instance,
@@ -149,19 +218,24 @@ function InputDate(props) {
    * that our form event handlers can manage this field's state just like
    * it does with other fields like InputText. We also include the original
    * event, but only for debugging purposes.
-   * @param {string} value - ISO 8601 date string
-   * @param {SyntheticEvent} originalEvent - Original event that triggered this change
    */
-  function dispatchChange(value, originalEvent) {
-    const target = originalEvent.target.cloneNode(true);
+  function dispatchChange(
+    value: string,
+    originalEvent:
+      | React.ChangeEvent<HTMLInputElement>
+      | React.FocusEvent<HTMLInputElement>
+  ) {
+    const target = originalEvent.target.cloneNode(true) as HTMLInputElement; // https://github.com/microsoft/TypeScript/issues/283
     // Replace day/month/year field name with actual date field name
     target.name = props.name;
     target.value = value;
 
-    props.onChange({
-      _originalEvent: originalEvent,
-      target,
-    });
+    if (props.onChange) {
+      props.onChange({
+        ...originalEvent,
+        target,
+      });
+    }
   }
 
   return (
@@ -185,7 +259,7 @@ function InputDate(props) {
           inputRef={inputTextRefs.month}
           label={props.monthLabel}
           labelClassName="text-normal margin-top-05"
-          maxLength="2"
+          maxLength={2}
           name={`${props.name}_month`}
           onBlur={handleBlur}
           onChange={handleChange}
@@ -200,7 +274,7 @@ function InputDate(props) {
           inputRef={inputTextRefs.day}
           label={props.dayLabel}
           labelClassName="text-normal margin-top-05"
-          maxLength="2"
+          maxLength={2}
           name={`${props.name}_day`}
           onBlur={handleBlur}
           onChange={handleChange}
@@ -215,7 +289,7 @@ function InputDate(props) {
           inputRef={inputTextRefs.year}
           label={props.yearLabel}
           labelClassName="text-normal margin-top-05"
-          maxLength="4"
+          maxLength={4}
           name={`${props.name}_year`}
           onBlur={handleBlur}
           onChange={handleChange}
@@ -226,72 +300,5 @@ function InputDate(props) {
     </Fieldset>
   );
 }
-
-InputDate.propTypes = {
-  /**
-   * Localized label for the day field
-   */
-  dayLabel: PropTypes.node.isRequired,
-  /**
-   * Apply error styling to the day `input`
-   */
-  dayInvalid: PropTypes.bool,
-  /**
-   * Localized error message. Setting this enables the error state styling.
-   */
-  errorMsg: PropTypes.node,
-  /**
-   * Localized example text for the entire fieldset
-   */
-  example: PropTypes.string,
-  /**
-   * Localized hint text for the entire fieldset
-   */
-  hint: PropTypes.node,
-  /**
-   * Localized label for the entire fieldset
-   */
-  label: PropTypes.node.isRequired,
-  /**
-   * Localized label for the month field
-   */
-  monthLabel: PropTypes.node.isRequired,
-  /**
-   * Apply error styling to the month `input`
-   */
-  monthInvalid: PropTypes.bool,
-  /**
-   * A name for the full date string. This is used for generating the individual field names
-   * and is the name used as the onChange event's `target.name`
-   */
-  name: PropTypes.string.isRequired,
-  /**
-   * Called when any of the fields' value changes. The event `target` will
-   * include the formatted ISO 8601 date as its `value`
-   */
-  onChange: PropTypes.func,
-  /**
-   * Localized text indicating this field is optional
-   */
-  optionalText: PropTypes.node,
-  /**
-   * Enable the smaller label variant
-   */
-  smallLabel: PropTypes.bool,
-  /**
-   * The full ISO 8601 date (`YYYY-MM-DD`). If a date part is not yet set, leave
-   * it blank (i.e `2019--10`). Use this prop in combination with `onChange`
-   * for a controlled component.
-   */
-  value: PropTypes.string,
-  /**
-   * Apply error styling to the year `input`
-   */
-  yearInvalid: PropTypes.bool,
-  /**
-   * Localized label for the year `input` field
-   */
-  yearLabel: PropTypes.node.isRequired,
-};
 
 export default InputDate;

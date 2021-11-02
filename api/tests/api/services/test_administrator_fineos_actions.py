@@ -1,9 +1,11 @@
 import copy
+import logging  # noqa: B1
 from datetime import date, timedelta
 from unittest import mock
 
 import pytest
 
+import massgov.pfml.fineos.mock_client
 import massgov.pfml.util.datetime as datetime_util
 from massgov.pfml.api.authorization.exceptions import NotAuthorizedForAccess
 from massgov.pfml.api.exceptions import ObjectNotFound
@@ -15,8 +17,10 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
     get_claim_as_leave_admin,
     get_documents_as_leave_admin,
     get_leave_details,
+    register_leave_admin_with_fineos,
 )
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
+from massgov.pfml.db.models.employees import UserLeaveAdministrator
 from massgov.pfml.db.models.factories import EmployerFactory
 from massgov.pfml.fineos import FINEOSClient, create_client
 from massgov.pfml.fineos.models import CreateOrUpdateLeaveAdmin, group_client_api
@@ -1646,13 +1650,98 @@ def test_create_leave_admin_request_payload():
     assert payload.__contains__("<ns0:enabled>true</ns0:enabled>")
 
 
+def test_register_leave_admin_with_fineos(employer_user, test_db_session):
+    employer = EmployerFactory.create()
+    register_leave_admin_with_fineos(
+        "Bob Smith",
+        "test@test.com",
+        "817",
+        "1234560",
+        employer,
+        employer_user,
+        test_db_session,
+        None,
+    )
+    created_leave_admin = (
+        test_db_session.query(UserLeaveAdministrator)
+        .filter(UserLeaveAdministrator.user_id == employer_user.user_id)
+        .one()
+    )
+
+    assert created_leave_admin is not None
+    assert created_leave_admin.fineos_web_id.startswith("pfml_leave_admin_")
+    assert created_leave_admin.employer_id == employer.employer_id
+
+
+def test_register_previously_registered_leave_admin_with_fineos(
+    employer_user, test_db_session, caplog
+):
+    employer = EmployerFactory.create()
+    ula = UserLeaveAdministrator(
+        user=employer_user, employer=employer, fineos_web_id="EXISTING_USER"
+    )
+    test_db_session.add(ula)
+    test_db_session.commit()
+    fineos_client = create_client()
+    caplog.set_level(logging.INFO)  # noqa: B1
+    capture = massgov.pfml.fineos.mock_client.start_capture()
+
+    register_leave_admin_with_fineos(
+        admin_full_name="Bob Smith",
+        admin_email="test@test.com",
+        admin_area_code="817",
+        admin_phone_number="1234560",
+        employer=employer,
+        user=employer_user,
+        db_session=test_db_session,
+        fineos_client=fineos_client,
+        force_register=False,
+    )
+
+    assert "User previously registered in FINEOS and force_register off" in caplog.text
+
+    capture = massgov.pfml.fineos.mock_client.get_capture()
+    # Assert no calls to FINEOS made
+    assert not capture
+    created_leave_admin = (
+        test_db_session.query(UserLeaveAdministrator)
+        .filter(UserLeaveAdministrator.user_id == employer_user.user_id)
+        .one()
+    )
+
+    assert created_leave_admin is not None
+    assert created_leave_admin.fineos_web_id == "EXISTING_USER"
+    caplog.clear()
+    register_leave_admin_with_fineos(
+        admin_full_name="Bob Smith",
+        admin_email="test@test.com",
+        admin_area_code="817",
+        admin_phone_number="1234560",
+        employer=employer,
+        user=employer_user,
+        db_session=test_db_session,
+        fineos_client=fineos_client,
+        force_register=True,
+    )
+    capture = massgov.pfml.fineos.mock_client.get_capture()
+    assert capture[0][0] == "create_or_update_leave_admin"
+
+    created_leave_admin = (
+        test_db_session.query(UserLeaveAdministrator)
+        .filter(UserLeaveAdministrator.user_id == employer_user.user_id)
+        .one()
+    )
+    assert created_leave_admin.fineos_web_id != "EXISTING_USER"
+    assert created_leave_admin.fineos_web_id.startswith("pfml_leave_admin_")
+
+
 def test_get_leave_details(period_decisions):
     leave_details = get_leave_details(period_decisions.dict())
 
     assert leave_details.continuous_leave_periods[0].start_date == date(2021, 2, 1)
     assert leave_details.continuous_leave_periods[0].end_date == date(2021, 2, 24)
-    assert leave_details.intermittent_leave_periods[0].start_date == date(2021, 1, 1)
-    assert leave_details.intermittent_leave_periods[0].end_date == date(2021, 2, 1)
+    assert leave_details.intermittent_leave_periods[0].start_date == date(2021, 1, 15)
+    assert leave_details.intermittent_leave_periods[0].end_date == date(2021, 1, 20)
     assert leave_details.reduced_schedule_leave_periods[0].start_date == date(2021, 1, 4)
     assert leave_details.reduced_schedule_leave_periods[0].end_date == date(2021, 1, 29)
 

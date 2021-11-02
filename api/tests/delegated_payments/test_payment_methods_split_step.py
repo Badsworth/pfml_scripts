@@ -1,11 +1,9 @@
-from typing import Optional
-
 import pytest
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.payment_methods_split_step as payment_split
 from massgov.pfml.db.models.employees import PaymentMethod, State
-from massgov.pfml.db.models.factories import PaymentFactory
+from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 
 # A few miscellaneous states that won't be cleaned up
 misc_states = [
@@ -21,32 +19,20 @@ def payment_split_step(initialize_factories_session, test_db_session, test_db_ot
     )
 
 
-def create_payment_in_state(state, db_session, payment_method_id: Optional[int] = None):
-    payment = PaymentFactory.create()
-    state_log_util.create_finished_state_log(
-        end_state=state,
-        outcome=state_log_util.build_outcome("Success"),
-        associated_model=payment,
-        db_session=db_session,
-    )
-
-    if payment_method_id is not None:
-        payment.disb_method_id = payment_method_id
-
-
 def test_split_payment_methods(payment_split_step, test_db_session):
     for _ in range(5):
-        create_payment_in_state(
-            State.DELEGATED_PAYMENT_VALIDATED, test_db_session, PaymentMethod.ACH.payment_method_id,
-        )
-        create_payment_in_state(
-            State.DELEGATED_PAYMENT_VALIDATED,
-            test_db_session,
-            PaymentMethod.CHECK.payment_method_id,
-        )
+        DelegatedPaymentFactory(
+            test_db_session, payment_method=PaymentMethod.ACH
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_VALIDATED)
+
+        DelegatedPaymentFactory(
+            test_db_session, payment_method=PaymentMethod.CHECK
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_VALIDATED)
 
         for misc_state in misc_states:
-            create_payment_in_state(misc_state, test_db_session)
+            DelegatedPaymentFactory(
+                test_db_session, payment_method=PaymentMethod.CHECK
+            ).get_or_create_payment_with_state(misc_state)
 
     test_db_session.commit()
 
@@ -77,22 +63,20 @@ def test_split_payment_methods(payment_split_step, test_db_session):
 def test_cleanup_states_rollback(payment_split_step, test_db_session):
     test_db_session.begin_nested()
     for _ in range(5):
-        create_payment_in_state(
-            State.DELEGATED_PAYMENT_VALIDATED, test_db_session, PaymentMethod.ACH.payment_method_id,
-        )
-        create_payment_in_state(
-            State.DELEGATED_PAYMENT_VALIDATED,
-            test_db_session,
-            PaymentMethod.CHECK.payment_method_id,
-        )
-        create_payment_in_state(
-            State.DELEGATED_PAYMENT_VALIDATED,
-            test_db_session,
-            PaymentMethod.DEBIT.payment_method_id,
-        )
+        DelegatedPaymentFactory(
+            test_db_session, payment_method=PaymentMethod.ACH
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_VALIDATED)
+
+        DelegatedPaymentFactory(
+            test_db_session, payment_method=PaymentMethod.CHECK
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_VALIDATED)
+
+        DelegatedPaymentFactory(
+            test_db_session, payment_method=PaymentMethod.DEBIT
+        ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_VALIDATED)
 
         for misc_state in misc_states:
-            create_payment_in_state(misc_state, test_db_session)
+            DelegatedPaymentFactory(test_db_session,).get_or_create_payment_with_state(misc_state)
 
     test_db_session.commit()  # It will rollback to this DB state
     test_db_session.begin_nested()

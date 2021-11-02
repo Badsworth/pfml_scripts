@@ -4,8 +4,8 @@ import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.delegated_payments.state_cleanup_step as state_cleanup
 from massgov.pfml.db.models.employees import State, StateLog
-from massgov.pfml.db.models.factories import PaymentFactory
 from massgov.pfml.db.models.payments import FineosWritebackDetails
+from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 
 # A few miscellaneous states that won't be cleaned up
 misc_states = [
@@ -24,23 +24,17 @@ def state_cleanup_step(
     )
 
 
-def create_payment_in_state(state, db_session):
-    payment = PaymentFactory.create()
-    state_log_util.create_finished_state_log(
-        end_state=state,
-        outcome=state_log_util.build_outcome("Success"),
-        associated_model=payment,
-        db_session=db_session,
-    )
-
-
 def test_cleanup_states(state_cleanup_step, local_test_db_session):
     for _ in range(5):
         for audit_state in payments_util.Constants.REJECT_FILE_PENDING_STATES:
-            create_payment_in_state(audit_state, local_test_db_session)
+            DelegatedPaymentFactory(
+                db_session=local_test_db_session
+            ).get_or_create_payment_with_state(audit_state)
 
         for misc_state in misc_states:
-            create_payment_in_state(misc_state, local_test_db_session)
+            DelegatedPaymentFactory(
+                db_session=local_test_db_session
+            ).get_or_create_payment_with_state(misc_state)
 
     # Get the counts before running
     state_log_counts = state_log_util.get_state_counts(local_test_db_session)
@@ -89,10 +83,16 @@ def test_cleanup_states_rollback(state_cleanup_step, local_test_db_session):
 
     for _ in range(5):
         for audit_state in payments_util.Constants.REJECT_FILE_PENDING_STATES:
-            create_payment_in_state(audit_state, local_test_db_session)
+            # create_payment_in_state(audit_state, local_test_db_session)
+            DelegatedPaymentFactory(
+                db_session=local_test_db_session
+            ).get_or_create_payment_with_state(audit_state)
 
         for misc_state in misc_states:
-            create_payment_in_state(misc_state, local_test_db_session)
+            # create_payment_in_state(misc_state, local_test_db_session)
+            DelegatedPaymentFactory(
+                db_session=local_test_db_session
+            ).get_or_create_payment_with_state(misc_state)
 
     # This process delibertely won't handle unassociated state logs, so we'll
     # error it by creating one.

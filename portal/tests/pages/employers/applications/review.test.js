@@ -1,9 +1,10 @@
 /* eslint testing-library/prefer-user-event: 0 */
-import Document, { DocumentType } from "../../../../src/models/Document";
 import { MockEmployerClaimBuilder, renderPage } from "../../../test-utils";
 import { act, fireEvent, screen, waitFor } from "@testing-library/react";
+import ClaimDocument from "../../../../src/models/ClaimDocument";
 import ConcurrentLeave from "../../../../src/models/ConcurrentLeave";
 import DocumentCollection from "../../../../src/models/DocumentCollection";
+import { DocumentType } from "../../../../src/models/Document";
 import { EmployerBenefitFrequency } from "../../../../src/models/EmployerBenefit";
 import EmployerClaim from "../../../../src/models/EmployerClaim";
 import LeaveReason from "../../../../src/models/LeaveReason";
@@ -13,28 +14,35 @@ import userEvent from "@testing-library/user-event";
 
 jest.mock("../../../../src/hooks/useAppLogic");
 
-const DOCUMENTS = new DocumentCollection([
-  new Document({
-    content_type: "image/png",
-    created_at: "2020-04-05",
-    document_type: DocumentType.certification.medicalCertification,
-    fineos_document_id: "fineos-id-4",
-    name: "Medical cert doc",
-  }),
-  new Document({
-    content_type: "application/pdf",
-    created_at: "2020-01-02",
-    document_type: DocumentType.approvalNotice,
-    fineos_document_id: "fineos-id-1",
-    name: "Approval notice doc",
-  }),
-  new Document({
-    content_type: "application/pdf",
-    created_at: "2020-02-01",
-    document_type: DocumentType.certification[LeaveReason.care],
-    fineos_document_id: "fineos-id-10",
-    name: "Caring cert doc",
-  }),
+const ABSENCEID = "NTN-111-ABS-01";
+
+const CLAIMDOCUMENTSMAP = new Map([
+  [
+    ABSENCEID,
+    new DocumentCollection([
+      new ClaimDocument({
+        content_type: "image/png",
+        created_at: "2020-04-05",
+        document_type: DocumentType.certification.medicalCertification,
+        fineos_document_id: "fineos-id-4",
+        name: "Medical cert doc",
+      }),
+      new ClaimDocument({
+        content_type: "application/pdf",
+        created_at: "2020-01-02",
+        document_type: DocumentType.approvalNotice,
+        fineos_document_id: "fineos-id-1",
+        name: "Approval notice doc",
+      }),
+      new ClaimDocument({
+        content_type: "application/pdf",
+        created_at: "2020-02-01",
+        document_type: DocumentType.certification[LeaveReason.care],
+        fineos_document_id: "fineos-id-10",
+        name: "Caring cert doc",
+      }),
+    ]),
+  ],
 ]);
 
 const baseClaimBuilder = new MockEmployerClaimBuilder()
@@ -56,6 +64,7 @@ const setup = (employerClaimAttrs = claimWithV2Eform, cb) => {
     {
       addCustomSetup: (appLogic) => {
         appLogic.employers.claim = new EmployerClaim(employerClaimAttrs);
+        appLogic.employers.claimDocumentsMap = new Map();
         appLogic.employers.submitClaimReview = submitClaimReview;
         appLogic.portalFlow.goTo = goTo;
         appLogic.employers.loadDocuments = loadDocuments;
@@ -770,15 +779,10 @@ describe("Review", () => {
         const caringLeaveClaim = clone(claimWithV2Eform);
         caringLeaveClaim.leave_details.reason = "Care for a Family Member";
         const cb = (appLogic) => {
-          appLogic.employers.documents = DOCUMENTS;
+          appLogic.employers.claimDocumentsMap = CLAIMDOCUMENTSMAP;
         };
         setup(caringLeaveClaim, cb);
       }
-
-      it("does not load the documents while documents is loaded ", () => {
-        render();
-        expect(loadDocuments).not.toHaveBeenCalled();
-      });
 
       it("shows medical cert and caring cert", () => {
         render();

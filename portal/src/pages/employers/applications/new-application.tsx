@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import Alert from "../../../components/Alert";
+import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
 import ConditionalContent from "../../../components/ConditionalContent";
 import EmployerClaim from "../../../models/EmployerClaim";
 import Heading from "../../../components/Heading";
 import InputChoiceGroup from "../../../components/InputChoiceGroup";
-import PropTypes from "prop-types";
 import StatusRow from "../../../components/StatusRow";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
@@ -14,13 +14,19 @@ import formatDateRange from "../../../utils/formatDateRange";
 import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
-export const NewApplication = (props) => {
+interface NewApplicationProps {
+  appLogic: AppLogic;
+  claim: EmployerClaim;
+  query: {
+    absence_id: string;
+  };
+}
+
+export const NewApplication = (props: NewApplicationProps) => {
   const { t } = useTranslation();
   const {
-    appLogic: {
-      employers: { claim },
-      portalFlow,
-    },
+    appLogic: { portalFlow },
+    claim,
     query: { absence_id: absenceId },
   } = props;
 
@@ -36,7 +42,7 @@ export const NewApplication = (props) => {
     );
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
     if (formState.hasReviewerVerified === "true") {
@@ -46,7 +52,7 @@ export const NewApplication = (props) => {
     }
   };
 
-  const handleOnChange = (event) => {
+  const handleOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     updateFields({
       hasReviewerVerified: event.target.value,
     });
@@ -56,7 +62,7 @@ export const NewApplication = (props) => {
     hasReviewerVerified: "",
   });
 
-  const updateFields = (fields) => {
+  const updateFields = (fields: { [fieldName: string]: unknown }) => {
     setFormState({ ...formState, ...fields });
   };
 
@@ -68,11 +74,9 @@ export const NewApplication = (props) => {
           name: claim.fullName,
         })}
       </Title>
-      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; }' is no... Remove this comment to see the full error message */}
       <Alert state="warning">
         <Trans
           i18nKey="pages.employersClaimsNewApplication.instructionsFollowUpDate"
-          // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
           values={{ date: formatDateRange(claim.follow_up_date) }}
         />
       </Alert>
@@ -132,7 +136,6 @@ export const NewApplication = (props) => {
           {claim.tax_identifier}
         </StatusRow>
         <StatusRow label={t("pages.employersClaimsNewApplication.dobLabel")}>
-          {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1. */}
           {formatDateRange(claim.date_of_birth)}
         </StatusRow>
         <ConditionalContent
@@ -150,7 +153,6 @@ export const NewApplication = (props) => {
                 )}
               </Heading>
               <Trans i18nKey="pages.employersClaimsNewApplication.instructions" />
-              {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; noIcon: true; state: str... Remove this comment to see the full error message */}
               <Alert noIcon state="info">
                 {t("pages.employersClaimsNewApplication.agreementBody")}
               </Alert>
@@ -166,22 +168,6 @@ export const NewApplication = (props) => {
       </form>
     </React.Fragment>
   );
-};
-
-NewApplication.propTypes = {
-  appLogic: PropTypes.shape({
-    employers: PropTypes.shape({
-      claim: PropTypes.instanceOf(EmployerClaim),
-    }).isRequired,
-    portalFlow: PropTypes.shape({
-      goTo: PropTypes.func.isRequired,
-      goToNextPage: PropTypes.func.isRequired,
-      goToPageFor: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-  query: PropTypes.shape({
-    absence_id: PropTypes.string.isRequired,
-  }).isRequired,
 };
 
 export default withEmployerClaim(NewApplication);

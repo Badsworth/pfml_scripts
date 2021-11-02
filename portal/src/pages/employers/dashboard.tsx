@@ -1,8 +1,15 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import Claim, { AbsenceCaseStatus } from "../../models/Claim";
+import React, {
+  FormEvent,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 import { camelCase, compact, find, get, isEqual, startCase } from "lodash";
-import { AbsenceCaseStatus } from "../../models/Claim";
 import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import Button from "../../components/Button";
 import ClaimCollection from "../../models/ClaimCollection";
 import Details from "../../components/Details";
@@ -15,14 +22,12 @@ import Link from "next/link";
 import PaginationMeta from "../../models/PaginationMeta";
 import PaginationNavigation from "../../components/PaginationNavigation";
 import PaginationSummary from "../../components/PaginationSummary";
-import PropTypes from "prop-types";
 import Table from "../../components/Table";
 import Title from "../../components/Title";
 import TooltipIcon from "../../components/TooltipIcon";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
 import formatDateRange from "../../utils/formatDateRange";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -30,43 +35,53 @@ import { useTranslation } from "../../locales/i18n";
 import withClaims from "../../hoc/withClaims";
 import withUser from "../../hoc/withUser";
 
-export const Dashboard = (props) => {
-  const showReviewByStatus = isFeatureEnabled("employerShowReviewByStatus");
+interface PageQueryParam {
+  name: string;
+  value: number | string | string[];
+}
+
+interface DashboardProps {
+  appLogic: AppLogic;
+  query: {
+    claim_status?: string;
+    employer_id?: string;
+    order_by?: "absence_status" | "created_at" | "employee";
+    order_direction?: "ascending" | "descending";
+    page_offset?: string;
+    search?: string;
+  };
+  user: User;
+}
+
+export const Dashboard = (props: DashboardProps) => {
   const { t } = useTranslation();
-  const introElementRef = useRef(null);
+  const introElementRef = useRef<HTMLElement>(null);
   const apiParams = {
     // Default the dashboard to show claims requiring action first
-    order_by: showReviewByStatus ? "absence_status" : "created_at",
-    order_direction: showReviewByStatus ? "ascending" : "descending",
+    order_by: "absence_status",
+    order_direction: "ascending",
     ...props.query,
-  };
-
-  const PaginatedClaimsTableWithClaims = withClaims(
-    PaginatedClaimsTable,
-    apiParams
-  );
+  } as const;
 
   /**
    * Update the page's query string, to load a different page number,
    * or change the filter/sort of the loaded claims. The name/value
    * are merged with the existing query string.
-   * @param {Array<{ name: string, value: number|string }>} paramsToUpdate
    */
-  const updatePageQuery = (paramsToUpdate) => {
+  const updatePageQuery = (paramsToUpdate: PageQueryParam[]) => {
     const params = new URLSearchParams(window.location.search);
 
     paramsToUpdate.forEach(({ name, value }) => {
-      if (!value || value.length === 0) {
+      if (typeof value !== "number" && value.length === 0) {
         // Remove param if its value is null, undefined, empty string, or empty array
         params.delete(name);
       } else {
-        params.set(name, value);
+        params.set(name, value.toString());
       }
     });
 
-    const paramsObj = {};
-    // @ts-expect-error ts-migrate(2569) FIXME: Type 'IterableIterator<[string, string]>' is not a... Remove this comment to see the full error message
-    for (const [paramKey, paramValue] of params.entries()) {
+    const paramsObj: { [key: string]: string } = {};
+    for (const [paramKey, paramValue] of Array.from(params.entries())) {
       paramsObj[paramKey] = paramValue;
     }
 
@@ -78,6 +93,21 @@ export const Dashboard = (props) => {
     if (introElementRef.current) introElementRef.current.scrollIntoView();
   };
 
+  const PaginatedClaimsTableWithClaims = withClaims(
+    PaginatedClaimsTable,
+    apiParams
+  );
+  const componentSpecificProps = {
+    updatePageQuery,
+    sort: (
+      <SortDropdown
+        order_by={apiParams.order_by}
+        order_direction={apiParams.order_direction}
+        updatePageQuery={updatePageQuery}
+      />
+    ),
+  };
+
   return (
     <React.Fragment>
       <EmployerNavigationTabs activePath={props.appLogic.portalFlow.pathname} />
@@ -85,7 +115,6 @@ export const Dashboard = (props) => {
 
       <div className="measure-6">
         {props.user.hasVerifiableEmployer && (
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; heading:... Remove this comment to see the full error message
           <Alert
             state="warning"
             heading={t("pages.employersDashboard.verificationTitle")}
@@ -106,45 +135,25 @@ export const Dashboard = (props) => {
         <DashboardInfoAlert />
       </div>
 
-      <section className="margin-bottom-4" ref={introElementRef}>
-        <p className="margin-y-2">
-          {!showReviewByStatus && t("pages.employersDashboard.instructions")}
-        </p>
+      <section className="margin-bottom-4 margin-top-2" ref={introElementRef}>
         <Details label={t("pages.employersDashboard.statusDescriptionsLabel")}>
-          {showReviewByStatus ? (
-            <ul className="usa-list">
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_reviewBy" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_noAction" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_denied" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_approved" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_closed" />
-              </li>
-            </ul>
-          ) : (
-            <ul className="usa-list">
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_none" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_approved" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_closed" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_denied" />
-              </li>
-            </ul>
-          )}
+          <ul className="usa-list">
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_reviewBy" />
+            </li>
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_noAction" />
+            </li>
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_denied" />
+            </li>
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_approved" />
+            </li>
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_closed" />
+            </li>
+          </ul>
         </Details>
       </section>
 
@@ -159,41 +168,24 @@ export const Dashboard = (props) => {
       />
       <PaginatedClaimsTableWithClaims
         appLogic={props.appLogic}
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ appLogic: any; user: any; updatePageQuery:... Remove this comment to see the full error message
         user={props.user}
-        updatePageQuery={updatePageQuery}
-        sort={
-          <SortDropdown
-            order_by={apiParams.order_by}
-            order_direction={apiParams.order_direction}
-            updatePageQuery={updatePageQuery}
-          />
-        }
+        {...componentSpecificProps}
       />
     </React.Fragment>
   );
 };
 
-Dashboard.propTypes = {
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      getNextPageRoute: PropTypes.func.isRequired,
-      pathname: PropTypes.string.isRequired,
-      updateQuery: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-  query: PropTypes.shape({
-    claim_status: PropTypes.string,
-    employer_id: PropTypes.string,
-    order_by: PropTypes.oneOf(["absence_status", "created_at", "employee"]),
-    order_direction: PropTypes.oneOf(["ascending", "descending"]),
-    page_offset: PropTypes.string,
-    search: PropTypes.string,
-  }).isRequired,
-  user: PropTypes.instanceOf(User).isRequired,
-};
+interface PaginatedClaimsTableProps {
+  appLogic: AppLogic;
+  claims: ClaimCollection;
+  paginationMeta: PaginationMeta;
+  updatePageQuery: (params: PageQueryParam[]) => void;
+  /** Pass in the SortDropdown so it can be rendered in the expected inline UI position */
+  sort: React.ReactNode;
+  user: User;
+}
 
-const PaginatedClaimsTable = (props) => {
+const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
   const { paginationMeta, updatePageQuery, user } = props;
   const { t } = useTranslation();
 
@@ -212,7 +204,6 @@ const PaginatedClaimsTable = (props) => {
    * Used for rendering header labels and the field(s) in each column. These
    * mostly mirror the name of the fields rendered, but not exactly
    * since some columns might require multiple fields.
-   * @type {string[]}
    */
   const tableColumnKeys = Object.entries(tableColumnVisibility)
     .filter(([_columnKey, isVisible]) => isVisible)
@@ -220,9 +211,8 @@ const PaginatedClaimsTable = (props) => {
 
   /**
    * Event handler for when a next/prev pagination button is clicked
-   * @param {number|string} pageOffset - Page number to load
    */
-  const handlePaginationNavigationClick = (pageOffset) => {
+  const handlePaginationNavigationClick = (pageOffset: number | string) => {
     updatePageQuery([
       {
         name: "page_offset",
@@ -298,25 +288,18 @@ const PaginatedClaimsTable = (props) => {
   );
 };
 
-PaginatedClaimsTable.propTypes = {
-  appLogic: Dashboard.propTypes.appLogic,
-  claims: PropTypes.instanceOf(ClaimCollection),
-  paginationMeta: PropTypes.instanceOf(PaginationMeta),
-  updatePageQuery: PropTypes.func.isRequired,
-  /** Pass in the SortDropdown so it can be rendered in the expected inline UI position */
-  sort: PropTypes.node.isRequired,
-  user: PropTypes.instanceOf(User).isRequired,
-  query: PropTypes.shape({
-    order_by: PropTypes.oneOf(["absence_status", "created_at", "employee"]),
-    order_direction: PropTypes.oneOf(["ascending", "descending"]),
-  }),
-};
+interface ClaimTableRowsProps {
+  appLogic: AppLogic;
+  claims: ClaimCollection;
+  tableColumnKeys: string[];
+  user: User;
+}
 
 /**
  * Renders the <tr> elements for each claim, or a message indicating
  * no claim data exists
  */
-const ClaimTableRows = (props) => {
+const ClaimTableRows = (props: ClaimTableRowsProps) => {
   const { appLogic, claims, tableColumnKeys, user } = props;
   const { t } = useTranslation();
 
@@ -333,11 +316,8 @@ const ClaimTableRows = (props) => {
   /**
    * Helper for mapping a column key to the value
    * the user should see
-   * @param {EmployerClaim} claim
-   * @param {string} columnKey
-   * @returns {string|React.ReactNode}
    */
-  const getValueForColumn = (claim, columnKey) => {
+  const getValueForColumn = (claim: Claim, columnKey: string) => {
     const claimRoute = appLogic.portalFlow.getNextPageRoute(
       "VIEW_CLAIM",
       {},
@@ -351,7 +331,6 @@ const ClaimTableRows = (props) => {
 
     switch (columnKey) {
       case "created_at":
-        // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
         return formatDateRange(get(claim, columnKey));
       case "fineos_absence_id":
         return isEmployerRegisteredInFineos ? (
@@ -386,43 +365,45 @@ const ClaimTableRows = (props) => {
     }
   };
 
-  return claims.items.map((claim) => (
-    <tr key={claim.fineos_absence_id}>
-      <th
-        scope="row"
-        data-label={t("pages.employersDashboard.tableColHeading", {
-          context: tableColumnKeys[0],
-        })}
-        data-test={tableColumnKeys[0]}
-      >
-        {getValueForColumn(claim, tableColumnKeys[0])}
-      </th>
-      {tableColumnKeys.slice(1).map((columnKey) => (
-        <td
-          key={columnKey}
-          data-label={t("pages.employersDashboard.tableColHeading", {
-            context: columnKey,
-          })}
-        >
-          {getValueForColumn(claim, columnKey)}
-        </td>
-      ))}
-    </tr>
-  ));
-};
+  const renderClaimItems = () => {
+    const claimItemsJSX: JSX.Element[] = [];
 
-ClaimTableRows.propTypes = {
-  appLogic: Dashboard.propTypes.appLogic,
-  claims: PropTypes.instanceOf(ClaimCollection),
-  tableColumnKeys: PropTypes.arrayOf(PropTypes.string).isRequired,
-  user: PropTypes.instanceOf(User).isRequired,
+    claims.items.forEach((claim) => {
+      claimItemsJSX.push(
+        <tr key={claim.fineos_absence_id}>
+          <th
+            scope="row"
+            data-label={t("pages.employersDashboard.tableColHeading", {
+              context: tableColumnKeys[0],
+            })}
+            data-test={tableColumnKeys[0]}
+          >
+            {getValueForColumn(claim, tableColumnKeys[0])}
+          </th>
+          {tableColumnKeys.slice(1).map((columnKey) => (
+            <td
+              key={columnKey}
+              data-label={t("pages.employersDashboard.tableColHeading", {
+                context: columnKey,
+              })}
+            >
+              {getValueForColumn(claim, columnKey)}
+            </td>
+          ))}
+        </tr>
+      );
+    });
+
+    return claimItemsJSX;
+  };
+
+  return <React.Fragment>{renderClaimItems()}</React.Fragment>;
 };
 
 const DashboardInfoAlert = () => {
   const { t } = useTranslation();
 
   return (
-    // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; heading:... Remove this comment to see the full error message
     <Alert state="info" heading={t("pages.employersDashboard.betaHeader")}>
       <p>
         <Trans
@@ -442,14 +423,22 @@ const DashboardInfoAlert = () => {
   );
 };
 
-const Filters = (props) => {
+interface FiltersProps {
+  params: {
+    claim_status?: string;
+    employer_id?: string;
+  };
+  updatePageQuery: (params: PageQueryParam[]) => void;
+  user: User;
+}
+
+const Filters = (props: FiltersProps) => {
   const { updatePageQuery, user } = props;
   const { t } = useTranslation();
 
   /**
    * Returns all filter fields with their values set based on
    * what's currently being applied to the API requests
-   * @returns { { employer_id: string, claim_status: string[] } }
    */
   const getFormStateFromQuery = useCallback(() => {
     const claim_status = get(props.params, "claim_status");
@@ -465,9 +454,8 @@ const Filters = (props) => {
    */
   const activeFilters = getFormStateFromQuery();
   const [showFilters, setShowFilters] = useState(false);
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState(activeFilters);
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ formState: any; updateFields: ... Remove this comment to see the full error message
   const getFunctionalInputProps = useFunctionalInputProps({
     formState,
     updateFields,
@@ -494,11 +482,10 @@ const Filters = (props) => {
   /**
    * Event handler for when the user applies their status and
    * organization filter selections
-   * @param {object} evt
    */
-  const handleSubmit = (evt) => {
+  const handleSubmit = (evt: FormEvent) => {
     evt.preventDefault();
-    const params = [];
+    const params: PageQueryParam[] = [];
 
     Object.entries(formState).forEach(([name, value]) => {
       params.push({ name, value });
@@ -520,7 +507,7 @@ const Filters = (props) => {
    * Event handler for the "Reset filters" action
    */
   const handleFilterReset = () => {
-    const params = [];
+    const params: PageQueryParam[] = [];
 
     Object.keys(activeFilters).forEach((name) => {
       // Reset by setting to an empty string
@@ -539,11 +526,14 @@ const Filters = (props) => {
 
   /**
    * Click event handler for an individual filter's removal button.
-   * @param {string} name - Filter query param name
-   * @param {string|Array} value - Leave empty to remove filter, or pass in the updated
+   * @param name - Filter query param name
+   * @param value - Leave empty to remove filter, or pass in the updated
    *  value if the filter is a checkbox field
    */
-  const handleRemoveFilterClick = (name, value = "") => {
+  const handleRemoveFilterClick = (
+    name: string,
+    value: string | string[] = ""
+  ) => {
     updatePageQuery([
       {
         name,
@@ -561,18 +551,14 @@ const Filters = (props) => {
     setShowFilters(!showFilters);
   };
 
-  // TODO (EMPLOYER-1587): Remove variable
-  const pendingStatusChoices = isFeatureEnabled("employerShowReviewByStatus")
-    ? ["Pending - no action", "Open requirement"]
-    : // API filtering uses this as a catchall for several pending-like statuses
-      ["Pending"];
+  const expandAria = showFilters ? "true" : "false";
 
   return (
     <React.Fragment>
       <div className="padding-bottom-3 bg-base-lightest padding-x-3">
         <Button
           aria-controls={filtersContainerId}
-          aria-expanded={showFilters.toString()}
+          aria-expanded={expandAria}
           onClick={handleFilterToggleClick}
           variation="outline"
         >
@@ -599,8 +585,8 @@ const Filters = (props) => {
             AbsenceCaseStatus.approved,
             AbsenceCaseStatus.closed,
             AbsenceCaseStatus.declined,
-            // TODO (EMPLOYER-1587): replace with the two new AbsenceCaseStatus values
-            ...pendingStatusChoices,
+            "Pending - no action",
+            "Open requirement",
           ].map((value) => ({
             checked: get(formState, "claim_status", []).includes(value),
             label: t("pages.employersDashboard.filterStatusChoice", {
@@ -655,11 +641,11 @@ const Filters = (props) => {
               {
                 find(user.verifiedEmployers, {
                   employer_id: activeFilters.employer_id,
-                }).employer_dba
+                })?.employer_dba
               }
             </FilterMenuButton>
           )}
-          {activeFilters.claim_status &&
+          {activeFilters.claim_status.length &&
             activeFilters.claim_status.map((status) => (
               <FilterMenuButton
                 data-test={`claim_status_${status}`}
@@ -682,16 +668,12 @@ const Filters = (props) => {
   );
 };
 
-Filters.propTypes = {
-  params: PropTypes.shape({
-    claim_status: PropTypes.string,
-    employer_id: PropTypes.string,
-  }).isRequired,
-  updatePageQuery: PropTypes.func.isRequired,
-  user: PropTypes.instanceOf(User).isRequired,
-};
+interface FilterMenuButtonProps {
+  children: React.ReactNode;
+  onClick: React.MouseEventHandler<HTMLButtonElement>;
+}
 
-const FilterMenuButton = (props) => {
+const FilterMenuButton = (props: FilterMenuButtonProps) => {
   const { t } = useTranslation();
 
   return (
@@ -715,24 +697,23 @@ const FilterMenuButton = (props) => {
   );
 };
 
-FilterMenuButton.propTypes = {
-  children: PropTypes.node.isRequired,
-  onClick: PropTypes.func.isRequired,
-};
+interface SearchProps {
+  /** The current search value */
+  initialValue?: string;
+  updatePageQuery: (params: PageQueryParam[]) => void;
+}
 
-const Search = (props) => {
+const Search = (props: SearchProps) => {
   const { initialValue, updatePageQuery } = props;
   const { t } = useTranslation();
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState({ search: initialValue });
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ formState: any; updateFields: ... Remove this comment to see the full error message
   const getFunctionalInputProps = useFunctionalInputProps({
     formState,
     updateFields,
   });
 
-  const handleSubmit = (evt) => {
+  const handleSubmit = (evt: FormEvent) => {
     evt.preventDefault();
 
     updatePageQuery([
@@ -768,32 +749,27 @@ const Search = (props) => {
   );
 };
 
-Search.propTypes = {
-  /** The current search value */
-  initialValue: PropTypes.string,
-  updatePageQuery: PropTypes.func.isRequired,
-};
+interface SortDropdownProps {
+  order_by?: "absence_status" | "created_at" | "employee";
+  order_direction?: "ascending" | "descending";
+  updatePageQuery: (params: PageQueryParam[]) => void;
+}
 
-const SortDropdown = (props) => {
+const SortDropdown = (props: SortDropdownProps) => {
   const { order_by, order_direction, updatePageQuery } = props;
   const choices = new Map([
+    ["status", "absence_status,ascending"],
     ["newest", "created_at,descending"],
     ["oldest", "created_at,ascending"],
     ["employee_az", "employee,ascending"],
     ["employee_za", "employee,descending"],
   ]);
 
-  // TODO (EMPLOYER-1587): Move the choice directly into the choices object definition
-  if (isFeatureEnabled("employerShowReviewByStatus")) {
-    choices.set("status", "absence_status,ascending");
-  }
-
   const { t } = useTranslation();
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState({
     orderAndDirection: compact([order_by, order_direction]).join(","),
   });
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ formState: any; updateFields: ... Remove this comment to see the full error message
   const getFunctionalInputProps = useFunctionalInputProps({
     formState,
     updateFields,
@@ -801,10 +777,9 @@ const SortDropdown = (props) => {
 
   /**
    * Convert a selected dropdown option to order_by and order_direction params
-   * @param {string} orderAndDirection - comma-delineated order_by,order_direction
-   * @returns {Array<{ name: string, value: string }>}
+   * @param orderAndDirection - comma-delineated order_by,order_direction
    */
-  const getParamsFromOrderAndDirection = (orderAndDirection) => {
+  const getParamsFromOrderAndDirection = (orderAndDirection: string) => {
     const [order_by, order_direction] = orderAndDirection.split(",");
 
     return [
@@ -819,7 +794,7 @@ const SortDropdown = (props) => {
     ];
   };
 
-  const handleChange = (evt) => {
+  const handleChange = (evt: React.ChangeEvent<HTMLSelectElement>) => {
     updatePageQuery([
       ...getParamsFromOrderAndDirection(evt.target.value),
       {
@@ -834,9 +809,10 @@ const SortDropdown = (props) => {
     <Dropdown
       {...getFunctionalInputProps("orderAndDirection")}
       onChange={handleChange}
-      // @ts-expect-error ts-migrate(2322) FIXME: Type '{ label: TFunctionResult; value: string; }[]... Remove this comment to see the full error message
       choices={Array.from(choices).map(([key, value]) => ({
-        label: t("pages.employersDashboard.sortChoice", { context: key }),
+        label: t<string>("pages.employersDashboard.sortChoice", {
+          context: key,
+        }),
         value,
       }))}
       label={t("pages.employersDashboard.sortLabel")}
@@ -847,12 +823,6 @@ const SortDropdown = (props) => {
       hideEmptyChoice
     />
   );
-};
-
-SortDropdown.propTypes = {
-  order_by: PropTypes.oneOf(["absence_status", "created_at", "employee"]),
-  order_direction: PropTypes.oneOf(["ascending", "descending"]),
-  updatePageQuery: PropTypes.func.isRequired,
 };
 
 export default withUser(Dashboard);

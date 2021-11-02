@@ -1,9 +1,20 @@
-import { Machine } from "xstate";
 import Pagination from "@massds/mayflower-react/dist/Pagination";
-import PropTypes from "prop-types";
 import React from "react";
+import { createMachine } from "xstate";
 import { times } from "lodash";
 import { useTranslation } from "../locales/i18n";
+
+interface PaginationContext {
+  /** The current page's number */
+  pageOffset: number;
+  /** Total pages available. Also can be read as "The last page number" */
+  totalPages: number;
+}
+
+interface PaginationNavigationProps extends PaginationContext {
+  /** Page button click handler. Gets the requested page number as a param */
+  onClick: (arg: number) => void;
+}
 
 /**
  * Limit the number of visible page number buttons to this amount
@@ -51,12 +62,12 @@ export const truncationStates = {
 /**
  * State machine representing the truncation states and their conditions (guards)
  */
-const truncationMachine = Machine(
+const truncationMachine = createMachine(
   {
     context: {
       // These should be defined when starting the machine, using withContext
-      pageOffset: null,
-      totalPages: null,
+      pageOffset: 0,
+      totalPages: 0,
     },
     initial: "unknown",
     states: { ...truncationStates }, // using destructuring to avoid a weird TS build error in Storybook
@@ -65,27 +76,23 @@ const truncationMachine = Machine(
     guards: {
       /**
        * Is the current page number less than the middle rendered number?
-       * @param {object} context
-       * @returns {boolean}
        */
-      isPageLessThanMidpoint: (context) =>
+      isPageLessThanMidpoint: (context: PaginationContext) =>
         context.pageOffset <= Math.ceil(MAX_TOTAL_PAGE_NUMBERS / 2),
       /**
        * Do the numbers after the current page sequentially connect with the last page number?
        * For example [current page] 7 8 9 10
        *                                  ^ last page
-       * @param {object} context
-       * @returns {boolean}
        */
-      canVisiblePagesAfterCurrentPageExtendToLastPage: (context) =>
+      canVisiblePagesAfterCurrentPageExtendToLastPage: (
+        context: PaginationContext
+      ) =>
         // +1 is for the last page that's always displayed
         context.pageOffset + MIN_SURROUNDING_PAGES + 1 >= context.totalPages,
       /**
        * Can all pages be displayed?
-       * @param {object} context
-       * @returns {boolean}
        */
-      isTotalPageNumLessOrEqualToMax: (context) =>
+      isTotalPageNumLessOrEqualToMax: (context: PaginationContext) =>
         context.totalPages <= MAX_TOTAL_PAGE_NUMBERS,
     },
   }
@@ -94,15 +101,14 @@ const truncationMachine = Machine(
 /**
  * Get a list of page numbers to display to the user, and include
  * spacers (...) when there are too many pages to display.
- * @param {number} pageOffset - current page
- * @param {number} totalPages
- * @returns {Array<number|'spacer'>} The page numbers (or spacers) that should be rendered
  */
-export const getTruncatedPageRange = (pageOffset, totalPages) => {
-  const truncationState = truncationMachine.withContext({
-    pageOffset,
-    totalPages,
-  }).initialState.value;
+export const getTruncatedPageRange = (
+  pageOffset: PaginationNavigationProps["pageOffset"],
+  totalPages: PaginationNavigationProps["totalPages"]
+): Array<"spacer" | number> => {
+  const context: PaginationContext = { pageOffset, totalPages };
+  const truncationState =
+    truncationMachine.withContext(context).initialState.value;
   const firstPageNumber = 1;
   const lastPageNumber = totalPages;
   const spacer = "spacer"; // Mayflower renders this as "..."
@@ -152,7 +158,7 @@ export const getTruncatedPageRange = (pageOffset, totalPages) => {
 /**
  * Next/previous navigation and page number buttons
  */
-const PaginationNavigation = (props) => {
+const PaginationNavigation = (props: PaginationNavigationProps) => {
   const { pageOffset, totalPages, onClick } = props;
   const { t } = useTranslation();
   const isFirstPage = pageOffset === 1;
@@ -172,10 +178,8 @@ const PaginationNavigation = (props) => {
 
   /**
    * Form the props object for a pagination button
-   * @param {number|'spacer'} pageNumberOrSpacer
-   * @returns {object}
    */
-  const getPageButtonProps = (pageNumberOrSpacer) => {
+  const getPageButtonProps = (pageNumberOrSpacer: number | "spacer") => {
     return {
       active: pageOffset === pageNumberOrSpacer,
       onClick:
@@ -186,9 +190,6 @@ const PaginationNavigation = (props) => {
     };
   };
 
-  /**
-   * @type {Pagination.propTypes.pages}
-   */
   const pageButtons = getTruncatedPageRange(pageOffset, totalPages).map(
     (pageNumberOrSpacer) => getPageButtonProps(pageNumberOrSpacer)
   );
@@ -208,15 +209,6 @@ const PaginationNavigation = (props) => {
       }}
     />
   );
-};
-
-PaginationNavigation.propTypes = {
-  /** The current page's number */
-  pageOffset: PropTypes.number.isRequired,
-  /** Total pages available. Also can be read as "The last page number" */
-  totalPages: PropTypes.number.isRequired,
-  /** Page button click handler. Gets the requested page number as a param */
-  onClick: PropTypes.func.isRequired,
 };
 
 export default PaginationNavigation;

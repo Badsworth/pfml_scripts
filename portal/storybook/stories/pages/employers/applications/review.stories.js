@@ -1,7 +1,8 @@
-import Document, { DocumentType } from "src/models/Document";
 import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
+import ClaimDocument from "src/models/ClaimDocument";
 import DocumentCollection from "src/models/DocumentCollection";
+import { DocumentType } from "src/models/Document";
 import { MockEmployerClaimBuilder } from "tests/test-utils";
 import React from "react";
 import { Review } from "src/pages/employers/applications/review";
@@ -98,8 +99,7 @@ export const Default = (args) => {
   const appLogic = {
     appErrors: getAppErrorInfoCollection(errorTypes),
     employers: {
-      claim: claim.create(),
-      documents: getDocuments(
+      claimDocumentsMap: getDocumentsMap(
         documentationOption,
         claim.create().leave_details.reason
       ),
@@ -111,10 +111,17 @@ export const Default = (args) => {
     setAppErrors: () => {},
   };
 
-  return <Review appLogic={appLogic} query={query} user={user} />;
+  return (
+    <Review
+      appLogic={appLogic}
+      query={query}
+      user={user}
+      claim={claim.create()}
+    />
+  );
 };
 
-function getDocuments(documentation, leaveReason) {
+function getDocumentsMap(documentation, leaveReason) {
   const isWithoutDocumentation = documentation.includes(
     "without documentation"
   );
@@ -128,8 +135,13 @@ function getDocuments(documentation, leaveReason) {
   };
 
   return isWithoutDocumentation
-    ? new DocumentCollection()
-    : new DocumentCollection([new Document(documentData)]);
+    ? new Map([["mock-absence-id", new DocumentCollection()]])
+    : new Map([
+        [
+          "mock-absence-id",
+          new DocumentCollection([new ClaimDocument(documentData)]),
+        ],
+      ]);
 }
 
 function getAppErrorInfoCollection(errorTypes = []) {

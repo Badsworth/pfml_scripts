@@ -1,15 +1,24 @@
 import Button from "./Button";
 import ButtonLink from "./ButtonLink";
-import PropTypes from "prop-types";
 import React from "react";
 import tracker from "../services/tracker";
 import { useTranslation } from "../locales/i18n";
+
+interface BackButtonProps {
+  label?: string;
+  href?: string;
+  /* Pass in the History API instance to be used for
+   * navigating backwards and determining what's in
+   * history. Mostly here to support unit testing.
+   */
+  history?: History;
+}
 
 /**
  * Help users go back to the previous page in a multi-page transaction. The
  * intention is to alleviate concerns that going back will result in lost data.
  */
-function BackButton(props) {
+function BackButton(props: BackButtonProps) {
   const { t } = useTranslation();
   const label = props.label || t("components.backButton.label");
   const behaveLikeBrowserBackButton = !props.href;
@@ -26,16 +35,19 @@ function BackButton(props) {
   }
 
   const handleClick = () => {
-    tracker.trackEvent("BackButton clicked", { behaveLikeBrowserBackButton });
+    tracker.trackEvent("BackButton clicked", {
+      behaveLikeBrowserBackButton: behaveLikeBrowserBackButton.toString(),
+    });
     if (behaveLikeBrowserBackButton) {
       historyApi.back();
     }
   };
 
-  let Component, componentProps;
+  let Component;
+  let linkProps = { href: "" };
   if (props.href) {
     Component = ButtonLink;
-    componentProps = {
+    linkProps = {
       href: props.href,
     };
   } else {
@@ -44,7 +56,7 @@ function BackButton(props) {
 
   return (
     <Component
-      {...componentProps}
+      {...linkProps}
       onClick={handleClick}
       className="margin-bottom-5"
       variation="unstyled"
@@ -65,16 +77,5 @@ function BackButton(props) {
     </Component>
   );
 }
-
-BackButton.propTypes = {
-  label: PropTypes.string,
-  href: PropTypes.string,
-  /**
-   * Pass in the History API instance to be used for
-   * navigating backwards and determining what's in
-   * history. Mostly here to support unit testing.
-   */
-  history: PropTypes.object,
-};
 
 export default BackButton;

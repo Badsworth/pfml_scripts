@@ -1,8 +1,9 @@
-import Document, { DocumentType } from "src/models/Document";
 import Step, { ClaimSteps } from "src/models/Step";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
+import BenefitsApplicationDocument from "src/models/BenefitsApplicationDocument";
 import { Checklist } from "src/pages/applications/checklist";
 import DocumentCollection from "src/models/DocumentCollection";
+import { DocumentType } from "src/models/Document";
 import { MockBenefitsApplicationBuilder } from "tests/test-utils";
 import React from "react";
 import claimantConfig from "src/flows/claimant";
@@ -108,10 +109,10 @@ const scenarios = {
   "Docs uploaded, ready to submit": {
     claim: new MockBenefitsApplicationBuilder().complete().create(),
     documents: [
-      new Document({
+      new BenefitsApplicationDocument({
         document_type: DocumentType.identityVerification,
       }),
-      new Document({
+      new BenefitsApplicationDocument({
         document_type: DocumentType.certification.medicalCertification,
       }),
     ],

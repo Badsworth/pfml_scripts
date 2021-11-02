@@ -12,6 +12,11 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_report import
 from massgov.pfml.delegated_payments.delegated_fineos_claimant_extract import ClaimantExtractStep
 from massgov.pfml.delegated_payments.delegated_fineos_payment_extract import PaymentExtractStep
 from massgov.pfml.delegated_payments.delegated_fineos_pei_writeback import FineosPeiWritebackStep
+from massgov.pfml.delegated_payments.fineos_extract_step import (
+    CLAIMANT_EXTRACT_CONFIG,
+    PAYMENT_EXTRACT_CONFIG,
+    FineosExtractStep,
+)
 from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_step import (
     PaymentPostProcessingStep,
 )
@@ -27,7 +32,9 @@ logger = logging.get_logger(__name__)
 
 ALL = "ALL"
 RUN_AUDIT_CLEANUP = "audit-cleanup"
+CONSUME_FINEOS_CLAIMANT = "consume-fineos-claimant"
 CLAIMANT_EXTRACT = "claimant-extract"
+CONSUME_FINEOS_PAYMENT = "consume-fineos-payment"
 PAYMENT_EXTRACT = "payment-extract"
 VALIDATE_ADDRESSES = "validate-addresses"
 PAYMENT_POST_PROCESSING = "payment-post-processing"
@@ -37,7 +44,9 @@ REPORT = "report"
 ALLOWED_VALUES = [
     ALL,
     RUN_AUDIT_CLEANUP,
+    CONSUME_FINEOS_CLAIMANT,
     CLAIMANT_EXTRACT,
+    CONSUME_FINEOS_PAYMENT,
     PAYMENT_EXTRACT,
     VALIDATE_ADDRESSES,
     PAYMENT_POST_PROCESSING,
@@ -49,7 +58,9 @@ ALLOWED_VALUES = [
 
 class Configuration:
     do_audit_cleanup: bool
+    consume_fineos_claimant: bool
     do_claimant_extract: bool
+    consume_fineos_payment: bool
     do_payment_extract: bool
     validate_addresses: bool
     do_payment_post_processing: bool
@@ -74,7 +85,9 @@ class Configuration:
 
         if ALL in steps:
             self.do_audit_cleanup = True
+            self.consume_fineos_claimant = True
             self.do_claimant_extract = True
+            self.consume_fineos_payment = True
             self.do_payment_extract = True
             self.validate_addresses = True
             self.do_payment_post_processing = True
@@ -83,7 +96,9 @@ class Configuration:
             self.make_reports = True
         else:
             self.do_audit_cleanup = RUN_AUDIT_CLEANUP in steps
+            self.consume_fineos_claimant = CONSUME_FINEOS_CLAIMANT in steps
             self.do_claimant_extract = CLAIMANT_EXTRACT in steps
+            self.consume_fineos_payment = CONSUME_FINEOS_PAYMENT in steps
             self.do_payment_extract = PAYMENT_EXTRACT in steps
             self.validate_addresses = VALIDATE_ADDRESSES in steps
             self.do_payment_post_processing = PAYMENT_POST_PROCESSING in steps
@@ -117,8 +132,22 @@ def _process_fineos_extracts(
     if config.do_audit_cleanup:
         StateCleanupStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
 
+    if config.consume_fineos_claimant:
+        FineosExtractStep(
+            db_session=db_session,
+            log_entry_db_session=log_entry_db_session,
+            extract_config=CLAIMANT_EXTRACT_CONFIG,
+        ).run()
+
     if config.do_claimant_extract:
         ClaimantExtractStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
+
+    if config.consume_fineos_payment:
+        FineosExtractStep(
+            db_session=db_session,
+            log_entry_db_session=log_entry_db_session,
+            extract_config=PAYMENT_EXTRACT_CONFIG,
+        ).run()
 
     if config.do_payment_extract:
         PaymentExtractStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()

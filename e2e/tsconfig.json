@@ -1,6 +1,11 @@
 {
   "compilerOptions": {
     "strict": true,
+    // @Todo: This flag causes the catch variable
+    // to be typed any. Once removed (or set to true)
+    // it will cause numerous ts errors in which the
+    // catch clause var will need to be explicity typed.
+    "useUnknownInCatchVariables": false,
     "lib": [
       "DOM",
       "es2019",

@@ -1,16 +1,23 @@
 import React, { useEffect } from "react";
 import InputChoiceGroup from "../InputChoiceGroup";
-import PropTypes from "prop-types";
 import ReviewHeading from "../ReviewHeading";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import usePreviousValue from "../../hooks/usePreviousValue";
 import { useTranslation } from "react-i18next";
+
+interface EmployeeNoticeProps {
+  employeeNoticeInput?: "Yes" | "No";
+  fraudInput?: string;
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
+  updateFields: (fields: { [fieldName: string]: unknown }) => void;
+}
 
 const EmployeeNotice = ({
   employeeNoticeInput,
   fraudInput,
   getFunctionalInputProps,
   updateFields,
-}) => {
+}: EmployeeNoticeProps) => {
   const { t } = useTranslation();
   // keep track of previous value for fraud prop to know when to clear notice of leave response
   const previouslyFraud = usePreviousValue(fraudInput);
@@ -53,13 +60,6 @@ const EmployeeNotice = ({
       />
     </React.Fragment>
   );
-};
-
-EmployeeNotice.propTypes = {
-  employeeNoticeInput: PropTypes.oneOf(["Yes", "No"]),
-  fraudInput: PropTypes.string,
-  getFunctionalInputProps: PropTypes.func.isRequired,
-  updateFields: PropTypes.func.isRequired,
 };
 
 export default EmployeeNotice;

@@ -1,15 +1,83 @@
 import React, { useEffect } from "react";
 import FormLabel from "./FormLabel";
-import PropTypes from "prop-types";
 import classnames from "classnames";
+import isBlank from "../utils/isBlank";
 import useUniqueId from "../hooks/useUniqueId";
 
 // Only load USWDS comboBox JS on client-side since it
 // references `window`, which isn't available during
 // the Node.js-based build process ("server-side")
-let comboBox = null;
+let comboBox: {
+  on: () => void;
+  off: () => void;
+} | null = null;
 if (typeof window !== "undefined") {
   comboBox = require("uswds/src/js/components/combo-box");
+}
+
+interface DropdownProps {
+  /**
+   * Enable combo-box function, help users select an item from a large list of options.
+   * [USWDS Reference ↗](https://designsystem.digital.gov/components/combo-box/)
+   */
+  autocomplete?: boolean;
+  /**
+   * List of choices to be rendered in the dropdown
+   */
+  choices: Array<{
+    label: number | string;
+    value: number | string;
+  }>;
+  /**
+   * Localized label for the initially selected option when no value is set
+   */
+  emptyChoiceLabel?: string;
+  /**
+   * Localized error message. Setting this enables the error state styling.
+   */
+  errorMsg?: React.ReactNode;
+  /**
+   * Localized hint text
+   */
+  hint?: React.ReactNode;
+  /**
+   * Additional classes to include on the HTML select
+   */
+  selectClassName?: string;
+  /**
+   * Override the label's default text-bold class
+   */
+  labelClassName?: string;
+  /**
+   * Additional classes to include on the containing form group element
+   */
+  formGroupClassName?: string;
+  /**
+   * Localized label
+   */
+  label: React.ReactNode;
+  /**
+   * HTML input `name` attribute
+   */
+  name: string;
+  /**
+   * Localized text indicating this field is optional
+   */
+  optionalText?: React.ReactNode;
+  /**
+   * HTML input `onChange` attribute
+   */
+  onChange?: React.ChangeEventHandler<HTMLSelectElement>;
+  /**
+   * Enable the smaller label variant
+   */
+  smallLabel?: boolean;
+  /**
+   * Flag to hide empty choice as first option
+   */
+  hideEmptyChoice?: boolean;
+  /** The `value` of the selected choice */
+  value?: number | string;
 }
 
 /**
@@ -18,8 +86,8 @@ if (typeof window !== "undefined") {
  *
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/form-controls/#dropdown)
  */
-function Dropdown(props) {
-  const hasError = !!props.errorMsg;
+function Dropdown(props: DropdownProps) {
+  const hasError = !isBlank(props.errorMsg);
   const inputId = useUniqueId("Dropdown");
   const { autocomplete } = props;
 
@@ -34,7 +102,9 @@ function Dropdown(props) {
       comboBox.on();
 
       return () => {
-        comboBox.off();
+        if (comboBox) {
+          comboBox.off();
+        }
       };
     }
     // see reasoning for `key` above. We include props.value here
@@ -95,74 +165,5 @@ function Dropdown(props) {
     </div>
   );
 }
-
-Dropdown.propTypes = {
-  /**
-   * Enable combo-box function, help users select an item from a large list of options.
-   * [USWDS Reference ↗](https://designsystem.digital.gov/components/combo-box/)
-   */
-  autocomplete: PropTypes.bool,
-  /**
-   * List of choices to be rendered in the dropdown
-   */
-  choices: PropTypes.arrayOf(
-    PropTypes.shape({
-      label: PropTypes.oneOfType([PropTypes.number, PropTypes.string])
-        .isRequired,
-      value: PropTypes.oneOfType([PropTypes.number, PropTypes.string])
-        .isRequired,
-    })
-  ).isRequired,
-  /**
-   * Localized label for the initially selected option when no value is set
-   */
-  emptyChoiceLabel: PropTypes.string,
-  /**
-   * Localized error message. Setting this enables the error state styling.
-   */
-  errorMsg: PropTypes.node,
-  /**
-   * Localized hint text
-   */
-  hint: PropTypes.node,
-  /**
-   * Additional classes to include on the HTML select
-   */
-  selectClassName: PropTypes.string,
-  /**
-   * Override the label's default text-bold class
-   */
-  labelClassName: PropTypes.string,
-  /**
-   * Additional classes to include on the containing form group element
-   */
-  formGroupClassName: PropTypes.string,
-  /**
-   * Localized label
-   */
-  label: PropTypes.node.isRequired,
-  /**
-   * HTML input `name` attribute
-   */
-  name: PropTypes.string.isRequired,
-  /**
-   * Localized text indicating this field is optional
-   */
-  optionalText: PropTypes.node,
-  /**
-   * HTML input `onChange` attribute
-   */
-  onChange: PropTypes.func,
-  /**
-   * Enable the smaller label variant
-   */
-  smallLabel: PropTypes.bool,
-  /**
-   * Flag to hide empty choice as first option
-   */
-  hideEmptyChoice: PropTypes.bool,
-  /** The `value` of the selected choice */
-  value: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
-};
 
 export default Dropdown;

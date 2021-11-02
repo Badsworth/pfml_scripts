@@ -1,28 +1,37 @@
 import routes, { isApplicationsRoute, isEmployersRoute } from "../routes";
 import { useMemo, useState } from "react";
+import { AppErrorsLogic } from "./useAppErrorsLogic";
+import BenefitsApplication from "../models/BenefitsApplication";
+import { PortalFlow } from "./usePortalFlow";
 import User from "../models/User";
-import { UserNotReceivedError } from "../errors";
 import UsersApi from "../api/UsersApi";
 
 /**
  * Hook that defines user state
- * @param {object} props
- * @param {object} props.appErrorsLogic - Utilities for set application's error  state
- * @param {boolean} props.isLoggedIn
- * @param {object} props.portalFlow - Utilities for navigating portal application
- * @returns {object} { user: User, loadUser: Function }
  */
-const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
+const useUsersLogic = ({
+  appErrorsLogic,
+  isLoggedIn,
+  portalFlow,
+}: {
+  appErrorsLogic: AppErrorsLogic;
+  isLoggedIn: boolean;
+  portalFlow: PortalFlow;
+}) => {
   const usersApi = useMemo(() => new UsersApi(), []);
   const [user, setUser] = useState<User>();
 
   /**
    * Update user through a PATCH request to /users
-   * @param {string} user_id - ID of user being updated
-   * @param {object} patchData - User fields to update
-   * @param {BenefitsApplication} [claim] - Update user in the context of a claim to determine the next page route.
+   * @param user_id - ID of user being updated
+   * @param patchData - User fields to update
+   * @param [claim] - Update user in the context of a claim to determine the next page route.
    */
-  const updateUser = async (user_id, patchData, claim) => {
+  const updateUser = async (
+    user_id: User["user_id"],
+    patchData: Partial<User>,
+    claim?: BenefitsApplication
+  ) => {
     appErrorsLogic.clearErrors();
 
     try {
@@ -30,7 +39,7 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
       setUser(user);
 
       const context = claim ? { claim, user } : { user };
-      const params = claim ? { claim_id: claim.application_id } : null;
+      const params = claim ? { claim_id: claim.application_id } : {};
       portalFlow.goToNextPage(context, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
@@ -51,11 +60,6 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     appErrorsLogic.clearErrors();
     try {
       const { user } = await usersApi.getCurrentUser();
-
-      if (!user) {
-        throw new UserNotReceivedError("User not received in loadUser");
-      }
-
       setUser(user);
     } catch (error) {
       appErrorsLogic.catchError(error);
@@ -69,7 +73,6 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
   const requireUserConsentToDataAgreement = () => {
     if (!user) throw new Error("User not loaded");
     if (
-      // @ts-expect-error FIXME: Property 'consented_to_data_sharing' does not exist on type 'User'
       !user.consented_to_data_sharing &&
       !portalFlow.pathname.includes(routes.user.consentToDataSharing)
     ) {
@@ -86,6 +89,11 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
     const pathname = portalFlow.pathname;
     if (pathname === routes.user.consentToDataSharing) return;
 
+    if (!user) {
+      portalFlow.goTo(routes.index, {}, { redirect: true });
+      return;
+    }
+
     // Portal currently does not support hybrid account (both Employer AND Claimant account)
     // If user has Employer role, they cannot access Claimant Portal regardless of multiple roles
     if (!user.hasEmployerRole && isEmployersRoute(pathname)) {
@@ -100,10 +108,13 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
 
   /**
    * Convert user role through a POST request to /users/{user_id}/convert_employer
-   * @param {string} user_id - ID of user being converted
-   * @param {object} postData - User fields to update - role and leave admin
+   * @param user_id - ID of user being converted
+   * @param postData - User fields to update - role and leave admin
    */
-  const convertUser = async (user_id, postData) => {
+  const convertUser = async (
+    user_id: User["user_id"],
+    postData: { employer_fein: string }
+  ) => {
     appErrorsLogic.clearErrors();
 
     try {
@@ -111,7 +122,7 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
       setUser(user);
 
       portalFlow.goTo(routes.employers.organizations, {
-        account_converted: true,
+        account_converted: "true",
       });
     } catch (error) {
       appErrorsLogic.catchError(error);
@@ -130,3 +141,4 @@ const useUsersLogic = ({ appErrorsLogic, isLoggedIn, portalFlow }) => {
 };
 
 export default useUsersLogic;
+export type UsersLogic = ReturnType<typeof useUsersLogic>;

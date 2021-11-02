@@ -179,7 +179,7 @@ class ClaimReviewResponse(PydanticBaseModel):
     employer_dba: str
     employer_fein: FEINFormattedStr
     employer_id: UUID4
-    fineos_absence_id: Optional[str]
+    fineos_absence_id: str
     first_name: Optional[str]
     hours_worked_per_week: Optional[Decimal]
     last_name: Optional[str]

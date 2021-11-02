@@ -2,16 +2,17 @@ import BenefitsApplication, {
   OrderedDaysOfWeek,
   ReducedScheduleLeavePeriod,
   WorkPattern,
+  WorkPatternDay,
   WorkPatternType,
 } from "../../models/BenefitsApplication";
 import { get, pick, set, zip } from "lodash";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import Details from "../../components/Details";
 import Heading from "../../components/Heading";
 import InputHours from "../../components/InputHours";
 import Lead from "../../components/Lead";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
@@ -44,7 +45,15 @@ export const fields = [
   `claim.${leavePeriodPath}.wednesday_off_minutes`,
 ];
 
-export const ReducedLeaveSchedule = (props) => {
+interface ReducedLeaveScheduleProps {
+  claim: BenefitsApplication;
+  appLogic: AppLogic;
+  query: {
+    claim_id?: string;
+  };
+}
+
+export const ReducedLeaveSchedule = (props: ReducedLeaveScheduleProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -52,12 +61,10 @@ export const ReducedLeaveSchedule = (props) => {
   const initialLeavePeriod = new ReducedScheduleLeavePeriod(
     get(claim, leavePeriodPath)
   );
-  const workPattern = new WorkPattern(claim.work_pattern);
+  const workPattern = new WorkPattern(claim.work_pattern || {});
   const gatherMinutesAsWeeklyAverage =
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_type' does not exist on typ... Remove this comment to see the full error message
     workPattern.work_pattern_type === WorkPatternType.variable;
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState({
     ...initialClaimState,
     totalMinutesOff: gatherMinutesAsWeeklyAverage
@@ -85,7 +92,9 @@ export const ReducedLeaveSchedule = (props) => {
       ];
 
       zip(minuteFields, dailyMinutes).forEach(([field, minutes]) => {
-        set(requestData, field, minutes);
+        if (field) {
+          set(requestData, field, minutes);
+        }
       });
     }
 
@@ -102,7 +111,6 @@ export const ReducedLeaveSchedule = (props) => {
 
   const contentScheduleTypeContext = findKeyByValue(
     WorkPatternType,
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_type' does not exist on typ... Remove this comment to see the full error message
     workPattern.work_pattern_type
   );
 
@@ -126,7 +134,6 @@ export const ReducedLeaveSchedule = (props) => {
       onSave={handleSave}
     >
       {(claim.isMedicalOrPregnancyLeave || claim.isCaringLeave) && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; neutral:... Remove this comment to see the full error message
         <Alert state="info" neutral>
           <Trans
             i18nKey="pages.claimsReducedLeaveSchedule.needDocumentAlert"
@@ -191,8 +198,9 @@ export const ReducedLeaveSchedule = (props) => {
             ...convertMinutesToHours(workPattern.minutesWorkedPerWeek),
           })
         ) : (
-          // @ts-expect-error ts-migrate(2339) FIXME: Property 'work_pattern_days' does not exist on typ... Remove this comment to see the full error message
-          <WeeklyTimeTable days={workPattern.work_pattern_days} />
+          <WeeklyTimeTable
+            days={workPattern.work_pattern_days as WorkPatternDay[]}
+          />
         )}
       </Details>
 
@@ -224,14 +232,6 @@ export const ReducedLeaveSchedule = (props) => {
         ))}
     </QuestionPage>
   );
-};
-
-ReducedLeaveSchedule.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(ReducedLeaveSchedule);

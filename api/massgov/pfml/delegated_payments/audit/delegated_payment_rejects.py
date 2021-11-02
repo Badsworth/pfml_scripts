@@ -136,6 +136,11 @@ class PaymentRejectsStep(Step):
     def run_step(self) -> None:
         self.process_rejects()
 
+    def cleanup_on_failure(self) -> None:
+        s3_config = payments_config.get_s3_config()
+
+        self.move_rejects_file_to_error_archive_folder(s3_config.pfml_payment_rejects_archive_path)
+
     def parse_payment_rejects_file(self, file_path: str) -> List[PaymentAuditCSV]:
         with file_util.open_stream(file_path) as csvfile:
             parsed_csv = csv.DictReader(csvfile)
@@ -180,6 +185,8 @@ class PaymentRejectsStep(Step):
                     absence_case_creation_date=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.absence_case_creation_date
                     ),
+                    absence_start_date=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.absence_start_date),
+                    absence_end_date=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.absence_end_date),
                     case_status=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.case_status),
                     leave_request_decision=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.leave_request_decision
@@ -550,25 +557,8 @@ class PaymentRejectsStep(Step):
 
     def process_rejects(self):
         """Top level function to process payments rejects"""
+        logger.info("Start processing payment rejects")
 
-        try:
-            logger.info("Start processing payment rejects")
+        self.process_rejects_and_send_report()
 
-            s3_config = payments_config.get_s3_config()
-
-            self.process_rejects_and_send_report()
-
-            self.db_session.commit()
-
-            logger.info("Done processing payment rejects")
-
-        except Exception:
-            self.db_session.rollback()
-            logger.exception("Error processing Payment Rejects file")
-
-            self.move_rejects_file_to_error_archive_folder(
-                s3_config.pfml_payment_rejects_archive_path
-            )
-
-            # We do not want to run any subsequent steps if this fails
-            raise
+        logger.info("Done processing payment rejects")

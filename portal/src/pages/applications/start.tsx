@@ -1,7 +1,7 @@
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
 import Button from "../../components/Button";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
@@ -10,7 +10,11 @@ import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
 
-export const Start = (props) => {
+interface StartProps {
+  appLogic: AppLogic;
+}
+
+export const Start = (props: StartProps) => {
   const { t } = useTranslation();
 
   const handleSubmit = useThrottledHandler(async (event) => {
@@ -35,7 +39,6 @@ export const Start = (props) => {
             ),
           }}
         />
-        {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element[]; className: string; st... Remove this comment to see the full error message */}
         <Alert className="measure-6" state="info" noIcon>
           <p>{t("pages.claimsStart.truthAttestation")}</p>
           <Button
@@ -49,10 +52,6 @@ export const Start = (props) => {
       </form>
     </React.Fragment>
   );
-};
-
-Start.propTypes = {
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default withUser(Start);

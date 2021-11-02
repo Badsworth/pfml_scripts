@@ -40,21 +40,20 @@ describe("Create a new caring leave claim in FINEOS and add Historical Absence c
     });
 
   it("Produces a withdrawn notice, available for download", () => {
-    if (config("HAS_WITHDRAWN_NOTICE") === "true") {
-      cy.dependsOnPreviousPass([withdraw]);
-      portal.before();
-      cy.visit("/");
-      portal.loginClaimant();
-      cy.unstash<Submission>("submission").then((submission) => {
-        portal.claimantGoToClaimStatus(submission.fineos_absence_id);
-        portal.claimantAssertClaimStatus([
-          { leave: "Care for a Family Member", status: "Withdrawn" },
-        ]);
-        cy.findByText("Pending Application Withdrawn (PDF)")
-          .should("be.visible")
-          .click();
-        portal.downloadLegalNotice(submission.fineos_absence_id);
-      });
-    }
+    // Skip this part in stage. @todo remove once stage has withdraw statuses.
+    if (config("ENVIRONMENT") === "stage") return;
+    cy.dependsOnPreviousPass([withdraw]);
+    portal.before();
+    portal.loginClaimant();
+    cy.unstash<Submission>("submission").then((submission) => {
+      portal.claimantGoToClaimStatus(submission.fineos_absence_id);
+      portal.claimantAssertClaimStatus([
+        { leave: "Care for a Family Member", status: "Withdrawn" },
+      ]);
+      cy.findByText("Pending Application Withdrawn (PDF)")
+        .should("be.visible")
+        .click();
+      portal.downloadLegalNotice(submission.fineos_absence_id);
+    });
   });
 });

@@ -104,6 +104,21 @@ export const submitPaymentPreferenceMock = jest.fn(
     })
 );
 
+export const submitTaxWithholdingPreferenceMock = jest.fn(
+  (application_id, taxPreferenceData) => {
+    return Promise.resolve({
+      success: true,
+      status: 201,
+      claim: new BenefitsApplication({
+        application_id,
+        is_withholding_tax: taxPreferenceData.withhold_taxes,
+      }),
+      warnings: [],
+      errors: [],
+    });
+  }
+);
+
 const claimsApi = jest.fn().mockImplementation(() => ({
   completeClaim: completeClaimMock,
   createClaim: createClaimMock,

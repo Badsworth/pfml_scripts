@@ -12,7 +12,6 @@ describe("Claimant can call call-center to submit a claim for leave with other l
   const claimSubmission =
     it("CPS Agent can enter a claim with Concurrent (employer sponsored) leave and employer sponsored benefits", () => {
       fineos.before();
-      cy.visit("/");
       cy.task("generateClaim", "CONTINUOUS_MEDICAL_OLB").then((claim) => {
         cy.stash("claim", claim);
         assertValidClaim(claim.claim);

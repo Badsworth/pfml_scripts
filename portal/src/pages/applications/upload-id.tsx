@@ -1,13 +1,14 @@
-import Document, { DocumentType } from "../../models/Document";
-
 import Accordion from "../../components/Accordion";
 import AccordionItem from "../../components/AccordionItem";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
+import BenefitsApplication from "../../models/BenefitsApplication";
+import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import DocumentRequirements from "../../components/DocumentRequirements";
+import { DocumentType } from "../../models/Document";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
 import Heading from "../../components/Heading";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import Spinner from "../../components/Spinner";
@@ -22,7 +23,19 @@ import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 import withClaimDocuments from "../../hoc/withClaimDocuments";
 
-export const UploadId = (props) => {
+interface UploadIdProps {
+  appLogic: AppLogic;
+  claim: BenefitsApplication;
+  documents: BenefitsApplicationDocument[];
+  isLoadingDocuments: boolean;
+  query: {
+    claim_id?: string;
+    showStateId?: string;
+    additionalDoc?: string;
+  };
+}
+
+export const UploadId = (props: UploadIdProps) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments, query } = props;
   const { files, processFiles, removeFile } = useFilesLogic({
@@ -47,9 +60,10 @@ export const UploadId = (props) => {
     claim.application_id
   );
 
-  const idDocuments = findDocumentsByTypes(documents, [
-    DocumentType.identityVerification,
-  ]);
+  const idDocuments = findDocumentsByTypes<BenefitsApplicationDocument>(
+    documents,
+    [DocumentType.identityVerification]
+  );
 
   const handleSave = async () => {
     if (files.isEmpty && idDocuments.length) {
@@ -139,7 +153,6 @@ export const UploadId = (props) => {
         <FileUploadDetails />
 
         {hasLoadingDocumentsError && (
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; noIc... Remove this comment to see the full error message
           <Alert className="margin-bottom-3" noIcon>
             <Trans
               i18nKey="pages.claimsUploadId.documentsLoadError"
@@ -181,24 +194,6 @@ export const UploadId = (props) => {
       </div>
     </QuestionPage>
   );
-};
-
-UploadId.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    catchError: PropTypes.func.isRequired,
-    documents: PropTypes.object.isRequired,
-    portalFlow: PropTypes.object.isRequired,
-    clearErrors: PropTypes.func.isRequired,
-  }).isRequired,
-  claim: PropTypes.object.isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-  isLoadingDocuments: PropTypes.bool,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-    showStateId: PropTypes.string,
-    additionalDoc: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(withClaimDocuments(UploadId));

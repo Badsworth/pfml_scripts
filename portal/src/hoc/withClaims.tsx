@@ -1,37 +1,35 @@
 import React, { useEffect } from "react";
 import { isNil, omitBy } from "lodash";
-import ClaimCollection from "../models/ClaimCollection";
-import PaginationMeta from "../models/PaginationMeta";
-import PropTypes from "prop-types";
+import { AppLogic } from "../hooks/useAppLogic";
 import Spinner from "../components/Spinner";
-import User from "../models/User";
-import assert from "assert";
 import { useTranslation } from "../locales/i18n";
 import withUser from "./withUser";
+
+interface ApiParams {
+  page_offset?: string;
+  employer_id?: string;
+  search?: string;
+  claim_status?: string;
+  order_by?: "absence_status" | "created_at" | "employee";
+  order_direction?: "ascending" | "descending";
+}
+
+interface ComponentWithClaimsProps {
+  appLogic: AppLogic;
+}
 
 /**
  * Higher order component that provides the current user's claims to the wrapped component.
  * The higher order component also loads the claims if they have not already been loaded.
  * @param {React.Component} Component - Component to receive claims prop
- * @param {object} apiParams
- * @param {string} [apiParams.claim_status]
- * @param {string} [apiParams.employer_id]
- * @param {string} [apiParams.order_by]
- * @param {string} [apiParams.order_direction]
- * @param {string} [apiParams.page_offset]
- * @param {string} [apiParams.search]
  * @returns {React.Component} - Component with claims prop
  */
-const withClaims = (Component, apiParams = {}) => {
-  const ComponentWithClaims = (props) => {
+// @ts-expect-error TODO (PORTAL-966) Fix HOC typing
+const withClaims = (Component, apiParams: ApiParams = {}) => {
+  const ComponentWithClaims = (props: ComponentWithClaimsProps) => {
     const { appLogic } = props;
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'page_offset' does not exist on type '{}'... Remove this comment to see the full error message
     const { page_offset } = apiParams;
     const { t } = useTranslation();
-
-    assert(appLogic.claims);
-    // Since we are within a withUser higher order component, user should always be set
-    assert(appLogic.users.user);
 
     const { isLoadingClaims } = appLogic.claims;
 
@@ -41,20 +39,15 @@ const withClaims = (Component, apiParams = {}) => {
     // how many filters are active.
     const order = omitBy(
       {
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'order_by' does not exist on type '{}'.
         order_by: apiParams.order_by,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'order_direction' does not exist on type ... Remove this comment to see the full error message
         order_direction: apiParams.order_direction,
       },
       isNil
     );
     const filters = omitBy(
       {
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'claim_status' does not exist on type '{}... Remove this comment to see the full error message
         claim_status: apiParams.claim_status,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'employer_id' does not exist on type '{}'... Remove this comment to see the full error message
         employer_id: apiParams.employer_id,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'search' does not exist on type '{}'.
         search: apiParams.search,
       },
       isNil
@@ -80,23 +73,6 @@ const withClaims = (Component, apiParams = {}) => {
         paginationMeta={appLogic.claims.paginationMeta}
       />
     );
-  };
-
-  ComponentWithClaims.propTypes = {
-    appLogic: PropTypes.shape({
-      users: PropTypes.shape({
-        user: PropTypes.instanceOf(User).isRequired,
-      }).isRequired,
-      claims: PropTypes.shape({
-        activeFilters: PropTypes.shape({
-          employer_id: PropTypes.string,
-        }).isRequired,
-        claims: PropTypes.instanceOf(ClaimCollection),
-        isLoadingClaims: PropTypes.bool,
-        loadPage: PropTypes.func.isRequired,
-        paginationMeta: PropTypes.instanceOf(PaginationMeta),
-      }).isRequired,
-    }).isRequired,
   };
 
   return withUser(ComponentWithClaims);

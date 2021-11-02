@@ -1,14 +1,22 @@
-import PropTypes from "prop-types";
 import React from "react";
 import { Trans } from "react-i18next";
 import classnames from "classnames";
+
+interface UnsupportedBrowserBannerProps {
+  /**
+   * Force the banner to render regardless of whether the
+   * browser is supported or not. Useful for testing or
+   * previewing the component in a supported browser.
+   */
+  forceRender?: boolean;
+}
 
 /**
  * Banner displayed at the top of the site to indicate the site
  * does not support the current web browser, when the user is
  * using Internet Explorer versions 11 and below.
  */
-const UnsupportedBrowserBanner = (props) => {
+const UnsupportedBrowserBanner = (props: UnsupportedBrowserBannerProps) => {
   const classes = classnames(
     "c-unsupported-browser-banner bg-yellow padding-1 text-center",
     {
@@ -42,15 +50,6 @@ const UnsupportedBrowserBanner = (props) => {
       </div>
     </React.Fragment>
   );
-};
-
-UnsupportedBrowserBanner.propTypes = {
-  /**
-   * Force the banner to render regardless of whether the
-   * browser is supported or not. Useful for testing or
-   * previewing the component in a supported browser.
-   */
-  forceRender: PropTypes.bool,
 };
 
 export default UnsupportedBrowserBanner;

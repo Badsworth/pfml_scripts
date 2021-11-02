@@ -103,11 +103,11 @@ def http_exception_handler(http_exception: HTTPException) -> Response:
 def internal_server_error_handler(error: InternalServerError) -> Response:
     # Use the original exception if it exists.
     #
-    # Ignore the mypy type error because it hasn't caught up to werkzeug 1.0.0.
+    # Ignore the mypy type error because it is missing the `original_exception` attribute.
     #
     # see: https://github.com/python/typeshed/pull/4210
     #
-    exception = error.original_exception or error
+    exception = error.original_exception or error  # type: ignore[attr-defined]
 
     logger.exception(str(exception), extra={"error.class": type(exception).__name__})
 

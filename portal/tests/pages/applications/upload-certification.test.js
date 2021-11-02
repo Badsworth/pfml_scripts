@@ -1,4 +1,3 @@
-import Document, { DocumentType } from "../../../src/models/Document";
 import {
   MockBenefitsApplicationBuilder,
   makeFile,
@@ -7,7 +6,9 @@ import {
 import { act, screen, waitFor } from "@testing-library/react";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
+import BenefitsApplicationDocument from "../../../src/models/BenefitsApplicationDocument";
 import DocumentCollection from "../../../src/models/DocumentCollection";
+import { DocumentType } from "../../../src/models/Document";
 import UploadCertification from "../../../src/pages/applications/upload-certification";
 import { ValidationError } from "../../../src/errors";
 import { setupBenefitsApplications } from "../../test-utils/helpers";
@@ -20,7 +21,7 @@ const goToNextPage = jest.fn(() => {
 
 const catchError = jest.fn();
 
-let attach = jest.fn();
+let attach = jest.fn().mockResolvedValue([]);
 
 const setup = (claim, props = {}, cb) => {
   if (!claim) {
@@ -132,7 +133,7 @@ describe("UploadCertification", () => {
         return Promise.resolve(true);
       });
       appLogic.documents.documents = new DocumentCollection([
-        new Document({
+        new BenefitsApplicationDocument({
           application_id: "mock_application_id",
           fineos_document_id: uuidv4(),
           document_type: DocumentType.certification.medicalCertification,
@@ -309,7 +310,7 @@ describe("UploadCertification", () => {
     const claim = new MockBenefitsApplicationBuilder()
       .medicalLeaveReason()
       .create();
-    attach = jest.fn();
+    attach = jest.fn().mockResolvedValue([]);
 
     setup(claim, {
       query: { claim_id: claim.application_id, additionalDoc: "true" },

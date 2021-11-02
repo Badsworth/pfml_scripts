@@ -108,6 +108,12 @@ variable "fineos_data_export_path" {
   default     = ""
 }
 
+variable "fineos_adhoc_data_export_path" {
+  description = "FINEOS generates adhoc data export files from custom queries for PFML API to pick up"
+  type        = string
+  default     = ""
+}
+
 variable "fineos_data_import_path" {
   description = "PFML API generates files for FINEOS to process"
   type        = string
@@ -235,6 +241,11 @@ variable "enable_pub_automation_create_pub_files" {
 
 variable "enable_pub_automation_process_returns" {
   description = "Enable scheduling for pub automation return processing task"
+  default     = false
+}
+
+variable "enable_pub_automation_process_1099_documents" {
+  description = "Enable scheduling for pub automation 1099 documents processing task"
   default     = false
 }
 

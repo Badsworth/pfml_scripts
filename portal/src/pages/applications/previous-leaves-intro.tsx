@@ -1,7 +1,7 @@
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Heading from "../../components/Heading";
 import IconHeading from "../../components/IconHeading";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
@@ -9,13 +9,19 @@ import formatDate from "../../utils/formatDate";
 import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
-export const PreviousLeavesIntro = (props) => {
+interface Props {
+  appLogic: AppLogic;
+  claim: BenefitsApplication;
+  query: { [key: string]: string };
+}
+
+export const PreviousLeavesIntro = (props: Props) => {
   const { t } = useTranslation();
   const { appLogic, claim, query } = props;
   const startDate = formatDate(claim.leaveStartDate).full();
 
-  const handleSave = () => {
-    return appLogic.portalFlow.goToNextPage({ claim }, query);
+  const handleSave = async () => {
+    return await appLogic.portalFlow.goToNextPage({ claim }, query);
   };
 
   return (
@@ -55,12 +61,6 @@ export const PreviousLeavesIntro = (props) => {
       />
     </QuestionPage>
   );
-};
-
-PreviousLeavesIntro.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  query: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(PreviousLeavesIntro);

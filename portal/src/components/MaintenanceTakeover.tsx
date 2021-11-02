@@ -1,13 +1,17 @@
 import { Trans, useTranslation } from "react-i18next";
 import Lead from "./Lead";
-import PropTypes from "prop-types";
 import React from "react";
 import Title from "./Title";
+
+interface MaintenanceTakeoverProps {
+  maintenanceStartTime: string | null;
+  maintenanceEndTime: string | null;
+}
 
 /**
  * Displayed on Maintenance pages, in place of the normal page content.
  */
-const MaintenanceTakeover = (props) => {
+const MaintenanceTakeover = (props: MaintenanceTakeoverProps) => {
   const { t } = useTranslation();
   const { maintenanceStartTime, maintenanceEndTime } = props;
 
@@ -36,17 +40,6 @@ const MaintenanceTakeover = (props) => {
       </Lead>
     </div>
   );
-};
-
-MaintenanceTakeover.propTypes = {
-  /**
-   * Day and time that maintenance page will begin
-   */
-  maintenanceStartTime: PropTypes.string,
-  /**
-   * Day and time that maintenance page will expire
-   */
-  maintenanceEndTime: PropTypes.string,
 };
 
 export default MaintenanceTakeover;

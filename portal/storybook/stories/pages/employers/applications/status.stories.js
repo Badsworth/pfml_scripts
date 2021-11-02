@@ -1,6 +1,7 @@
-import Document, { DocumentType } from "src/models/Document";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
+import ClaimDocument from "src/models/ClaimDocument";
 import DocumentCollection from "src/models/DocumentCollection";
+import { DocumentType } from "src/models/Document";
 import { MockEmployerClaimBuilder } from "tests/test-utils";
 import React from "react";
 import { Status } from "src/pages/employers/applications/status";
@@ -82,26 +83,35 @@ export const Default = ({ status, document, leaveDurationType }) => {
     documentData.document_type = DocumentType.identityVerification;
   }
 
-  let documents;
+  let documentsMap;
   if (document === "None") {
-    documents = new DocumentCollection();
+    documentsMap = new Map([["mock-absence-id", new DocumentCollection()]]);
   } else if (document === "Multiple") {
-    documents = new DocumentCollection([
-      new Document({ ...documentData }),
-      new Document({
-        ...documentData,
-        document_type: DocumentType.requestForInfoNotice,
-      }),
+    documentsMap = new Map([
+      [
+        "mock-absence-id",
+        new DocumentCollection([
+          new ClaimDocument({ ...documentData }),
+          new ClaimDocument({
+            ...documentData,
+            document_type: DocumentType.requestForInfoNotice,
+          }),
+        ]),
+      ],
     ]);
   } else {
-    documents = new DocumentCollection([new Document({ ...documentData })]);
+    documentsMap = new Map([
+      [
+        "mock-absence-id",
+        new DocumentCollection([new ClaimDocument({ ...documentData })]),
+      ],
+    ]);
   }
 
   const appLogic = {
     appErrors: new AppErrorInfoCollection(),
     employers: {
-      claim: claim.create(),
-      documents,
+      claimDocumentsMap: documentsMap,
       downloadDocument: () => {},
       loadClaim: () => {},
       loadDocuments: () => {},
@@ -111,5 +121,5 @@ export const Default = ({ status, document, leaveDurationType }) => {
 
   const query = { absence_id: "mock-absence-id" };
 
-  return <Status appLogic={appLogic} query={query} />;
+  return <Status appLogic={appLogic} query={query} claim={claim.create()} />;
 };

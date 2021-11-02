@@ -15,10 +15,10 @@ export default class FeatureFlagApi extends BaseApi {
    * @returns {Promise<Array.<Object>>}
    */
   getFlags = async () => {
-    const { data } = await this.request(
+    const { data } = await this.request<Flag[]>(
       "GET",
       "flags",
-      null,
+      undefined,
       {},
       { excludeAuthHeader: true }
     );

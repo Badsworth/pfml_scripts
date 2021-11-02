@@ -7,20 +7,15 @@ import EmployerIndex from "../generation/writers/EmployerIndex";
 import { format } from "date-fns";
 import { transform } from "streaming-iterables";
 import InfraClient from "../InfraClient";
+import { factory as configFactory } from "../config";
 import { Environment } from "../types";
-import AuthManger from "../submission/AuthenticationManager";
-import configs from "../../config.json";
-import { CognitoUserPool } from "amazon-cognito-identity-js";
-import TestMailVerificationFetcher from "../submission/TestMailVerificationFetcher";
+import AuthManager from "../submission/AuthenticationManager";
 import { getLeaveAdminCredentials } from "../util/credentials";
-import dotenv from "dotenv";
 import { endOfQuarter, formatISO, subQuarters } from "date-fns";
 import chalk from "chalk";
-dotenv.config();
 
 (async () => {
   const date = format(new Date(), "yyyy-MM-dd");
-  const rawConfig = { ...configs };
 
   // Prepare a "data directory" to save the generated data to disk.
   const storage = dataDirectory(`e2e-${date}`);
@@ -91,7 +86,12 @@ dotenv.config();
   ];
 
   const DORUploadRequest = transform(envs.length, async (env: Environment) => {
-    const infra = new InfraClient(env);
+    // Important - because we need to fetch configuration for the environment we're importing into,
+    // we use configFactory() to generate a new config() function specific to the environment. If we
+    // use our normal config() here, it will only return settings for the environment we're currently
+    // looking at.
+    const envConfig = configFactory(env).get;
+    const infra = InfraClient.create(envConfig);
     try {
       await infra.uploadDORFiles([
         storage.dorFile("DORDFMLEMP"),
@@ -102,17 +102,7 @@ dotenv.config();
       console.log(`${env.toUpperCase()} - failed to load EE's/ER's`);
       console.error(e);
     }
-    const authManager = new AuthManger(
-      new CognitoUserPool({
-        UserPoolId: rawConfig[env].COGNITO_POOL,
-        ClientId: rawConfig[env].COGNITO_CLIENTID,
-      }),
-      rawConfig[env].API_BASEURL,
-      new TestMailVerificationFetcher(
-        process.env.E2E_TESTMAIL_APIKEY as string,
-        rawConfig[env].TESTMAIL_NAMESPACE
-      )
-    );
+    const authManager = AuthManager.create(envConfig);
 
     const leaveAdminVerifications = transform(3, async (employer: Employer) => {
       try {

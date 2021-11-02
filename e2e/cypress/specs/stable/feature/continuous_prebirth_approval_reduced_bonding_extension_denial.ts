@@ -1,5 +1,4 @@
 import { fineos, fineosPages, portal } from "../../../actions";
-import { getFineosBaseUrl } from "../../../config";
 import { Submission } from "../../../../src/types";
 import { addMonths, addDays, format } from "date-fns";
 
@@ -17,41 +16,36 @@ describe("Submit medical pre-birth application via the web portal", () => {
         });
       });
     });
-  it(
-    "CSR rep will approve reduced medical application",
-    { retries: 0, baseUrl: getFineosBaseUrl() },
-    () => {
-      cy.dependsOnPreviousPass([submission]);
-      fineos.before();
-      cy.visit("/");
-      cy.unstash<DehydratedClaim>("claim").then((claim) => {
-        cy.unstash<Submission>("submission").then((submission) => {
-          fineosPages.ClaimPage.visit(submission.fineos_absence_id)
-            .adjudicate((adjudication) => {
-              adjudication
-                .evidence((evidence) => {
-                  // Receive all of the claim documentation.
-                  claim.documents.forEach((document) => {
-                    evidence.receive(document.document_type);
-                  });
-                })
-                .certificationPeriods((cert) => cert.prefill())
-                .acceptLeavePlan();
-            })
-            .shouldHaveStatus("Applicability", "Applicable")
-            .shouldHaveStatus("Eligibility", "Met")
-            .shouldHaveStatus("Evidence", "Satisfied")
-            .shouldHaveStatus("Availability", "Time Available")
-            .shouldHaveStatus("Restriction", "Passed")
-            .shouldHaveStatus("PlanDecision", "Accepted")
-            .approve();
-        });
+  it("CSR rep will approve reduced medical application", { retries: 0 }, () => {
+    cy.dependsOnPreviousPass([submission]);
+    fineos.before();
+    cy.unstash<DehydratedClaim>("claim").then((claim) => {
+      cy.unstash<Submission>("submission").then((submission) => {
+        fineosPages.ClaimPage.visit(submission.fineos_absence_id)
+          .adjudicate((adjudication) => {
+            adjudication
+              .evidence((evidence) => {
+                // Receive all of the claim documentation.
+                claim.documents.forEach((document) => {
+                  evidence.receive(document.document_type);
+                });
+              })
+              .certificationPeriods((cert) => cert.prefill())
+              .acceptLeavePlan();
+          })
+          .shouldHaveStatus("Applicability", "Applicable")
+          .shouldHaveStatus("Eligibility", "Met")
+          .shouldHaveStatus("Evidence", "Satisfied")
+          .shouldHaveStatus("Availability", "Time Available")
+          .shouldHaveStatus("Restriction", "Passed")
+          .shouldHaveStatus("PlanDecision", "Accepted")
+          .approve();
       });
-    }
-  );
+    });
+  });
   it(
     "CSR rep will add and deny bonding leave to the absence case",
-    { retries: 0, baseUrl: getFineosBaseUrl() },
+    { retries: 0 },
     () => {
       cy.dependsOnPreviousPass([submission]);
       fineos.before();
