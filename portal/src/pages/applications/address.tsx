@@ -54,13 +54,11 @@ export const Address = (props: AddressProps) => {
 
   const residentialAddressFormatter = useAddressFormatter(
     new AddressModel(formState.residential_address),
-    appLogic.catchError,
-    1
+    appLogic.catchError
   );
   const mailingAddressFormatter = useAddressFormatter(
     new AddressModel(formState.mailing_address),
-    appLogic.catchError,
-    2
+    appLogic.catchError
   );
 
   /**
