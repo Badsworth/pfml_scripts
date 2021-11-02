@@ -33,7 +33,7 @@ function ErrorsSummary(props: ErrorsSummaryProps) {
   }, [errors]);
 
   // Don't render anything if there are no errors present
-  if (!errors || errors.items.length <= 0) {
+  if (errors.isEmpty) {
     return null;
   }
 

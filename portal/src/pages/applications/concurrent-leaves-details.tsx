@@ -22,7 +22,7 @@ export const fields = [
 interface ConcurrentLeavesDetailsProps {
   appLogic: AppLogic;
   claim: BenefitsApplication;
-  query: Record<string, string>;
+  query: { [key: string]: string };
 }
 
 export const ConcurrentLeavesDetails = (

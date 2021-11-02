@@ -3,7 +3,7 @@ from decimal import Decimal
 
 import pytest
 
-from massgov.pfml.db.models.applications import StateMetric
+from massgov.pfml.db.models.applications import BenefitsMetrics
 from massgov.pfml.db.models.employees import PaymentTransactionType
 from massgov.pfml.db.models.factories import ClaimFactory, EmployeeFactory
 from massgov.pfml.delegated_payments.postprocessing.maximum_weekly_benefits_processor import (
@@ -46,9 +46,9 @@ def test_get_maximum_amount_for_week(maximum_weekly_processor, local_test_db_ses
     # If fetched from the DB they would be in descending order like so
 
     maximum_amounts = [
-        StateMetric(date(2021, 3, 1), "5000", "468.75", "300.00"),
-        StateMetric(date(2021, 2, 1), "5000", "312.50", "200.00"),
-        StateMetric(date(2021, 1, 1), "5000", "156.25", "100.00"),
+        BenefitsMetrics(date(2021, 3, 1), "468.75", "300.00"),
+        BenefitsMetrics(date(2021, 2, 1), "312.50", "200.00"),
+        BenefitsMetrics(date(2021, 1, 1), "156.25", "100.00"),
     ]
     maximum_weekly_processor.maximum_amount_for_week = maximum_amounts
 

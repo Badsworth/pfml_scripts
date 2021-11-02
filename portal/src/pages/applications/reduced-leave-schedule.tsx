@@ -2,6 +2,7 @@ import BenefitsApplication, {
   OrderedDaysOfWeek,
   ReducedScheduleLeavePeriod,
   WorkPattern,
+  WorkPatternDay,
   WorkPatternType,
 } from "../../models/BenefitsApplication";
 import { get, pick, set, zip } from "lodash";
@@ -197,7 +198,9 @@ export const ReducedLeaveSchedule = (props: ReducedLeaveScheduleProps) => {
             ...convertMinutesToHours(workPattern.minutesWorkedPerWeek),
           })
         ) : (
-          <WeeklyTimeTable days={workPattern.work_pattern_days} />
+          <WeeklyTimeTable
+            days={workPattern.work_pattern_days as WorkPatternDay[]}
+          />
         )}
       </Details>
 

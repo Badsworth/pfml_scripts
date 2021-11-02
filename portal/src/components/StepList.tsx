@@ -1,6 +1,7 @@
 import React, { Children, cloneElement } from "react";
 import Heading from "./Heading";
 import Step from "./Step";
+import isBlank from "../utils/isBlank";
 
 interface StepListProps {
   /**
@@ -58,7 +59,7 @@ const StepList = (props: StepListProps) => {
       <Heading level="2" size="2">
         {title}
       </Heading>
-      {description && <p>{description}</p>}
+      {!isBlank(description) && <p>{description}</p>}
       {steps}
     </div>
   );

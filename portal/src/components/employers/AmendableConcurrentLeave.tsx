@@ -15,7 +15,7 @@ interface AmendableConcurrentLeaveProps {
   concurrentLeave: ConcurrentLeave;
   isAddedByLeaveAdmin: boolean;
   onChange: (
-    arg: ConcurrentLeave | Record<string, unknown>,
+    arg: ConcurrentLeave | { [key: string]: unknown },
     arg2?: string
   ) => void;
   onRemove: (arg: ConcurrentLeave) => void;

@@ -17,6 +17,7 @@ import React from "react";
 import ThrottledButton from "../../components/ThrottledButton";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -46,6 +47,8 @@ interface PaymentMethodProps {
 export const PaymentMethod = (props: PaymentMethodProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
+  // TODO(Portal-1001): - Remove featureFlag
+  const taxWithholdingEnabled = isFeatureEnabled("claimantShowTaxWithholding");
 
   const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
@@ -168,28 +171,41 @@ export const PaymentMethod = (props: PaymentMethodProps) => {
           </Fieldset>
         </ConditionalContent>
         <div className="margin-top-6 margin-bottom-2">
-          <Trans
-            i18nKey="pages.claimsPaymentMethod.partTwoNextSteps"
-            components={{
-              "contact-center-phone-link": (
-                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-              ),
-              "benefits-guide-link": (
-                <a
-                  href={routes.external.massgov.benefitsGuide}
-                  target="_blank"
-                  rel="noreferrer noopener"
-                />
-              ),
-            }}
-          />
+          {taxWithholdingEnabled ? (
+            <Trans
+              i18nKey="pages.claimsPaymentMethod.warning"
+              components={{
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
+              }}
+            />
+          ) : (
+            <Trans
+              i18nKey="pages.claimsPaymentMethod.partTwoNextSteps"
+              components={{
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
+                "benefits-guide-link": (
+                  <a
+                    href={routes.external.massgov.benefitsGuide}
+                    target="_blank"
+                    rel="noreferrer noopener"
+                  />
+                ),
+              }}
+            />
+          )}
         </div>
         <ThrottledButton
           className="margin-top-4"
           onClick={handleSubmit}
           type="submit"
         >
-          {t("pages.claimsPaymentMethod.submitPart2Button")}
+          {taxWithholdingEnabled
+            ? t("pages.claimsPaymentMethod.submitPayment")
+            : t("pages.claimsPaymentMethod.submitPart2Button")}
         </ThrottledButton>
       </form>
     </React.Fragment>

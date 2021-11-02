@@ -9,7 +9,7 @@ interface EmployeeNoticeProps {
   employeeNoticeInput?: "Yes" | "No";
   fraudInput?: string;
   getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
-  updateFields: (arg: Record<string, unknown>) => void;
+  updateFields: (fields: { [fieldName: string]: unknown }) => void;
 }
 
 const EmployeeNotice = ({

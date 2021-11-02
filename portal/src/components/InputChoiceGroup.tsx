@@ -3,6 +3,7 @@ import FormLabel from "./FormLabel";
 import InputChoice from "./InputChoice";
 import React from "react";
 import classnames from "classnames";
+import isBlank from "../utils/isBlank";
 
 interface InputChoiceGroupProps {
   /**
@@ -62,7 +63,7 @@ function InputChoiceGroup({
   type = "checkbox",
   ...props
 }: InputChoiceGroupProps) {
-  const hasError = !!props.errorMsg;
+  const hasError = !isBlank(props.errorMsg);
 
   const formGroupClasses = classnames("usa-form-group", {
     "usa-form-group--error": hasError,

@@ -44,6 +44,9 @@ jobs:
       - name: format-check
         run: make format-check
 
+      - name: run migrations
+        run: make db-upgrade
+
       - name: lint
         run: make lint
 

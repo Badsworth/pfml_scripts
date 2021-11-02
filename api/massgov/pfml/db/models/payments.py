@@ -1020,14 +1020,20 @@ class PaymentAuditReportType(LookupTable):
     MAX_WEEKLY_BENEFITS = LkPaymentAuditReportType(
         1, "Max Weekly Benefits", AuditReportAction.REJECTED
     )
-    DUA_DIA_REDUCTION = LkPaymentAuditReportType(
-        2, "DUA DIA Reduction", AuditReportAction.INFORMATIONAL
+    DEPRECATED_DUA_DIA_REDUCTION = LkPaymentAuditReportType(
+        2, "DUA DIA Reduction (Deprecated)", AuditReportAction.INFORMATIONAL
     )
     LEAVE_PLAN_IN_REVIEW = LkPaymentAuditReportType(
         3, "Leave Plan In Review", AuditReportAction.SKIPPED_NO_COLUMN
     )
     DOR_FINEOS_NAME_MISMATCH = LkPaymentAuditReportType(
         4, "DOR FINEOS Name Mismatch", AuditReportAction.INFORMATIONAL
+    )
+    DUA_ADDITIONAL_INCOME = LkPaymentAuditReportType(
+        5, "DUA Additional Income", AuditReportAction.INFORMATIONAL
+    )
+    DIA_ADDITIONAL_INCOME = LkPaymentAuditReportType(
+        6, "DIA Additional Income", AuditReportAction.INFORMATIONAL
     )
 
 

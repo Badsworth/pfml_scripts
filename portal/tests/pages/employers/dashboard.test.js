@@ -93,7 +93,7 @@ const setup = ({
       total_pages: 3,
       total_records: 75,
       order_by: "created_at",
-      order_direction: "asc",
+      order_direction: "ascending",
       ...paginationMeta,
     });
 
@@ -290,6 +290,17 @@ describe("Employer dashboard", () => {
     expect(updateQuerySpy).toHaveBeenCalledWith({
       page_offset: "1",
       search: "Bud Baxter",
+    });
+  });
+
+  it("clears search param when the search field is cleared", () => {
+    const { updateQuerySpy } = setup({ query: { search: "Bud Baxter" } });
+
+    userEvent.clear(screen.getByRole("textbox", { name: /search/i }));
+    userEvent.click(screen.getByRole("button", { name: /search/i }));
+
+    expect(updateQuerySpy).toHaveBeenCalledWith({
+      page_offset: "1",
     });
   });
 
@@ -507,11 +518,7 @@ describe("Employer dashboard", () => {
     });
   });
 
-  it("defaults to Sort by Status option when Review By feature flag is enabled", () => {
-    process.env.featureFlags = {
-      employerShowReviewByStatus: true,
-    };
-
+  it("defaults to Sort by Status option", () => {
     setup();
 
     expect(screen.getByRole("combobox", { name: /sort/i })).toHaveValue(
@@ -533,11 +540,7 @@ describe("Employer dashboard", () => {
     });
   });
 
-  it("renders Review By status when feature flag is enabled", () => {
-    process.env.featureFlags = {
-      employerShowReviewByStatus: true,
-    };
-
+  it("renders Review By status", () => {
     const claims = getClaims(verifiedUserLeaveAdministrator);
     claims[0].managed_requirements = [
       {

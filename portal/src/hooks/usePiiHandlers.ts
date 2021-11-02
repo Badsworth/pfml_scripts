@@ -5,6 +5,7 @@ import {
   FocusEventHandler,
   useRef,
 } from "react";
+import isBlank from "../utils/isBlank";
 
 /**
  * Create onFocus and onBlur event handlers for PII inputs
@@ -17,7 +18,7 @@ const usePiiHandlers = (inputProps: {
   onFocus?: FocusEventHandler<HTMLInputElement>;
 }) => {
   const initialValue = useRef(inputProps.value);
-  const shouldClearValue = useRef(!!inputProps.value);
+  const shouldClearValue = useRef(!isBlank(inputProps.value));
 
   const handleFocus = (event: FocusEvent<HTMLInputElement>) => {
     if (shouldClearValue.current) {
@@ -31,7 +32,7 @@ const usePiiHandlers = (inputProps: {
   };
 
   const handleBlur = (event: FocusEvent<HTMLInputElement>) => {
-    if (!inputProps.value && initialValue.current) {
+    if (isBlank(inputProps.value) && !isBlank(initialValue.current)) {
       shouldClearValue.current = true;
       dispatchChange(initialValue.current, event);
     }

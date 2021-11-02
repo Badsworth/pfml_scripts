@@ -235,6 +235,7 @@ export default function (
       accountId: config("NEWRELIC_ACCOUNTID"),
       apiKey: config("NEWRELIC_INGEST_KEY"),
       environment: config("ENVIRONMENT"),
+      branch: path.relative("refs/heads", process.env.GITHUB_REF as string),
       ...reporterOptions,
     };
   }

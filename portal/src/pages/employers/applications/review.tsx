@@ -230,7 +230,7 @@ export const Review = (props: ReviewProps) => {
   };
 
   const handleBenefitInputChange = (
-    updatedBenefit: Record<string, unknown> | EmployerBenefit,
+    updatedBenefit: { [key: string]: unknown } | EmployerBenefit,
     formStateField = "amendedBenefits"
   ) => {
     const updatedBenefits = updateAmendments(
@@ -271,7 +271,7 @@ export const Review = (props: ReviewProps) => {
   };
 
   const handlePreviousLeavesChange = (
-    updatedLeave: PreviousLeave | Record<string, unknown>,
+    updatedLeave: PreviousLeave | { [key: string]: unknown },
     formStateField = "amendedPreviousLeaves"
   ) => {
     const originalPreviousLeave = get(
@@ -311,7 +311,7 @@ export const Review = (props: ReviewProps) => {
   };
 
   const handleConcurrentLeaveInputChange = (
-    updatedLeave: Record<string, unknown> | ConcurrentLeaveModel,
+    updatedLeave: { [key: string]: unknown } | ConcurrentLeaveModel,
     formStateField = "amendedConcurrentLeave"
   ) => {
     updateFields({

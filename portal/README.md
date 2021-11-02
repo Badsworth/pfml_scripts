@@ -1,6 +1,6 @@
 # Portal for Mass PFML
 
-This is a [Next.js](https://nextjs.org/docs)-powered [React](https://reactjs.org/) app, written in [TypeScript](https://www.typescriptlang.org/), for the Massachusetts Paid Family and Medical Leave Portal, used by Claimants and Leave Admins.
+This is a [Next.js](https://nextjs.org/docs)-powered [React](https://reactjs.org/) app, written in [TypeScript](https://www.typescriptlang.org/), for the Massachusetts Paid Family and Medical Leave Portal, used by claimants and employers' leave adminstrators.
 
 **You may also be interested in:**
 

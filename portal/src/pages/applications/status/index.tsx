@@ -36,8 +36,7 @@ interface StatusProps {
   };
 }
 
-const containerClassName =
-  "border-bottom border-base-lighter measure-6 padding-y-4";
+const containerClassName = "border-bottom border-base-lighter padding-y-4";
 
 export const Status = ({ appLogic, query }: StatusProps) => {
   const { t } = useTranslation();
@@ -167,14 +166,14 @@ export const Status = ({ appLogic, query }: StatusProps) => {
 
     // How many claim decisions
     const expectedNoticeCount = claimDetail.absence_periods.reduce(
-      (acc, { request_decision }) => {
+      (previousValue, { request_decision }) => {
         const shouldHaveNotice =
           request_decision === "Approved" ||
           request_decision === "Denied" ||
           request_decision === "Withdrawn";
 
-        if (shouldHaveNotice) acc += 1;
-        return acc;
+        if (shouldHaveNotice) return previousValue + 1;
+        return previousValue;
       },
       0
     );
@@ -210,9 +209,9 @@ export const Status = ({ appLogic, query }: StatusProps) => {
     );
   };
 
-  const getInfoAlertContext = (
-    absenceDetails: Record<string, AbsencePeriod[]>
-  ) => {
+  const getInfoAlertContext = (absenceDetails: {
+    [key: string]: AbsencePeriod[];
+  }) => {
     const hasBondingReason = has(absenceDetails, LeaveReason.bonding);
     const hasPregnancyReason = has(absenceDetails, LeaveReason.pregnancy);
     const hasNewBorn = claimDetail.absence_periods.some(
@@ -284,7 +283,7 @@ export const Status = ({ appLogic, query }: StatusProps) => {
         label={t("pages.claimsStatus.backButtonLabel")}
         href={routes.applications.index}
       />
-      <div>
+      <div className="measure-6">
         <Title weight="normal" small>
           {t("pages.claimsStatus.applicationDetails")}
         </Title>
@@ -296,19 +295,22 @@ export const Status = ({ appLogic, query }: StatusProps) => {
             context: findKeyByValue(LeaveReason, firstAbsenceDetail),
           })}
         </Heading>
-        <div className="display-flex bg-base-lightest padding-2">
-          <div className="padding-right-10">
+
+        <div className="bg-base-lightest padding-2 tablet:display-flex tablet:padding-bottom-0">
+          <div className="padding-bottom-3 padding-right-6">
             <Heading weight="normal" level="2" size="4">
               {t("pages.claimsStatus.applicationID")}
             </Heading>
             <p className="text-bold">{absence_case_id}</p>
           </div>
-          <div>
-            <Heading weight="normal" level="2" size="4">
-              {t("pages.claimsStatus.employerEIN")}
-            </Heading>
-            <p className="text-bold">{claimDetail.employer.employer_fein}</p>
-          </div>
+          {claimDetail.employer && (
+            <div>
+              <Heading weight="normal" level="2" size="4">
+                {t("pages.claimsStatus.employerEIN")}
+              </Heading>
+              <p className="text-bold">{claimDetail.employer.employer_fein}</p>
+            </div>
+          )}
         </div>
 
         {isFeatureEnabled("claimantShowPayments") && (
@@ -356,7 +358,7 @@ export const Status = ({ appLogic, query }: StatusProps) => {
           </div>
           {hasPendingStatus && (
             <ButtonLink
-              className="measure-6 margin-top-3"
+              className="margin-top-3"
               href={appLogic.portalFlow.getNextPageRoute(
                 "UPLOAD_DOC_OPTIONS",
                 {},
@@ -370,10 +372,7 @@ export const Status = ({ appLogic, query }: StatusProps) => {
 
         {/* Manage applications section */}
         {(hasPendingStatus || hasApprovedStatus) && (
-          <div
-            className="measure-6 padding-y-4"
-            data-testid="manageApplication"
-          >
+          <div className="padding-y-4" data-testid="manageApplication">
             <div>
               <Heading level="2">
                 {t("pages.claimsStatus.manageApplicationHeading")}
@@ -437,7 +436,7 @@ export const StatusTagMap = {
 } as const;
 
 interface LeaveDetailsProps {
-  absenceDetails?: Record<string, AbsencePeriod[]>;
+  absenceDetails?: { [key: string]: AbsencePeriod[] };
 }
 
 export const LeaveDetails = ({ absenceDetails = {} }: LeaveDetailsProps) => {
@@ -576,7 +575,6 @@ export const Timeline = ({
           />
         </p>
         <ButtonLink
-          className="measure-12"
           href={appLogic.portalFlow.getNextPageRoute(
             typeOfProof === "newborn"
               ? "UPLOAD_PROOF_OF_BIRTH"

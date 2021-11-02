@@ -31,8 +31,9 @@ const withClaimDocuments = (Component) => {
     // TODO (CP-2589): Clean up once application flow uses the same document upload components
     const application_id = claim ? claim.application_id : query.claim_id;
 
-    const shouldLoad =
-      application_id && !hasLoadedClaimDocuments(application_id);
+    const shouldLoad = !!(
+      application_id && !hasLoadedClaimDocuments(application_id)
+    );
     assert(documents);
     // Since we are within a withUser higher order component, user should always be set
     assert(users.user);

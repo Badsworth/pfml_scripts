@@ -207,8 +207,11 @@ class PaymentRejectsStep(Step):
                     max_weekly_benefits_details=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.max_weekly_benefits_details
                     ),
-                    dua_dia_reduction_details=get_row(
-                        row, PAYMENT_AUDIT_CSV_HEADERS.dua_dia_reduction_details
+                    dua_additional_income_details=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.dua_additional_income_details
+                    ),
+                    dia_additional_income_details=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.dia_additional_income_details
                     ),
                     dor_fineos_name_mismatch_details=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.dor_fineos_name_mismatch_details

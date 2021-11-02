@@ -80,7 +80,7 @@ interface InputCurrencyProps {
 }
 
 const maskCurrency = (value: InputCurrencyProps["value"]) =>
-  maskValue(String(value || ""), "currency");
+  maskValue(String(value ?? ""), "currency");
 
 /**
  * Input field that displays number values to users as en-us currency

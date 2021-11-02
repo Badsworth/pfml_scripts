@@ -65,6 +65,7 @@ const routes = {
     // Note that this route is used by the back-end when generating notification emails for
     // the claimant (see notifications.py). Changes here will need to be coordinated with the back-end.
     success: "/applications/success",
+    taxWithholding: "/applications/tax-withholding",
     // For routes that don't have a page to point to yet, we can route them
     // to a placeholder page. This allows us to search our code for routes.applications.todo,
     // which is less confusing than seeing routes.applications.checklist

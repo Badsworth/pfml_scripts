@@ -13,7 +13,10 @@ interface IconProps {
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/icons/)
  */
 function Icon(props: IconProps) {
-  const usaIconClass = props.size ? `usa-icon--size-${props.size}` : "usa-icon";
+  const usaIconClass =
+    typeof props.size === "number"
+      ? `usa-icon--size-${props.size}`
+      : "usa-icon";
   const className = classnames(usaIconClass, props.className);
 
   return (

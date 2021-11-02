@@ -31,7 +31,7 @@ export const VerifyContributions = (props: VerifyContributionsProps) => {
   const { t } = useTranslation();
 
   const { formState, updateFields } = useFormState({
-    withholdingAmount: 0,
+    withholdingAmount: "",
   });
 
   const handleAmountChange = (event: React.ChangeEvent<HTMLInputElement>) => {

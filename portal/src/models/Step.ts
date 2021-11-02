@@ -1,12 +1,15 @@
 import claimantFlow, { ClaimantFlowState } from "../flows/claimant";
-import { get, groupBy, isEmpty, map } from "lodash";
+import { get, groupBy, isBoolean, isEmpty, isNull, map } from "lodash";
 import BenefitsApplication from "./BenefitsApplication";
 import BenefitsApplicationDocument from "./BenefitsApplicationDocument";
 import ClaimDocument from "./ClaimDocument";
 import { Issue } from "../errors";
 import getRelevantIssues from "../utils/getRelevantIssues";
+import { isFeatureEnabled } from "../services/featureFlags";
 
-type Context = Record<string, unknown>;
+interface Context {
+  [key: string]: unknown;
+}
 
 /**
  * Unique identifiers for steps in the portal application. The values
@@ -20,6 +23,7 @@ export const ClaimSteps = {
   otherLeave: "OTHER_LEAVE",
   reviewAndConfirm: "REVIEW_AND_CONFIRM",
   payment: "PAYMENT",
+  taxWithholding: "TAX_WITHHOLDING",
   uploadCertification: "UPLOAD_CERTIFICATION",
   uploadId: "UPLOAD_ID",
 } as const;
@@ -161,7 +165,7 @@ export default class Step {
   static createClaimStepsFromMachine = (
     machineConfigs: typeof claimantFlow,
     context: {
-      claim: BenefitsApplication | Record<string, never>;
+      claim: BenefitsApplication | { [key: string]: never };
       certificationDocuments?: BenefitsApplicationDocument[] | ClaimDocument[];
       idDocuments?: BenefitsApplicationDocument[] | ClaimDocument[];
     } = {
@@ -244,6 +248,38 @@ export default class Step {
       warnings,
     });
 
+    const taxWithholding = new Step({
+      name: ClaimSteps.taxWithholding,
+      completeCond: (context) =>
+        isBoolean(get(context.claim, "is_withholding_tax")),
+      editable: isNull(claim.is_withholding_tax),
+      group: 2,
+      pages: pagesByStep[ClaimSteps.taxWithholding],
+      dependsOn: [
+        verifyId,
+        employerInformation,
+        leaveDetails,
+        otherLeave,
+        reviewAndConfirm,
+      ],
+      context,
+    });
+
+    // TODO(PORTAL-1001): - Remove Feature Flag
+    const taxWithholdingEnabled = isFeatureEnabled(
+      "claimantShowTaxWithholding"
+    );
+    const uploadDependsOn = [
+      verifyId,
+      employerInformation,
+      leaveDetails,
+      otherLeave,
+      reviewAndConfirm,
+      payment,
+    ];
+    if (taxWithholdingEnabled) {
+      uploadDependsOn.push(taxWithholding);
+    }
     const uploadId = new Step({
       completeCond: (context) => {
         return (
@@ -253,14 +289,7 @@ export default class Step {
       name: ClaimSteps.uploadId,
       group: 3,
       pages: pagesByStep[ClaimSteps.uploadId],
-      dependsOn: [
-        verifyId,
-        employerInformation,
-        leaveDetails,
-        otherLeave,
-        reviewAndConfirm,
-        payment,
-      ],
+      dependsOn: uploadDependsOn,
       context,
     });
 
@@ -276,14 +305,7 @@ export default class Step {
         get(context.claim, "leave_details.has_future_child_date") === true,
       group: 3,
       pages: pagesByStep[ClaimSteps.uploadCertification],
-      dependsOn: [
-        verifyId,
-        employerInformation,
-        leaveDetails,
-        otherLeave,
-        reviewAndConfirm,
-        payment,
-      ],
+      dependsOn: uploadDependsOn,
       context,
     });
 
@@ -294,6 +316,7 @@ export default class Step {
       otherLeave,
       reviewAndConfirm,
       payment,
+      taxWithholding,
       uploadId,
       uploadCertification,
     ];

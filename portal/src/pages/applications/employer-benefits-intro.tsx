@@ -11,7 +11,7 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 interface EmployerBenefitsIntroProps {
   appLogic: AppLogic;
   claim: BenefitsApplication;
-  query: Record<string, string>;
+  query: { [key: string]: string };
 }
 
 export const EmployerBenefitsIntro = (props: EmployerBenefitsIntroProps) => {

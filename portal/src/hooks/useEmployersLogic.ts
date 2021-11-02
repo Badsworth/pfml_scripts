@@ -38,7 +38,7 @@ const useEmployersLogic = ({
       const params = { employer_id: employer.employer_id, next };
       // Setting user to undefined to require fetching updated user_leave_administrators before navigating to Verify Contributions
       setUser(undefined);
-      if (employer) portalFlow.goToNextPage({}, params);
+      portalFlow.goToNextPage({}, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -125,7 +125,7 @@ const useEmployersLogic = ({
    */
   const submitClaimReview = async (
     absenceId: string,
-    data: Record<string, unknown>
+    data: { [key: string]: unknown }
   ) => {
     appErrorsLogic.clearErrors();
 

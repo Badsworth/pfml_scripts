@@ -2,6 +2,7 @@ import React, { useEffect } from "react";
 import { AppLogic } from "../hooks/useAppLogic";
 import PageNotFound from "../components/PageNotFound";
 import Spinner from "../components/Spinner";
+import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 import withUser from "./withUser";
 
@@ -30,11 +31,12 @@ const withBenefitsApplication = (Component) => {
     const claim = application_id
       ? benefitsApplications.getItem(application_id)
       : undefined;
-    const shouldLoad =
+    const shouldLoad = !!(
       application_id &&
       !appLogic.benefitsApplications.hasLoadedBenefitsApplicationAndWarnings(
         application_id
-      );
+      )
+    );
 
     useEffect(() => {
       if (shouldLoad) {
@@ -43,6 +45,18 @@ const withBenefitsApplication = (Component) => {
 
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [shouldLoad]);
+
+    useEffect(() => {
+      const { goTo, pathname } = appLogic.portalFlow;
+      if (
+        claim?.isCompleted &&
+        (pathname === routes.applications.checklist ||
+          pathname === routes.applications.review)
+      ) {
+        goTo(routes.applications.index);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [claim?.application_id]);
 
     if (!application_id) {
       return <PageNotFound />;

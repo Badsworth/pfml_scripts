@@ -188,7 +188,7 @@ const Step = (props: StepProps) => {
         screenReaderPrefix={props.screenReaderNumberPrefix || ""}
         state={props.status}
       >
-        {props.number || ""}
+        {props.number ?? ""}
       </StepNumber>
       <div className={collapsibleColumnClasses}>
         <div className={titleDescriptionColumnClasses}>
