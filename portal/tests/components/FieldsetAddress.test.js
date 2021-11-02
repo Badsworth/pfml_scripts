@@ -124,6 +124,12 @@ describe("FieldsetAddress", () => {
     ).toBeInTheDocument();
   });
 
+  it("displays errors for the entire fieldset", () => {
+    renderComponent({ errorMsg: "This is an error message." });
+
+    expect(screen.getByText("This is an error message.")).toBeInTheDocument();
+  });
+
   it("renders with a small label when the smallLabel prop is set", () => {
     renderComponent({ smallLabel: true });
 
