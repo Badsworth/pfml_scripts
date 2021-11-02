@@ -20,6 +20,7 @@ afterAll(() => {
 afterEach(() => server.resetHandlers());
 describe(findAddress, () => {
   it("returns AddressSuggestion when validation service returns a verified match", async () => {
+    const fetchSpy = jest.spyOn(global, "fetch");
     server.use(
       rest.post(
         "https://api.experianaperture.io/address/search/v1",
@@ -45,12 +46,26 @@ describe(findAddress, () => {
       )
     );
 
-    const result = await findAddress(new Address());
+    const result = await findAddress(
+      new Address({
+        line_1: "Address line 1",
+        line_2: "Address line 2",
+        city: "City",
+        state: "State",
+        zip: "20001",
+      })
+    );
 
     expect(result).toEqual({
       addressKey: "mockaddresskeyapt1",
       address: "54321 Mock Address Apt 1 Washington, DC 20005",
     });
+
+    expect(
+      JSON.parse(fetchSpy.mock.calls[0][1].body).components.unspecified[0]
+    ).toMatchInlineSnapshot(
+      `"Address line 1 Address line 2, City State 20001"`
+    );
   });
 
   it("throws AddressValidationError when validation service returns more than 1 result", async () => {
@@ -92,17 +107,17 @@ describe(findAddress, () => {
     } catch (e) {
       expect(e).toBeInstanceOf(AddressValidationError);
       expect(e.suggestions).toMatchInlineSnapshot(`
-Array [
-  Object {
-    "address": "54321 Mock Address Apt 1 Washington, DC 20005",
-    "addressKey": "mockaddresskeyapt1",
-  },
-  Object {
-    "address": "54321 Mock Address Apt 2 Washington, DC 20005",
-    "addressKey": "mockaddresskeyapt2",
-  },
-]
-`);
+        Array [
+          Object {
+            "address": "54321 Mock Address Apt 1 Washington, DC 20005",
+            "addressKey": "mockaddresskeyapt1",
+          },
+          Object {
+            "address": "54321 Mock Address Apt 2 Washington, DC 20005",
+            "addressKey": "mockaddresskeyapt2",
+          },
+        ]
+      `);
     }
   });
 
