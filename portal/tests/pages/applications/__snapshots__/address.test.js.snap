@@ -27,7 +27,7 @@ exports[`Address address formatting when claimantValidateAddress feature flag is
         <input
           class="usa-radio__input"
           id="InputChoice1436"
-          name="address-formatting-error1468"
+          name="address-formatting-error1458"
           type="radio"
           value="mockaddresskeyapt1"
         />
@@ -44,7 +44,7 @@ exports[`Address address formatting when claimantValidateAddress feature flag is
         <input
           class="usa-radio__input"
           id="InputChoice1437"
-          name="address-formatting-error1468"
+          name="address-formatting-error1458"
           type="radio"
           value="mockaddresskeyapt2"
         />
@@ -79,7 +79,7 @@ exports[`Address address formatting when claimantValidateAddress feature flag is
         <input
           class="usa-radio__input"
           id="InputChoice1438"
-          name="address-formatting-error1469"
+          name="address-formatting-error1459"
           type="radio"
           value="none"
         />
@@ -127,14 +127,14 @@ exports[`Address address formatting when claimantValidateAddress feature flag is
       >
         <input
           class="usa-radio__input"
-          id="InputChoice1482"
-          name="address-formatting-error1480"
+          id="InputChoice1467"
+          name="address-formatting-error1465"
           type="radio"
           value="mockaddresskeyapt1"
         />
         <label
           class="usa-radio__label"
-          for="InputChoice1482"
+          for="InputChoice1467"
         >
           54321 Mock Address Apt 1 Washington, DC 20005
         </label>
@@ -144,14 +144,14 @@ exports[`Address address formatting when claimantValidateAddress feature flag is
       >
         <input
           class="usa-radio__input"
-          id="InputChoice1483"
-          name="address-formatting-error1480"
+          id="InputChoice1468"
+          name="address-formatting-error1465"
           type="radio"
           value="mockaddresskeyapt2"
         />
         <label
           class="usa-radio__label"
-          for="InputChoice1483"
+          for="InputChoice1468"
         >
           54321 Mock Address Apt 2 Washington, DC 20005
         </label>
@@ -179,14 +179,14 @@ exports[`Address address formatting when claimantValidateAddress feature flag is
       >
         <input
           class="usa-radio__input"
-          id="InputChoice1484"
-          name="address-formatting-error1481"
+          id="InputChoice1469"
+          name="address-formatting-error1466"
           type="radio"
           value="none"
         />
         <label
           class="usa-radio__label"
-          for="InputChoice1484"
+          for="InputChoice1469"
         >
           54321 Mock Address , Washington DC 20005
         </label>
@@ -228,16 +228,16 @@ exports[`Address address formatting when claimantValidateAddress feature flag is
       >
         <input
           class="usa-radio__input"
-          id="InputChoice1961"
-          name="address-formatting-error1988"
+          id="InputChoice1816"
+          name="address-formatting-error1833"
           type="radio"
           value="none"
         />
         <label
           class="usa-radio__label"
-          for="InputChoice1961"
+          for="InputChoice1816"
         >
-          Use addrss as entered:
+          Use address as entered:
           <span
             class="usa-hint text-base-dark"
           >
@@ -283,16 +283,16 @@ exports[`Address address formatting when claimantValidateAddress feature flag is
       >
         <input
           class="usa-radio__input"
-          id="InputChoice1998"
-          name="address-formatting-error1997"
+          id="InputChoice1838"
+          name="address-formatting-error1837"
           type="radio"
           value="none"
         />
         <label
           class="usa-radio__label"
-          for="InputChoice1998"
+          for="InputChoice1838"
         >
-          Use addrss as entered:
+          Use address as entered:
           <span
             class="usa-hint text-base-dark"
           >

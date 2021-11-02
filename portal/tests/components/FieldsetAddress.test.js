@@ -124,10 +124,11 @@ describe("FieldsetAddress", () => {
     ).toBeInTheDocument();
   });
 
-  it("displays errors for the entire fieldset", () => {
+  it("displays errors for the entire fieldset and hides fields when errorMsg is set", () => {
     renderComponent({ errorMsg: "This is an error message." });
 
     expect(screen.getByText("This is an error message.")).toBeInTheDocument();
+    expect(screen.queryByLabelText("City")).not.toBeInTheDocument();
   });
 
   it("renders with a small label when the smallLabel prop is set", () => {

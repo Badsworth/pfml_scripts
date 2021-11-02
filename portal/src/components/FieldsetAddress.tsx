@@ -64,6 +64,21 @@ const FieldsetAddress = ({
     context: addressType,
   });
 
+  if (errorMsg) {
+    return (
+      <Fieldset>
+        <FormLabel
+          component="legend"
+          hint={props.hint}
+          small={props.smallLabel}
+          errorMsg={errorMsg}
+        >
+          {props.label}
+        </FormLabel>
+      </Fieldset>
+    );
+  }
+
   return (
     <Fieldset>
       <FormLabel

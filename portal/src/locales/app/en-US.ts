@@ -1038,7 +1038,7 @@ const pages = {
     validationSuggestionNoMatchHint:
       "We could not verify your address as entered",
     validationSuggestionNoMatchLabel: "Verify your address",
-    validationSuggestionNoMatchRadioLabel: "Use addrss as entered:",
+    validationSuggestionNoMatchRadioLabel: "Use address as entered:",
   },
   claimsBondingDateOfChild: {
     birthHint:
