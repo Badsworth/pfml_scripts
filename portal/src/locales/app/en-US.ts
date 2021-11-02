@@ -1031,6 +1031,14 @@ const pages = {
     mailingAddressLabel: "What is your mailing address?",
     sectionLabel: "What is your current residential address?",
     title: "$t(shared.claimsVerifyIdTitle)",
+    validationSuggestionEditAddressLink: "Edit address",
+    validationSuggestionEnteredHint: "Entered:",
+    validationSuggestionHint: "Suggested:",
+    validationSuggestionLabel: "Verify your address",
+    validationSuggestionNoMatchHint:
+      "We could not verify your address as entered",
+    validationSuggestionNoMatchLabel: "Verify your address",
+    validationSuggestionNoMatchRadioLabel: "Use addrss as entered:",
   },
   claimsBondingDateOfChild: {
     birthHint:

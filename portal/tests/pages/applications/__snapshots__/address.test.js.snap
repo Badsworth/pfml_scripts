@@ -213,7 +213,7 @@ exports[`Address address formatting when claimantValidateAddress feature flag is
     <legend
       class="usa-label text-bold usa-legend font-heading-xs measure-5"
     >
-      Verify address
+      Verify your address
     </legend>
     <span
       class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
@@ -237,7 +237,7 @@ exports[`Address address formatting when claimantValidateAddress feature flag is
           class="usa-radio__label"
           for="InputChoice1961"
         >
-          Use address as entered:
+          Use addrss as entered:
           <span
             class="usa-hint text-base-dark"
           >
@@ -268,7 +268,7 @@ exports[`Address address formatting when claimantValidateAddress feature flag is
     <legend
       class="usa-label text-bold usa-legend font-heading-xs measure-5"
     >
-      Verify address
+      Verify your address
     </legend>
     <span
       class="display-block line-height-sans-5 measure-5 usa-hint text-base-darkest"
@@ -292,7 +292,7 @@ exports[`Address address formatting when claimantValidateAddress feature flag is
           class="usa-radio__label"
           for="InputChoice1998"
         >
-          Use address as entered:
+          Use addrss as entered:
           <span
             class="usa-hint text-base-dark"
           >

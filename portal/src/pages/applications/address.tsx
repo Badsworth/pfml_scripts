@@ -177,6 +177,7 @@ interface AddressFormattingErrorProps {
 
 const AddressFormattingError = (props: AddressFormattingErrorProps) => {
   const { addressFormatter, "data-testid": dataTestId } = props;
+  const { t } = useTranslation();
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     addressFormatter.selectSuggestionAddressKey(event.target.value);
@@ -187,22 +188,24 @@ const AddressFormattingError = (props: AddressFormattingErrorProps) => {
       <div className="border-left-05 padding-left-2" data-testid={dataTestId}>
         <InputChoiceGroup
           smallLabel
-          label="Verify address"
-          hint={"We could not verify your address as entered"}
+          label={t("pages.claimsAddress.validationSuggestionNoMatchLabel")}
+          hint={t("pages.claimsAddress.validationSuggestionNoMatchHint")}
           type="radio"
           name={uniqueId("address-formatting-error")}
           onChange={handleChange}
           choices={[
             {
               checked: addressFormatter.selectedAddressKey === "none",
-              label: "Use address as entered:",
+              label: t(
+                "pages.claimsAddress.validationSuggestionNoMatchRadioLabel"
+              ),
               hint: addressFormatter.address.toString(),
               value: "none",
             },
           ]}
         />
         <Button onClick={addressFormatter.reset} variation="unstyled">
-          Edit address
+          {t("pages.claimsAddress.validationSuggestionEditAddressLink")}
         </Button>
       </div>
     );
@@ -212,8 +215,8 @@ const AddressFormattingError = (props: AddressFormattingErrorProps) => {
     <div className="border-left-05 padding-left-2" data-testid={dataTestId}>
       <InputChoiceGroup
         smallLabel
-        label="Verify your address"
-        hint="Suggested:"
+        label={t("pages.claimsAddress.validationSuggestionLabel")}
+        hint={t("pages.claimsAddress.validationSuggestionHint")}
         type="radio"
         name={uniqueId("address-formatting-error")}
         onChange={handleChange}
@@ -227,7 +230,7 @@ const AddressFormattingError = (props: AddressFormattingErrorProps) => {
       <InputChoiceGroup
         smallLabel
         label=""
-        hint="Entered:"
+        hint={t("pages.claimsAddress.validationSuggestionEnteredHint")}
         type="radio"
         name={uniqueId("address-formatting-error")}
         onChange={handleChange}
@@ -240,7 +243,7 @@ const AddressFormattingError = (props: AddressFormattingErrorProps) => {
         ]}
       />
       <Button onClick={addressFormatter.reset} variation="unstyled">
-        Edit address
+        {t("pages.claimsAddress.validationSuggestionEditAddressLink")}
       </Button>
     </div>
   );
