@@ -1,13 +1,15 @@
 import React, { useEffect } from "react";
 import { AppLogic } from "../hooks/useAppLogic";
+import PageNotFound from "../components/PageNotFound";
 import Spinner from "../components/Spinner";
+import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 import withUser from "./withUser";
 
 interface ComponentWithClaimProps {
   appLogic: AppLogic;
   query: {
-    claim_id: string;
+    claim_id?: string;
   };
 }
 
@@ -17,6 +19,7 @@ interface ComponentWithClaimProps {
  * @param {React.Component} Component - Component to receive claim prop
  * @returns {React.Component} - Component with claim prop
  */
+// @ts-expect-error TODO (PORTAL-966) Fix HOC typing
 const withBenefitsApplication = (Component) => {
   const ComponentWithClaim = (props: ComponentWithClaimProps) => {
     const { appLogic, query } = props;
@@ -25,11 +28,15 @@ const withBenefitsApplication = (Component) => {
     const application_id = query.claim_id;
     const benefitsApplications =
       appLogic.benefitsApplications.benefitsApplications;
-    const claim = benefitsApplications.getItem(application_id);
-    const shouldLoad =
+    const claim = application_id
+      ? benefitsApplications.getItem(application_id)
+      : undefined;
+    const shouldLoad = !!(
+      application_id &&
       !appLogic.benefitsApplications.hasLoadedBenefitsApplicationAndWarnings(
         application_id
-      );
+      )
+    );
 
     useEffect(() => {
       if (shouldLoad) {
@@ -38,6 +45,21 @@ const withBenefitsApplication = (Component) => {
 
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [shouldLoad]);
+
+    useEffect(() => {
+      const { goTo, pathname } = appLogic.portalFlow;
+      if (
+        claim?.isCompleted &&
+        (pathname === routes.applications.checklist ||
+          pathname === routes.applications.review)
+      ) {
+        goTo(routes.applications.index);
+      }
+    }, [claim, appLogic.portalFlow]);
+
+    if (!application_id) {
+      return <PageNotFound />;
+    }
 
     if (shouldLoad) {
       return (

@@ -1,5 +1,5 @@
 class Withholding {
-  filing_period: string | null = null;
+  filing_period: string;
 
   constructor(attrs: Withholding) {
     Object.assign(this, attrs);

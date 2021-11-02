@@ -66,8 +66,8 @@ const truncationMachine = createMachine(
   {
     context: {
       // These should be defined when starting the machine, using withContext
-      pageOffset: null,
-      totalPages: null,
+      pageOffset: 0,
+      totalPages: 0,
     },
     initial: "unknown",
     states: { ...truncationStates }, // using destructuring to avoid a weird TS build error in Storybook

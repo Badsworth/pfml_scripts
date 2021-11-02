@@ -16,14 +16,16 @@ const MaskDeliminatedRegex = {
  */
 function deliminateRegexGroups(value: string, rx: RegExp) {
   const matches = toDigits(value).match(rx);
+  let formattedValue = value;
+
   if (matches && matches.length > 1) {
-    value = matches
+    formattedValue = matches
       .slice(1)
       .filter((a) => !!a) // remove undefined groups
       .join("-");
   }
 
-  return value;
+  return formattedValue;
 }
 
 /**
@@ -42,12 +44,17 @@ function toDigits(value: string) {
 function stringWithFixedDigits(value: string, digits = 2) {
   const decimalRegex = /\.[\d]+$/;
   if (decimalRegex.test(value)) {
-    const decimal = value.match(decimalRegex)[0];
-    const fixedDecimal = parseFloat(decimal)
-      .toFixed(digits)
-      .match(decimalRegex)[0];
+    const decimalMatch = value.match(decimalRegex);
+    if (decimalMatch && decimalMatch.length > 0) {
+      const decimal = decimalMatch[0];
+      const fixedDecimalMatch = parseFloat(decimal)
+        .toFixed(digits)
+        .match(decimalRegex);
 
-    return value.replace(decimal, fixedDecimal);
+      if (fixedDecimalMatch && fixedDecimalMatch.length > 0) {
+        return value.replace(decimal, fixedDecimalMatch[0]);
+      }
+    }
   }
 
   return value;
@@ -84,17 +91,18 @@ export function maskValue(
     // ensure it includes two decimal points
     const number = toNumber(value);
     if (number !== undefined && !Number.isNaN(number)) {
-      value = stringWithFixedDigits(number.toLocaleString("en-US"));
+      return stringWithFixedDigits(number.toLocaleString("en-US"));
     }
-  } else if (MaskDeliminatedRegex[mask]) {
-    value = deliminateRegexGroups(value, MaskDeliminatedRegex[mask]);
+
+    return value;
   }
-  return value;
+
+  return deliminateRegexGroups(value, MaskDeliminatedRegex[mask]);
 }
 
 interface MaskProps {
-  children: any;
-  mask?: "currency" | "fein" | "hours" | "phone" | "ssn" | "zip";
+  children: JSX.Element; // it is an input
+  mask: "currency" | "fein" | "hours" | "phone" | "ssn" | "zip";
 }
 
 /**

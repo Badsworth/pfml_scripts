@@ -6,15 +6,19 @@ from freezegun import freeze_time
 import massgov.pfml.util.files as file_util
 from massgov.pfml.db.models.employees import (
     DuaEmployeeDemographics,
+    DuaReportingUnit,
+    EmployeeOccupation,
     Gender,
+    OrganizationUnit,
     ReferenceFile,
     ReferenceFileType,
 )
-from massgov.pfml.db.models.factories import EmployeeFactory
+from massgov.pfml.db.models.factories import EmployeeFactory, EmployerFactory
 from massgov.pfml.dua.config import get_moveit_config, get_s3_config
 from massgov.pfml.dua.demographics import (
     download_demographics_file_from_moveit,
     load_demographics_file,
+    set_employee_occupation_from_demographic_data,
 )
 from massgov.pfml.util.batch.log import LogEntry
 
@@ -23,6 +27,14 @@ def get_mock_data():
     return ReferenceFile(
         file_location=os.path.join(
             os.path.dirname(__file__), "test_files", "test_dua_demographic_data.csv"
+        )
+    )
+
+
+def get_set_demographic_mock_data():
+    return ReferenceFile(
+        file_location=os.path.join(
+            os.path.dirname(__file__), "test_files", "test_dua_demographic_data_set_occupation.csv"
         )
     )
 
@@ -110,6 +122,92 @@ def test_update_employee_demographics_file_mode(test_db_session, monkeypatch, mo
         processed_records = (test_db_session.query(DuaEmployeeDemographics)).all()
 
         assert len(processed_records) == 10
+
+
+def test_set_employee_occupation_from_demographics_file(
+    test_db_session, monkeypatch, mock_s3_bucket, initialize_factories_session
+):
+
+    monkeypatch.setenv("S3_BUCKET", f"s3://{mock_s3_bucket}")
+    with LogEntry(test_db_session, "test log entry") as log_entry:
+
+        # Scenario where org unit id is set
+        employee_one = EmployeeFactory(
+            employee_id="4376896b-596c-4c86-a653-1915cf997a84",
+            fineos_customer_number="1234567",
+            gender_id=Gender.WOMAN.gender_id,
+        )
+
+        # Scenario where org unit id can't be found
+        EmployeeFactory(
+            employee_id="cb2f2d72-ac68-4402-a82f-6e32edd086b3", fineos_customer_number="7654321"
+        )
+
+        # Scenario where org unit id is skipped
+        employee_three = EmployeeFactory(
+            employee_id="cb2f2d72-ac68-4402-a82f-6e32edd086b1", fineos_customer_number="1111111"
+        )
+
+        # Scenario where EmployeeOccupation is created
+        EmployeeFactory(
+            employee_id="cb2f2d72-ac68-4402-a82f-6e32edd086b2", fineos_customer_number="4444444"
+        )
+
+        employer = EmployerFactory(
+            employer_id="4376896b-596c-4c86-a653-1915cf997a85",
+            fineos_employer_id=10,
+            employer_name="Test Company",
+            employer_fein="123456789",
+        )
+
+        org_unit = OrganizationUnit(
+            organization_unit_id="4376896b-596c-4c86-a653-1915cf997a82",
+            name="Foo",
+            employer_id="4376896b-596c-4c86-a653-1915cf997a85",
+        )
+
+        employee_occupation = EmployeeOccupation()
+        employee_occupation.employee_id = employee_one.employee_id
+        employee_occupation.employer_id = employer.employer_id
+        employee_occupation.org_unit_name = "Test Org Unit Name"
+
+        test_db_session.add(employee_occupation)
+
+        employee_occupation_two = EmployeeOccupation()
+        employee_occupation_two.employee_id = employee_three.employee_id
+        employee_occupation_two.employer_id = employer.employer_id
+        employee_occupation_two.org_unit_name = "Test Org Unit Name"
+        employee_occupation_two.organization_unit_id = "4376896b-596c-4c86-a653-1915cf997a82"
+
+        test_db_session.add(employee_occupation_two)
+
+        test_db_session.add(org_unit)
+
+        reporting_unit = DuaReportingUnit(
+            dua_reporting_unit_id="4376896b-596c-4c86-a653-1915cf997a85", dua_id="12345"
+        )
+
+        test_db_session.add(reporting_unit)
+
+        test_db_session.commit()
+
+        reference_file = get_set_demographic_mock_data()
+        s3_config = get_s3_config()
+        load_demographics_file(test_db_session, reference_file, log_entry, s3_config=s3_config)
+
+        metrics = log_entry.metrics
+
+        # 4 rows in the file (not counting headers)
+        assert metrics["total_dua_demographics_row_count"] == 4
+        assert metrics["successful_dua_demographics_reference_files_count"] == 1
+        assert metrics["pending_dua_demographics_reference_files_count"] == 1
+
+        set_employee_occupation_from_demographic_data(test_db_session, log_entry=log_entry)
+
+        assert metrics["missing_dua_org_unit_count"] == 1
+        assert metrics["created_employee_occupation_count"] == 1
+        assert metrics["dua_org_unit_skipped_count"] == 1
+        assert metrics["dua_org_unit_set_count"] == 1
 
 
 @freeze_time("2020-12-07")

@@ -30,10 +30,10 @@ import withClaimDocuments from "../../hoc/withClaimDocuments";
 
 interface UploadCertificationProps {
   appLogic: AppLogic;
-  claim?: BenefitsApplication;
-  documents?: BenefitsApplicationDocument[];
-  isLoadingDocuments?: boolean;
-  query?: {
+  claim: BenefitsApplication;
+  documents: BenefitsApplicationDocument[];
+  isLoadingDocuments: boolean;
+  query: {
     claim_id?: string;
     additionalDoc?: string;
   };
@@ -73,7 +73,9 @@ export const UploadCertification = (props: UploadCertificationProps) => {
       leadTextContext = conditionalContext[claimReason];
       break;
     case LeaveReason.bonding:
-      leadTextContext = conditionalContext[claimReason][claimReasonQualifier];
+      leadTextContext = claimReasonQualifier
+        ? conditionalContext[claimReason][claimReasonQualifier]
+        : undefined;
       break;
   }
 

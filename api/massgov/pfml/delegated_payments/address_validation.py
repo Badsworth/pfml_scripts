@@ -66,20 +66,12 @@ class AddressValidationStep(Step):
 
     def run_step(self) -> None:
 
-        try:
-            experian_soap_client = _get_experian_soap_client()
+        experian_soap_client = _get_experian_soap_client()
 
-            payments = _get_payments_awaiting_address_validation(self.db_session)
-            for payment in payments:
-                self._validate_address_for_payment(payment, experian_soap_client)
-                self.increment(self.Metrics.VALIDATED_ADDRESS_COUNT)
-
-            self.db_session.commit()
-
-        except Exception:
-            self.db_session.rollback()
-            logger.exception("Error processing addresses for payments")
-            raise
+        payments = _get_payments_awaiting_address_validation(self.db_session)
+        for payment in payments:
+            self._validate_address_for_payment(payment, experian_soap_client)
+            self.increment(self.Metrics.VALIDATED_ADDRESS_COUNT)
 
         return None
 

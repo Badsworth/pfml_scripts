@@ -1,3 +1,4 @@
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Heading from "../../components/Heading";
 import Hint from "../../components/Hint";
@@ -8,17 +9,17 @@ import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 interface EmployerBenefitsIntroProps {
-  appLogic: any;
+  appLogic: AppLogic;
   claim: BenefitsApplication;
-  query: any;
+  query: { [key: string]: string };
 }
 
 export const EmployerBenefitsIntro = (props: EmployerBenefitsIntroProps) => {
   const { t } = useTranslation();
   const { appLogic, claim, query } = props;
 
-  const handleSave = () => {
-    return appLogic.portalFlow.goToNextPage({ claim }, query);
+  const handleSave = async () => {
+    return await appLogic.portalFlow.goToNextPage({ claim }, query);
   };
 
   return (

@@ -6,6 +6,7 @@ import InputNumber from "./InputNumber";
 import React from "react";
 import classnames from "classnames";
 import convertMinutesToHours from "../utils/convertMinutesToHours";
+import isBlank from "../utils/isBlank";
 
 interface InputHoursProps {
   /**
@@ -67,12 +68,14 @@ interface InputHoursProps {
   /**
    * Hours value represented in minutes. Must be a whole number.
    */
-  value?: number | string;
+  value?: null | number | string;
 }
 
 const InputHours = (props: InputHoursProps) => {
+  const hasError = !isBlank(props.errorMsg);
+
   const formGroupClasses = classnames("usa-form-group", {
-    "usa-form-group--error": !!props.errorMsg,
+    "usa-form-group--error": hasError,
   });
   const inputFormGroupClasses = {
     hours: classnames("display-inline-block margin-right-3", {

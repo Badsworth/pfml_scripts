@@ -135,14 +135,14 @@ describe("LeaveDetails", () => {
     userEvent.click(screen.getAllByRole("button")[0]);
 
     expect(downloadDocumentSpy).toHaveBeenCalledWith(
-      "NTN-111-ABS-01",
       expect.objectContaining({
         content_type: "image/png",
         created_at: "2020-04-05",
         document_type: "State managed Paid Leave Confirmation",
         fineos_document_id: "fineos-id-4",
         name: "Medical cert doc",
-      })
+      }),
+      "NTN-111-ABS-01"
     );
   });
 

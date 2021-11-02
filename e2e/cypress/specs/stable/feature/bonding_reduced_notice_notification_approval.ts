@@ -98,7 +98,6 @@ describe("Approval (notifications/notices)", () => {
     () => {
       cy.dependsOnPreviousPass([submit]);
       portal.before();
-      cy.visit("/");
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
           if (!claim.employer_fein) {

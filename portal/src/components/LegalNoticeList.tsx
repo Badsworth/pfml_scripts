@@ -7,8 +7,10 @@ import getLegalNotices from "../utils/getLegalNotices";
 import { useTranslation } from "../locales/i18n";
 
 interface LegalNoticeListProps {
-  documents?: Array<BenefitsApplicationDocument | ClaimDocument>;
-  onDownloadClick?: (...args: any[]) => any;
+  documents: Array<BenefitsApplicationDocument | ClaimDocument>;
+  onDownloadClick: (
+    document: BenefitsApplicationDocument
+  ) => Promise<Blob | undefined>;
 }
 
 /**
@@ -39,7 +41,7 @@ export default function LegalNoticeList(props: LegalNoticeListProps) {
       <div>
         <DownloadableDocument
           document={document}
-          onDownloadClick={onDownloadClick}
+          downloadBenefitsApplicationDocument={onDownloadClick}
           showCreatedAt
         />
       </div>

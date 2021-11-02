@@ -1,4 +1,4 @@
-import config from "./config";
+import { ConfigFunction } from "./config";
 import * as path from "path";
 import { S3Client, PutObjectCommandInput } from "@aws-sdk/client-s3";
 import { Upload } from "@aws-sdk/lib-storage";
@@ -13,7 +13,6 @@ import { URL } from "url";
 import delay from "delay";
 import pRetry from "p-retry";
 import chalk from "chalk";
-import { Environment } from "types";
 
 type SfnEventName =
   | " dor_import "
@@ -24,24 +23,34 @@ type SfnEventName =
 export default class InfraClient {
   private s3Client: S3Client;
   private sfnClient: SFNClient;
-  private env: Environment;
 
-  constructor(environment: Environment) {
+  static create(config: ConfigFunction) {
+    return new InfraClient(
+      config("ENVIRONMENT"),
+      config("DOR_IMPORT_URI"),
+      config("DOR_ETL_ARN")
+    );
+  }
+
+  constructor(
+    private environment: string,
+    private dor_import_uri: string,
+    private dor_etl_arn: string
+  ) {
     this.s3Client = new S3Client({
       region: "us-east-1",
     });
     this.sfnClient = new SFNClient({
       region: "us-east-1",
     });
-    this.env = environment;
   }
 
   private getS3UploadParams(filename: string): PutObjectCommandInput {
-    const formattedURI = config("DOR_IMPORT_URI").replace(
-      "TARGET_ENV",
-      this.env
-    );
-    const { host: bucket, pathname: key, protocol } = new URL(formattedURI);
+    const {
+      host: bucket,
+      pathname: key,
+      protocol,
+    } = new URL(this.dor_import_uri);
     if (protocol !== "s3:")
       throw new Error(`Invalid protocol for DOR_IMPORT_URI: ${protocol}`);
     return {
@@ -59,7 +68,9 @@ export default class InfraClient {
       return upload
         .done()
         .then(() =>
-          console.log(`${this.env.toUpperCase()} - Completed upload of ${file}`)
+          console.log(
+            `${this.environment.toUpperCase()} - Completed upload of ${file}`
+          )
         );
     });
     await Promise.all(uploads);
@@ -70,18 +81,14 @@ export default class InfraClient {
   async runDorEtl(
     exitEvent: SfnEventName = "fineos_eligibility_feed_export"
   ): Promise<boolean | void> {
-    const formattedEtlArn = config("DOR_ETL_ARN").replace(
-      "TARGET_ENV",
-      this.env
-    );
     const { executionArn } = await this.sfnClient.send(
       new StartExecutionCommand({
-        stateMachineArn: formattedEtlArn,
+        stateMachineArn: this.dor_etl_arn,
       })
     );
     console.log(
       `${chalk.blue(
-        this.env.toUpperCase() + " etl execution started"
+        this.environment.toUpperCase() + " etl execution started"
       )} - waiting on 'load_employers_to_fineos' task completion`
     );
     // wait 3 minutes before checking 'load_employers_to_fineos' completion
@@ -93,7 +100,7 @@ export default class InfraClient {
         log &&
           console.log(
             `${chalk.blue(
-              this.env.toUpperCase()
+              this.environment.toUpperCase()
             )} - checking for 'load_employers_to_fineos' task completion`
           );
         const logs = await this.sfnClient.send(
@@ -127,7 +134,7 @@ export default class InfraClient {
             if (eventName === "fineos_eligibility_feed_export") {
               console.log(
                 chalk.green(
-                  `${this.env.toUpperCase()} load_employers_to_fineos successful!`
+                  `${this.environment.toUpperCase()} load_employers_to_fineos successful!`
                 )
               );
             } else {

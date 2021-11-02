@@ -118,6 +118,10 @@ class ClaimantData:
     def _process_requested_absences(
         self, requested_absences: List[FineosExtractVbiRequestedAbsenceSom]
     ) -> None:
+
+        start_dates: List[str] = []
+        end_dates = []
+
         for requested_absence in requested_absences:
             # If any of the requested absence records are ID proofed, then
             # we consider the entire claim valid
@@ -165,6 +169,11 @@ class ClaimantData:
 
                 continue
 
+            if start_date:
+                start_dates.append(start_date)
+            if end_date:
+                end_dates.append(end_date)
+
             absence_period = AbsencePeriodContainer(
                 start_date=start_date,
                 end_date=end_date,
@@ -175,6 +184,20 @@ class ClaimantData:
             )
 
             self.absence_period_data.append(absence_period)
+
+        all_start_end_dates_valid = len(requested_absences) == len(start_dates) == len(end_dates)
+
+        if all_start_end_dates_valid:
+            # We don't need to convert to date to do comparisons (min/max)
+            # This is because the current string format (Y-M-D...) preserves the chronological sort order
+            self.absence_start_date = min(start_dates)
+            self.absence_end_date = max(end_dates)
+
+        else:
+            if self.count_incrementer:
+                self.count_incrementer(
+                    ClaimantExtractStep.Metrics.START_DATE_OR_END_DATE_NOT_FOUND_COUNT
+                )
 
         # Ideally, we would be able to distinguish and separate out the
         # various leave requests that make up a claim, but we don't
@@ -197,14 +220,6 @@ class ClaimantData:
             self.validation_container,
             True,
             custom_validator_func=payments_util.lookup_validator(AbsenceStatus),
-        )
-
-        self.absence_start_date = payments_util.validate_db_input(
-            "ABSENCEPERIOD_START", requested_absence, self.validation_container, True
-        )
-
-        self.absence_end_date = payments_util.validate_db_input(
-            "ABSENCEPERIOD_END", requested_absence, self.validation_container, True
         )
 
         # Note this should be identical regardless of absence case
@@ -362,6 +377,7 @@ class ClaimantExtractStep(Step):
         ABSENCE_PERIOD_CLASS_ID_OR_INDEX_ID_NOT_FOUND_COUNT = (
             "absence_period_class_id_or_index_id_not_found_count"
         )
+        START_DATE_OR_END_DATE_NOT_FOUND_COUNT = "start_date_or_end_date_not_found_count"
 
     def run_step(self) -> None:
         self.process_claimant_extract_data()
@@ -369,18 +385,7 @@ class ClaimantExtractStep(Step):
     def process_claimant_extract_data(self) -> None:
 
         logger.info("Processing claimant extract data")
-
-        try:
-            self.process_records_to_db()
-            self.db_session.commit()
-        except Exception:
-            # If there was a file-level exception anywhere in the processing,
-            # we move the file from received to error
-            # Add this function:
-            self.db_session.rollback()
-            logger.exception("Error processing claimant extract data")
-            raise
-
+        self.process_records_to_db()
         logger.info("Done processing claimant extract data")
 
     def get_employee_feed_map(

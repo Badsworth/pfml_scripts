@@ -10,7 +10,7 @@ class PaginationMeta {
   order_by: string;
   order_direction: "ascending" | "descending";
 
-  constructor(pagingMeta: PaginationMeta | Record<string, never> = {}) {
+  constructor(pagingMeta: PaginationMeta | { [key: string]: never } = {}) {
     Object.assign(this, pagingMeta);
   }
 }

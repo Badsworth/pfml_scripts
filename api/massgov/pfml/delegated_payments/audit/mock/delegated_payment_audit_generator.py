@@ -361,6 +361,8 @@ def generate_scenario_data(
         employer=employer,
         claim_type_id=scenario_descriptor.claim_type.claim_type_id,
         fineos_absence_status_id=AbsenceStatus.APPROVED.absence_status_id,
+        absence_period_start_date=datetime.today() - timedelta(days=180),
+        absence_period_end_date=datetime.today() - timedelta(days=90),
     )
 
     if not scenario_descriptor.is_first_time_payment:

@@ -28,13 +28,17 @@ import TooltipIcon from "../../components/TooltipIcon";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
 import formatDateRange from "../../utils/formatDateRange";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
 import withClaims from "../../hoc/withClaims";
 import withUser from "../../hoc/withUser";
+
+interface PageQueryParam {
+  name: string;
+  value: number | string | string[];
+}
 
 interface DashboardProps {
   appLogic: AppLogic;
@@ -50,13 +54,12 @@ interface DashboardProps {
 }
 
 export const Dashboard = (props: DashboardProps) => {
-  const showReviewByStatus = isFeatureEnabled("employerShowReviewByStatus");
   const { t } = useTranslation();
-  const introElementRef = useRef(null);
+  const introElementRef = useRef<HTMLElement>(null);
   const apiParams = {
     // Default the dashboard to show claims requiring action first
-    order_by: showReviewByStatus ? "absence_status" : "created_at",
-    order_direction: showReviewByStatus ? "ascending" : "descending",
+    order_by: "absence_status",
+    order_direction: "ascending",
     ...props.query,
   } as const;
 
@@ -65,13 +68,11 @@ export const Dashboard = (props: DashboardProps) => {
    * or change the filter/sort of the loaded claims. The name/value
    * are merged with the existing query string.
    */
-  const updatePageQuery = (
-    paramsToUpdate: Array<{ name: string; value: number | string | string[] }>
-  ) => {
+  const updatePageQuery = (paramsToUpdate: PageQueryParam[]) => {
     const params = new URLSearchParams(window.location.search);
 
     paramsToUpdate.forEach(({ name, value }) => {
-      if (!value || (typeof value !== "number" && value.length === 0)) {
+      if (typeof value !== "number" && value.length === 0) {
         // Remove param if its value is null, undefined, empty string, or empty array
         params.delete(name);
       } else {
@@ -79,7 +80,7 @@ export const Dashboard = (props: DashboardProps) => {
       }
     });
 
-    const paramsObj = {};
+    const paramsObj: { [key: string]: string } = {};
     for (const [paramKey, paramValue] of Array.from(params.entries())) {
       paramsObj[paramKey] = paramValue;
     }
@@ -134,45 +135,25 @@ export const Dashboard = (props: DashboardProps) => {
         <DashboardInfoAlert />
       </div>
 
-      <section className="margin-bottom-4" ref={introElementRef}>
-        <p className="margin-y-2">
-          {!showReviewByStatus && t("pages.employersDashboard.instructions")}
-        </p>
+      <section className="margin-bottom-4 margin-top-2" ref={introElementRef}>
         <Details label={t("pages.employersDashboard.statusDescriptionsLabel")}>
-          {showReviewByStatus ? (
-            <ul className="usa-list">
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_reviewBy" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_noAction" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_denied" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_approved" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_closed" />
-              </li>
-            </ul>
-          ) : (
-            <ul className="usa-list">
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_none" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_approved" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_closed" />
-              </li>
-              <li>
-                <Trans i18nKey="pages.employersDashboard.statusDescription_denied" />
-              </li>
-            </ul>
-          )}
+          <ul className="usa-list">
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_reviewBy" />
+            </li>
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_noAction" />
+            </li>
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_denied" />
+            </li>
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_approved" />
+            </li>
+            <li>
+              <Trans i18nKey="pages.employersDashboard.statusDescription_closed" />
+            </li>
+          </ul>
         </Details>
       </section>
 
@@ -195,10 +176,10 @@ export const Dashboard = (props: DashboardProps) => {
 };
 
 interface PaginatedClaimsTableProps {
-  appLogic?: AppLogic;
-  claims?: ClaimCollection;
-  paginationMeta?: PaginationMeta;
-  updatePageQuery: (...args: any[]) => any;
+  appLogic: AppLogic;
+  claims: ClaimCollection;
+  paginationMeta: PaginationMeta;
+  updatePageQuery: (params: PageQueryParam[]) => void;
   /** Pass in the SortDropdown so it can be rendered in the expected inline UI position */
   sort: React.ReactNode;
   user: User;
@@ -308,8 +289,8 @@ const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {
 };
 
 interface ClaimTableRowsProps {
-  appLogic?: any;
-  claims?: ClaimCollection;
+  appLogic: AppLogic;
+  claims: ClaimCollection;
   tableColumnKeys: string[];
   user: User;
 }
@@ -385,7 +366,7 @@ const ClaimTableRows = (props: ClaimTableRowsProps) => {
   };
 
   const renderClaimItems = () => {
-    const claimItemsJSX = [];
+    const claimItemsJSX: JSX.Element[] = [];
 
     claims.items.forEach((claim) => {
       claimItemsJSX.push(
@@ -447,7 +428,7 @@ interface FiltersProps {
     claim_status?: string;
     employer_id?: string;
   };
-  updatePageQuery: (...args: any[]) => any;
+  updatePageQuery: (params: PageQueryParam[]) => void;
   user: User;
 }
 
@@ -504,7 +485,7 @@ const Filters = (props: FiltersProps) => {
    */
   const handleSubmit = (evt: FormEvent) => {
     evt.preventDefault();
-    const params = [];
+    const params: PageQueryParam[] = [];
 
     Object.entries(formState).forEach(([name, value]) => {
       params.push({ name, value });
@@ -526,7 +507,7 @@ const Filters = (props: FiltersProps) => {
    * Event handler for the "Reset filters" action
    */
   const handleFilterReset = () => {
-    const params = [];
+    const params: PageQueryParam[] = [];
 
     Object.keys(activeFilters).forEach((name) => {
       // Reset by setting to an empty string
@@ -570,12 +551,6 @@ const Filters = (props: FiltersProps) => {
     setShowFilters(!showFilters);
   };
 
-  // TODO (EMPLOYER-1587): Remove variable
-  const pendingStatusChoices = isFeatureEnabled("employerShowReviewByStatus")
-    ? ["Pending - no action", "Open requirement"]
-    : // API filtering uses this as a catchall for several pending-like statuses
-      ["Pending"];
-
   const expandAria = showFilters ? "true" : "false";
 
   return (
@@ -610,8 +585,8 @@ const Filters = (props: FiltersProps) => {
             AbsenceCaseStatus.approved,
             AbsenceCaseStatus.closed,
             AbsenceCaseStatus.declined,
-            // TODO (EMPLOYER-1587): replace with the two new AbsenceCaseStatus values
-            ...pendingStatusChoices,
+            "Pending - no action",
+            "Open requirement",
           ].map((value) => ({
             checked: get(formState, "claim_status", []).includes(value),
             label: t("pages.employersDashboard.filterStatusChoice", {
@@ -666,11 +641,11 @@ const Filters = (props: FiltersProps) => {
               {
                 find(user.verifiedEmployers, {
                   employer_id: activeFilters.employer_id,
-                }).employer_dba
+                })?.employer_dba
               }
             </FilterMenuButton>
           )}
-          {activeFilters.claim_status &&
+          {activeFilters.claim_status.length &&
             activeFilters.claim_status.map((status) => (
               <FilterMenuButton
                 data-test={`claim_status_${status}`}
@@ -725,7 +700,7 @@ const FilterMenuButton = (props: FilterMenuButtonProps) => {
 interface SearchProps {
   /** The current search value */
   initialValue?: string;
-  updatePageQuery: (...args: any[]) => any;
+  updatePageQuery: (params: PageQueryParam[]) => void;
 }
 
 const Search = (props: SearchProps) => {
@@ -777,22 +752,18 @@ const Search = (props: SearchProps) => {
 interface SortDropdownProps {
   order_by?: "absence_status" | "created_at" | "employee";
   order_direction?: "ascending" | "descending";
-  updatePageQuery: (...args: any[]) => any;
+  updatePageQuery: (params: PageQueryParam[]) => void;
 }
 
 const SortDropdown = (props: SortDropdownProps) => {
   const { order_by, order_direction, updatePageQuery } = props;
   const choices = new Map([
+    ["status", "absence_status,ascending"],
     ["newest", "created_at,descending"],
     ["oldest", "created_at,ascending"],
     ["employee_az", "employee,ascending"],
     ["employee_za", "employee,descending"],
   ]);
-
-  // TODO (EMPLOYER-1587): Move the choice directly into the choices object definition
-  if (isFeatureEnabled("employerShowReviewByStatus")) {
-    choices.set("status", "absence_status,ascending");
-  }
 
   const { t } = useTranslation();
 

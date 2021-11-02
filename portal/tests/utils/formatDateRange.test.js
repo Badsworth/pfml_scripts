@@ -19,9 +19,8 @@ describe("formatDateRange", () => {
 
   describe("when start and end dates are invalid ISO 8601 strings", () => {
     it("returns empty string", () => {
-      const formattedDate = formatDateRange("1990--", "1990--31");
-
-      expect(formattedDate).toBe("");
+      expect(formatDateRange(null, null)).toBe("");
+      expect(formatDateRange("1990--", "1990--31")).toBe("");
     });
   });
 

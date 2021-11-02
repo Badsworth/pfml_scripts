@@ -1,18 +1,19 @@
 import { ClaimEmployee, ClaimEmployer, ManagedRequirement } from "./Claim";
 import { groupBy, orderBy } from "lodash";
+import { LeaveReasonType } from "./LeaveReason";
 
 class ClaimDetail {
   absence_periods: AbsencePeriod[] = [];
   application_id: string;
-  employee: ClaimEmployee;
-  employer: ClaimEmployer;
+  employee: ClaimEmployee | null;
+  employer: ClaimEmployer | null;
   fineos_absence_id: string;
   fineos_notification_id: string;
   managed_requirements: ManagedRequirement[] = [];
-  outstanding_evidence: Record<
-    "employee_evidence" | "employer_evidence",
-    OutstandingEvidence[]
-  > | null = null;
+  outstanding_evidence: {
+    employee_evidence: OutstandingEvidence[] | null;
+    employer_evidence: OutstandingEvidence[] | null;
+  } | null = null;
 
   constructor(attrs?: ClaimDetail) {
     if (!attrs) {
@@ -25,11 +26,9 @@ class ClaimDetail {
       this.employee = new ClaimEmployee(attrs.employee);
     }
 
-    if (attrs.absence_periods) {
-      this.absence_periods = attrs.absence_periods.map(
-        (absence_period) => new AbsencePeriod(absence_period)
-      );
-    }
+    this.absence_periods = this.absence_periods.map(
+      (absence_period) => new AbsencePeriod(absence_period)
+    );
 
     if (
       this.outstanding_evidence &&
@@ -78,7 +77,7 @@ export class AbsencePeriod {
   evidence_status: string | null = null;
   fineos_leave_request_id: string | null = null;
   period_type: "Continuous" | "Intermittent" | "Reduced Schedule";
-  reason: string;
+  reason: LeaveReasonType;
   reason_qualifier_one = "";
   reason_qualifier_two = "";
   request_decision: "Pending" | "Approved" | "Denied" | "Withdrawn";

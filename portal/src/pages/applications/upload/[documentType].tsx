@@ -187,9 +187,9 @@ const IdentificationUpload = ({ path }: IdentificationUploadProps) => {
 
 interface DocumentUploadProps {
   appLogic: AppLogic;
-  documents?: BenefitsApplicationDocument[];
-  isLoadingDocuments?: boolean;
-  query?: {
+  documents: BenefitsApplicationDocument[];
+  isLoadingDocuments: boolean;
+  query: {
     claim_id: string;
     absence_case_id: string;
     additionalDoc?: string;

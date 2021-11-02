@@ -22,8 +22,8 @@ import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 interface SuccessProps {
-  claim?: BenefitsApplication;
-  query?: {
+  claim: BenefitsApplication;
+  query: {
     claim_id?: string;
   };
 }
@@ -167,7 +167,7 @@ export const Success = (props: SuccessProps) => {
             ),
             "track-status-link": (
               <a
-                href={routeWithParams("applications.status", {
+                href={routeWithParams("applications.status.claim", {
                   absence_case_id: claim.fineos_absence_id,
                 })}
               />
@@ -280,7 +280,7 @@ export const Success = (props: SuccessProps) => {
           <Heading level="2">{t("pages.claimsSuccess.viewStatus")}</Heading>
           <ButtonLink
             className="margin-top-4"
-            href={routeWithParams("applications.status", {
+            href={routeWithParams("applications.status.claim", {
               absence_case_id: claim.fineos_absence_id,
             })}
           >

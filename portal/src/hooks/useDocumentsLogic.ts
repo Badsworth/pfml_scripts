@@ -107,7 +107,7 @@ const useDocumentsLogic = ({
           "documents"
         )
       );
-      return;
+      return [];
     }
 
     const uploadPromises = filesWithUniqueId.map(async (fileWithUniqueId) => {
@@ -125,7 +125,7 @@ const useDocumentsLogic = ({
           new DocumentsUploadError(
             application_id,
             fileWithUniqueId.id,
-            error instanceof ValidationError && error.issues
+            error instanceof ValidationError && error.issues.length
               ? error.issues[0]
               : null
           )

@@ -1,5 +1,6 @@
 import { get, pick } from "lodash";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -17,9 +18,9 @@ export const fields = [
 ];
 
 interface NotifiedEmployerProps {
-  claim?: BenefitsApplication;
-  appLogic: any;
-  query?: {
+  claim: BenefitsApplication;
+  appLogic: AppLogic;
+  query: {
     claim_id?: string;
   };
 }

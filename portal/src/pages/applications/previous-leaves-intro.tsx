@@ -1,7 +1,7 @@
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Heading from "../../components/Heading";
 import IconHeading from "../../components/IconHeading";
-
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
@@ -10,9 +10,9 @@ import { useTranslation } from "../../locales/i18n";
 import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 interface Props {
-  appLogic: any;
+  appLogic: AppLogic;
   claim: BenefitsApplication;
-  query: any;
+  query: { [key: string]: string };
 }
 
 export const PreviousLeavesIntro = (props: Props) => {
@@ -20,8 +20,8 @@ export const PreviousLeavesIntro = (props: Props) => {
   const { appLogic, claim, query } = props;
   const startDate = formatDate(claim.leaveStartDate).full();
 
-  const handleSave = () => {
-    return appLogic.portalFlow.goToNextPage({ claim }, query);
+  const handleSave = async () => {
+    return await appLogic.portalFlow.goToNextPage({ claim }, query);
   };
 
   return (

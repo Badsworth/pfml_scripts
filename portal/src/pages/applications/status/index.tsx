@@ -1,29 +1,31 @@
+import { DocumentType, DocumentTypeEnum } from "../../../models/Document";
 import React, { useEffect } from "react";
 import { find, get, has, map } from "lodash";
-
-import { AbsencePeriod } from "../../models/ClaimDetail";
-import Alert from "../../components/Alert";
-import { AppLogic } from "../../hooks/useAppLogic";
-import BackButton from "../../components/BackButton";
-import ButtonLink from "../../components/ButtonLink";
-import { DocumentType } from "../../models/Document";
-import Heading from "../../components/Heading";
-import LeaveReason from "../../models/LeaveReason";
-import LegalNoticeList from "../../components/LegalNoticeList";
-import PageNotFound from "../404";
-import Spinner from "../../components/Spinner";
-import Tag from "../../components/Tag";
-import Title from "../../components/Title";
+import { AbsencePeriod } from "../../../models/ClaimDetail";
+import Alert from "../../../components/Alert";
+import { AppLogic } from "../../../hooks/useAppLogic";
+import BackButton from "../../../components/BackButton";
+import BenefitsApplicationDocument from "../../../models/BenefitsApplicationDocument";
+import ButtonLink from "../../../components/ButtonLink";
+import ClaimDocument from "../../../models/ClaimDocument";
+import Heading from "../../../components/Heading";
+import LeaveReason from "../../../models/LeaveReason";
+import LegalNoticeList from "../../../components/LegalNoticeList";
+import PageNotFound from "../../../components/PageNotFound";
+import Spinner from "../../../components/Spinner";
+import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
+import Tag from "../../../components/Tag";
+import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
-import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
-import findKeyByValue from "../../utils/findKeyByValue";
-import formatDate from "../../utils/formatDate";
-import getLegalNotices from "../../utils/getLegalNotices";
-import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
-import { isFeatureEnabled } from "../../services/featureFlags";
-import routes from "../../routes";
-import { useTranslation } from "../../locales/i18n";
-import withUser from "../../hoc/withUser";
+import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
+import findKeyByValue from "../../../utils/findKeyByValue";
+import formatDate from "../../../utils/formatDate";
+import getLegalNotices from "../../../utils/getLegalNotices";
+import hasDocumentsLoadError from "../../../utils/hasDocumentsLoadError";
+import { isFeatureEnabled } from "../../../services/featureFlags";
+import routes from "../../../routes";
+import { useTranslation } from "../../../locales/i18n";
+import withUser from "../../../hoc/withUser";
 
 interface StatusProps {
   appLogic: AppLogic;
@@ -58,7 +60,9 @@ export const Status = ({ appLogic, query }: StatusProps) => {
   }, [portalFlow]);
 
   useEffect(() => {
-    loadClaimDetail(absence_case_id);
+    if (absence_case_id) {
+      loadClaimDetail(absence_case_id);
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [absence_case_id]);
 
@@ -163,28 +167,27 @@ export const Status = ({ appLogic, query }: StatusProps) => {
 
     // How many claim decisions
     const expectedNoticeCount = claimDetail.absence_periods.reduce(
-      (acc, { request_decision }) => {
+      (previousValue, { request_decision }) => {
         const shouldHaveNotice =
           request_decision === "Approved" ||
           request_decision === "Denied" ||
           request_decision === "Withdrawn";
 
-        if (shouldHaveNotice) acc += 1;
-        return acc;
+        if (shouldHaveNotice) return previousValue + 1;
+        return previousValue;
       },
       0
     );
 
-    // Types of notices we want to watch out for
-    const noticeTypes = {
-      [DocumentType.approvalNotice]: true,
-      [DocumentType.denialNotice]: true,
-      [DocumentType.withdrawalNotice]: true,
-    };
-
     // Legal notices which match notice types above
+    const noticeTypes: DocumentTypeEnum[] = [
+      DocumentType.approvalNotice,
+      DocumentType.denialNotice,
+      DocumentType.withdrawalNotice,
+    ];
+
     const decisionNotices = legalNotices.filter((legalNotice) => {
-      return noticeTypes[legalNotice.document_type];
+      return noticeTypes.includes(legalNotice.document_type);
     });
 
     // Show timeline for notice if there are no notices and expectedNotices > amount of Notices
@@ -207,7 +210,9 @@ export const Status = ({ appLogic, query }: StatusProps) => {
     );
   };
 
-  const getInfoAlertContext = (absenceDetails) => {
+  const getInfoAlertContext = (absenceDetails: {
+    [key: string]: AbsencePeriod[];
+  }) => {
     const hasBondingReason = has(absenceDetails, LeaveReason.bonding);
     const hasPregnancyReason = has(absenceDetails, LeaveReason.pregnancy);
     const hasNewBorn = claimDetail.absence_periods.some(
@@ -298,13 +303,23 @@ export const Status = ({ appLogic, query }: StatusProps) => {
             </Heading>
             <p className="text-bold">{absence_case_id}</p>
           </div>
-          <div>
-            <Heading weight="normal" level="2" size="4">
-              {t("pages.claimsStatus.employerEIN")}
-            </Heading>
-            <p className="text-bold">{claimDetail.employer.employer_fein}</p>
-          </div>
+          {claimDetail.employer && (
+            <div>
+              <Heading weight="normal" level="2" size="4">
+                {t("pages.claimsStatus.employerEIN")}
+              </Heading>
+              <p className="text-bold">{claimDetail.employer.employer_fein}</p>
+            </div>
+          )}
         </div>
+
+        {isFeatureEnabled("claimantShowPayments") && (
+          <StatusNavigationTabs
+            activePath={appLogic.portalFlow.pathname}
+            absence_case_id={absence_case_id}
+          />
+        )}
+
         {hasPendingStatus && (
           <Timeline
             absencePeriods={claimDetail.absence_periods}
@@ -421,10 +436,10 @@ export const StatusTagMap = {
   Pending: "pending",
   Withdrawn: "inactive",
   Cancelled: "inactive",
-};
+} as const;
 
 interface LeaveDetailsProps {
-  absenceDetails?: any;
+  absenceDetails?: { [key: string]: AbsencePeriod[] };
 }
 
 export const LeaveDetails = ({ absenceDetails = {} }: LeaveDetailsProps) => {
@@ -503,14 +518,10 @@ export const LeaveDetails = ({ absenceDetails = {} }: LeaveDetailsProps) => {
 interface TimelineProps {
   absencePeriods: AbsencePeriod[];
   applicationId?: string;
-  employerFollowUpDate?: string;
-  docList: any[];
+  employerFollowUpDate: string | null;
+  docList: ClaimDocument[] | BenefitsApplicationDocument[];
   absenceCaseId: string;
-  appLogic?: {
-    portalFlow?: {
-      getNextPageRoute: (...args: any[]) => any;
-    };
-  };
+  appLogic: AppLogic;
 }
 
 export const Timeline = ({
@@ -523,7 +534,10 @@ export const Timeline = ({
 }: TimelineProps) => {
   const { t } = useTranslation();
 
-  const shouldRenderCertificationButton = (absencePeriodReason, docList) =>
+  const shouldRenderCertificationButton = (
+    absencePeriodReason: keyof typeof DocumentType.certification,
+    docList: BenefitsApplicationDocument[] | ClaimDocument[]
+  ) =>
     !findDocumentsByTypes(docList, [
       DocumentType.certification[absencePeriodReason],
     ]).length;
@@ -533,7 +547,7 @@ export const Timeline = ({
     (absencePeriod) => absencePeriod.reason === LeaveReason.bonding
   );
   interface FollowUpStepsProps {
-    bondingAbsencePeriod: any;
+    bondingAbsencePeriod: AbsencePeriod;
   }
   const FollowUpSteps = ({ bondingAbsencePeriod }: FollowUpStepsProps) => {
     let typeOfProof;

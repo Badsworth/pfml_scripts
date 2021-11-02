@@ -1,8 +1,6 @@
 import React, { useEffect } from "react";
 import { isNil, omitBy } from "lodash";
 import { AppLogic } from "../hooks/useAppLogic";
-import ClaimCollection from "../models/ClaimCollection";
-import PaginationMeta from "../models/PaginationMeta";
 import Spinner from "../components/Spinner";
 import { useTranslation } from "../locales/i18n";
 import withUser from "./withUser";
@@ -18,15 +16,6 @@ interface ApiParams {
 
 interface ComponentWithClaimsProps {
   appLogic: AppLogic;
-  claims: {
-    activeFilters: {
-      employer_id: string;
-    };
-    claims?: ClaimCollection;
-    isLoadingClaims?: boolean;
-    loadPage: (page_offset: string, order: any, filters: any) => void;
-    paginationMeta?: PaginationMeta;
-  };
 }
 
 /**
@@ -35,7 +24,8 @@ interface ComponentWithClaimsProps {
  * @param {React.Component} Component - Component to receive claims prop
  * @returns {React.Component} - Component with claims prop
  */
-const withClaims = (Component: any, apiParams: ApiParams = {}) => {
+// @ts-expect-error TODO (PORTAL-966) Fix HOC typing
+const withClaims = (Component, apiParams: ApiParams = {}) => {
   const ComponentWithClaims = (props: ComponentWithClaimsProps) => {
     const { appLogic } = props;
     const { page_offset } = apiParams;

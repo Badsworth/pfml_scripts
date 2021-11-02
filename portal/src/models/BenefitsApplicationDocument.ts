@@ -4,11 +4,11 @@ import { DocumentTypeEnum } from "./Document";
  * A document record from the application endpoints
  */
 class BenefitsApplicationDocument {
-  content_type: string | null;
-  created_at: string | null;
+  content_type: string;
+  created_at: string;
   description: string;
-  document_type: DocumentTypeEnum | null;
-  fineos_document_id: string | null;
+  document_type: DocumentTypeEnum;
+  fineos_document_id: string;
   name: string;
   user_id: string;
   application_id: string;

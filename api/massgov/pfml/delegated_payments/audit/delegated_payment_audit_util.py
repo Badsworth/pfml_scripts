@@ -169,6 +169,12 @@ def build_audit_report_row(
         absence_case_creation_date=payment.absence_case_creation_date.isoformat()
         if payment.absence_case_creation_date
         else None,
+        absence_start_date=claim.absence_period_start_date.isoformat()
+        if claim.absence_period_start_date
+        else None,
+        absence_end_date=claim.absence_period_end_date.isoformat()
+        if claim.absence_period_end_date
+        else None,
         case_status=claim.fineos_absence_status.absence_status_description
         if claim.fineos_absence_status
         else None,

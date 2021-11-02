@@ -1,5 +1,5 @@
 import React, { Fragment } from "react";
-
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Details from "../../components/Details";
 import IconHeading from "../../components/IconHeading";
@@ -16,9 +16,9 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 export const fields = ["claim.has_concurrent_leave"];
 
 interface ConcurrentLeavesProps {
-  appLogic: any;
+  appLogic: AppLogic;
   claim: BenefitsApplication;
-  query: any;
+  query: { [key: string]: string };
 }
 
 export const ConcurrentLeaves = (props: ConcurrentLeavesProps) => {

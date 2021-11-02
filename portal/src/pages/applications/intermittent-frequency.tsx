@@ -6,6 +6,7 @@ import BenefitsApplication, {
 import { Trans, useTranslation } from "react-i18next";
 import { get, pick } from "lodash";
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import ConditionalContent from "../../components/ConditionalContent";
 import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -45,9 +46,9 @@ export const fields = [
 export const irregularOver6MonthsId = "irregularOver6Months";
 
 interface IntermittentFrequencyProps {
-  claim?: BenefitsApplication;
-  appLogic: any;
-  query?: {
+  claim: BenefitsApplication;
+  appLogic: AppLogic;
+  query: {
     claim_id?: string;
   };
 }

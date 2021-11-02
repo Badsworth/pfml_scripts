@@ -2,6 +2,7 @@ import BenefitsApplication, {
   CaringLeaveMetadata,
 } from "../../models/BenefitsApplication";
 import { get, pick } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import InputDate from "../../components/InputDate";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -16,9 +17,9 @@ export const fields = [
 ];
 
 interface FamilyMemberDateOfBirthProps {
-  appLogic: any;
+  appLogic: AppLogic;
   claim: BenefitsApplication;
-  query: any;
+  query: { [key: string]: string };
 }
 
 export const FamilyMemberDateOfBirth = (

@@ -1,30 +1,34 @@
 import { Trans, useTranslation } from "react-i18next";
-import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import Lead from "../../../components/Lead";
+import PageNotFound from "../../../components/PageNotFound";
 import React from "react";
 import Title from "../../../components/Title";
+import User from "../../../models/User";
 import routes from "../../../routes";
 import withUser from "../../../hoc/withUser";
 
 interface CannotVerifyProps {
-  appLogic: AppLogic;
   query: {
     employer_id: string;
   };
+  user: User;
 }
 
 export const CannotVerify = (props: CannotVerifyProps) => {
-  const { appLogic, query } = props;
-  const {
-    users: { user },
-  } = appLogic;
+  const { query, user } = props;
   const employer = user.user_leave_administrators.find((employer) => {
     return employer.employer_id === query.employer_id;
   });
   const { t } = useTranslation();
+
+  if (!employer) {
+    return <PageNotFound />;
+  }
+
   const employerDba = employer.employer_dba;
   const employerFein = employer.employer_fein;
+
   return (
     <React.Fragment>
       <BackButton />

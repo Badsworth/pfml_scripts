@@ -174,18 +174,6 @@ describe("useUsersLogic", () => {
       await expect(usersLogic.loadUser).rejects.toThrow(/Cannot load user/);
     });
 
-    it("throws UserNotReceivedError when api resolves with no user", async () => {
-      usersApi.getCurrentUser.mockResolvedValueOnce({ user: null });
-
-      await act(async () => {
-        await usersLogic.loadUser();
-      });
-
-      expect(appErrorsLogic.appErrors.items[0].message).toMatchInlineSnapshot(
-        `"Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"`
-      );
-    });
-
     it("throws NetworkError when fetch request fails", async () => {
       usersApi.getCurrentUser.mockRejectedValueOnce(new NetworkError());
 

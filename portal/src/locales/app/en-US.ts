@@ -585,8 +585,6 @@ const errors = {
   caughtError_NetworkError: "$t(shared.networkError)",
   caughtError_NotFoundError:
     "Sorry, we were unable to retrieve what you were looking for. Check that the link you are visiting is correct. If this continues to happen, please log out and try again.",
-  caughtError_UserNotReceivedError:
-    "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak)",
   claimStatus: {
     fineos_claim_withdrawn:
       "Application <strong>{{absenceId}}</strong> has been withdrawn and is no longer being processed.  If you believe this application has been withdrawn in error, check if any additional applications in your account cover the same leave period.  If you have additional questions, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
@@ -715,6 +713,7 @@ const shared = {
     passwordError_invalid:
       "Your password does not meet the requirements. Please check the requirements and try again.",
     passwordError_required: "Enter your password",
+    skip: "Skip this step",
   },
   backToLoginLink: "Back to log in",
   certificationFormCare:
@@ -904,6 +903,7 @@ const shared = {
   reducedLeaveScheduleLeadCertGuidanceMedicalOrPregnancy:
     "The total number of hours you enter must match the reduced leave schedule section in the $t(shared.certificationFormMedical).",
   resendVerificationCodeLink: "Resend the code",
+  saveAndContinue: "Save and continue",
   siteDescription:
     "Apply for this Commonwealth-offered benefit here, or log in to review your applications.",
   submitApplicationButton: "I understand and agree",
@@ -916,11 +916,6 @@ const shared = {
 };
 
 const pages = {
-  404: {
-    body: "<p>The page you’re looking for might have been removed, have a new name, or is otherwise unavailable.</p><p>If you typed the URL directly, check your spelling and capitalization. Our URLs look like this: <url-example>{{ url }}</url-example></p>",
-    homepageButton: "Visit homepage",
-    title: "Page not found",
-  },
   app: {
     seoDescription: "$t(shared.siteDescription)",
   },
@@ -997,6 +992,13 @@ const pages = {
     submitButton: "Set new password",
     title: "Create a new password",
     usernameLabel: "$t(shared.usernameLabel)",
+  },
+  authTwoFactorSmsSetup: {
+    lead: "We’ll send a 6-digit code by text message (SMS) to secure your account. This step is optional, but we can only show personal information like tax documents if you set this up.<br><br>If you skip this step now, you can secure your account later by going to the “Setting: Security” page.",
+    phoneNumberLabel: "Phone number",
+    saveButton: "$t(shared.saveAndContinue)",
+    skipButton: "$t(shared.auth.skip)",
+    title: "Make your account more secure",
   },
   authVerifyAccount: {
     backToLoginLink: "$t(shared.backToLoginLink)",
@@ -1100,8 +1102,12 @@ const pages = {
       "You will need to know:<ul><li>If you will use any benefits from your employer because you are taking leave.</li><li>If you will receive income from any other sources during your leave.</li><li>The dates for any leave you’ve taken since January 1, 2021 for a condition that is covered by Paid Family and Medical Leave.</li></ul>",
     stepHTMLDescription_payment:
       "<p>Tell us how you want to receive payment.</p><p>If you want to receive payment by direct deposit, you will need to provide your bank account information, including a routing number and account number.</p>",
+    stepHTMLDescription_payment_tax:
+      "<p>If you want to receive payment by direct deposit, you will need to provide your bank account information, including a routing number and account number.</p>",
     stepHTMLDescription_reviewAndConfirm:
       "<p>Once you confirm your leave information, we’ll notify your employer. Your job will be protected. To complete your application, you will need to finish the following three steps and submit.</p><p>If you need to edit your information in Part 1 after completing this step, you’ll need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
+    stepHTMLDescription_taxWithholding:
+      "<p>Tell us if you want to withhold state and federal taxes from your paid leave benefits. If you're unsure, we recommend speaking with a tax professional.</p>",
     stepHTMLDescription_uploadId:
       "<p>Upload proof of identity. If you entered a Massachusetts driver’s license or Mass ID number in step 1, upload the same$t(chars.nbsp)ID.</p><p>For other IDs, follow the instructions for acceptable proof of identity on the upload page.</p>",
     stepHTMLDescription_verifyId:
@@ -1111,7 +1117,7 @@ const pages = {
     stepListDescription_1_submitted:
       "Your in-progress application will be viewable by our Contact Center staff. If you need to edit your information in Part 1, you’ll need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Your application ID is <strong>{{absence_id}}</strong>.",
     stepListDescription_2:
-      "Entering payment information here leads to faster processing, but you can also call$t(chars.nbsp)<contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
+      "Entering information here leads to faster processing, but you can also call$t(chars.nbsp)<contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
     stepListDescription_2_submitted:
       "If you need to edit your information in Part 2, you’ll need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Your application ID is <strong>{{absence_id}}</strong>.",
     stepListDescription_3:
@@ -1119,12 +1125,15 @@ const pages = {
     stepListTitlePrefix: "Part {{number}}",
     stepListTitle_1: "Tell us about yourself and your leave",
     stepListTitle_2: "Enter your payment information",
+    stepListTitle_2_tax: "Tell us how you want to receive your payment",
     stepListTitle_3: "Upload your documents",
     stepTitle_employerInformation: "Enter employment information",
     stepTitle_leaveDetails: "Enter leave details",
     stepTitle_otherLeave: "Report other leave, benefits, and income",
     stepTitle_payment: "Add payment information",
+    stepTitle_payment_tax: "Enter payment information",
     stepTitle_reviewAndConfirm: "Review and confirm",
+    stepTitle_taxWithholding: "Enter tax withholding preference",
     stepTitle_uploadCertification: "Upload leave certification documents",
     stepTitle_uploadId: "Upload identification document",
     stepTitle_verifyId: "Verify your identification",
@@ -1570,7 +1579,10 @@ const pages = {
     sectionLabelHint:
       "Your choice will be applied to any previous applications you have submitted.",
     submitPart2Button: "Submit Part 2",
+    submitPayment: "Submit payment method",
     title: "Payment method",
+    warning:
+      "After you submit your payment method, it can’t be edited on this website. To change it, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
     whenWillIGetPaidDetails:
       "<p>Once your application is approved, you can expect your first payment to arrive at the beginning of your fourth week of leave, if your leave has already started.</p><p>If your leave starts in the future, you can expect your first payment 2-4 weeks after your leave starts.</p><p>After that, you will receive your payments every week.</p>",
     whenWillIGetPaidLabel: "When will I get paid?",
@@ -1854,16 +1866,16 @@ const pages = {
     otherLeaveChoiceNo: "$t(shared.choiceNo)",
     otherLeaveChoiceYes: "$t(shared.choiceYes)",
     otherLeaveDollarAmount: "{{amount, currency}}",
-    partDescription_1:
-      "If you need to make edits to Part 1, you’ll need to call our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Your application ID is <strong>{{absence_id}}</strong>",
+    partDescription:
+      "If you need to make edits to Part {{step}}, you’ll need to call our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Your application ID is <strong>{{absence_id}}</strong>",
     partHeadingPrefix: "Part {{number}}",
     partHeading_1: "Review: Tell us about yourself and your$t(chars.nbsp)leave",
-    partHeading_2: "Review: Your payment information",
-    partHeading_3: "Review: Upload document",
+    partHeading_2: "Review: Tell us how you want to receive your payment",
+    partHeading_3: "Review: Upload your documents",
     partOneNextSteps:
       "<p>Once you review and submit Part 1, your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you’ll need to call our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p><p>We’ll also notify your employer that you’ve started an application for paid family and medical leave.</p><p>Next, you’ll be able to work on Parts 2 and 3, and submit your application.</p>",
     paymentAccountNumLabel: "Account number",
-    paymentMethodLabel: "Payment method",
+    paymentMethodLabel: "Direct deposit or paper check",
     paymentMethodValue_ach: "$t(shared.paymentMethodAch)",
     paymentMethodValue_check: "$t(shared.paymentMethodCheck)",
     paymentRoutingNumLabel: "Routing number",
@@ -1902,13 +1914,17 @@ const pages = {
     stepHeading_employerInformation: "$t(shared.claimsEmploymentInfoTitle)",
     stepHeading_leaveDetails: "$t(shared.claimsLeaveDetailsTitle)",
     stepHeading_otherLeave: "$t(shared.claimsOtherLeaveTitle)",
-    stepHeading_payment: "Payment information",
+    stepHeading_payment: "Payment method",
+    stepHeading_tax: "Tax withholding",
     stepHeading_uploadCertification: "Upload certification document",
     stepHeading_uploadId: "Upload identity document",
     stepHeading_verifyId: "$t(shared.claimsVerifyIdTitle)",
     submitAction_final: "Submit application",
     submitAction_part1: "Submit Part 1",
     submitLoadingMessage: "Submitting… Do not refresh or go back.",
+    taxLabel: "Withhold state and federal taxes?",
+    taxNoWithhold: "$t(shared.choiceNo)",
+    taxYesWithhold: "$t(shared.choiceYes)",
     title_final: "Review and submit your application",
     title_part1:
       "Check your answers before submitting your$t(chars.nbsp)application.",
@@ -2108,6 +2124,18 @@ const pages = {
       "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link> if any of these are true:</p><ul><li>You have already taken leave to care for a family member since July 1, 2021</li><li>You have already taken leave since January 1, 2021 for <when-can-i-use-pfml>any other reason that qualifies for PFML</when-can-i-use-pfml></li><li>You plan to use any accrued paid leave or any other benefits from your employer during your paid leave from PFML (for example: your employer’s parental leave program or paid sick time)</li><li>You expect to get income from any other sources during your leave (for example: disability insurance, retirement benefits, or another job)</li></ul>",
     title: "You submitted your application",
     viewStatus: "View status and details for your application",
+  },
+  claimsTaxWithholding: {
+    choiceNo: "No, don’t withhold taxes",
+    choiceYes: "Yes, withhold state and federal taxes",
+    explanation:
+      "<p>We want to give you the option to have state and federal taxes withheld from your paid leave benefits. If you choose to have taxes withheld, we will withhold 5% for state taxes and 10% for federal taxes. These percentages can’t be adjusted.</p> <p>The IRS hasn’t decided if paid leave benefits are considered taxable income. When the IRS makes a decision for federal taxes, Massachusetts will follow the same guidance for state taxes.</p> <p>If you're unsure whether you want to withhold taxes, we recommend speaking with a <tax-professional-link>tax professional</tax-professional-link> about how IRS decisions could affect your personal tax liability. We cannot offer guidance or advice for individual tax situations.</p>",
+    sectionLabel:
+      "Do you want us to withhold state and federal taxes from your paid leave benefits?",
+    submit: "Submit tax withholding preference",
+    title: "Tax withholding",
+    warning:
+      "After you submit your tax withholding preference, it can’t be edited on this website. To change it, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>",
   },
   claimsUploadCertification: {
     addAnotherFileButton: "Choose another file",
@@ -2342,8 +2370,6 @@ const pages = {
     filterStatusChoice_Closed: "$t(shared.absenceCaseStatus_closed)",
     filterStatusChoice_Declined: "$t(shared.absenceCaseStatus_denied)",
     filterStatusChoice_OpenRequirement: "Review by",
-    // TODO (EMPLOYER-1587): Remove unused field
-    filterStatusChoice_Pending: "--",
     filterStatusChoice_PendingNoAction: "$t(shared.absenceCaseStatus_noAction)",
     filterStatusLabel: "Status",
     filtersApply: "Apply filters",
@@ -2351,8 +2377,6 @@ const pages = {
     filtersShowWithCount: "Show filters ({{count}})",
     filtersToggle: "Show filters",
     filtersToggle_expanded: "Hide filters",
-    instructions:
-      "Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.",
     noClaimResults: "No applications on file",
     searchLabel: "Search for employee name or application ID",
     searchSubmit: "Search",
@@ -2371,8 +2395,6 @@ const pages = {
       "<strong>Denied:</strong> DFML has denied this leave request.",
     statusDescription_noAction:
       "<strong>No action required:</strong> This leave request is awaiting a decision from DFML.",
-    statusDescription_none:
-      "<strong>“--” or no status:</strong> This leave request may require action from you; otherwise, it is awaiting a decision from DFML.",
     statusDescription_reviewBy:
       "<strong>Review by:</strong> Review this application by this date to provide DFML with your input.",
     statusDescriptionsLabel: "Status descriptions",
@@ -2990,7 +3012,7 @@ const components = {
     title: "Paid Family and Medical Leave (PFML)",
   },
   form: {
-    continueButton: "Save and continue",
+    continueButton: "$t(shared.saveAndContinue)",
     dateInputDayLabel: "Day",
     dateInputExample: "MM / DD / YYYY",
     dateInputMonthLabel: "Month",
@@ -3024,6 +3046,11 @@ const components = {
     title: "We’re undergoing maintenance",
   },
   newTag: "New",
+  pageNotFound: {
+    body: "<p>The page you’re looking for might have been removed, have a new name, or is otherwise unavailable.</p><p>If you typed the URL directly, check your spelling and capitalization. Our URLs look like this: <url-example>{{ url }}</url-example></p>",
+    homepageButton: "Visit homepage",
+    title: "Page not found",
+  },
   pagination: {
     nextLabel: "Next",
     previousLabel: "Previous",
@@ -3046,6 +3073,10 @@ const components = {
   },
   spinner: {
     label: "Loading",
+  },
+  statusNavigationTabs: {
+    payments: "Payments",
+    statusDetails: "Application",
   },
   tag: {
     state_approved: "Approved",

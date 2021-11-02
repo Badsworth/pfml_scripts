@@ -4,6 +4,7 @@ import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
 import ConditionalContent from "../../../components/ConditionalContent";
+import EmployerClaim from "../../../models/EmployerClaim";
 import Heading from "../../../components/Heading";
 import InputChoiceGroup from "../../../components/InputChoiceGroup";
 import StatusRow from "../../../components/StatusRow";
@@ -15,6 +16,7 @@ import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
 interface NewApplicationProps {
   appLogic: AppLogic;
+  claim: EmployerClaim;
   query: {
     absence_id: string;
   };
@@ -23,10 +25,8 @@ interface NewApplicationProps {
 export const NewApplication = (props: NewApplicationProps) => {
   const { t } = useTranslation();
   const {
-    appLogic: {
-      employers: { claim },
-      portalFlow,
-    },
+    appLogic: { portalFlow },
+    claim,
     query: { absence_id: absenceId },
   } = props;
 
@@ -42,7 +42,7 @@ export const NewApplication = (props: NewApplicationProps) => {
     );
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
     if (formState.hasReviewerVerified === "true") {
@@ -52,7 +52,7 @@ export const NewApplication = (props: NewApplicationProps) => {
     }
   };
 
-  const handleOnChange = (event) => {
+  const handleOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     updateFields({
       hasReviewerVerified: event.target.value,
     });
@@ -62,7 +62,7 @@ export const NewApplication = (props: NewApplicationProps) => {
     hasReviewerVerified: "",
   });
 
-  const updateFields = (fields) => {
+  const updateFields = (fields: { [fieldName: string]: unknown }) => {
     setFormState({ ...formState, ...fields });
   };
 

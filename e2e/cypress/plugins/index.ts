@@ -9,7 +9,7 @@
 // https://on.cypress.io/plugins-guide
 // ***********************************************************
 
-import config, { merged } from "../../src/config";
+import config, { configuration } from "../../src/config";
 import path from "path";
 import webpackPreprocessor from "@cypress/webpack-preprocessor";
 import {
@@ -193,7 +193,13 @@ export default function (
     },
 
     async deleteDownloadFolder(folderName): Promise<true> {
-      await fs.promises.rmdir(folderName, { maxRetries: 5, recursive: true });
+      try {
+        await fs.promises.rmdir(folderName, { maxRetries: 5, recursive: true });
+      } catch (error) {
+        // Ignore the error if download folder doesn't exist.
+        if (error.code === "ENOENT") return true;
+        throw error;
+      }
       return true;
     },
 
@@ -213,7 +219,10 @@ export default function (
   on("file:preprocessor", webpackPreprocessor(options));
 
   // Pass config values through as environment variables, which we will access via Cypress.env() in actions/common.ts.
-  const configEntries = Object.entries(merged).map(([k, v]) => [`E2E_${k}`, v]);
+  const configEntries = Object.entries(configuration).map(([k, v]) => [
+    `E2E_${k}`,
+    v,
+  ]);
 
   // Add dynamic options for the New Relic reporter.
   let reporterOptions = cypressConfig.reporterOptions ?? {};
@@ -226,6 +235,7 @@ export default function (
       accountId: config("NEWRELIC_ACCOUNTID"),
       apiKey: config("NEWRELIC_INGEST_KEY"),
       environment: config("ENVIRONMENT"),
+      branch: path.relative("refs/heads", process.env.GITHUB_REF as string),
       ...reporterOptions,
     };
   }

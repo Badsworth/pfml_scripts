@@ -57,7 +57,6 @@ describe("Claim date change", () => {
         cy.unstash<[string, string]>("changedLeaveDates").then(
           ([startDate, endDate]) => {
             fineos.before();
-            cy.visit("/");
             const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id);
             claimPage.tasks((task) => {
               task.add("Approved Leave Start Date Change");
@@ -67,7 +66,6 @@ describe("Claim date change", () => {
               );
             });
             claimPage.reviewClaim();
-            cy.visit("/");
             const claimReviewed =
               fineosPages.ClaimPage.visit(fineos_absence_id);
             claimReviewed.adjudicate((adjudication) => {
@@ -99,7 +97,6 @@ describe("Claim date change", () => {
   it("Should show the changed dates in Portal.", { retries: 0 }, () => {
     cy.dependsOnPreviousPass([submit, dateChange]);
     portal.before();
-    cy.visit("/");
     cy.unstash<DehydratedClaim>("claim").then(({ claim }) => {
       cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
         cy.unstash<string[]>("changedLeaveDates").then(

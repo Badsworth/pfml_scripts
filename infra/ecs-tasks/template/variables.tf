@@ -244,6 +244,11 @@ variable "enable_pub_automation_process_returns" {
   default     = false
 }
 
+variable "enable_pub_automation_process_1099_documents" {
+  description = "Enable scheduling for pub automation 1099 documents processing task"
+  default     = false
+}
+
 variable "rmv_client_base_url" {
   description = "The base URL for the Registry of Motor Vehicles (RMV) API."
   type        = string

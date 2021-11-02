@@ -1,3 +1,4 @@
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ConcurrentLeave from "../../models/ConcurrentLeave";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -19,9 +20,9 @@ export const fields = [
 ];
 
 interface ConcurrentLeavesDetailsProps {
-  appLogic: any;
+  appLogic: AppLogic;
   claim: BenefitsApplication;
-  query: any;
+  query: { [key: string]: string };
 }
 
 export const ConcurrentLeavesDetails = (
@@ -32,7 +33,7 @@ export const ConcurrentLeavesDetails = (
   const employer_fein = claim.employer_fein;
 
   const { formState, updateFields } = useFormState({
-    concurrent_leave: new ConcurrentLeave(get(claim, "concurrent_leave")),
+    concurrent_leave: new ConcurrentLeave(get(claim, "concurrent_leave") || {}),
   });
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,

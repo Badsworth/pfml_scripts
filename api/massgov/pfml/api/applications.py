@@ -3,7 +3,7 @@ from uuid import UUID
 
 import connexion
 import puremagic
-from flask import Response, request
+from flask import Response, abort, request
 from puremagic import PureError
 from pydantic import ValidationError
 from sqlalchemy import asc, desc
@@ -22,6 +22,7 @@ from massgov.pfml.api.models.applications.requests import (
     ApplicationRequestBody,
     DocumentRequestBody,
     PaymentPreferenceRequestBody,
+    TaxWithholdingPreferenceRequestBody,
 )
 from massgov.pfml.api.models.applications.responses import ApplicationResponse, DocumentResponse
 from massgov.pfml.api.services.applications import get_document_by_id
@@ -430,7 +431,7 @@ def validate_content_type(content_type):
 
 # We need custom validation here since we get the content type from the uploaded file
 def get_valid_content_type(file):
-    """ Use pure magic library to identify file type, use file mimetype as backup"""
+    """Use pure magic library to identify file type, use file mimetype as backup"""
     try:
         validate_content_type(file.mimetype)
         content_type = puremagic.from_stream(file.stream, mime=True, filename=file.filename)
@@ -689,8 +690,8 @@ def document_download(application_id: UUID, document_id: str) -> Response:
             document_type = document.document_type
         else:
             document_type = None
-        document_data: Base64EncodedFileData = (
-            download_document(existing_application, document_id, db_session, document_type)
+        document_data: Base64EncodedFileData = download_document(
+            existing_application, document_id, db_session, document_type
         )
         file_bytes = base64.b64decode(document_data.base64EncodedFileContents.encode("ascii"))
 
@@ -802,4 +803,77 @@ def payment_preference_submit(application_id: UUID) -> Response:
             ),
             data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
             errors=[],
+        ).to_api_response()
+
+
+def validate_tax_withholding_request(db_session, application_id, tax_preference_body):
+    """
+    Helper to handle validation for tax withholding requests
+        1. Must be an existing application
+        2. Requesting user must have authorization to edit application
+        3. Preference must not already be set
+    """
+    existing_application = get_or_404(db_session, Application, application_id)
+    ensure(EDIT, existing_application)
+
+    if existing_application.is_withholding_tax is not None:
+        logger.info(
+            "submit_tax_withholding_preference failure - preference already set",
+            extra=get_application_log_attributes(existing_application),
+        )
+        abort(
+            response_util.error_response(
+                status_code=Forbidden,
+                message="Application {} could not be updated. Tax withholding preference already submitted".format(
+                    existing_application.application_id
+                ),
+                data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+                errors=[],
+            ).to_api_response()
+        )
+
+    return existing_application
+
+
+def save_tax_preference(db_session, existing_application, tax_preference_body):
+    existing_application.is_withholding_tax = tax_preference_body.withhold_taxes
+    db_session.commit()
+    db_session.refresh(existing_application)
+
+
+def send_tax_selection_to_fineos(existing_application):
+    try:
+        pass
+        # TODO: (PORTAL-951) Integrate FINEOS call into tax withholding endpoint
+    except Exception:
+        logger.warning(
+            "submit_tax_withholding_preference failure - failure submitting tax withholding preference to claims processing system",
+            extra=get_application_log_attributes(existing_application),
+            exc_info=True,
+        )
+        raise
+
+
+def submit_tax_withholding_preference(application_id: UUID) -> Response:
+    body = connexion.request.json
+    tax_preference_body = TaxWithholdingPreferenceRequestBody.parse_obj(body)
+
+    with app.db_session() as db_session:
+        existing_application = validate_tax_withholding_request(
+            db_session, application_id, tax_preference_body
+        )
+
+        send_tax_selection_to_fineos(existing_application)
+        save_tax_preference(db_session, existing_application, tax_preference_body)
+
+        logger.info(
+            "tax_withholding_preference_submit success",
+            extra=get_application_log_attributes(existing_application),
+        )
+        return response_util.success_response(
+            message="Tax Withholding Preference for application {} submitted without errors".format(
+                existing_application.application_id
+            ),
+            data=ApplicationResponse.from_orm(existing_application).dict(exclude_none=True),
+            status_code=201,
         ).to_api_response()

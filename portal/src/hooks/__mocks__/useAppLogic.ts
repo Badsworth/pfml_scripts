@@ -57,7 +57,7 @@ export default jest.fn(() => ({
   clearRequiredFieldErrors: jest.fn(),
   documents: {
     attach: jest.fn((application_id, files) => {
-      const uploadPromises = [];
+      const uploadPromises: Array<Promise<{ success: boolean }>> = [];
       for (let i = 0; i < files.length; i++) {
         uploadPromises.push(Promise.resolve({ success: true }));
       }

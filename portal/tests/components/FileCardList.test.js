@@ -21,6 +21,7 @@ const onRemoveTempFile = jest.fn();
 
 const renderComponent = (customProps) => {
   const defaultProps = {
+    documents: [],
     tempFiles: new TempFileCollection(),
     onChange,
     fileErrors: [],

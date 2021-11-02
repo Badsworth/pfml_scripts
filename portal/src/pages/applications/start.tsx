@@ -1,4 +1,5 @@
 import Alert from "../../components/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
 import Button from "../../components/Button";
 import React from "react";
@@ -10,7 +11,7 @@ import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
 
 interface StartProps {
-  appLogic: any;
+  appLogic: AppLogic;
 }
 
 export const Start = (props: StartProps) => {

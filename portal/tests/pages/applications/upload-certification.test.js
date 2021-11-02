@@ -21,7 +21,7 @@ const goToNextPage = jest.fn(() => {
 
 const catchError = jest.fn();
 
-let attach = jest.fn();
+let attach = jest.fn().mockResolvedValue([]);
 
 const setup = (claim, props = {}, cb) => {
   if (!claim) {
@@ -310,7 +310,7 @@ describe("UploadCertification", () => {
     const claim = new MockBenefitsApplicationBuilder()
       .medicalLeaveReason()
       .create();
-    attach = jest.fn();
+    attach = jest.fn().mockResolvedValue([]);
 
     setup(claim, {
       query: { claim_id: claim.application_id, additionalDoc: "true" },

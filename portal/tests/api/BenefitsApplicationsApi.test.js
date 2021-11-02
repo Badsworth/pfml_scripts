@@ -4,6 +4,8 @@ import PaymentPreference, {
 import BenefitsApplication from "../../src/models/BenefitsApplication";
 import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import BenefitsApplicationsApi from "../../src/api/BenefitsApplicationsApi";
+import TaxWithholdingPreference from "../../src/models/TaxWithholdingPreference";
+
 import { mockAuth } from "../test-utils";
 
 jest.mock("../../src/services/tracker");
@@ -256,10 +258,10 @@ describe("BenefitsApplicationsApi", () => {
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
-Object {
-  "warnings": Array [],
-}
-`);
+        Object {
+          "warnings": Array [],
+        }
+      `);
     });
   });
 
@@ -340,10 +342,56 @@ Object {
       expect(claimResponse).toBeInstanceOf(BenefitsApplication);
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
-Object {
-  "warnings": Array [],
-}
-`);
+        Object {
+          "warnings": Array [],
+        }
+      `);
+    });
+  });
+
+  describe("SubmitTaxWithholdingPreference", () => {
+    let claim, tax_preference;
+
+    beforeEach(() => {
+      claim = new BenefitsApplication();
+      tax_preference = new TaxWithholdingPreference({ withhold_taxes: true });
+
+      global.fetch = mockFetch({
+        response: { data: { ...claim } },
+        status: 201,
+      });
+    });
+
+    it("sends POST request to /applications/:application_id/submit_tax_withholding_preference", async () => {
+      await claimsApi.submitTaxWithholdingPreference(
+        claim.application_id,
+        tax_preference
+      );
+
+      expect(fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/applications/${claim.application_id}/submit_tax_withholding_preference`,
+        {
+          body: JSON.stringify(tax_preference),
+          headers: baseRequestHeaders,
+          method: "POST",
+        }
+      );
+    });
+
+    it("resolves with claim properties", async () => {
+      const { claim: claimResponse, ...rest } =
+        await claimsApi.submitTaxWithholdingPreference(
+          claim.application_id,
+          tax_preference
+        );
+
+      expect(claimResponse).toBeInstanceOf(BenefitsApplication);
+      expect(claimResponse).toEqual(claim);
+      expect(rest).toMatchInlineSnapshot(`
+        Object {
+          "warnings": Array [],
+        }
+      `);
     });
   });
 });

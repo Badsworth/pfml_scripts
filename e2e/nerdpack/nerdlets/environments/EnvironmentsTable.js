@@ -20,7 +20,13 @@ import {
 } from "nr1";
 import React from "react";
 import { format } from "date-fns";
-import { labelComponent, COMPONENTS, COMPONENTS_WIDTH, ENVS } from "../common";
+import {
+  labelComponent,
+  extractGroup,
+  COMPONENTS,
+  COMPONENTS_WIDTH,
+  ENVS,
+} from "../common";
 
 function extractEnvironmentData(data) {
   const map = data
@@ -94,7 +100,18 @@ export default function EnvironmentsTable({ platformState }) {
             {({ item }) => {
               return (
                 <TableRow>
-                  <TableRowCell>{item.name}</TableRowCell>
+                  <TableRowCell>
+                    <Link
+                      to={navigation.getOpenStackedNerdletLocation({
+                        id: "env-timeline",
+                        urlState: {
+                          environment: item.name,
+                        },
+                      })}
+                    >
+                      {item.name}
+                    </Link>
+                  </TableRowCell>
                   <TableRowCell>
                     <LatestE2ERuns
                       environment={item.name}
@@ -249,11 +266,3 @@ function E2EVisualIndicator({ run, runIds }) {
     </Popover>
   );
 }
-
-const extractGroup = (item, name) => {
-  const group = item.metadata.groups.find((g) => g.name === name);
-  if (group) {
-    return group.value;
-  }
-  throw new Error(`Unable to determine ${name}`);
-};

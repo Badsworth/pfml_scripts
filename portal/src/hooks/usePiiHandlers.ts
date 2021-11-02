@@ -1,4 +1,11 @@
-import { ChangeEvent, FocusEvent, FocusEventHandler, useRef } from "react";
+import {
+  ChangeEvent,
+  ChangeEventHandler,
+  FocusEvent,
+  FocusEventHandler,
+  useRef,
+} from "react";
+import isBlank from "../utils/isBlank";
 
 /**
  * Create onFocus and onBlur event handlers for PII inputs
@@ -6,12 +13,12 @@ import { ChangeEvent, FocusEvent, FocusEventHandler, useRef } from "react";
 const usePiiHandlers = (inputProps: {
   name: string;
   value?: string | number;
-  onChange?: (event: { target: Node }) => void;
+  onChange?: ChangeEventHandler<HTMLInputElement>;
   onBlur?: FocusEventHandler<HTMLInputElement>;
   onFocus?: FocusEventHandler<HTMLInputElement>;
 }) => {
   const initialValue = useRef(inputProps.value);
-  const shouldClearValue = useRef(!!inputProps.value);
+  const shouldClearValue = useRef(!isBlank(inputProps.value));
 
   const handleFocus = (event: FocusEvent<HTMLInputElement>) => {
     if (shouldClearValue.current) {
@@ -25,7 +32,7 @@ const usePiiHandlers = (inputProps: {
   };
 
   const handleBlur = (event: FocusEvent<HTMLInputElement>) => {
-    if (!inputProps.value) {
+    if (isBlank(inputProps.value) && !isBlank(initialValue.current)) {
       shouldClearValue.current = true;
       dispatchChange(initialValue.current, event);
     }
@@ -48,7 +55,9 @@ const usePiiHandlers = (inputProps: {
     const target = originalEvent.target.cloneNode(true) as HTMLInputElement; // https://github.com/microsoft/TypeScript/issues/283
     target.value = value.toString();
 
-    inputProps.onChange({ target });
+    if (inputProps.onChange) {
+      inputProps.onChange({ ...originalEvent, target });
+    }
   };
 
   return { handleBlur, handleFocus };

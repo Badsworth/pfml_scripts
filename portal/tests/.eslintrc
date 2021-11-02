@@ -6,6 +6,7 @@
   ],
   "plugins": ["jest-dom", "testing-library"],
   "rules": {
+    "no-param-reassign": "off",
     "react/display-name": "off",
     "react/prop-types": "off",
     // allow container.firstChild for snapshot tests

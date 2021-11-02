@@ -1,4 +1,4 @@
-import { AppLogic } from "../../../hooks/useAppLogic";
+import EmployerClaim from "../../../models/EmployerClaim";
 import React from "react";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
@@ -9,7 +9,7 @@ import { useTranslation } from "../../../locales/i18n";
 import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
 interface ConfirmationProps {
-  appLogic: AppLogic;
+  claim: EmployerClaim;
   query: {
     absence_id: string;
   };
@@ -18,9 +18,7 @@ interface ConfirmationProps {
 export const Confirmation = (props: ConfirmationProps) => {
   const { t } = useTranslation();
   const {
-    appLogic: {
-      employers: { claim },
-    },
+    claim,
     query: { absence_id },
   } = props;
 

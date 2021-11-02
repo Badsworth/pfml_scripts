@@ -3,13 +3,15 @@ import Fieldset from "./Fieldset";
 import FormLabel from "./FormLabel";
 import InputText from "./InputText";
 import classnames from "classnames";
+import isBlank from "../utils/isBlank";
 
 /**
  * Add leading zeros if the numbers are less than 10
  * @example addLeadingZero(1) => "01"
  */
 function addLeadingZero(value: string | number) {
-  if (!value || (typeof value === "string" && value.match(/^0/))) return value;
+  if (isBlank(value) || (typeof value === "string" && value.match(/^0/)))
+    return value;
 
   return value.toString().padStart(2, "0");
 }
@@ -19,23 +21,23 @@ function addLeadingZero(value: string | number) {
  * @returns ISO 8601 date string (YYYY-MM-DD)
  */
 export function formatFieldsAsISO8601(
-  {
-    month,
-    day,
-    year,
-  }: {
-    day: number | string;
-    month: number | string;
-    year: number | string;
+  fields: {
+    day?: number | string;
+    month?: number | string;
+    year?: number | string;
   },
   options: {
     skipLeadingZeros?: boolean;
   } = {}
 ) {
   // Disallow anything other than numbers, and restrict invalid lengths
-  month = month ? month.toString().replace(/\D/g, "") : ""; // "abc" => ""
-  day = day ? day.toString().replace(/\D/g, "") : "";
-  year = year ? year.toString().replace(/\D/g, "") : "";
+  let month = isBlank(fields.month)
+    ? ""
+    : fields.month.toString().replace(/\D/g, ""); // "abc" => ""
+  let day = isBlank(fields.day) ? "" : fields.day.toString().replace(/\D/g, "");
+  const year = isBlank(fields.year)
+    ? ""
+    : fields.year.toString().replace(/\D/g, "");
 
   if (!options.skipLeadingZeros) {
     month = addLeadingZero(month);
@@ -54,7 +56,7 @@ export function formatFieldsAsISO8601(
  * Break apart the ISO 8601 date string into month/day/year parts, for UI rendering
  * @param value - ISO 8601 date string
  */
-export function parseDateParts(value: string) {
+export function parseDateParts(value?: string) {
   if (value) {
     const parts = value.split("-"); // "YYYY-MM-DD" => ["YYYY", "MM", "DD"]
     return {
@@ -146,7 +148,7 @@ interface InputDateProps {
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/form-controls)
  */
 function InputDate(props: InputDateProps) {
-  const hasError = !!props.errorMsg;
+  const hasError = !isBlank(props.errorMsg);
   const values = parseDateParts(props.value);
   const inputClassNames = {
     month: classnames("usa-input--inline", {
@@ -162,9 +164,9 @@ function InputDate(props: InputDateProps) {
   // We need refs in order to access the individual field values
   // and return the formatted date string back to our parent
   const inputTextRefs = {
-    month: useRef<HTMLInputElement>(),
-    day: useRef<HTMLInputElement>(),
-    year: useRef<HTMLInputElement>(),
+    month: useRef<HTMLInputElement>(null),
+    day: useRef<HTMLInputElement>(null),
+    year: useRef<HTMLInputElement>(null),
   };
 
   const formGroupClasses = classnames("usa-form-group", {
@@ -179,9 +181,9 @@ function InputDate(props: InputDateProps) {
    */
   const handleBlur = (evt: React.FocusEvent<HTMLInputElement>) => {
     const isoDate = formatFieldsAsISO8601({
-      month: inputTextRefs.month.current.value,
-      day: inputTextRefs.day.current.value,
-      year: inputTextRefs.year.current.value,
+      month: inputTextRefs.month.current?.value,
+      day: inputTextRefs.day.current?.value,
+      year: inputTextRefs.year.current?.value,
     });
 
     dispatchChange(isoDate, evt);
@@ -196,9 +198,9 @@ function InputDate(props: InputDateProps) {
   const handleChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const date = formatFieldsAsISO8601(
       {
-        month: inputTextRefs.month.current.value,
-        day: inputTextRefs.day.current.value,
-        year: inputTextRefs.year.current.value,
+        month: inputTextRefs.month.current?.value,
+        day: inputTextRefs.day.current?.value,
+        year: inputTextRefs.year.current?.value,
       },
       // We skip adding leading zeros onChange so that we don't prevent
       // a user from entering numbers with more than 1 digit. For instance,
@@ -228,10 +230,12 @@ function InputDate(props: InputDateProps) {
     target.name = props.name;
     target.value = value;
 
-    props.onChange({
-      ...originalEvent,
-      target,
-    });
+    if (props.onChange) {
+      props.onChange({
+        ...originalEvent,
+        target,
+      });
+    }
   }
 
   return (
@@ -255,7 +259,7 @@ function InputDate(props: InputDateProps) {
           inputRef={inputTextRefs.month}
           label={props.monthLabel}
           labelClassName="text-normal margin-top-05"
-          maxLength="2"
+          maxLength={2}
           name={`${props.name}_month`}
           onBlur={handleBlur}
           onChange={handleChange}
@@ -270,7 +274,7 @@ function InputDate(props: InputDateProps) {
           inputRef={inputTextRefs.day}
           label={props.dayLabel}
           labelClassName="text-normal margin-top-05"
-          maxLength="2"
+          maxLength={2}
           name={`${props.name}_day`}
           onBlur={handleBlur}
           onChange={handleChange}
@@ -285,7 +289,7 @@ function InputDate(props: InputDateProps) {
           inputRef={inputTextRefs.year}
           label={props.yearLabel}
           labelClassName="text-normal margin-top-05"
-          maxLength="4"
+          maxLength={4}
           name={`${props.name}_year`}
           onBlur={handleBlur}
           onChange={handleChange}

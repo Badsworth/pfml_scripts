@@ -4,7 +4,7 @@ import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { getClaimantCredentials } from "../../../config";
 
 describe("Denial Notification and Notice", () => {
-  after(() => {
+  before(() => {
     portal.deleteDownloadsFolder();
   });
 
@@ -72,7 +72,6 @@ describe("Denial Notification and Notice", () => {
     () => {
       cy.dependsOnPreviousPass([submit]);
       portal.before();
-      cy.visit("/");
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
           assertValidClaim(claim);

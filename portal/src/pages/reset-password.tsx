@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import Alert from "../components/Alert";
+import { AppLogic } from "../hooks/useAppLogic";
 import BackButton from "../components/BackButton";
 import Button from "../components/Button";
 import InputPassword from "../components/InputPassword";
@@ -16,7 +17,7 @@ import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
 
 interface ResetPasswordProps {
-  appLogic: any;
+  appLogic: AppLogic;
 }
 
 export const ResetPassword = (props: ResetPasswordProps) => {

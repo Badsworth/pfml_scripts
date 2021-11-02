@@ -3,7 +3,7 @@ import {
   createRouteWithQuery,
 } from "../utils/routeWithParams";
 import machineConfigs, { guards } from "../flows";
-import { RouteTransitionError } from "../errors";
+import { ClaimantFlowContext } from "../flows/claimant";
 import { createMachine } from "xstate";
 import { useMemo } from "react";
 import { useRouter } from "next/router";
@@ -69,7 +69,7 @@ const usePortalFlow = () => {
    */
   const getNextPageRoute = (
     event: string,
-    context: Record<string, unknown> = {},
+    context: ClaimantFlowContext = {},
     params?: NullableQueryParams
   ) => {
     const nextRoutingMachine = routingMachine.withContext(context);
@@ -77,9 +77,6 @@ const usePortalFlow = () => {
       pageRoute || pathname,
       event
     );
-    if (!nextPageRoute) {
-      throw new RouteTransitionError(`Next page not found for: ${event}`);
-    }
     return createRouteWithQuery(nextPageRoute.value.toString(), params);
   };
 
@@ -93,7 +90,7 @@ const usePortalFlow = () => {
    */
   const goToPageFor = (
     event: string,
-    context?: Record<string, unknown>,
+    context?: ClaimantFlowContext,
     params?: NullableQueryParams,
     options: {
       redirect?: boolean;
@@ -109,7 +106,7 @@ const usePortalFlow = () => {
    * @param params - query parameters to append to page route
    */
   const goToNextPage = (
-    context: Record<string, unknown>,
+    context: ClaimantFlowContext,
     params: NullableQueryParams = {},
     event = "CONTINUE"
   ) => {

@@ -1,4 +1,5 @@
 import { get, pick } from "lodash";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import LeaveReason from "../../models/LeaveReason";
@@ -13,7 +14,7 @@ import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 export const fields = ["claim.has_previous_leaves_same_reason"];
 
 interface PreviousLeavesSameReasonProps {
-  appLogic: any;
+  appLogic: AppLogic;
   claim: BenefitsApplication;
 }
 
@@ -74,7 +75,9 @@ export const PreviousLeavesSameReason = (
           },
         ]}
         hint={
-          isCaringLeave && t("pages.claimsPreviousLeavesSameReason.sectionHint")
+          isCaringLeave
+            ? t("pages.claimsPreviousLeavesSameReason.sectionHint")
+            : null
         }
         label={t("pages.claimsPreviousLeavesSameReason.sectionLabel", {
           context: isCaringLeave ? "caring" : undefined,

@@ -918,7 +918,6 @@ export function confirmEligibleClaimant(): void {
 
 export function submitClaimPartOne(application: ApplicationRequestBody): void {
   const reason = application.leave_details?.reason;
-  const reasonQualifier = application?.leave_details?.reason_qualifier;
 
   clickChecklistButton("Verify your identification");
   verifyIdentity(application);
@@ -943,8 +942,6 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
       enterBondingDateInfo(application);
       break;
   }
-
-  if (reasonQualifier === "Newborn") answerPregnancyQuestion(application);
 
   answerContinuousLeaveQuestion(application);
   answerReducedLeaveQuestion(application);

@@ -57,13 +57,13 @@ describe("storeFeatureFlagsFromQuery", () => {
 
   describe("when the URL doesn't include a query string", () => {
     it("doesn't set a Cookie", () => {
-      storeFeatureFlagsFromQuery();
+      storeFeatureFlagsFromQuery(new URLSearchParams());
 
       expect(cookiesSet).not.toHaveBeenCalled();
     });
 
     it("doesn't track an event", () => {
-      storeFeatureFlagsFromQuery();
+      storeFeatureFlagsFromQuery(new URLSearchParams());
 
       expect(tracker.trackEvent).not.toHaveBeenCalled();
     });

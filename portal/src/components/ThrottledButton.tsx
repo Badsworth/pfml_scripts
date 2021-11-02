@@ -30,7 +30,7 @@ interface ThrottledButtonProps {
   /**
    * HTML `onClick` attribute
    */
-  onClick?: (...args: any[]) => Promise<any>;
+  onClick: (Event: React.SyntheticEvent) => Promise<void>;
   /**
    * HTML `type` attribute
    */

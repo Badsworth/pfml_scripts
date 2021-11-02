@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import AddressModel from "../../models/Address";
+import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import FieldsetAddress from "../../components/FieldsetAddress";
@@ -24,14 +25,14 @@ export const fields = [
   "claim.mailing_address.line_1",
   "claim.mailing_address.line_2",
   "claim.mailing_address.city",
-  "claim.mailing_address.state",
+  "claim.mailing_address.sate",
   "claim.mailing_address.zip",
 ];
 
 interface AddressProps {
-  claim?: BenefitsApplication;
-  appLogic: any;
-  query?: {
+  claim: BenefitsApplication;
+  appLogic: AppLogic;
+  query: {
     claim_id?: string;
   };
 }
