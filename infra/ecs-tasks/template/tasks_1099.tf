@@ -4,7 +4,7 @@
 # this resource is used as a template to provision each ECS task in local.tasks
 resource "aws_ecs_task_definition" "ecs_tasks_1099" {
   family                   = "${local.app_name}-${var.environment_name}-1099-form-generator"
-  task_role_arn            = null
+  task_role_arn            = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-1099"
   execution_role_arn       = aws_iam_role.task_executor.arn
   cpu                      = tostring(4096)
   memory                   = tostring(8192)
@@ -15,6 +15,8 @@ resource "aws_ecs_task_definition" "ecs_tasks_1099" {
     environment = var.environment_name
   })
 
+
+
   //
   // This json needs to be dynamically created with each iteration
   // See task.tf
@@ -22,7 +24,7 @@ resource "aws_ecs_task_definition" "ecs_tasks_1099" {
   container_definitions = jsonencode([
     {
       name                   = "pub-payments-process-1099-documents",
-      image                  = "498823821309.dkr.ecr.us-east-1.amazonaws.com/pfml-api-dot-net-1099:latest",
+      image                  = format("%s:%s", data.aws_ecr_repository.app.repository_url, var.service_docker_tag),
       command                = ["pub-payments-process-1099-documents"],
       cpu                    = 2048,
       memory                 = 4096,
