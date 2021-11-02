@@ -3,7 +3,7 @@ from decimal import Decimal
 from typing import Dict, List, Optional, cast
 
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.applications import StateMetric
+from massgov.pfml.db.models.applications import BenefitsMetrics
 from massgov.pfml.db.models.employees import Employee, PaymentDetails
 from massgov.pfml.delegated_payments.abstract_step_processor import AbstractStepProcessor
 from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_util import (
@@ -30,7 +30,7 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
     for details on this algorithm, how it works, and why we do what we do.
     """
 
-    maximum_amount_for_week: Optional[List[StateMetric]] = None
+    maximum_amount_for_week: Optional[List[BenefitsMetrics]] = None
 
     Metrics = PostProcessingMetrics
 
@@ -112,7 +112,9 @@ class MaximumWeeklyBenefitsStepProcessor(AbstractStepProcessor):
 
         if not self.maximum_amount_for_week:
             results = (
-                self.db_session.query(StateMetric).order_by(StateMetric.effective_date.desc()).all()
+                self.db_session.query(BenefitsMetrics)
+                .order_by(BenefitsMetrics.effective_date.desc())
+                .all()
             )
             self.maximum_amount_for_week = results
 
