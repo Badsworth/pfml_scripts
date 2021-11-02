@@ -10,11 +10,20 @@ class Address {
   }
 
   toString(): string {
-    return `${this.line_1 || ""} ${this.line_2 || ""}, ${this.city || ""} ${
-      this.state || ""
-    } ${this.zip || ""}`
-      .replace("  ", " ")
-      .trim();
+    return (
+      `${this.line_1 || ""} ${this.line_2 || ""}, ${this.city || ""} ${
+        this.state || ""
+      } ${this.zip || ""}`
+        // remove double spaces
+        .replace("  ", " ")
+        .trim()
+        // clear space after line 1
+        .replace(" ,", ",")
+        // remove trailing comma
+        .replace(/(.), ?$/, "$1")
+        // remove starting comma
+        .replace(/^ ?, ?(.)/, "$1")
+    );
   }
 }
 
