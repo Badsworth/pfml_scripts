@@ -1051,6 +1051,29 @@ class PaymentAuditReportDetails(Base, TimestampMixin):
     import_log = relationship(ImportLog)
 
 
+class LkWithholdingType(Base):
+    __tablename__ = "lk_withholding_type"
+    withholding_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    withholding_type_description = Column(Text, nullable=False)
+
+    def __init__(
+        self, withholding_type_id, withholding_type_description,
+    ):
+        self.withholding_type_id = withholding_type_id
+        self.withholding_type_description = withholding_type_description
+
+
+class WithholdingType(LookupTable):
+    model = LkWithholdingType
+    column_names = (
+        "withholding_type_id",
+        "withholding_type_description",
+    )
+
+    FEDERAL = LkWithholdingType(1, "Federal Tax")
+    STATE = LkWithholdingType(2, "State Tax")
+
+
 class Pfml1099MMARSPayment(Base, TimestampMixin):
     __tablename__ = "pfml_1099_mmars_payment"
     pfml_1099_mmars_payment_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -1112,10 +1135,14 @@ class Pfml1099Withholding(Base, TimestampMixin):
     )
     withholding_amount = Column(Numeric, nullable=False)
     withholding_date = Column(Date, nullable=False)
+    withholding_type_id = Column(
+        Integer, ForeignKey("lk_withholding_type.withholding_type_id"), index=True, nullable=False
+    )
 
     payment = relationship(Payment)
     claim = relationship(Claim)
     employee = relationship(Employee)
+    withholding_type = relationship(LkWithholdingType)
 
 
 class Pfml1099Refund(Base, TimestampMixin):
@@ -1178,5 +1205,6 @@ class LinkSplitPayment(Base, TimestampMixin):
 def sync_lookup_tables(db_session):
     FineosWritebackTransactionStatus.sync_to_database(db_session)
     PaymentAuditReportType.sync_to_database(db_session)
+    WithholdingType.sync_to_database(db_session)
 
     db_session.commit()

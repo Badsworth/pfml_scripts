@@ -233,6 +233,11 @@ const machineTests = {
       test: () => {},
     },
   },
+  [routes.applications.taxWithholding]: {
+    meta: {
+      test: () => {},
+    },
+  },
   [routes.applications.bondingLeaveAttestation]: {
     meta: {
       test: (_, event) => {
@@ -456,6 +461,7 @@ describe("claimFlowConfigs", () => {
     SHOW_APPLICATIONS: {},
     START_APPLICATION: { cases: testData },
     STATUS: {},
+    TAX_WITHHOLDING: {},
     UPLOAD_CERTIFICATION: {},
     UPLOAD_DOCS: {},
     UPLOAD_ID: {},

@@ -3,8 +3,10 @@ import { AppErrorsLogic } from "./useAppErrorsLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
 import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
 import BenefitsApplicationsApi from "../api/BenefitsApplicationsApi";
+import { NullableQueryParams } from "../utils/routeWithParams";
 import PaymentPreference from "../models/PaymentPreference";
 import { PortalFlow } from "./usePortalFlow";
+import TaxWithholdingPreference from "../models/TaxWithholdingPreference";
 import User from "../models/User";
 import getRelevantIssues from "../utils/getRelevantIssues";
 import routes from "../routes";
@@ -253,13 +255,47 @@ const useBenefitsApplicationsLogic = ({
       }
 
       const context = { claim, user };
-      const params = {
+      const params: NullableQueryParams = {
         claim_id: claim.application_id,
         "payment-pref-submitted": "true",
       };
+
       portalFlow.goToNextPage(context, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
+    }
+  };
+
+  const submitTaxWithholdingPreference = async (
+    application_id: string,
+    data: TaxWithholdingPreference
+  ) => {
+    if (!user) return;
+    appErrorsLogic.clearErrors();
+
+    try {
+      const { claim, warnings } =
+        await applicationsApi.submitTaxWithholdingPreference(
+          application_id,
+          data
+        );
+
+      setBenefitsApplication(claim);
+      setClaimWarnings(application_id, warnings);
+
+      const issues = getRelevantIssues([], warnings, []);
+      if (issues && issues.length) {
+        throw new ValidationError(issues, applicationsApi.i18nPrefix);
+      }
+
+      const context = { claim, user };
+      const params: NullableQueryParams = {
+        claim_id: claim.application_id,
+        "tax-pref-submitted": "true",
+      };
+      portalFlow.goToNextPage(context, params);
+    } catch (err) {
+      appErrorsLogic.catchError(err);
     }
   };
 
@@ -274,6 +310,7 @@ const useBenefitsApplicationsLogic = ({
     update,
     submit,
     submitPaymentPreference,
+    submitTaxWithholdingPreference,
     warningsLists,
   };
 };

@@ -32,12 +32,6 @@ const flagsConfig = {
     // validate addresses on address page
     claimantValidateAddress: false,
 
-    // When this flag is enabled, the status column's current value of -- inside of the dashboard page will be replaced with either:
-    // Review by {date}
-    // No action required
-    // TODO (EMPLOYER-1587) Remove flag
-    employerShowReviewByStatus: false,
-
     // When this flag true, you can BYPASS maintenance pages that are currently present.
     // See docs/portal/maintenance-pages.md for more details.
     noMaintenance: false,
@@ -59,37 +53,29 @@ const flagsConfig = {
   // environment config files.
   "cps-preview": {
     claimantShowStatusPage: true,
-    employerShowReviewByStatus: true,
   },
   development: {
     claimantShowStatusPage: true,
-    employerShowReviewByStatus: true,
     example: true,
     pfmlTerriyay: true,
   },
   test: {
     claimantShowStatusPage: true,
-    employerShowReviewByStatus: true,
   },
   stage: {
     claimantShowStatusPage: true,
-    employerShowReviewByStatus: true,
   },
   training: {
     claimantShowStatusPage: true,
-    employerShowReviewByStatus: true,
   },
   performance: {
     claimantShowStatusPage: true,
-    employerShowReviewByStatus: true,
   },
   uat: {
     claimantShowStatusPage: true,
-    employerShowReviewByStatus: true,
   },
   prod: {
     claimantShowStatusPage: true,
-    employerShowReviewByStatus: true,
     pfmlTerriyay: true,
   },
 };

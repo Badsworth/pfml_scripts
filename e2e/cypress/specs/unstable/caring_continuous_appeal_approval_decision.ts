@@ -1,9 +1,5 @@
 import { portal, fineos, email, fineosPages } from "../../actions";
-import {
-  getClaimantCredentials,
-  getFineosBaseUrl,
-  getLeaveAdminCredentials,
-} from "../../config";
+import { getClaimantCredentials, getLeaveAdminCredentials } from "../../config";
 import { assertValidClaim } from "../../../src/util/typeUtils";
 import { Submission } from "../../../src/types";
 
@@ -50,7 +46,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
       });
     });
 
-  it("CSR will approve a claim", { baseUrl: getFineosBaseUrl() }, () => {
+  it("CSR will approve a claim", () => {
     cy.dependsOnPreviousPass([fineosSubmission, employerApproval]);
     fineos.before();
     cy.unstash<DehydratedClaim>("claim").then((claim) => {
@@ -72,36 +68,29 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
     });
   });
 
-  it(
-    "CSR will process the appeal for schedule hearing",
-    { baseUrl: getFineosBaseUrl() },
-    () => {
-      cy.dependsOnPreviousPass([fineosSubmission, employerApproval]);
-      fineos.before();
-      cy.visit("/");
-      cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
-        const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id);
-        claimPage.addAppeal();
-        claimPage.triggerNotice("SOM Generate Appeals Notice");
-        claimPage.appealDocuments((docPage) => {
-          docPage.assertDocumentExists("Appeal Acknowledgment");
-        });
-        claimPage.appealTasks((tasks) => {
-          tasks.closeAppealReview();
-          tasks.close("Schedule Hearing");
-          tasks.close("Conduct Hearing");
-          tasks.closeConductHearing();
-          tasks.assertTaskExists("Send Decision Notice");
-        });
-        claimPage.appealDocuments((docPage) => {
-          docPage.uploadDocument("Appeal Notice - Claim Decision Changed");
-          docPage.assertDocumentUploads(
-            "Appeal Notice - Claim Decision Changed"
-          );
-        });
+  it("CSR will process the appeal for schedule hearing", () => {
+    cy.dependsOnPreviousPass([fineosSubmission, employerApproval]);
+    fineos.before();
+    cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
+      const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id);
+      claimPage.addAppeal();
+      claimPage.triggerNotice("SOM Generate Appeals Notice");
+      claimPage.appealDocuments((docPage) => {
+        docPage.assertDocumentExists("Appeal Acknowledgment");
       });
-    }
-  );
+      claimPage.appealTasks((tasks) => {
+        tasks.closeAppealReview();
+        tasks.close("Schedule Hearing");
+        tasks.close("Conduct Hearing");
+        tasks.closeConductHearing();
+        tasks.assertTaskExists("Send Decision Notice");
+      });
+      claimPage.appealDocuments((docPage) => {
+        docPage.uploadDocument("Appeal Notice - Claim Decision Changed");
+        docPage.assertDocumentUploads("Appeal Notice - Claim Decision Changed");
+      });
+    });
+  });
   it(
     "Check the Claimant email for the appeal notification.",
     { retries: 0 },
@@ -123,7 +112,7 @@ describe("Submit a claim through Portal: Verify it creates an absence case in Fi
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
-              30000
+              60000
             );
             cy.contains(submission.fineos_absence_id);
           });

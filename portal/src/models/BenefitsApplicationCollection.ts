@@ -22,7 +22,7 @@ export default class BenefitsApplicationCollection extends BaseCollection<Benefi
    * those that made it to the Claims Processing System
    */
   get submitted() {
-    return this.items.filter((item) => item.isSubmitted);
+    return this.items.filter((item) => item.isSubmitted && !item.isCompleted);
   }
 
   /**
