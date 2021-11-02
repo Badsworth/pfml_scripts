@@ -2602,7 +2602,7 @@ class ReferenceFileType(LookupTable):
         30, "Consolidated DIA payments for DFML reduction report", 1
     )
     CLAIMANT_ADDRESS_VALIDATION_REPORT = LkReferenceFileType(
-        31, "Claimant Address validation Report", 1
+        33, "Claimant Address validation Report", 1
     )
 
     FINEOS_PAYMENT_RECONCILIATION_EXTRACT = LkReferenceFileType(

@@ -3,6 +3,7 @@ from typing import Optional, cast
 
 from sqlalchemy import JSON, TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql.functions import func
 from sqlalchemy.sql.schema import Index
 
 import massgov.pfml.util.logging
@@ -366,7 +367,7 @@ class FineosExtractVbiRequestedAbsence(Base, TimestampMixin):
     reference_file = relationship(ReferenceFile)
 
 
-class FineosExtractEmployeeFeed(Base, TimestampMixin):
+class FineosExtractEmployeeFeed(Base):
     __tablename__ = "fineos_extract_employee_feed"
 
     employee_feed_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -429,10 +430,11 @@ class FineosExtractEmployeeFeed(Base, TimestampMixin):
     sortcode = Column(Text)
     accounttype = Column(Text)
     active_absence_flag = Column(Text)
-    created_at = Column(TIMESTAMP, nullable=False)
     reference_file_id = Column(
         PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
     )
+    created_at = Column(TIMESTAMP(timezone=True), default=func.now())
+    updated_at = Column(TIMESTAMP(timezone=True), default=func.now())
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
     )
