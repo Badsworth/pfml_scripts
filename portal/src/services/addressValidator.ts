@@ -1,5 +1,5 @@
+import { AddressValidationError, ExperianApiError } from "../errors";
 import Address from "../models/Address";
-import { AddressValidationError } from "../errors";
 
 const authToken: string =
   process.env.experianApiKey || process.env.NEXT_PUBLIC_experianApiKey || "";
@@ -91,18 +91,29 @@ const search = async (address: string): Promise<ExperianSearchResult> => {
     },
   };
 
-  const response = await fetch(
-    "https://api.experianaperture.io/address/search/v1",
-    {
-      method: "POST",
-      headers: {
-        "Auth-Token": authToken,
-        "Content-Type": "application/json",
-        Accept: "application/json",
-      },
-      body: JSON.stringify(requestBody),
-    }
-  );
+  let response;
+
+  try {
+    response = await fetch(
+      "https://api.experianaperture.io/address/search/v1",
+      {
+        method: "POST",
+        headers: {
+          "Auth-Token": authToken,
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      }
+    );
+  } catch (error) {
+    console.error(error);
+    throw new ExperianApiError("Unexpected Experian API error.");
+  }
+
+  if (!response.ok || response.status !== 200) {
+    throw new ExperianApiError(`${response.status} returned by Experian API.`);
+  }
 
   const experianResult: ExperianSearchResult = await response.json();
 
@@ -110,18 +121,29 @@ const search = async (address: string): Promise<ExperianSearchResult> => {
 };
 
 const format = async (addressKey: string): Promise<ExperianFormatResult> => {
-  const response = await fetch(
-    `https://api.experianaperture.io/address/format/v1/${addressKey}`,
-    {
-      method: "GET",
-      headers: {
-        "Auth-Token": authToken,
-        Accept: "application/json",
-        "Add-Components": "false",
-        "Add-Metadata": "false",
-      },
-    }
-  );
+  let response;
+
+  try {
+    response = await fetch(
+      `https://api.experianaperture.io/address/format/v1/${addressKey}`,
+      {
+        method: "GET",
+        headers: {
+          "Auth-Token": authToken,
+          Accept: "application/json",
+          "Add-Components": "false",
+          "Add-Metadata": "false",
+        },
+      }
+    );
+  } catch (error) {
+    console.error(error);
+    throw new ExperianApiError("Unexpected Experian API error.");
+  }
+
+  if (!response.ok || response.status !== 200) {
+    throw new ExperianApiError(`${response.status} returned by Experian API.`);
+  }
 
   const experianResult: ExperianFormatResult = await response.json();
 

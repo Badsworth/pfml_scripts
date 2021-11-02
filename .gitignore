@@ -7,6 +7,9 @@ node_modules/
 # Next.js build output
 .next/
 
+# Local environment variables for next
+.env.local
+
 # Portal static exports
 portal/out/
 portal/out-storybook/

@@ -251,7 +251,7 @@ export class ValidationError extends BasePortalError {
 }
 
 /**
- * Address search returned more than one possible addresses.
+ * Address search returned more than one possible addresses or no addresses
  */
 export class AddressValidationError extends BasePortalError {
   // List of possible valid addresses
@@ -263,6 +263,11 @@ export class AddressValidationError extends BasePortalError {
     this.name = "AddressValidationError";
   }
 }
+
+/**
+ * Request to Experian API failed unexpectedly
+ */
+export class ExperianApiError extends BasePortalError {}
 
 /**
  * An error was encountered because the current user is not verified.

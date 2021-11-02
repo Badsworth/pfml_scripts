@@ -26,6 +26,7 @@ process.env.session = { secondsOfInactivityUntilLogout: 10 };
 /**
  * Mock DOM APIs
  */
+global.fetch = require("whatwg-fetch").fetch;
 global.scrollTo = jest.fn();
 // https://github.com/jsdom/jsdom/issues/1695
 Element.prototype.scrollIntoView = jest.fn();

@@ -578,9 +578,11 @@ const errors = {
   },
   caughtError:
     "Sorry, an unexpected error in our system was encountered. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak).",
-  caughtError_AddressValidationError: "Verify your address",
+  caughtError_AddressValidationError: "Verify your address.",
   caughtError_DocumentsLoadError: "$t(shared.documentsLoadError)",
   caughtError_DocumentsUploadError: "$t(shared.documentsUploadError)",
+  caughtError_ExperianApiError:
+    "Sorry, an unexpected error was encountered when attempting to verify your address. Please try saving again.",
   caughtError_ForbiddenError:
     "Sorry, an authorization error was encountered. Please log out and then log in to try again.",
   caughtError_NetworkError: "$t(shared.networkError)",

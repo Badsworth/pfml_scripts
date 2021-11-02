@@ -1,5 +1,5 @@
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
-import { act, screen, waitFor } from "@testing-library/react";
+import { screen, waitFor } from "@testing-library/react";
 import Address from "../../../src/pages/applications/address";
 import AddressModel from "../../../src/models/Address";
 import BenefitsApplicationCollection from "../../../src/models/BenefitsApplicationCollection";
@@ -235,16 +235,23 @@ describe("Address", () => {
       benefitsApplication.mailing_address = address;
       benefitsApplication.residential_address = address;
       benefitsApplication.has_mailing_address = true;
+      let appLogic;
 
       const options = {
-        addCustomSetup: (appLogic) => {
-          appLogic.benefitsApplications.update = update;
-          appLogic.benefitsApplications.benefitsApplications =
+        addCustomSetup: (appLogicHook) => {
+          appLogic = appLogicHook;
+          appLogicHook.benefitsApplications.update = update;
+          appLogicHook.benefitsApplications.benefitsApplications =
             new BenefitsApplicationCollection([benefitsApplication]);
         },
         isLoggedIn: true,
       };
-      return renderPage(Address, options, { query: { claim_id } });
+
+      const view = renderPage(Address, options, { query: { claim_id } });
+      return {
+        appLogic,
+        ...view,
+      };
     };
 
     beforeAll(() => {
@@ -362,7 +369,7 @@ describe("Address", () => {
       });
 
       it("does not update API and shows address suggestions when user clicks save and continue", async () => {
-        renderWithAddresses();
+        const { appLogic } = renderWithAddresses();
 
         userEvent.click(
           screen.getByRole("button", { name: "Save and continue" })
@@ -375,6 +382,7 @@ describe("Address", () => {
         expect(residentialInput).toMatchSnapshot();
         expect(mailingInput).toMatchSnapshot();
         expect(update).not.toHaveBeenCalled();
+        expect(appLogic.catchError).toHaveBeenCalled();
       });
 
       describe("after user clicks save and continue", () => {
@@ -469,7 +477,7 @@ describe("Address", () => {
       });
 
       it("does not update API and shows address suggestions", async () => {
-        renderWithAddresses();
+        const { appLogic } = renderWithAddresses();
 
         userEvent.click(
           screen.getByRole("button", { name: "Save and continue" })
@@ -482,6 +490,7 @@ describe("Address", () => {
         expect(residentialInput).toMatchSnapshot();
         expect(mailingInput).toMatchSnapshot();
         expect(update).not.toHaveBeenCalled();
+        expect(appLogic.catchError).toHaveBeenCalled();
       });
 
       describe("after user clicks save and continue", () => {

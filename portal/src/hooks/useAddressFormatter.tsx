@@ -7,15 +7,7 @@ import Address from "../models/Address";
 import { AddressValidationError } from "../errors";
 import { useState } from "react";
 
-export interface AddressFormatter {
-  address: Address;
-  selectedAddressKey?: string | null;
-  selectSuggestionAddressKey: (suggestionAddressKey: string) => void;
-  couldBeFormatted?: boolean | null;
-  format: () => Promise<Address | undefined>;
-  reset: () => void;
-  suggestions: AddressSuggestion[];
-}
+export type AddressFormatter = ReturnType<typeof useAddressFormatter>;
 
 /**
  * Manage state and actions around formatting an Address into a valid postal address. If an address can be formatted multiple ways,
@@ -28,15 +20,17 @@ export interface AddressFormatter {
 const useAddressFormatter = (
   address: Address,
   onError: (error: unknown) => void
-): AddressFormatter => {
+) => {
   const [couldBeFormatted, setCouldBeFormatted] = useState<boolean | null>();
+  // List of suggested addresses a user can select from if address can be formatted multiple ways
   const [suggestions, setSuggestions] = useState<AddressSuggestion[]>([]);
+  // Unique key for address that user selected
   const [selectedAddressKey, setSelectedAddressKey] = useState<
     AddressSuggestion["addressKey"] | "none" | null
   >();
 
   const shouldSkipFormatting = selectedAddressKey === "none";
-  const addressIsMasked = address.line_1 === "*******";
+  const addressIsMasked = !!address.line_1?.match(/\*\*\*\*\*\*\*/g);
 
   const format = async (): Promise<Address | undefined> => {
     if (shouldSkipFormatting || addressIsMasked) {
