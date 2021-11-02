@@ -43,7 +43,7 @@ class PaymentAuditReportStep(Step):
     def sample_payments_for_audit_report(self) -> Iterable[Payment]:
         logger.info("Start sampling payments for audit report")
 
-        state_logs_containers: List[StateLog]
+        state_logs_containers: List[StateLog] =[]
 
         state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
             state_log_util.AssociatedClass.PAYMENT,
