@@ -55,7 +55,8 @@ const withBenefitsApplication = (Component) => {
       ) {
         goTo(routes.applications.index);
       }
-    }, [claim, appLogic.portalFlow]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [claim?.application_id]);
 
     if (!application_id) {
       return <PageNotFound />;
