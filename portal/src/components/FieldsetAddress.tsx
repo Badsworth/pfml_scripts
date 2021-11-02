@@ -12,10 +12,6 @@ interface FieldsetAddressProps {
    */
   appErrors: AppErrorInfoCollection;
   /**
-   * Error message that applies to all address fields
-   */
-  errorMsg?: React.ReactNode;
-  /**
    * Localized hint text
    */
   hint?: string;
@@ -54,7 +50,7 @@ const FieldsetAddress = ({
   addressType = "residential",
   ...props
 }: FieldsetAddressProps) => {
-  const { appErrors, errorMsg, name, onChange, value } = props;
+  const { appErrors, name, onChange, value } = props;
   const { t } = useTranslation();
 
   const line1Label = t("components.fieldsetAddress.line1Label", {
@@ -66,14 +62,10 @@ const FieldsetAddress = ({
 
   return (
     <Fieldset>
-      <FormLabel
-        component="legend"
-        hint={props.hint}
-        small={props.smallLabel}
-        errorMsg={errorMsg}
-      >
+      <FormLabel component="legend" hint={props.hint} small={props.smallLabel}>
         {props.label}
       </FormLabel>
+
       <InputText
         autoComplete="address-line1"
         errorMsg={appErrors.fieldErrorMessage(`${name}.line_1`)}
