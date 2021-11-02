@@ -259,20 +259,17 @@ export default function EnvTimelineWidget({ environment, accountId }) {
     >
       {(chartData) => {
         if (chartData[0].loading) {
-          return <Spinner/>;
+          return <Spinner />;
         }
 
         const rows = [...chartData[0].data, ...chartData[1].data];
         // Sort records by timestamp, newest to oldest
-        rows.sort(function(a, b) {
+        rows.sort(function (a, b) {
           return b.timestamp - a.timestamp;
         });
 
         return (
-          <TimelineTable
-            rows={rows}
-            environment={environment}
-          ></TimelineTable>
+          <TimelineTable rows={rows} environment={environment}></TimelineTable>
         );
       }}
     </MutiQuery>

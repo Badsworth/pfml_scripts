@@ -99,15 +99,16 @@ const ssoAccount2Credentials: Credentials = {
 
 describe("Check the O/R is accessible to modify with secure actions", () => {
   userPermissions.forEach((userPermission) => {
-    const user = it(`${userPermission.security_group} checking the outstanding requirement access`, () => {
-      describe(`${userPermission.security_group}:`, () => {
-        cy.task("chooseFineosRole", {
-          userId: ssoAccount2Credentials.username,
-          preset: userPermission.security_group,
-          debug: false,
+    const user =
+      it(`${userPermission.security_group} checking the outstanding requirement access`, () => {
+        describe(`${userPermission.security_group}:`, () => {
+          cy.task("chooseFineosRole", {
+            userId: ssoAccount2Credentials.username,
+            preset: userPermission.security_group,
+            debug: false,
+          });
         });
       });
-    });
     it(`${userPermission.security_group} ${
       userPermission.employer_complete ? "can" : "can't"
     } complete, remove, or suppress available in O/R`, () => {
