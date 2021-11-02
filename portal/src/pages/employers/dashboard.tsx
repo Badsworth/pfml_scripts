@@ -28,6 +28,7 @@ import TooltipIcon from "../../components/TooltipIcon";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
 import formatDateRange from "../../utils/formatDateRange";
+import isBlank from "../../utils/isBlank";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
@@ -37,7 +38,7 @@ import withUser from "../../hoc/withUser";
 
 interface PageQueryParam {
   name: string;
-  value: number | string | string[];
+  value: number | null | string | string[];
 }
 
 interface DashboardProps {
@@ -72,7 +73,7 @@ export const Dashboard = (props: DashboardProps) => {
     const params = new URLSearchParams(window.location.search);
 
     paramsToUpdate.forEach(({ name, value }) => {
-      if (typeof value !== "number" && value.length === 0) {
+      if (isBlank(value) || (typeof value !== "number" && value.length === 0)) {
         // Remove param if its value is null, undefined, empty string, or empty array
         params.delete(name);
       } else {
