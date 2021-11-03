@@ -29,6 +29,8 @@ describe("Post-approval (notifications/notices)", () => {
         const claimPage = fineosPages.ClaimPage.visit(
           response.fineos_absence_id
         );
+        claimPage.triggerNotice("Preliminary Designation");
+        fineos.onTab("Absence Hub");
         claimPage.adjudicate((adjudication) => {
           adjudication.evidence((evidence) => {
             // Receive and approve all of the documentation for the claim.
@@ -42,7 +44,6 @@ describe("Post-approval (notifications/notices)", () => {
           adjudication.acceptLeavePlan();
         });
         claimPage.approve();
-        claimPage.triggerNotice("Preliminary Designation");
       });
     });
   });
