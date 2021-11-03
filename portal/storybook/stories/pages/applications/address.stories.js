@@ -5,7 +5,7 @@ import { MockBenefitsApplicationBuilder } from "tests/test-utils";
 import React from "react";
 
 export default {
-  title: `Pages/Applications/Address2`,
+  title: `Pages/Applications/Address`,
   component: Address,
   argTypes: {
     validationResult: {
