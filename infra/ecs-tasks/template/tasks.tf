@@ -247,16 +247,6 @@ locals {
       ]
     },
 
-    "pub-payments-process-1099-documents" = {
-      command   = ["pub-payments-process-1099-documents"]
-      task_role = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-1099"
-      env = [
-        local.db_access,
-        local.fineos_s3_access,
-        local.pub_s3_folders
-      ]
-    },
-
     "fineos-bucket-tool" = {
       command   = ["fineos-bucket-tool"]
       task_role = aws_iam_role.fineos_bucket_tool_role.arn
@@ -378,7 +368,7 @@ resource "aws_ecs_task_definition" "ecs_tasks" {
       # silently cause env vars to go missing which would definitely confuse someone for a day or two.
       #
       environment = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if contains(keys(val), "value")]
-      secrets     = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if ! contains(keys(val), "value")]
+      secrets     = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if !contains(keys(val), "value")]
     }
   ])
 }

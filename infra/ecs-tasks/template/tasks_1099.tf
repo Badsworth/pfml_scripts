@@ -15,6 +15,8 @@ resource "aws_ecs_task_definition" "ecs_tasks_1099" {
     environment = var.environment_name
   })
 
+
+
   //
   // This json needs to be dynamically created with each iteration
   // See task.tf
@@ -22,7 +24,7 @@ resource "aws_ecs_task_definition" "ecs_tasks_1099" {
   container_definitions = jsonencode([
     {
       name                   = "pub-payments-process-1099-documents",
-      image                  = "498823821309.dkr.ecr.us-east-1.amazonaws.com/pfml-api-dot-net-1099:latest",
+      image                  = format("%s:%s", data.aws_ecr_repository.app.repository_url, var.service_docker_tag),
       command                = ["pub-payments-process-1099-documents"],
       cpu                    = 2048,
       memory                 = 4096,
@@ -44,8 +46,44 @@ resource "aws_ecs_task_definition" "ecs_tasks_1099" {
         }
       },
 
-      environment = []
-      secrets     = []
+      environment = [
+        {
+          name  = "DB_HOST"
+          value = "massgov-pfml-test.c6icrkacncoz.us-east-1.rds.amazonaws.com"
+        },
+        {
+          name  = "DB_HOST_TEST"
+          value = "TEST"
+        },
+        {
+          name  = "DB_NAME"
+          value = "massgov_pfml_test"
+        },
+        { name : "FINEOS_AWS_IAM_ROLE_ARN", value : var.fineos_aws_iam_role_arn },
+        { name : "FINEOS_AWS_IAM_ROLE_EXTERNAL_ID", value : var.fineos_aws_iam_role_external_id },
+        { name : "FINEOS_DATA_IMPORT_PATH", value : var.fineos_data_import_path },
+        { name : "FINEOS_DATA_EXPORT_PATH", value : var.fineos_data_export_path },
+        { name : "FINEOS_ADHOC_DATA_EXPORT_PATH", value : var.fineos_adhoc_data_export_path },
+        { name : "FINEOS_FOLDER_PATH", value : var.fineos_import_employee_updates_input_directory_path },
+        { name : "PFML_FINEOS_WRITEBACK_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/cps/pei-writeback" },
+        { name : "PFML_FINEOS_EXTRACT_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/cps/extracts" },
+        { name : "DFML_REPORT_OUTBOUND_PATH", value : "s3://massgov-pfml-${var.environment_name}-reports/dfml-reports" },
+        { name : "DFML_RESPONSE_INBOUND_PATH", value : "s3://massgov-pfml-${var.environment_name}-reports/dfml-responses" },
+        { name : "PUB_MOVEIT_INBOUND_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/inbound" },
+        { name : "PUB_MOVEIT_OUTBOUND_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/outbound" },
+        { name : "PFML_PUB_ACH_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/ach" },
+        { name : "PFML_PUB_CHECK_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/check" },
+        { name : "PFML_ERROR_REPORTS_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/reports" },
+        { name : "PFML_PAYMENT_REJECTS_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/audit" }
+      ]
+      secrets = [{
+        name      = "DB_PASSWORD"
+        valueFrom = "/service/pfml-api/test/db-password"
+        },
+        {
+          name      = "RMV_CLIENT_CERTIFICATE_PASSWORD"
+          valueFrom = "/service/pfml-api/test/rmv_client_certificate_password"
+      }]
     },
     {
       name                   = "pub-payments-process-1099-dot-net-generator-service",
