@@ -994,9 +994,43 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#conventions" class="md-nav__link">
-    Conventions
+  <a href="#conventions-and-norms" class="md-nav__link">
+    Conventions and norms
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tricky-errors-solutions" class="md-nav__link">
+    Tricky errors &amp; solutions
+  </a>
+  
+    <nav class="md-nav" aria-label="Tricky errors &amp; solutions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#writing-boolean-expressions" class="md-nav__link">
+    Writing boolean expressions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#handling-nullundefined-values" class="md-nav__link">
+    Handling null/undefined values
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#narrowing-an-objects-type" class="md-nav__link">
+    Narrowing an object's type
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1126,9 +1160,43 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#conventions" class="md-nav__link">
-    Conventions
+  <a href="#conventions-and-norms" class="md-nav__link">
+    Conventions and norms
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tricky-errors-solutions" class="md-nav__link">
+    Tricky errors &amp; solutions
+  </a>
+  
+    <nav class="md-nav" aria-label="Tricky errors &amp; solutions">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#writing-boolean-expressions" class="md-nav__link">
+    Writing boolean expressions
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#handling-nullundefined-values" class="md-nav__link">
+    Handling null/undefined values
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#narrowing-an-objects-type" class="md-nav__link">
+    Narrowing an object's type
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1162,13 +1230,87 @@
 <blockquote>
 <p>Portal was originally written in JavaScript and later migrated to TypeScript in October 2021. You can <a href="https://lwd.atlassian.net/l/c/JYP9mGFr">reference the original migration tech spec in Confluence</a> for additional context.</p>
 </blockquote>
-<h2 id="conventions">Conventions</h2>
-<ul>
-<li>We avoid TypeScript features that produce different JS code when compiled when there is a suitable alternative, for example we avoid using TypeScript's <a href="https://www.typescriptlang.org/docs/handbook/enums.html"><code>enum</code></a> and <a href="https://www.typescriptlang.org/docs/handbook/2/classes.html#parameter-properties">parameter properties</a>. Lint rules are configured to prevent those two particular examples. Why? ⤵️<blockquote>
+<h2 id="conventions-and-norms">Conventions and norms</h2>
+<ol>
+<li><strong>Use <code>interface</code> instead of <code>class</code> for data models that have no getters, setters, or default values.</strong> This simplifies the code and results in less compiled JavaScript.</li>
+<li>
+<p><strong>Portal data models should match the API's.</strong> For example, if an API model indicates a field is <code>nullable</code> / <code>Optional</code>, the corresponding Portal data model should reflect the field can be <code>null</code> as well. Our type declarations should be as narrow as possible however, and we should be comfortable questioning if an API data model field is truly ever empty in reality.</p>
+</li>
+<li>
+<p><a href="https://paidleave-api-test.mass.gov/api/docs/">View the API's schema here</a></p>
+</li>
+<li>
+<p><a href="../../api/technical-overview/">View an overview of the API DB models here</a></p>
+</li>
+<li>
+<p><strong>Explicitly declaring function return types is encouraged</strong>. This helps make the engineer's intent clear. We're not currently enforcing this <a href="https://github.com/typescript-eslint/typescript-eslint/blob/master/packages/eslint-plugin/docs/rules/explicit-function-return-type.md">with a lint rule</a>, since this can produce a lot of noise due to React functional components and hooks. It's solvable, but was <a href="https://lwd.atlassian.net/browse/PORTAL-935?focusedCommentId=56295">deprioritized</a> during the initial TypeScript migration effort.</p>
+</li>
+<li><strong>Avoid TypeScript features that produce different JS code when compiled</strong> when there is a suitable alternative. For example, we avoid using TypeScript's <a href="https://www.typescriptlang.org/docs/handbook/enums.html"><code>enum</code></a> and <a href="https://www.typescriptlang.org/docs/handbook/2/classes.html#parameter-properties">parameter properties</a>. Lint rules are configured to prevent those two particular examples. Why? ⤵️</li>
+</ol>
+<blockquote>
 <p>TypeScript is supposed to be JavaScript, but with static type features added. If we remove all of the types from TypeScript code, what's left should be valid JavaScript code. The formal word used in the TypeScript documentation is "type-level extension": most TypeScript features are type-level extensions to JavaScript, but they don't affect the code's runtime behavior. Unfortunately, TypeScript's solution is to break its own rule in this case [for enums]. When compiling an enum, the compiler adds extra JavaScript code that never existed in the original TypeScript code. There are very few TypeScript features like this. Each of these unusual features adds a confusing complication to the otherwise simple TypeScript compiler model. — Execute Program's TypeScript course.</p>
 </blockquote>
-</li>
-</ul>
+<h2 id="tricky-errors-solutions">Tricky errors &amp; solutions</h2>
+<h3 id="writing-boolean-expressions">Writing boolean expressions</h3>
+<p>The <a href="https://github.com/typescript-eslint/typescript-eslint/blob/master/packages/eslint-plugin/docs/rules/strict-boolean-expressions.md">strict-boolean-expressions</a> lint rule is enforced, and can be confusing when initially encountered.</p>
+<p>Before this rule, we could (and did) have conditions that would check if a number was set, for instance:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span> <span class="nx">size</span>: <span class="kt">number</span> <span class="o">=</span> <span class="nx">props</span><span class="p">.</span><span class="nx">size</span><span class="p">;</span>
+<span class="kd">const</span> <span class="nx">className</span> <span class="o">=</span> <span class="nx">size</span> <span class="o">?</span> <span class="sb">`margin-</span><span class="si">${</span><span class="nx">size</span><span class="si">}</span><span class="sb">`</span> <span class="o">:</span> <span class="s2">&quot;margin-5&quot;</span><span class="p">;</span>
+</code></pre></div>
+<p>A bug is present in that example, because <code>0</code> is falsey in JavaScript, so if <code>size</code> was <code>0</code>, <code>className</code> would be <code>margin-5</code> (the fallback) instead of <code>margin-0</code>.</p>
+<p>With the lint rule, this is now an error indicating:</p>
+<blockquote>
+<p>Unexpected nullable number value in conditional. Please handle the nullish/zero/NaN cases explicitly.</p>
+</blockquote>
+<p>You can now fix the lint error with a few approaches.</p>
+<ol>
+<li><a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Nullish_coalescing_operator">Nullish coalescing</a>:</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span> <span class="nx">className</span> <span class="o">=</span> <span class="sb">`margin-</span><span class="si">${</span><span class="nx">size</span> <span class="o">??</span> <span class="mf">5</span><span class="si">}</span><span class="sb">`</span><span class="p">;</span>
+</code></pre></div>
+<ol>
+<li>Using the <code>isBlank</code> utility:</li>
+</ol>
+<div class="highlight"><pre><span></span><code><span class="kd">const</span> <span class="nx">className</span> <span class="o">=</span> <span class="nx">isBlank</span><span class="p">(</span><span class="nx">size</span><span class="p">)</span> <span class="o">?</span> <span class="s2">&quot;margin-5&quot;</span> <span class="o">:</span> <span class="sb">`margin-</span><span class="si">${</span><span class="nx">size</span><span class="si">}</span><span class="sb">`</span><span class="p">;</span>
+</code></pre></div>
+<h3 id="handling-nullundefined-values">Handling null/undefined values</h3>
+<p><code>null</code> and <code>undefined</code> have their own distinct types and you’ll get a type error if you try to use them where a concrete value is expected.</p>
+<p>For example with this TypeScript code, <code>users.find</code> has no guarantee that it will actually find a user, but you can write code as though it will:</p>
+<div class="highlight"><pre><span></span><code><span class="kr">declare</span> <span class="kd">const</span> <span class="nx">loggedInUsername</span>: <span class="kt">string</span><span class="p">;</span>
+
+<span class="kd">const</span> <span class="nx">users</span> <span class="o">=</span> <span class="p">[</span>
+  <span class="p">{</span> <span class="nx">name</span><span class="o">:</span> <span class="s2">&quot;Oby&quot;</span><span class="p">,</span> <span class="nx">age</span>: <span class="kt">12</span> <span class="p">},</span>
+  <span class="p">{</span> <span class="nx">name</span><span class="o">:</span> <span class="s2">&quot;Heera&quot;</span><span class="p">,</span> <span class="nx">age</span>: <span class="kt">32</span> <span class="p">},</span>
+<span class="p">];</span>
+
+<span class="kd">const</span> <span class="nx">loggedInUser</span> <span class="o">=</span> <span class="nx">users</span><span class="p">.</span><span class="nx">find</span><span class="p">((</span><span class="nx">u</span><span class="p">)</span> <span class="p">=&gt;</span> <span class="nx">u</span><span class="p">.</span><span class="nx">name</span> <span class="o">===</span> <span class="nx">loggedInUsername</span><span class="p">);</span>
+<span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">loggedInUser</span><span class="p">.</span><span class="nx">age</span><span class="p">);</span>
+</code></pre></div>
+<p>You'll receive an error that you have not made a guarantee that the <code>loggedInUser</code> exists before trying to use it. One approach to solving this is to use the <a href="https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Operators/Optional_chaining">optional chaining operator</a>:</p>
+<div class="highlight"><pre><span></span><code><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="nx">loggedInUser</span><span class="o">?</span><span class="p">.</span><span class="nx">age</span><span class="p">);</span>
+</code></pre></div>
+<blockquote>
+<p>This behavior is due to <a href="https://www.typescriptlang.org/tsconfig#strictNullChecks"><code>strictNullChecks</code></a>.</p>
+</blockquote>
+<h3 id="narrowing-an-objects-type">Narrowing an object's type</h3>
+<p>TypeScript supports narrowing objects by <a href="https://www.typescriptlang.org/docs/handbook/2/narrowing.html#the-in-operator-narrowing">using the <code>in</code> operator</a>.</p>
+<p>For example:</p>
+<div class="highlight"><pre><span></span><code><span class="kd">interface</span> <span class="nx">ErrorWithIssues</span> <span class="p">{</span>
+  <span class="nx">issues</span>: <span class="kt">string</span><span class="p">[];</span>
+<span class="p">}</span>
+
+<span class="kd">interface</span> <span class="nx">BlankError</span> <span class="p">{}</span>
+
+<span class="kd">function</span> <span class="nx">handleError</span><span class="p">(</span><span class="nx">error</span>: <span class="kt">ErrorWithIssues</span> <span class="o">|</span> <span class="nx">BlankError</span><span class="p">)</span> <span class="p">{</span>
+  <span class="k">if</span> <span class="p">(</span><span class="s2">&quot;issues&quot;</span> <span class="ow">in</span> <span class="nx">error</span><span class="p">)</span> <span class="p">{</span>
+    <span class="c1">// We&#39;ve now narrowed error down to ErrorWithIssues</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">issues</span><span class="p">.</span><span class="nx">join</span><span class="p">(</span><span class="s2">&quot;,&quot;</span><span class="p">));</span>
+  <span class="p">}</span> <span class="k">else</span> <span class="p">{</span>
+    <span class="c1">// We&#39;ve now narrowed error down to BlankError</span>
+    <span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s2">&quot;Generic error occurred&quot;</span><span class="p">);</span>
+  <span class="p">}</span>
+<span class="p">}</span>
+</code></pre></div>
 <h2 id="learning-typescript">Learning TypeScript</h2>
 <p>Crash courses and references</p>
 <ul>
