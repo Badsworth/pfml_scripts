@@ -17,7 +17,7 @@ locals {
 
   # Provides access to the RDS database via admin username/password
   db_access = [
-    { name : "DB_HOST", value : data.aws_db_instance.default.address },
+    { name : "DB_HOST", value : data..default.address },
     { name : "DB_NAME", value : data.aws_db_instance.default.db_name },
     { name : "DB_USERNAME", value : data.aws_db_instance.default.master_username },
     { name : "DB_PASSWORD", valueFrom : "/service/${local.app_name}/${var.environment_name}/db-password" }
