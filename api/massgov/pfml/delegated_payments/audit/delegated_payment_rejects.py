@@ -230,11 +230,11 @@ class PaymentRejectsStep(Step):
         payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
             payment, Flow.DELEGATED_PAYMENT, self.db_session
         )
-
-        withholding_records = (
-        self.db_session.query(LinkSplitPayment)
-        .filter(LinkSplitPayment.payment_id == payment.payment_id)
-        )
+        if os.getenv("ENABLE_WITHHOLDING_PAYMENTS"):
+            withholding_records = (
+            self.db_session.query(LinkSplitPayment)
+            .filter(LinkSplitPayment.payment_id == payment.payment_id)
+            )
 
         if payment_state_log is None:
             self.increment(self.Metrics.PAYMENT_STATE_LOG_MISSING_COUNT)
@@ -287,23 +287,23 @@ class PaymentRejectsStep(Step):
             )
             self.db_session.add(writeback_details)
 
-            
-            if(len(withholding_records) > 0):
-                for payment_withholding_record in withholding_records:
-                    payment_end_state_id = (
-                    self.db_session.query(StateLog.end_state_id,StateLog)
-                    .filter(StateLog.payment_id == payment.payment_id)
-                    .filter(StateLog.started_at == payment.fineos_extraction_date)
-                    ).order_by(StateLog.created_at.desc()).first()
+            if os.getenv("ENABLE_WITHHOLDING_PAYMENTS"):
+                if(len(withholding_records) > 0):
+                    for payment_withholding_record in withholding_records:
+                        payment_end_state_id = (
+                        self.db_session.query(StateLog.end_state_id,StateLog)
+                        .filter(StateLog.payment_id == payment.payment_id)
+                        .filter(StateLog.started_at == payment.fineos_extraction_date)
+                        ).order_by(StateLog.created_at.desc()).first()
 
-                    state_log_util.create_finished_state_log(
-                    payment_withholding_record,
-                    State.STATE_WITHHOLDING_ERROR if(payment_end_state_id in [State.STATE_WITHHOLDING_READY_FOR_PROCESSING]) else  State.FEDERAL_WITHHOLDING_ERROR,
-                    state_log_util.build_outcome(
-                        writeback_transaction_status.transaction_status_description
-                    ),
-                    self.db_session,
-                    )
+                        state_log_util.create_finished_state_log(
+                        payment_withholding_record,
+                        State.STATE_WITHHOLDING_ERROR if(payment_end_state_id in [State.STATE_WITHHOLDING_READY_FOR_PROCESSING]) else  State.FEDERAL_WITHHOLDING_ERROR,
+                        state_log_util.build_outcome(
+                            writeback_transaction_status.transaction_status_description
+                        ),
+                        self.db_session,
+                        )
         elif is_skipped_payment:
             self.increment(self.Metrics.SKIPPED_PAYMENT_COUNT)
             state_log_util.create_finished_state_log(
@@ -330,43 +330,47 @@ class PaymentRejectsStep(Step):
                 import_log_id=self.get_import_log_id(),
             )
             self.db_session.add(writeback_details)
+            if os.getenv("ENABLE_WITHHOLDING_PAYMENTS"):
+                if(len(withholding_records) > 0):
+                    for payment_withholding_record in withholding_records:
+                        payment_end_state_id = (
+                        self.db_session.query(StateLog.end_state_id,StateLog)
+                        .filter(StateLog.payment_id == payment.payment_id)
+                        .filter(StateLog.started_at == payment.fineos_extraction_date)
+                        ).order_by(StateLog.created_at.desc()).first()
 
-            if(len(withholding_records) > 0):
-                for payment_withholding_record in withholding_records:
-                    payment_end_state_id = (
-                    self.db_session.query(StateLog.end_state_id,StateLog)
-                    .filter(StateLog.payment_id == payment.payment_id)
-                    .filter(StateLog.started_at == payment.fineos_extraction_date)
-                    ).order_by(StateLog.created_at.desc()).first()
-
-                    state_log_util.create_finished_state_log(
-                    payment_withholding_record,
-                    State.STATE_WITHHOLDING_ERROR if(payment_end_state_id in [State.STATE_WITHHOLDING_READY_FOR_PROCESSING]) else  State.FEDERAL_WITHHOLDING_ERROR,
-                    state_log_util.build_outcome(
-                        writeback_transaction_status.transaction_status_description
-                    ),
-                    self.db_session,
-                    )
+                        state_log_util.create_finished_state_log(
+                        payment_withholding_record,
+                        State.STATE_WITHHOLDING_ERROR if(payment_end_state_id in [State.STATE_WITHHOLDING_READY_FOR_PROCESSING]) else  State.FEDERAL_WITHHOLDING_ERROR,
+                        state_log_util.build_outcome(
+                            writeback_transaction_status.transaction_status_description
+                        ),
+                        self.db_session,
+                        )
         else:
             self.increment(self.Metrics.ACCEPTED_PAYMENT_COUNT)
             state_log_util.create_finished_state_log(
                 payment, ACCEPTED_STATE, ACCEPTED_OUTCOME, self.db_session
             )
+            if os.getenv("ENABLE_WITHHOLDING_PAYMENTS"):
+                if(len(withholding_records) > 0):
+                    for payment_withholding_record in withholding_records:
+                        payment_end_state_id = (
+                        self.db_session.query(StateLog.end_state_id,StateLog)
+                        .filter(StateLog.payment_id == payment.payment_id)
+                        .filter(StateLog.started_at == payment.fineos_extraction_date)
+                        ).order_by(StateLog.created_at.desc()).first()
 
-            if(len(withholding_records) > 0):
-                for payment_withholding_record in withholding_records:
-                    payment_end_state_id = (
-                    self.db_session.query(StateLog.end_state_id,StateLog)
-                    .filter(StateLog.payment_id == payment.payment_id)
-                    .filter(StateLog.started_at == payment.fineos_extraction_date)
-                    ).order_by(StateLog.created_at.desc()).first()
+                        state_log_util.create_finished_state_log(
+                        payment_withholding_record,
+                        State.STATE_WITHHOLDING_SEND_FUNDS if(payment_end_state_id in [State.STATE_WITHHOLDING_READY_FOR_PROCESSING]) else  State.FEDERAL_WITHHOLDING_SEND_FUNDS,
+                        ACCEPTED_OUTCOME,
+                        self.db_session,
+                        )
 
-                    state_log_util.create_finished_state_log(
-                    payment_withholding_record,
-                    State.STATE_WITHHOLDING_SEND_FUNDS if(payment_end_state_id in [State.STATE_WITHHOLDING_READY_FOR_PROCESSING]) else  State.FEDERAL_WITHHOLDING_SEND_FUNDS,
-                    ACCEPTED_OUTCOME,
-                    self.db_session,
-                    )
+    # def update_withholding_payment_record_status(
+    #     self,
+    # )->None:
 
     def convert_reject_notes_to_writeback_status(
         self, payment: Payment, is_rejected: bool, rejected_notes: Optional[str] = None

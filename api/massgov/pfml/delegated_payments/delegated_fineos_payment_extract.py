@@ -1,5 +1,6 @@
 import enum
 import uuid
+import os
 from datetime import datetime
 from decimal import Decimal
 from typing import Any, Callable, Dict, List, Optional, Tuple, cast
@@ -58,6 +59,8 @@ PRENOTE_PRENDING_WAITING_PERIOD = 5
 RECEIVED_FOLDER = "received"
 PROCESSED_FOLDER = "processed"
 SKIPPED_FOLDER = "skipped"
+enable_withholding_payments: bool
+enable_withholding_payments=os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "1") == "1"
 
 CANCELLATION_PAYMENT_TRANSACTION_TYPE = "PaymentOut Cancellation"
 # There are multiple types of overpayments
@@ -350,18 +353,17 @@ class PaymentData:
         # Cancellations
         if self.event_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE:
             return PaymentTransactionType.CANCELLATION
-        #FICA 
-        if (
-            self.tin == "FICASOCIALSECURITYPAYEE001" 
-            or self.tin == "FICAMEDICAREPAYEE001"
+        #FICA
+  
+        if (enable_withholding_payments and (self.tin == "FICASOCIALSECURITYPAYEE001" 
+            or self.tin == "FICAMEDICAREPAYEE001")
         ):
             logger.info("BM -FICA  %s", self.tin)
             return PaymentTransactionType.STATE_TAX_WITHHOLDING
 
         #FIT 
-        if (
-            self.tin == "MANDATORYFITPAYEE001" 
-        ):
+
+        if (enable_withholding_payments and  self.tin == "MANDATORYFITPAYEE001"):
             logger.info("BM -FICA  %s" ,self.tin)
             return PaymentTransactionType.FEDERAL_TAX_WITHHOLDING
         # The bulk of the payments we process will be standard payments
@@ -1105,7 +1107,7 @@ class PaymentExtractStep(Step):
             self.increment(self.Metrics.CANCELLATION_COUNT)
 
         #set staus FEDERAL_WITHHOLDING_READY_FOR_PROCESSING
-        elif (
+        elif (enable_withholding_payments and
             payment.payment_transaction_type_id
             == PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
         ):
@@ -1113,7 +1115,7 @@ class PaymentExtractStep(Step):
             message = "Federal Withholding payment processed"
             self.increment(self.Metrics.STANDARD_VALID_PAYMENT_COUNT)
         #set status  STATE_WITHHOLDING_READY_FOR_PROCESSING
-        elif (
+        elif (enable_withholding_payments and
             payment.payment_transaction_type_id
             == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
         ):

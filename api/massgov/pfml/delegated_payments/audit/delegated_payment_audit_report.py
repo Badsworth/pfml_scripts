@@ -25,6 +25,8 @@ from massgov.pfml.delegated_payments.step import Step
 
 logger = logging.get_logger(__name__)
 
+enable_withholding_payments: bool
+enable_withholding_payments=os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "1") == "1"
 
 class PaymentAuditError(Exception):
     """An error in a row that prevents processing of the payment."""
@@ -57,30 +59,30 @@ class PaymentAuditReportStep(Step):
             for item in state_logs:
                 state_logs_containers.append(item)
 
+        if(enable_withholding_payments):
+            federal_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+                state_log_util.AssociatedClass.PAYMENT,
+                State.FEDERAL_WITHHOLDING_PENDING_AUDIT,
+                self.db_session,
+            )
 
-        federal_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-            state_log_util.AssociatedClass.PAYMENT,
-            State.FEDERAL_WITHHOLDING_PENDING_AUDIT,
-            self.db_session,
-        )
+            logger.info("federal_withholding_state_logs %s",federal_withholding_state_logs)
 
-        logger.info("federal_withholding_state_logs %s",federal_withholding_state_logs)
+            if len(federal_withholding_state_logs)>0:
+                for item in federal_withholding_state_logs:
+                    state_logs_containers.append(item)
 
-        if len(federal_withholding_state_logs)>0:
-            for item in federal_withholding_state_logs:
-                state_logs_containers.append(item)
+            state_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+                state_log_util.AssociatedClass.PAYMENT,
+                State.STATE_WITHHOLDING_PENDING_AUDIT,
+                self.db_session,
+            )
 
-        state_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
-            state_log_util.AssociatedClass.PAYMENT,
-            State.STATE_WITHHOLDING_PENDING_AUDIT,
-            self.db_session,
-        )
+            logger.info("state_withholding_state_logs %s",state_withholding_state_logs)
 
-        logger.info("state_withholding_state_logs %s",state_withholding_state_logs)
-
-        if len(state_withholding_state_logs)>0:
-            for item in state_withholding_state_logs:
-                state_logs_containers.append(item)
+            if len(state_withholding_state_logs)>0:
+                for item in state_withholding_state_logs:
+                    state_logs_containers.append(item)
 
 
         state_log_count = len(state_logs_containers)

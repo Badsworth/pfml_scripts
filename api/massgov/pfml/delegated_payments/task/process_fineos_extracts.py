@@ -30,8 +30,8 @@ from massgov.pfml.delegated_payments.state_cleanup_step import StateCleanupStep
 from massgov.pfml.util.bg import background_task
 
 logger = logging.get_logger(__name__)
-
-
+enable_withholding_payments: bool
+enable_withholding_payments=os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "1") == "1"
 ALL = "ALL"
 RUN_AUDIT_CLEANUP = "audit-cleanup"
 CONSUME_FINEOS_CLAIMANT = "consume-fineos-claimant"
@@ -121,7 +121,15 @@ def make_db_session() -> db.Session:
 @background_task("pub-payments-process-fineos")
 def main():
     """Entry point for PUB Payment Processing"""
-
+    
+    
+    # logger.info("enable_withholding_payments %s",enable_withholding_payments)
+    # if(enable_withholding_payments):
+    #     return 1
+    # else:
+    #     return enable_withholding_payments
+    # logger.info(os.getenv("ENABLE_WITHHOLDING_PAYMENTS"))
+    #return 
     # if os.getenv("ENABLE_WITHHOLDING_PAYMENTS"):
     #     logger.info(os.getenv("ENABLE_WITHHOLDING_PAYMENTS"))
     #     logger.info("1")
@@ -168,12 +176,13 @@ def _process_fineos_extracts(
 
     if config.do_payment_extract:
         PaymentExtractStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
-    # if os.getenv("ENABLE_WITHHOLDING_PAYMENTS"):
-    logger.info("End - PaymentExtractStep")
-    if config.do_related_payment_Processing:
-        RelatedPaymentsProcessingStep(
-            db_session=db_session, log_entry_db_session=log_entry_db_session
-        ).run()
+        logger.info("End - PaymentExtractStep")
+
+    if(enable_withholding_payments):
+        if config.do_related_payment_Processing:
+            RelatedPaymentsProcessingStep(
+                db_session=db_session, log_entry_db_session=log_entry_db_session
+            ).run()
 
     logger.info("End - RelatedPaymentsProcessingStep")
     
