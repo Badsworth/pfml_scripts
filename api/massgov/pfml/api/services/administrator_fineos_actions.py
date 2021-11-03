@@ -143,13 +143,20 @@ def get_documents_as_leave_admin(fineos_user_id: str, absence_id: str) -> List[D
 
 
 def download_document_as_leave_admin(
-    fineos_user_id: str, absence_id: str, fineos_document_id: str
+    fineos_user_id: str,
+    absence_id: str,
+    fineos_document_id: str,
+    log_attributes: Optional[Dict] = None,
 ) -> Base64EncodedFileData:
-    log_attributes = {
-        "fineos_user_id": fineos_user_id,
-        "absence_id": absence_id,
-        "fineos_document_id": fineos_document_id,
-    }
+    if log_attributes is None:
+        log_attributes = {}
+    log_attributes.update(
+        {
+            "fineos_user_id": fineos_user_id,
+            "absence_id": absence_id,
+            "fineos_document_id": fineos_document_id,
+        }
+    )
 
     document = _get_document(fineos_user_id, absence_id, fineos_document_id)
 
@@ -157,8 +164,9 @@ def download_document_as_leave_admin(
         logger.warning("Unable to find FINEOS document for user", extra=log_attributes)
         raise ObjectNotFound(description="Unable to find FINEOS document for user")
 
+    doc_type = document.name.lower()
+    log_attributes["document.document_type"] = doc_type
     if not document.is_downloadable_by_leave_admin():
-        doc_type = document.name.lower()
         logger.warning(
             f"Leave Admin is not authorized to download documents of type {doc_type}",
             extra=log_attributes,
@@ -166,9 +174,8 @@ def download_document_as_leave_admin(
         raise NotAuthorizedForAccess(
             description=f"User is not authorized to access documents of type: {doc_type}",
             error_type="unauthorized_document_type",
-            data={"doc_type": doc_type},
+            data={"document.document_type": doc_type},
         )
-
     fineos = massgov.pfml.fineos.create_client()
     return fineos.download_document_as_leave_admin(fineos_user_id, absence_id, fineos_document_id)
 
