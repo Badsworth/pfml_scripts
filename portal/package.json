@@ -109,5 +109,8 @@
     "sass-loader": "^10.1.1",
     "typescript": "^4.4.3",
     "whatwg-fetch": "^3.6.2"
+  },
+  "msw": {
+    "workerDirectory": "public"
   }
 }

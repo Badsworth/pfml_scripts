@@ -74,7 +74,6 @@ export const Address = (props: AddressProps) => {
 
   const handleSave = async () => {
     const formData = { ...formState };
-
     if (isFeatureEnabled("claimantValidateAddress")) {
       formData.residential_address = await residentialAddressFormatter.format();
 
