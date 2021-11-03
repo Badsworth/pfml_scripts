@@ -125,8 +125,8 @@ create-user: ## Create local API User
 deps: ## Install dependencies
 	$(POETRY_CMD) install --no-root --extras "api-only-dependencies"
 
-deps-check:
-	$(PY_RUN_CMD) safety check --full-report
+deps-check: ## Check dependencies for vulnerabilities using Safety
+	$(PY_RUN_CMD) safety check --full-report --ignore=42050 --ignore=42194
 
 distclean: ## Remove all artifacts that can be regenerated
 distclean: clean clean-node clean-venv
