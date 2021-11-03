@@ -407,6 +407,32 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 
+  /payments:
+    get:
+      summary: Retrieve payments with status for a specified absence ID
+      operationId: massgov.pfml.api.payments.get_payments
+      tags:
+        - Claims
+      parameters:
+        - name: absence_case_id
+          in: query
+          schema:
+            type: string
+            example: "NTN-00-ABS-00"
+          description: "FINEOS absence ID of the claim associated with payment data to be retrieved"
+          required: true
+      responses:
+        "200":
+          description: The payments for this absence case.
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/SuccessfulResponse'
+                  - properties:
+                      data:
+                        $ref: '#/components/schemas/PaymentsResponse'
+
   /employers/claims/{fineos_absence_id}/documents/{fineos_document_id}:
     get:
       summary: Retrieve a FINEOS documents for a specified absence ID and document ID
@@ -2348,6 +2374,62 @@ components:
       type: array
       items:
         $ref: "#/components/schemas/ClaimResponse"
+
+    PaymentsResponse:
+      type: object
+      properties:
+        absence_case_id:
+          format: string
+          example: "NTN-01-ABS-01"
+        payments:
+          type: array
+          items:
+            $ref: "#/components/schemas/PaymentResponse"
+
+    PaymentResponse:
+      type: object
+      properties:
+        payment_id:
+          type: string
+          format: uuid
+          nullable: true
+        period_start_date:
+          format: date
+          example: "1970-06-01"
+        period_end_date:
+          format: date
+          example: "1970-06-01"
+        amount:
+          type: string
+          nullable: true
+        sent_to_bank_date:
+          format: date
+          example: "1970-06-01"
+          nullable: true
+        payment_method:
+            type: string
+            enum:
+              - Elec Funds Transfer
+              - Check
+              - Debit
+            nullable: true
+            example: "Elec Funds Transfer"
+        expected_send_date_start:
+          format: date
+          nullable: true
+          example: "1970-06-01"
+        expected_send_date_end:
+          format: date
+          nullable: true
+          example: "1970-06-01"
+        is_delayed:
+          type: string
+          enum:
+            - Sent to bank
+            - Pending
+            - Cancelled
+            - Delayed
+          example: "Delayed"
 
     EvidenceStatusDetail:
       type: object
