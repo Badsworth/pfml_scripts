@@ -121,7 +121,7 @@ services:
     build:
       context: .
       target: pdfdev
-    image: mass-pfml-pdf-api:pdfdev
+    image: mass-pfml-pdf-api:dev
     container_name: mass-pfml-pdf-api
     links:
       - mass-pfml-db
