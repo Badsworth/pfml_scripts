@@ -1,0 +1,33 @@
+# Run testing for scripted releases
+
+name: Scripted Releases Check
+
+on:
+  pull_request:
+    paths:
+      - bin/ci/scripted_releases/**
+
+defaults:
+  run:
+    working-directory: ./bin/ci
+
+jobs:
+  run-tests:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v2
+        with:
+          python-version: '3.9'
+
+      - name: install poetry
+        run: pip install poetry
+
+      - name: add dependencies
+        run: poetry install
+
+      - name: run scripted releases unit tests
+        run: poetry run pytest scripted_releases/tests/
