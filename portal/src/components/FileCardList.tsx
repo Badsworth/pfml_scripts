@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import AppErrorInfo from "../models/AppErrorInfo";
-import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
+import { BenefitsApplicationDocument } from "../models/Document";
 import FileCard from "./FileCard";
 import Spinner from "./Spinner";
 import TempFile from "../models/TempFile";

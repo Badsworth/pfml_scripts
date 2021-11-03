@@ -1,4 +1,3 @@
-import ClaimDocument from "../../models/ClaimDocument";
 import DocumentCollection from "../../models/DocumentCollection";
 import { DocumentType } from "../../models/Document";
 import EmployerClaim from "../../models/EmployerClaim";
@@ -36,9 +35,9 @@ export const getClaimMock = jest.fn().mockResolvedValue((absenceId: string) => {
 export const getDocumentsMock = jest.fn().mockResolvedValue(() => {
   return {
     documents: new DocumentCollection([
-      new ClaimDocument({ ...documentData, fineos_document_id: uniqueId() }),
-      new ClaimDocument({ ...documentData, fineos_document_id: uniqueId() }),
-      new ClaimDocument({ ...documentData, fineos_document_id: uniqueId() }),
+      { ...documentData, fineos_document_id: uniqueId() },
+      { ...documentData, fineos_document_id: uniqueId() },
+      { ...documentData, fineos_document_id: uniqueId() },
     ]),
     status: 200,
     success: true,

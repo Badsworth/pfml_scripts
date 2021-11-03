@@ -1,8 +1,7 @@
+import { BenefitsApplicationDocument, ClaimDocument } from "./Document";
 import claimantFlow, { ClaimantFlowState } from "../flows/claimant";
 import { get, groupBy, isBoolean, isEmpty, isNull, map } from "lodash";
 import BenefitsApplication from "./BenefitsApplication";
-import BenefitsApplicationDocument from "./BenefitsApplicationDocument";
-import ClaimDocument from "./ClaimDocument";
 import { Issue } from "../errors";
 import getRelevantIssues from "../utils/getRelevantIssues";
 import { isFeatureEnabled } from "../services/featureFlags";

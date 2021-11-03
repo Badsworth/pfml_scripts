@@ -1,6 +1,5 @@
 import Step, { ClaimSteps } from "src/models/Step";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
-import BenefitsApplicationDocument from "src/models/BenefitsApplicationDocument";
 import { Checklist } from "src/pages/applications/checklist";
 import DocumentCollection from "src/models/DocumentCollection";
 import { DocumentType } from "src/models/Document";
@@ -109,12 +108,12 @@ const scenarios = {
   "Docs uploaded, ready to submit": {
     claim: new MockBenefitsApplicationBuilder().complete().create(),
     documents: [
-      new BenefitsApplicationDocument({
+      {
         document_type: DocumentType.identityVerification,
-      }),
-      new BenefitsApplicationDocument({
+      },
+      {
         document_type: DocumentType.certification.medicalCertification,
-      }),
+      },
     ],
   },
 };

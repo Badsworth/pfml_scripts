@@ -1,6 +1,5 @@
 import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
-import ClaimDocument from "src/models/ClaimDocument";
 import DocumentCollection from "src/models/DocumentCollection";
 import { DocumentType } from "src/models/Document";
 import { MockEmployerClaimBuilder } from "tests/test-utils";
@@ -136,12 +135,7 @@ function getDocumentsMap(documentation, leaveReason) {
 
   return isWithoutDocumentation
     ? new Map([["mock-absence-id", new DocumentCollection()]])
-    : new Map([
-        [
-          "mock-absence-id",
-          new DocumentCollection([new ClaimDocument(documentData)]),
-        ],
-      ]);
+    : new Map([["mock-absence-id", new DocumentCollection([documentData])]]);
 }
 
 function getAppErrorInfoCollection(errorTypes = []) {

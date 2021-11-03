@@ -1,5 +1,4 @@
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
-import BenefitsApplicationDocument from "../../../src/models/BenefitsApplicationDocument";
 import { Checklist } from "../../../src/pages/applications/checklist";
 import { DocumentType } from "../../../src/models/Document";
 import LeaveReason from "../../../src/models/LeaveReason";
@@ -521,14 +520,14 @@ describe("Checklist", () => {
       const warnings = [];
       const customProps = {
         documents: [
-          new BenefitsApplicationDocument({
+          {
             application_id: "mock-claim-id",
             document_type: DocumentType.certification[LeaveReason.pregnancy],
-          }),
-          new BenefitsApplicationDocument({
+          },
+          {
             application_id: "mock-claim-id",
             document_type: DocumentType.identityVerification,
-          }),
+          },
         ],
       };
       renderChecklist(
@@ -554,14 +553,14 @@ describe("Checklist", () => {
       const warnings = [];
       const customProps = {
         documents: [
-          new BenefitsApplicationDocument({
+          {
             application_id: "mock-claim-id",
             document_type: DocumentType.certification[LeaveReason.pregnancy],
-          }),
-          new BenefitsApplicationDocument({
+          },
+          {
             application_id: "mock-claim-id",
             document_type: DocumentType.identityVerification,
-          }),
+          },
         ],
       };
       renderChecklist(

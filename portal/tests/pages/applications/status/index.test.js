@@ -5,7 +5,6 @@ import { cleanup, render, screen } from "@testing-library/react";
 
 import AppErrorInfo from "../../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../../src/models/AppErrorInfoCollection";
-import BenefitsApplicationDocument from "../../../../src/models/BenefitsApplicationDocument";
 import ClaimDetail from "../../../../src/models/ClaimDetail";
 import DocumentCollection from "../../../../src/models/DocumentCollection";
 import { DocumentType } from "../../../../src/models/Document";
@@ -21,38 +20,38 @@ jest.mock("next/router");
 mockRouter.asPath = routes.applications.status.claim;
 
 const DOCUMENTS = [
-  new BenefitsApplicationDocument({
+  {
     application_id: "mock-application-id",
     content_type: "image/png",
     created_at: "2020-04-05",
     document_type: DocumentType.denialNotice,
     fineos_document_id: "fineos-id-4",
     name: "legal notice 1",
-  }),
-  new BenefitsApplicationDocument({
+  },
+  {
     application_id: "not-my-application-id",
     content_type: "image/png",
     created_at: "2020-04-05",
     document_type: DocumentType.requestForInfoNotice,
     fineos_document_id: "fineos-id-5",
     name: "legal notice 2",
-  }),
-  new BenefitsApplicationDocument({
+  },
+  {
     application_id: "mock-application-id",
     content_type: "image/png",
     created_at: "2020-04-05",
     document_type: DocumentType.identityVerification,
     fineos_document_id: "fineos-id-6",
     name: "non-legal notice 1",
-  }),
-  new BenefitsApplicationDocument({
+  },
+  {
     application_id: "mock-application-id",
     content_type: "image/png",
     created_at: "2020-04-05",
     document_type: DocumentType.requestForInfoNotice,
     fineos_document_id: "fineos-id-7",
     name: "legal notice 3",
-  }),
+  },
 ];
 
 const renderWithClaimDocuments = (appLogicHook, documents = []) => {
@@ -784,10 +783,10 @@ describe("Status", () => {
       };
 
       const documents = [
-        new BenefitsApplicationDocument({
+        {
           application_id: defaultClaimDetail.application_id,
           document_type: DocumentType.certification[LeaveReason.bonding],
-        }),
+        },
       ];
 
       it("shows timeline with generic follow up dates when there are no open managed requirements with follow up dates", () => {

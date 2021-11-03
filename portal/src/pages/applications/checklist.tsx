@@ -2,15 +2,17 @@ import BenefitsApplication, {
   BenefitsApplicationStatus,
   ReasonQualifier,
 } from "../../models/BenefitsApplication";
+import {
+  BenefitsApplicationDocument,
+  DocumentType,
+} from "../../models/Document";
 import StepModel, { ClaimSteps } from "../../models/Step";
 import { camelCase, filter, findIndex, get, isBoolean } from "lodash";
 import Alert from "../../components/Alert";
 import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
-import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import ButtonLink from "../../components/ButtonLink";
 import Details from "../../components/Details";
-import { DocumentType } from "../../models/Document";
 import HeadingPrefix from "../../components/HeadingPrefix";
 import LeaveReason from "../../models/LeaveReason";
 import React from "react";

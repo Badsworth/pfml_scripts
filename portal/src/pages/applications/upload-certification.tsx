@@ -1,13 +1,14 @@
 import BenefitsApplication, {
   ReasonQualifier,
 } from "../../models/BenefitsApplication";
-
+import {
+  BenefitsApplicationDocument,
+  DocumentType,
+} from "../../models/Document";
 import Alert from "../../components/Alert";
 import { AppLogic } from "../../hooks/useAppLogic";
-import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import ConditionalContent from "../../components/ConditionalContent";
 import DocumentRequirements from "../../components/DocumentRequirements";
-import { DocumentType } from "../../models/Document";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
 import Heading from "../../components/Heading";

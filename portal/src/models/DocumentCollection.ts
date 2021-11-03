@@ -1,6 +1,9 @@
+import {
+  BenefitsApplicationDocument,
+  ClaimDocument,
+  isBenefitsApplicationDocument,
+} from "./Document";
 import BaseCollection from "./BaseCollection";
-import BenefitsApplicationDocument from "./BenefitsApplicationDocument";
-import ClaimDocument from "./ClaimDocument";
 
 export default class DocumentCollection extends BaseCollection<
   BenefitsApplicationDocument | ClaimDocument
@@ -14,10 +17,10 @@ export default class DocumentCollection extends BaseCollection<
    */
   filterByApplication(application_id: string) {
     return this.items.filter((item) => {
-      if (item instanceof BenefitsApplicationDocument) {
-        return item.application_id === application_id;
-      }
-      return false;
+      return (
+        isBenefitsApplicationDocument(item) &&
+        item.application_id === application_id
+      );
     });
   }
 }

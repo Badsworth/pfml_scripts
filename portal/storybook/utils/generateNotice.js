@@ -1,4 +1,3 @@
-import BenefitsApplicationDocument from "src/models/BenefitsApplicationDocument";
 import { DocumentType } from "src/models/Document";
 import { uniqueId } from "lodash";
 
@@ -17,9 +16,9 @@ export const generateNotice = (type) => {
   const randomMonth = createRandomInteger(12);
   const randomDay = createRandomInteger(28);
 
-  return new BenefitsApplicationDocument({
+  return {
     created_at: `${lastYear}-${randomMonth}-${randomDay}`,
     document_type: DocumentType[type],
     fineos_document_id: uniqueId("notice"),
-  });
+  };
 };
