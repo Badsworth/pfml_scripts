@@ -221,7 +221,7 @@ def get_payment_preference(payment: Payment) -> str:
     elif payment.disb_method_id == PaymentMethod.CHECK.payment_method_id:
         return "Check"
     else:    
-        return "checkWithDrew"
+        return ""
         
     raise PaymentAuditRowError(
         "Unexpected payment preference %s" % payment.disb_method.payment_method_description

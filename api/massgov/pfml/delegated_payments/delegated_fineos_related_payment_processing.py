@@ -50,25 +50,14 @@ class RelatedPaymentsProcessingStep(Step):
 
 		for payment in payments:
 			#get absense id for this payment
-			
-				# fineos_absence_id = (
-				# self.db_session.query(distinct(Claim.fineos_absence_id))
-				# .filter(Claim.claim_id == payment.claim_id)
-				# .filter(Payment.payment_id == payment.payment_id)
-				# .filter(Payment.period_start_date == payment.period_start_date)
-				# .filter(Payment.period_end_date== payment.period_end_date)
-				# .filter(Payment.payment_date == payment.payment_date)
-				# .filter(Payment.fineos_extraction_date == payment.fineos_extraction_date)
-				# .first()
-				# )
-
 				fineos_absence_id = (
 				self.db_session.query(distinct(Claim.fineos_absence_id))
+				# .join(Claim, Payment.claim_id == Claim.claim_id)
 				.filter(Claim.claim_id == payment.claim_id)
 				.filter(Payment.payment_id == payment.payment_id)
 				.first()
 				)
-				logger.info(fineos_absence_id)
+				logger.info(fineos_absence_id[0])
 			
 				#get records for the absense id and check for duplicates
 				is_duplicate_records_exists =   self.is_withholding_records_have_duplicate_records(
@@ -78,44 +67,52 @@ class RelatedPaymentsProcessingStep(Step):
 				if(is_duplicate_records_exists):
 						logger.info("Duplicate records exists for %s",fineos_absence_id[0])
 					# to update status we need payment so getting all the payment details from above query
+						#get duplicate payment records 
+						duplicate_payment_records = (
+							self.db_session.query(Payment)
+							.filter(Payment.claim_id == payment.claim_id)
+							.filter(Claim.fineos_absence_id == fineos_absence_id[0])
+							.filter(Payment.period_start_date == payment.period_start_date)
+							.filter(Payment.period_end_date == payment.period_end_date)
+							.filter(Payment.payment_date == payment.payment_date)
+							.filter(Payment.amount == payment.amount)
+							.filter(Payment.fineos_extraction_date == payment.fineos_extraction_date)
+							.all()
+						)
 
-					#query the state_log table for this payment id , get latest record and check the end state 
-						
-						# payment_end_state_id = (
-						# self.db_session.query(StateLog.end_state_id,StateLog)
-						# .filter(StateLog.payment_id == payment.payment_id)
-						# .filter(StateLog.started_at == payment.fineos_extraction_date)
-						# ).order_by(StateLog.created_at.desc()).first()
-						
+						logger.info("duplicate payment records %s",duplicate_payment_records)
+
 						payment_end_state_id = (
 						self.db_session.query(StateLog.end_state_id)
-						.join(LatestStateLog)
 						.join(Payment)
 						.join(LkState, StateLog.end_state_id == LkState.state_id)
 						.filter(
 							Payment.payment_id ==payment.payment_id,
 							StateLog.end_state_id.in_([191,195]),
-							LkState.flow_id == Flow.DELEGATED_PAYMENT.flow_id,
 						)
 						.first()
 						)
 
+						logger.info(payment_end_state_id)
+
 
 						logger.info("payment_end_state_id %s",payment_end_state_id[0])
-						#how to differentiate  fed vs state :write new function to get state log (191, 195)
+						
 						end_state =State.STATE_WITHHOLDING_PENDING_AUDIT if(payment_end_state_id[0] in [191]) else  State.FEDERAL_WITHHOLDING_PENDING_AUDIT
 						logger.info("end_state_id %s",end_state)
 						message = "Duplicate records found for the payment."
-						state_log_util.create_finished_state_log(
-						end_state=end_state,
-						outcome=state_log_util.build_outcome(message),
-						associated_model=payment,
-						db_session=self.db_session,
-						)
-						logger.info(
-						"Payment added to state %s",
-						end_state.state_description,
-						)
+
+						for pmnt in duplicate_payment_records:
+							state_log_util.create_finished_state_log(
+							end_state=end_state,
+							outcome=state_log_util.build_outcome(message),
+							associated_model=pmnt,
+							db_session=self.db_session,
+							)
+							logger.info(
+							"Payment added to state %s",
+							end_state.state_description,
+							)
 				else:
 
 

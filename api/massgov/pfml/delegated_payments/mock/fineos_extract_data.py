@@ -435,11 +435,11 @@ def generate_payment_extract_files(
         elif scenario_descriptor.payment_transaction_type == PaymentTransactionType.CANCELLATION:
             event_type = "PaymentOut Cancellation"
         # TODO Unknown
-        elif scenario_descriptor.payment_transaction_type == PaymentTransactionType.FEDERAL_TAX_WITHHOLDING:
-            event_reason = "Automatic Alternate Payment"
-            payee_identifier = "ID"
-            amalgamationc = "ScheduledAlternate65424"
-            ssn="FICAMEDICAREPAYEE001"
+        # elif scenario_descriptor.payment_transaction_type == PaymentTransactionType.FEDERAL_TAX_WITHHOLDING:
+        #     event_reason = "Automatic Alternate Payment"
+        #     payee_identifier = "ID"
+        #     amalgamationc = "ScheduledAlternate65424"
+        #     ssn="FICAMEDICAREPAYEE001"
             
         if scenario_descriptor.fineos_extract_address_valid:
             mock_address = MATCH_ADDRESS
@@ -484,28 +484,32 @@ def generate_payment_extract_files(
             claim_type=claim_type,
         )
 
+        event_reason = "Automatic Alternate Payment"
+        payee_identifier = "ID"
+        amalgamationc = "ScheduledAlternate65424"
+
         if(scenario_descriptor.scenario_name == ScenarioName.FEDERAL_TAX_WITHHOLDING):
             logger.info("BM : round %s",ScenarioName.FEDERAL_TAX_WITHHOLDING)       
                     # Auto generated: c_value, i_value, leave_request_id
-            fineos_payments_withholding_data = FineosPaymentData(
+            fineos_payments_ss_state_withholding_data = FineosPaymentData(
                 generate_defaults=True,
                 c_value=c_value,
-                i_value= "878787",
+                i_value= i_value,
                 include_claim_details=scenario_descriptor.include_claim_details,
                 include_payment_details=True,
                 include_requested_absence=True,
-                tin="FICAMEDICAREPAYEE001",
+                tin="FICASOCIALSECURITYPAYEE001",
                 absence_case_number=absence_case_id,
                 payment_address_1=mock_address["line_1"],
                 payment_address_2=mock_address["line_2"],
                 city=mock_address["city"],
                 state=mock_address["state"],
                 zip_code=mock_address["zip"],
-                payment_method=payment_method,
+                payment_method="Accounting",
                 payment_date=payment_date.strftime("%Y-%m-%d %H:%M:%S"),
-                payment_amount=payment_amount,
-                routing_nbr=routing_nbr,
-                account_nbr=account_nbr,
+                payment_amount="28.62",
+                routing_nbr="",
+                account_nbr="",
                 account_type=account_type,
                 payment_start_period=payment_start_period.strftime("%Y-%m-%d %H:%M:%S"),
                 payment_end_period=payment_end_period.strftime("%Y-%m-%d %H:%M:%S"),
@@ -516,7 +520,71 @@ def generate_payment_extract_files(
                 amalgamationc=amalgamationc,
                 claim_type=claim_type,
             )
-        fineos_payments_dataset.append(fineos_payments_withholding_data)
+                        # Auto generated: c_value, i_value, leave_request_id
+            fineos_payments_med_state_withholding_data = FineosPaymentData(
+                generate_defaults=True,
+                c_value=c_value,
+                i_value= i_value,
+                include_claim_details=scenario_descriptor.include_claim_details,
+                include_payment_details=True,
+                include_requested_absence=True,
+                tin="FICAMEDICAREPAYEE001",
+                absence_case_number=absence_case_id,
+                payment_address_1=mock_address["line_1"],
+                payment_address_2=mock_address["line_2"],
+                city=mock_address["city"],
+                state=mock_address["state"],
+                zip_code=mock_address["zip"],
+                payment_method="Accounting",
+                payment_date=payment_date.strftime("%Y-%m-%d %H:%M:%S"),
+                payment_amount="6.99",
+                routing_nbr="",
+                account_nbr="",
+                account_type=account_type,
+                payment_start_period=payment_start_period.strftime("%Y-%m-%d %H:%M:%S"),
+                payment_end_period=payment_end_period.strftime("%Y-%m-%d %H:%M:%S"),
+                leave_request_decision=scenario_descriptor.leave_request_decision,
+                event_type=event_type,
+                event_reason=event_reason,
+                payee_identifier=payee_identifier,
+                amalgamationc=amalgamationc,
+                claim_type=claim_type,
+            )
+
+            fineos_payments_fit_withholding_data = FineosPaymentData(
+                generate_defaults=True,
+                c_value=c_value,
+                i_value= i_value,
+                include_claim_details=scenario_descriptor.include_claim_details,
+                include_payment_details=True,
+                include_requested_absence=True,
+                tin="MANDATORYFITPAYEE001",
+                absence_case_number=absence_case_id,
+                payment_address_1=mock_address["line_1"],
+                payment_address_2=mock_address["line_2"],
+                city=mock_address["city"],
+                state=mock_address["state"],
+                zip_code=mock_address["zip"],
+                payment_method="Accounting",
+                payment_date=payment_date.strftime("%Y-%m-%d %H:%M:%S"),
+                payment_amount="99.99",
+                routing_nbr="",
+                account_nbr="",
+                account_type=account_type,
+                payment_start_period=payment_start_period.strftime("%Y-%m-%d %H:%M:%S"),
+                payment_end_period=payment_end_period.strftime("%Y-%m-%d %H:%M:%S"),
+                leave_request_decision=scenario_descriptor.leave_request_decision,
+                event_type=event_type,
+                event_reason=event_reason,
+                payee_identifier=payee_identifier,
+                amalgamationc=amalgamationc,
+                claim_type=claim_type,
+            )
+        fineos_payments_dataset.append(fineos_payments_ss_state_withholding_data)
+
+        fineos_payments_dataset.append(fineos_payments_med_state_withholding_data)
+
+        fineos_payments_dataset.append(fineos_payments_fit_withholding_data)
 
         fineos_payments_dataset.append(fineos_payments_data)
 
