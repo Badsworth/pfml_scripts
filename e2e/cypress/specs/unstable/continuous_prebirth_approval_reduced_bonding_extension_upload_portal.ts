@@ -1,5 +1,5 @@
 import { fineos, fineosPages, portal } from "../../actions";
-import {getClaimantCredentials, getFineosBaseUrl} from "../../config";
+import { getClaimantCredentials, getFineosBaseUrl } from "../../config";
 import { Submission } from "../../../src/types";
 import { addMonths, addDays, format } from "date-fns";
 
@@ -58,21 +58,19 @@ describe("Submit medical pre-birth application via the web portal", () => {
       // wait 30s before modifying approved absence case, there's a good chance we'll see a fatal fineos error page without waiting here
       cy.wait(1000 * 30);
       cy.unstash<Submission>("submission").then((submission) => {
-        fineosPages.ClaimPage.visit(submission.fineos_absence_id)
-          .benefitsExtension((benefitsExtension) => {
-            const startDate = addMonths(new Date(), 2);
-            const startDateFormatted = format(startDate, "MM/dd/yyyy");
-            const endDateFormatted = format(
-              addDays(startDate, 2),
-              "MM/dd/yyyy"
-            );
-            benefitsExtension.extendLeave(
-              startDateFormatted,
-              endDateFormatted,
-              true,
-              "reduced"
-            );
-          })
+        fineosPages.ClaimPage.visit(
+          submission.fineos_absence_id
+        ).benefitsExtension((benefitsExtension) => {
+          const startDate = addMonths(new Date(), 2);
+          const startDateFormatted = format(startDate, "MM/dd/yyyy");
+          const endDateFormatted = format(addDays(startDate, 2), "MM/dd/yyyy");
+          benefitsExtension.extendLeave(
+            startDateFormatted,
+            endDateFormatted,
+            true,
+            "reduced"
+          );
+        });
       });
     }
   );
@@ -82,16 +80,15 @@ describe("Submit medical pre-birth application via the web portal", () => {
       portal.before();
       portal.loginClaimant();
       cy.unstash<Submission>("submission").then((submission) => {
-            portal.claimantGoToClaimStatus(submission.fineos_absence_id);
-            portal.claimantAssertClaimStatus([
-              {
-                leave: "Serious Health Condition - Employee",
-                status: "Approved",
-              },
-            ]);
-          }
-        );
-        portal.uploadAdditionalDocument("Proof of birth", "birth-certificate");
+        portal.claimantGoToClaimStatus(submission.fineos_absence_id);
+        portal.claimantAssertClaimStatus([
+          {
+            leave: "Serious Health Condition - Employee",
+            status: "Approved",
+          },
+        ]);
+      });
+      portal.uploadAdditionalDocument("Proof of birth", "birth-certificate");
     });
   it("CSR rep can view the Child Bonding evidence form uploaded by claimant", () => {
     cy.dependsOnPreviousPass([upload]);
