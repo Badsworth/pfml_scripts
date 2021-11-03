@@ -1531,7 +1531,7 @@ cognito_user_pool_keys_url = &quot;https://cognito-idp.us-east-1.amazonaws.com/$
 <h2 id="4-integrating-with-fineos">4. Integrating with FINEOS</h2>
 <h3 id="configure-pfml-credentials-for-fineos">Configure PFML credentials for FINEOS</h3>
 <ol>
-<li>Create the FINEOS user the in PFML database.</li>
+<li>Create the FINEOS user in the PFML database. This depends on the cognito_fineos_app_client_id secret being configured in Parameter Store from step 2.2, as part of API setup.</li>
 </ol>
 <div class="highlight"><pre><span></span><code>./bin/run-ecs-task/run-task.sh NEW_ENV db-create-fineos-user FIRST_NAME.LAST_NAME
 </code></pre></div>
@@ -1566,7 +1566,7 @@ cognito_user_pool_keys_url = &quot;https://cognito-idp.us-east-1.amazonaws.com/$
 <li>Add the environment to the <a href="https://github.com/EOLWD/pfml/tree/main/infra/monitoring/alarms.tf">monitoring module</a> to create API and Portal alarms that are linked to PagerDuty.</li>
 </ol>
 <h2 id="setting-up-custom-domains">Setting up Custom Domains</h2>
-<p>If we expect FINEOS to call the PFML API, you'll need a custom mass.gov domain for the environment. Please f    ollow these steps:</p>
+<p>If we expect FINEOS to call the PFML API, you'll need a custom mass.gov domain for the environment. Please follow these steps:</p>
 <ol>
 <li>Request an ACM cert in the AWS Console &gt; AWS Certificate Manager, with Email Verification. Example:</li>
 </ol>
@@ -1584,6 +1584,7 @@ cognito_user_pool_keys_url = &quot;https://cognito-idp.us-east-1.amazonaws.com/$
 </tr>
 </tbody>
 </table>
+<p>This requires an individual with cloudops/administrator permissions.</p>
 <ol>
 <li>Send an email to Vijay with the domain name/SANs, so he can request approval from Sarah Bourne / Chris Velluto / Bill Cole. Boilerplate:</li>
 </ol>
