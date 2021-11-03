@@ -176,6 +176,8 @@ export const Review = (props: ReviewProps) => {
     clearRequiredFieldErrors,
   ]);
 
+  const isEmployed = get(claim, "employment_status") === EmploymentStatus.employed;
+
   return (
     <div className="measure-6">
       {showNewFieldError && (
@@ -271,12 +273,6 @@ export const Review = (props: ReviewProps) => {
         {get(claim, "phone.phone_number")}
       </ReviewRow>
 
-      {get(claim, "organization_unit") && (
-        <ReviewRow level={reviewRowLevel} label="Department">
-          {get(claim, "organization_unit")}
-        </ReviewRow>
-      )}
-
       <ReviewRow
         level={reviewRowLevel}
         label={t("pages.claimsReview.residentialAddressLabel")}
@@ -342,7 +338,7 @@ export const Review = (props: ReviewProps) => {
           </ReviewRow>
         )}
 
-      {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
+      {isEmployed && ( // only display this if the claimant is Employed
         <ReviewRow
           level={reviewRowLevel}
           label={t("pages.claimsReview.employerFeinLabel")}
@@ -351,16 +347,16 @@ export const Review = (props: ReviewProps) => {
         </ReviewRow>
       )}
 
-      {get(claim, "employment_status") === EmploymentStatus.employed && isFeatureEnabled("claimantShowDepartments") && ( // only display this if the claimant is Employed
+      {isFeatureEnabled("claimantShowDepartments") && isEmployed && get(claim, "organization_unit_id") && (
         <ReviewRow
           level={reviewRowLevel}
           label={t("pages.claimsReview.employeeDepartment")}
         >
-          {get(claim, "reporting_unit")}
+          {get(claim, "organization_unit.name")}
         </ReviewRow>
       )}
 
-      {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
+      {isEmployed && ( // only display this if the claimant is Employed
         <ReviewRow
           level={reviewRowLevel}
           label={t("pages.claimsReview.employerNotifiedLabel")}

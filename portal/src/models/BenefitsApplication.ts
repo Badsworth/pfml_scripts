@@ -79,6 +79,13 @@ class BenefitsApplication extends BaseBenefitsApplication {
     | typeof BenefitsApplicationStatus[keyof typeof BenefitsApplicationStatus]
     | null = null;
 
+  organization_unit: {
+    organization_unit_id: string;
+    name: string;
+    fineos_id: string;
+    employer_id: string;
+  } | null
+
   constructor(attrs: Partial<BenefitsApplication>) {
     super();
     // Recursively merge with the defaults

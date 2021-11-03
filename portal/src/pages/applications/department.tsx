@@ -128,15 +128,14 @@ export const Department = (props: DepartmentProps) => {
     appLogic.setAppErrors(new AppErrorInfoCollection(errors));
 
     if (errors.length > 0) return;
-
-    formState.organization_unit_id = employerDepartmentOptions.find(
-      (d) =>
-        d.label === finalDepartmentDecision ||
-        d.value === finalDepartmentDecision
-    )?.value;
-    delete formState.radio_organization_unit;
-    delete formState.organization_unit;
-    await appLogic.benefitsApplications.update(claim.application_id, formState);
+    
+    await appLogic.benefitsApplications.update(claim.application_id, {
+      organization_unit_id: employerDepartmentOptions.find(
+        (d) =>
+          d.label === finalDepartmentDecision ||
+          d.value === finalDepartmentDecision
+      )?.value
+    });
   };
 
   const parseDepartments = (
@@ -157,8 +156,8 @@ export const Department = (props: DepartmentProps) => {
   };
 
   const populateDepartments = async () => {
-    // Finds this employee based on name, SSN and employer FEIN and retrieves 
-    // the employee info alongside the connected DUA reporting units and 
+    // Finds this employee based on name, SSN and employer FEIN and retrieves
+    // the employee info alongside the connected DUA reporting units and
     // this employer's list of organization units
     let claimantDeps: CommonDepartment[] = [];
     let employerDeps: CommonDepartment[] = [];
@@ -252,6 +251,12 @@ export const Department = (props: DepartmentProps) => {
   };
 
   useEffect(() => {
+    if (!showDepartments) {
+      appLogic.portalFlow.goToPageFor("CONTINUE", { claim }, query, {
+        redirect: true,
+      });
+      return () => null;
+    }
     // lazy loads both departments lists into state
     populateDepartments();
     return () => null;
@@ -283,11 +288,6 @@ export const Department = (props: DepartmentProps) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [departments]);
 
-  if (!showDepartments) {
-    // @todo: go to next page and ignore departments, auto-select "I'm not sure"
-    appLogic.portalFlow.goToNextPage({}, query);
-    // return null;
-  }
 
   const { isLong, isShort, isUnique } = getDepartmentListSizes(departments);
   const { isUniqueOptions, departmentOptions, employerDepartmentOptions } =
