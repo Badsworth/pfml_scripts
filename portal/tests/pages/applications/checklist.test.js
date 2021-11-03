@@ -355,7 +355,7 @@ describe("Checklist", () => {
     it("renders alert that Part 2 is confirmed", () => {
       expect(
         screen.getByText(
-          /You successfully submitted Part 2. Submit Part 3 so that we can review your application./
+          /You successfully submitted your payment method. Complete the remaining steps so that you can submit your application./
         )
       ).toBeInTheDocument();
     });

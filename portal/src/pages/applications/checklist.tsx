@@ -39,8 +39,23 @@ interface ChecklistProps {
   query: {
     "part-one-submitted"?: string;
     "payment-pref-submitted"?: string;
+    "tax-pref-submitted"?: string;
   };
 }
+
+interface ChecklistAlertsProps {
+  submitted: "partOne" | "payment" | "taxPref";
+}
+
+export const ChecklistAlerts = ({ submitted }: ChecklistAlertsProps) => {
+  const { t } = useTranslation();
+
+  return (
+    <Alert className="margin-bottom-3" state="warning">
+      {t("pages.claimsChecklist.afterSubmissionAlert", { context: submitted })}
+    </Alert>
+  );
+};
 
 export const Checklist = (props: ChecklistProps) => {
   const { t } = useTranslation();
@@ -61,8 +76,6 @@ export const Checklist = (props: ChecklistProps) => {
     get(claim, "leave_details.reason")
   );
 
-  const partOneSubmitted = query["part-one-submitted"];
-  const paymentPrefSubmitted = query["payment-pref-submitted"];
   // TODO(PORTAL-1001): - Remove Feature Flag
   const taxWithholdingEnabled = isFeatureEnabled("claimantShowTaxWithholding");
   const warnings =
@@ -341,15 +354,18 @@ export const Checklist = (props: ChecklistProps) => {
   }
   return (
     <div className="measure-6">
-      {partOneSubmitted && (
-        <Alert className="margin-bottom-3" state="warning">
-          {t("pages.claimsChecklist.partOneSubmittedDescription")}
-        </Alert>
-      )}
-      {paymentPrefSubmitted && (
-        <Alert className="margin-bottom-3" state="warning">
-          {t("pages.claimsChecklist.partTwoSubmittedDescription")}
-        </Alert>
+      {(query["part-one-submitted"] ||
+        query["payment-pref-submitted"] ||
+        query["tax-pref-submitted"]) && (
+        <ChecklistAlerts
+          submitted={
+            query["part-one-submitted"]
+              ? "partOne"
+              : query["payment-pref-submitted"]
+              ? "payment"
+              : "taxPref"
+          }
+        />
       )}
       <BackButton
         label={t("pages.claimsChecklist.backButtonLabel")}

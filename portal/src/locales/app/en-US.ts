@@ -1062,6 +1062,12 @@ const pages = {
       "I agree that I have an eligible relationship with my spouse or domestic partner who is experiencing a serious health condition and needs my care.",
   },
   claimsChecklist: {
+    afterSubmissionAlert_partOne:
+      "You successfully submitted Part 1. Submit Parts 2 and 3 so that we can review your application.",
+    afterSubmissionAlert_payment:
+      "You successfully submitted your payment method. Complete the remaining steps so that you can submit your application.",
+    afterSubmissionAlert_taxPref:
+      "You successfully submitted your tax withholding preference. Complete the remaining steps so that you can submit your application.",
     backButtonLabel: "Back to applications",
     completed_editable: "Completed",
     completed_uneditable: "Confirmed",
@@ -1073,10 +1079,7 @@ const pages = {
     otherLeaveSubmittedDetailsLabel: "What do I need to report?",
     otherLeaveSubmittedIntro:
       "<p>If you have any other leaves, benefits, or income to report, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
-    partOneSubmittedDescription:
-      "You successfully submitted Part 1. Submit Parts 2 and 3 so that we can review your application.",
-    partTwoSubmittedDescription:
-      "You successfully submitted Part 2. Submit Part 3 so that we can review your application.",
+
     resume: "Resume",
     // Resume button aria-label for screen readers, since VoiceOver reads "résumé":
     resumeScreenReader: "Continue with",
