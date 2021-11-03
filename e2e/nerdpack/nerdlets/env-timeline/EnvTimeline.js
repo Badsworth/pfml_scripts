@@ -1,7 +1,7 @@
 import { NrqlQuery, navigation, Link, Spinner, Icon } from "nr1";
 import React from "react";
 import { format as dateFormat } from "date-fns";
-import { labelComponent } from "../common";
+import { labelComponent, labelEnv } from "../common";
 import { MutiQuery } from "../common/MultiQuery";
 
 class baseDAO {
@@ -205,7 +205,7 @@ class TimelineTable extends React.Component {
     return (
       <div className={`e2e-run-timeline`}>
         <h2>
-          {this.environment} Deployment & E2E Run Timeline | Newest to Oldest |
+          {labelEnv(this.environment)} Deployment & E2E Run Timeline | Newest to Oldest |
           Past Month
         </h2>
         <div className={"filters"}>

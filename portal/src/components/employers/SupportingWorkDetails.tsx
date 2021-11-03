@@ -97,7 +97,7 @@ const SupportingWorkDetails = (props: SupportingWorkDetailsProps) => {
             mask="hours"
             width="small"
             smallLabel
-            valueType="integer"
+            valueType="float"
           />
         </AmendmentForm>
       </ConditionalContent>

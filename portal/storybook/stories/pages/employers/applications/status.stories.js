@@ -1,5 +1,4 @@
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
-import ClaimDocument from "src/models/ClaimDocument";
 import DocumentCollection from "src/models/DocumentCollection";
 import { DocumentType } from "src/models/Document";
 import { MockEmployerClaimBuilder } from "tests/test-utils";
@@ -91,20 +90,17 @@ export const Default = ({ status, document, leaveDurationType }) => {
       [
         "mock-absence-id",
         new DocumentCollection([
-          new ClaimDocument({ ...documentData }),
-          new ClaimDocument({
+          { ...documentData },
+          {
             ...documentData,
             document_type: DocumentType.requestForInfoNotice,
-          }),
+          },
         ]),
       ],
     ]);
   } else {
     documentsMap = new Map([
-      [
-        "mock-absence-id",
-        new DocumentCollection([new ClaimDocument({ ...documentData })]),
-      ],
+      ["mock-absence-id", new DocumentCollection([{ ...documentData }])],
     ]);
   }
 

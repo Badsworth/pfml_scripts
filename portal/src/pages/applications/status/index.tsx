@@ -1,13 +1,16 @@
-import { DocumentType, DocumentTypeEnum } from "../../../models/Document";
+import {
+  BenefitsApplicationDocument,
+  ClaimDocument,
+  DocumentType,
+  DocumentTypeEnum,
+} from "../../../models/Document";
 import React, { useEffect } from "react";
 import { find, get, has, map } from "lodash";
 import { AbsencePeriod } from "../../../models/ClaimDetail";
 import Alert from "../../../components/Alert";
 import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
-import BenefitsApplicationDocument from "../../../models/BenefitsApplicationDocument";
 import ButtonLink from "../../../components/ButtonLink";
-import ClaimDocument from "../../../models/ClaimDocument";
 import Heading from "../../../components/Heading";
 import LeaveReason from "../../../models/LeaveReason";
 import LegalNoticeList from "../../../components/LegalNoticeList";

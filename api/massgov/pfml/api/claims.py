@@ -389,7 +389,7 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
 
     try:
         document_data: Base64EncodedFileData = download_document_as_leave_admin(
-            user_leave_admin.fineos_web_id, fineos_absence_id, fineos_document_id  # type: ignore
+            user_leave_admin.fineos_web_id, fineos_absence_id, fineos_document_id, log_attr  # type: ignore
         )
     except ObjectNotFound as not_found:
         logger.error(
@@ -397,16 +397,13 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
         )
         return not_found.to_api_response()
     except NotAuthorizedForAccess as not_authorized:
-        doc_type = not_authorized.data["doc_type"]
         logger.error(
-            f"employer_document_download failed - {not_authorized.description}",
-            extra={**log_attr, "document_type": doc_type},
+            f"employer_document_download failed - {not_authorized.description}", extra=log_attr,
         )
         return not_authorized.to_api_response()
 
     file_bytes = base64.b64decode(document_data.base64EncodedFileContents.encode("ascii"))
     content_type = document_data.contentType or "application/octet-stream"
-
     claim = get_claim_from_db(fineos_absence_id)
     if claim:
         log_attr.update(get_claim_log_attributes(claim))

@@ -7,6 +7,7 @@ import {
   SectionMessage,
 } from "nr1";
 import React from "react";
+import { labelEnv } from "../common";
 
 const CATEGORY_PRIORITY = {
   content: {
@@ -340,7 +341,7 @@ export default function TestGrid({ accountId, environment, runIds }) {
         {uniqueRuns.map(({ runId, environment, runUrl }, i) => (
           <div className={"run-notes"}>
             <span>
-              {`${i + 1} Run ID: ${runId}, Environment: ${environment}`}
+              {`${i + 1} Run ID: ${runId}, Environment: ${labelEnv(environment)}`}
             </span>
             <Link to={runUrl}>View in Cypress</Link>
           </div>

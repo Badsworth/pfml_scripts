@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import BenefitsApplicationDocument from "src/models/BenefitsApplicationDocument";
 import { DocumentType } from "src/models/Document";
 import FileCard from "src/components/FileCard";
 
@@ -30,14 +29,12 @@ export const DocumentCard = () => {
   return (
     <FileCard
       heading="Document 1"
-      document={
-        new BenefitsApplicationDocument({
-          application_id: "mock-application-id",
-          created_at: "2021-01-01",
-          document_type: DocumentType.identityVerification,
-          fineos_document_id: "mock-document-4",
-        })
-      }
+      document={{
+        application_id: "mock-application-id",
+        created_at: "2021-01-01",
+        document_type: DocumentType.identityVerification,
+        fineos_document_id: "mock-document-4",
+      }}
     />
   );
 };

@@ -220,7 +220,7 @@ locals {
 
     "pub-payments-process-fineos" = {
       command   = ["pub-payments-process-fineos"]
-      task_role = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-fineos"
+      task_role = aws_iam_role.pub_payments_process_fineos_task_role.arn
       cpu       = 2048
       memory    = 16384
       env = [
@@ -236,7 +236,7 @@ locals {
 
     "pub-payments-process-snapshot" = {
       command   = ["pub-payments-process-snapshot"]
-      task_role = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-snapshot"
+      task_role = aws_iam_role.pub_payments_process_fineos_task_role.arn
       cpu       = 2048
       memory    = 16384
       env = [

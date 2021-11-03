@@ -11,7 +11,22 @@ function setup(customProps = {}) {
     ...customProps,
   };
 
-  return render(<InputNumber {...props} />);
+  const InputNumberWithState = (props) => {
+    const [value, setValue] = React.useState(props.value ?? "");
+
+    return (
+      <InputNumber
+        {...props}
+        value={value}
+        onChange={(event) => {
+          setValue(event.target.value);
+          props.onChange(event);
+        }}
+      />
+    );
+  };
+
+  return render(<InputNumberWithState {...props} />);
 }
 
 describe("InputNumber", () => {
@@ -55,14 +70,24 @@ describe("InputNumber", () => {
     expect(screen.getByRole("textbox")).toHaveAttribute("inputmode", "decimal");
   });
 
-  it("calls onChange when value is a number", () => {
+  it("supports entering only integers when valueType is integer", () => {
     const onChange = jest.fn();
     setup({ valueType: "integer", onChange });
+    const input = screen.getByRole("textbox");
 
-    const value = "1";
-    userEvent.type(screen.getByRole("textbox"), value);
+    // No decimal point allowed
+    userEvent.type(input, "1.");
+    expect(input).toHaveValue("1");
+  });
 
-    expect(onChange).toHaveBeenCalled();
+  it("supports entering decimals when valueType is float", () => {
+    const onChange = jest.fn();
+    setup({ valueType: "float", onChange });
+    const input = screen.getByRole("textbox");
+
+    userEvent.clear(input);
+    userEvent.type(input, "1.");
+    expect(input).toHaveValue("1.");
   });
 
   it("does not call onChange when value is not a number", () => {
@@ -99,8 +124,8 @@ describe("isAllowedValue", () => {
     });
 
     it("allows entering a decimal", () => {
-      const isAllowed = isAllowedValue("12.3", allowDecimals, allowNegative);
-      expect(isAllowed).toBe(true);
+      expect(isAllowedValue("12.", allowDecimals, allowNegative)).toBe(true);
+      expect(isAllowedValue("12.3", allowDecimals, allowNegative)).toBe(true);
     });
 
     it("prevents hyphen-delimited numbers", () => {

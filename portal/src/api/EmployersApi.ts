@@ -4,7 +4,7 @@ import BaseApi, {
   getAuthorizationHeader,
   handleNotOkResponse,
 } from "./BaseApi";
-import ClaimDocument from "../models/ClaimDocument";
+import { ClaimDocument } from "../models/Document";
 import DocumentCollection from "../models/DocumentCollection";
 import EmployerClaim from "../models/EmployerClaim";
 import { UserLeaveAdministrator } from "../models/User";
@@ -82,12 +82,9 @@ export default class EmployersApi extends BaseApi {
       "GET",
       `claims/${absenceId}/documents`
     );
-    const documents = data.map(
-      (documentData) => new ClaimDocument(documentData)
-    );
 
     return {
-      documents: new DocumentCollection(documents),
+      documents: new DocumentCollection(data),
     };
   };
 

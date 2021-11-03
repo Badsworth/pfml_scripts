@@ -12,6 +12,10 @@ import BenefitsApplication, {
   WorkPattern,
   WorkPatternType,
 } from "../../models/BenefitsApplication";
+import {
+  BenefitsApplicationDocument,
+  DocumentType,
+} from "../../models/Document";
 import EmployerBenefit, {
   EmployerBenefitFrequency,
   EmployerBenefitType,
@@ -28,9 +32,7 @@ import Address from "../../models/Address";
 import Alert from "../../components/Alert";
 import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
-import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import { DateTime } from "luxon";
-import { DocumentType } from "../../models/Document";
 import Heading from "../../components/Heading";
 import HeadingPrefix from "../../components/HeadingPrefix";
 import Lead from "../../components/Lead";

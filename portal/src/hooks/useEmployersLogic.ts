@@ -1,7 +1,7 @@
 import { get, isNil } from "lodash";
 import { useMemo, useState } from "react";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
-import ClaimDocument from "../models/ClaimDocument";
+import { ClaimDocument } from "../models/Document";
 import { ClaimsLogic } from "./useClaimsLogic";
 import DocumentCollection from "../models/DocumentCollection";
 import EmployerClaim from "../models/EmployerClaim";

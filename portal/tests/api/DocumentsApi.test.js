@@ -1,5 +1,4 @@
 import { makeFile, mockAuth } from "../test-utils";
-import BenefitsApplicationDocument from "../../src/models/BenefitsApplicationDocument";
 import DocumentCollection from "../../src/models/DocumentCollection";
 import DocumentsApi from "../../src/api/DocumentsApi";
 
@@ -85,7 +84,7 @@ describe("DocumentsApi", () => {
             "Mock Category",
             false
           );
-        expect(documentResponse).toBeInstanceOf(BenefitsApplicationDocument);
+        expect(documentResponse.application_id).toBe(applicationId);
       });
 
       it("sends POST request with the mark_evidence_received flag", async () => {
@@ -160,18 +159,18 @@ describe("DocumentsApi", () => {
           documents: expect.any(DocumentCollection),
         });
         expect(result.documents.items).toEqual([
-          new BenefitsApplicationDocument({
+          {
             application_id: applicationId,
             fineos_document_id: 1,
-          }),
-          new BenefitsApplicationDocument({
+          },
+          {
             application_id: applicationId,
             fineos_document_id: 2,
-          }),
-          new BenefitsApplicationDocument({
+          },
+          {
             application_id: applicationId,
             fineos_document_id: 3,
-          }),
+          },
         ]);
       });
     });
@@ -186,11 +185,11 @@ describe("DocumentsApi", () => {
     });
 
     it("sends GET request to /applications/{application_id/documents/{fineos_document_id}", async () => {
-      const document = new BenefitsApplicationDocument({
+      const document = {
         fineos_document_id: 1234,
         content_type: "image/png",
         application_id: applicationId,
-      });
+      };
 
       await documentsApi.downloadDocument(document);
       expect(fetch).toHaveBeenCalledWith(
@@ -203,11 +202,11 @@ describe("DocumentsApi", () => {
     });
 
     it("returns a Blob object", async () => {
-      const document = new BenefitsApplicationDocument({
+      const document = {
         fineos_document_id: 1234,
         content_type: "image/png",
         application_id: applicationId,
-      });
+      };
       const response = await documentsApi.downloadDocument(document);
       expect(response).toBeInstanceOf(Blob);
     });
