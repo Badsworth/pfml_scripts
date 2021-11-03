@@ -8,6 +8,7 @@ import connexion.apps.flask_app
 import pydantic
 from connexion.exceptions import BadRequestProblem, ExtraParameterProblem, ProblemException
 from flask.wrappers import Response
+from sqlalchemy.exc import OperationalError
 from werkzeug.exceptions import (
     BadRequest,
     Forbidden,
@@ -69,6 +70,16 @@ def log_validation_error(
     else:
         # Log explicit errors in the case of unexpected validation errors.
         newrelic_util.log_and_capture_exception(message, extra=log_attributes)
+
+
+def db_operational_error_handler(operational_error: OperationalError) -> Response:
+    log_attr = {
+        "error.class": "sqlalchemy.exc.OperationalError",
+    }
+    logger.warning(operational_error.detail, extra=log_attr, exc_info=True)
+    return response_util.error_response(
+        status_code=ServiceUnavailable, message="database service unavailable", errors=[],
+    ).to_api_response()
 
 
 def validation_request_handler(validation_exception: ValidationException) -> Response:
@@ -148,7 +159,7 @@ def add_error_handlers_to_app(connexion_app):
     connexion_app.add_error_handler(
         botocore.exceptions.ConnectionError, handle_aws_connection_error
     )
-
+    connexion_app.add_error_handler(OperationalError, db_operational_error_handler)
     # These are all handled with the same generic exception handler to make them uniform in structure.
     connexion_app.add_error_handler(NotFound, http_exception_handler)
     connexion_app.add_error_handler(HTTPException, http_exception_handler)
