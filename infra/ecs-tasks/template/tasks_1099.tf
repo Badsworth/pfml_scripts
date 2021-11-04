@@ -76,14 +76,16 @@ resource "aws_ecs_task_definition" "ecs_tasks_1099" {
         { name : "PFML_ERROR_REPORTS_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/reports" },
         { name : "PFML_PAYMENT_REJECTS_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/audit" }
       ]
-      secrets = [{
-        name      = "DB_PASSWORD"
-        valueFrom = "/service/pfml-api/test/db-password"
+      secrets = [
+        {
+          name      = "DB_PASSWORD"
+          valueFrom = "/service/pfml-api/test/db-password"
         },
         {
           name      = "RMV_CLIENT_CERTIFICATE_PASSWORD"
           valueFrom = "/service/pfml-api/test/rmv_client_certificate_password"
-      }]
+        }
+      ]
     },
     {
       name                   = "pub-payments-process-1099-dot-net-generator-service",
