@@ -47,18 +47,9 @@ resource "aws_ecs_task_definition" "ecs_tasks_1099" {
       },
 
       environment = [
-        {
-          name  = "DB_HOST"
-          value = "massgov-pfml-test.c6icrkacncoz.us-east-1.rds.amazonaws.com"
-        },
-        {
-          name  = "DB_HOST_TEST"
-          value = "TEST"
-        },
-        {
-          name  = "DB_NAME"
-          value = "massgov_pfml_test"
-        },
+        { name : "DB_HOST", value : data.aws_db_instance.default.address },
+        { name : "DB_NAME", value : data.aws_db_instance.default.db_name },
+        { name : "DB_USERNAME", value : data.aws_db_instance.default.master_username },
         { name : "ENVIRONMENT", value : var.environment_name },
         { name : "LOGGING_LEVEL", value : var.logging_level },
         { name : "FEATURES_FILE_PATH", value : "s3://massgov-pfml-${var.environment_name}-feature-gate/features.yaml" },
@@ -80,14 +71,12 @@ resource "aws_ecs_task_definition" "ecs_tasks_1099" {
         { name : "PFML_PAYMENT_REJECTS_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/audit" }
       ]
       secrets = [
-        {
-          name      = "DB_PASSWORD"
-          valueFrom = "/service/pfml-api/test/db-password"
-        },
+        { name : "DB_PASSWORD", valueFrom : "/service/${local.app_name}/${var.environment_name}/db-password" },
         {
           name      = "RMV_CLIENT_CERTIFICATE_PASSWORD"
           valueFrom = "/service/pfml-api/test/rmv_client_certificate_password"
-        }, { name : "NEW_RELIC_LICENSE_KEY", valueFrom : "/service/${local.app_name}/common/newrelic-license-key" },
+        },
+        { name : "NEW_RELIC_LICENSE_KEY", valueFrom : "/service/${local.app_name}/common/newrelic-license-key" },
         { name : "NR_INSERT_API_KEY", valueFrom : "/admin/${local.app_name}/newrelic-insert-api-key" },
       ]
     },
@@ -120,8 +109,10 @@ resource "aws_ecs_task_definition" "ecs_tasks_1099" {
         { name : "LOGGING_LEVEL", value : var.logging_level },
         { name : "FEATURES_FILE_PATH", value : "s3://massgov-pfml-${var.environment_name}-feature-gate/features.yaml" }
       ]
-      secrets = [{ name : "NEW_RELIC_LICENSE_KEY", valueFrom : "/service/${local.app_name}/common/newrelic-license-key" },
-      { name : "NR_INSERT_API_KEY", valueFrom : "/admin/${local.app_name}/newrelic-insert-api-key" }, ]
+      secrets = [
+        { name : "NEW_RELIC_LICENSE_KEY", valueFrom : "/service/${local.app_name}/common/newrelic-license-key" },
+        { name : "NR_INSERT_API_KEY", valueFrom : "/admin/${local.app_name}/newrelic-insert-api-key" },
+      ]
     }
   ])
 }
