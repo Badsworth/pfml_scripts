@@ -136,6 +136,7 @@ report-sequential-employment = "massgov.pfml.report.sequential_employment:main"
 update-gender-data-from-rmv = "massgov.pfml.rmv.update_gender_data:main"
 dua-import-employee-demographics = "massgov.pfml.dua.import_employee_demographics:main"
 pub-payments-process-1099-documents = "massgov.pfml.delegated_payments.task.process_1099_documents:main"
+bi-python = "massgov.pfml.business_intelligence.task.main:main"
 
 [tool.black]
 line-length = 100

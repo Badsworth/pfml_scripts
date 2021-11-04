@@ -11,7 +11,7 @@ s3_resource = boto3.resource('s3')
 #s3 = boto3.resource('s3')
 
 
-def lambda_handler(event, context):
+def __main__(event, context):
 
     EachRowCount=[]
     RowCount=[]
