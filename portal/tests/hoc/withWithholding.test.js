@@ -1,7 +1,6 @@
 import User, { UserLeaveAdministrator } from "../../src/models/User";
 import { act, screen } from "@testing-library/react";
 import React from "react";
-import Withholding from "../../src/models/Withholding";
 import { renderPage } from "../test-utils";
 import withWithholding from "../../src/hoc/withWithholding";
 
@@ -71,9 +70,9 @@ describe("withWithholding", () => {
   });
 
   it("renders the with withholding and employer whens when data is loaded", async () => {
-    const mockWithholding = new Withholding({
+    const mockWithholding = {
       filing_period: "2020-01-01",
-    });
+    };
 
     setup({
       addCustomSetup: (appLogic) => {

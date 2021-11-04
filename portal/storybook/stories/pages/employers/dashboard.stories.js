@@ -5,7 +5,6 @@ import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import ClaimCollection from "src/models/ClaimCollection";
 import { Dashboard } from "src/pages/employers/dashboard";
 import { DateTime } from "luxon";
-import PaginationMeta from "src/models/PaginationMeta";
 import faker from "faker";
 import routes from "src/routes";
 import { times } from "lodash";
@@ -182,14 +181,14 @@ export const Default = (args) => {
       claims: new ClaimCollection(claims),
       isLoadingClaims: false,
       loadPage: mockFunction,
-      paginationMeta: new PaginationMeta({
+      paginationMeta: {
         page_offset: 1,
         page_size: 25,
         total_pages: hasNoClaims ? 1 : args.total_pages,
         total_records: hasNoClaims ? 0 : args.total_pages * 25,
         order_by: "created_at",
         order_direction: "asc",
-      }),
+      },
     },
     portalFlow: {
       getNextPageRoute: () => "#mock-route",

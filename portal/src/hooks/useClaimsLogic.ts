@@ -26,7 +26,9 @@ const useClaimsLogic = ({
   const [isLoadingClaimDetail, setIsLoadingClaimDetail] = useState<boolean>();
 
   // Pagination info associated with the current collection of claims
-  const [paginationMeta, setPaginationMeta] = useState(new PaginationMeta());
+  const [paginationMeta, setPaginationMeta] = useState<
+    PaginationMeta | { [key: string]: never }
+  >({});
 
   // Track the search and filter params currently applied for the collection of claims
   const [activeFilters, setActiveFilters] = useState({});
@@ -41,7 +43,7 @@ const useClaimsLogic = ({
     setClaims(new ClaimCollection());
     // Also clear any indication that a page is loaded, so our loadPage method
     // fetches the page from the API
-    setPaginationMeta(new PaginationMeta());
+    setPaginationMeta({});
   };
 
   /**

@@ -96,7 +96,7 @@ export default class EmployersApi extends BaseApi {
       "GET",
       `withholding/${employer_id}`
     );
-    return new Withholding(data);
+    return data;
   };
 
   submitClaimReview = async (
