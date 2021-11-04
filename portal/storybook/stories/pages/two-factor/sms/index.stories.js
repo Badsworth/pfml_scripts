@@ -1,14 +1,14 @@
 import React from "react";
-import { SetupMFA } from "src/pages/two-factor/sms/index";
+import { SetupSMS } from "src/pages/two-factor/sms/index";
 
 export default {
-  title: "Pages/Auth/Two-Factor/SMS",
-  component: SetupMFA,
+  title: "Pages/Auth/Two-Factor/SMS/Index",
+  component: SetupSMS,
 };
 
 export const Page = (args) => {
   const appLogic = {};
-  return <SetupMFA appLogic={appLogic} />;
+  return <SetupSMS appLogic={appLogic} />;
 };
 
 Page.argTypes = {};
