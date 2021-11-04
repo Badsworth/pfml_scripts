@@ -2,7 +2,6 @@ import DocumentCollection from "../../models/DocumentCollection";
 import { DocumentType } from "../../models/Document";
 import EmployerClaim from "../../models/EmployerClaim";
 import { UserLeaveAdministrator } from "../../models/User";
-import Withholding from "../../models/Withholding";
 import { uniqueId } from "lodash";
 
 const documentData = {
@@ -45,9 +44,9 @@ export const getDocumentsMock = jest.fn().mockResolvedValue(() => {
 });
 
 export const getWithholdingMock = jest.fn().mockResolvedValue(() => {
-  return new Withholding({
+  return {
     filing_period: "2011-11-20",
-  });
+  };
 });
 
 export const downloadDocumentMock = jest.fn(() => new Blob());

@@ -2,7 +2,6 @@ import User, { UserLeaveAdministrator } from "src/models/User";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import React from "react";
 import { VerifyContributions } from "src/pages/employers/organizations/verify-contributions";
-import Withholding from "src/models/Withholding";
 
 export default {
   title: "Pages/Employers/Organizations/Verify Contributions",
@@ -38,9 +37,9 @@ export const Default = () => {
     },
     setAppErrors: () => {},
   };
-  const withholding = new Withholding({
+  const withholding = {
     filing_period: "02-2020",
-  });
+  };
   return (
     <VerifyContributions
       query={query}

@@ -29,26 +29,6 @@ class ClaimDetail {
     this.absence_periods = this.absence_periods.map(
       (absence_period) => new AbsencePeriod(absence_period)
     );
-
-    if (
-      this.outstanding_evidence &&
-      this.outstanding_evidence.employee_evidence
-    ) {
-      this.outstanding_evidence.employee_evidence =
-        this.outstanding_evidence.employee_evidence.map(
-          (evidence) => new OutstandingEvidence(evidence)
-        );
-    }
-
-    if (
-      this.outstanding_evidence &&
-      this.outstanding_evidence.employer_evidence
-    ) {
-      this.outstanding_evidence.employer_evidence =
-        this.outstanding_evidence.employer_evidence.map(
-          (evidence) => new OutstandingEvidence(evidence)
-        );
-    }
   }
 
   /**
@@ -87,13 +67,9 @@ export class AbsencePeriod {
   }
 }
 
-export class OutstandingEvidence {
+interface OutstandingEvidence {
   document_name: string;
   is_document_received: boolean;
-
-  constructor(attrs: OutstandingEvidence) {
-    Object.assign(this, attrs);
-  }
 }
 
 export default ClaimDetail;
