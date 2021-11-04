@@ -11,7 +11,7 @@ interface EmployerDecisionProps {
   employerDecisionInput?: "Approve" | "Deny";
   fraud?: string;
   getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
-  updateFields: (arg: Record<string, unknown>) => void;
+  updateFields: (fields: { [fieldName: string]: unknown }) => void;
 }
 
 const EmployerDecision = (props: EmployerDecisionProps) => {

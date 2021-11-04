@@ -19,7 +19,7 @@ export const fields = [
 interface FamilyMemberDateOfBirthProps {
   appLogic: AppLogic;
   claim: BenefitsApplication;
-  query: Record<string, string>;
+  query: { [key: string]: string };
 }
 
 export const FamilyMemberDateOfBirth = (

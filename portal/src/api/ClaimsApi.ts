@@ -36,7 +36,6 @@ export default class ClaimsApi extends BaseApi {
     const filterParams = { ...filters };
 
     if (
-      filters &&
       filters.claim_status &&
       filters.claim_status.includes(AbsenceCaseStatus.closed)
     ) {
@@ -46,7 +45,7 @@ export default class ClaimsApi extends BaseApi {
     // We want to avoid exposing "Fineos" terminology in user-facing interactions,
     // so we support just "absence_status" everywhere we set order_by (like the user's
     // URL query string).
-    if (order && order.order_by && order.order_by === "absence_status") {
+    if (order.order_by && order.order_by === "absence_status") {
       orderParams.order_by = "fineos_absence_status";
     }
 

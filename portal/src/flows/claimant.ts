@@ -67,7 +67,7 @@ type ClaimFlowGuardFn = (context: ClaimantFlowContext) => boolean;
  * @see https://xstate.js.org/docs/guides/guards.html
  *
  */
-export const guards: Record<string, ClaimFlowGuardFn> = {
+export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
   // claimants upload additional docs after the claim is completed.
   // claimants will either be routed to the status page vs. the checklist
   // if they are uploading an additional doc.
@@ -137,11 +137,11 @@ export interface ClaimantFlowState {
     fields?: string[];
     step?: string;
   };
-  on: Record<string, string | ConditionalEvent[]>;
+  on: { [event: string]: string | ConditionalEvent[] };
 }
 
 const claimantFlow: {
-  states: Record<string, ClaimantFlowState>;
+  states: { [route: string]: ClaimantFlowState };
 } = {
   states: {
     [routes.applications.getReady]: {

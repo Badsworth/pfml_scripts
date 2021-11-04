@@ -698,6 +698,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
   complete() {
     this.submitted();
     this.paymentPrefSubmitted();
+    this.taxPrefSubmitted();
     return this;
   }
 
@@ -759,9 +760,9 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
    * Part 2 tax preference step is completed and submitted to API
    * @returns {MockBenefitsApplicationBuilder}
    */
-  taxPrefSubmitted() {
+  taxPrefSubmitted(selection = false) {
     this.submitted();
-    set(this.claimAttrs, "is_withholding_tax", false);
+    set(this.claimAttrs, "is_withholding_tax", selection);
 
     return this;
   }

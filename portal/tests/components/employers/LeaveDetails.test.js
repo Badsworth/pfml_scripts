@@ -1,7 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
-import ClaimDocument from "../../../src/models/ClaimDocument";
 import { DocumentType } from "../../../src/models/Document";
 import LeaveDetails from "../../../src/components/employers/LeaveDetails";
 import { MockEmployerClaimBuilder } from "../../test-utils";
@@ -9,20 +8,20 @@ import React from "react";
 import userEvent from "@testing-library/user-event";
 
 const DOCUMENTS = [
-  new ClaimDocument({
+  {
     content_type: "image/png",
     created_at: "2020-04-05",
     document_type: DocumentType.certification.medicalCertification,
     fineos_document_id: "fineos-id-4",
     name: "Medical cert doc",
-  }),
-  new ClaimDocument({
+  },
+  {
     content_type: "application/pdf",
     created_at: "2020-02-01",
     document_type: DocumentType.certification.medicalCertification,
     fineos_document_id: "fineos-id-9",
     // intentionally omit name
-  }),
+  },
 ];
 
 const claimWithCaringLeave = new MockEmployerClaimBuilder()

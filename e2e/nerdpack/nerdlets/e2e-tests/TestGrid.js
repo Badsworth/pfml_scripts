@@ -1,5 +1,13 @@
-import {Link, NrqlQuery, PieChart, Tooltip, Spinner, SectionMessage} from "nr1";
+import {
+  Link,
+  NrqlQuery,
+  PieChart,
+  Tooltip,
+  Spinner,
+  SectionMessage,
+} from "nr1";
 import React from "react";
+import { labelEnv } from "../common";
 
 const CATEGORY_PRIORITY = {
   content: {
@@ -32,7 +40,7 @@ function getErrorPriority(cat, sub) {
   return "HIGH";
 }
 
-function RunIdsQuery({children, environment, accountId}) {
+function RunIdsQuery({ children, environment, accountId }) {
   const whereClauses = [];
   if (environment) {
     whereClauses.push(`environment = '${environment}'`);
@@ -104,7 +112,7 @@ function buildRuns(data) {
       //IF we did not pass this test, then populate the error fields
       collected[result.runId][result.file].status = result.status;
       collected[result.runId][result.file].failedCount++;
-      if (result.category == 'infrastructure') {
+      if (result.category == "infrastructure") {
         collected[result.runId][result.file].connectionError = true;
       }
       result["errorPriority"] = errorPriority;
@@ -250,7 +258,11 @@ class GridRow extends React.Component {
               <span className={`pill ${result.failedPriority}`}>
                 {result.failedPriority}
               </span>
-              {result.connectionError ? (<span className={`pill connection`}>Connection</span>) : ''}
+              {result.connectionError ? (
+                <span className={`pill connection`}>Connection</span>
+              ) : (
+                ""
+              )}
             </td>,
             <td>
               <div className={"e2e-run-progress"}>
@@ -329,7 +341,9 @@ export default function TestGrid({ accountId, environment, runIds }) {
         {uniqueRuns.map(({ runId, environment, runUrl }, i) => (
           <div className={"run-notes"}>
             <span>
-              {`${i + 1} Run ID: ${runId}, Environment: ${environment}`}
+              {`${i + 1} Run ID: ${runId}, Environment: ${labelEnv(
+                environment
+              )}`}
             </span>
             <Link to={runUrl}>View in Cypress</Link>
           </div>
@@ -371,7 +385,8 @@ export default function TestGrid({ accountId, environment, runIds }) {
                    FROM CypressTestResult since 1 month ago
                    WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
                       AND pass is false
-                   FACET category`}></PieChart>
+                   FACET category`}
+          ></PieChart>
           <PieChart
             fullWidth
             accountId={accountId}
@@ -379,7 +394,8 @@ export default function TestGrid({ accountId, environment, runIds }) {
                    FROM CypressTestResult since 1 month ago
                    WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
                       AND pass is false
-                   FACET category, subCategory`}></PieChart>
+                   FACET category, subCategory`}
+          ></PieChart>
         </div>
       </div>
     );

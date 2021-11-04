@@ -28,7 +28,7 @@ abstract class BaseCollection<T> {
    * Return a single item from the id of the item or
    * undefined if the item is not in the collection
    */
-  getItem(itemId: string) {
+  getItem(itemId: string): T | undefined {
     return this.itemsById[itemId];
   }
 

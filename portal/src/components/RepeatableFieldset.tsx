@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import Button from "./Button";
 import RepeatableFieldsetCard from "./RepeatableFieldsetCard";
 import classnames from "classnames";
+import isBlank from "../utils/isBlank";
 import { uniqueId } from "lodash";
 import usePreviousValue from "../hooks/usePreviousValue";
 
@@ -55,7 +56,9 @@ function RepeatableFieldset<TEntry>(props: RepeatableFieldsetProps<TEntry>) {
   const containerRef = useRef<HTMLElement>(null);
   const entriesAndIds = useEntryIds(entries);
   const previousEntriesLength = usePreviousValue(entriesAndIds.length);
-  const limitReached = props.limit ? entries.length >= props.limit : false;
+  const limitReached = isBlank(props.limit)
+    ? false
+    : entries.length >= props.limit;
 
   useEffect(() => {
     if (entriesAndIds.length > previousEntriesLength && containerRef.current) {

@@ -1,4 +1,3 @@
-import BenefitApplicationDocument from "../../models/BenefitsApplicationDocument";
 import DocumentCollection from "../../models/DocumentCollection";
 import { DocumentType } from "../../models/Document";
 import { uniqueId } from "xstate/lib/utils";
@@ -21,12 +20,12 @@ export const attachDocumentMock = jest.fn(
     return Promise.resolve({
       success: true,
       status: 200,
-      document: new BenefitApplicationDocument({
+      document: {
         ...documentData,
         application_id,
         document_type,
         fineos_document_id: uniqueId(),
-      }),
+      },
     });
   }
 );
@@ -36,21 +35,21 @@ export const getDocumentsMock = jest.fn((application_id) => {
     success: true,
     status: 200,
     documents: new DocumentCollection([
-      new BenefitApplicationDocument({
+      {
         ...documentData,
         application_id,
         fineos_document_id: uniqueId(),
-      }),
-      new BenefitApplicationDocument({
+      },
+      {
         ...documentData,
         application_id,
         fineos_document_id: uniqueId(),
-      }),
-      new BenefitApplicationDocument({
+      },
+      {
         ...documentData,
         application_id,
         fineos_document_id: uniqueId(),
-      }),
+      },
     ]),
   });
 });

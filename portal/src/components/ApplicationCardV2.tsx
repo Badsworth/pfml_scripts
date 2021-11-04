@@ -3,7 +3,7 @@ import routeWithParams, {
 } from "../utils/routeWithParams";
 import { AppLogic } from "../hooks/useAppLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
-import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
+import { BenefitsApplicationDocument } from "../models/Document";
 import ButtonLink from "./ButtonLink";
 import Heading from "./Heading";
 import LeaveReason from "../models/LeaveReason";

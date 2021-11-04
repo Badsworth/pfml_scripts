@@ -55,8 +55,6 @@ function flagExistsInEnvironment(flagName: string) {
  * showSite and disable enableClaimFlow
  */
 export function storeFeatureFlagsFromQuery(searchParams: URLSearchParams) {
-  if (!searchParams) return;
-
   const paramValue = searchParams.get(featureFlagsParamName);
   if (!paramValue) return;
 

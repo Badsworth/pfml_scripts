@@ -20,12 +20,16 @@ resource "aws_cloudwatch_event_target" "task" {
   input = var.input
 }
 
+locals {
+  is_daylight_savings = true
+}
+
 resource "aws_cloudwatch_event_rule" "scheduled_rule" {
   name        = "${var.task_name}_${var.environment_name}_schedule"
   description = "Fires the ${var.task_name} task in ${var.environment_name} on a schedule"
 
   is_enabled          = var.is_enabled
-  schedule_expression = var.schedule_expression
+  schedule_expression = local.is_daylight_savings ? var.schedule_expression_daylight_savings : var.schedule_expression_standard
 
   tags = merge(module.constants.common_tags, {
     environment = module.constants.environment_tags[var.environment_name]

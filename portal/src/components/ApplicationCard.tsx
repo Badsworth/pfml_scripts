@@ -1,11 +1,10 @@
 import BenefitsApplication, {
   ReasonQualifier,
 } from "../models/BenefitsApplication";
+import { BenefitsApplicationDocument, DocumentType } from "../models/Document";
 import Alert from "./Alert";
 import { AppLogic } from "../hooks/useAppLogic";
-import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import ButtonLink from "./ButtonLink";
-import { DocumentType } from "../models/Document";
 import DownloadableDocument from "./DownloadableDocument";
 import Heading from "./Heading";
 import LeaveReason from "../models/LeaveReason";

@@ -75,7 +75,9 @@ export const PreviousLeavesSameReason = (
           },
         ]}
         hint={
-          isCaringLeave && t("pages.claimsPreviousLeavesSameReason.sectionHint")
+          isCaringLeave
+            ? t("pages.claimsPreviousLeavesSameReason.sectionHint")
+            : null
         }
         label={t("pages.claimsPreviousLeavesSameReason.sectionLabel", {
           context: isCaringLeave ? "caring" : undefined,

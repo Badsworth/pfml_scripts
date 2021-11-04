@@ -293,6 +293,17 @@ describe("Employer dashboard", () => {
     });
   });
 
+  it("clears search param when the search field is cleared", () => {
+    const { updateQuerySpy } = setup({ query: { search: "Bud Baxter" } });
+
+    userEvent.clear(screen.getByRole("textbox", { name: /search/i }));
+    userEvent.click(screen.getByRole("button", { name: /search/i }));
+
+    expect(updateQuerySpy).toHaveBeenCalledWith({
+      page_offset: "1",
+    });
+  });
+
   it("displays number of active filters in Show Filters button", () => {
     const user_leave_administrators = [
       createUserLeaveAdministrator({

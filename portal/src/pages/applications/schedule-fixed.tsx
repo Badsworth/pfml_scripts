@@ -9,6 +9,7 @@ import InputHours from "../../components/InputHours";
 import Lead from "../../components/Lead";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import isBlank from "../../utils/isBlank";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
@@ -51,7 +52,9 @@ export const ScheduleFixed = (props: ScheduleFixedProps) => {
     const { work_pattern_days } = workPattern;
     // TODO (CP-1262): refactor calculating hours worked per week to WorkPattern model
     const minutes = workPattern.minutesWorkedPerWeek;
-    const hours_worked_per_week = minutes ? round(minutes / 60, 2) : null;
+    const hours_worked_per_week = isBlank(minutes)
+      ? null
+      : round(minutes / 60, 2);
 
     await appLogic.benefitsApplications.update(claim.application_id, {
       hours_worked_per_week,

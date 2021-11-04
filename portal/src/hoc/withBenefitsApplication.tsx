@@ -31,11 +31,12 @@ const withBenefitsApplication = (Component) => {
     const claim = application_id
       ? benefitsApplications.getItem(application_id)
       : undefined;
-    const shouldLoad =
+    const shouldLoad = !!(
       application_id &&
       !appLogic.benefitsApplications.hasLoadedBenefitsApplicationAndWarnings(
         application_id
-      );
+      )
+    );
 
     useEffect(() => {
       if (shouldLoad) {
@@ -54,7 +55,8 @@ const withBenefitsApplication = (Component) => {
       ) {
         goTo(routes.applications.index);
       }
-    }, [claim, appLogic.portalFlow]);
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [claim?.application_id]);
 
     if (!application_id) {
       return <PageNotFound />;

@@ -26,7 +26,7 @@ interface AmendableEmployerBenefitProps {
   employerBenefit: EmployerBenefit;
   isAddedByLeaveAdmin: boolean;
   onChange: (
-    arg: EmployerBenefit | Record<string, unknown>,
+    arg: EmployerBenefit | { [key: string]: unknown },
     arg2: string
   ) => void;
   onRemove: (arg: EmployerBenefit) => void;
@@ -216,13 +216,14 @@ const AmendableEmployerBenefit = ({
                         { context: benefitTypeKey }
                       ),
                       hint:
-                        benefitTypeKey !== "permanentDisability" &&
-                        t(
-                          "components.employersAmendableEmployerBenefit.choiceHint",
-                          {
-                            context: benefitTypeKey,
-                          }
-                        ),
+                        benefitTypeKey !== "permanentDisability"
+                          ? t(
+                              "components.employersAmendableEmployerBenefit.choiceHint",
+                              {
+                                context: benefitTypeKey,
+                              }
+                            )
+                          : null,
                       value: EmployerBenefitType[benefitTypeKey],
                       checked:
                         get(amendment, "benefit_type") ===
@@ -331,7 +332,7 @@ const AmendableEmployerBenefit = ({
                     width="small"
                     errorMsg={getErrorMessage("benefit_amount_dollars")}
                     value={
-                      get(amendment, "benefit_amount_dollars") || undefined
+                      get(amendment, "benefit_amount_dollars") ?? undefined
                     }
                     onChange={(e) => {
                       amendBenefit("benefit_amount_dollars", e);

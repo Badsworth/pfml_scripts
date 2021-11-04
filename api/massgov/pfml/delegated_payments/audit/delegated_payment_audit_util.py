@@ -187,7 +187,8 @@ def build_audit_report_row(
         previously_rejected_payment_count=str(payment_audit_data.previously_rejected_payment_count),
         previously_skipped_payment_count=str(payment_audit_data.previously_skipped_payment_count),
         max_weekly_benefits_details=audit_report_details.max_weekly_benefits_details,
-        dua_dia_reduction_details=audit_report_details.dua_dia_reduction_details,
+        dua_additional_income_details=audit_report_details.dua_additional_income_details,
+        dia_additional_income_details=audit_report_details.dia_additional_income_details,
         dor_fineos_name_mismatch_details=audit_report_details.dor_fineos_name_mismatch_details,
         rejected_by_program_integrity=bool_to_str[
             audit_report_details.rejected_by_program_integrity

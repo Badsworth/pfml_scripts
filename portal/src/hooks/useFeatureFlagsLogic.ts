@@ -29,10 +29,7 @@ const useFlagsLogic = () => {
    * set of flags
    */
   const getFlag = (flag_name: string) => {
-    return (
-      new Flag(flags.filter((flag) => flag.name === flag_name)[0]) ||
-      new Flag({})
-    );
+    return new Flag(flags.filter((flag) => flag.name === flag_name)[0]);
   };
 
   return {

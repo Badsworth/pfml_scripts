@@ -4,9 +4,11 @@
  * @see https://github.com/navahq/archive-vermont-customer-portal-apps/blob/27b66dd7bf37671a6e33a8d2c51a82c7bd9daa41/online-application-app/src/client/actions/index.js#L150
  */
 export default function getInputValueFromEvent(
-  event: React.ChangeEvent<
-    HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
-  >
+  event?:
+    | React.ChangeEvent<
+        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+      >
+    | { [key: string]: undefined }
 ) {
   if (!event || !event.target) {
     return undefined;
@@ -37,7 +39,13 @@ export default function getInputValueFromEvent(
   ) {
     // Support comma-delimited numbers
     const transformedValue = value.replace(/,/g, "");
-    if (isNaN(Number(transformedValue))) return result;
+
+    if (
+      isNaN(Number(transformedValue)) ||
+      // Don't prevent a trailing decimal point, otherwise a user can't enter a decimal number
+      (valueType === "float" && transformedValue.endsWith("."))
+    )
+      return result;
 
     result =
       valueType === "integer"

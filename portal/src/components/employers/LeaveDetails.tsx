@@ -1,6 +1,6 @@
 import Alert from "../Alert";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
-import ClaimDocument from "../../models/ClaimDocument";
+import { ClaimDocument } from "../../models/Document";
 import ConditionalContent from "../ConditionalContent";
 import DownloadableDocument from "../DownloadableDocument";
 import EmployerClaim from "../../models/EmployerClaim";

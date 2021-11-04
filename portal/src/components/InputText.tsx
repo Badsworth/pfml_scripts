@@ -2,6 +2,7 @@ import FormLabel from "./FormLabel";
 import Mask from "./Mask";
 import React from "react";
 import classnames from "classnames";
+import isBlank from "../utils/isBlank";
 import usePiiHandlers from "../hooks/usePiiHandlers";
 import useUniqueId from "../hooks/useUniqueId";
 
@@ -118,7 +119,7 @@ function InputText({ type = "text", ...props }: InputTextProps) {
   let inputId = useUniqueId("InputText");
   inputId = props.inputId || inputId;
 
-  const hasError = !!props.errorMsg;
+  const hasError = !isBlank(props.errorMsg);
 
   const fieldClasses = classnames("usa-input", props.inputClassName, {
     "usa-input--error": hasError,

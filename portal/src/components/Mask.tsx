@@ -16,14 +16,16 @@ const MaskDeliminatedRegex = {
  */
 function deliminateRegexGroups(value: string, rx: RegExp) {
   const matches = toDigits(value).match(rx);
+  let formattedValue = value;
+
   if (matches && matches.length > 1) {
-    value = matches
+    formattedValue = matches
       .slice(1)
       .filter((a) => !!a) // remove undefined groups
       .join("-");
   }
 
-  return value;
+  return formattedValue;
 }
 
 /**
@@ -89,12 +91,13 @@ export function maskValue(
     // ensure it includes two decimal points
     const number = toNumber(value);
     if (number !== undefined && !Number.isNaN(number)) {
-      value = stringWithFixedDigits(number.toLocaleString("en-US"));
+      return stringWithFixedDigits(number.toLocaleString("en-US"));
     }
-  } else if (MaskDeliminatedRegex[mask]) {
-    value = deliminateRegexGroups(value, MaskDeliminatedRegex[mask]);
+
+    return value;
   }
-  return value;
+
+  return deliminateRegexGroups(value, MaskDeliminatedRegex[mask]);
 }
 
 interface MaskProps {

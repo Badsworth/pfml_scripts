@@ -38,7 +38,7 @@ export interface ApiResponseBody<TResponseData> {
   warnings?: Issue[];
 }
 export type ApiMethod = "DELETE" | "GET" | "PATCH" | "POST" | "PUT";
-export type ApiRequestBody = Record<string, unknown> | FormData;
+export type ApiRequestBody = { [key: string]: unknown } | FormData;
 
 /**
  * Class that implements the base interaction with API resources
@@ -67,7 +67,7 @@ export default abstract class BaseApi {
   ) {
     const url = createRequestUrl(method, this.basePath, subPath, body);
     const authHeader = excludeAuthHeader ? {} : await getAuthorizationHeader();
-    const headers: Record<string, string> = {
+    const headers: { [header: string]: string } = {
       ...authHeader,
       ...additionalHeaders,
     };
@@ -152,7 +152,7 @@ export function createRequestUrl(
 
   if (method === "GET" && body && !(body instanceof FormData)) {
     // Append query string to URL
-    const searchBody: Record<string, string> = {};
+    const searchBody: { [key: string]: string } = {};
     Object.entries(body).forEach(([key, value]) => {
       const stringValue =
         typeof value === "string" ? value : JSON.stringify(value);

@@ -2,15 +2,17 @@ import BenefitsApplication, {
   BenefitsApplicationStatus,
   ReasonQualifier,
 } from "../../models/BenefitsApplication";
+import {
+  BenefitsApplicationDocument,
+  DocumentType,
+} from "../../models/Document";
 import StepModel, { ClaimSteps } from "../../models/Step";
-import { camelCase, filter, findIndex, get } from "lodash";
+import { camelCase, filter, findIndex, get, isBoolean } from "lodash";
 import Alert from "../../components/Alert";
 import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
-import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import ButtonLink from "../../components/ButtonLink";
 import Details from "../../components/Details";
-import { DocumentType } from "../../models/Document";
 import HeadingPrefix from "../../components/HeadingPrefix";
 import LeaveReason from "../../models/LeaveReason";
 import React from "react";
@@ -39,8 +41,23 @@ interface ChecklistProps {
   query: {
     "part-one-submitted"?: string;
     "payment-pref-submitted"?: string;
+    "tax-pref-submitted"?: string;
   };
 }
+
+interface ChecklistAlertsProps {
+  submitted: "partOne" | "payment" | "taxPref";
+}
+
+export const ChecklistAlerts = ({ submitted }: ChecklistAlertsProps) => {
+  const { t } = useTranslation();
+
+  return (
+    <Alert className="margin-bottom-3" state="warning">
+      {t("pages.claimsChecklist.afterSubmissionAlert", { context: submitted })}
+    </Alert>
+  );
+};
 
 export const Checklist = (props: ChecklistProps) => {
   const { t } = useTranslation();
@@ -61,8 +78,6 @@ export const Checklist = (props: ChecklistProps) => {
     get(claim, "leave_details.reason")
   );
 
-  const partOneSubmitted = query["part-one-submitted"];
-  const paymentPrefSubmitted = query["payment-pref-submitted"];
   // TODO(PORTAL-1001): - Remove Feature Flag
   const taxWithholdingEnabled = isFeatureEnabled("claimantShowTaxWithholding");
   const warnings =
@@ -312,7 +327,8 @@ export const Checklist = (props: ChecklistProps) => {
 
     if (
       stepGroup.number === 2 &&
-      claim.has_submitted_payment_preference === true
+      (claim.has_submitted_payment_preference === true ||
+        isBoolean(claim.is_withholding_tax))
     ) {
       // Description for the second part changes after it's been submitted
       context += "_submitted";
@@ -340,15 +356,18 @@ export const Checklist = (props: ChecklistProps) => {
   }
   return (
     <div className="measure-6">
-      {partOneSubmitted && (
-        <Alert className="margin-bottom-3" state="warning">
-          {t("pages.claimsChecklist.partOneSubmittedDescription")}
-        </Alert>
-      )}
-      {paymentPrefSubmitted && (
-        <Alert className="margin-bottom-3" state="warning">
-          {t("pages.claimsChecklist.partTwoSubmittedDescription")}
-        </Alert>
+      {(query["part-one-submitted"] ||
+        query["payment-pref-submitted"] ||
+        query["tax-pref-submitted"]) && (
+        <ChecklistAlerts
+          submitted={
+            query["part-one-submitted"]
+              ? "partOne"
+              : query["payment-pref-submitted"]
+              ? "payment"
+              : "taxPref"
+          }
+        />
       )}
       <BackButton
         label={t("pages.claimsChecklist.backButtonLabel")}

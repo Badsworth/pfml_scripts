@@ -1,7 +1,6 @@
 import usePortalFlow, {
   getRouteFromPathWithParams,
 } from "../../src/hooks/usePortalFlow";
-import RouteTransitionError from "../../src/errors";
 import machineConfigs from "../../src/flows";
 import { mockRouter } from "next/router";
 import { renderHook } from "@testing-library/react-hooks";
@@ -64,22 +63,6 @@ describe("usePortalFlow", () => {
         );
       });
     });
-
-    describe("when path is not defined", () => {
-      it("throws error", () => {
-        mockRouter.pathname = "/not/in/configs";
-
-        renderHook(() => {
-          portalFlow = usePortalFlow();
-        });
-
-        const testGoToPageFor = () => {
-          portalFlow.goToNextPage();
-        };
-
-        expect(testGoToPageFor).toThrowError(RouteTransitionError);
-      });
-    });
   });
 
   describe("getNextPageRoute", () => {
@@ -103,22 +86,6 @@ describe("usePortalFlow", () => {
         const result = portalFlow.getNextPageRoute("VERIFY_ID", {}, params);
 
         expect(result).toBe(`${expectedRoute}?param1=${params.param1}`);
-      });
-    });
-
-    describe("when path is not defined", () => {
-      it("throws error", () => {
-        mockRouter.pathname = "/not/in/configs";
-
-        renderHook(() => {
-          portalFlow = usePortalFlow();
-        });
-
-        const testGoToPageFor = () => {
-          portalFlow.getNextPageRoute();
-        };
-
-        expect(testGoToPageFor).toThrowError(RouteTransitionError);
       });
     });
   });
@@ -146,23 +113,6 @@ describe("usePortalFlow", () => {
         expect(mockRouter.push).toHaveBeenCalledWith(
           `${nextPageRoute}?param1=${params.param1}`
         );
-      });
-    });
-
-    describe("when next page is not defined", () => {
-      it("throws errors", () => {
-        let portalFlow;
-        mockRouter.pathname = "/not/in/configs";
-
-        renderHook(() => {
-          portalFlow = usePortalFlow();
-        });
-
-        const testNextPage = () => {
-          portalFlow.goToNextPage();
-        };
-
-        expect(testNextPage).toThrowError(RouteTransitionError);
       });
     });
   });

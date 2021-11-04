@@ -1,32 +1,46 @@
 import datetime
 import decimal
+from typing import Tuple
 
 import massgov.pfml.db
 from massgov.pfml.api.eligibility.benefit import calculate_weekly_benefit_amount
-from massgov.pfml.db.models.applications import StateMetric
+from massgov.pfml.db.models.applications import BenefitsMetrics, UnemploymentMetric
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 
 
 def fetch_state_metric(
     db_session: massgov.pfml.db.Session, effective_date: datetime.date
-) -> StateMetric:
+) -> Tuple[BenefitsMetrics, UnemploymentMetric]:
     """Return state metrics effective on the given date."""
 
-    state_metric = (
-        db_session.query(StateMetric)
-        .filter(StateMetric.effective_date <= effective_date)
-        .order_by(StateMetric.effective_date.desc())
+    benefits_metrics = (
+        db_session.query(BenefitsMetrics)
+        .filter(BenefitsMetrics.effective_date <= effective_date)
+        .order_by(BenefitsMetrics.effective_date.desc())
         .first()
     )
 
-    if state_metric is None:
-        logger.warning("State metric data was not found for effective_date %s", effective_date)
+    if benefits_metrics is None:
+        logger.warning("Benefits metrics were not found for effective_date %s", effective_date)
         raise RuntimeError(
-            "State metric data was not found for effective_date {}".format(effective_date)
+            "Benefits metrics were not found for effective_date {}".format(effective_date)
         )
 
-    return state_metric
+    unemployment_metric = (
+        db_session.query(UnemploymentMetric)
+        .filter(UnemploymentMetric.effective_date <= effective_date)
+        .order_by(UnemploymentMetric.effective_date.desc())
+        .first()
+    )
+
+    if unemployment_metric is None:
+        logger.warning("Unemployment metrics were not found for effective_date %s", effective_date)
+        raise RuntimeError(
+            "Unemployment metrics were not found for effective_date {}".format(effective_date)
+        )
+
+    return (benefits_metrics, unemployment_metric)
 
 
 def wages_gte_unemployment_min(
@@ -34,7 +48,7 @@ def wages_gte_unemployment_min(
 ) -> bool:
     """Evaluate whether total wages, calculated from employee specific DOR data,
     are less than the unemployment minimum. The minimum unemployment figure is set
-    each year on Oct. 1st and is stored in the StateMetric table."""
+    each year on Oct. 1st and is stored in the UnemploymentMetric table."""
 
     if total_wages < unemployment_min_earnings:
         return False

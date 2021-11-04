@@ -1,11 +1,13 @@
+import {
+  BenefitsApplicationDocument,
+  DocumentType,
+} from "../../models/Document";
 import Accordion from "../../components/Accordion";
 import AccordionItem from "../../components/AccordionItem";
 import Alert from "../../components/Alert";
 import { AppLogic } from "../../hooks/useAppLogic";
 import BenefitsApplication from "../../models/BenefitsApplication";
-import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import DocumentRequirements from "../../components/DocumentRequirements";
-import { DocumentType } from "../../models/Document";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
 import Heading from "../../components/Heading";

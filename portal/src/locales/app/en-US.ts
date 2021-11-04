@@ -585,8 +585,6 @@ const errors = {
   caughtError_NetworkError: "$t(shared.networkError)",
   caughtError_NotFoundError:
     "Sorry, we were unable to retrieve what you were looking for. Check that the link you are visiting is correct. If this continues to happen, please log out and try again.",
-  caughtError_UserNotReceivedError:
-    "Sorry, we were unable to retrieve your account. Please log out and try again. If this continues to happen, you may call the Paid Family Leave Contact Center at $t(shared.contactCenterPhoneNumberNoBreak)",
   claimStatus: {
     fineos_claim_withdrawn:
       "Application <strong>{{absenceId}}</strong> has been withdrawn and is no longer being processed.  If you believe this application has been withdrawn in error, check if any additional applications in your account cover the same leave period.  If you have additional questions, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
@@ -1064,6 +1062,12 @@ const pages = {
       "I agree that I have an eligible relationship with my spouse or domestic partner who is experiencing a serious health condition and needs my care.",
   },
   claimsChecklist: {
+    afterSubmissionAlert_partOne:
+      "You successfully submitted Part 1. Submit Parts 2 and 3 so that we can review your application.",
+    afterSubmissionAlert_payment:
+      "You successfully submitted your payment method. Complete the remaining steps so that you can submit your application.",
+    afterSubmissionAlert_taxPref:
+      "You successfully submitted your tax withholding preference. Complete the remaining steps so that you can submit your application.",
     backButtonLabel: "Back to applications",
     completed_editable: "Completed",
     completed_uneditable: "Confirmed",
@@ -1075,10 +1079,7 @@ const pages = {
     otherLeaveSubmittedDetailsLabel: "What do I need to report?",
     otherLeaveSubmittedIntro:
       "<p>If you have any other leaves, benefits, or income to report, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
-    partOneSubmittedDescription:
-      "You successfully submitted Part 1. Submit Parts 2 and 3 so that we can review your application.",
-    partTwoSubmittedDescription:
-      "You successfully submitted Part 2. Submit Part 3 so that we can review your application.",
+
     resume: "Resume",
     // Resume button aria-label for screen readers, since VoiceOver reads "résumé":
     resumeScreenReader: "Continue with",
@@ -1119,7 +1120,7 @@ const pages = {
     stepListDescription_1_submitted:
       "Your in-progress application will be viewable by our Contact Center staff. If you need to edit your information in Part 1, you’ll need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Your application ID is <strong>{{absence_id}}</strong>.",
     stepListDescription_2:
-      "Entering payment information here leads to faster processing, but you can also call$t(chars.nbsp)<contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
+      "Entering information here leads to faster processing, but you can also call$t(chars.nbsp)<contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
     stepListDescription_2_submitted:
       "If you need to edit your information in Part 2, you’ll need to call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Your application ID is <strong>{{absence_id}}</strong>.",
     stepListDescription_3:
@@ -1868,16 +1869,16 @@ const pages = {
     otherLeaveChoiceNo: "$t(shared.choiceNo)",
     otherLeaveChoiceYes: "$t(shared.choiceYes)",
     otherLeaveDollarAmount: "{{amount, currency}}",
-    partDescription_1:
-      "If you need to make edits to Part 1, you’ll need to call our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Your application ID is <strong>{{absence_id}}</strong>",
+    partDescription:
+      "If you need to make edits to Part {{step}}, you’ll need to call our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Your application ID is <strong>{{absence_id}}</strong>",
     partHeadingPrefix: "Part {{number}}",
     partHeading_1: "Review: Tell us about yourself and your$t(chars.nbsp)leave",
-    partHeading_2: "Review: Your payment information",
-    partHeading_3: "Review: Upload document",
+    partHeading_2: "Review: Tell us how you want to receive your payment",
+    partHeading_3: "Review: Upload your documents",
     partOneNextSteps:
       "<p>Once you review and submit Part 1, your in-progress application will be viewable by our Contact Center staff. If you need to make edits to Part 1, you’ll need to call our Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p><p>We’ll also notify your employer that you’ve started an application for paid family and medical leave.</p><p>Next, you’ll be able to work on Parts 2 and 3, and submit your application.</p>",
     paymentAccountNumLabel: "Account number",
-    paymentMethodLabel: "Payment method",
+    paymentMethodLabel: "Direct deposit or paper check",
     paymentMethodValue_ach: "$t(shared.paymentMethodAch)",
     paymentMethodValue_check: "$t(shared.paymentMethodCheck)",
     paymentRoutingNumLabel: "Routing number",
@@ -1916,13 +1917,17 @@ const pages = {
     stepHeading_employerInformation: "$t(shared.claimsEmploymentInfoTitle)",
     stepHeading_leaveDetails: "$t(shared.claimsLeaveDetailsTitle)",
     stepHeading_otherLeave: "$t(shared.claimsOtherLeaveTitle)",
-    stepHeading_payment: "Payment information",
+    stepHeading_payment: "Payment method",
+    stepHeading_tax: "Tax withholding",
     stepHeading_uploadCertification: "Upload certification document",
     stepHeading_uploadId: "Upload identity document",
     stepHeading_verifyId: "$t(shared.claimsVerifyIdTitle)",
     submitAction_final: "Submit application",
     submitAction_part1: "Submit Part 1",
     submitLoadingMessage: "Submitting… Do not refresh or go back.",
+    taxLabel: "Withhold state and federal taxes?",
+    taxNoWithhold: "$t(shared.choiceNo)",
+    taxYesWithhold: "$t(shared.choiceYes)",
     title_final: "Review and submit your application",
     title_part1:
       "Check your answers before submitting your$t(chars.nbsp)application.",

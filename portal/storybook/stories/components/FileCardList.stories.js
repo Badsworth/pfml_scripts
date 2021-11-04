@@ -1,5 +1,4 @@
 /* eslint-disable no-alert */
-import BenefitsApplicationDocument from "src/models/BenefitsApplicationDocument";
 import FileCardList from "src/components/FileCardList";
 import React from "react";
 import useFilesLogic from "src/hooks/useFilesLogic";
@@ -16,10 +15,10 @@ export default {
 
 export const Default = (args) => {
   const initialDocuments = [
-    new BenefitsApplicationDocument({
+    {
       content_type: "image/jpeg",
       created_at: "2021-01-30",
-    }),
+    },
   ];
 
   const { files, processFiles, removeFile } = useFilesLogic({

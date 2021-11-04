@@ -28,6 +28,7 @@ from massgov.pfml.api.services.administrator_fineos_actions import (
 )
 from massgov.pfml.api.services.claims import ClaimWithdrawnError, get_claim_detail
 from massgov.pfml.api.services.managed_requirements import update_employer_confirmation_requirements
+from massgov.pfml.api.util.claims import user_has_access_to_claim
 from massgov.pfml.api.util.response import error_response
 from massgov.pfml.api.validation.exceptions import (
     ContainsV1AndV2Eforms,
@@ -389,7 +390,7 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
 
     try:
         document_data: Base64EncodedFileData = download_document_as_leave_admin(
-            user_leave_admin.fineos_web_id, fineos_absence_id, fineos_document_id  # type: ignore
+            user_leave_admin.fineos_web_id, fineos_absence_id, fineos_document_id, log_attr  # type: ignore
         )
     except ObjectNotFound as not_found:
         logger.error(
@@ -397,16 +398,13 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
         )
         return not_found.to_api_response()
     except NotAuthorizedForAccess as not_authorized:
-        doc_type = not_authorized.data["doc_type"]
         logger.error(
-            f"employer_document_download failed - {not_authorized.description}",
-            extra={**log_attr, "document_type": doc_type},
+            f"employer_document_download failed - {not_authorized.description}", extra=log_attr,
         )
         return not_authorized.to_api_response()
 
     file_bytes = base64.b64decode(document_data.base64EncodedFileContents.encode("ascii"))
     content_type = document_data.contentType or "application/octet-stream"
-
     claim = get_claim_from_db(fineos_absence_id)
     if claim:
         log_attr.update(get_claim_log_attributes(claim))
@@ -419,24 +417,6 @@ def employer_document_download(fineos_absence_id: str, fineos_document_id: str) 
         content_type=content_type,
         headers={"Content-Disposition": f"attachment; filename={document_data.fileName}"},
     )
-
-
-def user_has_access_to_claim(claim: Claim) -> bool:
-    current_user = app.current_user()
-    if current_user is None:
-        return False
-
-    if can(READ, "EMPLOYER_API") and claim.employer in current_user.employers:
-        # User is leave admin for the employer associated with claim
-        return current_user.verified_employer(claim.employer)
-
-    application = claim.application  # type: ignore
-
-    if application and application.user == current_user:
-        # User is claimant and this is their claim
-        return True
-
-    return False
 
 
 def get_claim(fineos_absence_id: str) -> flask.Response:
@@ -457,7 +437,7 @@ def get_claim(fineos_absence_id: str) -> flask.Response:
         error = error_response(NotFound, "Claim not in PFML database.", errors=[])
         return error.to_api_response()
 
-    if not user_has_access_to_claim(claim):
+    if not user_has_access_to_claim(claim, app.current_user()):
         logger.warning(
             "get_claim failure - User does not have access to claim.",
             extra={"absence_case_id": fineos_absence_id},

@@ -1,5 +1,4 @@
-import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
-import ClaimDocument from "../models/ClaimDocument";
+import { BenefitsApplicationDocument, ClaimDocument } from "../models/Document";
 import DownloadableDocument from "./DownloadableDocument";
 import Icon from "./Icon";
 import React from "react";

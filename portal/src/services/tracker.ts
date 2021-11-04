@@ -4,11 +4,13 @@
  */
 import type NewRelicBrowser from "new-relic-browser";
 
-export type NewRelicEventAttributes = Record<string, number | string>;
+export interface NewRelicEventAttributes {
+  [name: string]: number | string;
+}
 
 declare global {
   interface Window {
-    NREUM?: Record<string, unknown>;
+    NREUM?: { [key: string]: unknown };
     newrelic?: typeof NewRelicBrowser;
   }
 }

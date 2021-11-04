@@ -1,5 +1,4 @@
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
-import BenefitsApplicationDocument from "../../../src/models/BenefitsApplicationDocument";
 import { Checklist } from "../../../src/pages/applications/checklist";
 import { DocumentType } from "../../../src/models/Document";
 import LeaveReason from "../../../src/models/LeaveReason";
@@ -288,6 +287,43 @@ describe("Checklist", () => {
         name: "Start: Enter tax withholding preference",
       })
     ).toBeEnabled();
+    // custom description
+    expect(
+      screen.getByText(
+        /If you need to edit your information in Part 2, you’ll need to call the Contact Center/
+      )
+    ).toBeInTheDocument();
+    // upload option is disabled
+    expect(
+      screen.getByRole("button", {
+        name: "Start: Upload identification document",
+      })
+    ).toBeDisabled();
+  });
+
+  it("with tax withholding done & payment not done, submitted description displays", () => {
+    process.env.featureFlags = {
+      claimantShowTaxWithholding: true,
+    };
+    renderChecklist(
+      new MockBenefitsApplicationBuilder()
+        .part1Complete()
+        .taxPrefSubmitted()
+        .create(),
+      [],
+      {
+        query: {
+          claim_id: "mock_application_id",
+          "payment-pref-submitted": "true",
+        },
+      }
+    );
+    // custom description
+    expect(
+      screen.getByText(
+        /If you need to edit your information in Part 2, you’ll need to call the Contact Center/
+      )
+    ).toBeInTheDocument();
     // upload option is disabled
     expect(
       screen.getByRole("button", {
@@ -318,7 +354,7 @@ describe("Checklist", () => {
     it("renders alert that Part 2 is confirmed", () => {
       expect(
         screen.getByText(
-          /You successfully submitted Part 2. Submit Part 3 so that we can review your application./
+          /You successfully submitted your payment method. Complete the remaining steps so that you can submit your application./
         )
       ).toBeInTheDocument();
     });
@@ -484,14 +520,14 @@ describe("Checklist", () => {
       const warnings = [];
       const customProps = {
         documents: [
-          new BenefitsApplicationDocument({
+          {
             application_id: "mock-claim-id",
             document_type: DocumentType.certification[LeaveReason.pregnancy],
-          }),
-          new BenefitsApplicationDocument({
+          },
+          {
             application_id: "mock-claim-id",
             document_type: DocumentType.identityVerification,
-          }),
+          },
         ],
       };
       renderChecklist(
@@ -517,14 +553,14 @@ describe("Checklist", () => {
       const warnings = [];
       const customProps = {
         documents: [
-          new BenefitsApplicationDocument({
+          {
             application_id: "mock-claim-id",
             document_type: DocumentType.certification[LeaveReason.pregnancy],
-          }),
-          new BenefitsApplicationDocument({
+          },
+          {
             application_id: "mock-claim-id",
             document_type: DocumentType.identityVerification,
-          }),
+          },
         ],
       };
       renderChecklist(
