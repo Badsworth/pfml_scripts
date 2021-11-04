@@ -7,7 +7,8 @@ terraform {
     template = "~> 2.2.0"
 
     newrelic = {
-      source = "newrelic/newrelic"
+      source  = "newrelic/newrelic"
+      version = "~> 2.15.0"
     }
   }
 }
@@ -34,7 +35,6 @@ module "constants" {
 }
 
 provider "newrelic" {
-  version       = "~> 2.15.0"
   region        = "US"
   account_id    = "2837112"
   api_key       = data.aws_ssm_parameter.newrelic-api-key.value

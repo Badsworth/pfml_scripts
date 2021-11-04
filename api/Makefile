@@ -193,6 +193,12 @@ ecr-login: ## Login to ECR for Docker
 	aws ecr get-login-password --region 'us-east-1' | \
 	docker login --username AWS --password-stdin 498823821309.dkr.ecr.us-east-1.amazonaws.com
 
+pre-commit: 
+	$(PY_RUN_CMD) isort --atomic --apply $(args)
+	$(PY_RUN_CMD) black $(args)
+	$(PY_RUN_CMD) flake8 $(args)
+	$(PY_RUN_CMD) mypy $(args)
+
 format: ## Format code
 	$(PY_RUN_CMD) isort --atomic --apply
 	$(PY_RUN_CMD) black .
