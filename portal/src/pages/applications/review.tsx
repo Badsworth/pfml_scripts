@@ -216,12 +216,8 @@ export const Review = (props: ReviewProps) => {
       {!usePartOneReview && (
         <Lead>
           <Trans
-            i18nKey={t("pages.claimsReview.partDescription", {
-              step: 1,
-              absence_id: claim.fineos_absence_id,
-            })}
-            tOptions={{ context: "1" }}
-            values={{ absence_id: claim.fineos_absence_id }}
+            i18nKey="pages.claimsReview.partDescription"
+            values={{ absence_id: claim.fineos_absence_id, step: 1 }}
             components={{
               "contact-center-phone-link": (
                 <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
@@ -729,12 +725,8 @@ export const Review = (props: ReviewProps) => {
           </Heading>
           <Lead>
             <Trans
-              i18nKey={t("pages.claimsReview.partDescription", {
-                step: 2,
-                absence_id: claim.fineos_absence_id,
-              })}
-              tOptions={{ context: "2" }}
-              values={{ absence_id: claim.fineos_absence_id }}
+              i18nKey="pages.claimsReview.partDescription"
+              values={{ absence_id: claim.fineos_absence_id, step: 2 }}
               components={{
                 "contact-center-phone-link": (
                   <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />

@@ -3,7 +3,6 @@ import User, { UserLeaveAdministrator } from "../../../src/models/User";
 import { cleanup, screen, within } from "@testing-library/react";
 import ClaimCollection from "../../../src/models/ClaimCollection";
 import Dashboard from "../../../src/pages/employers/dashboard";
-import PaginationMeta from "../../../src/models/PaginationMeta";
 import faker from "faker";
 import { mockRouter } from "next/router";
 import { renderPage } from "../../test-utils";
@@ -87,7 +86,7 @@ const setup = ({
     appLogic.claims.claims = new ClaimCollection(claims);
     appLogic.claims.shouldLoadPage = jest.fn().mockReturnValue(false);
     appLogic.claims.isLoadingClaims = false;
-    appLogic.claims.paginationMeta = new PaginationMeta({
+    appLogic.claims.paginationMeta = {
       page_offset: 1,
       page_size: 25,
       total_pages: 3,
@@ -95,7 +94,7 @@ const setup = ({
       order_by: "created_at",
       order_direction: "ascending",
       ...paginationMeta,
-    });
+    };
 
     updateQuerySpy = jest.spyOn(appLogic.portalFlow, "updateQuery");
   };

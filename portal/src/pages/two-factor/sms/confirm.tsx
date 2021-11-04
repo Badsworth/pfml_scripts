@@ -12,16 +12,16 @@ import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../../locales/i18n";
 import withUser from "../../../hoc/withUser";
 
-interface SetupSMSProps {
+interface ConfirmSMSProps {
   appLogic: AppLogic;
 }
 
-export const SetupSMS = (props: SetupSMSProps) => {
+export const ConfirmSMS = (props: ConfirmSMSProps) => {
   const { appLogic } = props;
   const { t } = useTranslation();
 
   const { formState, updateFields } = useFormState({
-    phone_number: "",
+    code: "",
   });
 
   const handleSubmit = (event: React.FormEvent) => {
@@ -44,19 +44,27 @@ export const SetupSMS = (props: SetupSMSProps) => {
 
   return (
     <form className="usa-form" onSubmit={handleSubmit} method="post">
-      <Title>{t("pages.authTwoFactorSmsSetup.title")}</Title>
+      <Title>{t("pages.authTwoFactorSmsConfirm.title")}</Title>
       <Lead>
-        <Trans i18nKey="pages.authTwoFactorSmsSetup.lead" />
+        <Trans i18nKey="pages.authTwoFactorSmsConfirm.lead" />
       </Lead>
       <InputText
-        {...getFunctionalInputProps("phone_number")}
-        mask="phone"
-        label={t("pages.authTwoFactorSmsSetup.phoneNumberLabel")}
+        {...getFunctionalInputProps("code")}
+        autoComplete="one-time-code"
+        inputMode="numeric"
+        label={t("pages.authTwoFactorSmsConfirm.codeLabel")}
         smallLabel
       />
 
-      <Button type="submit" className="display-block">
-        {t("pages.authTwoFactorSmsSetup.saveButton")}
+      <Button
+        type="button"
+        className="display-block margin-top-1"
+        variation="unstyled"
+      >
+        {t("pages.authTwoFactorSmsConfirm.resendCodeButton")}
+      </Button>
+      <Button type="submit" className="display-block margin-top-3">
+        {t("pages.authTwoFactorSmsConfirm.saveButton")}
       </Button>
       <Button
         type="button"
@@ -64,10 +72,10 @@ export const SetupSMS = (props: SetupSMSProps) => {
         variation="outline"
         className="display-block margin-top-1"
       >
-        {t("pages.authTwoFactorSmsSetup.skipButton")}
+        {t("pages.authTwoFactorSmsConfirm.skipButton")}
       </Button>
     </form>
   );
 };
 
-export default withUser(SetupSMS);
+export default withUser(ConfirmSMS);

@@ -993,6 +993,14 @@ const pages = {
     title: "Create a new password",
     usernameLabel: "$t(shared.usernameLabel)",
   },
+  authTwoFactorSmsConfirm: {
+    codeLabel: "6-digit code",
+    lead: "Enter the 6-digit code we sent to your phone number (123)$t(chars.nbsp)456$t(chars.nbhyphen)0012.",
+    resendCodeButton: "$t(shared.resendVerificationCodeLink)",
+    saveButton: "$t(shared.saveAndContinue)",
+    skipButton: "$t(shared.auth.skip)",
+    title: "Confirm your phone number",
+  },
   authTwoFactorSmsSetup: {
     lead: "We’ll send a 6-digit code by text message (SMS) to secure your account. This step is optional, but we can only show personal information like tax documents if you set this up.<br><br>If you skip this step now, you can secure your account later by going to the “Setting: Security” page.",
     phoneNumberLabel: "Phone number",

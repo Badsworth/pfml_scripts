@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`Two-factor SMS Index renders landing page content 1`] = `
+exports[`Two-factor SMS Setup renders landing page content 1`] = `
 <form
   class="usa-form"
   method="post"
@@ -11,10 +11,14 @@ exports[`Two-factor SMS Index renders landing page content 1`] = `
   >
     Make your account more secure
   </h1>
-  We’ll send a 6-digit code by text message (SMS) to secure your account. This step is optional, but we can only show personal information like tax documents if you set this up.
-  <br />
-  <br />
-  If you skip this step now, you can secure your account later by going to the “Setting: Security” page.
+  <p
+    class="usa-intro"
+  >
+    We’ll send a 6-digit code by text message (SMS) to secure your account. This step is optional, but we can only show personal information like tax documents if you set this up.
+    <br />
+    <br />
+    If you skip this step now, you can secure your account later by going to the “Setting: Security” page.
+  </p>
   <div
     class="usa-form-group"
   >
