@@ -307,6 +307,16 @@ class LkLeaveRequestDecision(Base):
         self.leave_request_decision_description = leave_request_decision_description
 
 
+class LkMFADeliveryPreference(Base):
+    __tablename__ = "lk_mfa_delivery_preference"
+    mfa_delivery_preference_id = Column(Integer, primary_key=True, autoincrement=True)
+    mfa_delivery_preference_description = Column(Text, nullable=False)
+
+    def __init__(self, mfa_delivery_preference_id, mfa_delivery_preference_description):
+        self.mfa_delivery_preference_id = mfa_delivery_preference_id
+        self.mfa_delivery_preference_description = mfa_delivery_preference_description
+
+
 class AbsencePeriod(Base, TimestampMixin):
     __tablename__ = "absence_period"
     __table_args__ = (
@@ -949,12 +959,16 @@ class User(Base, TimestampMixin):
     sub_id = Column(Text, index=True, unique=True)
     email_address = Column(Text, unique=True)
     consented_to_data_sharing = Column(Boolean, default=False, nullable=False)
+    mfa_delivery_preference_id = Column(
+        Integer, ForeignKey("lk_mfa_delivery_preference.mfa_delivery_preference_id")
+    )
 
     roles = relationship("LkRole", secondary="link_user_role", uselist=True)
     user_leave_administrators = relationship(
         "UserLeaveAdministrator", back_populates="user", uselist=True
     )
     employers = relationship("Employer", secondary="link_user_leave_administrator", uselist=True)
+    mfa_delivery_preference = relationship(LkMFADeliveryPreference)
 
     @hybrid_method
     def get_user_leave_admin_for_employer(
@@ -2637,6 +2651,14 @@ class LeaveRequestDecision(LookupTable):
     VOIDED = LkLeaveRequestDecision(8, "Voided")
 
 
+class MFADeliveryPreference(LookupTable):
+    model = LkMFADeliveryPreference
+    column_names = ("mfa_delivery_preference_id", "mfa_delivery_preference_description")
+
+    SMS = LkMFADeliveryPreference(1, "SMS")
+    OPT_OUT = LkMFADeliveryPreference(2, "Opt Out")
+
+
 def sync_lookup_tables(db_session):
     """Synchronize lookup tables to the database."""
     AbsencePeriodType.sync_to_database(db_session)
@@ -2670,4 +2692,5 @@ def sync_lookup_tables(db_session):
     ManagedRequirementStatus.sync_to_database(db_session)
     ManagedRequirementCategory.sync_to_database(db_session)
     ManagedRequirementType.sync_to_database(db_session)
+    MFADeliveryPreference.sync_to_database(db_session)
     db_session.commit()

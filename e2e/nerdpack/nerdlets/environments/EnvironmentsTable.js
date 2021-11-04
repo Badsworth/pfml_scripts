@@ -177,7 +177,7 @@ function LatestE2ERuns({ environment, accountId, count = 6 }) {
 
   return (
     <NrqlQuery accountId={accountId} query={query}>
-      {({ data , loading, error }) => {
+      {({ data, loading, error }) => {
         if (loading) {
           return <Spinner />;
         }
@@ -282,7 +282,11 @@ function E2EVisualIndicator({ run, runIds }) {
                 BlockText.SPACING_TYPE.MEDIUM,
                 BlockText.SPACING_TYPE.NONE,
               ]}
-            ></BlockText>
+            >
+              {run.tag
+                .split(",")
+                .filter((tag) => !tag.includes("Env-") && tag != "Deploy")}
+            </BlockText>
           </CardBody>
         </Card>
         <PopoverFooter style={{ textAlign: "right" }}>

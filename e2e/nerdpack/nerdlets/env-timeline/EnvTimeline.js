@@ -205,8 +205,8 @@ class TimelineTable extends React.Component {
     return (
       <div className={`e2e-run-timeline`}>
         <h2>
-          {labelEnv(this.environment)} Deployment & E2E Run Timeline | Newest to Oldest |
-          Past Month
+          {labelEnv(this.environment)} Deployment & E2E Run Timeline | Newest to
+          Oldest | Past Month
         </h2>
         <div className={"filters"}>
           <span>Filters:</span>

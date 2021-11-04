@@ -27,7 +27,7 @@ data "aws_iam_policy_document" "firehose_to_newrelic_or_s3" {
     ]
 
     resources = [
-      "${aws_s3_bucket.ses_to_newrelic_dlq.arn}",
+      aws_s3_bucket.ses_to_newrelic_dlq.arn,
       "${aws_s3_bucket.ses_to_newrelic_dlq.arn}/*"
     ]
   }

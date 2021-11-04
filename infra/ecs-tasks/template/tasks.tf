@@ -214,7 +214,7 @@ locals {
         local.db_access,
         local.fineos_api_access,
         local.fineos_s3_access,
-        { "name" : "OUTPUT_DIRECTORY_PATH", "value" : "${var.fineos_eligibility_feed_output_directory_path}" }
+        { "name" : "OUTPUT_DIRECTORY_PATH", "value" : var.fineos_eligibility_feed_output_directory_path }
       ]
     }
 
@@ -378,7 +378,7 @@ resource "aws_ecs_task_definition" "ecs_tasks" {
       # silently cause env vars to go missing which would definitely confuse someone for a day or two.
       #
       environment = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if contains(keys(val), "value")]
-      secrets     = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if ! contains(keys(val), "value")]
+      secrets     = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if !contains(keys(val), "value")]
     }
   ])
 }
