@@ -3,6 +3,7 @@
 
 # this resource is used as a template to provision each ECS task in local.tasks
 resource "aws_ecs_task_definition" "ecs_tasks_1099" {
+  scheduler                = "rate(30 minutes)"
   family                   = "${local.app_name}-${var.environment_name}-1099-form-generator"
   task_role_arn            = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-1099"
   execution_role_arn       = aws_iam_role.task_executor.arn
@@ -89,7 +90,7 @@ resource "aws_ecs_task_definition" "ecs_tasks_1099" {
     },
     {
       name                   = "pub-payments-process-1099-dot-net-generator-service",
-      image                  = "498823821309.dkr.ecr.us-east-1.amazonaws.com/pfml-api-dot-net-1099:latest",
+      image                  = "498823821309.dkr.ecr.us-east-1.amazonaws.com/pfml-api-1099:latest",
       command                = ["dotnet", "PfmlPdfApi.dll"],
       cpu                    = 2048,
       memory                 = 4096,
