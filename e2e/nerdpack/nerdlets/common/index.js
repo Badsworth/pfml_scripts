@@ -29,7 +29,7 @@ export const labelComponent = (name) => {
 };
 
 export const labelEnv = (name) => {
-  name = name.toLowerCase()
+  name = name.toLowerCase();
   switch (name) {
     case "test":
       return "Test/DT2";
