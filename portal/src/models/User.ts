@@ -110,6 +110,17 @@ export const RoleDescription = {
   employer: "Employer",
 } as const;
 
+export interface OrganizationUnit {
+  organization_unit_id: string;
+  fineos_id?: string;
+  name: string;
+  employer_id?: string;
+}
+
+export interface EmployeeOrganizationUnit extends OrganizationUnit {
+  linked: boolean;
+}
+
 export class UserLeaveAdministrator {
   employer_dba: string;
   employer_fein: string;
@@ -117,24 +128,11 @@ export class UserLeaveAdministrator {
   has_fineos_registration: boolean;
   has_verification_data: boolean;
   verified: boolean;
+  organization_units?: OrganizationUnit[]
 
   constructor(attrs: Partial<UserLeaveAdministrator>) {
     Object.assign(this, attrs);
   }
-}
-
-export interface OrganizationUnit {
-    organization_unit_id: string;
-    fineos_id: string;
-    name: string;
-    employer_id: string;
-}
-
-export interface DuaReportingUnit {
-    dua_reporting_unit_id: string;
-    dua_id?: string;
-    dba?: string;
-    organization_unit_id: string;
 }
 
 export interface Employee {
@@ -146,8 +144,7 @@ export interface Employee {
   other_name?: string;
   email_address?: string;
   phone_number?: string;
-  organization_units?: OrganizationUnit[]
-  connected_reporting_units?: DuaReportingUnit[]
+  organization_units?: EmployeeOrganizationUnit[]
 }
 
 export default User;
