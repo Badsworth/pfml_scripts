@@ -1,10 +1,9 @@
-import BenefitsApplication, {
-  WorkPattern,
-  WorkPatternDay,
-} from "../../models/BenefitsApplication";
 import React, { useState } from "react";
+import { WorkPattern, WorkPatternDay } from "../../models/BenefitsApplication";
 import { pick, round } from "lodash";
-import { AppLogic } from "../../hooks/useAppLogic";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import Heading from "../../components/Heading";
 import InputHours from "../../components/InputHours";
 import Lead from "../../components/Lead";
@@ -15,7 +14,6 @@ import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.work_pattern.work_pattern_days",
@@ -26,12 +24,7 @@ export const fields = [
   "claim.work_pattern.work_pattern_days[0].minutes",
 ];
 
-interface ScheduleVariableProps {
-  claim: BenefitsApplication;
-  appLogic: AppLogic;
-}
-
-export const ScheduleVariable = (props: ScheduleVariableProps) => {
+export const ScheduleVariable = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

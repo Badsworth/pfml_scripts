@@ -7,6 +7,8 @@ import React, {
   useState,
 } from "react";
 import { camelCase, compact, find, get, isEqual, startCase } from "lodash";
+import withClaims, { ApiParams, WithClaimsProps } from "../../hoc/withClaims";
+import withUser, { WithUserProps } from "../../hoc/withUser";
 import AbsenceCaseStatusTag from "../../components/AbsenceCaseStatusTag";
 import Alert from "../../components/Alert";
 import { AppLogic } from "../../hooks/useAppLogic";
@@ -19,7 +21,6 @@ import Icon from "../../components/Icon";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputText from "../../components/InputText";
 import Link from "next/link";
-import PaginationMeta from "../../models/PaginationMeta";
 import PaginationNavigation from "../../components/PaginationNavigation";
 import PaginationSummary from "../../components/PaginationSummary";
 import Table from "../../components/Table";
@@ -33,28 +34,13 @@ import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withClaims from "../../hoc/withClaims";
-import withUser from "../../hoc/withUser";
 
 interface PageQueryParam {
   name: string;
   value: number | null | string | string[];
 }
 
-interface DashboardProps {
-  appLogic: AppLogic;
-  query: {
-    claim_status?: string;
-    employer_id?: string;
-    order_by?: "absence_status" | "created_at" | "employee";
-    order_direction?: "ascending" | "descending";
-    page_offset?: string;
-    search?: string;
-  };
-  user: User;
-}
-
-export const Dashboard = (props: DashboardProps) => {
+export const Dashboard = (props: WithUserProps & { query: ApiParams }) => {
   const { t } = useTranslation();
   const introElementRef = useRef<HTMLElement>(null);
   const apiParams = {
@@ -169,21 +155,16 @@ export const Dashboard = (props: DashboardProps) => {
       />
       <PaginatedClaimsTableWithClaims
         appLogic={props.appLogic}
-        user={props.user}
         {...componentSpecificProps}
       />
     </React.Fragment>
   );
 };
 
-interface PaginatedClaimsTableProps {
-  appLogic: AppLogic;
-  claims: ClaimCollection;
-  paginationMeta: PaginationMeta;
+interface PaginatedClaimsTableProps extends WithClaimsProps {
   updatePageQuery: (params: PageQueryParam[]) => void;
   /** Pass in the SortDropdown so it can be rendered in the expected inline UI position */
   sort: React.ReactNode;
-  user: User;
 }
 
 const PaginatedClaimsTable = (props: PaginatedClaimsTableProps) => {

@@ -3,8 +3,9 @@ import EmployerBenefit, {
   EmployerBenefitType,
 } from "../../models/EmployerBenefit";
 import { get, pick } from "lodash";
-import { AppLogic } from "../../hooks/useAppLogic";
-import BenefitsApplication from "../../models/BenefitsApplication";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import Dropdown from "../../components/Dropdown";
 import Fieldset from "../../components/Fieldset";
@@ -20,7 +21,6 @@ import RepeatableFieldset from "../../components/RepeatableFieldset";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.employer_benefits",
@@ -32,13 +32,8 @@ export const fields = [
   "claim.employer_benefits[*].is_full_salary_continuous",
 ];
 
-interface EmployerBenefitsDetailsProps {
-  claim: BenefitsApplication;
-  appLogic: AppLogic;
-}
-
 export const EmployerBenefitsDetails = (
-  props: EmployerBenefitsDetailsProps
+  props: WithBenefitsApplicationProps
 ) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();

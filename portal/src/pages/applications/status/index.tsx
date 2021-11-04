@@ -6,6 +6,7 @@ import {
 } from "../../../models/Document";
 import React, { useEffect } from "react";
 import { find, get, has, map } from "lodash";
+import withUser, { WithUserProps } from "../../../hoc/withUser";
 import { AbsencePeriod } from "../../../models/ClaimDetail";
 import Alert from "../../../components/Alert";
 import { AppLogic } from "../../../hooks/useAppLogic";
@@ -28,20 +29,15 @@ import hasDocumentsLoadError from "../../../utils/hasDocumentsLoadError";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
-import withUser from "../../../hoc/withUser";
-
-interface StatusProps {
-  appLogic: AppLogic;
-  query: {
-    absence_case_id?: string;
-    claim_id?: string;
-    uploaded_document_type?: string;
-  };
-}
 
 const containerClassName = "border-bottom border-base-lighter padding-y-4";
 
-export const Status = ({ appLogic, query }: StatusProps) => {
+export const Status = ({
+  appLogic,
+  query,
+}: WithUserProps & {
+  query: { absence_case_id?: string | null; uploaded_document_type?: string };
+}) => {
   const { t } = useTranslation();
   const {
     claims: { claimDetail, isLoadingClaimDetail, loadClaimDetail },
@@ -130,7 +126,7 @@ export const Status = ({ appLogic, query }: StatusProps) => {
     claimDetail.application_id
   );
 
-  const ViewYourNotices = () => {
+  const viewYourNotices = () => {
     const legalNotices = getLegalNotices(documentsForApplication);
 
     const shouldShowSpinner =
@@ -336,7 +332,7 @@ export const Status = ({ appLogic, query }: StatusProps) => {
           />
         )}
         <LeaveDetails absenceDetails={absenceDetails} />
-        <ViewYourNotices />
+        {viewYourNotices()}
 
         {/* Upload documents section */}
         <div className={containerClassName} id="upload_documents">

@@ -1,6 +1,7 @@
 import { get, pick } from "lodash";
-import { AppLogic } from "../../hooks/useAppLogic";
-import BenefitsApplication from "../../models/BenefitsApplication";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -9,19 +10,10 @@ import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.is_withholding_tax"];
 
-interface TaxWithholdingProps {
-  claim: BenefitsApplication;
-  query: {
-    claim_id?: string;
-  };
-  appLogic: AppLogic;
-}
-
-export const TaxWithholding = (props: TaxWithholdingProps) => {
+export const TaxWithholding = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

@@ -1,12 +1,12 @@
 import React, { useEffect } from "react";
-
+import withEmployerClaim, {
+  WithEmployerClaimProps,
+} from "../../../hoc/withEmployerClaim";
 import { AbsenceCaseStatus } from "../../../models/Claim";
 import AbsenceCaseStatusTag from "../../../components/AbsenceCaseStatusTag";
-import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import { DocumentType } from "../../../models/Document";
 import DownloadableDocument from "../../../components/DownloadableDocument";
-import EmployerClaim from "../../../models/EmployerClaim";
 import Heading from "../../../components/Heading";
 import Lead from "../../../components/Lead";
 import LeaveReason from "../../../models/LeaveReason";
@@ -19,30 +19,19 @@ import formatDateRange from "../../../utils/formatDateRange";
 import { get } from "lodash";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
-import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
-interface StatusProps {
-  appLogic: AppLogic;
-  claim: EmployerClaim;
-  query: {
-    absence_id: string;
-  };
-}
-
-export const Status = (props: StatusProps) => {
-  const {
-    appLogic,
-    claim,
-    query: { absence_id: absenceId },
-  } = props;
+export const Status = (props: WithEmployerClaimProps) => {
+  const { appLogic, claim } = props;
   const {
     employers: { claimDocumentsMap, downloadDocument },
   } = appLogic;
   const { isContinuous, isIntermittent, isReducedSchedule } = claim;
   const { t } = useTranslation();
 
+  const absenceId = claim.fineos_absence_id;
+
   useEffect(() => {
-    appLogic.employers.loadDocuments(absenceId);
+    appLogic.employers.loadDocuments(claim.fineos_absence_id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [absenceId]);
 

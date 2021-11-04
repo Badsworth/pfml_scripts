@@ -2,6 +2,9 @@ import BenefitsApplication, {
   ReasonQualifier,
 } from "../models/BenefitsApplication";
 import { BenefitsApplicationDocument, DocumentType } from "../models/Document";
+import withClaimDocuments, {
+  WithClaimDocumentsProps,
+} from "../hoc/withClaimDocuments";
 import Alert from "./Alert";
 import { AppLogic } from "../hooks/useAppLogic";
 import ButtonLink from "./ButtonLink";
@@ -18,12 +21,9 @@ import hasDocumentsLoadError from "../utils/hasDocumentsLoadError";
 import routeWithParams from "../utils/routeWithParams";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
-import withClaimDocuments from "../hoc/withClaimDocuments";
 
-interface ApplicationCardProps {
-  appLogic: AppLogic;
+interface ApplicationCardProps extends WithClaimDocumentsProps {
   claim: BenefitsApplication;
-  documents: BenefitsApplicationDocument[];
   /**
    * Cards are displayed in a list. What position is this card?
    */

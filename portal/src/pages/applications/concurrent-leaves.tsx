@@ -1,6 +1,7 @@
 import React, { Fragment } from "react";
-import { AppLogic } from "../../hooks/useAppLogic";
-import BenefitsApplication from "../../models/BenefitsApplication";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import Details from "../../components/Details";
 import IconHeading from "../../components/IconHeading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -11,17 +12,10 @@ import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_concurrent_leave"];
 
-interface ConcurrentLeavesProps {
-  appLogic: AppLogic;
-  claim: BenefitsApplication;
-  query: { [key: string]: string };
-}
-
-export const ConcurrentLeaves = (props: ConcurrentLeavesProps) => {
+export const ConcurrentLeaves = (props: WithBenefitsApplicationProps) => {
   const { t } = useTranslation();
   const {
     appLogic,

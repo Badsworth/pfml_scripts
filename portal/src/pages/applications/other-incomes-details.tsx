@@ -3,8 +3,9 @@ import OtherIncome, {
   OtherIncomeType,
 } from "../../models/OtherIncome";
 import { get, pick } from "lodash";
-import { AppLogic } from "../../hooks/useAppLogic";
-import BenefitsApplication from "../../models/BenefitsApplication";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import Dropdown from "../../components/Dropdown";
 import Fieldset from "../../components/Fieldset";
 import FormLabel from "../../components/FormLabel";
@@ -19,7 +20,6 @@ import RepeatableFieldset from "../../components/RepeatableFieldset";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.other_incomes",
@@ -30,12 +30,7 @@ export const fields = [
   "claim.other_incomes[*].income_type",
 ];
 
-interface OtherIncomesDetailsProps {
-  claim: BenefitsApplication;
-  appLogic: AppLogic;
-}
-
-export const OtherIncomesDetails = (props: OtherIncomesDetailsProps) => {
+export const OtherIncomesDetails = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
   const limit = 6;

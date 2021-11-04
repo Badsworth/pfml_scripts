@@ -1,12 +1,14 @@
-import BenefitsApplication, {
-  ReasonQualifier,
-} from "../../models/BenefitsApplication";
 import {
   BenefitsApplicationDocument,
   DocumentType,
 } from "../../models/Document";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import withClaimDocuments, {
+  WithClaimDocumentsProps,
+} from "../../hoc/withClaimDocuments";
 import Alert from "../../components/Alert";
-import { AppLogic } from "../../hooks/useAppLogic";
 import ConditionalContent from "../../components/ConditionalContent";
 import DocumentRequirements from "../../components/DocumentRequirements";
 import FileCardList from "../../components/FileCardList";
@@ -16,6 +18,7 @@ import Lead from "../../components/Lead";
 import LeaveReason from "../../models/LeaveReason";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import { ReasonQualifier } from "../../models/BenefitsApplication";
 import Spinner from "../../components/Spinner";
 import { Trans } from "react-i18next";
 import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
@@ -26,16 +29,11 @@ import routes from "../../routes";
 import uploadDocumentsHelper from "../../utils/uploadDocumentsHelper";
 import useFilesLogic from "../../hooks/useFilesLogic";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
-import withClaimDocuments from "../../hoc/withClaimDocuments";
 
-interface UploadCertificationProps {
-  appLogic: AppLogic;
-  claim: BenefitsApplication;
-  documents: BenefitsApplicationDocument[];
-  isLoadingDocuments: boolean;
+interface UploadCertificationProps
+  extends WithClaimDocumentsProps,
+    WithBenefitsApplicationProps {
   query: {
-    claim_id?: string;
     additionalDoc?: string;
   };
 }

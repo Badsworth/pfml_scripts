@@ -1,5 +1,6 @@
-import { AppLogic } from "../../hooks/useAppLogic";
-import BenefitsApplication from "../../models/BenefitsApplication";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import Heading from "../../components/Heading";
 import Hint from "../../components/Hint";
 import QuestionPage from "../../components/QuestionPage";
@@ -8,23 +9,19 @@ import { Trans } from "react-i18next";
 import formatDate from "../../utils/formatDate";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
-interface ConcurrentLeavesIntroProps {
-  appLogic: AppLogic;
-  claim: BenefitsApplication;
-  query: { [key: string]: string };
-}
-
-export const ConcurrentLeavesIntro = (props: ConcurrentLeavesIntroProps) => {
+export const ConcurrentLeavesIntro = (props: WithBenefitsApplicationProps) => {
   const { t } = useTranslation();
-  const { appLogic, claim, query } = props;
+  const { appLogic, claim } = props;
 
   const startDate = formatDate(claim.leaveStartDate).full();
   const endDate = formatDate(claim.leaveEndDate).full();
 
   const handleSave = async () => {
-    return await appLogic.portalFlow.goToNextPage({ claim }, query);
+    return await appLogic.portalFlow.goToNextPage(
+      { claim },
+      { claim_id: claim.application_id }
+    );
   };
 
   return (

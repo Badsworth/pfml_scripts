@@ -3,8 +3,9 @@ import {
   PaymentPreferenceMethod,
 } from "../../models/PaymentPreference";
 import { cloneDeep, get, pick, set } from "lodash";
-import { AppLogic } from "../../hooks/useAppLogic";
-import BenefitsApplication from "../../models/BenefitsApplication";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
 import Fieldset from "../../components/Fieldset";
@@ -20,7 +21,6 @@ import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 const bankAccountTypeField = "payment_preference.bank_account_type";
 const routingNumberField = "payment_preference.routing_number";
@@ -34,15 +34,7 @@ export const fields = [
   `claim.${routingNumberField}`,
 ];
 
-interface PaymentMethodProps {
-  claim: BenefitsApplication;
-  query: {
-    claim_id?: string;
-  };
-  appLogic: AppLogic;
-}
-
-export const PaymentMethod = (props: PaymentMethodProps) => {
+export const PaymentMethod = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
   // TODO(Portal-1001): - Remove featureFlag

@@ -1,29 +1,22 @@
-import BenefitsApplication, {
-  CaringLeaveMetadata,
-} from "../../models/BenefitsApplication";
 import { get, pick } from "lodash";
-import { AppLogic } from "../../hooks/useAppLogic";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import { CaringLeaveMetadata } from "../../models/BenefitsApplication";
 import InputDate from "../../components/InputDate";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 const caringLeaveMetadataKey = "leave_details.caring_leave_metadata";
 export const fields = [
   `claim.${caringLeaveMetadataKey}.family_member_date_of_birth`,
 ];
 
-interface FamilyMemberDateOfBirthProps {
-  appLogic: AppLogic;
-  claim: BenefitsApplication;
-  query: { [key: string]: string };
-}
-
 export const FamilyMemberDateOfBirth = (
-  props: FamilyMemberDateOfBirthProps
+  props: WithBenefitsApplicationProps
 ) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;

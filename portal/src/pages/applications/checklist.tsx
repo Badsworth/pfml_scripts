@@ -2,17 +2,19 @@ import BenefitsApplication, {
   BenefitsApplicationStatus,
   ReasonQualifier,
 } from "../../models/BenefitsApplication";
-import {
-  BenefitsApplicationDocument,
-  DocumentType,
-} from "../../models/Document";
 import StepModel, { ClaimSteps } from "../../models/Step";
 import { camelCase, filter, findIndex, get, isBoolean } from "lodash";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import withClaimDocuments, {
+  WithClaimDocumentsProps,
+} from "../../hoc/withClaimDocuments";
 import Alert from "../../components/Alert";
-import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import Details from "../../components/Details";
+import { DocumentType } from "../../models/Document";
 import HeadingPrefix from "../../components/HeadingPrefix";
 import LeaveReason from "../../models/LeaveReason";
 import React from "react";
@@ -30,14 +32,10 @@ import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
-import withClaimDocuments from "../../hoc/withClaimDocuments";
 
-interface ChecklistProps {
-  appLogic: AppLogic;
-  claim: BenefitsApplication;
-  documents: BenefitsApplicationDocument[];
-  isLoadingDocuments: boolean;
+interface ChecklistProps
+  extends WithClaimDocumentsProps,
+    WithBenefitsApplicationProps {
   query: {
     "part-one-submitted"?: string;
     "payment-pref-submitted"?: string;

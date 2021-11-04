@@ -1,27 +1,29 @@
 import React, { useEffect } from "react";
-import { AppLogic } from "../hooks/useAppLogic";
+import withUser, { WithUserProps } from "./withUser";
+import BenefitsApplication from "../models/BenefitsApplication";
 import PageNotFound from "../components/PageNotFound";
 import Spinner from "../components/Spinner";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
-import withUser from "./withUser";
 
-interface ComponentWithClaimProps {
-  appLogic: AppLogic;
-  query: {
-    claim_id?: string;
-  };
+export interface QueryForWithBenefitsApplication {
+  claim_id?: string;
+}
+
+export interface WithBenefitsApplicationProps extends WithUserProps {
+  claim: BenefitsApplication;
 }
 
 /**
  * Higher order component that loads a claim if not yet loaded,
  * then adds a single claim to the wrapped component based on query parameters
- * @param {React.Component} Component - Component to receive claim prop
- * @returns {React.Component} - Component with claim prop
  */
-// @ts-expect-error TODO (PORTAL-966) Fix HOC typing
-const withBenefitsApplication = (Component) => {
-  const ComponentWithClaim = (props: ComponentWithClaimProps) => {
+function withBenefitsApplication<T extends WithBenefitsApplicationProps>(
+  Component: React.ComponentType<T>
+) {
+  const ComponentWithClaim = (
+    props: WithUserProps & { query: QueryForWithBenefitsApplication }
+  ) => {
     const { appLogic, query } = props;
     const { t } = useTranslation();
 
@@ -31,6 +33,7 @@ const withBenefitsApplication = (Component) => {
     const claim = application_id
       ? benefitsApplications.getItem(application_id)
       : undefined;
+
     const shouldLoad = !!(
       application_id &&
       !appLogic.benefitsApplications.hasLoadedBenefitsApplicationAndWarnings(
@@ -58,10 +61,6 @@ const withBenefitsApplication = (Component) => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [claim?.application_id]);
 
-    if (!application_id) {
-      return <PageNotFound />;
-    }
-
     if (shouldLoad) {
       return (
         <div className="margin-top-8 text-center">
@@ -74,10 +73,19 @@ const withBenefitsApplication = (Component) => {
       );
     }
 
-    return <Component {...props} claim={claim} />;
+    if (!application_id || !claim) {
+      return <PageNotFound />;
+    }
+
+    return (
+      <Component
+        {...(props as T & { query: QueryForWithBenefitsApplication })}
+        claim={claim}
+      />
+    );
   };
 
   return withUser(ComponentWithClaim);
-};
+}
 
 export default withBenefitsApplication;

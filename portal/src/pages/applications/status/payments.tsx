@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import { AppLogic } from "../../../hooks/useAppLogic";
+import withUser, { WithUserProps } from "../../../hoc/withUser";
 import BackButton from "../../../components/BackButton";
 import Heading from "../../../components/Heading";
 import LeaveReason from "../../../models/LeaveReason";
@@ -9,16 +9,11 @@ import findKeyByValue from "../../../utils/findKeyByValue";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
-import withUser from "../../../hoc/withUser";
 
-interface PaymentsProps {
-  appLogic: AppLogic;
-  query: {
-    absence_case_id?: string;
-  };
-}
-
-export const Payments = ({ appLogic, query }: PaymentsProps) => {
+export const Payments = ({
+  appLogic,
+  query,
+}: WithUserProps & { query: { absence_case_id?: string | null } }) => {
   const {
     claims: { claimDetail },
     portalFlow,

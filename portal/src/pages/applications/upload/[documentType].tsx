@@ -12,10 +12,12 @@ import {
   BenefitsApplicationDocument,
   DocumentType,
 } from "../../../models/Document";
+import withClaimDocuments, {
+  WithClaimDocumentsProps,
+} from "../../../hoc/withClaimDocuments";
 import Accordion from "../../../components/Accordion";
 import AccordionItem from "../../../components/AccordionItem";
 import Alert from "../../../components/Alert";
-import { AppLogic } from "../../../hooks/useAppLogic";
 import ConditionalContent from "../../../components/ConditionalContent";
 import DocumentRequirements from "../../../components/DocumentRequirements";
 import FileCardList from "../../../components/FileCardList";
@@ -33,7 +35,6 @@ import routes from "../../../routes";
 import uploadDocumentsHelper from "../../../utils/uploadDocumentsHelper";
 import useFilesLogic from "../../../hooks/useFilesLogic";
 import { useTranslation } from "../../../locales/i18n";
-import withClaimDocuments from "../../../hoc/withClaimDocuments";
 
 const uploadRoutes = routes.applications.upload;
 
@@ -187,15 +188,12 @@ const IdentificationUpload = ({ path }: IdentificationUploadProps) => {
   );
 };
 
-interface DocumentUploadProps {
-  appLogic: AppLogic;
-  documents: BenefitsApplicationDocument[];
-  isLoadingDocuments: boolean;
+interface DocumentUploadProps extends WithClaimDocumentsProps {
   query: {
     claim_id: string;
-    absence_case_id: string;
     additionalDoc?: string;
-    documentType:
+    absence_case_id?: string;
+    documentType?:
       | "state-id"
       | "other-id"
       | "proof-of-birth"

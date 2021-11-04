@@ -5,9 +5,12 @@ import User from "../models/User";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 
-interface ComponentWithUserProps {
-  appLogic: AppLogic;
+export interface WithUserProps extends PageProps {
   user: User;
+}
+
+export interface PageProps {
+  appLogic: AppLogic;
 }
 
 /**
@@ -17,12 +20,9 @@ interface ComponentWithUserProps {
  * If the user is not loaded, load the user.
  * If the logged in user has not consented to the data agreement, redirect the user
  * to the consent to data sharing page.
- * @param {React.Component} Component - Component to receive user prop
- * @returns {React.Component} - Component with user prop
  */
-// @ts-expect-error TODO (PORTAL-966) Fix HOC typing
-const withUser = (Component) => {
-  const ComponentWithUser = (props: ComponentWithUserProps) => {
+function withUser<T extends WithUserProps>(Component: React.ComponentType<T>) {
+  const ComponentWithUser = (props: PageProps) => {
     const { appLogic } = props;
     const { auth, portalFlow, users } = appLogic;
     const { t } = useTranslation();
@@ -64,10 +64,10 @@ const withUser = (Component) => {
     )
       return null;
 
-    return <Component {...props} user={users.user} />;
+    return <Component {...(props as T)} user={users.user} />;
   };
 
   return ComponentWithUser;
-};
+}
 
 export default withUser;

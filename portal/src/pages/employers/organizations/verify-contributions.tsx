@@ -1,4 +1,6 @@
-import { AppLogic } from "../../../hooks/useAppLogic";
+import withWithholding, {
+  WithWithholdingProps,
+} from "../../../hoc/withWithholding";
 import Button from "../../../components/Button";
 import Details from "../../../components/Details";
 import InputCurrency from "../../../components/InputCurrency";
@@ -6,24 +8,15 @@ import Lead from "../../../components/Lead";
 import React from "react";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
-import { UserLeaveAdministrator } from "../../../models/User";
-import Withholding from "../../../models/Withholding";
 import formatDateRange from "../../../utils/formatDateRange";
 import routes from "../../../routes";
 import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../../../hooks/useThrottledHandler";
 import { useTranslation } from "../../../locales/i18n";
-import withWithholding from "../../../hoc/withWithholding";
 
-interface VerifyContributionsProps {
-  appLogic: AppLogic;
-  employer: UserLeaveAdministrator;
-  query: {
-    employer_id: string;
-    next?: string;
-  };
-  withholding: Withholding;
+interface VerifyContributionsProps extends WithWithholdingProps {
+  query: { next?: string };
 }
 
 export const VerifyContributions = (props: VerifyContributionsProps) => {
@@ -44,7 +37,7 @@ export const VerifyContributions = (props: VerifyContributionsProps) => {
     event.preventDefault();
 
     const payload = {
-      employer_id: query.employer_id,
+      employer_id: employer.employer_id,
       withholding_amount: formState.withholdingAmount,
       withholding_quarter: withholding.filing_period,
     };

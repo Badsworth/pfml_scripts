@@ -5,8 +5,10 @@ import PreviousLeave, {
 } from "../../../models/PreviousLeave";
 import React, { useEffect, useState } from "react";
 import { get, isEqual, isNil, omit } from "lodash";
+import withEmployerClaim, {
+  WithEmployerClaimProps,
+} from "../../../hoc/withEmployerClaim";
 import Alert from "../../../components/Alert";
-import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
 import ConcurrentLeave from "../../../components/employers/ConcurrentLeave";
@@ -15,7 +17,6 @@ import EmployeeInformation from "../../../components/employers/EmployeeInformati
 import EmployeeNotice from "../../../components/employers/EmployeeNotice";
 import EmployerBenefit from "../../../models/EmployerBenefit";
 import EmployerBenefits from "../../../components/employers/EmployerBenefits";
-import EmployerClaim from "../../../models/EmployerClaim";
 import EmployerDecision from "../../../components/employers/EmployerDecision";
 import Feedback from "../../../components/employers/Feedback";
 import FraudReport from "../../../components/employers/FraudReport";
@@ -37,27 +38,16 @@ import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../../../hooks/useThrottledHandler";
 import { useTranslation } from "../../../locales/i18n";
-import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
-interface ReviewProps {
-  appLogic: AppLogic;
-  claim: EmployerClaim;
-  query: {
-    absence_id: string;
-  };
-}
-
-export const Review = (props: ReviewProps) => {
-  const {
-    appLogic,
-    claim,
-    query: { absence_id: absenceId },
-  } = props;
+export const Review = (props: WithEmployerClaimProps) => {
+  const { appLogic, claim } = props;
   const {
     appErrors,
     employers: { claimDocumentsMap, downloadDocument, loadDocuments },
   } = appLogic;
   const { t } = useTranslation();
+
+  const absenceId = claim.fineos_absence_id;
 
   const shouldShowV2 = !!claim.uses_second_eform_version;
   // explicitly check for false as opposed to falsy values.
