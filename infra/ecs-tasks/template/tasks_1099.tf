@@ -62,8 +62,6 @@ resource "aws_ecs_task_definition" "ecs_tasks_1099" {
         { name : "ENVIRONMENT", value : var.environment_name },
         { name : "LOGGING_LEVEL", value : var.logging_level },
         { name : "FEATURES_FILE_PATH", value : "s3://massgov-pfml-${var.environment_name}-feature-gate/features.yaml" },
-        { name : "NEW_RELIC_LICENSE_KEY", valueFrom : "/service/${local.app_name}/common/newrelic-license-key" },
-        { name : "NR_INSERT_API_KEY", valueFrom : "/admin/${local.app_name}/newrelic-insert-api-key" },
         { name : "FINEOS_AWS_IAM_ROLE_ARN", value : var.fineos_aws_iam_role_arn },
         { name : "FINEOS_AWS_IAM_ROLE_EXTERNAL_ID", value : var.fineos_aws_iam_role_external_id },
         { name : "FINEOS_DATA_IMPORT_PATH", value : var.fineos_data_import_path },
@@ -89,7 +87,8 @@ resource "aws_ecs_task_definition" "ecs_tasks_1099" {
         {
           name      = "RMV_CLIENT_CERTIFICATE_PASSWORD"
           valueFrom = "/service/pfml-api/test/rmv_client_certificate_password"
-        }
+        }, { name : "NEW_RELIC_LICENSE_KEY", valueFrom : "/service/${local.app_name}/common/newrelic-license-key" },
+        { name : "NR_INSERT_API_KEY", valueFrom : "/admin/${local.app_name}/newrelic-insert-api-key" },
       ]
     },
     {
@@ -119,11 +118,10 @@ resource "aws_ecs_task_definition" "ecs_tasks_1099" {
       environment = [
         { name : "ENVIRONMENT", value : var.environment_name },
         { name : "LOGGING_LEVEL", value : var.logging_level },
-        { name : "FEATURES_FILE_PATH", value : "s3://massgov-pfml-${var.environment_name}-feature-gate/features.yaml" },
-        { name : "NEW_RELIC_LICENSE_KEY", valueFrom : "/service/${local.app_name}/common/newrelic-license-key" },
-        { name : "NR_INSERT_API_KEY", valueFrom : "/admin/${local.app_name}/newrelic-insert-api-key" }
+        { name : "FEATURES_FILE_PATH", value : "s3://massgov-pfml-${var.environment_name}-feature-gate/features.yaml" }
       ]
-      secrets = []
+      secrets = [{ name : "NEW_RELIC_LICENSE_KEY", valueFrom : "/service/${local.app_name}/common/newrelic-license-key" },
+      { name : "NR_INSERT_API_KEY", valueFrom : "/admin/${local.app_name}/newrelic-insert-api-key" }, ]
     }
   ])
 }
