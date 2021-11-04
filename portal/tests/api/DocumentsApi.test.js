@@ -100,22 +100,9 @@ describe("DocumentsApi", () => {
         const request = fetch.mock.calls[0][1];
         expect(request.body.get("mark_evidence_received")).toBe("true");
       });
-
-      it("sends Post request with description", async () => {
-        const file = makeFile({ name: "Compressed_test.png" });
-
-        await documentsApi.attachDocument(
-          applicationId,
-          file,
-          "Mock Category",
-          true
-        );
-
-        const request = fetch.mock.calls[0][1];
-        expect(request.body.get("description")).toBe("Compressed Image");
-      });
     });
   });
+
   describe("getDocuments", () => {
     describe("successful request", () => {
       beforeEach(() => {

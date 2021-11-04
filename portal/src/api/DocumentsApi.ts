@@ -34,9 +34,6 @@ export default class DocumentsApi extends BaseApi {
   ) => {
     const formData = new FormData();
     formData.append("document_type", document_type);
-    if (file.name.includes("Compressed_")) {
-      formData.append("description", "Compressed Image");
-    }
 
     assert(file);
     // we use Blob to support IE 11, formData is using "blob" as the default file name,

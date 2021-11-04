@@ -43,16 +43,11 @@ function optimizeFileSize(file: File, maximumFileSize: number): Promise<File> {
       checkOrientation: false, // Improves compression speed for larger files
       convertSize: maximumFileSize,
       success: (compressedBlob: File) => {
-        const fileName = compressedBlob.name;
-        const fileNameWithPrefix = "Compressed_" + fileName;
-
         tracker.trackEvent("CompressorSize", {
           originalSize: file.size,
           compressedSize: compressedBlob.size,
         });
-        // TODO (PORTAL-25): Stop referencing/setting the name
-        // @ts-expect-error Cannot assign to 'name' because it is a read-only property
-        compressedBlob.name = fileNameWithPrefix;
+
         resolve(compressedBlob);
       },
       error: (error) => {
