@@ -3,6 +3,7 @@ import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import DocumentCollection from "src/models/DocumentCollection";
 import { DocumentType } from "src/models/Document";
 import { MockEmployerClaimBuilder } from "tests/test-utils";
+import { Props } from "storybook/types";
 import React from "react";
 import { Review } from "src/pages/employers/applications/review";
 import User from "src/models/User";
@@ -56,8 +57,14 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Default = (args) => {
+export const Default = (
+  args: Props<typeof Review> & {
+    claimOption: string;
+    "Claimant EForm Version": string;
+    errorTypes: string[];
+    "Leave reason": string;
+  }
+) => {
   const { claimOption } = args;
   const errorTypes = args.errorTypes || [];
 
@@ -144,10 +151,9 @@ function getDocumentsMap(documentation, leaveReason) {
       new Map([["mock-absence-id", new DocumentCollection([documentData])]]);
 }
 
-function getAppErrorInfoCollection(errorTypes = []) {
+function getAppErrorInfoCollection(errorTypes: string[] = []) {
   const errors = [];
 
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'string' is not assignable to par... Remove this comment to see the full error message
   if (errorTypes.includes("Hours worked per week - minimum")) {
     errors.push(
       new AppErrorInfo({
@@ -158,7 +164,6 @@ function getAppErrorInfoCollection(errorTypes = []) {
     );
   }
 
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'string' is not assignable to par... Remove this comment to see the full error message
   if (errorTypes.includes("Hours worked per week - maximum")) {
     errors.push(
       new AppErrorInfo({
@@ -169,7 +174,6 @@ function getAppErrorInfoCollection(errorTypes = []) {
     );
   }
 
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'string' is not assignable to par... Remove this comment to see the full error message
   if (errorTypes.includes("Employer benefit - benefit end date")) {
     errors.push(
       new AppErrorInfo({
@@ -180,7 +184,6 @@ function getAppErrorInfoCollection(errorTypes = []) {
     );
   }
 
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'string' is not assignable to par... Remove this comment to see the full error message
   if (errorTypes.includes("Previous leave - leave start date")) {
     errors.push(
       new AppErrorInfo({
@@ -191,7 +194,6 @@ function getAppErrorInfoCollection(errorTypes = []) {
     );
   }
 
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'string' is not assignable to par... Remove this comment to see the full error message
   if (errorTypes.includes("Previous leave - leave end date")) {
     errors.push(
       new AppErrorInfo({

@@ -4,16 +4,21 @@ import Address from "src/models/Address";
 import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import FieldsetAddress from "src/components/FieldsetAddress";
+import { Props } from "storybook/types";
 
 export default {
   title: "Components/Forms/FieldsetAddress",
   component: FieldsetAddress,
+  args: {
+    appErrors: new AppErrorInfoCollection(),
+    label: "What's your address?",
+    hint: "Enter it as it appears on your ID card",
+    name: "address",
+  },
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Default = (args) => {
-  // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-  const [formState, setFormState] = useState({ address: new Address() });
+export const Default = (args: Props<typeof FieldsetAddress>) => {
+  const [formState, setFormState] = useState({ address: new Address({}) });
 
   // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'evt' implicitly has an 'any' type.
   const handleOnChange = (evt) => {
@@ -25,19 +30,12 @@ export const Default = (args) => {
   return (
     <form className="usa-form">
       <FieldsetAddress
-        name="address"
+        {...args}
         onChange={handleOnChange}
         value={formState.address}
-        {...args}
       />
     </form>
   );
-};
-
-Default.args = {
-  appErrors: new AppErrorInfoCollection(),
-  label: "What's your address?",
-  hint: "Enter it as it appears on your ID card",
 };
 
 export const WithErrors = () => {
@@ -79,7 +77,6 @@ export const WithErrors = () => {
         hint="Enter it as it appears on your ID card"
         name="address"
         onChange={handleOnChange}
-        // @ts-expect-error ts-migrate(2322) FIXME: Type 'Address' is not assignable to type '{ city: ... Remove this comment to see the full error message
         value={formState.address}
       />
     </form>

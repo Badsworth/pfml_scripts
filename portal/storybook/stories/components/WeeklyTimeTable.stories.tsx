@@ -1,3 +1,4 @@
+import { Props } from "storybook/types";
 import React from "react";
 import WeeklyTimeTable from "src/components/WeeklyTimeTable";
 import { WorkPattern } from "src/models/BenefitsApplication";
@@ -19,7 +20,6 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Default = (args) => {
+export const Default = (args: Props<typeof WeeklyTimeTable>) => {
   return <WeeklyTimeTable {...args} />;
 };

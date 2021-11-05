@@ -1,4 +1,5 @@
 import AlertBar from "src/components/AlertBar";
+import { Props } from "storybook/types";
 import React from "react";
 
 export default {
@@ -15,5 +16,4 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Default = (args) => <AlertBar {...args} />;
+export const Default = (args: Props<typeof AlertBar>) => <AlertBar {...args} />;

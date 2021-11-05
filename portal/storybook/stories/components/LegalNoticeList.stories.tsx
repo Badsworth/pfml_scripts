@@ -1,5 +1,6 @@
 import { DocumentType } from "src/models/Document";
 import LegalNoticeList from "src/components/LegalNoticeList";
+import { Props } from "storybook/types";
 import React from "react";
 
 const DOCUMENT = {
@@ -27,5 +28,6 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Default = (args) => <LegalNoticeList {...args} />;
+export const Default = (args: Props<typeof LegalNoticeList>) => (
+  <LegalNoticeList {...args} />
+);

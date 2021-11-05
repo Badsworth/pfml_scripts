@@ -1,17 +1,22 @@
 import React, { useState } from "react";
 import Dropdown from "src/components/Dropdown";
+import { Props } from "storybook/types";
 
 export default {
   title: "Components/Forms/Dropdown",
   component: Dropdown,
+  foo: "test",
+  args: {
+    choices: ["apple", "banana", "cherry", "grapefruit", "peach"].map(
+      (fruit) => ({ label: fruit, value: fruit[0] })
+    ),
+    emptyChoiceLabel: "- Select an answer -",
+    label: "What's your favorite fruit?",
+    name: "fieldName",
+  },
 };
 
-const OPTIONS = ["apple", "banana", "cherry", "grapefruit", "peach"].map(
-  (fruit) => ({ label: fruit, value: fruit[0] })
-);
-
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Default = (args) => {
+export const Default = (args: Props<typeof Dropdown>) => {
   // Setup super simple state management for the change handler and this controlled form component
   const [selectedValue, setSelectedValue] = useState("a");
   // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'evt' implicitly has an 'any' type.
@@ -21,29 +26,18 @@ export const Default = (args) => {
 
   return (
     <form className="usa-form">
-      <Dropdown
-        choices={OPTIONS}
-        emptyChoiceLabel="- Select an answer -"
-        label="What's your favorite fruit?"
-        name="fieldName"
-        onChange={handleOnChange}
-        value={selectedValue}
-        {...args}
-      />
+      <Dropdown {...args} onChange={handleOnChange} value={selectedValue} />
     </form>
   );
 };
 
-export const WithErrorAndMostOtherProps = () => {
+export const WithErrorAndMostOtherProps = (args: Props<typeof Dropdown>) => {
   return (
     <form className="usa-form">
       <Dropdown
-        choices={OPTIONS}
-        emptyChoiceLabel="- Select an answer -"
+        {...args}
         errorMsg="This field is required"
         hint="Question hint text"
-        label="What's your favorite fruit?"
-        name="fieldName"
         optionalText="(optional)"
       />
     </form>

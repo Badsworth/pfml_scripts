@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Props } from "storybook/types";
 import StateDropdown from "src/components/StateDropdown";
 
 export default {
@@ -11,8 +12,7 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Default = (args) => {
+export const Default = (args: Props<typeof StateDropdown>) => {
   // Setup super simple state management for the change handler and this controlled form component
   const [selectedValue, setSelectedValue] = useState("");
   // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'evt' implicitly has an 'any' type.

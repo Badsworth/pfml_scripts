@@ -42,7 +42,7 @@ interface FieldsetAddressProps {
   /**
    * The address value as an object
    */
-  value: { [key in AddressFieldNames]: string };
+  value: { [key in AddressFieldNames]: string | null };
 }
 
 /**

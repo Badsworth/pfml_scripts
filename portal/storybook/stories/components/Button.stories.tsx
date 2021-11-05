@@ -1,5 +1,6 @@
 /* eslint-disable no-alert */
 import Button from "src/components/Button";
+import { Props } from "storybook/types";
 import React from "react";
 
 export default {
@@ -10,8 +11,7 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7031) FIXME: Binding element 'children' implicitly has an 'any'... Remove this comment to see the full error message
-export const Default = ({ children, ...args }) => {
+export const Default = ({ children, ...args }: Props<typeof Button>) => {
   const handleClick = () => alert("Clicked!");
 
   return (

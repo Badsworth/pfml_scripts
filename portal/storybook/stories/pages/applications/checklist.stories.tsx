@@ -4,6 +4,7 @@ import { Checklist } from "src/pages/applications/checklist";
 import DocumentCollection from "src/models/DocumentCollection";
 import { DocumentType } from "src/models/Document";
 import { MockBenefitsApplicationBuilder } from "tests/test-utils";
+import { Props } from "storybook/types";
 import React from "react";
 import claimantConfig from "src/flows/claimant";
 import { find } from "lodash";
@@ -125,8 +126,7 @@ export default {
   component: Checklist,
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const DefaultStory = (args) => {
+export const DefaultStory = (args: Props<typeof Checklist>) => {
   // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
   const { claim, documents, query, warnings } = scenarios[args.scenario];
 

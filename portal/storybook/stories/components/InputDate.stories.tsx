@@ -1,13 +1,13 @@
 import React, { useState } from "react";
 import InputDate from "src/components/InputDate";
+import { Props } from "storybook/types";
 
 export default {
   title: "Components/Forms/InputDate",
   component: InputDate,
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const ControlledField = (args) => {
+export const ControlledField = (args: Props<typeof InputDate>) => {
   // Setup super simple state management for the change handler and this controlled form component
   const [value, setFieldValue] = useState("2019-01-29");
   // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'evt' implicitly has an 'any' type.

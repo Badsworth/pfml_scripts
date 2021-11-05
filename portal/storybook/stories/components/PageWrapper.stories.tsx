@@ -2,6 +2,7 @@ import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import Flag from "src/models/Flag";
 import PageWrapper from "src/components/PageWrapper";
+import { Props } from "storybook/types";
 import React from "react";
 import User from "src/models/User";
 
@@ -33,8 +34,13 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Default = (args) => {
+export const Default = (
+  args: Props<typeof PageWrapper> & {
+    Authentication: string;
+    Errors: string;
+    "Maintenance Page": string;
+  }
+) => {
   const appErrors =
     args.Errors === "Has errors"
       ? [

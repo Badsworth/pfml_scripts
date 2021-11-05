@@ -3,6 +3,7 @@ import { Status, StatusTagMap } from "src/pages/applications/status";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import DocumentCollection from "src/models/DocumentCollection";
 import LeaveReason from "src/models/LeaveReason";
+import { Props } from "storybook/types";
 import React from "react";
 import { ReasonQualifier } from "src/models/BenefitsApplication";
 // @ts-expect-error ts-migrate(7016) FIXME: Could not find a declaration file for module 'fake... Remove this comment to see the full error message
@@ -146,8 +147,13 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const DefaultStory = (args) => {
+export const DefaultStory = (
+  args: Props<typeof Status> & {
+    "Leave Scenario": string;
+    "Request Decision": string;
+    "Show Request for More Information": string;
+  }
+) => {
   const leaveScenario = args["Leave Scenario"];
   const requestDecision = args["Request Decision"];
   const shouldIncludeRfiDocument = args["Show Request for More Information"];

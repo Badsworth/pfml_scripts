@@ -1,4 +1,5 @@
 import PaginationSummary from "src/components/PaginationSummary";
+import { Props } from "storybook/types";
 import React from "react";
 
 export default {
@@ -11,5 +12,7 @@ export default {
     totalRecords: 100,
   },
 };
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Default = (args) => <PaginationSummary {...args} />;
+
+export const Default = (args: Props<typeof PaginationSummary>) => (
+  <PaginationSummary {...args} />
+);

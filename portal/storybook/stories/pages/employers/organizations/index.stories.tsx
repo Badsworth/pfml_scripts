@@ -1,12 +1,13 @@
 import User, { UserLeaveAdministrator } from "src/models/User";
 import { Index } from "src/pages/employers/organizations";
+import { Props } from "storybook/types";
 import React from "react";
 
 const ORGANIZATION_TYPES = {
   verified: "Verified employer",
   verificationRequired: "Not verified employer (verification required)",
   verificationBlocked: "Not verified employer (verification blocked)",
-};
+} as const;
 
 export default {
   title: `Pages/Employers/Organizations/Organizations`,
@@ -21,8 +22,13 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Default = (args) => {
+export const Default = (
+  args: Props<typeof Index> & {
+    organizations: Array<
+      typeof ORGANIZATION_TYPES[keyof typeof ORGANIZATION_TYPES]
+    >;
+  }
+) => {
   const organizations = args.organizations || [];
   const user_leave_administrators = [];
 

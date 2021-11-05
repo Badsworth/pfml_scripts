@@ -1,4 +1,5 @@
 import BetaBanner from "src/components/BetaBanner";
+import { Props } from "storybook/types";
 import React from "react";
 
 export default {
@@ -9,5 +10,6 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Default = (args) => <BetaBanner {...args} />;
+export const Default = (args: Props<typeof BetaBanner>) => (
+  <BetaBanner {...args} />
+);

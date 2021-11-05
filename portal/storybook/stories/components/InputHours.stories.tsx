@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import InputHours from "src/components/InputHours";
+import { Props } from "storybook/types";
 
 export default {
   title: "Components/Forms/InputHours",
@@ -10,8 +11,7 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const ControlledField = (args) => {
+export const ControlledField = (args: Props<typeof InputHours>) => {
   const [value, setFieldValue] = useState(null);
   // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'evt' implicitly has an 'any' type.
   const handleChange = (evt) => {

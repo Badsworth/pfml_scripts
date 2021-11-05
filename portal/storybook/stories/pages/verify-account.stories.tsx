@@ -1,4 +1,5 @@
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
+import { Props } from "storybook/types";
 import React from "react";
 import VerifyAccount from "src/pages/verify-account";
 
@@ -20,8 +21,9 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Page = (args) => {
+export const Page = (
+  args: Props<typeof VerifyAccount> & { scenario: string }
+) => {
   const authData = {};
   const query = {};
 

@@ -1,3 +1,4 @@
+import { Props } from "storybook/types";
 import React from "react";
 import Step from "src/components/Step";
 
@@ -6,10 +7,9 @@ export default {
   component: Step,
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Default = (args) => {
+export const Default = (args: Props<typeof Step>) => {
   args.number ||= 1;
-  return <Step {...args}>{args.text}</Step>;
+  return <Step {...args} />;
 };
 
 Default.args = {
@@ -22,7 +22,7 @@ Default.args = {
   completedText: "Completed",
   editText: "Edit",
   stepHref: "/",
-  text: "These are the instructions",
+  children: "These are the instructions",
   editable: true,
 };
 

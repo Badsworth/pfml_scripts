@@ -1,4 +1,5 @@
 import LeaveDatesAlert from "src/components/LeaveDatesAlert";
+import { Props } from "storybook/types";
 import React from "react";
 
 export default {
@@ -11,5 +12,6 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Story = (args) => <LeaveDatesAlert {...args} />;
+export const Story = (args: Props<typeof LeaveDatesAlert>) => (
+  <LeaveDatesAlert {...args} />
+);

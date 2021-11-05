@@ -1,4 +1,5 @@
 import { ConsentToDataSharing } from "src/pages/user/consent-to-data-sharing";
+import { Props } from "storybook/types";
 import React from "react";
 import User from "src/models/User";
 
@@ -7,8 +8,9 @@ export default {
   component: ConsentToDataSharing,
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Page = (args) => {
+export const Page = (
+  args: Props<typeof ConsentToDataSharing> & { query: string }
+) => {
   // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
   let user = new User();
   if (args.query === "Employer Portal") {

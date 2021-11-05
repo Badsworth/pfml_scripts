@@ -1,5 +1,6 @@
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import Login from "src/pages/login";
+import { Props } from "storybook/types";
 import React from "react";
 
 export default {
@@ -7,8 +8,7 @@ export default {
   component: Login,
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Page = (args) => {
+export const Page = (args: Props<typeof Login>) => {
   const query = {};
   if (args.query === "Session timed out") {
     // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message

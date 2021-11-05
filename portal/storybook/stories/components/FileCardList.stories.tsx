@@ -1,5 +1,6 @@
 /* eslint-disable no-alert */
 import FileCardList from "src/components/FileCardList";
+import { Props } from "storybook/types";
 import React from "react";
 import useFilesLogic from "src/hooks/useFilesLogic";
 
@@ -7,21 +8,20 @@ export default {
   title: "Components/FileCardList",
   component: FileCardList,
   args: {
-    fileHeadingPrefix: "Document",
     addFirstFileButtonText: "Choose a document",
     addAnotherFileButtonText: "Choose another document",
+    documents: [
+      {
+        content_type: "image/jpeg",
+        created_at: "2021-01-30",
+      },
+    ],
+    fileHeadingPrefix: "Document",
+    fileErrors: [],
   },
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Default = (args) => {
-  const initialDocuments = [
-    {
-      content_type: "image/jpeg",
-      created_at: "2021-01-30",
-    },
-  ];
-
+export const Default = (args: Props<typeof FileCardList>) => {
   const { files, processFiles, removeFile } = useFilesLogic({
     clearErrors: () => {},
     catchError: () => {
@@ -31,12 +31,10 @@ export const Default = (args) => {
 
   return (
     <FileCardList
-      documents={initialDocuments}
-      tempFiles={files}
-      onChange={processFiles}
-      onRemoveTempFile={removeFile}
-      fileErrors={[]}
       {...args}
+      tempFiles={files}
+      onRemoveTempFile={removeFile}
+      onChange={processFiles}
     />
   );
 };

@@ -1,4 +1,5 @@
 import Alert from "src/components/Alert";
+import { Props } from "storybook/types";
 import React from "react";
 
 export default {
@@ -23,8 +24,7 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const ErrorAlert = (args) => <Alert {...args} />;
+export const ErrorAlert = (args: Props<typeof Alert>) => <Alert {...args} />;
 
 export const ErrorAlertTextOnly = () => (
   <Alert>

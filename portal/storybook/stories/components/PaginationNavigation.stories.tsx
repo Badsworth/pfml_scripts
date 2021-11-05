@@ -2,6 +2,7 @@ import PaginationNavigation, {
   truncationStates,
 } from "src/components/PaginationNavigation";
 import FlowDiagram from "../../utils/FlowDiagram";
+import { Props } from "storybook/types";
 import React from "react";
 
 export default {
@@ -15,6 +16,7 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Default = (args) => <PaginationNavigation {...args} />;
+export const Default = (args: Props<typeof PaginationNavigation>) => (
+  <PaginationNavigation {...args} />
+);
 export const TruncationLogic = () => <FlowDiagram states={truncationStates} />;

@@ -5,6 +5,7 @@ import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import ClaimCollection from "src/models/ClaimCollection";
 import { Dashboard } from "src/pages/employers/dashboard";
 import { DateTime } from "luxon";
+import { Props } from "storybook/types";
 // @ts-expect-error ts-migrate(7016) FIXME: Could not find a declaration file for module 'fake... Remove this comment to see the full error message
 import faker from "faker";
 import routes from "src/routes";
@@ -135,8 +136,9 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Default = (args) => {
+export const Default = (
+  args: Props<typeof Dashboard> & { claims: string; total_pages: number }
+) => {
   // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
   const { user } = verificationScenarios[args.verification];
   const hasNoClaims = args.claims === "No claims";

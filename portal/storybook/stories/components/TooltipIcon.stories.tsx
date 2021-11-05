@@ -1,3 +1,4 @@
+import { Props } from "storybook/types";
 import React from "react";
 import TooltipIcon from "src/components/TooltipIcon";
 
@@ -9,7 +10,6 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Default = (args) => {
+export const Default = (args: Props<typeof TooltipIcon>) => {
   return <TooltipIcon {...args}>{args.children}</TooltipIcon>;
 };

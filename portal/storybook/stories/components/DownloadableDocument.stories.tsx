@@ -1,5 +1,6 @@
 import { DocumentType } from "src/models/Document";
 import DownloadableDocument from "src/components/DownloadableDocument";
+import { Props } from "storybook/types";
 import React from "react";
 
 const DOCUMENT = {
@@ -19,7 +20,6 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Story = (args) => {
+export const Story = (args: Props<typeof DownloadableDocument>) => {
   return <DownloadableDocument {...args} />;
 };

@@ -1,3 +1,4 @@
+import { Props } from "storybook/types";
 import React from "react";
 import Table from "src/components/Table";
 
@@ -6,8 +7,7 @@ export default {
   component: Table,
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Default = (args) => {
+export const Default = (args: Props<typeof Table>) => {
   const headings = ["Date range", "Benefit type", "Amount"];
 
   return (

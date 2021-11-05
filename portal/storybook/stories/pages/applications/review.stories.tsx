@@ -5,6 +5,7 @@ import {
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import DocumentCollection from "src/models/DocumentCollection";
 import { DocumentType } from "src/models/Document";
+import { Props } from "storybook/types";
 import React from "react";
 import { Review } from "src/pages/applications/review";
 
@@ -22,8 +23,7 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const DefaultStory = (args) => {
+export const DefaultStory = (args: Props<typeof Review>) => {
   const claim = createClaimFromArgs(args);
 
   const appLogic = {

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import InputText from "src/components/InputText";
+import { Props } from "storybook/types";
 import { useTranslation } from "src/locales/i18n";
 
 export default {
@@ -7,8 +8,7 @@ export default {
   component: InputText,
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const ControlledField = (args) => {
+export const ControlledField = (args: Props<typeof InputText>) => {
   const { t } = useTranslation();
 
   // Setup super simple state management for the change handler and this controlled form component

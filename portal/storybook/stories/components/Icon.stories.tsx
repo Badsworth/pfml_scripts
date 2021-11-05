@@ -1,5 +1,6 @@
 /* eslint-disable no-alert */
 import Icon from "src/components/Icon";
+import { Props } from "storybook/types";
 import React from "react";
 
 export default {
@@ -10,5 +11,4 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Default = (args) => <Icon {...args} />;
+export const Default = (args: Props<typeof Icon>) => <Icon {...args} />;

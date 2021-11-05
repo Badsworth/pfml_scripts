@@ -1,4 +1,5 @@
 import InputPassword from "src/components/InputPassword";
+import { Props } from "storybook/types";
 import React from "react";
 
 export default {
@@ -6,8 +7,7 @@ export default {
   component: InputPassword,
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const ControlledField = (args) => {
+export const ControlledField = (args: Props<typeof InputPassword>) => {
   return (
     <form className="usa-form">
       <InputPassword {...args} />

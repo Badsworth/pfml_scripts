@@ -1,4 +1,5 @@
 import MaintenanceTakeover from "src/components/MaintenanceTakeover";
+import { Props } from "storybook/types";
 import React from "react";
 
 export default {
@@ -6,5 +7,6 @@ export default {
   component: MaintenanceTakeover,
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export const Default = (args) => <MaintenanceTakeover {...args} />;
+export const Default = (args: Props<typeof MaintenanceTakeover>) => (
+  <MaintenanceTakeover {...args} />
+);
