@@ -1,4 +1,5 @@
 import argparse
+import os
 import sys
 from typing import List
 
@@ -12,6 +13,9 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_report import
 from massgov.pfml.delegated_payments.delegated_fineos_claimant_extract import ClaimantExtractStep
 from massgov.pfml.delegated_payments.delegated_fineos_payment_extract import PaymentExtractStep
 from massgov.pfml.delegated_payments.delegated_fineos_pei_writeback import FineosPeiWritebackStep
+from massgov.pfml.delegated_payments.delegated_fineos_related_payment_processing import (
+    RelatedPaymentsProcessingStep,
+)
 from massgov.pfml.delegated_payments.fineos_extract_step import (
     CLAIMANT_EXTRACT_CONFIG,
     PAYMENT_EXTRACT_CONFIG,
@@ -29,6 +33,8 @@ from massgov.pfml.util.bg import background_task
 
 logger = logging.get_logger(__name__)
 
+enable_withholding_payments: bool
+enable_withholding_payments = os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "1") == "1"
 
 ALL = "ALL"
 RUN_AUDIT_CLEANUP = "audit-cleanup"
@@ -38,6 +44,7 @@ CONSUME_FINEOS_PAYMENT = "consume-fineos-payment"
 PAYMENT_EXTRACT = "payment-extract"
 VALIDATE_ADDRESSES = "validate-addresses"
 PAYMENT_POST_PROCESSING = "payment-post-processing"
+RELATED_PAYMENT_PROCESSING = "related-payment-processing"
 CREATE_AUDIT_REPORT = "audit-report"
 CREATE_PEI_WRITEBACK = "initial-writeback"
 REPORT = "report"
@@ -50,6 +57,7 @@ ALLOWED_VALUES = [
     PAYMENT_EXTRACT,
     VALIDATE_ADDRESSES,
     PAYMENT_POST_PROCESSING,
+    RELATED_PAYMENT_PROCESSING,
     CREATE_AUDIT_REPORT,
     CREATE_PEI_WRITEBACK,
     REPORT,
@@ -64,6 +72,7 @@ class Configuration:
     do_payment_extract: bool
     validate_addresses: bool
     do_payment_post_processing: bool
+    do_related_payment_Processing: bool
     make_audit_report: bool
     create_pei_writeback: bool
     make_reports: bool
@@ -91,6 +100,7 @@ class Configuration:
             self.do_payment_extract = True
             self.validate_addresses = True
             self.do_payment_post_processing = True
+            self.do_related_payment_Processing = True
             self.make_audit_report = True
             self.create_pei_writeback = True
             self.make_reports = True
@@ -102,6 +112,7 @@ class Configuration:
             self.do_payment_extract = PAYMENT_EXTRACT in steps
             self.validate_addresses = VALIDATE_ADDRESSES in steps
             self.do_payment_post_processing = PAYMENT_POST_PROCESSING in steps
+            self.do_related_payment_Processing = RELATED_PAYMENT_PROCESSING in steps
             self.make_audit_report = CREATE_AUDIT_REPORT in steps
             self.create_pei_writeback = CREATE_PEI_WRITEBACK in steps
             self.make_reports = REPORT in steps
@@ -151,6 +162,12 @@ def _process_fineos_extracts(
 
     if config.do_payment_extract:
         PaymentExtractStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
+
+    if enable_withholding_payments:
+        if config.do_related_payment_Processing:
+            RelatedPaymentsProcessingStep(
+                db_session=db_session, log_entry_db_session=log_entry_db_session
+            ).run()
 
     if config.validate_addresses:
         AddressValidationStep(

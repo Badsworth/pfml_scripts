@@ -1,4 +1,5 @@
 import enum
+import os
 import uuid
 from datetime import datetime
 from decimal import Decimal
@@ -58,6 +59,9 @@ PRENOTE_PRENDING_WAITING_PERIOD = 5
 RECEIVED_FOLDER = "received"
 PROCESSED_FOLDER = "processed"
 SKIPPED_FOLDER = "skipped"
+
+enable_withholding_payments: bool
+enable_withholding_payments = os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "1") == "1"
 
 CANCELLATION_PAYMENT_TRANSACTION_TYPE = "PaymentOut Cancellation"
 # There are multiple types of overpayments
@@ -351,6 +355,15 @@ class PaymentData:
         if self.event_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE:
             return PaymentTransactionType.CANCELLATION
 
+        # FICA
+        if enable_withholding_payments and (
+            self.tin == "FICASOCIALSECURITYPAYEE001" or self.tin == "FICAMEDICAREPAYEE001"
+        ):
+            return PaymentTransactionType.STATE_TAX_WITHHOLDING
+
+        # FIT
+        if enable_withholding_payments and self.tin == "MANDATORYFITPAYEE001":
+            return PaymentTransactionType.FEDERAL_TAX_WITHHOLDING
         # The bulk of the payments we process will be standard payments
         if (
             self.event_type == PAYMENT_OUT_TRANSACTION_TYPE
@@ -530,6 +543,8 @@ class PaymentExtractStep(Step):
         ZERO_DOLLAR_PAYMENT_COUNT = "zero_dollar_payment_count"
         ADHOC_PAYMENT_COUNT = "adhoc_payment_count"
         MULTIPLE_CLAIM_DETAILS_ERROR_COUNT = "multiple_claim_details_error_count"
+        FEDERAL_WITHHOLDING_PAYMENT_COUNT = "federal_withholding_payment_count"
+        STATE_WITHHOLDING_PAYMENT_COUNT = "state_withholding_payment_count"
 
     def run_step(self):
         logger.info("Processing payment extract data")
@@ -586,12 +601,13 @@ class PaymentExtractStep(Step):
         # Get the TIN, employee and claim associated with the payment to be made
         employee, claim = None, None
         try:
-            # If the payment transaction type is for the employer
+            # If the payment transaction type is for the employer,State or Federal
             # We know we aren't going to find an employee, so don't look
-            if (
-                payment_data.payment_transaction_type.payment_transaction_type_id
-                != PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id
-            ):
+            if payment_data.payment_transaction_type.payment_transaction_type_id not in [
+                PaymentTransactionType.EMPLOYER_REIMBURSEMENT.payment_transaction_type_id,
+                PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,
+                PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id,
+            ]:
                 tax_identifier = (
                     self.db_session.query(TaxIdentifier)
                     .filter_by(tax_identifier=payment_data.tin)
@@ -1077,6 +1093,25 @@ class PaymentExtractStep(Step):
             )
             self.increment(self.Metrics.CANCELLATION_COUNT)
 
+        # set staus FEDERAL_WITHHOLDING_READY_FOR_PROCESSING
+        elif (
+            enable_withholding_payments
+            and payment.payment_transaction_type_id
+            == PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
+        ):
+            end_state = State.FEDERAL_WITHHOLDING_READY_FOR_PROCESSING
+            message = "Federal Withholding payment processed"
+            self.increment(self.Metrics.FEDERAL_WITHHOLDING_PAYMENT_COUNT)
+
+        # set status  STATE_WITHHOLDING_READY_FOR_PROCESSING
+        elif (
+            enable_withholding_payments
+            and payment.payment_transaction_type_id
+            == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
+        ):
+            end_state = State.STATE_WITHHOLDING_READY_FOR_PROCESSING
+            message = "State Withholding payment processed"
+            self.increment(self.Metrics.STATE_WITHHOLDING_PAYMENT_COUNT)
         else:
             end_state = State.PAYMENT_READY_FOR_ADDRESS_VALIDATION
             message = "Success"

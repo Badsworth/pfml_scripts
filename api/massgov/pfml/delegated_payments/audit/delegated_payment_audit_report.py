@@ -23,6 +23,9 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
 )
 from massgov.pfml.delegated_payments.step import Step
 
+enable_withholding_payments: bool
+enable_withholding_payments = os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "1") == "1"
+
 logger = logging.get_logger(__name__)
 
 
@@ -43,16 +46,47 @@ class PaymentAuditReportStep(Step):
     def sample_payments_for_audit_report(self) -> Iterable[Payment]:
         logger.info("Start sampling payments for audit report")
 
+        state_logs_containers: List[StateLog] = []
+
         state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
             state_log_util.AssociatedClass.PAYMENT,
             State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
             self.db_session,
         )
-        state_log_count = len(state_logs)
+
+        logger.info("state_logs %s", state_logs)
+        if len(state_logs) > 0:
+            for item in state_logs:
+                state_logs_containers.append(item)
+
+        if enable_withholding_payments:
+            federal_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+                state_log_util.AssociatedClass.PAYMENT,
+                State.FEDERAL_WITHHOLDING_PENDING_AUDIT,
+                self.db_session,
+            )
+
+            logger.info("federal_withholding_state_logs %s", federal_withholding_state_logs)
+            if len(federal_withholding_state_logs) > 0:
+                for item in federal_withholding_state_logs:
+                    state_logs_containers.append(item)
+
+            state_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
+                state_log_util.AssociatedClass.PAYMENT,
+                State.STATE_WITHHOLDING_PENDING_AUDIT,
+                self.db_session,
+            )
+
+            logger.info("state_withholding_state_logs %s", state_withholding_state_logs)
+            if len(state_withholding_state_logs) > 0:
+                for item in state_withholding_state_logs:
+                    state_logs_containers.append(item)
+
+        state_log_count = len(state_logs_containers)
         self.set_metrics({self.Metrics.SAMPLED_PAYMENT_COUNT: state_log_count})
 
         payments: List[Payment] = []
-        for state_log in state_logs:
+        for state_log in state_logs_containers:
             payment = state_log.payment
 
             # Shouldn't happen as they should always have a payment attached
