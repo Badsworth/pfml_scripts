@@ -7,7 +7,7 @@
 #
 locals {
   # Configuration required for every ECS task
-  common = [
+   common = [
     { name : "ENVIRONMENT", value : var.environment_name },
     { name : "LOGGING_LEVEL", value : var.logging_level },
     { name : "FEATURES_FILE_PATH", value : "s3://massgov-pfml-${var.environment_name}-feature-gate/features.yaml" },
