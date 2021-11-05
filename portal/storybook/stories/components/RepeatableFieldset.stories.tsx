@@ -9,6 +9,10 @@ export default {
   component: RepeatableFieldset,
 };
 
+interface Person {
+  firstName: string;
+}
+
 export const Default = () => {
   const { formState, updateFields } = useFormState({
     people: [{ firstName: "Bud" }],
@@ -22,8 +26,7 @@ export const Default = () => {
   // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
   const handleInputChange = useHandleInputChange(updateFields);
 
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'entry' implicitly has an 'any' type.
-  const handleRemoveClick = (entry, index) => {
+  const handleRemoveClick = (entry: Person, index: number) => {
     const updatedPeople = [].concat(formState.people);
     updatedPeople.splice(index, 1);
     updateFields({ people: updatedPeople });
@@ -37,7 +40,7 @@ export const Default = () => {
       onAddClick={handleAddClick}
       onRemoveClick={handleRemoveClick}
       removeButtonLabel="Remove"
-      render={(person, index) => (
+      render={(person: Person, index: number) => (
         <React.Fragment>
           <InputText
             smallLabel

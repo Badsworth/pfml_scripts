@@ -1,4 +1,3 @@
-/* eslint-disable react/prop-types */
 /**
  * @file Storybook uses this file to globally control the rendering of a story.
  * "Preview" as in the "preview iFrame."
@@ -12,10 +11,9 @@ import { initializeI18n } from "../src/locales/i18n";
 // Internationalize strings in our stories
 initializeI18n();
 
-// @ts-expect-error ts-migrate(7031) FIXME: Binding element 'children' implicitly has an 'any'... Remove this comment to see the full error message
-const CustomContainer = ({ children, context }) => (
+const CustomContainer: typeof DocsContainer = ({ children, context }) => (
   <DocsContainer context={context}>
-    <Anchor storyId={context.id} />
+    <Anchor storyId={context.id || ""} />
     {children}
   </DocsContainer>
 );

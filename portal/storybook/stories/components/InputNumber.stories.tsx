@@ -13,9 +13,9 @@ export default {
 
 export const Default = (args: Props<typeof InputNumber>) => {
   // Setup super simple state management for the change handler and this controlled form component
-  const [value, setFieldValue] = useState(40);
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'evt' implicitly has an 'any' type.
-  const handleOnChange = (evt) => {
+  const [value, setFieldValue] = useState("40");
+
+  const handleOnChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     setFieldValue(evt.target.value);
   };
 

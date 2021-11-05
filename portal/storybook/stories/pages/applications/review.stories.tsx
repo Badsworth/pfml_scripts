@@ -5,7 +5,6 @@ import {
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import DocumentCollection from "src/models/DocumentCollection";
 import { DocumentType } from "src/models/Document";
-import { Props } from "storybook/types";
 import React from "react";
 import { Review } from "src/pages/applications/review";
 
@@ -23,7 +22,9 @@ export default {
   },
 };
 
-export const DefaultStory = (args: Props<typeof Review>) => {
+export const DefaultStory = (
+  args: typeof claimArgTypes & { isLoadingDocuments: boolean }
+) => {
   const claim = createClaimFromArgs(args);
 
   const appLogic = {

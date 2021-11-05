@@ -105,11 +105,12 @@ export const claimArgTypes = {
 /**
  * Create a claim using the args passed into a Story. The args
  * are based on the claimArgTypes.
- * @param {object} args
- * @returns {BenefitsApplication}
  */
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
-export function createClaimFromArgs(args) {
+export function createClaimFromArgs(
+  args: {
+    [key in keyof typeof claimArgTypes]: unknown;
+  }
+) {
   let claim = new MockBenefitsApplicationBuilder();
 
   if (args.Status === "Part 1 and 2 are submitted") {

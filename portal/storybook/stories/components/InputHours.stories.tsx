@@ -12,9 +12,11 @@ export default {
 };
 
 export const ControlledField = (args: Props<typeof InputHours>) => {
-  const [value, setFieldValue] = useState(null);
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'evt' implicitly has an 'any' type.
-  const handleChange = (evt) => {
+  const [value, setFieldValue] = useState("");
+
+  const handleChange = (
+    evt: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     setFieldValue(evt.target.value);
   };
 

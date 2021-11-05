@@ -25,18 +25,12 @@ module.exports = {
   /**
    * Customize the Webpack configuration used by Storybook so it supports
    * Sass files and alias import paths.
-   * @param {object} config - Default Storybook Webpack config
-   * @param {object} options
-   * @param {"DEVELOPMENT"|"PRODUCTION"} options.configType - 'PRODUCTION' is used
-   *  when building the static version of storybook.
-   * @returns {object} Altered Webpack config
    */
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'config' implicitly has an 'any' type.
-  webpackFinal: (config) => {
+  webpackFinal: (config: webpack.Configuration) => {
     // Set our environment variables so things like Cognito integration works in the sandbox
-    config.plugins.push(new webpack.EnvironmentPlugin(nextConfig.env));
+    config.plugins?.push(new webpack.EnvironmentPlugin(nextConfig.env));
 
-    config.module.rules.push({
+    config.module?.rules.push({
       test: /\.scss$/,
       use: [
         "style-loader",

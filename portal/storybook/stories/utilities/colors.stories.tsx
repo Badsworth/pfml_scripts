@@ -9,8 +9,7 @@ export default {
   title: "Utilities/Colors",
 };
 
-// @ts-expect-error ts-migrate(7031) FIXME: Binding element 'token' implicitly has an 'any' ty... Remove this comment to see the full error message
-const Swatch = ({ token }) => {
+const Swatch = ({ token }: { token: string }) => {
   const bgClass = `bg-${token}`;
   const bgElement = useRef();
   const [colorValue, setColor] = useState("");

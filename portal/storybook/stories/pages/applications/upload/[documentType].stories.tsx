@@ -1,6 +1,7 @@
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import DocumentCollection from "src/models/DocumentCollection";
 import { DocumentUpload } from "src/pages/applications/upload/[documentType]";
+import { Props } from "storybook/types";
 import React from "react";
 
 export default {
@@ -46,8 +47,14 @@ const appLogic = {
   },
 };
 
-// @ts-expect-error ts-migrate(7031) FIXME: Binding element 'documentType' implicitly has an '... Remove this comment to see the full error message
-export const Default = ({ documentType, ...args }) => {
+type DocumentUploadProps = Props<typeof DocumentUpload>;
+
+export const Default = ({
+  documentType,
+  ...args
+}: DocumentUploadProps & {
+  documentType: DocumentUploadProps["query"]["documentType"];
+}) => {
   // @ts-expect-error ts-migrate(2339) FIXME: Property 'pageRoute' does not exist on type '{ get... Remove this comment to see the full error message
   appLogic.portalFlow.pageRoute = `/applications/upload/${documentType}`;
 

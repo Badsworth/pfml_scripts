@@ -13,8 +13,8 @@ export const ControlledField = (args: Props<typeof InputText>) => {
 
   // Setup super simple state management for the change handler and this controlled form component
   const [value, setFieldValue] = useState("Bud Baxter");
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'evt' implicitly has an 'any' type.
-  const handleOnChange = (evt) => {
+
+  const handleOnChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     setFieldValue(evt.target.value);
   };
 
@@ -87,12 +87,14 @@ export const Masks = () => {
     phone: setPhoneValue,
     currency: setCurrencyValue,
     zip: setZipValue,
-  };
+  } as const;
 
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'evt' implicitly has an 'any' type.
-  const handleOnChange = (evt) => {
-    // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-    maskSetterMap[evt.target.name](evt.target.value);
+  const handleOnChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    const name = evt.target.name;
+
+    if (name in maskSetterMap) {
+      maskSetterMap[name as keyof typeof maskSetterMap](evt.target.value);
+    }
   };
 
   return (
@@ -141,8 +143,8 @@ export const Masks = () => {
 
 export const Pii = () => {
   const [value, setFieldValue] = useState("***-**-****");
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'evt' implicitly has an 'any' type.
-  const handleOnChange = (evt) => {
+
+  const handleOnChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     setFieldValue(evt.target.value);
   };
 
@@ -162,8 +164,8 @@ export const Pii = () => {
 
 export const SmallLabel = () => {
   const [value, setFieldValue] = useState("Bud");
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'evt' implicitly has an 'any' type.
-  const handleOnChange = (evt) => {
+
+  const handleOnChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     setFieldValue(evt.target.value);
   };
 

@@ -9,12 +9,10 @@ export default {
 };
 
 export const Page = (args: Props<typeof Login>) => {
-  const query = {};
+  const query: { [key: string]: string } = {};
   if (args.query === "Session timed out") {
-    // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
     query["session-timed-out"] = "true";
   } else if (args.query === "Verified account") {
-    // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
     query["account-verified"] = "true";
   }
 

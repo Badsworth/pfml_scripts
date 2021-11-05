@@ -55,6 +55,10 @@ export class BaseMockBenefitsApplicationBuilder {
     return this;
   }
 
+  /**
+   * @param {object} [attrs]
+   * @returns {BaseMockBenefitsApplicationBuilder}
+   */
   address(attrs) {
     set(
       this.claimAttrs,
@@ -327,6 +331,7 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
   }
 
   /**
+   * @param {string} status
    * @returns {MockEmployerClaimBuilder}
    */
   status(status = null) {
@@ -768,7 +773,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
   }
 
   /**
-   * @param {object} attrs Address object
+   * @param {object} [attrs] Address object
    * @returns {MockBenefitsApplicationBuilder}
    */
   address(attrs) {

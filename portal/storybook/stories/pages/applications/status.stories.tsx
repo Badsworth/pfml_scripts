@@ -10,10 +10,18 @@ import { ReasonQualifier } from "src/models/BenefitsApplication";
 import faker from "faker";
 import { generateNotice } from "storybook/utils/generateNotice";
 
+type AbsencePeriodRequestDecision =
+  | "Pending"
+  | "Approved"
+  | "Denied"
+  | "Withdrawn";
+
 /**
  * Maps each of the leave scenario options to a list of partial absence periods.
  */
-const LEAVE_SCENARIO_MAP = {
+const LEAVE_SCENARIO_MAP: {
+  [scenario: string]: Array<Partial<AbsencePeriod>>;
+} = {
   "Medical-Pregnancy and Bonding": [
     { reason: LeaveReason.pregnancy },
     { reason: LeaveReason.bonding, reason_qualifier_one: "Newborn" },
@@ -44,20 +52,16 @@ const LEAVE_SCENARIO_MAP = {
 /**
  * Creates the claim detail to be used by the Status component.
  * Ensures that all permutations of leave reason and request decision are displayed.
- * @param {object} selections - the selections made in Storybook.
- * @param {string} selections.leaveScenario - the selected radio option for the
- *    leave scenario in Storybook.
- * @param {string} selections.requestDecision - the selected radio option for the
- *    request decision in Storybook.
- * @returns {ClaimDetail} a populated ClaimDetail object that contains
- *    absence periods applicable to the provided leave scenario selection.
  */
-// @ts-expect-error ts-migrate(7031) FIXME: Binding element 'leaveScenario' implicitly has an ... Remove this comment to see the full error message
-function createClaimDetail({ leaveScenario, requestDecision }) {
-  // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-  const initialPartials = LEAVE_SCENARIO_MAP[leaveScenario] || [];
+function createClaimDetail({
+  leaveScenario,
+  requestDecision,
+}: {
+  leaveScenario: keyof typeof LEAVE_SCENARIO_MAP;
+  requestDecision: AbsencePeriodRequestDecision;
+}): ClaimDetail {
+  const initialPartials = LEAVE_SCENARIO_MAP[leaveScenario] ?? [];
   // ensure that we see all request decisions.
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'initialPartial' implicitly has an 'any'... Remove this comment to see the full error message
   const allPartials = initialPartials.map((initialPartial) => {
     const isPregnancyWithBonding =
       initialPartials.length === 2 &&
@@ -68,7 +72,6 @@ function createClaimDetail({ leaveScenario, requestDecision }) {
     };
   });
 
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'partial' implicitly has an 'any' type.
   const absence_periods = allPartials.map((partial) =>
     createAbsencePeriod(partial)
   );
@@ -85,10 +88,8 @@ function createClaimDetail({ leaveScenario, requestDecision }) {
 /**
  * Create an absence period for use in testing. Any attributes that are not passed
  * in will have a random, faked value provided.
- * @returns {AbsencePeriod} - a filled absence period
  */
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'partialAttrs' implicitly has an 'any' t... Remove this comment to see the full error message
-function createAbsencePeriod(partialAttrs) {
+function createAbsencePeriod(partialAttrs: Partial<AbsencePeriod>) {
   const defaultAbsencePeriod = {
     absence_period_end_date: "2021-09-04",
     absence_period_start_date: "2021-04-09",
@@ -100,8 +101,13 @@ function createAbsencePeriod(partialAttrs) {
   return new AbsencePeriod({ ...defaultAbsencePeriod, ...partialAttrs });
 }
 
-// @ts-expect-error ts-migrate(7031) FIXME: Binding element 'requestDecision' implicitly has a... Remove this comment to see the full error message
-function getDocuments({ requestDecision, shouldIncludeRfiDocument }) {
+function getDocuments({
+  requestDecision,
+  shouldIncludeRfiDocument,
+}: {
+  requestDecision: AbsencePeriodRequestDecision;
+  shouldIncludeRfiDocument: boolean;
+}) {
   const documents = [];
 
   if (requestDecision === "Approved") {
@@ -149,9 +155,9 @@ export default {
 
 export const DefaultStory = (
   args: Props<typeof Status> & {
-    "Leave Scenario": string;
-    "Request Decision": string;
-    "Show Request for More Information": string;
+    "Leave Scenario": keyof typeof LEAVE_SCENARIO_MAP;
+    "Request Decision": AbsencePeriodRequestDecision;
+    "Show Request for More Information": boolean;
   }
 ) => {
   const leaveScenario = args["Leave Scenario"];

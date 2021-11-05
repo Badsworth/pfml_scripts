@@ -33,12 +33,14 @@ export const Default = () => {
    * scrolling to the relevant section, so we're doing it this way instead:
    * @param {object} event
    */
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'event' implicitly has an 'any' type.
-  const handleListItemClick = (event) => {
+
+  const handleListItemClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
-    document
-      .querySelector(event.target.getAttribute("data-target"))
-      .scrollIntoView();
+    if (event.target instanceof HTMLElement) {
+      const id = event.target.getAttribute("data-target");
+      if (!id) return;
+      document.querySelector(id)?.scrollIntoView();
+    }
   };
 
   return (
@@ -82,14 +84,15 @@ export const Default = () => {
   );
 };
 
-// @ts-expect-error ts-migrate(7023) FIXME: 'getMessageKeys' implicitly has return type 'any' ... Remove this comment to see the full error message
-function getMessageKeys(messages, keyPrefix = "") {
-  // @ts-expect-error ts-migrate(7022) FIXME: 'keys' implicitly has type 'any' because it does n... Remove this comment to see the full error message
+function getMessageKeys(
+  messages: { [key: string]: unknown },
+  keyPrefix = ""
+): string[] {
   const keys = Object.entries(messages)
     .map(([key, value]) => {
       const keyPath = `${keyPrefix}${key}`;
       if (typeof value === "string") return keyPath;
-      return getMessageKeys(value, `${keyPath}.`);
+      return getMessageKeys(value as { [key: string]: unknown }, `${keyPath}.`);
     })
     .flat();
 

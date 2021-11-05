@@ -15,8 +15,8 @@ export default {
 export const Default = (args: Props<typeof StateDropdown>) => {
   // Setup super simple state management for the change handler and this controlled form component
   const [selectedValue, setSelectedValue] = useState("");
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'evt' implicitly has an 'any' type.
-  const handleOnChange = (evt) => {
+
+  const handleOnChange = (evt: React.ChangeEvent<HTMLSelectElement>) => {
     setSelectedValue(evt.target.value);
   };
 

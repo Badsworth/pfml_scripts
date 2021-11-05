@@ -1,7 +1,8 @@
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import { ApplicationCardV2 } from "src/components/ApplicationCardV2";
+import { MockBenefitsApplicationBuilder } from "tests/test-utils";
+import { Props } from "storybook/types";
 import React from "react";
-import { generateClaim } from "storybook/utils/generateClaim";
 import { generateNotice } from "storybook/utils/generateNotice";
 
 export default {
@@ -11,7 +12,7 @@ export default {
     number: 1,
   },
   argTypes: {
-    claim: {
+    scenario: {
       defaultValue: "Bonding",
       control: {
         type: "radio",
@@ -29,8 +30,10 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7031) FIXME: Binding element 'claim' implicitly has an 'any' ty... Remove this comment to see the full error message
-export const Story = ({ claim, ...args }) => {
+export const Story = ({
+  scenario,
+  ...args
+}: Props<typeof ApplicationCardV2> & { scenario: string }) => {
   // Fake appLogic for stories
   const appLogic = {
     appErrors: new AppErrorInfoCollection([]),
@@ -46,44 +49,53 @@ export const Story = ({ claim, ...args }) => {
 
   // Configuration for ApplicationCard props
   const cardProps = Object.assign(
-    // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
     {
       Bonding: {
-        claim: generateClaim("completed", "bonding"),
+        claim: new MockBenefitsApplicationBuilder()
+          .completed()
+          .bondingLeaveReason()
+          .create(),
       },
       Caring: {
-        claim: generateClaim("completed", "caring"),
+        claim: new MockBenefitsApplicationBuilder()
+          .completed()
+          .caringLeaveReason()
+          .create(),
       },
       Medical: {
-        claim: generateClaim("completed", "medical"),
+        claim: new MockBenefitsApplicationBuilder()
+          .completed()
+          .medicalLeaveReason()
+          .create(),
       },
       Pregnancy: {
-        claim: generateClaim("completed", "pregnancy"),
+        claim: new MockBenefitsApplicationBuilder()
+          .completed()
+          .pregnancyLeaveReason()
+          .create(),
       },
 
       "In Progress": {
-        // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
-        claim: generateClaim("address"),
+        claim: new MockBenefitsApplicationBuilder().address(),
         documents: [],
       },
 
       "In Progress + EIN": {
-        // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
-        claim: generateClaim("employed"),
+        claim: new MockBenefitsApplicationBuilder().employed(),
         documents: [],
       },
 
       "In Progress + Notices": {
-        // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
-        claim: generateClaim("submitted"),
+        claim: new MockBenefitsApplicationBuilder().submitted(),
         documents: [
           generateNotice("requestForInfoNotice"),
           generateNotice("denialNotice"),
         ],
       },
-    }[claim],
-    { appLogic, ...args }
+    }[scenario],
+    { ...args, appLogic }
   );
 
+  // @ts-expect-error appLogic mock type
   return <ApplicationCardV2 {...cardProps} />;
 };

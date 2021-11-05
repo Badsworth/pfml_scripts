@@ -20,8 +20,7 @@ export default {
 export const Default = (args: Props<typeof FieldsetAddress>) => {
   const [formState, setFormState] = useState({ address: new Address({}) });
 
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'evt' implicitly has an 'any' type.
-  const handleOnChange = (evt) => {
+  const handleOnChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const newFormState = cloneDeep(formState);
     set(newFormState, evt.target.name, evt.target.value);
     setFormState(newFormState);
@@ -42,8 +41,7 @@ export const WithErrors = () => {
   // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
   const [formState, setFormState] = useState({ address: new Address() });
 
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'evt' implicitly has an 'any' type.
-  const handleOnChange = (evt) => {
+  const handleOnChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     const newFormState = cloneDeep(formState);
     set(newFormState, evt.target.name, evt.target.value);
     setFormState(newFormState);

@@ -13,17 +13,13 @@ import { find } from "lodash";
  * Checklist step states are based on presence of validation warnings,
  * so in order to provide previews of the different states, we need
  * to generate warnings to prevent every step appearing Completed.
- * @param {string} name
- * @returns {{ field: string, message: string }[]}
  */
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'name' implicitly has an 'any' type.
-function generateWarningsForStep(name) {
+function generateWarningsForStep(name: string) {
   const allSteps = Step.createClaimStepsFromMachine(claimantConfig);
 
   const step = find(allSteps, { name });
 
-  // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
-  return step.fields.map((field) => {
+  return step?.fields.map((field) => {
     return { field: field.replace(/^claim./, ""), message: "Mocked warning" };
   });
 }
@@ -34,39 +30,54 @@ function generateWarningsForStep(name) {
 const scenarios = {
   "Verify Identity not started": {
     claim: new MockBenefitsApplicationBuilder().create(),
+    documents: [],
+    query: {},
     warnings: generateWarningsForStep(ClaimSteps.verifyId),
   },
   "Employment Information not started": {
     claim: new MockBenefitsApplicationBuilder().create(),
+    documents: [],
+    query: {},
     warnings: generateWarningsForStep(ClaimSteps.employerInformation),
   },
   "Leave Details not started": {
     claim: new MockBenefitsApplicationBuilder().create(),
+    documents: [],
+    query: {},
     warnings: generateWarningsForStep(ClaimSteps.leaveDetails),
   },
   "Part 1 ready for review": {
     claim: new MockBenefitsApplicationBuilder().noOtherLeave().create(),
+    documents: [],
+    query: {},
+    warnings: [],
   },
   "Part 1 submitted": {
     claim: new MockBenefitsApplicationBuilder().submitted().create(),
+    documents: [],
     query: {
       "part-one-submitted": "true",
     },
+    warnings: [],
   },
   "Part 1 submitted, null Other Leave": {
     claim: new MockBenefitsApplicationBuilder()
       .submitted()
       .nullOtherLeave()
       .create(),
+    documents: [],
     query: {
       "part-one-submitted": "true",
     },
+    warnings: [],
   },
   "Part 2 submitted, no medical docs uploaded": {
     claim: new MockBenefitsApplicationBuilder()
       .paymentPrefSubmitted()
       .submitted()
       .create(),
+    documents: [],
+    query: {},
     warnings: generateWarningsForStep(ClaimSteps.payment),
   },
   "Part 2 submitted, caring leave with no certification form uploaded": {
@@ -75,6 +86,8 @@ const scenarios = {
       .submitted()
       .caringLeaveReason()
       .create(),
+    documents: [],
+    query: {},
     warnings: generateWarningsForStep(ClaimSteps.payment),
   },
 
@@ -84,6 +97,9 @@ const scenarios = {
       .submitted()
       .bondingBirthLeaveReason()
       .create(),
+    documents: [],
+    query: {},
+    warnings: [],
   },
   "Proof of placement not uploaded (adoption/foster)": {
     claim: new MockBenefitsApplicationBuilder()
@@ -91,6 +107,9 @@ const scenarios = {
       .submitted()
       .bondingAdoptionLeaveReason()
       .create(),
+    documents: [],
+    query: {},
+    warnings: [],
   },
   "Proof of birth not uploaded (future newborn)": {
     claim: new MockBenefitsApplicationBuilder()
@@ -99,6 +118,9 @@ const scenarios = {
       .bondingBirthLeaveReason()
       .hasFutureChild()
       .create(),
+    documents: [],
+    query: {},
+    warnings: [],
   },
   "Proof of placement not uploaded (future adoption/foster)": {
     claim: new MockBenefitsApplicationBuilder()
@@ -107,17 +129,36 @@ const scenarios = {
       .bondingAdoptionLeaveReason()
       .hasFutureChild()
       .create(),
+    documents: [],
+    query: {},
+    warnings: [],
   },
   "Docs uploaded, ready to submit": {
     claim: new MockBenefitsApplicationBuilder().complete().create(),
     documents: [
       {
+        content_type: "image/jpeg",
+        created_at: "2021-01-01",
+        description: "",
+        fineos_document_id: "",
+        name: "",
+        user_id: "",
+        application_id: "",
         document_type: DocumentType.identityVerification,
       },
       {
+        content_type: "image/jpeg",
+        created_at: "2021-01-01",
+        description: "",
+        fineos_document_id: "",
+        name: "",
+        user_id: "",
+        application_id: "",
         document_type: DocumentType.certification.medicalCertification,
       },
     ],
+    query: {},
+    warnings: [],
   },
 };
 
@@ -126,8 +167,9 @@ export default {
   component: Checklist,
 };
 
-export const DefaultStory = (args: Props<typeof Checklist>) => {
-  // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
+export const DefaultStory = (
+  args: Props<typeof Checklist> & { scenario: keyof typeof scenarios }
+) => {
   const { claim, documents, query, warnings } = scenarios[args.scenario];
 
   const appLogic = {
@@ -135,12 +177,15 @@ export const DefaultStory = (args: Props<typeof Checklist>) => {
     benefitsApplications: {
       update: () => {},
       warningsLists: {
-        [claim.application_id]: warnings || [],
+        [claim.application_id]: warnings,
       },
     },
     documents: {
       attachDocument: () => {},
-      documents: new DocumentCollection(documents || []),
+      documents:
+        documents.length > 0
+          ? new DocumentCollection(documents)
+          : new DocumentCollection(),
     },
     portalFlow: {
       getNextPageRoute: () => "/storybook-mock",

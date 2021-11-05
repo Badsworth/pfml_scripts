@@ -10,8 +10,8 @@ export default {
 export const ControlledField = (args: Props<typeof InputDate>) => {
   // Setup super simple state management for the change handler and this controlled form component
   const [value, setFieldValue] = useState("2019-01-29");
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'evt' implicitly has an 'any' type.
-  const handleOnChange = (evt) => {
+
+  const handleOnChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     setFieldValue(evt.target.value);
   };
 

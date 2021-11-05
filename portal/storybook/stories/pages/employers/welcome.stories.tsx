@@ -17,8 +17,11 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7031) FIXME: Binding element 'hasVerifiableEmployer' implicitly... Remove this comment to see the full error message
-export const Default = ({ hasVerifiableEmployer }) => {
+export const Default = ({
+  hasVerifiableEmployer,
+}: {
+  hasVerifiableEmployer: string;
+}) => {
   const appLogic = {
     portalFlow: {
       pathname: routes.employers.welcome,

@@ -14,9 +14,9 @@ export default {
 export const Default = (args: Props<typeof InputCurrency>) => {
   // Setup super simple state management for the change handler and this controlled form component
   const [value, setFieldValue] = useState(4000);
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'evt' implicitly has an 'any' type.
-  const handleOnChange = (evt) => {
-    setFieldValue(evt.target.value);
+
+  const handleOnChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
+    setFieldValue(Number(evt.target.value));
   };
 
   // Render the form component!

@@ -47,8 +47,15 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7031) FIXME: Binding element 'status' implicitly has an 'any' t... Remove this comment to see the full error message
-export const Default = ({ status, document, leaveDurationType }) => {
+export const Default = ({
+  status,
+  document,
+  leaveDurationType,
+}: {
+  status: string;
+  document: string;
+  leaveDurationType: string;
+}) => {
   const claim = new MockEmployerClaimBuilder()
     .status(status)
     .bondingLeaveReason();

@@ -25,8 +25,7 @@ export const Default = () => {
     }));
   };
 
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'evt' implicitly has an 'any' type.
-  const handleChange = (evt) => {
+  const handleChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     updateCookieWithFlag(evt.target.value, String(evt.target.checked));
     setChoices(getFeatureFlagChoices());
   };

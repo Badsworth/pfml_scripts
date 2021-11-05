@@ -10,8 +10,8 @@ export default {
 
 export const Default = () => {
   const [value, setFieldValue] = useState("2020-01-01");
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'evt' implicitly has an 'any' type.
-  const handleOnChange = (evt) => {
+
+  const handleOnChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     setFieldValue(evt.target.value);
   };
 

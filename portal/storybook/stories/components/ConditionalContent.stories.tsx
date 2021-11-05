@@ -16,26 +16,22 @@ export const Example = () => {
     fullName: "",
   });
 
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'evt' implicitly has an 'any' type.
-  const handleOnChange = (evt) => {
+  const handleOnChange = (evt: React.ChangeEvent<HTMLInputElement>) => {
     updateFormState({
       ...formState,
       [evt.target.name]: evt.target.value,
     });
   };
 
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'fieldName' implicitly has an 'any' type... Remove this comment to see the full error message
-  const getField = (fieldName) => {
+  const getField = (fieldName: string) => {
     return get(formState, fieldName);
   };
 
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'fields' implicitly has an 'any' type.
-  const updateFields = (fields) => {
+  const updateFields = (fields: { [name: string]: unknown }) => {
     updateFormState({ ...formState, ...fields });
   };
 
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'fieldName' implicitly has an 'any' type... Remove this comment to see the full error message
-  const clearField = (fieldName) => {
+  const clearField = (fieldName: string) => {
     updateFormState({
       ...formState,
       [fieldName]: "",

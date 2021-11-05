@@ -1,4 +1,5 @@
 import DocumentRequirements from "src/components/DocumentRequirements";
+import { Props } from "storybook/types";
 import React from "react";
 
 export default {
@@ -15,8 +16,6 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7031) FIXME: Binding element 'type' implicitly has an 'any' typ... Remove this comment to see the full error message
-export const Default = ({ type }) => (
-  // @ts-expect-error ts-migrate(2322) FIXME: Type '{ type: any; role: string; }' is not assigna... Remove this comment to see the full error message
-  <DocumentRequirements type={type} role="complementary" />
+export const Default = (args: Props<typeof DocumentRequirements>) => (
+  <DocumentRequirements {...args} />
 );

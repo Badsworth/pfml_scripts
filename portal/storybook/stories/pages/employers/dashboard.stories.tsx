@@ -137,9 +137,12 @@ export default {
 };
 
 export const Default = (
-  args: Props<typeof Dashboard> & { claims: string; total_pages: number }
+  args: Props<typeof Dashboard> & {
+    claims: string;
+    total_pages: number;
+    verification: keyof typeof verificationScenarios;
+  }
 ) => {
-  // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
   const { user } = verificationScenarios[args.verification];
   const hasNoClaims = args.claims === "No claims";
   const [query, setQuery] = useState({});
@@ -198,8 +201,7 @@ export const Default = (
     },
     portalFlow: {
       getNextPageRoute: () => "#mock-route",
-      // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'params' implicitly has an 'any' type.
-      updateQuery: (params) => {
+      updateQuery: (params: { [key: string]: string }) => {
         setQuery(params);
       },
       pathname: routes.employers.dashboard,

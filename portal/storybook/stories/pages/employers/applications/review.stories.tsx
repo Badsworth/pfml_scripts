@@ -57,9 +57,11 @@ export default {
   },
 };
 
+type DocumentationOption = "documentation" | "without documentation";
+
 export const Default = (
   args: Props<typeof Review> & {
-    claimOption: string;
+    claimOption: `${string} - ${DocumentationOption}`;
     "Claimant EForm Version": string;
     errorTypes: string[];
     "Leave reason": string;
@@ -72,7 +74,7 @@ export const Default = (
   const user = new User();
   const query = { absence_id: "mock-absence-id" };
   const leavePeriodType = claimOption.split("-")[0];
-  const documentationOption = claimOption.split("-")[1];
+  const documentationOption = claimOption.split("-")[1] as DocumentationOption;
   const isIntermittent = !!leavePeriodType.includes("Intermittent");
 
   let claim = new MockEmployerClaimBuilder()
@@ -130,8 +132,10 @@ export const Default = (
   );
 };
 
-// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'documentation' implicitly has an 'any' ... Remove this comment to see the full error message
-function getDocumentsMap(documentation, leaveReason) {
+function getDocumentsMap(
+  documentation: DocumentationOption,
+  leaveReason: string | null
+) {
   const isWithoutDocumentation = documentation.includes(
     "without documentation"
   );
@@ -139,8 +143,12 @@ function getDocumentsMap(documentation, leaveReason) {
     application_id: "mock-application-id",
     content_type: "application/pdf",
     created_at: "2020-01-02",
-    // @ts-expect-error ts-migrate(7053) FIXME: Element implicitly has an 'any' type because expre... Remove this comment to see the full error message
-    document_type: DocumentType.certification[leaveReason],
+    document_type:
+      leaveReason && leaveReason in DocumentType.certification
+        ? DocumentType.certification[
+            leaveReason as keyof typeof DocumentType.certification
+          ]
+        : null,
     fineos_document_id: 202020,
     name: `${leaveReason} document`,
   };

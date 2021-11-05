@@ -40,9 +40,9 @@ export default {
   },
 };
 
-// @ts-expect-error ts-migrate(7031) FIXME: Binding element 'claim' implicitly has an 'any' ty... Remove this comment to see the full error message
+// @ts-expect-error Not solving these. Story will be deleted soon. The component is deprecated.
 export const Story = ({ claim, ...args }) => {
-  // @ts-expect-error ts-migrate(7034) FIXME: Variable 'attachedDocuments' implicitly has type '... Remove this comment to see the full error message
+  // @ts-expect-error Not solving these. Story will be deleted soon. The component is deprecated.
   let attachedDocuments = [];
   let claimAttrs;
   const errors = [];
@@ -157,7 +157,7 @@ export const Story = ({ claim, ...args }) => {
 
     errors.push(
       new AppErrorInfo({
-        // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
+        // @ts-expect-error Not solving these. Story will be deleted soon. The component is deprecated.
         meta: { application_id: claimAttrs.application_id },
         name: "DocumentsLoadError",
       })
@@ -173,12 +173,12 @@ export const Story = ({ claim, ...args }) => {
 
   return (
     <ApplicationCard
-      // @ts-expect-error ts-migrate(2740) FIXME: Type '{ appErrors: AppErrorInfoCollection; documen... Remove this comment to see the full error message
+      // @ts-expect-error Not solving these. Story will be deleted soon. The component is deprecated.
       appLogic={appLogic}
-      // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'BenefitsApplication | undefined'... Remove this comment to see the full error message
+      // @ts-expect-error Not solving these. Story will be deleted soon. The component is deprecated.
       claim={new BenefitsApplication(claimAttrs)}
       {...args}
-      // @ts-expect-error ts-migrate(7005) FIXME: Variable 'attachedDocuments' implicitly has an 'an... Remove this comment to see the full error message
+      // @ts-expect-error Not solving these. Story will be deleted soon. The component is deprecated.
       documents={attachedDocuments}
     />
   );

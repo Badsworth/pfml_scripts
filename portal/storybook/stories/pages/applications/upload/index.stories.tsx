@@ -66,8 +66,7 @@ const appLogic = {
   },
 };
 
-// @ts-expect-error ts-migrate(7031) FIXME: Binding element 'absencePeriod' implicitly has an ... Remove this comment to see the full error message
-export const Default = ({ absencePeriod, ...args }) => {
+export const Default = ({ absencePeriod }: { absencePeriod: string }) => {
   // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ application_id: string; fineos... Remove this comment to see the full error message
   appLogic.claims.claimDetail = new ClaimDetail({
     application_id: "application-id",
@@ -77,7 +76,6 @@ export const Default = ({ absencePeriod, ...args }) => {
 
   return (
     <DocumentUploadIndex
-      {...args}
       // @ts-expect-error ts-migrate(2740) FIXME: Type '{ benefitsApplications: { update: () => void... Remove this comment to see the full error message
       appLogic={appLogic}
       documents={[]}
