@@ -6,10 +6,10 @@ import massgov.pfml.db as db
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
 from massgov.pfml.delegated_payments.irs_1099.audit_batch import AuditBatchStep
-from massgov.pfml.delegated_payments.irs_1099.generate_documents import Generate1099DocumentsStep
-from massgov.pfml.delegated_payments.irs_1099.generate_pub_1220_filing import (
-    GeneratePub1220filingStep,
+from massgov.pfml.delegated_payments.irs_1099.generate_1099_irs_filing import (
+    Generate1099IRSfilingStep,
 )
+from massgov.pfml.delegated_payments.irs_1099.generate_documents import Generate1099DocumentsStep
 from massgov.pfml.delegated_payments.irs_1099.merge_documents import Merge1099Step
 from massgov.pfml.delegated_payments.irs_1099.populate_1099 import Populate1099Step
 from massgov.pfml.delegated_payments.irs_1099.populate_mmars_payments import (
@@ -37,7 +37,7 @@ POPULATE_1099 = "populate-1099"
 GENERATE_1099_DOCUMENTS = "generate-1099-documents"
 UPLOAD_1099_DOCUMENTS = "upload-1099-documents"
 MERGE_1099_DOCUMENTS = "merge-1099-documents"
-GENERATE_PUB1220_FILING = "generate-pub1220-filing"
+GENERATE_1099_IRS_FILING = "generate_1099_irs_filing"
 REPORT = "report"
 ALLOWED_VALUES = [
     ALL,
@@ -50,7 +50,7 @@ ALLOWED_VALUES = [
     GENERATE_1099_DOCUMENTS,
     UPLOAD_1099_DOCUMENTS,
     MERGE_1099_DOCUMENTS,
-    GENERATE_PUB1220_FILING,
+    GENERATE_1099_IRS_FILING,
     REPORT,
 ]
 
@@ -65,7 +65,7 @@ class Configuration:
     generate_1099_documents: bool
     upload_1099_dochuments: bool
     merge_1099_documents: bool
-    generate_pub1220_filing: bool
+    generate_1099_irs_filing: bool
     make_reports: bool
 
     def __init__(self, input_args: List[str]):
@@ -93,7 +93,7 @@ class Configuration:
             self.generate_1099_documents = True
             self.upload_1099_documents = True
             self.merge_1099_documents = True
-            self.generate_pub1220_filing = True
+            self.generate_1099_irs_filing = True
             self.make_reports = True
         else:
             self.db_audit_batch = AUDIT_BATCH in steps
@@ -105,7 +105,7 @@ class Configuration:
             self.generate_1099_documents = GENERATE_1099_DOCUMENTS in steps
             self.upload_1099_documents = UPLOAD_1099_DOCUMENTS in steps
             self.merge_1099_documents = MERGE_1099_DOCUMENTS in steps
-            self.generate_pub1220_filing = GENERATE_PUB1220_FILING in steps
+            self.generate_1099_irs_filing = GENERATE_1099_IRS_FILING in steps
             self.make_reports = REPORT in steps
 
 
@@ -165,8 +165,8 @@ def _process_1099_documents(
     if config.merge_1099_documents:
         Merge1099Step(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
 
-    if config.generate_pub1220_filing:
-        GeneratePub1220filingStep(
+    if config.generate_1099_irs_filing:
+        Generate1099IRSfilingStep(
             db_session=db_session, log_entry_db_session=log_entry_db_session
         ).run()
 
