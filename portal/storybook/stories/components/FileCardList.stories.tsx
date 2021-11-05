@@ -1,0 +1,42 @@
+/* eslint-disable no-alert */
+import FileCardList from "src/components/FileCardList";
+import React from "react";
+import useFilesLogic from "src/hooks/useFilesLogic";
+
+export default {
+  title: "Components/FileCardList",
+  component: FileCardList,
+  args: {
+    fileHeadingPrefix: "Document",
+    addFirstFileButtonText: "Choose a document",
+    addAnotherFileButtonText: "Choose another document",
+  },
+};
+
+// @ts-expect-error ts-migrate(7006) FIXME: Parameter 'args' implicitly has an 'any' type.
+export const Default = (args) => {
+  const initialDocuments = [
+    {
+      content_type: "image/jpeg",
+      created_at: "2021-01-30",
+    },
+  ];
+
+  const { files, processFiles, removeFile } = useFilesLogic({
+    clearErrors: () => {},
+    catchError: () => {
+      alert("invaid file");
+    },
+  });
+
+  return (
+    <FileCardList
+      documents={initialDocuments}
+      tempFiles={files}
+      onChange={processFiles}
+      onRemoveTempFile={removeFile}
+      fileErrors={[]}
+      {...args}
+    />
+  );
+};

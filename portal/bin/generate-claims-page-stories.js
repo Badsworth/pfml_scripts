@@ -31,12 +31,14 @@ async function generateClaimsPageStories() {
   await fs.promises.rmdir(autogenStoriesDir, { recursive: true });
   await Promise.all(
     claimsPageSubpaths.map(async (claimsPageSubpath) => {
-      const customStoryPath = `${customStoriesDir}/${claimsPageSubpath}.stories.js`;
+      const customTsStoryPath = `${customStoriesDir}/${claimsPageSubpath}.stories.ts`;
+      const customTsxStoryPath = `${customTsStoryPath}x`;
       const autogenStoryPath = `${autogenStoriesDir}/${claimsPageSubpath}.stories.js`;
-      const customStoryExists = await exists(customStoryPath);
+      const customStoryExists =
+        (await exists(customTsStoryPath)) || (await exists(customTsxStoryPath));
       if (customStoryExists) {
         console.log(
-          `Custom story already exists: (${customStoryPath}) Skipping`
+          `Custom story already exists: (${customTsStoryPath}) Skipping`
         );
         return;
       }
