@@ -17,9 +17,10 @@ def application_withholding_set(user):
     return ApplicationFactory.create(user=user, is_withholding_tax=False)
 
 
+@mock.patch("massgov.pfml.api.applications.send_tax_withholding_preference")
 @mock.patch("massgov.pfml.api.applications.logger.info")
 def test_submit_withholding_preference_success(
-    mock_info_logger, client, application, auth_token, test_db_session
+    mock_info_logger, mock_send_tax_preference, client, application, auth_token, test_db_session
 ):
     application_id = application.application_id
     application = test_db_session.query(Application).get(application_id)
@@ -35,10 +36,10 @@ def test_submit_withholding_preference_success(
     assert response_body["data"]["is_withholding_tax"] is True
     assert application.is_withholding_tax is True
 
-    assert mock_info_logger.call_count == 1
     msg_arg, _ = mock_info_logger.call_args_list[0]
     assert msg_arg[0] == "tax_withholding_preference_submit success"
-    # TODO (PORTAL-951) - assert call to fineos is made
+
+    mock_send_tax_preference.assert_called_once_with(application, True)
 
 
 def test_submit_withholding_preference_poorly_formatted(client, application, auth_token):
@@ -86,7 +87,3 @@ def test_submit_withholding_preference_already_set(
     assert mock_info_logger.call_count == 1
     msg_arg, _ = mock_info_logger.call_args_list[0]
     assert msg_arg[0] == "submit_tax_withholding_preference failure - preference already set"
-
-
-def test_submit_withholding_preference_handles_fineos_errors():
-    pass  # TODO: (PORTAL-951) Integrate FINEOS call into tax withholding endpoint

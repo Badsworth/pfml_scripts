@@ -29,6 +29,7 @@ from massgov.pfml.db.models.factories import (
     AddressFactory,
     ApplicationFactory,
     CaringLeaveMetadataFactory,
+    ClaimFactory,
     ConcurrentLeaveFactory,
     ContinuousLeavePeriodFactory,
     EmployeeFactory,
@@ -49,6 +50,21 @@ from massgov.pfml.fineos.exception import (
 from massgov.pfml.fineos.models import CreateOrUpdateEmployer, CreateOrUpdateServiceAgreement
 from massgov.pfml.fineos.models.customer_api import Address as FineosAddress
 from massgov.pfml.fineos.models.customer_api import CustomerAddress
+
+
+@pytest.fixture
+def employer():
+    return EmployerFactory.create()
+
+
+@pytest.fixture
+def claim(employer):
+    return ClaimFactory.create(employer_id=employer.employer_id, fineos_absence_id="NTN-111-111")
+
+
+@pytest.fixture
+def application(user, claim):
+    return ApplicationFactory.create(user=user, claim_id=claim.claim_id)
 
 
 def test_register_employee_pass(test_db_session):
@@ -1399,3 +1415,22 @@ class TestGetAbsencePeriods:
             pass
 
         assert "Unable to get absence periods" in caplog.text
+
+
+def test_send_tax_withholding_preference(application, claim):
+    fineos_mock_client = massgov.pfml.fineos.MockFINEOSClient()
+    fineos_mock.start_capture()
+    fineos_actions.send_tax_withholding_preference(application, True, fineos_mock_client)
+    capture = fineos_mock.get_capture()
+    assert capture[0][2] == {"absence_id": claim.fineos_absence_id, "is_withholding_tax": True}
+
+
+def test_tax_preference_payload():
+    payload = FINEOSClient._create_tax_preference_payload("NTN-111-111", True)
+
+    assert payload is not None
+    assert payload.__contains__("<config-name>OptInSITFITService</config-name>")
+    assert payload.__contains__("<name>AbsenceCaseNumber</name>")
+    assert payload.__contains__("<value>NTN-111-111</value>")
+    assert payload.__contains__("<name>FlagValue</name>")
+    assert payload.__contains__("<value>True</value>")

@@ -581,7 +581,7 @@ def application_reason_to_claim_reason(
     Optional[str],
     LeaveNotificationReason,
 ]:
-    """ Calculate a claim reason, reason qualifiers, relationship qualifiers, and notification reason
+    """Calculate a claim reason, reason qualifiers, relationship qualifiers, and notification reason
     from an application's reason and related fields. For example, an application may have have a medical
     leave reason and also have pregnant_or_recent_birth set to true which would get saved to FINEOS as a
     claim with reason set to pregnancy.
@@ -1446,3 +1446,15 @@ def get_absence_periods(
             absence_periods.append(absence_period_status)
 
     return absence_periods
+
+
+def send_tax_withholding_preference(
+    application: Application,
+    is_withholding_tax: bool,
+    fineos_client: Optional[massgov.pfml.fineos.AbstractFINEOSClient] = None,
+) -> None:
+    if not fineos_client:
+        fineos_client = massgov.pfml.fineos.create_client()
+    absence_id = get_fineos_absence_id_from_application(application)
+    absence_id = absence_id.rstrip()
+    fineos_client.send_tax_withholding_preference(absence_id, is_withholding_tax)

@@ -27,6 +27,8 @@ from .wscomposer import (  # noqa: F401
     PartyIntegrationDTOItem,
     ServiceAgreementData,
     ServiceAgreementServiceRequest,
+    TaxWithholdingUpdateData,
+    TaxWithholdingUpdateRequest,
     UpdateData,
     UpdateOrCreatePartyRequest,
 )

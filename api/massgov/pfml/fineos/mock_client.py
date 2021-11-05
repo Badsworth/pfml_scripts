@@ -716,6 +716,14 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
 
         return "SA-123"
 
+    def send_tax_withholding_preference(self, absence_id: str, is_withholding_tax: bool) -> None:
+        _capture_call(
+            "send_tax_withholding_preference",
+            None,
+            absence_id=absence_id,
+            is_withholding_tax=is_withholding_tax,
+        )
+
 
 massgov.pfml.util.logging.wrapper.log_all_method_calls(MockFINEOSClient, logger)
 
