@@ -31,6 +31,17 @@ Then we are checking to see if the following message is showing `Automatic Notif
 - **secure_action_outstanding_requirement_access** - We are checking to see if different security groups have access to the Outstanding Requirement buttons available to update or change the "Employer Confirmation of Leave Data".
 The buttons we are checking are the following: Complete, Suppress, and Remove only.
 
+Each of these secure action above have been added to the E2E Test Suite as a task. We are not testing the security groups in the E2E Test Suite, but we are
+testing the secure action is available to our "Super User" in each environment.
+
+| Secure Action                                 | Test name in E2E Test Suite                            |
+|-----------------------------------------------|--------------------------------------------------------|
+| Add Case                                      | fineos_caring_continuos_denial.ts                      |
+| Bulk Payee                                    | caring_continuous_approval_payment_ownership_90k.ts    |
+| Document Type Change                          | medical_notice_change_request_approval.ts              |
+| Add Historical Absence Case                   | fineos_caring_continuous_notice_historical_withdraw.ts |
+| Suppress Correspondence                       | fineos_caring_continuous_notice_historical_withdraw.ts |
+| O/R Buttons Access (Complete/Suppress/Remove) | caring_continuous_extension_notification_approval.ts   |
 
 **continuous_medical_midwk_work_patterns_weight_days.ts** - This is a test that came out a regression between two release. When a claimant submitting a claim through the Portal the hours and minutes get transfer to weight in Fineos.
 This test is to check a mid-week (Wednesday) start date for the claim and to see if the Weight is similar to all other Weight days.

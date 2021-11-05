@@ -137,4 +137,20 @@ describe("Approval (notifications/notices)", () => {
         );
     });
   });
+
+  it("Check to see if a document can be changed in the Documents tab", () => {
+    cy.dependsOnPreviousPass([submission, approval, modify]);
+    fineos.before();
+    cy.unstash<Submission>("submission").then((submission) => {
+      fineosPages.ClaimPage.visit(submission.fineos_absence_id).documents(
+        (docPage) => {
+          docPage.changeDocType(
+            "Identification Proof",
+            "State managed Paid Leave Confirmation",
+            true
+          );
+        }
+      );
+    });
+  })
 });
