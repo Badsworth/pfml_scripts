@@ -177,10 +177,37 @@ class PaymentRejectsStep(Step):
                     payment_period_weeks=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.payment_period_weeks
                     ),
+                    gross_payment_amount=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.gross_payment_amount
+                    ),
                     payment_amount=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.payment_amount),
+                    federal_withholding_amount=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.federal_withholding_amount
+                    ),
+                    state_withholding_amount=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.state_withholding_amount
+                    ),
+                    employer_reimbursement_amount=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.employer_reimbursement_amount
+                    ),
+                    child_support_amount=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.child_support_amount
+                    ),
                     absence_case_number=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.absence_case_number),
                     c_value=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.c_value),
                     i_value=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.i_value),
+                    federal_withholding_i_value=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.federal_withholding_i_value
+                    ),
+                    state_withholding_i_value=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.state_withholding_i_value
+                    ),
+                    employer_reimbursement_i_value=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.employer_reimbursement_i_value
+                    ),
+                    child_support_i_value=get_row(
+                        row, PAYMENT_AUDIT_CSV_HEADERS.child_support_i_value
+                    ),
                     employer_id=get_row(row, PAYMENT_AUDIT_CSV_HEADERS.employer_id),
                     absence_case_creation_date=get_row(
                         row, PAYMENT_AUDIT_CSV_HEADERS.absence_case_creation_date

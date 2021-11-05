@@ -28,10 +28,19 @@ class PaymentAuditCSV(AbstractRecord):
     payment_period_start_date: Optional[str]
     payment_period_end_date: Optional[str]
     payment_period_weeks: Optional[str]
+    gross_payment_amount: Optional[str]
     payment_amount: Optional[str]
+    federal_withholding_amount: Optional[str]
+    state_withholding_amount: Optional[str]
+    employer_reimbursement_amount: Optional[str]
+    child_support_amount: Optional[str]
     absence_case_number: Optional[str]
     c_value: Optional[str]
     i_value: Optional[str]
+    federal_withholding_i_value: Optional[str]
+    state_withholding_i_value: Optional[str]
+    employer_reimbursement_i_value: Optional[str]
+    child_support_i_value: Optional[str]
     employer_id: Optional[str]
     absence_case_creation_date: Optional[str]
     absence_start_date: Optional[str]
@@ -85,10 +94,19 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     payment_period_start_date="Payment Period Start",
     payment_period_end_date="Payment Period End",
     payment_period_weeks="Payment Period Weeks",
+    gross_payment_amount="Gross Payment Amount",
     payment_amount="Payment Amount",
+    federal_withholding_amount="Federal Withholding Amount",
+    state_withholding_amount="State Withholding Amount",
+    employer_reimbursement_amount="Employer Reimbursement Amount",
+    child_support_amount="Child Support Amount",
     absence_case_number="Absence Case Number",
     c_value="C Value",
     i_value="I Value",
+    federal_withholding_i_value="Federal Withholding I Value",
+    state_withholding_i_value="State Withholding I Value",
+    employer_reimbursement_i_value="Employer Reimbursement I Value",
+    child_support_i_value="Child Support I Value",
     employer_id="Employer ID",
     absence_case_creation_date="Absence Case Creation Date",
     absence_start_date="Absence Case Start Date",
