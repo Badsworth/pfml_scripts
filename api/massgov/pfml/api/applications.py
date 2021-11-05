@@ -47,10 +47,10 @@ from massgov.pfml.api.validation.exceptions import (
 )
 from massgov.pfml.db.models.applications import Application, Document, DocumentType, LeaveReason
 from massgov.pfml.fineos.exception import (
-    FINEOSClientBadResponse,
     FINEOSClientError,
+    FINEOSEntityNotFound,
     FINEOSFatalUnavailable,
-    FINEOSNotFound,
+    FINEOSUnprocessableEntity,
 )
 from massgov.pfml.fineos.models.customer_api import Base64EncodedFileData
 from massgov.pfml.util.logging.applications import get_application_log_attributes
@@ -204,7 +204,7 @@ def applications_update(application_id):
 
 
 def get_fineos_submit_issues_response(err, existing_application):
-    if isinstance(err, FINEOSNotFound):
+    if isinstance(err, FINEOSEntityNotFound):
         return response_util.error_response(
             status_code=BadRequest,
             message="Application {} could not be submitted".format(
@@ -586,7 +586,7 @@ def document_upload(application_id, body, file):
                 exc_info=True,
             )
 
-            if isinstance(err, FINEOSClientBadResponse) and err.response_status == 422:
+            if isinstance(err, FINEOSUnprocessableEntity):
                 message = "Issue encountered while attempting to upload the document."
                 return response_util.error_response(
                     status_code=BadRequest,

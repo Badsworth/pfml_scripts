@@ -40,7 +40,12 @@ from massgov.pfml.db.models.factories import (
     WorkPatternFixedFactory,
 )
 from massgov.pfml.fineos import FINEOSClient, exception
-from massgov.pfml.fineos.exception import FINEOSClientBadResponse, FINEOSClientError, FINEOSNotFound
+from massgov.pfml.fineos.exception import (
+    FINEOSClientBadResponse,
+    FINEOSClientError,
+    FINEOSEntityNotFound,
+    FINEOSForbidden,
+)
 from massgov.pfml.fineos.models import CreateOrUpdateEmployer, CreateOrUpdateServiceAgreement
 from massgov.pfml.fineos.models.customer_api import Address as FineosAddress
 from massgov.pfml.fineos.models.customer_api import CustomerAddress
@@ -101,7 +106,7 @@ def test_register_employee_bad_fein(test_db_session):
         fineos_actions.register_employee(
             fineos_client, employee_ssn, employer_fein, test_db_session
         )
-    except FINEOSNotFound:
+    except FINEOSEntityNotFound:
         assert True
 
 
@@ -1380,9 +1385,7 @@ class TestGetAbsencePeriods:
 
     @mock.patch("massgov.pfml.api.services.fineos_actions.register_employee")
     def test_with_fineos_error(self, mock_register, test_db_session, user, caplog):
-        error = exception.FINEOSClientBadResponse(
-            "get_absence", 200, 403, "Unable to get absence periods"
-        )
+        error = exception.FINEOSForbidden("get_absence", 200, 403, "Unable to get absence periods")
         mock_register.side_effect = error
 
         employee_tax_id = "123-45-6789"
@@ -1392,7 +1395,7 @@ class TestGetAbsencePeriods:
             fineos_actions.get_absence_periods(
                 employee_tax_id, employer_fein, absence_case_id, test_db_session
             )
-        except FINEOSClientBadResponse:
+        except FINEOSForbidden:
             pass
 
         assert "Unable to get absence periods" in caplog.text

@@ -276,12 +276,13 @@ class FINEOSClient(client.AbstractFINEOSClient):
                     method_name=method_name,
                 )
                 log_fn = logger.warning
-            elif response.status_code in (
-                requests.codes.UNPROCESSABLE_ENTITY,
-                requests.codes.NOT_FOUND,
-            ):
-                # Ideally we'd raise exceptions that distinguish between 404/422 but we'll leave that for another time.
-                err = exception.FINEOSClientBadResponse(
+            elif response.status_code == requests.codes.UNPROCESSABLE_ENTITY:
+                err = exception.FINEOSUnprocessableEntity(
+                    method_name, requests.codes.ok, response.status_code, message=response.text,
+                )
+                log_fn = logger.warning
+            elif response.status_code == requests.codes.NOT_FOUND:
+                err = exception.FINEOSNotFound(
                     method_name, requests.codes.ok, response.status_code, message=response.text,
                 )
                 log_fn = logger.warning
@@ -384,7 +385,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         Raises
         ------
-        FINEOSNotFound
+        FINEOSEntityNotFound
             If no employer exists in FINEOS that matches the given FEIN.
         """
         response = self._wscomposer_request(
@@ -393,7 +394,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         response_decoded = read_employer_response_schema.decode(response.text)
 
         if "OCOrganisation" not in response_decoded:
-            raise exception.FINEOSNotFound("Employer not found.")
+            raise exception.FINEOSEntityNotFound("Employer not found.")
 
         return models.OCOrganisation.parse_obj(response_decoded)
 
@@ -402,7 +403,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         Raises
         ------
-        FINEOSNotFound
+        FINEOSEntityNotFound
             If no employer exists in FINEOS that matches the given FEIN.
         """
         employer_response = self.read_employer(employer_fein)
@@ -415,7 +416,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         Raises
         ------
-        FINEOSNotFound
+        FINEOSEntityNotFound
             If no employee-employer combination exists in FINEOS
             that matches the given SSN + employer FEIN.
         """
@@ -439,7 +440,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 "The employee does not have an occupation linked" in err.message  # noqa: B306
                 or "No Employee Details" in err.message  # noqa: B306
             ):
-                raise exception.FINEOSNotFound(err.message)  # noqa: B306
+                raise exception.FINEOSEntityNotFound(err.message)  # noqa: B306
 
             # If not an expected error, bubble it up.
             raise
@@ -901,7 +902,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             return models.customer_api.Document.parse_obj(
                 fineos_document_empty_dates_to_none(response_json)
             )
-        except exception.FINEOSClientBadResponse as err:
+        except exception.FINEOSUnprocessableEntity as err:
             # Log any unexpected upload failures, even if we always
             # return a BadRequest to the user.
             log_validation_error(err, EXPECTED_DOCUMENT_UPLOAD_FAILURES)

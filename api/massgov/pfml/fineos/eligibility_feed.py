@@ -45,7 +45,7 @@ from massgov.pfml.db.models.employees import (
     WagesAndContributions,
 )
 from massgov.pfml.fineos import AbstractFINEOSClient
-from massgov.pfml.fineos.exception import FINEOSNotFound
+from massgov.pfml.fineos.exception import FINEOSEntityNotFound
 from massgov.pfml.util.datetime import utcnow
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -408,7 +408,7 @@ def get_fineos_employer_id(fineos: AbstractFINEOSClient, employer: Employer) -> 
     try:
         fineos_employer_id = fineos.find_employer(employer.employer_fein)
         return int(fineos_employer_id)
-    except FINEOSNotFound:
+    except FINEOSEntityNotFound:
         return None
 
 

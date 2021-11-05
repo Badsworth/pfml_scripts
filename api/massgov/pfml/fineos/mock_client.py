@@ -221,7 +221,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         _capture_call("read_employer", None, employer_fein=employer_fein)
 
         if employer_fein == "999999999":
-            raise exception.FINEOSNotFound("Employer not found.")
+            raise exception.FINEOSEntityNotFound("Employer not found.")
 
         return models.OCOrganisation(
             OCOrganisation=[
@@ -235,7 +235,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         _capture_call("find_employer", None, employer_fein=employer_fein)
 
         if employer_fein == "999999999":
-            raise exception.FINEOSNotFound("Employer not found.")
+            raise exception.FINEOSEntityNotFound("Employer not found.")
         else:
             # TODO: Match the FINEOS employer id format
             return employer_fein + "1000"
@@ -642,7 +642,7 @@ class MockFINEOSClient(client.AbstractFINEOSClient):
         )
 
         if user_id == "USER_WITH_EXISTING_WORK_PATTERN":
-            raise exception.FINEOSClientBadResponse("add_week_based_work_pattern", 200, 403)
+            raise exception.FINEOSForbidden("add_week_based_work_pattern", 200, 403)
         else:
             return week_based_work_pattern
 

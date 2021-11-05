@@ -50,7 +50,7 @@ from massgov.pfml.db.models.employees import (
     TaxIdentifier,
     User,
 )
-from massgov.pfml.fineos.exception import FINEOSClientError, FINEOSNotFound
+from massgov.pfml.fineos.exception import FINEOSClientError, FINEOSEntityNotFound
 from massgov.pfml.fineos.models import CreateOrUpdateServiceAgreement
 from massgov.pfml.fineos.models.customer_api import (
     AbsenceDetails,
@@ -918,25 +918,21 @@ def upsert_week_based_work_pattern(fineos_client, user_id, application, occupati
             extra=log_attributes,
         )
 
-    except massgov.pfml.fineos.exception.FINEOSClientBadResponse as error:
+    except massgov.pfml.fineos.exception.FINEOSForbidden:
         # FINEOS returns 403 when attempting to add a work pattern for an occupation when one already exists.
-        if error.response_status == 403:
-            update_week_based_work_pattern(
-                fineos_client, user_id, occupation_id, week_based_work_pattern, log_attributes
+        update_week_based_work_pattern(
+            fineos_client, user_id, occupation_id, week_based_work_pattern, log_attributes
+        )
+        if application.claim is not None:
+            logger.info(
+                "updated work_pattern successfully for absence case %s",
+                application.claim.fineos_absence_id,
+                extra=log_attributes,
             )
-            if application.claim is not None:
-                logger.info(
-                    "updated work_pattern successfully for absence case %s",
-                    application.claim.fineos_absence_id,
-                    extra=log_attributes,
-                )
-            else:
-                logger.info(
-                    "updated work_pattern successfully", extra=log_attributes,
-                )
-
         else:
-            raise error
+            logger.info(
+                "updated work_pattern successfully", extra=log_attributes,
+            )
 
 
 def add_week_based_work_pattern(
@@ -1190,7 +1186,7 @@ def create_or_update_employer(
         try:
             read_employer_response = fineos.read_employer(employer.employer_fein)
             existing_fineos_record = read_employer_response.OCOrganisation[0]
-        except FINEOSNotFound:
+        except FINEOSEntityNotFound:
             logger.warning(
                 "Did not find employer in FINEOS as expected. Continuing with update as create.",
                 extra={
