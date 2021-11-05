@@ -100,7 +100,7 @@ class Configuration:
             self.do_payment_extract = True
             self.validate_addresses = True
             self.do_payment_post_processing = True
-            self.do_related_payment_Processing = True
+            self.do_related_payment_processing = True
             self.make_audit_report = True
             self.create_pei_writeback = True
             self.make_reports = True
@@ -112,7 +112,7 @@ class Configuration:
             self.do_payment_extract = PAYMENT_EXTRACT in steps
             self.validate_addresses = VALIDATE_ADDRESSES in steps
             self.do_payment_post_processing = PAYMENT_POST_PROCESSING in steps
-            self.do_related_payment_Processing = RELATED_PAYMENT_PROCESSING in steps
+            self.do_related_payment_processing = RELATED_PAYMENT_PROCESSING in steps
             self.make_audit_report = CREATE_AUDIT_REPORT in steps
             self.create_pei_writeback = CREATE_PEI_WRITEBACK in steps
             self.make_reports = REPORT in steps
@@ -164,7 +164,7 @@ def _process_fineos_extracts(
         PaymentExtractStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
 
     if enable_withholding_payments:
-        if config.do_related_payment_Processing:
+        if config.do_related_payment_processing:
             RelatedPaymentsProcessingStep(
                 db_session=db_session, log_entry_db_session=log_entry_db_session
             ).run()
