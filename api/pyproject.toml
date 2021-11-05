@@ -82,6 +82,8 @@ types-PyYAML = "5.4.10"
 types-requests = "2.25.6"
 types-six = "1.16.1"
 types-Flask = "^1.1.3"
+sadisplay = "^0.4.9"
+pydot = "^1.4.2"
 
 [tool.poetry.extras]
 # These are packages only used by the API component itself. Historically, these

@@ -10,7 +10,7 @@ RUN apt-get update \
  && apt-get install --no-install-recommends --yes \
         libffi-dev make \
         build-essential git curl \
-        postgresql libpq-dev gnupg ghostscript
+        postgresql libpq-dev gnupg ghostscript graphviz
 
 # setup user stuff
 ARG RUN_UID
