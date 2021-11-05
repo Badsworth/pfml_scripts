@@ -46,39 +46,8 @@ resource "aws_ecs_task_definition" "ecs_tasks_1099" {
         }
       },
 
-      environment = [
-        { name : "DB_HOST", value : data.aws_db_instance.default.address },
-        { name : "DB_NAME", value : data.aws_db_instance.default.db_name },
-        { name : "DB_USERNAME", value : data.aws_db_instance.default.master_username },
-        { name : "ENVIRONMENT", value : var.environment_name },
-        { name : "LOGGING_LEVEL", value : var.logging_level },
-        { name : "FEATURES_FILE_PATH", value : "s3://massgov-pfml-${var.environment_name}-feature-gate/features.yaml" },
-        { name : "FINEOS_AWS_IAM_ROLE_ARN", value : var.fineos_aws_iam_role_arn },
-        { name : "FINEOS_AWS_IAM_ROLE_EXTERNAL_ID", value : var.fineos_aws_iam_role_external_id },
-        { name : "FINEOS_DATA_IMPORT_PATH", value : var.fineos_data_import_path },
-        { name : "FINEOS_DATA_EXPORT_PATH", value : var.fineos_data_export_path },
-        { name : "FINEOS_ADHOC_DATA_EXPORT_PATH", value : var.fineos_adhoc_data_export_path },
-        { name : "FINEOS_FOLDER_PATH", value : var.fineos_import_employee_updates_input_directory_path },
-        { name : "PFML_FINEOS_WRITEBACK_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/cps/pei-writeback" },
-        { name : "PFML_FINEOS_EXTRACT_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/cps/extracts" },
-        { name : "DFML_REPORT_OUTBOUND_PATH", value : "s3://massgov-pfml-${var.environment_name}-reports/dfml-reports" },
-        { name : "DFML_RESPONSE_INBOUND_PATH", value : "s3://massgov-pfml-${var.environment_name}-reports/dfml-responses" },
-        { name : "PUB_MOVEIT_INBOUND_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/inbound" },
-        { name : "PUB_MOVEIT_OUTBOUND_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/outbound" },
-        { name : "PFML_PUB_ACH_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/ach" },
-        { name : "PFML_PUB_CHECK_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/pub/check" },
-        { name : "PFML_ERROR_REPORTS_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/reports" },
-        { name : "PFML_PAYMENT_REJECTS_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/audit" }
-      ]
-      secrets = [
-        { name : "DB_PASSWORD", valueFrom : "/service/${local.app_name}/${var.environment_name}/db-password" },
-        {
-          name      = "RMV_CLIENT_CERTIFICATE_PASSWORD"
-          valueFrom = "/service/pfml-api/test/rmv_client_certificate_password"
-        },
-        { name : "NEW_RELIC_LICENSE_KEY", valueFrom : "/service/${local.app_name}/common/newrelic-license-key" },
-        { name : "NR_INSERT_API_KEY", valueFrom : "/admin/${local.app_name}/newrelic-insert-api-key" },
-      ]
+      environment = [for val in concat(local.common, local.db_access, local.fineos_s3_access, local.pub_s3_folders) : val if contains(keys(val), "value")]
+      secrets     = [for val in concat(local.common, local.db_access, local.fineos_s3_access, local.pub_s3_folders) : val if !contains(keys(val), "value")]
     },
     {
       name                   = "pub-payments-process-1099-dot-net-generator-service",
@@ -104,15 +73,8 @@ resource "aws_ecs_task_definition" "ecs_tasks_1099" {
         }
       },
 
-      environment = [
-        { name : "ENVIRONMENT", value : var.environment_name },
-        { name : "LOGGING_LEVEL", value : var.logging_level },
-        { name : "FEATURES_FILE_PATH", value : "s3://massgov-pfml-${var.environment_name}-feature-gate/features.yaml" }
-      ]
-      secrets = [
-        { name : "NEW_RELIC_LICENSE_KEY", valueFrom : "/service/${local.app_name}/common/newrelic-license-key" },
-        { name : "NR_INSERT_API_KEY", valueFrom : "/admin/${local.app_name}/newrelic-insert-api-key" },
-      ]
+      environment = [for val in local.common : val if contains(keys(val), "value")]
+      secrets     = [for val in local.common : val if !contains(keys(val), "value")]
     }
   ])
 }
