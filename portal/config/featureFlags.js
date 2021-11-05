@@ -40,6 +40,9 @@ const flagsConfig = {
     // https://lwd.atlassian.net/browse/CP-459
     pfmlTerriyay: false,
 
+    // When this flag is true, PDF files up to 10mb are sent to the API.
+    sendLargePdfToApi: false,
+
     // When this flag is enabled, the medical leave question numbers for leave periods
     // are updated to reflect the new "Certification of Your Serious Health Condition"
     // TODO (CP-2205): Remove this flag once updated medical leave form is effective

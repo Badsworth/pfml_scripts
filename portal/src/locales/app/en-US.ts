@@ -646,9 +646,9 @@ const errors = {
     },
   },
   invalidFile_size:
-    "We could not upload: {{disallowedFileNames}}. Files must be smaller than 4.5 MB.",
+    "We could not upload: {{disallowedFileNames}}. Files must be smaller than {{ sizeLimit }} MB.",
   invalidFile_sizeAndType:
-    "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than 4.5 MB.",
+    "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png) that is smaller than {{ sizeLimit }} MB.",
   invalidFile_type:
     "We could not upload: {{disallowedFileNames}}. Choose a PDF or an image file (.jpg, .jpeg, .png).",
   network:
