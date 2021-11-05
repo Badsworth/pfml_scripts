@@ -61,7 +61,7 @@ PROCESSED_FOLDER = "processed"
 SKIPPED_FOLDER = "skipped"
 
 enable_withholding_payments: bool
-enable_withholding_payments = os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "1") == "1"
+enable_withholding_payments = os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "0") == "1"
 
 CANCELLATION_PAYMENT_TRANSACTION_TYPE = "PaymentOut Cancellation"
 # There are multiple types of overpayments

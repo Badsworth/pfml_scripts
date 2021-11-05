@@ -34,7 +34,7 @@ from massgov.pfml.util.bg import background_task
 logger = logging.get_logger(__name__)
 
 enable_withholding_payments: bool
-enable_withholding_payments = os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "1") == "1"
+enable_withholding_payments = os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "0") == "1"
 
 ALL = "ALL"
 RUN_AUDIT_CLEANUP = "audit-cleanup"

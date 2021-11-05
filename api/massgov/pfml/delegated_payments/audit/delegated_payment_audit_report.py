@@ -24,7 +24,7 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
 from massgov.pfml.delegated_payments.step import Step
 
 enable_withholding_payments: bool
-enable_withholding_payments = os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "1") == "1"
+enable_withholding_payments = os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "0") == "1"
 
 logger = logging.get_logger(__name__)
 
