@@ -88,14 +88,14 @@ module "fineos_bucket_tool_scheduler" {
 }
 
 # - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-# run at 3:30pm EST (4:30pm EDT) (8:30pm UTC) and 6:30pm EST (7:30pm EDT) (11:30pm UTC)
+# run at 12:30pm EST (1:30pm EDT) (5:30pm UTC) and 4:30pm EST (5:30pm EDT) (9:30pm UTC)
 module "fineos_extract_scheduler" {
   source     = "../../modules/ecs_task_scheduler"
   is_enabled = true
 
   task_name                            = "fineos-report-extracts-tool"
-  schedule_expression_standard         = "cron(30 21,0 * * ? *)"
-  schedule_expression_daylight_savings = "cron(30 20,23 * * ? *)"
+  schedule_expression_standard         = "cron(30 17,21 * * ? *)"
+  schedule_expression_daylight_savings = "cron(30 16,20 * * ? *)"
 
   environment_name = var.environment_name
 
