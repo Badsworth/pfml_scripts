@@ -3,19 +3,11 @@ from typing import List
 from uuid import UUID
 
 from sqlalchemy import func
-from sqlalchemy.sql.expression import distinct
 
 import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.util.logging as logging
-
 from massgov.pfml import db
-from massgov.pfml.db.models.employees import (
-    Claim,
-    LkState,
-    Payment,
-    State,
-    StateLog,
-)
+from massgov.pfml.db.models.employees import Claim, LkState, Payment, State, StateLog
 from massgov.pfml.db.models.payments import LinkSplitPayment
 from massgov.pfml.delegated_payments.step import Step
 
@@ -43,26 +35,28 @@ class RelatedPaymentsProcessingStep(Step):
 
         for payment in payments:
             # get absense id for this payment
-            claims  = (
+            claim = (
                 self.db_session.query(Claim)
                 .filter(Claim.claim_id == payment.claim_id)
                 .filter(Payment.payment_id == payment.payment_id)
                 .first()
             )
-            
+
+            if claim is None:
+                raise Exception(f"Claim not found for withholding payment id: {payment.payment_id}")
             # get records for the absense id and check for duplicates
             is_duplicate_records_exists = self.is_withholding_records_have_duplicate_records(
-                self.db_session, payment, str(claims.fineos_absence_id)
+                self.db_session, payment, str(claim.fineos_absence_id)
             )
 
             if is_duplicate_records_exists:
-                logger.info("Duplicate records exists for %s", claims.fineos_absence_id)
+                logger.info("Duplicate records exists for %s", claim.fineos_absence_id)
                 # to update status we need payment so getting all the payment details from above query
                 # get duplicate payment records
                 duplicate_payment_records = (
                     self.db_session.query(Payment)
                     .filter(Payment.claim_id == payment.claim_id)
-                    .filter(Claim.fineos_absence_id == claims.fineos_absence_id)
+                    .filter(Claim.fineos_absence_id == claim.fineos_absence_id)
                     .filter(Payment.period_start_date == payment.period_start_date)
                     .filter(Payment.period_end_date == payment.period_end_date)
                     .filter(Payment.payment_date == payment.payment_date)
@@ -77,12 +71,7 @@ class RelatedPaymentsProcessingStep(Step):
                     .join(LkState, StateLog.end_state_id == LkState.state_id)
                     .filter(
                         Payment.payment_id == payment.payment_id,
-                        StateLog.end_state_id.in_(
-                            [
-                                191,
-                                195,
-                            ]
-                        ),
+                        StateLog.end_state_id.in_([191, 195,]),
                     )
                     .first()
                 )
@@ -106,7 +95,6 @@ class RelatedPaymentsProcessingStep(Step):
                     )
             else:
                 primary_payment_record = self._get_primary_payment_record(self.db_session, payment)
-                logger.info(primary_payment_record)
                 if primary_payment_record == "":
                     raise Exception(
                         f"Primary payment id not found for withholding payment id: {payment.payment_id}"
@@ -168,7 +156,7 @@ class RelatedPaymentsProcessingStep(Step):
             .join(Claim, Payment.claim_id == Claim.claim_id)
             .filter(Claim.claim_id == payment.claim_id)
             .filter(Claim.fineos_absence_id == fineos_absence_id)
-            .filter(Payment.fineos_extraction_date ==payment.fineos_extraction_date)
+            .filter(Payment.fineos_extraction_date == payment.fineos_extraction_date)
             .group_by(
                 Claim.fineos_absence_id,
                 Payment.period_start_date,

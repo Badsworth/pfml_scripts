@@ -143,9 +143,7 @@ def build_audit_report_row(
     payment_audit_row = PaymentAuditCSV(
         pfml_payment_id=str(payment.payment_id),
         leave_type=get_leave_type(payment),
-        fineos_customer_number=employee.fineos_customer_number 
-        if employee
-        else None,
+        fineos_customer_number=employee.fineos_customer_number if employee else None,
         first_name=payment.fineos_employee_first_name,
         last_name=payment.fineos_employee_last_name,
         dor_first_name=employee.first_name if employee else None,
