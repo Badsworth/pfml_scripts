@@ -72,7 +72,7 @@ class Configuration:
     do_payment_extract: bool
     validate_addresses: bool
     do_payment_post_processing: bool
-    do_related_payment_Processing: bool
+    do_related_payment_processing: bool
     make_audit_report: bool
     create_pei_writeback: bool
     make_reports: bool
