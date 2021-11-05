@@ -43,29 +43,26 @@ class RelatedPaymentsProcessingStep(Step):
 
         for payment in payments:
             # get absense id for this payment
-            fineos_absence_id : str = (
-                self.db_session.query(str(Claim.fineos_absence_id))
+            claims  = (
+                self.db_session.query(Claim)
                 .filter(Claim.claim_id == payment.claim_id)
                 .filter(Payment.payment_id == payment.payment_id)
                 .first()
             )
-
-            logger.info("fineos_absence_id %s", fineos_absence_id)
-
-            logger.info("fineos_absence_id string  %s", str(fineos_absence_id))
+            
             # get records for the absense id and check for duplicates
             is_duplicate_records_exists = self.is_withholding_records_have_duplicate_records(
-                self.db_session, payment, str(fineos_absence_id)
+                self.db_session, payment, str(claims.fineos_absence_id)
             )
 
             if is_duplicate_records_exists:
-                logger.info("Duplicate records exists for %s", fineos_absence_id)
+                logger.info("Duplicate records exists for %s", claims.fineos_absence_id)
                 # to update status we need payment so getting all the payment details from above query
                 # get duplicate payment records
                 duplicate_payment_records = (
                     self.db_session.query(Payment)
                     .filter(Payment.claim_id == payment.claim_id)
-                    .filter(Claim.fineos_absence_id == fineos_absence_id)
+                    .filter(Claim.fineos_absence_id == claims.fineos_absence_id)
                     .filter(Payment.period_start_date == payment.period_start_date)
                     .filter(Payment.period_end_date == payment.period_end_date)
                     .filter(Payment.payment_date == payment.payment_date)
@@ -82,8 +79,8 @@ class RelatedPaymentsProcessingStep(Step):
                         Payment.payment_id == payment.payment_id,
                         StateLog.end_state_id.in_(
                             [
-                                State.STATE_WITHHOLDING_READY_FOR_PROCESSING,
-                                State.FEDERAL_WITHHOLDING_READY_FOR_PROCESSING,
+                                191,
+                                195,
                             ]
                         ),
                     )
@@ -92,7 +89,7 @@ class RelatedPaymentsProcessingStep(Step):
 
                 end_state = (
                     State.STATE_WITHHOLDING_PENDING_AUDIT
-                    if (payment_end_state_id[0] in [State.STATE_WITHHOLDING_READY_FOR_PROCESSING])
+                    if (payment_end_state_id[0] in [191])
                     else State.FEDERAL_WITHHOLDING_PENDING_AUDIT
                 )
                 message = "Duplicate records found for the payment."
@@ -171,6 +168,7 @@ class RelatedPaymentsProcessingStep(Step):
             .join(Claim, Payment.claim_id == Claim.claim_id)
             .filter(Claim.claim_id == payment.claim_id)
             .filter(Claim.fineos_absence_id == fineos_absence_id)
+            .filter(Payment.fineos_extraction_date ==payment.fineos_extraction_date)
             .group_by(
                 Claim.fineos_absence_id,
                 Payment.period_start_date,
@@ -181,14 +179,11 @@ class RelatedPaymentsProcessingStep(Step):
             )
             .subquery()
         )
-        logger.info(num_payments_query)
         items = (
             self.db_session.query(num_payments_query)
             .filter(num_payments_query.c.records_count > 1)
             .all()
         )
-        logger.info(items)
-        logger.info(len(items) > 0)
         return len(items) > 0
 
     def _get_primary_payment_record(self, db_session: db.Session, payment: Payment) -> UUID:

@@ -143,13 +143,13 @@ def build_audit_report_row(
     payment_audit_row = PaymentAuditCSV(
         pfml_payment_id=str(payment.payment_id),
         leave_type=get_leave_type(payment),
-        fineos_customer_number=employee.fineos_customer_number
-        if employee.fineos_customer_number
+        fineos_customer_number=employee.fineos_customer_number 
+        if employee
         else None,
         first_name=payment.fineos_employee_first_name,
         last_name=payment.fineos_employee_last_name,
-        dor_first_name=employee.first_name,
-        dor_last_name=employee.last_name,
+        dor_first_name=employee.first_name if employee else None,
+        dor_last_name=employee.last_name if employee else None,
         address_line_1=address.address_line_one if address else None,
         address_line_2=address.address_line_two if address else None,
         city=address.city if address else None,
@@ -220,6 +220,8 @@ def get_payment_preference(payment: Payment) -> str:
         return "ACH"
     elif payment.disb_method_id == PaymentMethod.CHECK.payment_method_id:
         return "Check"
+    else:
+        return ""
 
     raise PaymentAuditRowError(
         "Unexpected payment preference %s" % payment.disb_method.payment_method_description
