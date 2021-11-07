@@ -470,6 +470,133 @@ def generate_payment_extract_files(
             claim_type=claim_type,
         )
 
+        if scenario_descriptor.is_tax_withholding_records_exists:
+            for item in range(3):
+                if item == 0:
+                    event_reason = "Automatic Alternate Payment"
+                    payee_identifier = "ID"
+                    amalgamationc = "ScheduledAlternate65424"
+                    ssn = "FICASOCIALSECURITYPAYEE001"
+                    payment_amount = "22.00"
+                    i_value = "2277"
+                if item == 1:
+                    event_reason = "Automatic Alternate Payment"
+                    payee_identifier = "ID"
+                    amalgamationc = "ScheduledAlternate65424"
+                    ssn = "FICAMEDICAREPAYEE001"
+                    payment_amount = "11.00"
+                    i_value = "2278"
+                if item == 2:
+                    event_reason = "Automatic Alternate Payment"
+                    payee_identifier = "ID"
+                    amalgamationc = "ScheduledAlternate65424"
+                    ssn = "MANDATORYFITPAYEE001"
+                    payment_amount = "35.00"
+                    i_value = "2279"
+                fineos_withholding_payments_data = FineosPaymentData(
+                    generate_defaults=True,
+                    c_value=c_value,
+                    i_value=i_value,
+                    include_claim_details=scenario_descriptor.include_claim_details,
+                    include_payment_details=True,
+                    include_requested_absence=True,
+                    tin=ssn,
+                    absence_case_number=absence_case_id,
+                    payment_address_1=mock_address["line_1"],
+                    payment_address_2=mock_address["line_2"],
+                    city=mock_address["city"],
+                    state=mock_address["state"],
+                    zip_code=mock_address["zip"],
+                    payment_method=payment_method,
+                    payment_date=payment_date.strftime("%Y-%m-%d %H:%M:%S"),
+                    payment_amount=payment_amount,
+                    routing_nbr=routing_nbr,
+                    account_nbr=account_nbr,
+                    account_type=account_type,
+                    payment_start_period=payment_start_period.strftime("%Y-%m-%d %H:%M:%S"),
+                    payment_end_period=payment_end_period.strftime("%Y-%m-%d %H:%M:%S"),
+                    leave_request_decision=scenario_descriptor.leave_request_decision,
+                    event_type=event_type,
+                    event_reason=event_reason,
+                    payee_identifier=payee_identifier,
+                    amalgamationc=amalgamationc,
+                    claim_type=claim_type,
+                )
+                fineos_payments_dataset.append(fineos_withholding_payments_data)
+        if scenario_descriptor.is_duplicate_tax_withholding_records_exists:
+            for item in range(6):
+                if item == 0:
+                    event_reason = "Automatic Alternate Payment"
+                    payee_identifier = "ID"
+                    amalgamationc = "ScheduledAlternate65424"
+                    ssn = "FICASOCIALSECURITYPAYEE001"
+                    payment_amount = "10.00"
+                    i_value = "7653"
+                if item == 1:
+                    event_reason = "Automatic Alternate Payment"
+                    payee_identifier = "ID"
+                    amalgamationc = "ScheduledAlternate65424"
+                    ssn = "FICASOCIALSECURITYPAYEE001"
+                    payment_amount = "10.00"
+                    i_value = "7654"
+                if item == 2:
+                    event_reason = "Automatic Alternate Payment"
+                    payee_identifier = "ID"
+                    amalgamationc = "ScheduledAlternate65424"
+                    ssn = "FICAMEDICAREPAYEE001"
+                    payment_amount = "11.00"
+                    i_value = "7655"
+                if item == 3:
+                    event_reason = "Automatic Alternate Payment"
+                    payee_identifier = "ID"
+                    amalgamationc = "ScheduledAlternate65424"
+                    ssn = "FICAMEDICAREPAYEE001"
+                    payment_amount = "11.00"
+                    i_value = "7656"
+                if item == 4:
+                    event_reason = "Automatic Alternate Payment"
+                    payee_identifier = "ID"
+                    amalgamationc = "ScheduledAlternate65424"
+                    ssn = "MANDATORYFITPAYEE001"
+                    payment_amount = "35.00"
+                    i_value = "7657"
+                if item == 5:
+                    event_reason = "Automatic Alternate Payment"
+                    payee_identifier = "ID"
+                    amalgamationc = "ScheduledAlternate65424"
+                    ssn = "MANDATORYFITPAYEE001"
+                    payment_amount = "35.00"
+                    i_value = "7658"
+                fineos_duplicate_withholding_payments_data = FineosPaymentData(
+                    generate_defaults=True,
+                    c_value=c_value,
+                    i_value=i_value,
+                    include_claim_details=scenario_descriptor.include_claim_details,
+                    include_payment_details=True,
+                    include_requested_absence=True,
+                    tin=ssn,
+                    absence_case_number=absence_case_id,
+                    payment_address_1=mock_address["line_1"],
+                    payment_address_2=mock_address["line_2"],
+                    city=mock_address["city"],
+                    state=mock_address["state"],
+                    zip_code=mock_address["zip"],
+                    payment_method=payment_method,
+                    payment_date=payment_date.strftime("%Y-%m-%d %H:%M:%S"),
+                    payment_amount=payment_amount,
+                    routing_nbr=routing_nbr,
+                    account_nbr=account_nbr,
+                    account_type=account_type,
+                    payment_start_period=payment_start_period.strftime("%Y-%m-%d %H:%M:%S"),
+                    payment_end_period=payment_end_period.strftime("%Y-%m-%d %H:%M:%S"),
+                    leave_request_decision=scenario_descriptor.leave_request_decision,
+                    event_type=event_type,
+                    event_reason=event_reason,
+                    payee_identifier=payee_identifier,
+                    amalgamationc=amalgamationc,
+                    claim_type=claim_type,
+                )
+                fineos_payments_dataset.append(fineos_duplicate_withholding_payments_data)
         fineos_payments_dataset.append(fineos_payments_data)
 
     # create the files

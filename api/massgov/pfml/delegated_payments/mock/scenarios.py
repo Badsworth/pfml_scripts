@@ -97,6 +97,10 @@ class ScenarioName(Enum):
         "PUB_CHECK_FAMILY_RETURN_CHECK_NUMBER_NOT_FOUND"
     )
 
+    # Tax withholding payments
+    HAPPY_PATH_TAX_WITHHOLDING = "HAPPY_PATH_TAX_WITHHOLDING"
+    TAX_WITHHOLDING_DUPLICATES = "TAX_WITHHOLDING_DUPLICATES"
+
 
 @dataclass
 class ScenarioDescriptor:
@@ -171,6 +175,9 @@ class ScenarioDescriptor:
     pub_check_outstanding_response_status: PaidStatus = PaidStatus.OUTSTANDING
 
     pub_check_return_invalid_check_number: bool = False
+
+    is_tax_withholding_records_exists: bool = False
+    is_duplicate_tax_withholding_records_exists: bool = False
 
 
 SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
@@ -357,6 +364,14 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         scenario_name=ScenarioName.CLAIM_UNABLE_TO_SET_EMPLOYEE_FROM_EXTRACT,
         claim_missing_employee=True,
         claim_extract_employee_identifier_unknown=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
+        is_tax_withholding_records_exists=True,
+    ),
+    ScenarioDescriptor(
+        scenario_name=ScenarioName.TAX_WITHHOLDING_DUPLICATES,
+        is_duplicate_tax_withholding_records_exists=True,
     ),
 ]
 
