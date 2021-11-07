@@ -2772,7 +2772,11 @@ const components = {
     addButton: "Add an accrued paid leave",
     dateRangeLabel: "Date range",
     explanation:
-      "Your employee has told us about the following accrued paid leave they plan to use concurrent with their paid leave from PFML. This includes paid vacation time, sick time, personal time, and other paid time off. It does not include a family or medical leave policy or a disability program. There’s a 7-day unpaid waiting period, and employees are allowed to use accrued paid leave to overlap that period.",
+      "Your employee has told us about the following accrued paid leave they plan to use concurrent with their paid leave from PFML. This includes paid vacation time, sick time, personal time, and other paid time off. It does not include a family or medical leave policy or a disability program.",
+    explanationDetails_continuousOrReduced:
+      "Your employee won’t receive PFML payments for the first 7 calendar days of their PFML leave from {{startDate}} to {{endDate}}. During those 7 days they may use accrued paid leave, and you and your employee shouldn’t report it.",
+    explanationDetails_intermittent:
+      "Your employee won’t receive PFML payments for the first 7 calendar days from the date of their first instance of leave. During those 7 days they may use accrued paid leave, and you and your employee shouldn’t report it.",
     header: "Concurrent accrued paid leave",
   },
   employersEmployeeInformation: {

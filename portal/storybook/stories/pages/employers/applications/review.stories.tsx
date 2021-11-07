@@ -2,11 +2,11 @@ import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import DocumentCollection from "src/models/DocumentCollection";
 import { DocumentType } from "src/models/Document";
-import { MockEmployerClaimBuilder } from "tests/test-utils";
 import { Props } from "storybook/types";
 import React from "react";
 import { Review } from "src/pages/employers/applications/review";
 import User from "src/models/User";
+import { createMockEmployerClaim } from "tests/test-utils";
 
 export default {
   title: "Pages/Employers/Applications/Review",
@@ -73,45 +73,44 @@ export const Default = (
   // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
   const user = new User();
   const query = { absence_id: "mock-absence-id" };
-  const leavePeriodType = claimOption.split("-")[0];
   const documentationOption = claimOption.split("-")[1] as DocumentationOption;
-  const isIntermittent = !!leavePeriodType.includes("Intermittent");
 
-  let claim = new MockEmployerClaimBuilder()
-    .completed(isIntermittent)
-    .previousLeaves()
-    .reviewable();
+  const leaveReason = {
+    Bonding: "bondingLeaveReason",
+    Medical: "medicalLeaveReason",
+    Care: "caringLeaveReason",
+    Pregnancy: "pregnancyLeaveReason",
+  }[args["Leave reason"]];
 
-  switch (args["Leave reason"]) {
-    case "Bonding":
-      claim = claim.bondingLeaveReason();
-      break;
-    case "Medical":
-      claim = claim.medicalLeaveReason();
-      break;
-    case "Care":
-      claim = claim.caringLeaveReason();
-      break;
-    case "Pregnancy":
-      claim = claim.pregnancyLeaveReason();
-      break;
-  }
+  const formVersion: string[] | undefined =
+    {
+      "Version 1 (before 2021-07-14)": ["eformsV1"],
+      "Version 2 (after 2021-07-14)": ["eformsV2", "concurrentLeave"],
+    }[args["Claimant EForm Version"]] || [];
 
-  switch (args["Claimant EForm Version"]) {
-    case "Version 1 (before 2021-07-14)":
-      claim = claim.eformsV1();
-      break;
-    case "Version 2 (after 2021-07-14)":
-      claim = claim.eformsV2().concurrentLeave();
-      break;
-  }
+  const optionText = claimOption.toLowerCase();
+  const leaveTypes = [
+    optionText.includes("continuous") && "continuous",
+    optionText.includes("intermittent") && "intermittent",
+    optionText.includes("reduced") && "reducedSchedule",
+  ].filter((text) => text); // removes falsy values
+
+  const claim = createMockEmployerClaim(
+    "completed",
+    "previousLeaves",
+    "reviewable",
+    leaveReason,
+    ...formVersion,
+    ...leaveTypes
+  );
 
   const appLogic = {
     appErrors: getAppErrorInfoCollection(errorTypes),
     employers: {
       claimDocumentsMap: getDocumentsMap(
         documentationOption,
-        claim.create().leave_details.reason
+        // @ts-expect-error ts-migrate(2339) FIXME: Property 'leave_details' does not exist on type 'MockEmployerClaimBuilder'.ts
+        claim.leave_details.reason
       ),
       downloadDocument: () => {},
       loadClaim: () => {},
@@ -121,15 +120,8 @@ export const Default = (
     setAppErrors: () => {},
   };
 
-  return (
-    <Review
-      // @ts-expect-error ts-migrate(2740) FIXME: Type '{ appErrors: AppErrorInfoCollection; employe... Remove this comment to see the full error message
-      appLogic={appLogic}
-      query={query}
-      user={user}
-      claim={claim.create()}
-    />
-  );
+  // @ts-expect-error ts-migrate(2740) FIXME: Type '{ appErrors: AppErrorInfoCollection; employe... Remove this comment to see the full error message
+  return <Review appLogic={appLogic} claim={claim} query={query} user={user} />;
 };
 
 function getDocumentsMap(

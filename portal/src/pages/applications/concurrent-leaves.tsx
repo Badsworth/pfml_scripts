@@ -2,6 +2,7 @@ import React, { Fragment } from "react";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
+
 import Details from "../../components/Details";
 import IconHeading from "../../components/IconHeading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -17,11 +18,7 @@ export const fields = ["claim.has_concurrent_leave"];
 
 export const ConcurrentLeaves = (props: WithBenefitsApplicationProps) => {
   const { t } = useTranslation();
-  const {
-    appLogic,
-    claim,
-    claim: { leave_details },
-  } = props;
+  const { appLogic, claim } = props;
 
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
 
@@ -41,25 +38,15 @@ export const ConcurrentLeaves = (props: WithBenefitsApplicationProps) => {
     );
   };
 
-  // Determines leave type
-  const isContinuousLeave = Boolean(
-    leave_details?.continuous_leave_periods?.length
-  );
-  const isIntermittentLeave = Boolean(
-    leave_details?.intermittent_leave_periods?.length
-  );
-  const isReducedLeave = Boolean(
-    leave_details?.reduced_schedule_leave_periods?.length
-  );
+  const { isContinuous, isIntermittent, isReducedSchedule } = claim;
 
   // Determines intro & details to be displayed
   const isContinuousLeaveIntro =
-    isContinuousLeave && !isReducedLeave && !isIntermittentLeave;
-  const isContinuousReducedIntro = isContinuousLeave && isReducedLeave;
+    isContinuous && !isReducedSchedule && !isIntermittent;
+  const isContinuousReducedIntro = isContinuous && isReducedSchedule;
   const isReducedOrIntermittentIntro =
-    (isReducedLeave && !isContinuousLeave) || isIntermittentLeave;
-  const isQualifyingReasonDetails =
-    isContinuousReducedIntro || !isContinuousLeave;
+    (isReducedSchedule && !isContinuous) || isIntermittent;
+  const isQualifyingReasonDetails = isContinuousReducedIntro || !isContinuous;
 
   // Gets context for intro trans
   const getIntroContext = () => {

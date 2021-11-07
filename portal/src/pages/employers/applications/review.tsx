@@ -8,6 +8,7 @@ import { get, isEqual, isNil, omit } from "lodash";
 import withEmployerClaim, {
   WithEmployerClaimProps,
 } from "../../../hoc/withEmployerClaim";
+
 import Alert from "../../../components/Alert";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
@@ -510,6 +511,7 @@ export const Review = (props: WithEmployerClaimProps) => {
             <ConcurrentLeave
               appErrors={appErrors}
               addedConcurrentLeave={formState.addedConcurrentLeave}
+              claim={claim}
               concurrentLeave={formState.concurrentLeave}
               onAdd={handleConcurrentLeaveAdd}
               onChange={handleConcurrentLeaveInputChange}
