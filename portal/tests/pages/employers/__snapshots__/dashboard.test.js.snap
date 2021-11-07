@@ -180,13 +180,8 @@ exports[`Employer dashboard renders the page with expected content and paginatio
     </div>
   </div>
   <section
-    class="margin-bottom-4"
+    class="margin-bottom-4 margin-top-2"
   >
-    <p
-      class="margin-y-2"
-    >
-      Applications will not have a status until the Department has made a decision. Applications that don't have a status may require action from you.
-    </p>
     <details
       class="c-details"
     >
@@ -203,9 +198,21 @@ exports[`Employer dashboard renders the page with expected content and paginatio
         >
           <li>
             <strong>
-              “--” or no status:
+              Review by:
             </strong>
-             This leave request may require action from you; otherwise, it is awaiting a decision from DFML.
+             Review this application by this date to provide DFML with your input.
+          </li>
+          <li>
+            <strong>
+              No action required:
+            </strong>
+             This leave request is awaiting a decision from DFML.
+          </li>
+          <li>
+            <strong>
+              Denied:
+            </strong>
+             DFML has denied this leave request.
           </li>
           <li>
             <strong>
@@ -218,12 +225,6 @@ exports[`Employer dashboard renders the page with expected content and paginatio
               Closed:
             </strong>
              The leave has passed or no action can be taken.
-          </li>
-          <li>
-            <strong>
-              Denied:
-            </strong>
-             DFML has denied this leave request.
           </li>
         </ul>
       </div>
@@ -357,13 +358,30 @@ exports[`Employer dashboard renders the page with expected content and paginatio
             id="InputChoice5"
             name="claim_status"
             type="checkbox"
-            value="Pending"
+            value="Pending - no action"
           />
           <label
             class="usa-checkbox__label"
             for="InputChoice5"
           >
-            --
+            No action required
+          </label>
+        </div>
+        <div
+          class="usa-checkbox measure-5 bg-transparent"
+        >
+          <input
+            class="usa-checkbox__input"
+            id="InputChoice6"
+            name="claim_status"
+            type="checkbox"
+            value="Open requirement"
+          />
+          <label
+            class="usa-checkbox__label"
+            for="InputChoice6"
+          >
+            Review by
           </label>
         </div>
       </div>
@@ -396,21 +414,26 @@ exports[`Employer dashboard renders the page with expected content and paginatio
       >
         <label
           class="usa-label text-bold margin-right-1 font-heading-xs measure-5"
-          for="Dropdown12"
-          id="Dropdown12_label"
+          for="Dropdown14"
+          id="Dropdown14_label"
         >
           Sort
         </label>
         <div
           class=""
-          data-default-value="created_at,descending"
+          data-default-value="absence_status,ascending"
         >
           <select
-            aria-labelledby="Dropdown12_label Dropdown12_hint Dropdown12_error"
+            aria-labelledby="Dropdown14_label Dropdown14_hint Dropdown14_error"
             class="usa-select maxw-mobile-lg margin-0"
-            id="Dropdown12"
+            id="Dropdown14"
             name="orderAndDirection"
           >
+            <option
+              value="absence_status,ascending"
+            >
+              Status
+            </option>
             <option
               value="created_at,descending"
             >

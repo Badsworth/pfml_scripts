@@ -4,6 +4,7 @@ import { Submission } from "../../../../src/types";
 import { extractLeavePeriod } from "../../../../src/util/claims";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { format, addDays, parse } from "date-fns";
+import {waitForAjaxComplete} from "../../../actions/fineos";
 
 describe("Post-approval (notifications/notices)", () => {
   const credentials: Credentials = {
@@ -29,6 +30,8 @@ describe("Post-approval (notifications/notices)", () => {
         const claimPage = fineosPages.ClaimPage.visit(
           response.fineos_absence_id
         );
+        claimPage.triggerNotice("Preliminary Designation");
+        fineos.onTab("Absence Hub");
         claimPage.adjudicate((adjudication) => {
           adjudication.evidence((evidence) => {
             // Receive and approve all of the documentation for the claim.
@@ -42,7 +45,6 @@ describe("Post-approval (notifications/notices)", () => {
           adjudication.acceptLeavePlan();
         });
         claimPage.approve();
-        claimPage.triggerNotice("Preliminary Designation");
       });
     });
   });
@@ -167,4 +169,35 @@ describe("Post-approval (notifications/notices)", () => {
       });
     }
   );
+
+  it("Check to see if the O/R buttons are enabled to Complete, Suppress, & Remove", () => {
+    cy.dependsOnPreviousPass([submit, extension, approval]);
+    fineos.before();
+    cy.unstash<Submission>("submission").then((submission) => {
+      const claimPage = fineosPages.ClaimPage.visit(
+        submission.fineos_absence_id
+      );
+      claimPage.outstandingRequirements((outstanding_requirement) => {
+        outstanding_requirement.add();
+        waitForAjaxComplete();
+        outstanding_requirement.complete(
+          "Received",
+          "Complete Employer Confirmation",
+          true
+        );
+        waitForAjaxComplete();
+        outstanding_requirement.reopen(true);
+        waitForAjaxComplete();
+        outstanding_requirement.suppress(
+          "Auto-Suppressed",
+          "Suppress Employer Confirmation",
+          true
+        );
+        waitForAjaxComplete();
+        outstanding_requirement.reopen(true);
+        waitForAjaxComplete();
+        outstanding_requirement.removeOR(true);
+      })
+    });
+  });
 });

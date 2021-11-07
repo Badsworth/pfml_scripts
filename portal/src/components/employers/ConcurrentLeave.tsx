@@ -2,18 +2,22 @@ import AddButton from "./AddButton";
 import AmendableConcurrentLeave from "./AmendableConcurrentLeave";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConcurrentLeaveModel from "../../models/ConcurrentLeave";
+import { DateTime } from "luxon";
+import EmployerClaim from "../../models/EmployerClaim";
 import Heading from "../Heading";
 import React from "react";
 import Table from "../Table";
+import formatDate from "../../utils/formatDate";
 import { useTranslation } from "../../locales/i18n";
 
 interface ConcurrentLeaveProps {
   addedConcurrentLeave?: ConcurrentLeaveModel;
   appErrors: AppErrorInfoCollection;
+  claim: EmployerClaim;
   concurrentLeave?: ConcurrentLeaveModel;
   onAdd: React.MouseEventHandler<HTMLButtonElement>;
   onChange: (
-    arg: ConcurrentLeaveModel | Record<string, unknown>,
+    arg: ConcurrentLeaveModel | { [key: string]: unknown },
     arg2?: string
   ) => void;
   onRemove: (arg: ConcurrentLeaveModel) => void;
@@ -29,11 +33,16 @@ const ConcurrentLeave = (props: ConcurrentLeaveProps) => {
   const {
     addedConcurrentLeave,
     appErrors,
+    claim,
     concurrentLeave,
     onAdd,
     onChange,
     onRemove,
   } = props;
+
+  const leaveContext = claim.isIntermittent
+    ? "intermittent"
+    : "continuousOrReduced";
 
   return (
     <React.Fragment>
@@ -41,6 +50,17 @@ const ConcurrentLeave = (props: ConcurrentLeaveProps) => {
         {t("components.employersConcurrentLeave.header")}
       </Heading>
       <p>{t("components.employersConcurrentLeave.explanation")}</p>
+      <p>
+        {t("components.employersConcurrentLeave.explanationDetails", {
+          context: leaveContext,
+          endDate: formatDate(
+            DateTime.fromISO(`${claim.leaveStartDate}`)
+              .plus({ days: 6 })
+              .toString()
+          ).short(),
+          startDate: formatDate(claim.leaveStartDate).short(),
+        })}
+      </p>
       <Table className="width-full">
         <thead>
           <tr>

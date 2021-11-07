@@ -55,6 +55,10 @@ export class BaseMockBenefitsApplicationBuilder {
     return this;
   }
 
+  /**
+   * @param {object} [attrs]
+   * @returns {BaseMockBenefitsApplicationBuilder}
+   */
   address(attrs) {
     set(
       this.claimAttrs,
@@ -327,6 +331,7 @@ export class MockEmployerClaimBuilder extends BaseMockBenefitsApplicationBuilder
   }
 
   /**
+   * @param {string} status
    * @returns {MockEmployerClaimBuilder}
    */
   status(status = null) {
@@ -698,6 +703,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
   complete() {
     this.submitted();
     this.paymentPrefSubmitted();
+    this.taxPrefSubmitted();
     return this;
   }
 
@@ -744,7 +750,7 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
   }
 
   /**
-   * Part 2 step is completed and submitted to API
+   * Part 2 payment step is completed and submitted to API
    * @returns {MockBenefitsApplicationBuilder}
    */
   paymentPrefSubmitted() {
@@ -756,7 +762,18 @@ export class MockBenefitsApplicationBuilder extends BaseMockBenefitsApplicationB
   }
 
   /**
-   * @param {object} attrs Address object
+   * Part 2 tax preference step is completed and submitted to API
+   * @returns {MockBenefitsApplicationBuilder}
+   */
+  taxPrefSubmitted(selection = false) {
+    this.submitted();
+    set(this.claimAttrs, "is_withholding_tax", selection);
+
+    return this;
+  }
+
+  /**
+   * @param {object} [attrs] Address object
    * @returns {MockBenefitsApplicationBuilder}
    */
   address(attrs) {

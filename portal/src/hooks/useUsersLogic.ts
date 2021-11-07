@@ -4,7 +4,6 @@ import { AppErrorsLogic } from "./useAppErrorsLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
 import { PortalFlow } from "./usePortalFlow";
 import User from "../models/User";
-import { UserNotReceivedError } from "../errors";
 import UsersApi from "../api/UsersApi";
 
 /**
@@ -61,11 +60,6 @@ const useUsersLogic = ({
     appErrorsLogic.clearErrors();
     try {
       const { user } = await usersApi.getCurrentUser();
-
-      if (!user) {
-        throw new UserNotReceivedError("User not received in loadUser");
-      }
-
       setUser(user);
     } catch (error) {
       appErrorsLogic.catchError(error);

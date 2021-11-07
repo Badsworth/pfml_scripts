@@ -15,7 +15,7 @@ interface EmployerBenefitsProps {
   employerBenefits: EmployerBenefit[];
   onAdd: React.MouseEventHandler<HTMLButtonElement>;
   onChange: (
-    arg: EmployerBenefit | Record<string, unknown>,
+    arg: EmployerBenefit | { [key: string]: unknown },
     arg2: string
   ) => void;
   onRemove: (arg: EmployerBenefit) => void;

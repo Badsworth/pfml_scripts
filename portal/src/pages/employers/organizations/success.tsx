@@ -1,24 +1,15 @@
-import { AppLogic } from "../../../hooks/useAppLogic";
+import withUser, { WithUserProps } from "../../../hoc/withUser";
 import Button from "../../../components/Button";
 import PageNotFound from "../../../components/PageNotFound";
 import React from "react";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
-import User from "../../../models/User";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
-import withUser from "../../../hoc/withUser";
 
-interface SuccessProps {
-  appLogic: AppLogic;
-  query: {
-    employer_id: string;
-    next: string;
-  };
-  user: User;
-}
-
-export const Success = (props: SuccessProps) => {
+export const Success = (
+  props: WithUserProps & { query: { employer_id?: string; next?: string } }
+) => {
   const { appLogic, query, user } = props;
   const { t } = useTranslation();
 

@@ -46,6 +46,7 @@ describe("Report of intermittent leave hours notification", () => {
                   .acceptLeavePlan();
               })
               .approve();
+            claimPage.triggerNotice("Designation Notice");
             waitForAjaxComplete();
           });
         });

@@ -1,5 +1,7 @@
 import { get, pick } from "lodash";
-import { AppLogic } from "../../hooks/useAppLogic";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Details from "../../components/Details";
 import Heading from "../../components/Heading";
@@ -17,7 +19,6 @@ import formatDate from "../../utils/formatDate";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.previous_leaves_same_reason",
@@ -28,13 +29,8 @@ export const fields = [
   "claim.previous_leaves_same_reason[*].worked_per_week_minutes",
 ];
 
-interface PreviousLeavesSameReasonDetailsProps {
-  appLogic: AppLogic;
-  claim: BenefitsApplication;
-}
-
 export const PreviousLeavesSameReasonDetails = (
-  props: PreviousLeavesSameReasonDetailsProps
+  props: WithBenefitsApplicationProps
 ) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;

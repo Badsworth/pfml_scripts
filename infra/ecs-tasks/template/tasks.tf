@@ -214,13 +214,13 @@ locals {
         local.db_access,
         local.fineos_api_access,
         local.fineos_s3_access,
-        { "name" : "OUTPUT_DIRECTORY_PATH", "value" : "${var.fineos_eligibility_feed_output_directory_path}" }
+        { "name" : "OUTPUT_DIRECTORY_PATH", "value" : var.fineos_eligibility_feed_output_directory_path }
       ]
     }
 
     "pub-payments-process-fineos" = {
       command   = ["pub-payments-process-fineos"]
-      task_role = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-fineos"
+      task_role = aws_iam_role.pub_payments_process_fineos_task_role.arn
       cpu       = 2048
       memory    = 16384
       env = [
@@ -236,7 +236,7 @@ locals {
 
     "pub-payments-process-snapshot" = {
       command   = ["pub-payments-process-snapshot"]
-      task_role = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-snapshot"
+      task_role = aws_iam_role.pub_payments_process_fineos_task_role.arn
       cpu       = 2048
       memory    = 16384
       env = [
@@ -378,7 +378,7 @@ resource "aws_ecs_task_definition" "ecs_tasks" {
       # silently cause env vars to go missing which would definitely confuse someone for a day or two.
       #
       environment = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if contains(keys(val), "value")]
-      secrets     = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if ! contains(keys(val), "value")]
+      secrets     = [for val in flatten(concat(lookup(each.value, "env", []), local.common)) : val if !contains(keys(val), "value")]
     }
   ])
 }

@@ -80,11 +80,7 @@ const useBenefitsApplicationsLogic = ({
     // It's important we load the claim if warnings haven't been fetched yet,
     // since the Checklist needs those to be present in order to accurately
     // determine what steps are completed.
-    if (
-      benefitsApplications &&
-      hasLoadedBenefitsApplicationAndWarnings(application_id)
-    )
-      return;
+    if (hasLoadedBenefitsApplicationAndWarnings(application_id)) return;
 
     appErrorsLogic.clearErrors();
 
@@ -250,15 +246,16 @@ const useBenefitsApplicationsLogic = ({
       setBenefitsApplication(claim);
       setClaimWarnings(application_id, warnings);
 
-      if (issues && issues.length) {
+      if (issues.length) {
         throw new ValidationError(issues, applicationsApi.i18nPrefix);
       }
 
       const context = { claim, user };
-      const params = {
+      const params: NullableQueryParams = {
         claim_id: claim.application_id,
         "payment-pref-submitted": "true",
       };
+
       portalFlow.goToNextPage(context, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
@@ -283,14 +280,14 @@ const useBenefitsApplicationsLogic = ({
       setClaimWarnings(application_id, warnings);
 
       const issues = getRelevantIssues([], warnings, []);
-      if (issues && issues.length) {
+      if (issues.length) {
         throw new ValidationError(issues, applicationsApi.i18nPrefix);
       }
 
       const context = { claim, user };
       const params: NullableQueryParams = {
         claim_id: claim.application_id,
-        "tax-preference-submitted": "true",
+        "tax-pref-submitted": "true",
       };
       portalFlow.goToNextPage(context, params);
     } catch (err) {

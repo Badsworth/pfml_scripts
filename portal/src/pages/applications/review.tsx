@@ -2,7 +2,11 @@ import {
   BankAccountType,
   PaymentPreferenceMethod,
 } from "../../models/PaymentPreference";
-import BenefitsApplication, {
+import EmployerBenefit, {
+  EmployerBenefitFrequency,
+  EmployerBenefitType,
+} from "../../models/EmployerBenefit";
+import {
   EmploymentStatus,
   Gender,
   PhoneType,
@@ -12,10 +16,6 @@ import BenefitsApplication, {
   WorkPattern,
   WorkPatternType,
 } from "../../models/BenefitsApplication";
-import EmployerBenefit, {
-  EmployerBenefitFrequency,
-  EmployerBenefitType,
-} from "../../models/EmployerBenefit";
 import OtherIncome, {
   OtherIncomeFrequency,
   OtherIncomeType,
@@ -23,12 +23,16 @@ import OtherIncome, {
 import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import React, { useEffect, useState } from "react";
 import Step, { ClaimSteps } from "../../models/Step";
-import { compact, get, isNil } from "lodash";
+import { compact, get, isBoolean, isNil } from "lodash";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import withClaimDocuments, {
+  WithClaimDocumentsProps,
+} from "../../hoc/withClaimDocuments";
 import Address from "../../models/Address";
 import Alert from "../../components/Alert";
-import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
-import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import { DateTime } from "luxon";
 import { DocumentType } from "../../models/Document";
 import Heading from "../../components/Heading";
@@ -51,11 +55,10 @@ import formatDateRange from "../../utils/formatDateRange";
 import getI18nContextForIntermittentFrequencyDuration from "../../utils/getI18nContextForIntermittentFrequencyDuration";
 import getMissingRequiredFields from "../../utils/getMissingRequiredFields";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
+import isBlank from "../../utils/isBlank";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import tracker from "../../services/tracker";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
-import withClaimDocuments from "../../hoc/withClaimDocuments";
 
 /**
  * Format an address onto a single line, or return undefined if the address
@@ -75,18 +78,13 @@ function formatAddress(address: Partial<Address> | null) {
   return formatted;
 }
 
-interface ReviewProps {
-  appLogic: AppLogic;
-  claim: BenefitsApplication;
-  documents: BenefitsApplicationDocument[];
-  isLoadingDocuments: boolean;
-}
-
 /**
  * Application review page, allowing a user to review the info
  * they've entered before they submit it.
  */
-export const Review = (props: ReviewProps) => {
+export const Review = (
+  props: WithClaimDocumentsProps & WithBenefitsApplicationProps
+) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments } = props;
 
@@ -214,8 +212,7 @@ export const Review = (props: ReviewProps) => {
         <Lead>
           <Trans
             i18nKey="pages.claimsReview.partDescription"
-            tOptions={{ context: "1" }}
-            values={{ absence_id: claim.fineos_absence_id }}
+            values={{ absence_id: claim.fineos_absence_id, step: 1 }}
             components={{
               "contact-center-phone-link": (
                 <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
@@ -370,7 +367,8 @@ export const Review = (props: ReviewProps) => {
         })}
       </ReviewRow>
 
-      {workPattern.work_pattern_type === WorkPatternType.fixed &&
+      {workPattern.work_pattern_days &&
+        workPattern.work_pattern_type === WorkPatternType.fixed &&
         workPattern.minutesWorkedPerWeek !== null && (
           <ReviewRow
             level={reviewRowLevel}
@@ -720,6 +718,17 @@ export const Review = (props: ReviewProps) => {
               context: "2",
             })}
           </Heading>
+          <Lead>
+            <Trans
+              i18nKey="pages.claimsReview.partDescription"
+              values={{ absence_id: claim.fineos_absence_id, step: 2 }}
+              components={{
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
+              }}
+            />
+          </Lead>
 
           {/* PAYMENT METHOD */}
           <ReviewHeading level={reviewHeadingLevel}>
@@ -763,6 +772,21 @@ export const Review = (props: ReviewProps) => {
                     get(claim, "payment_preference.bank_account_type")
                   ),
                 })}
+              </ReviewRow>
+            </React.Fragment>
+          )}
+          {isBoolean(claim.is_withholding_tax) && (
+            <React.Fragment>
+              <ReviewHeading level={reviewHeadingLevel}>
+                {t("pages.claimsReview.stepHeading", { context: "tax" })}
+              </ReviewHeading>
+              <ReviewRow
+                label={t("pages.claimsReview.taxLabel")}
+                level={reviewRowLevel}
+              >
+                {claim.is_withholding_tax === true
+                  ? t("pages.claimsReview.taxYesWithhold")
+                  : t("pages.claimsReview.taxNoWithhold")}
               </ReviewRow>
             </React.Fragment>
           )}
@@ -855,7 +879,7 @@ interface PreviousLeaveListProps {
 
 export const PreviousLeaveList = (props: PreviousLeaveListProps) => {
   const { t } = useTranslation();
-  if (!props.entries) return null;
+  if (!props.entries.length) return null;
 
   const rows = props.entries.map((entry, index) => (
     <ReviewRow
@@ -946,7 +970,7 @@ export const EmployerBenefitList = (props: EmployerBenefitListProps) => {
     if (entry.is_full_salary_continuous) {
       amount = t("pages.claimsReview.employerBenefitIsFullSalaryContinuous");
     } else {
-      amount = entry.benefit_amount_dollars
+      amount = !isBlank(entry.benefit_amount_dollars)
         ? t("pages.claimsReview.amountPerFrequency", {
             context: findKeyByValue(
               EmployerBenefitFrequency,
@@ -999,7 +1023,7 @@ export const OtherIncomeList = (props: OtherIncomeListProps) => {
       entry.income_end_date
     );
 
-    const amount = entry.income_amount_dollars
+    const amount = !isBlank(entry.income_amount_dollars)
       ? t("pages.claimsReview.amountPerFrequency", {
           context: findKeyByValue(
             OtherIncomeFrequency,

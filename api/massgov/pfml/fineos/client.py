@@ -259,3 +259,8 @@ class AbstractFINEOSClient(abc.ABC, metaclass=abc.ABCMeta):
     ) -> str:
         """Create Service Agreement For An Employer in FINEOS"""
         pass
+
+    @abc.abstractmethod
+    def send_tax_withholding_preference(self, absence_id: str, is_withholding_tax: bool) -> None:
+        """Send tax withholding preference to FINEOS"""
+        pass

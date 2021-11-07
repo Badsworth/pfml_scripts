@@ -1,8 +1,10 @@
 import { Dispatch, SetStateAction, useRef, useState } from "react";
 import { get, set } from "lodash";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type FormStateBody = Record<string, any>;
+interface FormStateBody {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [fieldName: string]: any;
+}
 type SetFormState = Dispatch<SetStateAction<FormStateBody>>;
 
 export class FormState {

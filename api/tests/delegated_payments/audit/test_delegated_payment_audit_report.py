@@ -79,8 +79,15 @@ def test_get_payment_audit_report_details(test_db_session, initialize_factories_
     )
     stage_payment_audit_report_details(
         payment,
-        PaymentAuditReportType.DUA_DIA_REDUCTION,
-        "DUA/DIA Reduction Test Message",
+        PaymentAuditReportType.DUA_ADDITIONAL_INCOME,
+        "DUA Reduction Test Message",
+        None,
+        test_db_session,
+    )
+    stage_payment_audit_report_details(
+        payment,
+        PaymentAuditReportType.DIA_ADDITIONAL_INCOME,
+        "DIA Reduction Test Message",
         None,
         test_db_session,
     )
@@ -107,18 +114,19 @@ def test_get_payment_audit_report_details(test_db_session, initialize_factories_
 
     assert audit_report_details
     assert audit_report_details.max_weekly_benefits_details == "Max Weekly Benefits Test Message"
-    assert audit_report_details.dua_dia_reduction_details == "DUA/DIA Reduction Test Message"
+    assert audit_report_details.dua_additional_income_details == "DUA Reduction Test Message"
+    assert audit_report_details.dia_additional_income_details == "DIA Reduction Test Message"
     assert audit_report_details.dor_fineos_name_mismatch_details == "Name mismatch Test Message"
     assert audit_report_details.rejected_by_program_integrity
     assert not audit_report_details.skipped_by_program_integrity
     assert (
         audit_report_details.rejected_notes
-        == f"{AUDIT_REPORT_NOTES_OVERRIDE[PaymentAuditReportType.MAX_WEEKLY_BENEFITS.payment_audit_report_type_id]} (Rejected), {PaymentAuditReportType.DUA_DIA_REDUCTION.payment_audit_report_type_description}, {PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH.payment_audit_report_type_description}, {PaymentAuditReportType.LEAVE_PLAN_IN_REVIEW.payment_audit_report_type_description} (Skipped)"
+        == f"{AUDIT_REPORT_NOTES_OVERRIDE[PaymentAuditReportType.MAX_WEEKLY_BENEFITS.payment_audit_report_type_id]} (Rejected), {PaymentAuditReportType.DUA_ADDITIONAL_INCOME.payment_audit_report_type_description}, {PaymentAuditReportType.DIA_ADDITIONAL_INCOME.payment_audit_report_type_description}, {PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH.payment_audit_report_type_description}, {PaymentAuditReportType.LEAVE_PLAN_IN_REVIEW.payment_audit_report_type_description} (Skipped)"
     )
 
     # test that the audit report time was set
     audit_report_details = test_db_session.query(PaymentAuditReportDetails).all()
-    assert len(audit_report_details) == 4
+    assert len(audit_report_details) == 5
     for audit_report_detail in audit_report_details:
         assert audit_report_detail.added_to_audit_report_at == audit_report_time
 
@@ -428,8 +436,8 @@ def validate_payment_audit_csv_row_by_payment_audit_data(
         assert row[PAYMENT_AUDIT_CSV_HEADERS.max_weekly_benefits_details] != ""
 
     if scenario_descriptor.audit_report_detail_informational:
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.dua_dia_reduction_details]
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.dua_dia_reduction_details] != ""
+        assert row[PAYMENT_AUDIT_CSV_HEADERS.dua_additional_income_details]
+        assert row[PAYMENT_AUDIT_CSV_HEADERS.dua_additional_income_details] != ""
 
     assert row[PAYMENT_AUDIT_CSV_HEADERS.dor_fineos_name_mismatch_details] == ""
 

@@ -53,6 +53,7 @@ import { fields as scheduleFixedFields } from "../pages/applications/schedule-fi
 import { fields as scheduleVariableFields } from "../pages/applications/schedule-variable";
 import { fields as ssnFields } from "../pages/applications/ssn";
 import { fields as stateIdFields } from "../pages/applications/state-id";
+import { fields as taxWithholdingFields } from "../pages/applications/tax-withholding";
 import { fields as workPatternTypeFields } from "../pages/applications/work-pattern-type";
 
 export interface ClaimantFlowContext {
@@ -66,7 +67,7 @@ type ClaimFlowGuardFn = (context: ClaimantFlowContext) => boolean;
  * @see https://xstate.js.org/docs/guides/guards.html
  *
  */
-export const guards: Record<string, ClaimFlowGuardFn> = {
+export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
   // claimants upload additional docs after the claim is completed.
   // claimants will either be routed to the status page vs. the checklist
   // if they are uploading an additional doc.
@@ -105,6 +106,7 @@ const checklistEvents = {
   OTHER_LEAVE: routes.applications.previousLeavesIntro,
   EMPLOYER_INFORMATION: routes.applications.employmentStatus,
   PAYMENT: routes.applications.paymentMethod,
+  TAX_WITHHOLDING: routes.applications.taxWithholding,
   UPLOAD_CERTIFICATION: routes.applications.uploadCertification,
   UPLOAD_ID: routes.applications.uploadId,
 };
@@ -135,11 +137,11 @@ export interface ClaimantFlowState {
     fields?: string[];
     step?: string;
   };
-  on: Record<string, string | ConditionalEvent[]>;
+  on: { [event: string]: string | ConditionalEvent[] };
 }
 
 const claimantFlow: {
-  states: Record<string, ClaimantFlowState>;
+  states: { [route: string]: ClaimantFlowState };
 } = {
   states: {
     [routes.applications.getReady]: {
@@ -654,6 +656,15 @@ const claimantFlow: {
       meta: {
         step: ClaimSteps.payment,
         fields: paymentMethodFields,
+      },
+      on: {
+        CONTINUE: routes.applications.checklist,
+      },
+    },
+    [routes.applications.taxWithholding]: {
+      meta: {
+        step: ClaimSteps.taxWithholding,
+        fields: taxWithholdingFields,
       },
       on: {
         CONTINUE: routes.applications.checklist,

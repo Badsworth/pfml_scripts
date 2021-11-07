@@ -68,7 +68,6 @@ const PageWrapper = (props: PageWrapperProps) => {
 
   /**
    * Should this page display a maintenance message instead of its normal content?
-   * @type {boolean}
    */
   const showMaintenancePageBody =
     maintenanceEnabled &&

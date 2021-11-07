@@ -1,7 +1,8 @@
 import React, { useEffect } from "react";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import AddressModel from "../../models/Address";
-import { AppLogic } from "../../hooks/useAppLogic";
-import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import FieldsetAddress from "../../components/FieldsetAddress";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -10,7 +11,6 @@ import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.has_mailing_address",
@@ -29,15 +29,7 @@ export const fields = [
   "claim.mailing_address.zip",
 ];
 
-interface AddressProps {
-  claim: BenefitsApplication;
-  appLogic: AppLogic;
-  query: {
-    claim_id?: string;
-  };
-}
-
-export const Address = (props: AddressProps) => {
+export const Address = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

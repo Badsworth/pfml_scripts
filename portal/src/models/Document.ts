@@ -38,3 +38,41 @@ export const DocumentType = {
   certification: { ...CertificationType },
   ...OtherDocumentType,
 } as const;
+
+/**
+ * A document record from the application endpoints
+ */
+export interface BenefitsApplicationDocument {
+  content_type: string;
+  created_at: string;
+  description: string;
+  document_type: DocumentTypeEnum;
+  fineos_document_id: string;
+  name: string;
+  user_id: string;
+  application_id: string;
+}
+
+/**
+ * A document record from the employer endpoints
+ */
+export interface ClaimDocument {
+  content_type: string;
+  created_at: string;
+  description: string | null;
+  document_type: DocumentTypeEnum;
+  fineos_document_id: string;
+  name: string | null;
+}
+
+export function isBenefitsApplicationDocument(
+  document: BenefitsApplicationDocument | ClaimDocument
+): document is BenefitsApplicationDocument {
+  return "application_id" in document;
+}
+
+export function isClaimDocument(
+  document: BenefitsApplicationDocument | ClaimDocument
+): document is ClaimDocument {
+  return !isBenefitsApplicationDocument(document);
+}

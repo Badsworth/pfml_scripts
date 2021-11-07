@@ -5,6 +5,7 @@ provider "registry.terraform.io/hashicorp/archive" {
   version     = "1.3.0"
   constraints = "~> 1.3"
   hashes = [
+    "h1:T3DszgOa/75SiiONgEDRujpN5rSqIw9TvFZXHjpqMB4=",
     "h1:bzjSdD6pqVQBmcfi+Muz2rgHVDBUZNqSqyDIHbN14zI=",
     "zh:115aa6bc7825402a8d4e2e954378a9f48e4fdbeabe081ffd04e0a2f6786159bb",
     "zh:21f731ffac20a67615c64a7a8a96949c971ee28ffd5807d8c299faba73b5e273",
@@ -25,6 +26,7 @@ provider "registry.terraform.io/hashicorp/aws" {
   version     = "3.56.0"
   constraints = "~> 3.56.0"
   hashes = [
+    "h1:L0F0l8AuDcLL+Grob4eHWdc3jm/dCufnU5lWWEpi+F8=",
     "h1:XuiEcFvwm+GkRpt4MqfwJpfdU2BssSjpyqMkqrI3Pjs=",
     "zh:001373be6fbc5738bf8c3aa8688b248ba5f99b04174310c0efcbbf23e6c4dc29",
     "zh:0d4af59266668089790f5a7bdeb25642ba750fb5dc7934fe28d1cc36310ba495",
@@ -43,6 +45,7 @@ provider "registry.terraform.io/hashicorp/aws" {
 provider "registry.terraform.io/hashicorp/null" {
   version = "3.1.0"
   hashes = [
+    "h1:vpC6bgUQoJ0znqIKVFevOdq+YQw42bRq0u+H3nto8nA=",
     "h1:xhbHC6in3nQryvTQBWKxebi3inG5OCgHgc4fRxL0ymc=",
     "zh:02a1675fd8de126a00460942aaae242e65ca3380b5bb192e8773ef3da9073fd2",
     "zh:53e30545ff8926a8e30ad30648991ca8b93b6fa496272cd23b26763c8ee84515",
@@ -61,6 +64,7 @@ provider "registry.terraform.io/hashicorp/null" {
 provider "registry.terraform.io/hashicorp/random" {
   version = "3.1.0"
   hashes = [
+    "h1:BZMEPucF+pbu9gsPk0G0BHx7YP04+tKdq2MrRDF1EDM=",
     "h1:rKYu5ZUbXwrLG1w81k7H3nce/Ys6yAxXhWcbtk36HjY=",
     "zh:2bbb3339f0643b5daa07480ef4397bd23a79963cc364cdfbb4e86354cb7725bc",
     "zh:3cd456047805bf639fbf2c761b1848880ea703a054f76db51852008b11008626",
@@ -81,6 +85,7 @@ provider "registry.terraform.io/newrelic/newrelic" {
   constraints = "~> 2.15.0"
   hashes = [
     "h1:/WvP+XohPzT/OvmfDaTCfzvL9g+wK8oQrgbpeUmK9Bg=",
+    "h1:bGsHESOMFeWaOrBqzrfgHt9sXICOvM45fH8KCb5YtiA=",
     "zh:12ffe2f6546173df95f6f8f86c6711de96d84909434e262d9972686a303fc525",
     "zh:145a56ad50361f06540d9b549e918cb0b9608566ddc776c426e7b95e856ea466",
     "zh:4c102b8340e606bc1b8c2fe81c06251fb561a77af6508ddaa78391138683db32",

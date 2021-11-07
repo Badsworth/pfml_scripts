@@ -1,28 +1,21 @@
-import BenefitsApplication, {
-  RelationshipToCaregiver,
-} from "../../models/BenefitsApplication";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import Alert from "../../components/Alert";
-import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
 import React from "react";
+import { RelationshipToCaregiver } from "../../models/BenefitsApplication";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
 import findKeyByValue from "../../utils/findKeyByValue";
 import { get } from "lodash";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
-interface Props {
-  appLogic: AppLogic;
-  claim: BenefitsApplication;
-  query: Record<string, string>;
-}
-
-export const CaringLeaveAttestation = (props: Props) => {
+export const CaringLeaveAttestation = (props: WithBenefitsApplicationProps) => {
   const { t } = useTranslation();
-  const { appLogic, claim, query } = props;
+  const { appLogic, claim } = props;
   const relationship = get(
     claim,
     "leave_details.caring_leave_metadata.relationship_to_caregiver"
@@ -52,7 +45,11 @@ export const CaringLeaveAttestation = (props: Props) => {
         </p>
         <ButtonLink
           className="text-no-underline text-white"
-          href={appLogic.portalFlow.getNextPageRoute("CONTINUE", {}, query)}
+          href={appLogic.portalFlow.getNextPageRoute(
+            "CONTINUE",
+            {},
+            { claim_id: claim.application_id }
+          )}
         >
           {t("pages.claimsCaringLeaveAttestation.submitApplicationButton")}
         </ButtonLink>

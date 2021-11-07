@@ -21,8 +21,10 @@ provider "registry.terraform.io/hashicorp/archive" {
 }
 
 provider "registry.terraform.io/hashicorp/aws" {
-  version = "3.63.0"
+  version     = "3.63.0"
+  constraints = "~> 3.63.0"
   hashes = [
+    "h1:Z+2GvXLgqQ/uPMH8dv+dXJ/t+jd6sriYjhCJS6kSO6g=",
     "h1:v9aPF3aaBpk0uSO5pfggYJKGgP/Ur28hZRJs1jS+ttI=",
     "zh:42c6c98b294953a4e1434a331251e539f5372bf6779bd61ab5df84cac0545287",
     "zh:5493773762a470889c9a23db97582d3a82035847c8d3bd13323b4c3012abf325",
@@ -43,6 +45,7 @@ provider "registry.terraform.io/newrelic/newrelic" {
   constraints = "~> 2.30.0"
   hashes = [
     "h1:IB4SBt3Bq5WbCbJCBZbRWyq4XHibli+/xUr03FfVrLc=",
+    "h1:rZ07yzqiCPMFV7sU7kEya6g4sCqI5+Yej6tG9x1uh2U=",
     "zh:132aeb8d451f87c2c6629369a06a4761ea7c7a546bb53ffbb64467ef6cd862e3",
     "zh:244453c32142ba1748d85c7b29bdac0b54b660a3424ec1e93d8994de993c5d52",
     "zh:2c6a53841662a1f33ded75485032ba013b0f0fe5d8d7697a12f32468e95bd1f5",
@@ -66,6 +69,7 @@ provider "registry.terraform.io/pagerduty/pagerduty" {
   version     = "2.0.0"
   constraints = "~> 2.0.0"
   hashes = [
+    "h1:+0aFJeF5GKQ9iRNj1FKODUOdLSd17KPlozf+BYHQUeU=",
     "h1:Jh0IBC8QY6YqAmihDvYNJ7guNXzyPyMmO8evJdPJ4As=",
     "zh:018f068b960f543b8d0efbe6f04fd777f046512c14e5957a6405f778848719a0",
     "zh:1a78984dedb1736150f67e5ddd0d9a6fd0f6f37f45ad2447d923e60892dd2493",

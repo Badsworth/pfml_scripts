@@ -7,6 +7,7 @@ describe("Create a new caring leave claim in FINEOS and add Historical Absence c
     portal.deleteDownloadsFolder();
   });
 
+  const historical =
   it("Create historical absence case within Absence Case", () => {
     fineos.before();
     cy.task("generateClaim", "HIST_CASE").then((claim) => {
@@ -19,8 +20,21 @@ describe("Create a new caring leave claim in FINEOS and add Historical Absence c
         });
         fineosPages.ClaimPage.visit(
           res.fineos_absence_id
-        ).addHistoricalAbsenceCase();
+        )
+          .addHistoricalAbsenceCase();
       });
+    });
+  });
+
+  it("Check to see if the Suppress Correspondence is available in the Absence Case", () => {
+    cy.dependsOnPreviousPass([historical]);
+    fineos.before();
+    cy.unstash<Submission>("submission").then((submission) => {
+      fineosPages.ClaimPage.visit(
+        submission.fineos_absence_id
+      )
+        .suppressCorrespondence(true)
+        .removeSuppressCorrespondence()
     });
   });
 

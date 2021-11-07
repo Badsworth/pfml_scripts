@@ -3,7 +3,6 @@ import React from "react";
 import Tag from "./Tag";
 import findKeyByValue from "../utils/findKeyByValue";
 import formatDate from "../utils/formatDate";
-import { isFeatureEnabled } from "../services/featureFlags";
 import { orderBy } from "lodash";
 import { useTranslation } from "../locales/i18n";
 
@@ -50,28 +49,12 @@ const AbsenceCaseStatusTag = ({
   };
 
   if (managedRequirements && managedRequirements.length > 0) {
-    // TODO (EMPLOYER-1542): Remove feature condition
-    if (isFeatureEnabled("employerShowReviewByStatus")) {
-      return (
-        <Tag
-          state="warning"
-          label={t("components.absenceCaseStatusTag.status_openRequirements", {
-            followupDate: findClosestFollowupDate(),
-          })}
-        />
-      );
-    }
-
-    // TODO (EMPLOYER-1542): Remove this once Review By feature is always enabled
-    return <React.Fragment>--</React.Fragment>;
-  }
-
-  // TODO (EMPLOYER-1542): Remove condition
-  if (isFeatureEnabled("employerShowReviewByStatus") && !mappedStatus) {
     return (
       <Tag
-        state="inactive"
-        label={t("components.absenceCaseStatusTag.status_noAction")}
+        state="warning"
+        label={t("components.absenceCaseStatusTag.status_openRequirements", {
+          followupDate: findClosestFollowupDate(),
+        })}
       />
     );
   }
@@ -84,8 +67,10 @@ const AbsenceCaseStatusTag = ({
       })}
     />
   ) : (
-    // TODO (EMPLOYER-1542): Replace with `inactive` tag on line 52
-    <React.Fragment>--</React.Fragment>
+    <Tag
+      state="inactive"
+      label={t("components.absenceCaseStatusTag.status_noAction")}
+    />
   );
 };
 

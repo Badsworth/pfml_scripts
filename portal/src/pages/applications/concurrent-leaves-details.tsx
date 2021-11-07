@@ -1,5 +1,6 @@
-import { AppLogic } from "../../hooks/useAppLogic";
-import BenefitsApplication from "../../models/BenefitsApplication";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import ConcurrentLeave from "../../models/ConcurrentLeave";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputDate from "../../components/InputDate";
@@ -10,7 +11,6 @@ import { get } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.concurrent_leave",
@@ -19,14 +19,8 @@ export const fields = [
   "claim.concurrent_leave.leave_end_date",
 ];
 
-interface ConcurrentLeavesDetailsProps {
-  appLogic: AppLogic;
-  claim: BenefitsApplication;
-  query: Record<string, string>;
-}
-
 export const ConcurrentLeavesDetails = (
-  props: ConcurrentLeavesDetailsProps
+  props: WithBenefitsApplicationProps
 ) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;

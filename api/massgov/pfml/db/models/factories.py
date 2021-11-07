@@ -759,14 +759,21 @@ class PreviousLeaveSameReasonFactory(PreviousLeaveFactory):
         model = application_models.PreviousLeaveSameReason
 
 
-class StateMetricFactory(BaseFactory):
+class BenefitsMetricsFactory(BaseFactory):
     class Meta:
-        model = application_models.StateMetric
+        model = application_models.BenefitsMetrics
+
+    effective_date = datetime(2019, 10, 1)
+    average_weekly_wage = Decimal("1331.66")
+    maximum_weekly_benefit_amount = Decimal("1000.00")
+
+
+class UnemploymentMetricFactory(BaseFactory):
+    class Meta:
+        model = application_models.UnemploymentMetric
 
     effective_date = datetime(2019, 10, 1)
     unemployment_minimum_earnings = Decimal("5000")
-    average_weekly_wage = Decimal("1331.66")
-    maximum_weekly_benefit_amount = Decimal("1000.00")
 
 
 class DocumentFactory(BaseFactory):

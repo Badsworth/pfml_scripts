@@ -350,13 +350,13 @@ export class ClaimPage {
   suppressCorrespondence(hasAction: boolean): this {
     cy.contains("Options").click();
     if (hasAction) {
-      cy.contains("Notifications").click();
+      cy.contains("Notifications").click( {force: true} );
       cy.get("input[type='submit'][value='Suppress Notifications']").click();
       cy.contains(
         "Automatic Notifications and Correspondence have been suppressed."
       );
       cy.get("#alertsHeader").within(() => {
-        cy.contains("Open").click();
+        cy.contains("Open").click( {force: true} );
         waitForAjaxComplete();
         cy.contains(
           "Automatic Notifications and Correspondence have been suppressed."
@@ -369,6 +369,13 @@ export class ClaimPage {
         "Notifications"
       ).should("have.attr", "disabled");
     }
+    return this;
+  }
+
+  removeSuppressCorrespondence(): this {
+    cy.contains("Options").click();
+    cy.contains("Notifications").click({force: true} );
+    cy.get("input[type='submit'][value='End Suppression']").click();
     return this;
   }
 }
@@ -1960,6 +1967,19 @@ export class ClaimantPage {
     onTab("Payment Preferences");
     waitForAjaxComplete();
     return new PaymentPreferencePage();
+  }
+
+  addCase(hasAccess: boolean): this {
+    if (hasAccess) {
+      cy.get(
+        `div[id^="MENUBAR.PartySubjectMenu_"][id$="_MENUBAR.PartySubjectMenu"] div[title="Add Case"]`
+      ).should("be.visible");
+    } else {
+      cy.get(
+        `div[id^="MENUBAR.PartySubjectMenu_"][id$="_MENUBAR.PartySubjectMenu"] div[title="Add Case"]`
+      ).should("not.be.visible");
+    }
+    return this;
   }
 }
 /**Contains utilities used within multiple pages throughout the intake process */

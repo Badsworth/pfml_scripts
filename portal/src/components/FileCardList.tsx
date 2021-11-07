@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import AppErrorInfo from "../models/AppErrorInfo";
-import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
+import { BenefitsApplicationDocument } from "../models/Document";
 import FileCard from "./FileCard";
 import Spinner from "./Spinner";
 import TempFile from "../models/TempFile";
@@ -85,16 +85,10 @@ const FileCardList = (props: FileCardListProps) => {
     fileHeadingPrefix,
     fileErrors,
   } = props;
-
-  let documentFileCount = 0;
-  let documentFileCards: JSX.Element[] = [];
-
-  if (documents) {
-    documentFileCount = documents.length;
-    documentFileCards = documents.map((file, index) =>
-      renderDocumentFileCard(file, index, fileHeadingPrefix)
-    );
-  }
+  const documentFileCount = documents.length;
+  const documentFileCards = documents.map((file, index) =>
+    renderDocumentFileCard(file, index, fileHeadingPrefix)
+  );
 
   const fileCards = tempFiles.items.map((file, index) => {
     const fileError = fileErrors.find(

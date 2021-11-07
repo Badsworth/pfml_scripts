@@ -3,13 +3,15 @@ import Fieldset from "./Fieldset";
 import FormLabel from "./FormLabel";
 import InputText from "./InputText";
 import classnames from "classnames";
+import isBlank from "../utils/isBlank";
 
 /**
  * Add leading zeros if the numbers are less than 10
  * @example addLeadingZero(1) => "01"
  */
 function addLeadingZero(value: string | number) {
-  if (!value || (typeof value === "string" && value.match(/^0/))) return value;
+  if (isBlank(value) || (typeof value === "string" && value.match(/^0/)))
+    return value;
 
   return value.toString().padStart(2, "0");
 }
@@ -19,11 +21,7 @@ function addLeadingZero(value: string | number) {
  * @returns ISO 8601 date string (YYYY-MM-DD)
  */
 export function formatFieldsAsISO8601(
-  {
-    month,
-    day,
-    year,
-  }: {
+  fields: {
     day?: number | string;
     month?: number | string;
     year?: number | string;
@@ -33,9 +31,13 @@ export function formatFieldsAsISO8601(
   } = {}
 ) {
   // Disallow anything other than numbers, and restrict invalid lengths
-  month = month ? month.toString().replace(/\D/g, "") : ""; // "abc" => ""
-  day = day ? day.toString().replace(/\D/g, "") : "";
-  year = year ? year.toString().replace(/\D/g, "") : "";
+  let month = isBlank(fields.month)
+    ? ""
+    : fields.month.toString().replace(/\D/g, ""); // "abc" => ""
+  let day = isBlank(fields.day) ? "" : fields.day.toString().replace(/\D/g, "");
+  const year = isBlank(fields.year)
+    ? ""
+    : fields.year.toString().replace(/\D/g, "");
 
   if (!options.skipLeadingZeros) {
     month = addLeadingZero(month);
@@ -146,7 +148,7 @@ interface InputDateProps {
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/form-controls)
  */
 function InputDate(props: InputDateProps) {
-  const hasError = !!props.errorMsg;
+  const hasError = !isBlank(props.errorMsg);
   const values = parseDateParts(props.value);
   const inputClassNames = {
     month: classnames("usa-input--inline", {

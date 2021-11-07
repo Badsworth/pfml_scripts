@@ -2,6 +2,7 @@ import { fineos, fineosPages, portal } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { extractLeavePeriod } from "../../../../src/util/claims";
 import { addDays, format } from "date-fns";
+
 describe("Post-approval (notifications/notices)", () => {
   const approval =
     it("Submit a Care for a Family member claim for approval", () => {
@@ -31,8 +32,10 @@ describe("Post-approval (notifications/notices)", () => {
           cy.stash("extendedDates", [newStartDate, newEndDate]);
           cy.stash("submission", submission);
           // Approve the claim
-          fineosPages.ClaimPage.visit(response.fineos_absence_id)
-            .adjudicate((adjudication) => {
+          const claimPage = fineosPages.ClaimPage.visit(response.fineos_absence_id)
+            claimPage.triggerNotice("Preliminary Designation");
+            fineos.onTab("Absence Hub");
+            claimPage.adjudicate((adjudication) => {
               adjudication
                 .evidence((evidence) => {
                   claim.documents.forEach((doc) =>
@@ -44,8 +47,7 @@ describe("Post-approval (notifications/notices)", () => {
             })
             // Skip checking tasks. We do that in other tests.
             // Also skip checking claim status for the same reason.
-            .approve()
-            .triggerNotice("Preliminary Designation");
+            claimPage.approve();
         });
       });
     });

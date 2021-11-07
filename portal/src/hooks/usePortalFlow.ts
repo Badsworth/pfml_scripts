@@ -4,7 +4,6 @@ import {
 } from "../utils/routeWithParams";
 import machineConfigs, { guards } from "../flows";
 import { ClaimantFlowContext } from "../flows/claimant";
-import { RouteTransitionError } from "../errors";
 import { createMachine } from "xstate";
 import { useMemo } from "react";
 import { useRouter } from "next/router";
@@ -78,9 +77,6 @@ const usePortalFlow = () => {
       pageRoute || pathname,
       event
     );
-    if (!nextPageRoute) {
-      throw new RouteTransitionError(`Next page not found for: ${event}`);
-    }
     return createRouteWithQuery(nextPageRoute.value.toString(), params);
   };
 

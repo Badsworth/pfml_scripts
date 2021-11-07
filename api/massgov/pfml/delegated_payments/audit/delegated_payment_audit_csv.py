@@ -28,10 +28,19 @@ class PaymentAuditCSV(AbstractRecord):
     payment_period_start_date: Optional[str]
     payment_period_end_date: Optional[str]
     payment_period_weeks: Optional[str]
+    gross_payment_amount: Optional[str]
     payment_amount: Optional[str]
+    federal_withholding_amount: Optional[str]
+    state_withholding_amount: Optional[str]
+    employer_reimbursement_amount: Optional[str]
+    child_support_amount: Optional[str]
     absence_case_number: Optional[str]
     c_value: Optional[str]
     i_value: Optional[str]
+    federal_withholding_i_value: Optional[str]
+    state_withholding_i_value: Optional[str]
+    employer_reimbursement_i_value: Optional[str]
+    child_support_i_value: Optional[str]
     employer_id: Optional[str]
     absence_case_creation_date: Optional[str]
     absence_start_date: Optional[str]
@@ -45,7 +54,8 @@ class PaymentAuditCSV(AbstractRecord):
     previously_skipped_payment_count: Optional[str]
 
     max_weekly_benefits_details: Optional[str] = None
-    dua_dia_reduction_details: Optional[str] = None
+    dua_additional_income_details: Optional[str] = None
+    dia_additional_income_details: Optional[str] = None
     rejected_by_program_integrity: Optional[str] = None
     skipped_by_program_integrity: Optional[str] = None
     rejected_notes: Optional[str] = None
@@ -56,7 +66,8 @@ class PaymentAuditDetails:
     """Subset of payment audit report relevant to system generated details"""
 
     max_weekly_benefits_details: Optional[str] = None
-    dua_dia_reduction_details: Optional[str] = None
+    dua_additional_income_details: Optional[str] = None
+    dia_additional_income_details: Optional[str] = None
     dor_fineos_name_mismatch_details: Optional[str] = None
     rejected_by_program_integrity: bool = False
     skipped_by_program_integrity: bool = False
@@ -83,10 +94,19 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     payment_period_start_date="Payment Period Start",
     payment_period_end_date="Payment Period End",
     payment_period_weeks="Payment Period Weeks",
+    gross_payment_amount="Gross Payment Amount",
     payment_amount="Payment Amount",
+    federal_withholding_amount="Federal Withholding Amount",
+    state_withholding_amount="State Withholding Amount",
+    employer_reimbursement_amount="Employer Reimbursement Amount",
+    child_support_amount="Child Support Amount",
     absence_case_number="Absence Case Number",
     c_value="C Value",
     i_value="I Value",
+    federal_withholding_i_value="Federal Withholding I Value",
+    state_withholding_i_value="State Withholding I Value",
+    employer_reimbursement_i_value="Employer Reimbursement I Value",
+    child_support_i_value="Child Support I Value",
     employer_id="Employer ID",
     absence_case_creation_date="Absence Case Creation Date",
     absence_start_date="Absence Case Start Date",
@@ -99,7 +119,8 @@ PAYMENT_AUDIT_CSV_HEADERS = PaymentAuditCSV(
     previously_rejected_payment_count="Previously Rejected Payment Count",
     previously_skipped_payment_count="Previously Skipped Payment Count",
     max_weekly_benefits_details=PaymentAuditReportType.MAX_WEEKLY_BENEFITS.payment_audit_report_type_description,
-    dua_dia_reduction_details=PaymentAuditReportType.DUA_DIA_REDUCTION.payment_audit_report_type_description,
+    dua_additional_income_details=PaymentAuditReportType.DUA_ADDITIONAL_INCOME.payment_audit_report_type_description,
+    dia_additional_income_details=PaymentAuditReportType.DIA_ADDITIONAL_INCOME.payment_audit_report_type_description,
     rejected_by_program_integrity="Reject",
     skipped_by_program_integrity="Skip",
     rejected_notes="Reject Notes",

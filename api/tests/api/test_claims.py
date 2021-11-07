@@ -2018,7 +2018,7 @@ class TestGetClaimEndpoint:
             "error" : "User does not have permission to access the resource or the instance data",
             "correlationId" : "foo"
         }"""
-        error = exception.FINEOSClientBadResponse("get_absence", 200, 403, error_msg)
+        error = exception.FINEOSForbidden("get_absence", 200, 403, error_msg)
         mock_get_absence_periods.side_effect = error
 
         employer = EmployerFactory.create(employer_fein="813648030")

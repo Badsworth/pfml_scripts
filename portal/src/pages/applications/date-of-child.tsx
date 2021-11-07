@@ -1,9 +1,11 @@
-import BenefitsApplication, {
+import {
   ReasonQualifier,
   ReasonQualifierEnum,
 } from "../../models/BenefitsApplication";
 import { get, pick, set } from "lodash";
-import { AppLogic } from "../../hooks/useAppLogic";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import { DateTime } from "luxon";
 import InputDate from "../../components/InputDate";
 import QuestionPage from "../../components/QuestionPage";
@@ -11,7 +13,6 @@ import React from "react";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 const reasonQualifierField = "leave_details.reason_qualifier";
 const childBirthDateField = "leave_details.child_birth_date";
@@ -23,15 +24,7 @@ export const fields = [
   `claim.${hasFutureChildDateField}`,
 ];
 
-interface DateOfChildProps {
-  appLogic: AppLogic;
-  claim: BenefitsApplication;
-  query: {
-    claim_id?: string;
-  };
-}
-
-export const DateOfChild = (props: DateOfChildProps) => {
+export const DateOfChild = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

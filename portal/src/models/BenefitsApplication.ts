@@ -132,7 +132,10 @@ class BenefitsApplication extends BaseBenefitsApplication {
    * of some fields, and as a result, the user experience.
    */
   get isSubmitted() {
-    return this.status === BenefitsApplicationStatus.submitted;
+    return (
+      this.status === BenefitsApplicationStatus.submitted ||
+      this.status === BenefitsApplicationStatus.completed
+    );
   }
 }
 
@@ -222,7 +225,7 @@ export class CaringLeaveMetadata {
 }
 
 export class WorkPattern {
-  work_pattern_days: WorkPatternDay[] = [];
+  work_pattern_days: WorkPatternDay[] | null = [];
   work_pattern_type:
     | typeof WorkPatternType[keyof typeof WorkPatternType]
     | null = null;
@@ -246,9 +249,9 @@ export class WorkPattern {
    * Return total minutes worked for work pattern days. Returns null if no minutes are defined for work pattern days
    */
   get minutesWorkedPerWeek() {
-    const hasNoMinutes = this.work_pattern_days.every(
-      (day) => day.minutes === null
-    );
+    const hasNoMinutes =
+      this.work_pattern_days &&
+      this.work_pattern_days.every((day) => day.minutes === null);
     if (hasNoMinutes) {
       return null;
     }
@@ -263,7 +266,7 @@ export class WorkPattern {
    */
   static createWithWeek(
     minutesWorkedPerWeek: number,
-    workPattern: WorkPattern | Record<string, never> = {}
+    workPattern: WorkPattern | { [key: string]: never } = {}
   ) {
     assert(!isNil(minutesWorkedPerWeek));
     const minutesOverWeek = spreadMinutesOverWeek(minutesWorkedPerWeek);

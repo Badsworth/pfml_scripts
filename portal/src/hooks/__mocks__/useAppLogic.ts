@@ -7,7 +7,6 @@ import ClaimDetail from "../../models/ClaimDetail";
 import DocumentCollection from "../../models/DocumentCollection";
 import EmployerClaim from "../../models/EmployerClaim";
 import Flag from "../../models/Flag";
-import PaginationMeta from "../../models/PaginationMeta";
 import { uniqueId } from "lodash";
 
 export default jest.fn(() => ({
@@ -50,7 +49,7 @@ export default jest.fn(() => ({
     isLoadingClaims: null,
     isLoadingClaimDetail: null,
     loadClaimDetail: jest.fn(),
-    paginationMeta: new PaginationMeta(),
+    paginationMeta: {},
     loadPage: jest.fn(),
   },
   clearErrors: jest.fn(),

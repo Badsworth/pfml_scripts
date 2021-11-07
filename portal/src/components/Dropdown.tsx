@@ -1,6 +1,7 @@
 import React, { useEffect } from "react";
 import FormLabel from "./FormLabel";
 import classnames from "classnames";
+import isBlank from "../utils/isBlank";
 import useUniqueId from "../hooks/useUniqueId";
 
 // Only load USWDS comboBox JS on client-side since it
@@ -86,7 +87,7 @@ interface DropdownProps {
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/form-controls/#dropdown)
  */
 function Dropdown(props: DropdownProps) {
-  const hasError = !!props.errorMsg;
+  const hasError = !isBlank(props.errorMsg);
   const inputId = useUniqueId("Dropdown");
   const { autocomplete } = props;
 

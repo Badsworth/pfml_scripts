@@ -6,7 +6,7 @@ import { useTranslation } from "../../locales/i18n";
 
 interface StatusNavigationTabsProps {
   activePath: string;
-  absence_case_id?: string;
+  absence_case_id?: string | null;
 }
 
 /**

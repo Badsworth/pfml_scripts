@@ -29,8 +29,8 @@ class User {
    * Determines whether user_leave_administrators has a verifiable employer
    */
   get hasVerifiableEmployer(): boolean {
-    return this.user_leave_administrators.some(
-      (employer) => employer && this.isVerifiableEmployer(employer)
+    return this.user_leave_administrators.some((employer) =>
+      this.isVerifiableEmployer(employer)
     );
   }
 

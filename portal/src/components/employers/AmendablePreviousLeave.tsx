@@ -20,7 +20,7 @@ interface AmendablePreviousLeaveProps {
   appErrors: AppErrorInfoCollection;
   isAddedByLeaveAdmin: boolean;
   onChange: (
-    arg: PreviousLeave | Record<string, unknown>,
+    arg: PreviousLeave | { [key: string]: unknown },
     arg2: string
   ) => void;
   onRemove: (arg: PreviousLeave) => void;

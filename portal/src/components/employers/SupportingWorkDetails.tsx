@@ -18,7 +18,7 @@ interface SupportingWorkDetailsProps {
   getField: (arg: string) => string;
   getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
   initialHoursWorkedPerWeek: number | null;
-  updateFields: (arg: Record<string, unknown>) => void;
+  updateFields: (fields: { [fieldName: string]: unknown }) => void;
 }
 
 /**
@@ -97,7 +97,7 @@ const SupportingWorkDetails = (props: SupportingWorkDetailsProps) => {
             mask="hours"
             width="small"
             smallLabel
-            valueType="integer"
+            valueType="float"
           />
         </AmendmentForm>
       </ConditionalContent>

@@ -1,5 +1,6 @@
-import { AppLogic } from "../../hooks/useAppLogic";
-import BenefitsApplication from "../../models/BenefitsApplication";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import InputText from "../../components/InputText";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -7,19 +8,13 @@ import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.tax_identifier"];
-
-interface SsnProps {
-  claim: BenefitsApplication;
-  appLogic: AppLogic;
-}
 
 /**
  * A form page to capture the worker's SSN or ITIN.
  */
-export const Ssn = (props: SsnProps) => {
+export const Ssn = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

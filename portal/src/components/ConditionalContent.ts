@@ -14,7 +14,7 @@ interface ConditionalContentProps {
   /**
    * Method called to remove a field's value from your app's state.
    */
-  clearField?: (arg: string) => void;
+  clearField?: (fieldName: string) => void;
   /**
    * Method called to cache the value of each field listed in `fieldNamesClearedWhenHidden`
    */
@@ -22,7 +22,7 @@ interface ConditionalContentProps {
   /**
    * Method called to restore the previous values of all fields listed in `fieldNamesClearedWhenHidden`
    */
-  updateFields?: (arg: Record<string, unknown>) => void;
+  updateFields?: (fields: { [fieldName: string]: unknown }) => void;
   visible?: boolean;
 }
 

@@ -67,7 +67,7 @@ export function before(credentials?: Credentials): void {
             debugInfo ? `\n\nDebug Information:\n----------\n${debugInfo}` : ""
           }}`
         );
-      }, 1000);
+      }, 300);
     });
   });
 

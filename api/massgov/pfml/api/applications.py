@@ -33,6 +33,7 @@ from massgov.pfml.api.services.fineos_actions import (
     get_documents,
     mark_documents_as_received,
     mark_single_document_as_received,
+    send_tax_withholding_preference,
     send_to_fineos,
     submit_payment_preference,
     upload_document,
@@ -47,10 +48,10 @@ from massgov.pfml.api.validation.exceptions import (
 )
 from massgov.pfml.db.models.applications import Application, Document, DocumentType, LeaveReason
 from massgov.pfml.fineos.exception import (
-    FINEOSClientBadResponse,
     FINEOSClientError,
+    FINEOSEntityNotFound,
     FINEOSFatalUnavailable,
-    FINEOSNotFound,
+    FINEOSUnprocessableEntity,
 )
 from massgov.pfml.fineos.models.customer_api import Base64EncodedFileData
 from massgov.pfml.util.logging.applications import get_application_log_attributes
@@ -204,7 +205,7 @@ def applications_update(application_id):
 
 
 def get_fineos_submit_issues_response(err, existing_application):
-    if isinstance(err, FINEOSNotFound):
+    if isinstance(err, FINEOSEntityNotFound):
         return response_util.error_response(
             status_code=BadRequest,
             message="Application {} could not be submitted".format(
@@ -586,7 +587,7 @@ def document_upload(application_id, body, file):
                 exc_info=True,
             )
 
-            if isinstance(err, FINEOSClientBadResponse) and err.response_status == 422:
+            if isinstance(err, FINEOSUnprocessableEntity):
                 message = "Issue encountered while attempting to upload the document."
                 return response_util.error_response(
                     status_code=BadRequest,
@@ -841,10 +842,9 @@ def save_tax_preference(db_session, existing_application, tax_preference_body):
     db_session.refresh(existing_application)
 
 
-def send_tax_selection_to_fineos(existing_application):
+def send_tax_selection_to_fineos(existing_application, tax_preference_body):
     try:
-        pass
-        # TODO: (PORTAL-951) Integrate FINEOS call into tax withholding endpoint
+        send_tax_withholding_preference(existing_application, tax_preference_body.withhold_taxes)
     except Exception:
         logger.warning(
             "submit_tax_withholding_preference failure - failure submitting tax withholding preference to claims processing system",
@@ -862,8 +862,7 @@ def submit_tax_withholding_preference(application_id: UUID) -> Response:
         existing_application = validate_tax_withholding_request(
             db_session, application_id, tax_preference_body
         )
-
-        send_tax_selection_to_fineos(existing_application)
+        send_tax_selection_to_fineos(existing_application, tax_preference_body)
         save_tax_preference(db_session, existing_application, tax_preference_body)
 
         logger.info(

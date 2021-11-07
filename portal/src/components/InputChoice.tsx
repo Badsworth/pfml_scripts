@@ -1,5 +1,6 @@
 import React from "react";
 import classnames from "classnames";
+import isBlank from "../utils/isBlank";
 import useUniqueId from "../hooks/useUniqueId";
 
 interface Props {
@@ -82,7 +83,7 @@ function InputChoice({ type = "checkbox", ...props }: Props) {
       <label className={`usa-${type}__label`} htmlFor={id}>
         {props.label}
 
-        {props.hint && (
+        {!isBlank(props.hint) && (
           <span className="usa-hint text-base-dark">
             <br />
             {props.hint}

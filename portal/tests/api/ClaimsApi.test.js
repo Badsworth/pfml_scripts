@@ -3,7 +3,6 @@ import ClaimCollection from "../../src/models/ClaimCollection";
 import ClaimDetail from "../../src/models/ClaimDetail";
 import { ClaimEmployee } from "../../src/models/Claim";
 import ClaimsApi from "../../src/api/ClaimsApi";
-import PaginationMeta from "../../src/models/PaginationMeta";
 
 jest.mock("../../src/services/tracker");
 
@@ -157,7 +156,6 @@ describe("ClaimsApi", () => {
       const { claims, paginationMeta } = await claimsApi.getClaims();
 
       expect(claims).toBeInstanceOf(ClaimCollection);
-      expect(paginationMeta).toBeInstanceOf(PaginationMeta);
       expect({ ...paginationMeta }).toEqual(mockPaginationMeta);
 
       expect(claims.items).toHaveLength(2);

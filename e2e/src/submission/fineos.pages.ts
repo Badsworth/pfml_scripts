@@ -417,9 +417,12 @@ export class ClaimantPage extends FineosPage {
   }
   async visit(ssn: string): Promise<ClaimantPage> {
     ssn = ssn.replace(/-/g, "");
-    await this.page.click('a[aria-label="Parties"]');
-    await this.page.focus("label:text-is('Identification Number')");
-    await this.page.type("label:text-is('Identification Number')", ssn);
+    await this.page.click('a[aria-label="Parties"]', { force: true });
+    await this.page.fill(
+      "input[type='text'][name$='Social_Security_No._(SSN)']",
+      ssn,
+      { force: true }
+    );
     await this.page.click('input[type="submit"][value="Search"]', {
       force: true,
     });

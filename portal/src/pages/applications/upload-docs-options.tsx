@@ -1,11 +1,13 @@
-import BenefitsApplication, {
+import LeaveReason, { LeaveReasonType } from "../../models/LeaveReason";
+import {
   ReasonQualifier,
   ReasonQualifierEnum,
 } from "../../models/BenefitsApplication";
-import LeaveReason, { LeaveReasonType } from "../../models/LeaveReason";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import AppErrorInfo from "../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
-import { AppLogic } from "../../hooks/useAppLogic";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -14,7 +16,6 @@ import tracker from "../../services/tracker";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const UploadType = {
   mass_id: "UPLOAD_MASS_ID",
@@ -22,12 +23,7 @@ export const UploadType = {
   certification: "UPLOAD_CERTIFICATION",
 };
 
-interface UploadDocsOptionsProps {
-  claim: BenefitsApplication;
-  appLogic: AppLogic;
-}
-
-export const UploadDocsOptions = (props: UploadDocsOptionsProps) => {
+export const UploadDocsOptions = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

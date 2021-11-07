@@ -28,7 +28,7 @@ abstract class BaseCollection<T> {
    * Return a single item from the id of the item or
    * undefined if the item is not in the collection
    */
-  getItem(itemId: string) {
+  getItem(itemId: string): T | undefined {
     return this.itemsById[itemId];
   }
 
@@ -43,9 +43,12 @@ abstract class BaseCollection<T> {
       throw new Error(`Item ${this.idProperty} is null or undefined`);
     }
     if (this.getItem(itemId)) {
-      throw new Error(
-        `Item with ${this.idProperty} ${itemId} already exists in collection`
+      // eslint-disable-next-line no-console
+      console.warn(
+        `Item with ${this.idProperty} ${itemId} already exists in collection. Use updateItem() if you intended to replace the item.`
       );
+
+      return this;
     }
     const newItems = this.items.concat(item);
     return new (<new (args: T[]) => BaseCollection<T>>this.constructor)(
