@@ -42,6 +42,8 @@ export const ConcurrentLeavesDetails = (
     );
   };
 
+  const { isIntermittent } = claim;
+
   return (
     <QuestionPage
       title={t("pages.claimsConcurrentLeavesDetails.title")}
@@ -72,9 +74,9 @@ export const ConcurrentLeavesDetails = (
         hint={
           <React.Fragment>
             <LeaveDatesAlert
-              showWaitingDayPeriod
               startDate={claim.leaveStartDate}
               endDate={claim.leaveEndDate}
+              showWaitingDayPeriod={!isIntermittent}
             />
             <p>{t("pages.claimsConcurrentLeavesDetails.hintHeader")}</p>
           </React.Fragment>

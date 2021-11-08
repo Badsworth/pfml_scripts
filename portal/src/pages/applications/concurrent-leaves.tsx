@@ -83,7 +83,7 @@ export const ConcurrentLeaves = (props: WithBenefitsApplicationProps) => {
             <LeaveDatesAlert
               startDate={claim.leaveStartDate}
               endDate={claim.leaveEndDate}
-              showWaitingDayPeriod
+              showWaitingDayPeriod={!isIntermittent}
             />
 
             <IconHeading name="check_circle">
@@ -133,9 +133,10 @@ export const ConcurrentLeaves = (props: WithBenefitsApplicationProps) => {
                 />
               </Details>
             )}
-
             <IconHeading name="cancel">
-              {t("pages.claimsConcurrentLeaves.dontNeedToReport")}
+              {t("pages.claimsConcurrentLeaves.dontNeedToReport", {
+                context: isIntermittent ? "intermittentLeave" : null,
+              })}
             </IconHeading>
           </div>
         }

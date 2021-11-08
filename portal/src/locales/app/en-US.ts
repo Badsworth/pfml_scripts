@@ -1162,6 +1162,8 @@ const pages = {
       "I need to report employer-sponsored accrued paid leave I will use after the 7-day waiting period",
     dontNeedToReport:
       "You don't need to report accrued paid leave that you use during the 7-day waiting period",
+    dontNeedToReport_intermittentLeave:
+      "You don't need to report accrued paid leave that you use during the 7-day waiting period, which is 7 consecutive calendar days from the date of the first instance of leave from your employer",
     hintWhatKindBody:
       "<p>This includes any paid vacation time, sick time, and personal time. It should be reported if it’s taken during your leave period, whether it’s during the 7-day waiting period or after. Reminder: you can use accrued paid leave during the 7-day waiting period with no impact to your PFML benefit.</p>",
     hintWhatKindHeading: "What kinds of accrued paid leave to report",
