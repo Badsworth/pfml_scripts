@@ -205,6 +205,18 @@ describe("Status", () => {
     expect(container).toMatchSnapshot();
   });
 
+  it("renders the page with claim detail when there is absence_case_id in query", () => {
+    const { container } = renderPage(
+      Status,
+      {
+        addCustomSetup: setupHelper({ ...defaultClaimDetail }),
+      },
+      { query: { absence_case_id: defaultClaimDetail.fineos_absence_id } }
+    );
+
+    expect(container).toMatchSnapshot();
+  });
+
   it("shows StatusNavigationTabs if claimantShowPayments feature flag is enabled", () => {
     process.env.featureFlags = {
       claimantShowPayments: true,

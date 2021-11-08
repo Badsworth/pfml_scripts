@@ -516,6 +516,109 @@ exports[`Status renders the page with claim detail 1`] = `
 </div>
 `;
 
+exports[`Status renders the page with claim detail when there is absence_case_id in query 1`] = `
+<div>
+  <a
+    class="usa-button margin-bottom-5 usa-button--unstyled"
+    href="/applications"
+  >
+    <svg
+      class="margin-right-05"
+      height="12"
+      viewBox="0 0 448 512"
+      width="12"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M257.5 445.1l-22.2 22.2c-9.4 9.4-24.6 9.4-33.9 0L7 273c-9.4-9.4-9.4-24.6 0-33.9L201.4 44.7c9.4-9.4 24.6-9.4 33.9 0l22.2 22.2c9.5 9.5 9.3 25-.4 34.3L136.6 216H424c13.3 0 24 10.7 24 24v32c0 13.3-10.7 24-24 24H136.6l120.5 114.8c9.8 9.3 10 24.8.4 34.3z"
+        fill="currentColor"
+      />
+    </svg>
+    Back to your applications
+  </a>
+  <div
+    class="measure-6"
+  >
+    <h1
+      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3 text-normal"
+      tabindex="-1"
+    >
+      Application details
+    </h1>
+    <h2
+      class="font-heading-lg text-bold"
+    >
+      pages.claimsStatus.leaveReasonValueHeader
+    </h2>
+    <div
+      class="bg-base-lightest padding-2 tablet:display-flex tablet:padding-bottom-0"
+    >
+      <div
+        class="padding-bottom-3 padding-right-6"
+      >
+        <h2
+          class="font-heading-xs text-normal"
+        >
+          Application ID
+        </h2>
+        <p
+          class="text-bold"
+        >
+          mock-absence-case-id
+        </p>
+      </div>
+      <div>
+        <h2
+          class="font-heading-xs text-normal"
+        >
+          Employer Identification Number (EIN)
+        </h2>
+        <p
+          class="text-bold"
+        >
+          12-1234567
+        </p>
+      </div>
+    </div>
+    <div
+      class="border-bottom border-base-lighter padding-y-4"
+    >
+      <span
+        aria-valuetext="Loading legal notices"
+        class="c-spinner"
+        role="progressbar"
+      />
+    </div>
+    <div
+      class="border-bottom border-base-lighter padding-y-4"
+      id="upload_documents"
+    >
+      <h2
+        class="font-heading-md text-bold"
+      >
+        Respond to requests for information
+      </h2>
+      <div>
+        We have made a final decision for this application. Your final decision notice has more details about the appeals process.
+        <p
+          class="margin-top-1"
+        >
+          If you would like to appeal the final decision, you can do so using mail, fax, or our 
+          <a
+            href="https://www.mass.gov/forms/request-an-appeal-for-paid-family-and-medical-leave"
+            rel="noreferrer noopener"
+            target="_blank"
+          >
+            online appeals form
+          </a>
+          .
+        </p>
+      </div>
+    </div>
+  </div>
+</div>
+`;
+
 exports[`Status timeline is displayed if there is a pending absence period 1`] = `
 <div
   class="border-bottom border-base-lighter padding-y-4"

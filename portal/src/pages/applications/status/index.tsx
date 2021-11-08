@@ -36,7 +36,11 @@ export const Status = ({
   appLogic,
   query,
 }: WithUserProps & {
-  query: { absence_id?: string | null; uploaded_document_type?: string };
+  query: {
+    absence_case_id?: string;
+    absence_id?: string;
+    uploaded_document_type?: string;
+  };
 }) => {
   const { t } = useTranslation();
   const {
@@ -49,7 +53,9 @@ export const Status = ({
     },
     portalFlow,
   } = appLogic;
-  const { absence_id, uploaded_document_type } = query;
+  const { absence_case_id, absence_id, uploaded_document_type } = query;
+
+  const absenceId = absence_id || absence_case_id;
 
   useEffect(() => {
     if (!isFeatureEnabled("claimantShowStatusPage")) {
@@ -58,11 +64,11 @@ export const Status = ({
   }, [portalFlow]);
 
   useEffect(() => {
-    if (absence_id) {
-      loadClaimDetail(absence_id);
+    if (absenceId) {
+      loadClaimDetail(absenceId);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [absence_id]);
+  }, [absenceId]);
 
   useEffect(() => {
     const application_id = get(claimDetail, "application_id");
@@ -88,7 +94,7 @@ export const Status = ({
    * If there is no absence_id query parameter,
    * then return the PFML 404 page.
    */
-  const isAbsenceCaseId = Boolean(query.absence_id?.length);
+  const isAbsenceCaseId = Boolean(absenceId?.length);
   if (!isAbsenceCaseId) return <PageNotFound />;
 
   // only hide page content if there is an error that's not DocumentsLoadError.
@@ -243,7 +249,7 @@ export const Status = ({
           state="success"
         >
           {t("pages.applications.uploadSuccessMessage", {
-            absence_id,
+            absenceId,
           })}
         </Alert>
       )}
@@ -300,7 +306,7 @@ export const Status = ({
             <Heading weight="normal" level="2" size="4">
               {t("pages.claimsStatus.applicationID")}
             </Heading>
-            <p className="text-bold">{absence_id}</p>
+            <p className="text-bold">{absenceId}</p>
           </div>
           {claimDetail.employer && (
             <div>
@@ -315,7 +321,7 @@ export const Status = ({
         {isFeatureEnabled("claimantShowPayments") && (
           <StatusNavigationTabs
             activePath={appLogic.portalFlow.pathname}
-            absence_id={absence_id}
+            absence_id={absenceId}
           />
         )}
 
