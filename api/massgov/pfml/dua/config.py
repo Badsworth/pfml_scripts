@@ -24,6 +24,11 @@ class DUAMoveItConfig(PydanticBaseSettings):
     moveit_ssh_key: str
     moveit_ssh_key_password: Optional[str] = None
     moveit_archive_path: str = Field("/DFML/DUA/Archive", env="MOVEIT_DUA_ARCHIVE_PATH")
+    # Warning:
+    # If the environment variable is set appropriately, the inbound path will actually point at /DUA/Outbound
+    # and the outbound path will point at /DUA/Inbound.  The default values here will only be correct after
+    # this is fixed in https://lwd.atlassian.net/browse/API-1626
+    moveit_inbound_path: str = Field("/DFML/DUA/Inbound", env="MOVEIT_DUA_INBOUND_PATH")
     moveit_outbound_path: str = Field("/DFML/DUA/Outbound", env="MOVEIT_DUA_OUTBOUND_PATH")
 
 

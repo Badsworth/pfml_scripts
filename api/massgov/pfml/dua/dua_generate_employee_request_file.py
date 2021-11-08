@@ -46,6 +46,7 @@ class Constants:
 
     # S3 bucket names
     S3_DFML_ARCHIVE_PATH = "dua/dfml/archive"
+    S3_DFML_INBOUND_PATH = "dua/dfml/inbound"
     S3_DFML_OUTBOUND_PATH = "dua/dfml/outbound"
     S3_DFML_ERROR_PATH = "dua/dfml/error"
 
@@ -116,7 +117,7 @@ def generate_and_upload_dua_employee_update_file(
     file_util.upload_to_s3(str(tempfile_path), s3_dest)
     reference_file = ReferenceFile(
         file_location=str(s3_dest),
-        reference_file_type_id=ReferenceFileType.DUA_DEMOGRAPHICS_FILE.reference_file_type_id,
+        reference_file_type_id=ReferenceFileType.DUA_DEMOGRAPHICS_REQUEST_FILE.reference_file_type_id,
     )
     db_session.add(reference_file)
     db_session.commit()
@@ -143,7 +144,7 @@ def copy_dua_files_from_s3_to_moveit(
     copied_reference_files = copy_to_sftp_and_archive_s3_files(transfer_config, db_session)
     for ref_file in copied_reference_files:
         ref_file.reference_file_type_id = (
-            ReferenceFileType.DUA_DEMOGRAPHICS_FILE.reference_file_type_id
+            ReferenceFileType.DUA_DEMOGRAPHICS_REQUEST_FILE.reference_file_type_id
         )
 
     # Commit the ReferenceFile changes to the database.

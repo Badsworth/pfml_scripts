@@ -2622,6 +2622,8 @@ class ReferenceFileType(LookupTable):
 
     DUA_DEMOGRAPHICS_FILE = LkReferenceFileType(32, "DUA demographics", 1)
 
+    DUA_DEMOGRAPHICS_REQUEST_FILE = LkReferenceFileType(33, "DUA demographics request", 1)
+
 
 class Title(LookupTable):
     model = LkTitle
