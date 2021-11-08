@@ -1,11 +1,13 @@
 import BenefitsApplication, {
   ReasonQualifier,
 } from "../models/BenefitsApplication";
+import { BenefitsApplicationDocument, DocumentType } from "../models/Document";
+import withClaimDocuments, {
+  WithClaimDocumentsProps,
+} from "../hoc/withClaimDocuments";
 import Alert from "./Alert";
 import { AppLogic } from "../hooks/useAppLogic";
-import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import ButtonLink from "./ButtonLink";
-import { DocumentType } from "../models/Document";
 import DownloadableDocument from "./DownloadableDocument";
 import Heading from "./Heading";
 import LeaveReason from "../models/LeaveReason";
@@ -19,12 +21,9 @@ import hasDocumentsLoadError from "../utils/hasDocumentsLoadError";
 import routeWithParams from "../utils/routeWithParams";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
-import withClaimDocuments from "../hoc/withClaimDocuments";
 
-interface ApplicationCardProps {
-  appLogic: AppLogic;
+interface ApplicationCardProps extends WithClaimDocumentsProps {
   claim: BenefitsApplication;
-  documents: BenefitsApplicationDocument[];
   /**
    * Cards are displayed in a list. What position is this card?
    */
@@ -243,7 +242,9 @@ function LegalNotices(props: LegalNoticesProps) {
                 <DownloadableDocument
                   document={notice}
                   showCreatedAt
-                  onDownloadClick={appLogic.documents.download}
+                  downloadBenefitsApplicationDocument={
+                    appLogic.documents.download
+                  }
                 />
               </li>
             ))}
@@ -281,7 +282,7 @@ function ApplicationActions(props: ApplicationActionsProps) {
   const hasFutureChildDate = get(claim, "leave_details.has_future_child_date");
   const leaveReasonQualifier = get(claim, "leave_details.reason_qualifier");
 
-  const bondingContentContext = {
+  const bondingContentContext: { [reason: string]: string } = {
     [ReasonQualifier.adoption]: "adopt_foster",
     [ReasonQualifier.fosterCare]: "adopt_foster",
     [ReasonQualifier.newBorn]: "newborn",
@@ -303,7 +304,7 @@ function ApplicationActions(props: ApplicationActionsProps) {
     get(claim, "has_previous_leaves_other_reason") !== null ||
     get(claim, "has_concurrent_leave") !== null;
   // Show no instructions by default
-  let reductionsI18nKey = null;
+  let reductionsI18nKey = "";
   // Show new other leave instructions on completed claims
   if (claim.isCompleted) {
     reductionsI18nKey = "components.applicationCard.reductionsInstructions";
@@ -353,7 +354,7 @@ function ApplicationActions(props: ApplicationActionsProps) {
           href={routeWithParams("applications.uploadDocsOptions", {
             claim_id: claim.application_id,
           })}
-          variation={showResumeButton ? "outline" : null}
+          variation={showResumeButton ? "outline" : undefined}
         >
           {t("components.applicationCard.uploadDocsButton")}
         </ButtonLink>

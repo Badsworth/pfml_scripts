@@ -50,10 +50,10 @@ export default useTrackerPageView;
  * the query string value. We should never put PII in query strings, so we should also be comfortable
  * sending all of these values to New Relic as custom attributes.
  */
-function getPageAttributesFromQueryString(
-  queryString?: string
-): Record<string, string> {
-  const pageAttributes = {};
+function getPageAttributesFromQueryString(queryString?: string): {
+  [key: string]: string;
+} {
+  const pageAttributes: { [key: string]: string } = {};
   // note that URLSearchParams accepts null/undefined in its constructor
   for (const [key, value] of Array.from(new URLSearchParams(queryString))) {
     pageAttributes[`query_${snakeCase(key)}`] = value;

@@ -43,14 +43,21 @@ describe("Applications", () => {
   });
 
   it("user can view their in-progress + submitted applications", () => {
-    renderPage(Index, {
-      addCustomSetup: (appLogicHook) => {
-        setUpHelper(appLogicHook);
-        appLogicHook.documents.loadAll = jest.fn();
-        appLogicHook.benefitsApplications.benefitsApplications =
-          new BenefitsApplicationCollection([inProgressClaim, submittedClaim]);
+    renderPage(
+      Index,
+      {
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.documents.loadAll = jest.fn();
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new BenefitsApplicationCollection([
+              inProgressClaim,
+              submittedClaim,
+            ]);
+        },
       },
-    });
+      { query: {} }
+    );
 
     expect(screen.getByText(/In-progress applications/)).toBeInTheDocument();
     expect(
@@ -62,14 +69,18 @@ describe("Applications", () => {
   });
 
   it("displays completed applications", () => {
-    renderPage(Index, {
-      addCustomSetup: (appLogicHook) => {
-        setUpHelper(appLogicHook);
-        appLogicHook.documents.loadAll = jest.fn();
-        appLogicHook.benefitsApplications.benefitsApplications =
-          new BenefitsApplicationCollection([completedClaim]);
+    renderPage(
+      Index,
+      {
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.documents.loadAll = jest.fn();
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new BenefitsApplicationCollection([completedClaim]);
+        },
       },
-    });
+      { query: {} }
+    );
 
     expect(screen.getByText(/Submitted applications/)).toBeInTheDocument();
     expect(screen.getByText(/Download your notices/)).toBeInTheDocument();
@@ -77,18 +88,22 @@ describe("Applications", () => {
 
   describe("When multiple claims of different statuses exist", () => {
     beforeEach(() => {
-      renderPage(Index, {
-        addCustomSetup: (appLogicHook) => {
-          setUpHelper(appLogicHook);
-          appLogicHook.documents.loadAll = jest.fn();
-          appLogicHook.benefitsApplications.benefitsApplications =
-            new BenefitsApplicationCollection([
-              inProgressClaim,
-              submittedClaim,
-              completedClaim,
-            ]);
+      renderPage(
+        Index,
+        {
+          addCustomSetup: (appLogicHook) => {
+            setUpHelper(appLogicHook);
+            appLogicHook.documents.loadAll = jest.fn();
+            appLogicHook.benefitsApplications.benefitsApplications =
+              new BenefitsApplicationCollection([
+                inProgressClaim,
+                submittedClaim,
+                completedClaim,
+              ]);
+          },
         },
-      });
+        { query: {} }
+      );
     });
 
     it("Displays Application Card for each claim", () => {
@@ -123,17 +138,21 @@ describe("Applications", () => {
 
     const spy = jest.fn();
 
-    renderPage(Index, {
-      addCustomSetup: (appLogicHook) => {
-        setUpHelper(appLogicHook);
-        appLogicHook.documents.loadAll = spy;
-        appLogicHook.benefitsApplications.benefitsApplications =
-          new BenefitsApplicationCollection([
-            inProgressClaim,
-            inProgressClaim2,
-          ]);
+    renderPage(
+      Index,
+      {
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.documents.loadAll = spy;
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new BenefitsApplicationCollection([
+              inProgressClaim,
+              inProgressClaim2,
+            ]);
+        },
       },
-    });
+      { query: {} }
+    );
     expect(spy).toHaveBeenCalledTimes(2);
   });
 
@@ -141,14 +160,21 @@ describe("Applications", () => {
     process.env.featureFlags = {
       claimantShowStatusPage: true,
     };
-    renderPage(Index, {
-      addCustomSetup: (appLogicHook) => {
-        setUpHelper(appLogicHook);
-        appLogicHook.documents.loadAll = jest.fn();
-        appLogicHook.benefitsApplications.benefitsApplications =
-          new BenefitsApplicationCollection([inProgressClaim, submittedClaim]);
+    renderPage(
+      Index,
+      {
+        addCustomSetup: (appLogicHook) => {
+          setUpHelper(appLogicHook);
+          appLogicHook.documents.loadAll = jest.fn();
+          appLogicHook.benefitsApplications.benefitsApplications =
+            new BenefitsApplicationCollection([
+              inProgressClaim,
+              submittedClaim,
+            ]);
+        },
       },
-    });
+      { query: {} }
+    );
     const [v2CardOne, v2CardTwo] = screen.getAllByRole("article");
     expect(within(v2CardOne).getByText(/Application 1/)).toBeInTheDocument();
     expect(within(v2CardTwo).getByText(/Application 2/)).toBeInTheDocument();

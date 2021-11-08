@@ -188,6 +188,17 @@ describe("getInputValueFromEvent", () => {
       expect(value).toBe(1200000.3);
     });
 
+    it("preserves trailing decimal point so a user can enter the next number", () => {
+      const target = createInputElement({
+        name: "Foo",
+        value: "1.",
+        "data-value-type": "float",
+      });
+      const value = getInputValueFromEvent({ target });
+
+      expect(value).toBe("1.");
+    });
+
     it("does not convert mixed strings/numbers", () => {
       const target = createInputElement({
         name: "Foo",

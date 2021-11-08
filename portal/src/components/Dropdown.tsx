@@ -1,12 +1,16 @@
 import React, { useEffect } from "react";
 import FormLabel from "./FormLabel";
 import classnames from "classnames";
+import isBlank from "../utils/isBlank";
 import useUniqueId from "../hooks/useUniqueId";
 
 // Only load USWDS comboBox JS on client-side since it
 // references `window`, which isn't available during
 // the Node.js-based build process ("server-side")
-let comboBox = null;
+let comboBox: {
+  on: () => void;
+  off: () => void;
+} | null = null;
 if (typeof window !== "undefined") {
   comboBox = require("uswds/src/js/components/combo-box");
 }
@@ -83,7 +87,7 @@ interface DropdownProps {
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/form-controls/#dropdown)
  */
 function Dropdown(props: DropdownProps) {
-  const hasError = !!props.errorMsg;
+  const hasError = !isBlank(props.errorMsg);
   const inputId = useUniqueId("Dropdown");
   const { autocomplete } = props;
 
@@ -98,7 +102,9 @@ function Dropdown(props: DropdownProps) {
       comboBox.on();
 
       return () => {
-        comboBox.off();
+        if (comboBox) {
+          comboBox.off();
+        }
       };
     }
     // see reasoning for `key` above. We include props.value here

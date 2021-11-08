@@ -12,6 +12,12 @@ const flagsConfig = {
     // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
     claimantShowEmploymentStatus: false,
 
+    // When this flag is enabled optional MFA will be enabled for claimant users.
+    claimantShowMFA: false,
+
+    // When this flag is enabled, tax withholding option will be displayed to claimaints.
+    claimantShowTaxWithholding: false,
+
     // When this flag is enabled, the military leave options are selectable on
     // the Leave Reason page in the claimant flow (CP-1145)
     // TODO (CP-534): Show all options when portal supports activeDutyFamily, serviceMemberFamily
@@ -22,16 +28,6 @@ const flagsConfig = {
 
     // When this flag is enabled, the claim payments section for claimants will show
     claimantShowPayments: false,
-
-    // When this flag is enabled, the "Previous leaves" section on Review page is visible
-    // TODO (EMPLOYER-718): Remove flag
-    employerShowPreviousLeaves: false,
-
-    // When this flag is enabled, the status column's current value of -- inside of the dashboard page will be replaced with either:
-    // Review by {date}
-    // No action required
-    // TODO (EMPLOYER-1587) Remove flag
-    employerShowReviewByStatus: false,
 
     // When this flag true, you can BYPASS maintenance pages that are currently present.
     // See docs/portal/maintenance-pages.md for more details.
@@ -47,6 +43,9 @@ const flagsConfig = {
     // https://lwd.atlassian.net/browse/CP-459
     pfmlTerriyay: false,
 
+    // When this flag is true, PDF files up to 10mb are sent to the API.
+    sendLargePdfToApi: false,
+
     // When this flag is enabled, the medical leave question numbers for leave periods
     // are updated to reflect the new "Certification of Your Serious Health Condition"
     // TODO (CP-2205): Remove this flag once updated medical leave form is effective
@@ -57,37 +56,29 @@ const flagsConfig = {
   // environment config files.
   "cps-preview": {
     claimantShowStatusPage: true,
-    employerShowReviewByStatus: true,
   },
   development: {
     claimantShowStatusPage: true,
-    employerShowReviewByStatus: true,
     example: true,
     pfmlTerriyay: true,
   },
   test: {
     claimantShowStatusPage: true,
-    employerShowReviewByStatus: true,
   },
   stage: {
     claimantShowStatusPage: true,
-    employerShowReviewByStatus: true,
   },
   training: {
     claimantShowStatusPage: true,
-    employerShowReviewByStatus: true,
   },
   performance: {
     claimantShowStatusPage: true,
-    employerShowReviewByStatus: true,
   },
   uat: {
     claimantShowStatusPage: true,
-    employerShowReviewByStatus: true,
   },
   prod: {
     claimantShowStatusPage: true,
-    employerShowReviewByStatus: true,
     pfmlTerriyay: true,
   },
 };

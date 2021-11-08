@@ -29,7 +29,6 @@ describe("Report of intermittent leave hours notification", () => {
       cy.unstash<DehydratedClaim>("claim").then((claim) => {
         cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
           fineos.before();
-          cy.visit("/");
           const claimPage = fineosPages.ClaimPage.visit(fineos_absence_id);
           // This check safeguards us against failure cases where we try to approve an already approved claim.
           fineos.getClaimStatus().then((status) => {
@@ -47,6 +46,7 @@ describe("Report of intermittent leave hours notification", () => {
                   .acceptLeavePlan();
               })
               .approve();
+            claimPage.triggerNotice("Designation Notice");
             waitForAjaxComplete();
           });
         });

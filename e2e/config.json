@@ -1,4 +1,8 @@
 {
+  "_default": {
+    "NEWRELIC_ACCOUNTID": "2837112",
+    "TESTMAIL_NAMESPACE": "gqzap"
+  },
   "test": {
     "PORTAL_BASEURL": "https://paidleave-test.mass.gov",
     "COGNITO_POOL": "us-east-1_HhQSLYSIe",
@@ -7,11 +11,12 @@
     "API_BASEURL": "https://paidleave-api-test.mass.gov/api/v1",
     "FINEOS_BASEURL": "https://dt2-claims-webapp.masspfml.fineos.com",
     "FINEOS_USERNAME": "CONTENT",
-    "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
     "LST_EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
-    "LST_EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json"
+    "LST_EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
+    "DOR_IMPORT_URI": "s3://massgov-pfml-test-agency-transfer/dor/received/",
+    "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-test-dor-fineos-etl"
   },
   "stage": {
     "PORTAL_BASEURL": "https://paidleave-stage.mass.gov",
@@ -21,9 +26,10 @@
     "API_BASEURL": "https://paidleave-api-stage.mass.gov/api/v1",
     "FINEOS_BASEURL": "https://idt-claims-webapp.masspfml.fineos.com",
     "FINEOS_USERNAME": "CONTENT",
-    "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-08-05.json",
-    "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json"
+    "EMPLOYERS_FILE": "./employers/e2e-2021-08-05.json",
+    "DOR_IMPORT_URI": "s3://massgov-pfml-stage-agency-transfer/dor/received/",
+    "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-stage-dor-fineos-etl"
   },
   "training": {
     "PORTAL_BASEURL": "https://paidleave-training.mass.gov",
@@ -33,9 +39,10 @@
     "FINEOS_USERNAME": "CONTENT",
     "COGNITO_POOL": "us-east-1_gHLjkp4A8",
     "COGNITO_CLIENTID": "2hr6bckdopamvq92jahr542p5p",
-    "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
-    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json"
+    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
+    "DOR_IMPORT_URI": "s3://massgov-pfml-training-agency-transfer/dor/received/",
+    "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-training-dor-fineos-etl"
   },
   "performance": {
     "PORTAL_BASEURL": "https://paidleave-performance.mass.gov",
@@ -45,11 +52,12 @@
     "FINEOS_USERNAME": "CONTENT",
     "COGNITO_POOL": "us-east-1_0jv6SlemT",
     "COGNITO_CLIENTID": "1ps8bs9s5ns4f6qamj6qn6qd3",
-    "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
     "LST_EMPLOYEES_FILE": "./employees/lst-2021-08-18.employees.json",
-    "LST_EMPLOYERS_FILE": "./employers/lst-2021-08-18.json"
+    "LST_EMPLOYERS_FILE": "./employers/lst-2021-08-18.json",
+    "DOR_IMPORT_URI": "s3://massgov-pfml-performance-agency-transfer/dor/received/",
+    "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-performance-dor-fineos-etl"
   },
   "uat": {
     "PORTAL_BASEURL": "https://paidleave-uat.mass.gov",
@@ -59,9 +67,10 @@
     "FINEOS_USERNAME": "OASIS",
     "COGNITO_POOL": "us-east-1_29j6fKBDT",
     "COGNITO_CLIENTID": "1ajh0c38bs21k60bjtttegspvp",
-    "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
     "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
+    "DOR_IMPORT_URI": "s3://massgov-pfml-uat-agency-transfer/dor/received/",
+    "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-uat-dor-fineos-etl",
     "HAS_FINEOS_SP": "true"
   },
   "cps-preview": {
@@ -72,9 +81,10 @@
     "FINEOS_USERNAME": "CONTENT",
     "COGNITO_POOL": "us-east-1_1OVYp4aZo",
     "COGNITO_CLIENTID": "59oeobfn0759c8166pjh381joc",
-    "TESTMAIL_NAMESPACE": "gqzap",
     "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
-    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json"
+    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
+    "DOR_IMPORT_URI": "s3://massgov-pfml-cps-preview-agency-transfer/dor/received/",
+    "DOR_ETL_ARN": "arn:aws:states:us-east-1:498823821309:stateMachine:pfml-api-cps-preview-dor-fineos-etl"
   },
   "local": {
     "PORTAL_BASEURL": "http://localhost:3000",
@@ -85,7 +95,6 @@
     "FINEOS_BASEURL": "https://idt-claims-webapp.masspfml.fineos.com",
     "FINEOS_USERNAME": "CONTENT",
     "EMPLOYEES_FILE": "./employees/e2e-2021-09-08.json",
-    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json",
-    "TESTMAIL_NAMESPACE": "gqzap"
+    "EMPLOYERS_FILE": "./employers/e2e-2021-09-08.json"
   }
 }

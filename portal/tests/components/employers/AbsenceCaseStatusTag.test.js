@@ -38,7 +38,6 @@ describe("AbsenceCaseStatusTag", () => {
   });
 
   it("renders the component with 'Review By {{date}}' when managedRequirements is not empty", () => {
-    process.env.featureFlags = { employerShowReviewByStatus: true };
     const managedRequirementsData = [
       { follow_up_date: "2021-08-22" },
       { follow_up_date: "2021-07-22" },
@@ -51,21 +50,7 @@ describe("AbsenceCaseStatusTag", () => {
     expect(container).toMatchSnapshot();
   });
 
-  it("renders the component with '--' when managedRequirements is not empty, but Review By feature flag is not enabled", () => {
-    const managedRequirementsData = [
-      { follow_up_date: "2021-08-22" },
-      { follow_up_date: "2021-07-22" },
-    ];
-    const { container } = renderComponent(
-      AbsenceCaseStatus.approved,
-      managedRequirementsData
-    );
-
-    expect(container).toHaveTextContent("--");
-  });
-
   it("renders the component with 'No Action Required' when managedRequirements is empty and has a pending-line status value", () => {
-    process.env.featureFlags = { employerShowReviewByStatus: true };
     const managedRequirementsData = [];
     const { container } = renderComponent(
       "Intake In Progress",
@@ -73,14 +58,5 @@ describe("AbsenceCaseStatusTag", () => {
     );
 
     expect(container).toMatchSnapshot();
-  });
-
-  it("renders -- for invalid status values", () => {
-    process.env.featureFlags = {
-      employerShowReviewByStatus: false,
-    };
-
-    expect(renderComponent("Pending", []).container).toHaveTextContent("--");
-    expect(renderComponent("", []).container).toHaveTextContent("--");
   });
 });

@@ -1,6 +1,6 @@
 import Alert from "../Alert";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
-import ClaimDocument from "../../models/ClaimDocument";
+import { ClaimDocument } from "../../models/Document";
 import ConditionalContent from "../ConditionalContent";
 import DownloadableDocument from "../DownloadableDocument";
 import EmployerClaim from "../../models/EmployerClaim";
@@ -22,8 +22,11 @@ interface LeaveDetailsProps {
   believeRelationshipAccurate?: "Yes" | "Unknown" | "No";
   claim: EmployerClaim;
   documents: ClaimDocument[];
-  downloadDocument: (...args: any[]) => any;
-  onChangeBelieveRelationshipAccurate: (arg: string) => void;
+  downloadDocument: (
+    document: ClaimDocument,
+    absenceId: string
+  ) => Promise<Blob | undefined>;
+  onChangeBelieveRelationshipAccurate?: (arg: string) => void;
   relationshipInaccurateReason?: string;
   onChangeRelationshipInaccurateReason: (arg: string) => void;
 }
@@ -64,7 +67,7 @@ const LeaveDetails = (props: LeaveDetailsProps) => {
     "usa-input--error": !!errorMsg,
   });
 
-  const benefitsGuideLink = {
+  const benefitsGuideLink: { [reason: string]: string } = {
     [LeaveReason.care]: routes.external.massgov.benefitsGuide_aboutCaringLeave,
     [LeaveReason.bonding]:
       routes.external.massgov.benefitsGuide_aboutBondingLeave,
@@ -87,7 +90,11 @@ const LeaveDetails = (props: LeaveDetailsProps) => {
             context: findKeyByValue(LeaveReason, reason),
           })
         ) : (
-          <a target="_blank" rel="noopener" href={benefitsGuideLink[reason]}>
+          <a
+            target="_blank"
+            rel="noopener"
+            href={reason ? benefitsGuideLink[reason] : undefined}
+          >
             {t("components.employersLeaveDetails.leaveReasonValue", {
               context: findKeyByValue(LeaveReason, reason),
             })}
@@ -133,7 +140,7 @@ const LeaveDetails = (props: LeaveDetailsProps) => {
             {documents.map((document) => (
               <li key={document.fineos_document_id}>
                 <DownloadableDocument
-                  onDownloadClick={downloadDocument}
+                  downloadClaimDocument={downloadDocument}
                   absenceId={absenceId}
                   document={document}
                   displayDocumentName={t(
@@ -151,7 +158,8 @@ const LeaveDetails = (props: LeaveDetailsProps) => {
             smallLabel
             name="believeRelationshipAccurate"
             onChange={(e) => {
-              onChangeBelieveRelationshipAccurate(e.target.value);
+              if (onChangeBelieveRelationshipAccurate)
+                onChangeBelieveRelationshipAccurate(e.target.value);
             }}
             choices={[
               {

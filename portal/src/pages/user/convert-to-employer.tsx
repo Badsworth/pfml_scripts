@@ -1,26 +1,19 @@
+import withBenefitsApplications, {
+  WithBenefitsApplicationsProps,
+} from "../../hoc/withBenefitsApplications";
 import Alert from "../../components/Alert";
-import { AppLogic } from "../../hooks/useAppLogic";
-import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
 import Button from "../../components/Button";
 import InputText from "../../components/InputText";
 import React from "react";
 import Title from "../../components/Title";
 import { Trans } from "react-i18next";
-import User from "../../models/User";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplications from "../../hoc/withBenefitsApplications";
 
-interface ConvertToEmployerProps {
-  appLogic: AppLogic;
-  claims: BenefitsApplicationCollection;
-  user: User;
-}
-
-export const ConvertToEmployer = (props: ConvertToEmployerProps) => {
+export const ConvertToEmployer = (props: WithBenefitsApplicationsProps) => {
   const { appLogic, user, claims } = props;
   const { t } = useTranslation();
   const { convertUser } = appLogic.users;

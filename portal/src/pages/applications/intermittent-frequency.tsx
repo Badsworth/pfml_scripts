@@ -1,10 +1,13 @@
-import BenefitsApplication, {
+import {
   DurationBasis,
   FrequencyIntervalBasis,
   IntermittentLeavePeriod,
 } from "../../models/BenefitsApplication";
 import { Trans, useTranslation } from "react-i18next";
 import { get, pick } from "lodash";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Heading from "../../components/Heading";
@@ -20,7 +23,6 @@ import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import useHandleInputChange from "../../hooks/useHandleInputChange";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 /**
  * Convenience constant for referencing the leave period object
@@ -44,15 +46,7 @@ export const fields = [
  */
 export const irregularOver6MonthsId = "irregularOver6Months";
 
-interface IntermittentFrequencyProps {
-  claim: BenefitsApplication;
-  appLogic: any;
-  query: {
-    claim_id?: string;
-  };
-}
-
-export const IntermittentFrequency = (props: IntermittentFrequencyProps) => {
+export const IntermittentFrequency = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

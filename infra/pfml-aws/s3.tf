@@ -39,7 +39,7 @@ resource "aws_s3_bucket" "terraform" {
   })
 
   replication_configuration {
-    role = data.aws_iam_role.replication.name
+    role = data.aws_iam_role.replication.arn
     rules {
       id     = "replicateFullBucket"
       status = "Enabled"
@@ -108,7 +108,7 @@ resource "aws_s3_bucket" "agency_transfer" {
   dynamic "replication_configuration" {
     for_each = each.key == module.constants.bucket_replication_environment ? [1] : []
     content {
-      role = data.aws_iam_role.replication.name
+      role = data.aws_iam_role.replication.arn
       rules {
         id     = "replicateFullBucket"
         status = "Enabled"

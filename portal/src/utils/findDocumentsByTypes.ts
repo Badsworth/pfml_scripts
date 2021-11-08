@@ -1,6 +1,8 @@
-import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
-import ClaimDocument from "../models/ClaimDocument";
-import { DocumentTypeEnum } from "../models/Document";
+import {
+  BenefitsApplicationDocument,
+  ClaimDocument,
+  DocumentTypeEnum,
+} from "../models/Document";
 
 /**
  * Get only documents associated with a given selection of document_types

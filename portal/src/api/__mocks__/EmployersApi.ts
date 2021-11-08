@@ -1,13 +1,11 @@
-import ClaimDocument from "../../models/ClaimDocument";
 import DocumentCollection from "../../models/DocumentCollection";
 import { DocumentType } from "../../models/Document";
 import EmployerClaim from "../../models/EmployerClaim";
 import { UserLeaveAdministrator } from "../../models/User";
-import Withholding from "../../models/Withholding";
 import { uniqueId } from "lodash";
 
 const documentData = {
-  content_type: null,
+  content_type: "",
   created_at: "2021-1-1",
   description: "",
   name: "mock doc",
@@ -23,7 +21,7 @@ export const addEmployerMock = jest.fn().mockResolvedValue(() => {
   };
 });
 
-export const getClaimMock = jest.fn().mockResolvedValue((absenceId) => {
+export const getClaimMock = jest.fn().mockResolvedValue((absenceId: string) => {
   return {
     claim: new EmployerClaim({
       fineos_absence_id: absenceId,
@@ -36,9 +34,9 @@ export const getClaimMock = jest.fn().mockResolvedValue((absenceId) => {
 export const getDocumentsMock = jest.fn().mockResolvedValue(() => {
   return {
     documents: new DocumentCollection([
-      new ClaimDocument({ ...documentData, fineos_document_id: uniqueId() }),
-      new ClaimDocument({ ...documentData, fineos_document_id: uniqueId() }),
-      new ClaimDocument({ ...documentData, fineos_document_id: uniqueId() }),
+      { ...documentData, fineos_document_id: uniqueId() },
+      { ...documentData, fineos_document_id: uniqueId() },
+      { ...documentData, fineos_document_id: uniqueId() },
     ]),
     status: 200,
     success: true,
@@ -46,9 +44,9 @@ export const getDocumentsMock = jest.fn().mockResolvedValue(() => {
 });
 
 export const getWithholdingMock = jest.fn().mockResolvedValue(() => {
-  return new Withholding({
+  return {
     filing_period: "2011-11-20",
-  });
+  };
 });
 
 export const downloadDocumentMock = jest.fn(() => new Blob());

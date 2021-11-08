@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { compact, find, map } from "lodash";
 import { Issue } from "../errors";
 

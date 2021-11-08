@@ -18,7 +18,7 @@ from massgov.pfml.api.models.claims.common import (
 from massgov.pfml.api.models.claims.responses import ClaimReviewResponse, DocumentResponse
 from massgov.pfml.api.models.common import ConcurrentLeave, EmployerBenefit
 from massgov.pfml.api.validation.exceptions import ContainsV1AndV2Eforms
-from massgov.pfml.db.models.employees import Employer
+from massgov.pfml.db.models.employees import Employer, User, UserLeaveAdministrator
 from massgov.pfml.fineos.common import DOWNLOADABLE_DOC_TYPES
 from massgov.pfml.fineos.models.group_client_api import (
     Base64EncodedFileData,
@@ -26,6 +26,7 @@ from massgov.pfml.fineos.models.group_client_api import (
     ManagedRequirementDetails,
     PeriodDecisions,
 )
+from massgov.pfml.fineos.models.leave_admin_creation import CreateOrUpdateLeaveAdmin
 from massgov.pfml.fineos.transforms.from_fineos.eforms import (
     TransformConcurrentLeaveFromOtherLeaveEform,
     TransformEmployerBenefitsFromOtherIncomeEform,
@@ -83,10 +84,10 @@ def get_leave_details(absence_periods: Dict) -> LeaveDetails:
                 reduced_end_date = end_date
 
         elif decision["period"]["type"] == "Episodic":
-            if intermittent_start_date is None or start_date < reduced_start_date:
+            if intermittent_start_date is None or start_date < intermittent_start_date:
                 intermittent_start_date = start_date
 
-            if intermittent_end_date is None or end_date > reduced_end_date:
+            if intermittent_end_date is None or end_date > intermittent_end_date:
                 intermittent_end_date = end_date
 
     if continuous_start_date is not None and continuous_end_date is not None:
@@ -142,13 +143,20 @@ def get_documents_as_leave_admin(fineos_user_id: str, absence_id: str) -> List[D
 
 
 def download_document_as_leave_admin(
-    fineos_user_id: str, absence_id: str, fineos_document_id: str
+    fineos_user_id: str,
+    absence_id: str,
+    fineos_document_id: str,
+    log_attributes: Optional[Dict] = None,
 ) -> Base64EncodedFileData:
-    log_attributes = {
-        "fineos_user_id": fineos_user_id,
-        "absence_id": absence_id,
-        "fineos_document_id": fineos_document_id,
-    }
+    if log_attributes is None:
+        log_attributes = {}
+    log_attributes.update(
+        {
+            "fineos_user_id": fineos_user_id,
+            "absence_id": absence_id,
+            "fineos_document_id": fineos_document_id,
+        }
+    )
 
     document = _get_document(fineos_user_id, absence_id, fineos_document_id)
 
@@ -156,8 +164,9 @@ def download_document_as_leave_admin(
         logger.warning("Unable to find FINEOS document for user", extra=log_attributes)
         raise ObjectNotFound(description="Unable to find FINEOS document for user")
 
+    doc_type = document.name.lower()
+    log_attributes["document.document_type"] = doc_type
     if not document.is_downloadable_by_leave_admin():
-        doc_type = document.name.lower()
         logger.warning(
             f"Leave Admin is not authorized to download documents of type {doc_type}",
             extra=log_attributes,
@@ -165,9 +174,8 @@ def download_document_as_leave_admin(
         raise NotAuthorizedForAccess(
             description=f"User is not authorized to access documents of type: {doc_type}",
             error_type="unauthorized_document_type",
-            data={"doc_type": doc_type},
+            data={"document.document_type": doc_type},
         )
-
     fineos = massgov.pfml.fineos.create_client()
     return fineos.download_document_as_leave_admin(fineos_user_id, absence_id, fineos_document_id)
 
@@ -343,6 +351,67 @@ def get_claim_as_leave_admin(
 
 def generate_fineos_web_id() -> str:
     return f"pfml_leave_admin_{str(uuid.uuid4())}"
+
+
+def register_leave_admin_with_fineos(
+    admin_full_name: str,
+    admin_email: str,
+    admin_area_code: Optional[str],
+    admin_phone_number: Optional[str],
+    employer: Employer,
+    user: User,
+    db_session: massgov.pfml.db.Session,
+    fineos_client: Optional[massgov.pfml.fineos.AbstractFINEOSClient],
+    force_register: Optional[bool] = False,
+) -> UserLeaveAdministrator:
+    """
+    Given information about a Leave administrator, create a FINEOS user for that leave admin
+    and associate that user to the leave admin within the PFML DB
+    """
+    leave_admin_record = (
+        db_session.query(UserLeaveAdministrator)
+        .filter(
+            UserLeaveAdministrator.user_id == user.user_id,
+            UserLeaveAdministrator.employer_id == employer.employer_id,
+        )
+        .one_or_none()
+    )
+
+    if leave_admin_record and leave_admin_record.fineos_web_id is not None:
+        if not force_register:
+            logger.info(
+                "User previously registered in FINEOS and force_register off",
+                extra={"email": admin_email, "fineos_web_id": leave_admin_record.fineos_web_id},
+            )
+            return leave_admin_record
+
+    fineos = fineos_client if fineos_client else massgov.pfml.fineos.create_client()
+    fineos_web_id = generate_fineos_web_id()
+    logger.info(
+        "Calling FINEOS to Create Leave Admin",
+        extra={"email": admin_email, "fineos_web_id": fineos_web_id},
+    )
+    if not employer.fineos_employer_id:
+        raise ValueError("Employer must have a Fineos employer ID to register a leave admin.")
+    leave_admin_create_payload = CreateOrUpdateLeaveAdmin(
+        fineos_web_id=fineos_web_id,
+        fineos_employer_id=employer.fineos_employer_id,
+        admin_full_name=admin_full_name,
+        admin_area_code=admin_area_code,
+        admin_phone_number=admin_phone_number,
+        admin_email=admin_email,
+    )
+    fineos.create_or_update_leave_admin(leave_admin_create_payload)
+
+    if leave_admin_record:
+        leave_admin_record.fineos_web_id = fineos_web_id
+    else:
+        leave_admin_record = UserLeaveAdministrator(
+            user=user, employer=employer, fineos_web_id=fineos_web_id
+        )
+    db_session.add(leave_admin_record)
+    db_session.commit()
+    return leave_admin_record
 
 
 def create_eform(user_id: str, absence_id: str, eform: EFormBody) -> None:

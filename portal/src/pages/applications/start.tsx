@@ -1,3 +1,4 @@
+import withUser, { WithUserProps } from "../../hoc/withUser";
 import Alert from "../../components/Alert";
 import BackButton from "../../components/BackButton";
 import Button from "../../components/Button";
@@ -7,13 +8,8 @@ import { Trans } from "react-i18next";
 import routes from "../../routes";
 import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
-import withUser from "../../hoc/withUser";
 
-interface StartProps {
-  appLogic: any;
-}
-
-export const Start = (props: StartProps) => {
+export const Start = (props: WithUserProps) => {
   const { t } = useTranslation();
 
   const handleSubmit = useThrottledHandler(async (event) => {

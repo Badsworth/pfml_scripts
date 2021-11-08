@@ -161,13 +161,28 @@ def build_audit_report_row(
         payment_period_start_date=payment_period_start_date,
         payment_period_end_date=payment_period_end_date,
         payment_period_weeks=str(payment_period_weeks),
+        gross_payment_amount=None,
         payment_amount=str(payment.amount),
+        federal_withholding_amount=None,
+        state_withholding_amount=None,
+        employer_reimbursement_amount=None,
+        child_support_amount=None,
         absence_case_number=claim.fineos_absence_id,
         c_value=payment.fineos_pei_c_value,
         i_value=payment.fineos_pei_i_value,
+        federal_withholding_i_value=None,
+        state_withholding_i_value=None,
+        employer_reimbursement_i_value=None,
+        child_support_i_value=None,
         employer_id=str(employer.fineos_employer_id) if employer else None,
         absence_case_creation_date=payment.absence_case_creation_date.isoformat()
         if payment.absence_case_creation_date
+        else None,
+        absence_start_date=claim.absence_period_start_date.isoformat()
+        if claim.absence_period_start_date
+        else None,
+        absence_end_date=claim.absence_period_end_date.isoformat()
+        if claim.absence_period_end_date
         else None,
         case_status=claim.fineos_absence_status.absence_status_description
         if claim.fineos_absence_status
@@ -181,7 +196,8 @@ def build_audit_report_row(
         previously_rejected_payment_count=str(payment_audit_data.previously_rejected_payment_count),
         previously_skipped_payment_count=str(payment_audit_data.previously_skipped_payment_count),
         max_weekly_benefits_details=audit_report_details.max_weekly_benefits_details,
-        dua_dia_reduction_details=audit_report_details.dua_dia_reduction_details,
+        dua_additional_income_details=audit_report_details.dua_additional_income_details,
+        dia_additional_income_details=audit_report_details.dia_additional_income_details,
         dor_fineos_name_mismatch_details=audit_report_details.dor_fineos_name_mismatch_details,
         rejected_by_program_integrity=bool_to_str[
             audit_report_details.rejected_by_program_integrity

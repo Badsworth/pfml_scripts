@@ -6,6 +6,8 @@ import React from "react";
 import StateDropdown from "./StateDropdown";
 import { useTranslation } from "../locales/i18n";
 
+type AddressFieldNames = "city" | "line_1" | "line_2" | "state" | "zip";
+
 interface FieldsetAddressProps {
   /**
    * Error messages which may apply to one of the address fields
@@ -40,7 +42,7 @@ interface FieldsetAddressProps {
   /**
    * The address value as an object
    */
-  value: Record<"city" | "line_1" | "line_2" | "state" | "zip", string>;
+  value: { [key in AddressFieldNames]: string | null };
 }
 
 /**

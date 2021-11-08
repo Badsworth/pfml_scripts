@@ -1,8 +1,11 @@
-import BenefitsApplication, {
+import {
   CaringLeaveMetadata,
   RelationshipToCaregiver,
 } from "../../models/BenefitsApplication";
 import { get, pick } from "lodash";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import Details from "../../components/Details";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
@@ -12,7 +15,6 @@ import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 const caringLeaveMetadataKey = "leave_details.caring_leave_metadata";
 
@@ -20,14 +22,8 @@ export const fields = [
   `claim.${caringLeaveMetadataKey}.relationship_to_caregiver`,
 ];
 
-interface FamilyMemberRelationshipProps {
-  appLogic: any;
-  claim: BenefitsApplication;
-  query: any;
-}
-
 export const FamilyMemberRelationship = (
-  props: FamilyMemberRelationshipProps
+  props: WithBenefitsApplicationProps
 ) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
@@ -45,7 +41,7 @@ export const FamilyMemberRelationship = (
     `${caringLeaveMetadataKey}.relationship_to_caregiver`
   );
   const handleSave = async () => {
-    const updatedData = pick({ claim: formState }, fields).claim;
+    const updatedData = pick({ claim: formState }, fields).claim || {};
     await appLogic.benefitsApplications.update(
       claim.application_id,
       updatedData
@@ -58,7 +54,7 @@ export const FamilyMemberRelationship = (
     updateFields,
   });
 
-  const relationshipList = [
+  const relationshipList: Array<keyof typeof RelationshipToCaregiver> = [
     "child",
     "spouse",
     "parent",

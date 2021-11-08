@@ -1,6 +1,7 @@
 import { get, pick } from "lodash";
-
-import BenefitsApplication from "../../models/BenefitsApplication";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import IconHeading from "../../components/IconHeading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
@@ -9,17 +10,11 @@ import formatDate from "../../utils/formatDate";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_previous_leaves_other_reason"];
 
-interface PreviousLeavesOtherReasonProps {
-  appLogic: any;
-  claim: BenefitsApplication;
-}
-
 export const PreviousLeavesOtherReason = (
-  props: PreviousLeavesOtherReasonProps
+  props: WithBenefitsApplicationProps
 ) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;

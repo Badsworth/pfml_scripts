@@ -1,5 +1,13 @@
-import { Link, NrqlQuery, Tooltip, Spinner, SectionMessage } from "nr1";
+import {
+  Link,
+  NrqlQuery,
+  PieChart,
+  Tooltip,
+  Spinner,
+  SectionMessage,
+} from "nr1";
 import React from "react";
+import { labelEnv } from "../common";
 
 const CATEGORY_PRIORITY = {
   content: {
@@ -9,7 +17,7 @@ const CATEGORY_PRIORITY = {
   infrastructure: {
     "timeout-service": "LOW",
     authentication: "HIGH",
-    "failure-400": "HIGH",
+    "failure-400": "EDM",
     "failure-500": "EDM",
     "failure-503": "MEDIUM",
     "failure-504": "LOW",
@@ -90,6 +98,7 @@ function buildRuns(data) {
         status: "passed",
         failedCount: 0,
         failedPriority: null,
+        connectionError: false,
         testCount: 0,
         categories: [],
         results: [],
@@ -103,6 +112,9 @@ function buildRuns(data) {
       //IF we did not pass this test, then populate the error fields
       collected[result.runId][result.file].status = result.status;
       collected[result.runId][result.file].failedCount++;
+      if (result.category == "infrastructure") {
+        collected[result.runId][result.file].connectionError = true;
+      }
       result["errorPriority"] = errorPriority;
 
       //Organization for categories. We could remove this in the future, it's not used at the moment,
@@ -181,7 +193,7 @@ function buildRuns(data) {
 
 function RunQuery({ accountId, runIds, children }) {
   const query = `SELECT *
-                 FROM CypressTestResult SINCE 1 week ago
+                 FROM CypressTestResult SINCE 1 month ago
                  WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
                  LIMIT MAX`;
 
@@ -246,6 +258,11 @@ class GridRow extends React.Component {
               <span className={`pill ${result.failedPriority}`}>
                 {result.failedPriority}
               </span>
+              {result.connectionError ? (
+                <span className={`pill connection`}>Connection</span>
+              ) : (
+                ""
+              )}
             </td>,
             <td>
               <div className={"e2e-run-progress"}>
@@ -302,6 +319,7 @@ class GridRow extends React.Component {
                     }`}</td>
                     <td>
                       <div className={"display-linebreak"}>
+                        {result.errorClass}:&nbsp;
                         {result.errorMessage}
                       </div>
                     </td>
@@ -323,7 +341,9 @@ export default function TestGrid({ accountId, environment, runIds }) {
         {uniqueRuns.map(({ runId, environment, runUrl }, i) => (
           <div className={"run-notes"}>
             <span>
-              {`${i + 1} Run ID: ${runId}, Environment: ${environment}`}
+              {`${i + 1} Run ID: ${runId}, Environment: ${labelEnv(
+                environment
+              )}`}
             </span>
             <Link to={runUrl}>View in Cypress</Link>
           </div>
@@ -357,6 +377,26 @@ export default function TestGrid({ accountId, environment, runIds }) {
             })}
           </tbody>
         </table>
+        <div className={`charts`}>
+          <PieChart
+            fullWidth
+            accountId={accountId}
+            query={`SELECT count(*)
+                   FROM CypressTestResult since 1 month ago
+                   WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
+                      AND pass is false
+                   FACET category`}
+          ></PieChart>
+          <PieChart
+            fullWidth
+            accountId={accountId}
+            query={`SELECT count(*)
+                   FROM CypressTestResult since 1 month ago
+                   WHERE runId IN (${runIds.map((i) => `'${i}'`).join(", ")})
+                      AND pass is false
+                   FACET category, subCategory`}
+          ></PieChart>
+        </div>
       </div>
     );
   };

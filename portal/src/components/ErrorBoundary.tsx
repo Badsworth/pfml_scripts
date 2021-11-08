@@ -6,7 +6,7 @@ import { withTranslation } from "../locales/i18n";
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
-  t: (...args: any[]) => any;
+  t: (arg: string) => string;
 }
 
 /**
@@ -20,7 +20,7 @@ interface ErrorBoundaryProps {
 export class ErrorBoundary extends React.Component<ErrorBoundaryProps> {
   state: { hasError: boolean };
 
-  constructor(props) {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
   }

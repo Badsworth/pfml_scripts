@@ -50,29 +50,24 @@ export function before(credentials?: Credentials): void {
   // page with an error page and capture the real response to a file for future debugging.
   cy.intercept(/\/(util\/errorpage\.jsp|outofdatedataerror\.jsp)/, (req) => {
     req.continue((res) => {
-      // const filename = Math.ceil(Math.random() * 1000).toString() + `.json`;
-      // We can't use Cypress's normal async methods here. Instead, use cy.now() to skip the command queue.
-      // This is very undocumented and very not recommended, but I can't find a cleaner way to capture this data to disk
-      // before we return the fake response.
-      // @ts-ignore
-      // cy.now(
-      //   "writeFile",
-      //   `cypress/screenshots/${filename}`,
-      //   JSON.stringify({
-      //     url: req.url,
-      //     headers: res.headers,
-      //     body: res.body,
-      //   })
-      // );
-
       // We need to extract this obstructive logic included in a FINEOS error page and replace it with a setTimeout to throw an error letting us know this page was encountered
       // Using the "modifyObstuctiveCode" property in the cypress.json was enough to get the error page to display but it was not enough to mitigate the test from hanging.
       // This approach behaves in a much more predictable manner (Error thrown)
       const body: string = res.body.replace(
         "if (top != self) { top.location=self.location }",
-        "window.setTimeout(function _() { throw new Error('A FINEOS error page was detected during this test. An error is being thrown in order to prevent Cypress from crashing.') }, 500)\n"
+        ""
       );
+      const doc = new DOMParser().parseFromString(body, "text/html");
+      const debugInfo = doc.getElementById("ErrorString")?.innerText; //  Out Of Date Data error pages won't contain a stack trace
       res.send(body);
+      // allow 1 second to pass - allowing page to display in CI recordings
+      setTimeout(() => {
+        throw new Error(
+          `A FINEOS error page was detected during this test. An error is being thrown in order to prevent Cypress from crashing.${
+            debugInfo ? `\n\nDebug Information:\n----------\n${debugInfo}` : ""
+          }}`
+        );
+      }, 300);
     });
   });
 

@@ -8,16 +8,17 @@ import InputNumber from "../InputNumber";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
 import { get } from "lodash";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import usePreviousValue from "../../hooks/usePreviousValue";
 import { useTranslation } from "../../locales/i18n";
 
 interface SupportingWorkDetailsProps {
   appErrors: AppErrorInfoCollection;
-  clearField: (...args: any[]) => any;
-  getField: (...args: any[]) => any;
-  getFunctionalInputProps: (...args: any[]) => any;
-  initialHoursWorkedPerWeek: number;
-  updateFields: (...args: any[]) => any;
+  clearField: (arg: string) => void;
+  getField: (arg: string) => string;
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
+  initialHoursWorkedPerWeek: number | null;
+  updateFields: (fields: { [fieldName: string]: unknown }) => void;
 }
 
 /**
@@ -96,7 +97,7 @@ const SupportingWorkDetails = (props: SupportingWorkDetailsProps) => {
             mask="hours"
             width="small"
             smallLabel
-            valueType="integer"
+            valueType="float"
           />
         </AmendmentForm>
       </ConditionalContent>

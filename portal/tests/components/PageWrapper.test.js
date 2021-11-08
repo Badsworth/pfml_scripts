@@ -323,15 +323,15 @@ describe("PageWrapper", () => {
       <PageWrapperWithAppLogic
         addAppLogicMocks={(_appLogic) => {
           appLogic = _appLogic;
-          appLogic.appErrors = new AppErrorInfoCollection([new AppErrorInfo()]);
+          appLogic.appErrors = new AppErrorInfoCollection([
+            new AppErrorInfo({
+              message: "Error message",
+            }),
+          ]);
         }}
       />
     );
 
-    expect(
-      screen.getByText(
-        "Sorry, we encountered an unexpected error. If this continues to happen, you may call the Paid Family Leave Contact Center at (833) 344‑7365"
-      )
-    ).toBeInTheDocument();
+    expect(screen.getByText("Error message")).toBeInTheDocument();
   });
 });

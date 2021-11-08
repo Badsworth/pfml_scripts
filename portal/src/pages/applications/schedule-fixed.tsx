@@ -1,17 +1,20 @@
-import BenefitsApplication, {
+import {
   OrderedDaysOfWeek,
   WorkPattern,
 } from "../../models/BenefitsApplication";
 import { get, pick, round } from "lodash";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import Heading from "../../components/Heading";
 import InputHours from "../../components/InputHours";
 import Lead from "../../components/Lead";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import isBlank from "../../utils/isBlank";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.work_pattern.work_pattern_days",
@@ -19,12 +22,7 @@ export const fields = [
   "claim.work_pattern.work_pattern_days[*].minutes",
 ];
 
-interface ScheduleFixedProps {
-  claim: BenefitsApplication;
-  appLogic: any;
-}
-
-export const ScheduleFixed = (props: ScheduleFixedProps) => {
+export const ScheduleFixed = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -35,7 +33,7 @@ export const ScheduleFixed = (props: ScheduleFixedProps) => {
       initialEntries,
       // Ensure initial work_pattern has 7 empty days by using
       // the WorkPattern model which defaults empty work_pattern_days to 7 empty days
-      { work_pattern: new WorkPattern(initialEntries.work_pattern) }
+      { work_pattern: new WorkPattern(initialEntries?.work_pattern || {}) }
     )
   );
 
@@ -50,11 +48,15 @@ export const ScheduleFixed = (props: ScheduleFixedProps) => {
     const { work_pattern_days } = workPattern;
     // TODO (CP-1262): refactor calculating hours worked per week to WorkPattern model
     const minutes = workPattern.minutesWorkedPerWeek;
-    const hours_worked_per_week = round(minutes / 60, 2);
+    const hours_worked_per_week = isBlank(minutes)
+      ? null
+      : round(minutes / 60, 2);
 
     await appLogic.benefitsApplications.update(claim.application_id, {
       hours_worked_per_week,
-      work_pattern: { work_pattern_days },
+      work_pattern: {
+        work_pattern_days,
+      },
     });
   };
 

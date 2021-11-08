@@ -111,7 +111,12 @@ const LeaveSchedule = ({ hasDocuments, claim }: LeaveScheduleProps) => {
             </tr>
           )}
           {isIntermittent && (
-            <IntermittentLeaveSchedule hasDocuments={hasDocuments} />
+            <IntermittentLeaveSchedule
+              hasDocuments={hasDocuments}
+              intermittentLeavePeriods={
+                claim.leave_details.intermittent_leave_periods
+              }
+            />
           )}
         </tbody>
       </Table>

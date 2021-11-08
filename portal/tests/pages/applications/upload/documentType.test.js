@@ -5,7 +5,6 @@ import UploadDocument, {
 import { act, render, screen } from "@testing-library/react";
 import AppErrorInfo from "../../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../../src/models/AppErrorInfoCollection";
-import BenefitsApplicationDocument from "../../../../src/models/BenefitsApplicationDocument";
 import { DocumentType } from "../../../../src/models/Document";
 import LeaveReason from "../../../../src/models/LeaveReason";
 import React from "react";
@@ -150,12 +149,12 @@ describe(UploadDocument, () => {
               .mockImplementation(() => true);
             appLogic.documents.attach = jest.fn();
             appLogic.documents.documents = appLogic.documents.documents.addItem(
-              new BenefitsApplicationDocument({
+              {
                 application_id: "mock-claim-id",
                 fineos_document_id: uuidv4(),
                 document_type: DocumentType.identityVerification,
                 created_at: "2021-09-01",
-              })
+              }
             );
             appLogic.portalFlow.goToNextPage = jest.fn();
           }}

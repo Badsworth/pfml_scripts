@@ -4,11 +4,11 @@ import { Submission } from "../../../../src/types";
 describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
   const fineosSubmission = it("Should be able to create a claim", () => {
     fineos.before();
-    cy.visit("/");
     cy.task("generateClaim", "CDENY2").then((claim) => {
       cy.stash("claim", claim);
       assertValidClaim(claim.claim);
       fineosPages.ClaimantPage.visit(claim.claim.tax_identifier)
+        .addCase(true)
         .createNotification(claim.claim)
         .then((fineos_absence_id) => {
           cy.log(fineos_absence_id);
@@ -61,7 +61,6 @@ describe("Create a new continuous leave, caring leave claim in FINEOS", () => {
   it("CSR rep will deny claim", () => {
     cy.dependsOnPreviousPass([fineosSubmission, employerDenial]);
     fineos.before();
-    cy.visit("/");
     cy.unstash<Submission>("submission").then(({ fineos_absence_id }) => {
       fineosPages.ClaimPage.visit(fineos_absence_id).deny(
         "Covered family relationship not established"

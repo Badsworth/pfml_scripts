@@ -1,6 +1,7 @@
 .DEFAULT_GOAL := help
 
 APP_NAME := mass-pfml-api
+SHELL = /bin/bash -o pipefail
 
 export AWS_DEFAULT_REGION := us-east-1
 
@@ -115,6 +116,9 @@ build-app: ## Build app container
 		--build-arg RUN_UID=$(RUN_UID) \
 		.
 
+create-erds:
+	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-erds.py; rm *.dot; mv *.png ../docs/assets/api/erds
+
 create-leave-admin-and-claims: ## Create local API Leave Admin user and claims
 	PYTHONPATH=$$PYTHONPATH:. $(PY_RUN_CMD) python bin/create-leave-admin-and-claims.py $(args)
 
@@ -124,8 +128,8 @@ create-user: ## Create local API User
 deps: ## Install dependencies
 	$(POETRY_CMD) install --no-root --extras "api-only-dependencies"
 
-deps-check:
-	$(PY_RUN_CMD) safety check --full-report
+deps-check: ## Check dependencies for vulnerabilities using Safety
+	$(PY_RUN_CMD) safety check --full-report --ignore=42050 --ignore=42194
 
 distclean: ## Remove all artifacts that can be regenerated
 distclean: clean clean-node clean-venv
@@ -192,6 +196,12 @@ ecr-login: ## Login to ECR for Docker
 	aws ecr get-login-password --region 'us-east-1' | \
 	docker login --username AWS --password-stdin 498823821309.dkr.ecr.us-east-1.amazonaws.com
 
+pre-commit: 
+	$(PY_RUN_CMD) isort --atomic --apply $(args)
+	$(PY_RUN_CMD) black $(args)
+	$(PY_RUN_CMD) flake8 $(args)
+	$(PY_RUN_CMD) mypy $(args)
+
 format: ## Format code
 	$(PY_RUN_CMD) isort --atomic --apply
 	$(PY_RUN_CMD) black .
@@ -234,12 +244,14 @@ jwt: jwks.json
 # See https://help.github.com/en/actions/reference/workflow-commands-for-github-actions
 ifdef CI
  FLAKE8_FORMAT := '::warning file=api/%(path)s,line=%(row)d,col=%(col)d::%(path)s:%(row)d:%(col)d: %(code)s %(text)s'
+ MYPY_FLAGS := --no-pretty
+ MYPY_POSTPROC := | perl -pe "s/^(.+):(\d+):(\d+): error: (.*)/::warning file=api\/\1,line=\2,col=\3::\4/"
 else
  FLAKE8_FORMAT := default
 endif
 
 lint: ## Run linting
-lint: lint-spectral lint-py
+lint: lint-spectral lint-py db-check-model-parity
 
 lint-py: ## Run python linting
 lint-py: lint-flake lint-mypy
@@ -248,7 +260,7 @@ lint-flake: ## Run flake8
 	$(PY_RUN_CMD) flake8 --format=$(FLAKE8_FORMAT) massgov tests bin
 
 lint-mypy: ## Run mypy
-	$(PY_RUN_CMD) mypy massgov bin
+	$(PY_RUN_CMD) mypy $(MYPY_FLAGS) massgov bin $(MYPY_POSTPROC)
 
 lint-security: ## Run security linting
 	$(PY_RUN_CMD) bandit -r . --number 3 --skip B101 -ll
@@ -340,6 +352,9 @@ run: start logs
 run-native: ## Start API server directly
 run-native: jwks.json
 	poetry run python -m massgov.pfml.api $(DECODE_LOG)
+
+db-check-model-parity: ## Ensure application models are in sync with the database
+	$(PY_RUN_CMD) db-check-model-parity
 
 db-create-users: ## Create database users
 	$(PY_RUN_CMD) db-admin-create-db-users $(DECODE_LOG)
@@ -505,3 +520,5 @@ help: ## Displays this help screen
 	@echo "IMAGE_TAG=$(IMAGE_TAG)"
 	@echo "RUN_UID=$(RUN_UID)"
 	@echo "RUN_USER=$(RUN_USER)"
+	@echo "SHELL=$(SHELL)"
+	@echo "MAKE_VERSION=$(MAKE_VERSION)"

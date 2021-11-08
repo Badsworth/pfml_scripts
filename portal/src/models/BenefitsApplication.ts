@@ -1,13 +1,13 @@
 /**
  * @file Benefits application model and enum values
  */
+import LeaveReason, { LeaveReasonType } from "./LeaveReason";
 import { compact, get, isNil, merge, sum, sumBy, zip } from "lodash";
 import Address from "./Address";
 import BaseBenefitsApplication from "./BaseBenefitsApplication";
 import ConcurrentLeave from "./ConcurrentLeave";
 import { DateTime } from "luxon";
 import EmployerBenefit from "./EmployerBenefit";
-import LeaveReason from "./LeaveReason";
 import OtherIncome from "./OtherIncome";
 import PaymentPreference from "./PaymentPreference";
 import PreviousLeave from "./PreviousLeave";
@@ -40,6 +40,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
   has_state_id: boolean | null = null;
   has_submitted_payment_preference: boolean | null = null;
   hours_worked_per_week: number | null = null;
+  is_withholding_tax: boolean | null = null;
   mass_id: string | null = null;
   mailing_address: Address | null = null;
   other_incomes: OtherIncome[] = [];
@@ -48,7 +49,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
   previous_leaves_same_reason: PreviousLeave[] = [];
   residential_address: Address = new Address({});
   tax_identifier: string | null = null;
-  work_pattern: WorkPattern | null = null;
+  work_pattern: Partial<WorkPattern> | null = null;
 
   employment_status:
     | typeof EmploymentStatus[keyof typeof EmploymentStatus]
@@ -66,7 +67,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
     has_future_child_date: boolean | null;
     pregnant_or_recent_birth: boolean | null;
     reason: typeof LeaveReason[keyof typeof LeaveReason] | null;
-    reason_qualifier: string | null;
+    reason_qualifier: ReasonQualifierEnum | null;
   };
 
   phone: {
@@ -94,10 +95,9 @@ class BenefitsApplication extends BaseBenefitsApplication {
 
   /**
    * Determine if applicable leave period start date(s) are in the future.
-   * @returns {boolean}
    */
   get isLeaveStartDateInFuture() {
-    const startDates = compact([
+    const startDates: string[] = compact([
       get(this, "leave_details.continuous_leave_periods[0].start_date"),
       get(this, "leave_details.intermittent_leave_periods[0].start_date"),
       get(this, "leave_details.reduced_schedule_leave_periods[0].start_date"),
@@ -123,15 +123,15 @@ class BenefitsApplication extends BaseBenefitsApplication {
   /**
    * Determine if claim is a Medical or Pregnancy leave claim
    */
-  get isMedicalOrPregnancyLeave() {
-    const reason = get(this, "leave_details.reason");
+  get isMedicalOrPregnancyLeave(): boolean {
+    const reason: LeaveReasonType = get(this, "leave_details.reason");
     return reason === LeaveReason.medical || reason === LeaveReason.pregnancy;
   }
 
   /**
    * Determine if claim is a Caring Leave claim
    */
-  get isCaringLeave() {
+  get isCaringLeave(): boolean {
     return get(this, "leave_details.reason") === LeaveReason.care;
   }
 
@@ -140,7 +140,10 @@ class BenefitsApplication extends BaseBenefitsApplication {
    * of some fields, and as a result, the user experience.
    */
   get isSubmitted() {
-    return this.status === BenefitsApplicationStatus.submitted;
+    return (
+      this.status === BenefitsApplicationStatus.submitted ||
+      this.status === BenefitsApplicationStatus.completed
+    );
   }
 }
 
@@ -176,6 +179,9 @@ export const ReasonQualifier = {
   fosterCare: "Foster Care",
   newBorn: "Newborn",
 } as const;
+
+export type ReasonQualifierEnum =
+  typeof ReasonQualifier[keyof typeof ReasonQualifier];
 
 export class ContinuousLeavePeriod {
   leave_period_id: string | null = null;
@@ -227,7 +233,7 @@ export class CaringLeaveMetadata {
 }
 
 export class WorkPattern {
-  work_pattern_days: WorkPatternDay[] = [];
+  work_pattern_days: WorkPatternDay[] | null = [];
   work_pattern_type:
     | typeof WorkPatternType[keyof typeof WorkPatternType]
     | null = null;
@@ -249,12 +255,11 @@ export class WorkPattern {
 
   /**
    * Return total minutes worked for work pattern days. Returns null if no minutes are defined for work pattern days
-   * @returns {(number|null)}
    */
   get minutesWorkedPerWeek() {
-    const hasNoMinutes = this.work_pattern_days.every(
-      (day) => day.minutes === null
-    );
+    const hasNoMinutes =
+      this.work_pattern_days &&
+      this.work_pattern_days.every((day) => day.minutes === null);
     if (hasNoMinutes) {
       return null;
     }
@@ -269,7 +274,7 @@ export class WorkPattern {
    */
   static createWithWeek(
     minutesWorkedPerWeek: number,
-    workPattern: WorkPattern | Record<string, never> = {}
+    workPattern: WorkPattern | { [key: string]: never } = {}
   ) {
     assert(!isNil(minutesWorkedPerWeek));
     const minutesOverWeek = spreadMinutesOverWeek(minutesWorkedPerWeek);
@@ -373,7 +378,6 @@ export class ReducedScheduleLeavePeriod {
   }
 
   /**
-   * @returns {number?} Sum of all *_off_minutes fields.
    */
   get totalMinutesOff() {
     const fieldsWithMinutes = compact([

@@ -6,6 +6,9 @@
 # State machine for daily DOR FINEOS ETL.
 #
 locals {
+  # toggle variable between daylight savings and standard time
+  is_daylight_savings = false
+
   # Allow first step to either generate mock data _or_ import employees from FINEOS
   st_states_details_list = {
     "fineos_import_employee_updates" = {
@@ -200,7 +203,7 @@ data "aws_iam_policy_document" "iam_policy_step_functions" {
 resource "aws_cloudwatch_event_rule" "dor_fineos_etl" {
   name                = "dor-fineos-etl-${var.environment_name}-schedule"
   description         = "Schedule dor-fineos-etl step function"
-  schedule_expression = var.dor_fineos_etl_schedule_expression
+  schedule_expression = local.is_daylight_savings ? var.dor_fineos_etl_schedule_expression_daylight_savings : var.dor_fineos_etl_schedule_expression_standard
 }
 
 resource "aws_cloudwatch_event_target" "dor_fineos_etl_event_target_ecs" {

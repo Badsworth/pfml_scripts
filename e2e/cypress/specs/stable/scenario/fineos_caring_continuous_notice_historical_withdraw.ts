@@ -1,11 +1,13 @@
 import { fineos, fineosPages, portal } from "../../../actions";
 import { Submission } from "../../../../src/types";
+import { config } from "../../../actions/common";
 
 describe("Create a new caring leave claim in FINEOS and add Historical Absence case. Then withdraw the Absence Case", () => {
   after(() => {
     portal.deleteDownloadsFolder();
   });
 
+  const historical =
   it("Create historical absence case within Absence Case", () => {
     fineos.before();
     cy.task("generateClaim", "HIST_CASE").then((claim) => {
@@ -18,8 +20,21 @@ describe("Create a new caring leave claim in FINEOS and add Historical Absence c
         });
         fineosPages.ClaimPage.visit(
           res.fineos_absence_id
-        ).addHistoricalAbsenceCase();
+        )
+          .addHistoricalAbsenceCase();
       });
+    });
+  });
+
+  it("Check to see if the Suppress Correspondence is available in the Absence Case", () => {
+    cy.dependsOnPreviousPass([historical]);
+    fineos.before();
+    cy.unstash<Submission>("submission").then((submission) => {
+      fineosPages.ClaimPage.visit(
+        submission.fineos_absence_id
+      )
+        .suppressCorrespondence(true)
+        .removeSuppressCorrespondence()
     });
   });
 
@@ -39,9 +54,10 @@ describe("Create a new caring leave claim in FINEOS and add Historical Absence c
     });
 
   it("Produces a withdrawn notice, available for download", () => {
+    // Skip this part in stage. @todo remove once stage has withdraw statuses.
+    if (config("ENVIRONMENT") === "stage") return;
     cy.dependsOnPreviousPass([withdraw]);
     portal.before();
-    cy.visit("/");
     portal.loginClaimant();
     cy.unstash<Submission>("submission").then((submission) => {
       portal.claimantGoToClaimStatus(submission.fineos_absence_id);

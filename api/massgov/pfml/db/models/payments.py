@@ -792,17 +792,6 @@ class MmarsPaymentRefunds(Base, TimestampMixin):
     payment = relationship(Payment)
 
 
-# TO-DO: this has been consolidated into the applications.state_metric table and can be removed
-# after the app code (including the initial migration) has been deployed
-class MaximumWeeklyBenefitAmount(Base):
-    # See regulations for how this is calculated:
-    # https://malegislature.gov/Laws/GeneralLaws/PartI/TitleXXII/Chapter175M/Section3
-    __tablename__ = "maximum_weekly_benefit_amount"
-
-    effective_date = Column(Date, primary_key=True, nullable=False)
-    maximum_weekly_benefit_amount = Column(Numeric, nullable=False)
-
-
 class FineosWritebackDetails(Base, TimestampMixin):
     __tablename__ = "fineos_writeback_details"
     fineos_writeback_details_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -1031,14 +1020,20 @@ class PaymentAuditReportType(LookupTable):
     MAX_WEEKLY_BENEFITS = LkPaymentAuditReportType(
         1, "Max Weekly Benefits", AuditReportAction.REJECTED
     )
-    DUA_DIA_REDUCTION = LkPaymentAuditReportType(
-        2, "DUA DIA Reduction", AuditReportAction.INFORMATIONAL
+    DEPRECATED_DUA_DIA_REDUCTION = LkPaymentAuditReportType(
+        2, "DUA DIA Reduction (Deprecated)", AuditReportAction.INFORMATIONAL
     )
     LEAVE_PLAN_IN_REVIEW = LkPaymentAuditReportType(
         3, "Leave Plan In Review", AuditReportAction.SKIPPED_NO_COLUMN
     )
     DOR_FINEOS_NAME_MISMATCH = LkPaymentAuditReportType(
         4, "DOR FINEOS Name Mismatch", AuditReportAction.INFORMATIONAL
+    )
+    DUA_ADDITIONAL_INCOME = LkPaymentAuditReportType(
+        5, "DUA Additional Income", AuditReportAction.INFORMATIONAL
+    )
+    DIA_ADDITIONAL_INCOME = LkPaymentAuditReportType(
+        6, "DIA Additional Income", AuditReportAction.INFORMATIONAL
     )
 
 
@@ -1060,6 +1055,29 @@ class PaymentAuditReportDetails(Base, TimestampMixin):
     payment = relationship(Payment)
     audit_report_type = relationship(LkPaymentAuditReportType)
     import_log = relationship(ImportLog)
+
+
+class LkWithholdingType(Base):
+    __tablename__ = "lk_withholding_type"
+    withholding_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    withholding_type_description = Column(Text, nullable=False)
+
+    def __init__(
+        self, withholding_type_id, withholding_type_description,
+    ):
+        self.withholding_type_id = withholding_type_id
+        self.withholding_type_description = withholding_type_description
+
+
+class WithholdingType(LookupTable):
+    model = LkWithholdingType
+    column_names = (
+        "withholding_type_id",
+        "withholding_type_description",
+    )
+
+    FEDERAL = LkWithholdingType(1, "Federal Tax")
+    STATE = LkWithholdingType(2, "State Tax")
 
 
 class Pfml1099MMARSPayment(Base, TimestampMixin):
@@ -1123,10 +1141,14 @@ class Pfml1099Withholding(Base, TimestampMixin):
     )
     withholding_amount = Column(Numeric, nullable=False)
     withholding_date = Column(Date, nullable=False)
+    withholding_type_id = Column(
+        Integer, ForeignKey("lk_withholding_type.withholding_type_id"), index=True, nullable=False
+    )
 
     payment = relationship(Payment)
     claim = relationship(Claim)
     employee = relationship(Employee)
+    withholding_type = relationship(LkWithholdingType)
 
 
 class Pfml1099Refund(Base, TimestampMixin):
@@ -1189,5 +1211,6 @@ class LinkSplitPayment(Base, TimestampMixin):
 def sync_lookup_tables(db_session):
     FineosWritebackTransactionStatus.sync_to_database(db_session)
     PaymentAuditReportType.sync_to_database(db_session)
+    WithholdingType.sync_to_database(db_session)
 
     db_session.commit()

@@ -1,29 +1,30 @@
 import React, { useEffect } from "react";
-import { AppLogic } from "../hooks/useAppLogic";
+import withUser, { WithUserProps } from "./withUser";
+import EmployerClaim from "../models/EmployerClaim";
 import PageNotFound from "../components/PageNotFound";
 import { Spinner } from "../components/Spinner";
-import User from "../models/User";
+import { UserLeaveAdministrator } from "../models/User";
 import routes from "../routes";
 import { useTranslation } from "react-i18next";
-import withUser from "./withUser";
 
-interface ComponentWithClaimProps {
-  appLogic: AppLogic;
-  query: {
-    absence_id?: string;
-  };
-  user: User;
+interface QueryForWithEmployerClaim {
+  absence_id?: string;
+}
+export interface WithEmployerClaimProps extends WithUserProps {
+  claim: EmployerClaim;
 }
 
 /**
  * Higher order component that (1) loads a claim if not yet loaded and adds a single claim to the wrapper component
  * based on query parameters, and (2) redirects to Verify Business page if an unverified employer exists.
  * This should be used in routes meant for employers.
- * @param {React.Component} Component - Component to receive claim prop
- * @returns {React.Component} component with claim prop
  */
-const withEmployerClaim = (Component) => {
-  const ComponentWithClaim = (props: ComponentWithClaimProps) => {
+function withEmployerClaim<T extends WithEmployerClaimProps>(
+  Component: React.ComponentType<T>
+) {
+  const ComponentWithClaim = (
+    props: WithUserProps & { query: QueryForWithEmployerClaim }
+  ) => {
     const { appLogic, query, user } = props;
     const { t } = useTranslation();
     const absenceId = query.absence_id;
@@ -60,7 +61,7 @@ const withEmployerClaim = (Component) => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [appLogic.portalFlow, claim, user]);
 
-    const redirectToVerifyPage = (employer) => {
+    const redirectToVerifyPage = (employer: UserLeaveAdministrator) => {
       // the current employer can and should be verified; the page is blocked.
       appLogic.portalFlow.goTo(routes.employers.verifyContributions, {
         employer_id: employer.employer_id,
@@ -68,7 +69,7 @@ const withEmployerClaim = (Component) => {
       });
     };
 
-    const redirectToCannotVerifyPage = (employer) => {
+    const redirectToCannotVerifyPage = (employer: UserLeaveAdministrator) => {
       // the current employer cannot be verified; the page is blocked.
       appLogic.portalFlow.goTo(routes.employers.cannotVerify, {
         employer_id: employer.employer_id,
@@ -89,10 +90,15 @@ const withEmployerClaim = (Component) => {
       return null;
     }
 
-    return <Component {...props} claim={claim} />;
+    return (
+      <Component
+        {...(props as T & { query: QueryForWithEmployerClaim })}
+        claim={claim}
+      />
+    );
   };
 
   return withUser(ComponentWithClaim);
-};
+}
 
 export default withEmployerClaim;

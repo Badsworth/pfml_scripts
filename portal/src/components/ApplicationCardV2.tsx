@@ -1,9 +1,12 @@
 import routeWithParams, {
   createRouteWithQuery,
 } from "../utils/routeWithParams";
+import withClaimDocuments, {
+  WithClaimDocumentsProps,
+} from "../hoc/withClaimDocuments";
 import { AppLogic } from "../hooks/useAppLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
-import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
+import { BenefitsApplicationDocument } from "../models/Document";
 import ButtonLink from "./ButtonLink";
 import Heading from "./Heading";
 import LeaveReason from "../models/LeaveReason";
@@ -15,21 +18,31 @@ import ThrottledButton from "./ThrottledButton";
 import findKeyByValue from "../utils/findKeyByValue";
 import getLegalNotices from "../utils/getLegalNotices";
 import hasDocumentsLoadError from "../utils/hasDocumentsLoadError";
+import tracker from "../services/tracker";
 import { useTranslation } from "../locales/i18n";
-import withClaimDocuments from "../hoc/withClaimDocuments";
 
 /**
  * Assists with page navigation, displays errors on the
  * current page rather than redirecting and showing the
  * error on a new page.
  */
-const navigateToPage = async (claim, appLogic, href) => {
+const navigateToPage = async (
+  claim: BenefitsApplication,
+  appLogic: AppLogic,
+  href: string
+) => {
   const { fineos_absence_id } = claim;
-  const claimDetail = await appLogic.claims.loadClaimDetail(fineos_absence_id);
-  const isValidClaim = claimDetail?.fineos_absence_id === fineos_absence_id;
 
-  // navigate to page if claim loads w/o errors
-  if (isValidClaim) appLogic.portalFlow.goTo(href);
+  if (fineos_absence_id) {
+    const claimDetail = await appLogic.claims.loadClaimDetail(
+      fineos_absence_id
+    );
+    const isValidClaim = claimDetail?.fineos_absence_id === fineos_absence_id;
+    // navigate to page if claim loads w/o errors
+    if (isValidClaim) appLogic.portalFlow.goTo(href);
+  } else {
+    tracker.trackEvent("fineos_absence_id is missing");
+  }
 };
 
 interface HeaderSectionProps {
@@ -78,7 +91,7 @@ const ManageDocumentSection = ({
   const { t } = useTranslation();
   const { fineos_absence_id: absence_case_id } = claim;
 
-  const onClickHandler = async (href) => {
+  const onClickHandler = async (href: string) => {
     await navigateToPage(claim, appLogic, href);
   };
 
@@ -177,7 +190,7 @@ interface InProgressStatusCardProps {
   documents: BenefitsApplicationDocument[];
   isLoadingDocuments: boolean;
   number: number;
-  appLogic: any;
+  appLogic: AppLogic;
 }
 
 /**
@@ -236,7 +249,7 @@ const CompletedStatusCard = ({ appLogic, claim }: CompletedStatusCardProps) => {
     context: findKeyByValue(LeaveReason, claim.leave_details?.reason),
   });
 
-  const statusPage = routeWithParams("applications.status", {
+  const statusPage = routeWithParams("applications.status.claim", {
     absence_case_id: claim.fineos_absence_id,
   });
 
@@ -249,11 +262,11 @@ const CompletedStatusCard = ({ appLogic, claim }: CompletedStatusCardProps) => {
       <HeaderSection title={leaveReasonText} />
       <TitleAndDetailSectionItem
         title={t("components.applicationCardV2.applicationID")}
-        details={claim.fineos_absence_id}
+        details={claim.fineos_absence_id || ""}
       />
       <TitleAndDetailSectionItem
         title={t("components.applicationCardV2.employerEIN")}
-        details={claim.employer_fein}
+        details={claim.employer_fein || ""}
       />
 
       <div className="border-top border-base-lighter padding-y-2 margin-y-2 margin-bottom-0">
@@ -269,11 +282,8 @@ const CompletedStatusCard = ({ appLogic, claim }: CompletedStatusCardProps) => {
   );
 };
 
-interface ApplicationCardV2Props {
+interface ApplicationCardV2Props extends WithClaimDocumentsProps {
   claim: BenefitsApplication;
-  appLogic: AppLogic;
-  documents: BenefitsApplicationDocument[];
-  isLoadingDocuments: boolean;
   number: number;
 }
 

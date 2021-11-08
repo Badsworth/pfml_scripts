@@ -1,7 +1,6 @@
 import User, { UserLeaveAdministrator } from "../../../../src/models/User";
 import { screen, waitFor } from "@testing-library/react";
 import VerifyContributions from "../../../../src/pages/employers/organizations/verify-contributions";
-import Withholding from "../../../../src/models/Withholding";
 import { renderPage } from "../../../test-utils";
 import userEvent from "@testing-library/user-event";
 
@@ -27,11 +26,9 @@ const setup = (props = {}) => {
             }),
           ],
         });
-        appLogic.employers.loadWithholding = jest.fn().mockResolvedValue(
-          new Withholding({
-            filing_period: "2011-11-20",
-          })
-        );
+        appLogic.employers.loadWithholding = jest.fn().mockResolvedValue({
+          filing_period: "2011-11-20",
+        });
         submitWithholdingSpy = jest.spyOn(
           appLogic.employers,
           "submitWithholding"

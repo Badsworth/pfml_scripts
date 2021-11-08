@@ -1,7 +1,7 @@
 import { get, isNil } from "lodash";
 import { useMemo, useState } from "react";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
-import ClaimDocument from "../models/ClaimDocument";
+import { ClaimDocument } from "../models/Document";
 import { ClaimsLogic } from "./useClaimsLogic";
 import DocumentCollection from "../models/DocumentCollection";
 import EmployerClaim from "../models/EmployerClaim";
@@ -22,7 +22,9 @@ const useEmployersLogic = ({
   setUser: UsersLogic["setUser"];
 }) => {
   const [claim, setEmployerClaim] = useState<EmployerClaim | null>(null);
-  const [documents, setDocuments] = useState<DocumentCollection | null>(null);
+  const [claimDocumentsMap, setClaimDocumentsMap] = useState<
+    Map<string, DocumentCollection>
+  >(new Map());
   const employersApi = useMemo(() => new EmployersApi(), []);
 
   /**
@@ -36,7 +38,7 @@ const useEmployersLogic = ({
       const params = { employer_id: employer.employer_id, next };
       // Setting user to undefined to require fetching updated user_leave_administrators before navigating to Verify Contributions
       setUser(undefined);
-      if (employer) portalFlow.goToNextPage({}, params);
+      portalFlow.goToNextPage({}, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -78,13 +80,15 @@ const useEmployersLogic = ({
    * Retrieve documents from the API and set application errors if any
    */
   const loadDocuments = async (absenceId: string) => {
-    if (documents) return;
+    if (claimDocumentsMap.has(absenceId)) return;
     appErrorsLogic.clearErrors();
 
     try {
       const { documents } = await employersApi.getDocuments(absenceId);
+      const loadedClaimDocumentsMap = new Map(claimDocumentsMap.entries());
+      loadedClaimDocumentsMap.set(absenceId, documents);
 
-      setDocuments(documents);
+      setClaimDocumentsMap(loadedClaimDocumentsMap);
     } catch (error) {
       appErrorsLogic.catchError(error);
     }
@@ -105,8 +109,8 @@ const useEmployersLogic = ({
    * Download document from the API and set app errors if any.
    */
   const downloadDocument = async (
-    absenceId: string,
-    document: ClaimDocument
+    document: ClaimDocument,
+    absenceId: string
   ) => {
     appErrorsLogic.clearErrors();
     try {
@@ -121,7 +125,7 @@ const useEmployersLogic = ({
    */
   const submitClaimReview = async (
     absenceId: string,
-    data: Record<string, unknown>
+    data: { [key: string]: unknown }
   ) => {
     appErrorsLogic.clearErrors();
 
@@ -168,7 +172,7 @@ const useEmployersLogic = ({
   return {
     addEmployer,
     claim,
-    documents,
+    claimDocumentsMap,
     downloadDocument,
     loadClaim,
     loadDocuments,

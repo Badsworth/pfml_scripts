@@ -61,7 +61,7 @@ export const initializeI18n = (
  * translations will not automatically rerender on language change
  * @see https://www.i18next.com/overview/api#t
  */
-export const t = (key: string, options?: string | Record<string, unknown>) =>
+export const t = (key: string, options?: string | { [key: string]: unknown }) =>
   i18next.t(key, options);
 
 /**

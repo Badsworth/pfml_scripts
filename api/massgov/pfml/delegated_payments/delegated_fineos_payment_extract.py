@@ -533,16 +533,7 @@ class PaymentExtractStep(Step):
 
     def run_step(self):
         logger.info("Processing payment extract data")
-
-        try:
-            self.process_records()
-            self.db_session.commit()
-
-        except Exception:
-            self.db_session.rollback()
-            logger.exception("Error processing payment extract data")
-            raise
-
+        self.process_records()
         logger.info("Successfully processed payment extract data")
 
     def get_active_payment_state(self, payment: Payment) -> Optional[LkState]:

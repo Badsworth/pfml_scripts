@@ -11,11 +11,11 @@ import { t } from "../locales/i18n";
  * @see https://moment.github.io/luxon/docs/manual/intl.html
  */
 export default function formatDateRange(
-  startIsoDate: string,
-  endIsoDate?: string,
+  startIsoDate: string | null,
+  endIsoDate?: string | null,
   customDelimiter?: string
 ) {
-  const startDate = formatDate(startIsoDate).short();
+  const startDate = startIsoDate ? formatDate(startIsoDate).short() : "";
   const endDate = endIsoDate ? formatDate(endIsoDate).short() : "";
 
   let delimiter = "";

@@ -4,7 +4,7 @@ import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { getClaimantCredentials } from "../../../config";
 
 describe("Denial Notification and Notice", () => {
-  after(() => {
+  before(() => {
     portal.deleteDownloadsFolder();
   });
 
@@ -20,12 +20,13 @@ describe("Denial Notification and Notice", () => {
           timestamp_from: Date.now(),
         });
 
-        fineosPages.ClaimPage.visit(res.fineos_absence_id)
-          .shouldHaveStatus("Eligibility", "Not Met")
-          .deny("Claimant wages failed 30x rule")
-          .triggerNotice("Leave Request Declined")
-          .triggerNotice("Preliminary Designation")
-          .documents((docPage) =>
+        const claimPage = fineosPages.ClaimPage.visit(res.fineos_absence_id)
+          claimPage.triggerNotice("Preliminary Designation")
+          fineos.onTab("Absence Hub")
+          claimPage.shouldHaveStatus("Eligibility", "Not Met")
+          claimPage.deny("Claimant wages failed 30x rule")
+          claimPage.triggerNotice("Leave Request Declined")
+          claimPage.documents((docPage) =>
             docPage.assertDocumentExists("Denial Notice")
           );
       });
@@ -72,7 +73,6 @@ describe("Denial Notification and Notice", () => {
     () => {
       cy.dependsOnPreviousPass([submit]);
       portal.before();
-      cy.visit("/");
       cy.unstash<Submission>("submission").then((submission) => {
         cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
           assertValidClaim(claim);

@@ -1,5 +1,7 @@
 import { get, pick } from "lodash";
-import BenefitsApplication from "../../models/BenefitsApplication";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import LeaveReason from "../../models/LeaveReason";
 import QuestionPage from "../../components/QuestionPage";
@@ -7,19 +9,10 @@ import React from "react";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.leave_details.pregnant_or_recent_birth"];
 
-interface ReasonPregnancyProps {
-  claim: BenefitsApplication;
-  appLogic: any;
-  query: {
-    claim_id?: string;
-  };
-}
-
-export const ReasonPregnancy = (props: ReasonPregnancyProps) => {
+export const ReasonPregnancy = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
