@@ -8,33 +8,30 @@ describe("Create a new caring leave claim in FINEOS and add Historical Absence c
   });
 
   const historical =
-  it("Create historical absence case within Absence Case", () => {
-    fineos.before();
-    cy.task("generateClaim", "HIST_CASE").then((claim) => {
-      cy.task("submitClaimToAPI", claim).then((res) => {
-        cy.stash("claim", claim.claim);
-        cy.stash("submission", {
-          application_id: res.application_id,
-          fineos_absence_id: res.fineos_absence_id,
-          timestamp_from: Date.now(),
+    it("Create historical absence case within Absence Case", () => {
+      fineos.before();
+      cy.task("generateClaim", "HIST_CASE").then((claim) => {
+        cy.task("submitClaimToAPI", claim).then((res) => {
+          cy.stash("claim", claim.claim);
+          cy.stash("submission", {
+            application_id: res.application_id,
+            fineos_absence_id: res.fineos_absence_id,
+            timestamp_from: Date.now(),
+          });
+          fineosPages.ClaimPage.visit(
+            res.fineos_absence_id
+          ).addHistoricalAbsenceCase();
         });
-        fineosPages.ClaimPage.visit(
-          res.fineos_absence_id
-        )
-          .addHistoricalAbsenceCase();
       });
     });
-  });
 
   it("Check to see if the Suppress Correspondence is available in the Absence Case", () => {
     cy.dependsOnPreviousPass([historical]);
     fineos.before();
     cy.unstash<Submission>("submission").then((submission) => {
-      fineosPages.ClaimPage.visit(
-        submission.fineos_absence_id
-      )
+      fineosPages.ClaimPage.visit(submission.fineos_absence_id)
         .suppressCorrespondence(true)
-        .removeSuppressCorrespondence()
+        .removeSuppressCorrespondence();
     });
   });
 

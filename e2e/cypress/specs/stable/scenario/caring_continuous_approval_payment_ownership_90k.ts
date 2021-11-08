@@ -107,7 +107,7 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
       fineosPages.ClaimantPage.visit(claim.claim.tax_identifier)
         .paymentPreferences()
         .edit()
-        .checkBulkPayee(true)
+        .checkBulkPayee(true);
     });
   });
 });

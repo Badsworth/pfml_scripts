@@ -152,5 +152,5 @@ describe("Approval (notifications/notices)", () => {
         }
       );
     });
-  })
+  });
 });

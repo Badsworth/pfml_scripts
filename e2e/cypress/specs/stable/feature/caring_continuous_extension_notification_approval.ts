@@ -4,7 +4,7 @@ import { Submission } from "../../../../src/types";
 import { extractLeavePeriod } from "../../../../src/util/claims";
 import { assertValidClaim } from "../../../../src/util/typeUtils";
 import { format, addDays, parse } from "date-fns";
-import {waitForAjaxComplete} from "../../../actions/fineos";
+import { waitForAjaxComplete } from "../../../actions/fineos";
 
 describe("Post-approval (notifications/notices)", () => {
   const credentials: Credentials = {
@@ -197,7 +197,7 @@ describe("Post-approval (notifications/notices)", () => {
         outstanding_requirement.reopen(true);
         waitForAjaxComplete();
         outstanding_requirement.removeOR(true);
-      })
+      });
     });
   });
 });
