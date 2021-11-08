@@ -31,7 +31,8 @@ import {
 
 function extractEnvironmentData(data) {
   const map = data
-    .filter((point) => !point.metadata.other_series) // Remove "Other" rows.
+    // Filter out "other" rows, and event rows, like daylight savings time.
+    .filter((d) => !d.metadata.other_series && d.metadata.viz === "main")
     .reduce((collected, item) => {
       const environment = extractGroup(item, "environment");
       if (!(environment in collected)) {
@@ -162,7 +163,8 @@ function LatestE2ERuns({ environment, accountId, count = 6 }) {
 
   function extractRunData(data) {
     const rows = data
-      .filter((d) => !d.metadata.other_series)
+      // Filter out "other" rows, and event rows, like daylight savings time.
+      .filter((d) => !d.metadata.other_series && d.metadata.viz === "main")
       .reduce((collected, point) => {
         const key = extractGroup(point, "runId");
         if (!collected[key]) {
