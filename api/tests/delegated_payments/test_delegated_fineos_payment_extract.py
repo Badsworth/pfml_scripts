@@ -368,6 +368,7 @@ def test_run_step_happy_path(
             assert len(pub_efts) == 1  # A prior one from setup logic
             assert payment.pub_eft_id in [pub_eft.pub_eft_id for pub_eft in employee.pub_efts]
 
+        assert payment.exclude_from_payment_status is False
     # Verify a few of the metrics were added to the import log table
     import_log_report = json.loads(payment.fineos_extract_import_log.report)
     assert import_log_report["standard_valid_payment_count"] == 2
@@ -439,7 +440,8 @@ def test_process_extract_data_prior_payment_exists_is_being_processed(
         for payment in payments
         if payment.state_logs[0].end_state_id != State.DELEGATED_PAYMENT_COMPLETE.state_id
     ][0]
-    assert new_payment
+
+    assert new_payment.exclude_from_payment_status is True
 
     state_log = state_log_util.get_latest_state_log_in_flow(
         new_payment, Flow.DELEGATED_PAYMENT, local_test_db_session
