@@ -22,6 +22,7 @@ from massgov.pfml.db.models.employees import (
 from massgov.pfml.db.models.payments import (
     FineosWritebackDetails,
     FineosWritebackTransactionStatus,
+    LinkSplitPayment,
     LkFineosWritebackTransactionStatus,
     PaymentAuditReportType,
 )
@@ -32,6 +33,9 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
 from massgov.pfml.delegated_payments.step import Step
 
 logger = logging.get_logger(__name__)
+
+enable_withholding_payments: bool
+enable_withholding_payments = os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "0") == "1"
 
 
 # Not sampled payment next states
@@ -266,6 +270,11 @@ class PaymentRejectsStep(Step):
             payment, Flow.DELEGATED_PAYMENT, self.db_session
         )
 
+        if enable_withholding_payments:
+            withholding_records: List[LinkSplitPayment] = self.db_session.query(
+                LinkSplitPayment
+            ).filter(LinkSplitPayment.payment_id == payment.payment_id).all()
+            logger.info("withholding_records %s", withholding_records)
         if payment_state_log is None:
             self.increment(self.Metrics.PAYMENT_STATE_LOG_MISSING_COUNT)
             raise PaymentRejectsException(
@@ -316,6 +325,14 @@ class PaymentRejectsStep(Step):
                 import_log_id=self.get_import_log_id(),
             )
             self.db_session.add(writeback_details)
+
+            if enable_withholding_payments:
+                if withholding_records:
+                    logger.info("call set_statelog_for_withholding_payments is_rejected_payment")
+                    self.set_statelog_for_withholding_payments(
+                        withholding_records, payment, is_skipped_or_rejected=True
+                    )
+
         elif is_skipped_payment:
             self.increment(self.Metrics.SKIPPED_PAYMENT_COUNT)
             state_log_util.create_finished_state_log(
@@ -342,11 +359,67 @@ class PaymentRejectsStep(Step):
                 import_log_id=self.get_import_log_id(),
             )
             self.db_session.add(writeback_details)
+
+            if enable_withholding_payments:
+                if withholding_records:
+                    logger.info("call set_statelog_for_withholding_payments is_skipped_payment")
+                    self.set_statelog_for_withholding_payments(
+                        withholding_records, payment, is_skipped_or_rejected=True,
+                    )
         else:
             self.increment(self.Metrics.ACCEPTED_PAYMENT_COUNT)
             state_log_util.create_finished_state_log(
                 payment, ACCEPTED_STATE, ACCEPTED_OUTCOME, self.db_session
             )
+
+            if enable_withholding_payments:
+                logger.info("call set_statelog_for_withholding_payments success")
+                if withholding_records:
+                    self.set_statelog_for_withholding_payments(
+                        withholding_records, payment, is_skipped_or_rejected=False
+                    )
+
+    def set_statelog_for_withholding_payments(
+        self,
+        withholding_records: List[LinkSplitPayment],
+        payment: Payment,
+        is_skipped_or_rejected: bool,
+    ) -> None:
+        logger.info("set_statelog_for_withholding_payments %s",is_skipped_or_rejected)
+        for payment_withholding_record in withholding_records:
+            payment_end_state_id = (
+                (
+                    self.db_session.query(StateLog.end_state_id, StateLog)
+                    .filter(StateLog.payment_id == payment.payment_id)
+                    .filter(StateLog.started_at == payment.fineos_extraction_date)
+                )
+                .order_by(StateLog.created_at.desc())
+                .first()
+            )
+
+            withhold_payment: Payment = (
+                self.db_session.query(Payment)
+                .join(LinkSplitPayment, Payment.payment_id == LinkSplitPayment.related_payment_id)
+                .filter(Payment.payment_id == payment_withholding_record.related_payment_id)
+            ).first()
+            if is_skipped_or_rejected:
+                state_log_util.create_finished_state_log(
+                    withhold_payment,
+                    State.STATE_WITHHOLDING_ERROR
+                    if (payment_end_state_id in [191])
+                    else State.FEDERAL_WITHHOLDING_ERROR,
+                    state_log_util.build_outcome("Record is skipped or rejected"),
+                    self.db_session,
+                )
+            else:
+                state_log_util.create_finished_state_log(
+                    withhold_payment,
+                    State.STATE_WITHHOLDING_SEND_FUNDS
+                    if (payment_end_state_id in [191])
+                    else State.FEDERAL_WITHHOLDING_SEND_FUNDS,
+                    ACCEPTED_OUTCOME,
+                    self.db_session,
+                )
 
     def convert_reject_notes_to_writeback_status(
         self, payment: Payment, is_rejected: bool, rejected_notes: Optional[str] = None
