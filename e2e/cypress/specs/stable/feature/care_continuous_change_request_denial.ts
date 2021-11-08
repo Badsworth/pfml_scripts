@@ -32,22 +32,24 @@ describe("Post-approval (notifications/notices)", () => {
           cy.stash("extendedDates", [newStartDate, newEndDate]);
           cy.stash("submission", submission);
           // Approve the claim
-          const claimPage = fineosPages.ClaimPage.visit(response.fineos_absence_id)
-            claimPage.triggerNotice("Preliminary Designation");
-            fineos.onTab("Absence Hub");
-            claimPage.adjudicate((adjudication) => {
-              adjudication
-                .evidence((evidence) => {
-                  claim.documents.forEach((doc) =>
-                    evidence.receive(doc.document_type)
-                  );
-                })
-                .certificationPeriods((cert) => cert.prefill())
-                .acceptLeavePlan();
-            })
-            // Skip checking tasks. We do that in other tests.
-            // Also skip checking claim status for the same reason.
-            claimPage.approve();
+          const claimPage = fineosPages.ClaimPage.visit(
+            response.fineos_absence_id
+          );
+          claimPage.triggerNotice("Preliminary Designation");
+          fineos.onTab("Absence Hub");
+          claimPage.adjudicate((adjudication) => {
+            adjudication
+              .evidence((evidence) => {
+                claim.documents.forEach((doc) =>
+                  evidence.receive(doc.document_type)
+                );
+              })
+              .certificationPeriods((cert) => cert.prefill())
+              .acceptLeavePlan();
+          });
+          // Skip checking tasks. We do that in other tests.
+          // Also skip checking claim status for the same reason.
+          claimPage.approve();
         });
       });
     });

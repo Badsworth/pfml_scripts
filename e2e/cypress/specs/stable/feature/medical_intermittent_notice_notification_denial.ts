@@ -20,15 +20,15 @@ describe("Denial Notification and Notice", () => {
           timestamp_from: Date.now(),
         });
 
-        const claimPage = fineosPages.ClaimPage.visit(res.fineos_absence_id)
-          claimPage.triggerNotice("Preliminary Designation")
-          fineos.onTab("Absence Hub")
-          claimPage.shouldHaveStatus("Eligibility", "Not Met")
-          claimPage.deny("Claimant wages failed 30x rule")
-          claimPage.triggerNotice("Leave Request Declined")
-          claimPage.documents((docPage) =>
-            docPage.assertDocumentExists("Denial Notice")
-          );
+        const claimPage = fineosPages.ClaimPage.visit(res.fineos_absence_id);
+        claimPage.triggerNotice("Preliminary Designation");
+        fineos.onTab("Absence Hub");
+        claimPage.shouldHaveStatus("Eligibility", "Not Met");
+        claimPage.deny("Claimant wages failed 30x rule");
+        claimPage.triggerNotice("Leave Request Declined");
+        claimPage.documents((docPage) =>
+          docPage.assertDocumentExists("Denial Notice")
+        );
       });
     });
   });
