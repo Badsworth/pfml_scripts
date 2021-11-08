@@ -400,7 +400,7 @@ class Employer(Base, TimestampMixin):
     employer_occupations: "Query[EmployeeOccupation]" = dynamic_loader(
         "EmployeeOccupation", back_populates="employer"
     )
-    employer_quarterly_contribution: "Query[EmployerQuarterlyContribution]" = dynamic_loader(
+    employer_quarterly_contribution = relationship(
         "EmployerQuarterlyContribution", back_populates="employer"
     )
     organization_units: "Query[OrganizationUnit]" = dynamic_loader(
@@ -417,7 +417,7 @@ class Employer(Base, TimestampMixin):
             quarter.employer_total_pfml_contribution > 0
             and quarter.filing_period >= last_years_date
             and quarter.filing_period < current_date
-            for quarter in self.employer_quarterly_contribution
+            for quarter in self.employer_quarterly_contribution  # type: ignore
         )
 
     @validates("employer_fein")
