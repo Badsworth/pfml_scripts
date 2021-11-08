@@ -592,7 +592,7 @@ exports[`Status timeline when there is a pending bonding absence period and clai
   </p>
   <a
     class="usa-button"
-    href="/applications/upload/proof-of-birth?claim_id=mock-application-id&absence_case_id=mock-absence-case-id"
+    href="/applications/upload/proof-of-birth?claim_id=mock-application-id&absence_id=mock-absence-case-id"
   >
     Upload proof of birth
   </a>

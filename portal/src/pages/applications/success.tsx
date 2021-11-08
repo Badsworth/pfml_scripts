@@ -161,7 +161,7 @@ export const Success = (props: WithBenefitsApplicationProps) => {
             "track-status-link": (
               <a
                 href={routeWithParams("applications.status.claim", {
-                  absence_case_id: claim.fineos_absence_id,
+                  absence_id: claim.fineos_absence_id,
                 })}
               />
             ),
@@ -274,7 +274,7 @@ export const Success = (props: WithBenefitsApplicationProps) => {
           <ButtonLink
             className="margin-top-4"
             href={routeWithParams("applications.status.claim", {
-              absence_case_id: claim.fineos_absence_id,
+              absence_id: claim.fineos_absence_id,
             })}
           >
             {t("pages.claimsSuccess.exitLink")}

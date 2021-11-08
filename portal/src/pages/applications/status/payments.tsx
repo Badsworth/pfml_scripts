@@ -13,7 +13,7 @@ import { useTranslation } from "../../../locales/i18n";
 export const Payments = ({
   appLogic,
   query,
-}: WithUserProps & { query: { absence_case_id?: string | null } }) => {
+}: WithUserProps & { query: { absence_id?: string } }) => {
   const {
     claims: { claimDetail },
     portalFlow,
@@ -23,10 +23,10 @@ export const Payments = ({
   useEffect(() => {
     if (!isFeatureEnabled("claimantShowStatusPage") || !claimDetail) {
       portalFlow.goTo(routes.applications.status.claim, {
-        absence_case_id: query.absence_case_id,
+        absence_id: query.absence_id,
       });
     }
-  }, [portalFlow, claimDetail, query.absence_case_id]);
+  }, [portalFlow, claimDetail, query.absence_id]);
 
   const absenceDetails = claimDetail?.absencePeriodsByReason;
   const [firstAbsenceDetail] = absenceDetails
@@ -55,7 +55,7 @@ export const Payments = ({
             <Heading weight="normal" level="2" size="4">
               {t("pages.claimsStatus.applicationID")}
             </Heading>
-            <p className="text-bold">{query.absence_case_id}</p>
+            <p className="text-bold">{query.absence_id}</p>
           </div>
           <div>
             <Heading weight="normal" level="2" size="4">
@@ -66,7 +66,7 @@ export const Payments = ({
         </div>
         <StatusNavigationTabs
           activePath={appLogic.portalFlow.pathname}
-          absence_case_id={query.absence_case_id}
+          absence_id={query.absence_id}
         />
       </div>
     </React.Fragment>

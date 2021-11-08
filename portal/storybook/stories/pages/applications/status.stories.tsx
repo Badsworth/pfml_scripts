@@ -188,7 +188,7 @@ export const DefaultStory = (
     <Status
       // @ts-expect-error ts-migrate(2740) FIXME: Type '{ appErrors: AppErrorInfoCollection; claims:... Remove this comment to see the full error message
       appLogic={appLogic}
-      query={{ absence_case_id: "NTN-12345-ABS-01" }}
+      query={{ absence_id: "NTN-12345-ABS-01" }}
     />
   );
 };

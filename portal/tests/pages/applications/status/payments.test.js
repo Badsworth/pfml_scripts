@@ -14,7 +14,7 @@ const defaultClaimDetail = {
 };
 
 const props = {
-  query: { absence_case_id: defaultClaimDetail.fineos_absence_id },
+  query: { absence_id: defaultClaimDetail.fineos_absence_id },
 };
 
 describe("Payments", () => {

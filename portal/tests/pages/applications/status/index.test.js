@@ -83,7 +83,7 @@ const defaultClaimDetail = {
 };
 
 const props = {
-  query: { absence_case_id: defaultClaimDetail.fineos_absence_id },
+  query: { absence_id: defaultClaimDetail.fineos_absence_id },
 };
 
 describe("Status", () => {
@@ -236,7 +236,7 @@ describe("Status", () => {
           query: {
             uploaded_document_type: "proof-of-birth",
             claim_id: "12342323",
-            absence_case_id: defaultClaimDetail.fineos_absence_id,
+            absence_id: defaultClaimDetail.fineos_absence_id,
           },
         }
       );
@@ -260,7 +260,7 @@ describe("Status", () => {
           query: {
             uploaded_document_type: "state-id",
             claim_id: "12342323",
-            absence_case_id: defaultClaimDetail.fineos_absence_id,
+            absence_id: defaultClaimDetail.fineos_absence_id,
           },
         }
       );
@@ -282,7 +282,7 @@ describe("Status", () => {
           query: {
             uploaded_document_type: "family-member-medical-certification",
             claim_id: "12342323",
-            absence_case_id: defaultClaimDetail.fineos_absence_id,
+            absence_id: defaultClaimDetail.fineos_absence_id,
           },
         }
       );
@@ -554,7 +554,7 @@ describe("Status", () => {
       .toMatchInlineSnapshot(`
       <a
         class="usa-button margin-top-3"
-        href="/applications/upload?absence_case_id=mock-absence-case-id"
+        href="/applications/upload?absence_id=mock-absence-case-id"
       >
         Upload additional documents
       </a>
@@ -912,7 +912,7 @@ describe("Status", () => {
           .toMatchInlineSnapshot(`
           <a
             class="usa-button"
-            href="/applications/upload/proof-of-birth?claim_id=mock-application-id&absence_case_id=mock-absence-case-id"
+            href="/applications/upload/proof-of-birth?claim_id=mock-application-id&absence_id=mock-absence-case-id"
           >
             Upload proof of birth
           </a>
@@ -942,7 +942,7 @@ describe("Status", () => {
           .toMatchInlineSnapshot(`
           <a
             class="usa-button"
-            href="/applications/upload/proof-of-placement?claim_id=mock-application-id&absence_case_id=mock-absence-case-id"
+            href="/applications/upload/proof-of-placement?claim_id=mock-application-id&absence_id=mock-absence-case-id"
           >
             Upload proof of placement
           </a>
@@ -972,7 +972,7 @@ describe("Status", () => {
           .toMatchInlineSnapshot(`
           <a
             class="usa-button"
-            href="/applications/upload/proof-of-placement?claim_id=mock-application-id&absence_case_id=mock-absence-case-id"
+            href="/applications/upload/proof-of-placement?claim_id=mock-application-id&absence_id=mock-absence-case-id"
           >
             Upload proof of adoption
           </a>

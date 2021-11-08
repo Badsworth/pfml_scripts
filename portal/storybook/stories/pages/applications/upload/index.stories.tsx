@@ -79,7 +79,7 @@ export const Default = ({ absencePeriod }: { absencePeriod: string }) => {
       // @ts-expect-error ts-migrate(2740) FIXME: Type '{ benefitsApplications: { update: () => void... Remove this comment to see the full error message
       appLogic={appLogic}
       documents={[]}
-      query={{ absence_case_id: "mock-absence-id" }}
+      query={{ absence_id: "mock-absence-id" }}
     />
   );
 };

@@ -36,7 +36,7 @@ export const Status = ({
   appLogic,
   query,
 }: WithUserProps & {
-  query: { absence_case_id?: string | null; uploaded_document_type?: string };
+  query: { absence_id?: string | null; uploaded_document_type?: string };
 }) => {
   const { t } = useTranslation();
   const {
@@ -49,7 +49,7 @@ export const Status = ({
     },
     portalFlow,
   } = appLogic;
-  const { absence_case_id, uploaded_document_type } = query;
+  const { absence_id, uploaded_document_type } = query;
 
   useEffect(() => {
     if (!isFeatureEnabled("claimantShowStatusPage")) {
@@ -58,11 +58,11 @@ export const Status = ({
   }, [portalFlow]);
 
   useEffect(() => {
-    if (absence_case_id) {
-      loadClaimDetail(absence_case_id);
+    if (absence_id) {
+      loadClaimDetail(absence_id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [absence_case_id]);
+  }, [absence_id]);
 
   useEffect(() => {
     const application_id = get(claimDetail, "application_id");
@@ -85,10 +85,10 @@ export const Status = ({
   }, [isLoadingClaimDetail, claimDetail]);
 
   /**
-   * If there is no absence_case_id query parameter,
+   * If there is no absence_id query parameter,
    * then return the PFML 404 page.
    */
-  const isAbsenceCaseId = Boolean(query.absence_case_id?.length);
+  const isAbsenceCaseId = Boolean(query.absence_id?.length);
   if (!isAbsenceCaseId) return <PageNotFound />;
 
   // only hide page content if there is an error that's not DocumentsLoadError.
@@ -243,7 +243,7 @@ export const Status = ({
           state="success"
         >
           {t("pages.applications.uploadSuccessMessage", {
-            absence_id: absence_case_id,
+            absence_id,
           })}
         </Alert>
       )}
@@ -300,7 +300,7 @@ export const Status = ({
             <Heading weight="normal" level="2" size="4">
               {t("pages.claimsStatus.applicationID")}
             </Heading>
-            <p className="text-bold">{absence_case_id}</p>
+            <p className="text-bold">{absence_id}</p>
           </div>
           {claimDetail.employer && (
             <div>
@@ -315,7 +315,7 @@ export const Status = ({
         {isFeatureEnabled("claimantShowPayments") && (
           <StatusNavigationTabs
             activePath={appLogic.portalFlow.pathname}
-            absence_case_id={absence_case_id}
+            absence_id={absence_id}
           />
         )}
 
@@ -327,7 +327,7 @@ export const Status = ({
             }
             applicationId={claimDetail.application_id}
             docList={documentsForApplication}
-            absenceCaseId={claimDetail.fineos_absence_id}
+            absenceId={claimDetail.fineos_absence_id}
             appLogic={appLogic}
           />
         )}
@@ -361,7 +361,7 @@ export const Status = ({
               href={appLogic.portalFlow.getNextPageRoute(
                 "UPLOAD_DOC_OPTIONS",
                 {},
-                { absence_case_id: claimDetail.fineos_absence_id }
+                { absence_id: claimDetail.fineos_absence_id }
               )}
             >
               {t("pages.claimsStatus.uploadDocumentsButton")}
@@ -516,7 +516,7 @@ interface TimelineProps {
   applicationId?: string;
   employerFollowUpDate: string | null;
   docList: ClaimDocument[] | BenefitsApplicationDocument[];
-  absenceCaseId: string;
+  absenceId: string;
   appLogic: AppLogic;
 }
 
@@ -525,7 +525,7 @@ export const Timeline = ({
   applicationId,
   docList,
   absencePeriods,
-  absenceCaseId,
+  absenceId,
   appLogic,
 }: TimelineProps) => {
   const { t } = useTranslation();
@@ -579,7 +579,7 @@ export const Timeline = ({
               ? "UPLOAD_PROOF_OF_BIRTH"
               : "UPLOAD_PROOF_OF_PLACEMENT",
             {},
-            { claim_id: applicationId, absence_case_id: absenceCaseId }
+            { claim_id: applicationId, absence_id: absenceId }
           )}
         >
           {t("pages.claimsStatus.whatHappensNextButton", {

@@ -192,7 +192,7 @@ interface DocumentUploadProps extends WithClaimDocumentsProps {
   query: {
     claim_id: string;
     additionalDoc?: string;
-    absence_case_id?: string;
+    absence_id?: string;
     documentType?:
       | "state-id"
       | "other-id"
@@ -232,16 +232,16 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
   // after the application has been completed.
   // If true, the document is immediately marked as received in the CPS,
   // and the user will be navigated back to the claim's status page.
-  // The absence_case_id param is only set when claimant is uploading
+  // The absence_id param is only set when claimant is uploading
   // a document after the application has been completed.
-  const isAdditionalDoc = !!query.absence_case_id;
+  const isAdditionalDoc = !!query.absence_id;
 
   const handleSave = async () => {
     if (files.isEmpty && existingDocuments.length) {
       // Allow user to skip this page if they've previously uploaded documents
       portalFlow.goToNextPage(
         { isAdditionalDoc },
-        { claim_id: query.claim_id, absence_case_id: query.absence_case_id }
+        { claim_id: query.claim_id, absence_id: query.absence_id }
       );
       return;
     }
@@ -265,7 +265,7 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
         {
           uploaded_document_type: query.documentType,
           claim_id: query.claim_id,
-          absence_case_id: query.absence_case_id,
+          absence_id: query.absence_id,
         }
       );
     }

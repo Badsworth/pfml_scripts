@@ -92,7 +92,7 @@ describe("UploadDocsOptions", () => {
           addClaimDetail(appLogic, claimDetail);
         }}
         query={{
-          absence_case_id: "mock-absence-id",
+          absence_id: "mock-absence-id",
         }}
       />
     );
@@ -116,7 +116,7 @@ describe("UploadDocsOptions", () => {
             addClaimDetail(_appLogic, claimDetail);
           }}
           query={{
-            absence_case_id: "mock-absence-id",
+            absence_id: "mock-absence-id",
           }}
         />
       ));
@@ -145,7 +145,7 @@ describe("UploadDocsOptions", () => {
 
       expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledWith(
         {},
-        { claim_id: "mock-claim-id", absence_case_id: "mock-absence-id" },
+        { claim_id: "mock-claim-id", absence_id: "mock-absence-id" },
         UploadType.mass_id
       );
     });
@@ -169,7 +169,7 @@ describe("UploadDocsOptions", () => {
 
       expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledWith(
         {},
-        { claim_id: "mock-claim-id", absence_case_id: "mock-absence-id" },
+        { claim_id: "mock-claim-id", absence_id: "mock-absence-id" },
         UploadType.non_mass_id
       );
     });
@@ -191,7 +191,7 @@ describe("UploadDocsOptions", () => {
           addClaimDetail(_appLogic, claimDetail);
         }}
         query={{
-          absence_case_id: "mock-absence-id",
+          absence_id: "mock-absence-id",
         }}
       />
     );
@@ -228,7 +228,7 @@ describe("UploadDocsOptions", () => {
                 addClaimDetail(_appLogic, claimDetail);
               }}
               query={{
-                absence_case_id: "mock-absence-id",
+                absence_id: "mock-absence-id",
               }}
             />
           );
@@ -257,7 +257,7 @@ describe("UploadDocsOptions", () => {
 
           expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledWith(
             {},
-            { claim_id: "mock-claim-id", absence_case_id: "mock-absence-id" },
+            { claim_id: "mock-claim-id", absence_id: "mock-absence-id" },
             uploadType
           );
         });

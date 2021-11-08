@@ -89,7 +89,7 @@ const ManageDocumentSection = ({
   claim,
 }: ManageDocumentSectionProps) => {
   const { t } = useTranslation();
-  const { fineos_absence_id: absence_case_id } = claim;
+  const { fineos_absence_id: absence_id } = claim;
 
   const onClickHandler = async (href: string) => {
     await navigateToPage(claim, appLogic, href);
@@ -97,13 +97,13 @@ const ManageDocumentSection = ({
 
   const viewNoticesLink = createRouteWithQuery(
     "/applications/status/",
-    { absence_case_id },
+    { absence_id },
     "view_notices"
   );
 
   const uploadDocumentsLink = createRouteWithQuery(
     "/applications/status/",
-    { absence_case_id },
+    { absence_id },
     "upload_documents"
   );
 
@@ -250,7 +250,7 @@ const CompletedStatusCard = ({ appLogic, claim }: CompletedStatusCardProps) => {
   });
 
   const statusPage = routeWithParams("applications.status.claim", {
-    absence_case_id: claim.fineos_absence_id,
+    absence_id: claim.fineos_absence_id,
   });
 
   const onClickHandler = async () => {

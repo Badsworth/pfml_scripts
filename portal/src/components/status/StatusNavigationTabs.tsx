@@ -6,7 +6,7 @@ import { useTranslation } from "../../locales/i18n";
 
 interface StatusNavigationTabsProps {
   activePath: string;
-  absence_case_id?: string | null;
+  absence_id?: string | null;
 }
 
 /**
@@ -14,20 +14,20 @@ interface StatusNavigationTabsProps {
  */
 const StatusNavigationTabs = ({
   activePath,
-  absence_case_id,
+  absence_id,
 }: StatusNavigationTabsProps) => {
   const { t } = useTranslation();
   const tabs = [
     {
       label: t("components.statusNavigationTabs.statusDetails"),
       href: createRouteWithQuery(routes.applications.status.claim, {
-        absence_case_id,
+        absence_id,
       }),
     },
     {
       label: t("components.statusNavigationTabs.payments"),
       href: createRouteWithQuery(routes.applications.status.payments, {
-        absence_case_id,
+        absence_id,
       }),
     },
   ];

@@ -66,7 +66,7 @@ export const Default = ({
       documents={[]}
       query={{
         claim_id: "mock-claim-id",
-        absence_case_id: "mock-absence-case-id",
+        absence_id: "mock-absence-case-id",
         documentType,
       }}
     />
