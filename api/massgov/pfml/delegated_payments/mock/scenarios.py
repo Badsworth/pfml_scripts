@@ -365,14 +365,14 @@ SCENARIO_DESCRIPTORS: List[ScenarioDescriptor] = [
         claim_missing_employee=True,
         claim_extract_employee_identifier_unknown=True,
     ),
-    ScenarioDescriptor(
-        scenario_name=ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
-        is_tax_withholding_records_exists=True,
-    ),
-    ScenarioDescriptor(
-        scenario_name=ScenarioName.TAX_WITHHOLDING_DUPLICATES,
-        is_duplicate_tax_withholding_records_exists=True,
-    ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.HAPPY_PATH_TAX_WITHHOLDING,
+    #     is_tax_withholding_records_exists=True,
+    # ),
+    # ScenarioDescriptor(
+    #     scenario_name=ScenarioName.TAX_WITHHOLDING_DUPLICATES,
+    #     is_duplicate_tax_withholding_records_exists=True,
+    # ),
 ]
 
 SCENARIO_DESCRIPTORS_BY_NAME: Dict[ScenarioName, ScenarioDescriptor] = {
