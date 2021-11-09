@@ -212,6 +212,7 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
     clearErrors: appLogic.clearErrors,
     catchError: appLogic.catchError,
   });
+  const [submissionInProgress, setSubmissionInProgress] = React.useState(false);
 
   const hasLoadingDocumentsError = hasDocumentsLoadError(
     appErrors,
@@ -245,7 +246,7 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
       );
       return;
     }
-
+    setSubmissionInProgress(true);
     const uploadPromises = appLogic.documents.attach(
       query.claim_id,
       files.items,
@@ -259,6 +260,7 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
       files,
       removeFile
     );
+    setSubmissionInProgress(false);
     if (success) {
       portalFlow.goToNextPage(
         { isAdditionalDoc },
@@ -311,6 +313,7 @@ export const DocumentUpload = (props: DocumentUploadProps) => {
           documents={existingDocuments}
           onChange={processFiles}
           onRemoveTempFile={removeFile}
+          disableRemove={submissionInProgress}
           fileHeadingPrefix={t(
             "pages.claimsUploadDocumentType.fileHeadingPrefix"
           )}

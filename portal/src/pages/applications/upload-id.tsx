@@ -44,6 +44,7 @@ export const UploadId = (props: UploadIdProps) => {
     catchError: appLogic.catchError,
   });
   const { additionalDoc, showStateId } = query;
+  const [submissionInProgress, setSubmissionInProgress] = React.useState(false);
   let hasStateId;
   if (showStateId === "true") {
     hasStateId = true;
@@ -72,7 +73,7 @@ export const UploadId = (props: UploadIdProps) => {
       portalFlow.goToNextPage({ claim }, { claim_id: claim.application_id });
       return;
     }
-
+    setSubmissionInProgress(true);
     const uploadPromises = appLogic.documents.attach(
       claim.application_id,
       files.items,
@@ -85,7 +86,7 @@ export const UploadId = (props: UploadIdProps) => {
       files,
       removeFile
     );
-
+    setSubmissionInProgress(false);
     if (success) {
       portalFlow.goToNextPage(
         { claim },
@@ -182,6 +183,7 @@ export const UploadId = (props: UploadIdProps) => {
             tempFiles={files}
             documents={idDocuments}
             onChange={processFiles}
+            disableRemove={submissionInProgress}
             onRemoveTempFile={removeFile}
             fileHeadingPrefix={t("pages.claimsUploadId.fileHeadingPrefix")}
             addFirstFileButtonText={t(

@@ -16,6 +16,7 @@ interface FileCardProps {
   /** Event handler for when the "Remove" button is clicked. We'll pass it the `id` prop above. */
   onRemoveClick?: React.MouseEventHandler<HTMLButtonElement>;
   errorMsg?: React.ReactNode;
+  disableRemove?: boolean;
 }
 
 /**
@@ -66,6 +67,7 @@ const FileCard = (props: FileCardProps) => {
               className="text-error hover:text-error-dark active:text-error-darker margin-top-0"
               onClick={props.onRemoveClick}
               variation="unstyled"
+              disabled={props.disableRemove}
             >
               {removeButton}
             </Button>
