@@ -115,6 +115,7 @@ jobs:
       # Run Cypress tests.
       - name: Cypress Tests (Commit Stable)
         uses: cypress-io/github-action@v2
+        # Note: This change is currently blocked on https://github.com/cypress-io/cypress/issues/18564.
         timeout-minutes: 20
         with:
           spec: "cypress/specs/stable/**"
