@@ -63,16 +63,21 @@ resource "aws_s3_bucket_public_access_block" "sql_export_block_public_access" {
 
 # S3 Bucket for 1099 ECS Tasks usage
 resource "aws_s3_bucket" "ecs_tasks_1099_bucket" { 
-  bucket = "${local.app_name}-${local.environment_name}-1099-form-generator"
-  acl = private
+  bucket = "${local.app_name}-${var.environment_name}-1099-form-generator"
+  acl = "private"
 
   server_side_encryption_configuration {
     rule {
-      apply_server_side_configuration_by_default {
+      apply_server_side_encryption_by_default {
         sse_algorithm = "AES256"
       }
     }
   }
+
+    tags = merge(module.constants.common_tags, {
+    environment = "${var.environment_name}"
+    public      = "no"
+  })
 }
 
 resource "aws_s3_bucket_public_access_block" "ecs_tasks_1099_bucket_block_public_access" {
