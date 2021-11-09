@@ -28,6 +28,7 @@ from massgov.pfml.db.models.employees import (
     ManagedRequirementStatus,
     ManagedRequirementType,
     Role,
+    State,
     UserLeaveAdministrator,
 )
 from massgov.pfml.db.models.factories import (
@@ -47,6 +48,7 @@ from massgov.pfml.db.queries.managed_requirements import (
     create_managed_requirement_from_fineos,
     get_managed_requirement_by_fineos_managed_requirement_id,
 )
+from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.fineos import exception, models
 from massgov.pfml.fineos.mock_client import MockFINEOSClient
 from massgov.pfml.fineos.models.group_client_api import (
@@ -1790,7 +1792,9 @@ class TestUpdateClaim:
             assert error is not None
 
 
-def assert_claim_response_equal_to_claim_query(claim_response, claim_query) -> bool:
+def assert_claim_response_equal_to_claim_query(
+    claim_response, claim_query, has_paid_payments=False
+) -> bool:
     assert claim_response["absence_period_end_date"] == claim_query.absence_period_end_date
     assert claim_response["absence_period_start_date"] == claim_query.absence_period_start_date
     assert claim_response["fineos_absence_id"] == claim_query.fineos_absence_id
@@ -1809,10 +1813,11 @@ def assert_claim_response_equal_to_claim_query(claim_response, claim_query) -> b
         == claim_query.fineos_absence_status.absence_status_description
     )
     assert claim_response["claim_type_description"] == claim_query.claim_type.claim_type_description
+    assert claim_response["has_paid_payments"] == has_paid_payments
 
 
 def assert_detailed_claim_response_equal_to_claim_query(
-    claim_response, claim_query, application=None
+    claim_response, claim_query, application=None, has_paid_payments=False
 ) -> bool:
     if application:
         assert claim_response["application_id"] == str(application.application_id)
@@ -1827,6 +1832,7 @@ def assert_detailed_claim_response_equal_to_claim_query(
     assert claim_response["employee"]["middle_name"] == claim_query.employee.middle_name
     assert claim_response["employee"]["last_name"] == claim_query.employee.last_name
     assert claim_response["employee"]["other_name"] == claim_query.employee.other_name
+    assert claim_response["has_paid_payments"] == has_paid_payments
 
 
 def leave_period_response_equal_leave_period_query(
@@ -2165,6 +2171,26 @@ class TestGetClaimEndpoint:
             == managed_requirement_response[0]["category"]
         )
 
+    def test_get_claim_with_paid_payments(self, test_db_session, client, auth_token, user):
+        payment_factory = DelegatedPaymentFactory(
+            test_db_session, fineos_absence_id="NTN-304363-ABS-01"
+        )
+        claim = payment_factory.get_or_create_claim()
+        payment_factory.get_or_create_payment_with_state(
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT
+        )
+        ApplicationFactory.create(user=user, claim=claim)
+
+        response = client.get(
+            f"/v1/claims/{claim.fineos_absence_id}",
+            headers={"Authorization": f"Bearer {auth_token}"},
+        )
+
+        assert response.status_code == 200
+        response_body = response.get_json()
+        claim_data = response_body.get("data")
+        assert claim_data["has_paid_payments"] is True
+
 
 class TestGetClaimsEndpoint:
     def test_get_claims_as_leave_admin(
@@ -2337,6 +2363,44 @@ class TestGetClaimsEndpoint:
                     raise AssertionError(
                         f"tag: {tag}\n{key} value was '{actual_value}', not expected {expected_value}"
                     )
+
+    def test_get_claims_with_paid_payments(
+        self, client, test_db_session, employer_user, employer_auth_token, test_verification
+    ):
+        payment_factory = DelegatedPaymentFactory(test_db_session, fineos_absence_status_id=1)
+        claim = payment_factory.get_or_create_claim()
+        payment_factory.get_or_create_payment_with_state(
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT
+        )
+
+        claim2 = ClaimFactory.create(
+            employer=payment_factory.employer,
+            employee=payment_factory.employee,
+            fineos_absence_status_id=1,
+            claim_type_id=1,
+        )
+
+        link = UserLeaveAdministrator(
+            user_id=employer_user.user_id,
+            employer_id=payment_factory.employer.employer_id,
+            fineos_web_id="fake-fineos-web-id",
+            verification=test_verification,
+        )
+        test_db_session.add(link)
+        test_db_session.commit()
+
+        response = client.get(
+            "/v1/claims", headers={"Authorization": f"Bearer {employer_auth_token}"},
+        )
+
+        assert response.status_code == 200
+        response_body = response.get_json()
+        claim_data = response_body.get("data")
+        assert len(claim_data) == 2
+
+        # Sort order places most recent claims first
+        assert_claim_response_equal_to_claim_query(claim_data[0], claim2, has_paid_payments=False)
+        assert_claim_response_equal_to_claim_query(claim_data[1], claim, has_paid_payments=True)
 
     # Inner class for testing Claims With Status Filtering
     class TestClaimsOrder:

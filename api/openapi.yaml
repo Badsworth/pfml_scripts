@@ -2332,6 +2332,9 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/EvidenceStatusDetail"
+        has_paid_payments:
+          type: boolean
+          example: false
 
     ClaimResponse:
       type: object
@@ -2368,7 +2371,10 @@ components:
         absence_periods:
             type: array
             items:
-              $ref: "#/components/schemas/AbsencePeriodStatusResponse"         
+              $ref: "#/components/schemas/AbsencePeriodStatusResponse"
+        has_paid_payments:
+          type: boolean
+          example: false
 
     ClaimsResponse:
       type: array

@@ -28,7 +28,7 @@ from sqlalchemy import (
     select,
 )
 from sqlalchemy.ext.hybrid import hybrid_method
-from sqlalchemy.orm import Query, aliased, dynamic_loader, relationship, validates
+from sqlalchemy.orm import Query, aliased, dynamic_loader, object_session, relationship, validates
 from sqlalchemy.schema import Sequence
 from sqlalchemy.sql.expression import func
 from sqlalchemy.types import JSON
@@ -758,6 +758,22 @@ class Claim(Base, TimestampMixin):
             return None
 
         return self.employer.employer_fein
+
+    @typed_hybrid_property
+    def has_paid_payments(self) -> bool:
+        # Joining to LatestStateLog filters out StateLogs
+        # which are no longer the most recent state for a given payment
+        paid_payments = (
+            object_session(self)
+            .query(func.count(Payment.payment_id))
+            .join(StateLog)
+            .join(LatestStateLog)
+            .filter(Payment.claim_id == self.claim_id)
+            .filter(StateLog.end_state_id.in_(SharedPaymentConstants.PAID_STATE_IDS))
+            .scalar()
+        )
+
+        return paid_payments > 0
 
 
 class Payment(Base, TimestampMixin):
@@ -2541,6 +2557,27 @@ class State(LookupTable):
     FEDERAL_WITHHOLDING_SEND_FUNDS = LkState(
         198, "Federal Withholding send funds to IRS", Flow.DELEGATED_PAYMENT.flow_id
     )
+
+
+class SharedPaymentConstants:
+    """
+    A class to hold Payment-Specific constants relevant
+    to more than one part of the application.
+    Definining constants here allows them to be shared
+    throughout the application without creating circular dependencies
+    """
+
+    # States that indicate we have sent a payment to PUB
+    # and it has not yet errored.
+    PAID_STATES = frozenset(
+        [
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
+            State.DELEGATED_PAYMENT_COMPLETE,
+            State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION,
+        ]
+    )
+    PAID_STATE_IDS = frozenset([state.state_id for state in PAID_STATES])
 
 
 class PaymentTransactionType(LookupTable):

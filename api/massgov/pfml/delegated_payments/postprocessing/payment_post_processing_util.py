@@ -15,6 +15,7 @@ from massgov.pfml.db.models.employees import (
     Payment,
     PaymentDetails,
     PaymentTransactionType,
+    SharedPaymentConstants,
     State,
     StateLog,
 )
@@ -257,7 +258,7 @@ def get_all_paid_payments_associated_with_employee(
         .join(LatestStateLog)
         .filter(
             Payment.payment_id.in_(subquery),
-            StateLog.end_state_id.in_(payments_util.Constants.PAID_STATE_IDS),
+            StateLog.end_state_id.in_(SharedPaymentConstants.PAID_STATE_IDS),
         )
         .all()
     )
