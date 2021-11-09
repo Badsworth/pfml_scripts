@@ -39,7 +39,7 @@ def to_response_dict(payment_data: List[Payment], absence_case_id: Optional[str]
                 fineos_i_value=payment.fineos_pei_i_value,
                 period_start_date=payment.period_start_date,
                 period_end_date=payment.period_end_date,
-                amount=str(round(payment.amount, 2)),  # TODO (API-2046)
+                amount=payment.amount,  # TODO (API-2046)
                 sent_to_bank_date=payment.payment_date,  # TODO (API-2046)
                 payment_method=payment.disb_method
                 and payment.disb_method.payment_method_description,

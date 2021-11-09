@@ -2406,8 +2406,9 @@ components:
           format: date
           example: "1970-06-01"
         amount:
-          type: string
+          type: number
           nullable: true
+          example: 750.25
         sent_to_bank_date:
           format: date
           example: "1970-06-01"
@@ -2428,7 +2429,7 @@ components:
           format: date
           nullable: true
           example: "1970-06-01"
-        is_delayed:
+        status:
           type: string
           enum:
             - Sent to bank

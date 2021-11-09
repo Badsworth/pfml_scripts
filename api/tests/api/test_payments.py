@@ -9,7 +9,10 @@ def test_get_payments_200(client, auth_token, user, test_db_session):
     absence_id = "NTN-12345-ABS-01"
 
     payment_factory = DelegatedPaymentFactory(
-        test_db_session, fineos_absence_id=absence_id, payment_method=PaymentMethod.ACH
+        test_db_session,
+        fineos_absence_id=absence_id,
+        payment_method=PaymentMethod.ACH,
+        amount=750.67,
     )
     claim = payment_factory.get_or_create_claim()
     ApplicationFactory.create(claim=claim, user=user)
@@ -33,7 +36,7 @@ def test_get_payments_200(client, auth_token, user, test_db_session):
         "fineos_i_value": str(payment.fineos_pei_i_value),
         "period_start_date": str(payment.period_start_date),
         "period_end_date": str(payment.period_end_date),
-        "amount": str(round(payment.amount, 2)),
+        "amount": 750.67,
         "sent_to_bank_date": str(payment.payment_date),
         "payment_method": payment.disb_method.payment_method_description,
         "expected_send_date_start": None,
