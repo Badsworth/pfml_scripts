@@ -1802,10 +1802,10 @@ export function assertConcurrentLeave(leave: ValidConcurrentLeave): void {
   const selector = new RegExp(template);
 
   cy.findByText("Concurrent accrued paid leave")
-    .next()
-    .next()
-    .should(($table) => {
-      expect($table.html()).to.match(selector);
+    .nextUntil("h3")
+    .filter("table")
+    .should((table) => {
+      expect(table.html()).to.match(selector);
     });
 }
 
