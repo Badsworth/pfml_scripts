@@ -15,6 +15,8 @@ class ClaimDetail {
     employer_evidence: OutstandingEvidence[] | null;
   } | null = null;
 
+  payments: PaymentDetail[] = [];
+
   constructor(attrs?: ClaimDetail) {
     if (!attrs) {
       return;
@@ -70,6 +72,18 @@ export class AbsencePeriod {
 interface OutstandingEvidence {
   document_name: string;
   is_document_received: boolean;
+}
+
+interface PaymentDetail {
+  payment_id: string;
+  period_start_date: string;
+  period_end_date: string;
+  amount: number | null;
+  sent_to_bank_date: string | null;
+  payment_method: string;
+  expected_send_date_start: string | null;
+  expected_send_date_end: string | null;
+  status: string;
 }
 
 export default ClaimDetail;
