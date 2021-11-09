@@ -85,7 +85,7 @@ class BenefitsApplication extends BaseBenefitsApplication {
     name: string;
     fineos_id: string;
     employer_id: string;
-  } | null
+  } | null;
 
   constructor(attrs: Partial<BenefitsApplication>) {
     super();

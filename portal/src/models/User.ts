@@ -128,7 +128,7 @@ export class UserLeaveAdministrator {
   has_fineos_registration: boolean;
   has_verification_data: boolean;
   verified: boolean;
-  organization_units?: OrganizationUnit[]
+  organization_units?: OrganizationUnit[];
 
   constructor(attrs: Partial<UserLeaveAdministrator>) {
     Object.assign(this, attrs);
@@ -144,7 +144,7 @@ export interface Employee {
   other_name?: string;
   email_address?: string;
   phone_number?: string;
-  organization_units?: EmployeeOrganizationUnit[]
+  organization_units?: EmployeeOrganizationUnit[];
 }
 
 export default User;

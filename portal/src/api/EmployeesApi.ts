@@ -31,7 +31,11 @@ export default class EmployeesApi extends BaseApi {
    * @returns {Promise} Employee: Promise<Employee>
    */
   search = async (postData: EmployeeSearchRequest): Promise<Employee> => {
-    const { data } = await this.request<Employee>("POST", "search", postData as unknown as Record<string, unknown>);
+    const { data } = await this.request<Employee>(
+      "POST",
+      "search",
+      postData as unknown as Record<string, unknown>
+    );
     return data;
   };
 }

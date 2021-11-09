@@ -170,7 +170,8 @@ export const Review = (
     clearRequiredFieldErrors,
   ]);
 
-  const isEmployed = get(claim, "employment_status") === EmploymentStatus.employed;
+  const isEmployed =
+    get(claim, "employment_status") === EmploymentStatus.employed;
 
   return (
     <div className="measure-6">
@@ -340,14 +341,16 @@ export const Review = (
         </ReviewRow>
       )}
 
-      {isFeatureEnabled("claimantShowDepartments") && isEmployed && get(claim, "organization_unit_id") && (
-        <ReviewRow
-          level={reviewRowLevel}
-          label={t("pages.claimsReview.employeeDepartment")}
-        >
-          {get(claim, "organization_unit.name")}
-        </ReviewRow>
-      )}
+      {isFeatureEnabled("claimantShowDepartments") &&
+        isEmployed &&
+        get(claim, "organization_unit_id") && (
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.employeeDepartment")}
+          >
+            {get(claim, "organization_unit.name")}
+          </ReviewRow>
+        )}
 
       {isEmployed && ( // only display this if the claimant is Employed
         <ReviewRow
