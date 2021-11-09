@@ -421,8 +421,7 @@ module "fineos_snapshot_extract_scheduler" {
         "command": [
           "fineos-bucket-tool",
           "--copy", "s3://${data.aws_s3_bucket.agency_transfer.bucket}/payments/static/fineos-query/config-fineos-payments-snapshot.json",
-          "--to", "${var.fineos_adhoc_data_export_path}/config/config.json",
-          "--file_prefixes", "all"
+          "--to", "${var.fineos_adhoc_data_export_path}/config/config.json"
         ]
       }
     ]
