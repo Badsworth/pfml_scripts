@@ -126,6 +126,8 @@ jobs:
           group: Commit Stable
           tag: "${{ github.event.inputs.cypress_tags }},Env-${{ github.event.inputs.target_environment }}"
           config: reporter=cypress/reporters/new-relic.js
+        env:
+          DEBUG: "cypress:*"
 
       # Run Cypress tests.
       - name: Cypress Tests (Commit Unstable)
