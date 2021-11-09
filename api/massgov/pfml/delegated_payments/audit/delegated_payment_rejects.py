@@ -271,10 +271,12 @@ class PaymentRejectsStep(Step):
         )
 
         if enable_withholding_payments:
+            # check if the payment has any withholding payments.
             withholding_records: List[LinkSplitPayment] = self.db_session.query(
                 LinkSplitPayment
             ).filter(LinkSplitPayment.payment_id == payment.payment_id).all()
             logger.info("withholding_records %s", withholding_records)
+
         if payment_state_log is None:
             self.increment(self.Metrics.PAYMENT_STATE_LOG_MISSING_COUNT)
             raise PaymentRejectsException(
@@ -328,8 +330,7 @@ class PaymentRejectsStep(Step):
 
             if enable_withholding_payments:
                 if withholding_records:
-                    logger.info("call set_statelog_for_withholding_payments is_rejected_payment")
-                    self.set_statelog_for_withholding_payments(
+                    self.set_statelog_for_withholding_linksplit_payments(
                         withholding_records, payment, is_skipped_or_rejected=True
                     )
 
@@ -362,8 +363,7 @@ class PaymentRejectsStep(Step):
 
             if enable_withholding_payments:
                 if withholding_records:
-                    logger.info("call set_statelog_for_withholding_payments is_skipped_payment")
-                    self.set_statelog_for_withholding_payments(
+                    self.set_statelog_for_withholding_linksplit_payments(
                         withholding_records, payment, is_skipped_or_rejected=True,
                     )
         else:
@@ -373,19 +373,66 @@ class PaymentRejectsStep(Step):
             )
 
             if enable_withholding_payments:
-                logger.info("call set_statelog_for_withholding_payments success")
                 if withholding_records:
-                    self.set_statelog_for_withholding_payments(
+                    self.set_statelog_for_withholding_linksplit_payments(
                         withholding_records, payment, is_skipped_or_rejected=False
                     )
 
-    def set_statelog_for_withholding_payments(
+    def transition_audit_pending_withholding_payment_state(
+        self,
+        payment: Payment,
+        is_rejected_payment: bool,
+        is_skipped_payment: bool,
+        is_state_withholding_pending_audit: bool,
+        rejected_notes: Optional[str] = None,
+    ) -> None:
+        payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
+            payment, Flow.DELEGATED_PAYMENT, self.db_session
+        )
+
+        if payment_state_log is None:
+            self.increment(self.Metrics.PAYMENT_STATE_LOG_MISSING_COUNT)
+            raise PaymentRejectsException(
+                f"No state log found for payment found in audit reject file: {payment.payment_id}"
+            )
+
+        if (
+            payment_state_log.end_state_id
+            != State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT.state_id
+        ):
+            self.increment(self.Metrics.PAYMENT_STATE_LOG_NOT_IN_AUDIT_RESPONSE_PENDING_COUNT)
+            raise PaymentRejectsException(
+                f"Found payment state log not in audit response pending state: {payment_state_log.end_state.state_description if payment_state_log.end_state else None}, payment_id: {payment.payment_id}"
+            )
+
+        if rejected_notes:
+            rejected_notes = rejected_notes.replace("\ufffd", " ")
+
+        if is_rejected_payment or is_skipped_payment:
+            state_log_util.create_finished_state_log(
+                payment,
+                State.STATE_WITHHOLDING_ERROR
+                if is_state_withholding_pending_audit
+                else State.FEDERAL_WITHHOLDING_ERROR,
+                state_log_util.build_outcome("Payment rejected or skipped"),
+                self.db_session,
+            )
+        else:
+            state_log_util.create_finished_state_log(
+                payment,
+                State.STATE_WITHHOLDING_SEND_FUNDS
+                if is_state_withholding_pending_audit
+                else State.FEDERAL_WITHHOLDING_SEND_FUNDS,
+                ACCEPTED_OUTCOME,
+                self.db_session,
+            )
+
+    def set_statelog_for_withholding_linksplit_payments(
         self,
         withholding_records: List[LinkSplitPayment],
         payment: Payment,
         is_skipped_or_rejected: bool,
     ) -> None:
-        logger.info("set_statelog_for_withholding_payments %s",is_skipped_or_rejected)
         for payment_withholding_record in withholding_records:
             payment_end_state_id = (
                 (
@@ -508,9 +555,32 @@ class PaymentRejectsStep(Step):
 
             rejected_notes = payment_rejects_row.rejected_notes
 
-            self.transition_audit_pending_payment_state(
-                payment, is_rejected_payment, is_skipped_payment, rejected_notes
+            payment_state_logs = (
+                (self.db_session.query(StateLog).filter(StateLog.payment_id == payment.payment_id))
+                .order_by(StateLog.created_at.desc())
+                .all()
             )
+            is_state_withholding_pending_audit: bool = False
+            is_federal_withholding_pending_audit: bool = False
+            for payment_end_state in payment_state_logs:
+                if payment_end_state.end_state_id == 192:
+                    is_state_withholding_pending_audit = True
+                if payment_end_state.end_state_id == 196:
+                    is_federal_withholding_pending_audit = True
+            if enable_withholding_payments and (
+                is_state_withholding_pending_audit or is_federal_withholding_pending_audit
+            ):
+                self.transition_audit_pending_withholding_payment_state(
+                    payment,
+                    is_rejected_payment,
+                    is_skipped_payment,
+                    is_state_withholding_pending_audit,
+                    rejected_notes,
+                )
+            else:
+                self.transition_audit_pending_payment_state(
+                    payment, is_rejected_payment, is_skipped_payment, rejected_notes
+                )
 
     def _transition_not_sampled_payment_audit_pending_state(self, pending_state: LkState) -> None:
         state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
