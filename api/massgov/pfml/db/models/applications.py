@@ -907,6 +907,10 @@ def sync_state_metrics(db_session):
         UnemploymentMetric(
             effective_date=datetime.date(2021, 1, 1), unemployment_minimum_earnings="5400.00",
         ),
+        BenefitsMetrics(effective_date=datetime.date(2022, 1, 2), average_weekly_wage="1694.24",),
+        UnemploymentMetric(
+            effective_date=datetime.date(2022, 1, 2), unemployment_minimum_earnings="5700.00",
+        ),
     ]
 
     for metric in state_metrics:
