@@ -213,10 +213,10 @@ export default function (
     },
   });
 
-  const options = {
-    webpackOptions: require("../../webpack.config.ts"),
-  };
-  on("file:preprocessor", webpackPreprocessor(options));
+  // const options = {
+  //   webpackOptions: require("../../webpack.config.ts"),
+  // };
+  // on("file:preprocessor", webpackPreprocessor(options));
 
   // Pass config values through as environment variables, which we will access via Cypress.env() in actions/common.ts.
   const configEntries = Object.entries(configuration).map(([k, v]) => [
