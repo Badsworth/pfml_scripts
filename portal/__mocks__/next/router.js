@@ -1,22 +1,5 @@
-export const mockRouterEvents = [];
-
-export const mockRouter = {
-  pathname: "",
-  query: {},
-  asPath: "",
-  push: jest.fn(),
-  replace: jest.fn(),
-  events: {
-    on: (name, callback) => {
-      mockRouterEvents.push({ name, callback });
-    },
-    off: jest.fn(),
-  },
-};
-
-export function useRouter() {
-  return mockRouter;
-}
+import { mockRouter, mockRouterEvents } from "../../lib/mock-helpers/router";
+export * from "../../lib/mock-helpers/router";
 
 afterEach(() => {
   mockRouter.pathname = "";

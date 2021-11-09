@@ -6,7 +6,6 @@ import LeaveReason from "src/models/LeaveReason";
 import { Props } from "storybook/types";
 import React from "react";
 import { ReasonQualifier } from "src/models/BenefitsApplication";
-// @ts-expect-error ts-migrate(7016) FIXME: Could not find a declaration file for module 'fake... Remove this comment to see the full error message
 import faker from "faker";
 import { generateNotice } from "storybook/utils/generateNotice";
 
@@ -98,6 +97,7 @@ function createAbsencePeriod(partialAttrs: Partial<AbsencePeriod>) {
     request_decision: faker.random.arrayElement(Object.keys(StatusTagMap)),
   };
 
+  // @ts-expect-error Declare the generic type for faker.random.arrayElement calls above
   return new AbsencePeriod({ ...defaultAbsencePeriod, ...partialAttrs });
 }
 
