@@ -6,7 +6,7 @@ from sqlalchemy import and_, func
 import massgov.pfml.db as db
 import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
 import massgov.pfml.util.logging as logging
-from massgov.pfml.db.models.employees import Employee, LatestStateLog, Payment, StateLog
+from massgov.pfml.db.models.employees import Employee, Payment, StateLog
 from massgov.pfml.db.models.payments import (
     FineosExtractEmployeeFeed,
     Pfml1099Batch,
@@ -56,13 +56,9 @@ def get_payments(db_session: db.Session) -> List[Payment]:
     payments = (
         db_session.query(Payment)
         .join(StateLog)
-        .join(LatestStateLog)
         .filter(StateLog.end_state_id.in_(payments_util.Constants.PAYMENT_SENT_STATE_IDS),)
         .filter(
-            and_(
-                Payment.fineos_extraction_date >= date(year, 1, 1),
-                Payment.fineos_extraction_date < date(year + 1, 1, 1),
-            )
+            and_(StateLog.ended_at >= date(year, 1, 1), StateLog.ended_at < date(year + 1, 1, 1),)
         )
         .all()
     )
