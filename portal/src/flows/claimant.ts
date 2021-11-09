@@ -83,7 +83,7 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
   isEmployedAndPickDeparment: ({ claim }) => {
     return (
       get(claim, "employment_status") === EmploymentStatus.employed &&
-      isFeatureEnabled("claimantShowDepartments")
+      isFeatureEnabled("claimantShowOrganizationUnits")
     );
   },
   isCompleted: ({ claim }) => claim?.isCompleted === true,

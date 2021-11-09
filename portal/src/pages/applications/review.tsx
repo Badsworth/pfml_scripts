@@ -341,12 +341,12 @@ export const Review = (
         </ReviewRow>
       )}
 
-      {isFeatureEnabled("claimantShowDepartments") &&
+      {isFeatureEnabled("claimantShowOrganizationUnits") &&
         isEmployed &&
         get(claim, "organization_unit_id") && (
           <ReviewRow
             level={reviewRowLevel}
-            label={t("pages.claimsReview.employeeDepartment")}
+            label={t("pages.claimsReview.employeeOrganizationUnit")}
           >
             {get(claim, "organization_unit.name")}
           </ReviewRow>
