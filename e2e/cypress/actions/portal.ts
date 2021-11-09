@@ -1804,6 +1804,7 @@ export function assertConcurrentLeave(leave: ValidConcurrentLeave): void {
   cy.findByText("Concurrent accrued paid leave")
     .next()
     .next()
+    .next()
     .should(($table) => {
       expect($table.html()).to.match(selector);
     });
