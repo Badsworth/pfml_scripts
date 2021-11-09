@@ -1,5 +1,7 @@
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import Alert from "../../components/Alert";
-import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import Heading from "../../components/Heading";
 import Icon from "../../components/Icon";
@@ -11,19 +13,10 @@ import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_employer_benefits"];
 
-interface EmployerBenefitsProps {
-  claim?: BenefitsApplication;
-  query?: {
-    claim_id?: string;
-  };
-  appLogic: any;
-}
-
-export const EmployerBenefits = (props: EmployerBenefitsProps) => {
+export const EmployerBenefits = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
   const employer_fein = claim.employer_fein;

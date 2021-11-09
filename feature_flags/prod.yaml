@@ -1,7 +1,6 @@
 maintenance:
-    start: 
-    end: 
-    enabled: 0
+    start: "2021-11-10T20:59:00-05:00"
+    enabled: 1
     options:
         pages_routes:
             - /*

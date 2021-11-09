@@ -75,6 +75,7 @@ class ApplicationResponse(PydanticBaseModel):
     has_previous_leaves_other_reason: Optional[bool]
     has_previous_leaves_same_reason: Optional[bool]
     has_concurrent_leave: Optional[bool]
+    is_withholding_tax: Optional[bool]
     updated_at: datetime
 
     @classmethod
@@ -141,5 +142,4 @@ class DocumentResponse(PydanticBaseModel):
         document_response = super().from_orm(document)
         document_response.fineos_document_id = str(document.fineos_id)
         document_response.document_type = document.document_type_instance.document_type_description
-        document_response.content_type = document.content_type_instance.content_type_description
         return document_response

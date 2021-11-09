@@ -3,6 +3,7 @@ import { AppErrorsLogic } from "./useAppErrorsLogic";
 import Compressor from "compressorjs";
 import TempFile from "../models/TempFile";
 import TempFileCollection from "../models/TempFileCollection";
+import { isFeatureEnabled } from "../services/featureFlags";
 import { snakeCase } from "lodash";
 import { t } from "../locales/i18n";
 import tracker from "../services/tracker";
@@ -15,12 +16,20 @@ const defaultAllowedFileTypes = [
   "application/pdf",
 ] as const;
 
-// Max file size in bytes
-const defaultMaximumFileSize = 4500000;
+// Fineos uploads are Base64-encoded. Their limit is 6mb. 4.5mb is the max size before base64 encoding.
+const fineosMaximumFileSize = 4500000; // bytes
+// PFML API Gateway has a 10mb payload size limit, so we shouldn't attempt to send files beyond this.
+// https://docs.aws.amazon.com/apigateway/latest/developerguide/limits.html#http-api-quotas
+const apiGatewayMaximumFileSize = 10000000;
+
+function bytesToMb(bytes: number): number {
+  return bytes / 1000000;
+}
 
 // Exclusion reasons
 const disallowedReasons = {
   size: "size",
+  apiGatewaySize: "apiGatewaySize",
   sizeAndType: "sizeAndType",
   type: "type",
 } as const;
@@ -29,10 +38,12 @@ const disallowedReasons = {
  * Compress an image which size is greater than maximum file size and  returns a promise
  * @param maximumFileSize - Size at which compression will be attempted
  */
-function optimizeFileSize(file: Blob, maximumFileSize: number): Promise<Blob> {
+function optimizeImageSize(file: File): Promise<File> {
+  const maximumImageSize = fineosMaximumFileSize;
+
   return new Promise((resolve) => {
     if (
-      file.size <= maximumFileSize ||
+      file.size <= maximumImageSize ||
       !["image/png", "image/jpeg"].includes(file.type)
     ) {
       return resolve(file);
@@ -41,20 +52,13 @@ function optimizeFileSize(file: Blob, maximumFileSize: number): Promise<Blob> {
     new Compressor(file, {
       quality: 0.6,
       checkOrientation: false, // Improves compression speed for larger files
-      convertSize: maximumFileSize,
-      success: (compressedBlob: Blob) => {
-        // TODO (PORTAL-25): Stop referencing/setting the name
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'name' does not exist on type 'Blob'.
-        const fileName = compressedBlob.name;
-        const fileNameWithPrefix = "Compressed_" + fileName;
-
+      convertSize: maximumImageSize,
+      success: (compressedBlob: File) => {
         tracker.trackEvent("CompressorSize", {
           originalSize: file.size,
           compressedSize: compressedBlob.size,
         });
-        // TODO (PORTAL-25): Stop referencing/setting the name
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'name' does not exist on type 'Blob'.
-        compressedBlob.name = fileNameWithPrefix;
+
         resolve(compressedBlob);
       },
       error: (error) => {
@@ -78,10 +82,8 @@ function optimizeFileSize(file: Blob, maximumFileSize: number): Promise<Blob> {
  * Attempt to reduce the size of files
  * @param maximumFileSize - Size at which compression will be attempted
  */
-function optimizeFiles(files: Blob[], maximumFileSize: number) {
-  const compressPromises = files.map((file) =>
-    optimizeFileSize(file, maximumFileSize)
-  );
+function optimizeFiles(files: File[]) {
+  const compressPromises = files.map((file) => optimizeImageSize(file));
 
   return Promise.all(compressPromises);
 }
@@ -92,23 +94,29 @@ function optimizeFiles(files: Blob[], maximumFileSize: number) {
  * @example const { allowedFiles,issues }  = filterAllowedFiles(files);
  */
 function filterAllowedFiles(
-  files: Blob[],
+  files: File[],
   {
     allowedFileTypes,
-    maximumFileSize,
   }: {
     allowedFileTypes: readonly string[];
-    maximumFileSize: number;
   }
 ) {
-  const allowedFiles = [];
-  const issues = [];
+  const allowedFiles: File[] = [];
+  const issues: Issue[] = [];
 
   files.forEach((file) => {
-    let disallowedReason = null;
+    let disallowedReason = "";
+    const useApiGatewaySizeLimit =
+      file.type === "application/pdf" && isFeatureEnabled("sendLargePdfToApi");
 
-    if (file.size > maximumFileSize) {
-      disallowedReason = disallowedReasons.size;
+    const exceedsSizeLimit = useApiGatewaySizeLimit
+      ? file.size >= apiGatewayMaximumFileSize
+      : file.size > fineosMaximumFileSize;
+
+    if (exceedsSizeLimit) {
+      disallowedReason = useApiGatewaySizeLimit
+        ? disallowedReasons.apiGatewaySize
+        : disallowedReasons.size;
     }
     if (!allowedFileTypes.includes(file.type)) {
       if (disallowedReason === disallowedReasons.size) {
@@ -148,14 +156,21 @@ function filterAllowedFiles(
  * @param disallowedReason - reason file is not allowed (size, sizeAndType, or type)
  */
 function getIssueForDisallowedFile(
-  disallowedFile: Blob,
+  disallowedFile: File,
   disallowedReason: string
 ): Issue {
-  const i18nKey = `errors.invalidFile_${disallowedReason}`;
+  const context =
+    disallowedReason === disallowedReasons.apiGatewaySize
+      ? disallowedReasons.size
+      : disallowedReason;
 
   return {
-    message: t(i18nKey, {
-      context: disallowedReason,
+    message: t("errors.invalidFile", {
+      context,
+      sizeLimit:
+        disallowedReason === disallowedReasons.apiGatewaySize
+          ? bytesToMb(apiGatewayMaximumFileSize)
+          : bytesToMb(fineosMaximumFileSize),
       disallowedFileNames:
         disallowedFile instanceof File ? disallowedFile.name : "",
     }),
@@ -166,12 +181,10 @@ const useFilesLogic = ({
   allowedFileTypes = defaultAllowedFileTypes,
   catchError,
   clearErrors,
-  maximumFileSize = defaultMaximumFileSize,
 }: {
   allowedFileTypes?: readonly string[];
   catchError: AppErrorsLogic["catchError"];
   clearErrors: AppErrorsLogic["clearErrors"];
-  maximumFileSize?: number;
 }) => {
   const {
     collection: files,
@@ -182,12 +195,11 @@ const useFilesLogic = ({
   /**
    * Async function handles file optimization and filter logic
    */
-  const processFiles = async (files: Blob[]) => {
+  const processFiles = async (files: File[]) => {
     clearErrors();
-    const compressedFiles = await optimizeFiles(files, maximumFileSize);
+    const compressedFiles = await optimizeFiles(files);
 
     const { allowedFiles, issues } = filterAllowedFiles(compressedFiles, {
-      maximumFileSize,
       allowedFileTypes,
     });
 

@@ -3,6 +3,7 @@ import { TFunction, useTranslation } from "react-i18next";
 import { AbsencePeriod } from "../../../models/ClaimDetail";
 import AppErrorInfo from "../../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../models/AppErrorInfoCollection";
+import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import InputChoiceGroup from "../../../components/InputChoiceGroup";
 import LeaveReason from "../../../models/LeaveReason";
@@ -23,16 +24,16 @@ export const UploadType = {
 };
 
 interface Props {
-  appLogic: any;
-  query?: {
-    absence_case_id: string;
+  appLogic: AppLogic;
+  query: {
+    absence_id: string;
   };
 }
 
 export const UploadDocsOptions = (props: Props) => {
   const {
     appLogic,
-    query: { absence_case_id },
+    query: { absence_id },
   } = props;
   const {
     claims: { claimDetail, isLoadingClaimDetail, loadClaimDetail },
@@ -44,9 +45,9 @@ export const UploadDocsOptions = (props: Props) => {
   const upload_docs_options = formState.upload_docs_options;
 
   useEffect(() => {
-    loadClaimDetail(absence_case_id);
+    loadClaimDetail(absence_id);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [absence_case_id]);
+  }, [absence_id]);
 
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -86,8 +87,8 @@ export const UploadDocsOptions = (props: Props) => {
       appLogic.setAppErrors(new AppErrorInfoCollection([appErrorInfo]));
 
       tracker.trackEvent("ValidationError", {
-        issueField: appErrorInfo.field,
-        issueType: appErrorInfo.type,
+        issueField: appErrorInfo.field || "",
+        issueType: appErrorInfo.type || "",
       });
 
       return;
@@ -97,7 +98,7 @@ export const UploadDocsOptions = (props: Props) => {
       {},
       {
         claim_id: claimDetail.application_id,
-        absence_case_id: claimDetail.fineos_absence_id,
+        absence_id: claimDetail.fineos_absence_id,
       },
       upload_docs_options
     );

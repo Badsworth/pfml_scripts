@@ -62,7 +62,7 @@ exports[`ConcurrentLeaves renders the continuous page content 1`] = `
               <div
                 class="usa-alert__text"
               >
-                1/1/2021 to 1/8/2021
+                1/1/2021 to 1/7/2021
               </div>
             </div>
           </div>
@@ -201,7 +201,7 @@ exports[`ConcurrentLeaves renders the intermittent reduced page content 1`] = `
           class="margin-bottom-5"
         >
           <div
-            class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-0"
+            class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-2 margin-bottom-4"
             role="region"
             tabindex="-1"
           >
@@ -217,26 +217,6 @@ exports[`ConcurrentLeaves renders the intermittent reduced page content 1`] = `
                 class="usa-alert__text"
               >
                 2/1/2021 to 7/1/2021
-              </div>
-            </div>
-          </div>
-          <div
-            class="usa-alert usa-alert--info usa-alert--no-icon c-alert--neutral margin-top-0 margin-bottom-4"
-            role="region"
-            tabindex="-1"
-          >
-            <div
-              class="usa-alert__body"
-            >
-              <h2
-                class="usa-alert__heading font-heading-md text-bold"
-              >
-                Your 7-day waiting period dates
-              </h2>
-              <div
-                class="usa-alert__text"
-              >
-                2/1/2021 to 2/8/2021
               </div>
             </div>
           </div>
@@ -334,7 +314,7 @@ exports[`ConcurrentLeaves renders the intermittent reduced page content 1`] = `
             <span
               class="flex-1"
             >
-              You don't need to report accrued paid leave that you use during the 7-day waiting period
+              You don't need to report accrued paid leave that you use during the 7-day waiting period, which is 7 consecutive calendar days from the date of the first instance of leave from your employer
             </span>
           </h2>
         </div>
@@ -462,7 +442,7 @@ exports[`ConcurrentLeaves renders the page 1`] = `
               <div
                 class="usa-alert__text"
               >
-                1/1/2021 to 1/8/2021
+                1/1/2021 to 1/7/2021
               </div>
             </div>
           </div>
@@ -637,7 +617,7 @@ exports[`ConcurrentLeaves renders the page when the claim does not contain concu
               <div
                 class="usa-alert__text"
               >
-                1/1/2021 to 1/8/2021
+                1/1/2021 to 1/7/2021
               </div>
             </div>
           </div>
@@ -811,7 +791,7 @@ exports[`ConcurrentLeaves renders the reduced page content 1`] = `
               <div
                 class="usa-alert__text"
               >
-                2/1/2021 to 2/8/2021
+                2/1/2021 to 2/7/2021
               </div>
             </div>
           </div>

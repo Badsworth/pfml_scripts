@@ -1,12 +1,14 @@
 import BaseApi, {
   createRequestUrl,
+  fetchErrorToNetworkError,
   getAuthorizationHeader,
-  handleError,
   handleNotOkResponse,
 } from "./BaseApi";
-import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
+import {
+  BenefitsApplicationDocument,
+  DocumentTypeEnum,
+} from "../models/Document";
 import DocumentCollection from "../models/DocumentCollection";
-import { DocumentTypeEnum } from "../models/Document";
 import assert from "assert";
 import routes from "../routes";
 
@@ -32,9 +34,6 @@ export default class DocumentsApi extends BaseApi {
   ) => {
     const formData = new FormData();
     formData.append("document_type", document_type);
-    if (file.name.includes("Compressed_")) {
-      formData.append("description", "Compressed Image");
-    }
 
     assert(file);
     // we use Blob to support IE 11, formData is using "blob" as the default file name,
@@ -42,20 +41,21 @@ export default class DocumentsApi extends BaseApi {
     // https://developer.mozilla.org/en-US/docs/Web/API/FormData/append#append_parameters
     formData.append("file", file, file.name);
     formData.append("name", file.name);
-    // @ts-expect-error ts(2345): Argument of type 'boolean' is not assignable to parameter of type 'string | Blob'.
-    // Resolving this TypeScript error **might** require a corresponding change to the OpenAPI schema and API logic.
-    formData.append("mark_evidence_received", mark_evidence_received);
+    formData.append(
+      "mark_evidence_received",
+      mark_evidence_received.toString()
+    );
 
     const { data } = await this.request<BenefitsApplicationDocument>(
       "POST",
       `${application_id}/documents`,
       formData,
-      null,
+      undefined,
       { multipartForm: true }
     );
 
     return {
-      document: new BenefitsApplicationDocument(data),
+      document: data,
     };
   };
 
@@ -67,12 +67,9 @@ export default class DocumentsApi extends BaseApi {
       "GET",
       `${application_id}/documents`
     );
-    const documents = data.map(
-      (documentData) => new BenefitsApplicationDocument(documentData)
-    );
 
     return {
-      documents: new DocumentCollection(documents),
+      documents: new DocumentCollection(data),
     };
   };
 
@@ -89,7 +86,7 @@ export default class DocumentsApi extends BaseApi {
 
     const headers = {
       ...authHeader,
-      "Content-Type": content_type,
+      "Content-Type": content_type || "",
     };
 
     let blob: Blob, response: Response;
@@ -97,12 +94,11 @@ export default class DocumentsApi extends BaseApi {
       response = await fetch(url, { headers, method });
       blob = await response.blob();
     } catch (error) {
-      handleError(error);
+      throw fetchErrorToNetworkError(error);
     }
 
     if (!response.ok) {
-      // @ts-expect-error ts-migrate(2554) FIXME: Expected 5 arguments, but got 2.
-      handleNotOkResponse(url, response);
+      handleNotOkResponse(response, [], this.i18nPrefix);
     }
 
     return blob;

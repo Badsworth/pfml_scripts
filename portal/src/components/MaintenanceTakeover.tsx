@@ -4,8 +4,8 @@ import React from "react";
 import Title from "./Title";
 
 interface MaintenanceTakeoverProps {
-  maintenanceStartTime?: string;
-  maintenanceEndTime?: string;
+  maintenanceStartTime: string | null;
+  maintenanceEndTime: string | null;
 }
 
 /**

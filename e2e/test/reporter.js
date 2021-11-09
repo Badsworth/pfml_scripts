@@ -1,5 +1,6 @@
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+/* eslint-env node */
 const fetch = require("node-fetch");
+const path = require("path");
 
 // Get NR credentials from env
 const accountId = process.env.E2E_NEWRELIC_ACCOUNTID;
@@ -16,6 +17,7 @@ class CustomReporter {
       file.testResults.forEach((res) => {
         const event = {
           runId: process.env.TEST_RUN_ID,
+          branch: path.relative("refs/heads", process.env.GITHUB_REF),
           environment: process.env.E2E_ENVIRONMENT,
           eventType: "IntegrationTestResult",
           file: file.testFilePath.split("e2e/")[1],

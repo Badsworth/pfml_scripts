@@ -20,11 +20,19 @@ import {
 } from "nr1";
 import React from "react";
 import { format } from "date-fns";
-import { labelComponent, COMPONENTS, COMPONENTS_WIDTH, ENVS } from "../common";
+import {
+  labelComponent,
+  labelEnv,
+  extractGroup,
+  COMPONENTS,
+  COMPONENTS_WIDTH,
+  ENVS,
+} from "../common";
 
 function extractEnvironmentData(data) {
   const map = data
-    .filter((point) => !point.metadata.other_series) // Remove "Other" rows.
+    // Filter out "other" rows, and event rows, like daylight savings time.
+    .filter((d) => !d.metadata.other_series && d.metadata.viz === "main")
     .reduce((collected, item) => {
       const environment = extractGroup(item, "environment");
       if (!(environment in collected)) {
@@ -94,7 +102,18 @@ export default function EnvironmentsTable({ platformState }) {
             {({ item }) => {
               return (
                 <TableRow>
-                  <TableRowCell>{item.name}</TableRowCell>
+                  <TableRowCell>
+                    <Link
+                      to={navigation.getOpenStackedNerdletLocation({
+                        id: "env-timeline",
+                        urlState: {
+                          environment: item.name,
+                        },
+                      })}
+                    >
+                      {labelEnv(item.name)}
+                    </Link>
+                  </TableRowCell>
                   <TableRowCell>
                     <LatestE2ERuns
                       environment={item.name}
@@ -131,19 +150,21 @@ export default function EnvironmentsTable({ platformState }) {
   );
 }
 
-function LatestE2ERuns({ environment, accountId, count = 5 }) {
+function LatestE2ERuns({ environment, accountId, count = 6 }) {
   let runIDs = [];
   const query = `SELECT max(timestamp)                                AS timestamp,
                         percentage(count(*), WHERE status = 'passed') AS pass_rate,
-                        latest(runUrl)                                AS runUrl
+                        latest(runUrl)                                AS runUrl,
+                        latest(tag)                                   AS tag
                  FROM CypressTestResult
-                 WHERE environment = '${environment}' AND tag LIKE 'Morning Run%'
+                 WHERE environment = '${environment}' AND tag LIKE '%Morning Run%'
                     OR tag LIKE 'Deploy%' FACET runId SINCE 1 week ago
                  LIMIT ${count}`;
 
   function extractRunData(data) {
     const rows = data
-      .filter((d) => !d.metadata.other_series)
+      // Filter out "other" rows, and event rows, like daylight savings time.
+      .filter((d) => !d.metadata.other_series && d.metadata.viz === "main")
       .reduce((collected, point) => {
         const key = extractGroup(point, "runId");
         if (!collected[key]) {
@@ -158,7 +179,19 @@ function LatestE2ERuns({ environment, accountId, count = 5 }) {
 
   return (
     <NrqlQuery accountId={accountId} query={query}>
-      {({ data }) => {
+      {({ data, loading, error }) => {
+        if (loading) {
+          return <Spinner />;
+        }
+        if (error) {
+          return (
+            <SectionMessage
+              title={"There was an error executing the query"}
+              description={error}
+              type={SectionMessage.TYPE.CRITICAL}
+            />
+          );
+        }
         const rows = extractRunData(data ?? []);
         if (rows.length) {
           return (
@@ -193,7 +226,19 @@ function LatestDeploymentVersion({ environment, component, accountId }) {
   } SINCE 3 months ago LIMIT 1`;
   return (
     <NrqlQuery query={query} accountId={accountId}>
-      {({ data }) => {
+      {({ data, loading, error }) => {
+        if (loading) {
+          return <Spinner />;
+        }
+        if (error) {
+          return (
+            <SectionMessage
+              title={"There was an error executing the query"}
+              description={error}
+              type={SectionMessage.TYPE.CRITICAL}
+            />
+          );
+        }
         const rows = (data?.[0]?.data ?? []).map((row) => {
           return {
             ...row,
@@ -239,7 +284,11 @@ function E2EVisualIndicator({ run, runIds }) {
                 BlockText.SPACING_TYPE.MEDIUM,
                 BlockText.SPACING_TYPE.NONE,
               ]}
-            ></BlockText>
+            >
+              {run.tag
+                .split(",")
+                .filter((tag) => !tag.includes("Env-") && tag != "Deploy")}
+            </BlockText>
           </CardBody>
         </Card>
         <PopoverFooter style={{ textAlign: "right" }}>
@@ -249,11 +298,3 @@ function E2EVisualIndicator({ run, runIds }) {
     </Popover>
   );
 }
-
-const extractGroup = (item, name) => {
-  const group = item.metadata.groups.find((g) => g.name === name);
-  if (group) {
-    return group.value;
-  }
-  throw new Error(`Unable to determine ${name}`);
-};

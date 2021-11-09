@@ -1,6 +1,10 @@
 import { get, isNil, omitBy } from "lodash";
-
 import routes from "../routes";
+
+// A param with a null/undefined value will be excluded from the query string ultimately created
+export interface NullableQueryParams {
+  [name: string]: null | string | undefined | string[];
+}
 
 /**
  * Append a query string params and optional hash to a given route
@@ -11,18 +15,20 @@ import routes from "../routes";
  */
 export const createRouteWithQuery = (
   route: string,
-  params: Record<string, string>,
+  nullableParams: NullableQueryParams = {},
   hash = ""
 ) => {
+  const formattedHash = hash ? `/#${hash}` : "";
   // Remove null and undefined
-  params = omitBy(params, isNil);
-  let queryString = new URLSearchParams(params).toString();
+  const params = omitBy(nullableParams, isNil);
+  let queryString = new URLSearchParams(
+    params as { [name: string]: string }
+  ).toString();
 
   // Include prefixes (e.g., ?, #) if args/values exist
   if (queryString) queryString = `?${queryString}`;
-  if (hash) hash = `#${hash}`;
 
-  return `${route}${queryString}${hash}`;
+  return `${route}${queryString}${formattedHash}`;
 };
 
 /**
@@ -31,7 +37,7 @@ export const createRouteWithQuery = (
  * @param params - object of query string params
  * @returns - route with query string "e.g. /claims/ssn?claim_id=12345"
  */
-const routeWithParams = (routePath: string, params: Record<string, string>) => {
+const routeWithParams = (routePath: string, params: NullableQueryParams) => {
   const route = get(routes, routePath);
   if (!route) {
     throw new Error(

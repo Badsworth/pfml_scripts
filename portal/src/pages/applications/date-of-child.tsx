@@ -1,13 +1,18 @@
+import {
+  ReasonQualifier,
+  ReasonQualifierEnum,
+} from "../../models/BenefitsApplication";
 import { get, pick, set } from "lodash";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import { DateTime } from "luxon";
 import InputDate from "../../components/InputDate";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import { ReasonQualifier } from "../../models/BenefitsApplication";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 const reasonQualifierField = "leave_details.reason_qualifier";
 const childBirthDateField = "leave_details.child_birth_date";
@@ -19,15 +24,7 @@ export const fields = [
   `claim.${hasFutureChildDateField}`,
 ];
 
-interface DateOfChildProps {
-  appLogic: any;
-  claim: any;
-  query?: {
-    claim_id?: string;
-  };
-}
-
-export const DateOfChild = (props: DateOfChildProps) => {
+export const DateOfChild = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
@@ -35,7 +32,10 @@ export const DateOfChild = (props: DateOfChildProps) => {
     pick(props, fields).claim
   );
 
-  const reason_qualifier = get(claim, reasonQualifierField);
+  const reason_qualifier: ReasonQualifierEnum = get(
+    claim,
+    reasonQualifierField
+  );
   const dateFieldName =
     reason_qualifier === ReasonQualifier.newBorn
       ? childBirthDateField

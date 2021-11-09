@@ -1,4 +1,7 @@
 import { get, pick } from "lodash";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import BenefitsApplication from "../../models/BenefitsApplication";
 import Details from "../../components/Details";
 import Heading from "../../components/Heading";
@@ -16,7 +19,6 @@ import formatDate from "../../utils/formatDate";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.previous_leaves_same_reason",
@@ -27,22 +29,19 @@ export const fields = [
   "claim.previous_leaves_same_reason[*].worked_per_week_minutes",
 ];
 
-interface PreviousLeavesSameReasonDetailsProps {
-  appLogic: any;
-  claim: BenefitsApplication;
-}
-
 export const PreviousLeavesSameReasonDetails = (
-  props: PreviousLeavesSameReasonDetailsProps
+  props: WithBenefitsApplicationProps
 ) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
   const limit = 6;
 
-  const initialEntries = pick(props, fields).claim;
+  const initialEntries = pick(props, fields).claim || {
+    previous_leaves_same_reason: [],
+  };
+
   if (initialEntries.previous_leaves_same_reason.length === 0) {
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-    initialEntries.previous_leaves_same_reason = [new PreviousLeave()];
+    initialEntries.previous_leaves_same_reason = [new PreviousLeave({})];
   }
 
   // default to one existing previous leave.
@@ -71,13 +70,12 @@ export const PreviousLeavesSameReasonDetails = (
     updateFields({
       previous_leaves_same_reason: [
         ...previous_leaves_same_reason,
-        // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-        new PreviousLeave(),
+        new PreviousLeave({}),
       ],
     });
   };
 
-  const handleRemoveClick = (_entry, index) => {
+  const handleRemoveClick = (_entry: PreviousLeave, index: number) => {
     const updatedLeaves = [...previous_leaves_same_reason];
     updatedLeaves.splice(index, 1);
     updateFields({ previous_leaves_same_reason: updatedLeaves });
@@ -89,7 +87,7 @@ export const PreviousLeavesSameReasonDetails = (
     updateFields,
   });
 
-  const render = (entry, index) => {
+  const render = (entry: PreviousLeave, index: number) => {
     return (
       <PreviousLeaveSameReasonDetailsCard
         claim={claim}
@@ -145,7 +143,7 @@ export const PreviousLeavesSameReasonDetails = (
 interface PreviousLeaveSameReasonDetailsCardProps {
   claim: BenefitsApplication;
   entry: PreviousLeave;
-  getFunctionalInputProps: (...args: any[]) => any;
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
   index: number;
 }
 

@@ -2,6 +2,7 @@ import { fineos, fineosPages, portal } from "../../../actions";
 import { Submission } from "../../../../src/types";
 import { extractLeavePeriod } from "../../../../src/util/claims";
 import { addDays, format } from "date-fns";
+
 describe("Post-approval (notifications/notices)", () => {
   const approval =
     it("Submit a Care for a Family member claim for approval", () => {
@@ -31,21 +32,24 @@ describe("Post-approval (notifications/notices)", () => {
           cy.stash("extendedDates", [newStartDate, newEndDate]);
           cy.stash("submission", submission);
           // Approve the claim
-          fineosPages.ClaimPage.visit(response.fineos_absence_id)
-            .adjudicate((adjudication) => {
-              adjudication
-                .evidence((evidence) => {
-                  claim.documents.forEach((doc) =>
-                    evidence.receive(doc.document_type)
-                  );
-                })
-                .certificationPeriods((cert) => cert.prefill())
-                .acceptLeavePlan();
-            })
-            // Skip checking tasks. We do that in other tests.
-            // Also skip checking claim status for the same reason.
-            .approve()
-            .triggerNotice("Preliminary Designation");
+          const claimPage = fineosPages.ClaimPage.visit(
+            response.fineos_absence_id
+          );
+          claimPage.triggerNotice("Preliminary Designation");
+          fineos.onTab("Absence Hub");
+          claimPage.adjudicate((adjudication) => {
+            adjudication
+              .evidence((evidence) => {
+                claim.documents.forEach((doc) =>
+                  evidence.receive(doc.document_type)
+                );
+              })
+              .certificationPeriods((cert) => cert.prefill())
+              .acceptLeavePlan();
+          });
+          // Skip checking tasks. We do that in other tests.
+          // Also skip checking claim status for the same reason.
+          claimPage.approve();
         });
       });
     });
@@ -79,10 +83,7 @@ describe("Post-approval (notifications/notices)", () => {
 
   it("Displays proper statuses in the claimant portal", () => {
     cy.dependsOnPreviousPass([denyModification]);
-    portal.before({
-      claimantShowStatusPage: true,
-    });
-    cy.visit("/");
+    portal.before();
     portal.loginClaimant();
     cy.unstash<Submission>("submission").then((submission) => {
       // Wait for the legal document to arrive.

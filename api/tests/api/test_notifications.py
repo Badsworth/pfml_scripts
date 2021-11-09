@@ -565,7 +565,7 @@ class TestNotificationAbsencePeriod:
             "error" : "User does not have permission to access the resource or the instance data",
             "correlationId" : "foo"
         }"""
-        error = exception.FINEOSClientBadResponse("get_absence", 200, 403, error_msg)
+        error = exception.FINEOSForbidden("get_absence", 200, 403, error_msg)
         mock_get_absence.side_effect = error
         response = self._api_call(client, fineos_user_token)
         assert response.status_code == 201

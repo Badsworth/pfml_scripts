@@ -1,7 +1,9 @@
 import React, { useEffect } from "react";
 import { cloneDeep, get, pick, set } from "lodash";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import Alert from "../../components/Alert";
-import BenefitsApplication from "../../models/BenefitsApplication";
 import ConditionalContent from "../../components/ConditionalContent";
 import Heading from "../../components/Heading";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -16,7 +18,6 @@ import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 /**
  * Convenience constant for referencing the leave period object
@@ -31,16 +32,8 @@ export const fields = [
   `claim.${leavePeriodPath}.start_date`,
 ];
 
-interface LeavePeriodIntermittentProps {
-  appLogic: any;
-  claim: BenefitsApplication;
-  query?: {
-    claim_id?: string;
-  };
-}
-
 export const LeavePeriodIntermittent = (
-  props: LeavePeriodIntermittentProps
+  props: WithBenefitsApplicationProps
 ) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();

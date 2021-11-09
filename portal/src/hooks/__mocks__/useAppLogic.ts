@@ -7,7 +7,6 @@ import ClaimDetail from "../../models/ClaimDetail";
 import DocumentCollection from "../../models/DocumentCollection";
 import EmployerClaim from "../../models/EmployerClaim";
 import Flag from "../../models/Flag";
-import PaginationMeta from "../../models/PaginationMeta";
 import { uniqueId } from "lodash";
 
 export default jest.fn(() => ({
@@ -44,21 +43,20 @@ export default jest.fn(() => ({
   },
   claims: {
     activeFilters: {},
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     claimDetail: new ClaimDetail(),
     claims: new ClaimCollection(),
     clearClaims: jest.fn(),
     isLoadingClaims: null,
     isLoadingClaimDetail: null,
     loadClaimDetail: jest.fn(),
-    paginationMeta: new PaginationMeta(),
+    paginationMeta: {},
     loadPage: jest.fn(),
   },
   clearErrors: jest.fn(),
   clearRequiredFieldErrors: jest.fn(),
   documents: {
     attach: jest.fn((application_id, files) => {
-      const uploadPromises = [];
+      const uploadPromises: Array<Promise<{ success: boolean }>> = [];
       for (let i = 0; i < files.length; i++) {
         uploadPromises.push(Promise.resolve({ success: true }));
       }

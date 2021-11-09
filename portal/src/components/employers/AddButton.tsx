@@ -4,7 +4,7 @@ import React from "react";
 interface AddButtonProps {
   disabled?: boolean;
   label: string;
-  onClick: (...args: any[]) => any;
+  onClick: React.MouseEventHandler<HTMLButtonElement>;
 }
 
 /**

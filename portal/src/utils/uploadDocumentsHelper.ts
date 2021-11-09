@@ -7,17 +7,19 @@ import TempFileCollection from "../models/TempFileCollection";
  * array to update the FileCardList's displayed FileCards.
  */
 const uploadDocumentsHelper = async (
-  uploadPromises: Array<Promise<{ success: boolean }>>,
+  uploadPromises: Array<Promise<{ success: boolean }>> = [],
   tempFiles: TempFileCollection,
   removeTempFile: (id: string) => void
 ) => {
-  if (!uploadPromises) {
+  if (!uploadPromises.length) {
     return { success: false };
   }
+
   const success = every(
     await Promise.all(
       zip(tempFiles.items, uploadPromises).map(
         async ([successfullyUploadedFile, uploadPromise]) => {
+          if (!uploadPromise || !successfullyUploadedFile) return true;
           const { success } = await uploadPromise;
           if (success) {
             removeTempFile(successfullyUploadedFile.id);

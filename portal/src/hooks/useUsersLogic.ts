@@ -4,7 +4,6 @@ import { AppErrorsLogic } from "./useAppErrorsLogic";
 import BenefitsApplication from "../models/BenefitsApplication";
 import { PortalFlow } from "./usePortalFlow";
 import User from "../models/User";
-import { UserNotReceivedError } from "../errors";
 import UsersApi from "../api/UsersApi";
 
 /**
@@ -40,7 +39,7 @@ const useUsersLogic = ({
       setUser(user);
 
       const context = claim ? { claim, user } : { user };
-      const params = claim ? { claim_id: claim.application_id } : null;
+      const params = claim ? { claim_id: claim.application_id } : {};
       portalFlow.goToNextPage(context, params);
     } catch (error) {
       appErrorsLogic.catchError(error);
@@ -61,11 +60,6 @@ const useUsersLogic = ({
     appErrorsLogic.clearErrors();
     try {
       const { user } = await usersApi.getCurrentUser();
-
-      if (!user) {
-        throw new UserNotReceivedError("User not received in loadUser");
-      }
-
       setUser(user);
     } catch (error) {
       appErrorsLogic.catchError(error);
@@ -94,6 +88,11 @@ const useUsersLogic = ({
     //  Allow roles to view data sharing consent page
     const pathname = portalFlow.pathname;
     if (pathname === routes.user.consentToDataSharing) return;
+
+    if (!user) {
+      portalFlow.goTo(routes.index, {}, { redirect: true });
+      return;
+    }
 
     // Portal currently does not support hybrid account (both Employer AND Claimant account)
     // If user has Employer role, they cannot access Claimant Portal regardless of multiple roles

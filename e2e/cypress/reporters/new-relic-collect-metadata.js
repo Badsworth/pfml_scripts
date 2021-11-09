@@ -11,7 +11,6 @@
  * We don't want to be doing this, but it's the only way we could find to gather
  * this metadata, which is very useful for reporting purposes.
  */
-/* eslint-disable @typescript-eslint/no-var-requires */
 const os = require("os");
 const path = require("path");
 const fs = require("fs");

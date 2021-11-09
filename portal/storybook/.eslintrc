@@ -1,0 +1,7 @@
+{
+  "rules": {
+    "@typescript-eslint/no-empty-function": "off",
+    "@typescript-eslint/strict-boolean-expressions": "off",
+    "react/prop-types": "off"
+  }
+}

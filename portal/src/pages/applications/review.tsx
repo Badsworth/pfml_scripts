@@ -2,7 +2,11 @@ import {
   BankAccountType,
   PaymentPreferenceMethod,
 } from "../../models/PaymentPreference";
-import BenefitsApplication, {
+import EmployerBenefit, {
+  EmployerBenefitFrequency,
+  EmployerBenefitType,
+} from "../../models/EmployerBenefit";
+import {
   EmploymentStatus,
   Gender,
   PhoneType,
@@ -12,10 +16,6 @@ import BenefitsApplication, {
   WorkPattern,
   WorkPatternType,
 } from "../../models/BenefitsApplication";
-import EmployerBenefit, {
-  EmployerBenefitFrequency,
-  EmployerBenefitType,
-} from "../../models/EmployerBenefit";
 import OtherIncome, {
   OtherIncomeFrequency,
   OtherIncomeType,
@@ -23,12 +23,16 @@ import OtherIncome, {
 import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import React, { useEffect, useState } from "react";
 import Step, { ClaimSteps } from "../../models/Step";
-import { compact, get, isUndefined } from "lodash";
-
+import { compact, get, isBoolean, isNil } from "lodash";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import withClaimDocuments, {
+  WithClaimDocumentsProps,
+} from "../../hoc/withClaimDocuments";
+import Address from "../../models/Address";
 import Alert from "../../components/Alert";
-import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
-import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import { DateTime } from "luxon";
 import { DocumentType } from "../../models/Document";
 import Heading from "../../components/Heading";
@@ -51,17 +55,16 @@ import formatDateRange from "../../utils/formatDateRange";
 import getI18nContextForIntermittentFrequencyDuration from "../../utils/getI18nContextForIntermittentFrequencyDuration";
 import getMissingRequiredFields from "../../utils/getMissingRequiredFields";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
+import isBlank from "../../utils/isBlank";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import tracker from "../../services/tracker";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
-import withClaimDocuments from "../../hoc/withClaimDocuments";
 
 /**
  * Format an address onto a single line, or return undefined if the address
  * is empty.
  */
-function formatAddress(address) {
+function formatAddress(address: Partial<Address> | null) {
   let formatted = compact([
     get(address, "line_1"),
     get(address, "line_2"),
@@ -75,18 +78,13 @@ function formatAddress(address) {
   return formatted;
 }
 
-interface ReviewProps {
-  appLogic: AppLogic;
-  claim?: BenefitsApplication;
-  documents?: BenefitsApplicationDocument[];
-  isLoadingDocuments?: boolean;
-}
-
 /**
  * Application review page, allowing a user to review the info
  * they've entered before they submit it.
  */
-export const Review = (props: ReviewProps) => {
+export const Review = (
+  props: WithClaimDocumentsProps & WithBenefitsApplicationProps
+) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments } = props;
 
@@ -110,20 +108,16 @@ export const Review = (props: ReviewProps) => {
   const reducedLeavePeriod = new ReducedScheduleLeavePeriod(
     get(claim, "leave_details.reduced_schedule_leave_periods[0]")
   );
-  const workPattern = new WorkPattern(get(claim, "work_pattern"));
+  const workPattern = new WorkPattern(get(claim, "work_pattern") || {});
   const gender = get(claim, "gender");
 
-  const steps = Step.createClaimStepsFromMachine(
-    claimantConfigs,
-    {
-      claim: props.claim,
-    },
-    null
-  );
+  const steps = Step.createClaimStepsFromMachine(claimantConfigs, {
+    claim: props.claim,
+  });
 
   const usePartOneReview = !claim.isSubmitted;
 
-  const getStepEditHref = (name) => {
+  const getStepEditHref = (name: string) => {
     const step = steps.find((s) => s.name === name);
 
     if (step && step.editable) {
@@ -147,7 +141,6 @@ export const Review = (props: ReviewProps) => {
     await appLogic.benefitsApplications.complete(claim.application_id);
   };
 
-  const contentContext = usePartOneReview ? "part1" : "final";
   // Adjust heading levels depending on if there's a "Part 1" heading at the top of the page or not
   const reviewHeadingLevel = usePartOneReview ? "3" : "2";
   const reviewRowLevel = usePartOneReview ? "4" : "3";
@@ -201,23 +194,25 @@ export const Review = (props: ReviewProps) => {
       )}
       <BackButton />
 
-      <Title hidden>{t("pages.claimsReview.title")}</Title>
+      {usePartOneReview && (
+        <Title hidden>{t("pages.claimsReview.title_part1")}</Title>
+      )}
+      {!usePartOneReview && (
+        <Title marginBottom="6">{t("pages.claimsReview.title_final")}</Title>
+      )}
 
-      <Heading className="margin-top-0" level="2" size="1">
+      <Heading className="margin-top-0" level="2">
         <HeadingPrefix>
           {t("pages.claimsReview.partHeadingPrefix", { number: 1 })}
         </HeadingPrefix>
-        {t("pages.claimsReview.partHeading", {
-          context: `${1}_${contentContext}`,
-        })}
+        {t("pages.claimsReview.partHeading_1")}
       </Heading>
 
       {!usePartOneReview && (
         <Lead>
           <Trans
             i18nKey="pages.claimsReview.partDescription"
-            tOptions={{ context: "1" }}
-            values={{ absence_id: claim.fineos_absence_id }}
+            values={{ absence_id: claim.fineos_absence_id, step: 1 }}
             components={{
               "contact-center-phone-link": (
                 <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
@@ -372,7 +367,8 @@ export const Review = (props: ReviewProps) => {
         })}
       </ReviewRow>
 
-      {workPattern.work_pattern_type === WorkPatternType.fixed &&
+      {workPattern.work_pattern_days &&
+        workPattern.work_pattern_type === WorkPatternType.fixed &&
         workPattern.minutesWorkedPerWeek !== null && (
           <ReviewRow
             level={reviewRowLevel}
@@ -388,7 +384,7 @@ export const Review = (props: ReviewProps) => {
           level={reviewRowLevel}
           label={t("pages.claimsReview.workPatternDaysVariableLabel")}
         >
-          {!isUndefined(workPattern.minutesWorkedPerWeek) &&
+          {!isNil(workPattern.minutesWorkedPerWeek) &&
             t("pages.claimsReview.workPatternVariableTime", {
               context:
                 convertMinutesToHours(workPattern.minutesWorkedPerWeek)
@@ -620,14 +616,12 @@ export const Review = (props: ReviewProps) => {
               ? t("pages.claimsReview.otherLeaveChoiceYes")
               : t("pages.claimsReview.otherLeaveChoiceNo")}
           </ReviewRow>
-          {/* @ts-expect-error ts-migrate(2786) FIXME: 'PreviousLeaveList' cannot be used as a JSX compon... Remove this comment to see the full error message */}
           <PreviousLeaveList
             entries={get(claim, "previous_leaves_same_reason")}
             type="sameReason"
             startIndex={0}
             reviewRowLevel={reviewRowLevel}
           />
-          {/* @ts-expect-error ts-migrate(2786) FIXME: 'PreviousLeaveList' cannot be used as a JSX compon... Remove this comment to see the full error message */}
           <PreviousLeaveList
             entries={get(claim, "previous_leaves_other_reason")}
             type="otherReason"
@@ -678,7 +672,6 @@ export const Review = (props: ReviewProps) => {
           </ReviewRow>
 
           {get(claim, "has_employer_benefits") && (
-            // @ts-expect-error ts-migrate(2786) FIXME: 'EmployerBenefitList' cannot be used as a JSX comp... Remove this comment to see the full error message
             <EmployerBenefitList
               entries={get(claim, "employer_benefits")}
               reviewRowLevel={reviewRowLevel}
@@ -696,7 +689,6 @@ export const Review = (props: ReviewProps) => {
           </ReviewRow>
 
           {get(claim, "has_other_incomes") && (
-            // @ts-expect-error ts-migrate(2786) FIXME: 'OtherIncomeList' cannot be used as a JSX componen... Remove this comment to see the full error message
             <OtherIncomeList
               entries={get(claim, "other_incomes")}
               reviewRowLevel={reviewRowLevel}
@@ -718,7 +710,7 @@ export const Review = (props: ReviewProps) => {
         </div>
       ) : (
         <React.Fragment>
-          <Heading level="2" size="1">
+          <Heading level="2">
             <HeadingPrefix>
               {t("pages.claimsReview.partHeadingPrefix", { number: 2 })}
             </HeadingPrefix>
@@ -726,6 +718,17 @@ export const Review = (props: ReviewProps) => {
               context: "2",
             })}
           </Heading>
+          <Lead>
+            <Trans
+              i18nKey="pages.claimsReview.partDescription"
+              values={{ absence_id: claim.fineos_absence_id, step: 2 }}
+              components={{
+                "contact-center-phone-link": (
+                  <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
+                ),
+              }}
+            />
+          </Lead>
 
           {/* PAYMENT METHOD */}
           <ReviewHeading level={reviewHeadingLevel}>
@@ -772,7 +775,22 @@ export const Review = (props: ReviewProps) => {
               </ReviewRow>
             </React.Fragment>
           )}
-          <Heading level="2" size="1">
+          {isBoolean(claim.is_withholding_tax) && (
+            <React.Fragment>
+              <ReviewHeading level={reviewHeadingLevel}>
+                {t("pages.claimsReview.stepHeading", { context: "tax" })}
+              </ReviewHeading>
+              <ReviewRow
+                label={t("pages.claimsReview.taxLabel")}
+                level={reviewRowLevel}
+              >
+                {claim.is_withholding_tax === true
+                  ? t("pages.claimsReview.taxYesWithhold")
+                  : t("pages.claimsReview.taxNoWithhold")}
+              </ReviewRow>
+            </React.Fragment>
+          )}
+          <Heading level="2">
             <HeadingPrefix>
               {t("pages.claimsReview.partHeadingPrefix", { number: 3 })}
             </HeadingPrefix>
@@ -861,9 +879,9 @@ interface PreviousLeaveListProps {
 
 export const PreviousLeaveList = (props: PreviousLeaveListProps) => {
   const { t } = useTranslation();
-  if (!props.entries) return null;
+  if (!props.entries.length) return null;
 
-  return props.entries.map((entry, index) => (
+  const rows = props.entries.map((entry, index) => (
     <ReviewRow
       level={props.reviewRowLevel}
       key={`${props.type}-${index}`}
@@ -916,6 +934,8 @@ export const PreviousLeaveList = (props: PreviousLeaveListProps) => {
       </ul>
     </ReviewRow>
   ));
+
+  return <React.Fragment>{rows}</React.Fragment>;
 };
 
 interface EmployerBenefitListProps {
@@ -931,7 +951,7 @@ export const EmployerBenefitList = (props: EmployerBenefitListProps) => {
   const { t } = useTranslation();
   const { entries, reviewRowLevel } = props;
 
-  return entries.map((entry, index) => {
+  const rows = entries.map((entry, index) => {
     const label = t("pages.claimsReview.employerBenefitEntryLabel", {
       count: index + 1,
     });
@@ -950,7 +970,7 @@ export const EmployerBenefitList = (props: EmployerBenefitListProps) => {
     if (entry.is_full_salary_continuous) {
       amount = t("pages.claimsReview.employerBenefitIsFullSalaryContinuous");
     } else {
-      amount = entry.benefit_amount_dollars
+      amount = !isBlank(entry.benefit_amount_dollars)
         ? t("pages.claimsReview.amountPerFrequency", {
             context: findKeyByValue(
               EmployerBenefitFrequency,
@@ -972,6 +992,8 @@ export const EmployerBenefitList = (props: EmployerBenefitListProps) => {
       />
     );
   });
+
+  return <React.Fragment>{rows}</React.Fragment>;
 };
 
 interface OtherIncomeListProps {
@@ -987,7 +1009,7 @@ export const OtherIncomeList = (props: OtherIncomeListProps) => {
   const { t } = useTranslation();
   const { entries, reviewRowLevel } = props;
 
-  return entries.map((entry, index) => {
+  const rows = entries.map((entry, index) => {
     const label = t("pages.claimsReview.otherIncomeEntryLabel", {
       count: index + 1,
     });
@@ -1001,7 +1023,7 @@ export const OtherIncomeList = (props: OtherIncomeListProps) => {
       entry.income_end_date
     );
 
-    const amount = entry.income_amount_dollars
+    const amount = !isBlank(entry.income_amount_dollars)
       ? t("pages.claimsReview.amountPerFrequency", {
           context: findKeyByValue(
             OtherIncomeFrequency,
@@ -1022,10 +1044,12 @@ export const OtherIncomeList = (props: OtherIncomeListProps) => {
       />
     );
   });
+
+  return <React.Fragment>{rows}</React.Fragment>;
 };
 
 interface OtherLeaveEntryProps {
-  amount?: string;
+  amount?: string | null;
   dates: string;
   label: string;
   reviewRowLevel: "2" | "3" | "4" | "5" | "6";

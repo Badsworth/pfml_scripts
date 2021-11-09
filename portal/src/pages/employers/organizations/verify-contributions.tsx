@@ -1,4 +1,6 @@
-import { AppLogic } from "../../../hooks/useAppLogic";
+import withWithholding, {
+  WithWithholdingProps,
+} from "../../../hoc/withWithholding";
 import Button from "../../../components/Button";
 import Details from "../../../components/Details";
 import InputCurrency from "../../../components/InputCurrency";
@@ -6,40 +8,26 @@ import Lead from "../../../components/Lead";
 import React from "react";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
-import Withholding from "../../../models/Withholding";
 import formatDateRange from "../../../utils/formatDateRange";
 import routes from "../../../routes";
 import useFormState from "../../../hooks/useFormState";
 import useFunctionalInputProps from "../../../hooks/useFunctionalInputProps";
 import useThrottledHandler from "../../../hooks/useThrottledHandler";
 import { useTranslation } from "../../../locales/i18n";
-import withUser from "../../../hoc/withUser";
-import withWithholding from "../../../hoc/withWithholding";
 
-interface VerifyContributionsProps {
-  appLogic: AppLogic;
-  query: {
-    employer_id: string;
-    next?: string;
-  };
-  withholding: Withholding;
+interface VerifyContributionsProps extends WithWithholdingProps {
+  query: { next?: string };
 }
 
 export const VerifyContributions = (props: VerifyContributionsProps) => {
-  const { appLogic, query, withholding } = props;
-  const {
-    users: { user },
-  } = appLogic;
+  const { appLogic, employer, query, withholding } = props;
   const { t } = useTranslation();
-  const employer = user.user_leave_administrators.find((employer) => {
-    return employer.employer_id === query.employer_id;
-  });
 
   const { formState, updateFields } = useFormState({
-    withholdingAmount: 0,
+    withholdingAmount: "",
   });
 
-  const handleAmountChange = (event) => {
+  const handleAmountChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const value = event.target.value;
     const amount = value ? Number(value.replace(/,/g, "")) : 0;
     updateFields({ withholdingAmount: amount });
@@ -49,7 +37,7 @@ export const VerifyContributions = (props: VerifyContributionsProps) => {
     event.preventDefault();
 
     const payload = {
-      employer_id: query.employer_id,
+      employer_id: employer.employer_id,
       withholding_amount: formState.withholdingAmount,
       withholding_quarter: withholding.filing_period,
     };
@@ -129,8 +117,6 @@ export const VerifyContributions = (props: VerifyContributionsProps) => {
       <InputCurrency
         {...getFunctionalInputProps("withholdingAmount")}
         onChange={handleAmountChange}
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ onChange: (event: any) => void; mask: stri... Remove this comment to see the full error message
-        mask="currency"
         hint={t(
           "pages.employersOrganizationsVerifyContributions.withholdingAmountHint"
         )}
@@ -149,4 +135,4 @@ export const VerifyContributions = (props: VerifyContributionsProps) => {
   );
 };
 
-export default withUser(withWithholding(VerifyContributions));
+export default withWithholding(VerifyContributions);

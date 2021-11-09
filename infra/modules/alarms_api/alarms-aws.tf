@@ -11,7 +11,10 @@ locals {
     "import-fineos-to-warehouse",
     "pub-payments-process-fineos",
     "weekend-pub-claimant-extract",
-    "pub-payments-process-snapshot"
+    "dua-generate-and-send-employee-request-file",
+    "dua-import-employee-demographics",
+    "pub-payments-process-snapshot",
+    "pub-payments-process-1099-documents"
   ]
 }
 

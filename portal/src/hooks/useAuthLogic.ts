@@ -4,6 +4,10 @@ import {
   Issue,
   ValidationError,
 } from "../errors";
+import {
+  NullableQueryParams,
+  createRouteWithQuery,
+} from "../utils/routeWithParams";
 import { compact, trim } from "lodash";
 import { useMemo, useState } from "react";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
@@ -12,9 +16,24 @@ import { PortalFlow } from "./usePortalFlow";
 import { RoleDescription } from "../models/User";
 import UsersApi from "../api/UsersApi";
 import assert from "assert";
-import { createRouteWithQuery } from "../utils/routeWithParams";
 import routes from "../routes";
 import tracker from "../services/tracker";
+
+interface ErrorCodeMap {
+  [code: string]: { field?: string; type: string } | undefined;
+}
+
+function isCognitoError(error: unknown): error is CognitoError {
+  if (
+    error &&
+    typeof error === "object" &&
+    error.hasOwnProperty("code") !== undefined
+  ) {
+    return true;
+  }
+
+  return false;
+}
 
 const useAuthLogic = ({
   appErrorsLogic,
@@ -32,16 +51,14 @@ const useAuthLogic = ({
    * Sometimes we need to persist information the user entered on
    * one auth screen so it can be reused on a subsequent auth screen.
    * For these cases we need to store this data in memory.
-   * @property {object} authData - data to store between page transitions
-   * @property {Function} setAuthData - updated the cached authentication info
+   * @property authData - data to store between page transitions
    */
   const [authData, setAuthData] = useState({});
 
   /**
-   * @property {?boolean} isLoggedIn - Whether the user is logged in or not, or null if logged in status has not been checked yet
-   * @property {Function} setIsLoggedIn - Set whether the user is logged in or not after the logged in status has been checked
+   * @property isLoggedIn - Whether the user is logged in or not, or null if logged in status has not been checked yet
    */
-  const [isLoggedIn, setIsLoggedIn] = useState(null);
+  const [isLoggedIn, setIsLoggedIn] = useState<boolean | null>(null);
 
   /**
    * Initiate the Forgot Password flow, sending a verification code when user exists.
@@ -70,10 +87,10 @@ const useAuthLogic = ({
    */
   const sendForgotPasswordConfirmation = async (username = "") => {
     appErrorsLogic.clearErrors();
-    username = trim(username);
+    const trimmedUsername = trim(username);
 
     const validationIssues = combineValidationIssues(
-      validateUsername(username)
+      validateUsername(trimmedUsername)
     );
 
     if (validationIssues) {
@@ -83,11 +100,16 @@ const useAuthLogic = ({
 
     try {
       trackAuthRequest("forgotPassword");
-      await Auth.forgotPassword(username);
+      await Auth.forgotPassword(trimmedUsername);
       tracker.markFetchRequestEnd();
 
       return true;
     } catch (error) {
+      if (!isCognitoError(error)) {
+        appErrorsLogic.catchError(error);
+        return false;
+      }
+
       const authError = getForgotPasswordError(error);
       appErrorsLogic.catchError(authError);
       return false;
@@ -102,10 +124,10 @@ const useAuthLogic = ({
    */
   const login = async (username = "", password: string, next?: string) => {
     appErrorsLogic.clearErrors();
-    username = trim(username);
+    const trimmedUsername = trim(username);
 
     const validationIssues = combineValidationIssues(
-      validateUsername(username),
+      validateUsername(trimmedUsername),
       validatePassword(password)
     );
 
@@ -116,7 +138,7 @@ const useAuthLogic = ({
 
     try {
       trackAuthRequest("signIn");
-      await Auth.signIn(username, password);
+      await Auth.signIn(trimmedUsername, password);
       tracker.markFetchRequestEnd();
 
       setIsLoggedIn(true);
@@ -127,6 +149,11 @@ const useAuthLogic = ({
         portalFlow.goToPageFor("LOG_IN");
       }
     } catch (error) {
+      if (!isCognitoError(error)) {
+        appErrorsLogic.catchError(error);
+        return;
+      }
+
       if (error.code === "UserNotConfirmedException") {
         portalFlow.goToPageFor("UNCONFIRMED_ACCOUNT");
         return;
@@ -161,7 +188,7 @@ const useAuthLogic = ({
       tracker.noticeError(error);
     }
     setIsLoggedIn(false);
-    const params = {};
+    const params: NullableQueryParams = {};
     if (sessionTimedOut) {
       params["session-timed-out"] = "true";
     }
@@ -181,16 +208,16 @@ const useAuthLogic = ({
     employer_fein?: string
   ) => {
     appErrorsLogic.clearErrors();
-    email_address = trim(email_address);
+    const trimmedEmail = trim(email_address);
 
     const requestData = {
-      email_address,
+      email_address: trimmedEmail,
       password,
+      user_leave_administrator: {},
       role: { role_description },
     };
 
     if (role_description === RoleDescription.employer) {
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'user_leave_administrator' does not exist... Remove this comment to see the full error message
       requestData.user_leave_administrator = { employer_fein };
     }
 
@@ -203,7 +230,7 @@ const useAuthLogic = ({
 
     // Store the username so the user doesn't need to reenter it on the Verify page
     setAuthData({
-      createAccountUsername: email_address,
+      createAccountUsername: trimmedEmail,
       createAccountFlow:
         role_description === RoleDescription.employer ? "employer" : "claimant",
     });
@@ -266,10 +293,10 @@ const useAuthLogic = ({
 
   const resendVerifyAccountCode = async (username = "") => {
     appErrorsLogic.clearErrors();
-    username = trim(username);
+    const trimmedUsername = trim(username);
 
     const validationIssues = combineValidationIssues(
-      validateUsername(username)
+      validateUsername(trimmedUsername)
     );
 
     if (validationIssues) {
@@ -279,11 +306,16 @@ const useAuthLogic = ({
 
     try {
       trackAuthRequest("resendSignUp");
-      await Auth.resendSignUp(username);
+      await Auth.resendSignUp(trimmedUsername);
       tracker.markFetchRequestEnd();
 
       // TODO (CP-600): Show success message
     } catch (error) {
+      if (!isCognitoError(error)) {
+        appErrorsLogic.catchError(error);
+        return;
+      }
+
       appErrorsLogic.catchError(new CognitoAuthError(error));
     }
   };
@@ -295,12 +327,12 @@ const useAuthLogic = ({
   const resetPassword = async (username = "", code = "", password = "") => {
     appErrorsLogic.clearErrors();
 
-    username = trim(username);
-    code = trim(code);
+    const trimmedUsername = trim(username);
+    const trimmedCode = trim(code);
 
     const validationIssues = combineValidationIssues(
-      validateCode(code),
-      validateUsername(username),
+      validateCode(trimmedCode),
+      validateUsername(trimmedUsername),
       validatePassword(password)
     );
 
@@ -309,7 +341,7 @@ const useAuthLogic = ({
       return;
     }
 
-    await resetPasswordInCognito(username, code, password);
+    await resetPasswordInCognito(trimmedUsername, trimmedCode, password);
   };
 
   /**
@@ -329,6 +361,11 @@ const useAuthLogic = ({
 
       portalFlow.goToPageFor("SET_NEW_PASSWORD");
     } catch (error) {
+      if (!isCognitoError(error)) {
+        appErrorsLogic.catchError(error);
+        return;
+      }
+
       const authError = getResetPasswordError(error);
       appErrorsLogic.catchError(authError);
     }
@@ -352,6 +389,11 @@ const useAuthLogic = ({
         }
       );
     } catch (error) {
+      if (!isCognitoError(error)) {
+        appErrorsLogic.catchError(error);
+        return;
+      }
+
       // If the error is the user trying to re-verified an already-verified account then we can redirect
       // them to the login page. This only occurs if the user's account is already verified and the
       // verification code they use is valid.
@@ -382,12 +424,12 @@ const useAuthLogic = ({
   const verifyAccount = async (username = "", code = "") => {
     appErrorsLogic.clearErrors();
 
-    username = trim(username);
-    code = trim(code);
+    const trimmedUsername = trim(username);
+    const trimmedCode = trim(code);
 
     const validationIssues = combineValidationIssues(
-      validateCode(code),
-      validateUsername(username)
+      validateCode(trimmedCode),
+      validateUsername(trimmedUsername)
     );
 
     if (validationIssues) {
@@ -395,7 +437,7 @@ const useAuthLogic = ({
       return;
     }
 
-    await verifyAccountInCognito(username, code);
+    await verifyAccountInCognito(trimmedUsername, trimmedCode);
   };
 
   return {
@@ -414,7 +456,7 @@ const useAuthLogic = ({
   };
 };
 
-function combineValidationIssues(...issues: Issue[]) {
+function combineValidationIssues(...issues: Array<Issue | undefined>) {
   const combinedIssues = compact(issues);
   if (combinedIssues.length === 0) return;
   return combinedIssues;
@@ -460,7 +502,7 @@ function validatePassword(password?: string) {
  */
 function getForgotPasswordError(error: CognitoError) {
   let issue;
-  const errorCodeToIssueMap = {
+  const errorCodeToIssueMap: ErrorCodeMap = {
     CodeDeliveryFailureException: { field: "code", type: "deliveryFailure" },
     InvalidParameterException: { type: "invalidParametersFallback" },
     UserNotFoundException: { type: "userNotFound" },
@@ -510,7 +552,7 @@ function getLoginError(error: CognitoError) {
  */
 function getResetPasswordError(error: CognitoError) {
   let issue;
-  const errorCodeToIssueMap = {
+  const errorCodeToIssueMap: ErrorCodeMap = {
     CodeMismatchException: { field: "code", type: "mismatchException" },
     ExpiredCodeException: { field: "code", type: "expired" },
     InvalidParameterException: {
@@ -537,7 +579,7 @@ function getResetPasswordError(error: CognitoError) {
  */
 function getVerifyAccountError(error: CognitoError) {
   let issue;
-  const errorCodeToIssueMap = {
+  const errorCodeToIssueMap: ErrorCodeMap = {
     CodeMismatchException: { field: "code", type: "mismatchException" },
     ExpiredCodeException: { field: "code", type: "expired" },
   };

@@ -1,10 +1,10 @@
 import BaseApi, {
   createRequestUrl,
+  fetchErrorToNetworkError,
   getAuthorizationHeader,
-  handleError,
   handleNotOkResponse,
 } from "./BaseApi";
-import ClaimDocument from "../models/ClaimDocument";
+import { ClaimDocument } from "../models/Document";
 import DocumentCollection from "../models/DocumentCollection";
 import EmployerClaim from "../models/EmployerClaim";
 import { UserLeaveAdministrator } from "../models/User";
@@ -24,12 +24,19 @@ export default class EmployersApi extends BaseApi {
    * Add an FEIN to the logged in Leave Administrator
    */
   addEmployer = async (postData: { employer_fein: string }) => {
-    const { data } = await this.request("POST", "add", postData);
+    const { data } = await this.request<UserLeaveAdministrator>(
+      "POST",
+      "add",
+      postData
+    );
     return new UserLeaveAdministrator(data);
   };
 
   getClaim = async (absenceId: string) => {
-    const { data } = await this.request("GET", `claims/${absenceId}/review`);
+    const { data } = await this.request<EmployerClaim>(
+      "GET",
+      `claims/${absenceId}/review`
+    );
 
     return {
       claim: new EmployerClaim(data),
@@ -49,7 +56,7 @@ export default class EmployersApi extends BaseApi {
 
     const headers = {
       ...authHeader,
-      "Content-Type": content_type,
+      "Content-Type": content_type || "",
     };
 
     let blob: Blob, response: Response;
@@ -57,12 +64,11 @@ export default class EmployersApi extends BaseApi {
       response = await fetch(url, { headers, method });
       blob = await response.blob();
     } catch (error) {
-      handleError(error);
+      throw fetchErrorToNetworkError(error);
     }
 
     if (!response.ok) {
-      // @ts-expect-error ts-migrate(2554) FIXME: Expected 5 arguments, but got 2.
-      handleNotOkResponse(url, response);
+      handleNotOkResponse(response, [], this.i18nPrefix);
     }
 
     return blob;
@@ -76,12 +82,9 @@ export default class EmployersApi extends BaseApi {
       "GET",
       `claims/${absenceId}/documents`
     );
-    const documents = data.map(
-      (documentData) => new ClaimDocument(documentData)
-    );
 
     return {
-      documents: new DocumentCollection(documents),
+      documents: new DocumentCollection(data),
     };
   };
 
@@ -93,12 +96,12 @@ export default class EmployersApi extends BaseApi {
       "GET",
       `withholding/${employer_id}`
     );
-    return new Withholding(data);
+    return data;
   };
 
   submitClaimReview = async (
     absenceId: string,
-    patchData: Record<string, unknown>
+    patchData: { [key: string]: unknown }
   ) => {
     await this.request("PATCH", `claims/${absenceId}/review`, patchData);
   };
@@ -106,7 +109,7 @@ export default class EmployersApi extends BaseApi {
   /**
    * Submit withholding data for validation
    */
-  submitWithholding = async (postData: Record<string, unknown>) => {
+  submitWithholding = async (postData: { [key: string]: unknown }) => {
     await this.request("POST", "verifications", postData);
   };
 }

@@ -1,7 +1,4 @@
-import ClaimDetail, {
-  AbsencePeriod,
-  OutstandingEvidence,
-} from "../../src/models/ClaimDetail";
+import ClaimDetail, { AbsencePeriod } from "../../src/models/ClaimDetail";
 import { ClaimEmployee } from "../../src/models/Claim";
 
 describe("ClaimDetail", () => {
@@ -49,17 +46,11 @@ describe("ClaimDetail", () => {
     expect(claimDetail.outstanding_evidence.employee_evidence.length).toBe(2);
 
     expect(
-      claimDetail.outstanding_evidence.employee_evidence[0]
-    ).toBeInstanceOf(OutstandingEvidence);
-    expect(
       claimDetail.outstanding_evidence.employee_evidence[0].document_name
     ).toBe("First Fake Document Name");
     expect(
       claimDetail.outstanding_evidence.employee_evidence[0].is_document_received
     ).toBe(true);
-    expect(
-      claimDetail.outstanding_evidence.employee_evidence[1]
-    ).toBeInstanceOf(OutstandingEvidence);
     expect(
       claimDetail.outstanding_evidence.employee_evidence[1].document_name
     ).toBe("Second Fake Document Name");
@@ -72,17 +63,11 @@ describe("ClaimDetail", () => {
     );
     expect(claimDetail.outstanding_evidence.employer_evidence.length).toBe(2);
     expect(
-      claimDetail.outstanding_evidence.employer_evidence[0]
-    ).toBeInstanceOf(OutstandingEvidence);
-    expect(
       claimDetail.outstanding_evidence.employer_evidence[0].document_name
     ).toBe("Third Fake Document Name");
     expect(
       claimDetail.outstanding_evidence.employer_evidence[0].is_document_received
     ).toBe(true);
-    expect(
-      claimDetail.outstanding_evidence.employer_evidence[1]
-    ).toBeInstanceOf(OutstandingEvidence);
     expect(
       claimDetail.outstanding_evidence.employer_evidence[1].document_name
     ).toBe("Fourth Fake Document Name");

@@ -394,3 +394,20 @@ class ServiceAgreementServiceRequest(pydantic.BaseModel):
     )
     config_name: str = pydantic.Field("ServiceAgreementService", alias="config-name")
     update_data: ServiceAgreementData = pydantic.Field(None, alias="update-data")
+
+
+class TaxWithholdingUpdateData(pydantic.BaseModel):
+    additional_data_set: AdditionalDataSet = pydantic.Field(None, alias="additional-data-set")
+
+
+class TaxWithholdingUpdateRequest(pydantic.BaseModel):
+    xmlns_p: str = pydantic.Field(
+        "http://www.fineos.com/wscomposer/OptInSITFITService", alias="@xmlns:p"
+    )
+    xmlns_xsi: str = pydantic.Field("http://www.w3.org/2001/XMLSchema-instance", alias="@xmlns:xsi")
+    xsi_schemaLocation: str = pydantic.Field(
+        "http://www.fineos.com/wscomposer/OptInSITFITService  optinsitfitservice.xsd",
+        alias="@xsi:schemaLocation",
+    )
+    config_name: str = pydantic.Field("OptInSITFITService", alias="config-name")
+    update_data: TaxWithholdingUpdateData = pydantic.Field(None, alias="update-data")

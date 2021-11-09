@@ -1,6 +1,8 @@
 import React, { useState } from "react";
+import withEmployerClaim, {
+  WithEmployerClaimProps,
+} from "../../../hoc/withEmployerClaim";
 import Alert from "../../../components/Alert";
-import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import Button from "../../../components/Button";
 import ConditionalContent from "../../../components/ConditionalContent";
@@ -11,23 +13,12 @@ import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
 import formatDateRange from "../../../utils/formatDateRange";
 import { useTranslation } from "../../../locales/i18n";
-import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
-interface NewApplicationProps {
-  appLogic: AppLogic;
-  query: {
-    absence_id: string;
-  };
-}
-
-export const NewApplication = (props: NewApplicationProps) => {
+export const NewApplication = (props: WithEmployerClaimProps) => {
   const { t } = useTranslation();
   const {
-    appLogic: {
-      employers: { claim },
-      portalFlow,
-    },
-    query: { absence_id: absenceId },
+    appLogic: { portalFlow },
+    claim,
   } = props;
 
   // explicitly check for false as opposed to falsy values.
@@ -37,22 +28,26 @@ export const NewApplication = (props: NewApplicationProps) => {
     portalFlow.goToPageFor(
       "CLAIM_NOT_REVIEWABLE",
       {},
-      { absence_id: absenceId },
+      { absence_id: claim.fineos_absence_id },
       { redirect: true }
     );
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = (event: React.FormEvent) => {
     event.preventDefault();
 
     if (formState.hasReviewerVerified === "true") {
-      portalFlow.goToNextPage({}, { absence_id: absenceId });
+      portalFlow.goToNextPage({}, { absence_id: claim.fineos_absence_id });
     } else if (formState.hasReviewerVerified === "false") {
-      portalFlow.goToPageFor("CONFIRMATION", {}, { absence_id: absenceId });
+      portalFlow.goToPageFor(
+        "CONFIRMATION",
+        {},
+        { absence_id: claim.fineos_absence_id }
+      );
     }
   };
 
-  const handleOnChange = (event) => {
+  const handleOnChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     updateFields({
       hasReviewerVerified: event.target.value,
     });
@@ -62,7 +57,7 @@ export const NewApplication = (props: NewApplicationProps) => {
     hasReviewerVerified: "",
   });
 
-  const updateFields = (fields) => {
+  const updateFields = (fields: { [fieldName: string]: unknown }) => {
     setFormState({ ...formState, ...fields });
   };
 

@@ -33,6 +33,8 @@ def update_xsds():
         "ServiceAgreementService.Response.xsd",
         "OccupationDetailUpdateService.Request.xsd",
         "OccupationDetailUpdateService.Response.xsd",
+        "OptInSITFITService.Request.xsd",
+        "OptInSITFITService.Response.xsd",
     ]
 
     dir_path = os.path.dirname(os.path.realpath(__file__))

@@ -1,8 +1,9 @@
+import withBenefitsApplications, {
+  WithBenefitsApplicationsProps,
+} from "../../hoc/withBenefitsApplications";
 import Alert from "../../components/Alert";
-import { AppLogic } from "../../hooks/useAppLogic";
 import ApplicationCardV1 from "../../components/ApplicationCard";
 import ApplicationCardV2 from "../../components/ApplicationCardV2";
-import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
 import ButtonLink from "../../components/ButtonLink";
 import Heading from "../../components/Heading";
 import Lead from "../../components/Lead";
@@ -12,14 +13,9 @@ import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplications from "../../hoc/withBenefitsApplications";
 
-interface IndexProps {
-  appLogic: AppLogic;
-  claims: BenefitsApplicationCollection;
-  query?: {
-    uploadedAbsenceId?: string;
-  };
+interface IndexProps extends WithBenefitsApplicationsProps {
+  query: { uploadedAbsenceId?: string };
 }
 
 /**
@@ -41,12 +37,10 @@ export const Index = (props: IndexProps) => {
 
   return (
     <React.Fragment>
-      {query && query.uploadedAbsenceId && (
+      {query.uploadedAbsenceId && (
         <Alert
           className="margin-bottom-3"
           heading={t("pages.applications.uploadSuccessHeading")}
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: TFunctionResult; className: stri... Remove this comment to see the full error message
-          name="upload-success-message"
           state="success"
         >
           {t("pages.applications.uploadSuccessMessage", {
@@ -128,6 +122,7 @@ export const Index = (props: IndexProps) => {
 /**
  * Allowing claimantShowStatusPage feature flag
  */
+// @ts-expect-error TODO (PORTAL-287) Remove v1 application card
 function ApplicationCard(props) {
   return isFeatureEnabled("claimantShowStatusPage") ? (
     <ApplicationCardV2 {...props} />

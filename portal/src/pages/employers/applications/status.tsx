@@ -1,8 +1,9 @@
 import React, { useEffect } from "react";
-
+import withEmployerClaim, {
+  WithEmployerClaimProps,
+} from "../../../hoc/withEmployerClaim";
 import { AbsenceCaseStatus } from "../../../models/Claim";
 import AbsenceCaseStatusTag from "../../../components/AbsenceCaseStatusTag";
-import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import { DocumentType } from "../../../models/Document";
 import DownloadableDocument from "../../../components/DownloadableDocument";
@@ -18,34 +19,23 @@ import formatDateRange from "../../../utils/formatDateRange";
 import { get } from "lodash";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
-import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
-interface StatusProps {
-  appLogic: AppLogic;
-  query: {
-    absence_id?: string;
-  };
-}
-
-export const Status = (props: StatusProps) => {
+export const Status = (props: WithEmployerClaimProps) => {
+  const { appLogic, claim } = props;
   const {
-    appLogic,
-    query: { absence_id: absenceId },
-  } = props;
-  const {
-    employers: { claim, documents, downloadDocument },
+    employers: { claimDocumentsMap, downloadDocument },
   } = appLogic;
   const { isContinuous, isIntermittent, isReducedSchedule } = claim;
   const { t } = useTranslation();
 
-  useEffect(() => {
-    if (!documents) {
-      appLogic.employers.loadDocuments(absenceId);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [documents, absenceId]);
+  const absenceId = claim.fineos_absence_id;
 
-  const allDocuments = documents ? documents.items : [];
+  useEffect(() => {
+    appLogic.employers.loadDocuments(claim.fineos_absence_id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [absenceId]);
+
+  const allDocuments = claimDocumentsMap.get(absenceId)?.items || [];
   const legalNotices = findDocumentsByTypes(allDocuments, [
     DocumentType.approvalNotice,
     DocumentType.denialNotice,
@@ -97,12 +87,9 @@ export const Status = (props: StatusProps) => {
           ),
         })}
       </StatusRow>
-      {/* TODO (EMPLOYER-448): Show leave duration and the intermittent leave period dates when API returns them to Portal */}
-      {!isIntermittent && (
-        <StatusRow label={t("pages.employersClaimsStatus.leaveDurationLabel")}>
-          {formatDateRange(claim.leaveStartDate, claim.leaveEndDate)}
-        </StatusRow>
-      )}
+      <StatusRow label={t("pages.employersClaimsStatus.leaveDurationLabel")}>
+        {formatDateRange(claim.leaveStartDate, claim.leaveEndDate)}
+      </StatusRow>
       {isContinuous && (
         <StatusRow
           label={t("pages.employersClaimsStatus.leaveDurationLabel_continuous")}
@@ -115,6 +102,15 @@ export const Status = (props: StatusProps) => {
           label={t("pages.employersClaimsStatus.leaveDurationLabel_reduced")}
         >
           {claim.reducedLeaveDateRange()}
+        </StatusRow>
+      )}
+      {isIntermittent && (
+        <StatusRow
+          label={t(
+            "pages.employersClaimsStatus.leaveDurationLabel_intermittent"
+          )}
+        >
+          {claim.intermittentLeaveDateRange()}
         </StatusRow>
       )}
       {legalNotices.length > 0 && (
@@ -130,7 +126,7 @@ export const Status = (props: StatusProps) => {
               <li key={document.fineos_document_id} className="margin-bottom-2">
                 <DownloadableDocument
                   absenceId={absenceId}
-                  onDownloadClick={downloadDocument}
+                  downloadClaimDocument={downloadDocument}
                   document={document}
                   showCreatedAt
                 />

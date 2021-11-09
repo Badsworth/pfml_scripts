@@ -760,3 +760,35 @@ def dua_reduction_payment_unique_index(initialize_factories_session):
             )
         """
         )
+
+
+@pytest.fixture
+def sqlalchemy_query_counter():
+    class SQLAlchemyQueryCounter:
+        """
+        Check SQLAlchemy query count.
+        Usage:
+            with SQLAlchemyQueryCounter(session, expected_query_count=2):
+                conn.execute("SELECT 1")
+                conn.execute("SELECT 1")
+        """
+
+        def __init__(self, session, expected_query_count):
+            self.engine = session.get_bind()
+            self._query_count = expected_query_count
+            self.count = 0
+
+        def __enter__(self):
+            sqlalchemy.event.listen(self.engine, "after_execute", self._callback)
+            return self
+
+        def __exit__(self, *_):
+            sqlalchemy.event.remove(self.engine, "after_execute", self._callback)
+            assert self.count == self._query_count, (
+                "Executed: " + str(self.count) + " != Required: " + str(self._query_count)
+            )
+
+        def _callback(self, *_):
+            self.count += 1
+
+    return SQLAlchemyQueryCounter

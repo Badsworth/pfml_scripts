@@ -15,8 +15,8 @@ export default class UsersApi extends BaseApi {
    * Register a new user
    * @param requestData - Registration fields
    */
-  createUser = async (requestData: Record<string, unknown>) => {
-    const { data } = await this.request(
+  createUser = async (requestData: { [key: string]: unknown }) => {
+    const { data } = await this.request<User>(
       "POST",
       "",
       requestData,
@@ -33,7 +33,7 @@ export default class UsersApi extends BaseApi {
    * Get the currently authenticated user
    */
   getCurrentUser = async () => {
-    const { data } = await this.request<User>("GET", "current", null);
+    const { data } = await this.request<User>("GET", "current");
     const roles = this.createUserRoles(data.roles);
     const user_leave_administrators = this.createUserLeaveAdministrators(
       data.user_leave_administrators
@@ -44,7 +44,10 @@ export default class UsersApi extends BaseApi {
     });
   };
 
-  updateUser = async (user_id: string, patchData: Record<string, unknown>) => {
+  updateUser = async (
+    user_id: string,
+    patchData: { [key: string]: unknown }
+  ) => {
     const { data } = await this.request<User>("PATCH", user_id, patchData);
     const roles = this.createUserRoles(data.roles);
     const user_leave_administrators = this.createUserLeaveAdministrators(
@@ -87,13 +90,15 @@ export default class UsersApi extends BaseApi {
     };
   };
 
-  createUserLeaveAdministrators = (leaveAdmins: UserLeaveAdministrator[]) => {
-    return (leaveAdmins || []).map(
+  createUserLeaveAdministrators = (
+    leaveAdmins: UserLeaveAdministrator[] = []
+  ) => {
+    return leaveAdmins.map(
       (leaveAdmin) => new UserLeaveAdministrator(leaveAdmin)
     );
   };
 
-  createUserRoles = (roles: UserRole[]) => {
-    return (roles || []).map((role) => new UserRole(role));
+  createUserRoles = (roles: UserRole[] = []) => {
+    return roles.map((role) => new UserRole(role));
   };
 }

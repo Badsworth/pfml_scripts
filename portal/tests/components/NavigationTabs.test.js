@@ -47,4 +47,29 @@ describe("NavigationTabs", () => {
       screen.getByRole("link", { name: "Employer Organizations" })
     ).not.toHaveClass("border-primary", "text-primary");
   });
+
+  it("ignores queries in links given ignoreQueries prop", () => {
+    renderTabs({
+      ignoreQueries: true,
+      activePath: routes.applications.status.claim,
+      tabs: [
+        {
+          label: "Claim Detail",
+          href: `${routes.applications.status.claim}?absence_id=NTN-123-213-1234`,
+        },
+        {
+          label: "Payments",
+          href: `${routes.applications.status.payments}?absence_id=NTN-123-213-1234`,
+        },
+      ],
+    });
+    expect(screen.getAllByRole("link")).toHaveLength(2);
+    expect(
+      screen.getByRole("link", { name: "Claim Detail", current: "page" })
+    ).toHaveClass("border-primary", "text-primary");
+    expect(screen.getByRole("link", { name: "Payments" })).not.toHaveClass(
+      "border-primary",
+      "text-primary"
+    );
+  });
 });

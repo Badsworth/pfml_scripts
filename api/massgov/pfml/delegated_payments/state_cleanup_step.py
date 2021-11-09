@@ -92,15 +92,9 @@ class StateCleanupStep(Step):
         logger.info(
             "Beginning cleanup of payment state logs for payments in audit report pending states"
         )
-        try:
-            for audit_state in payments_util.Constants.REJECT_FILE_PENDING_STATES:
-                self._cleanup_state(audit_state)
-            self.db_session.commit()
-            logger.info(
-                "Completed cleanup of payment state logs for payments in audit report pending states"
-            )
-        except Exception:
-            self.db_session.rollback()
-            logger.exception("Error cleaning up audit report pending states")
-            # We do not want to run any subsequent steps if this fails
-            raise
+        for audit_state in payments_util.Constants.REJECT_FILE_PENDING_STATES:
+            self._cleanup_state(audit_state)
+        self.db_session.commit()
+        logger.info(
+            "Completed cleanup of payment state logs for payments in audit report pending states"
+        )

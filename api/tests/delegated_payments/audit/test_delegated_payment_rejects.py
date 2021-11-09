@@ -127,7 +127,8 @@ def test_parse_payment_rejects_file_missing_columns(
         assert row.rejected_by_program_integrity is None
         assert row.skipped_by_program_integrity is None
         assert row.max_weekly_benefits_details is None
-        assert row.dua_dia_reduction_details is None
+        assert row.dua_additional_income_details is None
+        assert row.dia_additional_income_details is None
         assert row.dor_fineos_name_mismatch_details is None
 
 
@@ -645,7 +646,7 @@ def test_process_rejects_error(
         PaymentRejectsException,
         match=f"Too many Payment Rejects files found: {rejects_file_name_1}, {rejects_file_name_2}",
     ):
-        payment_rejects_step.process_rejects()
+        payment_rejects_step.run()
 
     # check rejects file was moved to processed folder
     expected_errored_folder_path = os.path.join(

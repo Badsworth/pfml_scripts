@@ -2,7 +2,6 @@ import Claim, { AbsenceCaseStatus } from "../models/Claim";
 import BaseApi from "./BaseApi";
 import ClaimCollection from "../models/ClaimCollection";
 import ClaimDetail from "../models/ClaimDetail";
-import PaginationMeta from "../models/PaginationMeta";
 import routes from "../routes";
 
 export default class ClaimsApi extends BaseApi {
@@ -36,7 +35,6 @@ export default class ClaimsApi extends BaseApi {
     const filterParams = { ...filters };
 
     if (
-      filters &&
       filters.claim_status &&
       filters.claim_status.includes(AbsenceCaseStatus.closed)
     ) {
@@ -46,11 +44,11 @@ export default class ClaimsApi extends BaseApi {
     // We want to avoid exposing "Fineos" terminology in user-facing interactions,
     // so we support just "absence_status" everywhere we set order_by (like the user's
     // URL query string).
-    if (order && order.order_by && order.order_by === "absence_status") {
+    if (order.order_by && order.order_by === "absence_status") {
       orderParams.order_by = "fineos_absence_status";
     }
 
-    const { data, meta } = await this.request<Claim[]>("GET", null, {
+    const { data, meta } = await this.request<Claim[]>("GET", undefined, {
       page_offset: pageOffset,
       ...orderParams,
       ...filterParams,
@@ -60,7 +58,7 @@ export default class ClaimsApi extends BaseApi {
 
     return {
       claims: new ClaimCollection(claims),
-      paginationMeta: meta ? new PaginationMeta(meta.paging) : null,
+      paginationMeta: meta?.paging ?? {},
     };
   };
 

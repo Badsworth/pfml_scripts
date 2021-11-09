@@ -6,6 +6,8 @@ import React from "react";
 import StateDropdown from "./StateDropdown";
 import { useTranslation } from "../locales/i18n";
 
+type AddressFieldNames = "city" | "line_1" | "line_2" | "state" | "zip";
+
 interface FieldsetAddressProps {
   /**
    * Error messages which may apply to one of the address fields
@@ -32,7 +34,7 @@ interface FieldsetAddressProps {
    * Called when any of the fields' value changes. The event `target` will
    * include the formatted ISO 8601 date as its `value`
    */
-  onChange: (...args: any[]) => any;
+  onChange: React.ChangeEventHandler<HTMLSelectElement | HTMLInputElement>;
   /**
    * Whether or not to use a small label. Default is false.
    */
@@ -40,7 +42,7 @@ interface FieldsetAddressProps {
   /**
    * The address value as an object
    */
-  value: Record<"city" | "line_1" | "line_2" | "state" | "zip", string>;
+  value: { [key in AddressFieldNames]: string | null };
 }
 
 /**

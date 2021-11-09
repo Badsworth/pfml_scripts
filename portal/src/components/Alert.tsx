@@ -1,6 +1,7 @@
 import Heading from "./Heading";
 import React from "react";
 import classnames from "classnames";
+import isBlank from "../utils/isBlank";
 
 interface AlertProps {
   className?: string;
@@ -26,7 +27,7 @@ interface AlertProps {
  *
  * [USWDS Reference ↗](https://designsystem.digital.gov/components/alert/)
  */
-const Alert = React.forwardRef<any, AlertProps>(
+const Alert = React.forwardRef<HTMLDivElement, AlertProps>(
   (
     {
       headingLevel = "2",
@@ -48,10 +49,9 @@ const Alert = React.forwardRef<any, AlertProps>(
     );
 
     return (
-      // @ts-expect-error ts-migrate(2322) FIXME: Type 'string' is not assignable to type 'number'.
-      <div className={classes} role={role} ref={ref} tabIndex="-1">
+      <div className={classes} role={role} ref={ref} tabIndex={-1}>
         <div className="usa-alert__body">
-          {props.heading && (
+          {!isBlank(props.heading) && (
             <Heading
               level={headingLevel}
               className="usa-alert__heading"

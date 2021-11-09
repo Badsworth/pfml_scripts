@@ -81,6 +81,14 @@ read_employer_response_schema = xmlschema.XMLSchema(
     os.path.join(os.path.dirname(__file__), "wscomposer", "ReadEmployer.Response.xsd")
 )
 
+update_tax_withholding_pref_request_schema = xmlschema.XMLSchema(
+    os.path.join(os.path.dirname(__file__), "wscomposer", "OptInSITFITService.Request.xsd")
+)
+
+update_tax_withholding_pref_response_schema = xmlschema.XMLSchema(
+    os.path.join(os.path.dirname(__file__), "wscomposer", "OptInSITFITService.Response.xsd")
+)
+
 
 class FINEOSClient(client.AbstractFINEOSClient):
     """FINEOS API client."""
@@ -276,12 +284,13 @@ class FINEOSClient(client.AbstractFINEOSClient):
                     method_name=method_name,
                 )
                 log_fn = logger.warning
-            elif response.status_code in (
-                requests.codes.UNPROCESSABLE_ENTITY,
-                requests.codes.NOT_FOUND,
-            ):
-                # Ideally we'd raise exceptions that distinguish between 404/422 but we'll leave that for another time.
-                err = exception.FINEOSClientBadResponse(
+            elif response.status_code == requests.codes.UNPROCESSABLE_ENTITY:
+                err = exception.FINEOSUnprocessableEntity(
+                    method_name, requests.codes.ok, response.status_code, message=response.text,
+                )
+                log_fn = logger.warning
+            elif response.status_code == requests.codes.NOT_FOUND:
+                err = exception.FINEOSNotFound(
                     method_name, requests.codes.ok, response.status_code, message=response.text,
                 )
                 log_fn = logger.warning
@@ -384,7 +393,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         Raises
         ------
-        FINEOSNotFound
+        FINEOSEntityNotFound
             If no employer exists in FINEOS that matches the given FEIN.
         """
         response = self._wscomposer_request(
@@ -393,7 +402,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
         response_decoded = read_employer_response_schema.decode(response.text)
 
         if "OCOrganisation" not in response_decoded:
-            raise exception.FINEOSNotFound("Employer not found.")
+            raise exception.FINEOSEntityNotFound("Employer not found.")
 
         return models.OCOrganisation.parse_obj(response_decoded)
 
@@ -402,7 +411,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         Raises
         ------
-        FINEOSNotFound
+        FINEOSEntityNotFound
             If no employer exists in FINEOS that matches the given FEIN.
         """
         employer_response = self.read_employer(employer_fein)
@@ -415,7 +424,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
 
         Raises
         ------
-        FINEOSNotFound
+        FINEOSEntityNotFound
             If no employee-employer combination exists in FINEOS
             that matches the given SSN + employer FEIN.
         """
@@ -439,7 +448,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
                 "The employee does not have an occupation linked" in err.message  # noqa: B306
                 or "No Employee Details" in err.message  # noqa: B306
             ):
-                raise exception.FINEOSNotFound(err.message)  # noqa: B306
+                raise exception.FINEOSEntityNotFound(err.message)  # noqa: B306
 
             # If not an expected error, bubble it up.
             raise
@@ -901,7 +910,7 @@ class FINEOSClient(client.AbstractFINEOSClient):
             return models.customer_api.Document.parse_obj(
                 fineos_document_empty_dates_to_none(response_json)
             )
-        except exception.FINEOSClientBadResponse as err:
+        except exception.FINEOSUnprocessableEntity as err:
             # Log any unexpected upload failures, even if we always
             # return a BadRequest to the user.
             log_validation_error(err, EXPECTED_DOCUMENT_UPLOAD_FAILURES)
@@ -1414,6 +1423,60 @@ class FINEOSClient(client.AbstractFINEOSClient):
         xml_element = service_agreement_service_request_schema.encode(payload_as_dict)
 
         return xml.etree.ElementTree.tostring(xml_element, encoding="unicode", xml_declaration=True)
+
+    @staticmethod
+    def _create_tax_preference_payload(absence_id, tax_preference):
+
+        additional_data_set = models.AdditionalDataSet()
+
+        additional_data_set.additional_data.append(
+            models.AdditionalData(name="AbsenceCaseNumber", value=str(absence_id))
+        )
+        additional_data_set.additional_data.append(
+            models.AdditionalData(name="FlagValue", value=bool(tax_preference))
+        )
+
+        tax_data = models.TaxWithholdingUpdateData()
+        tax_data.additional_data_set = additional_data_set
+
+        service_request = models.TaxWithholdingUpdateRequest()
+        service_request.update_data = tax_data
+
+        payload = service_request.dict(by_alias=True)
+        xml_element = update_tax_withholding_pref_request_schema.encode(payload)
+        return xml.etree.ElementTree.tostring(xml_element, encoding="unicode", xml_declaration=True)
+
+    @staticmethod
+    def _handle_service_err(response_decoded, absence_id):
+        resp_data = response_decoded.get("additional-data-set").get("additional-data")
+        service_errors_obj = next(
+            (obj for obj in resp_data if obj["name"] == "ServiceErrors"), None
+        )
+        fineos_err = (
+            service_errors_obj["value"]
+            if service_errors_obj
+            else "Failed to retrieve FINEOS err msg"
+        )
+        logger.warning(
+            "FINEOS API responded with an error: {}".format(fineos_err),
+            extra={"absence_id": absence_id},
+        )
+        raise Exception(fineos_err)
+
+    def send_tax_withholding_preference(self, absence_id: str, tax_preference: bool) -> None:
+        """Update tax withholding preference in FINEOS."""
+        xml_body = self._create_tax_preference_payload(absence_id, tax_preference)
+
+        response = self._wscomposer_request(
+            "POST",
+            "webservice",
+            "send_tax_withholding_preference",
+            {"config": "OptInSITFITService"},
+            xml_body,
+        )
+        response_decoded = update_tax_withholding_pref_response_schema.decode(response.text)
+        if "ServiceErrors" in response_decoded:
+            self._handle_service_err(response_decoded, absence_id)
 
     def update_reflexive_questions(
         self,

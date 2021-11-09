@@ -16,11 +16,31 @@ import {
   postUsers,
   UserCreateRequest,
 } from "../api";
+import { ConfigFunction } from "../config";
 
 export default class AuthenticationManager {
   pool: CognitoUserPool;
   apiBaseUrl?: string;
   verificationFetcher?: TestMailVerificationFetcher;
+
+  /**
+   * Creates a new instance based on configuration.
+   *
+   * @param config
+   */
+  static create(config: ConfigFunction) {
+    return new AuthenticationManager(
+      new CognitoUserPool({
+        UserPoolId: config("COGNITO_POOL"),
+        ClientId: config("COGNITO_CLIENTID"),
+      }),
+      config("API_BASEURL"),
+      new TestMailVerificationFetcher(
+        config("TESTMAIL_APIKEY"),
+        config("TESTMAIL_NAMESPACE")
+      )
+    );
+  }
 
   constructor(
     pool: CognitoUserPool,
@@ -108,7 +128,7 @@ export default class AuthenticationManager {
       Username: username,
       Pool: this.pool,
     });
-    return new Promise(async (resolve, reject) => {
+    return new Promise((resolve, reject) => {
       cognitoUser.forgotPassword({
         onSuccess: () => console.log("Success was called"),
         onFailure: () => console.log("Failure was called"),

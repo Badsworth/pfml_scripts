@@ -59,7 +59,7 @@ describe("LeaveSchedule", () => {
     render(<LeaveSchedule claim={INTERMITTENT_CLAIM} />);
     expect(
       screen.getByRole("row", {
-        name: "Intermittent leave Contact us at (833) 344‑7365 for details about the leave schedule.",
+        name: "2/1/2021 to 7/1/2021 Intermittent leave Contact us at (833) 344‑7365 for details about the leave schedule.",
       })
     ).toBeInTheDocument();
   });

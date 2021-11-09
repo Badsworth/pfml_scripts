@@ -12,10 +12,13 @@ import { useTranslation } from "../../locales/i18n";
 interface EmployerBenefitsProps {
   addedBenefits: EmployerBenefit[];
   appErrors: AppErrorInfoCollection;
-  employerBenefits?: EmployerBenefit[];
-  onAdd: (...args: any[]) => any;
-  onChange: (...args: any[]) => any;
-  onRemove: (...args: any[]) => any;
+  employerBenefits: EmployerBenefit[];
+  onAdd: React.MouseEventHandler<HTMLButtonElement>;
+  onChange: (
+    arg: EmployerBenefit | { [key: string]: unknown },
+    arg2: string
+  ) => void;
+  onRemove: (arg: EmployerBenefit) => void;
   shouldShowV2: boolean;
 }
 

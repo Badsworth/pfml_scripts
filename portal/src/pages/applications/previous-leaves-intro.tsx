@@ -1,27 +1,24 @@
-import BenefitsApplication from "../../models/BenefitsApplication";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import Heading from "../../components/Heading";
 import IconHeading from "../../components/IconHeading";
-
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
 import formatDate from "../../utils/formatDate";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
-interface Props {
-  appLogic: any;
-  claim: BenefitsApplication;
-  query: any;
-}
-
-export const PreviousLeavesIntro = (props: Props) => {
+export const PreviousLeavesIntro = (props: WithBenefitsApplicationProps) => {
   const { t } = useTranslation();
-  const { appLogic, claim, query } = props;
+  const { appLogic, claim } = props;
   const startDate = formatDate(claim.leaveStartDate).full();
 
-  const handleSave = () => {
-    return appLogic.portalFlow.goToNextPage({ claim }, query);
+  const handleSave = async () => {
+    return await appLogic.portalFlow.goToNextPage(
+      { claim },
+      { claim_id: claim.application_id }
+    );
   };
 
   return (

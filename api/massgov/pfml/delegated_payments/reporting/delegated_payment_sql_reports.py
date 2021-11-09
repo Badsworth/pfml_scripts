@@ -21,6 +21,9 @@ class ReportName(str, Enum):
     PAYMENT_FULL_SNAPSHOT_RECONCILIATION_SUMMARY_REPORT = (
         "payment-full-snapshot-reconciliation-summary-report"
     )
+    PAYMENT_FULL_SNAPSHOT_RECONCILIATION_DETAIL_REPORT = (
+        "payment-full-snapshot-reconciliation-detail-report"
+    )
     PROCCESS_1099_DOCUMENT_REPORTS = "irs-1099-document-report"
 
 
@@ -43,7 +46,8 @@ CREATE_PUB_FILES_REPORTS: List[ReportName] = [
 ]
 PROCESS_PUB_RESPONSES_REPORTS: List[ReportName] = [ReportName.PUB_ERROR_REPORT]
 PROCESS_FINEOS_RECONCILIATION_REPORTS: List[ReportName] = [
-    ReportName.PAYMENT_FULL_SNAPSHOT_RECONCILIATION_SUMMARY_REPORT
+    ReportName.PAYMENT_FULL_SNAPSHOT_RECONCILIATION_SUMMARY_REPORT,
+    ReportName.PAYMENT_FULL_SNAPSHOT_RECONCILIATION_DETAIL_REPORT,
 ]
 
 
@@ -123,6 +127,12 @@ REPORTS: List[Report] = [
             ReportName.PAYMENT_FULL_SNAPSHOT_RECONCILIATION_SUMMARY_REPORT
         ),
         report_name=ReportName.PAYMENT_FULL_SNAPSHOT_RECONCILIATION_SUMMARY_REPORT,
+    ),
+    Report(
+        sql_command=_get_report_sql_command_from_file(
+            ReportName.PAYMENT_FULL_SNAPSHOT_RECONCILIATION_DETAIL_REPORT
+        ),
+        report_name=ReportName.PAYMENT_FULL_SNAPSHOT_RECONCILIATION_DETAIL_REPORT,
     ),
     Report(
         sql_command=_get_report_sql_command_from_file(ReportName.PROCCESS_1099_DOCUMENT_REPORTS),

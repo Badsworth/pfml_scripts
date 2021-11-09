@@ -1,25 +1,24 @@
 import { render, screen } from "@testing-library/react";
-import BenefitsApplicationDocument from "../../src/models/BenefitsApplicationDocument";
 import { DocumentType } from "../../src/models/Document";
 import LegalNoticeList from "../../src/components/LegalNoticeList";
 import React from "react";
 import userEvent from "@testing-library/user-event";
 
-const CERT_DOCUMENT = new BenefitsApplicationDocument({
+const CERT_DOCUMENT = {
   content_type: "image/png",
   created_at: "2020-04-05",
   document_type: DocumentType.certification.medicalCertification,
   fineos_document_id: "fineos-id-4",
   name: "Medical cert doc",
-});
+};
 
-const LEGAL_NOTICE = new BenefitsApplicationDocument({
+const LEGAL_NOTICE = {
   content_type: "image/png",
   created_at: "2020-04-05",
   document_type: DocumentType.approvalNotice,
   fineos_document_id: "fineos-id-4",
   name: "legal notice",
-});
+};
 
 function renderComponent(customProps = { documents: [] }) {
   const mockDownloadDocument = jest.fn();
@@ -46,7 +45,9 @@ describe("LegalNoticeList", () => {
   });
 
   it("calls download function on click", () => {
-    const onDownloadClick = jest.fn();
+    const onDownloadClick = jest.fn(() => {
+      return Promise.resolve();
+    });
 
     renderComponent({
       documents: [LEGAL_NOTICE],

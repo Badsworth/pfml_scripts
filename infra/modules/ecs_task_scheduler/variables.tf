@@ -34,8 +34,13 @@ variable "security_group_ids" {
   type        = list(any)
 }
 
-variable "schedule_expression" {
-  description = "Schedule to follow for running the task"
+variable "schedule_expression_standard" {
+  description = "Schedule to follow for running the task in standard time"
+  type        = string
+}
+
+variable "schedule_expression_daylight_savings" {
+  description = "Schedule to follow for running the task in daylight time"
   type        = string
 }
 

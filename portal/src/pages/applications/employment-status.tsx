@@ -1,10 +1,11 @@
-import BenefitsApplication, {
-  EmploymentStatus as EmploymentStatusEnum,
-} from "../../models/BenefitsApplication";
 import { get, pick } from "lodash";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import Alert from "../../components/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import Details from "../../components/Details";
+import { EmploymentStatus as EmploymentStatusEnum } from "../../models/BenefitsApplication";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
 import InputText from "../../components/InputText";
 import QuestionPage from "../../components/QuestionPage";
@@ -14,23 +15,19 @@ import { isFeatureEnabled } from "../../services/featureFlags";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.employment_status", "claim.employer_fein"];
 
-interface EmploymentStatusProps {
-  appLogic: any;
-  claim: BenefitsApplication;
-}
-
-export const EmploymentStatus = (props: EmploymentStatusProps) => {
+export const EmploymentStatus = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
   // TODO (CP-1281): Show employment status question when Portal supports other employment statuses
   const showEmploymentStatus = isFeatureEnabled("claimantShowEmploymentStatus");
 
-  const initialFormState = pick(props, fields).claim;
+  const initialFormState = pick(props, fields).claim || {
+    employment_status: undefined,
+  };
 
   if (!showEmploymentStatus) {
     // If the radio buttons are disabled, hard-code the field so that validations pass
@@ -49,6 +46,12 @@ export const EmploymentStatus = (props: EmploymentStatusProps) => {
     formState,
     updateFields,
   });
+
+  const choiceKeys: Array<keyof typeof EmploymentStatusEnum> = [
+    "employed",
+    "unemployed",
+    "selfEmployed",
+  ];
 
   return (
     <QuestionPage
@@ -72,7 +75,7 @@ export const EmploymentStatus = (props: EmploymentStatusProps) => {
       {showEmploymentStatus && (
         <InputChoiceGroup
           {...getFunctionalInputProps("employment_status")}
-          choices={["employed", "unemployed", "selfEmployed"].map((key) => ({
+          choices={choiceKeys.map((key) => ({
             checked: employment_status === EmploymentStatusEnum[key],
             label: t("pages.claimsEmploymentStatus.choiceLabel", {
               context: key,

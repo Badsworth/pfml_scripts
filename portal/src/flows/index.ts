@@ -23,4 +23,5 @@ export default {
     ...claimant.states,
     ...employer.states,
   },
+  context: {},
 };

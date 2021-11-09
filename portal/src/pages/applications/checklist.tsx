@@ -3,11 +3,15 @@ import BenefitsApplication, {
   ReasonQualifier,
 } from "../../models/BenefitsApplication";
 import StepModel, { ClaimSteps } from "../../models/Step";
-import { camelCase, filter, findIndex, get } from "lodash";
+import { camelCase, filter, findIndex, get, isBoolean } from "lodash";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import withClaimDocuments, {
+  WithClaimDocumentsProps,
+} from "../../hoc/withClaimDocuments";
 import Alert from "../../components/Alert";
-import { AppLogic } from "../../hooks/useAppLogic";
 import BackButton from "../../components/BackButton";
-import BenefitsApplicationDocument from "../../models/BenefitsApplicationDocument";
 import ButtonLink from "../../components/ButtonLink";
 import Details from "../../components/Details";
 import { DocumentType } from "../../models/Document";
@@ -24,22 +28,34 @@ import claimantConfig from "../../flows/claimant";
 import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
 import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
-import withClaimDocuments from "../../hoc/withClaimDocuments";
 
-interface ChecklistProps {
-  appLogic: AppLogic;
-  claim: BenefitsApplication;
-  documents?: BenefitsApplicationDocument[];
-  isLoadingDocuments?: boolean;
-  query?: {
+interface ChecklistProps
+  extends WithClaimDocumentsProps,
+    WithBenefitsApplicationProps {
+  query: {
     "part-one-submitted"?: string;
     "payment-pref-submitted"?: string;
+    "tax-pref-submitted"?: string;
   };
 }
+
+interface ChecklistAlertsProps {
+  submitted: "partOne" | "payment" | "taxPref";
+}
+
+export const ChecklistAlerts = ({ submitted }: ChecklistAlertsProps) => {
+  const { t } = useTranslation();
+
+  return (
+    <Alert className="margin-bottom-3" state="warning">
+      {t("pages.claimsChecklist.afterSubmissionAlert", { context: submitted })}
+    </Alert>
+  );
+};
 
 export const Checklist = (props: ChecklistProps) => {
   const { t } = useTranslation();
@@ -60,8 +76,8 @@ export const Checklist = (props: ChecklistProps) => {
     get(claim, "leave_details.reason")
   );
 
-  const partOneSubmitted = query["part-one-submitted"];
-  const paymentPrefSubmitted = query["payment-pref-submitted"];
+  // TODO(PORTAL-1001): - Remove Feature Flag
+  const taxWithholdingEnabled = isFeatureEnabled("claimantShowTaxWithholding");
   const warnings =
     appLogic.benefitsApplications.warningsLists[claim.application_id];
 
@@ -76,7 +92,12 @@ export const Checklist = (props: ChecklistProps) => {
       certificationDocuments,
     },
     warnings
-  );
+  ).filter((step) => {
+    if (!taxWithholdingEnabled) {
+      return step.name !== ClaimSteps.taxWithholding;
+    }
+    return step;
+  });
 
   /**
    * @type {boolean} Flag for determining whether to enable the submit button
@@ -184,11 +205,14 @@ export const Checklist = (props: ChecklistProps) => {
           key={step.name}
           number={getStepNumber(step)}
           title={t("pages.claimsChecklist.stepTitle", {
-            context: camelCase(step.name),
+            context:
+              taxWithholdingEnabled && step.name === ClaimSteps.payment
+                ? camelCase(step.name) + "_tax"
+                : camelCase(step.name),
           })}
           status={step.status}
           stepHref={stepHref}
-          editable={step.editable}
+          editable={!!step.editable}
           submittedContent={getStepSubmittedContent(step)}
         >
           <Trans
@@ -249,6 +273,10 @@ export const Checklist = (props: ChecklistProps) => {
       claim,
       "leave_details.has_future_child_date"
     );
+
+    if (stepName === ClaimSteps.payment && taxWithholdingEnabled) {
+      return "payment_tax";
+    }
     // TODO (CP-2101) rename context strings for clarity in en-US.js strings i.e. uploadMedicalCert, uploadCareCert
     if (stepName !== ClaimSteps.uploadCertification) {
       return camelCase(stepName);
@@ -275,7 +303,6 @@ export const Checklist = (props: ChecklistProps) => {
     if (hasFutureChildDate) {
       context += "Future";
     }
-
     return context;
   }
 
@@ -298,7 +325,8 @@ export const Checklist = (props: ChecklistProps) => {
 
     if (
       stepGroup.number === 2 &&
-      claim.has_submitted_payment_preference === true
+      (claim.has_submitted_payment_preference === true ||
+        isBoolean(claim.is_withholding_tax))
     ) {
       // Description for the second part changes after it's been submitted
       context += "_submitted";
@@ -324,43 +352,30 @@ export const Checklist = (props: ChecklistProps) => {
       />
     );
   }
-
   return (
     <div className="measure-6">
-      {partOneSubmitted && (
-        <Alert
-          className="margin-bottom-3"
-          heading={t("pages.claimsChecklist.partOneSubmittedHeading")}
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; head... Remove this comment to see the full error message
-          name="part-one-submitted-message"
-          state="success"
-        >
-          <Trans
-            i18nKey="pages.claimsChecklist.partOneSubmittedDescription"
-            components={{
-              "contact-center-phone-link": (
-                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-              ),
-            }}
-          />
-        </Alert>
-      )}
-      {paymentPrefSubmitted && (
-        <Alert
-          className="margin-bottom-3"
-          heading={t("pages.claimsChecklist.partTwoSubmittedHeading")}
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: TFunctionResult; className: stri... Remove this comment to see the full error message
-          name="part-two-submitted-message"
-          state="success"
-        >
-          {t("pages.claimsChecklist.partTwoSubmittedDescription")}
-        </Alert>
+      {(query["part-one-submitted"] ||
+        query["payment-pref-submitted"] ||
+        query["tax-pref-submitted"]) && (
+        <ChecklistAlerts
+          submitted={
+            query["part-one-submitted"]
+              ? "partOne"
+              : query["payment-pref-submitted"]
+              ? "payment"
+              : "taxPref"
+          }
+        />
       )}
       <BackButton
         label={t("pages.claimsChecklist.backButtonLabel")}
         href={routes.applications.index}
       />
-      <Title hidden>{t("pages.claimsChecklist.title")}</Title>
+
+      <div className="margin-bottom-5">
+        <Title>{t("pages.claimsChecklist.title")}</Title>
+        <p> {t("pages.claimsChecklist.titleBody")} </p>
+      </div>
 
       {stepGroups.map((stepGroup) => (
         <StepList
@@ -374,7 +389,10 @@ export const Checklist = (props: ChecklistProps) => {
                 })}
               </HeadingPrefix>
               {t("pages.claimsChecklist.stepListTitle", {
-                context: String(stepGroup.number),
+                context:
+                  taxWithholdingEnabled && stepGroup.number === 2
+                    ? `${String(stepGroup.number)}_tax`
+                    : String(stepGroup.number),
               })}
             </React.Fragment>
           }
@@ -398,7 +416,6 @@ export const Checklist = (props: ChecklistProps) => {
           )}
         </StepList>
       ))}
-
       <ButtonLink
         href={routeWithParams("applications.review", {
           claim_id: claim.application_id,

@@ -35,6 +35,20 @@ def split_fineos_absence_period_id(id: str) -> Tuple[int, int]:
     return int(period_ids[1]), int(period_ids[2])
 
 
+def split_fineos_leave_request_id(id: str, log_attributes: Dict) -> int:
+    period_ids = id.split("-")
+    if len(period_ids) != 3 or not period_ids[2].isdigit():
+        message = f"Invalid fineos leave request id format, leave request id: {id}"
+        logger.error(
+            message, extra={"fineos_leave_request_id": id, **log_attributes},
+        )
+        validation_error = ValidationErrorDetail(
+            message=message, type=IssueType.value_error, field="id/periodReference"
+        )
+        raise ValidationException(errors=[validation_error], message=message, data={})
+    return int(period_ids[2])
+
+
 def get_absence_period_by_claim_id_and_fineos_ids(
     db_session: Session, claim_id: UUID, class_id: int, index_id: int
 ) -> Optional[AbsencePeriod]:
@@ -60,7 +74,7 @@ def create_absence_period_from_fineos_id_and_claim_id(
 
 
 def parse_fineos_period_leave_request(
-    db_absence_period: AbsencePeriod, leave_request: LeaveRequest
+    db_absence_period: AbsencePeriod, leave_request: LeaveRequest, log_attributes: Dict
 ) -> AbsencePeriod:
     if leave_request.qualifier1:
         db_absence_period.absence_reason_qualifier_one_id = AbsenceReasonQualifierOne.get_id(
@@ -75,7 +89,9 @@ def parse_fineos_period_leave_request(
         leave_request.decisionStatus
     )
     if leave_request.id:
-        db_absence_period.fineos_leave_request_id = int(leave_request.id)
+        db_absence_period.fineos_leave_request_id = split_fineos_leave_request_id(
+            leave_request.id, log_attributes
+        )
     return db_absence_period
 
 
@@ -117,7 +133,7 @@ def upsert_absence_period_from_fineos_period(
     db_absence_period.absence_period_end_date = fineos_period.endDate
     db_absence_period.absence_period_type_id = AbsencePeriodType.get_id(fineos_period.type)
     db_absence_period = parse_fineos_period_leave_request(
-        db_absence_period, fineos_period.leaveRequest
+        db_absence_period, fineos_period.leaveRequest, log_attributes
     )
     db_session.add(db_absence_period)
     return

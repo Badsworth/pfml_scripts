@@ -432,7 +432,7 @@
               </xs:restriction>
             </xs:simpleType>
           </xs:element>
-	  <xs:element minOccurs="0" maxOccurs="1" name="organisationUnits" type="tns:organisationUnits_OCOrganisation_OrganisationUnit_List"/>
+          <xs:element name="organisationUnits" type="tns:organisationUnits_OCOrganisation_OrganisationUnit_List"/>
         </xs:sequence>
       </xs:extension>
     </xs:complexContent>

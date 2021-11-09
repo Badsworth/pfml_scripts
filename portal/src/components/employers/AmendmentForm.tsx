@@ -4,7 +4,7 @@ import classnames from "classnames";
 
 interface AmendmentFormProps {
   className?: string;
-  onDestroy: (...args: any[]) => any;
+  onDestroy: React.MouseEventHandler<HTMLButtonElement>;
   children: React.ReactNode;
   destroyButtonLabel: string;
 }

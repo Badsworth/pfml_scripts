@@ -61,9 +61,9 @@ from massgov.pfml.db.models.factories import (
 from massgov.pfml.fineos.client import AbstractFINEOSClient
 from massgov.pfml.fineos.exception import (
     FINEOSClientError,
+    FINEOSEntityNotFound,
     FINEOSFatalResponseError,
     FINEOSFatalUnavailable,
-    FINEOSNotFound,
 )
 from massgov.pfml.fineos.factory import FINEOSClientConfig
 from massgov.pfml.util.paginate.paginator import DEFAULT_PAGE_SIZE
@@ -3213,7 +3213,7 @@ def create_mock_client(err: FINEOSClientError):
         (
             400,
             IssueType.fineos_case_creation_issues,
-            FINEOSNotFound(
+            FINEOSEntityNotFound(
                 "<ErrorDetails><faultcode>com.fineos.common.portalinfrastructure.exceptions.GenericUncheckedException</faultcode><faultstring>The employee does not have an occupation linked.</faultstring><detail></detail></ErrorDetails>"
             ),
         ),

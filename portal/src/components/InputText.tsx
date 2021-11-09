@@ -2,6 +2,7 @@ import FormLabel from "./FormLabel";
 import Mask from "./Mask";
 import React from "react";
 import classnames from "classnames";
+import isBlank from "../utils/isBlank";
 import usePiiHandlers from "../hooks/usePiiHandlers";
 import useUniqueId from "../hooks/useUniqueId";
 
@@ -43,7 +44,7 @@ interface InputTextProps {
   /**
    * Add a `ref` to the input element
    */
-  inputRef?: any;
+  inputRef?: React.MutableRefObject<HTMLInputElement | null>;
   /**
    * Localized field label
    */
@@ -67,7 +68,7 @@ interface InputTextProps {
   /**
    * HTML input `maxlength` attribute
    */
-  maxLength?: any;
+  maxLength?: number;
   /**
    * HTML input `name` attribute
    */
@@ -85,6 +86,8 @@ interface InputTextProps {
   smallLabel?: boolean;
   /**
    * HTML input `type` attribute. Defaults to "text".
+   * Usage of type="number" is not allowed, see:
+   * https://css-tricks.com/you-probably-dont-need-input-typenumber/
    */
   type?: "email" | "password" | "tel" | "text";
   /**
@@ -116,16 +119,7 @@ function InputText({ type = "text", ...props }: InputTextProps) {
   let inputId = useUniqueId("InputText");
   inputId = props.inputId || inputId;
 
-  const hasError = !!props.errorMsg;
-  let inputMode = props.inputMode;
-
-  // @ts-expect-error ts-migrate(2367) FIXME: This condition will always return 'false' since th... Remove this comment to see the full error message
-  if (type === "number") {
-    // Prevent usage of type="number"
-    // See: https://css-tricks.com/you-probably-dont-need-input-typenumber/
-    type = "text";
-    inputMode = "numeric";
-  }
+  const hasError = !isBlank(props.errorMsg);
 
   const fieldClasses = classnames("usa-input", props.inputClassName, {
     "usa-input--error": hasError,
@@ -140,8 +134,13 @@ function InputText({ type = "text", ...props }: InputTextProps) {
     }
   );
 
-  // @ts-expect-error ts(2345) - hopefully fixed once this component's props are typed using an interface
-  const { handleFocus, handleBlur } = usePiiHandlers(props);
+  const { handleFocus, handleBlur } = usePiiHandlers({
+    name: props.name,
+    value: props.value,
+    onChange: props.onChange,
+    onBlur: props.onBlur,
+    onFocus: props.onFocus,
+  });
 
   const field = (
     <input
@@ -150,7 +149,7 @@ function InputText({ type = "text", ...props }: InputTextProps) {
       className={fieldClasses}
       data-value-type={props.valueType}
       id={inputId}
-      inputMode={inputMode}
+      inputMode={props.inputMode}
       maxLength={props.maxLength}
       name={props.name}
       onBlur={props.pii ? handleBlur : props.onBlur}
@@ -162,7 +161,7 @@ function InputText({ type = "text", ...props }: InputTextProps) {
     />
   );
 
-  const fieldAndMask = (field) => {
+  const fieldAndMask = (field: React.ReactElement) => {
     return props.mask ? <Mask mask={props.mask}>{field}</Mask> : field;
   };
 

@@ -1,13 +1,15 @@
 import {
+  BenefitsApplicationDocument,
+  DocumentTypeEnum,
+} from "../models/Document";
+import {
   DocumentsLoadError,
   DocumentsUploadError,
   ValidationError,
 } from "../errors";
 import { useMemo, useState } from "react";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
-import BenefitsApplicationDocument from "../models/BenefitsApplicationDocument";
 import DocumentCollection from "../models/DocumentCollection";
-import { DocumentTypeEnum } from "../models/Document";
 import DocumentsApi from "../api/DocumentsApi";
 import TempFile from "../models/TempFile";
 import assert from "assert";
@@ -36,7 +38,9 @@ const useDocumentsLogic = ({
   } = useCollectionState(new DocumentCollection());
 
   const documentsApi = useMemo(() => new DocumentsApi(), []);
-  const [loadedApplicationDocs, setLoadedApplicationDocs] = useState([]);
+  const [loadedApplicationDocs, setLoadedApplicationDocs] = useState<string[]>(
+    []
+  );
 
   /**
    * Check if docs for this application have been loaded
@@ -105,7 +109,7 @@ const useDocumentsLogic = ({
           "documents"
         )
       );
-      return;
+      return [];
     }
 
     const uploadPromises = filesWithUniqueId.map(async (fileWithUniqueId) => {
@@ -123,7 +127,9 @@ const useDocumentsLogic = ({
           new DocumentsUploadError(
             application_id,
             fileWithUniqueId.id,
-            error.issues ? error.issues[0] : null
+            error instanceof ValidationError && error.issues.length
+              ? error.issues[0]
+              : null
           )
         );
         return { success: false };

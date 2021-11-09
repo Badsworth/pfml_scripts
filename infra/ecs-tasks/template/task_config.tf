@@ -79,14 +79,27 @@ locals {
     { name : "PFML_PAYMENT_REJECTS_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/audit" }
   ]
 
-  # Moveit and S3 path configurations for reductions
+  # MOVEit and S3 path configurations for reductions
+  #
+  # These environment variables are from the perspective of the API system,
+  # namely:
+  # "inbound" = "where does API look for files coming from DIA/DUA"
+  # "outbound" = "where does API put files to send to DIA/DUA"
+  #
+  # The actual paths in MOVEit may not always correspond to the API perspective.
+  #
+  # *Notably, the DUA paths in MOVEit are reversed from the API point of view.*
+  #
+  # The paths may be made consistent in the future:
+  # https://lwd.atlassian.net/browse/API-1626
   reductions_folders = [
     { name : "MOVEIT_DIA_INBOUND_PATH", value : "/DFML/DIA/Inbound" },
     { name : "MOVEIT_DUA_INBOUND_PATH", value : "/DFML/DUA/Outbound" },
     { name : "MOVEIT_DIA_OUTBOUND_PATH", value : "/DFML/DIA/Outbound" },
     { name : "MOVEIT_DUA_OUTBOUND_PATH", value : "/DFML/DUA/Inbound" },
+    { name : "MOVEIT_DIA_ARCHIVE_PATH", value : "/DFML/DIA/Archive" },
+    { name : "MOVEIT_DUA_ARCHIVE_PATH", value : "/DFML/DUA/Archive" },
     { name : "S3_BUCKET", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/" }
-
   ]
 
   # Basic configuration for sender email

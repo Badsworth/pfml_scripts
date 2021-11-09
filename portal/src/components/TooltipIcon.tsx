@@ -4,13 +4,16 @@ import Icon from "./Icon";
 // Only load USWDS tooltip JS on client-side since it
 // references `window`, which isn't available during
 // the Node.js-based build process ("server-side")
-let tooltip = null;
+let tooltip: {
+  on: () => void;
+  off: () => void;
+} | null = null;
 if (typeof window !== "undefined") {
   tooltip = require("uswds/src/js/components/tooltip");
 }
 
 interface TooltipIconProps {
-  children: any;
+  children: string;
   position?: "top" | "bottom" | "left" | "right";
 }
 
@@ -18,13 +21,11 @@ const TooltipIcon = (props: TooltipIconProps) => {
   const position = props.position;
 
   useEffect(() => {
-    if (tooltip) {
-      tooltip.on();
+    if (tooltip) tooltip.on();
 
-      return () => {
-        tooltip.off();
-      };
-    }
+    return () => {
+      if (tooltip) tooltip.off();
+    };
   });
 
   return (

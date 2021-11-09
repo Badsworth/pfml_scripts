@@ -2,6 +2,7 @@ import BaseApi, { ApiMethod, ApiRequestBody } from "./BaseApi";
 import BenefitsApplication from "../models/BenefitsApplication";
 import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
 import PaymentPreference from "../models/PaymentPreference";
+import TaxWithholdingPreference from "../models/TaxWithholdingPreference";
 import routes from "../routes";
 
 export default class BenefitsApplicationsApi extends BaseApi {
@@ -45,7 +46,10 @@ export default class BenefitsApplicationsApi extends BaseApi {
   }
 
   getClaim = async (application_id: string) => {
-    const { data, warnings } = await this.request("GET", application_id);
+    const { data, warnings } = await this.request<BenefitsApplication>(
+      "GET",
+      application_id
+    );
 
     return {
       claim: new BenefitsApplication(data),
@@ -71,7 +75,7 @@ export default class BenefitsApplicationsApi extends BaseApi {
    * for intake to be marked as complete in the claims processing system.
    */
   completeClaim = async (application_id: string) => {
-    const { data } = await this.request(
+    const { data } = await this.request<BenefitsApplication>(
       "POST",
       `${application_id}/complete_application`
     );
@@ -82,7 +86,7 @@ export default class BenefitsApplicationsApi extends BaseApi {
   };
 
   createClaim = async () => {
-    const { data } = await this.request("POST");
+    const { data } = await this.request<BenefitsApplication>("POST");
 
     return {
       claim: new BenefitsApplication(data),
@@ -93,7 +97,7 @@ export default class BenefitsApplicationsApi extends BaseApi {
     application_id: string,
     patchData: Partial<BenefitsApplication>
   ) => {
-    const { data, warnings } = await this.request(
+    const { data, warnings } = await this.request<BenefitsApplication>(
       "PATCH",
       application_id,
       patchData
@@ -110,7 +114,7 @@ export default class BenefitsApplicationsApi extends BaseApi {
    * to be submitted to the claims processing system.
    */
   submitClaim = async (application_id: string) => {
-    const { data } = await this.request(
+    const { data } = await this.request<BenefitsApplication>(
       "POST",
       `${application_id}/submit_application`
     );
@@ -124,10 +128,26 @@ export default class BenefitsApplicationsApi extends BaseApi {
     application_id: string,
     paymentPreferenceData: Partial<PaymentPreference>
   ) => {
-    const { data, warnings } = await this.request(
+    const { data, warnings } = await this.request<BenefitsApplication>(
       "POST",
       `${application_id}/submit_payment_preference`,
       paymentPreferenceData
+    );
+
+    return {
+      claim: new BenefitsApplication(data),
+      warnings,
+    };
+  };
+
+  submitTaxWithholdingPreference = async (
+    application_id: string,
+    preferenceData: Partial<TaxWithholdingPreference>
+  ) => {
+    const { data, warnings } = await this.request<BenefitsApplication>(
+      "POST",
+      `${application_id}/submit_tax_withholding_preference`,
+      preferenceData
     );
 
     return {

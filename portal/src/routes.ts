@@ -58,10 +58,14 @@ const routes = {
     ssn: "/applications/ssn",
     start: "/applications/start",
     stateId: "/applications/state-id",
+    status: {
+      claim: "/applications/status",
+      payments: "/applications/status/payments",
+    },
     // Note that this route is used by the back-end when generating notification emails for
     // the claimant (see notifications.py). Changes here will need to be coordinated with the back-end.
-    status: "/applications/status",
     success: "/applications/success",
+    taxWithholding: "/applications/tax-withholding",
     // For routes that don't have a page to point to yet, we can route them
     // to a placeholder page. This allows us to search our code for routes.applications.todo,
     // which is less confusing than seeing routes.applications.checklist
@@ -182,6 +186,8 @@ const routes = {
         "https://www.mass.gov/how-to/appealing-a-denied-paid-family-or-medical-leave-claim",
       schedulingLeaveGuide:
         "https://www.mass.gov/info-details/intermittent-and-reduced-leave-schedules",
+      taxGuide:
+        "https://www.mass.gov/service-details/find-a-tax-professional-to-help-with-your-taxes",
       taxLiability: "https://www.mass.gov/pfml-tax-liability",
       timeline:
         "https://www.mass.gov/info-details/paid-family-and-medical-leave-pfml-application-approval-timeline",
@@ -205,26 +211,23 @@ const routes = {
 };
 
 /**
- * @param {string} url - path, with or without query param
- * @returns {boolean}
+ * @param url - path, with or without query param
  */
-export const isEmployersRoute = (url) => {
+export const isEmployersRoute = (url: string) => {
   return Object.values(routes.employers).includes(getRouteFromUrl(url));
 };
 
 /**
- * @param {string} url - path, with or without query param
- * @returns {boolean}
+ * @param url - path, with or without query param
  */
-export const isApplicationsRoute = (url) => {
+export const isApplicationsRoute = (url: string) => {
   return Object.values(routes.applications).includes(getRouteFromUrl(url));
 };
 
 /**
- * @param {string} url - path, with or without query param
- * @returns {string}
+ * @param url - path, with or without query param
  */
-const getRouteFromUrl = (url) => {
+const getRouteFromUrl = (url: string) => {
   let route = url;
   const queryStringIndex = route.indexOf("?");
 

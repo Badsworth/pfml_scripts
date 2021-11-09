@@ -8,7 +8,7 @@ interface AuthNavProps {
   user?: {
     email_address?: string;
   };
-  onLogout: (...args: any[]) => any;
+  onLogout: React.MouseEventHandler<HTMLButtonElement>;
 }
 
 /**

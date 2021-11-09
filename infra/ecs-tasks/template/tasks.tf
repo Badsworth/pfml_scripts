@@ -140,6 +140,16 @@ locals {
       ]
     },
 
+    "register-leave-admins-with-fineos" = {
+      command   = ["register-leave-admins-with-fineos"]
+      task_role = aws_iam_role.register_admins_task_role.arn,
+      cpu       = 4096,
+      memory    = 18432,
+      env = [
+        local.db_access,
+        local.fineos_api_access
+      ]
+    }
 
     "load-employers-to-fineos" = {
       command = ["load-employers-to-fineos"]
@@ -204,13 +214,13 @@ locals {
         local.db_access,
         local.fineos_api_access,
         local.fineos_s3_access,
-        { "name" : "OUTPUT_DIRECTORY_PATH", "value" : "${var.fineos_eligibility_feed_output_directory_path}" }
+        { "name" : "OUTPUT_DIRECTORY_PATH", "value" : var.fineos_eligibility_feed_output_directory_path }
       ]
     }
 
     "pub-payments-process-fineos" = {
       command   = ["pub-payments-process-fineos"]
-      task_role = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-fineos"
+      task_role = aws_iam_role.pub_payments_process_fineos_task_role.arn
       cpu       = 2048
       memory    = 16384
       env = [
@@ -226,14 +236,24 @@ locals {
 
     "pub-payments-process-snapshot" = {
       command   = ["pub-payments-process-snapshot"]
-      task_role = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-snapshot"
+      task_role = aws_iam_role.pub_payments_process_fineos_task_role.arn
       cpu       = 2048
       memory    = 16384
       env = [
         local.db_access,
         local.fineos_s3_access,
         local.pub_s3_folders,
-        { name : "FINEOS_PAYMENT_RECONCILIATION_EXTRACT_MAX_HISTORY_DATE", value : "2021-10-01" }
+        { name : "FINEOS_PAYMENT_RECONCILIATION_EXTRACT_MAX_HISTORY_DATE", value : "2021-10-26" }
+      ]
+    },
+
+    "pub-payments-process-1099-documents" = {
+      command   = ["pub-payments-process-1099-documents"]
+      task_role = "arn:aws:iam::498823821309:role/${local.app_name}-${var.environment_name}-ecs-tasks-pub-payments-process-1099"
+      env = [
+        local.db_access,
+        local.fineos_s3_access,
+        local.pub_s3_folders
       ]
     },
 
@@ -282,6 +302,43 @@ locals {
         { name : "S3_EXPORT_BUCKET", value : "s3://massgov-pfml-${var.environment_name}-execute-sql-export" }
       ]
     },
+
+    "dua-generate-and-send-employee-request-file" = {
+      command   = ["dua-generate-and-send-employee-request-file"]
+      task_role = aws_iam_role.dua_employee_workflow_task_role.arn
+      execution_role = aws_iam_role.dua_employee_workflow_execution_role.arn
+      cpu       = 2048,
+      memory    = 4096,
+      env = [
+        local.db_access,
+        local.eolwd_moveit_access,
+        local.reductions_folders
+      ]
+    }
+
+    "dua-backfill-employee-gender" = {
+      command   = ["dua-backfill-employee-gender"]
+      task_role = aws_iam_role.dua_employee_workflow_task_role.arn
+      execution_role = aws_iam_role.dua_employee_workflow_execution_role.arn
+      cpu       = 2048,
+      memory    = 4096,
+      env = [
+        local.db_access
+      ]
+    }
+
+    "dua-import-employee-demographics" = {
+      command   = ["dua-import-employee-demographics"]
+      task_role = aws_iam_role.dua_employee_workflow_task_role.arn
+      execution_role = aws_iam_role.dua_employee_workflow_execution_role.arn
+      cpu       = 2048,
+      memory    = 4096,
+      env = [
+        local.db_access,
+        local.eolwd_moveit_access,
+        local.reductions_folders
+      ]
+    }
 
     "report-sequential-employment" = {
       command   = ["report-sequential-employment"]

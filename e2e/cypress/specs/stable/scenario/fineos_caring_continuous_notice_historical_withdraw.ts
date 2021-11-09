@@ -7,20 +7,31 @@ describe("Create a new caring leave claim in FINEOS and add Historical Absence c
     portal.deleteDownloadsFolder();
   });
 
-  it("Create historical absence case within Absence Case", () => {
-    fineos.before();
-    cy.task("generateClaim", "HIST_CASE").then((claim) => {
-      cy.task("submitClaimToAPI", claim).then((res) => {
-        cy.stash("claim", claim.claim);
-        cy.stash("submission", {
-          application_id: res.application_id,
-          fineos_absence_id: res.fineos_absence_id,
-          timestamp_from: Date.now(),
+  const historical =
+    it("Create historical absence case within Absence Case", () => {
+      fineos.before();
+      cy.task("generateClaim", "HIST_CASE").then((claim) => {
+        cy.task("submitClaimToAPI", claim).then((res) => {
+          cy.stash("claim", claim.claim);
+          cy.stash("submission", {
+            application_id: res.application_id,
+            fineos_absence_id: res.fineos_absence_id,
+            timestamp_from: Date.now(),
+          });
+          fineosPages.ClaimPage.visit(
+            res.fineos_absence_id
+          ).addHistoricalAbsenceCase();
         });
-        fineosPages.ClaimPage.visit(
-          res.fineos_absence_id
-        ).addHistoricalAbsenceCase();
       });
+    });
+
+  it("Check to see if the Suppress Correspondence is available in the Absence Case", () => {
+    cy.dependsOnPreviousPass([historical]);
+    fineos.before();
+    cy.unstash<Submission>("submission").then((submission) => {
+      fineosPages.ClaimPage.visit(submission.fineos_absence_id)
+        .suppressCorrespondence(true)
+        .removeSuppressCorrespondence();
     });
   });
 
@@ -40,21 +51,24 @@ describe("Create a new caring leave claim in FINEOS and add Historical Absence c
     });
 
   it("Produces a withdrawn notice, available for download", () => {
-    if (config("HAS_WITHDRAWN_NOTICE") === "true") {
-      cy.dependsOnPreviousPass([withdraw]);
-      portal.before();
-      cy.visit("/");
-      portal.loginClaimant();
-      cy.unstash<Submission>("submission").then((submission) => {
-        portal.claimantGoToClaimStatus(submission.fineos_absence_id);
-        portal.claimantAssertClaimStatus([
-          { leave: "Care for a Family Member", status: "Withdrawn" },
-        ]);
-        cy.findByText("Pending Application Withdrawn (PDF)")
-          .should("be.visible")
-          .click();
-        portal.downloadLegalNotice(submission.fineos_absence_id);
-      });
-    }
+    // Skip this part in stage. @todo remove once stage has withdraw statuses.
+    if (
+      config("ENVIRONMENT") === "stage" ||
+      config("ENVIRONMENT") === "breakfix"
+    )
+      return;
+    cy.dependsOnPreviousPass([withdraw]);
+    portal.before();
+    portal.loginClaimant();
+    cy.unstash<Submission>("submission").then((submission) => {
+      portal.claimantGoToClaimStatus(submission.fineos_absence_id);
+      portal.claimantAssertClaimStatus([
+        { leave: "Care for a Family Member", status: "Withdrawn" },
+      ]);
+      cy.findByText("Pending Application Withdrawn (PDF)")
+        .should("be.visible")
+        .click();
+      portal.downloadLegalNotice(submission.fineos_absence_id);
+    });
   });
 });

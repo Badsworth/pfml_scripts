@@ -98,4 +98,16 @@ describe("Submit caring application via the web portal: Adjudication Approval & 
       });
     });
   });
+
+  it("Check the Claimant profile to see if bulk payee is enabled under Payment Preferences", () => {
+    cy.dependsOnPreviousPass();
+    fineos.before();
+    cy.unstash<DehydratedClaim>("claim").then((claim) => {
+      assertValidClaim(claim.claim);
+      fineosPages.ClaimantPage.visit(claim.claim.tax_identifier)
+        .paymentPreferences()
+        .edit()
+        .checkBulkPayee(true);
+    });
+  });
 });

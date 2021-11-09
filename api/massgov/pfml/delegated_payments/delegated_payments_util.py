@@ -160,6 +160,14 @@ class Constants:
         ]
     )
 
+    PAYMENT_SENT_STATES = frozenset(
+        [
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
+        ]
+    )
+    PAYMENT_SENT_STATE_IDS = frozenset([state.state_id for state in PAYMENT_SENT_STATES])
+
 
 CANCELLED_OR_REPLACED_EXTRACT_FIELD_NAMES = [
     "C",
@@ -282,7 +290,7 @@ class FineosExtractConstants:
     )
 
     PAYMENT_FULL_SNAPSHOT = FineosExtract(
-        file_name="SOM_PEI_Fullextract.csv",
+        file_name="Automated-Adhoc-Extract-SOM_PEI_Fullextract.csv",
         table=FineosExtractPaymentFullSnapshot,
         field_names=[
             "C",
@@ -381,13 +389,13 @@ class FineosExtractConstants:
     )
 
     CANCELLED_PAYMENTS_EXTRACT = FineosExtract(
-        file_name="SOM_PEI_CancelledRecords.csv",
+        file_name="Automated-Adhoc-Extract-SOM_PEI_CancelledRecords.csv",
         table=FineosExtractCancelledPayments,
         field_names=CANCELLED_OR_REPLACED_EXTRACT_FIELD_NAMES,
     )
 
     REPLACED_PAYMENTS_EXTRACT = FineosExtract(
-        file_name="SOM_PEI_ReplacedRecords.csv",
+        file_name="Automated-Adhoc-Extract-SOM_PEI_ReplacedRecords.csv",
         table=FineosExtractReplacedPayments,
         field_names=CANCELLED_OR_REPLACED_EXTRACT_FIELD_NAMES,
     )

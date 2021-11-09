@@ -213,7 +213,7 @@ Our Terraform scripts enable Advanced Security. however at the time of writing, 
 
 ### Configure PFML credentials for FINEOS
 
-1. Create the FINEOS user the in PFML database.
+1. Create the FINEOS user in the PFML database. This depends on the cognito_fineos_app_client_id secret being configured in Parameter Store from step 2.2, as part of API setup.
 
    ```sh
    ./bin/run-ecs-task/run-task.sh NEW_ENV db-create-fineos-user FIRST_NAME.LAST_NAME
@@ -249,13 +249,15 @@ Verify the following details with FINEOS:
 
 ## Setting up Custom Domains
 
-If we expect FINEOS to call the PFML API, you'll need a custom mass.gov domain for the environment. Please f	ollow these steps:
+If we expect FINEOS to call the PFML API, you'll need a custom mass.gov domain for the environment. Please follow these steps:
 
 1. Request an ACM cert in the AWS Console > AWS Certificate Manager, with Email Verification. Example:
 
    |Domain Name|SANs|
    |---|---|
    |paidleave-performance.eol.mass.gov|paidleave-training.eol.mass.gov,<br>paidleave-api-training.eol.mass.gov,<br>paidleave-api-performance.eol.mass.gov|
+   
+   This requires an individual with cloudops/administrator permissions.
 
 2. Send an email to Vijay with the domain name/SANs, so he can request approval from Sarah Bourne / Chris Velluto / Bill Cole. Boilerplate:
 

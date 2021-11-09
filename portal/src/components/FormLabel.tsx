@@ -1,6 +1,7 @@
 import Hint from "./Hint";
 import React from "react";
 import classnames from "classnames";
+import isBlank from "../utils/isBlank";
 
 interface FormLabelProps {
   /**
@@ -58,9 +59,9 @@ function FormLabel({
   ...props
 }: FormLabelProps) {
   const LabelElement = component;
-  const errorMsgId = props.inputId ? props.inputId + "_error" : null;
-  const labelId = props.inputId ? `${props.inputId}_label` : null;
-  const hasError = !!props.errorMsg;
+  const errorMsgId = props.inputId ? props.inputId + "_error" : undefined;
+  const labelId = props.inputId ? `${props.inputId}_label` : undefined;
+  const hasError = !isBlank(props.errorMsg);
 
   const labelClasses = classnames(`usa-label ${labelClassName}`, {
     "usa-label--error": hasError,
@@ -76,17 +77,17 @@ function FormLabel({
     <React.Fragment>
       <LabelElement
         className={labelClasses}
-        htmlFor={component === "label" ? props.inputId : null}
+        htmlFor={component === "label" ? props.inputId : undefined}
         id={labelId}
       >
         {props.children}
-        {props.optionalText && (
+        {!isBlank(props.optionalText) && (
           <span className="usa-hint text-base-dark text-normal">
             {" " + props.optionalText}
           </span>
         )}
       </LabelElement>
-      {props.hint && (
+      {!isBlank(props.hint) && (
         <Hint inputId={props.inputId} small={small}>
           {props.hint}
         </Hint>

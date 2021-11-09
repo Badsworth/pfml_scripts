@@ -19,12 +19,7 @@ interface LeaveScheduleProps {
  */
 const LeaveSchedule = ({ hasDocuments, claim }: LeaveScheduleProps) => {
   const { t } = useTranslation();
-  const {
-    isContinuous,
-    isIntermittent,
-    isReducedSchedule,
-    leave_details: { intermittent_leave_periods },
-  } = claim;
+  const { isContinuous, isIntermittent, isReducedSchedule } = claim;
 
   const buildContext = () => {
     if (isIntermittent && hasDocuments) return "intermittentWithDocuments";
@@ -117,9 +112,10 @@ const LeaveSchedule = ({ hasDocuments, claim }: LeaveScheduleProps) => {
           )}
           {isIntermittent && (
             <IntermittentLeaveSchedule
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ intermittentLeavePeriods: IntermittentLeav... Remove this comment to see the full error message
-              intermittentLeavePeriods={intermittent_leave_periods}
               hasDocuments={hasDocuments}
+              intermittentLeavePeriods={
+                claim.leave_details.intermittent_leave_periods
+              }
             />
           )}
         </tbody>

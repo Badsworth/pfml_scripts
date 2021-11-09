@@ -17,7 +17,7 @@ import { Auth } from "@aws-amplify/auth";
 import tracker from "../services/tracker";
 
 export interface ApiResponseBody<TResponseData> {
-  data?: TResponseData;
+  data: TResponseData;
   errors?: Issue[];
   meta?: {
     resource: string;
@@ -38,7 +38,7 @@ export interface ApiResponseBody<TResponseData> {
   warnings?: Issue[];
 }
 export type ApiMethod = "DELETE" | "GET" | "PATCH" | "POST" | "PUT";
-export type ApiRequestBody = Record<string, unknown> | FormData;
+export type ApiRequestBody = { [key: string]: unknown } | FormData;
 
 /**
  * Class that implements the base interaction with API resources
@@ -61,13 +61,13 @@ export default abstract class BaseApi {
   async request<TResponseData>(
     method: ApiMethod,
     subPath = "",
-    body: ApiRequestBody | null = null,
+    body?: ApiRequestBody,
     additionalHeaders = {},
     { excludeAuthHeader = false, multipartForm = false } = {}
   ) {
     const url = createRequestUrl(method, this.basePath, subPath, body);
     const authHeader = excludeAuthHeader ? {} : await getAuthorizationHeader();
-    const headers = {
+    const headers: { [header: string]: string } = {
       ...authHeader,
       ...additionalHeaders,
     };
@@ -105,19 +105,19 @@ export default abstract class BaseApi {
       tracker.markFetchRequestEnd();
       responseBody = await response.json();
     } catch (error) {
-      handleError(error);
+      throw fetchErrorToNetworkError(error);
     }
 
     const { data, errors, meta, warnings } = responseBody;
     if (!response.ok) {
-      handleNotOkResponse(url, response, errors, this.i18nPrefix, data);
+      handleNotOkResponse(response, errors, this.i18nPrefix, data);
     }
 
     return {
       data,
       meta,
       // Guaranteeing warnings is always an array makes our code simpler
-      warnings: formatIssues(warnings) || [],
+      warnings: Array.isArray(warnings) ? formatIssues(warnings) : [],
     };
   }
 }
@@ -152,8 +152,14 @@ export function createRequestUrl(
 
   if (method === "GET" && body && !(body instanceof FormData)) {
     // Append query string to URL
-    // @ts-expect-error: Type 'Record<string, unknown>' is not assignable to type 'string'.ts(2345)
-    const params = new URLSearchParams(body).toString();
+    const searchBody: { [key: string]: string } = {};
+    Object.entries(body).forEach(([key, value]) => {
+      const stringValue =
+        typeof value === "string" ? value : JSON.stringify(value);
+      searchBody[key] = stringValue;
+    });
+
+    const params = new URLSearchParams(searchBody).toString();
     url = `${url}?${params}`;
   }
 
@@ -170,17 +176,15 @@ export async function getAuthorizationHeader() {
     return { Authorization: `Bearer ${jwtToken}` };
   } catch (error) {
     // Amplify returns a string for the error...
-    const message = typeof error === "string" ? error : error.message;
-    throw new AuthSessionMissingError(message);
+    const message = error instanceof Error ? error.message : error;
+    throw new AuthSessionMissingError(message as string);
   }
 }
 
 /**
  * Convert API error/warnings field paths into a field path format we use on the Portal
  */
-function formatIssues(issues?: Issue[]) {
-  if (!issues) return issues;
-
+function formatIssues(issues: Issue[]) {
   return issues.map((issue) => {
     if (!issue.field) return issue;
 
@@ -199,11 +203,11 @@ function formatIssues(issues?: Issue[]) {
 /**
  * Handle request errors
  */
-export function handleError(error: Error) {
+export function fetchErrorToNetworkError(error: unknown) {
   // Request failed to send or something failed while parsing the response
   // Log the JS error to support troubleshooting
   console.error(error);
-  throw new NetworkError(error.message);
+  return new NetworkError(error instanceof Error ? error.message : "");
 }
 
 /**
@@ -215,11 +219,10 @@ export function handleError(error: Error) {
  * @param data
  */
 export function handleNotOkResponse(
-  url: string,
   response: Response,
   errors: Issue[] = [],
   i18nPrefix: string,
-  data: unknown
+  data?: unknown
 ) {
   if (isEmpty(errors)) {
     // Response didn't include any errors that we could use to

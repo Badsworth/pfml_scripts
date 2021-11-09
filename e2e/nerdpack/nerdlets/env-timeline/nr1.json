@@ -1,0 +1,6 @@
+{
+  "schemaType": "NERDLET",
+  "id": "env-timeline",
+  "displayName": "EnvTimeline",
+  "description": "Displays timeline events for a given environment/component."
+}

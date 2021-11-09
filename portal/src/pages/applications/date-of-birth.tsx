@@ -1,3 +1,6 @@
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import InputDate from "../../components/InputDate";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
@@ -5,19 +8,10 @@ import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.date_of_birth"];
 
-interface DateOfBirthProps {
-  appLogic: any;
-  claim: any;
-  query?: {
-    claim_id?: string;
-  };
-}
-
-export const DateOfBirth = (props: DateOfBirthProps) => {
+export const DateOfBirth = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 

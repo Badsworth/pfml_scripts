@@ -1,5 +1,3 @@
-from typing import Any, Dict
-
 import connexion
 from werkzeug.exceptions import BadRequest, NotFound
 
@@ -12,7 +10,7 @@ from massgov.pfml.api.models.users.requests import (
     UserCreateRequest,
     UserUpdateRequest,
 )
-from massgov.pfml.api.models.users.responses import UserLeaveAdminResponse, UserResponse
+from massgov.pfml.api.models.users.responses import user_response
 from massgov.pfml.api.util.deepgetattr import deepgetattr
 from massgov.pfml.api.validation.exceptions import IssueType, ValidationErrorDetail
 from massgov.pfml.api.validation.user_rules import (
@@ -86,13 +84,13 @@ def users_post():
                 errors=[e.issue],
                 data={},
             ).to_api_response()
-
+        data = user_response(user, db_session)
     logger.info(
         "users_post success - account created", extra={"is_employer": str(is_employer)},
     )
 
     return response_util.success_response(
-        data=user_response(user),
+        data=data,
         message="Successfully created user. User needs to verify email address next.",
         status_code=201,
     ).to_api_response()
@@ -101,10 +99,10 @@ def users_post():
 def users_get(user_id):
     with app.db_session() as db_session:
         u = get_or_404(db_session, User, user_id)
-
+        data = user_response(u, db_session)
     ensure(READ, u)
     return response_util.success_response(
-        message="Successfully retrieved user", data=user_response(u),
+        message="Successfully retrieved user", data=data,
     ).to_api_response()
 
 
@@ -153,14 +151,14 @@ def users_convert_employer(user_id):
             add_leave_admin_and_role(db_session, updated_user, employer)
             db_session.commit()
             db_session.refresh(updated_user)
-
+        data = user_response(updated_user, db_session)
     logger.info(
         "users_convert_employer success - account converted",
         extra={"employer_id": employer.employer_id},
     )
 
     return response_util.success_response(
-        message="Successfully converted user", status_code=201, data=user_response(updated_user),
+        message="Successfully converted user", status_code=201, data=data,
     ).to_api_response()
 
 
@@ -173,8 +171,11 @@ def users_current_get():
         raise NotFound
 
     ensure(READ, current_user)
+    with app.db_session() as db_session:
+        data = user_response(current_user, db_session)
+
     return response_util.success_response(
-        message="Successfully retrieved current user", data=user_response(current_user),
+        message="Successfully retrieved current user", data=data,
     ).to_api_response()
 
 
@@ -189,34 +190,7 @@ def users_patch(user_id):
         for key in body.__fields_set__:
             value = getattr(body, key)
             setattr(updated_user, key, value)
-
+        data = user_response(updated_user, db_session)
     return response_util.success_response(
-        message="Successfully updated user", data=user_response(updated_user),
+        message="Successfully updated user", data=data,
     ).to_api_response()
-
-
-##########################################
-# Data helpers
-##########################################
-
-
-def user_response(user: User) -> Dict[str, Any]:
-    response = UserResponse.from_orm(user).dict()
-    response["user_leave_administrators"] = [
-        normalize_user_leave_admin_response(ula) for ula in response["user_leave_administrators"]
-    ]
-    return response
-
-
-def normalize_user_leave_admin_response(
-    leave_admin_response: UserLeaveAdminResponse,
-) -> Dict[str, Any]:
-    leave_admin_dict = dict(leave_admin_response)
-    return {
-        "employer_dba": leave_admin_dict["employer"]["employer_dba"],
-        "employer_fein": leave_admin_dict["employer"]["employer_fein"],
-        "employer_id": leave_admin_dict["employer"]["employer_id"],
-        "has_fineos_registration": leave_admin_dict["has_fineos_registration"],
-        "verified": leave_admin_dict["verified"],
-        "has_verification_data": leave_admin_dict["employer"]["has_verification_data"],
-    }

@@ -1,4 +1,6 @@
-import { AppLogic } from "../../../hooks/useAppLogic";
+import withEmployerClaim, {
+  WithEmployerClaimProps,
+} from "../../../hoc/withEmployerClaim";
 import React from "react";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
@@ -6,30 +8,17 @@ import UserFeedback from "../../../components/UserFeedback";
 import formatDateRange from "../../../utils/formatDateRange";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
-import withEmployerClaim from "../../../hoc/withEmployerClaim";
 
-interface ConfirmationProps {
-  appLogic: AppLogic;
-  query: {
-    absence_id: string;
-  };
-}
-
-export const Confirmation = (props: ConfirmationProps) => {
+export const Confirmation = (props: WithEmployerClaimProps) => {
   const { t } = useTranslation();
-  const {
-    appLogic: {
-      employers: { claim },
-    },
-    query: { absence_id },
-  } = props;
+  const { claim } = props;
 
   return (
     <React.Fragment>
       <Title>{t("pages.employersClaimsConfirmation.title")}</Title>
       <Trans
         i18nKey="pages.employersClaimsConfirmation.applicationIdLabel"
-        values={{ absenceId: absence_id }}
+        values={{ absenceId: claim.fineos_absence_id }}
       />
       <Trans
         i18nKey="pages.employersClaimsConfirmation.instructionsFollowUpDateLabel"

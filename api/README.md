@@ -79,11 +79,11 @@ The OpenAPI spec is available at:
 
 **Next steps:**
 
+- [Make sure the pre-commit hooks are working properly](../readme.md#using-pre-commit-hooks)
 - [Set up local authentication credentials](#setting-up-local-authentication-credentials)
 - [Seed your database](#seed-your-database)
 - Review documentation in `/docs`, especially [contributing.md](../docs/contributing.md) for guidelines on how to contribute code
 - Read the [technical overview](../docs/api/technical-overview.md) to understand how API components work.
-
 
 ## Setting up local authentication credentials
 

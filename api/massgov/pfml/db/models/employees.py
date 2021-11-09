@@ -307,6 +307,16 @@ class LkLeaveRequestDecision(Base):
         self.leave_request_decision_description = leave_request_decision_description
 
 
+class LkMFADeliveryPreference(Base):
+    __tablename__ = "lk_mfa_delivery_preference"
+    mfa_delivery_preference_id = Column(Integer, primary_key=True, autoincrement=True)
+    mfa_delivery_preference_description = Column(Text, nullable=False)
+
+    def __init__(self, mfa_delivery_preference_id, mfa_delivery_preference_description):
+        self.mfa_delivery_preference_id = mfa_delivery_preference_id
+        self.mfa_delivery_preference_description = mfa_delivery_preference_description
+
+
 class AbsencePeriod(Base, TimestampMixin):
     __tablename__ = "absence_period"
     __table_args__ = (
@@ -390,7 +400,7 @@ class Employer(Base, TimestampMixin):
     employer_occupations: "Query[EmployeeOccupation]" = dynamic_loader(
         "EmployeeOccupation", back_populates="employer"
     )
-    employer_quarterly_contribution: "Query[EmployerQuarterlyContribution]" = dynamic_loader(
+    employer_quarterly_contribution = relationship(
         "EmployerQuarterlyContribution", back_populates="employer"
     )
     organization_units: "Query[OrganizationUnit]" = dynamic_loader(
@@ -407,7 +417,7 @@ class Employer(Base, TimestampMixin):
             quarter.employer_total_pfml_contribution > 0
             and quarter.filing_period >= last_years_date
             and quarter.filing_period < current_date
-            for quarter in self.employer_quarterly_contribution
+            for quarter in self.employer_quarterly_contribution  # type: ignore
         )
 
     @validates("employer_fein")
@@ -949,12 +959,16 @@ class User(Base, TimestampMixin):
     sub_id = Column(Text, index=True, unique=True)
     email_address = Column(Text, unique=True)
     consented_to_data_sharing = Column(Boolean, default=False, nullable=False)
+    mfa_delivery_preference_id = Column(
+        Integer, ForeignKey("lk_mfa_delivery_preference.mfa_delivery_preference_id")
+    )
 
     roles = relationship("LkRole", secondary="link_user_role", uselist=True)
     user_leave_administrators = relationship(
         "UserLeaveAdministrator", back_populates="user", uselist=True
     )
     employers = relationship("Employer", secondary="link_user_leave_administrator", uselist=True)
+    mfa_delivery_preference = relationship(LkMFADeliveryPreference)
 
     @hybrid_method
     def get_user_leave_admin_for_employer(
@@ -1368,15 +1382,29 @@ class DiaReductionPayment(Base, TimestampMixin):
 
 class DuaEmployeeDemographics(Base, TimestampMixin):
     __tablename__ = "dua_employee_demographics"
-    dua_employee_demographics_id = Column(PostgreSQLUUID, primary_key=True,)
+    dua_employee_demographics_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
 
-    fineos_customer_number = Column(Text, nullable=False)
-    date_of_birth = Column(Date)
-    gender_code = Column(Text)
-    occupation_code = Column(Text)
-    occupation_description = Column(Text)
-    employer_fein = Column(Text)
-    employer_reporting_unit_number = Column(Text)
+    fineos_customer_number = Column(Text, nullable=True)
+    date_of_birth = Column(Date, nullable=True)
+    gender_code = Column(Text, nullable=True)
+    occupation_code = Column(Text, nullable=True)
+    occupation_description = Column(Text, nullable=True)
+    employer_fein = Column(Text, nullable=True)
+    employer_reporting_unit_number = Column(Text, nullable=True)
+
+    # this Unique index is required since our test framework does not run migrations
+    # it is excluded from migrations. see api/massgov/pfml/db/migrations/env.py
+    Index(
+        "dua_employee_demographics_unique_import_data_idx",
+        fineos_customer_number,
+        date_of_birth,
+        gender_code,
+        occupation_code,
+        occupation_description,
+        employer_fein,
+        employer_reporting_unit_number,
+        unique=True,
+    )
 
     # Each row should be unique. This enables us to load only new rows from a CSV and ensures that
     # we don't include demographics twice as two different rows. Almost all fields are nullable so we
@@ -2592,6 +2620,10 @@ class ReferenceFileType(LookupTable):
         31, "Payment reconciliation extract", 3
     )
 
+    DUA_DEMOGRAPHICS_FILE = LkReferenceFileType(32, "DUA demographics", 1)
+
+    DUA_DEMOGRAPHICS_REQUEST_FILE = LkReferenceFileType(33, "DUA demographics request", 1)
+
 
 class Title(LookupTable):
     model = LkTitle
@@ -2619,6 +2651,14 @@ class LeaveRequestDecision(LookupTable):
     WITHDRAWN = LkLeaveRequestDecision(6, "Withdrawn")
     PROJECTED = LkLeaveRequestDecision(7, "Projected")
     VOIDED = LkLeaveRequestDecision(8, "Voided")
+
+
+class MFADeliveryPreference(LookupTable):
+    model = LkMFADeliveryPreference
+    column_names = ("mfa_delivery_preference_id", "mfa_delivery_preference_description")
+
+    SMS = LkMFADeliveryPreference(1, "SMS")
+    OPT_OUT = LkMFADeliveryPreference(2, "Opt Out")
 
 
 def sync_lookup_tables(db_session):
@@ -2654,4 +2694,5 @@ def sync_lookup_tables(db_session):
     ManagedRequirementStatus.sync_to_database(db_session)
     ManagedRequirementCategory.sync_to_database(db_session)
     ManagedRequirementType.sync_to_database(db_session)
+    MFADeliveryPreference.sync_to_database(db_session)
     db_session.commit()
