@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from "react";
 
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import Alert from "../../components/Alert";
 import AppErrorInfo from "../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
-import { AppLogic } from "../../hooks/useAppLogic";
-import BenefitsApplication from "../../models/BenefitsApplication";
-import ComboBox from "../../components/ComboBox";
 import ConditionalContent from "../../components/ConditionalContent";
+import Dropdown from "../../components/Dropdown";
 import { EmployeeOrganizationUnit } from "../../models/User";
+import { EmployeeSearchRequest } from "../../api/EmployeesApi";
 import Fieldset from "../../components/Fieldset";
 import FormLabel from "../../components/FormLabel";
 import InputChoiceGroup from "../../components/InputChoiceGroup";
@@ -19,13 +21,10 @@ import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.organization_unit_id"];
 
-interface DepartmentProps {
-  appLogic: AppLogic;
-  claim: BenefitsApplication;
+interface DepartmentProps extends WithBenefitsApplicationProps {
   query: NullableQueryParams;
 }
 
@@ -70,18 +69,20 @@ export const Department = (props: DepartmentProps) => {
   // Determine whether user selected a "workaround" type option
   // while choosing from radio options
   const hasSelectedRadioWorkaround = !![NOT_LISTED, NOT_SURE, NO].find(
-    (wa) => wa.organization_unit_id === formState.radio_organization_unit
+    (workaround) =>
+      workaround.organization_unit_id === formState.radio_organization_unit
   );
   // or while choosing from comboBox options
   const hasSelectedComboboxWorkaround = !![NOT_LISTED, NOT_SURE].find(
-    (wa) => wa.name === formState.organization_unit
+    (workaround) =>
+      workaround.organization_unit_id === formState.organization_unit
   );
 
   // API calls
   const handleSave = async () => {
     const errors = [];
 
-    if (isUnique && !formState.radio_organization_unit) {
+    if (isSingular && !formState.radio_organization_unit) {
       errors.push(
         new AppErrorInfo({
           field: "radio_organization_unit",
@@ -91,7 +92,7 @@ export const Department = (props: DepartmentProps) => {
       );
     }
     if (
-      ((isUnique || isShort) &&
+      ((isSingular || isShort) &&
         hasSelectedRadioWorkaround &&
         !formState.organization_unit) ||
       (isShort && !formState.radio_organization_unit) ||
@@ -112,9 +113,8 @@ export const Department = (props: DepartmentProps) => {
     appLogic.setAppErrors(new AppErrorInfoCollection(errors));
 
     if (errors.length > 0) return;
-    // If user selects a workaround, then take the combobox's value
-    // otherwise, take the radio group's value
-    const finalDepartmentDecision =
+
+    const finalDepartmentDecision: string =
       hasSelectedRadioWorkaround || isLong
         ? formState.organization_unit
         : formState.radio_organization_unit;
@@ -125,28 +125,29 @@ export const Department = (props: DepartmentProps) => {
         d.value === finalDepartmentDecision
     );
 
-    if (
-      selectedDepartment.value === NOT_LISTED.organization_unit_id ||
-      selectedDepartment.value === NOT_SURE.organization_unit_id
-    ) {
-      selectedDepartment.value = null;
-    }
+    if (typeof selectedDepartment !== "undefined") {
+      // If user selected a workaround option, then remove org unit from claim
+      // falls back into manual process
+      const noGoodOption =
+        selectedDepartment.value === NOT_LISTED.organization_unit_id ||
+        selectedDepartment.value === NOT_SURE.organization_unit_id;
 
-    await appLogic.benefitsApplications.update(claim.application_id, {
-      organization_unit_id: selectedDepartment.value,
-    });
+      await appLogic.benefitsApplications.update(claim.application_id, {
+        organization_unit_id: noGoodOption ? null : selectedDepartment.value,
+      });
+    }
   };
 
   const populateDepartments = async () => {
     // Finds this employee based on name, SSN and employer FEIN and retrieves
     // the employee info alongside the connected organization units
     if (!departments.length) {
-      const searchEmployee = {
-        first_name: claim.first_name,
-        last_name: claim.last_name,
+      const searchEmployee: EmployeeSearchRequest = {
+        first_name: claim.first_name ?? "",
+        last_name: claim.last_name ?? "",
         middle_name: claim.middle_name ?? "",
-        tax_identifier_last4: claim.tax_identifier.slice(-4),
-        employer_fein: claim.employer_fein,
+        tax_identifier_last4: claim.tax_identifier?.slice(-4) ?? "",
+        employer_fein: claim.employer_fein ?? "",
       };
       const employee = await appLogic.employees.search(
         searchEmployee,
@@ -164,18 +165,18 @@ export const Department = (props: DepartmentProps) => {
     const linkedDepartments = departments.filter(
       (department) => department.linked
     );
-    const isUnique = linkedDepartments.length === 1;
+    const isSingular = linkedDepartments.length === 1;
     const isShort =
       linkedDepartments.length > 1 && linkedDepartments.length <= 3;
     const isLong =
-      !isUnique &&
+      !isSingular &&
       !isShort &&
       (linkedDepartments.length > 3 ||
         departments.length > linkedDepartments.length);
     return {
       isLong,
       isShort,
-      isUnique,
+      isSingular,
     };
   };
 
@@ -230,24 +231,24 @@ export const Department = (props: DepartmentProps) => {
       appLogic.portalFlow.goToPageFor("CONTINUE", { claim }, query, {
         redirect: true,
       });
-      return () => null;
+      return;
     }
     // lazy loads both departments lists into state
     populateDepartments();
-    return () => null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
-    if (!departments.length) return () => null;
+    if (!departments.length) return;
 
     const selectedChoice = departments.find(
-      (c) => c.organization_unit_id === initialFormState.organization_unit_id
+      (c) => c.organization_unit_id === initialFormState?.organization_unit_id
     );
 
-    const hasDefaultValue =
-      departments.length && initialFormState.organization_unit_id;
     const hasValidValue = typeof selectedChoice !== "undefined";
+    const hasDefaultValue =
+      departments.length > 0 &&
+      typeof initialFormState?.organization_unit_id !== "undefined";
 
     // Determines radio / combobox default values based on claim.organization_unit_id
     const newInitialState = {
@@ -255,26 +256,25 @@ export const Department = (props: DepartmentProps) => {
       organization_unit: hasDefaultValue
         ? hasValidValue
           ? isLong || !selectedChoice.linked
-            ? selectedChoice.name
+            ? selectedChoice.organization_unit_id
             : null
-          : NOT_LISTED.name
+          : NOT_LISTED.organization_unit_id
         : null,
       radio_organization_unit: hasDefaultValue
         ? hasValidValue
           ? selectedChoice.linked
             ? selectedChoice.organization_unit_id
-            : isUnique
+            : isSingular
             ? NO.organization_unit_id
             : NOT_LISTED.organization_unit_id
           : NOT_LISTED.organization_unit_id
         : null,
     };
     updateFields(newInitialState);
-    return () => null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [departments]);
 
-  const { isLong, isShort, isUnique } = getDepartmentListSizes();
+  const { isLong, isShort, isSingular } = getDepartmentListSizes();
   const {
     oneDepartmentOptions,
     allDepartmentOptions,
@@ -287,7 +287,7 @@ export const Department = (props: DepartmentProps) => {
       title={t("pages.claimsEmploymentStatus.title")}
       onSave={handleSave}
     >
-      <ConditionalContent visible={isUnique}>
+      <ConditionalContent visible={isSingular}>
         <InputChoiceGroup
           {...getFunctionalInputProps("radio_organization_unit")}
           choices={oneDepartmentOptions}
@@ -331,7 +331,7 @@ export const Department = (props: DepartmentProps) => {
             </FormLabel>
           </ConditionalContent>
           <ConditionalContent visible={showDepartments}>
-            <ComboBox
+            <Dropdown
               {...getFunctionalInputProps("organization_unit", {
                 fallbackValue: formState.organization_unit || "",
               })}
@@ -340,6 +340,7 @@ export const Department = (props: DepartmentProps) => {
                   ? unlinkedDepartmentOptions
                   : allDepartmentOptions
               }
+              autocomplete={true}
               label={t("pages.claimsDepartment.comboBoxLabel")}
               smallLabel
             />

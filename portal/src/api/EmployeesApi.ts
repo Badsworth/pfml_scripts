@@ -1,4 +1,4 @@
-import BaseApi from "./BaseApi";
+import BaseApi, { ApiRequestBody } from "./BaseApi";
 import { Employee } from "../models/User";
 import routes from "../routes";
 
@@ -34,7 +34,7 @@ export default class EmployeesApi extends BaseApi {
     const { data } = await this.request<Employee>(
       "POST",
       "search",
-      postData as unknown as Record<string, unknown>
+      postData as unknown as ApiRequestBody
     );
     return data;
   };

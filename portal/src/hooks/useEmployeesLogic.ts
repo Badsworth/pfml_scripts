@@ -1,8 +1,15 @@
-import { Employee } from "../models/User";
 import EmployeesApi, { EmployeeSearchRequest } from "../api/EmployeesApi";
+import { AppErrorsLogic } from "./useAppErrorsLogic";
+import { Employee } from "../models/User";
+import { PortalFlow } from "./usePortalFlow";
 import { useMemo } from "react";
 
-const useEmployeesLogic = ({ appErrorsLogic, portalFlow }) => {
+interface Props {
+  appErrorsLogic: AppErrorsLogic;
+  portalFlow: PortalFlow;
+}
+
+const useEmployeesLogic = ({ appErrorsLogic, portalFlow }: Props) => {
   const employeesApi = useMemo(() => new EmployeesApi(), []);
 
   /**
@@ -11,18 +18,23 @@ const useEmployeesLogic = ({ appErrorsLogic, portalFlow }) => {
   const search = async (
     data: EmployeeSearchRequest,
     applicationId: string
-  ): Promise<Employee> => {
+  ): Promise<Employee | null> => {
     appErrorsLogic.clearErrors();
 
+    let employee: Employee;
     try {
-      const employee = await employeesApi.search(data);
-      if (!employee.organization_units.length) {
-        portalFlow.goToNextPage({}, { claim_id: applicationId });
-      }
-      return employee;
+      employee = await employeesApi.search(data);
     } catch (error) {
       appErrorsLogic.catchError(error);
+      return null;
     }
+
+    if (typeof employee.organization_units !== "undefined") {
+      if (employee.organization_units.length === 0) {
+        portalFlow.goToNextPage({}, { claim_id: applicationId });
+      }
+    }
+    return employee;
   };
   return {
     search,
