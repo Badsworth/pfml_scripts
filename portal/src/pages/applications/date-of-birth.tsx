@@ -1,7 +1,7 @@
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
-import InputDate from "../../components/InputDate";
+import InputDate from "../../components/core/InputDate";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { pick } from "lodash";

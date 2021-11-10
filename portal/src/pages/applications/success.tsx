@@ -7,13 +7,13 @@ import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
 
-import Alert from "../../components/Alert";
+import Alert from "../../components/core/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
-import Heading from "../../components/Heading";
+import Heading from "../../components/core/Heading";
 import React from "react";
 import { ReasonQualifier } from "../../models/BenefitsApplication";
-import Title from "../../components/Title";
+import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import UserFeedback from "../../components/UserFeedback";
 import { get } from "lodash";

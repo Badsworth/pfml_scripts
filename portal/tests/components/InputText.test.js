@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import InputText from "../../src/components/InputText";
+import InputText from "../../src/components/core/InputText";
 import React from "react";
 import userEvent from "@testing-library/user-event";
 

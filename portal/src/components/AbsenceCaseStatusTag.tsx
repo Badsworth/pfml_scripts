@@ -1,6 +1,6 @@
 import { AbsenceCaseStatus } from "../models/Claim";
 import React from "react";
-import Tag from "./Tag";
+import Tag from "./core/Tag";
 import findKeyByValue from "../utils/findKeyByValue";
 import formatDate from "../utils/formatDate";
 import { orderBy } from "lodash";

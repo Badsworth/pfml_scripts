@@ -1,11 +1,11 @@
 import withBenefitsApplications, {
   WithBenefitsApplicationsProps,
 } from "../../hoc/withBenefitsApplications";
-import Alert from "../../components/Alert";
-import Button from "../../components/Button";
-import InputText from "../../components/InputText";
+import Alert from "../../components/core/Alert";
+import Button from "../../components/core/Button";
+import InputText from "../../components/core/InputText";
 import React from "react";
-import Title from "../../components/Title";
+import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";

@@ -8,7 +8,7 @@ import withBenefitsApplication, {
 } from "../../hoc/withBenefitsApplication";
 import AppErrorInfo from "../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { get } from "lodash";

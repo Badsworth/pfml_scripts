@@ -1,12 +1,12 @@
 import withWithholding, {
   WithWithholdingProps,
 } from "../../../hoc/withWithholding";
-import Button from "../../../components/Button";
-import Details from "../../../components/Details";
-import InputCurrency from "../../../components/InputCurrency";
-import Lead from "../../../components/Lead";
+import Button from "../../../components/core/Button";
+import Details from "../../../components/core/Details";
+import InputCurrency from "../../../components/core/InputCurrency";
+import Lead from "../../../components/core/Lead";
 import React from "react";
-import Title from "../../../components/Title";
+import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import formatDateRange from "../../../utils/formatDateRange";
 import routes from "../../../routes";

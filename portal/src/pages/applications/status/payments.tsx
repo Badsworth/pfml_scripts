@@ -1,9 +1,9 @@
 import React, { useEffect } from "react";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
 import BackButton from "../../../components/BackButton";
-import Heading from "../../../components/Heading";
+import Heading from "../../../components/core/Heading";
 import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
-import Title from "../../../components/Title";
+import Title from "../../../components/core/Title";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";

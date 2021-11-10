@@ -3,7 +3,7 @@ import { isNil, omitBy } from "lodash";
 import withUser, { WithUserProps } from "./withUser";
 import ClaimCollection from "../models/ClaimCollection";
 import PaginationMeta from "../models/PaginationMeta";
-import Spinner from "../components/Spinner";
+import Spinner from "../components/core/Spinner";
 import { useTranslation } from "../locales/i18n";
 
 export interface ApiParams {

@@ -6,9 +6,9 @@ import { get, pick, round } from "lodash";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
-import Heading from "../../components/Heading";
-import InputHours from "../../components/InputHours";
-import Lead from "../../components/Lead";
+import Heading from "../../components/core/Heading";
+import InputHours from "../../components/core/InputHours";
+import Lead from "../../components/core/Lead";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import isBlank from "../../utils/isBlank";

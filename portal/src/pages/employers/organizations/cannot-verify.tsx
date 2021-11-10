@@ -1,10 +1,10 @@
 import { Trans, useTranslation } from "react-i18next";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
 import BackButton from "../../../components/BackButton";
-import Lead from "../../../components/Lead";
+import Lead from "../../../components/core/Lead";
 import PageNotFound from "../../../components/PageNotFound";
 import React from "react";
-import Title from "../../../components/Title";
+import Title from "../../../components/core/Title";
 import routes from "../../../routes";
 
 export const CannotVerify = (

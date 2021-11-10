@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import React from "react";
-import Tag from "../../src/components/Tag";
+import Tag from "../../src/components/core/Tag";
 
 describe("Tag", () => {
   it.each(["error", "inactive", "pending", "success", "warning"])(

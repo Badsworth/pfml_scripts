@@ -3,9 +3,9 @@ import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
 
-import Details from "../../components/Details";
-import IconHeading from "../../components/IconHeading";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
+import Details from "../../components/core/Details";
+import IconHeading from "../../components/core/IconHeading";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";

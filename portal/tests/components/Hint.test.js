@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import Hint from "../../src/components/Hint";
+import Hint from "../../src/components/core/Hint";
 import React from "react";
 
 describe("Hint", () => {

@@ -8,16 +8,16 @@ import withBenefitsApplication, {
 import withClaimDocuments, {
   WithClaimDocumentsProps,
 } from "../../hoc/withClaimDocuments";
-import Accordion from "../../components/Accordion";
-import AccordionItem from "../../components/AccordionItem";
-import Alert from "../../components/Alert";
+import Accordion from "../../components/core/Accordion";
+import AccordionItem from "../../components/core/AccordionItem";
+import Alert from "../../components/core/Alert";
 import DocumentRequirements from "../../components/DocumentRequirements";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
-import Heading from "../../components/Heading";
+import Heading from "../../components/core/Heading";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import Spinner from "../../components/Spinner";
+import Spinner from "../../components/core/Spinner";
 import { Trans } from "react-i18next";
 import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import { get } from "lodash";

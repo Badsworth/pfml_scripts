@@ -1,10 +1,10 @@
 import { AppLogic } from "../../../hooks/useAppLogic";
-import Button from "../../../components/Button";
-import InputText from "../../../components/InputText";
-import Lead from "../../../components/Lead";
+import Button from "../../../components/core/Button";
+import InputText from "../../../components/core/InputText";
+import Lead from "../../../components/core/Lead";
 import PageNotFound from "../../../components/PageNotFound";
 import React from "react";
-import Title from "../../../components/Title";
+import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "../../../services/featureFlags";
 import useFormState from "../../../hooks/useFormState";

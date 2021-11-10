@@ -252,6 +252,7 @@ Below is an abbreviated representation of our directory structure, pointing out 
 ├── src                     Source code
 │   ├── api                 API request modules
 │   ├── components
+|   |   └── core            Home for reusable presentation components
 │   │   └── PageWrapper.tsx 🖼 Main layout applied to all pages
 │   ├── hooks               Custom React hooks
 │   ├── locales             Localization files

@@ -1,5 +1,5 @@
 import React, { Children, cloneElement } from "react";
-import Heading from "./Heading";
+import Heading from "./core/Heading";
 import Step from "./Step";
 import isBlank from "../utils/isBlank";
 

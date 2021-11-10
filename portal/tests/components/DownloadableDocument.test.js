@@ -1,7 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { DocumentType } from "../../src/models/Document";
 import DownloadableDocument from "../../src/components/DownloadableDocument";
-import Icon from "../../src/components/Icon";
+import Icon from "../../src/components/core/Icon";
 import React from "react";
 import userEvent from "@testing-library/user-event";
 

@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 
-import IconHeading from "../../src/components/IconHeading";
+import IconHeading from "../../src/components/core/IconHeading";
 import React from "react";
 
 describe("IconHeading", () => {

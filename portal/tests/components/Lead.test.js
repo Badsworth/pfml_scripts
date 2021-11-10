@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import Lead from "../../src/components/Lead";
+import Lead from "../../src/components/core/Lead";
 import React from "react";
 
 describe("Lead", () => {

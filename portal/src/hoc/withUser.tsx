@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import { AppLogic } from "../hooks/useAppLogic";
-import Spinner from "../components/Spinner";
+import Spinner from "../components/core/Spinner";
 import User from "../models/User";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";

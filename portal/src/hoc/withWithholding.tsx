@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import withUser, { WithUserProps } from "./withUser";
 import PageNotFound from "../components/PageNotFound";
-import Spinner from "../components/Spinner";
+import Spinner from "../components/core/Spinner";
 import { UserLeaveAdministrator } from "../models/User";
 import Withholding from "../models/Withholding";
 import routes from "../routes";

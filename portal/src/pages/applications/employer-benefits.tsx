@@ -1,11 +1,11 @@
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
-import Alert from "../../components/Alert";
+import Alert from "../../components/core/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
-import Heading from "../../components/Heading";
-import Icon from "../../components/Icon";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
+import Heading from "../../components/core/Heading";
+import Icon from "../../components/core/Icon";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";

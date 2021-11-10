@@ -1,7 +1,7 @@
 import { Trans, useTranslation } from "react-i18next";
-import Lead from "./Lead";
+import Lead from "./core/Lead";
 import React from "react";
-import Title from "./Title";
+import Title from "./core/Title";
 
 interface MaintenanceTakeoverProps {
   maintenanceStartTime: string | null;

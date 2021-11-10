@@ -1,7 +1,7 @@
 import BackButton from "./BackButton";
-import Button from "./Button";
+import Button from "./core/Button";
 import React from "react";
-import Title from "./Title";
+import Title from "./core/Title";
 import tracker from "../services/tracker";
 import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";

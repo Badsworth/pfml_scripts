@@ -1,14 +1,14 @@
 import withBenefitsApplications, {
   WithBenefitsApplicationsProps,
 } from "../../hoc/withBenefitsApplications";
-import Alert from "../../components/Alert";
+import Alert from "../../components/core/Alert";
 import ApplicationCardV1 from "../../components/ApplicationCard";
 import ApplicationCardV2 from "../../components/ApplicationCardV2";
 import ButtonLink from "../../components/ButtonLink";
-import Heading from "../../components/Heading";
-import Lead from "../../components/Lead";
+import Heading from "../../components/core/Heading";
+import Lead from "../../components/core/Lead";
 import React from "react";
-import Title from "../../components/Title";
+import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";

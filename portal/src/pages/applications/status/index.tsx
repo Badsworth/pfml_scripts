@@ -9,20 +9,20 @@ import {
   DocumentTypeEnum,
 } from "../../../models/Document";
 import React, { useEffect } from "react";
-import Tag, { TagProps } from "../../../components/Tag";
+import Tag, { TagProps } from "../../../components/core/Tag";
 import { find, get, has, map } from "lodash";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
-import Alert from "../../../components/Alert";
+import Alert from "../../../components/core/Alert";
 import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
 import ButtonLink from "../../../components/ButtonLink";
-import Heading from "../../../components/Heading";
+import Heading from "../../../components/core/Heading";
 import LeaveReason from "../../../models/LeaveReason";
 import LegalNoticeList from "../../../components/LegalNoticeList";
 import PageNotFound from "../../../components/PageNotFound";
-import Spinner from "../../../components/Spinner";
+import Spinner from "../../../components/core/Spinner";
 import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
-import Title from "../../../components/Title";
+import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../../utils/findKeyByValue";

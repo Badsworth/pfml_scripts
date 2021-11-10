@@ -1,6 +1,6 @@
 import { BenefitsApplicationDocument, ClaimDocument } from "../models/Document";
 import DownloadableDocument from "./DownloadableDocument";
-import Icon from "./Icon";
+import Icon from "./core/Icon";
 import React from "react";
 import getLegalNotices from "../utils/getLegalNotices";
 import { useTranslation } from "../locales/i18n";

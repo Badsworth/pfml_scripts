@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import AppErrorInfo from "../models/AppErrorInfo";
 import { BenefitsApplicationDocument } from "../models/Document";
 import FileCard from "./FileCard";
-import Spinner from "./Spinner";
+import Spinner from "./core/Spinner";
 import TempFile from "../models/TempFile";
 import TempFileCollection from "../models/TempFileCollection";
 import { useTranslation } from "../locales/i18n";

@@ -1,5 +1,5 @@
 import React from "react";
-import Tag from "../Tag";
+import Tag from "../core/Tag";
 import { UserLeaveAdministrator } from "../../models/User";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";

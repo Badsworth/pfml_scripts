@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import React from "react";
-import Title from "../../src/components/Title";
+import Title from "../../src/components/core/Title";
 
 jest.mock("react-helmet", () => {
   // Render <title> directly in document.body so we can assert its value

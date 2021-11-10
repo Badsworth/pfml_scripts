@@ -1,4 +1,4 @@
-import AlertBar from "src/components/AlertBar";
+import AlertBar from "src/components/core/AlertBar";
 import { Props } from "storybook/types";
 import React from "react";
 

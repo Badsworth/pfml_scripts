@@ -1,8 +1,8 @@
 import withUser, { WithUserProps } from "../../../hoc/withUser";
-import Button from "../../../components/Button";
+import Button from "../../../components/core/Button";
 import PageNotFound from "../../../components/PageNotFound";
 import React from "react";
-import Title from "../../../components/Title";
+import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";

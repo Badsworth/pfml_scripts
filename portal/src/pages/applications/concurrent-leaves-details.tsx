@@ -2,8 +2,8 @@ import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
 import ConcurrentLeave from "../../models/ConcurrentLeave";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import InputDate from "../../components/InputDate";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
+import InputDate from "../../components/core/InputDate";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
