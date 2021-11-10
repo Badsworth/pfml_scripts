@@ -20,8 +20,6 @@ defaults:
 
 env:
   CI: true
-  deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
-  workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
 jobs:
   # Check for formatting and linting issues.
@@ -157,5 +155,5 @@ jobs:
     if: failure() && github.ref == 'refs/heads/main'
     uses: EOLWD/pfml/.github/workflows/reusable-send-slack-message.yml@kev/fix-ci-notifications
     with:
-      title: "[main] API tests failed (<${{ env.workflow_self_link }}|build logs>)"
+      title: "[main] API tests failed (<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|build logs>)"
       color: danger

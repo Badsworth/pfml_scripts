@@ -20,10 +20,8 @@ concurrency:
 
 env:
   nodeVersion: 15.x
-  deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
   working-dir: ./portal
   cache-package-lock: ./portal/package-lock.json
-  workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
 jobs:
   lint:
@@ -110,5 +108,5 @@ jobs:
     if: failure() && github.ref == 'refs/heads/main'
     uses: EOLWD/pfml/.github/workflows/reusable-send-slack-message.yml@kev/fix-ci-notifications
     with:
-      title: "[main] Portal tests failed (<${{ env.workflow_self_link }}|build logs>)"
+      title: "[main] Portal tests failed (<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|build logs>)"
       color: danger
