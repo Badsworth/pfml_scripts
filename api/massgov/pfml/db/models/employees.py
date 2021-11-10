@@ -819,6 +819,9 @@ class Payment(Base, TimestampMixin):
     leave_request_id = Column(PostgreSQLUUID, ForeignKey("absence_period.absence_period_id"))
 
     vpei_id = Column(PostgreSQLUUID, ForeignKey("fineos_extract_vpei.vpei_id"))
+    exclude_from_payment_status = Column(
+        Boolean, default=False, server_default="FALSE", nullable=False
+    )
 
     fineos_employee_first_name = Column(Text)
     fineos_employee_middle_name = Column(Text)

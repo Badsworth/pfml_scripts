@@ -143,6 +143,8 @@ class DelegatedPaymentFactory(MockData):
         self.amount = self.get_value("amount", Decimal("0.00"))
         self.experian_address_pair = self.get_value("experian_address_pair", None)
         self.check_number = self.get_value("check_number", None)
+        self.fineos_extract_import_log_id = self.get_value("fineos_extract_import_log_id", None)
+        self.exclude_from_payment_status = self.get_value("exclude_from_payment_status", None)
 
     # only set if value was passed in constructor through kwarg
     # else defer to lazy factory initialization
@@ -262,6 +264,8 @@ class DelegatedPaymentFactory(MockData):
             claim_type=self.claim.claim_type if self.claim else None,
             check=PaymentCheck(check_number=self.check_number) if self.check_number else None,
             fineos_extraction_date=self.fineos_extraction_date,
+            fineos_extract_import_log_id=self.fineos_extract_import_log_id,
+            exclude_from_payment_status=self.exclude_from_payment_status,
             **self.payment_optional_kwargs,
         )
 

@@ -1,6 +1,8 @@
 import uuid
 from typing import Dict, List, Optional
 
+from sqlalchemy.sql.expression import desc
+
 from massgov.pfml.api.models.payments.responses import PaymentResponse
 from massgov.pfml.db import Session
 from massgov.pfml.db.models.employees import Claim, Payment, PaymentTransactionType
@@ -23,6 +25,9 @@ def get_payments_from_db(db_session: Session, claim_id: uuid.UUID) -> List[Payme
             Payment.payment_transaction_type_id
             == PaymentTransactionType.STANDARD.payment_transaction_type_id,
         )
+        .filter(Payment.exclude_from_payment_status != True)  # noqa: E712
+        .order_by(Payment.fineos_pei_i_value, desc(Payment.fineos_extract_import_log_id))
+        .distinct(Payment.fineos_pei_i_value)
         .all()
     )
 
