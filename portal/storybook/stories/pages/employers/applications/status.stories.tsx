@@ -1,9 +1,10 @@
-import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import DocumentCollection from "src/models/DocumentCollection";
 import { DocumentType } from "src/models/Document";
 import { MockEmployerClaimBuilder } from "tests/test-utils";
 import React from "react";
 import { Status } from "src/pages/employers/applications/status";
+import User from "src/models/User";
+import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
   title: "Pages/Employers/Applications/Status",
@@ -56,20 +57,20 @@ export const Default = ({
   document: string;
   leaveDurationType: string;
 }) => {
-  const claim = new MockEmployerClaimBuilder()
+  let claimBuilder = new MockEmployerClaimBuilder()
     .status(status)
     .bondingLeaveReason();
 
   if (leaveDurationType.includes("Continuous")) {
-    claim.continuous();
+    claimBuilder = claimBuilder.continuous();
   }
 
   if (leaveDurationType.includes("Intermittent")) {
-    claim.intermittent();
+    claimBuilder = claimBuilder.intermittent();
   }
 
   if (leaveDurationType.includes("Reduced")) {
-    claim.reducedSchedule();
+    claimBuilder = claimBuilder.reducedSchedule();
   }
 
   const documentData = {
@@ -119,19 +120,13 @@ export const Default = ({
     ]);
   }
 
-  const appLogic = {
-    appErrors: new AppErrorInfoCollection(),
+  const claim = claimBuilder.create();
+  const appLogic = useMockableAppLogic({
     employers: {
+      claim,
       claimDocumentsMap: documentsMap,
-      downloadDocument: () => {},
-      loadClaim: () => {},
-      loadDocuments: () => {},
     },
-    setAppErrors: () => {},
-  };
+  });
 
-  const query = { absence_id: "mock-absence-id" };
-
-  // @ts-expect-error ts-migrate(2740) FIXME: Type '{ appErrors: AppErrorInfoCollection; employe... Remove this comment to see the full error message
-  return <Status appLogic={appLogic} query={query} claim={claim.create()} />;
+  return <Status appLogic={appLogic} claim={claim} user={new User({})} />;
 };

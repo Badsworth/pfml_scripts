@@ -1,10 +1,10 @@
 import ClaimDetail, { AbsencePeriod } from "src/models/ClaimDetail";
-import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
-import DocumentCollection from "src/models/DocumentCollection";
 import DocumentUploadIndex from "src/pages/applications/upload/index";
 import LeaveReason from "src/models/LeaveReason";
 import React from "react";
+import faker from "faker";
 import { pick } from "lodash";
+import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 const absencePeriodScenarios = {
   bondingWithNewBorn: new AbsencePeriod({
@@ -45,41 +45,31 @@ export default {
   },
 };
 
-const appLogic = {
-  benefitsApplications: {
-    update: () => {},
-  },
-  documents: {
-    attachDocument: () => {},
-    documents: new DocumentCollection([]),
-  },
-  appErrors: new AppErrorInfoCollection(),
-  setAppErrors: () => {},
-  catchError: () => {},
-  claims: {
-    claimDetail: new ClaimDetail(),
-    loadClaimDetail: () => {},
-  },
-  clearErrors: () => {},
-  portalFlow: {
-    goToNextPage: () => "/storybook-mock",
-  },
-};
-
 export const Default = ({ absencePeriod }: { absencePeriod: string }) => {
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ application_id: string; fineos... Remove this comment to see the full error message
-  appLogic.claims.claimDetail = new ClaimDetail({
+  const claimDetail = new ClaimDetail({
     application_id: "application-id",
     fineos_absence_id: "fineos-absence-id",
-    absence_periods: Object.values(pick(absencePeriodScenarios, absencePeriod)),
+    absence_periods: Object.values(
+      pick(absencePeriodScenarios, absencePeriod ?? "medical")
+    ),
+    employee: null,
+    employer: null,
+    fineos_notification_id: faker.datatype.uuid(),
+    managed_requirements: [],
+    payments: [],
+    outstanding_evidence: null,
+  });
+
+  const appLogic = useMockableAppLogic({
+    claims: {
+      claimDetail,
+    },
   });
 
   return (
     <DocumentUploadIndex
-      // @ts-expect-error ts-migrate(2740) FIXME: Type '{ benefitsApplications: { update: () => void... Remove this comment to see the full error message
       appLogic={appLogic}
-      documents={[]}
-      query={{ absence_id: "mock-absence-id" }}
+      query={{ absence_id: claimDetail.fineos_absence_id }}
     />
   );
 };

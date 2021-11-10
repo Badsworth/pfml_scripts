@@ -5,6 +5,7 @@ import PageWrapper from "src/components/PageWrapper";
 import { Props } from "storybook/types";
 import React from "react";
 import User from "src/models/User";
+import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
   title: "Components/PageWrapper",
@@ -53,7 +54,7 @@ export const Default = (
   const user =
     args.Authentication === "Logged in"
       ? new User({ email_address: "test@example.com" })
-      : null;
+      : undefined;
 
   const maintenance = new Flag({
     name: "maintenance",
@@ -63,22 +64,13 @@ export const Default = (
     },
   });
 
-  const pathname = "/storybook-example";
-
-  const appLogic = {
+  const appLogic = useMockableAppLogic({
     appErrors: new AppErrorInfoCollection(appErrors),
-    auth: {
-      logout: () => {},
-    },
-    portalFlow: {
-      pathname,
-    },
     users: { user },
-  };
+  });
 
   return (
     <PageWrapper
-      // @ts-expect-error ts-migrate(2740) FIXME: Type '{ appErrors: AppErrorInfoCollection; auth: {... Remove this comment to see the full error message
       appLogic={appLogic}
       isLoading={args.isLoading}
       maintenance={maintenance}

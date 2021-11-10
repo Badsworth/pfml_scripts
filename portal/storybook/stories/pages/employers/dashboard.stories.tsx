@@ -4,6 +4,7 @@ import User, { UserLeaveAdministrator } from "src/models/User";
 import ClaimCollection from "src/models/ClaimCollection";
 import { Dashboard } from "src/pages/employers/dashboard";
 import { DateTime } from "luxon";
+import { NullableQueryParams } from "src/utils/routeWithParams";
 import { Props } from "storybook/types";
 import faker from "faker";
 import routes from "src/routes";
@@ -188,11 +189,11 @@ export const Default = (
         total_pages: hasNoClaims ? 1 : args.total_pages,
         total_records: hasNoClaims ? 0 : args.total_pages * 25,
         order_by: "created_at",
-        order_direction: "asc",
+        order_direction: "ascending",
       },
     },
     portalFlow: {
-      updateQuery: (params: { [key: string]: string }) => {
+      updateQuery: (params: NullableQueryParams) => {
         setQuery(params);
       },
       pathname: routes.employers.dashboard,

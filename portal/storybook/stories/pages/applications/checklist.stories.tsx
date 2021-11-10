@@ -174,9 +174,9 @@ export const DefaultStory = (
 
   const appLogic = useMockableAppLogic({
     benefitsApplications: {
-      update: () => {},
+      update: () => Promise.resolve(),
       warningsLists: {
-        [claim.application_id]: warnings,
+        [claim.application_id]: warnings ?? [],
       },
     },
     documents: {

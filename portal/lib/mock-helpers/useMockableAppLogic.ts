@@ -24,7 +24,7 @@ const authenticateUser = (appLogic: AppLogic) => {
  */
 const useMockableAppLogic = (
   mockedLogic: {
-    [appLogicKey in keyof AppLogic]?: { [key: string]: unknown };
+    [appLogicKey in keyof AppLogic]?: Partial<AppLogic[appLogicKey]>;
   } = {},
   { isLoggedIn } = { isLoggedIn: true }
 ): AppLogic => {

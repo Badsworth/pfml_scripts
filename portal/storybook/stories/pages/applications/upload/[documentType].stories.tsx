@@ -1,8 +1,8 @@
-import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
-import DocumentCollection from "src/models/DocumentCollection";
 import { DocumentUpload } from "src/pages/applications/upload/[documentType]";
 import { Props } from "storybook/types";
 import React from "react";
+import User from "src/models/User";
+import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
   title: "Pages/Applications/Upload/[DocumentType]",
@@ -30,45 +30,31 @@ export default {
   },
 };
 
-const appLogic = {
-  benefitsApplications: {
-    update: () => {},
-  },
-  documents: {
-    attachDocument: () => {},
-    documents: new DocumentCollection([]),
-  },
-  appErrors: new AppErrorInfoCollection(),
-  setAppErrors: () => {},
-  catchError: () => {},
-  clearErrors: () => {},
-  portalFlow: {
-    getNextPageRoute: () => "/storybook-mock",
-  },
-};
-
 type DocumentUploadProps = Props<typeof DocumentUpload>;
 
 export const Default = ({
   documentType,
-  ...args
+  isLoadingDocuments,
 }: DocumentUploadProps & {
   documentType: DocumentUploadProps["query"]["documentType"];
 }) => {
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'pageRoute' does not exist on type '{ get... Remove this comment to see the full error message
-  appLogic.portalFlow.pageRoute = `/applications/upload/${documentType}`;
+  const appLogic = useMockableAppLogic({
+    portalFlow: {
+      pageRoute: `/applications/upload/${documentType}`,
+    },
+  });
 
   return (
     <DocumentUpload
-      {...args}
-      // @ts-expect-error ts-migrate(2740) FIXME: Type '{ benefitsApplications: { update: () => void... Remove this comment to see the full error message
       appLogic={appLogic}
       documents={[]}
+      isLoadingDocuments={isLoadingDocuments}
       query={{
         claim_id: "mock-claim-id",
         absence_id: "mock-absence-case-id",
         documentType,
       }}
+      user={new User({})}
     />
   );
 };

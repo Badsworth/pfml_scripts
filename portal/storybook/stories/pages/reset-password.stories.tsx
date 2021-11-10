@@ -1,7 +1,7 @@
-import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import { Props } from "storybook/types";
 import React from "react";
 import ResetPassword from "src/pages/reset-password";
+import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
   title: "Pages/Auth/Reset Password",
@@ -27,15 +27,11 @@ export const Page = (
     authData.resetPasswordUsername = "test@example.com";
   }
 
-  const appLogic = {
+  const appLogic = useMockableAppLogic({
     auth: {
       authData,
-      resetPassword: () => {},
-      resendForgotPasswordCode: () => {},
     },
-    appErrors: new AppErrorInfoCollection(),
-  };
+  });
 
-  // @ts-expect-error ts-migrate(2740) FIXME: Type '{ auth: { authData: {}; resetPassword: () =>... Remove this comment to see the full error message
   return <ResetPassword appLogic={appLogic} />;
 };
