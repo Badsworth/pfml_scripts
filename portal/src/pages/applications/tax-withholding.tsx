@@ -29,7 +29,7 @@ export const TaxWithholding = (props: WithBenefitsApplicationProps) => {
 
   const handleSave = async () => {
     const data = {
-      withhold_taxes: withholdTax,
+      is_withholding_tax: withholdTax,
     };
     await appLogic.benefitsApplications.submitTaxWithholdingPreference(
       claim.application_id,

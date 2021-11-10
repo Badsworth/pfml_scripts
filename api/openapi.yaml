@@ -2571,7 +2571,7 @@ components:
     TaxWithholdingPreferenceRequestBody:
       type: object
       properties:
-        withhold_taxes:
+        is_withholding_tax:
           type: boolean
           nullable: false
 

@@ -29,7 +29,7 @@ def test_submit_withholding_preference_success(
     response = client.post(
         "/v1/applications/{}/submit_tax_withholding_preference".format(application_id),
         headers={"Authorization": "Bearer {}".format(auth_token)},
-        json={"withhold_taxes": True},
+        json={"is_withholding_tax": True},
     )
     assert response.status_code == 201
     response_body = response.get_json()
@@ -46,7 +46,7 @@ def test_submit_withholding_preference_poorly_formatted(client, application, aut
     response = client.post(
         "/v1/applications/{}/submit_tax_withholding_preference".format(application.application_id),
         headers={"Authorization": "Bearer {}".format(auth_token)},
-        json={"withhold_taxes": None},
+        json={"is_withholding_tax": None},
     )
     tests.api.validate_error_response(
         response,
@@ -54,7 +54,7 @@ def test_submit_withholding_preference_poorly_formatted(client, application, aut
         message="Request Validation Error",
         errors=[
             {
-                "field": "withhold_taxes",
+                "field": "is_withholding_tax",
                 "message": "None is not of type 'boolean'",
                 "rule": "boolean",
                 "type": "type",
@@ -74,7 +74,7 @@ def test_submit_withholding_preference_already_set(
     response = client.post(
         "/v1/applications/{}/submit_tax_withholding_preference".format(application_id),
         headers={"Authorization": "Bearer {}".format(auth_token)},
-        json={"withhold_taxes": True},
+        json={"is_withholding_tax": True},
     )
     tests.api.validate_error_response(
         response,

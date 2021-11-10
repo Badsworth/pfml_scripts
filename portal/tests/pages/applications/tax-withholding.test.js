@@ -74,7 +74,7 @@ describe("TaxWithholding", () => {
       expect(submitTaxPreferenceSpy).toHaveBeenCalledWith(
         "mock_application_id",
         {
-          withhold_taxes: true,
+          is_withholding_tax: true,
         }
       );
     });

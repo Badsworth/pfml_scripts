@@ -3,6 +3,7 @@ from itertools import chain, combinations
 from typing import Any, Dict, Iterable, List, Optional, Union
 
 from dateutil.relativedelta import relativedelta
+from werkzeug.datastructures import Headers
 
 import massgov.pfml.db as db
 import massgov.pfml.util.logging
@@ -44,6 +45,28 @@ def get_application_issues(application: Application) -> List[ValidationErrorDeta
     issues += get_leave_periods_issues(application)
     issues += get_conditional_issues(application)
 
+    return issues
+
+
+def get_application_complete_issues(
+    application: Application, headers: Headers
+) -> List[ValidationErrorDetail]:
+    """Takes in an application and outputs any validation issues.
+        Goes beyond get_application_issues to validate fields required only by complete step, usually steps later in the application process.
+    """
+    issues = get_application_issues(application)
+
+    # only verify tax when tax is enabled
+    if headers.get("X-FF-Tax-Withholding-Enabled") and not isinstance(
+        application.is_withholding_tax, bool
+    ):
+        issues.append(
+            ValidationErrorDetail(
+                type=IssueType.required,
+                message="Tax withholding preference is required",
+                field="is_withholding_tax",
+            )
+        )
     return issues
 
 

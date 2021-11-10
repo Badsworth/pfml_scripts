@@ -1,4 +1,5 @@
 from datetime import date, datetime
+from unittest import mock
 
 import pytest
 from freezegun import freeze_time
@@ -6,6 +7,7 @@ from freezegun import freeze_time
 from massgov.pfml.api.models.applications.common import DurationBasis, FrequencyIntervalBasis
 from massgov.pfml.api.validation.application_rules import (
     get_always_required_issues,
+    get_application_complete_issues,
     get_conditional_issues,
     get_continuous_leave_issues,
     get_intermittent_leave_issues,
@@ -2476,3 +2478,35 @@ def test_previous_leaves_cannot_overlap_leave_periods():
             message="Previous leaves cannot overlap with leave periods. Received leave period 2021-01-05 – 2021-02-28 and previous leave 2021-01-03 – 2021-03-01.",
         ),
     ] == issues
+
+
+@pytest.mark.parametrize(
+    "headers, is_withholding_tax, expected_issues",
+    [
+        ({}, None, []),
+        (
+            {"X-FF-Tax-Withholding-Enabled": True},
+            None,
+            [
+                ValidationErrorDetail(
+                    type=IssueType.required,
+                    message="Tax withholding preference is required",
+                    field="is_withholding_tax",
+                ),
+            ],
+        ),
+        ({"X-FF-Tax-Withholding-Enabled": True}, True, []),
+        ({"X-FF-Tax-Withholding-Enabled": True}, False, []),
+    ],
+)
+def test_get_application_complete_issues(headers, is_withholding_tax, expected_issues):
+    with mock.patch(
+        "massgov.pfml.api.validation.application_rules.get_application_issues", return_value=[]
+    ) as mock_get_app_issues:
+        application = ApplicationFactory.build(is_withholding_tax=is_withholding_tax)
+
+        issues = get_application_complete_issues(application, headers)
+
+        mock_get_app_issues.assert_called_once_with(application)
+
+        assert issues == expected_issues
