@@ -371,14 +371,14 @@ export function verifyIdentity(application: ApplicationRequestBody): void {
   });
   cy.contains("button", "Save and continue").click();
 
-  cy.contains("Do you have a Massachusetts driver’s license or ID card?");
+  const fieldset = cy.contains("Do you have a Massachusetts driver’s license or ID card?").parent()
   if (application.has_state_id) {
-    cy.contains("Yes").click();
+    fieldset.contains("label", "Yes").click();
     cy.contains("Enter your license or ID number").type(
       `{selectall}{backspace}${application.mass_id}`
     );
   } else {
-    cy.contains("No").click();
+    fieldset.contains("label", "No").click();
   }
   cy.contains("button", "Save and continue").click();
 
