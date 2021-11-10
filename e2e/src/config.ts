@@ -64,6 +64,8 @@ function getRawEnvironment() {
 
     DOR_IMPORT_URI: process.env.E2E_DOR_IMPORT_URI,
     DOR_ETL_ARN: process.env.E2E_DOR_ETL_ARN,
+
+    FINEOS_HAS_TAX_WITHHOLDING: process.env.FINEOS_HAS_TAX_WITHHOLDING,
   };
 }
 

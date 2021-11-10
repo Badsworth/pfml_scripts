@@ -1,4 +1,5 @@
 import {
+  CaringLeaveClaim,
   MilitaryCaregiverClaim,
   MilitaryExigencyClaim,
   ScenarioSpecification,
@@ -538,5 +539,20 @@ export const MED_LSDCR: ScenarioSpecification = {
       employer_decision: "Approve",
       fraud: "No",
     },
+  },
+};
+
+export const CARE_TAXES: ScenarioSpecification<CaringLeaveClaim> = {
+  employee: { wages: 30000 },
+  claim: {
+    reason: "Care for a Family Member",
+    label: "CARE_TAXES",
+    leave_dates: [
+      startOfWeek(addDays(new Date(), 60)), // claims must start in 2022 in order to test SIT/FIT withholdings
+      startOfWeek(addDays(new Date(), 74)),
+    ],
+    work_pattern_spec: "standard",
+    reduced_leave_spec: "0,240,240,240,240,240,0",
+    docs: { CARING: {}, MASSID: {} },
   },
 };
