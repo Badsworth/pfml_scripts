@@ -18,6 +18,7 @@ concurrency:
   group: ${{ github.head_ref }}-ci
   cancel-in-progress: true
 
+jobs:
   # TODO(kevin): Not sure if this ignores concurrency cancellations
   post-to-slack:
     name: Post failures to slack
