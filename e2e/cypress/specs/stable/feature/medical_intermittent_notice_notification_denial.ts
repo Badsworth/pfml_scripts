@@ -149,8 +149,9 @@ describe("Denial Notification and Notice", () => {
                 timestamp_from: submission.timestamp_from,
                 debugInfo: { "Fineos Claim ID": submission.fineos_absence_id },
               },
-              // Reduced timeout, since we have multiple tests that run prior to this.
-              30000
+              // Adding an additional 30 seconds based on recent failures
+              // retrieving this notification during E2E runs
+              60000
             )
             .then(() => {
               const dob =
