@@ -1,0 +1,48 @@
+# Partial workflow to send a slack message using the credentials stored in AWS Parameter Store.
+#
+name: Send slack message
+
+inputs:
+  channel-id:
+    description: "The slack channel ID or name to receive a message"
+    required: false
+    default: 'C01HEAJPE76' # mass-pfml-deploys-shared
+    type: string
+  title:
+    description: "The text to send"
+    required: true
+    type: string
+  color:
+    description: "The message sidebar color"
+    required: true
+    type: string
+
+runs:
+  using: "composite"
+  steps:
+    - name: Configure AWS Credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
+        aws-region: us-east-1
+        role-to-assume: ci-run-deploys
+        role-duration-seconds: 3600
+
+    - name: Pull slackbot API token from SSM
+      uses: "marvinpinto/action-inject-ssm-secrets@latest"
+      with:
+        ssm_parameter: "/admin/common/nava-slackbot-api-key"
+        env_variable_name: "slackbot_token"
+
+    - name: Post to Slack
+      uses: slackapi/slack-github-action@v1.15.0
+      with:
+        channel-id: inputs.channel-id
+        payload: | 
+          {
+            "title": "${{ inputs.title }}",
+            "color": "${{ inputs.color }}"
+          }
+      env:
+        SLACK_BOT_TOKEN: ${{ env.SLACKBOT_TOKEN }}
