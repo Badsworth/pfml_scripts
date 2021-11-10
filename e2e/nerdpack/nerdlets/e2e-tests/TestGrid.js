@@ -72,6 +72,7 @@ function buildRuns(data) {
         testCount: 0,
         categories: [],
         results: [],
+        branch: result.branch,
       };
     }
     seenTests.add(result.file);
@@ -141,6 +142,7 @@ function buildRuns(data) {
       runId,
       environment: sample.environment,
       runUrl: sample.runUrl,
+      branch: sample.branch,
       timestamp: Math.min(...Object.values(runResults).map((r) => r.timestamp)),
     };
   });
@@ -307,7 +309,7 @@ export default function TestGrid({ accountId, environment, runIds }) {
   const children = ({ rows, uniqueRuns }) => {
     return (
       <div>
-        {uniqueRuns.map(({ runId, environment, runUrl }, i) => (
+        {uniqueRuns.map(({ runId, environment, runUrl, branch }, i) => (
           <div className={"run-notes"}>
             <span>
               {`${i + 1} Run ID: ${runId}, Environment: ${labelEnv(
@@ -315,6 +317,13 @@ export default function TestGrid({ accountId, environment, runIds }) {
               )}`}
             </span>
             <Link to={runUrl}>View in Cypress</Link>
+            {branch != "main" && (
+              <Link
+                to={`https://github.com/EOLWD/pfml/compare/main...${branch}`}
+              >
+                {branch}
+              </Link>
+            )}
           </div>
         ))}
         <table className={"e2e-status"}>
