@@ -69,11 +69,11 @@ exports[`Employer welcome renders page 1`] = `
           />
         </svg>
         View all applications
-        <strong
-          class="usa-tag radius-md margin-left-1"
+        <span
+          class="usa-tag display-inline-block text-bold text-middle text-no-wrap margin-left-1"
         >
           New
-        </strong>
+        </span>
       </h2>
       <p>
         When you log into your account you can now use the 

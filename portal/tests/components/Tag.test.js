@@ -13,12 +13,9 @@ describe("Tag", () => {
     }
   );
 
-  it("does not have default padding when alternative className padding-x is given", () => {
-    const { container } = render(
-      <Tag state="pending" label="Foo" className="padding-x-1" />
-    );
+  it("supports className prop", () => {
+    const { container } = render(<Tag label="Foo" className="margin-left-1" />);
 
-    expect(container.firstChild).not.toHaveClass("padding-x-205");
-    expect(container.firstChild).toHaveClass("padding-x-1");
+    expect(container.firstChild).toHaveClass("margin-left-1");
   });
 });

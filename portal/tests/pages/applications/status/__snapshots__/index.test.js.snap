@@ -22,7 +22,7 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
         From June 1, 2021 to June 8, 2021
       </p>
       <span
-        class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-success-dark bg-success-lighter padding-x-205"
+        class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-success-dark bg-success-lighter"
       >
         Approved
       </span>
@@ -67,7 +67,7 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
         From August 1, 2021 to August 8, 2021
       </p>
       <span
-        class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap bg-primary-lighter text-primary padding-x-205"
+        class="usa-tag display-inline-block text-bold text-middle text-no-wrap bg-primary-lighter text-primary"
       >
         Pending
       </span>
@@ -98,7 +98,7 @@ exports[`Status LeaveDetails renders page separated by keys if object of absence
         From August 1, 2021 to August 8, 2021
       </p>
       <span
-        class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-base-darker bg-base-lightest padding-x-205"
+        class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-base-darker bg-base-lightest"
       >
         Withdrawn
       </span>
@@ -146,7 +146,7 @@ exports[`Status LeaveDetails renders page with one section if absenceDetails has
         From August 1, 2021 to August 8, 2021
       </p>
       <span
-        class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-base-darker bg-base-lightest padding-x-205"
+        class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-base-darker bg-base-lightest"
       >
         Withdrawn
       </span>

@@ -6,17 +6,24 @@ import { capitalize } from "lodash";
 export default {
   title: "Components/Tag",
   component: Tag,
-  argTypes: {
-    state: {
-      defaultValue: "success",
-      control: {
-        type: "radio",
-        options: ["success", "error", "warning", "inactive", "pending"],
-      },
-    },
+  args: {
+    label: "Tag",
   },
 };
 
+const states: Array<Props<typeof Tag>["state"]> = [
+  "success",
+  "error",
+  "warning",
+  "inactive",
+  "pending",
+];
+
 export const Default = (args: Props<typeof Tag>) => (
-  <Tag {...args} label={capitalize(args.state)} />
+  <React.Fragment>
+    <Tag {...args} />
+    {states.map((state) => (
+      <Tag state={state} label={capitalize(state)} key={state} />
+    ))}
+  </React.Fragment>
 );

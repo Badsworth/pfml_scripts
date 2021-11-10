@@ -208,7 +208,6 @@ const InProgressStatusCard = (props: InProgressStatusCardProps) => {
         })}
       />
       <Tag
-        className="text-no-wrap"
         state="warning"
         label={t("components.applicationCardV2.inProgressTag")}
       />

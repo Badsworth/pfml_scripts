@@ -4,16 +4,22 @@ import classnames from "classnames";
 export interface TagProps {
   className?: string;
   label: string;
-  state: "success" | "warning" | "error" | "inactive" | "pending";
+  /**
+   * Keywords for sharing common styling for similar Tag states. The state value
+   * may not exactly match the tag content (i.e "Approved" is a success-like state).
+   */
+  state?: "success" | "warning" | "error" | "inactive" | "pending";
 }
 
+/**
+ * [USWDS Reference ↗](https://designsystem.digital.gov/components/tag/)
+ */
 const Tag = ({ label, state, className }: TagProps) => {
   const classes = classnames(
     "usa-tag",
     "display-inline-block",
     "text-bold",
-    "padding-y-05",
-    "radius-lg",
+    "text-middle",
     "text-no-wrap",
     {
       "text-success-dark": state === "success",
@@ -26,7 +32,6 @@ const Tag = ({ label, state, className }: TagProps) => {
       "bg-base-lightest": state === "inactive",
       "bg-primary-lighter": state === "pending",
       "text-primary": state === "pending",
-      "padding-x-205": !className,
     },
     className
   );

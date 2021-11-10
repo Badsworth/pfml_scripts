@@ -77,7 +77,10 @@ export const Status = (props: WithEmployerClaimProps) => {
         {absenceId}
       </StatusRow>
       <StatusRow label={t("pages.employersClaimsStatus.statusLabel")}>
-        <AbsenceCaseStatusTag status={claim.status} />
+        {/* Wrapped with margin-0 to collapse awkward default spacing between the heading and the tag */}
+        <div className="margin-0">
+          <AbsenceCaseStatusTag status={claim.status} />
+        </div>
       </StatusRow>
       <StatusRow label={t("pages.employersClaimsStatus.leaveReasonLabel")}>
         {t("pages.employersClaimsStatus.leaveReasonValue", {
