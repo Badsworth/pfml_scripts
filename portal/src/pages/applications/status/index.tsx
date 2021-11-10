@@ -291,9 +291,14 @@ export const Status = ({
         href={routes.applications.index}
       />
       <div className="measure-6">
-        <Title weight="normal" small>
-          {t("pages.claimsStatus.applicationDetails")}
-        </Title>
+        <Title hidden>{t("pages.claimsStatus.applicationTitle")}</Title>
+        {isFeatureEnabled("claimantShowPayments") &&
+          claimDetail.payments.length > 0 && (
+            <StatusNavigationTabs
+              activePath={appLogic.portalFlow.pathname}
+              absence_id={absenceId}
+            />
+          )}
 
         {/* Heading section */}
 
@@ -319,13 +324,6 @@ export const Status = ({
             </div>
           )}
         </div>
-
-        {isFeatureEnabled("claimantShowPayments") && (
-          <StatusNavigationTabs
-            activePath={appLogic.portalFlow.pathname}
-            absence_id={absenceId}
-          />
-        )}
 
         {hasPendingStatus && (
           <Timeline

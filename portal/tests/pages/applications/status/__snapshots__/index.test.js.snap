@@ -334,7 +334,7 @@ exports[`Status renders the page if the only errors are DocumentsLoadError 1`] =
     class="measure-6"
   >
     <h1
-      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3 text-normal"
+      class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2 usa-sr-only"
       tabindex="-1"
     >
       Application details
@@ -437,7 +437,7 @@ exports[`Status renders the page with claim detail 1`] = `
     class="measure-6"
   >
     <h1
-      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3 text-normal"
+      class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2 usa-sr-only"
       tabindex="-1"
     >
       Application details
@@ -540,7 +540,7 @@ exports[`Status renders the page with claim detail when there is absence_case_id
     class="measure-6"
   >
     <h1
-      class="js-title margin-top-0 margin-bottom-2 font-heading-sm line-height-sans-3 text-normal"
+      class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2 usa-sr-only"
       tabindex="-1"
     >
       Application details

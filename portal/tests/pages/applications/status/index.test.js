@@ -224,7 +224,17 @@ describe("Status", () => {
     renderPage(
       Status,
       {
-        addCustomSetup: setupHelper({ ...defaultClaimDetail }),
+        addCustomSetup: setupHelper({
+          ...defaultClaimDetail,
+          absence_periods: [
+            {
+              period_type: "Reduced",
+              reason: LeaveReason.bonding,
+              request_decision: "Approved",
+              reason_qualifier_one: "Newborn",
+            },
+          ],
+        }),
       },
       props
     );
