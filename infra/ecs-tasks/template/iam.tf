@@ -819,12 +819,10 @@ resource "aws_iam_role_policy" "pub_payments_process_1099_role_s3_access_policy"
     Statement = [
       {
         Action = [
-          "s3:ListBucket",
           "s3:Get*",
           "s3:List*",
           "s3:PutObject",
-          "s3:DeleteObject",
-          "s3:AbortMultipartUpload"
+          "s3:DeleteObject"
         ]
         Effect   = "Allow"
         Resource = [
