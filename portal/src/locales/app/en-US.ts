@@ -2548,6 +2548,21 @@ const pages = {
     title:
       "Massachusetts workers can now apply for Paid Family and Medical Leave. Learn more about this <mass-paid-leave-link>new paid leave program</mass-paid-leave-link>.",
   },
+  payments: {
+    changesToPaymentsAmountAnswer:
+      "<p>See your approval notice for your maximum weekly benefit. We may reduce your benefit amount based on other leave, income and benefits you reported to us. You will receive another notice in this application’s details if we reduce or offset your benefit amount.</p><p>Other scenarios that may change your benefit amount are:</p><ul> <li>You reach the $850 benefit total across multiple employers</li><li>If you transition from medical pregnancy to leave to bond with a child</li><li>Extending your leave</li></ul> <p>Check your <view-notices-link>application’s notices</view-notices-link> to see your approval notice and any updates to your approved benefit amount.</p>",
+    changesToPaymentsAmountQuestion: "What may change your benefit amount",
+    changesToPaymentsHeader: "Changes to payments",
+    changesToPaymentsScheduleAnswer:
+      "<ul> <li>State and federal holidays</li><li>Your bank’s processes</li><li>Pay periods that end on a weekend</li><li>Payments may be delayed if we need to adjust your benefit amount based on extensions, other income or benefits you’ve reported and other process delays</li></ul>",
+    changesToPaymentsScheduleQuestion: "What may change your payment schedule",
+    changesToPaymentsYourPreferencesAnswer:
+      "<p>To make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. If you request a change to your start and end dates, we may need to review your application again.</p>",
+    changesToPaymentsYourPreferencesQuestion: "Change your payment preference",
+    questionsDetails:
+      "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
+    questionsHeader: "Questions?",
+  },
   userConsentToDataSharing: {
     agreementBody:
       "By continuing, I am indicating that I have read and understood the above user agreements. I give the Department of Family and Medical Leave permission to collect, share, and use my information consistent with the terms of the agreements linked$t(chars.nbsp)above.",

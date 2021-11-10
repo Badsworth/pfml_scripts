@@ -292,13 +292,12 @@ export const Status = ({
       />
       <div className="measure-6">
         <Title hidden>{t("pages.claimsStatus.applicationTitle")}</Title>
-        {isFeatureEnabled("claimantShowPayments") &&
-          claimDetail.payments.length > 0 && (
-            <StatusNavigationTabs
-              activePath={appLogic.portalFlow.pathname}
-              absence_id={absenceId}
-            />
-          )}
+        {isFeatureEnabled("claimantShowPayments") && hasApprovedStatus && (
+          <StatusNavigationTabs
+            activePath={appLogic.portalFlow.pathname}
+            absence_id={absenceId}
+          />
+        )}
 
         {/* Heading section */}
 

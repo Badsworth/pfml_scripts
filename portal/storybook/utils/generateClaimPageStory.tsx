@@ -82,6 +82,7 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
   if (!claims) {
     // Customize mock claims for different stories
     switch (Component.displayName) {
+      // Pages contextualized based on leave type
       case "ConcurrentLeaves":
         claims = {
           "continuous leave": createMockBenefitsApplication("continuous"),
@@ -125,6 +126,12 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
         });
       })
     );
+
+    // TODO (PORTAL-1075): Remove `query` object once Story for Payments page is complete
+    const query = {
+      absence_id: "mock-absence-case-id",
+    };
+
     const appLogic = useMockableAppLogic({ appErrors });
 
     return (
@@ -133,7 +140,7 @@ function generateDefaultStory(Component, mockClaims, possibleErrors) {
         claim={claim}
         user={user}
         documents={appLogic.documents.documents.items}
-        query={{}}
+        query={query}
       />
     );
   };

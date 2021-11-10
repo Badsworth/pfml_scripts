@@ -113,6 +113,58 @@ describe("Status", () => {
     expect(goToSpy).toHaveBeenCalledWith(routes.applications.index);
   });
 
+  it("shows StatusNavigationTabs if claimantShowPayments feature flag is enabled", () => {
+    process.env.featureFlags = {
+      claimantShowPayments: true,
+    };
+    renderPage(
+      Status,
+      {
+        addCustomSetup: setupHelper({
+          ...defaultClaimDetail,
+          absence_periods: [
+            {
+              period_type: "Reduced",
+              reason: LeaveReason.bonding,
+              request_decision: "Approved",
+              reason_qualifier_one: "Newborn",
+            },
+          ],
+        }),
+      },
+      props
+    );
+
+    expect(screen.getByRole("link", { name: "Payments" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Application" })
+    ).toBeInTheDocument();
+  });
+
+  it("does not show StatusNavigationTabs if claimantShowPayments feature flag is disabled", () => {
+    renderPage(
+      Status,
+      {
+        addCustomSetup: setupHelper({
+          ...defaultClaimDetail,
+          absence_periods: [
+            {
+              period_type: "Reduced",
+              reason: LeaveReason.bonding,
+              request_decision: "Approved",
+              reason_qualifier_one: "Newborn",
+            },
+          ],
+        }),
+      },
+      props
+    );
+
+    expect(
+      screen.queryByRole("link", { name: "Payments" })
+    ).not.toBeInTheDocument();
+  });
+
   it("redirects to 404 if there's no absence case ID", () => {
     renderPage(
       Status,
@@ -215,34 +267,6 @@ describe("Status", () => {
     );
 
     expect(container).toMatchSnapshot();
-  });
-
-  it("shows StatusNavigationTabs if claimantShowPayments feature flag is enabled", () => {
-    process.env.featureFlags = {
-      claimantShowPayments: true,
-    };
-    renderPage(
-      Status,
-      {
-        addCustomSetup: setupHelper({
-          ...defaultClaimDetail,
-          absence_periods: [
-            {
-              period_type: "Reduced",
-              reason: LeaveReason.bonding,
-              request_decision: "Approved",
-              reason_qualifier_one: "Newborn",
-            },
-          ],
-        }),
-      },
-      props
-    );
-
-    expect(screen.getByRole("link", { name: "Payments" })).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "Application" })
-    ).toBeInTheDocument();
   });
 
   describe("success alert", () => {
@@ -1002,6 +1026,7 @@ describe("Status", () => {
       });
     });
   });
+
   describe("manage your application", () => {
     it("is not displayed if all the claim statuses on an application are Withdrawn, Cancelled, or Denied", () => {
       const absence_periods = ["Withdrawn", "Cancelled", "Denied"].map(

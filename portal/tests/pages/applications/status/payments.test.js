@@ -2,6 +2,7 @@ import Payments from "../../../../src/pages/applications/status/payments";
 import { mockRouter } from "next/router";
 import { renderPage } from "../../../test-utils";
 import routes from "../../../../src/routes";
+import { screen } from "@testing-library/react";
 
 jest.mock("next/router");
 
@@ -14,7 +15,9 @@ const defaultClaimDetail = {
 };
 
 const props = {
-  query: { absence_id: defaultClaimDetail.fineos_absence_id },
+  query: {
+    absence_id: defaultClaimDetail.fineos_absence_id,
+  },
 };
 
 describe("Payments", () => {
@@ -41,9 +44,39 @@ describe("Payments", () => {
       props
     );
 
-    expect(goToSpy).toHaveBeenCalledWith(
-      routes.applications.status.claim,
-      props.query
-    );
+    expect(goToSpy).toHaveBeenCalledWith(routes.applications.status.claim, {
+      absence_id: props.query.absence_id,
+    });
+  });
+
+  it("renders the back button", () => {
+    renderPage(Payments, undefined, props);
+
+    const backButton = screen.getByRole("link", {
+      name: /back to your applications/i,
+    });
+
+    expect(backButton).toBeInTheDocument();
+  });
+
+  it("renders the `changes to payments` section", () => {
+    renderPage(Payments, undefined, props);
+
+    const paymentHeader = screen.getByRole("heading", {
+      name: /changes to payments/i,
+    });
+    expect(paymentHeader.parentNode).toMatchSnapshot();
+  });
+
+  it("renders the `questions?` section", () => {
+    renderPage(Payments, undefined, props);
+
+    const questionsHeader = screen.getByRole("heading", {
+      name: /questions\?/i,
+    });
+    expect(questionsHeader).toBeInTheDocument();
+
+    const details = screen.getAllByText(/call the contact center at/i);
+    expect(details.length).toBe(2);
   });
 });
