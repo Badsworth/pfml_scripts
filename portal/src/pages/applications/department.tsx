@@ -120,7 +120,7 @@ export const OrganizationUnit = (props: OrganizationUnitProps) => {
 
     if (errors.length > 0) {
       appLogic.setAppErrors(new AppErrorInfoCollection(errors));
-      return null;
+      return;
     }
 
     const finalOrganizationUnitDecision: string =
