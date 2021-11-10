@@ -34,7 +34,7 @@ const flagsConfig = {
     noMaintenance: false,
 
     // When this flag is false, you can bypass the deparment capture form when applying
-    claimantShowDepartments: false,
+    claimantShowOrganizationUnits: false,
 
     // When this flag is enabled, the user can see the site.
     // To immediately hide the site from people who previously overrode this
