@@ -658,7 +658,7 @@ const claimantFlow: {
     [routes.applications.department]: {
       meta: {
         step: ClaimSteps.employerInformation,
-        fields: departmentFields, // @todo real fields here
+        fields: departmentFields,
       },
       on: {
         CONTINUE: [

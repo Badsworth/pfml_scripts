@@ -277,12 +277,6 @@ export const OrganizationUnit = (props: OrganizationUnitProps) => {
           : NOT_LISTED.organization_unit_id
         : null,
     };
-    // console.log({
-    //   selectedChoice,
-    //   hasValidValue,
-    //   hasDefaultValue,
-    //   newInitialState
-    // })
     updateFields(newInitialState);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [organizationUnits]);
