@@ -28,6 +28,7 @@ import {
   COMPONENTS_WIDTH,
   ENVS,
 } from "../common";
+import Navigation from "../common/navigation"
 
 function extractEnvironmentData(data) {
   const map = data
@@ -63,7 +64,8 @@ export default function EnvironmentsTable({ platformState }) {
   ).join(", ")}
                  FROM CustomDeploymentMarker FACET environment SINCE 1 month ago
                  LIMIT MAX`;
-  return (
+  return [
+    <Navigation></Navigation>,
     <NrqlQuery query={query} accountId={platformState.accountId}>
       {({ data: environmentData, loading, error }) => {
         if (loading) {
@@ -73,7 +75,7 @@ export default function EnvironmentsTable({ platformState }) {
           return (
             <SectionMessage
               title={"There was an error executing the query"}
-              description={error}
+              description={error.message}
               type={SectionMessage.TYPE.CRITICAL}
             />
           );
@@ -147,7 +149,7 @@ export default function EnvironmentsTable({ platformState }) {
         );
       }}
     </NrqlQuery>
-  );
+  ];
 }
 
 function LatestE2ERuns({ environment, accountId, count = 6 }) {
@@ -191,7 +193,7 @@ function LatestE2ERuns({ environment, accountId, count = 6 }) {
           return (
             <SectionMessage
               title={"There was an error executing the query"}
-              description={error}
+              description={error.message}
               type={SectionMessage.TYPE.CRITICAL}
             />
           );
@@ -238,7 +240,7 @@ function LatestDeploymentVersion({ environment, component, accountId }) {
           return (
             <SectionMessage
               title={"There was an error executing the query"}
-              description={error}
+              description={error.message}
               type={SectionMessage.TYPE.CRITICAL}
             />
           );

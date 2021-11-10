@@ -8,37 +8,7 @@ import {
 } from "nr1";
 import React from "react";
 import { labelEnv } from "../common";
-
-const CATEGORY_PRIORITY = {
-  content: {
-    "potential-edm": "EDM",
-    "test-update": "HIGH",
-  },
-  infrastructure: {
-    "timeout-service": "LOW",
-    authentication: "HIGH",
-    "failure-400": "EDM",
-    "failure-500": "EDM",
-    "failure-503": "MEDIUM",
-    "failure-504": "LOW",
-  },
-  known: { priority: "LOW" },
-  notification: { priority: "MEDIUM" },
-};
-
-const ERROR_PRIORITY = ["EDM", "HIGH", "MEDIUM", "LOW"];
-
-function getErrorPriority(cat, sub) {
-  if (CATEGORY_PRIORITY[cat]) {
-    if (CATEGORY_PRIORITY[cat].priority) {
-      return CATEGORY_PRIORITY[cat]?.priority;
-    }
-    if (CATEGORY_PRIORITY[cat][sub]) {
-      return CATEGORY_PRIORITY[cat][sub];
-    }
-  }
-  return "HIGH";
-}
+import { ERROR_PRIORITY, getErrorPriority } from "../common/ErrorPriority";
 
 function RunIdsQuery({ children, environment, accountId }) {
   const whereClauses = [];
@@ -104,7 +74,6 @@ function buildRuns(data) {
         results: [],
       };
     }
-
     seenTests.add(result.file);
     if (result.status != "passed") {
       let errorPriority = getErrorPriority(result.category, result.subCategory);
