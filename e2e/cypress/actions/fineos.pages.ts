@@ -1650,7 +1650,7 @@ class PaidLeavePage {
 
   assertOwnershipAssignTo(assign: string): this {
     this.onTab("General Claim");
-    cy.get('span[id="CaseDetails_un29_AssignedTo"]').should((element) => {
+    cy.get('span[id*="AssignedTo"]').should((element) => {
       expect(
         element,
         `Expected the Assigned To display the following "${assign}"`
