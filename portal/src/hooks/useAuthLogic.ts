@@ -122,7 +122,9 @@ const useAuthLogic = ({
    * @param password Password
    * @param [next] Redirect url after login
    */
-  const login = async (username = "", password: string, next?: string) => {
+  const login = async (username = "", password: string) => {
+    console.log("IN login");
+
     appErrorsLogic.clearErrors();
     const trimmedUsername = trim(username);
 
@@ -138,16 +140,19 @@ const useAuthLogic = ({
 
     try {
       trackAuthRequest("signIn");
-      await Auth.signIn(trimmedUsername, password);
+      var user = await Auth.signIn(trimmedUsername, password);
       tracker.markFetchRequestEnd();
 
-      setIsLoggedIn(true);
+      if (user.challengeName !== 'SMS_MFA') {
+        console.log('Need to set up MFA with SMS!')
+        await setUpSMSMFA(user)
 
-      if (next) {
-        portalFlow.goTo(next);
-      } else {
-        portalFlow.goToPageFor("LOG_IN");
+        // do it again! (this sends the SMS code the second time)
+        user = await Auth.signIn(trimmedUsername, password);
       }
+
+      // return the user, for use in the MFA flow
+      return user
     } catch (error) {
       if (!isCognitoError(error)) {
         appErrorsLogic.catchError(error);
@@ -162,6 +167,60 @@ const useAuthLogic = ({
       appErrorsLogic.catchError(authError);
     }
   };
+
+  const setUpSMSMFA = async (user: any) => {
+    console.log("IN setPreferredMFA")
+
+    var phoneNumber = '0001112222';
+    phoneNumber = prompt("What 10-digit phone number do you want to use for SMS? Currently: " + phoneNumber);
+    console.log('Phone number is: ' + phoneNumber)
+
+    console.log("Calling updateUserAttributes")
+    let result = await Auth.updateUserAttributes(user, {
+        'phone_number': '+1' + phoneNumber
+    });
+    console.log(result); // SUCCESS
+
+    /*
+    console.log("Calling getPreferredMFA")
+    Auth.getPreferredMFA(user,{
+      bypassCache: true
+    }).then((data) => {
+      console.log('Current preferred MFA type is: ' + data);
+    })
+    */
+
+    console.log("Calling setPreferredMFA")
+    try {
+      Auth.setPreferredMFA(user, 'SMS').then((data) => {console.log(data)});
+    } catch (error) {
+      console.log("Oops")
+      console.log(error)
+    }
+  };
+
+  const verifyMFACodeAndLogIn = async (user: any, next?: string) => {
+    console.log('IN verifyMFACodeAndLogIn');
+
+    const input = prompt("What's the 6-digit number you received via SMS?");
+    console.log('MFA code is: ' + input)
+
+    await Auth.confirmSignIn(
+        user,   // Return object from Auth.signIn()
+        input,   // Confirmation code
+        'SMS_MFA'
+    );
+
+    console.log('SUCCESS!')
+
+    setIsLoggedIn(true);
+
+    if (next) {
+      portalFlow.goTo(next);
+    } else {
+      portalFlow.goToPageFor("LOG_IN");
+    }
+  }
 
   /**
    * Log out of the Portal
@@ -453,6 +512,7 @@ const useAuthLogic = ({
     resetPassword,
     resendForgotPasswordCode,
     verifyAccount,
+    verifyMFACodeAndLogIn,
   };
 };
 
