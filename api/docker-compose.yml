@@ -53,10 +53,10 @@ services:
       - DB_PASSWORD=secret123
       - DB_NESSUS_PASSWORD=nessussecret123
       - CORS_ORIGINS=http://localhost:3000
-      - COGNITO_USER_POOL_KEYS_URL=file:///app/jwks.json
-      # Stage Cognito resource
-      - COGNITO_USER_POOL_ID=us-east-1_HpL4XslLg
-      - COGNITO_USER_POOL_CLIENT_ID=10rjcp71r8bnk4459c67bn18t8
+      - COGNITO_USER_POOL_KEYS_URL=https://cognito-idp.us-east-1.amazonaws.com/us-east-1_Ok2yc8UXd/.well-known/jwks.json
+      # MFA Cognito
+      - COGNITO_USER_POOL_ID=us-east-1_Ok2yc8UXd
+      - COGNITO_USER_POOL_CLIENT_ID=5q860cvap9p2se09q284thas48
       - DASHBOARD_PASSWORD=secret123
       - LOGGING_LEVEL=massgov.pfml.fineos.fineos_client=DEBUG,massgov.pfml.servicenow.client=DEBUG
       - ENABLE_EMPLOYEE_ENDPOINTS=1
@@ -69,14 +69,14 @@ services:
       # Enable this variable to configure /rmv-check
       - RMV_CHECK_MOCK_SUCCESS=1
       # Enable these variables to use a real FINEOS API instead of a mock:
-      # - FINEOS_CLIENT_CUSTOMER_API_URL=https://idt-api.masspfml.fineos.com/customerapi/
-      # - FINEOS_CLIENT_WSCOMPOSER_API_URL=https://idt-api.masspfml.fineos.com/integration-services/wscomposer/
-      # - FINEOS_CLIENT_GROUP_CLIENT_API_URL=https://idt-api.masspfml.fineos.com/groupclientapi/
-      # - FINEOS_CLIENT_INTEGRATION_SERVICES_API_URL=https://idt-api.masspfml.fineos.com/integration-services/
-      # - FINEOS_CLIENT_OAUTH2_URL=https://idt-api.masspfml.fineos.com/oauth2/token
-      # - FINEOS_CLIENT_OAUTH2_CLIENT_ID=...
-      # - FINEOS_CLIENT_OAUTH2_CLIENT_SECRET=...
-      # - OAUTHLIB_INSECURE_TRANSPORT=1
+      - FINEOS_CLIENT_CUSTOMER_API_URL=https://dt2-api.masspfml.fineos.com/customerapi/
+      - FINEOS_CLIENT_WSCOMPOSER_API_URL=https://dt2-api.masspfml.fineos.com/integration-services/wscomposer/
+      - FINEOS_CLIENT_GROUP_CLIENT_API_URL=https://dt2-api.masspfml.fineos.com/groupclientapi/
+      - FINEOS_CLIENT_INTEGRATION_SERVICES_API_URL=https://dt2-api.masspfml.fineos.com/integration-services/
+      - FINEOS_CLIENT_OAUTH2_URL=https://dt2-api.masspfml.fineos.com/oauth2/token
+      - FINEOS_CLIENT_OAUTH2_CLIENT_ID=1ral5e957i0l9shul52bhk0037
+      - FINEOS_CLIENT_OAUTH2_CLIENT_SECRET=;)
+      - OAUTHLIB_INSECURE_TRANSPORT=1
       # Disable this variable and set the following three variables to use a real Service Now API instead of a mock:
       - ENABLE_MOCK_SERVICE_NOW_CLIENT=1
       # - SERVICE_NOW_BASE_URL=...

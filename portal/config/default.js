@@ -10,12 +10,12 @@
 module.exports = {
   // We target the API stage environment for the systems we're dependent on,
   // even in dev and test. Read more here: https://lwd.atlassian.net/wiki/spaces/DD/pages/246612440/Environments
-  apiUrl: "https://paidleave-api-stage.mass.gov/api/v1",
+  apiUrl: "http://localhost:1550/v1",
   awsConfig: {
     cognitoRegion: "us-east-1",
-    // Cognito Stage environment (must match whatever API environment we're targeting)
-    cognitoUserPoolId: "us-east-1_HpL4XslLg",
-    cognitoUserPoolWebClientId: "10rjcp71r8bnk4459c67bn18t8",
+    // MFA Cognito
+    cognitoUserPoolId: "us-east-1_Ok2yc8UXd",
+    cognitoUserPoolWebClientId: "5q860cvap9p2se09q284thas48",
   },
   newRelicAppId: null,
   gtmConfig: {
