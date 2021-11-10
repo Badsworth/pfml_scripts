@@ -59,7 +59,7 @@ describe("Denial Notification and Notice", () => {
             status: "Denied",
           },
         ]);
-        cy.findByText("Denial notice (PDF)")
+        cy.findByText("Denial notice (PDF)", {timeout: 20000})
           .should("be.visible")
           .click({ force: true });
         portal.downloadLegalNotice(submission.fineos_absence_id);

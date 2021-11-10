@@ -84,7 +84,7 @@ describe("Approval (notifications/notices)", () => {
         portal.claimantAssertClaimStatus([
           { leave: "Child Bonding", status: "Approved" },
         ]);
-        cy.findByText("Approval notice (PDF)")
+        cy.findByText("Approval notice (PDF)", {timeout: 20000})
           .should("be.visible")
           .click({ force: true });
         portal.downloadLegalNotice(submission.fineos_absence_id);
