@@ -821,8 +821,7 @@ resource "aws_iam_role_policy" "pub_payments_process_1099_role_s3_access_policy"
         Action = [
           "s3:Get*",
           "s3:List*",
-          "s3:PutObject",
-          "s3:DeleteObject"
+          "s3:PutObject"
         ]
         Effect   = "Allow"
         Resource = [
