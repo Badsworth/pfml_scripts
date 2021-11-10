@@ -157,8 +157,12 @@ function LatestE2ERuns({ environment, accountId, count = 6 }) {
                         latest(runUrl)                                AS runUrl,
                         latest(tag)                                   AS tag
                  FROM CypressTestResult
-                 WHERE environment = '${environment}' AND tag LIKE '%Morning Run%'
-                    OR tag LIKE 'Deploy%' FACET runId SINCE 1 week ago
+                 WHERE environment = '${environment}'
+                    AND tag LIKE '%Morning Run%'
+                    OR tag LIKE 'Deploy%'
+                    OR (tag LIKE 'Manual%' AND branch = 'main')
+                    FACET runId
+                    SINCE 1 week ago
                  LIMIT ${count}`;
 
   function extractRunData(data) {
