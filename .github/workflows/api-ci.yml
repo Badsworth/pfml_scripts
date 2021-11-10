@@ -155,7 +155,7 @@ jobs:
   post-to-slack:
     name: Post failures to slack
     if: failure() && github.ref == 'refs/heads/main'
-    uses: ./.github/actions/slack-slack-message
+    uses: EOLWD/pfml/.github/partials/send-slack-message.yml@kev/fix-ci-notifications
     with:
       title: "[main] API tests failed (<${{ env.workflow_self_link }}|build logs>)"
       color: danger
