@@ -15,7 +15,7 @@ const CertificationType = {
   medicalCertification: "State managed Paid Leave Confirmation", // TODO (CP-2029): Remove this legacy type once claims filed before 7/1/2021 are adjudicated
 } as const;
 
-const OtherDocumentType = {
+export const OtherDocumentType = {
   appealAcknowledgment: "Appeal Acknowledgment",
   approvalNotice: "Approval Notice",
   denialNotice: "Denial Notice",

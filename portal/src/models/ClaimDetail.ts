@@ -17,7 +17,12 @@ class ClaimDetail {
 
   payments: PaymentDetail[] = [];
 
-  constructor(attrs?: ClaimDetail) {
+  constructor(
+    attrs?: Omit<
+      ClaimDetail,
+      "absencePeriodsByReason" | "managedRequirementByFollowUpDate"
+    >
+  ) {
     if (!attrs) {
       return;
     }
@@ -53,6 +58,13 @@ class ClaimDetail {
   }
 }
 
+export type AbsencePeriodRequestDecision =
+  | "Cancelled"
+  | "Pending"
+  | "Approved"
+  | "Denied"
+  | "Withdrawn";
+
 export class AbsencePeriod {
   absence_period_end_date: string;
   absence_period_start_date: string;
@@ -62,7 +74,7 @@ export class AbsencePeriod {
   reason: LeaveReasonType;
   reason_qualifier_one = "";
   reason_qualifier_two = "";
-  request_decision: "Pending" | "Approved" | "Denied" | "Withdrawn";
+  request_decision: AbsencePeriodRequestDecision;
 
   constructor(attrs: Partial<AbsencePeriod> = {}) {
     Object.assign(this, attrs);

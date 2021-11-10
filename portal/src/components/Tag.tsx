@@ -1,7 +1,7 @@
 import React from "react";
 import classnames from "classnames";
 
-interface TagProps {
+export interface TagProps {
   className?: string;
   label: string;
   state: "success" | "warning" | "error" | "inactive" | "pending";

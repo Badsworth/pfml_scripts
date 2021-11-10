@@ -1,13 +1,17 @@
 import {
+  AbsencePeriod,
+  AbsencePeriodRequestDecision,
+} from "../../../models/ClaimDetail";
+import {
   BenefitsApplicationDocument,
   ClaimDocument,
   DocumentType,
   DocumentTypeEnum,
 } from "../../../models/Document";
 import React, { useEffect } from "react";
+import Tag, { TagProps } from "../../../components/Tag";
 import { find, get, has, map } from "lodash";
 import withUser, { WithUserProps } from "../../../hoc/withUser";
-import { AbsencePeriod } from "../../../models/ClaimDetail";
 import Alert from "../../../components/Alert";
 import { AppLogic } from "../../../hooks/useAppLogic";
 import BackButton from "../../../components/BackButton";
@@ -18,7 +22,6 @@ import LegalNoticeList from "../../../components/LegalNoticeList";
 import PageNotFound from "../../../components/PageNotFound";
 import Spinner from "../../../components/Spinner";
 import StatusNavigationTabs from "../../../components/status/StatusNavigationTabs";
-import Tag from "../../../components/Tag";
 import Title from "../../../components/Title";
 import { Trans } from "react-i18next";
 import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
@@ -54,7 +57,7 @@ export const Status = ({
     portalFlow,
   } = appLogic;
   const { absence_case_id, absence_id, uploaded_document_type } = query;
-
+  const application_id = get(claimDetail, "application_id");
   const absenceId = absence_id || absence_case_id;
 
   useEffect(() => {
@@ -71,12 +74,11 @@ export const Status = ({
   }, [absenceId]);
 
   useEffect(() => {
-    const application_id = get(claimDetail, "application_id");
     if (application_id) {
       loadAllClaimDocuments(application_id);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [claimDetail]);
+  }, [application_id]);
 
   useEffect(() => {
     /**
@@ -88,7 +90,7 @@ export const Status = ({
       const anchorId = document.getElementById(location.hash.substring(1));
       if (anchorId) anchorId.scrollIntoView();
     }
-  }, [isLoadingClaimDetail, claimDetail]);
+  }, [isLoadingClaimDetail]);
 
   /**
    * If there is no absence_id query parameter,
@@ -432,7 +434,9 @@ export const Status = ({
 
 export default withUser(Status);
 
-export const StatusTagMap = {
+export const StatusTagMap: {
+  [status in AbsencePeriodRequestDecision]: TagProps["state"];
+} = {
   Approved: "success",
   Denied: "error",
   Pending: "pending",

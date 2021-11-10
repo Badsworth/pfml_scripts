@@ -1,19 +1,18 @@
-import ClaimDetail, { AbsencePeriod } from "src/models/ClaimDetail";
+import ClaimDetail, {
+  AbsencePeriod,
+  AbsencePeriodRequestDecision,
+} from "src/models/ClaimDetail";
 import { Status, StatusTagMap } from "src/pages/applications/status";
-import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
+import { ClaimEmployee } from "src/models/Claim";
 import DocumentCollection from "src/models/DocumentCollection";
 import LeaveReason from "src/models/LeaveReason";
 import { Props } from "storybook/types";
 import React from "react";
 import { ReasonQualifier } from "src/models/BenefitsApplication";
+import User from "src/models/User";
 import faker from "faker";
 import { generateNotice } from "storybook/utils/generateNotice";
-
-type AbsencePeriodRequestDecision =
-  | "Pending"
-  | "Approved"
-  | "Denied"
-  | "Withdrawn";
+import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 /**
  * Maps each of the leave scenario options to a list of partial absence periods.
@@ -75,12 +74,25 @@ function createClaimDetail({
     createAbsencePeriod(partial)
   );
   return new ClaimDetail({
-    application_id: "my-application-id",
-    // @ts-expect-error ts-migrate(2739) FIXME: Type '{ employer_fein: string; }' is missing the f... Remove this comment to see the full error message
-    employer: {
-      employer_fein: "123456789",
-    },
     absence_periods,
+    application_id: "my-application-id",
+    employee: new ClaimEmployee({
+      first_name: faker.name.firstName(),
+      last_name: faker.name.lastName(),
+    }),
+    employer: {
+      employer_dba: faker.company.companyName(),
+      employer_fein: "123456789",
+      employer_id: faker.datatype.uuid(),
+    },
+    fineos_absence_id: "NTN-12345-ABS-01",
+    fineos_notification_id: faker.datatype.uuid(),
+    managed_requirements: [],
+    payments: [],
+    outstanding_evidence: {
+      employee_evidence: [],
+      employer_evidence: [],
+    },
   });
 }
 
@@ -93,11 +105,15 @@ function createAbsencePeriod(partialAttrs: Partial<AbsencePeriod>) {
     absence_period_end_date: "2021-09-04",
     absence_period_start_date: "2021-04-09",
     fineos_leave_request_id: faker.datatype.uuid(),
-    period_type: faker.random.arrayElement(["Continuous", "Reduced"]),
-    request_decision: faker.random.arrayElement(Object.keys(StatusTagMap)),
+    period_type: faker.random.arrayElement<"Continuous" | "Reduced Schedule">([
+      "Continuous",
+      "Reduced Schedule",
+    ]),
+    request_decision: faker.random.arrayElement<keyof typeof StatusTagMap>(
+      Object.keys(StatusTagMap) as Array<keyof typeof StatusTagMap>
+    ),
   };
 
-  // @ts-expect-error Declare the generic type for faker.random.arrayElement calls above
   return new AbsencePeriod({ ...defaultAbsencePeriod, ...partialAttrs });
 }
 
@@ -122,7 +138,6 @@ function getDocuments({
     documents.push(generateNotice("requestForInfoNotice"));
   }
 
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ created_at: string; document_t... Remove this comment to see the full error message
   return new DocumentCollection(documents);
 }
 
@@ -163,32 +178,24 @@ export const DefaultStory = (
   const leaveScenario = args["Leave Scenario"];
   const requestDecision = args["Request Decision"];
   const shouldIncludeRfiDocument = args["Show Request for More Information"];
-
   const claimDetail = createClaimDetail({ leaveScenario, requestDecision });
-  const appLogic = {
-    appErrors: new AppErrorInfoCollection(),
+
+  const appLogic = useMockableAppLogic({
     claims: {
       claimDetail,
       isLoadingClaimDetail: false,
-      loadClaimDetail: () => {},
     },
     documents: {
       documents: getDocuments({ requestDecision, shouldIncludeRfiDocument }),
-      download: () => {},
       hasLoadedClaimDocuments: () => true,
-      loadAll: () => {},
     },
-    portalFlow: {
-      getNextPageRoute: () => "/storybook-mock",
-      goTo: () => {},
-    },
-  };
+  });
 
   return (
     <Status
-      // @ts-expect-error ts-migrate(2740) FIXME: Type '{ appErrors: AppErrorInfoCollection; claims:... Remove this comment to see the full error message
       appLogic={appLogic}
-      query={{ absence_id: "NTN-12345-ABS-01" }}
+      query={{ absence_id: claimDetail.fineos_absence_id }}
+      user={new User({})}
     />
   );
 };
