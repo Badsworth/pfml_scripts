@@ -150,10 +150,19 @@ jobs:
 #          --env CHECK_POLICY=true \
 #          --interactive tenableio-docker-consec-local.jfrog.io/cs-scanner:latest inspect-image mass-pfml-api:$DOCKER_TAG
 
-  post-to-slack:
+  post-failures-to-slack:
     name: Post failures to slack
     if: failure() && github.ref == 'refs/heads/main'
-    uses: EOLWD/pfml/.github/workflows/reusable-send-slack-message.yml@kev/fix-ci-notifications
-    with:
-      title: "[main] API tests failed (<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|build logs>)"
-      color: danger
+    steps:
+      # Use a custom action to check overall workflow status, since cancelled workflow runs
+      # are included in failure() checks but we do not want to be notified. Instead, only
+      # notify on failure or timeout.
+      - uses: technote-space/workflow-conclusion-action@v2      
+      
+      - if: ${{ env.WORKFLOW_CONCLUSION }} == 'failure' || ${{ env.WORKFLOW_CONCLUSION }} == 'timed_out'
+        uses: ./.github/actions/send-slack-message
+        with:
+          title: "[main] API tests failed (<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|build logs>)"
+          color: danger
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}

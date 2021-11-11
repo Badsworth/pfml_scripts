@@ -18,11 +18,103 @@ concurrency:
   group: ${{ github.head_ref }}-ci
   cancel-in-progress: true
 
+env:
+  nodeVersion: 15.x
+  working-dir: ./portal
+  cache-package-lock: ./portal/package-lock.json
+
 jobs:
-  # TODO(kevin): Not sure if this ignores concurrency cancellations
+  lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          cache: 'npm'
+          cache-dependency-path: ${{ env.cache-package-lock }}
+          node-version: ${{ env.nodeVersion }}
+
+      - name: install
+        run: npm ci --audit false
+        working-directory: ${{ env.working-dir }}
+
+      - name: format-check
+        run: npm run format-check
+        working-directory: ${{ env.working-dir }}
+
+      - name: if format-check fails
+        if: ${{ failure() }}
+        run: echo "::warning file=portal/package.json,line=1,col=1::Make sure you have the latest version of Prettier setup locally. You can also trigger Prettier by commenting on the PR with '/gh portal format' as the body."
+
+      - name: lint
+        run: npm run lint:ci
+        working-directory: ${{ env.working-dir }}
+
+  type-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          cache: 'npm'
+          cache-dependency-path: ${{ env.cache-package-lock }}
+          node-version: ${{ env.nodeVersion }}
+
+      - name: install
+        run: npm ci --audit false
+        working-directory: ${{ env.working-dir }}
+
+      - name: TypeScript
+        run: npm run ts:check
+        working-directory: ${{ env.working-dir }}
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          cache: 'npm'
+          cache-dependency-path: ${{ env.cache-package-lock }}
+          node-version: ${{ env.nodeVersion }}
+
+      - name: install
+        run: npm ci --audit false
+        working-directory: ${{ env.working-dir }}
+
+      - name: test
+        run: npm run test:ci
+        working-directory: ${{ env.working-dir }}
+
+      - name: Coveralls
+        uses: coverallsapp/github-action@master
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          path-to-lcov: "./portal/coverage/lcov.info"
+          base-path: "./portal"
+
   post-to-slack:
     name: Post failures to slack
-    uses: EOLWD/pfml/.github/workflows/reusable-send-slack-message.yml@kev/fix-ci-notifications
-    with:
-      title: "[main] Portal tests failed (<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|build logs>)"
-      color: danger
+    if: failure() && github.ref == 'refs/heads/main'
+    steps:
+      # Use a custom action to check overall workflow status, since cancelled workflow runs
+      # are included in failure() checks but we do not want to be notified. Instead, only
+      # notify on failure or timeout.
+      - uses: technote-space/workflow-conclusion-action@v2      
+      
+      - if: ${{ env.WORKFLOW_CONCLUSION }} == 'failure' || ${{ env.WORKFLOW_CONCLUSION }} == 'timed_out'
+        uses: ./.github/actions/send-slack-message
+        with:
+          title: "[main] Portal tests failed (<https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}|build logs>)"
+          color: danger
+          aws-access-key-id: ${{ secrets.PFML_AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.PFML_AWS_SECRET_ACCESS_KEY }}
