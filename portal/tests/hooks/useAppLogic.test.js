@@ -16,6 +16,7 @@ describe("useAppLogic", () => {
       clearErrors,
       clearRequiredFieldErrors,
       documents,
+      employees,
       employers,
       featureFlags,
       portalFlow,
@@ -33,6 +34,7 @@ describe("useAppLogic", () => {
         claims,
         clearErrors,
         documents,
+        employees,
         employers,
         featureFlags,
         clearRequiredFieldErrors,
@@ -76,6 +78,7 @@ describe("useAppLogic", () => {
     expect(featureFlags.flags).toBeInstanceOf(Array);
     expect(featureFlags.getFlag).toBeInstanceOf(Function);
     expect(featureFlags.loadFlags).toBeInstanceOf(Function);
+    expect(employees.search).toBeInstanceOf(Function);
     // there should be no other properties;
     expect(rest).toEqual({});
   });
