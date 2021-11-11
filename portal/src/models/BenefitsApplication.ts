@@ -8,6 +8,7 @@ import BaseBenefitsApplication from "./BaseBenefitsApplication";
 import ConcurrentLeave from "./ConcurrentLeave";
 import { DateTime } from "luxon";
 import EmployerBenefit from "./EmployerBenefit";
+import { OrganizationUnit } from "./User";
 import OtherIncome from "./OtherIncome";
 import PaymentPreference from "./PaymentPreference";
 import PreviousLeave from "./PreviousLeave";
@@ -17,6 +18,7 @@ import spreadMinutesOverWeek from "../utils/spreadMinutesOverWeek";
 class BenefitsApplication extends BaseBenefitsApplication {
   application_id: string;
   fineos_absence_id: string | null = null;
+  organization_unit_id: string | null = null;
   created_at: string;
 
   first_name: string | null = null;
@@ -78,6 +80,8 @@ class BenefitsApplication extends BaseBenefitsApplication {
   status:
     | typeof BenefitsApplicationStatus[keyof typeof BenefitsApplicationStatus]
     | null = null;
+
+  organization_unit: OrganizationUnit | null;
 
   constructor(attrs: Partial<BenefitsApplication>) {
     super();

@@ -170,6 +170,9 @@ export const Review = (
     clearRequiredFieldErrors,
   ]);
 
+  const isEmployed =
+    get(claim, "employment_status") === EmploymentStatus.employed;
+
   return (
     <div className="measure-6">
       {showNewFieldError && (
@@ -329,7 +332,7 @@ export const Review = (
           </ReviewRow>
         )}
 
-      {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
+      {isEmployed && ( // only display this if the claimant is Employed
         <ReviewRow
           level={reviewRowLevel}
           label={t("pages.claimsReview.employerFeinLabel")}
@@ -338,7 +341,18 @@ export const Review = (
         </ReviewRow>
       )}
 
-      {get(claim, "employment_status") === EmploymentStatus.employed && ( // only display this if the claimant is Employed
+      {isFeatureEnabled("claimantShowOrganizationUnits") &&
+        isEmployed &&
+        get(claim, "organization_unit_id") && (
+          <ReviewRow
+            level={reviewRowLevel}
+            label={t("pages.claimsReview.employeeOrganizationUnit")}
+          >
+            {get(claim, "organization_unit.name")}
+          </ReviewRow>
+        )}
+
+      {isEmployed && ( // only display this if the claimant is Employed
         <ReviewRow
           level={reviewRowLevel}
           label={t("pages.claimsReview.employerNotifiedLabel")}

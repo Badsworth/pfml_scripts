@@ -23,6 +23,7 @@ import { fields as concurrentLeavesDetailsFields } from "../pages/applications/c
 import { fields as concurrentLeavesFields } from "../pages/applications/concurrent-leaves";
 import { fields as dateOfBirthFields } from "../pages/applications/date-of-birth";
 import { fields as dateOfChildFields } from "../pages/applications/date-of-child";
+import { fields as departmentFields } from "../pages/applications/department";
 import { fields as employerBenefitsDetailsFields } from "../pages/applications/employer-benefits-details";
 import { fields as employerBenefitsFields } from "../pages/applications/employer-benefits";
 import { fields as employmentStatusFields } from "../pages/applications/employment-status";
@@ -32,6 +33,7 @@ import { fields as familyMemberRelationshipFields } from "../pages/applications/
 import { fields as genderFields } from "../pages/applications/gender";
 import { get } from "lodash";
 import { fields as intermittentFrequencyFields } from "../pages/applications/intermittent-frequency";
+import { isFeatureEnabled } from "../services/featureFlags";
 import { fields as leavePeriodContinuousFields } from "../pages/applications/leave-period-continuous";
 import { fields as leavePeriodIntermittentFields } from "../pages/applications/leave-period-intermittent";
 import { fields as leavePeriodReducedScheduleFields } from "../pages/applications/leave-period-reduced-schedule";
@@ -78,6 +80,12 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
   isBondingLeave: ({ claim }) => claim?.isBondingLeave === true,
   isEmployed: ({ claim }) =>
     get(claim, "employment_status") === EmploymentStatus.employed,
+  isEmployedAndPickDeparment: ({ claim }) => {
+    return (
+      get(claim, "employment_status") === EmploymentStatus.employed &&
+      isFeatureEnabled("claimantShowOrganizationUnits")
+    );
+  },
   isCompleted: ({ claim }) => claim?.isCompleted === true,
   hasStateId: ({ claim }) => claim?.has_state_id === true,
   hasConcurrentLeave: ({ claim }) => claim?.has_concurrent_leave === true,
@@ -630,6 +638,27 @@ const claimantFlow: {
         ],
         step: ClaimSteps.employerInformation,
         fields: employmentStatusFields,
+      },
+      on: {
+        CONTINUE: [
+          {
+            target: routes.applications.department,
+            cond: "isEmployedAndPickDeparment",
+          },
+          {
+            target: routes.applications.notifiedEmployer,
+            cond: "isEmployed",
+          },
+          {
+            target: routes.applications.checklist,
+          },
+        ],
+      },
+    },
+    [routes.applications.department]: {
+      meta: {
+        step: ClaimSteps.employerInformation,
+        fields: departmentFields,
       },
       on: {
         CONTINUE: [
