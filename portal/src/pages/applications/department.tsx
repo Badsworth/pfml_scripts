@@ -8,7 +8,7 @@ import AppErrorInfo from "../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../../components/ConditionalContent";
 import Dropdown from "../../components/core/Dropdown";
-import { EmployeeOrganizationUnit } from "../../models/User";
+import { EmployeeOrganizationUnit } from "../../models/Employee";
 import { EmployeeSearchRequest } from "../../api/EmployeesApi";
 import Fieldset from "../../components/core/Fieldset";
 import FormLabel from "../../components/core/FormLabel";
