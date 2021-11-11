@@ -1493,7 +1493,9 @@ class PaidLeavePage {
     cy.findByLabelText("Start Date")
       .focus()
       .type(`${dateToMMddyyyy(start_date)}{enter}`);
-    cy.findByLabelText("Start Date").should("have.focus");
+
+    waitForAjaxComplete();
+    cy.findByLabelText("Start Date").focus().should("have.focus");
 
     cy.findByLabelText("End Date")
       .focus()

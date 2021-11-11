@@ -372,7 +372,9 @@ export function verifyIdentity(application: ApplicationRequestBody): void {
   });
   cy.contains("button", "Save and continue").click();
 
-  const fieldset = cy.contains("Do you have a Massachusetts driver’s license or ID card?").parent()
+  const fieldset = cy
+    .contains("Do you have a Massachusetts driver’s license or ID card?")
+    .parent();
   if (application.has_state_id) {
     fieldset.contains("label", "Yes").click();
     cy.contains("Enter your license or ID number").type(
