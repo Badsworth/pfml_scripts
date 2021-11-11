@@ -2,11 +2,6 @@ import BaseApi, { JSONRequestBody } from "./BaseApi";
 import { Employee } from "../models/User";
 import routes from "../routes";
 
-/**
- * @typedef {object} EmployeesAPISingleResult
- * @property {Employee} [reporting_units] - If the request succeeded, this will contain employee's reporting units.
- */
-
 export interface EmployeeSearchRequest extends JSONRequestBody {
   first_name: string;
   last_name: string;

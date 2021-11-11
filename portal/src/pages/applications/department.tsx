@@ -3,16 +3,16 @@ import React, { useEffect, useState } from "react";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
-import Alert from "../../components/Alert";
+import Alert from "../../components/core/Alert";
 import AppErrorInfo from "../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../../components/ConditionalContent";
-import Dropdown from "../../components/Dropdown";
+import Dropdown from "../../components/core/Dropdown";
 import { EmployeeOrganizationUnit } from "../../models/User";
 import { EmployeeSearchRequest } from "../../api/EmployeesApi";
-import Fieldset from "../../components/Fieldset";
-import FormLabel from "../../components/FormLabel";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
+import Fieldset from "../../components/core/Fieldset";
+import FormLabel from "../../components/core/FormLabel";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import { NullableQueryParams } from "../../utils/routeWithParams";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
@@ -54,18 +54,24 @@ export const OrganizationUnit = (props: OrganizationUnitProps) => {
     organization_unit_id: "choiceNo",
     name: t("pages.claimsOrganizationUnit.choiceNo"),
     linked: false,
+    fineos_id: null,
+    employer_id: null,
   };
 
   const NOT_LISTED: EmployeeOrganizationUnit = {
     organization_unit_id: "choiceNotListed",
     name: t("pages.claimsOrganizationUnit.choiceNotListed"),
     linked: false,
+    fineos_id: null,
+    employer_id: null,
   };
 
   const NOT_SURE: EmployeeOrganizationUnit = {
     organization_unit_id: "choiceNotSure",
     name: t("pages.claimsOrganizationUnit.choiceNotSure"),
     linked: false,
+    fineos_id: null,
+    employer_id: null,
   };
 
   // Determine whether user selected a "workaround" type option
@@ -150,14 +156,19 @@ export const OrganizationUnit = (props: OrganizationUnitProps) => {
         tax_identifier_last4: claim.tax_identifier?.slice(-4) ?? "",
         employer_fein: claim.employer_fein ?? "",
       };
-      const employee = await appLogic.employees.search(
-        searchEmployee,
-        claim.application_id
-      );
+      const employee = await appLogic.employees.search(searchEmployee);
       if (employee) {
+        if (
+          typeof employee.organization_units !== "undefined" &&
+          employee.organization_units.length === 0
+        ) {
+          appLogic.portalFlow.goToNextPage(
+            {},
+            { claim_id: claim.application_id }
+          );
+        }
         setOrganizationUnits(employee.organization_units || []);
       }
-      // @todo: if employee not found, api should handle the error response
     }
   };
 

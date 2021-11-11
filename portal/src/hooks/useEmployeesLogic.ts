@@ -2,22 +2,20 @@ import EmployeesApi, { EmployeeSearchRequest } from "../api/EmployeesApi";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
 import { Employee } from "../models/User";
 import { PortalFlow } from "./usePortalFlow";
-import { useMemo } from "react";
 
 interface Props {
   appErrorsLogic: AppErrorsLogic;
   portalFlow: PortalFlow;
 }
 
-const useEmployeesLogic = ({ appErrorsLogic, portalFlow }: Props) => {
-  const employeesApi = useMemo(() => new EmployeesApi(), []);
+const useEmployeesLogic = ({ appErrorsLogic }: Props) => {
+  const employeesApi = new EmployeesApi();
 
   /**
    * Search for employee
    */
   const search = async (
-    data: EmployeeSearchRequest,
-    applicationId: string
+    data: EmployeeSearchRequest
   ): Promise<Employee | null> => {
     appErrorsLogic.clearErrors();
 
@@ -29,11 +27,6 @@ const useEmployeesLogic = ({ appErrorsLogic, portalFlow }: Props) => {
       return null;
     }
 
-    if (typeof employee.organization_units !== "undefined") {
-      if (employee.organization_units.length === 0) {
-        portalFlow.goToNextPage({}, { claim_id: applicationId });
-      }
-    }
     return employee;
   };
   return {

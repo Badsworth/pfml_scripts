@@ -341,16 +341,14 @@ export const Review = (
         </ReviewRow>
       )}
 
-      {isFeatureEnabled("claimantShowOrganizationUnits") &&
-        isEmployed &&
-        get(claim, "organization_unit_id") && (
-          <ReviewRow
-            level={reviewRowLevel}
-            label={t("pages.claimsReview.employeeOrganizationUnit")}
-          >
-            {get(claim, "organization_unit.name")}
-          </ReviewRow>
-        )}
+      {get(claim, "organization_unit_id") && (
+        <ReviewRow
+          level={reviewRowLevel}
+          label={t("pages.claimsReview.employeeOrganizationUnit")}
+        >
+          {get(claim, "organization_unit.name")}
+        </ReviewRow>
+      )}
 
       {isEmployed && ( // only display this if the claimant is Employed
         <ReviewRow
