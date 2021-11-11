@@ -1,4 +1,5 @@
 /* eslint sort-keys: ["error", "asc"] */
+import { OrganizationUnit } from "./Employee";
 
 class User {
   auth_id: string;
@@ -110,17 +111,6 @@ export const RoleDescription = {
   employer: "Employer",
 } as const;
 
-export interface OrganizationUnit {
-  organization_unit_id: string;
-  fineos_id: string | null;
-  name: string;
-  employer_id: string | null;
-}
-
-export interface EmployeeOrganizationUnit extends OrganizationUnit {
-  linked: boolean;
-}
-
 export class UserLeaveAdministrator {
   employer_dba: string;
   employer_fein: string;
@@ -133,18 +123,6 @@ export class UserLeaveAdministrator {
   constructor(attrs: Partial<UserLeaveAdministrator>) {
     Object.assign(this, attrs);
   }
-}
-
-export interface Employee {
-  employee_id: string;
-  tax_identifier_last4: string | null;
-  first_name: string | null;
-  middle_name: string | null;
-  last_name: string | null;
-  other_name: string | null;
-  email_address: string | null;
-  phone_number: string | null;
-  organization_units?: EmployeeOrganizationUnit[];
 }
 
 export default User;

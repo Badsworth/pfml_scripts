@@ -1,6 +1,6 @@
 import EmployeesApi, { EmployeeSearchRequest } from "../api/EmployeesApi";
 import { AppErrorsLogic } from "./useAppErrorsLogic";
-import { Employee } from "../models/User";
+import Employee from "../models/Employee";
 import { PortalFlow } from "./usePortalFlow";
 
 interface Props {

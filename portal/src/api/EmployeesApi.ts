@@ -1,5 +1,5 @@
 import BaseApi, { JSONRequestBody } from "./BaseApi";
-import { Employee } from "../models/User";
+import Employee from "../models/Employee";
 import routes from "../routes";
 
 export interface EmployeeSearchRequest extends JSONRequestBody {
