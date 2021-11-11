@@ -1,4 +1,4 @@
-# Partial workflow to send a slack message using the credentials stored in AWS Parameter Store.
+#  Send a slack message using credentials retrieved from AWS Parameter Store.
 #
 name: Send slack message
 
@@ -17,11 +17,11 @@ inputs:
     required: true
     type: string
   aws-access-key-id: 
-    description: "AWS access key for parameter store"
+    description: "AWS access key with access to parameter store"
     required: true
     type: string
   aws-secret-access-key:
-    description: "AWS secret key for parameter store"
+    description: "AWS secret key with access to parameter store"
     required: true
     type: string
 
