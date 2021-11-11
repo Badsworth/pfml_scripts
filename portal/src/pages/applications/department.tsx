@@ -263,7 +263,7 @@ export const OrganizationUnit = (props: OrganizationUnitProps) => {
           ? isLong || !selectedChoice.linked
             ? selectedChoice.organization_unit_id
             : null
-          : NOT_LISTED.organization_unit_id
+          : null
         : null,
       radio_organization_unit: hasDefaultValue
         ? hasValidValue

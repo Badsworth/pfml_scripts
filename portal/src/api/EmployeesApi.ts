@@ -1,4 +1,4 @@
-import BaseApi, { ApiRequestBody } from "./BaseApi";
+import BaseApi, { JSONRequestBody } from "./BaseApi";
 import { Employee } from "../models/User";
 import routes from "../routes";
 
@@ -7,7 +7,7 @@ import routes from "../routes";
  * @property {Employee} [reporting_units] - If the request succeeded, this will contain employee's reporting units.
  */
 
-export interface EmployeeSearchRequest {
+export interface EmployeeSearchRequest extends JSONRequestBody {
   first_name: string;
   last_name: string;
   middle_name?: string;
@@ -31,11 +31,7 @@ export default class EmployeesApi extends BaseApi {
    * @returns {Promise} Employee: Promise<Employee>
    */
   search = async (postData: EmployeeSearchRequest): Promise<Employee> => {
-    const { data } = await this.request<Employee>(
-      "POST",
-      "search",
-      postData as unknown as ApiRequestBody
-    );
+    const { data } = await this.request<Employee>("POST", "search", postData);
     return data;
   };
 }

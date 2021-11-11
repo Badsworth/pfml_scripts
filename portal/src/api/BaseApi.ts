@@ -38,7 +38,10 @@ export interface ApiResponseBody<TResponseData> {
   warnings?: Issue[];
 }
 export type ApiMethod = "DELETE" | "GET" | "PATCH" | "POST" | "PUT";
-export type ApiRequestBody = { [key: string]: unknown } | FormData;
+export interface JSONRequestBody {
+  [key: string]: unknown;
+}
+export type ApiRequestBody = JSONRequestBody | FormData;
 
 /**
  * Class that implements the base interaction with API resources
