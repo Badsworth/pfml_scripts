@@ -58,6 +58,7 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
  */
 export function before(flags?: Partial<FeatureFlags>): void {
   Cypress.config("baseUrl", config("PORTAL_BASEURL"));
+  Cypress.config("pageLoadTimeout", 30000);
   // Set the feature flags necessary to see the portal.
   setFeatureFlags(flags);
 
