@@ -80,12 +80,6 @@ export const guards: { [guardName: string]: ClaimFlowGuardFn } = {
   isBondingLeave: ({ claim }) => claim?.isBondingLeave === true,
   isEmployed: ({ claim }) =>
     get(claim, "employment_status") === EmploymentStatus.employed,
-  isEmployedAndPickDeparment: ({ claim }) => {
-    return (
-      get(claim, "employment_status") === EmploymentStatus.employed &&
-      isFeatureEnabled("claimantShowOrganizationUnits")
-    );
-  },
   isCompleted: ({ claim }) => claim?.isCompleted === true,
   hasStateId: ({ claim }) => claim?.has_state_id === true,
   hasConcurrentLeave: ({ claim }) => claim?.has_concurrent_leave === true,
@@ -643,10 +637,6 @@ const claimantFlow: {
         CONTINUE: [
           {
             target: routes.applications.department,
-            cond: "isEmployedAndPickDeparment",
-          },
-          {
-            target: routes.applications.notifiedEmployer,
             cond: "isEmployed",
           },
           {

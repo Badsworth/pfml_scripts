@@ -219,6 +219,15 @@ const machineTests = {
       test: () => {},
     },
   },
+  [routes.applications.department]: {
+    meta: {
+      test: (_, event) => {
+        expect(get(event.context.claim, "employment_status")).toEqual(
+          EmploymentStatus.employed
+        );
+      },
+    },
+  },
   [routes.applications.notifiedEmployer]: {
     meta: {
       test: (_, event) => {
