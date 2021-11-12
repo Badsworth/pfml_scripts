@@ -106,7 +106,7 @@ jobs:
 
   post-to-slack:
     name: Post failures to slack
-    if: failure() && github.ref == 'refs/heads/main'
+    if: failure()
     runs-on: ubuntu-latest
 
     steps:
