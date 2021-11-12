@@ -106,8 +106,9 @@ jobs:
 
   post-to-slack:
     name: Post failures to slack
-    if: failure()
+    needs: [lint, type-check, test]
     runs-on: ubuntu-latest
+    if: failure() && github.ref == "refs/heads/main"
 
     steps:
       # Use a custom action to check overall workflow status, since cancelled workflow runs
