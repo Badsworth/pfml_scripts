@@ -1511,8 +1511,15 @@ components:
       properties:
         consented_to_data_sharing:
           type: boolean
+          nullable: false
           example: true
-      required: ["consented_to_data_sharing"]
+        mfa_delivery_preference:
+          type: string
+          enum:
+            - SMS
+            - Opt Out
+          nullable: true
+          example: "SMS"
 
     EmployeeUpdateRequest:
       type: object
