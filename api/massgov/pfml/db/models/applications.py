@@ -1,6 +1,7 @@
 import datetime
 from decimal import Decimal
 from enum import Enum
+from itertools import chain
 from typing import Optional
 
 from sqlalchemy import TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text, case
@@ -372,6 +373,17 @@ class Application(Base, TimestampMixin):
         "PreviousLeaveSameReason", back_populates="application", uselist=True,
     )
     concurrent_leave = relationship("ConcurrentLeave", back_populates="application", uselist=False,)
+
+    @hybrid_property
+    def all_leave_periods(self) -> Optional[list]:
+        leave_periods = list(
+            chain(
+                self.continuous_leave_periods,
+                self.intermittent_leave_periods,
+                self.reduced_schedule_leave_periods,
+            )
+        )
+        return leave_periods
 
 
 class CaringLeaveMetadata(Base, TimestampMixin):
