@@ -1008,6 +1008,15 @@ const pages = {
     skipButton: "$t(shared.auth.skip)",
     title: "Make your account more secure",
   },
+  authTwoFactorSmsVerify: {
+    callContactCenter:
+      "Need help? Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
+    codeLabel: "$t(shared.verificationCodeLabel)",
+    lead: "We sent a 6-digit code to your phone number ending in {{lastFourDigits}}.",
+    resendCodeLink: "$t(shared.resendVerificationCodeLink)",
+    submitButton: "Submit",
+    title: "Enter your security code",
+  },
   authVerifyAccount: {
     backToLoginLink: "$t(shared.backToLoginLink)",
     codeLabel: "$t(shared.verificationCodeLabel)",
