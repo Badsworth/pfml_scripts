@@ -51,50 +51,23 @@ jobs:
       - name: "Fetch status of remote ref"
         run: |
           git fetch --no-tags --prune --depth=1 origin +refs/heads/${{ env.baseref }}:refs/remotes/origin/${{ env.baseref }}
-
-      - name: "Check for changes"
-        id: check-for-changes
-        # Check whether the config has changed within the PR.
-        # This is done by comparing the PR's base branch (usually main) against the current PR commit.
+      
+      - name: "Determine root module folder"
+        id: determine-root-module-folder
         run: |
-          echo "::set-output name=has-changes::false"
-
           if [ -z "${{ matrix.environment }}" ]; then
             tf_dir=${{ env.working-dir }}/${{ matrix.component }}
           else
             tf_dir=${{ env.working-dir }}/${{ matrix.component }}/environments/${{ matrix.environment }}
           fi
 
-          folders=${tf_dir}
+          echo "::set-output name=folder::${tf_dir}"
 
-          folders_to_search="$folders"
-
-          while [[ ! -z "$folders_to_search" ]]; do
-            new_folders=""
-
-            for folder in $folders_to_search; do
-              echo "looking for submodules in: $folder"
-              echo "found:"
-              new_folders="$new_folders $(git grep -Poh '(?<=source = ")\.\.[^"]*' -- ${folder} | sed s:^:${folder}/:g | xargs realpath)"
-              # new_folders="$new_folders $(git grep -h 'source = "\.\.' -- ${folder} | sed 's/.*\"\(.*\)\".*/\1/' | sed s:^:${folder}/:g | xargs realpath)"
-            done
-
-            echo
-            new_folders=$(echo "$new_folders" | xargs -n1 | sort | uniq)
-
-            folders="$folders $new_folders"
-            folders=$(echo "$folders" | xargs -n1 | sort | uniq)
-            folders_to_search="$new_folders"
-          done
-
-          echo "::set-output name=tf_working_dir::${tf_dir}"
-
-          for folder in $folders; do
-            if [ -n "$(git --no-pager diff --name-only origin/${{ env.baseref }} ${GITHUB_SHA} -- ${folder})" ]; then
-              echo "::set-output name=has-changes::true"
-              break
-            fi
-          done
+      - name: "Detect terraform changes"
+        uses: ./.github/actions/detect-terraform-changes
+        id: check-for-changes
+        with:
+          root-module-folder: ${{ steps.determine-root-module-folder.outputs.folder }}
 
       - name: Configure AWS Credentials
         if: steps.check-for-changes.outputs.has-changes == 'true'
@@ -112,7 +85,7 @@ jobs:
         with:
           tf_actions_version: ${{ env.tf-version }}
           tf_actions_subcommand: "init"
-          tf_actions_working_dir: ${{ steps.check-for-changes.outputs.tf_working_dir }}
+          tf_actions_working_dir: ${{ steps.determine-root-module-folder.outputs.folder }}
           tf_actions_comment: false
 
       - name: tf-plan
@@ -121,5 +94,5 @@ jobs:
         with:
           tf_actions_version: ${{ env.tf-version }}
           tf_actions_subcommand: "plan"
-          tf_actions_working_dir: ${{ steps.check-for-changes.outputs.tf_working_dir }}
+          tf_actions_working_dir: ${{ steps.determine-root-module-folder.outputs.folder }}
           tf_actions_comment: false
