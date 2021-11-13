@@ -62,6 +62,7 @@ get_git_diff() (
 )
 
 folders=$(get_all_dependency_folders "$folder")
+echo
 echo "All dependencies for $folder:"
 echo "$folders"
 
