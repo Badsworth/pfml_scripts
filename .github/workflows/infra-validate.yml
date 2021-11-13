@@ -64,10 +64,8 @@ jobs:
           echo "::set-output name=folder::${tf_dir}"
 
       - name: "Detect terraform changes"
-        uses: ./.github/actions/detect-terraform-changes
         id: check-for-changes
-        with:
-          root-module-folder: ${{ steps.determine-root-module-folder.outputs.folder }}
+        run: ./bin/github-actions/detect-terraform-changes.sh "${{ steps.determine-root-module-folder.outputs.folder }}" origin/${{ env.baseref }}
 
       - name: Configure AWS Credentials
         if: steps.check-for-changes.outputs.has-changes == 'true'
