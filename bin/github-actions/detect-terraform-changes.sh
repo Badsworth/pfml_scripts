@@ -21,6 +21,7 @@ echo "::set-output name=has-changes::false"
 
 folder=$1
 baseref=$2
+currentsha=${GITHUB_SHA:-$(git rev-parse head)}
 
 find_submodules() (
     folder=$1
@@ -49,23 +50,23 @@ get_all_dependency_folders() (
 
         new_folders=$(uniqify_list "$new_folders")
         folders_to_search="$new_folders"
-
         folders="$folders $new_folders"
-        folders=$(uniqify_list "$folders")
-        echo "$folders"
     done
+
+    folders=$(uniqify_list "$folders")
+    echo "$folders"
 )
 
 get_git_diff() (
-    folder=$1
-    echo "$(git --no-pager diff --name-only $2 ${GITHUB_SHA} -- ${folder})"
+    echo "$(git --no-pager diff --name-only $2 $3 -- ${1})"
 )
 
 folders=$(get_all_dependency_folders "$folder")
-echo "All dependencies for $folder: $folders"
+echo "All dependencies for $folder:"
+echo "$folders"
 
 for folder in $folders; do
-    if [ -n "$(get_git_diff $folder $baseref)" ]; then
+    if [ -n "$(get_git_diff $folder $baseref $currentsha)" ]; then
         echo "::set-output name=has-changes::true"
         break
     fi
