@@ -75,7 +75,8 @@ jobs:
             for folder in $folders_to_search; do
               echo "looking for submodules in: $folder"
               echo "found:"
-              new_folders="$new_folders $(git grep -h source\ =\ \"\\.\\. -- ${folder} | sed s/\ *source\ =\ \"//g | sed s/\"//g | sed s:^:${folder}/:g | xargs realpath)"
+              new_folders="$new_folders $(git grep -Poh '(?<=source = ")\.\.[^"]*' -- ${folder} | sed s:^:${folder}/:g | xargs realpath)"
+              # new_folders="$new_folders $(git grep -h 'source = "\.\.' -- ${folder} | sed 's/.*\"\(.*\)\".*/\1/' | sed s:^:${folder}/:g | xargs realpath)"
             done
 
             echo
