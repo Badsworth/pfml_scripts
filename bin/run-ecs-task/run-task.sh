@@ -74,6 +74,14 @@ fi
 echo "Running aws"
 printf " ... %s\n" "${AWS_ARGS[@]}"
 
+echo ""
+read -p "You are about to run a AWS ECS Task. Would you like to proceed? Pleae select 'Y' or 'N'" -n 1 -r
+echo ""
+if [[ ! $REPLY =~ ^[Yy]$ ]]
+then
+    exit 1
+fi
+
 # Start the ECS task
 RUN_TASK=$(aws "${AWS_ARGS[@]}")
 
