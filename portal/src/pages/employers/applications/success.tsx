@@ -1,7 +1,7 @@
 import withUser, { WithUserProps } from "../../../hoc/withUser";
 import BackButton from "../../../components/BackButton";
 import React from "react";
-import Title from "../../../components/Title";
+import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import UserFeedback from "../../../components/UserFeedback";
 import routes from "../../../routes";

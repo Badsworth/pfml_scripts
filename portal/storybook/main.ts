@@ -67,6 +67,7 @@ module.exports = {
     // import Foo from "../../../src/components/Foo"
     config.resolve = config.resolve || {};
     config.resolve.alias = Object.assign(config.resolve.alias, {
+      lib: path.resolve(__dirname, "../lib"),
       src: path.resolve(__dirname, "../src"),
       storybook: path.resolve(__dirname),
       tests: path.resolve(__dirname, "../tests"),

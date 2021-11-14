@@ -1,6 +1,6 @@
 import { OrderedDaysOfWeek } from "../models/BenefitsApplication";
 import React from "react";
-import Table from "./Table";
+import Table from "./core/Table";
 import { useTranslation } from "react-i18next";
 
 interface WeeklyTimeTableProps {

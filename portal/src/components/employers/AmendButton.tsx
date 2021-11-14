@@ -1,5 +1,5 @@
-import Button from "../Button";
-import Icon from "../Icon";
+import Button from "../core/Button";
+import Icon from "../core/Icon";
 import React from "react";
 import { useTranslation } from "../../locales/i18n";
 

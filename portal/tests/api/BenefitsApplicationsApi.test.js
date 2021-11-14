@@ -353,7 +353,7 @@ describe("BenefitsApplicationsApi", () => {
 
     beforeEach(() => {
       claim = new BenefitsApplication();
-      tax_preference = { withhold_taxes: true };
+      tax_preference = { is_withholding_tax: true };
 
       global.fetch = mockFetch({
         response: { data: { ...claim } },

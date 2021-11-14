@@ -1,4 +1,4 @@
-import Heading from "./Heading";
+import Heading from "./core/Heading";
 import React from "react";
 import classnames from "classnames";
 

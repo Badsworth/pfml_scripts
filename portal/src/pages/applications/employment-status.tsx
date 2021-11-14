@@ -2,12 +2,12 @@ import { get, pick } from "lodash";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
-import Alert from "../../components/Alert";
+import Alert from "../../components/core/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
-import Details from "../../components/Details";
+import Details from "../../components/core/Details";
 import { EmploymentStatus as EmploymentStatusEnum } from "../../models/BenefitsApplication";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import InputText from "../../components/InputText";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
+import InputText from "../../components/core/InputText";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";

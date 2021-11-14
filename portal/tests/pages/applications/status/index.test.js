@@ -83,7 +83,7 @@ const defaultClaimDetail = {
 };
 
 const props = {
-  query: { absence_case_id: defaultClaimDetail.fineos_absence_id },
+  query: { absence_id: defaultClaimDetail.fineos_absence_id },
 };
 
 describe("Status", () => {
@@ -111,6 +111,58 @@ describe("Status", () => {
     );
 
     expect(goToSpy).toHaveBeenCalledWith(routes.applications.index);
+  });
+
+  it("shows StatusNavigationTabs if claimantShowPayments feature flag is enabled", () => {
+    process.env.featureFlags = {
+      claimantShowPayments: true,
+    };
+    renderPage(
+      Status,
+      {
+        addCustomSetup: setupHelper({
+          ...defaultClaimDetail,
+          absence_periods: [
+            {
+              period_type: "Reduced",
+              reason: LeaveReason.bonding,
+              request_decision: "Approved",
+              reason_qualifier_one: "Newborn",
+            },
+          ],
+        }),
+      },
+      props
+    );
+
+    expect(screen.getByRole("link", { name: "Payments" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Application" })
+    ).toBeInTheDocument();
+  });
+
+  it("does not show StatusNavigationTabs if claimantShowPayments feature flag is disabled", () => {
+    renderPage(
+      Status,
+      {
+        addCustomSetup: setupHelper({
+          ...defaultClaimDetail,
+          absence_periods: [
+            {
+              period_type: "Reduced",
+              reason: LeaveReason.bonding,
+              request_decision: "Approved",
+              reason_qualifier_one: "Newborn",
+            },
+          ],
+        }),
+      },
+      props
+    );
+
+    expect(
+      screen.queryByRole("link", { name: "Payments" })
+    ).not.toBeInTheDocument();
   });
 
   it("redirects to 404 if there's no absence case ID", () => {
@@ -205,22 +257,16 @@ describe("Status", () => {
     expect(container).toMatchSnapshot();
   });
 
-  it("shows StatusNavigationTabs if claimantShowPayments feature flag is enabled", () => {
-    process.env.featureFlags = {
-      claimantShowPayments: true,
-    };
-    renderPage(
+  it("renders the page with claim detail when there is absence_case_id in query", () => {
+    const { container } = renderPage(
       Status,
       {
         addCustomSetup: setupHelper({ ...defaultClaimDetail }),
       },
-      props
+      { query: { absence_case_id: defaultClaimDetail.fineos_absence_id } }
     );
 
-    expect(screen.getByRole("link", { name: "Payments" })).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: "Application" })
-    ).toBeInTheDocument();
+    expect(container).toMatchSnapshot();
   });
 
   describe("success alert", () => {
@@ -236,7 +282,7 @@ describe("Status", () => {
           query: {
             uploaded_document_type: "proof-of-birth",
             claim_id: "12342323",
-            absence_case_id: defaultClaimDetail.fineos_absence_id,
+            absence_id: defaultClaimDetail.fineos_absence_id,
           },
         }
       );
@@ -260,7 +306,7 @@ describe("Status", () => {
           query: {
             uploaded_document_type: "state-id",
             claim_id: "12342323",
-            absence_case_id: defaultClaimDetail.fineos_absence_id,
+            absence_id: defaultClaimDetail.fineos_absence_id,
           },
         }
       );
@@ -282,7 +328,7 @@ describe("Status", () => {
           query: {
             uploaded_document_type: "family-member-medical-certification",
             claim_id: "12342323",
-            absence_case_id: defaultClaimDetail.fineos_absence_id,
+            absence_id: defaultClaimDetail.fineos_absence_id,
           },
         }
       );
@@ -554,7 +600,7 @@ describe("Status", () => {
       .toMatchInlineSnapshot(`
       <a
         class="usa-button margin-top-3"
-        href="/applications/upload?absence_case_id=mock-absence-case-id"
+        href="/applications/upload?absence_id=mock-absence-case-id"
       >
         Upload additional documents
       </a>
@@ -912,7 +958,7 @@ describe("Status", () => {
           .toMatchInlineSnapshot(`
           <a
             class="usa-button"
-            href="/applications/upload/proof-of-birth?claim_id=mock-application-id&absence_case_id=mock-absence-case-id"
+            href="/applications/upload/proof-of-birth?claim_id=mock-application-id&absence_id=mock-absence-case-id"
           >
             Upload proof of birth
           </a>
@@ -942,7 +988,7 @@ describe("Status", () => {
           .toMatchInlineSnapshot(`
           <a
             class="usa-button"
-            href="/applications/upload/proof-of-placement?claim_id=mock-application-id&absence_case_id=mock-absence-case-id"
+            href="/applications/upload/proof-of-placement?claim_id=mock-application-id&absence_id=mock-absence-case-id"
           >
             Upload proof of placement
           </a>
@@ -972,7 +1018,7 @@ describe("Status", () => {
           .toMatchInlineSnapshot(`
           <a
             class="usa-button"
-            href="/applications/upload/proof-of-placement?claim_id=mock-application-id&absence_case_id=mock-absence-case-id"
+            href="/applications/upload/proof-of-placement?claim_id=mock-application-id&absence_id=mock-absence-case-id"
           >
             Upload proof of adoption
           </a>
@@ -980,6 +1026,7 @@ describe("Status", () => {
       });
     });
   });
+
   describe("manage your application", () => {
     it("is not displayed if all the claim statuses on an application are Withdrawn, Cancelled, or Denied", () => {
       const absence_periods = ["Withdrawn", "Cancelled", "Denied"].map(

@@ -1,6 +1,7 @@
 import User, { UserLeaveAdministrator } from "src/models/User";
 import React from "react";
 import { Success } from "src/pages/employers/organizations/success";
+import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
   title: `Pages/Employers/Organizations/Verification Success`,
@@ -12,11 +13,7 @@ export const Default = () => {
     employer_id: "123",
     next: "/",
   };
-  const appLogic = {
-    portalFlow: {
-      goTo: () => {},
-    },
-  };
+  const appLogic = useMockableAppLogic();
   const user_leave_administrators = [
     new UserLeaveAdministrator({
       employer_dba: "Some Company",
@@ -28,6 +25,6 @@ export const Default = () => {
   const user = new User({
     user_leave_administrators,
   });
-  // @ts-expect-error ts-migrate(2740) FIXME: Type '{ portalFlow: { goTo: () => void; }; }' is m... Remove this comment to see the full error message
+
   return <Success appLogic={appLogic} query={query} user={user} />;
 };

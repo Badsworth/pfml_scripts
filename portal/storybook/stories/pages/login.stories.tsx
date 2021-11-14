@@ -1,7 +1,7 @@
-import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import Login from "src/pages/login";
 import { Props } from "storybook/types";
 import React from "react";
+import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
   title: "Pages/Auth/Login",
@@ -16,13 +16,8 @@ export const Page = (args: Props<typeof Login>) => {
     query["account-verified"] = "true";
   }
 
-  const appLogic = {
-    auth: { login: () => {} },
-    appErrors: new AppErrorInfoCollection(),
-    portalFlow: { goTo: () => {} },
-  };
+  const appLogic = useMockableAppLogic();
 
-  // @ts-expect-error ts-migrate(2740) FIXME: Type '{ auth: { login: () => void; }; appErrors: A... Remove this comment to see the full error message
   return <Login appLogic={appLogic} query={query} />;
 };
 

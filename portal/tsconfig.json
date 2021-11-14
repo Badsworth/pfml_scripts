@@ -3,7 +3,7 @@
     "baseUrl": "./",
     "paths": {
       // Support src/ alias for Storybook files
-      "src": ["./src/*"]
+      "src/*": ["./src/*"]
     },
     "target": "es5",
     "lib": ["dom", "dom.iterable", "esnext"],

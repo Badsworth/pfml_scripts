@@ -1,4 +1,4 @@
-import Button from "./Button";
+import Button from "./core/Button";
 import ButtonLink from "./ButtonLink";
 import React from "react";
 import routes from "../routes";

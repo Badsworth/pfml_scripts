@@ -11,7 +11,7 @@ import Flag from "../models/Flag";
 import Header from "./Header";
 import { Helmet } from "react-helmet";
 import React from "react";
-import Spinner from "./Spinner";
+import Spinner from "./core/Spinner";
 import dynamic from "next/dynamic";
 import { get } from "lodash";
 import { isFeatureEnabled } from "../services/featureFlags";

@@ -35,7 +35,7 @@ def test_state_metric_init(initialize_factories_session, test_db_session):
         effective_date=datetime.date(2022, 1, 1), unemployment_minimum_earnings=5300,
     )
 
-    effective_date = datetime.date(2022, 9, 30)
+    effective_date = datetime.date(2022, 1, 1)
     (benefits_metrics_data, unemployment_metric_data) = eligibility_util.fetch_state_metric(
         test_db_session, effective_date
     )

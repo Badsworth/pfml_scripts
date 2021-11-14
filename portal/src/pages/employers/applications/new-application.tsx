@@ -2,14 +2,14 @@ import React, { useState } from "react";
 import withEmployerClaim, {
   WithEmployerClaimProps,
 } from "../../../hoc/withEmployerClaim";
-import Alert from "../../../components/Alert";
+import Alert from "../../../components/core/Alert";
 import BackButton from "../../../components/BackButton";
-import Button from "../../../components/Button";
+import Button from "../../../components/core/Button";
 import ConditionalContent from "../../../components/ConditionalContent";
-import Heading from "../../../components/Heading";
-import InputChoiceGroup from "../../../components/InputChoiceGroup";
+import Heading from "../../../components/core/Heading";
+import InputChoiceGroup from "../../../components/core/InputChoiceGroup";
 import StatusRow from "../../../components/StatusRow";
-import Title from "../../../components/Title";
+import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import formatDateRange from "../../../utils/formatDateRange";
 import { useTranslation } from "../../../locales/i18n";

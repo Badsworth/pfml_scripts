@@ -2,11 +2,13 @@ import {
   claimArgTypes,
   createClaimFromArgs,
 } from "storybook/utils/claimArgTypes";
-import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import DocumentCollection from "src/models/DocumentCollection";
 import { DocumentType } from "src/models/Document";
 import React from "react";
 import { Review } from "src/pages/applications/review";
+import User from "src/models/User";
+import faker from "faker";
+import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
   title: `Pages/Applications/Review`,
@@ -26,35 +28,42 @@ export const DefaultStory = (
   args: typeof claimArgTypes & { isLoadingDocuments: boolean }
 ) => {
   const claim = createClaimFromArgs(args);
+  const documents = [
+    {
+      document_type: DocumentType.identityVerification,
+      content_type: "image/png",
+      created_at: "2021-01-01",
+      description: "",
+      fineos_document_id: faker.datatype.uuid(),
+      name: "",
+      user_id: "mock-user-id",
+      application_id: "mock-applicatoin-id",
+    },
+    {
+      document_type: DocumentType.certification.medicalCertification,
+      content_type: "image/png",
+      created_at: "2021-01-01",
+      description: "",
+      fineos_document_id: faker.datatype.uuid(),
+      name: "",
+      user_id: "mock-user-id",
+      application_id: "mock-applicatoin-id",
+    },
+  ];
 
-  const appLogic = {
-    appErrors: new AppErrorInfoCollection(),
-    benefitsApplications: {},
+  const appLogic = useMockableAppLogic({
     documents: {
-      documents: new DocumentCollection([
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ document_type: "Identification Proof"; }' ... Remove this comment to see the full error message
-        {
-          document_type: DocumentType.identityVerification,
-        },
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ document_type: "State managed Paid Leave C... Remove this comment to see the full error message
-        {
-          document_type: DocumentType.certification.medicalCertification,
-        },
-      ]),
+      documents: new DocumentCollection(documents),
     },
-    portalFlow: {
-      getNextPageRoute: () => "/storybook-mock",
-    },
-  };
+  });
 
   return (
     <Review
-      // @ts-expect-error ts-migrate(2740) FIXME: Type '{ appErrors: AppErrorInfoCollection; benefit... Remove this comment to see the full error message
       appLogic={appLogic}
       claim={claim}
-      // @ts-expect-error ts-migrate(2322) FIXME: Type '(BenefitsApplicationDocument | ClaimDocument... Remove this comment to see the full error message
-      documents={appLogic.documents.documents.items}
+      documents={documents}
       isLoadingDocuments={args.isLoadingDocuments}
+      user={new User({})}
     />
   );
 };

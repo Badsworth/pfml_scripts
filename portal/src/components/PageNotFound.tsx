@@ -1,6 +1,6 @@
 import React, { useEffect } from "react";
 import ButtonLink from "./ButtonLink";
-import Title from "./Title";
+import Title from "./core/Title";
 import { Trans } from "react-i18next";
 import routes from "../routes";
 import tracker from "../services/tracker";

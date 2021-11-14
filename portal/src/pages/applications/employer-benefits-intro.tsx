@@ -1,8 +1,8 @@
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
-import Heading from "../../components/Heading";
-import Hint from "../../components/Hint";
+import Heading from "../../components/core/Heading";
+import Hint from "../../components/core/Hint";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";

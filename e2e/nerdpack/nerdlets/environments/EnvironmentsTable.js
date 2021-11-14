@@ -28,10 +28,12 @@ import {
   COMPONENTS_WIDTH,
   ENVS,
 } from "../common";
+import Navigation from "../common/navigation"
 
 function extractEnvironmentData(data) {
   const map = data
-    .filter((point) => !point.metadata.other_series) // Remove "Other" rows.
+    // Filter out "other" rows, and event rows, like daylight savings time.
+    .filter((d) => !d.metadata.other_series && d.metadata.viz === "main")
     .reduce((collected, item) => {
       const environment = extractGroup(item, "environment");
       if (!(environment in collected)) {
@@ -62,7 +64,8 @@ export default function EnvironmentsTable({ platformState }) {
   ).join(", ")}
                  FROM CustomDeploymentMarker FACET environment SINCE 1 month ago
                  LIMIT MAX`;
-  return (
+  return [
+    <Navigation></Navigation>,
     <NrqlQuery query={query} accountId={platformState.accountId}>
       {({ data: environmentData, loading, error }) => {
         if (loading) {
@@ -72,7 +75,7 @@ export default function EnvironmentsTable({ platformState }) {
           return (
             <SectionMessage
               title={"There was an error executing the query"}
-              description={error}
+              description={error.message}
               type={SectionMessage.TYPE.CRITICAL}
             />
           );
@@ -146,7 +149,7 @@ export default function EnvironmentsTable({ platformState }) {
         );
       }}
     </NrqlQuery>
-  );
+  ];
 }
 
 function LatestE2ERuns({ environment, accountId, count = 6 }) {
@@ -156,13 +159,18 @@ function LatestE2ERuns({ environment, accountId, count = 6 }) {
                         latest(runUrl)                                AS runUrl,
                         latest(tag)                                   AS tag
                  FROM CypressTestResult
-                 WHERE environment = '${environment}' AND tag LIKE '%Morning Run%'
-                    OR tag LIKE 'Deploy%' FACET runId SINCE 1 week ago
+                 WHERE environment = '${environment}'
+                    AND tag LIKE '%Morning Run%'
+                    OR tag LIKE 'Deploy%'
+                    OR (tag LIKE 'Manual%' AND branch = 'main')
+                    FACET runId
+                    SINCE 1 week ago
                  LIMIT ${count}`;
 
   function extractRunData(data) {
     const rows = data
-      .filter((d) => !d.metadata.other_series)
+      // Filter out "other" rows, and event rows, like daylight savings time.
+      .filter((d) => !d.metadata.other_series && d.metadata.viz === "main")
       .reduce((collected, point) => {
         const key = extractGroup(point, "runId");
         if (!collected[key]) {
@@ -185,7 +193,7 @@ function LatestE2ERuns({ environment, accountId, count = 6 }) {
           return (
             <SectionMessage
               title={"There was an error executing the query"}
-              description={error}
+              description={error.message}
               type={SectionMessage.TYPE.CRITICAL}
             />
           );
@@ -232,7 +240,7 @@ function LatestDeploymentVersion({ environment, component, accountId }) {
           return (
             <SectionMessage
               title={"There was an error executing the query"}
-              description={error}
+              description={error.message}
               type={SectionMessage.TYPE.CRITICAL}
             />
           );

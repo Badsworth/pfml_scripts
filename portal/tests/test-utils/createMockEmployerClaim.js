@@ -3,7 +3,7 @@ import { MockEmployerClaimBuilder } from "./mock-model-builder";
 /**
  * Creates mock employer claim
  * @param {Array} types - types of claim to create
- * @returns {MockEmployerClaimBuilder}
+ * @returns {EmployerClaim}
  *
  * @example
  * createMockEmployerClaim("continuous", "reducedSchedule")

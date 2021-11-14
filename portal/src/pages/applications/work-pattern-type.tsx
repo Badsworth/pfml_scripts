@@ -2,7 +2,7 @@ import { get, pick, set } from "lodash";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { WorkPatternType as WorkPatternTypeEnum } from "../../models/BenefitsApplication";

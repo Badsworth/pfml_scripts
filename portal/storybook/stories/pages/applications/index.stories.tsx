@@ -2,34 +2,24 @@ import BenefitsApplicationCollection from "src/models/BenefitsApplicationCollect
 import { Index } from "src/pages/applications/index";
 import { MockBenefitsApplicationBuilder } from "tests/test-utils";
 import React from "react";
-import routes from "src/routes";
+import User from "src/models/User";
+import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
   title: "Pages/Applications/Index",
   component: Index,
-  argTypes: {
-    claim: {
-      defaultValue: "Empty",
-    },
-  },
 };
 
-export const Empty = ({ ...args }) => {
+export const Empty = () => {
   const claimAttrs = new MockBenefitsApplicationBuilder().create();
+  const appLogic = useMockableAppLogic();
 
-  const appLogic = {
-    portalFlow: {
-      goTo: () => "/storybook-mock",
-      pathname: routes.applications.getReady,
-    },
-  };
   return (
     <Index
-      {...args}
-      // @ts-expect-error ts-migrate(2740) FIXME: Type '{ portalFlow: { goTo: () => string; pathname... Remove this comment to see the full error message
       appLogic={appLogic}
-      // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'BenefitsApplication' is not assi... Remove this comment to see the full error message
-      claims={new BenefitsApplicationCollection(claimAttrs)}
+      claims={new BenefitsApplicationCollection([claimAttrs])}
+      query={{}}
+      user={new User({})}
     />
   );
 };

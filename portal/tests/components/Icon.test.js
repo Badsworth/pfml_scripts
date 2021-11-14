@@ -1,4 +1,4 @@
-import Icon from "../../src/components/Icon";
+import Icon from "../../src/components/core/Icon";
 import React from "react";
 import { render } from "@testing-library/react";
 

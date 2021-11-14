@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import withUser, { WithUserProps } from "./withUser";
 import BenefitsApplication from "../models/BenefitsApplication";
 import PageNotFound from "../components/PageNotFound";
-import Spinner from "../components/Spinner";
+import Spinner from "../components/core/Spinner";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 

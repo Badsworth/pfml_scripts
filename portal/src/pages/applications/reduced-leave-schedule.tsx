@@ -9,11 +9,11 @@ import { get, pick, set, zip } from "lodash";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
-import Alert from "../../components/Alert";
-import Details from "../../components/Details";
-import Heading from "../../components/Heading";
-import InputHours from "../../components/InputHours";
-import Lead from "../../components/Lead";
+import Alert from "../../components/core/Alert";
+import Details from "../../components/core/Details";
+import Heading from "../../components/core/Heading";
+import InputHours from "../../components/core/InputHours";
+import Lead from "../../components/core/Lead";
 import LeaveReason from "../../models/LeaveReason";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";

@@ -132,7 +132,7 @@ exports[`Success renders content tailored to Caring Leave 1`] = `
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
@@ -207,7 +207,7 @@ exports[`Success renders content tailored to Caring Leave 1`] = `
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>
@@ -340,7 +340,7 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
@@ -415,7 +415,7 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>
@@ -523,7 +523,7 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
@@ -598,7 +598,7 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>
@@ -706,7 +706,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
@@ -847,7 +847,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>
@@ -980,7 +980,7 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
@@ -1121,7 +1121,7 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>
@@ -1254,7 +1254,7 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
@@ -1329,7 +1329,7 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>
@@ -1462,7 +1462,7 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
@@ -1603,7 +1603,7 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>
@@ -1730,7 +1730,7 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
@@ -1871,7 +1871,7 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>

@@ -1,5 +1,4 @@
 import Step, { ClaimSteps } from "src/models/Step";
-import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import { Checklist } from "src/pages/applications/checklist";
 import DocumentCollection from "src/models/DocumentCollection";
 import { DocumentType } from "src/models/Document";
@@ -8,6 +7,7 @@ import { Props } from "storybook/types";
 import React from "react";
 import claimantConfig from "src/flows/claimant";
 import { find } from "lodash";
+import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 /**
  * Checklist step states are based on presence of validation warnings,
@@ -172,29 +172,23 @@ export const DefaultStory = (
 ) => {
   const { claim, documents, query, warnings } = scenarios[args.scenario];
 
-  const appLogic = {
-    appErrors: new AppErrorInfoCollection(),
+  const appLogic = useMockableAppLogic({
     benefitsApplications: {
-      update: () => {},
+      update: () => Promise.resolve(),
       warningsLists: {
-        [claim.application_id]: warnings,
+        [claim.application_id]: warnings ?? [],
       },
     },
     documents: {
-      attachDocument: () => {},
       documents:
         documents.length > 0
           ? new DocumentCollection(documents)
           : new DocumentCollection(),
     },
-    portalFlow: {
-      getNextPageRoute: () => "/storybook-mock",
-    },
-  };
+  });
 
   return (
     <Checklist
-      // @ts-expect-error ts-migrate(2740) FIXME: Type '{ appErrors: AppErrorInfoCollection; benefit... Remove this comment to see the full error message
       appLogic={appLogic}
       claim={claim}
       // @ts-expect-error ts-migrate(2322) FIXME: Type '(BenefitsApplicationDocument | ClaimDocument... Remove this comment to see the full error message

@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import ConditionalContent from "src/components/ConditionalContent";
-import InputChoiceGroup from "src/components/InputChoiceGroup";
-import InputText from "src/components/InputText";
+import InputChoiceGroup from "src/components/core/InputChoiceGroup";
+import InputText from "src/components/core/InputText";
 import { get } from "lodash";
 
 export default {

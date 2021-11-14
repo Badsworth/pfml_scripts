@@ -1,7 +1,7 @@
 import React, { useEffect } from "react";
 import withUser, { WithUserProps } from "./withUser";
 import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
-import Spinner from "../components/Spinner";
+import Spinner from "../components/core/Spinner";
 import { useTranslation } from "../locales/i18n";
 
 export interface WithBenefitsApplicationsProps extends WithUserProps {

@@ -4,7 +4,7 @@ import {
   DocumentType,
   isClaimDocument,
 } from "../models/Document";
-import Button from "./Button";
+import Button from "./core/Button";
 import React from "react";
 import classnames from "classnames";
 import download from "downloadjs";

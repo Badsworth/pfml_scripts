@@ -9,7 +9,7 @@ https://docs.pytest.org/en/latest/fixture.html#conftest-py-sharing-fixture-funct
 import logging.config  # noqa: B1
 import os
 import uuid
-from datetime import datetime, timedelta
+from datetime import date, datetime, timedelta
 from typing import List
 
 import _pytest.monkeypatch
@@ -27,7 +27,14 @@ import massgov.pfml.api.employees
 import massgov.pfml.db.models.employees as employee_models
 import massgov.pfml.util.files as file_util
 import massgov.pfml.util.logging
-from massgov.pfml.db.models.factories import UserFactory
+from massgov.pfml.api.models.claims.responses import AbsencePeriodStatusResponse
+from massgov.pfml.db.models.factories import (
+    ClaimFactory,
+    EmployeeFactory,
+    EmployerFactory,
+    TaxIdentifierFactory,
+    UserFactory,
+)
 
 logger = massgov.pfml.util.logging.get_logger("massgov.pfml.api.tests.conftest")
 
@@ -84,6 +91,47 @@ def logging_fix(monkeypatch):
 def user(initialize_factories_session):
     user = UserFactory.create()
     return user
+
+
+@pytest.fixture
+def employer():
+    return EmployerFactory.create(employer_fein="112222222")
+
+
+@pytest.fixture
+def tax_identifier():
+    return TaxIdentifierFactory.create(tax_identifier="123456789")
+
+
+@pytest.fixture
+def employee(tax_identifier):
+    return EmployeeFactory.create(tax_identifier_id=tax_identifier.tax_identifier_id)
+
+
+@pytest.fixture
+def claim(employer, employee):
+    return ClaimFactory.create(
+        employer=employer,
+        employee=employee,
+        fineos_absence_status_id=1,
+        claim_type_id=1,
+        fineos_absence_id="foo",
+    )
+
+
+@pytest.fixture
+def absence_period():
+    return AbsencePeriodStatusResponse(
+        fineos_leave_period_id="PL-14449-0000002237",
+        absence_period_start_date=date(2021, 1, 29),
+        absence_period_end_date=date(2021, 1, 30),
+        reason="Child Bonding",
+        reason_qualifier_one="Foster Care",
+        reason_qualifier_two="",
+        period_type="Continuous",
+        request_decision="Pending",
+        evidence_status=None,
+    )
 
 
 @pytest.fixture
@@ -760,3 +808,35 @@ def dua_reduction_payment_unique_index(initialize_factories_session):
             )
         """
         )
+
+
+@pytest.fixture
+def sqlalchemy_query_counter():
+    class SQLAlchemyQueryCounter:
+        """
+        Check SQLAlchemy query count.
+        Usage:
+            with SQLAlchemyQueryCounter(session, expected_query_count=2):
+                conn.execute("SELECT 1")
+                conn.execute("SELECT 1")
+        """
+
+        def __init__(self, session, expected_query_count):
+            self.engine = session.get_bind()
+            self._query_count = expected_query_count
+            self.count = 0
+
+        def __enter__(self):
+            sqlalchemy.event.listen(self.engine, "after_execute", self._callback)
+            return self
+
+        def __exit__(self, *_):
+            sqlalchemy.event.remove(self.engine, "after_execute", self._callback)
+            assert self.count == self._query_count, (
+                "Executed: " + str(self.count) + " != Required: " + str(self._query_count)
+            )
+
+        def _callback(self, *_):
+            self.count += 1
+
+    return SQLAlchemyQueryCounter

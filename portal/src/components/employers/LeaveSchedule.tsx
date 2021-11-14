@@ -2,7 +2,7 @@ import EmployerClaim from "../../models/EmployerClaim";
 import IntermittentLeaveSchedule from "./IntermittentLeaveSchedule";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
-import Table from "../Table";
+import Table from "../core/Table";
 import { Trans } from "react-i18next";
 import formatDateRange from "../../utils/formatDateRange";
 import { get } from "lodash";

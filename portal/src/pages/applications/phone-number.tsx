@@ -2,10 +2,10 @@ import { cloneDeep, get, pick, set } from "lodash";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
-import Heading from "../../components/Heading";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import InputText from "../../components/InputText";
-import Lead from "../../components/Lead";
+import Heading from "../../components/core/Heading";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
+import InputText from "../../components/core/InputText";
+import Lead from "../../components/core/Lead";
 import { PhoneType } from "../../models/BenefitsApplication";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";

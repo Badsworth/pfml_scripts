@@ -4,9 +4,9 @@ import { pick, round } from "lodash";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
-import Heading from "../../components/Heading";
-import InputHours from "../../components/InputHours";
-import Lead from "../../components/Lead";
+import Heading from "../../components/core/Heading";
+import InputHours from "../../components/core/InputHours";
+import Lead from "../../components/core/Lead";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
 import isBlank from "../../utils/isBlank";

@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import Dropdown from "../../src/components/Dropdown";
+import Dropdown from "../../src/components/core/Dropdown";
 import React from "react";
 import userEvent from "@testing-library/user-event";
 

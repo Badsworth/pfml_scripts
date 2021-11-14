@@ -374,7 +374,9 @@ def applications_complete(application_id):
 
         log_attributes = get_application_log_attributes(existing_application)
 
-        issues = application_rules.get_application_issues(existing_application)
+        issues = application_rules.get_application_complete_issues(
+            existing_application, request.headers
+        )
         if issues:
             logger.info(
                 "applications_complete failure - application failed validation",
@@ -837,14 +839,16 @@ def validate_tax_withholding_request(db_session, application_id, tax_preference_
 
 
 def save_tax_preference(db_session, existing_application, tax_preference_body):
-    existing_application.is_withholding_tax = tax_preference_body.withhold_taxes
+    existing_application.is_withholding_tax = tax_preference_body.is_withholding_tax
     db_session.commit()
     db_session.refresh(existing_application)
 
 
 def send_tax_selection_to_fineos(existing_application, tax_preference_body):
     try:
-        send_tax_withholding_preference(existing_application, tax_preference_body.withhold_taxes)
+        send_tax_withholding_preference(
+            existing_application, tax_preference_body.is_withholding_tax
+        )
     except Exception:
         logger.warning(
             "submit_tax_withholding_preference failure - failure submitting tax withholding preference to claims processing system",

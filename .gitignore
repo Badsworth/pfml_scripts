@@ -7,6 +7,9 @@ node_modules/
 # Next.js build output
 .next/
 
+# TypeScript
+tsconfig.tsbuildinfo
+
 # Portal static exports
 portal/out/
 portal/out-storybook/

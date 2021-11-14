@@ -12,7 +12,7 @@ import userEvent from "@testing-library/user-event";
 // Avoid issue where USWDS generates unique ID each render,
 // which causes havoc for our snapshot testing
 // https://github.com/uswds/uswds/issues/4338
-jest.mock("../../../src/components/TooltipIcon", () => ({
+jest.mock("../../../src/components/core/TooltipIcon", () => ({
   __esModule: true,
   default: () => null,
 }));

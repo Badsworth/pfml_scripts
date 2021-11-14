@@ -2,6 +2,7 @@ import User, { UserLeaveAdministrator } from "src/models/User";
 import { Index } from "src/pages/employers/organizations";
 import { Props } from "storybook/types";
 import React from "react";
+import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 const ORGANIZATION_TYPES = {
   verified: "Verified employer",
@@ -71,14 +72,7 @@ export const Default = (
   const user = new User({
     user_leave_administrators,
   });
-  const appLogic = {
-    users: {
-      user,
-    },
-    portalFlow: {
-      getNextPageRoute: () => "",
-    },
-  };
-  // @ts-expect-error ts-migrate(2740) FIXME: Type '{ users: { user: User; }; portalFlow: { getN... Remove this comment to see the full error message
-  return <Index appLogic={appLogic} user={appLogic.users.user} />;
+  const appLogic = useMockableAppLogic();
+
+  return <Index appLogic={appLogic} query={{}} user={user} />;
 };

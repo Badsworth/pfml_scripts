@@ -1,6 +1,6 @@
-import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import ForgotPassword from "src/pages/forgot-password";
 import React from "react";
+import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
   title: "Pages/Auth/Forgot Password",
@@ -8,11 +8,7 @@ export default {
 };
 
 export const Page = () => {
-  const appLogic = {
-    auth: { forgotPassword: () => {} },
-    appErrors: new AppErrorInfoCollection(),
-  };
+  const appLogic = useMockableAppLogic();
 
-  // @ts-expect-error ts-migrate(2740) FIXME: Type '{ auth: { forgotPassword: () => void; }; app... Remove this comment to see the full error message
   return <ForgotPassword appLogic={appLogic} />;
 };

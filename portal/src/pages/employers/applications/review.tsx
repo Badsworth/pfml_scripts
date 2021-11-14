@@ -9,9 +9,9 @@ import withEmployerClaim, {
   WithEmployerClaimProps,
 } from "../../../hoc/withEmployerClaim";
 
-import Alert from "../../../components/Alert";
+import Alert from "../../../components/core/Alert";
 import BackButton from "../../../components/BackButton";
-import Button from "../../../components/Button";
+import Button from "../../../components/core/Button";
 import ConcurrentLeave from "../../../components/employers/ConcurrentLeave";
 import ConcurrentLeaveModel from "../../../models/ConcurrentLeave";
 import EmployeeInformation from "../../../components/employers/EmployeeInformation";
@@ -21,14 +21,14 @@ import EmployerBenefits from "../../../components/employers/EmployerBenefits";
 import EmployerDecision from "../../../components/employers/EmployerDecision";
 import Feedback from "../../../components/employers/Feedback";
 import FraudReport from "../../../components/employers/FraudReport";
-import Heading from "../../../components/Heading";
+import Heading from "../../../components/core/Heading";
 import LeaveDetails from "../../../components/employers/LeaveDetails";
 import LeaveSchedule from "../../../components/employers/LeaveSchedule";
 import PreviousLeaves from "../../../components/employers/PreviousLeaves";
 import ReviewHeading from "../../../components/ReviewHeading";
 import ReviewRow from "../../../components/ReviewRow";
 import SupportingWorkDetails from "../../../components/employers/SupportingWorkDetails";
-import Title from "../../../components/Title";
+import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import formatDateRange from "../../../utils/formatDateRange";

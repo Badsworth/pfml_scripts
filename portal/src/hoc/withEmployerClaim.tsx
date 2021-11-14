@@ -2,7 +2,7 @@ import React, { useEffect } from "react";
 import withUser, { WithUserProps } from "./withUser";
 import EmployerClaim from "../models/EmployerClaim";
 import PageNotFound from "../components/PageNotFound";
-import { Spinner } from "../components/Spinner";
+import { Spinner } from "../components/core/Spinner";
 import { UserLeaveAdministrator } from "../models/User";
 import routes from "../routes";
 import { useTranslation } from "react-i18next";

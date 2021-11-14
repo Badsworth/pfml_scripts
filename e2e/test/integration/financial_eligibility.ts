@@ -25,9 +25,14 @@ describe("Financial Eligibility", () => {
     token = await authenticator.getAPIBearerToken(apiCreds);
   });
 
+  const INEL: ScenarioSpecification = {
+    ...scenarios.BHAP1,
+    employee: { wages: "ineligible" },
+  };
+
   const financial_eligibility = [
     ["Eligible", scenarios.BHAP1],
-    ["Ineligible", scenarios.BHAP1INEL],
+    ["Ineligible", INEL],
   ];
 
   test.each(financial_eligibility)(

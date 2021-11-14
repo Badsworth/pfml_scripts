@@ -2,7 +2,7 @@ import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
 import { Gender as GenderDescription } from "../../models/BenefitsApplication";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { get } from "lodash";

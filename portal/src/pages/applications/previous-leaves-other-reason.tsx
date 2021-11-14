@@ -2,8 +2,8 @@ import { get, pick } from "lodash";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
-import IconHeading from "../../components/IconHeading";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
+import IconHeading from "../../components/core/IconHeading";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import formatDate from "../../utils/formatDate";

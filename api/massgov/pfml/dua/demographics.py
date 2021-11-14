@@ -76,7 +76,7 @@ def download_demographics_file_from_moveit(
 ) -> List[ReferenceFile]:
     transfer_config = SftpS3TransferConfig(
         s3_bucket_uri=s3_config.s3_bucket_uri,
-        source_dir=moveit_config.moveit_outbound_path,
+        source_dir=moveit_config.moveit_inbound_path,
         archive_dir=moveit_config.moveit_archive_path,
         dest_dir=s3_config.s3_pending_directory_path,
         sftp_uri=moveit_config.moveit_sftp_uri,

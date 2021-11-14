@@ -10,19 +10,19 @@ import withBenefitsApplication, {
 import withClaimDocuments, {
   WithClaimDocumentsProps,
 } from "../../hoc/withClaimDocuments";
-import Alert from "../../components/Alert";
+import Alert from "../../components/core/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
-import Details from "../../components/Details";
+import Details from "../../components/core/Details";
 import { DocumentType } from "../../models/Document";
-import HeadingPrefix from "../../components/HeadingPrefix";
+import HeadingPrefix from "../../components/core/HeadingPrefix";
 import LeaveReason from "../../models/LeaveReason";
 import React from "react";
-import Spinner from "../../components/Spinner";
+import Spinner from "../../components/core/Spinner";
 import Step from "../../components/Step";
 import StepGroup from "../../models/StepGroup";
 import StepList from "../../components/StepList";
-import Title from "../../components/Title";
+import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import claimantConfig from "../../flows/claimant";
 import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";

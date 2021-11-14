@@ -1,8 +1,7 @@
 import random
 from datetime import date, timedelta
 
-import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
-from massgov.pfml.db.models.employees import PaymentTransactionType, State
+from massgov.pfml.db.models.employees import PaymentTransactionType, SharedPaymentConstants, State
 from massgov.pfml.db.models.factories import PaymentDetailsFactory
 from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_util import (
@@ -75,7 +74,7 @@ def _create_payment_container(
             payment_period.payment_id = payment.payment_id
 
     if has_processed_state:
-        state = random.choice(list(payments_util.Constants.PAID_STATES))
+        state = random.choice(list(SharedPaymentConstants.PAID_STATES))
     elif has_errored_state:
         state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
     elif is_overpayment:

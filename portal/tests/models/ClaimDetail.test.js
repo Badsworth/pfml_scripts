@@ -107,6 +107,64 @@ describe("ClaimDetail", () => {
     );
   });
 
+  describe("creates payments", () => {
+    const absencePeriod = [
+      {
+        absence_period_start_date: "2021-01-01",
+        absence_period_end_date: "2021-06-30",
+      },
+      {
+        absence_period_start_date: "2021-07-01",
+        absence_period_end_date: "2021-12-31",
+      },
+    ];
+
+    it("to be initialized as an empty array", () => {
+      const claimDetail = new ClaimDetail({
+        absence_periods: absencePeriod,
+      });
+
+      expect(claimDetail.payments).toBeInstanceOf(Array);
+      expect(claimDetail.payments.length).toBe(0);
+    });
+
+    it("to populate model given ", () => {
+      const claimDetail = new ClaimDetail({
+        absence_periods: absencePeriod,
+        payments: [
+          {
+            payment_id: "12345",
+            period_start_date: "2021-01-08",
+            period_end_date: "2021-01-15",
+            amount: 124,
+            sent_to_bank_date: "2021-01-16",
+            payment_method: "Check",
+            expected_send_date_start: null,
+            expected_send_date_end: null,
+            status: "Sent to bank",
+          },
+          {
+            payment_id: "12346",
+            period_start_date: "2021-01-16",
+            period_end_date: "2021-01-23",
+            amount: 124,
+            sent_to_bank_date: null,
+            payment_method: "Check",
+            expected_send_date_start: "2021-01-24",
+            expected_send_date_end: "2021-01-27",
+            status: "Pending",
+          },
+        ],
+      });
+
+      expect(claimDetail.payments.length).toBe(2);
+      expect(claimDetail.payments[0].period_start_date).toBe("2021-01-08");
+      expect(claimDetail.payments[0].period_end_date).toBe("2021-01-15");
+      expect(claimDetail.payments[1].status).toBe("Pending");
+      expect(claimDetail.payments[1].sent_to_bank_date).toBeNull();
+    });
+  });
+
   it("groups absence periods by leave_details", () => {
     const claimDetail = new ClaimDetail({
       absence_periods: [
