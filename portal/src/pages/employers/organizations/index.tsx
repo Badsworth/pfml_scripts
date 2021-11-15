@@ -1,22 +1,21 @@
-import Alert from "../../../components/Alert";
+import withUser, { WithUserProps } from "../../../hoc/withUser";
+import Alert from "../../../components/core/Alert";
 import BackButton from "../../../components/BackButton";
 import ButtonLink from "../../../components/ButtonLink";
 import LeaveAdministratorRow from "../../../components/employers/LeaveAdministratorRow";
-import PropTypes from "prop-types";
 import React from "react";
-import Table from "../../../components/Table";
-import Title from "../../../components/Title";
+import Table from "../../../components/core/Table";
+import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
-import User from "../../../models/User";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
-import withUser from "../../../hoc/withUser";
 
-export const Index = (props) => {
+export const Index = (
+  props: WithUserProps & { query: { account_converted?: string } }
+) => {
   const { appLogic, query } = props;
   const { t } = useTranslation();
-  const { hasVerifiableEmployer, user_leave_administrators } =
-    appLogic.users.user;
+  const { hasVerifiableEmployer, user_leave_administrators } = props.user;
   const accountConverted = query?.account_converted === "true";
 
   return (
@@ -27,7 +26,6 @@ export const Index = (props) => {
       />
       <Title>{t("pages.employersOrganizations.title")}</Title>
       {accountConverted && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; heading: string; state: ... Remove this comment to see the full error message
         <Alert
           heading={t("pages.employersOrganizations.convertHeading")}
           state="success"
@@ -36,7 +34,6 @@ export const Index = (props) => {
         </Alert>
       )}
       {hasVerifiableEmployer && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; heading:... Remove this comment to see the full error message
         <Alert
           state="warning"
           heading={t("pages.employersOrganizations.verificationTitle")}
@@ -87,20 +84,6 @@ export const Index = (props) => {
       </ButtonLink>
     </React.Fragment>
   );
-};
-
-Index.propTypes = {
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      getNextPageRoute: PropTypes.func.isRequired,
-    }).isRequired,
-    users: PropTypes.shape({
-      user: PropTypes.instanceOf(User).isRequired,
-    }).isRequired,
-  }).isRequired,
-  query: PropTypes.shape({
-    account_converted: PropTypes.string,
-  }),
 };
 
 export default withUser(Index);

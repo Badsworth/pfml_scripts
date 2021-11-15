@@ -1,4 +1,25 @@
+.DEFAULT_GOAL := help
 PORTAL_PATHS := . ../infra/portal
+
+help: ## Displays this help screen
+	@grep -Eh '^[[:print:]]+:.*?##' $(MAKEFILE_LIST) | \
+	sort -d | \
+	awk -F':.*?## ' '{printf "\033[36m%s\033[0m\t%s\n", $$1, $$2}' | \
+	column -t -s "$$(printf '\t')"
+	@echo ""
+
+start-release: ## Creates a new release series. Increments the Portal's major version number.
+	pushd ../bin/ci && poetry run scripted-releases --app portal start-release $(args) && popd
+
+update-release: ## Updates an in-progress release series. Increments the Portal's RC number.
+	pushd ../bin/ci && poetry run scripted-releases --app portal update-release $(args) && popd
+
+finalize-release: ## Marks a release series as approved to go to prod. Enables hotfixes; disables updates.
+	pushd ../bin/ci && poetry run scripted-releases --app portal finalize-release $(args) && popd
+
+hotfix: ## Alters a release series that already went to prod. Increments the Portal's minor version number.
+	pushd ../bin/ci && poetry run scripted-releases --app portal hotfix $(args) && popd
+
 release-notes: refs=origin/deploy/portal/stage..origin/main
 release-notes: ## Generate PORTAL release notes for $refs (defaults between stage and test)
 	@git log --pretty='format: * %s' $(refs) -- $(PORTAL_PATHS) | \

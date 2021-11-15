@@ -1,35 +1,45 @@
 import React, { useEffect } from "react";
-import BenefitsApplicationCollection from "../models/BenefitsApplicationCollection";
-import PropTypes from "prop-types";
-import Spinner from "../components/Spinner";
-import User from "../models/User";
-import assert from "assert";
+import withUser, { WithUserProps } from "./withUser";
+import BenefitsApplication from "../models/BenefitsApplication";
+import PageNotFound from "../components/PageNotFound";
+import Spinner from "../components/core/Spinner";
+import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
-import withUser from "./withUser";
+
+export interface QueryForWithBenefitsApplication {
+  claim_id?: string;
+}
+
+export interface WithBenefitsApplicationProps extends WithUserProps {
+  claim: BenefitsApplication;
+}
 
 /**
  * Higher order component that loads a claim if not yet loaded,
  * then adds a single claim to the wrapped component based on query parameters
- * @param {React.Component} Component - Component to receive claim prop
- * @returns {React.Component} - Component with claim prop
  */
-const withBenefitsApplication = (Component) => {
-  const ComponentWithClaim = (props) => {
+function withBenefitsApplication<T extends WithBenefitsApplicationProps>(
+  Component: React.ComponentType<T>
+) {
+  const ComponentWithClaim = (
+    props: WithUserProps & { query: QueryForWithBenefitsApplication }
+  ) => {
     const { appLogic, query } = props;
     const { t } = useTranslation();
-
-    assert(appLogic.benefitsApplications);
-    // Since we are within a withUser higher order component, user should always be set
-    assert(appLogic.users.user);
 
     const application_id = query.claim_id;
     const benefitsApplications =
       appLogic.benefitsApplications.benefitsApplications;
-    const claim = benefitsApplications.getItem(application_id);
-    const shouldLoad =
+    const claim = application_id
+      ? benefitsApplications.getItem(application_id)
+      : undefined;
+
+    const shouldLoad = !!(
+      application_id &&
       !appLogic.benefitsApplications.hasLoadedBenefitsApplicationAndWarnings(
         application_id
-      );
+      )
+    );
 
     useEffect(() => {
       if (shouldLoad) {
@@ -38,6 +48,18 @@ const withBenefitsApplication = (Component) => {
 
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [shouldLoad]);
+
+    useEffect(() => {
+      const { goTo, pathname } = appLogic.portalFlow;
+      if (
+        claim?.isCompleted &&
+        (pathname === routes.applications.checklist ||
+          pathname === routes.applications.review)
+      ) {
+        goTo(routes.applications.index);
+      }
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [claim?.application_id]);
 
     if (shouldLoad) {
       return (
@@ -51,29 +73,19 @@ const withBenefitsApplication = (Component) => {
       );
     }
 
-    return <Component {...props} claim={claim} />;
-  };
+    if (!application_id || !claim) {
+      return <PageNotFound />;
+    }
 
-  ComponentWithClaim.propTypes = {
-    appLogic: PropTypes.shape({
-      users: PropTypes.shape({
-        user: PropTypes.instanceOf(User).isRequired,
-      }).isRequired,
-      benefitsApplications: PropTypes.shape({
-        benefitsApplications: PropTypes.instanceOf(
-          BenefitsApplicationCollection
-        ),
-        load: PropTypes.func.isRequired,
-        hasLoadedBenefitsApplicationAndWarnings: PropTypes.func.isRequired,
-      }).isRequired,
-      appErrors: PropTypes.object.isRequired,
-    }).isRequired,
-    query: PropTypes.shape({
-      claim_id: PropTypes.string.isRequired,
-    }).isRequired,
+    return (
+      <Component
+        {...(props as T & { query: QueryForWithBenefitsApplication })}
+        claim={claim}
+      />
+    );
   };
 
   return withUser(ComponentWithClaim);
-};
+}
 
 export default withBenefitsApplication;

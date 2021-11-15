@@ -1,14 +1,20 @@
-import Button from "./Button";
+import Button from "./core/Button";
 import ButtonLink from "./ButtonLink";
-import PropTypes from "prop-types";
 import React from "react";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 
+interface AuthNavProps {
+  user?: {
+    email_address?: string;
+  };
+  onLogout: React.MouseEventHandler<HTMLButtonElement>;
+}
+
 /**
  * Displays auth links and info about the user if they're logged in
  */
-const AuthNav = (props) => {
+const AuthNav = (props: AuthNavProps) => {
   const { t } = useTranslation();
   const user = props.user || {};
   const isLoggedIn = !!user.email_address;
@@ -62,13 +68,6 @@ const AuthNav = (props) => {
       </div>
     </div>
   );
-};
-
-AuthNav.propTypes = {
-  user: PropTypes.shape({
-    email_address: PropTypes.string,
-  }),
-  onLogout: PropTypes.func.isRequired,
 };
 
 export default AuthNav;

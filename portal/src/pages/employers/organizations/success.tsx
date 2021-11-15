@@ -1,14 +1,15 @@
-import Button from "../../../components/Button";
-import PropTypes from "prop-types";
+import withUser, { WithUserProps } from "../../../hoc/withUser";
+import Button from "../../../components/core/Button";
+import PageNotFound from "../../../components/PageNotFound";
 import React from "react";
-import Title from "../../../components/Title";
+import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
-import User from "../../../models/User";
 import routes from "../../../routes";
 import { useTranslation } from "../../../locales/i18n";
-import withUser from "../../../hoc/withUser";
 
-export const Success = (props) => {
+export const Success = (
+  props: WithUserProps & { query: { employer_id?: string; next?: string } }
+) => {
   const { appLogic, query, user } = props;
   const { t } = useTranslation();
 
@@ -19,6 +20,10 @@ export const Success = (props) => {
     const route = query.next || routes.employers.organizations;
     appLogic.portalFlow.goTo(route);
   };
+
+  if (!employer) {
+    return <PageNotFound />;
+  }
 
   return (
     <React.Fragment>
@@ -53,19 +58,6 @@ export const Success = (props) => {
       </Button>
     </React.Fragment>
   );
-};
-
-Success.propTypes = {
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      goTo: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-  query: PropTypes.shape({
-    employer_id: PropTypes.string.isRequired,
-    next: PropTypes.string.isRequired,
-  }).isRequired,
-  user: PropTypes.instanceOf(User),
 };
 
 export default withUser(Success);

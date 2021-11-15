@@ -1,26 +1,25 @@
-import Alert from "../../components/Alert";
-import BenefitsApplication from "../../models/BenefitsApplication";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import Alert from "../../components/core/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
-import Heading from "../../components/Heading";
-import Icon from "../../components/Icon";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
+import Heading from "../../components/core/Heading";
+import Icon from "../../components/core/Icon";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_other_incomes"];
 
-export const OtherIncomes = (props) => {
+export const OtherIncomes = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
 
   const handleSave = () => {
@@ -112,21 +111,12 @@ export const OtherIncomes = (props) => {
         }
       />
       <ConditionalContent visible={formState.has_other_incomes === false}>
-        {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; state: string; role: str... Remove this comment to see the full error message */}
         <Alert state="info" role="alert" slim>
           {t("pages.claimsOtherIncomes.choiceNoAlert")}
         </Alert>
       </ConditionalContent>
     </QuestionPage>
   );
-};
-
-OtherIncomes.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(OtherIncomes);

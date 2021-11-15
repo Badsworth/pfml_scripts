@@ -1,23 +1,21 @@
-import BenefitsApplication, {
-  WorkPatternType as WorkPatternTypeEnum,
-} from "../../models/BenefitsApplication";
 import { get, pick, set } from "lodash";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import PropTypes from "prop-types";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
+import { WorkPatternType as WorkPatternTypeEnum } from "../../models/BenefitsApplication";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.work_pattern.work_pattern_type"];
 
-export const WorkPatternType = (props) => {
+export const WorkPatternType = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const work_pattern_type = get(formState, "work_pattern.work_pattern_type");
 
@@ -41,6 +39,11 @@ export const WorkPatternType = (props) => {
     updateFields,
   });
 
+  const choiceKeys: Array<keyof typeof WorkPatternTypeEnum> = [
+    "fixed",
+    "variable",
+  ];
+
   return (
     <QuestionPage
       title={t("pages.claimsWorkPatternType.title")}
@@ -48,7 +51,7 @@ export const WorkPatternType = (props) => {
     >
       <InputChoiceGroup
         {...getFunctionalInputProps("work_pattern.work_pattern_type")}
-        choices={["fixed", "variable"].map((key) => ({
+        choices={choiceKeys.map((key) => ({
           checked: work_pattern_type === WorkPatternTypeEnum[key],
           hint: t("pages.claimsWorkPatternType.choiceHint", {
             context: key,
@@ -63,11 +66,6 @@ export const WorkPatternType = (props) => {
       />
     </QuestionPage>
   );
-};
-
-WorkPatternType.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
 export default withBenefitsApplication(WorkPatternType);

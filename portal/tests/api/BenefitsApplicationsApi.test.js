@@ -4,6 +4,7 @@ import PaymentPreference, {
 import BenefitsApplication from "../../src/models/BenefitsApplication";
 import BenefitsApplicationCollection from "../../src/models/BenefitsApplicationCollection";
 import BenefitsApplicationsApi from "../../src/api/BenefitsApplicationsApi";
+
 import { mockAuth } from "../test-utils";
 
 jest.mock("../../src/services/tracker");
@@ -257,7 +258,6 @@ describe("BenefitsApplicationsApi", () => {
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
         Object {
-          "errors": undefined,
           "warnings": Array [],
         }
       `);
@@ -342,7 +342,52 @@ describe("BenefitsApplicationsApi", () => {
       expect(claimResponse).toEqual(claim);
       expect(rest).toMatchInlineSnapshot(`
         Object {
-          "errors": undefined,
+          "warnings": Array [],
+        }
+      `);
+    });
+  });
+
+  describe("SubmitTaxWithholdingPreference", () => {
+    let claim, tax_preference;
+
+    beforeEach(() => {
+      claim = new BenefitsApplication();
+      tax_preference = { is_withholding_tax: true };
+
+      global.fetch = mockFetch({
+        response: { data: { ...claim } },
+        status: 201,
+      });
+    });
+
+    it("sends POST request to /applications/:application_id/submit_tax_withholding_preference", async () => {
+      await claimsApi.submitTaxWithholdingPreference(
+        claim.application_id,
+        tax_preference
+      );
+
+      expect(fetch).toHaveBeenCalledWith(
+        `${process.env.apiUrl}/applications/${claim.application_id}/submit_tax_withholding_preference`,
+        {
+          body: JSON.stringify(tax_preference),
+          headers: baseRequestHeaders,
+          method: "POST",
+        }
+      );
+    });
+
+    it("resolves with claim properties", async () => {
+      const { claim: claimResponse, ...rest } =
+        await claimsApi.submitTaxWithholdingPreference(
+          claim.application_id,
+          tax_preference
+        );
+
+      expect(claimResponse).toBeInstanceOf(BenefitsApplication);
+      expect(claimResponse).toEqual(claim);
+      expect(rest).toMatchInlineSnapshot(`
+        Object {
           "warnings": Array [],
         }
       `);

@@ -1,25 +1,288 @@
-import BenefitsApplication, {
-  ReasonQualifier,
-} from "../models/BenefitsApplication";
-import Document, { DocumentType } from "../models/Document";
-
-import Alert from "./Alert";
+import routeWithParams, {
+  createRouteWithQuery,
+} from "../utils/routeWithParams";
+import withClaimDocuments, {
+  WithClaimDocumentsProps,
+} from "../hoc/withClaimDocuments";
+import { AppLogic } from "../hooks/useAppLogic";
+import BenefitsApplication from "../models/BenefitsApplication";
+import { BenefitsApplicationDocument } from "../models/Document";
 import ButtonLink from "./ButtonLink";
-import DownloadableDocument from "./DownloadableDocument";
-import Heading from "./Heading";
+import Heading from "./core/Heading";
 import LeaveReason from "../models/LeaveReason";
-import PropTypes from "prop-types";
+import LegalNoticeList from "./LegalNoticeList";
 import React from "react";
-import { Trans } from "react-i18next";
-import findDocumentsByTypes from "../utils/findDocumentsByTypes";
+import Spinner from "./core/Spinner";
+import Tag from "./core/Tag";
+import ThrottledButton from "./ThrottledButton";
 import findKeyByValue from "../utils/findKeyByValue";
-import formatDateRange from "../utils/formatDateRange";
-import { get } from "lodash";
+import getLegalNotices from "../utils/getLegalNotices";
 import hasDocumentsLoadError from "../utils/hasDocumentsLoadError";
-import routeWithParams from "../utils/routeWithParams";
-import routes from "../routes";
+import tracker from "../services/tracker";
 import { useTranslation } from "../locales/i18n";
-import withClaimDocuments from "../hoc/withClaimDocuments";
+
+/**
+ * Assists with page navigation, displays errors on the
+ * current page rather than redirecting and showing the
+ * error on a new page.
+ */
+const navigateToPage = async (
+  claim: BenefitsApplication,
+  appLogic: AppLogic,
+  href: string
+) => {
+  const { fineos_absence_id } = claim;
+
+  if (fineos_absence_id) {
+    const claimDetail = await appLogic.claims.loadClaimDetail(
+      fineos_absence_id
+    );
+    const isValidClaim = claimDetail?.fineos_absence_id === fineos_absence_id;
+    // navigate to page if claim loads w/o errors
+    if (isValidClaim) appLogic.portalFlow.goTo(href);
+  } else {
+    tracker.trackEvent("fineos_absence_id is missing");
+  }
+};
+
+interface HeaderSectionProps {
+  title: string;
+}
+
+/**
+ * Main header for the top of status cards
+ */
+const HeaderSection = ({ title }: HeaderSectionProps) => (
+  <Heading className="padding-top-3" level="3" size="2">
+    {title}
+  </Heading>
+);
+
+interface TitleAndDetailSectionItemProps {
+  details: string;
+  title: string;
+}
+
+/**
+ * Group together details for status cards
+ */
+const TitleAndDetailSectionItem = ({
+  details,
+  title,
+}: TitleAndDetailSectionItemProps) => (
+  <div className="padding-y-1">
+    <p>{title}</p>
+    <p className="margin-top-05 text-bold">{details}</p>
+  </div>
+);
+
+interface ManageDocumentSectionProps {
+  appLogic: AppLogic;
+  claim: BenefitsApplication;
+}
+
+/**
+ * Section to view notices and upload documents
+ */
+const ManageDocumentSection = ({
+  appLogic,
+  claim,
+}: ManageDocumentSectionProps) => {
+  const { t } = useTranslation();
+  const { fineos_absence_id: absence_id } = claim;
+
+  const onClickHandler = async (href: string) => {
+    await navigateToPage(claim, appLogic, href);
+  };
+
+  const viewNoticesLink = createRouteWithQuery(
+    "/applications/status/",
+    { absence_id },
+    "view_notices"
+  );
+
+  const uploadDocumentsLink = createRouteWithQuery(
+    "/applications/status/",
+    { absence_id },
+    "upload_documents"
+  );
+
+  return (
+    <div className="border-top border-base-lighter">
+      <Heading className="padding-y-3" level="4">
+        {t("components.applicationCard.otherActions")}
+      </Heading>
+      <ThrottledButton
+        className="display-block margin-bottom-3"
+        onClick={() => onClickHandler(viewNoticesLink)}
+        variation="unstyled"
+      >
+        {t("components.applicationCard.viewNotices")}
+      </ThrottledButton>
+
+      <ThrottledButton
+        className="display-block margin-bottom-2"
+        onClick={() => onClickHandler(uploadDocumentsLink)}
+        variation="unstyled"
+      >
+        {t("components.applicationCard.respondToRequest")}
+      </ThrottledButton>
+    </div>
+  );
+};
+
+interface LegalNoticeSectionProps {
+  appLogic: AppLogic;
+  claim: BenefitsApplication;
+  documents: BenefitsApplicationDocument[];
+  isLoadingDocuments: boolean;
+}
+
+/**
+ * Section to view legal notices for in-progress applications
+ */
+const LegalNoticeSection = (props: LegalNoticeSectionProps) => {
+  const { t } = useTranslation();
+  const isSubmitted = props.claim.status === "Submitted";
+  const legalNotices = getLegalNotices(props.documents);
+  const shouldShowSpinner =
+    props.isLoadingDocuments &&
+    !hasDocumentsLoadError(
+      props.appLogic.appErrors,
+      props.claim.application_id
+    );
+
+  /**
+   * If application is not submitted,
+   * don't display section
+   */
+  if (!isSubmitted) return null;
+
+  // check for spinner before documents length, since length is 0 while loading.
+  if (shouldShowSpinner) {
+    return (
+      <div className="text-center">
+        <Spinner
+          small
+          aria-valuetext={t("components.applicationCard.loadingLabel")}
+        />
+      </div>
+    );
+  }
+
+  if (!legalNotices.length) return null;
+
+  return (
+    <div className="margin-top-2 padding-bottom-1" style={{ maxWidth: 385 }}>
+      <Heading level="3">{t("components.applicationCard.viewNotices")}</Heading>
+      <LegalNoticeList
+        onDownloadClick={props.appLogic.documents.download}
+        {...props}
+      />
+    </div>
+  );
+};
+
+interface InProgressStatusCardProps {
+  claim: BenefitsApplication;
+  documents: BenefitsApplicationDocument[];
+  isLoadingDocuments: boolean;
+  number: number;
+  appLogic: AppLogic;
+}
+
+/**
+ * Status card for claim.status != "Completed" (In Progress)
+ */
+const InProgressStatusCard = (props: InProgressStatusCardProps) => {
+  const { claim, number } = props;
+  const { t } = useTranslation();
+
+  return (
+    <React.Fragment>
+      <HeaderSection
+        title={t("components.applicationCard.heading", {
+          number,
+        })}
+      />
+      <Tag
+        state="warning"
+        label={t("components.applicationCard.inProgressTag")}
+      />
+      <p>{t("components.applicationCard.inProgressText")}</p>
+      {claim.employer_fein && (
+        <TitleAndDetailSectionItem
+          title={t("components.applicationCard.employerEIN")}
+          details={claim.employer_fein}
+        />
+      )}
+      <LegalNoticeSection {...props} />
+      <div className="border-top border-base-lighter padding-top-2">
+        <ButtonLink
+          className="display-flex flex-align-center flex-justify-center flex-column margin-right-0"
+          href={routeWithParams("applications.checklist", {
+            claim_id: claim.application_id,
+          })}
+        >
+          <div>{t("components.applicationCard.continueApplication")}</div>
+        </ButtonLink>
+      </div>
+    </React.Fragment>
+  );
+};
+
+interface CompletedStatusCardProps {
+  claim: BenefitsApplication;
+  appLogic: AppLogic;
+}
+
+/**
+ * Status card for claim.status = "Completed"
+ */
+const CompletedStatusCard = ({ appLogic, claim }: CompletedStatusCardProps) => {
+  const { t } = useTranslation();
+
+  const leaveReasonText = t("components.applicationCard.leaveReasonValue", {
+    context: findKeyByValue(LeaveReason, claim.leave_details?.reason),
+  });
+
+  const statusPage = routeWithParams("applications.status.claim", {
+    absence_id: claim.fineos_absence_id,
+  });
+
+  const onClickHandler = async () => {
+    await navigateToPage(claim, appLogic, statusPage);
+  };
+
+  return (
+    <React.Fragment>
+      <HeaderSection title={leaveReasonText} />
+      <TitleAndDetailSectionItem
+        title={t("components.applicationCard.applicationID")}
+        details={claim.fineos_absence_id || ""}
+      />
+      <TitleAndDetailSectionItem
+        title={t("components.applicationCard.employerEIN")}
+        details={claim.employer_fein || ""}
+      />
+
+      <div className="border-top border-base-lighter padding-y-2 margin-y-2 margin-bottom-0">
+        <ThrottledButton
+          className="width-full display-flex flex-align-center flex-justify-center flex-column margin-right-0"
+          onClick={onClickHandler}
+        >
+          {t("components.applicationCard.viewStatusUpdatesAndDetails")}
+        </ThrottledButton>
+      </div>
+      <ManageDocumentSection appLogic={appLogic} claim={claim} />
+    </React.Fragment>
+  );
+};
+
+interface ApplicationCardProps extends WithClaimDocumentsProps {
+  claim: BenefitsApplication;
+  number: number;
+}
 
 /**
  * Main entry point for an existing benefits Application, allowing
@@ -27,354 +290,27 @@ import withClaimDocuments from "../hoc/withClaimDocuments";
  * they've submitted, view notices and instructions, or upload
  * additional docs.
  */
-export const ApplicationCard = (props) => {
-  const { claim, number } = props;
-  const { t } = useTranslation();
-
-  const leaveReason = get(claim, "leave_details.reason");
+export const ApplicationCard = (props: ApplicationCardProps) => {
+  const {
+    claim: { status },
+  } = props;
 
   return (
-    <article className="maxw-mobile-lg border border-base-lighter margin-bottom-3">
-      <header className="bg-base-lightest padding-3">
-        {claim.fineos_absence_id ? (
-          <Heading className="margin-bottom-1" level="2">
-            {claim.fineos_absence_id}
-          </Heading>
+    <div className="maxw-mobile-lg margin-bottom-3">
+      <aside
+        className={`border-top-1 ${
+          status === "Completed" ? "border-primary" : "border-gold"
+        }`}
+      />
+      <article className="border-x border-bottom border-base-lighter padding-2 padding-top-0">
+        {status === "Completed" ? (
+          <CompletedStatusCard {...props} />
         ) : (
-          <Heading className="margin-bottom-05" level="2">
-            {t("components.applicationCard.heading", { number })}
-          </Heading>
+          <InProgressStatusCard {...props} />
         )}
-
-        {leaveReason && (
-          <Heading className="margin-top-0" size="2" level="3" weight="normal">
-            {t("components.applicationCard.leaveReasonValue", {
-              context: findKeyByValue(LeaveReason, leaveReason),
-            })}
-          </Heading>
-        )}
-      </header>
-
-      <div className="padding-3">
-        <ApplicationDetails {...props} />
-        <LegalNotices {...props} />
-        <ApplicationActions {...props} />
-      </div>
-    </article>
-  );
-};
-
-ApplicationCard.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    documents: PropTypes.shape({
-      download: PropTypes.func.isRequired,
-    }),
-  }).isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-  /**
-   * Cards are displayed in a list. What position is this card?
-   */
-  number: PropTypes.number.isRequired,
-};
-
-/**
- * Details about the application, entered by the Claimant,
- * like Employer EIN and leave periods
- */
-function ApplicationDetails(props) {
-  const { t } = useTranslation();
-  const { claim } = props;
-
-  const headingProps = {
-    className: "margin-top-0 margin-bottom-05 text-base-dark",
-    level: "4",
-    size: "6",
-  };
-  const valueProps = {
-    className: "margin-top-0 margin-bottom-2 font-body-2xs text-medium",
-  };
-
-  // If an EIN isn't present yet, then this entire component is going to
-  // be empty, so we don't want to include a border
-  const containerClassName = claim.employer_fein
-    ? "border-bottom border-base-lighter margin-bottom-2"
-    : undefined;
-
-  return (
-    <div className={containerClassName}>
-      {claim.employer_fein && (
-        <React.Fragment>
-          <Heading {...headingProps}>
-            {t("components.applicationCard.feinHeading")}
-          </Heading>
-          <p {...valueProps}>{claim.employer_fein}</p>
-        </React.Fragment>
-      )}
-
-      {claim.isContinuous && (
-        <React.Fragment>
-          <Heading {...headingProps}>
-            {t("components.applicationCard.leavePeriodLabel_continuous")}
-          </Heading>
-          <p {...valueProps}>
-            {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
-            {formatDateRange(
-              get(
-                claim,
-                "leave_details.continuous_leave_periods[0].start_date"
-              ),
-              get(claim, "leave_details.continuous_leave_periods[0].end_date")
-            )}
-          </p>
-        </React.Fragment>
-      )}
-
-      {claim.isReducedSchedule && (
-        <React.Fragment>
-          <Heading {...headingProps}>
-            {t("components.applicationCard.leavePeriodLabel_reduced")}
-          </Heading>
-          <p {...valueProps}>
-            {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
-            {formatDateRange(
-              get(
-                claim,
-                "leave_details.reduced_schedule_leave_periods[0].start_date"
-              ),
-              get(
-                claim,
-                "leave_details.reduced_schedule_leave_periods[0].end_date"
-              )
-            )}
-          </p>
-        </React.Fragment>
-      )}
-
-      {claim.isIntermittent && (
-        <React.Fragment>
-          <Heading {...headingProps}>
-            {t("components.applicationCard.leavePeriodLabel_intermittent")}
-          </Heading>
-          <p {...valueProps}>
-            {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
-            {formatDateRange(
-              get(
-                claim,
-                "leave_details.intermittent_leave_periods[0].start_date"
-              ),
-              get(claim, "leave_details.intermittent_leave_periods[0].end_date")
-            )}
-          </p>
-        </React.Fragment>
-      )}
+      </article>
     </div>
   );
-}
-
-ApplicationDetails.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-};
-
-/**
- * Legal notices list and content
- */
-function LegalNotices(props) {
-  const { t } = useTranslation();
-  const { appLogic, claim, documents } = props;
-
-  const hasLoadingDocumentsError = hasDocumentsLoadError(
-    appLogic.appErrors,
-    claim.application_id
-  );
-
-  const legalNotices = findDocumentsByTypes(documents, [
-    DocumentType.approvalNotice,
-    DocumentType.denialNotice,
-    DocumentType.requestForInfoNotice,
-    DocumentType.withdrawalNotice,
-    DocumentType.appealAcknowledgment,
-  ]);
-
-  // If a claim doesn't have a corresponding FINEOS ID, then
-  // it's not yet in a state where it could have a legal notice
-  return !claim.fineos_absence_id ? null : (
-    <div
-      className="border-bottom border-base-lighter padding-bottom-2 margin-bottom-2"
-      data-test="legal-notices"
-    >
-      <Heading level="3" weight="normal">
-        {t("components.applicationCard.noticesHeading")}
-      </Heading>
-
-      {hasLoadingDocumentsError && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; noIcon: true; }' is not... Remove this comment to see the full error message
-        <Alert noIcon>
-          <Trans
-            i18nKey="components.applicationCard.documentsLoadError"
-            components={{
-              "contact-center-phone-link": (
-                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-              ),
-            }}
-          />
-        </Alert>
-      )}
-
-      {legalNotices.length === 0 && (
-        <p>{t("components.applicationCard.noticesFallback")}</p>
-      )}
-
-      {legalNotices.length > 0 && (
-        <React.Fragment>
-          <p>{t("components.applicationCard.noticesDownload")}</p>
-          <ul className="usa-list">
-            {legalNotices.map((notice) => (
-              <li key={notice.fineos_document_id}>
-                <DownloadableDocument
-                  document={notice}
-                  showCreatedAt
-                  onDownloadClick={appLogic.documents.download}
-                />
-              </li>
-            ))}
-          </ul>
-        </React.Fragment>
-      )}
-    </div>
-  );
-}
-
-LegalNotices.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    documents: PropTypes.shape({
-      download: PropTypes.func.isRequired,
-    }),
-  }).isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-};
-
-/**
- * Actions the user can take or will need to take, like calling for
- * reductions, uploading docs, or completing their claim.
- */
-function ApplicationActions(props) {
-  const { t } = useTranslation();
-  const { claim, documents } = props;
-
-  const certificationDocs = findDocumentsByTypes(
-    documents,
-    // TODO (CP-2029): Remove reference to `State managed Paid Leave Confirmation` (DocumentType.certification.medicalCertification) type when it's obsolete
-    [
-      DocumentType.certification.medicalCertification,
-      DocumentType.certification[LeaveReason.bonding],
-    ]
-  );
-  const hasDenialNotice =
-    findDocumentsByTypes(documents, [DocumentType.denialNotice]).length > 0;
-
-  const hasFutureChildDate = get(claim, "leave_details.has_future_child_date");
-  const leaveReasonQualifier = get(claim, "leave_details.reason_qualifier");
-
-  const bondingContentContext = {
-    [ReasonQualifier.adoption]: "adopt_foster",
-    [ReasonQualifier.fosterCare]: "adopt_foster",
-    [ReasonQualifier.newBorn]: "newborn",
-  };
-
-  const showBondingLeaveDocRequirement =
-    hasFutureChildDate && certificationDocs.length === 0;
-  const showResumeButton = !claim.isCompleted && !hasDenialNotice;
-  const showUploadButton = claim.isCompleted || hasDenialNotice;
-
-  /**
-   * Which Other Leave instructions to display on ApplicationCard
-   * TODO (CP-2354) Remove CC guidance for claims with Part 1 submitted without reductions data
-   */
-  const hasReductionsData =
-    get(claim, "has_employer_benefits") !== null ||
-    get(claim, "has_other_incomes") !== null ||
-    get(claim, "has_previous_leaves_same_reason") !== null ||
-    get(claim, "has_previous_leaves_other_reason") !== null ||
-    get(claim, "has_concurrent_leave") !== null;
-  // Show no instructions by default
-  let reductionsI18nKey = null;
-  // Show new other leave instructions on completed claims
-  if (claim.isCompleted) {
-    reductionsI18nKey = "components.applicationCard.reductionsInstructions";
-  }
-  // Show prompt to report other leaves if Part 1 was submitted with null reductions data
-  else if (!hasReductionsData && claim.isSubmitted) {
-    reductionsI18nKey =
-      "components.applicationCard.reductionsInstructions_missingData";
-  }
-
-  return (
-    <div>
-      <Heading level="3" weight="normal">
-        {t("components.applicationCard.actionsHeading")}
-      </Heading>
-
-      {reductionsI18nKey && (
-        <Trans
-          i18nKey={reductionsI18nKey}
-          components={{
-            "contact-center-phone-link": (
-              <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-            ),
-            "when-can-i-use-pfml": (
-              <a href={routes.external.massgov.whenCanIUsePFML} />
-            ),
-            "reductions-overview-link": (
-              <a href={routes.external.massgov.reductionsOverview} />
-            ),
-            ul: <ul className="usa-list" />,
-            li: <li />,
-          }}
-        />
-      )}
-
-      {showBondingLeaveDocRequirement && (
-        <p>
-          {t("components.applicationCard.bondingLeaveDocsRequired", {
-            context: bondingContentContext[leaveReasonQualifier],
-          })}
-        </p>
-      )}
-
-      {showUploadButton && (
-        <ButtonLink
-          className="display-block"
-          href={routeWithParams("applications.uploadDocsOptions", {
-            claim_id: claim.application_id,
-          })}
-          variation={showResumeButton ? "outline" : null}
-        >
-          {t("components.applicationCard.uploadDocsButton")}
-        </ButtonLink>
-      )}
-
-      {showResumeButton && (
-        <ButtonLink
-          data-test="resume-button"
-          className="display-block margin-top-2"
-          href={routeWithParams("applications.checklist", {
-            claim_id: claim.application_id,
-          })}
-        >
-          {t("components.applicationCard.resumeClaimButton")}
-        </ButtonLink>
-      )}
-    </div>
-  );
-}
-
-ApplicationActions.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
 };
 
 export default withClaimDocuments(ApplicationCard);

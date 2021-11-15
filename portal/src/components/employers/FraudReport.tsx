@@ -1,13 +1,21 @@
 import { Trans, useTranslation } from "react-i18next";
-import Alert from "../Alert";
+import Alert from "../core/Alert";
 import ConditionalContent from "../ConditionalContent";
-import Details from "../Details";
-import InputChoiceGroup from "../InputChoiceGroup";
-import PropTypes from "prop-types";
+import Details from "../core/Details";
+import InputChoiceGroup from "../core/InputChoiceGroup";
 import React from "react";
 import ReviewHeading from "../ReviewHeading";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 
-const FraudReport = ({ fraudInput, getFunctionalInputProps }) => {
+interface FraudReportProps {
+  fraudInput?: "Yes" | "No";
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
+}
+
+const FraudReport = ({
+  fraudInput,
+  getFunctionalInputProps,
+}: FraudReportProps) => {
   const { t } = useTranslation();
 
   return (
@@ -49,7 +57,6 @@ const FraudReport = ({ fraudInput, getFunctionalInputProps }) => {
       />
       <ConditionalContent visible={fraudInput === "Yes"}>
         <React.Fragment>
-          {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; heading:... Remove this comment to see the full error message */}
           <Alert
             state="warning"
             heading={t("components.employersFraudReport.alertHeading")}
@@ -67,11 +74,6 @@ const FraudReport = ({ fraudInput, getFunctionalInputProps }) => {
       </ConditionalContent>
     </React.Fragment>
   );
-};
-
-FraudReport.propTypes = {
-  fraudInput: PropTypes.oneOf(["Yes", "No"]),
-  getFunctionalInputProps: PropTypes.func.isRequired,
 };
 
 export default FraudReport;

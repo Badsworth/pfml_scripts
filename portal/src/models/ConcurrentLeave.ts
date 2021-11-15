@@ -2,16 +2,14 @@
 /**
  * @file Concurrent leave
  */
-import BaseModel from "./BaseModel";
 
-class ConcurrentLeave extends BaseModel {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'ConcurrentLeave' is n... Remove this comment to see the full error message
-  get defaults() {
-    return {
-      is_for_current_employer: null,
-      leave_end_date: null,
-      leave_start_date: null,
-    };
+class ConcurrentLeave {
+  is_for_current_employer: boolean | null = null;
+  leave_end_date: string | null = null;
+  leave_start_date: string | null = null;
+
+  constructor(attrs: Partial<ConcurrentLeave>) {
+    Object.assign(this, attrs);
   }
 }
 

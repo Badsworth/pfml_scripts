@@ -188,19 +188,6 @@ describe("BaseApi", () => {
     expect(fetch).toHaveBeenCalledTimes(2);
   });
 
-  it("transforms the method to uppercase", async () => {
-    const method = "get";
-
-    await testsApi.request(method, "users");
-
-    expect(fetch).toHaveBeenCalledWith(
-      expect.any(String),
-      expect.objectContaining({
-        method: "GET",
-      })
-    );
-  });
-
   it("removes the leading slash from the path", async () => {
     const method = "GET";
     const path = "/users";
@@ -224,18 +211,6 @@ describe("BaseApi", () => {
       expect(fetch).toHaveBeenCalledWith(
         expect.any(String),
         expect.objectContaining({ body })
-      );
-    });
-  });
-
-  describe("when the method is invalid", () => {
-    it("throws an error", async () => {
-      const method = "WRONG";
-
-      await expect(
-        testsApi.request(method, "users")
-      ).rejects.toThrowErrorMatchingInlineSnapshot(
-        `"Invalid method provided, expected one of: DELETE, GET, PATCH, POST, PUT"`
       );
     });
   });

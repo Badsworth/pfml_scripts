@@ -105,8 +105,10 @@ describe("LeavePeriodReducedSchedule", () => {
     });
   });
 
-  it("sends continuous leave dates and ID to the api when the user enters leave data", async () => {
-    const claim = new MockBenefitsApplicationBuilder().create();
+  it("sends reduced leave dates and ID to the api when the user enters leave data", async () => {
+    const claim = new MockBenefitsApplicationBuilder()
+      .bondingBirthLeaveReason()
+      .create();
     const { updateSpy } = setup({ claim });
 
     userEvent.click(screen.getByRole("radio", { name: /yes/i }));

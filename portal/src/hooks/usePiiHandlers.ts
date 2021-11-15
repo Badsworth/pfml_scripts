@@ -1,21 +1,26 @@
-import { useRef } from "react";
+import {
+  ChangeEvent,
+  ChangeEventHandler,
+  FocusEvent,
+  FocusEventHandler,
+  useRef,
+} from "react";
+import isBlank from "../utils/isBlank";
 
 /**
  * Create onFocus and onBlur event handlers for PII inputs
- * @param {object} inputProps - a subset of props for input components
- * @param {string} inputProps.name - HTML input `name` attribute
- * @param {string} inputProps.type - HTML input `type` attribute
- * @param {string|number} inputProps.value - input value
- * @param {Function} inputProps.onChange - HTML input `onChange` attribute
- * @param {Function} inputProps.onBlur - HTML input `onBlur` attribute
- * @param {Function} inputProps.onFocus - HTML input `onFocus` attribute
- * @returns {{ handleFocus: Function, handleBlur: Function }}
  */
-const usePiiHandlers = (inputProps) => {
+const usePiiHandlers = (inputProps: {
+  name: string;
+  value?: string | number;
+  onChange?: ChangeEventHandler<HTMLInputElement>;
+  onBlur?: FocusEventHandler<HTMLInputElement>;
+  onFocus?: FocusEventHandler<HTMLInputElement>;
+}) => {
   const initialValue = useRef(inputProps.value);
-  const shouldClearValue = useRef(!!inputProps.value);
+  const shouldClearValue = useRef(!isBlank(inputProps.value));
 
-  const handleFocus = (event) => {
+  const handleFocus = (event: FocusEvent<HTMLInputElement>) => {
     if (shouldClearValue.current) {
       shouldClearValue.current = false;
       dispatchChange("", event);
@@ -26,8 +31,8 @@ const usePiiHandlers = (inputProps) => {
     }
   };
 
-  const handleBlur = (event) => {
-    if (!inputProps.value) {
+  const handleBlur = (event: FocusEvent<HTMLInputElement>) => {
+    if (isBlank(inputProps.value) && !isBlank(initialValue.current)) {
       shouldClearValue.current = true;
       dispatchChange(initialValue.current, event);
     }
@@ -40,17 +45,19 @@ const usePiiHandlers = (inputProps) => {
    * Call props.onChange with an argument value in a shape resembling Event so
    * we can force change events on blur and focus. We also include the original event
    * for debugging purposes.
-   * @param {string} value - the value we want to set the field to
-   * @param {SyntheticEvent} originalEvent - Original event that triggered this change
+   * @param value - the value we want to set the field to
+   * @param originalEvent - Original event that triggered this change
    */
-  const dispatchChange = (value, originalEvent) => {
-    const target = originalEvent.target.cloneNode(true);
-    target.value = value;
+  const dispatchChange = (
+    value: string | number,
+    originalEvent: ChangeEvent<HTMLInputElement> | FocusEvent<HTMLInputElement>
+  ) => {
+    const target = originalEvent.target.cloneNode(true) as HTMLInputElement; // https://github.com/microsoft/TypeScript/issues/283
+    target.value = value.toString();
 
-    inputProps.onChange({
-      _originalEvent: originalEvent,
-      target,
-    });
+    if (inputProps.onChange) {
+      inputProps.onChange({ ...originalEvent, target });
+    }
   };
 
   return { handleBlur, handleFocus };

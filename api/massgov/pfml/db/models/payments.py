@@ -1,10 +1,9 @@
-import datetime
-from decimal import Decimal
 from enum import Enum
 from typing import Optional, cast
 
 from sqlalchemy import JSON, TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text
 from sqlalchemy.orm import relationship
+from sqlalchemy.sql.schema import Index
 
 import massgov.pfml.util.logging
 from massgov.pfml.db.models.employees import Claim, Employee, ImportLog, Payment, ReferenceFile
@@ -134,8 +133,8 @@ class FineosExtractVpeiPaymentDetails(Base, TimestampMixin):
     businessnetbe_moncur = Column(Text)
     duetype = Column(Text)
     groupid = Column(Text)
-    peclassid = Column(Text)
-    peindexid = Column(Text)
+    peclassid = Column(Text, index=True)
+    peindexid = Column(Text, index=True)
     claimdetailsclassid = Column(Text)
     claimdetailsindexid = Column(Text)
     dateinterface = Column(Text)
@@ -144,6 +143,14 @@ class FineosExtractVpeiPaymentDetails(Base, TimestampMixin):
     )
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    Index(
+        "ix_payment_details_c_i_reference_file_id",
+        fineos_extract_import_log_id,
+        peclassid,
+        peindexid,
+        unique=False,
     )
 
     reference_file = relationship(ReferenceFile)
@@ -207,14 +214,22 @@ class FineosExtractVpeiClaimDetails(Base, TimestampMixin):
     diag3medicalc = Column(Text)
     diag4medicalc = Column(Text)
     diag5medicalc = Column(Text)
-    peclassid = Column(Text)
-    peindexid = Column(Text)
+    peclassid = Column(Text, index=True)
+    peindexid = Column(Text, index=True)
     dateinterface = Column(Text)
     reference_file_id = Column(
         PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
     )
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    Index(
+        "ix_claim_details_c_i_reference_file_id",
+        fineos_extract_import_log_id,
+        peclassid,
+        peindexid,
+        unique=False,
     )
 
     reference_file = relationship(ReferenceFile)
@@ -303,7 +318,7 @@ class FineosExtractVbiRequestedAbsence(Base, TimestampMixin):
     employer_name = Column(Text)
     employment_classid = Column(Text)
     employment_indexid = Column(Text)
-    leaverequest_id = Column(Text)
+    leaverequest_id = Column(Text, index=True)
     leaverequest_notificationdate = Column(Text)
     leaverequest_lastupdatedate = Column(Text)
     leaverequest_originalrequest = Column(Text)
@@ -340,6 +355,14 @@ class FineosExtractVbiRequestedAbsence(Base, TimestampMixin):
     fineos_extract_import_log_id = Column(
         Integer, ForeignKey("import_log.import_log_id"), index=True
     )
+
+    Index(
+        "ix_payment_details_leaverequest_reference_file_id",
+        fineos_extract_import_log_id,
+        leaverequest_id,
+        unique=False,
+    )
+
     reference_file = relationship(ReferenceFile)
 
 
@@ -366,7 +389,7 @@ class FineosExtractEmployeeFeed(Base, TimestampMixin):
     maritalstatus = Column(Text)
     disabled = Column(Text)
     natinsno = Column(Text)
-    customerno = Column(Text)
+    customerno = Column(Text, index=True)
     referenceno = Column(Text)
     identificatio = Column(Text)
     unverified = Column(Text)
@@ -406,6 +429,181 @@ class FineosExtractEmployeeFeed(Base, TimestampMixin):
     sortcode = Column(Text)
     accounttype = Column(Text)
     active_absence_flag = Column(Text)
+    effectivefrom = Column(Text)
+    effectiveto = Column(Text)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    Index(
+        "ix_employee_feed_import_log_id_customerno",
+        fineos_extract_import_log_id,
+        customerno,
+        unique=False,
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+
+class FineosExtractPaymentFullSnapshot(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_payment_full_snapshot"
+
+    payment_report_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    c = Column(Text)
+    i = Column(Text)
+    flags = Column(Text)
+    partitionid = Column(Text)
+    lastupdatedate = Column(Text)
+    boeversion = Column(Text)
+    c_osuser_updatedby = Column(Text)
+    i_osuser_updatedby = Column(Text)
+    addressline1 = Column(Text)
+    addressline2 = Column(Text)
+    addressline3 = Column(Text)
+    addressline4 = Column(Text)
+    addressline5 = Column(Text)
+    addressline6 = Column(Text)
+    addressline7 = Column(Text)
+    advicetopay = Column(Text)
+    advicetopayov = Column(Text)
+    amalgamationc = Column(Text)
+    amount_monamt = Column(Text)
+    amount_moncur = Column(Text)
+    checkcutting = Column(Text)
+    confirmedbyus = Column(Text)
+    confirmeduid = Column(Text)
+    contractref = Column(Text)
+    correspcountr = Column(Text)
+    currency = Column(Text)
+    dateinterface = Column(Text)
+    datelastproce = Column(Text)
+    description = Column(Text)
+    employeecontr = Column(Text)
+    eventeffectiv = Column(Text)
+    eventreason = Column(Text)
+    eventtype = Column(Text)
+    extractiondat = Column(Text)
+    grosspaymenta_monamt = Column(Text)
+    grosspaymenta_moncur = Column(Text)
+    insuredreside = Column(Text)
+    nametoprinton = Column(Text)
+    nominatedpaye = Column(Text)
+    nompayeecusto = Column(Text)
+    nompayeedob = Column(Text)
+    nompayeefulln = Column(Text)
+    nompayeesocnu = Column(Text)
+    notes = Column(Text)
+    payeeaccountn = Column(Text)
+    payeeaccountt = Column(Text)
+    payeeaddress = Column(Text)
+    payeebankbran = Column(Text)
+    payeebankcode = Column(Text)
+    payeebankinst = Column(Text)
+    payeebanksort = Column(Text)
+    payeecorrespo = Column(Text)
+    payeecustomer = Column(Text)
+    payeedob = Column(Text)
+    payeefullname = Column(Text)
+    payeeidentifi = Column(Text)
+    payeesocnumbe = Column(Text)
+    paymentadd = Column(Text)
+    paymentadd1 = Column(Text)
+    paymentadd2 = Column(Text)
+    paymentadd3 = Column(Text)
+    paymentadd4 = Column(Text)
+    paymentadd5 = Column(Text)
+    paymentadd6 = Column(Text)
+    paymentadd7 = Column(Text)
+    paymentaddcou = Column(Text)
+    paymentcorrst = Column(Text)
+    paymentdate = Column(Text)
+    paymentfreque = Column(Text)
+    paymentmethod = Column(Text)
+    paymentpostco = Column(Text)
+    paymentpremis = Column(Text)
+    paymenttrigge = Column(Text)
+    paymenttype = Column(Text)
+    paymethcurren = Column(Text)
+    percenttaxabl = Column(Text)
+    postcode = Column(Text)
+    premisesno = Column(Text)
+    setupbyuserid = Column(Text)
+    setupbyuserna = Column(Text)
+    status = Column(Text)
+    statuseffecti = Column(Text)
+    statusreason = Column(Text)
+    stockno = Column(Text)
+    summaryeffect = Column(Text)
+    summarystatus = Column(Text)
+    taxoverride = Column(Text)
+    taxwageamount_monamt = Column(Text)
+    taxwageamount_moncur = Column(Text)
+    transactionno = Column(Text)
+    transactionst = Column(Text)
+    transstatusda = Column(Text)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+
+class FineosExtractCancelledPayments(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_cancelled_payments"
+
+    canelled_payment_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    c = Column(Text)
+    i = Column(Text)
+    statusreason = Column(Text)
+    grossamount = Column(Text)
+    addedby = Column(Text)
+    issuedate = Column(Text)
+    cancellationdate = Column(Text)
+    transactionstatusdate = Column(Text)
+    transactionstatus = Column(Text)
+    extractiondate = Column(Text)
+    stocknumber = Column(Text)
+    claimnumber = Column(Text)
+    benefitcasenumber = Column(Text)
+
+    reference_file_id = Column(
+        PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
+    )
+    fineos_extract_import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True
+    )
+
+    reference_file = relationship(ReferenceFile)
+
+
+class FineosExtractReplacedPayments(Base, TimestampMixin):
+    __tablename__ = "fineos_extract_replaced_payments"
+
+    replaced_payment_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+
+    c = Column(Text)
+    i = Column(Text)
+    statusreason = Column(Text)
+    grossamount = Column(Text)
+    addedby = Column(Text)
+    issuedate = Column(Text)
+    cancellationdate = Column(Text)
+    transactionstatusdate = Column(Text)
+    transactionstatus = Column(Text)
+    extractiondate = Column(Text)
+    stocknumber = Column(Text)
+    claimnumber = Column(Text)
+    benefitcasenumber = Column(Text)
 
     reference_file_id = Column(
         PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
@@ -594,21 +792,6 @@ class MmarsPaymentRefunds(Base, TimestampMixin):
     payment_id = Column(PostgreSQLUUID, ForeignKey("payment.payment_id"), index=True, nullable=True)
 
     payment = relationship(Payment)
-
-
-class MaximumWeeklyBenefitAmount(Base):
-    # See regulations for how this is calculated:
-    # https://malegislature.gov/Laws/GeneralLaws/PartI/TitleXXII/Chapter175M/Section3
-    __tablename__ = "maximum_weekly_benefit_amount"
-
-    effective_date = Column(Date, primary_key=True, nullable=False)
-    maximum_weekly_benefit_amount = Column(Numeric, nullable=False)
-
-    def __init__(self, effective_date: datetime.date, maximum_weekly_benefit_amount: str):
-        """ Constructor takes metric as a string to maintain precision. """
-
-        self.effective_date = effective_date
-        self.maximum_weekly_benefit_amount = Decimal(maximum_weekly_benefit_amount)
 
 
 class FineosWritebackDetails(Base, TimestampMixin):
@@ -839,14 +1022,20 @@ class PaymentAuditReportType(LookupTable):
     MAX_WEEKLY_BENEFITS = LkPaymentAuditReportType(
         1, "Max Weekly Benefits", AuditReportAction.REJECTED
     )
-    DUA_DIA_REDUCTION = LkPaymentAuditReportType(
-        2, "DUA DIA Reduction", AuditReportAction.INFORMATIONAL
+    DEPRECATED_DUA_DIA_REDUCTION = LkPaymentAuditReportType(
+        2, "DUA DIA Reduction (Deprecated)", AuditReportAction.INFORMATIONAL
     )
     LEAVE_PLAN_IN_REVIEW = LkPaymentAuditReportType(
         3, "Leave Plan In Review", AuditReportAction.SKIPPED_NO_COLUMN
     )
     DOR_FINEOS_NAME_MISMATCH = LkPaymentAuditReportType(
         4, "DOR FINEOS Name Mismatch", AuditReportAction.INFORMATIONAL
+    )
+    DUA_ADDITIONAL_INCOME = LkPaymentAuditReportType(
+        5, "DUA Additional Income", AuditReportAction.INFORMATIONAL
+    )
+    DIA_ADDITIONAL_INCOME = LkPaymentAuditReportType(
+        6, "DIA Additional Income", AuditReportAction.INFORMATIONAL
     )
 
 
@@ -870,19 +1059,48 @@ class PaymentAuditReportDetails(Base, TimestampMixin):
     import_log = relationship(ImportLog)
 
 
+class LkWithholdingType(Base):
+    __tablename__ = "lk_withholding_type"
+    withholding_type_id = Column(Integer, primary_key=True, autoincrement=True)
+    withholding_type_description = Column(Text, nullable=False)
+
+    def __init__(
+        self, withholding_type_id, withholding_type_description,
+    ):
+        self.withholding_type_id = withholding_type_id
+        self.withholding_type_description = withholding_type_description
+
+
+class WithholdingType(LookupTable):
+    model = LkWithholdingType
+    column_names = (
+        "withholding_type_id",
+        "withholding_type_description",
+    )
+
+    FEDERAL = LkWithholdingType(1, "Federal Tax")
+    STATE = LkWithholdingType(2, "State Tax")
+
+
 class Pfml1099MMARSPayment(Base, TimestampMixin):
     __tablename__ = "pfml_1099_mmars_payment"
     pfml_1099_mmars_payment_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     pfml_1099_batch_id = Column(
         PostgreSQLUUID, ForeignKey("pfml_1099_batch.pfml_1099_batch_id"), index=True, nullable=False
     )
-    mmars_payment_id = Column(Integer, nullable=False)
+    mmars_payment_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("mmars_payment_data.mmars_payment_data_id"),
+        index=True,
+        nullable=False,
+    )
     employee_id = Column(
         PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=False
     )
     payment_amount = Column(Numeric, nullable=False)
     payment_date = Column(Date, nullable=False)
 
+    mmars_payment_data = relationship(MmarsPaymentData)
     employee = relationship(Employee)
 
 
@@ -913,6 +1131,7 @@ class Pfml1099Batch(Base, TimestampMixin):
     tax_year = Column(Integer, nullable=False)
     batch_run_date = Column(Date, nullable=False)
     correction_ind = Column(Boolean, nullable=False)
+    batch_status = Column(Text)
 
 
 class Pfml1099Withholding(Base, TimestampMixin):
@@ -930,10 +1149,14 @@ class Pfml1099Withholding(Base, TimestampMixin):
     )
     withholding_amount = Column(Numeric, nullable=False)
     withholding_date = Column(Date, nullable=False)
+    withholding_type_id = Column(
+        Integer, ForeignKey("lk_withholding_type.withholding_type_id"), index=True, nullable=False
+    )
 
     payment = relationship(Payment)
     claim = relationship(Claim)
     employee = relationship(Employee)
+    withholding_type = relationship(LkWithholdingType)
 
 
 class Pfml1099Refund(Base, TimestampMixin):
@@ -996,16 +1219,6 @@ class LinkSplitPayment(Base, TimestampMixin):
 def sync_lookup_tables(db_session):
     FineosWritebackTransactionStatus.sync_to_database(db_session)
     PaymentAuditReportType.sync_to_database(db_session)
-
-
-def sync_maximum_weekly_benefit_amount(db_session):
-    maximum_weekly_benefit_amounts = [
-        MaximumWeeklyBenefitAmount(datetime.date(2020, 10, 1), "850.00"),
-    ]
-
-    for maximum_weekly_benefit_amount in maximum_weekly_benefit_amounts:
-        instance = db_session.merge(maximum_weekly_benefit_amount)
-        if db_session.is_modified(instance):
-            logger.info("updating maximum weekly benefit amount %r", instance)
+    WithholdingType.sync_to_database(db_session)
 
     db_session.commit()

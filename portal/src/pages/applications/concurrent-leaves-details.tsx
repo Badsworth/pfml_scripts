@@ -1,16 +1,16 @@
-import BenefitsApplication from "../../models/BenefitsApplication";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import ConcurrentLeave from "../../models/ConcurrentLeave";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import InputDate from "../../components/InputDate";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
+import InputDate from "../../components/core/InputDate";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { get } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.concurrent_leave",
@@ -19,14 +19,15 @@ export const fields = [
   "claim.concurrent_leave.leave_end_date",
 ];
 
-export const ConcurrentLeavesDetails = (props) => {
+export const ConcurrentLeavesDetails = (
+  props: WithBenefitsApplicationProps
+) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
   const employer_fein = claim.employer_fein;
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState({
-    concurrent_leave: new ConcurrentLeave(get(claim, "concurrent_leave")),
+    concurrent_leave: new ConcurrentLeave(get(claim, "concurrent_leave") || {}),
   });
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -40,6 +41,8 @@ export const ConcurrentLeavesDetails = (props) => {
       formState
     );
   };
+
+  const { isIntermittent } = claim;
 
   return (
     <QuestionPage
@@ -73,6 +76,7 @@ export const ConcurrentLeavesDetails = (props) => {
             <LeaveDatesAlert
               startDate={claim.leaveStartDate}
               endDate={claim.leaveEndDate}
+              showWaitingDayPeriod={!isIntermittent}
             />
             <p>{t("pages.claimsConcurrentLeavesDetails.hintHeader")}</p>
           </React.Fragment>
@@ -96,12 +100,6 @@ export const ConcurrentLeavesDetails = (props) => {
       />
     </QuestionPage>
   );
-};
-
-ConcurrentLeavesDetails.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  query: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(ConcurrentLeavesDetails);

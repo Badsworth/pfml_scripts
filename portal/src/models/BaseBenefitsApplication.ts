@@ -1,127 +1,99 @@
-/* eslint sort-keys: ["error", "asc"] */
 import { compact, get, map } from "lodash";
-
-import Address from "./Address";
-import BaseModel from "./BaseModel";
 import LeaveReason from "./LeaveReason";
 import formatDateRange from "../utils/formatDateRange";
 
+export interface BaseLeavePeriod {
+  start_date: string | null;
+  end_date: string | null;
+}
+
 /**
  * The API's Applications table and the data we return for the Leave Admin
- * info request flow share a common set of fields, which this model represents.
- * Separate models then extend this.
+ * info request flow share a few common fields, which this model includes
+ * helper methods for. Separate models then extend this.
  */
-class BaseBenefitsApplication extends BaseModel {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'BaseBenefitsApplicati... Remove this comment to see the full error message
-  get defaults() {
-    return {
-      application_id: null,
-      concurrent_leave: null,
-      created_at: null,
-      date_of_birth: null,
-      // array of EmployerBenefit objects. See the EmployerBenefit model
-      employer_benefits: [],
-      employer_fein: null,
-      fineos_absence_id: null,
-      first_name: null,
-      gender: null,
-      hours_worked_per_week: null,
-      last_name: null,
-      leave_details: {
-        continuous_leave_periods: null,
-        employer_notification_date: null,
-        intermittent_leave_periods: null,
-        reason: null,
-        reduced_schedule_leave_periods: null,
-      },
-      middle_name: null,
-      // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-      residential_address: new Address(),
-      status: null,
-      tax_identifier: null,
-    };
-  }
+abstract class BaseBenefitsApplication {
+  abstract first_name: string | null;
+  abstract middle_name: string | null;
+  abstract last_name: string | null;
+  abstract leave_details: {
+    continuous_leave_periods: BaseLeavePeriod[];
+    intermittent_leave_periods: BaseLeavePeriod[];
+    reduced_schedule_leave_periods: BaseLeavePeriod[];
+    reason: string | null;
+  };
 
   /**
    * Determine if claim is a Bonding Leave claim
-   * @returns {boolean}
    */
-  get isBondingLeave() {
+  get isBondingLeave(): boolean {
     return get(this, "leave_details.reason") === LeaveReason.bonding;
   }
 
   /**
    * Determine if claim is a continuous leave claim
-   * @returns {boolean}
    */
-  get isContinuous() {
+  get isContinuous(): boolean {
     return !!get(this, "leave_details.continuous_leave_periods[0]");
   }
 
   /**
    * Returns the start and end dates of the specific continuous leave period in a
    * human-readable format. Ex: "1/1/2021 - 6/1/2021".
-   * @returns {string} a representation of the leave period
+   * @returns a representation of the leave period
    */
   continuousLeaveDateRange() {
     const { start_date, end_date } = get(
       this,
       `leave_details.continuous_leave_periods[0]`
     );
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     return formatDateRange(start_date, end_date);
   }
 
   /**
    * Determine if claim is an intermittent leave claim
-   * @returns {boolean}
    */
-  get isIntermittent() {
+  get isIntermittent(): boolean {
     return !!get(this, "leave_details.intermittent_leave_periods[0]");
   }
 
   /**
    * Returns the start and end dates of the specific intermittent leave period in a
    * human-readable format. Ex: "1/1/2021 - 6/1/2021".
-   * @returns {string} a representation of the leave period
+   * @returns a representation of the leave period
    */
   intermittentLeaveDateRange() {
     const { start_date, end_date } = get(
       this,
       `leave_details.intermittent_leave_periods[0]`
     );
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     return formatDateRange(start_date, end_date);
   }
 
   /**
    * Determine if claim is a reduced schedule leave claim
-   * @returns {boolean}
    */
-  get isReducedSchedule() {
+  get isReducedSchedule(): boolean {
     return !!get(this, "leave_details.reduced_schedule_leave_periods[0]");
   }
 
   /**
    * Returns the start and end dates of the specific reduced schedule leave period in a
    * human-readable format. Ex: "1/1/2021 - 6/1/2021".
-   * @returns {string} a representation of the leave period
+   * @returns a representation of the leave period
    */
   reducedLeaveDateRange() {
     const { start_date, end_date } = get(
       this,
       `leave_details.reduced_schedule_leave_periods[0]`
     );
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2.
     return formatDateRange(start_date, end_date);
   }
 
   /**
    * Returns full name accounting for any false values
-   * @returns {string}
    */
   get fullName() {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'first_name' does not exist on type 'Base... Remove this comment to see the full error message
     return compact([this.first_name, this.middle_name, this.last_name]).join(
       " "
     );
@@ -129,7 +101,6 @@ class BaseBenefitsApplication extends BaseModel {
 
   /**
    * Returns earliest start date across all leave periods
-   * @returns {string}
    */
   get leaveStartDate() {
     const periods = [
@@ -138,7 +109,7 @@ class BaseBenefitsApplication extends BaseModel {
       get(this, "leave_details.reduced_schedule_leave_periods"),
     ].flat();
 
-    const startDates = map(compact(periods), "start_date").sort();
+    const startDates: string[] = map(compact(periods), "start_date").sort();
 
     if (!startDates.length) return null;
 
@@ -147,7 +118,6 @@ class BaseBenefitsApplication extends BaseModel {
 
   /**
    * Returns latest end date across all leave periods
-   * @returns {string}
    */
   get leaveEndDate() {
     const periods = [
@@ -156,7 +126,7 @@ class BaseBenefitsApplication extends BaseModel {
       get(this, "leave_details.reduced_schedule_leave_periods"),
     ].flat();
 
-    const endDates = map(compact(periods), "end_date").sort();
+    const endDates: string[] = map(compact(periods), "end_date").sort();
 
     if (!endDates.length) return null;
 

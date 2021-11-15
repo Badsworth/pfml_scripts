@@ -2,27 +2,47 @@ import AddButton from "./AddButton";
 import AmendableConcurrentLeave from "./AmendableConcurrentLeave";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConcurrentLeaveModel from "../../models/ConcurrentLeave";
-import Heading from "../Heading";
-import PropTypes from "prop-types";
+import { DateTime } from "luxon";
+import EmployerClaim from "../../models/EmployerClaim";
+import Heading from "../core/Heading";
 import React from "react";
-import Table from "../Table";
+import Table from "../core/Table";
+import formatDate from "../../utils/formatDate";
 import { useTranslation } from "../../locales/i18n";
+
+interface ConcurrentLeaveProps {
+  addedConcurrentLeave?: ConcurrentLeaveModel;
+  appErrors: AppErrorInfoCollection;
+  claim: EmployerClaim;
+  concurrentLeave?: ConcurrentLeaveModel;
+  onAdd: React.MouseEventHandler<HTMLButtonElement>;
+  onChange: (
+    arg: ConcurrentLeaveModel | { [key: string]: unknown },
+    arg2?: string
+  ) => void;
+  onRemove: (arg: ConcurrentLeaveModel) => void;
+}
 
 /**
  * Display a current leave taken by the employee
  * in the Leave Admin claim review page.
  */
 
-const ConcurrentLeave = (props) => {
+const ConcurrentLeave = (props: ConcurrentLeaveProps) => {
   const { t } = useTranslation();
   const {
     addedConcurrentLeave,
     appErrors,
+    claim,
     concurrentLeave,
     onAdd,
     onChange,
     onRemove,
   } = props;
+
+  const leaveContext = claim.isIntermittent
+    ? "intermittent"
+    : "continuousOrReduced";
 
   return (
     <React.Fragment>
@@ -30,6 +50,17 @@ const ConcurrentLeave = (props) => {
         {t("components.employersConcurrentLeave.header")}
       </Heading>
       <p>{t("components.employersConcurrentLeave.explanation")}</p>
+      <p>
+        {t("components.employersConcurrentLeave.explanationDetails", {
+          context: leaveContext,
+          endDate: formatDate(
+            DateTime.fromISO(`${claim.leaveStartDate}`)
+              .plus({ days: 6 })
+              .toString()
+          ).short(),
+          startDate: formatDate(claim.leaveStartDate).short(),
+        })}
+      </p>
       <Table className="width-full">
         <thead>
           <tr>
@@ -78,15 +109,6 @@ const ConcurrentLeave = (props) => {
       </Table>
     </React.Fragment>
   );
-};
-
-ConcurrentLeave.propTypes = {
-  addedConcurrentLeave: PropTypes.instanceOf(ConcurrentLeaveModel),
-  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
-  concurrentLeave: PropTypes.instanceOf(ConcurrentLeaveModel),
-  onAdd: PropTypes.func.isRequired,
-  onChange: PropTypes.func.isRequired,
-  onRemove: PropTypes.func.isRequired,
 };
 
 export default ConcurrentLeave;

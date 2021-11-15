@@ -1,29 +1,27 @@
-import BenefitsApplication, {
-  PhoneType,
-} from "../../models/BenefitsApplication";
 import { cloneDeep, get, pick, set } from "lodash";
-import Heading from "../../components/Heading";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import InputText from "../../components/InputText";
-import Lead from "../../components/Lead";
-import PropTypes from "prop-types";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import Heading from "../../components/core/Heading";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
+import InputText from "../../components/core/InputText";
+import Lead from "../../components/core/Lead";
+import { PhoneType } from "../../models/BenefitsApplication";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.phone.phone_number", "claim.phone.phone_type"];
 
 /**
  * A form page to capture the worker's phone number.
  */
-export const PhoneNumber = (props) => {
+export const PhoneNumber = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
 
   const handleSave = async () => {
@@ -86,11 +84,6 @@ export const PhoneNumber = (props) => {
       />
     </QuestionPage>
   );
-};
-
-PhoneNumber.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
 export default withBenefitsApplication(PhoneNumber);

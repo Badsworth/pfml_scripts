@@ -2,35 +2,62 @@ import BenefitsApplication, {
   BenefitsApplicationStatus,
   ReasonQualifier,
 } from "../../models/BenefitsApplication";
-import Document, { DocumentType } from "../../models/Document";
 import StepModel, { ClaimSteps } from "../../models/Step";
-import { camelCase, filter, findIndex, get } from "lodash";
-
-import Alert from "../../components/Alert";
+import { camelCase, filter, findIndex, get, isBoolean } from "lodash";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import withClaimDocuments, {
+  WithClaimDocumentsProps,
+} from "../../hoc/withClaimDocuments";
+import Alert from "../../components/core/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
-import Details from "../../components/Details";
-import HeadingPrefix from "../../components/HeadingPrefix";
+import Details from "../../components/core/Details";
+import { DocumentType } from "../../models/Document";
+import HeadingPrefix from "../../components/core/HeadingPrefix";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import React from "react";
-import Spinner from "../../components/Spinner";
+import Spinner from "../../components/core/Spinner";
 import Step from "../../components/Step";
 import StepGroup from "../../models/StepGroup";
 import StepList from "../../components/StepList";
-import Title from "../../components/Title";
+import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import claimantConfig from "../../flows/claimant";
 import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
 import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import hasDocumentsLoadError from "../../utils/hasDocumentsLoadError";
+import { isFeatureEnabled } from "../../services/featureFlags";
 import routeWithParams from "../../utils/routeWithParams";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
-import withClaimDocuments from "../../hoc/withClaimDocuments";
 
-export const Checklist = (props) => {
+interface ChecklistProps
+  extends WithClaimDocumentsProps,
+    WithBenefitsApplicationProps {
+  query: {
+    "part-one-submitted"?: string;
+    "payment-pref-submitted"?: string;
+    "tax-pref-submitted"?: string;
+  };
+}
+
+interface ChecklistAlertsProps {
+  submitted: "partOne" | "payment" | "taxPref";
+}
+
+export const ChecklistAlerts = ({ submitted }: ChecklistAlertsProps) => {
+  const { t } = useTranslation();
+
+  return (
+    <Alert className="margin-bottom-3" state="warning">
+      {t("pages.claimsChecklist.afterSubmissionAlert", { context: submitted })}
+    </Alert>
+  );
+};
+
+export const Checklist = (props: ChecklistProps) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments, query } = props;
   const { appErrors } = appLogic;
@@ -49,8 +76,8 @@ export const Checklist = (props) => {
     get(claim, "leave_details.reason")
   );
 
-  const partOneSubmitted = query["part-one-submitted"];
-  const paymentPrefSubmitted = query["payment-pref-submitted"];
+  // TODO(PORTAL-1001): - Remove Feature Flag
+  const taxWithholdingEnabled = isFeatureEnabled("claimantShowTaxWithholding");
   const warnings =
     appLogic.benefitsApplications.warningsLists[claim.application_id];
 
@@ -65,7 +92,12 @@ export const Checklist = (props) => {
       certificationDocuments,
     },
     warnings
-  );
+  ).filter((step) => {
+    if (!taxWithholdingEnabled) {
+      return step.name !== ClaimSteps.taxWithholding;
+    }
+    return step;
+  });
 
   /**
    * @type {boolean} Flag for determining whether to enable the submit button
@@ -96,21 +128,17 @@ export const Checklist = (props) => {
 
   /**
    * Get the number of a Step for display in the checklist.
-   * @param {StepModel} step
-   * @returns {number}
    */
-  function getStepNumber(step) {
+  function getStepNumber(step: StepModel) {
     const index = findIndex(allSteps, { name: step.name });
     return index + 1;
   }
 
   /**
    * Get the content to show for a submitted step
-   * @param {StepModel} step
-   * @returns {React.Component}
    */
   // TODO (CP-2354) Remove this once there are no submitted claims with null Other Leave data
-  function getStepSubmittedContent(step) {
+  function getStepSubmittedContent(step: StepModel) {
     const hasReductionsData =
       get(claim, "has_employer_benefits") !== null ||
       get(claim, "has_other_incomes") !== null ||
@@ -157,10 +185,8 @@ export const Checklist = (props) => {
 
   /**
    * Helper method for rendering steps for one of the StepLists
-   * @param {StepModel[]} steps
-   * @returns {Step[]}
    */
-  function renderSteps(steps) {
+  function renderSteps(steps: StepModel[]) {
     return steps.map((step) => {
       const description = getStepDescription(step.name, claim);
       const stepHref = appLogic.portalFlow.getNextPageRoute(
@@ -179,11 +205,14 @@ export const Checklist = (props) => {
           key={step.name}
           number={getStepNumber(step)}
           title={t("pages.claimsChecklist.stepTitle", {
-            context: camelCase(step.name),
+            context:
+              taxWithholdingEnabled && step.name === ClaimSteps.payment
+                ? camelCase(step.name) + "_tax"
+                : camelCase(step.name),
           })}
           status={step.status}
           stepHref={stepHref}
-          editable={step.editable}
+          editable={!!step.editable}
           submittedContent={getStepSubmittedContent(step)}
         >
           <Trans
@@ -236,17 +265,18 @@ export const Checklist = (props) => {
   /**
    * Helper method for generating a context string used to differentiate i18n keys
    * for the various Step content strings.
-   * @param {string} stepName
-   * @param {BenefitsApplication} claim
-   * @returns {string|undefined}
    */
-  function getStepDescription(stepName, claim) {
+  function getStepDescription(stepName: string, claim: BenefitsApplication) {
     const claimReason = get(claim, "leave_details.reason");
     const claimReasonQualifier = get(claim, "leave_details.reason_qualifier");
     const hasFutureChildDate = get(
       claim,
       "leave_details.has_future_child_date"
     );
+
+    if (stepName === ClaimSteps.payment && taxWithholdingEnabled) {
+      return "payment_tax";
+    }
     // TODO (CP-2101) rename context strings for clarity in en-US.js strings i.e. uploadMedicalCert, uploadCareCert
     if (stepName !== ClaimSteps.uploadCertification) {
       return camelCase(stepName);
@@ -273,16 +303,13 @@ export const Checklist = (props) => {
     if (hasFutureChildDate) {
       context += "Future";
     }
-
     return context;
   }
 
   /**
    * Conditionally output a description for each Part of the checklist
-   * @param {StepGroup[]} stepGroup
-   * @returns {string|null}
    */
-  function stepListDescription(stepGroup) {
+  function stepListDescription(stepGroup: StepGroup) {
     if (!stepGroup.isEnabled) return null;
 
     // context has to be a string
@@ -298,7 +325,8 @@ export const Checklist = (props) => {
 
     if (
       stepGroup.number === 2 &&
-      claim.has_submitted_payment_preference === true
+      (claim.has_submitted_payment_preference === true ||
+        isBoolean(claim.is_withholding_tax))
     ) {
       // Description for the second part changes after it's been submitted
       context += "_submitted";
@@ -324,43 +352,30 @@ export const Checklist = (props) => {
       />
     );
   }
-
   return (
     <div className="measure-6">
-      {partOneSubmitted && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; head... Remove this comment to see the full error message
-        <Alert
-          className="margin-bottom-3"
-          heading={t("pages.claimsChecklist.partOneSubmittedHeading")}
-          name="part-one-submitted-message"
-          state="success"
-        >
-          <Trans
-            i18nKey="pages.claimsChecklist.partOneSubmittedDescription"
-            components={{
-              "contact-center-phone-link": (
-                <a href={`tel:${t("shared.contactCenterPhoneNumber")}`} />
-              ),
-            }}
-          />
-        </Alert>
-      )}
-      {paymentPrefSubmitted && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; className: string; headi... Remove this comment to see the full error message
-        <Alert
-          className="margin-bottom-3"
-          heading={t("pages.claimsChecklist.partTwoSubmittedHeading")}
-          name="part-two-submitted-message"
-          state="success"
-        >
-          {t("pages.claimsChecklist.partTwoSubmittedDescription")}
-        </Alert>
+      {(query["part-one-submitted"] ||
+        query["payment-pref-submitted"] ||
+        query["tax-pref-submitted"]) && (
+        <ChecklistAlerts
+          submitted={
+            query["part-one-submitted"]
+              ? "partOne"
+              : query["payment-pref-submitted"]
+              ? "payment"
+              : "taxPref"
+          }
+        />
       )}
       <BackButton
         label={t("pages.claimsChecklist.backButtonLabel")}
         href={routes.applications.index}
       />
-      <Title hidden>{t("pages.claimsChecklist.title")}</Title>
+
+      <div className="margin-bottom-5">
+        <Title>{t("pages.claimsChecklist.title")}</Title>
+        <p> {t("pages.claimsChecklist.titleBody")} </p>
+      </div>
 
       {stepGroups.map((stepGroup) => (
         <StepList
@@ -374,14 +389,16 @@ export const Checklist = (props) => {
                 })}
               </HeadingPrefix>
               {t("pages.claimsChecklist.stepListTitle", {
-                context: String(stepGroup.number),
+                context:
+                  taxWithholdingEnabled && stepGroup.number === 2
+                    ? `${String(stepGroup.number)}_tax`
+                    : String(stepGroup.number),
               })}
             </React.Fragment>
           }
           {...sharedStepListProps}
         >
           {stepGroup.number === 3 && hasLoadingDocumentsError ? (
-            // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; noIc... Remove this comment to see the full error message
             <Alert className="margin-bottom-3" noIcon>
               <Trans
                 i18nKey="pages.claimsChecklist.documentsLoadError"
@@ -399,7 +416,6 @@ export const Checklist = (props) => {
           )}
         </StepList>
       ))}
-
       <ButtonLink
         href={routeWithParams("applications.review", {
           claim_id: claim.application_id,
@@ -411,25 +427,6 @@ export const Checklist = (props) => {
       </ButtonLink>
     </div>
   );
-};
-
-Checklist.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    benefitsApplications: PropTypes.shape({
-      warningsLists: PropTypes.object.isRequired,
-    }).isRequired,
-    portalFlow: PropTypes.shape({
-      getNextPageRoute: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-  isLoadingDocuments: PropTypes.bool,
-  query: PropTypes.shape({
-    "part-one-submitted": PropTypes.string,
-    "payment-pref-submitted": PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(withClaimDocuments(Checklist));

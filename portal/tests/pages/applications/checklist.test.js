@@ -1,6 +1,6 @@
-import Document, { DocumentType } from "../../../src/models/Document";
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
 import { Checklist } from "../../../src/pages/applications/checklist";
+import { DocumentType } from "../../../src/models/Document";
 import LeaveReason from "../../../src/models/LeaveReason";
 import { mockRouter } from "next/router";
 import { screen } from "@testing-library/react";
@@ -43,7 +43,7 @@ describe("Checklist", () => {
     const { container } = renderChecklist();
     expect(container).toMatchSnapshot();
     expect(screen.getByText("Part 1")).toBeInTheDocument();
-    expect(screen.getByText("Part 1")).toBeInTheDocument();
+    expect(screen.getByText("Part 2")).toBeInTheDocument();
     expect(screen.getByText("Part 3")).toBeInTheDocument();
   });
 
@@ -159,7 +159,7 @@ describe("Checklist", () => {
 
     it("renders alert", () => {
       expect(
-        screen.getByText(/Part 1 of your application was confirmed./)
+        screen.getByText(/You successfully submitted Part 1./)
       ).toBeInTheDocument();
       expect(screen.getByText(/Your application ID is/)).toBeInTheDocument();
     });
@@ -182,7 +182,7 @@ describe("Checklist", () => {
       ).toBeInTheDocument();
     });
 
-    it("CTA would direct user to expected location", () => {
+    it("CTA for payment would direct user to expected location", () => {
       expect(
         screen.getByRole("link", { name: "Start: Add payment information" })
       ).toBeEnabled();
@@ -193,6 +193,143 @@ describe("Checklist", () => {
         "/applications/payment-method?claim_id=mock_application_id"
       );
     });
+  });
+
+  describe("Part 2 with tax withholding enabled", () => {
+    beforeEach(() => {
+      process.env.featureFlags = {
+        claimantShowTaxWithholding: true,
+      };
+      const warnings = [];
+      const customProps = {
+        query: {
+          claim_id: "mock_application_id",
+          "part-one-submitted": "true",
+        },
+      };
+      renderChecklist(
+        new MockBenefitsApplicationBuilder().submitted().create(),
+        warnings,
+        customProps
+      );
+    });
+
+    it("renders with 9 steps including tax", () => {
+      for (let step = 1; step <= 9; step++) {
+        expect(screen.getByText(step)).toBeInTheDocument();
+      }
+    });
+
+    it("part 2 headlines with different titles", () => {
+      expect(
+        screen.queryByRole("heading", {
+          name: "Enter your payment information",
+        })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.queryByRole("heading", { name: "Add payment information" })
+      ).not.toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", {
+          name: "Part 2 Tell us how you want to receive your payment",
+        })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: "Enter payment information" })
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", {
+          name: "Enter tax withholding preference",
+        })
+      ).toBeInTheDocument();
+    });
+
+    it("CTA for tax withholding directs user to expected location", () => {
+      expect(
+        screen.getByRole("link", {
+          name: "Start: Enter tax withholding preference",
+        })
+      ).toBeEnabled();
+      expect(
+        screen.getByRole("link", {
+          name: "Start: Enter tax withholding preference",
+        })
+      ).toHaveAttribute(
+        "href",
+        "/applications/tax-withholding?claim_id=mock_application_id"
+      );
+    });
+  });
+
+  it("with tax withholding incomplete, upload steps still disabled", () => {
+    process.env.featureFlags = {
+      claimantShowTaxWithholding: true,
+    };
+    renderChecklist(
+      new MockBenefitsApplicationBuilder()
+        .part1Complete()
+        .paymentPrefSubmitted()
+        .create(),
+      [],
+      {
+        query: {
+          claim_id: "mock_application_id",
+          "payment-pref-submitted": "true",
+        },
+      }
+    );
+    // payment shows as black indicating done
+    expect(screen.getByLabelText("Step 6")).toHaveClass("bg-black");
+    // tax shows as green with start option enabled
+    expect(screen.getByLabelText("Step 7")).toHaveClass("bg-secondary");
+    expect(
+      screen.getByRole("link", {
+        name: "Start: Enter tax withholding preference",
+      })
+    ).toBeEnabled();
+    // custom description
+    expect(
+      screen.getByText(
+        /If you need to edit your information in Part 2, you’ll need to call the Contact Center/
+      )
+    ).toBeInTheDocument();
+    // upload option is disabled
+    expect(
+      screen.getByRole("button", {
+        name: "Start: Upload identification document",
+      })
+    ).toBeDisabled();
+  });
+
+  it("with tax withholding done & payment not done, submitted description displays", () => {
+    process.env.featureFlags = {
+      claimantShowTaxWithholding: true,
+    };
+    renderChecklist(
+      new MockBenefitsApplicationBuilder()
+        .part1Complete()
+        .taxPrefSubmitted()
+        .create(),
+      [],
+      {
+        query: {
+          claim_id: "mock_application_id",
+          "payment-pref-submitted": "true",
+        },
+      }
+    );
+    // custom description
+    expect(
+      screen.getByText(
+        /If you need to edit your information in Part 2, you’ll need to call the Contact Center/
+      )
+    ).toBeInTheDocument();
+    // upload option is disabled
+    expect(
+      screen.getByRole("button", {
+        name: "Start: Upload identification document",
+      })
+    ).toBeDisabled();
   });
 
   describe("Part 3", () => {
@@ -216,11 +353,8 @@ describe("Checklist", () => {
 
     it("renders alert that Part 2 is confirmed", () => {
       expect(
-        screen.getByText(/Part 2 of your application was confirmed./)
-      ).toBeInTheDocument();
-      expect(
         screen.getByText(
-          /Now, you can work on Part 3, and submit your application./
+          /You successfully submitted your payment method. Complete the remaining steps so that you can submit your application./
         )
       ).toBeInTheDocument();
     });
@@ -386,14 +520,14 @@ describe("Checklist", () => {
       const warnings = [];
       const customProps = {
         documents: [
-          new Document({
+          {
             application_id: "mock-claim-id",
             document_type: DocumentType.certification[LeaveReason.pregnancy],
-          }),
-          new Document({
+          },
+          {
             application_id: "mock-claim-id",
             document_type: DocumentType.identityVerification,
-          }),
+          },
         ],
       };
       renderChecklist(
@@ -419,14 +553,14 @@ describe("Checklist", () => {
       const warnings = [];
       const customProps = {
         documents: [
-          new Document({
+          {
             application_id: "mock-claim-id",
             document_type: DocumentType.certification[LeaveReason.pregnancy],
-          }),
-          new Document({
+          },
+          {
             application_id: "mock-claim-id",
             document_type: DocumentType.identityVerification,
-          }),
+          },
         ],
       };
       renderChecklist(

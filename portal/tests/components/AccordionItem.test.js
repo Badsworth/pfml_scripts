@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import AccordionItem from "../../src/components/AccordionItem";
+import AccordionItem from "../../src/components/core/AccordionItem";
 import React from "react";
 import userEvent from "@testing-library/user-event";
 

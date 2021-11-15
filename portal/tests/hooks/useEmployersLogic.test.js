@@ -1,4 +1,8 @@
-import { BadRequestError, LeaveAdminForbiddenError } from "../../src/errors";
+import {
+  BadRequestError,
+  ForbiddenError,
+  LeaveAdminForbiddenError,
+} from "../../src/errors";
 import { act, renderHook } from "@testing-library/react-hooks";
 import {
   addEmployerMock,
@@ -11,6 +15,7 @@ import {
 } from "../../src/api/EmployersApi";
 import AppErrorInfo from "../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../src/models/AppErrorInfoCollection";
+import DocumentCollection from "../../src/models/DocumentCollection";
 import { uniqueId } from "lodash";
 import useAppErrorsLogic from "../../src/hooks/useAppErrorsLogic";
 import useEmployersLogic from "../../src/hooks/useEmployersLogic";
@@ -146,16 +151,13 @@ describe("useEmployersLogic", () => {
       it("catches instances of LeaveAdminForbiddenError", async () => {
         const catchErrorSpy = jest.spyOn(appErrorsLogic, "catchError");
         getClaimMock.mockImplementationOnce(() => {
-          // eslint-disable-next-line no-throw-literal
-          throw {
-            responseData: {
+          throw new ForbiddenError(
+            {
               employer_id: "some-employer-id",
               has_verification_data: "true",
             },
-            errors: [],
-            message: "User is not Verified",
-            status_code: 403,
-          };
+            "User is not Verified"
+          );
         });
 
         await act(async () => {
@@ -199,6 +201,98 @@ describe("useEmployersLogic", () => {
       });
 
       expect(getDocumentsMock).toHaveBeenCalledWith(absenceId);
+    });
+
+    describe("when the API returns documents", () => {
+      const denialNotice = {
+        name: "Denial notice",
+        fineos_document_id: "67899",
+      };
+      const approvalNotice = {
+        name: "Approval notice",
+        fineos_document_id: "78789",
+      };
+
+      it("fetches all documents for an application and adds to the claimDocumentsMap", async () => {
+        const absenceId = "NTN-323-ABS-01";
+        const expectedDocumentsMap = new Map([
+          [absenceId, new DocumentCollection([approvalNotice])],
+        ]);
+        let { claimDocumentsMap } = employersLogic;
+
+        getDocumentsMock.mockImplementationOnce(() => {
+          return {
+            success: true,
+            status: 200,
+            documents: new DocumentCollection([approvalNotice]),
+          };
+        });
+
+        await act(async () => {
+          await employersLogic.loadDocuments(absenceId);
+        });
+        ({ claimDocumentsMap } = employersLogic);
+        expect(claimDocumentsMap).toEqual(expectedDocumentsMap);
+      });
+
+      it("fetches documents for two absence cases and saves them to the claimDocumentsMap", async () => {
+        const absenceCaseId_first = "NTN-323-ABS-01";
+        const absenceCaseId_second = "NTN-423-ABS-01";
+        const expectedDocumentsMap = new Map([
+          [absenceCaseId_first, new DocumentCollection([approvalNotice])],
+          [absenceCaseId_second, new DocumentCollection([denialNotice])],
+        ]);
+        let { claimDocumentsMap } = employersLogic;
+
+        getDocumentsMock
+          .mockImplementationOnce(() => {
+            return {
+              success: true,
+              status: 200,
+              documents: new DocumentCollection([approvalNotice]),
+            };
+          })
+          .mockImplementationOnce(() => {
+            return {
+              success: true,
+              status: 200,
+              documents: new DocumentCollection([denialNotice]),
+            };
+          });
+
+        await act(async () => {
+          await employersLogic.loadDocuments(absenceCaseId_first);
+          await employersLogic.loadDocuments(absenceCaseId_second);
+        });
+
+        ({ claimDocumentsMap } = employersLogic);
+        expect(claimDocumentsMap).toEqual(expectedDocumentsMap);
+      });
+
+      it("fetches documents for the same absence case twice and only calls the API once", async () => {
+        const absenceId = "NTN-323-ABS-01";
+        const expectedDocumentsMap = new Map([
+          [absenceId, new DocumentCollection([approvalNotice])],
+        ]);
+        let { claimDocumentsMap } = employersLogic;
+
+        getDocumentsMock.mockImplementationOnce(() => {
+          return {
+            success: true,
+            status: 200,
+            documents: new DocumentCollection([approvalNotice]),
+          };
+        });
+
+        await act(async () => {
+          await employersLogic.loadDocuments(absenceId);
+          await employersLogic.loadDocuments(absenceId);
+        });
+
+        ({ claimDocumentsMap } = employersLogic);
+        expect(getDocumentsMock).toHaveBeenCalledTimes(1);
+        expect(claimDocumentsMap).toEqual(expectedDocumentsMap);
+      });
     });
 
     describe("errors", () => {
@@ -295,7 +389,7 @@ describe("useEmployersLogic", () => {
       });
 
       act(() => {
-        employersLogic.downloadDocument(absenceId, document);
+        employersLogic.downloadDocument(document, absenceId);
       });
 
       expect(downloadDocumentMock).toHaveBeenCalledWith(absenceId, document);

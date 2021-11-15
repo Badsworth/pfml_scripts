@@ -28,7 +28,7 @@ from sqlalchemy import (
     select,
 )
 from sqlalchemy.ext.hybrid import hybrid_method
-from sqlalchemy.orm import Query, aliased, dynamic_loader, relationship, validates
+from sqlalchemy.orm import Query, aliased, dynamic_loader, object_session, relationship, validates
 from sqlalchemy.schema import Sequence
 from sqlalchemy.sql.expression import func
 from sqlalchemy.types import JSON
@@ -307,6 +307,16 @@ class LkLeaveRequestDecision(Base):
         self.leave_request_decision_description = leave_request_decision_description
 
 
+class LkMFADeliveryPreference(Base):
+    __tablename__ = "lk_mfa_delivery_preference"
+    mfa_delivery_preference_id = Column(Integer, primary_key=True, autoincrement=True)
+    mfa_delivery_preference_description = Column(Text, nullable=False)
+
+    def __init__(self, mfa_delivery_preference_id, mfa_delivery_preference_description):
+        self.mfa_delivery_preference_id = mfa_delivery_preference_id
+        self.mfa_delivery_preference_description = mfa_delivery_preference_description
+
+
 class AbsencePeriod(Base, TimestampMixin):
     __tablename__ = "absence_period"
     __table_args__ = (
@@ -390,7 +400,7 @@ class Employer(Base, TimestampMixin):
     employer_occupations: "Query[EmployeeOccupation]" = dynamic_loader(
         "EmployeeOccupation", back_populates="employer"
     )
-    employer_quarterly_contribution: "Query[EmployerQuarterlyContribution]" = dynamic_loader(
+    employer_quarterly_contribution = relationship(
         "EmployerQuarterlyContribution", back_populates="employer"
     )
     organization_units: "Query[OrganizationUnit]" = dynamic_loader(
@@ -407,7 +417,7 @@ class Employer(Base, TimestampMixin):
             quarter.employer_total_pfml_contribution > 0
             and quarter.filing_period >= last_years_date
             and quarter.filing_period < current_date
-            for quarter in self.employer_quarterly_contribution
+            for quarter in self.employer_quarterly_contribution  # type: ignore
         )
 
     @validates("employer_fein")
@@ -749,6 +759,22 @@ class Claim(Base, TimestampMixin):
 
         return self.employer.employer_fein
 
+    @typed_hybrid_property
+    def has_paid_payments(self) -> bool:
+        # Joining to LatestStateLog filters out StateLogs
+        # which are no longer the most recent state for a given payment
+        paid_payments = (
+            object_session(self)
+            .query(func.count(Payment.payment_id))
+            .join(StateLog)
+            .join(LatestStateLog)
+            .filter(Payment.claim_id == self.claim_id)
+            .filter(StateLog.end_state_id.in_(SharedPaymentConstants.PAID_STATE_IDS))
+            .scalar()
+        )
+
+        return paid_payments > 0
+
 
 class Payment(Base, TimestampMixin):
     __tablename__ = "payment"
@@ -791,6 +817,11 @@ class Payment(Base, TimestampMixin):
     )
     claim_type_id = Column(Integer, ForeignKey("lk_claim_type.claim_type_id"))
     leave_request_id = Column(PostgreSQLUUID, ForeignKey("absence_period.absence_period_id"))
+
+    vpei_id = Column(PostgreSQLUUID, ForeignKey("fineos_extract_vpei.vpei_id"))
+    exclude_from_payment_status = Column(
+        Boolean, default=False, server_default="FALSE", nullable=False
+    )
 
     fineos_employee_first_name = Column(Text)
     fineos_employee_middle_name = Column(Text)
@@ -945,14 +976,18 @@ class User(Base, TimestampMixin):
     __tablename__ = "user"
     user_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     sub_id = Column(Text, index=True, unique=True)
-    email_address = Column(Text)
+    email_address = Column(Text, unique=True)
     consented_to_data_sharing = Column(Boolean, default=False, nullable=False)
+    mfa_delivery_preference_id = Column(
+        Integer, ForeignKey("lk_mfa_delivery_preference.mfa_delivery_preference_id")
+    )
 
     roles = relationship("LkRole", secondary="link_user_role", uselist=True)
     user_leave_administrators = relationship(
         "UserLeaveAdministrator", back_populates="user", uselist=True
     )
     employers = relationship("Employer", secondary="link_user_leave_administrator", uselist=True)
+    mfa_delivery_preference = relationship(LkMFADeliveryPreference)
 
     @hybrid_method
     def get_user_leave_admin_for_employer(
@@ -1095,6 +1130,30 @@ class WagesAndContributions(Base, TimestampMixin):
     employer = relationship("Employer", back_populates="wages_and_contributions")
 
 
+class WagesAndContributionsHistory(Base, TimestampMixin):
+    __tablename__ = "wages_and_contributions_history"
+    wages_and_contributions_history_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
+    is_independent_contractor = Column(Boolean, nullable=False)
+    is_opted_in = Column(Boolean, nullable=False)
+    employee_ytd_wages = Column(Numeric(asdecimal=True), nullable=False)
+    employee_qtr_wages = Column(Numeric(asdecimal=True), nullable=False)
+    employee_med_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    employer_med_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    employee_fam_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    employer_fam_contribution = Column(Numeric(asdecimal=True), nullable=False)
+    import_log_id = Column(
+        Integer, ForeignKey("import_log.import_log_id"), index=True, nullable=True
+    )
+    wage_and_contribution_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("wages_and_contributions.wage_and_contribution_id"),
+        index=True,
+        nullable=False,
+    )
+
+    wage_and_contribution = relationship("WagesAndContributions")
+
+
 class EmployeeOccupation(Base, TimestampMixin):
     __tablename__ = "employee_occupation"
 
@@ -1153,6 +1212,8 @@ class ReferenceFile(Base, TimestampMixin):
         nullable=True,
         index=True,
     )
+    # When the data within the files was processed (as determined by the particular process)
+    processed_import_log_id = Column(Integer, ForeignKey("import_log.import_log_id"), index=True)
 
     reference_file_type = relationship(LkReferenceFileType)
     payments = relationship("PaymentReferenceFile", back_populates="reference_file")
@@ -1340,15 +1401,29 @@ class DiaReductionPayment(Base, TimestampMixin):
 
 class DuaEmployeeDemographics(Base, TimestampMixin):
     __tablename__ = "dua_employee_demographics"
-    dua_employee_demographics_id = Column(PostgreSQLUUID, primary_key=True,)
+    dua_employee_demographics_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
 
-    fineos_customer_number = Column(Text, nullable=False)
-    date_of_birth = Column(Date)
-    gender_code = Column(Text)
-    occupation_code = Column(Text)
-    occupation_description = Column(Text)
-    employer_fein = Column(Text)
-    employer_reporting_unit_number = Column(Text)
+    fineos_customer_number = Column(Text, nullable=True)
+    date_of_birth = Column(Date, nullable=True)
+    gender_code = Column(Text, nullable=True)
+    occupation_code = Column(Text, nullable=True)
+    occupation_description = Column(Text, nullable=True)
+    employer_fein = Column(Text, nullable=True)
+    employer_reporting_unit_number = Column(Text, nullable=True)
+
+    # this Unique index is required since our test framework does not run migrations
+    # it is excluded from migrations. see api/massgov/pfml/db/migrations/env.py
+    Index(
+        "dua_employee_demographics_unique_import_data_idx",
+        fineos_customer_number,
+        date_of_birth,
+        gender_code,
+        occupation_code,
+        occupation_description,
+        employer_fein,
+        employer_reporting_unit_number,
+        unique=True,
+    )
 
     # Each row should be unique. This enables us to load only new rows from a CSV and ensures that
     # we don't include demographics twice as two different rows. Almost all fields are nullable so we
@@ -1471,8 +1546,8 @@ class AbsenceReason(LookupTable):
     BEREAVEMENT = LkAbsenceReason(8, "Bereavement")
     EDUCATIONAL_ACTIVITY_FAMILY = LkAbsenceReason(9, "Educational Activity - Family")
     MEDICAL_DONATION_FAMILY = LkAbsenceReason(10, "Medical Donation - Family")
-    MILITARY_EXIGENCY_FAMILY = LkAbsenceReason(11, "Military Caregiver")
-    MILITARY_EXIGENCY_FAMILY = LkAbsenceReason(12, "Military Exigency - Family")
+    MILITARY_CAREGIVER = LkAbsenceReason(11, "Military Caregiver")
+    MILITARY_EXIGENCY_FAMILY = LkAbsenceReason(12, "Military Exigency Family")
     PREVENTATIVE_CARE_FAMILY_MEMBER = LkAbsenceReason(13, "Preventative Care - Family Member")
     PUBLIC_HEALTH_EMERGENCY_FAMILY = LkAbsenceReason(14, "Public Health Emergency - Family")
 
@@ -2487,6 +2562,27 @@ class State(LookupTable):
     )
 
 
+class SharedPaymentConstants:
+    """
+    A class to hold Payment-Specific constants relevant
+    to more than one part of the application.
+    Definining constants here allows them to be shared
+    throughout the application without creating circular dependencies
+    """
+
+    # States that indicate we have sent a payment to PUB
+    # and it has not yet errored.
+    PAID_STATES = frozenset(
+        [
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
+            State.DELEGATED_PAYMENT_COMPLETE,
+            State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION,
+        ]
+    )
+    PAID_STATE_IDS = frozenset([state.state_id for state in PAID_STATES])
+
+
 class PaymentTransactionType(LookupTable):
     model = LkPaymentTransactionType
     column_names = ("payment_transaction_type_id", "payment_transaction_type_description")
@@ -2560,6 +2656,14 @@ class ReferenceFileType(LookupTable):
         30, "Consolidated DIA payments for DFML reduction report", 1
     )
 
+    FINEOS_PAYMENT_RECONCILIATION_EXTRACT = LkReferenceFileType(
+        31, "Payment reconciliation extract", 3
+    )
+
+    DUA_DEMOGRAPHICS_FILE = LkReferenceFileType(32, "DUA demographics", 1)
+
+    DUA_DEMOGRAPHICS_REQUEST_FILE = LkReferenceFileType(33, "DUA demographics request", 1)
+
 
 class Title(LookupTable):
     model = LkTitle
@@ -2583,6 +2687,18 @@ class LeaveRequestDecision(LookupTable):
     IN_REVIEW = LkLeaveRequestDecision(2, "In Review")
     APPROVED = LkLeaveRequestDecision(3, "Approved")
     DENIED = LkLeaveRequestDecision(4, "Denied")
+    CANCELLED = LkLeaveRequestDecision(5, "Cancelled")
+    WITHDRAWN = LkLeaveRequestDecision(6, "Withdrawn")
+    PROJECTED = LkLeaveRequestDecision(7, "Projected")
+    VOIDED = LkLeaveRequestDecision(8, "Voided")
+
+
+class MFADeliveryPreference(LookupTable):
+    model = LkMFADeliveryPreference
+    column_names = ("mfa_delivery_preference_id", "mfa_delivery_preference_description")
+
+    SMS = LkMFADeliveryPreference(1, "SMS")
+    OPT_OUT = LkMFADeliveryPreference(2, "Opt Out")
 
 
 def sync_lookup_tables(db_session):
@@ -2618,4 +2734,5 @@ def sync_lookup_tables(db_session):
     ManagedRequirementStatus.sync_to_database(db_session)
     ManagedRequirementCategory.sync_to_database(db_session)
     ManagedRequirementType.sync_to_database(db_session)
+    MFADeliveryPreference.sync_to_database(db_session)
     db_session.commit()

@@ -1,30 +1,39 @@
-import Document, { DocumentType } from "../../src/models/Document";
 import { render, screen } from "@testing-library/react";
+import { DocumentType } from "../../src/models/Document";
 import DownloadableDocument from "../../src/components/DownloadableDocument";
-import Icon from "../../src/components/Icon";
+import Icon from "../../src/components/core/Icon";
 import React from "react";
 import userEvent from "@testing-library/user-event";
 
-const DOCUMENT = new Document({
+const DOCUMENT = {
   content_type: "image/png",
   created_at: "2020-04-05",
   document_type: DocumentType.certification.medicalCertification,
   fineos_document_id: "fineos-id-4",
   name: "Medical cert doc",
-});
+};
 
-const LEGAL_NOTICE = new Document({
+const LEGAL_NOTICE = {
   content_type: "image/png",
   created_at: "2020-04-05",
   document_type: DocumentType.approvalNotice,
   fineos_document_id: "fineos-id-4",
   name: "legal notice",
-});
+};
+
+const CLAIM_DOCUMENT = {
+  content_type: "image/png",
+  created_at: "2020-04-05",
+  document_type: DocumentType.certification.medicalCertification,
+  fineos_document_id: "fineos-id-4",
+  name: "Medical cert doc",
+};
 
 function renderComponent(customProps = {}) {
   const props = {
     document: DOCUMENT,
-    onDownloadClick: jest.fn(),
+    downloadClaimDocument: jest.fn(),
+    downloadBenefitsApplicationDocument: jest.fn(),
     ...customProps,
   };
 
@@ -59,7 +68,9 @@ describe("DownloadableDocument", () => {
 
   it("calls download function without absence id when there isn't an absence id", () => {
     const mockDownloadDocument = jest.fn();
-    renderComponent({ onDownloadClick: mockDownloadDocument });
+    renderComponent({
+      downloadBenefitsApplicationDocument: mockDownloadDocument,
+    });
 
     userEvent.click(screen.getByRole("button"));
     expect(mockDownloadDocument).toHaveBeenCalledWith(DOCUMENT);
@@ -68,14 +79,15 @@ describe("DownloadableDocument", () => {
   it("calls download function with absence id when there is an absence id", () => {
     const mockDownloadDocument = jest.fn();
     renderComponent({
-      onDownloadClick: mockDownloadDocument,
+      downloadClaimDocument: mockDownloadDocument,
       absenceId: "mock-absence-id",
+      document: CLAIM_DOCUMENT,
     });
 
     userEvent.click(screen.getByRole("button"));
     expect(mockDownloadDocument).toHaveBeenCalledWith(
-      "mock-absence-id",
-      DOCUMENT
+      DOCUMENT,
+      "mock-absence-id"
     );
   });
 

@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import InputHours from "../../src/components/InputHours";
+import InputHours from "../../src/components/core/InputHours";
 import React from "react";
 import { renderHook } from "@testing-library/react-hooks";
 import useHandleInputChange from "../../src/hooks/useHandleInputChange";
@@ -124,7 +124,27 @@ describe("InputHours", () => {
 
     userEvent.selectOptions(screen.getByRole("combobox"), ["0"]);
 
+    expect(onChange).toHaveBeenCalledWith({
+      target: expect.objectContaining({
+        value: "0",
+      }),
+    });
     expect(screen.getByRole("combobox")).toHaveValue("0");
+  });
+
+  it("supports clearing of hours value", () => {
+    const onChange = jest.fn();
+    setup({ value: 60 * 2, onChange });
+
+    userEvent.clear(screen.getByRole("textbox"));
+    userEvent.type(screen.getByRole("textbox"), "0");
+
+    expect(onChange).toHaveBeenCalledWith({
+      target: expect.objectContaining({
+        value: "0",
+      }),
+    });
+    expect(screen.getByRole("textbox")).toHaveValue("0");
   });
 
   it("propagates valid input with useHandleInputChange", () => {

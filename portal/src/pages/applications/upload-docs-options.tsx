@@ -1,11 +1,14 @@
-import BenefitsApplication, {
+import LeaveReason, { LeaveReasonType } from "../../models/LeaveReason";
+import {
   ReasonQualifier,
+  ReasonQualifierEnum,
 } from "../../models/BenefitsApplication";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import AppErrorInfo from "../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { get } from "lodash";
@@ -13,7 +16,6 @@ import tracker from "../../services/tracker";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const UploadType = {
   mass_id: "UPLOAD_MASS_ID",
@@ -21,15 +23,19 @@ export const UploadType = {
   certification: "UPLOAD_CERTIFICATION",
 };
 
-export const UploadDocsOptions = (props) => {
+export const UploadDocsOptions = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState();
   const upload_docs_options = formState.upload_docs_options;
 
-  const leaveReason = get(claim, "leave_details.reason");
-  const reasonQualifier = get(claim, "leave_details.reason_qualifier");
+  const leaveReason = get(claim, "leave_details.reason") as LeaveReasonType;
+  const reasonQualifier = get(
+    claim,
+    "leave_details.reason_qualifier"
+  ) as ReasonQualifierEnum;
+
   const contentContext = {
     [LeaveReason.bonding]: {
       [ReasonQualifier.newBorn]: "bonding_newborn",
@@ -43,9 +49,9 @@ export const UploadDocsOptions = (props) => {
   const certChoiceLabel =
     leaveReason === LeaveReason.bonding
       ? contentContext[leaveReason][reasonQualifier]
-      : contentContext[leaveReason];
+      : get(contentContext, leaveReason, "");
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!upload_docs_options) {
       const appErrorInfo = new AppErrorInfo({
         field: "upload_docs_options",
@@ -53,13 +59,11 @@ export const UploadDocsOptions = (props) => {
         type: "required",
       });
 
-      appLogic.setAppErrors(new AppErrorInfoCollection([appErrorInfo]));
+      await appLogic.setAppErrors(new AppErrorInfoCollection([appErrorInfo]));
 
       tracker.trackEvent("ValidationError", {
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'field' does not exist on type 'AppErrorI... Remove this comment to see the full error message
-        issueField: appErrorInfo.field,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'type' does not exist on type 'AppErrorIn... Remove this comment to see the full error message
-        issueType: appErrorInfo.type,
+        issueField: appErrorInfo.field || "",
+        issueType: appErrorInfo.type || "",
       });
 
       return Promise.resolve();
@@ -71,7 +75,14 @@ export const UploadDocsOptions = (props) => {
         : upload_docs_options === UploadType.mass_id;
     return appLogic.portalFlow.goToNextPage(
       { claim },
-      { claim_id: claim.application_id, showStateId, additionalDoc: "true" },
+      {
+        claim_id: claim.application_id,
+        showStateId:
+          typeof showStateId !== "undefined"
+            ? showStateId.toString()
+            : undefined,
+        additionalDoc: "true",
+      },
       upload_docs_options
     );
   };
@@ -114,11 +125,6 @@ export const UploadDocsOptions = (props) => {
       />
     </QuestionPage>
   );
-};
-
-UploadDocsOptions.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  appLogic: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(UploadDocsOptions);

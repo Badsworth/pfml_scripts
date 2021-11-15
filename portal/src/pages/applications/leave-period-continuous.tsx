@@ -1,14 +1,15 @@
 import React, { useEffect } from "react";
 import { cloneDeep, get, pick, set } from "lodash";
-import Alert from "../../components/Alert";
-import BenefitsApplication from "../../models/BenefitsApplication";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import Alert from "../../components/core/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
-import Heading from "../../components/Heading";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import InputDate from "../../components/InputDate";
-import Lead from "../../components/Lead";
+import Heading from "../../components/core/Heading";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
+import InputDate from "../../components/core/InputDate";
+import Lead from "../../components/core/Lead";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
 import findKeyByValue from "../../utils/findKeyByValue";
@@ -17,7 +18,6 @@ import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 /**
  * Convenience constant for referencing the leave period object
@@ -32,11 +32,10 @@ export const fields = [
   `claim.${leavePeriodPath}.start_date`,
 ];
 
-export const LeavePeriodContinuous = (props) => {
+export const LeavePeriodContinuous = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
 
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   const { formState, getField, updateFields, clearField } = useFormState(
     pick(props, fields).claim
   );
@@ -93,7 +92,6 @@ export const LeavePeriodContinuous = (props) => {
       onSave={handleSave}
     >
       {(claim.isMedicalOrPregnancyLeave || claim.isCaringLeave) && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; state: string; neutral:... Remove this comment to see the full error message
         <Alert state="info" neutral>
           <Trans
             i18nKey="pages.claimsLeavePeriodContinuous.needDocumentAlert"
@@ -194,14 +192,6 @@ export const LeavePeriodContinuous = (props) => {
       </ConditionalContent>
     </QuestionPage>
   );
-};
-
-LeavePeriodContinuous.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(LeavePeriodContinuous);

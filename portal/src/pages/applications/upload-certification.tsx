@@ -1,19 +1,25 @@
-import BenefitsApplication, {
-  ReasonQualifier,
-} from "../../models/BenefitsApplication";
-import Document, { DocumentType } from "../../models/Document";
-import Alert from "../../components/Alert";
+import {
+  BenefitsApplicationDocument,
+  DocumentType,
+} from "../../models/Document";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import withClaimDocuments, {
+  WithClaimDocumentsProps,
+} from "../../hoc/withClaimDocuments";
+import Alert from "../../components/core/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import DocumentRequirements from "../../components/DocumentRequirements";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
-import Heading from "../../components/Heading";
-import Lead from "../../components/Lead";
+import Heading from "../../components/core/Heading";
+import Lead from "../../components/core/Lead";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import Spinner from "../../components/Spinner";
+import { ReasonQualifier } from "../../models/BenefitsApplication";
+import Spinner from "../../components/core/Spinner";
 import { Trans } from "react-i18next";
 import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
 import findKeyByValue from "../../utils/findKeyByValue";
@@ -23,10 +29,16 @@ import routes from "../../routes";
 import uploadDocumentsHelper from "../../utils/uploadDocumentsHelper";
 import useFilesLogic from "../../hooks/useFilesLogic";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
-import withClaimDocuments from "../../hoc/withClaimDocuments";
 
-export const UploadCertification = (props) => {
+interface UploadCertificationProps
+  extends WithClaimDocumentsProps,
+    WithBenefitsApplicationProps {
+  query: {
+    additionalDoc?: string;
+  };
+}
+
+export const UploadCertification = (props: UploadCertificationProps) => {
   const { appLogic, claim, documents, isLoadingDocuments, query } = props;
   const { t } = useTranslation();
   const claimReason = claim.leave_details.reason;
@@ -41,6 +53,7 @@ export const UploadCertification = (props) => {
     appErrors,
     claim.application_id
   );
+  const [submissionInProgress, setSubmissionInProgress] = React.useState(false);
 
   const conditionalContext = {
     [LeaveReason.bonding]: {
@@ -60,14 +73,17 @@ export const UploadCertification = (props) => {
       leadTextContext = conditionalContext[claimReason];
       break;
     case LeaveReason.bonding:
-      leadTextContext = conditionalContext[claimReason][claimReasonQualifier];
+      leadTextContext = claimReasonQualifier
+        ? conditionalContext[claimReason][claimReasonQualifier]
+        : undefined;
       break;
   }
 
-  const certificationDocuments = findDocumentsByLeaveReason(
-    documents,
-    get(claim, "leave_details.reason")
-  );
+  const certificationDocuments =
+    findDocumentsByLeaveReason<BenefitsApplicationDocument>(
+      documents,
+      get(claim, "leave_details.reason")
+    );
 
   const handleSave = async () => {
     if (files.isEmpty && certificationDocuments.length) {
@@ -77,6 +93,7 @@ export const UploadCertification = (props) => {
     }
 
     const documentType = DocumentType.certification.certificationForm;
+    setSubmissionInProgress(true);
 
     const uploadPromises = appLogic.documents.attach(
       claim.application_id,
@@ -90,6 +107,8 @@ export const UploadCertification = (props) => {
       files,
       removeFile
     );
+    setSubmissionInProgress(false);
+
     if (success) {
       const absence_id = get(claim, "fineos_absence_id");
       portalFlow.goToNextPage(
@@ -157,7 +176,6 @@ export const UploadCertification = (props) => {
       <FileUploadDetails />
 
       {hasLoadingDocumentsError && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; noIc... Remove this comment to see the full error message
         <Alert className="margin-bottom-3" noIcon>
           <Trans
             i18nKey="pages.claimsUploadCertification.documentsLoadError"
@@ -185,6 +203,7 @@ export const UploadCertification = (props) => {
           documents={certificationDocuments}
           onChange={processFiles}
           onRemoveTempFile={removeFile}
+          disableRemove={submissionInProgress}
           fileHeadingPrefix={t(
             "pages.claimsUploadCertification.fileHeadingPrefix"
           )}
@@ -198,23 +217,6 @@ export const UploadCertification = (props) => {
       )}
     </QuestionPage>
   );
-};
-
-UploadCertification.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    catchError: PropTypes.func.isRequired,
-    documents: PropTypes.object.isRequired,
-    portalFlow: PropTypes.object.isRequired,
-    clearErrors: PropTypes.func.isRequired,
-  }).isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-  isLoadingDocuments: PropTypes.bool,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-    additionalDoc: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(withClaimDocuments(UploadCertification));

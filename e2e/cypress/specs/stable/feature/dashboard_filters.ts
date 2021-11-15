@@ -17,7 +17,6 @@ describe("Employer dashboard", () => {
   it("LA should be able to view, filter, sort claims and search by name", () => {
     cy.dependsOnPreviousPass([submit]);
     portal.before();
-    cy.visit("/");
     cy.unstash<ApplicationRequestBody>("claim").then((claim) => {
       assertValidClaim(claim);
       portal.loginLeaveAdmin(claim.employer_fein);

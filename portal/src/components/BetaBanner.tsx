@@ -1,12 +1,15 @@
 import { Trans, useTranslation } from "react-i18next";
-import PropTypes from "prop-types";
 import React from "react";
+
+interface BetaBannerProps {
+  feedbackUrl: string;
+}
 
 /**
  * Banner displayed at the top of the site to indicate the site is a work in progress,
  * and provide a method for sending feedback.
  */
-const BetaBanner = (props) => {
+const BetaBanner = (props: BetaBannerProps) => {
   const { t } = useTranslation();
 
   return (
@@ -26,11 +29,6 @@ const BetaBanner = (props) => {
       </div>
     </div>
   );
-};
-
-BetaBanner.propTypes = {
-  /** URL for the survey */
-  feedbackUrl: PropTypes.string.isRequired,
 };
 
 export default BetaBanner;

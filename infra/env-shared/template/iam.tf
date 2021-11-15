@@ -89,7 +89,7 @@ data "aws_iam_policy_document" "pfmldata_executor_policy_document" {
 
       resources = [statement.value.bucket_arn]
       condition {
-        test     = "StringEquals"
+        test     = "StringLike"
         variable = "s3:prefix"
         values = [
           for r in statement.value.resource_prefixes : r

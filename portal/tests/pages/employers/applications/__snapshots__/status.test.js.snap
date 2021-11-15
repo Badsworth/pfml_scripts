@@ -39,7 +39,15 @@ exports[`Status renders the page for a claim without documents or a status 1`] =
     >
       Status
     </h3>
-    --
+    <div
+      class="margin-0"
+    >
+      <span
+        class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-base-darker bg-base-lightest"
+      >
+        No action required
+      </span>
+    </div>
   </div>
   <div
     class="margin-bottom-2 padding-bottom-2"
@@ -128,11 +136,15 @@ exports[`Status renders the page for a completed claim 1`] = `
     >
       Status
     </h3>
-    <span
-      class="usa-tag display-inline-block text-bold padding-y-05 radius-lg text-no-wrap text-success-dark bg-success-lighter padding-x-205"
+    <div
+      class="margin-0"
     >
-      Approved
-    </span>
+      <span
+        class="usa-tag display-inline-block text-bold text-middle text-no-wrap text-success-dark bg-success-lighter"
+      >
+        Approved
+      </span>
+    </div>
   </div>
   <div
     class="margin-bottom-2 padding-bottom-2"
@@ -223,7 +235,7 @@ exports[`Status shows only legal documents 1`] = `
     <div
       class="text-base-dark"
     >
-      Posted 1/1/2021
+      Posted 1/9/2021
     </div>
   </li>
   <li
@@ -238,7 +250,7 @@ exports[`Status shows only legal documents 1`] = `
     <div
       class="text-base-dark"
     >
-      Posted 1/2/2021
+      Posted 1/10/2021
     </div>
   </li>
   <li

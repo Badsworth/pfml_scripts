@@ -5,6 +5,7 @@ provider "registry.terraform.io/hashicorp/archive" {
   version = "2.1.0"
   hashes = [
     "h1:Rjd4bHMA69V+16tiriAUTW8vvqoljzNLmEaRBCgzpUs=",
+    "h1:f3WXKM/FBu5EMY6j2BGt982hzVMNicrxTyEAz5EsrOU=",
     "zh:033279ecbf60f565303222e9a6d26b50fdebe43aa1c6e8f565f09bb64d67c3fd",
     "zh:0af998e42eb421c92e87202df5bfee436b3cfe553214394f08d786c72a9e3f70",
     "zh:1183b661c692f38409a61eefb5d412167c246fcd9e49d4d61d6d910012d206ba",
@@ -20,9 +21,9 @@ provider "registry.terraform.io/hashicorp/archive" {
 }
 
 provider "registry.terraform.io/hashicorp/aws" {
-  version     = "3.56.0"
-  constraints = "~> 3.56.0"
+  version = "3.56.0"
   hashes = [
+    "h1:L0F0l8AuDcLL+Grob4eHWdc3jm/dCufnU5lWWEpi+F8=",
     "h1:XuiEcFvwm+GkRpt4MqfwJpfdU2BssSjpyqMkqrI3Pjs=",
     "zh:001373be6fbc5738bf8c3aa8688b248ba5f99b04174310c0efcbbf23e6c4dc29",
     "zh:0d4af59266668089790f5a7bdeb25642ba750fb5dc7934fe28d1cc36310ba495",
@@ -42,6 +43,7 @@ provider "registry.terraform.io/hashicorp/template" {
   version = "2.2.0"
   hashes = [
     "h1:0wlehNaxBX7GJQnPfQwTNvvAf38Jm0Nv7ssKGMaG6Og=",
+    "h1:94qn780bi1qjrbC3uQtjJh3Wkfwd5+tTtJHOb7KTg9w=",
     "zh:01702196f0a0492ec07917db7aaa595843d8f171dc195f4c988d2ffca2a06386",
     "zh:09aae3da826ba3d7df69efeb25d146a1de0d03e951d35019a0f80e4f58c89b53",
     "zh:09ba83c0625b6fe0a954da6fbd0c355ac0b7f07f86c91a2a97849140fea49603",
@@ -58,6 +60,7 @@ provider "registry.terraform.io/hashicorp/template" {
 provider "registry.terraform.io/newrelic/newrelic" {
   version = "2.21.0"
   hashes = [
+    "h1:9fTUVQm/Nf3IebTBUiC5khPivgUR189kx7YtqoU7iGc=",
     "h1:KeWL5oXb6NZpKVYbWWsqcKutbssd/rHKg2qUYse+Olo=",
     "zh:0e4b0b026caf1fd750b62687784d4514c86d7ff5be5674cdf6994f8be1877486",
     "zh:0e90821537612aef583cb1a2fbd73acc34769e1475cd437da6f50729f733f213",
@@ -80,6 +83,7 @@ provider "registry.terraform.io/newrelic/newrelic" {
 provider "registry.terraform.io/pagerduty/pagerduty" {
   version = "1.9.6"
   hashes = [
+    "h1:BG1r5zNIzXLxrIoJt5ghwzH/tl5PMlGsP7H5t8EFBRQ=",
     "h1:sU4HatINJWZGtLhGJC0QMCSvEfIM8pG/S+mt5y/U77M=",
     "zh:1b1aa8ad7ef8d2242a28385e8af5097f0a9fae99cf565434205ee3e8bcb62bdc",
     "zh:273cc8d931035b2db0f2355b397f8d3e5dbdfb9603ab6e3bec8ca49c6b6be3a4",

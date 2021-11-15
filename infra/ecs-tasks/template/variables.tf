@@ -108,6 +108,12 @@ variable "fineos_data_export_path" {
   default     = ""
 }
 
+variable "fineos_adhoc_data_export_path" {
+  description = "FINEOS generates adhoc data export files from custom queries for PFML API to pick up"
+  type        = string
+  default     = ""
+}
+
 variable "fineos_data_import_path" {
   description = "PFML API generates files for FINEOS to process"
   type        = string
@@ -132,9 +138,14 @@ variable "pfml_fineos_outbound_path" {
   default     = ""
 }
 
-variable "dor_fineos_etl_schedule_expression" {
-  # Daily at 04:30 UTC [12:30 EST] [13:30 EDT]
-  description = "EventBridge schedule for DOR FINEOS ETL"
+variable "dor_fineos_etl_schedule_expression_standard" {
+  description = "EventBridge schedule for DOR FINEOS ETL in standard time"
+  type        = string
+  default     = "cron(30 5 * * ? *)"
+}
+
+variable "dor_fineos_etl_schedule_expression_daylight_savings" {
+  description = "EventBridge schedule for DOR FINEOS ETL in daylight time"
   type        = string
   default     = "cron(30 4 * * ? *)"
 }
@@ -235,6 +246,11 @@ variable "enable_pub_automation_create_pub_files" {
 
 variable "enable_pub_automation_process_returns" {
   description = "Enable scheduling for pub automation return processing task"
+  default     = false
+}
+
+variable "enable_pub_automation_process_1099_documents" {
+  description = "Enable scheduling for pub automation 1099 documents processing task"
   default     = false
 }
 

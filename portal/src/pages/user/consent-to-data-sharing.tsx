@@ -1,10 +1,10 @@
-import Accordion from "../../components/Accordion";
-import AccordionItem from "../../components/AccordionItem";
-import Alert from "../../components/Alert";
-import Button from "../../components/Button";
-import PropTypes from "prop-types";
+import Accordion from "../../components/core/Accordion";
+import AccordionItem from "../../components/core/AccordionItem";
+import Alert from "../../components/core/Alert";
+import { AppLogic } from "../../hooks/useAppLogic";
+import Button from "../../components/core/Button";
 import React from "react";
-import Title from "../../components/Title";
+import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
 import routes from "../../routes";
@@ -13,7 +13,12 @@ import useThrottledHandler from "../../hooks/useThrottledHandler";
 import { useTranslation } from "../../locales/i18n";
 import withUser from "../../hoc/withUser";
 
-export const ConsentToDataSharing = (props) => {
+interface ConsentToDataSharingProps {
+  appLogic: AppLogic;
+  user: User;
+}
+
+export const ConsentToDataSharing = (props: ConsentToDataSharingProps) => {
   const { t } = useTranslation();
   const { appLogic, user } = props;
   const { updateUser } = appLogic.users;
@@ -99,7 +104,6 @@ export const ConsentToDataSharing = (props) => {
         </AccordionItem>
       </Accordion>
 
-      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element[]; state: string; noIcon... Remove this comment to see the full error message */}
       <Alert state="info" noIcon>
         <p>{t("pages.userConsentToDataSharing.agreementBody")}</p>
         <Button type="submit" loading={handleSubmit.isThrottled}>
@@ -108,15 +112,6 @@ export const ConsentToDataSharing = (props) => {
       </Alert>
     </form>
   );
-};
-
-ConsentToDataSharing.propTypes = {
-  appLogic: PropTypes.shape({
-    users: PropTypes.shape({
-      updateUser: PropTypes.func.isRequired,
-    }).isRequired,
-  }).isRequired,
-  user: PropTypes.instanceOf(User).isRequired,
 };
 
 export default withUser(ConsentToDataSharing);

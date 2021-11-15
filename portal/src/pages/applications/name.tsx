@@ -1,15 +1,15 @@
-import BenefitsApplication from "../../models/BenefitsApplication";
-import Fieldset from "../../components/Fieldset";
-import FormLabel from "../../components/FormLabel";
-import InputText from "../../components/InputText";
-import PropTypes from "prop-types";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import Fieldset from "../../components/core/Fieldset";
+import FormLabel from "../../components/core/FormLabel";
+import InputText from "../../components/core/InputText";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.first_name",
@@ -17,10 +17,10 @@ export const fields = [
   "claim.last_name",
 ];
 
-export const Name = (props) => {
+export const Name = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
 
   const handleSave = () =>
@@ -57,11 +57,6 @@ export const Name = (props) => {
       </Fieldset>
     </QuestionPage>
   );
-};
-
-Name.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
 export default withBenefitsApplication(Name);

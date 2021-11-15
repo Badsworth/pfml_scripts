@@ -1,10 +1,9 @@
 import random
 from datetime import date, timedelta
 
-import massgov.pfml.api.util.state_log_util as state_log_util
-import massgov.pfml.delegated_payments.delegated_payments_util as payments_util
-from massgov.pfml.db.models.employees import PaymentTransactionType, State
-from massgov.pfml.db.models.factories import ClaimFactory, PaymentDetailsFactory, PaymentFactory
+from massgov.pfml.db.models.employees import PaymentTransactionType, SharedPaymentConstants, State
+from massgov.pfml.db.models.factories import PaymentDetailsFactory
+from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.delegated_payments.postprocessing.payment_post_processing_util import (
     PaymentContainer,
 )
@@ -44,6 +43,7 @@ def _create_payment_container(
     payment_transaction_type=PaymentTransactionType.STANDARD,
     claim=None,
 ):
+
     if not start_date:
         # We use this day because it's a Sunday that starts on the 1st so easier to conceptualize
         start_date = date(2021, 8, 1)
@@ -54,10 +54,11 @@ def _create_payment_container(
     else:
         end_date = start_date + timedelta(length_of_period - 1)
 
-    if not claim:
-        claim = ClaimFactory.create(employee=employee)
-    payment = PaymentFactory.create(
+    factory = DelegatedPaymentFactory(
+        db_session,
+        employee=employee,
         claim=claim,
+        payment_transaction_type=payment_transaction_type,
         amount=amount,
         period_start_date=start_date,
         period_end_date=end_date,
@@ -66,13 +67,14 @@ def _create_payment_container(
         fineos_employee_first_name=employee.first_name,
         fineos_employee_last_name=employee.last_name,
     )
+    payment = factory.get_or_create_payment()
 
     if not skip_pay_periods:
         for payment_period in payment_periods:
             payment_period.payment_id = payment.payment_id
 
     if has_processed_state:
-        state = random.choice(list(payments_util.Constants.PAID_STATES))
+        state = random.choice(list(SharedPaymentConstants.PAID_STATES))
     elif has_errored_state:
         state = State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
     elif is_overpayment:
@@ -80,21 +82,11 @@ def _create_payment_container(
     else:
         state = State.DELEGATED_PAYMENT_POST_PROCESSING_CHECK
 
-    state_log_util.create_finished_state_log(
-        payment,
-        state,
-        state_log_util.build_outcome(f"Payment set to {state.state_description}"),
-        db_session,
-    )
+    factory.get_or_create_payment_with_state(state)
 
     # To represent a payment that succeeded and then failed with the bank
     if has_processed_state and later_failed:
-        state_log_util.create_finished_state_log(
-            payment,
-            State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
-            state_log_util.build_outcome("Payment later failed with the bank"),
-            db_session,
-        )
+        factory.get_or_create_payment_with_state(State.DELEGATED_PAYMENT_ERROR_FROM_BANK)
 
-    db_session.commit()
+    # db_session.commit()
     return PaymentContainer(payment)

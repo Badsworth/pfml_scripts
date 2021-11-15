@@ -45,7 +45,6 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
   const defaults: FeatureFlags = {
     pfmlTerriyay: true,
     noMaintenance: true,
-    claimantShowStatusPage: true,
     employerShowDashboardSearch: true,
     employerShowReviewByStatus: true,
   };
@@ -58,6 +57,7 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
  */
 export function before(flags?: Partial<FeatureFlags>): void {
   Cypress.config("baseUrl", config("PORTAL_BASEURL"));
+  Cypress.config("pageLoadTimeout", 30000);
   // Set the feature flags necessary to see the portal.
   setFeatureFlags(flags);
 
@@ -371,14 +371,16 @@ export function verifyIdentity(application: ApplicationRequestBody): void {
   });
   cy.contains("button", "Save and continue").click();
 
-  cy.contains("Do you have a Massachusetts driver’s license or ID card?");
+  const fieldset = cy
+    .contains("Do you have a Massachusetts driver’s license or ID card?")
+    .parent();
   if (application.has_state_id) {
-    cy.contains("Yes").click();
+    fieldset.contains("label", "Yes").click();
     cy.contains("Enter your license or ID number").type(
       `{selectall}{backspace}${application.mass_id}`
     );
   } else {
-    cy.contains("No").click();
+    fieldset.contains("label", "No").click();
   }
   cy.contains("button", "Save and continue").click();
 
@@ -918,7 +920,6 @@ export function confirmEligibleClaimant(): void {
 
 export function submitClaimPartOne(application: ApplicationRequestBody): void {
   const reason = application.leave_details?.reason;
-  const reasonQualifier = application?.leave_details?.reason_qualifier;
 
   clickChecklistButton("Verify your identification");
   verifyIdentity(application);
@@ -943,8 +944,6 @@ export function submitClaimPartOne(application: ApplicationRequestBody): void {
       enterBondingDateInfo(application);
       break;
   }
-
-  if (reasonQualifier === "Newborn") answerPregnancyQuestion(application);
 
   answerContinuousLeaveQuestion(application);
   answerReducedLeaveQuestion(application);
@@ -1032,7 +1031,9 @@ export function verifyLeaveAdmin(withholding: number): void {
     .click();
   cy.get('input[id="InputText1"]').type(withholding.toString());
   cy.get('button[type="submit"').click();
-  cy.contains("h1", "Thanks for verifying your paid leave contributions");
+  cy.contains("h1", "Thanks for verifying your paid leave contributions", {
+    timeout: 30000,
+  });
   cy.contains("p", "Your account has been verified");
   cy.contains("button", "Continue").click();
   cy.get('a[href^="/employers/organizations/verify-contributions"]').should(
@@ -1052,7 +1053,9 @@ export function addOrganization(fein: string, withholding: number): void {
       withholding.toString()
     );
     cy.get('button[type="submit"]').click();
-    cy.contains("h1", "Thanks for verifying your paid leave contributions");
+    cy.contains("h1", "Thanks for verifying your paid leave contributions", {
+      timeout: 30000,
+    });
     cy.contains("p", "Your account has been verified");
     cy.contains("button", "Continue").click();
     cy.get('a[href^="/employers/organizations/verify-contributions"]').should(
@@ -1427,7 +1430,7 @@ function reportOtherLeavesAndBenefits(claim: ApplicationRequestBody): void {
 
   cy.contains(
     "form",
-    /(Will you use any employer\-sponsored benefits from this employer during your paid leave from PFML\?|Will you use any employer\-sponsored benefits from this employer during your paid leave from PFML\?)/
+    /(Will you use any employer-sponsored benefits from this employer during your paid leave from PFML\?|Will you use any employer-sponsored benefits from this employer during your paid leave from PFML\?)/
   ).within(() => {
     const labelSelector = (content: string) =>
       content.startsWith(claim.employer_benefits ? "Yes" : "No");
@@ -1801,10 +1804,10 @@ export function assertConcurrentLeave(leave: ValidConcurrentLeave): void {
   const selector = new RegExp(template);
 
   cy.findByText("Concurrent accrued paid leave")
-    .next()
-    .next()
-    .should(($table) => {
-      expect($table.html()).to.match(selector);
+    .nextUntil("h3")
+    .filter("table")
+    .should((table) => {
+      expect(table.html()).to.match(selector);
     });
 }
 
@@ -1949,10 +1952,9 @@ export function claimantGoToClaimStatus(fineosAbsenceId: string): void {
   cy.wait("@getApplications").wait(150);
   cy.contains("article", fineosAbsenceId).within(() => {
     cy.contains("View status updates and details").click();
-    cy.url().should(
-      "include",
-      `/applications/status/?absence_case_id=${fineosAbsenceId}`
-    );
+    cy.url()
+      .should("include", "/applications/status/")
+      .and("include", `${fineosAbsenceId}`);
   });
 }
 

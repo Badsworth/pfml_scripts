@@ -1,23 +1,24 @@
 import { get, pick } from "lodash";
-
-import BenefitsApplication from "../../models/BenefitsApplication";
-import IconHeading from "../../components/IconHeading";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import PropTypes from "prop-types";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import IconHeading from "../../components/core/IconHeading";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import formatDate from "../../utils/formatDate";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.has_previous_leaves_other_reason"];
 
-export const PreviousLeavesOtherReason = (props) => {
+export const PreviousLeavesOtherReason = (
+  props: WithBenefitsApplicationProps
+) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState(pick(props, fields).claim);
   const getFunctionalInputProps = useFunctionalInputProps({
     appErrors: appLogic.appErrors,
@@ -98,11 +99,6 @@ export const PreviousLeavesOtherReason = (props) => {
       />
     </QuestionPage>
   );
-};
-
-PreviousLeavesOtherReason.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
 export default withBenefitsApplication(PreviousLeavesOtherReason);

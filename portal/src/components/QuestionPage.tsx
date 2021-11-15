@@ -1,11 +1,30 @@
 import BackButton from "./BackButton";
-import Button from "./Button";
-import PropTypes from "prop-types";
+import Button from "./core/Button";
 import React from "react";
-import Title from "./Title";
+import Title from "./core/Title";
 import tracker from "../services/tracker";
 import useThrottledHandler from "../hooks/useThrottledHandler";
 import { useTranslation } from "../locales/i18n";
+
+interface QuestionPageProps {
+  /**
+   * The contents of the form question page.
+   */
+  children: React.ReactNode;
+  continueButtonLabel?: string;
+  /**
+   * The text of the small title of the form.
+   */
+  title: React.ReactNode;
+  /**
+   * Function that performs the save operation. Can be asynchronous.
+   */
+  onSave: () => Promise<void>;
+  /**
+   * A data selector to support end-to-end testing with Cypress.js
+   */
+  dataCy?: string;
+}
 
 /**
  * This is a page template for form questions, including back link and continue
@@ -14,7 +33,7 @@ import { useTranslation } from "../locales/i18n";
  * Note: If you add a fieldset as the first child inside this template, there
  * will be inconsistent spacing between the title and the rest of the contents.
  */
-export const QuestionPage = (props) => {
+export const QuestionPage = (props: QuestionPageProps) => {
   const { t } = useTranslation();
 
   const handleSubmit = useThrottledHandler(async (event) => {
@@ -22,7 +41,6 @@ export const QuestionPage = (props) => {
 
     const resp = props.onSave();
     if (!(resp instanceof Promise)) {
-      // @ts-expect-error ts-migrate(2554) FIXME: Expected 2 arguments, but got 1.
       tracker.trackEvent(
         "onSave wasn't a Promise, so user isn't seeing a loading indicator."
       );
@@ -48,30 +66,11 @@ export const QuestionPage = (props) => {
           type="submit"
           loading={handleSubmit.isThrottled}
         >
-          {t("components.form.continueButton")}
+          {props.continueButtonLabel ?? t("components.form.continueButton")}
         </Button>
       </form>
     </React.Fragment>
   );
-};
-
-QuestionPage.propTypes = {
-  /**
-   * The contents of the form question page.
-   */
-  children: PropTypes.node.isRequired,
-  /**
-   * The text of the small title of the form.
-   */
-  title: PropTypes.node.isRequired,
-  /**
-   * Function that performs the save operation. Can be asynchronous.
-   */
-  onSave: PropTypes.func.isRequired,
-  /**
-   * A data selector to support end-to-end testing with Cypress.js
-   */
-  dataCy: PropTypes.string,
 };
 
 export default QuestionPage;

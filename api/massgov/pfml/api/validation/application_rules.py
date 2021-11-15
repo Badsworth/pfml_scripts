@@ -1,8 +1,10 @@
+import datetime
 from datetime import date
 from itertools import chain, combinations
 from typing import Any, Dict, Iterable, List, Optional, Union
 
 from dateutil.relativedelta import relativedelta
+from werkzeug.datastructures import Headers
 
 import massgov.pfml.db as db
 import massgov.pfml.util.logging
@@ -44,6 +46,28 @@ def get_application_issues(application: Application) -> List[ValidationErrorDeta
     issues += get_leave_periods_issues(application)
     issues += get_conditional_issues(application)
 
+    return issues
+
+
+def get_application_complete_issues(
+    application: Application, headers: Headers
+) -> List[ValidationErrorDetail]:
+    """Takes in an application and outputs any validation issues.
+        Goes beyond get_application_issues to validate fields required only by complete step, usually steps later in the application process.
+    """
+    issues = get_application_issues(application)
+
+    # only verify tax when tax is enabled
+    if headers.get("X-FF-Tax-Withholding-Enabled") and not isinstance(
+        application.is_withholding_tax, bool
+    ):
+        issues.append(
+            ValidationErrorDetail(
+                type=IssueType.required,
+                message="Tax withholding preference is required",
+                field="is_withholding_tax",
+            )
+        )
     return issues
 
 
@@ -224,20 +248,19 @@ def get_employer_benefit_issues(
         "benefit_start_date",
         "benefit_type_id",
         "is_full_salary_continuous",
-        "benefit_amount_dollars",
-        "benefit_amount_frequency_id",
     ]
     issues += check_required_fields(
-        benefit_path,
-        benefit,
-        required_fields,
-        {
-            "benefit_type_id": "benefit_type",
-            "benefit_amount_frequency_id": "benefit_amount_frequency",
-        },
+        benefit_path, benefit, required_fields, {"benefit_type_id": "benefit_type",},
     )
 
-    issues += check_zero_income_amount(benefit_path, benefit, "benefit_amount_dollars",)
+    if benefit.is_full_salary_continuous is False:
+        issues += check_required_fields(
+            benefit_path,
+            benefit,
+            ["benefit_amount_dollars", "benefit_amount_frequency_id",],
+            {"benefit_amount_frequency_id": "benefit_amount_frequency",},
+        )
+        issues += check_zero_income_amount(benefit_path, benefit, "benefit_amount_dollars",)
 
     start_date = benefit.benefit_start_date
     start_date_path = f"{benefit_path}.benefit_start_date"
@@ -302,48 +325,103 @@ def get_other_income_issues(income: OtherIncome, index: int) -> List[ValidationE
 
 
 def get_concurrent_leave_issues(application: Application) -> List[ValidationErrorDetail]:
+    concurrent_leave = application.concurrent_leave
+
+    if not application.has_concurrent_leave and not concurrent_leave:
+        return []
+
+    if application.has_concurrent_leave and not concurrent_leave:
+        issue = ValidationErrorDetail(
+            type=IssueType.required,
+            rule=IssueRule.conditional,
+            message="when has_concurrent_leave is true, concurrent_leave must be present",
+            field="concurrent_leave",
+        )
+        return [issue]
+
+    if not application.has_concurrent_leave and concurrent_leave:
+        issue = ValidationErrorDetail(
+            type=IssueType.required,
+            rule=IssueRule.conditional,
+            message="when has_concurrent_leave is false, concurrent_leave must be null",
+            field="concurrent_leave",
+        )
+        return [issue]
+
     issues = []
 
-    if application.has_concurrent_leave and application.concurrent_leave:
-        concurrent_leave = application.concurrent_leave
-        issues += check_date_range(
-            concurrent_leave.leave_start_date,
-            "concurrent_leave.leave_start_date",
-            concurrent_leave.leave_end_date,
-            "concurrent_leave.leave_end_date",
-            PFML_PROGRAM_LAUNCH_DATE,
-        )
+    required_fields = [
+        "leave_start_date",
+        "leave_end_date",
+        "is_for_current_employer",
+    ]
 
-        required_fields = [
-            "leave_start_date",
-            "leave_end_date",
-            "is_for_current_employer",
-        ]
+    issues += check_required_fields(
+        "concurrent_leave", application.concurrent_leave, required_fields
+    )
 
-        issues += check_required_fields(
-            "concurrent_leave", application.concurrent_leave, required_fields
-        )
-    else:
-        if application.has_concurrent_leave and not application.concurrent_leave:
-            issues.append(
-                ValidationErrorDetail(
-                    type=IssueType.required,
-                    rule=IssueRule.conditional,
-                    message="when has_concurrent_leave is true, concurrent_leave must be present",
-                    field="concurrent_leave",
-                )
+    issues += check_date_range(
+        concurrent_leave.leave_start_date,
+        "concurrent_leave.leave_start_date",
+        concurrent_leave.leave_end_date,
+        "concurrent_leave.leave_end_date",
+        PFML_PROGRAM_LAUNCH_DATE,
+    )
+
+    if application.has_continuous_leave_periods or application.has_reduced_schedule_leave_periods:
+        issues += _check_concurrent_leave_overlapping_waiting_period(application)
+
+    return issues
+
+
+def _check_concurrent_leave_overlapping_waiting_period(
+    application: Application,
+) -> List[ValidationErrorDetail]:
+    concurrent_leave_start = application.concurrent_leave.leave_start_date
+    concurrent_leave_end = application.concurrent_leave.leave_end_date
+
+    issues = []
+
+    waiting_period_start: date = date.max
+
+    # Loop through continuous_and_reduced_leave_periods to find earliest start date
+    for leave_period in application.all_leave_periods:
+        # Can’t predict the 7-day waiting period for intermittent leave
+        # won't be validating concurrent leave dates for intermittent leave
+        if type(leave_period) == IntermittentLeavePeriod:
+            continue
+
+        if leave_period.start_date is None:
+            continue
+
+        if leave_period.start_date <= waiting_period_start:
+            waiting_period_start = leave_period.start_date
+
+    if waiting_period_start == date.max:
+        return []
+
+    waiting_period_days = 7
+    waiting_period_end = waiting_period_start + datetime.timedelta(days=waiting_period_days - 1)
+
+    if waiting_period_start <= concurrent_leave_start <= waiting_period_end:  # type: ignore
+        issues.append(
+            ValidationErrorDetail(
+                type=IssueType.conflicting,
+                message="Concurrent leaves cannot overlap with waiting period.",
+                rule=IssueRule.disallow_overlapping_waiting_period_and_concurrent_leave_start_date,
+                field="concurrent_leave.leave_start_date",
             )
-        else:
-            if not application.has_concurrent_leave and application.concurrent_leave:
-                issues.append(
-                    ValidationErrorDetail(
-                        type=IssueType.required,
-                        rule=IssueRule.conditional,
-                        message="when has_concurrent_leave is false, concurrent_leave must be null",
-                        field="concurrent_leave",
-                    )
-                )
+        )
 
+    if waiting_period_start <= concurrent_leave_end <= waiting_period_end:  # type: ignore
+        issues.append(
+            ValidationErrorDetail(
+                type=IssueType.conflicting,
+                message="Concurrent leaves cannot overlap with waiting period.",
+                rule=IssueRule.disallow_overlapping_waiting_period_and_concurrent_leave_end_date,
+                field="concurrent_leave.leave_end_date",
+            )
+        )
     return issues
 
 
@@ -436,18 +514,9 @@ def get_previous_leave_and_leave_period_issues(
 ) -> List[ValidationErrorDetail]:
     issues = []
     # Prevent overlapping leave periods and previous leaves
-    all_leave_periods: Iterable[
-        Union[ContinuousLeavePeriod, IntermittentLeavePeriod, ReducedScheduleLeavePeriod]
-    ] = list(
-        chain(
-            application.continuous_leave_periods,
-            application.intermittent_leave_periods,
-            application.reduced_schedule_leave_periods,
-        )
-    )
     leave_period_ranges = [
         (leave_period.start_date, leave_period.end_date)
-        for leave_period in all_leave_periods
+        for leave_period in application.all_leave_periods
         # Only store complete ranges
         if leave_period.start_date and leave_period.end_date
     ]
@@ -848,19 +917,12 @@ def get_leave_period_ranges_issues(application: Application) -> List[ValidationE
     """Validate all leave period date ranges against each other"""
     issues = []
 
-    all_leave_periods: Iterable[
-        Union[ContinuousLeavePeriod, IntermittentLeavePeriod, ReducedScheduleLeavePeriod]
-    ] = list(
-        chain(
-            application.continuous_leave_periods,
-            application.intermittent_leave_periods,
-            application.reduced_schedule_leave_periods,
-        )
-    )
+    all_leave_periods = application.all_leave_periods
 
     leave_period_start_dates = [
         leave_period.start_date for leave_period in all_leave_periods if leave_period.start_date
     ]
+
     leave_period_end_dates = [
         leave_period.end_date for leave_period in all_leave_periods if leave_period.end_date
     ]

@@ -17,7 +17,6 @@ export default class StepGroup {
 
   /**
    * Is at least one step in this group active?
-   * @returns {boolean}
    */
   get isEnabled() {
     return this.steps.some((step) => !step.isDisabled);

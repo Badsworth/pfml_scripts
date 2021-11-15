@@ -90,7 +90,7 @@ export default (scenario: Cfg.LSTScenario): Cfg.Agent => {
           .findElement("td:nth-child(7)")
           .then(async (e) => {
             const fullText = (await e?.text()) ?? "";
-            const match = fullText.match(/^[A-Za-z ]+: ([A-Z|\d|\-]+)$/);
+            const match = fullText.match(/^[A-Za-z ]+: ([A-Z|\d|-]+)$/);
             return match ? match[1] : undefined;
           });
         return { name, row, claim };
@@ -101,7 +101,7 @@ export default (scenario: Cfg.LSTScenario): Cfg.Agent => {
     }
 
     await selectActiveTasks();
-    while (true) {
+    for (;;) {
       const next = await getNextTask();
       const closeTask = async () => {
         await next.row.click();

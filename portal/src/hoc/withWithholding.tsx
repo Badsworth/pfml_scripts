@@ -1,32 +1,45 @@
 import React, { useEffect, useState } from "react";
-import PropTypes from "prop-types";
-import Spinner from "../components/Spinner";
-import User from "../models/User";
+import withUser, { WithUserProps } from "./withUser";
+import PageNotFound from "../components/PageNotFound";
+import Spinner from "../components/core/Spinner";
+import { UserLeaveAdministrator } from "../models/User";
+import Withholding from "../models/Withholding";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
 
+export interface QueryForWithWithholding {
+  employer_id?: string;
+}
+
+export interface WithWithholdingProps extends WithUserProps {
+  employer: UserLeaveAdministrator;
+  withholding: Withholding;
+}
 /**
  * Higher order component that loads withholding data if not yet loaded,
  * then adds that data to the wrapped component based on query parameters and
  * user information.
- * @param {React.Component} Component - Component to receive withholding data prop
- * @returns {React.Component} - Component with withholding data
  */
-const withWithholding = (Component) => {
-  const ComponentWithWithholding = (props) => {
-    const { appLogic, query } = props;
-    const {
-      users: { user },
-    } = appLogic;
+function withWithholding<T extends WithWithholdingProps>(
+  Component: React.ComponentType<T>
+) {
+  const ComponentWithWithholding = (
+    props: Omit<T, "employer" | "withholding"> & {
+      query: QueryForWithWithholding;
+    }
+  ) => {
+    const { appLogic, query, user } = props;
     const { t } = useTranslation();
     const [shouldLoadWithholding, setShouldLoadWithholding] = useState(true);
-    const [withholding, setWithholding] = useState();
+    const [withholding, setWithholding] = useState<Withholding>();
 
     const employer = user.user_leave_administrators.find((employer) => {
       return employer.employer_id === query.employer_id;
     });
 
     useEffect(() => {
+      if (!employer) return;
+
       if (employer.verified) {
         appLogic.portalFlow.goTo(routes.employers.verificationSuccess, {
           employer_id: query.employer_id,
@@ -47,6 +60,10 @@ const withWithholding = (Component) => {
       // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [withholding, employer]);
 
+    if (!employer) {
+      return <PageNotFound />;
+    }
+
     return (
       <React.Fragment>
         {!withholding && shouldLoadWithholding && (
@@ -54,27 +71,18 @@ const withWithholding = (Component) => {
             <Spinner aria-valuetext={t("components.spinner.label")} />
           </div>
         )}
-        {withholding && <Component {...props} withholding={withholding} />}
+        {withholding && (
+          <Component
+            {...(props as T & { query: QueryForWithWithholding })}
+            employer={employer}
+            withholding={withholding}
+          />
+        )}
       </React.Fragment>
     );
   };
 
-  ComponentWithWithholding.propTypes = {
-    appLogic: PropTypes.shape({
-      employers: PropTypes.shape({
-        loadWithholding: PropTypes.func.isRequired,
-      }).isRequired,
-      portalFlow: PropTypes.shape({
-        goTo: PropTypes.func.isRequired,
-      }).isRequired,
-      users: PropTypes.shape({
-        user: PropTypes.instanceOf(User).isRequired,
-      }).isRequired,
-    }).isRequired,
-    query: PropTypes.object.isRequired,
-  };
-
-  return ComponentWithWithholding;
-};
+  return withUser(ComponentWithWithholding);
+}
 
 export default withWithholding;

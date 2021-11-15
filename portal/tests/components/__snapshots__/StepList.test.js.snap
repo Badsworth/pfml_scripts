@@ -5,7 +5,7 @@ exports[`StepList renders component 1`] = `
   class="margin-bottom-8"
 >
   <h2
-    class="font-heading-lg text-bold"
+    class="font-heading-md text-bold"
   >
     Create an application
   </h2>

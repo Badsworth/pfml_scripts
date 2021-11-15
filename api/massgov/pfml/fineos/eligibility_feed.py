@@ -45,7 +45,7 @@ from massgov.pfml.db.models.employees import (
     WagesAndContributions,
 )
 from massgov.pfml.fineos import AbstractFINEOSClient
-from massgov.pfml.fineos.exception import FINEOSNotFound
+from massgov.pfml.fineos.exception import FINEOSEntityNotFound
 from massgov.pfml.util.datetime import utcnow
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
@@ -408,7 +408,7 @@ def get_fineos_employer_id(fineos: AbstractFINEOSClient, employer: Employer) -> 
     try:
         fineos_employer_id = fineos.find_employer(employer.employer_fein)
         return int(fineos_employer_id)
-    except FINEOSNotFound:
+    except FINEOSEntityNotFound:
         return None
 
 
@@ -1090,7 +1090,11 @@ def employee_to_eligibility_feed_record(
         record.employeeDateOfHire = occupation.date_of_hire
         record.employeeEndDate = occupation.date_job_ended
         record.employmentStatus = occupation.employment_status
-        record.employeeOrgUnitName = occupation.org_unit_name
+        record.employeeOrgUnitName = (
+            occupation.organization_unit.name
+            if occupation.organization_unit
+            else occupation.org_unit_name
+        )
         record.employeeHoursWorkedPerWeek = (
             Decimal(occupation.hours_worked_per_week) if occupation.hours_worked_per_week else None
         )

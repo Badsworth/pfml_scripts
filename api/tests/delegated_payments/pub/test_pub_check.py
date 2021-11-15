@@ -7,7 +7,6 @@ import faker
 import pytest
 import sqlalchemy
 
-import massgov.pfml.api.util.state_log_util as state_log_util
 import massgov.pfml.db as db
 import massgov.pfml.delegated_payments.pub.pub_check as pub_check
 import massgov.pfml.util.files as file_util
@@ -28,6 +27,7 @@ from massgov.pfml.db.models.factories import (
 )
 from massgov.pfml.delegated_payments.check_issue_file import CheckIssueFile
 from massgov.pfml.delegated_payments.ez_check import EzCheckFile, EzCheckRecord
+from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from tests.factories import EzCheckFileFactory, PositivePayFileFactory
 
 fake = faker.Faker()
@@ -42,36 +42,28 @@ def _random_valid_check_payment_with_state_log(db_session: db.Session) -> Paymen
 def _random_payment_with_state_log(
     db_session: db.Session, method: PaymentMethod, state: LkState
 ) -> Payment:
+
     # Create the employee and claim ourselves so the payment has an associated address.
     address_pair = ExperianAddressPairFactory(experian_address=AddressFactory())
     employee = EmployeeFactory()
-    claim = ClaimFactory(employee=employee, claim_type_id=ClaimType.MEDICAL_LEAVE.claim_type_id)
 
     # Set the dates to some reasonably recent dates in the past.
     start_date = fake.date_between("-10w", "-2w")
     end_date = start_date + timedelta(days=6)
     payment_date = end_date + timedelta(days=1)
 
-    payment = PaymentFactory(
-        claim=claim,
+    payment = DelegatedPaymentFactory(
+        db_session,
+        employee,
+        claim_type=ClaimType.MEDICAL_LEAVE,
         period_start_date=start_date,
         period_end_date=end_date,
         payment_date=payment_date,
         amount=Decimal(fake.random_int(min=10, max=9_999)),
-        disb_method_id=method.payment_method_id,
+        payment_method=method,
         experian_address_pair=address_pair,
-        claim_type=claim.claim_type,
-        fineos_employee_first_name=employee.first_name,
-        fineos_employee_last_name=employee.last_name,
-    )
-
-    state_log_util.create_finished_state_log(
-        end_state=state,
-        outcome=state_log_util.build_outcome("Add to PUB check file"),
-        associated_model=payment,
-        db_session=db_session,
-    )
-    db_session.commit()
+        payment_end_state_message="Add to PUB check file",
+    ).get_or_create_payment_with_state(state)
 
     return payment
 

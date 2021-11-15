@@ -1,3 +1,5 @@
+import { ChangeEventHandler } from "react";
+import { FormState } from "./useFormState";
 import { get } from "lodash";
 import getInputValueFromEvent from "../utils/getInputValueFromEvent";
 
@@ -5,29 +7,35 @@ import getInputValueFromEvent from "../utils/getInputValueFromEvent";
  * React hook that takes a function that updates formState and returns an event handler
  * that can listen to form input change events and update the appropriate formState fields
  * based on the input name and value.
- * @param {Function} updateFields - FormState#updateFields - updates form state with new field values
- * @param {object} formState - FormState#formState - Current form state, before this change
- * @returns {handleInputChangeFunction} Event handler that can listen to form input change events and update the appropriate formState fields based on the input name and value.
+ * @param formState - Current form state, before this change
+ * @returns Event handler that can listen to form input change events and update the appropriate formState fields based on the input name and value.
  */
-const useHandleInputChange = (updateFields, formState = {}) => {
+const useHandleInputChange = (
+  updateFields: FormState["updateFields"],
+  formState: FormState["formState"]
+) => {
   /**
    * Event callback function that when listening for input change events will update form state appropriately based on the input name and value
-   * @callback handleInputChangeFunction
-   * @param {*} event DOM input event triggered by the browser
    */
-  const handleInputChange = (event) => {
-    const { checked, name, type } = event.target;
+  const handleInputChange: ChangeEventHandler<
+    HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+  > = (event) => {
+    const { name, type } = event.target;
     const value = getInputValueFromEvent(event);
 
-    if (type === "checkbox") {
+    if (event.target instanceof HTMLInputElement && type === "checkbox") {
       // Multiple checkboxes sharing the same name could be selected, so we
       // store checkbox values as arrays
       let selectedCheckboxes = get(formState, name, []);
 
-      if (checked) {
-        selectedCheckboxes.push(value);
+      if (Array.isArray(selectedCheckboxes)) {
+        if (event.target.checked) {
+          selectedCheckboxes.push(value);
+        } else {
+          selectedCheckboxes = selectedCheckboxes.filter((v) => v !== value);
+        }
       } else {
-        selectedCheckboxes = selectedCheckboxes.filter((v) => v !== value);
+        console.error("Expected checkbox field state type to be an array");
       }
 
       updateFields({ [name]: selectedCheckboxes });

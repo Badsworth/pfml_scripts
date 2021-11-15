@@ -8,31 +8,39 @@ on:
       - main
     paths:
       - portal/**
+      - .github/workflows/portal-ci.yml
   pull_request:
     paths:
       - portal/**
+      - .github/workflows/portal-ci.yml
+
+concurrency:
+  group: ${{ github.head_ref }}-ci
+  cancel-in-progress: true
 
 env:
   nodeVersion: 15.x
   deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
   working-dir: ./portal
+  cache-package-lock: ./portal/package-lock.json
   workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
 jobs:
-  test:
-    name: Lint and Unit tests
+  lint:
     runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v2
 
       - name: Use Node.js
-        uses: actions/setup-node@v1
+        uses: actions/setup-node@v2
         with:
+          cache: 'npm'
+          cache-dependency-path: ${{ env.cache-package-lock }}
           node-version: ${{ env.nodeVersion }}
 
       - name: install
-        run: npm ci
+        run: npm ci --audit false
         working-directory: ${{ env.working-dir }}
 
       - name: format-check
@@ -47,8 +55,42 @@ jobs:
         run: npm run lint:ci
         working-directory: ${{ env.working-dir }}
 
+  type-check:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          cache: 'npm'
+          cache-dependency-path: ${{ env.cache-package-lock }}
+          node-version: ${{ env.nodeVersion }}
+
+      - name: install
+        run: npm ci --audit false
+        working-directory: ${{ env.working-dir }}
+
       - name: TypeScript
         run: npm run ts:check
+        working-directory: ${{ env.working-dir }}
+
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Use Node.js
+        uses: actions/setup-node@v2
+        with:
+          cache: 'npm'
+          cache-dependency-path: ${{ env.cache-package-lock }}
+          node-version: ${{ env.nodeVersion }}
+
+      - name: install
+        run: npm ci --audit false
         working-directory: ${{ env.working-dir }}
 
       - name: test
@@ -64,7 +106,7 @@ jobs:
 
   get-test-state:
     name: Finalize test state
-    needs: [test]
+    needs: [lint, type-check, test]
     if: always() && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     outputs:
@@ -80,9 +122,11 @@ jobs:
   post-to-slack:
     name: post failures to slack
     needs: [get-test-state]
-    if: needs.get-test-state.outputs.test-state == 'failure' || needs.get-test-state.outputs.test-state == 'timed_out'
+    if: always() && (needs.get-test-state.outputs.test-state == 'failure' || needs.get-test-state.outputs.test-state == 'timed_out')
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -105,7 +149,7 @@ jobs:
           --data '{
             "channel": "${{ env.deploys_channel }}",
             "attachments": [{
-              "title": "Portal Unit Test failed in main (<${{ env.workflow_self_link }}|build logs>)",
+              "title": "Portal tests failed in main (<${{ env.workflow_self_link }}|build logs>)",
               "color": "danger"
             }]
           }' https://slack.com/api/chat.postMessage)

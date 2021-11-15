@@ -2,7 +2,7 @@
 # Dockerfile for PFML API.
 #
 
-FROM python:3.9-slim-buster as build
+FROM python:3.9.7-slim-buster as build
 
 # core project tools
 RUN pip install poetry
@@ -10,7 +10,7 @@ RUN apt-get update \
  && apt-get install --no-install-recommends --yes \
         libffi-dev make \
         build-essential git curl \
-        postgresql libpq-dev gnupg
+        postgresql libpq-dev gnupg ghostscript graphviz
 
 # setup user stuff
 ARG RUN_UID
@@ -106,6 +106,9 @@ COPY --from=app-build /usr/local/lib/ /usr/local/lib/
 COPY --from=app-build /usr/local/include/python* /usr/local/include/
 COPY --from=app-build /lib64/* /lib64/
 COPY --from=app-build --chown=${RUN_USER} /tmp/ /tmp/
+
+# Include ghostscript executable
+COPY --from=app-build  /usr/bin/gs /usr/bin/gs
 
 ENV PATH="/app/.venv/bin:$PATH"
 

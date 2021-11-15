@@ -1,5 +1,4 @@
-import Document, { DocumentType } from "../../src/models/Document";
-
+import { DocumentType } from "../../src/models/Document";
 import LeaveReason from "../../src/models/LeaveReason";
 import getLegalNotices from "../../src/utils/getLegalNotices";
 
@@ -24,9 +23,9 @@ describe("getLegalNotices", () => {
       DocumentType.requestForInfoNotice,
       DocumentType.withdrawalNotice,
     ];
-    const documents = manyDocumentTypes.map(
-      (document_type) => new Document({ document_type })
-    );
+    const documents = manyDocumentTypes.map((document_type) => {
+      return { document_type };
+    });
 
     const legalNotices = getLegalNotices(documents);
 

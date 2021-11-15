@@ -1,11 +1,13 @@
-import BenefitsApplication, {
+import {
   CaringLeaveMetadata,
   RelationshipToCaregiver,
 } from "../../models/BenefitsApplication";
 import { get, pick } from "lodash";
-import Details from "../../components/Details";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import PropTypes from "prop-types";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import Details from "../../components/core/Details";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { Trans } from "react-i18next";
@@ -13,7 +15,6 @@ import routes from "../../routes";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 const caringLeaveMetadataKey = "leave_details.caring_leave_metadata";
 
@@ -21,10 +22,12 @@ export const fields = [
   `claim.${caringLeaveMetadataKey}.relationship_to_caregiver`,
 ];
 
-export const FamilyMemberRelationship = (props) => {
+export const FamilyMemberRelationship = (
+  props: WithBenefitsApplicationProps
+) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState({
     leave_details: {
       caring_leave_metadata: new CaringLeaveMetadata(
@@ -38,7 +41,7 @@ export const FamilyMemberRelationship = (props) => {
     `${caringLeaveMetadataKey}.relationship_to_caregiver`
   );
   const handleSave = async () => {
-    const updatedData = pick({ claim: formState }, fields).claim;
+    const updatedData = pick({ claim: formState }, fields).claim || {};
     await appLogic.benefitsApplications.update(
       claim.application_id,
       updatedData
@@ -51,7 +54,7 @@ export const FamilyMemberRelationship = (props) => {
     updateFields,
   });
 
-  const relationshipList = [
+  const relationshipList: Array<keyof typeof RelationshipToCaregiver> = [
     "child",
     "spouse",
     "parent",
@@ -94,8 +97,6 @@ export const FamilyMemberRelationship = (props) => {
             />
             <Details
               label={t("pages.claimsFamilyMemberRelationship.detailsLabel")}
-              // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; label: string; classNam... Remove this comment to see the full error message
-              className="text-bold"
             >
               <Trans
                 i18nKey="pages.claimsFamilyMemberRelationship.detailsBody"
@@ -119,12 +120,6 @@ export const FamilyMemberRelationship = (props) => {
       />
     </QuestionPage>
   );
-};
-
-FamilyMemberRelationship.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  query: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(FamilyMemberRelationship);

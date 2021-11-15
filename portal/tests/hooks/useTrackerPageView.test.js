@@ -46,7 +46,7 @@ describe("New Relic page view tracking", () => {
     expect(tracker.startPageView).toHaveBeenCalledTimes(1);
   });
 
-  it("does track page view and attributes when on /applications/claim as a claimaint", async () => {
+  it("does track page view and attributes when on /applications/claim as a claimant", async () => {
     const updatedUser = {
       auth_id: "000",
       hasEmployerRole: false,
@@ -57,8 +57,8 @@ describe("New Relic page view tracking", () => {
     // with what actually gets called when we start a page view
     const pageAttributes = {
       "user.auth_id": updatedUser.auth_id,
-      "user.has_employer_role": updatedUser.hasEmployerRole,
-      "user.is_logged_in": true,
+      "user.has_employer_role": updatedUser.hasEmployerRole.toString(),
+      "user.is_logged_in": "true",
       query_claim_id: "12345",
     };
 
@@ -80,8 +80,8 @@ describe("New Relic page view tracking", () => {
     // with what actually gets called when we start a page view
     const pageAttributes = {
       "user.auth_id": updatedUser.auth_id,
-      "user.has_employer_role": updatedUser.hasEmployerRole,
-      "user.is_logged_in": true,
+      "user.has_employer_role": updatedUser.hasEmployerRole.toString(),
+      "user.is_logged_in": "true",
     };
 
     renderHook(() => useTrackerPageView(updatedUser));

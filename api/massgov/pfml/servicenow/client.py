@@ -3,14 +3,15 @@
 #
 
 import datetime
-from typing import Optional, Union
+from typing import Optional
 
 import flask
 import newrelic.agent
 import requests
 
 import massgov.pfml.util.logging
-from massgov.pfml.servicenow.models import OutboundMessage
+
+from . import abstract_client, models
 
 logger = massgov.pfml.util.logging.get_logger(__name__)
 MILLISECOND = datetime.timedelta(milliseconds=1)
@@ -19,10 +20,10 @@ MILLISECOND = datetime.timedelta(milliseconds=1)
 class ServiceNowException(requests.HTTPError):
     """ Generic rebrand of HTTPError """
 
-    pass
 
+class ServiceNowClient(abstract_client.AbstractServiceNowClient):
+    """ServiceNow API client."""
 
-class ServiceNowClient:
     def __init__(
         self, base_url: str, username: str, password: str, response: Optional[bool] = False
     ):
@@ -40,8 +41,8 @@ class ServiceNowClient:
             self._session.headers.update({"X-no-response-body": "true"})
 
     def send_message(
-        self, message: OutboundMessage, table: str = "u_cps_notifications"
-    ) -> Union[None, dict]:
+        self, message: models.OutboundMessage, table: str = "u_cps_notifications"
+    ) -> Optional[dict]:
         """ Make a request to a "Table API" that has been configured to trigger outbound email delivery using templates
             See docs at: https://docs.servicenow.com/bundle/orlando-application-development/page/integrate/inbound-rest/concept/c_TableAPI.html#c_TableAPI
         """

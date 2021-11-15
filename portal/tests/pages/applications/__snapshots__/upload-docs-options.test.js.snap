@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`UploadDocsOptions renders document options for leave reason: Care for a Family Member null 1`] = `
+exports[`UploadDocsOptions renders document options for leave reason: Care for a Family Member  1`] = `
 Array [
   <input
     class="usa-radio__input"
@@ -78,7 +78,7 @@ Array [
 ]
 `;
 
-exports[`UploadDocsOptions renders document options for leave reason: Serious Health Condition - Employee null 1`] = `
+exports[`UploadDocsOptions renders document options for leave reason: Serious Health Condition - Employee  1`] = `
 Array [
   <input
     class="usa-radio__input"

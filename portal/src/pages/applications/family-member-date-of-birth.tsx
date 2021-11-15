@@ -1,22 +1,23 @@
-import BenefitsApplication, {
-  CaringLeaveMetadata,
-} from "../../models/BenefitsApplication";
 import { get, pick } from "lodash";
-import InputDate from "../../components/InputDate";
-import PropTypes from "prop-types";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import { CaringLeaveMetadata } from "../../models/BenefitsApplication";
+import InputDate from "../../components/core/InputDate";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 const caringLeaveMetadataKey = "leave_details.caring_leave_metadata";
 export const fields = [
   `claim.${caringLeaveMetadataKey}.family_member_date_of_birth`,
 ];
 
-export const FamilyMemberDateOfBirth = (props) => {
+export const FamilyMemberDateOfBirth = (
+  props: WithBenefitsApplicationProps
+) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
 
@@ -26,7 +27,7 @@ export const FamilyMemberDateOfBirth = (props) => {
   // properties; without this it would be possible for a claimant to skip this page by just
   // clicking "Save and continue" instead of entering a date.
   const initialClaimState = pick(props.claim, caringLeaveMetadataKey);
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState({
     leave_details: {
       caring_leave_metadata: new CaringLeaveMetadata(
@@ -62,12 +63,6 @@ export const FamilyMemberDateOfBirth = (props) => {
       />
     </QuestionPage>
   );
-};
-
-FamilyMemberDateOfBirth.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  query: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(FamilyMemberDateOfBirth);

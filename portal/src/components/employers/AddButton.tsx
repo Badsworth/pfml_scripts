@@ -1,12 +1,17 @@
-import Button from "../Button";
-import PropTypes from "prop-types";
+import Button from "../core/Button";
 import React from "react";
+
+interface AddButtonProps {
+  disabled?: boolean;
+  label: string;
+  onClick: React.MouseEventHandler<HTMLButtonElement>;
+}
 
 /**
  * Generic "add" button used on the leave administrator review page to add
  * previous leaves, concurrent leaves and employer benefits.
  */
-const AddButton = ({ disabled = false, label, onClick }) => {
+const AddButton = ({ disabled = false, label, onClick }: AddButtonProps) => {
   return (
     <Button
       name="add-entry-button"
@@ -17,12 +22,6 @@ const AddButton = ({ disabled = false, label, onClick }) => {
       {label}
     </Button>
   );
-};
-
-AddButton.propTypes = {
-  disabled: PropTypes.bool,
-  label: PropTypes.string.isRequired,
-  onClick: PropTypes.func.isRequired,
 };
 
 export default AddButton;

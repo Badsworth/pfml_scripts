@@ -84,7 +84,7 @@ exports[`SupportingWorkDetails opens the amendment form when "Amend" is clicked 
             <input
               aria-labelledby="InputText1_label InputText1_hint InputText1_error"
               class="usa-input usa-input--small"
-              data-value-type="integer"
+              data-value-type="float"
               id="InputText1"
               inputmode="decimal"
               name="hours_worked_per_week"

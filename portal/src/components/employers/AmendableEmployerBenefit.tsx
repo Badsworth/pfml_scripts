@@ -7,20 +7,31 @@ import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../ConditionalContent";
-import Dropdown from "../Dropdown";
-import Fieldset from "../Fieldset";
-import FormLabel from "../FormLabel";
-import Heading from "../Heading";
-import InputChoiceGroup from "../InputChoiceGroup";
-import InputCurrency from "../InputCurrency";
-import InputDate from "../InputDate";
-import PropTypes from "prop-types";
+import Dropdown from "../core/Dropdown";
+import Fieldset from "../core/Fieldset";
+import FormLabel from "../core/FormLabel";
+import Heading from "../core/Heading";
+import InputChoiceGroup from "../core/InputChoiceGroup";
+import InputCurrency from "../core/InputCurrency";
+import InputDate from "../core/InputDate";
 import findKeyByValue from "../../utils/findKeyByValue";
 import formatDateRange from "../../utils/formatDateRange";
 import { get } from "lodash";
 import getInputValueFromEvent from "../../utils/getInputValueFromEvent";
 import useAutoFocusEffect from "../../hooks/useAutoFocusEffect";
 import { useTranslation } from "../../locales/i18n";
+
+interface AmendableEmployerBenefitProps {
+  appErrors: AppErrorInfoCollection;
+  employerBenefit: EmployerBenefit;
+  isAddedByLeaveAdmin: boolean;
+  onChange: (
+    arg: EmployerBenefit | { [key: string]: unknown },
+    arg2: string
+  ) => void;
+  onRemove: (arg: EmployerBenefit) => void;
+  shouldShowV2: boolean;
+}
 
 /**
  * Display an employer benefit and amendment form
@@ -34,25 +45,28 @@ const AmendableEmployerBenefit = ({
   onChange,
   onRemove,
   shouldShowV2,
-}) => {
+}: AmendableEmployerBenefitProps) => {
   const { t } = useTranslation();
   const [amendment, setAmendment] = useState(employerBenefit);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
     useState(isAddedByLeaveAdmin);
-  const containerRef = useRef<HTMLTableRowElement>();
+  const containerRef = useRef<HTMLTableRowElement>(null);
   useAutoFocusEffect({ containerRef, isAmendmentFormDisplayed });
 
-  const getFieldPath = (field) =>
+  const getFieldPath = (field: string) =>
     `employer_benefits[${amendment.employer_benefit_id}].${field}`;
 
-  const getErrorMessage = (field) =>
+  const getErrorMessage = (field: string) =>
     appErrors.fieldErrorMessage(getFieldPath(field));
 
   /**
    * Update amendment state and sends to `review.js` (dates, dollars, frequency)
    * For benefit amount dollars, sets invalid input to 0
    */
-  const amendBenefit = (field, event) => {
+  const amendBenefit = (
+    field: string,
+    event: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const formStateField = isAddedByLeaveAdmin
       ? "addedBenefits"
       : "amendedBenefits";
@@ -143,7 +157,6 @@ const AmendableEmployerBenefit = ({
   const BenefitDetailsRow = () => (
     <tr data-testid="benefit-details-row">
       <th scope="row">
-        {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
         {formatDateRange(
           employerBenefit.benefit_start_date,
           employerBenefit.benefit_end_date
@@ -156,6 +169,12 @@ const AmendableEmployerBenefit = ({
       </td>
     </tr>
   );
+
+  const benefitTypeKeys: Array<keyof typeof EmployerBenefitType> = [
+    "shortTermDisability",
+    "permanentDisability",
+    "familyOrMedicalLeave",
+  ];
 
   return (
     <React.Fragment>
@@ -190,24 +209,21 @@ const AmendableEmployerBenefit = ({
                     "components.employersAmendableEmployerBenefit.benefitTypeLabel"
                   )}
                   type="radio"
-                  choices={[
-                    "shortTermDisability",
-                    "permanentDisability",
-                    "familyOrMedicalLeave",
-                  ].map((benefitTypeKey) => {
+                  choices={benefitTypeKeys.map((benefitTypeKey) => {
                     return {
                       label: t(
                         "components.employersAmendableEmployerBenefit.choiceLabel",
                         { context: benefitTypeKey }
                       ),
                       hint:
-                        benefitTypeKey !== "permanentDisability" &&
-                        t(
-                          "components.employersAmendableEmployerBenefit.choiceHint",
-                          {
-                            context: benefitTypeKey,
-                          }
-                        ),
+                        benefitTypeKey !== "permanentDisability"
+                          ? t(
+                              "components.employersAmendableEmployerBenefit.choiceHint",
+                              {
+                                context: benefitTypeKey,
+                              }
+                            )
+                          : null,
                       value: EmployerBenefitType[benefitTypeKey],
                       checked:
                         get(amendment, "benefit_type") ===
@@ -226,7 +242,7 @@ const AmendableEmployerBenefit = ({
                 label={t(
                   "components.employersAmendableEmployerBenefit.benefitStartDateLabel"
                 )}
-                value={get(amendment, "benefit_start_date")}
+                value={get(amendment, "benefit_start_date") || ""}
                 dayLabel={t("components.form.dateInputDayLabel")}
                 monthLabel={t("components.form.dateInputMonthLabel")}
                 yearLabel={t("components.form.dateInputYearLabel")}
@@ -244,7 +260,7 @@ const AmendableEmployerBenefit = ({
                 errorMsg={getErrorMessage("benefit_end_date")}
                 name={getFieldPath("benefit_end_date")}
                 data-test="benefit-end-date-input"
-                value={get(amendment, "benefit_end_date")}
+                value={get(amendment, "benefit_end_date") || ""}
                 onChange={(e) => {
                   amendBenefit("benefit_end_date", e);
                 }}
@@ -315,7 +331,9 @@ const AmendableEmployerBenefit = ({
                     labelClassName="text-normal"
                     width="small"
                     errorMsg={getErrorMessage("benefit_amount_dollars")}
-                    value={get(amendment, "benefit_amount_dollars")}
+                    value={
+                      get(amendment, "benefit_amount_dollars") ?? undefined
+                    }
                     onChange={(e) => {
                       amendBenefit("benefit_amount_dollars", e);
                     }}
@@ -330,7 +348,7 @@ const AmendableEmployerBenefit = ({
                     labelClassName="text-normal"
                     choices={getAllBenefitFrequencies()}
                     errorMsg={getErrorMessage("benefit_amount_frequency")}
-                    value={get(amendment, "benefit_amount_frequency")}
+                    value={get(amendment, "benefit_amount_frequency") || ""}
                     onChange={(e) => {
                       amendBenefit("benefit_amount_frequency", e);
                     }}
@@ -343,15 +361,6 @@ const AmendableEmployerBenefit = ({
       </ConditionalContent>
     </React.Fragment>
   );
-};
-
-AmendableEmployerBenefit.propTypes = {
-  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
-  employerBenefit: PropTypes.instanceOf(EmployerBenefit).isRequired,
-  isAddedByLeaveAdmin: PropTypes.bool.isRequired,
-  onChange: PropTypes.func.isRequired,
-  onRemove: PropTypes.func.isRequired,
-  shouldShowV2: PropTypes.bool.isRequired,
 };
 
 export default AmendableEmployerBenefit;

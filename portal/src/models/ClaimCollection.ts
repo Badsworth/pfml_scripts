@@ -1,7 +1,7 @@
 import BaseCollection from "./BaseCollection";
+import Claim from "./Claim";
 
-export default class ClaimCollection extends BaseCollection {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'idProperty' in type 'ClaimCollection' is... Remove this comment to see the full error message
+export default class ClaimCollection extends BaseCollection<Claim> {
   get idProperty() {
     return "fineos_absence_id";
   }

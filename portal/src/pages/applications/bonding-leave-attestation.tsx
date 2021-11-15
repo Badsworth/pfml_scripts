@@ -1,16 +1,19 @@
-import Alert from "../../components/Alert";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import Alert from "../../components/core/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
-import PropTypes from "prop-types";
 import React from "react";
-import Title from "../../components/Title";
+import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
-export const BondingLeaveAttestation = (props) => {
+export const BondingLeaveAttestation = (
+  props: WithBenefitsApplicationProps
+) => {
   const { t } = useTranslation();
-  const { appLogic, query } = props;
+  const { appLogic, claim } = props;
 
   return (
     <React.Fragment>
@@ -20,27 +23,21 @@ export const BondingLeaveAttestation = (props) => {
         i18nKey="pages.claimsBondingLeaveAttestation.lead"
         components={{ ul: <ul className="usa-list" />, li: <li /> }}
       />
-      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element[]; className: string; st... Remove this comment to see the full error message */}
       <Alert className="measure-6" state="info" noIcon>
         <p>{t("pages.claimsBondingLeaveAttestation.truthAttestation")}</p>
         <ButtonLink
           className="text-no-underline text-white"
-          href={appLogic.portalFlow.getNextPageRoute("CONTINUE", {}, query)}
+          href={appLogic.portalFlow.getNextPageRoute(
+            "CONTINUE",
+            {},
+            { claim_id: claim.application_id }
+          )}
         >
           {t("pages.claimsBondingLeaveAttestation.submitApplicationButton")}
         </ButtonLink>
       </Alert>
     </React.Fragment>
   );
-};
-
-BondingLeaveAttestation.propTypes = {
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      getNextPageRoute: PropTypes.func.isRequired,
-    }),
-  }).isRequired,
-  query: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(BondingLeaveAttestation);

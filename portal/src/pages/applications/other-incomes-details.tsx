@@ -3,23 +3,23 @@ import OtherIncome, {
   OtherIncomeType,
 } from "../../models/OtherIncome";
 import { get, pick } from "lodash";
-import BenefitsApplication from "../../models/BenefitsApplication";
-import Dropdown from "../../components/Dropdown";
-import Fieldset from "../../components/Fieldset";
-import FormLabel from "../../components/FormLabel";
-import Heading from "../../components/Heading";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import InputCurrency from "../../components/InputCurrency";
-import InputDate from "../../components/InputDate";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import Dropdown from "../../components/core/Dropdown";
+import Fieldset from "../../components/core/Fieldset";
+import FormLabel from "../../components/core/FormLabel";
+import Heading from "../../components/core/Heading";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
+import InputCurrency from "../../components/core/InputCurrency";
+import InputDate from "../../components/core/InputDate";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import RepeatableFieldset from "../../components/RepeatableFieldset";
+import RepeatableFieldset from "../../components/core/RepeatableFieldset";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "react-i18next";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.other_incomes",
@@ -30,19 +30,18 @@ export const fields = [
   "claim.other_incomes[*].income_type",
 ];
 
-export const OtherIncomesDetails = (props) => {
+export const OtherIncomesDetails = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
   const limit = 6;
 
-  const initialEntries = pick(props, fields).claim;
+  const initialEntries = pick(props, fields).claim || { other_incomes: [] };
   // If the claim doesn't have any relevant entries, pre-populate the first one
   // so that it renders in the RepeatableFieldset below
   if (initialEntries.other_incomes.length === 0) {
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     initialEntries.other_incomes = [new OtherIncome()];
   }
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState(initialEntries);
   const other_incomes = get(formState, "other_incomes");
 
@@ -51,12 +50,11 @@ export const OtherIncomesDetails = (props) => {
 
   const handleAddClick = () => {
     // Add a new blank entry
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
     const updatedEntries = other_incomes.concat([new OtherIncome()]);
     updateFields({ other_incomes: updatedEntries });
   };
 
-  const handleRemoveClick = (entry, index) => {
+  const handleRemoveClick = (entry: OtherIncome, index: number) => {
     const updatedIncomes = [...other_incomes];
     updatedIncomes.splice(index, 1);
     updateFields({ other_incomes: updatedIncomes });
@@ -68,7 +66,7 @@ export const OtherIncomesDetails = (props) => {
     updateFields,
   });
 
-  const render = (entry, index) => {
+  const render = (entry: OtherIncome, index: number) => {
     return (
       <OtherIncomeCard
         entry={entry}
@@ -110,18 +108,16 @@ export const OtherIncomesDetails = (props) => {
   );
 };
 
-OtherIncomesDetails.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication),
-  appLogic: PropTypes.object.isRequired,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-  }),
-};
+interface OtherIncomeCardProps {
+  index: number;
+  entry: OtherIncome;
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
+}
 
 /**
  * Group of fields for an OtherIncome instance
  */
-export const OtherIncomeCard = (props) => {
+export const OtherIncomeCard = (props: OtherIncomeCardProps) => {
   const { t } = useTranslation();
   const { entry, getFunctionalInputProps, index } = props;
 
@@ -136,19 +132,21 @@ export const OtherIncomeCard = (props) => {
     }
   );
 
+  const choiceKeys: Array<keyof typeof OtherIncomeType> = [
+    "workersCompensation",
+    "unemployment",
+    "ssdi",
+    "retirementDisability",
+    "jonesAct",
+    "railroadRetirement",
+    "otherEmployer",
+  ];
+
   return (
     <React.Fragment>
       <InputChoiceGroup
         {...getFunctionalInputProps(`other_incomes[${index}].income_type`)}
-        choices={[
-          "workersCompensation",
-          "unemployment",
-          "ssdi",
-          "retirementDisability",
-          "jonesAct",
-          "railroadRetirement",
-          "otherEmployer",
-        ].map((otherIncomeTypeKey) => {
+        choices={choiceKeys.map((otherIncomeTypeKey) => {
           return {
             checked: entry.income_type === OtherIncomeType[otherIncomeTypeKey],
             label: t("pages.claimsOtherIncomesDetails.typeChoiceLabel", {
@@ -209,12 +207,6 @@ export const OtherIncomeCard = (props) => {
       </Fieldset>
     </React.Fragment>
   );
-};
-
-OtherIncomeCard.propTypes = {
-  index: PropTypes.number.isRequired,
-  entry: PropTypes.object.isRequired,
-  getFunctionalInputProps: PropTypes.func.isRequired,
 };
 
 export default withBenefitsApplication(OtherIncomesDetails);

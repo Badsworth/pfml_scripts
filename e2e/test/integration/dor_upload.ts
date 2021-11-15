@@ -47,7 +47,7 @@ describe("dor_upload", () => {
   });
   afterAll(async () => {
     if (tempDir) {
-      await fs.promises.rmdir(tempDir);
+      await fs.promises.rmdir(tempDir, { recursive: true });
     }
   });
 
@@ -56,6 +56,10 @@ describe("dor_upload", () => {
     async () => {
       const dayOfWeek = format(new Date(), "EEEE");
       const isMonday = dayOfWeek === "Monday";
+      // Training refresh takes place Monday morning after testing (before employee's are picked up before the nightly eligibilty batch job).
+      // This will cause test data from the previous day to be "wiped"
+      if (dayOfWeek === "Tuesday" && config("ENVIRONMENT") === "training")
+        return;
       await Fineos.withBrowser(
         async (page) => {
           await new ClaimantPage(page).visit(
@@ -75,7 +79,7 @@ describe("dor_upload", () => {
 
     const storage = dataDirectory(`dor_upload_test`, tempDir);
     await storage.prepare();
-    const infra = new InfraClient(config("ENVIRONMENT"));
+    const infra = InfraClient.create(config);
 
     const employerPool = EmployerPool.generate(1, {});
     employerPool.pick().fein = employerFeinAsDate();

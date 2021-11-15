@@ -36,6 +36,7 @@ from massgov.pfml.delegated_payments.audit.mock.delegated_payment_audit_generato
     AuditScenarioData,
     generate_audit_report_dataset,
 )
+from massgov.pfml.delegated_payments.mock.delegated_payments_factory import DelegatedPaymentFactory
 from massgov.pfml.delegated_payments.pub.pub_check import _format_check_memo
 from massgov.pfml.util.datetime import get_period_in_weeks
 
@@ -78,8 +79,15 @@ def test_get_payment_audit_report_details(test_db_session, initialize_factories_
     )
     stage_payment_audit_report_details(
         payment,
-        PaymentAuditReportType.DUA_DIA_REDUCTION,
-        "DUA/DIA Reduction Test Message",
+        PaymentAuditReportType.DUA_ADDITIONAL_INCOME,
+        "DUA Reduction Test Message",
+        None,
+        test_db_session,
+    )
+    stage_payment_audit_report_details(
+        payment,
+        PaymentAuditReportType.DIA_ADDITIONAL_INCOME,
+        "DIA Reduction Test Message",
         None,
         test_db_session,
     )
@@ -106,18 +114,19 @@ def test_get_payment_audit_report_details(test_db_session, initialize_factories_
 
     assert audit_report_details
     assert audit_report_details.max_weekly_benefits_details == "Max Weekly Benefits Test Message"
-    assert audit_report_details.dua_dia_reduction_details == "DUA/DIA Reduction Test Message"
+    assert audit_report_details.dua_additional_income_details == "DUA Reduction Test Message"
+    assert audit_report_details.dia_additional_income_details == "DIA Reduction Test Message"
     assert audit_report_details.dor_fineos_name_mismatch_details == "Name mismatch Test Message"
     assert audit_report_details.rejected_by_program_integrity
     assert not audit_report_details.skipped_by_program_integrity
     assert (
         audit_report_details.rejected_notes
-        == f"{AUDIT_REPORT_NOTES_OVERRIDE[PaymentAuditReportType.MAX_WEEKLY_BENEFITS.payment_audit_report_type_id]} (Rejected), {PaymentAuditReportType.DUA_DIA_REDUCTION.payment_audit_report_type_description}, {PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH.payment_audit_report_type_description}, {PaymentAuditReportType.LEAVE_PLAN_IN_REVIEW.payment_audit_report_type_description} (Skipped)"
+        == f"{AUDIT_REPORT_NOTES_OVERRIDE[PaymentAuditReportType.MAX_WEEKLY_BENEFITS.payment_audit_report_type_id]} (Rejected), {PaymentAuditReportType.DUA_ADDITIONAL_INCOME.payment_audit_report_type_description}, {PaymentAuditReportType.DIA_ADDITIONAL_INCOME.payment_audit_report_type_description}, {PaymentAuditReportType.DOR_FINEOS_NAME_MISMATCH.payment_audit_report_type_description}, {PaymentAuditReportType.LEAVE_PLAN_IN_REVIEW.payment_audit_report_type_description} (Skipped)"
     )
 
     # test that the audit report time was set
     audit_report_details = test_db_session.query(PaymentAuditReportDetails).all()
-    assert len(audit_report_details) == 4
+    assert len(audit_report_details) == 5
     for audit_report_detail in audit_report_details:
         assert audit_report_detail.added_to_audit_report_at == audit_report_time
 
@@ -130,52 +139,38 @@ def test_is_first_time_payment(
     )
 
     claim = ClaimFactory.create()
-    payment = PaymentFactory.create(claim=claim)
-    state_log_util.create_finished_state_log(
-        payment,
-        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
-        state_log_util.build_outcome("test"),
-        test_db_session,
+    payment = DelegatedPaymentFactory(
+        test_db_session, claim=claim,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
     )
+
     assert payment_audit_report_step.previously_audit_sent_count(payment) == 0
 
-    previous_error_payment = PaymentFactory.create(claim=claim)
-    state_log_util.create_finished_state_log(
-        previous_error_payment,
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
-        state_log_util.build_outcome("test"),
-        test_db_session,
+    DelegatedPaymentFactory(test_db_session, claim=claim,).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT
     )
+
     assert payment_audit_report_step.previously_audit_sent_count(payment) == 0
 
-    previous_rejected_payment = PaymentFactory.create(claim=claim)
-    state_log_util.create_finished_state_log(
-        previous_rejected_payment,
-        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
-        state_log_util.build_outcome("test"),
-        test_db_session,
+    previous_rejected_payment_factory = DelegatedPaymentFactory(test_db_session, claim=claim,)
+    previous_rejected_payment_factory.get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT
     )
-    state_log_util.create_finished_state_log(
-        previous_rejected_payment,
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
-        state_log_util.build_outcome("test"),
-        test_db_session,
+    previous_rejected_payment_factory.get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT
     )
+
     assert payment_audit_report_step.previously_audit_sent_count(payment) == 1
 
-    previous_bank_error_payment = PaymentFactory.create(claim=claim)
-    state_log_util.create_finished_state_log(
-        previous_bank_error_payment,
-        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT,
-        state_log_util.build_outcome("test"),
-        test_db_session,
+    previous_bank_error_payment_factory = DelegatedPaymentFactory(test_db_session, claim=claim,)
+    previous_bank_error_payment_factory.get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_PAYMENT_AUDIT_REPORT_SENT
     )
-    state_log_util.create_finished_state_log(
-        previous_bank_error_payment,
-        State.DELEGATED_PAYMENT_ERROR_FROM_BANK,
-        state_log_util.build_outcome("test"),
-        test_db_session,
+    previous_bank_error_payment_factory.get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_ERROR_FROM_BANK
     )
+
     assert payment_audit_report_step.previously_audit_sent_count(payment) == 2
 
 
@@ -186,8 +181,6 @@ def test_previously_errored_payment_count(
         db_session=test_db_session, log_entry_db_session=test_db_other_session
     )
 
-    outcome = state_log_util.build_outcome("test")
-
     period_start_date = date(2021, 1, 16)
     period_end_date = date(2021, 1, 28)
 
@@ -196,93 +189,82 @@ def test_previously_errored_payment_count(
 
     # state the payment for audit
     claim = ClaimFactory.create()
-    payment = PaymentFactory.create(
-        claim=claim, period_start_date=period_start_date, period_end_date=period_end_date
-    )
-    state_log_util.create_finished_state_log(
-        payment,
-        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
-        outcome,
+
+    payment = DelegatedPaymentFactory(
         test_db_session,
+        claim=claim,
+        period_start_date=period_start_date,
+        period_end_date=period_end_date,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
     )
+
     assert payment_audit_report_step.previously_errored_payment_count(payment) == 0
 
     # confirm that errors for payments in other periods for the same claim are not counted
-    other_period_erroed_payment = PaymentFactory.create(
+    DelegatedPaymentFactory(
+        test_db_session,
         claim=claim,
         period_start_date=other_period_start_date,
         period_end_date=other_period_end_date,
-    )
-    state_log_util.create_finished_state_log(
-        other_period_erroed_payment,
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
-        outcome,
-        test_db_session,
-    )
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT)
 
-    other_period_erroed_payment_restarted = PaymentFactory.create(
+    assert payment_audit_report_step.previously_errored_payment_count(payment) == 0
+
+    DelegatedPaymentFactory(
+        test_db_session,
         claim=claim,
         period_start_date=other_period_start_date,
         period_end_date=other_period_end_date,
-    )
-    state_log_util.create_finished_state_log(
-        other_period_erroed_payment_restarted,
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE,
-        outcome,
-        test_db_session,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
     )
 
     assert payment_audit_report_step.previously_errored_payment_count(payment) == 0
 
     # check errored payments in the same payment period are counted
 
-    same_period_address_error = PaymentFactory.create(
-        claim=claim, period_start_date=period_start_date, period_end_date=period_end_date
-    )
-    state_log_util.create_finished_state_log(
-        same_period_address_error,
-        State.PAYMENT_FAILED_ADDRESS_VALIDATION,
-        outcome,
+    DelegatedPaymentFactory(
         test_db_session,
-    )
+        claim=claim,
+        period_start_date=period_start_date,
+        period_end_date=period_end_date,
+    ).get_or_create_payment_with_state(State.PAYMENT_FAILED_ADDRESS_VALIDATION)
+
     assert payment_audit_report_step.previously_errored_payment_count(payment) == 1
 
-    same_period_erroed_payment = PaymentFactory.create(
-        claim=claim, period_start_date=period_start_date, period_end_date=period_end_date
-    )
-    state_log_util.create_finished_state_log(
-        same_period_erroed_payment,
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT,
-        outcome,
+    DelegatedPaymentFactory(
         test_db_session,
-    )
+        claim=claim,
+        period_start_date=period_start_date,
+        period_end_date=period_end_date,
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT)
+
     assert payment_audit_report_step.previously_errored_payment_count(payment) == 2
 
-    same_period_erroed_payment_restarted = PaymentFactory.create(
-        claim=claim, period_start_date=period_start_date, period_end_date=period_end_date
-    )
-    state_log_util.create_finished_state_log(
-        same_period_erroed_payment_restarted,
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE,
-        outcome,
+    same_period_erroed_payment_restarted = DelegatedPaymentFactory(
         test_db_session,
+        claim=claim,
+        period_start_date=period_start_date,
+        period_end_date=period_end_date,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
     )
+
     assert payment_audit_report_step.previously_errored_payment_count(payment) == 3
 
     # each restart will be counted
-    same_period_erroed_payment_restarted_2 = PaymentFactory.create(
+    DelegatedPaymentFactory(
+        test_db_session,
         claim=claim,
         fineos_pei_c_value=same_period_erroed_payment_restarted.fineos_pei_c_value,
         fineos_pei_i_value=same_period_erroed_payment_restarted.fineos_pei_c_value,
         period_start_date=period_start_date,
         period_end_date=period_end_date,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE
     )
-    state_log_util.create_finished_state_log(
-        same_period_erroed_payment_restarted_2,
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_ERROR_REPORT_RESTARTABLE,
-        outcome,
-        test_db_session,
-    )
+
     assert payment_audit_report_step.previously_errored_payment_count(payment) == 4
 
 
@@ -293,8 +275,6 @@ def test_previously_rejected_payment_count(
         db_session=test_db_session, log_entry_db_session=test_db_other_session
     )
 
-    outcome = state_log_util.build_outcome("test")
-
     period_start_date = date(2021, 1, 16)
     period_end_date = date(2021, 1, 28)
 
@@ -303,83 +283,72 @@ def test_previously_rejected_payment_count(
 
     # state the payment for audit
     claim = ClaimFactory.create()
-    payment = PaymentFactory.create(
-        claim=claim, period_start_date=period_start_date, period_end_date=period_end_date
-    )
-    state_log_util.create_finished_state_log(
-        payment,
-        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING,
-        outcome,
+
+    payment = DelegatedPaymentFactory(
         test_db_session,
+        claim=claim,
+        period_start_date=period_start_date,
+        period_end_date=period_end_date,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING
     )
+
     assert payment_audit_report_step.previously_rejected_payment_count(payment) == 0
 
     # confirm that rejects for payments in other periods for the same claim are not counted
-    other_period_rejected_payment = PaymentFactory.create(
+    DelegatedPaymentFactory(
+        test_db_session,
         claim=claim,
         period_start_date=other_period_start_date,
         period_end_date=other_period_end_date,
-    )
-    state_log_util.create_finished_state_log(
-        other_period_rejected_payment,
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
-        outcome,
-        test_db_session,
-    )
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT)
 
-    other_period_rejected_payment_restarted = PaymentFactory.create(
+    DelegatedPaymentFactory(
+        test_db_session,
         claim=claim,
         period_start_date=other_period_start_date,
         period_end_date=other_period_end_date,
-    )
-    state_log_util.create_finished_state_log(
-        other_period_rejected_payment_restarted,
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
-        outcome,
-        test_db_session,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE
     )
 
     assert payment_audit_report_step.previously_rejected_payment_count(payment) == 0
 
     # check errored payments in the same payment period are counted
-    same_period_rejected_payment = PaymentFactory.create(
-        claim=claim, period_start_date=period_start_date, period_end_date=period_end_date
-    )
-    state_log_util.create_finished_state_log(
-        same_period_rejected_payment,
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT,
-        outcome,
+    DelegatedPaymentFactory(
         test_db_session,
-    )
+        claim=claim,
+        period_start_date=period_start_date,
+        period_end_date=period_end_date,
+    ).get_or_create_payment_with_state(State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT)
+
     assert payment_audit_report_step.previously_rejected_payment_count(payment) == 1
 
     # skips are counted separately
-    same_period_rejected_payment_restarted = PaymentFactory.create(
-        claim=claim, period_start_date=period_start_date, period_end_date=period_end_date
-    )
-    state_log_util.create_finished_state_log(
-        same_period_rejected_payment_restarted,
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
-        outcome,
+    same_period_rejected_payment_restarted = DelegatedPaymentFactory(
         test_db_session,
+        claim=claim,
+        period_start_date=period_start_date,
+        period_end_date=period_end_date,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE
     )
+
     assert payment_audit_report_step.previously_rejected_payment_count(payment) == 1
     assert payment_audit_report_step.previously_skipped_payment_count(payment) == 1
 
     # each restart will be counted
-    same_period_rejected_payment_restarted_2 = PaymentFactory.create(
+    DelegatedPaymentFactory(
+        test_db_session,
         claim=claim,
         fineos_pei_c_value=same_period_rejected_payment_restarted.fineos_pei_c_value,
         fineos_pei_i_value=same_period_rejected_payment_restarted.fineos_pei_c_value,
         period_start_date=period_start_date,
         period_end_date=period_end_date,
+    ).get_or_create_payment_with_state(
+        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE
     )
-    state_log_util.create_finished_state_log(
-        same_period_rejected_payment_restarted_2,
-        State.DELEGATED_PAYMENT_ADD_TO_PAYMENT_REJECT_REPORT_RESTARTABLE,
-        outcome,
-        test_db_session,
-    )
+
     assert payment_audit_report_step.previously_skipped_payment_count(payment) == 2
 
 
@@ -467,8 +436,8 @@ def validate_payment_audit_csv_row_by_payment_audit_data(
         assert row[PAYMENT_AUDIT_CSV_HEADERS.max_weekly_benefits_details] != ""
 
     if scenario_descriptor.audit_report_detail_informational:
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.dua_dia_reduction_details]
-        assert row[PAYMENT_AUDIT_CSV_HEADERS.dua_dia_reduction_details] != ""
+        assert row[PAYMENT_AUDIT_CSV_HEADERS.dua_additional_income_details]
+        assert row[PAYMENT_AUDIT_CSV_HEADERS.dua_additional_income_details] != ""
 
     assert row[PAYMENT_AUDIT_CSV_HEADERS.dor_fineos_name_mismatch_details] == ""
 
@@ -524,6 +493,14 @@ def validate_payment_audit_csv_row_by_payment(row: PaymentAuditCSV, payment: Pay
     assert (
         row[PAYMENT_AUDIT_CSV_HEADERS.absence_case_creation_date]
         == payment.absence_case_creation_date.isoformat()
+    )
+    assert (
+        row[PAYMENT_AUDIT_CSV_HEADERS.absence_start_date]
+        == payment.claim.absence_period_start_date.isoformat()
+    )
+    assert (
+        row[PAYMENT_AUDIT_CSV_HEADERS.absence_end_date]
+        == payment.claim.absence_period_end_date.isoformat()
     )
     assert (
         row[PAYMENT_AUDIT_CSV_HEADERS.case_status]

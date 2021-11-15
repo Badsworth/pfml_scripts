@@ -1,6 +1,8 @@
 import datetime
 from decimal import Decimal
 from enum import Enum
+from itertools import chain
+from typing import Optional
 
 from sqlalchemy import TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text, case
 from sqlalchemy.dialects.postgresql import JSONB
@@ -20,6 +22,7 @@ from massgov.pfml.db.models.employees import (
     User,
 )
 from massgov.pfml.rmv.models import RmvAcknowledgement
+from massgov.pfml.util.decimals import round_nearest_hundredth
 
 from ..lookup import LookupTable
 from .base import Base, TimestampMixin, uuid_gen
@@ -254,7 +257,7 @@ class PreviousLeaveSameReason(PreviousLeave):
     __mapper_args__ = {"polymorphic_identity": "same_reason"}
 
 
-class Application(Base):
+class Application(Base, TimestampMixin):
     __tablename__ = "application"
     application_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
     user_id = Column(PostgreSQLUUID, ForeignKey("user.user_id"), nullable=False, index=True)
@@ -318,6 +321,7 @@ class Application(Base):
     has_previous_leaves_same_reason = Column(Boolean)
     has_previous_leaves_other_reason = Column(Boolean)
     has_concurrent_leave = Column(Boolean)
+    is_withholding_tax = Column(Boolean, nullable=True)
 
     user = relationship(User)
     caring_leave_metadata = relationship("CaringLeaveMetadata", back_populates="application")
@@ -369,6 +373,17 @@ class Application(Base):
         "PreviousLeaveSameReason", back_populates="application", uselist=True,
     )
     concurrent_leave = relationship("ConcurrentLeave", back_populates="application", uselist=False,)
+
+    @hybrid_property
+    def all_leave_periods(self) -> Optional[list]:
+        leave_periods = list(
+            chain(
+                self.continuous_leave_periods,
+                self.intermittent_leave_periods,
+                self.reduced_schedule_leave_periods,
+            )
+        )
+        return leave_periods
 
 
 class CaringLeaveMetadata(Base, TimestampMixin):
@@ -694,16 +709,6 @@ class LkDocumentType(Base):
         self.document_type_description = document_type_description
 
 
-class LkContentType(Base):
-    __tablename__ = "lk_content_type"
-    content_type_id = Column(Integer, primary_key=True, autoincrement=True)
-    content_type_description = Column(Text, nullable=False)
-
-    def __init__(self, content_type_id, content_type_description):
-        self.content_type_id = content_type_id
-        self.content_type_description = content_type_description
-
-
 class DocumentType(LookupTable):
     model = LkDocumentType
     column_names = ("document_type_id", "document_type_description")
@@ -727,17 +732,6 @@ class DocumentType(LookupTable):
     APPEAL_ACKNOWLEDGMENT = LkDocumentType(15, "Appeal Acknowledgment")
 
 
-class ContentType(LookupTable):
-    model = LkContentType
-    column_names = ("content_type_id", "content_type_description")
-
-    PDF = LkContentType(1, "application/pdf")
-    JPEG = LkContentType(2, "image/jpeg")
-    PNG = LkContentType(3, "image/png")
-    TIFF = LkContentType(4, "image/tiff")
-    HEIC = LkContentType(5, "image/heic")
-
-
 class Document(Base, TimestampMixin):
     __tablename__ = "document"
     document_id = Column(PostgreSQLUUID, primary_key=True, default=uuid_gen)
@@ -748,7 +742,6 @@ class Document(Base, TimestampMixin):
     document_type_id = Column(
         Integer, ForeignKey("lk_document_type.document_type_id"), nullable=False
     )
-    content_type_id = Column(Integer, ForeignKey("lk_content_type.content_type_id"), nullable=False)
     size_bytes = Column(Integer, nullable=False)
     fineos_id = Column(Text, nullable=True)
     is_stored_in_s3 = Column(Boolean, nullable=False)
@@ -756,7 +749,6 @@ class Document(Base, TimestampMixin):
     description = Column(Text, nullable=False)
 
     document_type_instance = relationship(LkDocumentType)
-    content_type_instance = relationship(LkContentType)
 
 
 class RMVCheckApiErrorCode(Enum):
@@ -806,12 +798,14 @@ class StateMetric(Base, TimestampMixin):
     effective_date = Column(Date, primary_key=True, nullable=False)
     unemployment_minimum_earnings = Column(Numeric, nullable=False)
     average_weekly_wage = Column(Numeric, nullable=False)
+    maximum_weekly_benefit_amount = Column(Numeric, nullable=False)
 
     def __init__(
         self,
         effective_date: datetime.date,
         unemployment_minimum_earnings: str,
         average_weekly_wage: str,
+        maximum_weekly_benefit_amount: Optional[str] = None,
     ):
         """Constructor that takes metric values as strings.
 
@@ -822,25 +816,112 @@ class StateMetric(Base, TimestampMixin):
         self.unemployment_minimum_earnings = Decimal(unemployment_minimum_earnings)
         self.average_weekly_wage = Decimal(average_weekly_wage)
 
+        # When the maximum weekly benefit is not manually set, it will be calculated based on
+        # the average weekly wage, as per the regulation:
+        # https://malegislature.gov/Laws/GeneralLaws/PartI/TitleXXII/Chapter175M/Section3
+        if maximum_weekly_benefit_amount is None:
+            self.maximum_weekly_benefit_amount = round_nearest_hundredth(
+                self.average_weekly_wage * Decimal(".64")
+            )
+        else:
+            self.maximum_weekly_benefit_amount = Decimal(maximum_weekly_benefit_amount)
+
     def __repr__(self):
-        return "StateMetric(%s, %s, %s)" % (
+        return "StateMetric(%s, %s, %s, %s)" % (
             self.effective_date,
             self.unemployment_minimum_earnings,
             self.average_weekly_wage,
+            self.maximum_weekly_benefit_amount,
+        )
+
+
+class UnemploymentMetric(Base, TimestampMixin):
+    __tablename__ = "unemployment_metric"
+    effective_date = Column(Date, primary_key=True, nullable=False)
+    unemployment_minimum_earnings = Column(Numeric, nullable=False)
+
+    def __init__(
+        self, effective_date: datetime.date, unemployment_minimum_earnings: str,
+    ):
+        """Constructor that takes metric values as strings.
+
+        This ensures that the decimals are precise. For example compare Decimal(1431.66) to
+        Decimal("1431.66").
+        """
+        self.effective_date = effective_date
+        self.unemployment_minimum_earnings = Decimal(unemployment_minimum_earnings)
+
+    def __repr__(self):
+        return "UnemploymentMetric(%s, %s)" % (
+            self.effective_date,
+            self.unemployment_minimum_earnings,
+        )
+
+
+class BenefitsMetrics(Base, TimestampMixin):
+    __tablename__ = "benefits_metrics"
+    effective_date = Column(Date, primary_key=True, nullable=False)
+    average_weekly_wage = Column(Numeric, nullable=False)
+    maximum_weekly_benefit_amount = Column(Numeric, nullable=False)
+
+    def __init__(
+        self,
+        effective_date: datetime.date,
+        average_weekly_wage: str,
+        maximum_weekly_benefit_amount: Optional[str] = None,
+    ):
+        """Constructor that takes metric values as strings.
+
+        This ensures that the decimals are precise. For example compare Decimal(1431.66) to
+        Decimal("1431.66").
+        """
+        self.effective_date = effective_date
+        self.average_weekly_wage = Decimal(average_weekly_wage)
+
+        # When the maximum weekly benefit is not manually set, it will be calculated based on
+        # the average weekly wage, as per the regulation:
+        # https://malegislature.gov/Laws/GeneralLaws/PartI/TitleXXII/Chapter175M/Section3
+        if maximum_weekly_benefit_amount is None:
+            self.maximum_weekly_benefit_amount = round_nearest_hundredth(
+                self.average_weekly_wage * Decimal(".64")
+            )
+        else:
+            self.maximum_weekly_benefit_amount = Decimal(maximum_weekly_benefit_amount)
+
+    def __repr__(self):
+        return "BenefitsMetrics(%s, %s, %s)" % (
+            self.effective_date,
+            self.average_weekly_wage,
+            self.maximum_weekly_benefit_amount,
         )
 
 
 def sync_state_metrics(db_session):
+    # For the first year of the program, the maximum weekly benefit is $850, which needs to
+    # be set directly. Beyond that, we should only directly set the unempleoyment minimum
+    # earnings and the average weekly wage. The maximum weekly benefit amount will then be
+    # calculated based on the average weekly wage.
+
     state_metrics = [
-        StateMetric(
+        BenefitsMetrics(
             effective_date=datetime.date(2020, 10, 1),
-            unemployment_minimum_earnings="5100.00",
             average_weekly_wage="1431.66",
+            maximum_weekly_benefit_amount="850.00",
         ),
-        StateMetric(
+        UnemploymentMetric(
+            effective_date=datetime.date(2020, 10, 1), unemployment_minimum_earnings="5100.00",
+        ),
+        BenefitsMetrics(
             effective_date=datetime.date(2021, 1, 1),
-            unemployment_minimum_earnings="5400.00",
             average_weekly_wage="1487.78",
+            maximum_weekly_benefit_amount="850.00",
+        ),
+        UnemploymentMetric(
+            effective_date=datetime.date(2021, 1, 1), unemployment_minimum_earnings="5400.00",
+        ),
+        BenefitsMetrics(effective_date=datetime.date(2022, 1, 2), average_weekly_wage="1694.24",),
+        UnemploymentMetric(
+            effective_date=datetime.date(2022, 1, 2), unemployment_minimum_earnings="5700.00",
         ),
     ]
 
@@ -905,7 +986,6 @@ def sync_lookup_tables(db_session):
     EmployerBenefitType.sync_to_database(db_session)
     OtherIncomeType.sync_to_database(db_session)
     DocumentType.sync_to_database(db_session)
-    ContentType.sync_to_database(db_session)
     DayOfWeek.sync_to_database(db_session)
     WorkPatternType.sync_to_database(db_session)
     PhoneType.sync_to_database(db_session)

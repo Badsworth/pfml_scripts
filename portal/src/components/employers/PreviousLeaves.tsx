@@ -1,22 +1,34 @@
 import AddButton from "./AddButton";
 import AmendablePreviousLeave from "./AmendablePreviousLeave";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
-import Details from "../Details";
-import Heading from "../Heading";
+import Details from "../core/Details";
+import Heading from "../core/Heading";
 import PreviousLeave from "../../models/PreviousLeave";
-import PropTypes from "prop-types";
 import React from "react";
-import Table from "../Table";
+import Table from "../core/Table";
 import { Trans } from "react-i18next";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
+
+interface PreviousLeavesProps {
+  addedPreviousLeaves: PreviousLeave[];
+  appErrors: AppErrorInfoCollection;
+  onAdd: React.MouseEventHandler<HTMLButtonElement>;
+  onChange: (
+    arg: PreviousLeave | { [key: string]: unknown },
+    arg2: string
+  ) => void;
+  onRemove: (arg: PreviousLeave) => void;
+  previousLeaves: PreviousLeave[];
+  shouldShowV2: boolean;
+}
 
 /**
  * Display past leaves taken by the employee
  * in the Leave Admin claim review page.
  */
 
-const PreviousLeaves = (props) => {
+const PreviousLeaves = (props: PreviousLeavesProps) => {
   const { t } = useTranslation();
   const {
     addedPreviousLeaves,
@@ -52,8 +64,6 @@ const PreviousLeaves = (props) => {
         label={t(
           "components.employersPreviousLeaves.qualifyingReasonDetailsLabel"
         )}
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element[]; label: string; classN... Remove this comment to see the full error message
-        className="text-bold"
       >
         <p>{t("components.employersPreviousLeaves.qualifyingReasonContent")}</p>
         <ul className="usa-list">
@@ -179,17 +189,6 @@ const PreviousLeaves = (props) => {
       </Table>
     </React.Fragment>
   );
-};
-
-PreviousLeaves.propTypes = {
-  addedPreviousLeaves: PropTypes.arrayOf(PropTypes.instanceOf(PreviousLeave))
-    .isRequired,
-  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
-  onAdd: PropTypes.func.isRequired,
-  onChange: PropTypes.func.isRequired,
-  onRemove: PropTypes.func.isRequired,
-  previousLeaves: PropTypes.arrayOf(PropTypes.instanceOf(PreviousLeave)),
-  shouldShowV2: PropTypes.bool.isRequired,
 };
 
 export default PreviousLeaves;

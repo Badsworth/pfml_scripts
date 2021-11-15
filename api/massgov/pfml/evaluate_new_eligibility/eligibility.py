@@ -32,9 +32,12 @@ def compute_financial_eligibility(
     diff_reason_csv=None,
 ):
     effective_date = eligibility_date(leave_start_date, application_submitted_date)
-    state_metric_data = eligibility_util.fetch_state_metric(db_session, effective_date)
-    state_average_weekly_wage = state_metric_data.average_weekly_wage
-    unemployment_minimum = state_metric_data.unemployment_minimum_earnings
+    (benefits_metrics_data, unemployment_metric_data) = eligibility_util.fetch_state_metric(
+        db_session, effective_date
+    )
+    state_average_weekly_wage = benefits_metrics_data.average_weekly_wage
+    maximum_weekly_benefit_amount = benefits_metrics_data.maximum_weekly_benefit_amount
+    unemployment_minimum = unemployment_metric_data.unemployment_minimum_earnings
 
     # Calculate various wages by fetching them from DOR
     wage_calculator = wage.get_wage_calculator(
@@ -56,7 +59,10 @@ def compute_financial_eligibility(
     )
 
     gte_thirty_times_wba = eligibility_util.wages_gte_thirty_times_wba(
-        total_wages, consolidated_weekly_wage, state_average_weekly_wage, effective_date
+        total_wages,
+        consolidated_weekly_wage,
+        state_average_weekly_wage,
+        maximum_weekly_benefit_amount,
     )
     # Check various financial eligibility thresholds, set the description accordingly
     financially_eligible = False

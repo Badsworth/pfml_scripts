@@ -2,25 +2,27 @@
  * Get a form field's value, making appropriate type conversions as necessary.
  *
  * @see https://github.com/navahq/archive-vermont-customer-portal-apps/blob/27b66dd7bf37671a6e33a8d2c51a82c7bd9daa41/online-application-app/src/client/actions/index.js#L150
- * @param {object} event
- * @param {HTMLElement|object} event.target
- * @param {boolean} [event.target.checked] - if input was radio/checkbox, was it selected?
- * @param {string} event.target.name - The name representing this field in our state
- * @param {*} event.target.value
- * @param {string} [event.target.type] - what type of input is this value coming from (i.e text, radio)
- * @returns {string|boolean}
  */
-export default function getInputValueFromEvent(event) {
+export default function getInputValueFromEvent(
+  event?:
+    | React.ChangeEvent<
+        HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement
+      >
+    | { [key: string]: undefined }
+) {
   if (!event || !event.target) {
     return undefined;
   }
 
-  const { checked, type, value } = event.target;
-
+  const { type, value } = event.target;
   const valueType = event.target.getAttribute("data-value-type");
 
-  let result = value;
-  if (type === "checkbox" || type === "radio") {
+  let result: number | string | boolean | null = value;
+  if (
+    event.target instanceof HTMLInputElement &&
+    (type === "checkbox" || type === "radio")
+  ) {
+    const checked = event.target.checked;
     // Convert boolean input string values into an actual boolean
     switch (value) {
       case "true":
@@ -37,7 +39,13 @@ export default function getInputValueFromEvent(event) {
   ) {
     // Support comma-delimited numbers
     const transformedValue = value.replace(/,/g, "");
-    if (isNaN(transformedValue)) return result;
+
+    if (
+      isNaN(Number(transformedValue)) ||
+      // Don't prevent a trailing decimal point, otherwise a user can't enter a decimal number
+      (valueType === "float" && transformedValue.endsWith("."))
+    )
+      return result;
 
     result =
       valueType === "integer"

@@ -1,19 +1,18 @@
+import { Dispatch, SetStateAction, useRef, useState } from "react";
 import { get, set } from "lodash";
-import { useRef, useState } from "react";
+
+interface FormStateBody {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [fieldName: string]: any;
+}
+type SetFormState = Dispatch<SetStateAction<FormStateBody>>;
 
 export class FormState {
-  constructor(setState) {
-    /**
-     * Should not be modified except by useFormState hook
-     * @readonly
-     * @type {object}
-     */
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
-    this.formState = null;
-    /**
-     * @private
-     */
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'setState' does not exist on type 'FormSt... Remove this comment to see the full error message
+  formState: FormStateBody;
+  private setState: SetFormState;
+
+  constructor(setState: SetFormState) {
+    this.formState = {};
     this.setState = setState;
   }
 
@@ -21,11 +20,9 @@ export class FormState {
    * Function that fetches the corresponding value of a field name.
    * Similar to updateFields, this function identity is guaranteed to be stable
    * and won’t change on re-renders.
-   * @param {string} name Name of field to fetch
-   * @returns {*}
+   * @param name Name of field to fetch
    */
-  getField = (name) => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+  getField = (name: string) => {
     return get(this.formState, name);
   };
 
@@ -33,9 +30,9 @@ export class FormState {
    * Function that sets a field from the form state to null.
    * Similar to updateFields, this function identity is guaranteed to be stable
    * and won’t change on re-renders.
-   * @param {string} name Name of field to remove
+   * @param name Name of field to remove
    */
-  clearField = (name) => {
+  clearField = (name: string) => {
     this.updateFields({ [name]: null });
   };
 
@@ -47,11 +44,10 @@ export class FormState {
    * updateFields is often called as part of the onChange handler in controlled
    * form field components, which can be as often as every user keystroke in
    * the case of an input text field.
-   * @param {object.<string, *>} fields - Dictionary of field names in object path syntax mapped to field values
+   * @param fields - Dictionary of field names in object path syntax mapped to field values
    * @example formState.updateFields({ "leave_details.employer_notified": true })
    */
-  updateFields = (fields) => {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'setState' does not exist on type 'FormSt... Remove this comment to see the full error message
+  updateFields = (fields: FormStateBody) => {
     this.setState((prevState) => {
       // Create mutable copy of the state
       const draftState = { ...prevState };
@@ -68,13 +64,11 @@ export class FormState {
 
 /**
  * React hook that creates a formState object
- * @param {object} [initialState] Initial form state
- * @returns {FormState}
+ * @param initialState Initial form state
  */
-const useFormState = (initialState = {}) => {
+const useFormState = (initialState: FormStateBody = {}) => {
   const [state, setState] = useState(initialState);
   const formStateRef = useRef(new FormState(setState));
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
   formStateRef.current.formState = state;
   return formStateRef.current;
 };

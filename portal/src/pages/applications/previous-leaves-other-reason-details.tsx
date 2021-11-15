@@ -1,23 +1,24 @@
 import PreviousLeave, { PreviousLeaveReason } from "../../models/PreviousLeave";
 import { get, pick } from "lodash";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
 import BenefitsApplication from "../../models/BenefitsApplication";
-import Details from "../../components/Details";
-import Heading from "../../components/Heading";
-import Hint from "../../components/Hint";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import InputDate from "../../components/InputDate";
-import InputHours from "../../components/InputHours";
+import Details from "../../components/core/Details";
+import Heading from "../../components/core/Heading";
+import Hint from "../../components/core/Hint";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
+import InputDate from "../../components/core/InputDate";
+import InputHours from "../../components/core/InputHours";
 import LeaveReason from "../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import RepeatableFieldset from "../../components/RepeatableFieldset";
+import RepeatableFieldset from "../../components/core/RepeatableFieldset";
 import { Trans } from "react-i18next";
 import formatDate from "../../utils/formatDate";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = [
   "claim.previous_leaves_other_reason",
@@ -30,19 +31,23 @@ export const fields = [
   "claim.previous_leaves_other_reason[*].worked_per_week_minutes",
 ];
 
-export const PreviousLeavesOtherReasonDetails = (props) => {
+export const PreviousLeavesOtherReasonDetails = (
+  props: WithBenefitsApplicationProps
+) => {
   const { t } = useTranslation();
   const { appLogic, claim } = props;
   const limit = 6;
 
-  const initialEntries = pick(props, fields).claim;
+  const initialEntries = pick(props, fields).claim || {
+    previous_leaves_other_reason: [],
+  };
+
   if (initialEntries.previous_leaves_other_reason.length === 0) {
-    // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-    initialEntries.previous_leaves_other_reason = [new PreviousLeave()];
+    initialEntries.previous_leaves_other_reason = [new PreviousLeave({})];
   }
 
   // default to one existing previous leave.
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState(initialEntries);
   const previous_leaves_other_reason = get(
     formState,
@@ -67,13 +72,12 @@ export const PreviousLeavesOtherReasonDetails = (props) => {
     updateFields({
       previous_leaves_other_reason: [
         ...previous_leaves_other_reason,
-        // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-        new PreviousLeave(),
+        new PreviousLeave({}),
       ],
     });
   };
 
-  const handleRemoveClick = (_entry, index) => {
+  const handleRemoveClick = (_entry: PreviousLeave, index: number) => {
     const updatedLeaves = [...previous_leaves_other_reason];
     updatedLeaves.splice(index, 1);
     updateFields({ previous_leaves_other_reason: updatedLeaves });
@@ -85,7 +89,7 @@ export const PreviousLeavesOtherReasonDetails = (props) => {
     updateFields,
   });
 
-  const render = (entry, index) => {
+  const render = (entry: PreviousLeave, index: number) => {
     return (
       <PreviousLeavesOtherReasonDetailsCard
         claim={claim}
@@ -138,12 +142,16 @@ export const PreviousLeavesOtherReasonDetails = (props) => {
   );
 };
 
-PreviousLeavesOtherReasonDetails.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-};
+interface PreviousLeavesOtherReasonDetailsCardProps {
+  claim: BenefitsApplication;
+  entry: PreviousLeave;
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
+  index: number;
+}
 
-export const PreviousLeavesOtherReasonDetailsCard = (props) => {
+export const PreviousLeavesOtherReasonDetailsCard = (
+  props: PreviousLeavesOtherReasonDetailsCardProps
+) => {
   const { t } = useTranslation();
   const {
     claim: { employer_fein },
@@ -316,13 +324,6 @@ export const PreviousLeavesOtherReasonDetailsCard = (props) => {
       />
     </React.Fragment>
   );
-};
-
-PreviousLeavesOtherReasonDetailsCard.propTypes = {
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  entry: PropTypes.instanceOf(PreviousLeave).isRequired,
-  getFunctionalInputProps: PropTypes.func.isRequired,
-  index: PropTypes.number.isRequired,
 };
 
 export default withBenefitsApplication(PreviousLeavesOtherReasonDetails);

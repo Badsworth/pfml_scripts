@@ -173,7 +173,7 @@ def test_invalid_and_missing_report_in_step_execution(
     caplog.set_level(logging.INFO)  # noqa: B1
 
     report_names = [report.report_name for report in REPORTS]
-    step = init_step(test_db_session, test_db_other_session, report_names)
+    step = init_step(test_db_session, test_db_session, report_names)
 
     invalid_report_name = ReportName.ADDRESS_ERROR_REPORT
     REPORTS_BY_NAME[invalid_report_name].sql_command = "select * from nonexistent_table"
@@ -188,7 +188,7 @@ def test_invalid_and_missing_report_in_step_execution(
         step.run()
 
     # validate expected report counts
-    import_log = test_db_other_session.query(ImportLog).one_or_none()
+    import_log = test_db_session.query(ImportLog).one_or_none()
     log_report = json.loads(import_log.report)
     assert log_report["report_generated_count"] == len(REPORTS) - 2
     assert log_report["report_error_count"] == 2

@@ -55,7 +55,7 @@ class PaginationAPIContext:
 
 # TODO (API-1776): remove when Application model uses create_at field
 class ApplicationPaginationAPIContext(PaginationAPIContext):
-    default_order_by: str = "start_time"
+    default_order_by: str = "created_at"
 
 
 class Page:

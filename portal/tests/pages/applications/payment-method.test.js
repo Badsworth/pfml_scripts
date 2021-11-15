@@ -132,4 +132,15 @@ describe("PaymentMethod", () => {
       );
     });
   });
+
+  it("displays different copy when tax withholding is enabled", () => {
+    process.env.featureFlags = {
+      claimantShowTaxWithholding: true,
+    };
+    setup();
+    expect(screen.queryByText("Submit Part 2")).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Submit payment method" })
+    ).toBeInTheDocument();
+  });
 });

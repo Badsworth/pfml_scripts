@@ -283,6 +283,7 @@ describe("useAppErrorsLogic", () => {
 
     expect(tracker.trackEvent).toHaveBeenCalledWith("ValidationError", {
       issueField: "first_name",
+      issueRule: "",
       issueType: "required",
     });
   });
@@ -310,7 +311,7 @@ describe("useAppErrorsLogic", () => {
         errorMessage: "User is not Verified",
         errorName: "LeaveAdminForbiddenError",
         employerId: "some-employer-id",
-        hasVerificationData: true,
+        hasVerificationData: "true",
       }
     );
   });
@@ -366,7 +367,7 @@ describe("useAppErrorsLogic", () => {
         errorMessage: "User is not Verified",
         errorName: "LeaveAdminForbiddenError",
         employerId: "some-employer-id",
-        hasVerificationData: false,
+        hasVerificationData: "false",
       }
     );
   });

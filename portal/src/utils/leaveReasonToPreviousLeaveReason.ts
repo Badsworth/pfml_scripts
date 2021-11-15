@@ -4,12 +4,12 @@ import findKeyByValue from "./findKeyByValue";
 
 /**
  * Converts a LeaveReason to its corresponding PreviousLeaveReason.
- * @param {string} leaveReason - the application leave reason
- * @returns {PreviousLeaveReason} the corresponding PreviousLeaveReason
  */
-const leaveReasonToPreviousLeaveReason = (leaveReason) => {
+const leaveReasonToPreviousLeaveReason = (leaveReason: string | null) => {
   const previousLeaveReasonKey = findKeyByValue(LeaveReason, leaveReason);
-  return PreviousLeaveReason[previousLeaveReasonKey];
+  return previousLeaveReasonKey
+    ? PreviousLeaveReason[previousLeaveReasonKey]
+    : undefined;
 };
 
 export default leaveReasonToPreviousLeaveReason;

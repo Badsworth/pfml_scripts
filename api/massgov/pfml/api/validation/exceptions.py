@@ -50,6 +50,12 @@ class IssueRule(str, Enum):
     disallow_overlapping_leave_period_with_previous_leave = (
         "disallow_overlapping_leave_period_with_previous_leave"
     )
+    disallow_overlapping_waiting_period_and_concurrent_leave_end_date = (
+        "disallow_overlapping_waiting_period_and_concurrent_leave_end_date"
+    )
+    disallow_overlapping_waiting_period_and_concurrent_leave_start_date = (
+        "disallow_overlapping_waiting_period_and_concurrent_leave_start_date"
+    )
     # Employer must be notified when employment status is Employed
     require_employer_notified = "require_employer_notified"
     # Partially masked field does not match existing value
@@ -150,6 +156,8 @@ class IssueType(str, Enum):
     # this moving forward.
     # TODO (EMPLOYER-1643): Remove this once the errors the reference it no longer use IssueRule
     pfml = ""
+    # Generic value error
+    value_error = "value_error"
 
 
 @dataclass

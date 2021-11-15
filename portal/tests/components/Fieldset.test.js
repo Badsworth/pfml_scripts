@@ -1,4 +1,4 @@
-import Fieldset from "../../src/components/Fieldset";
+import Fieldset from "../../src/components/core/Fieldset";
 import React from "react";
 import { render } from "@testing-library/react";
 

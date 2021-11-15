@@ -1,16 +1,23 @@
-import Document, { DocumentType } from "../../models/Document";
-
-import Accordion from "../../components/Accordion";
-import AccordionItem from "../../components/AccordionItem";
-import Alert from "../../components/Alert";
+import {
+  BenefitsApplicationDocument,
+  DocumentType,
+} from "../../models/Document";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import withClaimDocuments, {
+  WithClaimDocumentsProps,
+} from "../../hoc/withClaimDocuments";
+import Accordion from "../../components/core/Accordion";
+import AccordionItem from "../../components/core/AccordionItem";
+import Alert from "../../components/core/Alert";
 import DocumentRequirements from "../../components/DocumentRequirements";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
-import Heading from "../../components/Heading";
-import PropTypes from "prop-types";
+import Heading from "../../components/core/Heading";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import Spinner from "../../components/Spinner";
+import Spinner from "../../components/core/Spinner";
 import { Trans } from "react-i18next";
 import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import { get } from "lodash";
@@ -19,10 +26,17 @@ import routes from "../../routes";
 import uploadDocumentsHelper from "../../utils/uploadDocumentsHelper";
 import useFilesLogic from "../../hooks/useFilesLogic";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
-import withClaimDocuments from "../../hoc/withClaimDocuments";
 
-export const UploadId = (props) => {
+interface UploadIdProps
+  extends WithClaimDocumentsProps,
+    WithBenefitsApplicationProps {
+  query: {
+    additionalDoc?: string;
+    showStateId?: string;
+  };
+}
+
+export const UploadId = (props: UploadIdProps) => {
   const { t } = useTranslation();
   const { appLogic, claim, documents, isLoadingDocuments, query } = props;
   const { files, processFiles, removeFile } = useFilesLogic({
@@ -30,6 +44,7 @@ export const UploadId = (props) => {
     catchError: appLogic.catchError,
   });
   const { additionalDoc, showStateId } = query;
+  const [submissionInProgress, setSubmissionInProgress] = React.useState(false);
   let hasStateId;
   if (showStateId === "true") {
     hasStateId = true;
@@ -47,9 +62,10 @@ export const UploadId = (props) => {
     claim.application_id
   );
 
-  const idDocuments = findDocumentsByTypes(documents, [
-    DocumentType.identityVerification,
-  ]);
+  const idDocuments = findDocumentsByTypes<BenefitsApplicationDocument>(
+    documents,
+    [DocumentType.identityVerification]
+  );
 
   const handleSave = async () => {
     if (files.isEmpty && idDocuments.length) {
@@ -57,7 +73,7 @@ export const UploadId = (props) => {
       portalFlow.goToNextPage({ claim }, { claim_id: claim.application_id });
       return;
     }
-
+    setSubmissionInProgress(true);
     const uploadPromises = appLogic.documents.attach(
       claim.application_id,
       files.items,
@@ -70,7 +86,7 @@ export const UploadId = (props) => {
       files,
       removeFile
     );
-
+    setSubmissionInProgress(false);
     if (success) {
       portalFlow.goToNextPage(
         { claim },
@@ -139,7 +155,6 @@ export const UploadId = (props) => {
         <FileUploadDetails />
 
         {hasLoadingDocumentsError && (
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; noIc... Remove this comment to see the full error message
           <Alert className="margin-bottom-3" noIcon>
             <Trans
               i18nKey="pages.claimsUploadId.documentsLoadError"
@@ -168,6 +183,7 @@ export const UploadId = (props) => {
             tempFiles={files}
             documents={idDocuments}
             onChange={processFiles}
+            disableRemove={submissionInProgress}
             onRemoveTempFile={removeFile}
             fileHeadingPrefix={t("pages.claimsUploadId.fileHeadingPrefix")}
             addFirstFileButtonText={t(
@@ -181,24 +197,6 @@ export const UploadId = (props) => {
       </div>
     </QuestionPage>
   );
-};
-
-UploadId.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    catchError: PropTypes.func.isRequired,
-    documents: PropTypes.object.isRequired,
-    portalFlow: PropTypes.object.isRequired,
-    clearErrors: PropTypes.func.isRequired,
-  }).isRequired,
-  claim: PropTypes.object.isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-  isLoadingDocuments: PropTypes.bool,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string,
-    showStateId: PropTypes.string,
-    additionalDoc: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplication(withClaimDocuments(UploadId));

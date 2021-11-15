@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import Alert from "../../src/components/Alert";
+import Alert from "../../src/components/core/Alert";
 import React from "react";
 
 const renderComponent = (customProps = {}) => {

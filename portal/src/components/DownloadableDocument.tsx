@@ -1,7 +1,10 @@
-import Document, { DocumentType } from "../models/Document";
-
-import Button from "./Button";
-import PropTypes from "prop-types";
+import {
+  BenefitsApplicationDocument,
+  ClaimDocument,
+  DocumentType,
+  isClaimDocument,
+} from "../models/Document";
+import Button from "./core/Button";
 import React from "react";
 import classnames from "classnames";
 import download from "downloadjs";
@@ -10,14 +13,31 @@ import formatDateRange from "../utils/formatDateRange";
 import tracker from "../services/tracker";
 import { useTranslation } from "../locales/i18n";
 
+interface DownloadableDocumentProps {
+  /** If the user is a Leave Admin, required absence case ID */
+  absenceId?: string;
+  document: BenefitsApplicationDocument | ClaimDocument;
+  displayDocumentName?: string;
+  downloadClaimDocument?: (
+    document: ClaimDocument,
+    absenceId: string
+  ) => Promise<Blob | undefined>;
+  downloadBenefitsApplicationDocument?: (
+    document: BenefitsApplicationDocument
+  ) => Promise<Blob | undefined>;
+  showCreatedAt?: boolean;
+  icon?: React.ReactNode;
+}
+
 /**
  * Link and metadata for a document
  */
-const DownloadableDocument = (props) => {
+const DownloadableDocument = (props: DownloadableDocumentProps) => {
   const {
     absenceId,
     document,
-    onDownloadClick,
+    downloadClaimDocument,
+    downloadBenefitsApplicationDocument,
     showCreatedAt,
     displayDocumentName,
     icon,
@@ -30,13 +50,15 @@ const DownloadableDocument = (props) => {
 
   const documentName = getDocumentName(document, t);
 
-  const handleClick = async (event) => {
+  const handleClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
     let documentData;
-    if (absenceId) {
-      documentData = await onDownloadClick(absenceId, document);
-    } else {
-      documentData = await onDownloadClick(document);
+    if (isClaimDocument(document) && downloadClaimDocument && absenceId) {
+      documentData = await downloadClaimDocument(document, absenceId);
+    } else if (downloadBenefitsApplicationDocument) {
+      documentData = await downloadBenefitsApplicationDocument(
+        document as BenefitsApplicationDocument
+      );
     }
     if (documentData) {
       download(
@@ -61,7 +83,6 @@ const DownloadableDocument = (props) => {
       {showCreatedAt && (
         <div className="text-base-dark">
           {t("components.downloadableDocument.createdAtDate", {
-            // @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 1.
             date: formatDateRange(document.created_at),
           })}
         </div>
@@ -70,29 +91,20 @@ const DownloadableDocument = (props) => {
   );
 };
 
-DownloadableDocument.propTypes = {
-  /** Required absence case ID, if the user is a Leave Admin */
-  absenceId: PropTypes.string,
-  document: PropTypes.instanceOf(Document).isRequired,
-  /** Overrides the name displayed for the document */
-  displayDocumentName: PropTypes.string,
-  onDownloadClick: PropTypes.func.isRequired,
-  showCreatedAt: PropTypes.bool,
-  icon: PropTypes.node,
-};
-
-function getDocumentName(document, t) {
-  if (
-    [
-      DocumentType.appealAcknowledgment,
-      DocumentType.approvalNotice,
-      DocumentType.denialNotice,
-      DocumentType.requestForInfoNotice,
-      DocumentType.withdrawalNotice,
-    ].includes(document.document_type)
-  ) {
+function getDocumentName(
+  document: ClaimDocument | BenefitsApplicationDocument,
+  t: (arg: string, arg2?: { context: string }) => string
+) {
+  const docTypes: string[] = [
+    DocumentType.appealAcknowledgment,
+    DocumentType.approvalNotice,
+    DocumentType.denialNotice,
+    DocumentType.requestForInfoNotice,
+    DocumentType.withdrawalNotice,
+  ];
+  if (docTypes.includes(document.document_type)) {
     return t("components.downloadableDocument.noticeName", {
-      context: findKeyByValue(DocumentType, document.document_type),
+      context: findKeyByValue(DocumentType, document.document_type) || "",
     });
   } else {
     tracker.trackEvent(

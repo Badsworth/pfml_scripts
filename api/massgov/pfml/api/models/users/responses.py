@@ -1,7 +1,16 @@
-from typing import List
+from typing import Any, Dict, List
 
 from pydantic import UUID4, Field
+from sqlalchemy.orm import contains_eager
 
+from massgov.pfml.db import Session
+from massgov.pfml.db.models.employees import (
+    Employer,
+    EmployerQuarterlyContribution,
+    User,
+    UserLeaveAdministrator,
+)
+from massgov.pfml.db.models.verifications import Verification
 from massgov.pfml.util.pydantic import PydanticBaseModel
 from massgov.pfml.util.pydantic.types import FEINFormattedStr
 
@@ -33,3 +42,49 @@ class UserResponse(PydanticBaseModel):
     consented_to_data_sharing: bool
     roles: List[RoleResponse]
     user_leave_administrators: List[UserLeaveAdminResponse]
+
+
+def get_user_leave_administrators(user: User, db: Session) -> List[UserLeaveAdministrator]:
+    """
+    Get User Leave Administrators and load required relationship data in place
+    for better performance when users are a leave admin for multiple employers
+    """
+    return (
+        db.query(UserLeaveAdministrator)
+        .join(Employer)
+        .join(EmployerQuarterlyContribution, isouter=True)
+        .join(Verification, isouter=True)
+        .options(
+            contains_eager(UserLeaveAdministrator.employer).contains_eager(
+                Employer.employer_quarterly_contribution
+            )
+        )
+        .filter(UserLeaveAdministrator.user_id == user.user_id)
+        .all()
+    )
+
+
+def user_response(user: User, db: Session) -> Dict[str, Any]:
+    user_leave_administrators = get_user_leave_administrators(user, db)
+    response = UserResponse.from_orm(user)
+    user_leave_administrators_data = [
+        normalize_user_leave_admin_response(UserLeaveAdminResponse.from_orm(ula))
+        for ula in user_leave_administrators
+    ]
+    response_data = response.dict()
+    response_data["user_leave_administrators"] = user_leave_administrators_data
+    return response_data
+
+
+def normalize_user_leave_admin_response(
+    leave_admin_response: UserLeaveAdminResponse,
+) -> Dict[str, Any]:
+    leave_admin_dict = leave_admin_response.dict()
+    return {
+        "employer_dba": leave_admin_dict["employer"]["employer_dba"],
+        "employer_fein": leave_admin_dict["employer"]["employer_fein"],
+        "employer_id": leave_admin_dict["employer"]["employer_id"],
+        "has_fineos_registration": leave_admin_dict["has_fineos_registration"],
+        "verified": leave_admin_dict["verified"],
+        "has_verification_data": leave_admin_dict["employer"]["has_verification_data"],
+    }

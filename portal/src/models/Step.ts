@@ -1,7 +1,14 @@
-import { get, groupBy, isEmpty, map } from "lodash";
+import { BenefitsApplicationDocument, ClaimDocument } from "./Document";
+import claimantFlow, { ClaimantFlowState } from "../flows/claimant";
+import { get, groupBy, isBoolean, isEmpty, isNull, map } from "lodash";
+import BenefitsApplication from "./BenefitsApplication";
+import { Issue } from "../errors";
 import getRelevantIssues from "../utils/getRelevantIssues";
+import { isFeatureEnabled } from "../services/featureFlags";
 
-type Context = Record<string, unknown>;
+interface Context {
+  [key: string]: unknown;
+}
 
 /**
  * Unique identifiers for steps in the portal application. The values
@@ -15,6 +22,7 @@ export const ClaimSteps = {
   otherLeave: "OTHER_LEAVE",
   reviewAndConfirm: "REVIEW_AND_CONFIRM",
   payment: "PAYMENT",
+  taxWithholding: "TAX_WITHHOLDING",
   uploadCertification: "UPLOAD_CERTIFICATION",
   uploadId: "UPLOAD_ID",
 } as const;
@@ -33,7 +41,6 @@ const fieldHasValue = (fieldPath: string, context: Context) => {
  * A model that represents a section in a user flow
  * and gives the completion status based on the current
  * state of user data
- * @returns {Step}
  */
 export default class Step {
   name: string;
@@ -53,7 +60,7 @@ export default class Step {
    */
   pages: Array<{
     route: string;
-    meta: { step: string; fields: string[]; applicableRules: string[] };
+    meta: ClaimantFlowState["meta"];
   }>;
 
   /**
@@ -73,14 +80,14 @@ export default class Step {
   /**
    * Context used for evaluating a step's status
    */
-  context?: Context;
+  context: Context = {};
   /**
    * Array of validation warnings from the API, used for determining
    * the completion status of Steps that include fields. You can exclude
    * this if a Step doesn't include a field, or if it has its own
    * completeCond set.
    */
-  warnings?: Array<Record<string, unknown>>;
+  warnings?: Issue[];
 
   constructor(
     attrs: Omit<
@@ -96,8 +103,8 @@ export default class Step {
     Object.assign(this, attrs);
   }
 
-  get fields() {
-    return this.pages.flatMap((page) => page.meta.fields);
+  get fields(): string[] {
+    return this.pages.flatMap((page) => page.meta?.fields || []);
   }
 
   get status() {
@@ -144,7 +151,7 @@ export default class Step {
   }
 
   get isDisabled() {
-    if (!this.dependsOn.length) return false;
+    if (!this.dependsOn || !this.dependsOn.length) return false;
 
     return this.dependsOn.some((dependedOnStep) => !dependedOnStep.isComplete);
   }
@@ -152,23 +159,20 @@ export default class Step {
   /**
    * Create an array of Steps from routing machine configuration
    * @see ../flows/index.js
-   * @param {object} machineConfigs - configuration object for routing machine
-   * @param {object} context - used for evaluating a step's status
-   * @param {BenefitsApplication} [context.claim]
-   * @param {Document[]} [context.certificationDocuments]
-   * @param {Document[]} [context.idDocuments]
-   * @param {object[]} [warnings] - array of validation warnings returned from API
-   * @returns {Step[]}
    * @example createClaimStepsFromMachine(claimFlowConfig, { claim: { first_name: "Bud" } })
    */
   static createClaimStepsFromMachine = (
-    machineConfigs,
-    context = {
+    machineConfigs: typeof claimantFlow,
+    context: {
+      claim: BenefitsApplication | { [key: string]: never };
+      certificationDocuments?: BenefitsApplicationDocument[] | ClaimDocument[];
+      idDocuments?: BenefitsApplicationDocument[] | ClaimDocument[];
+    } = {
       claim: {},
       certificationDocuments: [],
       idDocuments: [],
     },
-    warnings
+    warnings?: Issue[]
   ) => {
     const { claim } = context;
     const pages = map(machineConfigs.states, (state, key) =>
@@ -178,7 +182,6 @@ export default class Step {
 
     const verifyId = new Step({
       name: ClaimSteps.verifyId,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isSubmitted' does not exist on type '{}'... Remove this comment to see the full error message
       editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.verifyId],
@@ -188,7 +191,6 @@ export default class Step {
 
     const employerInformation = new Step({
       name: ClaimSteps.employerInformation,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isSubmitted' does not exist on type '{}'... Remove this comment to see the full error message
       editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.employerInformation],
@@ -199,7 +201,6 @@ export default class Step {
 
     const leaveDetails = new Step({
       name: ClaimSteps.leaveDetails,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isSubmitted' does not exist on type '{}'... Remove this comment to see the full error message
       editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.leaveDetails],
@@ -210,7 +211,6 @@ export default class Step {
 
     const otherLeave = new Step({
       name: ClaimSteps.otherLeave,
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isSubmitted' does not exist on type '{}'... Remove this comment to see the full error message
       editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.otherLeave],
@@ -222,7 +222,6 @@ export default class Step {
     const reviewAndConfirm = new Step({
       name: ClaimSteps.reviewAndConfirm,
       completeCond: (context) => get(context.claim, "isSubmitted"),
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'isSubmitted' does not exist on type '{}'... Remove this comment to see the full error message
       editable: !claim.isSubmitted,
       group: 1,
       pages: pagesByStep[ClaimSteps.reviewAndConfirm],
@@ -234,7 +233,6 @@ export default class Step {
       name: ClaimSteps.payment,
       completeCond: (context) =>
         get(context.claim, "has_submitted_payment_preference"),
-      // @ts-expect-error ts-migrate(2339) FIXME: Property 'has_submitted_payment_preference' does n... Remove this comment to see the full error message
       editable: !claim.has_submitted_payment_preference,
       group: 2,
       pages: pagesByStep[ClaimSteps.payment],
@@ -249,6 +247,38 @@ export default class Step {
       warnings,
     });
 
+    const taxWithholding = new Step({
+      name: ClaimSteps.taxWithholding,
+      completeCond: (context) =>
+        isBoolean(get(context.claim, "is_withholding_tax")),
+      editable: isNull(claim.is_withholding_tax),
+      group: 2,
+      pages: pagesByStep[ClaimSteps.taxWithholding],
+      dependsOn: [
+        verifyId,
+        employerInformation,
+        leaveDetails,
+        otherLeave,
+        reviewAndConfirm,
+      ],
+      context,
+    });
+
+    // TODO(PORTAL-1001): - Remove Feature Flag
+    const taxWithholdingEnabled = isFeatureEnabled(
+      "claimantShowTaxWithholding"
+    );
+    const uploadDependsOn = [
+      verifyId,
+      employerInformation,
+      leaveDetails,
+      otherLeave,
+      reviewAndConfirm,
+      payment,
+    ];
+    if (taxWithholdingEnabled) {
+      uploadDependsOn.push(taxWithholding);
+    }
     const uploadId = new Step({
       completeCond: (context) => {
         return (
@@ -258,14 +288,7 @@ export default class Step {
       name: ClaimSteps.uploadId,
       group: 3,
       pages: pagesByStep[ClaimSteps.uploadId],
-      dependsOn: [
-        verifyId,
-        employerInformation,
-        leaveDetails,
-        otherLeave,
-        reviewAndConfirm,
-        payment,
-      ],
+      dependsOn: uploadDependsOn,
       context,
     });
 
@@ -281,14 +304,7 @@ export default class Step {
         get(context.claim, "leave_details.has_future_child_date") === true,
       group: 3,
       pages: pagesByStep[ClaimSteps.uploadCertification],
-      dependsOn: [
-        verifyId,
-        employerInformation,
-        leaveDetails,
-        otherLeave,
-        reviewAndConfirm,
-        payment,
-      ],
+      dependsOn: uploadDependsOn,
       context,
     });
 
@@ -299,6 +315,7 @@ export default class Step {
       otherLeave,
       reviewAndConfirm,
       payment,
+      taxWithholding,
       uploadId,
       uploadCertification,
     ];

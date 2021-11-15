@@ -1,9 +1,17 @@
 import React, { useEffect } from "react";
-import PropTypes from "prop-types";
-import Spinner from "../components/Spinner";
+import { AppLogic } from "../hooks/useAppLogic";
+import Spinner from "../components/core/Spinner";
 import User from "../models/User";
 import routes from "../routes";
 import { useTranslation } from "../locales/i18n";
+
+export interface WithUserProps extends PageProps {
+  user: User;
+}
+
+export interface PageProps {
+  appLogic: AppLogic;
+}
 
 /**
  * Higher order component that provides the current logged in Portal user object
@@ -12,11 +20,9 @@ import { useTranslation } from "../locales/i18n";
  * If the user is not loaded, load the user.
  * If the logged in user has not consented to the data agreement, redirect the user
  * to the consent to data sharing page.
- * @param {React.Component} Component - Component to receive user prop
- * @returns {React.Component} - Component with user prop
  */
-const withUser = (Component) => {
-  const ComponentWithUser = (props) => {
+function withUser<T extends WithUserProps>(Component: React.ComponentType<T>) {
+  const ComponentWithUser = (props: PageProps) => {
     const { appLogic } = props;
     const { auth, portalFlow, users } = appLogic;
     const { t } = useTranslation();
@@ -58,29 +64,10 @@ const withUser = (Component) => {
     )
       return null;
 
-    return <Component {...props} user={users.user} />;
-  };
-
-  ComponentWithUser.propTypes = {
-    appLogic: PropTypes.shape({
-      auth: PropTypes.shape({
-        isLoggedIn: PropTypes.bool,
-        requireLogin: PropTypes.func.isRequired,
-      }),
-      portalFlow: PropTypes.shape({
-        pathname: PropTypes.string.isRequired,
-      }),
-      users: PropTypes.shape({
-        loadUser: PropTypes.func.isRequired,
-        requireUserConsentToDataAgreement: PropTypes.func.isRequired,
-        requireUserRole: PropTypes.func.isRequired,
-        user: PropTypes.instanceOf(User),
-      }).isRequired,
-      appErrors: PropTypes.object.isRequired,
-    }).isRequired,
+    return <Component {...(props as T)} user={users.user} />;
   };
 
   return ComponentWithUser;
-};
+}
 
 export default withUser;

@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import InputText from "../../src/components/InputText";
+import InputText from "../../src/components/core/InputText";
 import React from "react";
 import userEvent from "@testing-library/user-event";
 
@@ -98,16 +98,6 @@ describe("InputText", () => {
       "autocomplete",
       "address-line1"
     );
-  });
-
-  it("prevents usage of HTML number type", () => {
-    jest.spyOn(console, "error").mockImplementationOnce(jest.fn());
-    setup({ type: "number" });
-
-    const field = screen.getByRole("textbox");
-
-    expect(field.type).toBe("text");
-    expect(field.inputMode).toBe("numeric");
   });
 
   it("supports password input type", () => {

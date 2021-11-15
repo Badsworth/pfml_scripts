@@ -3,21 +3,30 @@ import AmendButton from "./AmendButton";
 import AmendmentForm from "./AmendmentForm";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConditionalContent from "../ConditionalContent";
-import Heading from "../Heading";
-import InputNumber from "../InputNumber";
-import PropTypes from "prop-types";
+import Heading from "../core/Heading";
+import InputNumber from "../core/InputNumber";
 import ReviewHeading from "../ReviewHeading";
 import ReviewRow from "../ReviewRow";
 import { get } from "lodash";
+import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import usePreviousValue from "../../hooks/usePreviousValue";
 import { useTranslation } from "../../locales/i18n";
+
+interface SupportingWorkDetailsProps {
+  appErrors: AppErrorInfoCollection;
+  clearField: (arg: string) => void;
+  getField: (arg: string) => string;
+  getFunctionalInputProps: ReturnType<typeof useFunctionalInputProps>;
+  initialHoursWorkedPerWeek: number | null;
+  updateFields: (fields: { [fieldName: string]: unknown }) => void;
+}
 
 /**
  * Display weekly hours worked for intermittent leave
  * in the Leave Admin claim review page.
  */
 
-const SupportingWorkDetails = (props) => {
+const SupportingWorkDetails = (props: SupportingWorkDetailsProps) => {
   const { t } = useTranslation();
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
     useState(false);
@@ -88,21 +97,12 @@ const SupportingWorkDetails = (props) => {
             mask="hours"
             width="small"
             smallLabel
-            valueType="integer"
+            valueType="float"
           />
         </AmendmentForm>
       </ConditionalContent>
     </React.Fragment>
   );
-};
-
-SupportingWorkDetails.propTypes = {
-  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
-  clearField: PropTypes.func.isRequired,
-  getField: PropTypes.func.isRequired,
-  getFunctionalInputProps: PropTypes.func.isRequired,
-  initialHoursWorkedPerWeek: PropTypes.number.isRequired,
-  updateFields: PropTypes.func.isRequired,
 };
 
 export default SupportingWorkDetails;

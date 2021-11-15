@@ -1,22 +1,21 @@
-import BenefitsApplication, {
-  RelationshipToCaregiver,
-} from "../../models/BenefitsApplication";
-import Alert from "../../components/Alert";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import Alert from "../../components/core/Alert";
 import BackButton from "../../components/BackButton";
 import ButtonLink from "../../components/ButtonLink";
-import PropTypes from "prop-types";
 import React from "react";
-import Title from "../../components/Title";
+import { RelationshipToCaregiver } from "../../models/BenefitsApplication";
+import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import findKeyByValue from "../../utils/findKeyByValue";
 import { get } from "lodash";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
-export const CaringLeaveAttestation = (props) => {
+export const CaringLeaveAttestation = (props: WithBenefitsApplicationProps) => {
   const { t } = useTranslation();
-  const { appLogic, claim, query } = props;
+  const { appLogic, claim } = props;
   const relationship = get(
     claim,
     "leave_details.caring_leave_metadata.relationship_to_caregiver"
@@ -38,7 +37,6 @@ export const CaringLeaveAttestation = (props) => {
           ),
         }}
       />
-      {/* @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element[]; className: string; st... Remove this comment to see the full error message */}
       <Alert className="measure-6" state="info" noIcon>
         <p>
           {t("pages.claimsCaringLeaveAttestation.truthAttestation", {
@@ -47,23 +45,17 @@ export const CaringLeaveAttestation = (props) => {
         </p>
         <ButtonLink
           className="text-no-underline text-white"
-          href={appLogic.portalFlow.getNextPageRoute("CONTINUE", {}, query)}
+          href={appLogic.portalFlow.getNextPageRoute(
+            "CONTINUE",
+            {},
+            { claim_id: claim.application_id }
+          )}
         >
           {t("pages.claimsCaringLeaveAttestation.submitApplicationButton")}
         </ButtonLink>
       </Alert>
     </React.Fragment>
   );
-};
-
-CaringLeaveAttestation.propTypes = {
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      getNextPageRoute: PropTypes.func.isRequired,
-    }),
-  }).isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
-  query: PropTypes.object.isRequired,
 };
 
 export default withBenefitsApplication(CaringLeaveAttestation);

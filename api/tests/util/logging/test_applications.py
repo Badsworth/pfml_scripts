@@ -16,7 +16,7 @@ from massgov.pfml.util.logging.applications import get_application_log_attribute
 
 
 def test_get_application_log_attributes(user, test_db_session, initialize_factories_session):
-    application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+    application = ApplicationFactory.create(user=user, updated_at=datetime.now())
     EmployerBenefitFactory.create(application_id=application.application_id, benefit_type_id=None)
     OtherIncomeFactory.create(application_id=application.application_id)
     PreviousLeaveOtherReasonFactory.create(application_id=application.application_id)
@@ -70,13 +70,14 @@ def test_get_application_log_attributes(user, test_db_session, initialize_factor
         "application.num_previous_leave_same_reason_reasons.Pregnancy": "0",
         "application.num_previous_leave_same_reason_reasons.An illness or injury": "0",
         "application.pregnant_or_recent_birth": "False",
-        "application.start_time": str(application.start_time),
-        "application.start_time.timestamp": str(application.start_time.timestamp()),
+        "application.created_at": str(application.created_at),
+        "application.created_at.timestamp": str(application.created_at.timestamp()),
         "application.submitted_time": None,
         "application.submitted_time.timestamp": None,
-        "application.updated_time": str(application.updated_time),
-        "application.updated_time.timestamp": str(application.updated_time.timestamp()),
+        "application.updated_at": str(application.updated_at),
+        "application.updated_at.timestamp": str(application.updated_at.timestamp()),
         "work_pattern.work_pattern_type": None,
+        "application.is_withholding_tax": None,
     }
     assert log_attributes == expected_attributes
 
@@ -84,7 +85,7 @@ def test_get_application_log_attributes(user, test_db_session, initialize_factor
 def test_get_leave_period_log_attributes(user, test_db_session, initialize_factories_session):
     application = ApplicationFactory.create(
         user=user,
-        updated_time=datetime.now(),
+        updated_at=datetime.now(),
         has_continuous_leave_periods=True,
         has_intermittent_leave_periods=True,
         has_reduced_schedule_leave_periods=True,

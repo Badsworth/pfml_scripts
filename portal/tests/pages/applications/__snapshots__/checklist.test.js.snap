@@ -23,17 +23,26 @@ exports[`Checklist renders multiple steps 1`] = `
       </svg>
       Back to applications
     </a>
-    <h1
-      class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2 usa-sr-only"
-      tabindex="-1"
+    <div
+      class="margin-bottom-5"
     >
-      Checklist: Create a new application
-    </h1>
+      <h1
+        class="js-title margin-top-0 margin-bottom-2 font-heading-lg line-height-sans-2"
+        tabindex="-1"
+      >
+        Your in-progress application
+      </h1>
+      <p>
+         
+        Submit all three parts so that we can review your application.
+         
+      </p>
+    </div>
     <div
       class="margin-bottom-8"
     >
       <h2
-        class="font-heading-lg text-bold"
+        class="font-heading-md text-bold"
       >
         <span
           class="display-block font-heading-2xs margin-bottom-2 text-base-dark text-bold"
@@ -247,7 +256,7 @@ exports[`Checklist renders multiple steps 1`] = `
       class="margin-bottom-8"
     >
       <h2
-        class="font-heading-lg text-bold"
+        class="font-heading-md text-bold"
       >
         <span
           class="display-block font-heading-2xs margin-bottom-2 text-base-dark text-bold"
@@ -296,7 +305,7 @@ exports[`Checklist renders multiple steps 1`] = `
       class="margin-bottom-8"
     >
       <h2
-        class="font-heading-lg text-bold"
+        class="font-heading-md text-bold"
       >
         <span
           class="display-block font-heading-2xs margin-bottom-2 text-base-dark text-bold"

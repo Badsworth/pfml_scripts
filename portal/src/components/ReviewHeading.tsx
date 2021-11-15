@@ -1,12 +1,18 @@
-import Heading from "./Heading";
+import Heading from "./core/Heading";
 import Link from "next/link";
-import PropTypes from "prop-types";
 import React from "react";
+
+interface ReviewHeadingProps {
+  children: string;
+  editHref?: string;
+  editText?: React.ReactNode;
+  level: "2" | "3" | "4" | "5" | "6";
+}
 
 /**
  * Heading for a group of ReviewRow components
  */
-const ReviewHeading = (props) => {
+const ReviewHeading = (props: ReviewHeadingProps) => {
   return (
     <div className="display-flex flex-align-end margin-top-6 margin-bottom-3">
       <Heading
@@ -28,26 +34,6 @@ const ReviewHeading = (props) => {
       )}
     </div>
   );
-};
-
-ReviewHeading.propTypes = {
-  /**
-   * Heading text
-   */
-  children: PropTypes.string.isRequired,
-  /**
-   * HTML `href` attribute for the edit link.
-   * If undefined, no edit link will be shown.
-   */
-  editHref: PropTypes.string,
-  /**
-   * Localized text for the edit link
-   */
-  editText: PropTypes.node,
-  /**
-   * The heading level to use
-   */
-  level: PropTypes.oneOf(["2", "3", "4", "5", "6"]).isRequired,
 };
 
 export default ReviewHeading;

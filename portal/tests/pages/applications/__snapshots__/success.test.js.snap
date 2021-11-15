@@ -132,13 +132,28 @@ exports[`Success renders content tailored to Caring Leave 1`] = `
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
         .
       </li>
+      <li>
+        View the video below to learn about what happens between submitting your application and receiving payments.
+      </li>
     </ul>
+    <div
+      class="add-aspect-16x9"
+    >
+      <iframe
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen=""
+        class="pin-left pin-y width-full height-full"
+        frameborder="0"
+        src="https://player.vimeo.com/video/609976204?h=902acebe39"
+        title="DFML - What comes between \\\\“submit\\\\” and receiving payments"
+      />
+    </div>
     <h2
       class="font-heading-md text-bold"
     >
@@ -192,7 +207,7 @@ exports[`Success renders content tailored to Caring Leave 1`] = `
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>
@@ -325,13 +340,28 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
         .
       </li>
+      <li>
+        View the video below to learn about what happens between submitting your application and receiving payments.
+      </li>
     </ul>
+    <div
+      class="add-aspect-16x9"
+    >
+      <iframe
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen=""
+        class="pin-left pin-y width-full height-full"
+        frameborder="0"
+        src="https://player.vimeo.com/video/609976204?h=902acebe39"
+        title="DFML - What comes between \\\\“submit\\\\” and receiving payments"
+      />
+    </div>
     <h2
       class="font-heading-md text-bold"
     >
@@ -385,7 +415,7 @@ exports[`Success renders content tailored to Family (Bonding Adoption) 1`] = `
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>
@@ -493,13 +523,28 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
         .
       </li>
+      <li>
+        View the video below to learn about what happens between submitting your application and receiving payments.
+      </li>
     </ul>
+    <div
+      class="add-aspect-16x9"
+    >
+      <iframe
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen=""
+        class="pin-left pin-y width-full height-full"
+        frameborder="0"
+        src="https://player.vimeo.com/video/609976204?h=902acebe39"
+        title="DFML - What comes between \\\\“submit\\\\” and receiving payments"
+      />
+    </div>
     <h2
       class="font-heading-md text-bold"
     >
@@ -553,7 +598,7 @@ exports[`Success renders content tailored to Family (Bonding Future Adoption) 1`
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>
@@ -661,13 +706,28 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
         .
       </li>
+      <li>
+        View the video below to learn about what happens between submitting your application and receiving payments.
+      </li>
     </ul>
+    <div
+      class="add-aspect-16x9"
+    >
+      <iframe
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen=""
+        class="pin-left pin-y width-full height-full"
+        frameborder="0"
+        src="https://player.vimeo.com/video/609976204?h=902acebe39"
+        title="DFML - What comes between \\\\“submit\\\\” and receiving payments"
+      />
+    </div>
     <h2
       class="font-heading-md text-bold"
     >
@@ -787,7 +847,7 @@ exports[`Success renders content tailored to Family (Bonding Future Newborn) 1`]
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>
@@ -920,13 +980,28 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
         .
       </li>
+      <li>
+        View the video below to learn about what happens between submitting your application and receiving payments.
+      </li>
     </ul>
+    <div
+      class="add-aspect-16x9"
+    >
+      <iframe
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen=""
+        class="pin-left pin-y width-full height-full"
+        frameborder="0"
+        src="https://player.vimeo.com/video/609976204?h=902acebe39"
+        title="DFML - What comes between \\\\“submit\\\\” and receiving payments"
+      />
+    </div>
     <h2
       class="font-heading-md text-bold"
     >
@@ -1046,7 +1121,7 @@ exports[`Success renders content tailored to Family (Bonding Newborn) 1`] = `
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>
@@ -1179,13 +1254,28 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
         .
       </li>
+      <li>
+        View the video below to learn about what happens between submitting your application and receiving payments.
+      </li>
     </ul>
+    <div
+      class="add-aspect-16x9"
+    >
+      <iframe
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen=""
+        class="pin-left pin-y width-full height-full"
+        frameborder="0"
+        src="https://player.vimeo.com/video/609976204?h=902acebe39"
+        title="DFML - What comes between \\\\“submit\\\\” and receiving payments"
+      />
+    </div>
     <h2
       class="font-heading-md text-bold"
     >
@@ -1239,7 +1329,7 @@ exports[`Success renders content tailored to Medical (Not pregnant) 1`] = `
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>
@@ -1372,13 +1462,28 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
         .
       </li>
+      <li>
+        View the video below to learn about what happens between submitting your application and receiving payments.
+      </li>
     </ul>
+    <div
+      class="add-aspect-16x9"
+    >
+      <iframe
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen=""
+        class="pin-left pin-y width-full height-full"
+        frameborder="0"
+        src="https://player.vimeo.com/video/609976204?h=902acebe39"
+        title="DFML - What comes between \\\\“submit\\\\” and receiving payments"
+      />
+    </div>
     <h2
       class="font-heading-md text-bold"
     >
@@ -1498,7 +1603,7 @@ exports[`Success renders content tailored to Medical (Pregnant) 1`] = `
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>
@@ -1625,13 +1730,28 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
       </li>
       <li>
         <a
-          href="/applications/status?absence_case_id=NTN-111-ABS-01"
+          href="/applications/status?absence_id=NTN-111-ABS-01"
         >
           Track the status of your application here
         </a>
         .
       </li>
+      <li>
+        View the video below to learn about what happens between submitting your application and receiving payments.
+      </li>
     </ul>
+    <div
+      class="add-aspect-16x9"
+    >
+      <iframe
+        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+        allowfullscreen=""
+        class="pin-left pin-y width-full height-full"
+        frameborder="0"
+        src="https://player.vimeo.com/video/609976204?h=902acebe39"
+        title="DFML - What comes between \\\\“submit\\\\” and receiving payments"
+      />
+    </div>
     <h2
       class="font-heading-md text-bold"
     >
@@ -1751,7 +1871,7 @@ exports[`Success renders content tailored to Medical (Pregnant, applying in adva
       </h2>
       <a
         class="usa-button margin-top-4"
-        href="/applications/status?absence_case_id=NTN-111-ABS-01"
+        href="/applications/status?absence_id=NTN-111-ABS-01"
       >
         View your application
       </a>

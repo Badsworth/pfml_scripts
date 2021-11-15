@@ -122,13 +122,19 @@ export const LSTFBHAP1: ScenarioSpecification = {
 
 // Fineos claim submission with ineligible employee
 export const LSTFBHAP4: ScenarioSpecification = {
-  ...CypressScenarios.BHAP1INEL,
+  employee: { mass_id: true, wages: "ineligible" },
   claim: {
-    ...CypressScenarios.BHAP1INEL.claim,
     label: "FineosClaimSubmit",
+    shortClaim: true,
+    reason: "Child Bonding",
+    reason_qualifier: "Foster Care",
     employerResponse: {
       hours_worked_per_week: 40,
       employer_decision: "Deny",
+    },
+    docs: {
+      MASSID: {},
+      FOSTERPLACEMENT: {},
     },
   },
 };

@@ -1,11 +1,10 @@
 import { DateTime } from "luxon";
+import { ISO8601Timestamp } from "../../types/common";
 
-/**
- * @param {string} [start] - ISO 8601 timestamp
- * @param {string} [end] - ISO 8601 timestamp
- * @returns {boolean}
- */
-export const isInMaintenanceWindow = (start, end) => {
+export const isInMaintenanceWindow = (
+  start?: ISO8601Timestamp | null,
+  end?: ISO8601Timestamp | null
+) => {
   // If no time frame is set, the maintenance window is considered
   // always open (when maintenance mode is On)
   if (!start && !end) return true;
@@ -17,11 +16,9 @@ export const isInMaintenanceWindow = (start, end) => {
   return isAfterStart && isBeforeEnd;
 };
 
-/**
- * @param {string} [start] - ISO 8601 timestamp
- * @returns {boolean}
- */
-export const isMaintenanceOneDayInFuture = (start) => {
+export const isMaintenanceOneDayInFuture = (
+  start?: ISO8601Timestamp | null
+) => {
   if (!start) return false;
 
   const now = DateTime.local();
@@ -38,30 +35,27 @@ export const isMaintenanceOneDayInFuture = (start) => {
 
 /**
  * Check if a page route should include the maintenance message
- * @param {string[]} maintenancePageRoutes - routes to apply maintenance message to
- * @param {string} pathname - current page's path
- * @returns {boolean}
  */
-export const isMaintenancePageRoute = (maintenancePageRoutes, pathname) => {
+export const isMaintenancePageRoute = (
+  maintenancePageRoutes: string[],
+  pathname: string
+) => {
   return (
-    maintenancePageRoutes &&
     // includes specific page? (pathname doesn't include a trailing slash):
-    (maintenancePageRoutes.includes(pathname) ||
-      // or pages matching a wildcard? (e.g /applications/* or /* for site-wide):
-      maintenancePageRoutes.some(
-        (maintenancePageRoute) =>
-          maintenancePageRoute.endsWith("*") &&
-          pathname.startsWith(maintenancePageRoute.split("*")[0])
-      ))
+    maintenancePageRoutes.includes(pathname) ||
+    // or pages matching a wildcard? (e.g /applications/* or /* for site-wide):
+    maintenancePageRoutes.some(
+      (maintenancePageRoute) =>
+        maintenancePageRoute.endsWith("*") &&
+        pathname.startsWith(maintenancePageRoute.split("*")[0])
+    )
   );
 };
 
 /**
  * Returns formatted maintenance time
- * @param {string} mTime - ISO 8601 timestamp
- * @returns {string}
  */
-export const maintenanceTime = (mTime) => {
+export const maintenanceTime = (mTime?: ISO8601Timestamp | null) => {
   return mTime
     ? DateTime.fromISO(mTime).toLocaleString(DateTime.DATETIME_FULL)
     : null;

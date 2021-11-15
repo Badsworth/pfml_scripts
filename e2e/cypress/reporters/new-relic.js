@@ -3,7 +3,6 @@
  *
  * It is written in JS because it's required directly by Cypress, not transpiled.
  */
-/* eslint-disable @typescript-eslint/no-var-requires */
 const { Runner, reporters, Suite } = require("mocha");
 const fetch = require("node-fetch");
 const debug = require("debug")("cypress:reporter:newrelic");
@@ -14,10 +13,11 @@ module.exports = class NewRelicCypressReporter extends reporters.Spec {
   constructor(runner, options) {
     super(runner, options);
 
-    const { accountId, apiKey, environment } = options.reporterOptions;
+    const { accountId, apiKey, environment, branch } = options.reporterOptions;
     this.accountId = accountId;
     this.apiKey = apiKey;
     this.environment = environment;
+    this.branch = branch;
     this.queue = [];
     this.ErrorCategory = new ErrorCategory();
 
@@ -43,9 +43,10 @@ module.exports = class NewRelicCypressReporter extends reporters.Spec {
   async reportTest(test) {
     const suite = getSuite(test);
     const { ciBuildId: runId, group, tag, runUrl } = await getRunMetadata();
-    const { environment, ErrorCategory } = this;
+    const { environment, ErrorCategory, branch } = this;
     const event = {
       runId,
+      branch,
       eventType: "CypressTestResult",
       test: test.title,
       suite: suite.title,

@@ -1,14 +1,71 @@
 import React, { useState } from "react";
-import InputChoice from "./InputChoice";
-import InputText from "./InputText";
-import PropTypes from "prop-types";
+import InputChoice from "./core/InputChoice";
+import InputText from "./core/InputText";
 import { useTranslation } from "../locales/i18n";
 import useUniqueId from "../hooks/useUniqueId";
 
 /**
+ * This component supports most (not all) InputText props and passes those
+ * props directly to InputText. It should not be passed props such as `type`.
+ */
+interface InputPasswordProps {
+  /**
+   * HTML input `autocomplete` attribute
+   */
+  autoComplete?: string;
+  /**
+   * Localized error message. Setting this enables the error state styling.
+   */
+  errorMsg?: React.ReactNode;
+  /**
+   * Localized example text
+   */
+  example?: string;
+  /**
+   * Additional classes to include on the containing form group element
+   */
+  formGroupClassName?: string;
+  /**
+   * Localized hint text
+   */
+  hint?: React.ReactNode;
+  /**
+   * Additional classes to include on the HTML input
+   */
+  inputClassName?: string;
+  /**
+   * Localized field label
+   */
+  label: React.ReactNode;
+  /**
+   * Override the label's default text-bold class
+   */
+  labelClassName?: string;
+  /**
+   * HTML input `maxlength` attribute
+   */
+  maxLength?: number;
+  /**
+   * HTML input `name` attribute
+   */
+  name: string;
+  onBlur?: React.FocusEventHandler<HTMLInputElement>;
+  onFocus?: React.FocusEventHandler<HTMLInputElement>;
+  onChange?: React.ChangeEventHandler<HTMLInputElement>;
+  /**
+   * Enable the smaller label variant
+   */
+  smallLabel?: boolean;
+  /**
+   * Change the width of the input field
+   */
+  width?: "small" | "medium";
+}
+
+/**
  * An input that can be toggled between type="password" and type="text".
  */
-const InputPassword = (props) => {
+const InputPassword = (props: InputPasswordProps) => {
   const inputId = useUniqueId("InputPassword");
   const [showPassword, setShowPassword] = useState(false);
 
@@ -30,73 +87,6 @@ const InputPassword = (props) => {
       />
     </React.Fragment>
   );
-};
-
-/**
- * This component supports most (not all) InputText.propTypes and passes those
- * props directly to InputText. It should not be passed props such as `type`.
- */
-InputPassword.propTypes = {
-  /**
-   * HTML input `autocomplete` attribute
-   */
-  autoComplete: PropTypes.string,
-  /**
-   * Localized error message. Setting this enables the error state styling.
-   */
-  errorMsg: PropTypes.node,
-  /**
-   * Localized example text
-   */
-  example: PropTypes.string,
-  /**
-   * Additional classes to include on the containing form group element
-   */
-  formGroupClassName: PropTypes.string,
-  /**
-   * Localized hint text
-   */
-  hint: PropTypes.node,
-  /**
-   * Additional classes to include on the HTML input
-   */
-  inputClassName: PropTypes.string,
-  /**
-   * Localized field label
-   */
-  label: PropTypes.node.isRequired,
-  /**
-   * Override the label's default text-bold class
-   */
-  labelClassName: PropTypes.string,
-  /**
-   * HTML input `maxlength` attribute
-   */
-  maxLength: PropTypes.string,
-  /**
-   * HTML input `name` attribute
-   */
-  name: PropTypes.string.isRequired,
-  /**
-   * HTML input `onBlur` attribute
-   */
-  onBlur: PropTypes.func,
-  /**
-   * HTML input `onFocus` attribute
-   */
-  onFocus: PropTypes.func,
-  /**
-   * HTML input `onChange` attribute
-   */
-  onChange: PropTypes.func,
-  /**
-   * Enable the smaller label variant
-   */
-  smallLabel: PropTypes.bool,
-  /**
-   * Change the width of the input field
-   */
-  width: PropTypes.oneOf(["small", "medium"]),
 };
 
 export default InputPassword;

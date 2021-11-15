@@ -50,6 +50,7 @@ locals {
     { name : "FINEOS_AWS_IAM_ROLE_EXTERNAL_ID", value : var.fineos_aws_iam_role_external_id },
     { name : "FINEOS_DATA_IMPORT_PATH", value : var.fineos_data_import_path },
     { name : "FINEOS_DATA_EXPORT_PATH", value : var.fineos_data_export_path },
+    { name : "FINEOS_ADHOC_DATA_EXPORT_PATH", value : var.fineos_adhoc_data_export_path },
     # This should just be fineos_data_export_path but we'll roll with this for now
     # to avoid breaking the camel's back
     { name : "FINEOS_FOLDER_PATH", value : var.fineos_import_employee_updates_input_directory_path }
@@ -78,14 +79,27 @@ locals {
     { name : "PFML_PAYMENT_REJECTS_ARCHIVE_PATH", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/audit" }
   ]
 
-  # Moveit and S3 path configurations for reductions
+  # MOVEit and S3 path configurations for reductions
+  #
+  # These environment variables are from the perspective of the API system,
+  # namely:
+  # "inbound" = "where does API look for files coming from DIA/DUA"
+  # "outbound" = "where does API put files to send to DIA/DUA"
+  #
+  # The actual paths in MOVEit may not always correspond to the API perspective.
+  #
+  # *Notably, the DUA paths in MOVEit are reversed from the API point of view.*
+  #
+  # The paths may be made consistent in the future:
+  # https://lwd.atlassian.net/browse/API-1626
   reductions_folders = [
     { name : "MOVEIT_DIA_INBOUND_PATH", value : "/DFML/DIA/Inbound" },
     { name : "MOVEIT_DUA_INBOUND_PATH", value : "/DFML/DUA/Outbound" },
     { name : "MOVEIT_DIA_OUTBOUND_PATH", value : "/DFML/DIA/Outbound" },
     { name : "MOVEIT_DUA_OUTBOUND_PATH", value : "/DFML/DUA/Inbound" },
+    { name : "MOVEIT_DIA_ARCHIVE_PATH", value : "/DFML/DIA/Archive" },
+    { name : "MOVEIT_DUA_ARCHIVE_PATH", value : "/DFML/DUA/Archive" },
     { name : "S3_BUCKET", value : "s3://massgov-pfml-${var.environment_name}-agency-transfer/" }
-
   ]
 
   # Basic configuration for sender email

@@ -23,7 +23,7 @@ from . import _create_payment_container
 
 ###
 # Note that the maximum weekly benefit cap for these tests is set to $850.00 in:
-# api/massgov/pfml/db/models/payments.py::sync_maximum_weekly_benefit_amount
+# api/massgov/pfml/db/models/applications.py::sync_state_metrics
 ###
 
 
@@ -160,16 +160,33 @@ def test_dua_dia_reductions_post_processing(payment_post_processing_step, local_
         == State.DELEGATED_PAYMENT_STAGED_FOR_PAYMENT_AUDIT_REPORT_SAMPLING.state_id
     )
 
-    audit_report_details = (
+    dua_audit_report_details = (
         local_test_db_session.query(PaymentAuditReportDetails)
         .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
+        .filter(
+            PaymentAuditReportDetails.audit_report_type_id
+            == PaymentAuditReportType.DUA_ADDITIONAL_INCOME.payment_audit_report_type_id
+        )
         .one_or_none()
     )
-    assert audit_report_details.details["message"] == "\n".join(
+    assert dua_audit_report_details.details["message"] == "\n".join(
         [
             "DUA Reductions:",
             "- Payment Date: 2021-09-29, Amount: 127.65, Gross Payment Amount: 345.50, Request Week Begin Date: 2021-09-22, Calculated Request Week End Date: 2021-09-28, Benefit Year Begin Date: 2021-01-01, Benefit Year End Date: 2021-12-31, Fraud Indicator: N/A",
-            "",
+        ]
+    )
+
+    dia_audit_report_details = (
+        local_test_db_session.query(PaymentAuditReportDetails)
+        .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
+        .filter(
+            PaymentAuditReportDetails.audit_report_type_id
+            == PaymentAuditReportType.DIA_ADDITIONAL_INCOME.payment_audit_report_type_id
+        )
+        .one_or_none()
+    )
+    assert dia_audit_report_details.details["message"] == "\n".join(
+        [
             "DIA Reductions:",
             "- Award Date: 2021-01-15, Start Date: 2021-01-15, Amount: 1200.00, Weekly Amount: 400.00, Event Created Date: 2021-01-11",
         ]
@@ -226,14 +243,18 @@ def test_mixed_post_processing_scenarios(
         .filter(PaymentAuditReportDetails.payment_id == payment.payment_id)
         .all()
     )
-    assert len(audit_report_details) == 2
+    assert len(audit_report_details) == 3
 
     audit_report_type_ids = [
         audit_report_detail.audit_report_type.payment_audit_report_type_id
         for audit_report_detail in audit_report_details
     ]
     assert (
-        PaymentAuditReportType.DUA_DIA_REDUCTION.payment_audit_report_type_id
+        PaymentAuditReportType.DUA_ADDITIONAL_INCOME.payment_audit_report_type_id
+        in audit_report_type_ids
+    )
+    assert (
+        PaymentAuditReportType.DIA_ADDITIONAL_INCOME.payment_audit_report_type_id
         in audit_report_type_ids
     )
     assert (

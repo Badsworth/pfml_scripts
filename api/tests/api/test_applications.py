@@ -61,9 +61,9 @@ from massgov.pfml.db.models.factories import (
 from massgov.pfml.fineos.client import AbstractFINEOSClient
 from massgov.pfml.fineos.exception import (
     FINEOSClientError,
+    FINEOSEntityNotFound,
     FINEOSFatalResponseError,
     FINEOSFatalUnavailable,
-    FINEOSNotFound,
 )
 from massgov.pfml.fineos.factory import FINEOSClientConfig
 from massgov.pfml.util.paginate.paginator import DEFAULT_PAGE_SIZE
@@ -71,6 +71,19 @@ from massgov.pfml.util.paginate.paginator import DEFAULT_PAGE_SIZE
 
 def sqlalchemy_object_as_dict(obj):
     return {c.key: getattr(obj, c.key) for c in inspect(obj).mapper.column_attrs}
+
+
+def test_applications_get_invalid_uuid(client, user, auth_token):
+    response = client.get(
+        "/v1/applications/undefined", headers={"Authorization": f"Bearer {auth_token}"},
+    )
+
+    response_body = response.get_json()
+    assert response.status_code == 400
+    assert (
+        response_body.get("detail")
+        == "'undefined' is not a 'uuid'\n\nFailed validating 'format' in schema:\n    {'format': 'uuid', 'type': 'string'}\n\nOn instance:\n    'undefined'"
+    )
 
 
 # The UUID used in this test was generated online. Hopefully it will never match any of
@@ -86,7 +99,7 @@ def test_applications_get_invalid(client, user, auth_token):
 
 @freeze_time("2020-01-01")
 def test_applications_get_valid(client, user, auth_token):
-    application = ApplicationFactory.create(user=user, updated_time=datetime_util.utcnow())
+    application = ApplicationFactory.create(user=user, updated_at=datetime_util.utcnow())
 
     response = client.get(
         "/v1/applications/{}".format(application.application_id),
@@ -98,7 +111,7 @@ def test_applications_get_valid(client, user, auth_token):
 
     assert response_body.get("employer_fein") is not None
     assert response_body.get("application_id") == str(application.application_id)
-    assert response_body.get("updated_time") == "2020-01-01T00:00:00+00:00"
+    assert response_body.get("updated_at") == "2020-01-01T00:00:00+00:00"
     assert response_body.get("status") == ApplicationStatus.Started.value
 
 
@@ -129,7 +142,7 @@ def test_applications_unauthorized_get_with_user(client, user, auth_token):
 
 def test_applications_get_fineos_forbidden(client, fineos_user, fineos_user_token):
     # Fineos role cannot access this endpoint
-    application = ApplicationFactory.create(user=fineos_user, updated_time=datetime.now())
+    application = ApplicationFactory.create(user=fineos_user, updated_at=datetime.now())
     response = client.get(
         "/v1/applications/{}".format(application.application_id),
         headers={"Authorization": f"Bearer {fineos_user_token}"},
@@ -189,12 +202,13 @@ def test_applications_get_with_payment_preference(client, user, auth_token, test
 def test_applications_get_all_for_user(client, user, auth_token):
     applications = sorted(
         [ApplicationFactory.create(user=user), ApplicationFactory.create(user=user)],
-        key=lambda app: app.start_time,
+        key=lambda app: app.created_at,
         reverse=True,
     )
     unassociated_application = ApplicationFactory.create()
 
     response = client.get("/v1/applications", headers={"Authorization": f"Bearer {auth_token}"})
+    print(response.get_json())
     assert response.status_code == 200
 
     response_data = response.get_json().get("data")
@@ -207,7 +221,7 @@ def test_applications_get_all_for_user(client, user, auth_token):
 
 def test_applications_get_all_pagination_default_limit(client, user, auth_token):
     applications = [ApplicationFactory.create(user=user) for _ in range(DEFAULT_PAGE_SIZE * 4)]
-    applications = sorted(applications, key=lambda app: app.start_time, reverse=True)
+    applications = sorted(applications, key=lambda app: app.created_at, reverse=True)
 
     response = client.get("/v1/applications", headers={"Authorization": f"Bearer {auth_token}"})
     assert response.status_code == 200
@@ -220,7 +234,7 @@ def test_applications_get_all_pagination_default_limit(client, user, auth_token)
 
 def test_applications_get_all_pagination_asc(client, user, auth_token):
     applications = [ApplicationFactory.create(user=user) for _ in range(100)]
-    applications = sorted(applications, key=lambda app: app.start_time, reverse=False)
+    applications = sorted(applications, key=lambda app: app.created_at, reverse=False)
 
     response = client.get(
         "/v1/applications?order_direction=ascending",
@@ -236,7 +250,7 @@ def test_applications_get_all_pagination_asc(client, user, auth_token):
 
 def test_applications_get_all_pagination_limit_double(client, user, auth_token):
     applications = [ApplicationFactory.create(user=user) for _ in range(DEFAULT_PAGE_SIZE * 4)]
-    applications = sorted(applications, key=lambda app: app.start_time, reverse=True)
+    applications = sorted(applications, key=lambda app: app.created_at, reverse=True)
 
     response = client.get(
         f"/v1/applications?page_size={DEFAULT_PAGE_SIZE * 2}",
@@ -261,8 +275,8 @@ def test_applications_post_start_app(client, user, auth_token, test_db_session):
 
     application = test_db_session.query(Application).get(application_id)
 
-    assert application.start_time
-    assert application.updated_time == application.start_time
+    assert application.created_at
+    assert application.updated_at == application.created_at
     assert application.user.user_id == user.user_id
 
 
@@ -349,7 +363,7 @@ def test_application_patch(client, user, auth_token, test_db_session):
     assert application.phone.phone_number == "+12404879945"
 
     assert response_body.get("data").get("last_name") == "Perez"
-    assert response_body.get("data").get("updated_time") == "2020-01-01T00:00:00+00:00"
+    assert response_body.get("data").get("updated_at") == "2020-01-01T00:00:00+00:00"
     assert response_body.get("data").get("middle_name") == "Mike"
     assert response_body.get("data").get("occupation") == "Engineer"
     assert response_body.get("data").get("mailing_address")["city"] == "Springfield"
@@ -3212,7 +3226,7 @@ def create_mock_client(err: FINEOSClientError):
         (
             400,
             IssueType.fineos_case_creation_issues,
-            FINEOSNotFound(
+            FINEOSEntityNotFound(
                 "<ErrorDetails><faultcode>com.fineos.common.portalinfrastructure.exceptions.GenericUncheckedException</faultcode><faultstring>The employee does not have an occupation linked.</faultstring><detail></detail></ErrorDetails>"
             ),
         ),
@@ -4754,7 +4768,7 @@ def test_application_patch_null_benefits(
     client, user, auth_token, test_db_session, initialize_factories_session
 ):
     # employer_benefits
-    application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+    application = ApplicationFactory.create(user=user, updated_at=datetime.now())
     EmployerBenefitFactory.create(application_id=application.application_id)
 
     update_request_body = {
@@ -4815,7 +4829,7 @@ def test_application_patch_benefits_empty_arrays(
     client, user, auth_token, test_db_session, initialize_factories_session
 ):
     # employer_benefits
-    application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+    application = ApplicationFactory.create(user=user, updated_at=datetime.now())
     EmployerBenefitFactory.create(application_id=application.application_id)
 
     update_request_body = {
@@ -4877,7 +4891,7 @@ def test_application_patch_benefits_empty_arrays(
 class TestApplicationsUpdate:
     @pytest.fixture
     def application(self, user):
-        application = ApplicationFactory.create(user=user, updated_time=datetime.now())
+        application = ApplicationFactory.create(user=user, updated_at=datetime.now())
         EmployerBenefitFactory.create(application_id=application.application_id)
 
         return application

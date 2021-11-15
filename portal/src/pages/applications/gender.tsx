@@ -1,23 +1,21 @@
-import BenefitsApplication, {
-  Gender as GenderDescription,
-} from "../../models/BenefitsApplication";
-
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import PropTypes from "prop-types";
+import withBenefitsApplication, {
+  WithBenefitsApplicationProps,
+} from "../../hoc/withBenefitsApplication";
+import { Gender as GenderDescription } from "../../models/BenefitsApplication";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { get } from "lodash";
 import useFormState from "../../hooks/useFormState";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplication from "../../hoc/withBenefitsApplication";
 
 export const fields = ["claim.gender"];
 
-export const Gender = (props) => {
+export const Gender = (props: WithBenefitsApplicationProps) => {
   const { appLogic, claim } = props;
   const { t } = useTranslation();
-  // @ts-expect-error ts-migrate(2339) FIXME: Property 'formState' does not exist on type 'FormS... Remove this comment to see the full error message
+
   const { formState, updateFields } = useFormState({
     gender: get(claim, "gender") || GenderDescription.preferNotToAnswer,
   });
@@ -74,11 +72,6 @@ export const Gender = (props) => {
       />
     </QuestionPage>
   );
-};
-
-Gender.propTypes = {
-  appLogic: PropTypes.object.isRequired,
-  claim: PropTypes.instanceOf(BenefitsApplication).isRequired,
 };
 
 export default withBenefitsApplication(Gender);

@@ -1,27 +1,27 @@
-import Document, { DocumentType } from "../../../src/models/Document";
 import { render, screen } from "@testing-library/react";
 import AppErrorInfo from "../../../src/models/AppErrorInfo";
 import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
+import { DocumentType } from "../../../src/models/Document";
 import LeaveDetails from "../../../src/components/employers/LeaveDetails";
 import { MockEmployerClaimBuilder } from "../../test-utils";
 import React from "react";
 import userEvent from "@testing-library/user-event";
 
 const DOCUMENTS = [
-  new Document({
+  {
     content_type: "image/png",
     created_at: "2020-04-05",
     document_type: DocumentType.certification.medicalCertification,
     fineos_document_id: "fineos-id-4",
     name: "Medical cert doc",
-  }),
-  new Document({
+  },
+  {
     content_type: "application/pdf",
     created_at: "2020-02-01",
     document_type: DocumentType.certification.medicalCertification,
     fineos_document_id: "fineos-id-9",
     // intentionally omit name
-  }),
+  },
 ];
 
 const claimWithCaringLeave = new MockEmployerClaimBuilder()
@@ -134,14 +134,14 @@ describe("LeaveDetails", () => {
     userEvent.click(screen.getAllByRole("button")[0]);
 
     expect(downloadDocumentSpy).toHaveBeenCalledWith(
-      "NTN-111-ABS-01",
       expect.objectContaining({
         content_type: "image/png",
         created_at: "2020-04-05",
         document_type: "State managed Paid Leave Confirmation",
         fineos_document_id: "fineos-id-4",
         name: "Medical cert doc",
-      })
+      }),
+      "NTN-111-ABS-01"
     );
   });
 

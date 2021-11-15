@@ -67,12 +67,13 @@ module "tasks" {
   dfml_business_operations_email_address = "mass-pfml-payments-test-email@navapbc.com"
   agency_reductions_email_address        = "mass-pfml-payments-test-email@navapbc.com"
 
-  fineos_data_export_path   = "s3://fin-somdev-data-export/IDT/dataexports"
-  fineos_data_import_path   = "s3://fin-somdev-data-import/IDT/peiupdate"
-  fineos_error_export_path  = "s3://fin-somdev-data-export/IDT/errorExtracts"
-  fineos_report_export_path = "s3://fin-somdev-data-export/IDT/reportExtract"
-  pfml_fineos_inbound_path  = "s3://massgov-pfml-stage-agency-transfer/cps/inbound"
-  pfml_fineos_outbound_path = "s3://massgov-pfml-stage-agency-transfer/cps/outbound"
+  fineos_data_export_path       = "s3://fin-somdev-data-export/IDT/dataexports"
+  fineos_adhoc_data_export_path = "s3://fin-somdev-data-export/IDT/dataExtracts/AdHocExtract"
+  fineos_data_import_path       = "s3://fin-somdev-data-import/IDT/peiupdate"
+  fineos_error_export_path      = "s3://fin-somdev-data-export/IDT/errorExtracts"
+  fineos_report_export_path     = "s3://fin-somdev-data-export/IDT/reportExtract"
+  pfml_fineos_inbound_path      = "s3://massgov-pfml-stage-agency-transfer/cps/inbound"
+  pfml_fineos_outbound_path     = "s3://massgov-pfml-stage-agency-transfer/cps/outbound"
 
   payment_audit_report_outbound_folder_path = "s3://massgov-pfml-stage-agency-transfer/audit/outbound"
   payment_audit_report_sent_folder_path     = "s3://massgov-pfml-stage-agency-transfer/audit/sent"
@@ -89,5 +90,7 @@ module "tasks" {
 
   task_failure_email_address_list = ["mass-pfml-api-low-priority@navapbc.pagerduty.com"]
 
-  dor_fineos_etl_schedule_expression = "cron(5 * * * ? *)" # Hourly at :05 minutes past each hour
+  # Hourly at :05 minutes past each hour
+  dor_fineos_etl_schedule_expression_standard         = "cron(5 * * * ? *)"
+  dor_fineos_etl_schedule_expression_daylight_savings = "cron(5 * * * ? *)"
 }

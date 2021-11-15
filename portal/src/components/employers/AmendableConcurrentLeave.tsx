@@ -4,12 +4,22 @@ import AmendmentForm from "./AmendmentForm";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConcurrentLeave from "../../models/ConcurrentLeave";
 import ConditionalContent from "../ConditionalContent";
-import Heading from "../Heading";
-import InputDate from "../InputDate";
-import PropTypes from "prop-types";
+import Heading from "../core/Heading";
+import InputDate from "../core/InputDate";
 import formatDateRange from "../../utils/formatDateRange";
 import useAutoFocusEffect from "../../hooks/useAutoFocusEffect";
 import { useTranslation } from "../../locales/i18n";
+
+interface AmendableConcurrentLeaveProps {
+  appErrors: AppErrorInfoCollection;
+  concurrentLeave: ConcurrentLeave;
+  isAddedByLeaveAdmin: boolean;
+  onChange: (
+    arg: ConcurrentLeave | { [key: string]: unknown },
+    arg2?: string
+  ) => void;
+  onRemove: (arg: ConcurrentLeave) => void;
+}
 
 /**
  * Display a concurrent leave and amendment form
@@ -22,15 +32,15 @@ const AmendableConcurrentLeave = ({
   isAddedByLeaveAdmin,
   onChange,
   onRemove,
-}) => {
+}: AmendableConcurrentLeaveProps) => {
   const { t } = useTranslation();
   const [amendment, setAmendment] = useState(concurrentLeave);
   const [isAmendmentFormDisplayed, setIsAmendmentFormDisplayed] =
     useState(isAddedByLeaveAdmin);
-  const containerRef = useRef<HTMLTableRowElement>();
+  const containerRef = useRef<HTMLTableRowElement>(null);
   useAutoFocusEffect({ containerRef, isAmendmentFormDisplayed });
 
-  const getFormattedValue = (field, value) => {
+  const getFormattedValue = (field: string, value: string) => {
     if (field === "leave_start_date" || field === "leave_end_date") {
       // happens if a user starts typing a date, then removes it
       // these fields aren't required, and sending an empty string returns an "invalid date" error
@@ -40,7 +50,7 @@ const AmendableConcurrentLeave = ({
     return value;
   };
 
-  const amendLeave = (field, value) => {
+  const amendLeave = (field: string, value: string) => {
     const formStateField = isAddedByLeaveAdmin
       ? "addedConcurrentLeave"
       : "amendedConcurrentLeave";
@@ -84,7 +94,6 @@ const AmendableConcurrentLeave = ({
   const ConcurrentLeaveDetailsRow = () => (
     <tr>
       <th scope="row">
-        {/* @ts-expect-error ts-migrate(2554) FIXME: Expected 3 arguments, but got 2. */}
         {formatDateRange(
           concurrentLeave.leave_start_date,
           concurrentLeave.leave_end_date
@@ -125,7 +134,7 @@ const AmendableConcurrentLeave = ({
               </p>
               <InputDate
                 onChange={(e) => amendLeave("leave_start_date", e.target.value)}
-                value={amendment.leave_start_date}
+                value={amendment.leave_start_date || ""}
                 label={t(
                   "components.employersAmendableConcurrentLeave.leaveStartDateLabel"
                 )}
@@ -138,7 +147,7 @@ const AmendableConcurrentLeave = ({
               />
               <InputDate
                 onChange={(e) => amendLeave("leave_end_date", e.target.value)}
-                value={amendment.leave_end_date}
+                value={amendment.leave_end_date || ""}
                 label={t(
                   "components.employersAmendableConcurrentLeave.leaveEndDateLabel"
                 )}
@@ -155,14 +164,6 @@ const AmendableConcurrentLeave = ({
       </ConditionalContent>
     </React.Fragment>
   );
-};
-
-AmendableConcurrentLeave.propTypes = {
-  appErrors: PropTypes.instanceOf(AppErrorInfoCollection).isRequired,
-  concurrentLeave: PropTypes.instanceOf(ConcurrentLeave).isRequired,
-  isAddedByLeaveAdmin: PropTypes.bool.isRequired,
-  onChange: PropTypes.func.isRequired,
-  onRemove: PropTypes.func.isRequired,
 };
 
 export default AmendableConcurrentLeave;

@@ -7,22 +7,27 @@
  * This page uses the url path to determine which document type
  * should be uploaded and what text should be displayed.
  */
-import Document, { DocumentType } from "../../../models/Document";
 
-import Accordion from "../../../components/Accordion";
-import AccordionItem from "../../../components/AccordionItem";
-import Alert from "../../../components/Alert";
+import {
+  BenefitsApplicationDocument,
+  DocumentType,
+} from "../../../models/Document";
+import withClaimDocuments, {
+  WithClaimDocumentsProps,
+} from "../../../hoc/withClaimDocuments";
+import Accordion from "../../../components/core/Accordion";
+import AccordionItem from "../../../components/core/AccordionItem";
+import Alert from "../../../components/core/Alert";
 import ConditionalContent from "../../../components/ConditionalContent";
 import DocumentRequirements from "../../../components/DocumentRequirements";
 import FileCardList from "../../../components/FileCardList";
 import FileUploadDetails from "../../../components/FileUploadDetails";
-import Heading from "../../../components/Heading";
-import Lead from "../../../components/Lead";
+import Heading from "../../../components/core/Heading";
+import Lead from "../../../components/core/Lead";
 import LeaveReason from "../../../models/LeaveReason";
-import PropTypes from "prop-types";
 import QuestionPage from "../../../components/QuestionPage";
 import React from "react";
-import Spinner from "../../../components/Spinner";
+import Spinner from "../../../components/core/Spinner";
 import { Trans } from "react-i18next";
 import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import hasDocumentsLoadError from "../../../utils/hasDocumentsLoadError";
@@ -30,7 +35,6 @@ import routes from "../../../routes";
 import uploadDocumentsHelper from "../../../utils/uploadDocumentsHelper";
 import useFilesLogic from "../../../hooks/useFilesLogic";
 import { useTranslation } from "../../../locales/i18n";
-import withClaimDocuments from "../../../hoc/withClaimDocuments";
 
 const uploadRoutes = routes.applications.upload;
 
@@ -54,7 +58,11 @@ const pathsToDocumentTypes = {
   [uploadRoutes.stateId]: DocumentType.identityVerification,
 };
 
-const CertificationUpload = ({ path }) => {
+interface CertificationUploadProps {
+  path: string;
+}
+
+const CertificationUpload = ({ path }: CertificationUploadProps) => {
   const context = {
     [uploadRoutes.bondingProofOfPlacement]: "bonding_adopt_foster",
     [uploadRoutes.bondingProofOfBirth]: "bonding_newborn",
@@ -114,11 +122,11 @@ const CertificationUpload = ({ path }) => {
   );
 };
 
-CertificationUpload.propTypes = {
-  path: PropTypes.string.isRequired,
-};
+interface IdentificationUploadProps {
+  path: string;
+}
 
-const IdentificationUpload = ({ path }) => {
+const IdentificationUpload = ({ path }: IdentificationUploadProps) => {
   const { t } = useTranslation();
   const isStateId = path === uploadRoutes.stateId;
 
@@ -180,11 +188,23 @@ const IdentificationUpload = ({ path }) => {
   );
 };
 
-IdentificationUpload.propTypes = {
-  path: PropTypes.string.isRequired,
-};
+interface DocumentUploadProps extends WithClaimDocumentsProps {
+  query: {
+    claim_id: string;
+    additionalDoc?: string;
+    absence_id?: string;
+    documentType?:
+      | "state-id"
+      | "other-id"
+      | "proof-of-birth"
+      | "proof-of-placement"
+      | "medical-certification"
+      | "pregnancy-medical-certification"
+      | "family-member-medical-certification";
+  };
+}
 
-export const DocumentUpload = (props) => {
+export const DocumentUpload = (props: DocumentUploadProps) => {
   const { appLogic, documents, isLoadingDocuments, query } = props;
   const { appErrors, portalFlow } = appLogic;
   const { t } = useTranslation();
@@ -192,6 +212,7 @@ export const DocumentUpload = (props) => {
     clearErrors: appLogic.clearErrors,
     catchError: appLogic.catchError,
   });
+  const [submissionInProgress, setSubmissionInProgress] = React.useState(false);
 
   const hasLoadingDocumentsError = hasDocumentsLoadError(
     appErrors,
@@ -200,7 +221,10 @@ export const DocumentUpload = (props) => {
 
   const path = portalFlow.pageRoute;
   const documentType = pathsToDocumentTypes[path];
-  const existingDocuments = findDocumentsByTypes(documents, [documentType]);
+  const existingDocuments = findDocumentsByTypes<BenefitsApplicationDocument>(
+    documents,
+    [documentType]
+  );
 
   const isIdUpload = documentType === DocumentType.identityVerification;
   const isCertificationUpload = !isIdUpload;
@@ -209,20 +233,20 @@ export const DocumentUpload = (props) => {
   // after the application has been completed.
   // If true, the document is immediately marked as received in the CPS,
   // and the user will be navigated back to the claim's status page.
-  // The absence_case_id param is only set when claimant is uploading
+  // The absence_id param is only set when claimant is uploading
   // a document after the application has been completed.
-  const isAdditionalDoc = !!query.absence_case_id;
+  const isAdditionalDoc = !!query.absence_id;
 
   const handleSave = async () => {
     if (files.isEmpty && existingDocuments.length) {
       // Allow user to skip this page if they've previously uploaded documents
       portalFlow.goToNextPage(
         { isAdditionalDoc },
-        { claim_id: query.claim_id, absence_case_id: query.absence_case_id }
+        { claim_id: query.claim_id, absence_id: query.absence_id }
       );
       return;
     }
-
+    setSubmissionInProgress(true);
     const uploadPromises = appLogic.documents.attach(
       query.claim_id,
       files.items,
@@ -236,13 +260,14 @@ export const DocumentUpload = (props) => {
       files,
       removeFile
     );
+    setSubmissionInProgress(false);
     if (success) {
       portalFlow.goToNextPage(
         { isAdditionalDoc },
         {
           uploaded_document_type: query.documentType,
           claim_id: query.claim_id,
-          absence_case_id: query.absence_case_id,
+          absence_id: query.absence_id,
         }
       );
     }
@@ -263,7 +288,6 @@ export const DocumentUpload = (props) => {
       {isIdUpload && <IdentificationUpload path={path} />}
       <FileUploadDetails />
       {hasLoadingDocumentsError && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; className: string; noIc... Remove this comment to see the full error message
         <Alert className="margin-bottom-3" noIcon role="alert">
           <Trans
             i18nKey="pages.claimsUploadDocumentType.documentsLoadError"
@@ -289,6 +313,7 @@ export const DocumentUpload = (props) => {
           documents={existingDocuments}
           onChange={processFiles}
           onRemoveTempFile={removeFile}
+          disableRemove={submissionInProgress}
           fileHeadingPrefix={t(
             "pages.claimsUploadDocumentType.fileHeadingPrefix"
           )}
@@ -302,32 +327,6 @@ export const DocumentUpload = (props) => {
       )}
     </QuestionPage>
   );
-};
-
-DocumentUpload.propTypes = {
-  appLogic: PropTypes.shape({
-    appErrors: PropTypes.object.isRequired,
-    catchError: PropTypes.func.isRequired,
-    documents: PropTypes.object.isRequired,
-    portalFlow: PropTypes.object.isRequired,
-    clearErrors: PropTypes.func.isRequired,
-  }).isRequired,
-  documents: PropTypes.arrayOf(PropTypes.instanceOf(Document)),
-  isLoadingDocuments: PropTypes.bool,
-  query: PropTypes.shape({
-    claim_id: PropTypes.string.isRequired,
-    absence_case_id: PropTypes.string.isRequired,
-    additionalDoc: PropTypes.string,
-    documentType: PropTypes.oneOf([
-      "state-id",
-      "other-id",
-      "proof-of-birth",
-      "proof-of-placement",
-      "medical-certification",
-      "pregnancy-medical-certification",
-      "family-member-medical-certification",
-    ]).isRequired,
-  }),
 };
 
 export default withClaimDocuments(DocumentUpload);

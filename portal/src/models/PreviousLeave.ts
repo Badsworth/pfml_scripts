@@ -2,22 +2,22 @@
 /**
  * @file Previous leave period
  */
-import BaseModel from "./BaseModel";
 
-class PreviousLeave extends BaseModel {
-  // @ts-expect-error ts-migrate(2416) FIXME: Property 'defaults' in type 'PreviousLeave' is not... Remove this comment to see the full error message
-  get defaults() {
-    return {
-      is_for_current_employer: null,
-      leave_end_date: null,
-      leave_minutes: null,
-      leave_reason: null, // PreviousLeaveReason
-      leave_start_date: null,
-      // this ID field is currently only used by the /applications API in the Claimant portal.
-      previous_leave_id: null,
-      type: null, // PreviousLeaveType
-      worked_per_week_minutes: null,
-    };
+class PreviousLeave {
+  is_for_current_employer: boolean | null = null;
+  leave_end_date: string | null = null;
+  leave_minutes: number | null = null;
+  leave_reason:
+    | typeof PreviousLeaveReason[keyof typeof PreviousLeaveReason]
+    | null = null;
+
+  leave_start_date: string | null = null;
+  previous_leave_id: string | null = null; // currently only used by the /applications API in the Claimant portal.
+  type: typeof PreviousLeaveType[keyof typeof PreviousLeaveType] | null = null;
+  worked_per_week_minutes: number | null = null;
+
+  constructor(attrs: Partial<PreviousLeave>) {
+    Object.assign(this, attrs);
   }
 }
 

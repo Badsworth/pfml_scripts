@@ -7,7 +7,7 @@ jest.mock("react", () => ({
 
 import React, { useEffect } from "react";
 import { render, screen } from "@testing-library/react";
-import Thumbnail from "../../src/components/Thumbnail";
+import Thumbnail from "../../src/components/core/Thumbnail";
 
 describe("Thumbnail", () => {
   const file = new File(["foo"], "foo.png", { type: "image/png" });

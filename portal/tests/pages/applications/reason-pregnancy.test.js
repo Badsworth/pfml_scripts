@@ -36,11 +36,7 @@ describe("ReasonPregnancy", () => {
 
     await waitFor(() => expect(updateSpy).toHaveBeenCalled());
 
-    expect(updateSpy).toHaveBeenCalledWith(expect.any(String), {
-      leave_details: {
-        pregnant_or_recent_birth: null,
-      },
-    });
+    expect(updateSpy).toHaveBeenCalledWith(expect.any(String), {});
   });
 
   it("submits expected data when the user selects a response and clicks save and continue", async () => {

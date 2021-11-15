@@ -1,23 +1,25 @@
-import Alert from "../../components/Alert";
-import ApplicationCardV1 from "../../components/ApplicationCard";
-import ApplicationCardV2 from "../../components/ApplicationCardV2";
-import BenefitsApplicationCollection from "../../models/BenefitsApplicationCollection";
+import withBenefitsApplications, {
+  WithBenefitsApplicationsProps,
+} from "../../hoc/withBenefitsApplications";
+import Alert from "../../components/core/Alert";
+import ApplicationCard from "../../components/ApplicationCard";
 import ButtonLink from "../../components/ButtonLink";
-import Heading from "../../components/Heading";
-import Lead from "../../components/Lead";
-import PropTypes from "prop-types";
+import Heading from "../../components/core/Heading";
+import Lead from "../../components/core/Lead";
 import React from "react";
-import Title from "../../components/Title";
+import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
-import { isFeatureEnabled } from "../../services/featureFlags";
 import routes from "../../routes";
 import { useTranslation } from "../../locales/i18n";
-import withBenefitsApplications from "../../hoc/withBenefitsApplications";
+
+interface IndexProps extends WithBenefitsApplicationsProps {
+  query: { uploadedAbsenceId?: string };
+}
 
 /**
  * List of all applications associated with the authenticated user
  */
-export const Index = (props) => {
+export const Index = (props: IndexProps) => {
   const { appLogic, claims, query } = props;
   const { t } = useTranslation();
 
@@ -33,12 +35,10 @@ export const Index = (props) => {
 
   return (
     <React.Fragment>
-      {query && query.uploadedAbsenceId && (
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: string; className: string; headi... Remove this comment to see the full error message
+      {query.uploadedAbsenceId && (
         <Alert
           className="margin-bottom-3"
           heading={t("pages.applications.uploadSuccessHeading")}
-          name="upload-success-message"
           state="success"
         >
           {t("pages.applications.uploadSuccessMessage", {
@@ -77,6 +77,7 @@ export const Index = (props) => {
                   <ApplicationCard
                     appLogic={appLogic}
                     key={claim.application_id}
+                    // @ts-expect-error PORTAL-1078
                     claim={claim}
                     number={index + 1}
                   />
@@ -95,6 +96,7 @@ export const Index = (props) => {
                   <ApplicationCard
                     appLogic={appLogic}
                     key={claim.application_id}
+                    // @ts-expect-error PORTAL-1078
                     claim={claim}
                     number={claims.inProgress.length + index + 1}
                   />
@@ -115,30 +117,6 @@ export const Index = (props) => {
       </div>
     </React.Fragment>
   );
-};
-
-/**
- * Allowing claimantShowStatusPage feature flag
- */
-function ApplicationCard(props) {
-  return isFeatureEnabled("claimantShowStatusPage") ? (
-    <ApplicationCardV2 {...props} />
-  ) : (
-    <ApplicationCardV1 {...props} />
-  );
-}
-
-Index.propTypes = {
-  appLogic: PropTypes.shape({
-    portalFlow: PropTypes.shape({
-      goTo: PropTypes.func.isRequired,
-      pathname: PropTypes.string.isRequired,
-    }).isRequired,
-  }).isRequired,
-  claims: PropTypes.instanceOf(BenefitsApplicationCollection).isRequired,
-  query: PropTypes.shape({
-    uploadedAbsenceId: PropTypes.string,
-  }),
 };
 
 export default withBenefitsApplications(Index);
