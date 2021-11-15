@@ -252,9 +252,8 @@ export const Department = (props: DepartmentProps) => {
     }
     // Searches for employee's organization units
     populateOrganizationUnits();
-    // This dependency is required to present this page on storybook
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [appLogic.employees.search]);
+  }, []);
 
   useEffect(() => {
     if (!organizationUnits.length) return;
