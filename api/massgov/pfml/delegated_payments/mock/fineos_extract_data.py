@@ -30,7 +30,10 @@ fake.seed_instance(1212)
 # so these field names extended from the constant values
 # This is mainly for new columns we want to implement logic for
 # but FINEOS hasn't yet made a change to a particular extract
-EMPLOYEE_FEED_FIELD_NAMES = payments_util.FineosExtractConstants.EMPLOYEE_FEED.field_names
+EMPLOYEE_FEED_FIELD_NAMES = payments_util.FineosExtractConstants.EMPLOYEE_FEED.field_names + [
+    "EFFECTIVEFROM",
+    "EFFECTIVETO",
+]
 REQUESTED_ABSENCE_SOM_FIELD_NAMES = (
     payments_util.FineosExtractConstants.VBI_REQUESTED_ABSENCE_SOM.field_names
 )
@@ -102,6 +105,12 @@ class FineosClaimantData(MockData):
         self.absence_period_index_id = self.get_value(
             "absence_period_i_value", str(fake.unique.random_int())
         )
+        self.fineos_address_effective_from = self.get_value(
+            "fineos_address_effective_from", "2021-01-01 12:00:00"
+        )
+        self.fineos_address_effective_to = self.get_value(
+            "fineos_address_effective_to", "2022-01-01 12:00:00"
+        )
 
     def get_employee_feed_record(self):
         employee_feed_record = OrderedDict()
@@ -124,6 +133,8 @@ class FineosClaimantData(MockData):
             employee_feed_record["FIRSTNAMES"] = self.fineos_employee_first_name
             employee_feed_record["INITIALS"] = self.fineos_employee_middle_name
             employee_feed_record["LASTNAME"] = self.fineos_employee_last_name
+            employee_feed_record["EFFECTIVEFROM"] = self.fineos_address_effective_from
+            employee_feed_record["EFFECTIVETO"] = self.fineos_address_effective_to
 
         return employee_feed_record
 

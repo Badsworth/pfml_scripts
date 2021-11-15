@@ -2,10 +2,10 @@ import { get, pick } from "lodash";
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
-import Alert from "../../components/Alert";
+import Alert from "../../components/core/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
-import InputDate from "../../components/InputDate";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
+import InputDate from "../../components/core/InputDate";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";

@@ -1,9 +1,9 @@
 import withUser, { WithUserProps } from "../../hoc/withUser";
-import Alert from "../../components/Alert";
+import Alert from "../../components/core/Alert";
 import BackButton from "../../components/BackButton";
-import Button from "../../components/Button";
+import Button from "../../components/core/Button";
 import React from "react";
-import Title from "../../components/Title";
+import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import routes from "../../routes";
 import useThrottledHandler from "../../hooks/useThrottledHandler";

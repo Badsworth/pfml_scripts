@@ -5,7 +5,7 @@ import withBenefitsApplication, {
 import AddressModel from "../../models/Address";
 import ConditionalContent from "../../components/ConditionalContent";
 import FieldsetAddress from "../../components/FieldsetAddress";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import QuestionPage from "../../components/QuestionPage";
 import { pick } from "lodash";
 import useFormState from "../../hooks/useFormState";

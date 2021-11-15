@@ -5,11 +5,11 @@ import { BenefitsApplicationDocument, DocumentType } from "../models/Document";
 import withClaimDocuments, {
   WithClaimDocumentsProps,
 } from "../hoc/withClaimDocuments";
-import Alert from "./Alert";
+import Alert from "./core/Alert";
 import { AppLogic } from "../hooks/useAppLogic";
 import ButtonLink from "./ButtonLink";
 import DownloadableDocument from "./DownloadableDocument";
-import Heading from "./Heading";
+import Heading from "./core/Heading";
 import LeaveReason from "../models/LeaveReason";
 import React from "react";
 import { Trans } from "react-i18next";

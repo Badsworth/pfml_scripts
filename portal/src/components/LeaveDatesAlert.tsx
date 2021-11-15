@@ -1,4 +1,4 @@
-import Alert from "./Alert";
+import Alert from "./core/Alert";
 import { DateTime } from "luxon";
 import React from "react";
 import formatDateRange from "../utils/formatDateRange";

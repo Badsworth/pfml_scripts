@@ -3,7 +3,7 @@ import {
   isFeatureEnabled,
   updateCookieWithFlag,
 } from "src/services/featureFlags";
-import InputChoiceGroup from "src/components/InputChoiceGroup";
+import InputChoiceGroup from "src/components/core/InputChoiceGroup";
 import featureFlags from "../../config/featureFlags";
 
 export default {

@@ -7,6 +7,7 @@ import React from "react";
 import { Review } from "src/pages/employers/applications/review";
 import User from "src/models/User";
 import { createMockEmployerClaim } from "tests/test-utils";
+import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
   title: "Pages/Employers/Applications/Review",
@@ -69,10 +70,6 @@ export const Default = (
 ) => {
   const { claimOption } = args;
   const errorTypes = args.errorTypes || [];
-
-  // @ts-expect-error ts-migrate(2554) FIXME: Expected 1 arguments, but got 0.
-  const user = new User();
-  const query = { absence_id: "mock-absence-id" };
   const documentationOption = claimOption.split("-")[1] as DocumentationOption;
 
   const leaveReason = {
@@ -104,24 +101,17 @@ export const Default = (
     ...leaveTypes
   );
 
-  const appLogic = {
+  const appLogic = useMockableAppLogic({
     appErrors: getAppErrorInfoCollection(errorTypes),
     employers: {
       claimDocumentsMap: getDocumentsMap(
         documentationOption,
-        // @ts-expect-error ts-migrate(2339) FIXME: Property 'leave_details' does not exist on type 'MockEmployerClaimBuilder'.ts
         claim.leave_details.reason
       ),
-      downloadDocument: () => {},
-      loadClaim: () => {},
-      loadDocuments: () => {},
-      submit: () => {},
     },
-    setAppErrors: () => {},
-  };
+  });
 
-  // @ts-expect-error ts-migrate(2740) FIXME: Type '{ appErrors: AppErrorInfoCollection; employe... Remove this comment to see the full error message
-  return <Review appLogic={appLogic} claim={claim} query={query} user={user} />;
+  return <Review appLogic={appLogic} claim={claim} user={new User({})} />;
 };
 
 function getDocumentsMap(

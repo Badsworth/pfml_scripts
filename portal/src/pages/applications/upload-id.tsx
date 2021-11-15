@@ -8,16 +8,16 @@ import withBenefitsApplication, {
 import withClaimDocuments, {
   WithClaimDocumentsProps,
 } from "../../hoc/withClaimDocuments";
-import Accordion from "../../components/Accordion";
-import AccordionItem from "../../components/AccordionItem";
-import Alert from "../../components/Alert";
+import Accordion from "../../components/core/Accordion";
+import AccordionItem from "../../components/core/AccordionItem";
+import Alert from "../../components/core/Alert";
 import DocumentRequirements from "../../components/DocumentRequirements";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
-import Heading from "../../components/Heading";
+import Heading from "../../components/core/Heading";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
-import Spinner from "../../components/Spinner";
+import Spinner from "../../components/core/Spinner";
 import { Trans } from "react-i18next";
 import findDocumentsByTypes from "../../utils/findDocumentsByTypes";
 import { get } from "lodash";
@@ -44,6 +44,7 @@ export const UploadId = (props: UploadIdProps) => {
     catchError: appLogic.catchError,
   });
   const { additionalDoc, showStateId } = query;
+  const [submissionInProgress, setSubmissionInProgress] = React.useState(false);
   let hasStateId;
   if (showStateId === "true") {
     hasStateId = true;
@@ -72,7 +73,7 @@ export const UploadId = (props: UploadIdProps) => {
       portalFlow.goToNextPage({ claim }, { claim_id: claim.application_id });
       return;
     }
-
+    setSubmissionInProgress(true);
     const uploadPromises = appLogic.documents.attach(
       claim.application_id,
       files.items,
@@ -85,7 +86,7 @@ export const UploadId = (props: UploadIdProps) => {
       files,
       removeFile
     );
-
+    setSubmissionInProgress(false);
     if (success) {
       portalFlow.goToNextPage(
         { claim },
@@ -182,6 +183,7 @@ export const UploadId = (props: UploadIdProps) => {
             tempFiles={files}
             documents={idDocuments}
             onChange={processFiles}
+            disableRemove={submissionInProgress}
             onRemoveTempFile={removeFile}
             fileHeadingPrefix={t("pages.claimsUploadId.fileHeadingPrefix")}
             addFirstFileButtonText={t(

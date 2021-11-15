@@ -122,18 +122,6 @@ class Constants:
         [state.state_id for state in RESTARTABLE_PAYMENT_STATES]
     )
 
-    # States that indicate we have sent a payment to PUB
-    # and it has not yet errored.
-    PAID_STATES = frozenset(
-        [
-            State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
-            State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
-            State.DELEGATED_PAYMENT_COMPLETE,
-            State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION,
-        ]
-    )
-    PAID_STATE_IDS = frozenset([state.state_id for state in PAID_STATES])
-
     # States that we wait in while waiting for the reject file
     # If any payments are still in this state when the extract
     # task runs, we'll move them to an error state.

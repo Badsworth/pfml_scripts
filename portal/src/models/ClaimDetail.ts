@@ -15,7 +15,14 @@ class ClaimDetail {
     employer_evidence: OutstandingEvidence[] | null;
   } | null = null;
 
-  constructor(attrs?: ClaimDetail) {
+  payments: PaymentDetail[] = [];
+
+  constructor(
+    attrs?: Omit<
+      ClaimDetail,
+      "absencePeriodsByReason" | "managedRequirementByFollowUpDate"
+    >
+  ) {
     if (!attrs) {
       return;
     }
@@ -51,6 +58,13 @@ class ClaimDetail {
   }
 }
 
+export type AbsencePeriodRequestDecision =
+  | "Cancelled"
+  | "Pending"
+  | "Approved"
+  | "Denied"
+  | "Withdrawn";
+
 export class AbsencePeriod {
   absence_period_end_date: string;
   absence_period_start_date: string;
@@ -60,7 +74,7 @@ export class AbsencePeriod {
   reason: LeaveReasonType;
   reason_qualifier_one = "";
   reason_qualifier_two = "";
-  request_decision: "Pending" | "Approved" | "Denied" | "Withdrawn";
+  request_decision: AbsencePeriodRequestDecision;
 
   constructor(attrs: Partial<AbsencePeriod> = {}) {
     Object.assign(this, attrs);
@@ -70,6 +84,18 @@ export class AbsencePeriod {
 interface OutstandingEvidence {
   document_name: string;
   is_document_received: boolean;
+}
+
+interface PaymentDetail {
+  payment_id: string;
+  period_start_date: string;
+  period_end_date: string;
+  amount: number | null;
+  sent_to_bank_date: string | null;
+  payment_method: string;
+  expected_send_date_start: string | null;
+  expected_send_date_end: string | null;
+  status: string;
 }
 
 export default ClaimDetail;

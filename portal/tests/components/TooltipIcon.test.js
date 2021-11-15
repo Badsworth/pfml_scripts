@@ -7,7 +7,7 @@
  */
 import { render, screen } from "@testing-library/react/pure";
 import React from "react";
-import TooltipIcon from "../../src/components/TooltipIcon";
+import TooltipIcon from "../../src/components/core/TooltipIcon";
 import userEvent from "@testing-library/user-event";
 
 describe("TooltipIcon", () => {

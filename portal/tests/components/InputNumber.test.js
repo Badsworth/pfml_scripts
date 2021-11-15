@@ -1,4 +1,6 @@
-import InputNumber, { isAllowedValue } from "../../src/components/InputNumber";
+import InputNumber, {
+  isAllowedValue,
+} from "../../src/components/core/InputNumber";
 import { render, screen } from "@testing-library/react";
 import React from "react";
 import userEvent from "@testing-library/user-event";

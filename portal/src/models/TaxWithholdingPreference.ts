@@ -1,5 +1,5 @@
 interface TaxWithholdingPreference {
-  withhold_taxes: boolean;
+  is_withholding_tax: boolean;
 }
 
 export default TaxWithholdingPreference;

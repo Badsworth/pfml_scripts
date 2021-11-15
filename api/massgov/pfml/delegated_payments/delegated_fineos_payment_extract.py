@@ -818,6 +818,7 @@ class PaymentExtractStep(Step):
                 payments_util.ValidationReason.RECEIVED_PAYMENT_CURRENTLY_BEING_PROCESSED,
                 f"We received a payment that is already being processed. It is currently in state [{active_state.state_description}].",
             )
+            payment.exclude_from_payment_status = True
 
         self.db_session.add(payment)
 

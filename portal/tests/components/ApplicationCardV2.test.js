@@ -134,7 +134,7 @@ describe("ApplicationCardV2", () => {
       });
 
       expect(appLogic.portalFlow.goTo).toHaveBeenCalledWith(
-        `/applications/status${hash ? "/" : ""}?absence_case_id=${
+        `/applications/status${hash ? "/" : ""}?absence_id=${
           claim.fineos_absence_id
         }${hash}`
       );

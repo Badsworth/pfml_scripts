@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import React from "react";
-import Table from "../../src/components/Table";
+import Table from "../../src/components/core/Table";
 
 describe("Table", () => {
   it("renders children within a table", () => {

@@ -1,13 +1,13 @@
 import React, { useState } from "react";
-import Alert from "../components/Alert";
+import Alert from "../components/core/Alert";
 import { AppLogic } from "../hooks/useAppLogic";
 import BackButton from "../components/BackButton";
-import Button from "../components/Button";
+import Button from "../components/core/Button";
 import InputPassword from "../components/InputPassword";
-import InputText from "../components/InputText";
-import Lead from "../components/Lead";
+import InputText from "../components/core/InputText";
+import Lead from "../components/core/Lead";
 import ThrottledButton from "../components/ThrottledButton";
-import Title from "../components/Title";
+import Title from "../components/core/Title";
 import { Trans } from "react-i18next";
 import { get } from "lodash";
 import routes from "../routes";

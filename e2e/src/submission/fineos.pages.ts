@@ -16,7 +16,8 @@ export class Fineos {
     next: (page: Page) => Promise<T>,
     { debug = false, screenshots, credentials }: FineosBrowserOptions
   ): Promise<T> {
-    const isSSO = config("ENVIRONMENT") === "uat";
+    const isSSO =
+      config("ENVIRONMENT") === "uat" || config("ENVIRONMENT") === "breakfix";
     const browser = await chromium.launch({
       headless: !debug,
       slowMo: debug ? 100 : undefined,

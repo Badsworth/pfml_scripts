@@ -429,6 +429,8 @@ class FineosExtractEmployeeFeed(Base, TimestampMixin):
     sortcode = Column(Text)
     accounttype = Column(Text)
     active_absence_flag = Column(Text)
+    effectivefrom = Column(Text)
+    effectiveto = Column(Text)
 
     reference_file_id = Column(
         PostgreSQLUUID, ForeignKey("reference_file.reference_file_id"), index=True
@@ -1086,13 +1088,19 @@ class Pfml1099MMARSPayment(Base, TimestampMixin):
     pfml_1099_batch_id = Column(
         PostgreSQLUUID, ForeignKey("pfml_1099_batch.pfml_1099_batch_id"), index=True, nullable=False
     )
-    mmars_payment_id = Column(Integer, nullable=False)
+    mmars_payment_id = Column(
+        PostgreSQLUUID,
+        ForeignKey("mmars_payment_data.mmars_payment_data_id"),
+        index=True,
+        nullable=False,
+    )
     employee_id = Column(
         PostgreSQLUUID, ForeignKey("employee.employee_id"), index=True, nullable=False
     )
     payment_amount = Column(Numeric, nullable=False)
     payment_date = Column(Date, nullable=False)
 
+    mmars_payment_data = relationship(MmarsPaymentData)
     employee = relationship(Employee)
 
 

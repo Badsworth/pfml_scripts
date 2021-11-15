@@ -29,6 +29,12 @@ describe("FileCard", () => {
     expect(onRemove).toHaveBeenCalled();
   });
 
+  it("disables onRemove when indicated", () => {
+    renderFile({ disableRemove: true });
+    userEvent.click(screen.getByRole("button", { name: "Remove file" }));
+    expect(onRemove).not.toHaveBeenCalled();
+  });
+
   it("renders an error message when indicated", () => {
     renderFile({ errorMsg: "Hallo I am an error" });
     expect(screen.getByText(/Hallo I am an error/)).toBeInTheDocument();

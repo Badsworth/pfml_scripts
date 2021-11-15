@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import InputChoice from "./InputChoice";
-import InputText from "./InputText";
+import InputChoice from "./core/InputChoice";
+import InputText from "./core/InputText";
 import { useTranslation } from "../locales/i18n";
 import useUniqueId from "../hooks/useUniqueId";
 

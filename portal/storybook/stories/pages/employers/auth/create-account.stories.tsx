@@ -1,6 +1,6 @@
-import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import CreateAccount from "src/pages/employers/create-account";
 import React from "react";
+import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
   title: "Pages/Employers/Auth/Create Account",
@@ -8,13 +8,7 @@ export default {
 };
 
 export const Default = () => {
-  const appLogic = {
-    appErrors: new AppErrorInfoCollection(),
-    auth: {
-      createEmployerAccount: () => {},
-    },
-    portalFlow: { goTo: () => {} },
-  };
-  // @ts-expect-error ts-migrate(2740) FIXME: Type '{ appErrors: AppErrorInfoCollection; auth: {... Remove this comment to see the full error message
+  const appLogic = useMockableAppLogic();
+
   return <CreateAccount appLogic={appLogic} />;
 };

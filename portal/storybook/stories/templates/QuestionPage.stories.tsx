@@ -1,6 +1,6 @@
-import Fieldset from "src/components/Fieldset";
-import FormLabel from "src/components/FormLabel";
-import InputText from "src/components/InputText";
+import Fieldset from "src/components/core/Fieldset";
+import FormLabel from "src/components/core/FormLabel";
+import InputText from "src/components/core/InputText";
 import QuestionPage from "src/components/QuestionPage";
 import React from "react";
 

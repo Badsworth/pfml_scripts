@@ -1,10 +1,10 @@
 /**
  * @file Example template of various page components
  */
-import Heading from "src/components/Heading";
-import Lead from "src/components/Lead";
+import Heading from "src/components/core/Heading";
+import Lead from "src/components/core/Lead";
 import React from "react";
-import Title from "src/components/Title";
+import Title from "src/components/core/Title";
 
 export default {
   title: "Templates/Content page",

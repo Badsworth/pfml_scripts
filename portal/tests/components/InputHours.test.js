@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import InputHours from "../../src/components/InputHours";
+import InputHours from "../../src/components/core/InputHours";
 import React from "react";
 import { renderHook } from "@testing-library/react-hooks";
 import useHandleInputChange from "../../src/hooks/useHandleInputChange";

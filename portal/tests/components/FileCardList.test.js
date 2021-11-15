@@ -28,6 +28,7 @@ const renderComponent = (customProps) => {
     fileHeadingPrefix: "Document",
     addFirstFileButtonText: "Choose a document",
     addAnotherFileButtonText: "Choose another document",
+    disableRemove: false,
     ...customProps,
   };
   return render(<FileCardList {...defaultProps} />);
@@ -77,6 +78,14 @@ describe("FileCardList", () => {
     expect(onChange).toHaveBeenCalledWith([
       expect.objectContaining({ name: "filename.txt" }),
     ]);
+  });
+
+  it("disables remove button on file card children when indicated", () => {
+    renderComponent({
+      tempFiles: new TempFileCollection([makeFileObjectHelper()]),
+      disableRemove: true,
+    });
+    expect(screen.getByRole("button", { name: "Remove file" })).toBeDisabled();
   });
 
   it("calls onChange with multiple files when user makes that selection", async () => {

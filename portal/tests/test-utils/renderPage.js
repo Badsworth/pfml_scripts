@@ -1,18 +1,7 @@
 /* eslint react/prop-types: 0 */
 import React from "react";
-import User from "../../src/models/User";
 import { render } from "@testing-library/react";
-import useAppLogic from "../../src/hooks/useAppLogic";
-
-const authenticateUser = (appLogic) => {
-  appLogic.auth.requireLogin = jest.fn();
-  appLogic.users.requireUserConsentToDataAgreement = jest.fn();
-  appLogic.users.requireUserRole = jest.fn();
-  appLogic.users.user = new User({
-    consented_to_data_sharing: true,
-    email_address: "unique@miau.com",
-  });
-};
+import useMockableAppLogic from "../../lib/mock-helpers/useMockableAppLogic";
 
 const PageWithAppLogic = ({
   PageComponent,
@@ -20,11 +9,13 @@ const PageWithAppLogic = ({
   isLoggedIn = true,
   ...props
 }) => {
-  const appLogic = useAppLogic();
-
-  if (isLoggedIn) {
-    authenticateUser(appLogic);
-  }
+  const appLogic = useMockableAppLogic(
+    {
+      // Our tests instead use addCustomSetup in order to mock appLogic properties,
+      // since we often want to use jest.spyOn.
+    },
+    { isLoggedIn }
+  );
 
   if (addCustomSetup) {
     addCustomSetup(appLogic);

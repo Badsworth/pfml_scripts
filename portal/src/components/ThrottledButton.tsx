@@ -1,4 +1,4 @@
-import Button from "./Button";
+import Button from "./core/Button";
 import React from "react";
 import tracker from "../services/tracker";
 import useThrottledHandler from "../hooks/useThrottledHandler";

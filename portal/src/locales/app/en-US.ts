@@ -1008,6 +1008,15 @@ const pages = {
     skipButton: "$t(shared.auth.skip)",
     title: "Make your account more secure",
   },
+  authTwoFactorSmsVerify: {
+    callContactCenter:
+      "Need help? Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.",
+    codeLabel: "$t(shared.verificationCodeLabel)",
+    lead: "We sent a 6-digit code to your phone number ending in {{lastFourDigits}}.",
+    resendCodeLink: "$t(shared.resendVerificationCodeLink)",
+    submitButton: "Submit",
+    title: "Enter your security code",
+  },
   authVerifyAccount: {
     backToLoginLink: "$t(shared.backToLoginLink)",
     codeLabel: "$t(shared.verificationCodeLabel)",
@@ -1162,6 +1171,8 @@ const pages = {
       "I need to report employer-sponsored accrued paid leave I will use after the 7-day waiting period",
     dontNeedToReport:
       "You don't need to report accrued paid leave that you use during the 7-day waiting period",
+    dontNeedToReport_intermittentLeave:
+      "You don't need to report accrued paid leave that you use during the 7-day waiting period, which is 7 consecutive calendar days from the date of the first instance of leave from your employer",
     hintWhatKindBody:
       "<p>This includes any paid vacation time, sick time, and personal time. It should be reported if it’s taken during your leave period, whether it’s during the 7-day waiting period or after. Reminder: you can use accrued paid leave during the 7-day waiting period with no impact to your PFML benefit.</p>",
     hintWhatKindHeading: "What kinds of accrued paid leave to report",
@@ -2000,8 +2011,8 @@ const pages = {
     title: "$t(shared.claimsVerifyIdTitle)",
   },
   claimsStatus: {
-    applicationDetails: "Application details",
     applicationID: "Application ID",
+    applicationTitle: "Application details",
     applicationUpdatesHeading: "Application updates",
     backButtonLabel: "Back to your applications",
     employerEIN: "Employer Identification Number (EIN)",
@@ -2052,6 +2063,7 @@ const pages = {
     manageApplicationHeading: "Manage your application",
     manageApprovedApplicationText:
       "<p>See more <manage-approved-app-link>examples of how to manage your approved application.</manage-approved-app-link></p>",
+    paymentsTitle: "Payments",
     reportOtherBenefitsBody:
       "<p>If your plans for other benefits or income during your paid leave have changed, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. Report changes to:</p><ul><li>Benefits from your employer that you plan to use in addition to paid leave from PFML. For example, if you are taking a different amount of sick days than you first planned, or if you are taking employer sponsored parental leave on a different schedule than you expected, report this change.</li><li>Income from other sources during your leave. For example, if you got approved for a disability benefit or a worker’s compensation claim after you submitted your application, report this change.</li></ul>",
     reportOtherBenefitsHeading: "Report other benefits or income",
@@ -2098,6 +2110,7 @@ const pages = {
     whatYouNeedToDoText_fosterCare:
       "Once your child is placed, submit a certificate of proof, including the date of the placement, so that we can review your application. Learn more about the <proof-document-link>proof of placement documents</proof-document-link> we accept.",
     whatYouNeedToDoText_newborn: "$t(shared.docsRequired.newborn)",
+    yourPayments: "Your payments",
   },
   claimsSuccess: {
     adjudicationProcess:
@@ -2475,6 +2488,7 @@ const pages = {
     learnMoreLinks:
       "<ul><li><mass-employer-role-link>Your role as a Massachusetts employer</mass-employer-role-link></li><li><reimbursements-link>Employer reimbursements</reimbursements-link></li></ul>",
     learnMoreTitle: "Learn more",
+    newTag: "New",
     otherLeaveInfoAlertBody:
       "The Department of Family and Medical Leave has updated the Review page. Employees can now report other leaves and benefits in their paid leave application. If your employee reported other leaves or benefits, you can review the information provided, and add any that they missed.",
     respondBody:
@@ -2542,6 +2556,21 @@ const pages = {
       "Create or Log into your account for Massachusetts Paid Family and Medical Leave",
     title:
       "Massachusetts workers can now apply for Paid Family and Medical Leave. Learn more about this <mass-paid-leave-link>new paid leave program</mass-paid-leave-link>.",
+  },
+  payments: {
+    changesToPaymentsAmountAnswer:
+      "<p>See your approval notice for your maximum weekly benefit. We may reduce your benefit amount based on other leave, income and benefits you reported to us. You will receive another notice in this application’s details if we reduce or offset your benefit amount.</p><p>Other scenarios that may change your benefit amount are:</p><ul> <li>You reach the $850 benefit total across multiple employers</li><li>If you transition from medical pregnancy to leave to bond with a child</li><li>Extending your leave</li></ul> <p>Check your <view-notices-link>application’s notices</view-notices-link> to see your approval notice and any updates to your approved benefit amount.</p>",
+    changesToPaymentsAmountQuestion: "What may change your benefit amount",
+    changesToPaymentsHeader: "Changes to payments",
+    changesToPaymentsScheduleAnswer:
+      "<ul> <li>State and federal holidays</li><li>Your bank’s processes</li><li>Pay periods that end on a weekend</li><li>Payments may be delayed if we need to adjust your benefit amount based on extensions, other income or benefits you’ve reported and other process delays</li></ul>",
+    changesToPaymentsScheduleQuestion: "What may change your payment schedule",
+    changesToPaymentsYourPreferencesAnswer:
+      "<p>To make changes to your application, call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>. If you request a change to your start and end dates, we may need to review your application again.</p>",
+    changesToPaymentsYourPreferencesQuestion: "Change your payment preference",
+    questionsDetails:
+      "<p>Call the Contact Center at <contact-center-phone-link>$t(shared.contactCenterPhoneNumberNoBreak)</contact-center-phone-link>.</p>",
+    questionsHeader: "Questions?",
   },
   userConsentToDataSharing: {
     agreementBody:
@@ -3060,7 +3089,6 @@ const components = {
       "We're performing some maintenance on our system, so you can't log in or work on any applications right now. The system will be offline from <strong>{{start}}</strong> to <strong>{{end}}</strong>.",
     title: "We’re undergoing maintenance",
   },
-  newTag: "New",
   pageNotFound: {
     body: "<p>The page you’re looking for might have been removed, have a new name, or is otherwise unavailable.</p><p>If you typed the URL directly, check your spelling and capitalization. Our URLs look like this: <url-example>{{ url }}</url-example></p>",
     homepageButton: "Visit homepage",

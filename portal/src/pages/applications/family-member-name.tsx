@@ -3,9 +3,9 @@ import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
 import { CaringLeaveMetadata } from "../../models/BenefitsApplication";
-import Fieldset from "../../components/Fieldset";
-import FormLabel from "../../components/FormLabel";
-import InputText from "../../components/InputText";
+import Fieldset from "../../components/core/Fieldset";
+import FormLabel from "../../components/core/FormLabel";
+import InputText from "../../components/core/InputText";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import useFormState from "../../hooks/useFormState";

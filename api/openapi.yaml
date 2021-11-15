@@ -1511,8 +1511,15 @@ components:
       properties:
         consented_to_data_sharing:
           type: boolean
+          nullable: false
           example: true
-      required: ["consented_to_data_sharing"]
+        mfa_delivery_preference:
+          type: string
+          enum:
+            - SMS
+            - Opt Out
+          nullable: true
+          example: "SMS"
 
     EmployeeUpdateRequest:
       type: object
@@ -2332,6 +2339,9 @@ components:
               type: array
               items:
                 $ref: "#/components/schemas/EvidenceStatusDetail"
+        has_paid_payments:
+          type: boolean
+          example: false
 
     ClaimResponse:
       type: object
@@ -2368,7 +2378,10 @@ components:
         absence_periods:
             type: array
             items:
-              $ref: "#/components/schemas/AbsencePeriodStatusResponse"         
+              $ref: "#/components/schemas/AbsencePeriodStatusResponse"
+        has_paid_payments:
+          type: boolean
+          example: false
 
     ClaimsResponse:
       type: array
@@ -2400,8 +2413,9 @@ components:
           format: date
           example: "1970-06-01"
         amount:
-          type: string
+          type: number
           nullable: true
+          example: 750.25
         sent_to_bank_date:
           format: date
           example: "1970-06-01"
@@ -2422,7 +2436,7 @@ components:
           format: date
           nullable: true
           example: "1970-06-01"
-        is_delayed:
+        status:
           type: string
           enum:
             - Sent to bank
@@ -2564,7 +2578,7 @@ components:
     TaxWithholdingPreferenceRequestBody:
       type: object
       properties:
-        withhold_taxes:
+        is_withholding_tax:
           type: boolean
           nullable: false
 

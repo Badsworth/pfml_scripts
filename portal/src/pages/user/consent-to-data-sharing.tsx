@@ -1,10 +1,10 @@
-import Accordion from "../../components/Accordion";
-import AccordionItem from "../../components/AccordionItem";
-import Alert from "../../components/Alert";
+import Accordion from "../../components/core/Accordion";
+import AccordionItem from "../../components/core/AccordionItem";
+import Alert from "../../components/core/Alert";
 import { AppLogic } from "../../hooks/useAppLogic";
-import Button from "../../components/Button";
+import Button from "../../components/core/Button";
 import React from "react";
-import Title from "../../components/Title";
+import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import User from "../../models/User";
 import routes from "../../routes";

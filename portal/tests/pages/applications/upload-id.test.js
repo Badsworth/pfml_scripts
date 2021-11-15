@@ -232,9 +232,15 @@ describe("UploadId", () => {
         );
       });
 
+      expect(
+        screen.getAllByRole("button", { name: "Remove file" })[0]
+      ).toBeEnabled();
       userEvent.click(
         screen.getByRole("button", { name: "Save and continue" })
       );
+      expect(
+        screen.getAllByRole("button", { name: "Remove file" })[0]
+      ).toBeDisabled();
 
       await waitFor(() => {
         expect(goToNextPage).toHaveBeenCalled();

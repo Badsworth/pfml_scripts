@@ -33,7 +33,8 @@ class DAOCypressRunsTimelineSummaryForEnvironment extends baseDAO {
                    filter(count(pass), WHERE pass is true)     as passCount,
                    percentage(count(pass), WHERE pass is true) as passPercent,
                    latest(runUrl),
-                   latest(tag)
+                   latest(tag),
+                   latest(branch)
             FROM CypressTestResult FACET environment, runId ${
               where.length ? `WHERE ${where.join(" AND ")}` : ""
             }
@@ -69,6 +70,7 @@ class DAOCypressRunsTimelineSummaryForEnvironment extends baseDAO {
       tag: row.results[6].latest
         .split(",")
         .filter((tag) => !tag.includes("Env-")),
+      branch: row.results[7].latest,
     };
 
     function componentSearch(arr, what) {
@@ -169,6 +171,13 @@ const EnvTimelineRow = (row) => {
                 {tag}
               </span>
             ))}
+            {row?.branch && row?.branch != "main" && (
+              <Link
+                to={`https://github.com/EOLWD/pfml/compare/main...${row.branch}`}
+              >
+                <span className={`branch label`}>{row.branch}</span>
+              </Link>
+            )}
           </div>,
         ]
       ) : (

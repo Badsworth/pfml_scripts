@@ -28,7 +28,7 @@ from sqlalchemy import (
     select,
 )
 from sqlalchemy.ext.hybrid import hybrid_method
-from sqlalchemy.orm import Query, aliased, dynamic_loader, relationship, validates
+from sqlalchemy.orm import Query, aliased, dynamic_loader, object_session, relationship, validates
 from sqlalchemy.schema import Sequence
 from sqlalchemy.sql.expression import func
 from sqlalchemy.types import JSON
@@ -400,7 +400,7 @@ class Employer(Base, TimestampMixin):
     employer_occupations: "Query[EmployeeOccupation]" = dynamic_loader(
         "EmployeeOccupation", back_populates="employer"
     )
-    employer_quarterly_contribution: "Query[EmployerQuarterlyContribution]" = dynamic_loader(
+    employer_quarterly_contribution = relationship(
         "EmployerQuarterlyContribution", back_populates="employer"
     )
     organization_units: "Query[OrganizationUnit]" = dynamic_loader(
@@ -417,7 +417,7 @@ class Employer(Base, TimestampMixin):
             quarter.employer_total_pfml_contribution > 0
             and quarter.filing_period >= last_years_date
             and quarter.filing_period < current_date
-            for quarter in self.employer_quarterly_contribution
+            for quarter in self.employer_quarterly_contribution  # type: ignore
         )
 
     @validates("employer_fein")
@@ -759,6 +759,22 @@ class Claim(Base, TimestampMixin):
 
         return self.employer.employer_fein
 
+    @typed_hybrid_property
+    def has_paid_payments(self) -> bool:
+        # Joining to LatestStateLog filters out StateLogs
+        # which are no longer the most recent state for a given payment
+        paid_payments = (
+            object_session(self)
+            .query(func.count(Payment.payment_id))
+            .join(StateLog)
+            .join(LatestStateLog)
+            .filter(Payment.claim_id == self.claim_id)
+            .filter(StateLog.end_state_id.in_(SharedPaymentConstants.PAID_STATE_IDS))
+            .scalar()
+        )
+
+        return paid_payments > 0
+
 
 class Payment(Base, TimestampMixin):
     __tablename__ = "payment"
@@ -803,6 +819,9 @@ class Payment(Base, TimestampMixin):
     leave_request_id = Column(PostgreSQLUUID, ForeignKey("absence_period.absence_period_id"))
 
     vpei_id = Column(PostgreSQLUUID, ForeignKey("fineos_extract_vpei.vpei_id"))
+    exclude_from_payment_status = Column(
+        Boolean, default=False, server_default="FALSE", nullable=False
+    )
 
     fineos_employee_first_name = Column(Text)
     fineos_employee_middle_name = Column(Text)
@@ -2543,6 +2562,27 @@ class State(LookupTable):
     )
 
 
+class SharedPaymentConstants:
+    """
+    A class to hold Payment-Specific constants relevant
+    to more than one part of the application.
+    Definining constants here allows them to be shared
+    throughout the application without creating circular dependencies
+    """
+
+    # States that indicate we have sent a payment to PUB
+    # and it has not yet errored.
+    PAID_STATES = frozenset(
+        [
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_CHECK_SENT,
+            State.DELEGATED_PAYMENT_PUB_TRANSACTION_EFT_SENT,
+            State.DELEGATED_PAYMENT_COMPLETE,
+            State.DELEGATED_PAYMENT_COMPLETE_WITH_CHANGE_NOTIFICATION,
+        ]
+    )
+    PAID_STATE_IDS = frozenset([state.state_id for state in PAID_STATES])
+
+
 class PaymentTransactionType(LookupTable):
     model = LkPaymentTransactionType
     column_names = ("payment_transaction_type_id", "payment_transaction_type_description")
@@ -2623,6 +2663,8 @@ class ReferenceFileType(LookupTable):
     )
 
     DUA_DEMOGRAPHICS_FILE = LkReferenceFileType(32, "DUA demographics", 1)
+
+    DUA_DEMOGRAPHICS_REQUEST_FILE = LkReferenceFileType(33, "DUA demographics request", 1)
 
 
 class Title(LookupTable):

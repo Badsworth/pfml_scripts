@@ -111,7 +111,7 @@ export const submitTaxWithholdingPreferenceMock = jest.fn(
       status: 201,
       claim: new BenefitsApplication({
         application_id,
-        is_withholding_tax: taxPreferenceData.withhold_taxes,
+        is_withholding_tax: taxPreferenceData.is_withholding_tax,
       }),
       warnings: [],
       errors: [],

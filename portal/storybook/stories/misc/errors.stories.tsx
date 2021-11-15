@@ -1,5 +1,5 @@
-import Alert from "src/components/Alert";
-import Heading from "src/components/Heading";
+import Alert from "src/components/core/Alert";
+import Heading from "src/components/core/Heading";
 import React from "react";
 import englishLocale from "src/locales/app/en-US";
 import { groupBy } from "lodash";

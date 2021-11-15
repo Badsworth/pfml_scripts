@@ -6,17 +6,20 @@
 import "../styles/app.scss"; // Apply global styling to our stories
 import { Anchor, DocsContainer } from "@storybook/addon-docs";
 import React from "react";
+import { WithNextRouter } from "./decorators/WithNextRouter";
 import { initializeI18n } from "../src/locales/i18n";
 
 // Internationalize strings in our stories
 initializeI18n();
 
-const CustomContainer: typeof DocsContainer = ({ children, context }) => (
+const CustomDocsContainer: typeof DocsContainer = ({ children, context }) => (
   <DocsContainer context={context}>
     <Anchor storyId={context.id || ""} />
     {children}
   </DocsContainer>
 );
+
+export const decorators = [WithNextRouter];
 
 export const parameters = {
   actions: {
@@ -26,7 +29,7 @@ export const parameters = {
   docs: {
     // Prevent Storybook from scrolling to the bottom of a long story
     // https://github.com/storybookjs/storybook/issues/10983#issuecomment-708599819
-    container: CustomContainer,
+    container: CustomDocsContainer,
   },
   options: {
     // Sort stories alphabetically

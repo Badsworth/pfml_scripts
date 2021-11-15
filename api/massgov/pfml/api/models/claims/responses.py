@@ -136,6 +136,7 @@ class ClaimResponse(PydanticBaseModel):
     created_at: Optional[date]
     managed_requirements: Optional[List[ManagedRequirementResponse]]
     absence_periods: Optional[List[AbsencePeriodResponse]] = None
+    has_paid_payments: bool
 
     @classmethod
     def from_orm(cls, claim: Claim) -> "ClaimResponse":
@@ -161,6 +162,7 @@ class DetailedClaimResponse(PydanticBaseModel):
     managed_requirements: Optional[List[ManagedRequirementResponse]]
     # Place holder for future implementation.
     outstanding_evidence: Optional[OutstandingEvidenceResponse]
+    has_paid_payments: bool
 
     @classmethod
     def from_orm(cls, claim: Claim) -> "DetailedClaimResponse":

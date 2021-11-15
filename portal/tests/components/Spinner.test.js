@@ -1,6 +1,6 @@
 import { render, screen } from "@testing-library/react";
 import React from "react";
-import Spinner from "../../src/components/Spinner";
+import Spinner from "../../src/components/core/Spinner";
 
 describe("Spinner", () => {
   it("renders spinner with the given aria text", () => {

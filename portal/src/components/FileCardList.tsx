@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import AppErrorInfo from "../models/AppErrorInfo";
 import { BenefitsApplicationDocument } from "../models/Document";
 import FileCard from "./FileCard";
-import Spinner from "./Spinner";
+import Spinner from "./core/Spinner";
 import TempFile from "../models/TempFile";
 import TempFileCollection from "../models/TempFileCollection";
 import { useTranslation } from "../locales/i18n";
@@ -20,7 +20,8 @@ function renderFileCard(
   index: number,
   onRemoveTempFile: (id: string) => void,
   fileHeadingPrefix: string,
-  errorMsg: React.ReactNode = null
+  errorMsg: React.ReactNode = null,
+  disableRemove: boolean | undefined
 ) {
   const handleRemoveClick = () => onRemoveTempFile(tempFile.id);
   const heading = `${fileHeadingPrefix} ${index + 1}`;
@@ -32,6 +33,7 @@ function renderFileCard(
         file={tempFile.file}
         onRemoveClick={handleRemoveClick}
         errorMsg={errorMsg}
+        disableRemove={disableRemove}
       />
     </li>
   );
@@ -68,6 +70,7 @@ interface FileCardListProps {
   addFirstFileButtonText: string;
   addAnotherFileButtonText: string;
   documents: BenefitsApplicationDocument[];
+  disableRemove?: boolean;
 }
 /**
  * A list of previously uploaded files and a button to upload additional files. This component
@@ -84,6 +87,7 @@ const FileCardList = (props: FileCardListProps) => {
     onRemoveTempFile,
     fileHeadingPrefix,
     fileErrors,
+    disableRemove,
   } = props;
   const documentFileCount = documents.length;
   const documentFileCards = documents.map((file, index) =>
@@ -100,7 +104,8 @@ const FileCardList = (props: FileCardListProps) => {
       index + documentFileCount,
       onRemoveTempFile,
       fileHeadingPrefix,
-      errorMsg
+      errorMsg,
+      disableRemove
     );
   });
 

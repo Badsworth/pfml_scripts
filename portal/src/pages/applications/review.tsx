@@ -31,19 +31,19 @@ import withClaimDocuments, {
   WithClaimDocumentsProps,
 } from "../../hoc/withClaimDocuments";
 import Address from "../../models/Address";
-import Alert from "../../components/Alert";
+import Alert from "../../components/core/Alert";
 import BackButton from "../../components/BackButton";
 import { DateTime } from "luxon";
 import { DocumentType } from "../../models/Document";
-import Heading from "../../components/Heading";
-import HeadingPrefix from "../../components/HeadingPrefix";
-import Lead from "../../components/Lead";
+import Heading from "../../components/core/Heading";
+import HeadingPrefix from "../../components/core/HeadingPrefix";
+import Lead from "../../components/core/Lead";
 import LeaveReason from "../../models/LeaveReason";
 import ReviewHeading from "../../components/ReviewHeading";
 import ReviewRow from "../../components/ReviewRow";
-import Spinner from "../../components/Spinner";
+import Spinner from "../../components/core/Spinner";
 import ThrottledButton from "../../components/ThrottledButton";
-import Title from "../../components/Title";
+import Title from "../../components/core/Title";
 import { Trans } from "react-i18next";
 import WeeklyTimeTable from "../../components/WeeklyTimeTable";
 import claimantConfigs from "../../flows/claimant";

@@ -41,7 +41,7 @@ describe(UploadDocument, () => {
         <UploadDocumentWithAppLogic
           query={{
             claim_id: "mock-claim-id",
-            absence_case_id: "mock-absence-case-id",
+            absence_id: "mock-absence-case-id",
             documentType,
           }}
         />
@@ -63,7 +63,7 @@ describe(UploadDocument, () => {
         <UploadDocumentWithAppLogic
           query={{
             claim_id: "mock-claim-id",
-            absence_case_id: "mock-absence-case-id",
+            absence_id: "mock-absence-case-id",
             documentType,
           }}
         />
@@ -79,7 +79,7 @@ describe(UploadDocument, () => {
         <UploadDocumentWithAppLogic
           query={{
             claim_id: "mock-claim-id",
-            absence_case_id: "mock-absence-case-id",
+            absence_id: "mock-absence-case-id",
             documentType: "state-id",
           }}
         />
@@ -113,7 +113,7 @@ describe(UploadDocument, () => {
           }}
           query={{
             claim_id: "mock-claim-id",
-            absence_case_id: "mock-absence-case-id",
+            absence_id: "mock-absence-case-id",
             documentType: "state-id",
           }}
         />
@@ -160,7 +160,7 @@ describe(UploadDocument, () => {
           }}
           query={{
             claim_id: "mock-claim-id",
-            absence_case_id: "mock-absence-case-id",
+            absence_id: "mock-absence-case-id",
             documentType: "state-id",
           }}
         />
@@ -189,7 +189,7 @@ describe(UploadDocument, () => {
       expect(appLogic.documents.attach).not.toHaveBeenCalled();
       expect(appLogic.portalFlow.goToNextPage).toHaveBeenCalledWith(
         { isAdditionalDoc: true },
-        { claim_id: "mock-claim-id", absence_case_id: "mock-absence-case-id" }
+        { claim_id: "mock-claim-id", absence_id: "mock-absence-case-id" }
       );
     });
   });
@@ -229,7 +229,7 @@ describe(UploadDocument, () => {
           }}
           query={{
             claim_id: "mock-claim-id",
-            absence_case_id: "mock-absence-case-id",
+            absence_id: "mock-absence-case-id",
             documentType: "state-id",
           }}
         />
@@ -298,7 +298,7 @@ describe(UploadDocument, () => {
         }}
         query={{
           claim_id: "mock-claim-id",
-          absence_case_id: "mock-absence-case-id",
+          absence_id: "mock-absence-case-id",
           documentType: "state-id",
         }}
       />
@@ -340,7 +340,7 @@ describe(UploadDocument, () => {
         }}
         query={{
           claim_id: "mock-claim-id",
-          absence_case_id: "mock-absence-case-id",
+          absence_id: "mock-absence-case-id",
           documentType: "state-id",
           additionalDoc: "true",
         }}
@@ -400,7 +400,7 @@ describe(UploadDocument, () => {
           }}
           query={{
             claim_id: "mock-claim-id",
-            absence_case_id: "mock-absence-case-id",
+            absence_id: "mock-absence-case-id",
             documentType: documentTypeParam,
             additionalDoc: "true",
           }}
@@ -433,7 +433,7 @@ describe(UploadDocument, () => {
         { isAdditionalDoc: true },
         {
           claim_id: "mock-claim-id",
-          absence_case_id: "mock-absence-case-id",
+          absence_id: "mock-absence-case-id",
           uploaded_document_type: documentTypeParam,
         }
       );

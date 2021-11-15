@@ -3,9 +3,9 @@ import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
 
-import Details from "../../components/Details";
-import IconHeading from "../../components/IconHeading";
-import InputChoiceGroup from "../../components/InputChoiceGroup";
+import Details from "../../components/core/Details";
+import IconHeading from "../../components/core/IconHeading";
+import InputChoiceGroup from "../../components/core/InputChoiceGroup";
 import LeaveDatesAlert from "../../components/LeaveDatesAlert";
 import QuestionPage from "../../components/QuestionPage";
 import { Trans } from "react-i18next";
@@ -83,7 +83,7 @@ export const ConcurrentLeaves = (props: WithBenefitsApplicationProps) => {
             <LeaveDatesAlert
               startDate={claim.leaveStartDate}
               endDate={claim.leaveEndDate}
-              showWaitingDayPeriod
+              showWaitingDayPeriod={!isIntermittent}
             />
 
             <IconHeading name="check_circle">
@@ -133,9 +133,10 @@ export const ConcurrentLeaves = (props: WithBenefitsApplicationProps) => {
                 />
               </Details>
             )}
-
             <IconHeading name="cancel">
-              {t("pages.claimsConcurrentLeaves.dontNeedToReport")}
+              {t("pages.claimsConcurrentLeaves.dontNeedToReport", {
+                context: isIntermittent ? "intermittentLeave" : null,
+              })}
             </IconHeading>
           </div>
         }

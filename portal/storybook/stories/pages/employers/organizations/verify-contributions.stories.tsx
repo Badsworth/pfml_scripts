@@ -1,7 +1,7 @@
 import User, { UserLeaveAdministrator } from "src/models/User";
-import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import React from "react";
 import { VerifyContributions } from "src/pages/employers/organizations/verify-contributions";
+import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
 
 export default {
   title: "Pages/Employers/Organizations/Verify Contributions",
@@ -9,9 +9,6 @@ export default {
 };
 
 export const Default = () => {
-  const query = {
-    employer_id: "mock_employer_id",
-  };
   const user = new User({
     user_leave_administrators: [
       new UserLeaveAdministrator({
@@ -23,31 +20,18 @@ export const Default = () => {
       }),
     ],
   });
-  const appLogic = {
-    appErrors: new AppErrorInfoCollection(),
-    employers: {
-      loadClaim: () => {},
-      submitWithholding: () => {},
-    },
-    portalFlow: {
-      goTo: () => {},
-    },
-    users: {
-      user,
-    },
-    setAppErrors: () => {},
-  };
+  const appLogic = useMockableAppLogic();
   const withholding = {
     filing_period: "02-2020",
   };
+
   return (
     <VerifyContributions
-      // @ts-expect-error no query needed?
-      query={query}
-      // @ts-expect-error ts-migrate(2740) FIXME: Type '{ appErrors: AppErrorInfoCollection; employe... Remove this comment to see the full error message
+      query={{}}
       appLogic={appLogic}
       withholding={withholding}
       employer={user.user_leave_administrators[0]}
+      user={user}
     />
   );
 };

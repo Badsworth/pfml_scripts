@@ -7,11 +7,11 @@ import AbsenceCaseStatusTag from "../../../components/AbsenceCaseStatusTag";
 import BackButton from "../../../components/BackButton";
 import { DocumentType } from "../../../models/Document";
 import DownloadableDocument from "../../../components/DownloadableDocument";
-import Heading from "../../../components/Heading";
-import Lead from "../../../components/Lead";
+import Heading from "../../../components/core/Heading";
+import Lead from "../../../components/core/Lead";
 import LeaveReason from "../../../models/LeaveReason";
 import StatusRow from "../../../components/StatusRow";
-import Title from "../../../components/Title";
+import Title from "../../../components/core/Title";
 import { Trans } from "react-i18next";
 import findDocumentsByTypes from "../../../utils/findDocumentsByTypes";
 import findKeyByValue from "../../../utils/findKeyByValue";
@@ -77,7 +77,10 @@ export const Status = (props: WithEmployerClaimProps) => {
         {absenceId}
       </StatusRow>
       <StatusRow label={t("pages.employersClaimsStatus.statusLabel")}>
-        <AbsenceCaseStatusTag status={claim.status} />
+        {/* Wrapped with margin-0 to collapse awkward default spacing between the heading and the tag */}
+        <div className="margin-0">
+          <AbsenceCaseStatusTag status={claim.status} />
+        </div>
       </StatusRow>
       <StatusRow label={t("pages.employersClaimsStatus.leaveReasonLabel")}>
         {t("pages.employersClaimsStatus.leaveReasonValue", {

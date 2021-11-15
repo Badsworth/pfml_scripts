@@ -1,6 +1,7 @@
 import datetime
 from decimal import Decimal
 from enum import Enum
+from itertools import chain
 from typing import Optional
 
 from sqlalchemy import TIMESTAMP, Boolean, Column, Date, ForeignKey, Integer, Numeric, Text, case
@@ -372,6 +373,17 @@ class Application(Base, TimestampMixin):
         "PreviousLeaveSameReason", back_populates="application", uselist=True,
     )
     concurrent_leave = relationship("ConcurrentLeave", back_populates="application", uselist=False,)
+
+    @hybrid_property
+    def all_leave_periods(self) -> Optional[list]:
+        leave_periods = list(
+            chain(
+                self.continuous_leave_periods,
+                self.intermittent_leave_periods,
+                self.reduced_schedule_leave_periods,
+            )
+        )
+        return leave_periods
 
 
 class CaringLeaveMetadata(Base, TimestampMixin):
@@ -906,6 +918,10 @@ def sync_state_metrics(db_session):
         ),
         UnemploymentMetric(
             effective_date=datetime.date(2021, 1, 1), unemployment_minimum_earnings="5400.00",
+        ),
+        BenefitsMetrics(effective_date=datetime.date(2022, 1, 2), average_weekly_wage="1694.24",),
+        UnemploymentMetric(
+            effective_date=datetime.date(2022, 1, 2), unemployment_minimum_earnings="5700.00",
         ),
     ]
 

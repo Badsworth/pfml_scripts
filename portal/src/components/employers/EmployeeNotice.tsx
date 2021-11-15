@@ -1,5 +1,5 @@
 import React, { useEffect } from "react";
-import InputChoiceGroup from "../InputChoiceGroup";
+import InputChoiceGroup from "../core/InputChoiceGroup";
 import ReviewHeading from "../ReviewHeading";
 import useFunctionalInputProps from "../../hooks/useFunctionalInputProps";
 import usePreviousValue from "../../hooks/usePreviousValue";

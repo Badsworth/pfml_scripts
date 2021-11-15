@@ -8,18 +8,18 @@ import withBenefitsApplication, {
 import withClaimDocuments, {
   WithClaimDocumentsProps,
 } from "../../hoc/withClaimDocuments";
-import Alert from "../../components/Alert";
+import Alert from "../../components/core/Alert";
 import ConditionalContent from "../../components/ConditionalContent";
 import DocumentRequirements from "../../components/DocumentRequirements";
 import FileCardList from "../../components/FileCardList";
 import FileUploadDetails from "../../components/FileUploadDetails";
-import Heading from "../../components/Heading";
-import Lead from "../../components/Lead";
+import Heading from "../../components/core/Heading";
+import Lead from "../../components/core/Lead";
 import LeaveReason from "../../models/LeaveReason";
 import QuestionPage from "../../components/QuestionPage";
 import React from "react";
 import { ReasonQualifier } from "../../models/BenefitsApplication";
-import Spinner from "../../components/Spinner";
+import Spinner from "../../components/core/Spinner";
 import { Trans } from "react-i18next";
 import findDocumentsByLeaveReason from "../../utils/findDocumentsByLeaveReason";
 import findKeyByValue from "../../utils/findKeyByValue";
@@ -53,6 +53,7 @@ export const UploadCertification = (props: UploadCertificationProps) => {
     appErrors,
     claim.application_id
   );
+  const [submissionInProgress, setSubmissionInProgress] = React.useState(false);
 
   const conditionalContext = {
     [LeaveReason.bonding]: {
@@ -92,6 +93,7 @@ export const UploadCertification = (props: UploadCertificationProps) => {
     }
 
     const documentType = DocumentType.certification.certificationForm;
+    setSubmissionInProgress(true);
 
     const uploadPromises = appLogic.documents.attach(
       claim.application_id,
@@ -105,6 +107,8 @@ export const UploadCertification = (props: UploadCertificationProps) => {
       files,
       removeFile
     );
+    setSubmissionInProgress(false);
+
     if (success) {
       const absence_id = get(claim, "fineos_absence_id");
       portalFlow.goToNextPage(
@@ -199,6 +203,7 @@ export const UploadCertification = (props: UploadCertificationProps) => {
           documents={certificationDocuments}
           onChange={processFiles}
           onRemoveTempFile={removeFile}
+          disableRemove={submissionInProgress}
           fileHeadingPrefix={t(
             "pages.claimsUploadCertification.fileHeadingPrefix"
           )}

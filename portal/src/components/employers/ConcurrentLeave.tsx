@@ -4,9 +4,9 @@ import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
 import ConcurrentLeaveModel from "../../models/ConcurrentLeave";
 import { DateTime } from "luxon";
 import EmployerClaim from "../../models/EmployerClaim";
-import Heading from "../Heading";
+import Heading from "../core/Heading";
 import React from "react";
-import Table from "../Table";
+import Table from "../core/Table";
 import formatDate from "../../utils/formatDate";
 import { useTranslation } from "../../locales/i18n";
 
