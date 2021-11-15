@@ -1311,3 +1311,54 @@ data "aws_iam_policy_document" "dua_employee_workflow_execution_role_extras" {
     ]
   }
 }
+
+# ------------------------------------------------------------------------------------------------------
+# IAM Roles and Policies for Redshift Daily Import
+# ------------------------------------------------------------------------------------------------------
+locals {
+  nonprod_roles = [
+    "arn:aws:iam::018311717589:role/aws-service-role/redshift.amazonaws.com/AWSServiceRoleForRedshift",
+    "arn:aws:iam::018311717589:role/pfml-all-redshift-s3-daily-import-role",
+    "arn:aws:iam::018311717589:role/redshiftSpectrumRole"
+  ]
+  prod_roles = ["arn:aws:iam::018311717589:role/redshift-lwd-prod-cluster-edw-role"]
+}
+data "aws_iam_policy_document" "bi_imports_bucket_policy_document" {
+  statement {
+    sid = "ReadListAccessToImportBucket"
+
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = var.environment_name == "prod" ? local.prod_roles : local.nonprod_roles
+    }
+
+    actions = [
+      "s3:ListBucket",
+      "s3:GetBucketLocation"
+    ]
+
+    resources = [
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-redshift-daily-import"
+    ]
+  }
+  statement {
+    sid = "AllowGetObject"
+
+    effect = "Allow"
+
+    principals {
+      type        = "AWS"
+      identifiers = var.environment_name == "prod" ? local.prod_roles : local.nonprod_roles
+    }
+
+    actions = [
+      "s3:GetObject"
+    ]
+
+    resources = [
+      "arn:aws:s3:::massgov-pfml-${var.environment_name}-redshift-daily-import/*"
+    ]
+  }
+}
