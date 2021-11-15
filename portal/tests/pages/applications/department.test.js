@@ -1,7 +1,7 @@
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
 import { screen, waitFor } from "@testing-library/react";
 
-import OrganizationUnit from "../../../src/pages/applications/department";
+import Department from "../../../src/pages/applications/department";
 import { setupBenefitsApplications } from "../../test-utils/helpers";
 import userEvent from "@testing-library/user-event";
 
@@ -21,7 +21,7 @@ const searchMock = jest.fn();
 
 const setup = (organization_units) => {
   return renderPage(
-    OrganizationUnit,
+    Department,
     {
       addCustomSetup: (appLogic) => {
         setupBenefitsApplications(appLogic, [claim]);

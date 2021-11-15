@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from "react";
-
 import withBenefitsApplication, {
   WithBenefitsApplicationProps,
 } from "../../hoc/withBenefitsApplication";
+
 import Alert from "../../components/core/Alert";
 import AppErrorInfo from "../../models/AppErrorInfo";
 import AppErrorInfoCollection from "../../models/AppErrorInfoCollection";
@@ -24,11 +24,11 @@ import { useTranslation } from "../../locales/i18n";
 
 export const fields = ["claim.organization_unit_id"];
 
-interface OrganizationUnitProps extends WithBenefitsApplicationProps {
+interface DepartmentProps extends WithBenefitsApplicationProps {
   query: NullableQueryParams;
 }
 
-export const OrganizationUnit = (props: OrganizationUnitProps) => {
+export const Department = (props: DepartmentProps) => {
   const { appLogic, claim, query } = props;
   const { t } = useTranslation();
 
@@ -154,26 +154,24 @@ export const OrganizationUnit = (props: OrganizationUnitProps) => {
   const populateOrganizationUnits = async () => {
     // Finds this employee based on name, SSN and employer FEIN and retrieves
     // the employee info alongside the connected organization units
-    if (!organizationUnits.length) {
-      const searchEmployee: EmployeeSearchRequest = {
-        first_name: claim.first_name ?? "",
-        last_name: claim.last_name ?? "",
-        middle_name: claim.middle_name ?? "",
-        tax_identifier_last4: claim.tax_identifier?.slice(-4) ?? "",
-        employer_fein: claim.employer_fein ?? "",
-      };
-      const employee = await appLogic.employees.search(searchEmployee);
-      if (employee) {
-        // When the employee search does not return organization units
-        // then the employer also does not have any, so go to next page
-        if (
-          typeof employee.organization_units === "undefined" ||
-          employee.organization_units.length === 0
-        ) {
-          skipDepartments();
-        }
-        setOrganizationUnits(employee.organization_units || []);
+    const searchEmployee: EmployeeSearchRequest = {
+      first_name: claim.first_name ?? "",
+      last_name: claim.last_name ?? "",
+      middle_name: claim.middle_name ?? "",
+      tax_identifier_last4: claim.tax_identifier?.slice(-4) ?? "",
+      employer_fein: claim.employer_fein ?? "",
+    };
+    const employee = await appLogic.employees.search(searchEmployee);
+    if (employee) {
+      // When the employee search does not return organization units
+      // then the employer also does not have any, so go to next page
+      if (
+        typeof employee.organization_units === "undefined" ||
+        employee.organization_units.length === 0
+      ) {
+        skipDepartments();
       }
+      setOrganizationUnits(employee.organization_units || []);
     }
   };
 
@@ -252,10 +250,11 @@ export const OrganizationUnit = (props: OrganizationUnitProps) => {
       skipDepartments();
       return;
     }
-    // lazy loads both organizationUnits lists into state
+    // Searches for employee's organization units
     populateOrganizationUnits();
+    // This dependency is required to present this page on storybook
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [appLogic.employees.search]);
 
   useEffect(() => {
     if (!organizationUnits.length) return;
@@ -376,4 +375,4 @@ export const OrganizationUnit = (props: OrganizationUnitProps) => {
   );
 };
 
-export default withBenefitsApplication(OrganizationUnit);
+export default withBenefitsApplication(Department);
