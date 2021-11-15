@@ -28,9 +28,8 @@ import { useTranslation } from "src/locales/i18n";
  * })
  */
 export default function generateClaimPageStory(
-  // @ts-expect-error ts-migrate(7006) FIXME: Parameter 'claimsPageSubpath' implicitly has an 'a... Remove this comment to see the full error message
-  claimsPageSubpath,
-  mockClaims = null
+  claimsPageSubpath: string,
+  mockClaims: { [scenario: string]: BenefitsApplication } | null = null
 ) {
   // e.g. applications/leave-duration --> LeaveDuration
   const componentName = chain(claimsPageSubpath)

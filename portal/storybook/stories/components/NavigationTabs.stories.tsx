@@ -31,8 +31,14 @@ export default {
   },
 };
 
-export const Default = ({ selectedTab }: { selectedTab: string }) => {
-  const activeTab = TABS.find((tab) => tab.label === selectedTab);
-  // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
+export const Default = ({
+  selectedTab,
+}: {
+  selectedTab: typeof TABS[number]["label"];
+}) => {
+  const activeTab = TABS.find(
+    (tab) => tab.label === selectedTab
+  ) as typeof TABS[number];
+
   return <NavigationTabs tabs={TABS} activePath={activeTab.href} />;
 };

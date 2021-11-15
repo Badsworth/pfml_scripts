@@ -80,7 +80,7 @@ export const AbsenceCaseStatus = {
   declined: "Declined",
 } as const;
 
-type AbsenceCaseStatusType =
+export type AbsenceCaseStatusType =
   typeof AbsenceCaseStatus[keyof typeof AbsenceCaseStatus];
 
 export default Claim;

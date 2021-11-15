@@ -1,4 +1,4 @@
-import Claim, { ClaimEmployee } from "src/models/Claim";
+import Claim, { AbsenceCaseStatusType, ClaimEmployee } from "src/models/Claim";
 import React, { useState } from "react";
 import User, { UserLeaveAdministrator } from "src/models/User";
 import ClaimCollection from "src/models/ClaimCollection";
@@ -156,7 +156,6 @@ export const Default = (
             new Claim({
               created_at: DateTime.local().minus({ days: num }).toISODate(),
               fineos_absence_id: `NTN-101-ABS-${num}`,
-              // @ts-expect-error AbsenceCaseStatusType only declares a subset of types
               claim_status: faker.helpers.randomize([
                 "Approved",
                 "Declined",
@@ -164,7 +163,7 @@ export const Default = (
                 "Completed",
                 "Adjudication",
                 "Intake In Progress",
-              ]),
+              ]) as AbsenceCaseStatusType,
               employee: new ClaimEmployee({
                 first_name: faker.name.firstName(),
                 last_name: faker.name.lastName(),
@@ -176,6 +175,11 @@ export const Default = (
                   2
                 )}-${faker.finance.account(7)}`,
               },
+              absence_period_end_date: "",
+              absence_period_start_date: "",
+              claim_type_description: "",
+              fineos_notification_id: "",
+              managed_requirements: [],
             })
         );
 

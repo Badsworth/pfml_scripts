@@ -1,5 +1,5 @@
+import { BenefitsApplicationDocument, DocumentType } from "src/models/Document";
 import DocumentCollection from "src/models/DocumentCollection";
-import { DocumentType } from "src/models/Document";
 import { MockEmployerClaimBuilder } from "tests/test-utils";
 import React from "react";
 import { Status } from "src/pages/employers/applications/status";
@@ -73,25 +73,24 @@ export const Default = ({
     claimBuilder = claimBuilder.reducedSchedule();
   }
 
-  const documentData = {
+  const documentData: BenefitsApplicationDocument = {
     application_id: "mock-application-id",
     content_type: "application/pdf",
+    description: "",
+    document_type: DocumentType.identityVerification,
     created_at: "2020-01-02",
-    fineos_document_id: 202020,
+    fineos_document_id: "202020",
     name: "Your Document",
+    user_id: "",
   };
 
   if (document === "Approval notice") {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'document_type' does not exist on type '{... Remove this comment to see the full error message
     documentData.document_type = DocumentType.approvalNotice;
   } else if (document === "Denial notice" || document === "Multiple") {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'document_type' does not exist on type '{... Remove this comment to see the full error message
     documentData.document_type = DocumentType.denialNotice;
   } else if (document === "Request for info") {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'document_type' does not exist on type '{... Remove this comment to see the full error message
     documentData.document_type = DocumentType.requestForInfoNotice;
   } else if (document === "Other") {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'document_type' does not exist on type '{... Remove this comment to see the full error message
     documentData.document_type = DocumentType.identityVerification;
   }
 
@@ -103,9 +102,7 @@ export const Default = ({
       [
         "mock-absence-id",
         new DocumentCollection([
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ application_id: string; content_type: stri... Remove this comment to see the full error message
           { ...documentData },
-          // @ts-expect-error ts-migrate(2322) FIXME: Type '{ document_type: "Request for more Informati... Remove this comment to see the full error message
           {
             ...documentData,
             document_type: DocumentType.requestForInfoNotice,
@@ -115,7 +112,6 @@ export const Default = ({
     ]);
   } else {
     documentsMap = new Map([
-      // @ts-expect-error ts-migrate(2322) FIXME: Type '{ application_id: string; content_type: stri... Remove this comment to see the full error message
       ["mock-absence-id", new DocumentCollection([{ ...documentData }])],
     ]);
   }

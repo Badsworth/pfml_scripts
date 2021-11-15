@@ -1,7 +1,8 @@
+import { BenefitsApplicationDocument, DocumentType } from "src/models/Document";
 import AppErrorInfo from "src/models/AppErrorInfo";
 import AppErrorInfoCollection from "src/models/AppErrorInfoCollection";
 import DocumentCollection from "src/models/DocumentCollection";
-import { DocumentType } from "src/models/Document";
+import EmployerClaim from "src/models/EmployerClaim";
 import { Props } from "storybook/types";
 import React from "react";
 import { Review } from "src/pages/employers/applications/review";
@@ -99,7 +100,7 @@ export const Default = (
     leaveReason,
     ...formVersion,
     ...leaveTypes
-  );
+  ) as EmployerClaim;
 
   const appLogic = useMockableAppLogic({
     appErrors: getAppErrorInfoCollection(errorTypes),
@@ -121,24 +122,30 @@ function getDocumentsMap(
   const isWithoutDocumentation = documentation.includes(
     "without documentation"
   );
-  const documentData = {
+
+  if (
+    isWithoutDocumentation ||
+    !leaveReason ||
+    !(leaveReason in DocumentType.certification)
+  ) {
+    return new Map([["mock-absence-id", new DocumentCollection()]]);
+  }
+
+  const documentData: BenefitsApplicationDocument = {
     application_id: "mock-application-id",
     content_type: "application/pdf",
     created_at: "2020-01-02",
+    description: "",
     document_type:
-      leaveReason && leaveReason in DocumentType.certification
-        ? DocumentType.certification[
-            leaveReason as keyof typeof DocumentType.certification
-          ]
-        : null,
-    fineos_document_id: 202020,
+      DocumentType.certification[
+        leaveReason as keyof typeof DocumentType.certification
+      ],
+    fineos_document_id: "202020",
     name: `${leaveReason} document`,
+    user_id: "",
   };
 
-  return isWithoutDocumentation
-    ? new Map([["mock-absence-id", new DocumentCollection()]])
-    : // @ts-expect-error ts-migrate(2322) FIXME: Type '{ application_id: string; content_type: stri... Remove this comment to see the full error message
-      new Map([["mock-absence-id", new DocumentCollection([documentData])]]);
+  return new Map([["mock-absence-id", new DocumentCollection([documentData])]]);
 }
 
 function getAppErrorInfoCollection(errorTypes: string[] = []) {

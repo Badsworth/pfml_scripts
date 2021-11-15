@@ -11,7 +11,6 @@ const mockClaims = {
 
 const { config, DefaultStory } = generateClaimPageStory(
   "schedule-variable",
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ fixed: BenefitsApplication; }'... Remove this comment to see the full error message
   mockClaims
 );
 export default config;

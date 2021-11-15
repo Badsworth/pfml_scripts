@@ -20,12 +20,10 @@ export default {
 export const Page = (
   args: Props<typeof ResetPassword> & { scenario: string }
 ) => {
-  const authData = {};
-
-  if (args.scenario === "With cached email") {
-    // @ts-expect-error ts-migrate(2339) FIXME: Property 'resetPasswordUsername' does not exist on... Remove this comment to see the full error message
-    authData.resetPasswordUsername = "test@example.com";
-  }
+  const authData = {
+    resetPasswordUsername:
+      args.scenario === "With cached email" ? "test@example.com" : undefined,
+  };
 
   const appLogic = useMockableAppLogic({
     auth: {

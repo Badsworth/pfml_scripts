@@ -1,5 +1,4 @@
 import React, { useEffect, useState } from "react";
-import { DocumentType } from "src/models/Document";
 import FileCard from "src/components/FileCard";
 
 export default {
@@ -20,8 +19,7 @@ export const PdfFileCard = () => {
     );
   } catch (err) {
     // Unable to create a File -- fallback to displaying an error
-    // @ts-expect-error unknown
-    console.error(err.message);
+    console.error(err);
     return "Unable to render this story because the File constructor failed. This usually happens when you're using Internet Explorer which doesn't support the File constructor. You can see the FileCardList component to select your own files to view FileCards with.";
   }
 };
@@ -31,11 +29,7 @@ export const DocumentCard = () => {
     <FileCard
       heading="Document 1"
       document={{
-        // @ts-expect-error ts-migrate(2322) FIXME: Type '{ application_id: string; created_at: string... Remove this comment to see the full error message
-        application_id: "mock-application-id",
         created_at: "2021-01-01",
-        document_type: DocumentType.identityVerification,
-        fineos_document_id: "mock-document-4",
       }}
     />
   );
@@ -50,7 +44,7 @@ export const ImageFileCard = () => {
   // probably using Internet Explorer.
 
   // Asynchronously fetch an image file to use as our thumbnail
-  const [file, setFile] = useState();
+  const [file, setFile] = useState<File>();
   const [fileFailed, setFileFailed] = useState(false);
   useEffect(() => {
     const fetchImage = async () => {
@@ -59,11 +53,9 @@ export const ImageFileCard = () => {
       const blob = await response.blob();
       // Now that we have our image we can trigger the FileCard to render
       try {
-        // @ts-expect-error ts-migrate(2345) FIXME: Argument of type 'File' is not assignable to param... Remove this comment to see the full error message
         setFile(new File([blob], "favicon.png", { type: "image/png" }));
       } catch (err) {
-        // @ts-expect-error unknown
-        console.error(err.message);
+        console.error(err);
         setFileFailed(true);
       }
     };

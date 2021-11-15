@@ -20,7 +20,6 @@ const mockClaims = {
 
 const { config, DefaultStory } = generateClaimPageStory(
   "previous-leaves-same-reason",
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ continuous: BenefitsApplicatio... Remove this comment to see the full error message
   mockClaims
 );
 export default config;

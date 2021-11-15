@@ -47,9 +47,6 @@ export class BaseMockBenefitsApplicationBuilder {
     return this;
   }
 
-  /**
-   * @returns {BaseMockBenefitsApplicationBuilder}
-   */
   absenceId(absenceId = "NTN-111-ABS-01") {
     set(this.claimAttrs, "fineos_absence_id", absenceId);
     return this;

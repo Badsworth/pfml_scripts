@@ -21,7 +21,6 @@ const mockClaims = {
 
 const { config, DefaultStory } = generateClaimPageStory(
   "upload-docs-options",
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ "Medical leave": BenefitsAppli... Remove this comment to see the full error message
   mockClaims
 );
 export default config;

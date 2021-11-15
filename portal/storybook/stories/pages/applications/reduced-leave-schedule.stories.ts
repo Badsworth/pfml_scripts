@@ -40,7 +40,6 @@ const mockClaims = {
 
 const { config, DefaultStory } = generateClaimPageStory(
   "reduced-leave-schedule",
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ "Bonding (Fixed)": BenefitsApp... Remove this comment to see the full error message
   mockClaims
 );
 export default config;

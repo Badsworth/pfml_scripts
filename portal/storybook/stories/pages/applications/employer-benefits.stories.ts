@@ -9,7 +9,6 @@ const mockClaims = {
 
 const { config, DefaultStory } = generateClaimPageStory(
   "employer-benefits",
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ "continuous leave": BenefitsAp... Remove this comment to see the full error message
   mockClaims
 );
 

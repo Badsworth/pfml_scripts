@@ -18,7 +18,6 @@ const mockClaims = {
 
 const { config, DefaultStory } = generateClaimPageStory(
   "leave-period-intermittent",
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ bonding: BenefitsApplication; ... Remove this comment to see the full error message
   mockClaims
 );
 export default config;

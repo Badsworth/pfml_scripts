@@ -17,8 +17,8 @@ export const Default = () => {
 
   return (
     <AmendmentForm
-      // @ts-expect-error ts-migrate(2322) FIXME: Type '{ children: Element; onCancel: () => void; }... Remove this comment to see the full error message
-      onCancel={() => alert("This function should hide and clear the form!")}
+      destroyButtonLabel="Cancel"
+      onDestroy={() => alert("This function should hide and clear the form!")}
     >
       <InputDate
         onChange={handleOnChange}

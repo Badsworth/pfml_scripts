@@ -5,7 +5,6 @@ import Step from "src/models/Step";
 import auth from "src/flows/auth";
 import claimant from "src/flows/claimant";
 import employer from "src/flows/employer";
-import machineConfig from "src/flows";
 import routes from "src/routes";
 
 export default {
@@ -39,8 +38,7 @@ export const ClaimantSteps = () => (
 );
 
 export const ClaimantFields = () => {
-  // @ts-expect-error ts-migrate(2345) FIXME: Argument of type '{ id: string; initial: string; s... Remove this comment to see the full error message
-  const steps = Step.createClaimStepsFromMachine(machineConfig, { claim: {} });
+  const steps = Step.createClaimStepsFromMachine(claimant, { claim: {} });
 
   return steps.map((step) => {
     return (
@@ -51,10 +49,8 @@ export const ClaimantFields = () => {
             <article key={page.route}>
               <h3>{page.route}</h3>
               <ul>
-                {/* @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'. */}
-                {page.meta.fields
-                  ? // @ts-expect-error ts-migrate(2532) FIXME: Object is possibly 'undefined'.
-                    page.meta.fields.map((field) => (
+                {page.meta?.fields
+                  ? page.meta.fields.map((field) => (
                       <li key={field}>
                         <code>{field}</code>
                       </li>

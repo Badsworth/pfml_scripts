@@ -1,10 +1,10 @@
 import Step, { ClaimSteps } from "src/models/Step";
 import { Checklist } from "src/pages/applications/checklist";
-import DocumentCollection from "src/models/DocumentCollection";
 import { DocumentType } from "src/models/Document";
 import { MockBenefitsApplicationBuilder } from "tests/test-utils";
 import { Props } from "storybook/types";
 import React from "react";
+import User from "src/models/User";
 import claimantConfig from "src/flows/claimant";
 import { find } from "lodash";
 import useMockableAppLogic from "lib/mock-helpers/useMockableAppLogic";
@@ -171,19 +171,11 @@ export const DefaultStory = (
   args: Props<typeof Checklist> & { scenario: keyof typeof scenarios }
 ) => {
   const { claim, documents, query, warnings } = scenarios[args.scenario];
-
   const appLogic = useMockableAppLogic({
     benefitsApplications: {
-      update: () => Promise.resolve(),
       warningsLists: {
         [claim.application_id]: warnings ?? [],
       },
-    },
-    documents: {
-      documents:
-        documents.length > 0
-          ? new DocumentCollection(documents)
-          : new DocumentCollection(),
     },
   });
 
@@ -191,9 +183,10 @@ export const DefaultStory = (
     <Checklist
       appLogic={appLogic}
       claim={claim}
-      // @ts-expect-error ts-migrate(2322) FIXME: Type '(BenefitsApplicationDocument | ClaimDocument... Remove this comment to see the full error message
-      documents={appLogic.documents.documents.items}
+      isLoadingDocuments={args.isLoadingDocuments}
+      documents={documents}
       query={query || {}}
+      user={new User({})}
     />
   );
 };
