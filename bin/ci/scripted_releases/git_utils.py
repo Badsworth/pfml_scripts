@@ -83,9 +83,9 @@ def merge(*args):
 
 def create_branch(branch_name):
     fetch_remotes()
-    gitcmd.branch(branch_name, "main")
-    gitcmd.push("-u", "origin", branch_name)
-    logger.info(f"Branch '{branch_name}' created from HEAD of local main")
+    gitcmd.branch(branch_name, "origin/main")
+    gitcmd.push("-u", "origin", branch_name + ":" + branch_name)
+    logger.info(f"Branch '{branch_name}' created from HEAD of origin/main")
 
 
 def current_branch():
