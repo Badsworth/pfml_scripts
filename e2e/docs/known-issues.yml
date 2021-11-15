@@ -1,0 +1,98 @@
+- id: NOTIFICATION_TIMEOUT
+  description: A notification e-mail fails to arrive in the time allotted.
+  cause: Multiple - could be infrastructure related, or something else.
+  matches:
+    - Timed out while looking for e-mail
+- id: REVIEW_SUBMIT_FAILURE
+  matches:
+    - >-
+      Expected to find content: 'Thanks for reviewing the application' but never
+      did.
+- id: FINEOS_AJAX_TIMEOUT
+  description: FINEOS ajax requests fail to complete in the time allotted.
+  cause: Generally, Fineos UI slowness.
+  matches:
+    - In-flight Ajax requests should be 0
+- id: LA_VERIFICATION_FAILURE
+  matches:
+    - >-
+      Expected to find content: 'Thanks for verifying your paid leave
+      contributions' within the selector: 'h1' but never did.
+- id: MULTIPLE_ESCALATE
+  matches:
+    - >-
+      Found multiple elements with the text: Escalate Employer Reported Other
+      Income
+- id: FINEOS_REDIRECTION
+  matches:
+    - >-
+      The application redirected to `https://fineos/index.jsp` more than 20
+      times.
+- id: MISSING_SUPPRESS_NOTIFICATIONS
+  ticket: MISSING_SUPPRESS_NOTIFICATIONS
+  matches:
+    - >-
+      Expected to find element: `input[type='submit'][value='Suppress
+      Notifications']`, but never found it.
+- id: ER_UNABLE_TO_RESPOND
+  matches:
+    - >-
+      Expected to find content: 'Are you the right person to respond to this
+      application?' but never did.
+- id: ER_NO_APPLICATIONS_MATCHING
+  matches:
+    - >-
+      expected '<tr>' to contain text '--', but the text was 'No applications on
+      file'
+- id: CLAIM_SUBMIT_TIMEOUT
+  description: Claim submission times out, either on the submit_application or complete_application endpoint.
+  cause: Typically, slow FINEOS API responses.
+  ticket: EDM-262
+  matches:
+    - /submit_application - Gateway Timeout (504
+    - /complete_application - Gateway Timeout (504
+    - '`cy.task(''submitClaimToAPI'')` timed out after waiting `Xms`'
+- id: CLAIM_SUBMIT_503
+  description: Claim submission results in a 503 error.
+  matches:
+    - submit_application - Service Unavailable (503
+- id: PFMLPB-1234
+  description: A timeout happens while we're waiting for the final adjudication action to complete.
+  matches:
+    - "Expected to find content: 'Denied' but never did."
+    - "Expected to find content: 'Approved' but never did."
+- id: PORTAL_QUERY_TEXT_CHANGE
+  description: The absence_case_id query string is missing, and has been replaced by absence_id.
+  cause: A query string that E2E tests relied on was updated without updating the tests.
+  matches:
+    - >-
+      expected
+      'https://portal/applications/status/?absence_case_id=NTN-XXX-ABS-XX' to
+      include '/applications/status/?absence_id=NTN-XXX-ABS-XX'
+- id: QUERY_MIX
+  matches:
+    - >-
+      expected 'https://portal/applications/status/?absence_id=NTN-XXX-ABS-XX'
+      to include '/applications/status/?absence_case_id=NTN-XXX-ABS-XX'
+- id: PFMLPB-2434
+  ticket: PFMLPB-2434
+  matches:
+    - >-
+      Expected to find content: 'What’s your Social Security Number?' but never
+      did.
+- id: PFMLPB-2430
+  ticket: PFMLPB-2430
+  matches:
+    - >-
+      Expected to find element: `span[id="CaseDetails_unXX_AssignedTo"]`, but
+      never found it.
+- id: PFMLPB-2455
+  ticket: PFMLPB-2455
+  matches:
+    - >-
+      Expected to find element: `input[type="submit"][value="Adjudicate"]`, but
+      never found it.
+- id: PR-6124
+  ticket: PR-6124
+  matches:
+    - 'Unable to find an element with the text: Denial notice (PDF).'
