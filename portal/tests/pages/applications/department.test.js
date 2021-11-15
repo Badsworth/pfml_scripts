@@ -1,20 +1,9 @@
 import { MockBenefitsApplicationBuilder, renderPage } from "../../test-utils";
-// import { act, renderHook } from "@testing-library/react-hooks";
 import { screen, waitFor } from "@testing-library/react";
 
-// import AppErrorInfo from "../../../src/models/AppErrorInfo";
-// import AppErrorInfoCollection from "../../../src/models/AppErrorInfoCollection";
 import OrganizationUnit from "../../../src/pages/applications/department";
-// import { searchMock } from "../../../src/api/EmployeesApi";
 import { setupBenefitsApplications } from "../../test-utils/helpers";
-// import useAppErrorsLogic from "../../../src/hooks/useAppErrorsLogic";
-// import useEmployeesLogic from "../../../src/hooks/useEmployeesLogic";
-// import usePortalFlow from "../../../src/hooks/usePortalFlow";
 import userEvent from "@testing-library/user-event";
-
-// jest.mock("../../../src/api/EmployeesApi");
-// jest.mock("../../../src/hooks/useEmployeesLogic");
-// jest.mock("../../../src/hooks/useAppLogic");
 
 const goToPageFor = jest.fn(() => {
   return Promise.resolve();
@@ -225,9 +214,9 @@ describe("DepartmentPage", () => {
         userEvent.click(
           screen.getByRole("button", { name: "Save and continue" })
         );
-        // Shows error to the user
+        // Shows error to the user, doesn't save
         await waitFor(() => {
-          expect(screen.getByRole("alert")).toBeInTheDocument();
+          expect(updateClaim).toHaveBeenCalledTimes(0);
         });
         // Click "No" confirming that "Department One" is not your department
         userEvent.click(screen.getByRole("radio", { name: "No" }));
@@ -235,9 +224,9 @@ describe("DepartmentPage", () => {
         userEvent.click(
           screen.getByRole("button", { name: "Save and continue" })
         );
-        // Shows error to the user
+        // Shows error to the user, doesn't save
         await waitFor(() => {
-          expect(screen.getByRole("alert")).toBeInTheDocument();
+          expect(updateClaim).toHaveBeenCalledTimes(0);
         });
         // Selects a workaround
         userEvent.type(
@@ -258,8 +247,6 @@ describe("DepartmentPage", () => {
             organization_unit_id: null,
           });
         });
-        // Clears errors
-        expect(screen.getByRole("alert")).not.toBeInTheDocument();
       });
     });
 
@@ -326,8 +313,52 @@ describe("DepartmentPage", () => {
         });
       });
 
-      // @todo: when user doesn't pick an option cannot submit department
-      // @todo: when user picks workaround a warning is displayed
+      it("when user doesn't pick an option cannot submit department", async () => {
+        setup(shortOrganizationUnitsList);
+        // Wait for multiple component renders
+        await waitFor(() => {
+          expect(searchMock).toHaveBeenCalledWith(postData);
+        });
+        // Click Save and continue button
+        userEvent.click(
+          screen.getByRole("button", { name: "Save and continue" })
+        );
+        // Shows error to the user, doesn't save
+        await waitFor(() => {
+          expect(updateClaim).toHaveBeenCalledTimes(0);
+        });
+        // Click "No" confirming that "Department One" is not your department
+        userEvent.click(
+          screen.getByRole("radio", { name: "My department is not listed" })
+        );
+        // Click Save and continue button
+        userEvent.click(
+          screen.getByRole("button", { name: "Save and continue" })
+        );
+        // Shows error to the user, doesn't save
+        await waitFor(() => {
+          expect(updateClaim).toHaveBeenCalledTimes(0);
+        });
+        // Selects a workaround
+        userEvent.type(
+          screen.getByRole("combobox", {
+            name: "Select a department",
+          }),
+          "My department is not listed{enter}" // Needs enter to confirm option in combobox
+        );
+        // Additional information is displayed to the user
+        expect(screen.getByRole("region")).toBeInTheDocument();
+        // Click Save and continue button
+        userEvent.click(
+          screen.getByRole("button", { name: "Save and continue" })
+        );
+        // Check if the PATCH call to update the application was made
+        await waitFor(() => {
+          expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
+            organization_unit_id: null,
+          });
+        });
+      });
     });
 
     describe("when there is more than five linked departments", () => {
@@ -367,8 +398,40 @@ describe("DepartmentPage", () => {
         });
       });
 
-      // @todo: when user doesn't pick an option cannot submit department
-      // @todo: when user picks workaround a warning is displayed
+      it("when user doesn't pick an option cannot submit department", async () => {
+        setup(longOrganizationUnitsList);
+        // Wait for multiple component renders
+        await waitFor(() => {
+          expect(searchMock).toHaveBeenCalledWith(postData);
+        });
+        // Click Save and continue button
+        userEvent.click(
+          screen.getByRole("button", { name: "Save and continue" })
+        );
+        // Shows error to the user, doesn't save
+        await waitFor(() => {
+          expect(updateClaim).toHaveBeenCalledTimes(0);
+        });
+        // Selects a workaround
+        userEvent.type(
+          screen.getByRole("combobox", {
+            name: "Select a department",
+          }),
+          "My department is not listed{enter}" // Needs enter to confirm option in combobox
+        );
+        // Additional information is displayed to the user
+        expect(screen.getByRole("region")).toBeInTheDocument();
+        // Click Save and continue button
+        userEvent.click(
+          screen.getByRole("button", { name: "Save and continue" })
+        );
+        // Check if the PATCH call to update the application was made
+        await waitFor(() => {
+          expect(updateClaim).toHaveBeenCalledWith("mock_application_id", {
+            organization_unit_id: null,
+          });
+        });
+      });
     });
   });
 });
