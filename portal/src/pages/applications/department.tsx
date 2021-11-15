@@ -86,6 +86,12 @@ export const OrganizationUnit = (props: OrganizationUnitProps) => {
       workaround.organization_unit_id === formState.combobox_organization_unit
   );
 
+  const skipDepartments = () => {
+    appLogic.portalFlow.goToPageFor("CONTINUE", { claim }, query, {
+      redirect: true,
+    });
+  };
+
   // API calls
   const handleSave = async () => {
     const errors = [];
@@ -158,14 +164,13 @@ export const OrganizationUnit = (props: OrganizationUnitProps) => {
       };
       const employee = await appLogic.employees.search(searchEmployee);
       if (employee) {
+        // When the employee search does not return organization units
+        // then the employer also does not have any, so go to next page
         if (
-          typeof employee.organization_units !== "undefined" &&
+          typeof employee.organization_units === "undefined" ||
           employee.organization_units.length === 0
         ) {
-          appLogic.portalFlow.goToNextPage(
-            {},
-            { claim_id: claim.application_id }
-          );
+          skipDepartments();
         }
         setOrganizationUnits(employee.organization_units || []);
       }
@@ -244,9 +249,7 @@ export const OrganizationUnit = (props: OrganizationUnitProps) => {
 
   useEffect(() => {
     if (!showOrganizationUnits) {
-      appLogic.portalFlow.goToPageFor("CONTINUE", { claim }, query, {
-        redirect: true,
-      });
+      skipDepartments();
       return;
     }
     // lazy loads both organizationUnits lists into state
@@ -263,8 +266,8 @@ export const OrganizationUnit = (props: OrganizationUnitProps) => {
 
     const hasValidValue = typeof selectedChoice !== "undefined";
     const hasDefaultValue =
-      organizationUnits.length > 0 &&
-      typeof initialFormState?.organization_unit_id !== "undefined";
+      initialFormState?.organization_unit_id !== null &&
+      organizationUnits.length > 0;
 
     // Determines radio / combobox default values based on claim.organization_unit_id
     const newInitialState = {
@@ -276,17 +279,16 @@ export const OrganizationUnit = (props: OrganizationUnitProps) => {
             : null
           : null
         : null,
-      radio_organization_unit: hasDefaultValue
-        ? hasValidValue
-          ? selectedChoice.linked
-            ? selectedChoice.organization_unit_id
-            : isSingular
-            ? NO.organization_unit_id
-            : NOT_LISTED.organization_unit_id
-          : isSingular
-          ? NO.organization_unit_id
-          : NOT_LISTED.organization_unit_id
-        : null,
+      radio_organization_unit:
+        hasDefaultValue && !isLong
+          ? hasValidValue
+            ? selectedChoice.linked
+              ? selectedChoice.organization_unit_id
+              : isSingular
+              ? NO.organization_unit_id
+              : NOT_LISTED.organization_unit_id
+            : null
+          : null,
     };
     updateFields(newInitialState);
     // eslint-disable-next-line react-hooks/exhaustive-deps
