@@ -1,5 +1,4 @@
 import argparse
-import os
 import sys
 from typing import List
 
@@ -32,9 +31,6 @@ from massgov.pfml.delegated_payments.state_cleanup_step import StateCleanupStep
 from massgov.pfml.util.bg import background_task
 
 logger = logging.get_logger(__name__)
-
-enable_withholding_payments: bool
-enable_withholding_payments = os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "0") == "1"
 
 ALL = "ALL"
 RUN_AUDIT_CLEANUP = "audit-cleanup"
@@ -163,7 +159,7 @@ def _process_fineos_extracts(
     if config.do_payment_extract:
         PaymentExtractStep(db_session=db_session, log_entry_db_session=log_entry_db_session).run()
 
-    if enable_withholding_payments:
+    if payments_util.is_withholding_payments_enabled():
         if config.do_related_payment_processing:
             RelatedPaymentsProcessingStep(
                 db_session=db_session, log_entry_db_session=log_entry_db_session

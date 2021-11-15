@@ -23,9 +23,6 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_util import (
 )
 from massgov.pfml.delegated_payments.step import Step
 
-enable_withholding_payments: bool
-enable_withholding_payments = os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "0") == "1"
-
 logger = logging.get_logger(__name__)
 
 
@@ -59,7 +56,7 @@ class PaymentAuditReportStep(Step):
             for item in state_logs:
                 state_logs_containers.append(item)
 
-        if enable_withholding_payments:
+        if payments_util.is_withholding_payments_enabled():
             federal_withholding_state_logs = state_log_util.get_all_latest_state_logs_in_end_state(
                 state_log_util.AssociatedClass.PAYMENT,
                 State.FEDERAL_WITHHOLDING_PENDING_AUDIT,

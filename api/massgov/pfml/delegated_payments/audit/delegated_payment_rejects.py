@@ -14,6 +14,7 @@ from massgov.pfml.db.models.employees import (
     Flow,
     LkState,
     Payment,
+    PaymentTransactionType,
     ReferenceFile,
     ReferenceFileType,
     State,
@@ -33,9 +34,6 @@ from massgov.pfml.delegated_payments.audit.delegated_payment_audit_csv import (
 from massgov.pfml.delegated_payments.step import Step
 
 logger = logging.get_logger(__name__)
-
-enable_withholding_payments: bool
-enable_withholding_payments = os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "0") == "1"
 
 
 # Not sampled payment next states
@@ -270,7 +268,7 @@ class PaymentRejectsStep(Step):
             payment, Flow.DELEGATED_PAYMENT, self.db_session
         )
 
-        if enable_withholding_payments:
+        if payments_util.is_withholding_payments_enabled():
             # check if the payment has any withholding payments.
             withholding_records: List[LinkSplitPayment] = self.db_session.query(
                 LinkSplitPayment
@@ -328,7 +326,7 @@ class PaymentRejectsStep(Step):
             )
             self.db_session.add(writeback_details)
 
-            if enable_withholding_payments:
+            if payments_util.is_withholding_payments_enabled():
                 if withholding_records:
                     self.set_statelog_for_withholding_linksplit_payments(
                         withholding_records, payment, is_skipped_or_rejected=True
@@ -361,7 +359,7 @@ class PaymentRejectsStep(Step):
             )
             self.db_session.add(writeback_details)
 
-            if enable_withholding_payments:
+            if payments_util.is_withholding_payments_enabled():
                 if withholding_records:
                     self.set_statelog_for_withholding_linksplit_payments(
                         withholding_records, payment, is_skipped_or_rejected=True,
@@ -372,7 +370,7 @@ class PaymentRejectsStep(Step):
                 payment, ACCEPTED_STATE, ACCEPTED_OUTCOME, self.db_session
             )
 
-            if enable_withholding_payments:
+            if payments_util.is_withholding_payments_enabled():
                 if withholding_records:
                     self.set_statelog_for_withholding_linksplit_payments(
                         withholding_records, payment, is_skipped_or_rejected=False
@@ -383,7 +381,6 @@ class PaymentRejectsStep(Step):
         payment: Payment,
         is_rejected_payment: bool,
         is_skipped_payment: bool,
-        is_state_withholding_pending_audit: bool,
         rejected_notes: Optional[str] = None,
     ) -> None:
         payment_state_log: Optional[StateLog] = state_log_util.get_latest_state_log_in_flow(
@@ -412,7 +409,7 @@ class PaymentRejectsStep(Step):
             state_log_util.create_finished_state_log(
                 payment,
                 State.STATE_WITHHOLDING_ERROR
-                if is_state_withholding_pending_audit
+                if PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
                 else State.FEDERAL_WITHHOLDING_ERROR,
                 state_log_util.build_outcome("Payment rejected or skipped"),
                 self.db_session,
@@ -421,7 +418,7 @@ class PaymentRejectsStep(Step):
             state_log_util.create_finished_state_log(
                 payment,
                 State.STATE_WITHHOLDING_SEND_FUNDS
-                if is_state_withholding_pending_audit
+                if PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
                 else State.FEDERAL_WITHHOLDING_SEND_FUNDS,
                 ACCEPTED_OUTCOME,
                 self.db_session,
@@ -434,15 +431,6 @@ class PaymentRejectsStep(Step):
         is_skipped_or_rejected: bool,
     ) -> None:
         for payment_withholding_record in withholding_records:
-            payment_end_state_id = (
-                (
-                    self.db_session.query(StateLog.end_state_id, StateLog)
-                    .filter(StateLog.payment_id == payment.payment_id)
-                    .filter(StateLog.started_at == payment.fineos_extraction_date)
-                )
-                .order_by(StateLog.created_at.desc())
-                .first()
-            )
 
             withhold_payment: Payment = (
                 self.db_session.query(Payment)
@@ -453,7 +441,7 @@ class PaymentRejectsStep(Step):
                 state_log_util.create_finished_state_log(
                     withhold_payment,
                     State.STATE_WITHHOLDING_ERROR
-                    if (payment_end_state_id in [191])
+                    if (payment.payment_transaction_type_id == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id)
                     else State.FEDERAL_WITHHOLDING_ERROR,
                     state_log_util.build_outcome("Record is skipped or rejected"),
                     self.db_session,
@@ -462,7 +450,7 @@ class PaymentRejectsStep(Step):
                 state_log_util.create_finished_state_log(
                     withhold_payment,
                     State.STATE_WITHHOLDING_SEND_FUNDS
-                    if (payment_end_state_id in [191])
+                    if (payment.payment_transaction_type_id == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id)
                     else State.FEDERAL_WITHHOLDING_SEND_FUNDS,
                     ACCEPTED_OUTCOME,
                     self.db_session,
@@ -555,26 +543,11 @@ class PaymentRejectsStep(Step):
 
             rejected_notes = payment_rejects_row.rejected_notes
 
-            payment_state_logs = (
-                (self.db_session.query(StateLog).filter(StateLog.payment_id == payment.payment_id))
-                .order_by(StateLog.created_at.desc())
-                .all()
-            )
-            is_state_withholding_pending_audit: bool = False
-            is_federal_withholding_pending_audit: bool = False
-            for payment_end_state in payment_state_logs:
-                if payment_end_state.end_state_id == 192:
-                    is_state_withholding_pending_audit = True
-                if payment_end_state.end_state_id == 196:
-                    is_federal_withholding_pending_audit = True
-            if enable_withholding_payments and (
-                is_state_withholding_pending_audit or is_federal_withholding_pending_audit
-            ):
+            if payments_util.is_withholding_payments_enabled() and payment.payment_transaction_type_id in [PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id,PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id]:
                 self.transition_audit_pending_withholding_payment_state(
                     payment,
                     is_rejected_payment,
                     is_skipped_payment,
-                    is_state_withholding_pending_audit,
                     rejected_notes,
                 )
             else:

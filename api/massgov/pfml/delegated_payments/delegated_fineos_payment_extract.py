@@ -1,5 +1,4 @@
 import enum
-import os
 import uuid
 from datetime import datetime
 from decimal import Decimal
@@ -59,9 +58,6 @@ PRENOTE_PRENDING_WAITING_PERIOD = 5
 RECEIVED_FOLDER = "received"
 PROCESSED_FOLDER = "processed"
 SKIPPED_FOLDER = "skipped"
-
-enable_withholding_payments: bool
-enable_withholding_payments = os.environ.get("ENABLE_WITHHOLDING_PAYMENTS", "0") == "1"
 
 CANCELLATION_PAYMENT_TRANSACTION_TYPE = "PaymentOut Cancellation"
 # There are multiple types of overpayments
@@ -333,6 +329,15 @@ class PaymentData:
         could potentially fall into multiple payment types.
         https://lwd.atlassian.net/wiki/spaces/API/pages/1336901700/Types+of+Payments
         """
+        # FICA
+        if payments_util.is_withholding_payments_enabled() and (
+            self.tin == "FICASOCIALSECURITYPAYEE001" or self.tin == "FICAMEDICAREPAYEE001"
+        ):
+            return PaymentTransactionType.STATE_TAX_WITHHOLDING
+
+        # FIT
+        if payments_util.is_withholding_payments_enabled() and self.tin == "MANDATORYFITPAYEE001":
+            return PaymentTransactionType.FEDERAL_TAX_WITHHOLDING
 
         # Zero dollar payments overrule all other payment types
         if self.payment_amount == Decimal("0"):
@@ -355,15 +360,6 @@ class PaymentData:
         if self.event_type == CANCELLATION_PAYMENT_TRANSACTION_TYPE:
             return PaymentTransactionType.CANCELLATION
 
-        # FICA
-        if enable_withholding_payments and (
-            self.tin == "FICASOCIALSECURITYPAYEE001" or self.tin == "FICAMEDICAREPAYEE001"
-        ):
-            return PaymentTransactionType.STATE_TAX_WITHHOLDING
-
-        # FIT
-        if enable_withholding_payments and self.tin == "MANDATORYFITPAYEE001":
-            return PaymentTransactionType.FEDERAL_TAX_WITHHOLDING
         # The bulk of the payments we process will be standard payments
         if (
             self.event_type == PAYMENT_OUT_TRANSACTION_TYPE
@@ -1093,9 +1089,9 @@ class PaymentExtractStep(Step):
             )
             self.increment(self.Metrics.CANCELLATION_COUNT)
 
-        # set staus FEDERAL_WITHHOLDING_READY_FOR_PROCESSING
+        # set status FEDERAL_WITHHOLDING_READY_FOR_PROCESSING
         elif (
-            enable_withholding_payments
+            payments_util.is_withholding_payments_enabled()
             and payment.payment_transaction_type_id
             == PaymentTransactionType.FEDERAL_TAX_WITHHOLDING.payment_transaction_type_id
         ):
@@ -1105,7 +1101,7 @@ class PaymentExtractStep(Step):
 
         # set status  STATE_WITHHOLDING_READY_FOR_PROCESSING
         elif (
-            enable_withholding_payments
+            payments_util.is_withholding_payments_enabled()
             and payment.payment_transaction_type_id
             == PaymentTransactionType.STATE_TAX_WITHHOLDING.payment_transaction_type_id
         ):
