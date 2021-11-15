@@ -20,7 +20,9 @@ class ClaimDetail {
   constructor(
     attrs?: Omit<
       ClaimDetail,
-      "absencePeriodsByReason" | "managedRequirementByFollowUpDate"
+      | "absencePeriodsByReason"
+      | "managedRequirementByFollowUpDate"
+      | "hasApprovedStatus"
     >
   ) {
     if (!attrs) {
@@ -56,6 +58,14 @@ class ClaimDetail {
       ["desc"]
     );
   }
+
+  get hasApprovedStatus() {
+    return this.absence_periods.some(
+      (absence_period) =>
+        absence_period.request_decision ===
+        <AbsencePeriodRequestDecision>"Approved"
+    );
+  }
 }
 
 export type AbsencePeriodRequestDecision =
@@ -86,7 +96,18 @@ interface OutstandingEvidence {
   is_document_received: boolean;
 }
 
-interface PaymentDetail {
+/**
+ * Payment response associated with the Claim from API
+ */
+export interface Payments {
+  absence_case_id: string;
+  payments: PaymentDetail[];
+}
+
+/**
+ * Payment details associated with the Claim
+ */
+export interface PaymentDetail {
   payment_id: string;
   period_start_date: string;
   period_end_date: string;

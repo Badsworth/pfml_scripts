@@ -8,6 +8,7 @@ const routes = {
     applications: "/applications",
     claims: "/claims",
     employers: "/employers",
+    payments: "/payments",
     users: "/users",
   },
   applications: {
