@@ -8,9 +8,11 @@ on:
       - main
     paths:
       - portal/**
+      - .github/workflows/portal-ci.yml
   pull_request:
     paths:
       - portal/**
+      - .github/workflows/portal-ci.yml
 
 concurrency:
   group: ${{ github.head_ref }}-ci
@@ -120,9 +122,11 @@ jobs:
   post-to-slack:
     name: post failures to slack
     needs: [get-test-state]
-    if: needs.get-test-state.outputs.test-state == 'failure' || needs.get-test-state.outputs.test-state == 'timed_out'
+    if: always() && (needs.get-test-state.outputs.test-state == 'failure' || needs.get-test-state.outputs.test-state == 'timed_out')
     runs-on: ubuntu-latest
     steps:
+      - uses: actions/checkout@v2
+
       - name: Configure AWS Credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
@@ -145,7 +149,7 @@ jobs:
           --data '{
             "channel": "${{ env.deploys_channel }}",
             "attachments": [{
-              "title": "Portal Unit Test failed in main (<${{ env.workflow_self_link }}|build logs>)",
+              "title": "Portal tests failed in main (<${{ env.workflow_self_link }}|build logs>)",
               "color": "danger"
             }]
           }' https://slack.com/api/chat.postMessage)
