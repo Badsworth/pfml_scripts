@@ -304,11 +304,11 @@ locals {
     },
 
     "dua-generate-and-send-employee-request-file" = {
-      command   = ["dua-generate-and-send-employee-request-file"]
-      task_role = aws_iam_role.dua_employee_workflow_task_role.arn
+      command        = ["dua-generate-and-send-employee-request-file"]
+      task_role      = aws_iam_role.dua_employee_workflow_task_role.arn
       execution_role = aws_iam_role.dua_employee_workflow_execution_role.arn
-      cpu       = 2048,
-      memory    = 4096,
+      cpu            = 2048,
+      memory         = 4096,
       env = [
         local.db_access,
         local.eolwd_moveit_access,
@@ -317,22 +317,22 @@ locals {
     }
 
     "dua-backfill-employee-gender" = {
-      command   = ["dua-backfill-employee-gender"]
-      task_role = aws_iam_role.dua_employee_workflow_task_role.arn
+      command        = ["dua-backfill-employee-gender"]
+      task_role      = aws_iam_role.dua_employee_workflow_task_role.arn
       execution_role = aws_iam_role.dua_employee_workflow_execution_role.arn
-      cpu       = 2048,
-      memory    = 4096,
+      cpu            = 2048,
+      memory         = 4096,
       env = [
         local.db_access
       ]
     }
 
     "dua-import-employee-demographics" = {
-      command   = ["dua-import-employee-demographics"]
-      task_role = aws_iam_role.dua_employee_workflow_task_role.arn
+      command        = ["dua-import-employee-demographics"]
+      task_role      = aws_iam_role.dua_employee_workflow_task_role.arn
       execution_role = aws_iam_role.dua_employee_workflow_execution_role.arn
-      cpu       = 2048,
-      memory    = 4096,
+      cpu            = 2048,
+      memory         = 4096,
       env = [
         local.db_access,
         local.eolwd_moveit_access,

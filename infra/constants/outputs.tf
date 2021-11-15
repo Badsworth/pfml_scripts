@@ -156,5 +156,5 @@ output "slackbot_channels" {
 }
 
 output "bucket_replication_environment" {
-  value = "prod"
+  value = "test"
 }
