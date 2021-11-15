@@ -1,6 +1,6 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
-exports[`ApplicationCardV2 with a completed application renders the component 1`] = `
+exports[`ApplicationCard with a completed application renders the component 1`] = `
 <div
   class="maxw-mobile-lg margin-bottom-3"
 >

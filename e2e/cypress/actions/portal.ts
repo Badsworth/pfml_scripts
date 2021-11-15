@@ -45,7 +45,6 @@ function setFeatureFlags(flags?: Partial<FeatureFlags>): void {
   const defaults: FeatureFlags = {
     pfmlTerriyay: true,
     noMaintenance: true,
-    claimantShowStatusPage: true,
     employerShowDashboardSearch: true,
     employerShowReviewByStatus: true,
   };
