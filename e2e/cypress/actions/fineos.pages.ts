@@ -2540,7 +2540,7 @@ class HistoricalAbsence {
       qualifier_2: "Sickness",
     };
     cy.contains("Options").click();
-    cy.contains("Add Historical Absence").click();
+    cy.contains("Add Historical Absence").click({ force: true });
     HistoricalAbsence.fillAbsenceDescription(historicalPeriodDescription);
     cy.contains("div", "timeOffHistoricalAbsencePeriodsListviewWidget")
       .find("input")
