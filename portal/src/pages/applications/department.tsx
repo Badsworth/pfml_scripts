@@ -154,24 +154,26 @@ export const Department = (props: DepartmentProps) => {
   const populateOrganizationUnits = async () => {
     // Finds this employee based on name, SSN and employer FEIN and retrieves
     // the employee info alongside the connected organization units
-    const searchEmployee: EmployeeSearchRequest = {
-      first_name: claim.first_name ?? "",
-      last_name: claim.last_name ?? "",
-      middle_name: claim.middle_name ?? "",
-      tax_identifier_last4: claim.tax_identifier?.slice(-4) ?? "",
-      employer_fein: claim.employer_fein ?? "",
-    };
-    const employee = await appLogic.employees.search(searchEmployee);
-    if (employee) {
-      // When the employee search does not return organization units
-      // then the employer also does not have any, so go to next page
-      if (
-        typeof employee.organization_units === "undefined" ||
-        employee.organization_units.length === 0
-      ) {
-        skipDepartments();
+    if (!organizationUnits.length) {
+      const searchEmployee: EmployeeSearchRequest = {
+        first_name: claim.first_name ?? "",
+        last_name: claim.last_name ?? "",
+        middle_name: claim.middle_name ?? "",
+        tax_identifier_last4: claim.tax_identifier?.slice(-4) ?? "",
+        employer_fein: claim.employer_fein ?? "",
+      };
+      const employee = await appLogic.employees.search(searchEmployee);
+      if (employee) {
+        // When the employee search does not return organization units
+        // then the employer also does not have any, so go to next page
+        if (
+          typeof employee.organization_units === "undefined" ||
+          employee.organization_units.length === 0
+        ) {
+          skipDepartments();
+        }
+        setOrganizationUnits(employee.organization_units || []);
       }
-      setOrganizationUnits(employee.organization_units || []);
     }
   };
 
