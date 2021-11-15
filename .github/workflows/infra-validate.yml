@@ -12,25 +12,20 @@ on:
 
 env:
   working-dir: ./infra
-  tf-version-monitoring: 0.14.7
   tf-version-default: 0.14.7
-  deploys_channel: "C01HEAJPE76" #mass-pfml-deploys-shared
-  workflow_self_link: "https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
 
 jobs:
-#  tf-format:
-#    name: "tf format check"
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v2
-#
-#      - name: tf-format-check
-#        uses: hashicorp/terraform-github-actions@master
-#        with:
-#          tf_actions_version: ${{ env[format('{0}-{1}', 'tf-version', matrix.component)] || env.tf-version-default }}
-#          tf_actions_subcommand: "fmt"
-#          tf_actions_working_dir: ${{ env.working-dir }}
-#          tf_actions_comment: false
+  tf-format-check:
+    name: "tf format (run 'terraform fmt -recursive infra/' if this fails)"
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+      - uses: hashicorp/setup-terraform@v1
+        with:
+          terraform_version: env.tf-version-default
+
+      - run: terraform fmt -recursive -check ${{ env.working-dir }}
 
   tf-validate:
     name: "tf validate"
@@ -42,6 +37,9 @@ jobs:
 
     # Run a job for each combination of a component and environment.
     # e.g. portal/test, portal/stage, env-shared/test, env-shared/stage
+    #
+    # This should be automated as part of INFRA-558 to avoid developer maintenance costs.
+    #
     strategy:
       fail-fast: false
       matrix:
